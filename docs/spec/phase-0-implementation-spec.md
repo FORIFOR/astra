@@ -591,293 +591,91 @@ Phase 0 で **DDL を作る**のは以下。空でも作るものは「先に作
 
 Phase 2 以降のテーブル（`shares` `meetings` `evidence` `world_*` …）は作らない。
 
-### 5.3 主要 DDL
+### 5.3 マイグレーション
 
-すべての列に `NOT NULL` を既定とし、意味のある NULL だけ許す。
+**実 DDL の正本は `infra/db/migrations/*.sql`**（ADR 0002）。本節は SQL を読むだけでは
+分からない設計判断だけを記す。
 
-```sql
--- 0001_identity.sql
-CREATE TABLE tenants (
-  id            uuid PRIMARY KEY,
-  name          text NOT NULL,
-  kind          text NOT NULL CHECK (kind IN ('personal', 'organization')),
-  compliance_profile text NOT NULL DEFAULT 'GENERAL',
-  created_at    timestamptz NOT NULL DEFAULT now(),
-  deleted_at    timestamptz
-);
+| ファイル                           | 内容                                                                                   |
+| ---------------------------------- | -------------------------------------------------------------------------------------- |
+| `20260826010001_extensions.sql`    | `citext`、append-only 強制関数 `astra_deny_mutation()`                                 |
+| `20260826010002_identity.sql`      | `tenants` `users` `memberships` `devices` `sessions`                                   |
+| `20260826010003_conversations.sql` | `conversations` `turns`（逸脱 D-06。書き込みは Phase 1）                               |
+| `20260826010004_tasks.sql`         | `tasks` `event_streams` `task_events` `approvals` `action_receipts`                    |
+| `20260826010005_library.sql`       | `artifacts` `artifact_versions`、`tasks.result_artifact_id` の FK 付与                 |
+| `20260826010006_plugins.sql`       | `plugin_publishers` `plugins` `plugin_versions` `plugin_installs` `plugin_permissions` |
+| `20260826010007_audit.sql`         | `audit_sequences` `audit_events`                                                       |
+| `20260826010008_rls.sql`           | 全テナントテーブルの RLS 有効化・FORCE・ポリシー                                       |
 
-CREATE TABLE users (
-  id            uuid PRIMARY KEY,
-  email         citext NOT NULL,
-  display_name  text NOT NULL,
-  created_at    timestamptz NOT NULL DEFAULT now(),
-  deleted_at    timestamptz
-);
-CREATE UNIQUE INDEX users_email_key ON users (email) WHERE deleted_at IS NULL;
+すべてのマイグレーションは `up` / `down` 双方向が通ること（CI で往復を検査する）。
 
-CREATE TABLE memberships (
-  tenant_id     uuid NOT NULL REFERENCES tenants(id),
-  user_id       uuid NOT NULL REFERENCES users(id),
-  role          text NOT NULL CHECK (role IN ('owner', 'admin', 'member')),
-  created_at    timestamptz NOT NULL DEFAULT now(),
-  PRIMARY KEY (tenant_id, user_id)
-);
+#### 設計上の要点
 
-CREATE TABLE devices (
-  id            uuid PRIMARY KEY,
-  tenant_id     uuid NOT NULL REFERENCES tenants(id),
-  user_id       uuid NOT NULL REFERENCES users(id),
-  platform      text NOT NULL CHECK (platform IN ('macos', 'windows', 'linux', 'web')),
-  name          text NOT NULL,
-  app_version   text NOT NULL,
-  last_seen_at  timestamptz,
-  revoked_at    timestamptz,
-  created_at    timestamptz NOT NULL DEFAULT now()
-);
+**冪等性と重複防止**（正本 §24）
 
-CREATE TABLE sessions (
-  id                  uuid PRIMARY KEY,
-  tenant_id           uuid NOT NULL REFERENCES tenants(id),
-  user_id             uuid NOT NULL REFERENCES users(id),
-  device_id           uuid NOT NULL REFERENCES devices(id),
-  refresh_token_hash  text NOT NULL,          -- Argon2id
-  rotated_from        uuid REFERENCES sessions(id),
-  expires_at          timestamptz NOT NULL,
-  revoked_at          timestamptz,
-  revoked_reason      text,
-  created_at          timestamptz NOT NULL DEFAULT now()
-);
-CREATE INDEX sessions_user_active ON sessions (user_id) WHERE revoked_at IS NULL;
-```
+| 制約                                                         | 何を防ぐか                                            |
+| ------------------------------------------------------------ | ----------------------------------------------------- |
+| `tasks_idempotency (tenant_id, created_by, idempotency_key)` | API 層でのタスク二重作成                              |
+| `tasks_workflow_id (workflow_id)`                            | Temporal workflow とタスク行の 1:1 崩れ               |
+| `task_events_stream_seq (stream_kind, stream_id, sequence)`  | sequence の重複                                       |
+| `task_events_idem (stream_kind, stream_id, idempotency_key)` | activity 再実行によるイベント二重挿入                 |
+| `approvals_task_step (task_id, step_index)`                  | `requestApproval` 再実行による承認の重複生成          |
+| `action_receipts_idem (task_id, tool_id, inputs_hash)`       | 同一入力の receipt 二重記録                           |
+| `sessions_rotation_chain (rotated_from)`                     | refresh token の再利用（同じ親から 2 本目が生えない） |
 
-```sql
--- 0002_tasks.sql
-CREATE TABLE tasks (
-  id                 uuid PRIMARY KEY,
-  tenant_id          uuid NOT NULL REFERENCES tenants(id),
-  created_by         uuid NOT NULL REFERENCES users(id),
-  conversation_id    uuid REFERENCES conversations(id),
-  kind               text NOT NULL,
-  title              text,
-  status             text NOT NULL CHECK (status IN
-                       ('PENDING','RUNNING','WAITING_APPROVAL','CANCELLING',
-                        'COMPLETED','FAILED','CANCELLED')),
-  input              jsonb NOT NULL DEFAULT '{}'::jsonb,
-  result_artifact_id uuid,                      -- FK は artifacts 作成後に付与
-  error              jsonb,
-  idempotency_key    text NOT NULL,
-  workflow_id        text NOT NULL,
-  run_id             text,
-  created_at         timestamptz NOT NULL DEFAULT now(),
-  started_at         timestamptz,
-  completed_at       timestamptz,
-  updated_at         timestamptz NOT NULL DEFAULT now()
-);
--- 正本 §24「duplicate event protection / 重複実行しない」
-CREATE UNIQUE INDEX tasks_idempotency ON tasks (tenant_id, created_by, idempotency_key);
-CREATE INDEX tasks_tenant_recent ON tasks (tenant_id, created_at DESC);
-CREATE INDEX tasks_active ON tasks (tenant_id, status)
-  WHERE status IN ('PENDING','RUNNING','WAITING_APPROVAL','CANCELLING');
+**append-only**（正本 §9.4 / §21、受け入れテスト AC-16）
 
--- sequence の採番元。stream 単位で欠番なしを保証する（§7.2）
-CREATE TABLE event_streams (
-  stream_kind text NOT NULL CHECK (stream_kind IN ('task','conversation','meeting')),
-  stream_id   uuid NOT NULL,
-  tenant_id   uuid NOT NULL REFERENCES tenants(id),
-  next_seq    bigint NOT NULL DEFAULT 1,
-  closed_at   timestamptz,
-  PRIMARY KEY (stream_kind, stream_id)
-);
+`task_events` `action_receipts` `audit_events` は `astra_deny_mutation()` トリガで
+UPDATE / DELETE / TRUNCATE を DB 側から拒否する。アプリの規律に依存させない。
 
-CREATE TABLE task_events (
-  event_id     uuid PRIMARY KEY,
-  tenant_id    uuid NOT NULL REFERENCES tenants(id),
-  stream_kind  text NOT NULL,
-  stream_id    uuid NOT NULL,
-  sequence     bigint NOT NULL,
-  type         text NOT NULL,
-  task_id      uuid REFERENCES tasks(id),
-  conversation_id uuid,
-  payload      jsonb NOT NULL,
-  idempotency_key text,                          -- activity 再実行時の重複挿入防止
-  created_at   timestamptz NOT NULL DEFAULT now()
-);
-CREATE UNIQUE INDEX task_events_stream_seq ON task_events (stream_kind, stream_id, sequence);
-CREATE UNIQUE INDEX task_events_idem
-  ON task_events (stream_kind, stream_id, idempotency_key) WHERE idempotency_key IS NOT NULL;
-CREATE INDEX task_events_replay ON task_events (stream_kind, stream_id, sequence)
-  INCLUDE (type, payload);
+トリガは **文レベル (`FOR EACH STATEMENT`)** で張ること。行レベルにすると
+0 行に一致する UPDATE / DELETE がそのまま成功し、TRUNCATE は素通しになるため、
+append-only の保証にならない（実装中に検出。`infra/db/verify.sh` が回帰を検査する）。
 
-CREATE TABLE approvals (
-  id              uuid PRIMARY KEY,
-  tenant_id       uuid NOT NULL REFERENCES tenants(id),
-  task_id         uuid NOT NULL REFERENCES tasks(id),
-  risk            text NOT NULL,
-  summary         text NOT NULL,
-  details         jsonb NOT NULL DEFAULT '[]'::jsonb,
-  editable_fields jsonb NOT NULL DEFAULT '[]'::jsonb,
-  status          text NOT NULL CHECK (status IN ('PENDING','APPROVED','REJECTED','EXPIRED')),
-  expires_at      timestamptz NOT NULL,
-  decided_by      uuid REFERENCES users(id),
-  decided_at      timestamptz,
-  decision_note   text,
-  created_at      timestamptz NOT NULL DEFAULT now()
-);
-CREATE INDEX approvals_pending ON approvals (tenant_id, status) WHERE status = 'PENDING';
+**採番**
 
--- 正本 §9.4 / §24「immutable action receipt」。UPDATE / DELETE はトリガで拒否する
-CREATE TABLE action_receipts (
-  id               uuid PRIMARY KEY,
-  tenant_id        uuid NOT NULL REFERENCES tenants(id),
-  task_id          uuid NOT NULL REFERENCES tasks(id),
-  tool_id          text NOT NULL,
-  actor            text NOT NULL CHECK (actor IN ('user','agent','system')),
-  inputs_hash      char(64) NOT NULL,
-  result_ref       text,
-  risk             text NOT NULL,
-  approved_by      uuid REFERENCES users(id),
-  reversible_until timestamptz,
-  executed_at      timestamptz NOT NULL DEFAULT now()
-);
-```
+`event_streams.next_seq` と `audit_sequences.next_seq` は、`UPDATE ... RETURNING` で
+採番と挿入を同一トランザクションに閉じる（§7.2）。連番が意味を持つ列は必ずこの形にする。
+
+**索引の方針**
+
+- カーソルページングは UUIDv7 の時系列性を使うので `tasks_recent (tenant_id, id DESC)` で足りる。
+- Library の既定表示は「最近使ったもの」なので `artifacts_recent (tenant_id, updated_at DESC, id DESC)`。
+  `id` を tiebreak に入れてカーソルを安定させる。
+- `task_events` のリプレイは `task_events_stream_seq` の範囲スキャンだけで賄う。
+  **`payload` を `INCLUDE` しない** — jsonb は TOAST され得るため索引が肥大する。
+
+**チェック制約で表現した不変条件**
+
+- `plugin_versions_signed`: `signature_state = 'UNSIGNED'` の行は存在できない（§9.2）
+- `approvals_decision_complete`: `APPROVED` / `REJECTED` なら `decided_by` と `decided_at` が必ず揃う
+- `audit_events_chain_root`: ハッシュ連鎖の先頭 (`seq = 1`) だけ `prev_hash` が NULL
+- `inputs_hash` / `sha256` / `manifest_sha256` は小文字 16 進 64 桁
+
+#### RLS（実装仕様 §4.4 の DB 層）
+
+`20260826010008_rls.sql` が `tenant_id` 列を持つ全 16 テーブル + `tenants` + `users` に
+ポリシーを張る。`plugin_publishers` / `plugins` / `plugin_versions` はテナント横断の
+カタログなので対象外。
 
 ```sql
--- 0003_library.sql
-CREATE TABLE artifacts (
-  id                 uuid PRIMARY KEY,
-  tenant_id          uuid NOT NULL REFERENCES tenants(id),
-  owner_id           uuid NOT NULL REFERENCES users(id),
-  type               text NOT NULL,
-  title              text NOT NULL,
-  mime_type          text NOT NULL,
-  source_agent_id    text,
-  source_task_id     uuid REFERENCES tasks(id),
-  source_meeting_id  uuid,
-  parent_artifact_id uuid REFERENCES artifacts(id),
-  current_version    int  NOT NULL DEFAULT 1,
-  tags               text[] NOT NULL DEFAULT '{}',
-  entities           jsonb NOT NULL DEFAULT '[]'::jsonb,   -- Phase 6 まで空
-  lineage            jsonb NOT NULL DEFAULT '[]'::jsonb,   -- Phase 6 まで空
-  sensitivity        text NOT NULL DEFAULT 'PRIVATE',
-  searchable_text_ref text,
-  deleted_at         timestamptz,
-  created_at         timestamptz NOT NULL DEFAULT now(),
-  updated_at         timestamptz NOT NULL DEFAULT now()
-);
-CREATE INDEX artifacts_recent ON artifacts (tenant_id, updated_at DESC) WHERE deleted_at IS NULL;
-CREATE INDEX artifacts_by_task ON artifacts (source_task_id);
-
-CREATE TABLE artifact_versions (
-  artifact_id  uuid NOT NULL REFERENCES artifacts(id),
-  version      int  NOT NULL,
-  tenant_id    uuid NOT NULL REFERENCES tenants(id),
-  object_key   text NOT NULL,
-  size         bigint NOT NULL,
-  sha256       char(64) NOT NULL,
-  created_by   uuid NOT NULL REFERENCES users(id),
-  created_at   timestamptz NOT NULL DEFAULT now(),
-  PRIMARY KEY (artifact_id, version)
-);
-CREATE INDEX artifact_versions_sha ON artifact_versions (tenant_id, sha256);
-
-ALTER TABLE tasks ADD CONSTRAINT tasks_result_artifact_fk
-  FOREIGN KEY (result_artifact_id) REFERENCES artifacts(id);
+CREATE FUNCTION astra_current_tenant() RETURNS uuid
+  LANGUAGE sql STABLE AS $$
+  SELECT NULLIF(current_setting('app.tenant_id', true), '')::uuid
+$$;
 ```
 
-```sql
--- 0004_plugins.sql
-CREATE TABLE plugin_publishers (
-  id          text PRIMARY KEY,               -- 'astra'
-  display_name text NOT NULL,
-  public_key  text NOT NULL,                  -- Ed25519 公開鍵 (base64)
-  verified    boolean NOT NULL DEFAULT false,
-  created_at  timestamptz NOT NULL DEFAULT now()
-);
+**実測で確認した落とし穴（実装時に必ず守ること）**
 
-CREATE TABLE plugins (
-  id           text PRIMARY KEY,              -- 'com.astra.gmail'
-  publisher_id text NOT NULL REFERENCES plugin_publishers(id),
-  name         text NOT NULL,
-  category     text NOT NULL,
-  builtin      boolean NOT NULL DEFAULT false,
-  removable    boolean NOT NULL DEFAULT true,
-  latest_version text NOT NULL,
-  created_at   timestamptz NOT NULL DEFAULT now()
-);
-
-CREATE TABLE plugin_versions (
-  plugin_id        text NOT NULL REFERENCES plugins(id),
-  version          text NOT NULL,
-  min_core_version text NOT NULL,
-  compliance_profile text NOT NULL,
-  manifest         jsonb NOT NULL,            -- 検証済み正規化 manifest
-  manifest_sha256  char(64) NOT NULL,
-  signature        text,
-  signature_state  text NOT NULL CHECK (signature_state IN ('VERIFIED','BUILTIN_TRUSTED','UNSIGNED')),
-  published_at     timestamptz NOT NULL DEFAULT now(),
-  yanked_at        timestamptz,
-  PRIMARY KEY (plugin_id, version)
-);
-
-CREATE TABLE plugin_installs (
-  id           uuid PRIMARY KEY,
-  tenant_id    uuid NOT NULL REFERENCES tenants(id),
-  plugin_id    text NOT NULL REFERENCES plugins(id),
-  version      text NOT NULL,
-  installed_by uuid NOT NULL REFERENCES users(id),
-  state        text NOT NULL CHECK (state IN ('INSTALLED','DISABLED','UNINSTALLED')),
-  installed_at timestamptz NOT NULL DEFAULT now(),
-  updated_at   timestamptz NOT NULL DEFAULT now()
-);
-CREATE UNIQUE INDEX plugin_installs_unique ON plugin_installs (tenant_id, plugin_id)
-  WHERE state <> 'UNINSTALLED';
-
-CREATE TABLE plugin_permissions (
-  install_id  uuid NOT NULL REFERENCES plugin_installs(id),
-  scope       text NOT NULL,
-  granted     boolean NOT NULL,
-  granted_by  uuid REFERENCES users(id),
-  granted_at  timestamptz NOT NULL DEFAULT now(),
-  PRIMARY KEY (install_id, scope)
-);
-```
-
-```sql
--- 0005_audit.sql
--- 正本 §21「append-only audit event」。ハッシュ連鎖で改竄を検出可能にする
-CREATE TABLE audit_events (
-  id            uuid PRIMARY KEY,
-  tenant_id     uuid NOT NULL REFERENCES tenants(id),
-  seq           bigint NOT NULL,
-  actor_type    text NOT NULL CHECK (actor_type IN ('user','agent','system','service')),
-  actor_id      text,
-  action        text NOT NULL,               -- 'plugin.install' / 'approval.decide' / 'session.reuse_detected'
-  task_id       uuid,
-  tool_id       text,
-  external_effect boolean NOT NULL DEFAULT false,
-  payload       jsonb NOT NULL DEFAULT '{}'::jsonb,
-  prev_hash     char(64),
-  hash          char(64) NOT NULL,           -- sha256(prev_hash || canonical_json(row-without-hash))
-  created_at    timestamptz NOT NULL DEFAULT now()
-);
-CREATE UNIQUE INDEX audit_events_chain ON audit_events (tenant_id, seq);
-```
-
-`action_receipts` と `audit_events` は UPDATE / DELETE をトリガで拒否する:
-
-```sql
-CREATE FUNCTION astra_deny_mutation() RETURNS trigger LANGUAGE plpgsql AS $$
-BEGIN
-  RAISE EXCEPTION 'table % is append-only', TG_TABLE_NAME;
-END $$;
-
-CREATE TRIGGER action_receipts_append_only
-  BEFORE UPDATE OR DELETE ON action_receipts
-  FOR EACH ROW EXECUTE FUNCTION astra_deny_mutation();
-CREATE TRIGGER audit_events_append_only
-  BEFORE UPDATE OR DELETE ON audit_events
-  FOR EACH ROW EXECUTE FUNCTION astra_deny_mutation();
-```
+1. **`SET LOCAL` はトランザクション内でしか効かない。** 外で実行すると `WARNING` が出るだけで
+   設定は入らず、`astra_current_tenant()` が NULL になって全行が見えなくなる。
+   fail-closed ではあるが、`withTenant` は**必ずトランザクションを開く**こと。
+2. **superuser と `BYPASSRLS` ロールは `FORCE ROW LEVEL SECURITY` すら無視する。**
+   アプリが superuser で接続した瞬間にテナント隔離が消える。接続ロールは
+   `infra/db/bootstrap.sql` の `astra_app`（非 superuser・非 BYPASSRLS）を使う。
+   ロールはデータベースを跨ぐためマイグレーションではなく運用手順に置いた。
+3. 他テナント行への `UPDATE` はエラーにならず **0 行更新**になる。
+   「更新できた」ことを行数で確認しないコードはバグを見逃す。
 
 ### 5.4 `packages/db`
 

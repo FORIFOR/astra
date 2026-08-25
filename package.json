@@ -20,7 +20,8 @@
     "dev:infra:down": "docker compose -f infra/docker-compose.dev.yml down",
     "db:new": "dbmate --migrations-dir infra/db/migrations new",
     "db:rollback": "dbmate --migrations-dir infra/db/migrations rollback",
-    "test:acceptance": "vitest run --dir evals/actions --passWithNoTests"
+    "test:acceptance": "vitest run --dir evals/actions --passWithNoTests",
+    "db:verify": "./infra/db/verify.sh"
   },
   "devDependencies": {
     "@types/node": "^22.15.0",

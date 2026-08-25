@@ -16,3 +16,24 @@ pnpm db:status
 
 Typed access lives in `packages/db` (Kysely `Database` interface + tenant guard).
 See `docs/spec/phase-0-implementation-spec.md` §5.
+
+## schema.sql について
+
+`schema.sql` は `dbmate up` が自動生成する。手で編集しない。
+
+> **注意**: 現在コミットされている `schema.sql` は開発機のローカル PostgreSQL **14** で
+> 生成したもの。開発対象は `infra/docker-compose.dev.yml` の **PostgreSQL 16 (pgvector)** なので、
+> Docker が使える環境で一度 `pnpm db:migrate` を流し直して再生成すること。
+> pg_dump のヘッダ差分程度だが、生成物の鮮度は CI で検査する（実装仕様 §14.3-3）。
+
+## bootstrap.sql
+
+ロールはデータベースを跨ぐためマイグレーションに入れていない。クラスタ初期化時に一度だけ:
+
+```sh
+psql "$ADMIN_DATABASE_URL" -f infra/db/bootstrap.sql
+```
+
+`astra_app` は **superuser でも BYPASSRLS でもない**。superuser は
+`FORCE ROW LEVEL SECURITY` すら無視するため、アプリが superuser で接続すると
+テナント隔離が無くなる（実装仕様 §4.4）。

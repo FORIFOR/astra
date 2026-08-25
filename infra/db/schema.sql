@@ -1,0 +1,1485 @@
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+--
+-- Name: citext; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS citext WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION citext; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON EXTENSION citext IS 'data type for case-insensitive character strings';
+
+
+--
+-- Name: astra_current_tenant(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.astra_current_tenant() RETURNS uuid
+    LANGUAGE sql STABLE
+    AS $$
+  SELECT NULLIF(current_setting('app.tenant_id', true), '')::uuid
+$$;
+
+
+--
+-- Name: astra_deny_mutation(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.astra_deny_mutation() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+  RAISE EXCEPTION 'table % is append-only (attempted %)', TG_TABLE_NAME, TG_OP
+    USING ERRCODE = 'restrict_violation';
+END $$;
+
+
+SET default_tablespace = '';
+
+SET default_table_access_method = heap;
+
+--
+-- Name: action_receipts; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.action_receipts (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    task_id uuid NOT NULL,
+    tool_id text NOT NULL,
+    actor text NOT NULL,
+    inputs_hash character(64) NOT NULL,
+    result_ref text,
+    risk text NOT NULL,
+    approved_by uuid,
+    reversible_until timestamp with time zone,
+    executed_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT action_receipts_actor_check CHECK ((actor = ANY (ARRAY['user'::text, 'agent'::text, 'system'::text]))),
+    CONSTRAINT action_receipts_inputs_hash_check CHECK ((inputs_hash ~ '^[0-9a-f]{64}$'::text))
+);
+
+ALTER TABLE ONLY public.action_receipts FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: approvals; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.approvals (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    task_id uuid NOT NULL,
+    step_index integer NOT NULL,
+    risk text NOT NULL,
+    summary text NOT NULL,
+    details jsonb DEFAULT '[]'::jsonb NOT NULL,
+    editable_fields jsonb DEFAULT '[]'::jsonb NOT NULL,
+    status text NOT NULL,
+    expires_at timestamp with time zone NOT NULL,
+    decided_by uuid,
+    decided_at timestamp with time zone,
+    decision_note text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT approvals_decision_complete CHECK ((((status = ANY (ARRAY['PENDING'::text, 'EXPIRED'::text])) AND (decided_at IS NULL)) OR ((status = ANY (ARRAY['APPROVED'::text, 'REJECTED'::text])) AND (decided_at IS NOT NULL) AND (decided_by IS NOT NULL)))),
+    CONSTRAINT approvals_risk_check CHECK ((risk = ANY (ARRAY['READ'::text, 'REVERSIBLE_WRITE'::text, 'EXTERNAL_COMMIT'::text, 'DESTRUCTIVE'::text, 'REGULATED'::text, 'FINANCIAL'::text]))),
+    CONSTRAINT approvals_status_check CHECK ((status = ANY (ARRAY['PENDING'::text, 'APPROVED'::text, 'REJECTED'::text, 'EXPIRED'::text])))
+);
+
+ALTER TABLE ONLY public.approvals FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: artifact_versions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.artifact_versions (
+    artifact_id uuid NOT NULL,
+    version integer NOT NULL,
+    tenant_id uuid NOT NULL,
+    object_key text NOT NULL,
+    size bigint NOT NULL,
+    sha256 character(64) NOT NULL,
+    created_by uuid NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT artifact_versions_sha256_check CHECK ((sha256 ~ '^[0-9a-f]{64}$'::text)),
+    CONSTRAINT artifact_versions_size_check CHECK ((size >= 0)),
+    CONSTRAINT artifact_versions_version_check CHECK ((version >= 1))
+);
+
+ALTER TABLE ONLY public.artifact_versions FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: artifacts; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.artifacts (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    owner_id uuid NOT NULL,
+    type text NOT NULL,
+    title text NOT NULL,
+    mime_type text NOT NULL,
+    source_agent_id text,
+    source_task_id uuid,
+    source_meeting_id uuid,
+    parent_artifact_id uuid,
+    current_version integer DEFAULT 1 NOT NULL,
+    tags text[] DEFAULT '{}'::text[] NOT NULL,
+    entities jsonb DEFAULT '[]'::jsonb NOT NULL,
+    lineage jsonb DEFAULT '[]'::jsonb NOT NULL,
+    sensitivity text DEFAULT 'PRIVATE'::text NOT NULL,
+    searchable_text_ref text,
+    deleted_at timestamp with time zone,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT artifacts_current_version_check CHECK ((current_version >= 1)),
+    CONSTRAINT artifacts_sensitivity_check CHECK ((sensitivity = ANY (ARRAY['PUBLIC'::text, 'PRIVATE'::text, 'CONFIDENTIAL'::text, 'REGULATED'::text]))),
+    CONSTRAINT artifacts_type_check CHECK ((type = ANY (ARRAY['REPORT'::text, 'DOCUMENT'::text, 'TRANSCRIPT'::text, 'MEETING_BUNDLE'::text, 'IMAGE'::text, 'VIDEO'::text, 'AUDIO'::text, 'CODE'::text, 'DATASET'::text, 'OTHER'::text])))
+);
+
+ALTER TABLE ONLY public.artifacts FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: audit_events; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.audit_events (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    seq bigint NOT NULL,
+    actor_type text NOT NULL,
+    actor_id text,
+    action text NOT NULL,
+    task_id uuid,
+    tool_id text,
+    external_effect boolean DEFAULT false NOT NULL,
+    payload jsonb DEFAULT '{}'::jsonb NOT NULL,
+    prev_hash character(64),
+    hash character(64) NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT audit_events_actor_type_check CHECK ((actor_type = ANY (ARRAY['user'::text, 'agent'::text, 'system'::text, 'service'::text]))),
+    CONSTRAINT audit_events_chain_root CHECK (((seq = 1) = (prev_hash IS NULL))),
+    CONSTRAINT audit_events_hash_check CHECK ((hash ~ '^[0-9a-f]{64}$'::text)),
+    CONSTRAINT audit_events_prev_hash_check CHECK ((prev_hash ~ '^[0-9a-f]{64}$'::text)),
+    CONSTRAINT audit_events_seq_check CHECK ((seq >= 1))
+);
+
+ALTER TABLE ONLY public.audit_events FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: audit_sequences; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.audit_sequences (
+    tenant_id uuid NOT NULL,
+    next_seq bigint DEFAULT 1 NOT NULL,
+    CONSTRAINT audit_sequences_next_seq_check CHECK ((next_seq >= 1))
+);
+
+ALTER TABLE ONLY public.audit_sequences FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: conversations; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.conversations (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    created_by uuid NOT NULL,
+    title text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone
+);
+
+ALTER TABLE ONLY public.conversations FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: devices; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.devices (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    user_id uuid NOT NULL,
+    platform text NOT NULL,
+    name text NOT NULL,
+    app_version text NOT NULL,
+    last_seen_at timestamp with time zone,
+    revoked_at timestamp with time zone,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT devices_platform_check CHECK ((platform = ANY (ARRAY['macos'::text, 'windows'::text, 'linux'::text, 'web'::text])))
+);
+
+ALTER TABLE ONLY public.devices FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: event_streams; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.event_streams (
+    stream_kind text NOT NULL,
+    stream_id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    next_seq bigint DEFAULT 1 NOT NULL,
+    closed_at timestamp with time zone,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT event_streams_next_seq_check CHECK ((next_seq >= 1)),
+    CONSTRAINT event_streams_stream_kind_check CHECK ((stream_kind = ANY (ARRAY['task'::text, 'conversation'::text, 'meeting'::text])))
+);
+
+ALTER TABLE ONLY public.event_streams FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: memberships; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.memberships (
+    tenant_id uuid NOT NULL,
+    user_id uuid NOT NULL,
+    role text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT memberships_role_check CHECK ((role = ANY (ARRAY['owner'::text, 'admin'::text, 'member'::text])))
+);
+
+ALTER TABLE ONLY public.memberships FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: plugin_installs; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.plugin_installs (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    plugin_id text NOT NULL,
+    version text NOT NULL,
+    installed_by uuid NOT NULL,
+    state text NOT NULL,
+    installed_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT plugin_installs_state_check CHECK ((state = ANY (ARRAY['INSTALLED'::text, 'DISABLED'::text, 'UNINSTALLED'::text])))
+);
+
+ALTER TABLE ONLY public.plugin_installs FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: plugin_permissions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.plugin_permissions (
+    install_id uuid NOT NULL,
+    scope text NOT NULL,
+    tenant_id uuid NOT NULL,
+    granted boolean NOT NULL,
+    granted_by uuid,
+    granted_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+ALTER TABLE ONLY public.plugin_permissions FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: plugin_publishers; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.plugin_publishers (
+    id text NOT NULL,
+    display_name text NOT NULL,
+    public_key text NOT NULL,
+    verified boolean DEFAULT false NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT plugin_publishers_id_check CHECK ((id ~ '^[a-z0-9][a-z0-9-]{0,63}$'::text))
+);
+
+
+--
+-- Name: plugin_versions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.plugin_versions (
+    plugin_id text NOT NULL,
+    version text NOT NULL,
+    min_core_version text NOT NULL,
+    compliance_profile text NOT NULL,
+    manifest jsonb NOT NULL,
+    manifest_sha256 character(64) NOT NULL,
+    signature text,
+    signature_state text NOT NULL,
+    published_at timestamp with time zone DEFAULT now() NOT NULL,
+    yanked_at timestamp with time zone,
+    CONSTRAINT plugin_versions_compliance_profile_check CHECK ((compliance_profile = ANY (ARRAY['GENERAL'::text, 'ENTERPRISE'::text, 'REGULATED_HEALTH'::text, 'CARE'::text, 'FINANCIAL'::text]))),
+    CONSTRAINT plugin_versions_manifest_sha256_check CHECK ((manifest_sha256 ~ '^[0-9a-f]{64}$'::text)),
+    CONSTRAINT plugin_versions_min_core_version_check CHECK ((min_core_version ~ '^\d+\.\d+\.\d+$'::text)),
+    CONSTRAINT plugin_versions_signature_state_check CHECK ((signature_state = ANY (ARRAY['VERIFIED'::text, 'BUILTIN_TRUSTED'::text, 'UNSIGNED'::text]))),
+    CONSTRAINT plugin_versions_signed CHECK ((signature_state <> 'UNSIGNED'::text)),
+    CONSTRAINT plugin_versions_version_check CHECK ((version ~ '^\d+\.\d+\.\d+$'::text))
+);
+
+
+--
+-- Name: plugins; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.plugins (
+    id text NOT NULL,
+    publisher_id text NOT NULL,
+    name text NOT NULL,
+    category text NOT NULL,
+    builtin boolean DEFAULT false NOT NULL,
+    removable boolean DEFAULT true NOT NULL,
+    latest_version text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT plugins_category_check CHECK ((category = ANY (ARRAY['connector'::text, 'capability'::text, 'domain-agent'::text, 'skill-pack'::text, 'dashboard-extension'::text]))),
+    CONSTRAINT plugins_id_check CHECK ((id ~ '^[a-z0-9]+(\.[a-z0-9-]+)+$'::text))
+);
+
+
+--
+-- Name: schema_migrations; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.schema_migrations (
+    version character varying NOT NULL
+);
+
+
+--
+-- Name: sessions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.sessions (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    user_id uuid NOT NULL,
+    device_id uuid NOT NULL,
+    refresh_token_hash text NOT NULL,
+    rotated_from uuid,
+    expires_at timestamp with time zone NOT NULL,
+    revoked_at timestamp with time zone,
+    revoked_reason text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+ALTER TABLE ONLY public.sessions FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: task_events; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.task_events (
+    event_id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    stream_kind text NOT NULL,
+    stream_id uuid NOT NULL,
+    sequence bigint NOT NULL,
+    type text NOT NULL,
+    task_id uuid,
+    conversation_id uuid,
+    payload jsonb NOT NULL,
+    idempotency_key text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT task_events_sequence_check CHECK ((sequence >= 1))
+);
+
+ALTER TABLE ONLY public.task_events FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: tasks; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.tasks (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    created_by uuid NOT NULL,
+    conversation_id uuid,
+    kind text NOT NULL,
+    title text,
+    status text NOT NULL,
+    input jsonb DEFAULT '{}'::jsonb NOT NULL,
+    result_artifact_id uuid,
+    error jsonb,
+    idempotency_key text NOT NULL,
+    workflow_id text NOT NULL,
+    run_id text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    started_at timestamp with time zone,
+    completed_at timestamp with time zone,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT tasks_status_check CHECK ((status = ANY (ARRAY['PENDING'::text, 'RUNNING'::text, 'WAITING_APPROVAL'::text, 'CANCELLING'::text, 'COMPLETED'::text, 'FAILED'::text, 'CANCELLED'::text])))
+);
+
+ALTER TABLE ONLY public.tasks FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: tenants; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.tenants (
+    id uuid NOT NULL,
+    name text NOT NULL,
+    kind text NOT NULL,
+    compliance_profile text DEFAULT 'GENERAL'::text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT tenants_compliance_profile_check CHECK ((compliance_profile = ANY (ARRAY['GENERAL'::text, 'ENTERPRISE'::text, 'REGULATED_HEALTH'::text, 'CARE'::text, 'FINANCIAL'::text]))),
+    CONSTRAINT tenants_kind_check CHECK ((kind = ANY (ARRAY['personal'::text, 'organization'::text])))
+);
+
+ALTER TABLE ONLY public.tenants FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: turns; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.turns (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    conversation_id uuid NOT NULL,
+    role text NOT NULL,
+    modality text DEFAULT 'text'::text NOT NULL,
+    content jsonb DEFAULT '{}'::jsonb NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT turns_modality_check CHECK ((modality = ANY (ARRAY['text'::text, 'voice'::text, 'mixed'::text]))),
+    CONSTRAINT turns_role_check CHECK ((role = ANY (ARRAY['user'::text, 'assistant'::text, 'system'::text])))
+);
+
+ALTER TABLE ONLY public.turns FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: users; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.users (
+    id uuid NOT NULL,
+    email public.citext NOT NULL,
+    display_name text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone
+);
+
+ALTER TABLE ONLY public.users FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: action_receipts action_receipts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.action_receipts
+    ADD CONSTRAINT action_receipts_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: approvals approvals_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.approvals
+    ADD CONSTRAINT approvals_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: artifact_versions artifact_versions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.artifact_versions
+    ADD CONSTRAINT artifact_versions_pkey PRIMARY KEY (artifact_id, version);
+
+
+--
+-- Name: artifacts artifacts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.artifacts
+    ADD CONSTRAINT artifacts_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: audit_events audit_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.audit_events
+    ADD CONSTRAINT audit_events_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: audit_sequences audit_sequences_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.audit_sequences
+    ADD CONSTRAINT audit_sequences_pkey PRIMARY KEY (tenant_id);
+
+
+--
+-- Name: conversations conversations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.conversations
+    ADD CONSTRAINT conversations_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: devices devices_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.devices
+    ADD CONSTRAINT devices_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: event_streams event_streams_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.event_streams
+    ADD CONSTRAINT event_streams_pkey PRIMARY KEY (stream_kind, stream_id);
+
+
+--
+-- Name: memberships memberships_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.memberships
+    ADD CONSTRAINT memberships_pkey PRIMARY KEY (tenant_id, user_id);
+
+
+--
+-- Name: plugin_installs plugin_installs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.plugin_installs
+    ADD CONSTRAINT plugin_installs_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: plugin_permissions plugin_permissions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.plugin_permissions
+    ADD CONSTRAINT plugin_permissions_pkey PRIMARY KEY (install_id, scope);
+
+
+--
+-- Name: plugin_publishers plugin_publishers_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.plugin_publishers
+    ADD CONSTRAINT plugin_publishers_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: plugin_versions plugin_versions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.plugin_versions
+    ADD CONSTRAINT plugin_versions_pkey PRIMARY KEY (plugin_id, version);
+
+
+--
+-- Name: plugins plugins_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.plugins
+    ADD CONSTRAINT plugins_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: schema_migrations schema_migrations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.schema_migrations
+    ADD CONSTRAINT schema_migrations_pkey PRIMARY KEY (version);
+
+
+--
+-- Name: sessions sessions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.sessions
+    ADD CONSTRAINT sessions_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: task_events task_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.task_events
+    ADD CONSTRAINT task_events_pkey PRIMARY KEY (event_id);
+
+
+--
+-- Name: tasks tasks_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tasks
+    ADD CONSTRAINT tasks_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: tenants tenants_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tenants
+    ADD CONSTRAINT tenants_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: turns turns_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.turns
+    ADD CONSTRAINT turns_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: action_receipts_by_task; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX action_receipts_by_task ON public.action_receipts USING btree (tenant_id, task_id);
+
+
+--
+-- Name: action_receipts_idem; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX action_receipts_idem ON public.action_receipts USING btree (task_id, tool_id, inputs_hash);
+
+
+--
+-- Name: approvals_pending; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX approvals_pending ON public.approvals USING btree (tenant_id, expires_at) WHERE (status = 'PENDING'::text);
+
+
+--
+-- Name: approvals_task_step; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX approvals_task_step ON public.approvals USING btree (task_id, step_index);
+
+
+--
+-- Name: artifact_versions_sha; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX artifact_versions_sha ON public.artifact_versions USING btree (tenant_id, sha256);
+
+
+--
+-- Name: artifacts_by_task; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX artifacts_by_task ON public.artifacts USING btree (source_task_id) WHERE (source_task_id IS NOT NULL);
+
+
+--
+-- Name: artifacts_by_type; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX artifacts_by_type ON public.artifacts USING btree (tenant_id, type, updated_at DESC) WHERE (deleted_at IS NULL);
+
+
+--
+-- Name: artifacts_recent; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX artifacts_recent ON public.artifacts USING btree (tenant_id, updated_at DESC, id DESC) WHERE (deleted_at IS NULL);
+
+
+--
+-- Name: audit_events_by_action; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX audit_events_by_action ON public.audit_events USING btree (tenant_id, action, seq DESC);
+
+
+--
+-- Name: audit_events_chain; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX audit_events_chain ON public.audit_events USING btree (tenant_id, seq);
+
+
+--
+-- Name: audit_events_external; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX audit_events_external ON public.audit_events USING btree (tenant_id, seq DESC) WHERE external_effect;
+
+
+--
+-- Name: audit_events_prev; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX audit_events_prev ON public.audit_events USING btree (tenant_id, prev_hash) WHERE (prev_hash IS NOT NULL);
+
+
+--
+-- Name: conversations_recent; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX conversations_recent ON public.conversations USING btree (tenant_id, updated_at DESC, id DESC) WHERE (deleted_at IS NULL);
+
+
+--
+-- Name: devices_by_user; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX devices_by_user ON public.devices USING btree (tenant_id, user_id) WHERE (revoked_at IS NULL);
+
+
+--
+-- Name: plugin_installs_unique; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX plugin_installs_unique ON public.plugin_installs USING btree (tenant_id, plugin_id) WHERE (state <> 'UNINSTALLED'::text);
+
+
+--
+-- Name: plugin_permissions_granted; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX plugin_permissions_granted ON public.plugin_permissions USING btree (tenant_id, scope) WHERE granted;
+
+
+--
+-- Name: sessions_rotation_chain; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX sessions_rotation_chain ON public.sessions USING btree (rotated_from) WHERE (rotated_from IS NOT NULL);
+
+
+--
+-- Name: sessions_user_active; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX sessions_user_active ON public.sessions USING btree (tenant_id, user_id) WHERE (revoked_at IS NULL);
+
+
+--
+-- Name: task_events_idem; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX task_events_idem ON public.task_events USING btree (stream_kind, stream_id, idempotency_key) WHERE (idempotency_key IS NOT NULL);
+
+
+--
+-- Name: task_events_stream_seq; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX task_events_stream_seq ON public.task_events USING btree (stream_kind, stream_id, sequence);
+
+
+--
+-- Name: tasks_active; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX tasks_active ON public.tasks USING btree (tenant_id, status) WHERE (status = ANY (ARRAY['PENDING'::text, 'RUNNING'::text, 'WAITING_APPROVAL'::text, 'CANCELLING'::text]));
+
+
+--
+-- Name: tasks_idempotency; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX tasks_idempotency ON public.tasks USING btree (tenant_id, created_by, idempotency_key);
+
+
+--
+-- Name: tasks_recent; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX tasks_recent ON public.tasks USING btree (tenant_id, id DESC);
+
+
+--
+-- Name: tasks_workflow_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX tasks_workflow_id ON public.tasks USING btree (workflow_id);
+
+
+--
+-- Name: turns_by_conversation; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX turns_by_conversation ON public.turns USING btree (conversation_id, id);
+
+
+--
+-- Name: users_email_key; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX users_email_key ON public.users USING btree (email) WHERE (deleted_at IS NULL);
+
+
+--
+-- Name: action_receipts action_receipts_append_only; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER action_receipts_append_only BEFORE DELETE OR UPDATE OR TRUNCATE ON public.action_receipts FOR EACH STATEMENT EXECUTE FUNCTION public.astra_deny_mutation();
+
+
+--
+-- Name: audit_events audit_events_append_only; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER audit_events_append_only BEFORE DELETE OR UPDATE OR TRUNCATE ON public.audit_events FOR EACH STATEMENT EXECUTE FUNCTION public.astra_deny_mutation();
+
+
+--
+-- Name: task_events task_events_append_only; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER task_events_append_only BEFORE DELETE OR UPDATE OR TRUNCATE ON public.task_events FOR EACH STATEMENT EXECUTE FUNCTION public.astra_deny_mutation();
+
+
+--
+-- Name: action_receipts action_receipts_approved_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.action_receipts
+    ADD CONSTRAINT action_receipts_approved_by_fkey FOREIGN KEY (approved_by) REFERENCES public.users(id);
+
+
+--
+-- Name: action_receipts action_receipts_task_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.action_receipts
+    ADD CONSTRAINT action_receipts_task_id_fkey FOREIGN KEY (task_id) REFERENCES public.tasks(id);
+
+
+--
+-- Name: action_receipts action_receipts_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.action_receipts
+    ADD CONSTRAINT action_receipts_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+
+--
+-- Name: approvals approvals_decided_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.approvals
+    ADD CONSTRAINT approvals_decided_by_fkey FOREIGN KEY (decided_by) REFERENCES public.users(id);
+
+
+--
+-- Name: approvals approvals_task_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.approvals
+    ADD CONSTRAINT approvals_task_id_fkey FOREIGN KEY (task_id) REFERENCES public.tasks(id);
+
+
+--
+-- Name: approvals approvals_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.approvals
+    ADD CONSTRAINT approvals_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+
+--
+-- Name: artifact_versions artifact_versions_artifact_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.artifact_versions
+    ADD CONSTRAINT artifact_versions_artifact_id_fkey FOREIGN KEY (artifact_id) REFERENCES public.artifacts(id);
+
+
+--
+-- Name: artifact_versions artifact_versions_created_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.artifact_versions
+    ADD CONSTRAINT artifact_versions_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.users(id);
+
+
+--
+-- Name: artifact_versions artifact_versions_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.artifact_versions
+    ADD CONSTRAINT artifact_versions_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+
+--
+-- Name: artifacts artifacts_owner_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.artifacts
+    ADD CONSTRAINT artifacts_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES public.users(id);
+
+
+--
+-- Name: artifacts artifacts_parent_artifact_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.artifacts
+    ADD CONSTRAINT artifacts_parent_artifact_id_fkey FOREIGN KEY (parent_artifact_id) REFERENCES public.artifacts(id);
+
+
+--
+-- Name: artifacts artifacts_source_task_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.artifacts
+    ADD CONSTRAINT artifacts_source_task_id_fkey FOREIGN KEY (source_task_id) REFERENCES public.tasks(id);
+
+
+--
+-- Name: artifacts artifacts_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.artifacts
+    ADD CONSTRAINT artifacts_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+
+--
+-- Name: audit_events audit_events_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.audit_events
+    ADD CONSTRAINT audit_events_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+
+--
+-- Name: audit_sequences audit_sequences_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.audit_sequences
+    ADD CONSTRAINT audit_sequences_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+
+--
+-- Name: conversations conversations_created_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.conversations
+    ADD CONSTRAINT conversations_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.users(id);
+
+
+--
+-- Name: conversations conversations_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.conversations
+    ADD CONSTRAINT conversations_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+
+--
+-- Name: devices devices_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.devices
+    ADD CONSTRAINT devices_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+
+--
+-- Name: devices devices_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.devices
+    ADD CONSTRAINT devices_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
+-- Name: event_streams event_streams_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.event_streams
+    ADD CONSTRAINT event_streams_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+
+--
+-- Name: memberships memberships_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.memberships
+    ADD CONSTRAINT memberships_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+
+--
+-- Name: memberships memberships_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.memberships
+    ADD CONSTRAINT memberships_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
+-- Name: plugin_installs plugin_installs_installed_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.plugin_installs
+    ADD CONSTRAINT plugin_installs_installed_by_fkey FOREIGN KEY (installed_by) REFERENCES public.users(id);
+
+
+--
+-- Name: plugin_installs plugin_installs_plugin_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.plugin_installs
+    ADD CONSTRAINT plugin_installs_plugin_id_fkey FOREIGN KEY (plugin_id) REFERENCES public.plugins(id);
+
+
+--
+-- Name: plugin_installs plugin_installs_plugin_id_version_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.plugin_installs
+    ADD CONSTRAINT plugin_installs_plugin_id_version_fkey FOREIGN KEY (plugin_id, version) REFERENCES public.plugin_versions(plugin_id, version);
+
+
+--
+-- Name: plugin_installs plugin_installs_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.plugin_installs
+    ADD CONSTRAINT plugin_installs_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+
+--
+-- Name: plugin_permissions plugin_permissions_granted_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.plugin_permissions
+    ADD CONSTRAINT plugin_permissions_granted_by_fkey FOREIGN KEY (granted_by) REFERENCES public.users(id);
+
+
+--
+-- Name: plugin_permissions plugin_permissions_install_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.plugin_permissions
+    ADD CONSTRAINT plugin_permissions_install_id_fkey FOREIGN KEY (install_id) REFERENCES public.plugin_installs(id);
+
+
+--
+-- Name: plugin_permissions plugin_permissions_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.plugin_permissions
+    ADD CONSTRAINT plugin_permissions_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+
+--
+-- Name: plugin_versions plugin_versions_plugin_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.plugin_versions
+    ADD CONSTRAINT plugin_versions_plugin_id_fkey FOREIGN KEY (plugin_id) REFERENCES public.plugins(id);
+
+
+--
+-- Name: plugins plugins_publisher_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.plugins
+    ADD CONSTRAINT plugins_publisher_id_fkey FOREIGN KEY (publisher_id) REFERENCES public.plugin_publishers(id);
+
+
+--
+-- Name: sessions sessions_device_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.sessions
+    ADD CONSTRAINT sessions_device_id_fkey FOREIGN KEY (device_id) REFERENCES public.devices(id);
+
+
+--
+-- Name: sessions sessions_rotated_from_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.sessions
+    ADD CONSTRAINT sessions_rotated_from_fkey FOREIGN KEY (rotated_from) REFERENCES public.sessions(id);
+
+
+--
+-- Name: sessions sessions_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.sessions
+    ADD CONSTRAINT sessions_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+
+--
+-- Name: sessions sessions_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.sessions
+    ADD CONSTRAINT sessions_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
+-- Name: task_events task_events_conversation_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.task_events
+    ADD CONSTRAINT task_events_conversation_id_fkey FOREIGN KEY (conversation_id) REFERENCES public.conversations(id);
+
+
+--
+-- Name: task_events task_events_stream_kind_stream_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.task_events
+    ADD CONSTRAINT task_events_stream_kind_stream_id_fkey FOREIGN KEY (stream_kind, stream_id) REFERENCES public.event_streams(stream_kind, stream_id);
+
+
+--
+-- Name: task_events task_events_task_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.task_events
+    ADD CONSTRAINT task_events_task_id_fkey FOREIGN KEY (task_id) REFERENCES public.tasks(id);
+
+
+--
+-- Name: task_events task_events_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.task_events
+    ADD CONSTRAINT task_events_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+
+--
+-- Name: tasks tasks_conversation_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tasks
+    ADD CONSTRAINT tasks_conversation_id_fkey FOREIGN KEY (conversation_id) REFERENCES public.conversations(id);
+
+
+--
+-- Name: tasks tasks_created_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tasks
+    ADD CONSTRAINT tasks_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.users(id);
+
+
+--
+-- Name: tasks tasks_result_artifact_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tasks
+    ADD CONSTRAINT tasks_result_artifact_fk FOREIGN KEY (result_artifact_id) REFERENCES public.artifacts(id);
+
+
+--
+-- Name: tasks tasks_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tasks
+    ADD CONSTRAINT tasks_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+
+--
+-- Name: turns turns_conversation_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.turns
+    ADD CONSTRAINT turns_conversation_id_fkey FOREIGN KEY (conversation_id) REFERENCES public.conversations(id);
+
+
+--
+-- Name: turns turns_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.turns
+    ADD CONSTRAINT turns_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+
+--
+-- Name: action_receipts; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.action_receipts ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: action_receipts action_receipts_tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY action_receipts_tenant_isolation ON public.action_receipts USING ((tenant_id = public.astra_current_tenant())) WITH CHECK ((tenant_id = public.astra_current_tenant()));
+
+
+--
+-- Name: approvals; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.approvals ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: approvals approvals_tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY approvals_tenant_isolation ON public.approvals USING ((tenant_id = public.astra_current_tenant())) WITH CHECK ((tenant_id = public.astra_current_tenant()));
+
+
+--
+-- Name: artifact_versions; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.artifact_versions ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: artifact_versions artifact_versions_tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY artifact_versions_tenant_isolation ON public.artifact_versions USING ((tenant_id = public.astra_current_tenant())) WITH CHECK ((tenant_id = public.astra_current_tenant()));
+
+
+--
+-- Name: artifacts; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.artifacts ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: artifacts artifacts_tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY artifacts_tenant_isolation ON public.artifacts USING ((tenant_id = public.astra_current_tenant())) WITH CHECK ((tenant_id = public.astra_current_tenant()));
+
+
+--
+-- Name: audit_events; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.audit_events ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: audit_events audit_events_tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY audit_events_tenant_isolation ON public.audit_events USING ((tenant_id = public.astra_current_tenant())) WITH CHECK ((tenant_id = public.astra_current_tenant()));
+
+
+--
+-- Name: audit_sequences; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.audit_sequences ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: audit_sequences audit_sequences_tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY audit_sequences_tenant_isolation ON public.audit_sequences USING ((tenant_id = public.astra_current_tenant())) WITH CHECK ((tenant_id = public.astra_current_tenant()));
+
+
+--
+-- Name: conversations; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.conversations ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: conversations conversations_tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY conversations_tenant_isolation ON public.conversations USING ((tenant_id = public.astra_current_tenant())) WITH CHECK ((tenant_id = public.astra_current_tenant()));
+
+
+--
+-- Name: devices; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.devices ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: devices devices_tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY devices_tenant_isolation ON public.devices USING ((tenant_id = public.astra_current_tenant())) WITH CHECK ((tenant_id = public.astra_current_tenant()));
+
+
+--
+-- Name: event_streams; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.event_streams ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: event_streams event_streams_tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY event_streams_tenant_isolation ON public.event_streams USING ((tenant_id = public.astra_current_tenant())) WITH CHECK ((tenant_id = public.astra_current_tenant()));
+
+
+--
+-- Name: memberships; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.memberships ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: memberships memberships_tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY memberships_tenant_isolation ON public.memberships USING ((tenant_id = public.astra_current_tenant())) WITH CHECK ((tenant_id = public.astra_current_tenant()));
+
+
+--
+-- Name: plugin_installs; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.plugin_installs ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: plugin_installs plugin_installs_tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY plugin_installs_tenant_isolation ON public.plugin_installs USING ((tenant_id = public.astra_current_tenant())) WITH CHECK ((tenant_id = public.astra_current_tenant()));
+
+
+--
+-- Name: plugin_permissions; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.plugin_permissions ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: plugin_permissions plugin_permissions_tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY plugin_permissions_tenant_isolation ON public.plugin_permissions USING ((tenant_id = public.astra_current_tenant())) WITH CHECK ((tenant_id = public.astra_current_tenant()));
+
+
+--
+-- Name: sessions; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.sessions ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: sessions sessions_tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY sessions_tenant_isolation ON public.sessions USING ((tenant_id = public.astra_current_tenant())) WITH CHECK ((tenant_id = public.astra_current_tenant()));
+
+
+--
+-- Name: task_events; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.task_events ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: task_events task_events_tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY task_events_tenant_isolation ON public.task_events USING ((tenant_id = public.astra_current_tenant())) WITH CHECK ((tenant_id = public.astra_current_tenant()));
+
+
+--
+-- Name: tasks; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.tasks ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: tasks tasks_tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY tasks_tenant_isolation ON public.tasks USING ((tenant_id = public.astra_current_tenant())) WITH CHECK ((tenant_id = public.astra_current_tenant()));
+
+
+--
+-- Name: tenants; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.tenants ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: tenants tenants_tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY tenants_tenant_isolation ON public.tenants USING ((id = public.astra_current_tenant())) WITH CHECK ((id = public.astra_current_tenant()));
+
+
+--
+-- Name: turns; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.turns ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: turns turns_tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY turns_tenant_isolation ON public.turns USING ((tenant_id = public.astra_current_tenant())) WITH CHECK ((tenant_id = public.astra_current_tenant()));
+
+
+--
+-- Name: users; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: users users_tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY users_tenant_isolation ON public.users USING ((EXISTS ( SELECT 1
+   FROM public.memberships m
+  WHERE ((m.user_id = users.id) AND (m.tenant_id = public.astra_current_tenant()))))) WITH CHECK ((EXISTS ( SELECT 1
+   FROM public.memberships m
+  WHERE ((m.user_id = users.id) AND (m.tenant_id = public.astra_current_tenant())))));
+
+
+--
+-- PostgreSQL database dump complete
+--
+
+
+--
+-- Dbmate schema migrations
+--
+
+INSERT INTO public.schema_migrations (version) VALUES
+    ('20260826010001'),
+    ('20260826010002'),
+    ('20260826010003'),
+    ('20260826010004'),
+    ('20260826010005'),
+    ('20260826010006'),
+    ('20260826010007'),
+    ('20260826010008');
