@@ -12,6 +12,7 @@ export * from './uuid.js';
 export * from './ids.js';
 export * from './primitives.js';
 export * from './codec.js';
+export * from './canonical.js';
 export * from './errors.js';
 export * from './approval.js';
 export * from './artifact.js';

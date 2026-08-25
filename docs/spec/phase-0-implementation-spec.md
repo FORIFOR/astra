@@ -339,6 +339,37 @@ Phase 0 では承認 UI は無いが、**承認待ち・承認・失効の状態
 理由: 正本 §9 の「勝手に成功扱いしない」「全 write action は receipt」は後付けが極めて困難な性質で、
 Phase 4 以降に追加すると既存タスク全部の再監査が要る。
 
+#### 承認判定（`packages/policy`）
+
+「この操作に承認が要るか」を決める場所を 1 つに固定する。Agent や tool が個別に
+判断すると必ずどこかが緩くなる。
+
+| リスク             | 承認 | receipt | 外部副作用 | 読み返し | 正本の例     |
+| ------------------ | ---- | ------- | ---------- | -------- | ------------ |
+| `READ`             | 不要 | 不要    | なし       | 不要     | email search |
+| `REVERSIBLE_WRITE` | 不要 | 必要    | なし       | 不要     | draft create |
+| `EXTERNAL_COMMIT`  | 必要 | 必要    | あり       | 不要     | send email   |
+| `DESTRUCTIVE`      | 必要 | 必要    | あり       | 不要     | delete files |
+| `REGULATED`        | 必要 | 必要    | あり       | 不要     | modify EHR   |
+| `FINANCIAL`        | 必要 | 必要    | あり       | **必要** | place trade  |
+
+上乗せ規則:
+
+1. manifest の `requires_confirmation: true` は、低リスクでも承認を要求できる（§3.6 不変条件 1）。
+2. `REGULATED_HEALTH` / `CARE` / `FINANCIAL` profile では、**あらゆる write が承認必須**になる。
+   「取り消せるから聞かない」という一般則を規制領域へ持ち込まない（正本 §15.5・§15.6・§22）。
+3. 同 profile では **参照も監査対象**。アクセスログ自体が要件になるため。
+4. `FINANCIAL` は金額・価格・注文種別の読み返しを必須にする（正本 §15.7・§22）。
+
+承認の有効期限:
+
+| 対象        | TTL     | 根拠                                                             |
+| ----------- | ------- | ---------------------------------------------------------------- |
+| 既定        | 24 時間 | §6.5 の承認待ち上限と一致させる                                  |
+| `FINANCIAL` | 5 分    | 価格が動く。古い承認で発注させない（正本 §25「stale approval」） |
+
+期限切れの承認は実行に使わない（`isApprovalUsable`）。
+
 ### 3.5 Artifact
 
 正本 §2.3 の情報モデルを Phase 0 で必要な範囲に絞る。`entities[]` / `lineage[]` は World Model
@@ -1161,11 +1192,31 @@ export function withSpan<T>(name: string, fn: (span: Span) => Promise<T>): Promi
 export function auditEvent(e: AuditEventInput): Promise<void>;
 ```
 
-- OpenTelemetry。trace context は Temporal のヘッダで workflow / activity へ伝播させる。
+- トレースは `@opentelemetry/api` だけに依存する。SDK の初期化は各サービスの起動側で行う。
+  SDK 未設定なら API 側が no-op になるので、呼び出しコードは変えなくてよい。
 - ログに **PII とプロンプト本文を出さない**。出すのは ID と種別と件数。
+  伏せるキーは `REDACTED_KEYS` に列挙し、1 階層目から 3 階層目まで pino の redact で潰す。
+  機密フィールドを増やしたらこの配列にも足す。
 - 相関 ID: `request_id`（HTTP 単位） / `task_id` / `trace_id` の 3 本を全ログに載せる。
+- trace context は Temporal のヘッダで workflow / activity へ伝播させる（P0-11）。
 
 ### 13.2 監査必須イベント（Phase 0）
+
+ハッシュ連鎖の性質:
+
+```text
+hash(n) = sha256(canonicalJson({ ...row(n), prev_hash: hash(n-1) }))
+```
+
+- 連鎖リンクは**保存済みの hash** を辿る。1 行だけ書き換えられた場合、壊れるのは
+  その行の `hash_mismatch` だけになり、**どの行が改変されたか一意に分かる**。
+- 改竄者が hash も付け替えたなら、後続の `prev_hash` が合わなくなって `broken_link` が出る。
+- `audit_sequences` の行を `UPDATE ... RETURNING` で更新することで、同一テナントの追記が
+  トランザクション単位で直列化される。この行ロックが連鎖の前提になっている。
+- **限界**: 連鎖全体を整合的に作り直されると、この仕組みだけでは検出できない。
+  定期的に最新 hash を外部へ固定する運用が要る（§18 OQ-10）。
+
+監査必須イベント:
 
 `session.created` `session.rotated` `session.reuse_detected` `session.revoked`
 `plugin.install` `plugin.uninstall` `plugin.permission.grant` `plugin.permission.revoke`
@@ -1229,8 +1280,8 @@ CI で検査する（実装は Phase 0 の P0-16）:
 | P0-03 | `packages/contracts`: Task / Approval / ActionReceipt / Artifact / PluginManifest (P0-02) | 全スキーマの正常系・異常系 test                                                        |
 | P0-04 | `infra/db` マイグレーション 0001〜0005 + RLS + append-only トリガ (P0-03)                 | `pnpm db:migrate` 成功、`schema.sql` 生成物をコミット                                  |
 | P0-05 | `packages/db`: pool / `withTenant` / `withSystem` / `withIdentity` / 生成型 (P0-04)       | 別テナントの行が見えないことの結合テスト。ネスト規則と identity ロールの権限境界も検査 |
-| P0-06 | `packages/telemetry`: logger / span / auditEvent + ハッシュ連鎖 (P0-05)                   | 連鎖検証ユーティリティの test                                                          |
-| P0-07 | `packages/policy`: ActionRisk → 承認要否の判定表 (P0-03)                                  | 正本 §9.2 の全リスク区分を網羅する test                                                |
+| P0-06 | `packages/telemetry`: logger / span / auditEvent + ハッシュ連鎖 (P0-05)                   | 連鎖の検証・改竄検出・並行追記の直列化を実 DB で検査                                   |
+| P0-07 | `packages/policy`: ActionRisk → 承認要否の判定表 (P0-03)                                  | 正本 §9.2 の全リスク区分 × compliance profile を網羅する test                          |
 | P0-08 | api-gateway: HTTP 基盤 / エラー / request_id / rate limit / healthz / readyz (P0-05,06)   | `/readyz` が依存断で 503                                                               |
 | P0-09 | 認証: dev token 発行 / refresh ローテーション / 再利用検知 / `GET /v1/me` (P0-08)         | 再利用検知で全 session 失効 + audit                                                    |
 | P0-10 | task-service: `POST /v1/tasks` の受理と冪等化、Temporal 起動 (P0-09)                      | 同一 Idempotency-Key の二重 POST が同一 task を返す                                    |
@@ -1311,17 +1362,18 @@ AC-8〜AC-16 は「後から入れられない性質」を Phase 0 で固定す�
 
 ## 18. 未決事項（Phase 1 着手前に決める）
 
-| ID   | 論点                                                                                                              | 影響範囲                         | 期限           |
-| ---- | ----------------------------------------------------------------------------------------------------------------- | -------------------------------- | -------------- |
-| OQ-1 | ID プロバイダ（自前 OIDC / Firebase Auth 継続 / WorkOS 等）。旧 DeepNote は apple/google/firebase/line を実装済み | §4.3, P0-09, 移植計画            | Phase 1 開始前 |
-| OQ-2 | テナントモデル。個人利用が主か、法人テナント + 招待 + ロールを最初から持つか                                      | §4.1, DDL, 課金                  | Phase 1 開始前 |
-| OQ-3 | LLM プロバイダとルーティング方針。正本はモデル提供者を一切指定していない                                          | Conversation/Research/Agent 全体 | Phase 1 開始前 |
-| OQ-4 | Temporal Cloud か自前運用か（正本 §16.2 は "Temporal Cloud initially"）                                           | 運用コスト、namespace 設計       | Phase 1        |
-| OQ-5 | データリージョン。REGULATED（介護・医療）を国内リージョン必須とするか                                             | §22, インフラ設計                | Phase 4        |
-| OQ-6 | `task_events` の保持期間と削除ジョブ、コールドストレージ移送                                                      | ストレージコスト                 | Phase 2        |
-| OQ-7 | ESLint 導入時期と規約（Phase 0 は Prettier のみ）                                                                 | 開発体験                         | Phase 1        |
-| OQ-8 | 課金・利用量計測。正本に記述が無い                                                                                | Plugin 課金表示（§2.4）に必要    | Phase 4        |
-| OQ-9 | サービス名 "Astra" の商標・ドメイン確認                                                                           | ブランド全体                     | Phase 1        |
+| ID    | 論点                                                                                                                                   | 影響範囲                         | 期限           |
+| ----- | -------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- | -------------- |
+| OQ-1  | ID プロバイダ（自前 OIDC / Firebase Auth 継続 / WorkOS 等）。旧 DeepNote は apple/google/firebase/line を実装済み                      | §4.3, P0-09, 移植計画            | Phase 1 開始前 |
+| OQ-2  | テナントモデル。個人利用が主か、法人テナント + 招待 + ロールを最初から持つか                                                           | §4.1, DDL, 課金                  | Phase 1 開始前 |
+| OQ-3  | LLM プロバイダとルーティング方針。正本はモデル提供者を一切指定していない                                                               | Conversation/Research/Agent 全体 | Phase 1 開始前 |
+| OQ-4  | Temporal Cloud か自前運用か（正本 §16.2 は "Temporal Cloud initially"）                                                                | 運用コスト、namespace 設計       | Phase 1        |
+| OQ-5  | データリージョン。REGULATED（介護・医療）を国内リージョン必須とするか                                                                  | §22, インフラ設計                | Phase 4        |
+| OQ-6  | `task_events` の保持期間と削除ジョブ、コールドストレージ移送                                                                           | ストレージコスト                 | Phase 2        |
+| OQ-7  | ESLint 導入時期と規約（Phase 0 は Prettier のみ）                                                                                      | 開発体験                         | Phase 1        |
+| OQ-8  | 課金・利用量計測。正本に記述が無い                                                                                                     | Plugin 課金表示（§2.4）に必要    | Phase 4        |
+| OQ-9  | サービス名 "Astra" の商標・ドメイン確認                                                                                                | ブランド全体                     | Phase 1        |
+| OQ-10 | 監査ハッシュ連鎖の外部アンカリング（最新 hash を WORM ストレージや別システムへ定期固定）。連鎖全体の作り直しはアプリ内では検出できない | §13.2, 規制対応                  | Phase 4        |
 
 ---
 

@@ -18,7 +18,8 @@ OS のどこからでも呼び出せる **Task Dock**。North Star は **Intent 
 ## 現在地
 
 **Phase 0 進行中。** 完了: P0-01（scaffold）/ P0-02・P0-03（`@astra/contracts`）/
-P0-04（DB スキーマ）/ P0-05（`@astra/db`）。次: P0-06（`@astra/telemetry`）。
+P0-04（DB スキーマ）/ P0-05（`@astra/db`）/ P0-06（`@astra/telemetry`）/ P0-07（`@astra/policy`）。
+次: P0-08（api-gateway の HTTP 基盤）。
 
 実装順は正本 §28 に従う。
 

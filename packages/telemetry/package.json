@@ -21,6 +21,13 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@astra/contracts": "workspace:*"
+    "@astra/contracts": "workspace:*",
+    "@astra/db": "workspace:*",
+    "@opentelemetry/api": "^1.9.1",
+    "kysely": "catalog:",
+    "pino": "^10.3.1"
+  },
+  "devDependencies": {
+    "vitest": "catalog:"
   }
 }

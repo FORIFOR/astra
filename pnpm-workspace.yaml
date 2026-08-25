@@ -1,19 +1,16 @@
 packages:
-  - 'apps/*'
-  - 'services/*'
-  - 'workers/*'
-  - 'packages/*'
+  - apps/*
+  - services/*
+  - workers/*
+  - packages/*
 
-# 共有依存はここで一元管理する。package 側は "catalog:" と書く。
-# バージョンがパッケージ間でずれると、型の不一致やテストランナーの挙動差が
-# 原因不明のビルド失敗として現れるため。
 catalog:
   '@types/node': ^22.15.0
   '@types/pg': ^8.15.0
   '@types/react': ^19.1.0
   '@types/react-dom': ^19.1.0
   '@vitejs/plugin-react': ^4.6.0
-  kysely: ^0.29.0
+  kysely: 0.29.5
   kysely-codegen: ^0.20.0
   pg: ^8.16.0
   prettier: ^3.6.0
@@ -22,5 +19,5 @@ catalog:
   tsx: ^4.20.0
   typescript: ^5.9.0
   vite: ^7.0.0
-  vitest: ^3.2.0
+  vitest: 3.2.7
   zod: ^4.4.0

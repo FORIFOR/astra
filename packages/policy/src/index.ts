@@ -1,11 +1,20 @@
 /**
  * @astra/policy
  *
- * Action risk classification, approval requirements and regulated-domain profiles.
- *
- * Phase 0 scaffold only — no implementation yet.
- * Normative spec: docs/spec/phase-0-implementation-spec.md
- * Product spec:   docs/spec/new_ai_platform_design_spec_v0.1.md
+ * 「この操作に承認が要るか」「receipt と監査が要るか」を決める唯一の場所。
+ * 正本 §9 / §22、実装仕様 §3.4。
  */
-
-export const POLICY_PACKAGE = '@astra/policy' as const;
+export {
+  evaluate,
+  isWrite,
+  hasExternalEffect,
+  approvalTtlMs,
+  isApprovalUsable,
+  assertRiskTableComplete,
+  COVERED_RISKS,
+  DEFAULT_APPROVAL_TTL_MS,
+  FINANCIAL_APPROVAL_TTL_MS,
+  type ActionContext,
+  type PolicyDecision,
+  type ApprovalLike,
+} from './risk.js';

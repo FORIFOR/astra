@@ -1,11 +1,25 @@
 /**
  * @astra/telemetry
  *
- * Structured logging, tracing, metrics and audit-event emission helpers.
- *
- * Phase 0 scaffold only — no implementation yet.
- * Normative spec: docs/spec/phase-0-implementation-spec.md
- * Product spec:   docs/spec/new_ai_platform_design_spec_v0.1.md
+ * 構造化ログ / トレース / 監査イベント。実装仕様 §13。
  */
-
-export const TELEMETRY_PACKAGE = '@astra/telemetry' as const;
+export {
+  createLogger,
+  withCorrelation,
+  REDACTED_KEYS,
+  type Logger,
+  type LoggerOptions,
+  type Correlation,
+} from './logger.js';
+export { withSpan, tracer, currentTraceId } from './tracing.js';
+export {
+  appendAuditEvent,
+  readAuditChain,
+  verifyAuditChain,
+  computeAuditHash,
+  AUDIT_ACTIONS,
+  type AuditAction,
+  type AuditEventInput,
+  type AuditHashInput,
+  type AuditChainProblem,
+} from './audit.js';

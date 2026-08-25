@@ -22,5 +22,8 @@
   },
   "dependencies": {
     "@astra/contracts": "workspace:*"
+  },
+  "devDependencies": {
+    "vitest": "catalog:"
   }
 }
