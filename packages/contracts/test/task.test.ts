@@ -5,6 +5,7 @@ import {
   TASK_TRANSITIONS,
   TERMINAL_TASK_STATUSES,
   Task,
+  TaskDockState,
   canTransition,
   dockStateFor,
   isTerminal,
@@ -47,13 +48,55 @@ describe('task dock state mapping', () => {
     for (const s of TASK_STATUSES) expect(dockStateFor(s)).toBeTruthy();
   });
 
-  it('uses the progress phase to pick the running face', () => {
-    expect(dockStateFor('RUNNING')).toBe('THINKING');
-    expect(dockStateFor('RUNNING', 'researching')).toBe('RESEARCHING');
-    expect(dockStateFor('RUNNING', 'acting')).toBe('ACTING');
+  it('collapses every running status into a single WORKING face', () => {
+    // UI/UX §1.2「Show Work, Not Agents」: どの工程かは Work Surface の step が示す
+    expect(dockStateFor('PENDING')).toBe('WORKING');
+    expect(dockStateFor('RUNNING')).toBe('WORKING');
+    expect(dockStateFor('CANCELLING')).toBe('WORKING');
     expect(dockStateFor('WAITING_APPROVAL')).toBe('WAITING_APPROVAL');
     expect(dockStateFor('COMPLETED')).toBe('RESULT');
-    expect(dockStateFor('FAILED')).toBe('ERROR');
+    expect(dockStateFor('CANCELLED')).toBe('READY');
+  });
+
+  it('separates failures a retry can fix from ones needing a person', () => {
+    // UI/UX §3・§21: 見せる next action が違うので同じ状態にしない
+    const retryable = {
+      code: 'common.unavailable' as const,
+      message: 'x',
+      step_index: 0,
+      retryable: true,
+      recovery: 'retry' as const,
+    };
+    const blocked = {
+      code: 'plugin.permission_denied' as const,
+      message: 'x',
+      step_index: 0,
+      retryable: false,
+      recovery: 'grant_permission' as const,
+    };
+    expect(dockStateFor('FAILED', retryable)).toBe('FAILED_RECOVERABLE');
+    expect(dockStateFor('FAILED', blocked)).toBe('FAILED_BLOCKED');
+    // 情報が無いときは「再試行できるかもしれない」側に倒す
+    expect(dockStateFor('FAILED')).toBe('FAILED_RECOVERABLE');
+  });
+
+  it('has no state the UI/UX spec does not declare', () => {
+    // UI/UX §3 の Global Interaction State Machine と一致していること
+    expect(new Set(TaskDockState.options)).toEqual(
+      new Set([
+        'HIDDEN',
+        'READY',
+        'LISTENING',
+        'TYPING',
+        'UNDERSTANDING',
+        'WORKING',
+        'WAITING_APPROVAL',
+        'RESULT',
+        'FAILED_RECOVERABLE',
+        'FAILED_BLOCKED',
+        'MINIMIZED',
+      ]),
+    );
   });
 });
 

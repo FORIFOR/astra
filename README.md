@@ -2,18 +2,19 @@
 
 会話（音声 / テキスト）から、調べる・作る・動かすまでを一貫して行う AI プラットフォーム。
 
-ユーザーに見せるトップレベル UI は **4 タブ固定**（ホーム / AIエージェント / ライブラリ / プラグイン）と、
+ユーザーに見せるトップレベル UI は **4 タブ固定**（Home / Work / Library / Apps）と、
 OS のどこからでも呼び出せる **Task Dock**。North Star は **Intent → Done**。
 
 > 話す / 打つ → AI が理解する → 調べる / 動く → 結果が Library に残る
 
 ## ドキュメント
 
-| 文書                                                                                             | 役割                            |
-| ------------------------------------------------------------------------------------------------ | ------------------------------- |
-| [`docs/spec/new_ai_platform_design_spec_v0.1.md`](docs/spec/new_ai_platform_design_spec_v0.1.md) | **正本**（製品仕様 v0.1、凍結） |
-| [`docs/spec/phase-0-implementation-spec.md`](docs/spec/phase-0-implementation-spec.md)           | Phase 0 実装仕様                |
-| [`docs/adr/`](docs/adr/)                                                                         | 設計判断の記録                  |
+| 文書                                                                                             | 役割                                            |
+| ------------------------------------------------------------------------------------------------ | ----------------------------------------------- |
+| [`docs/spec/new_ai_platform_design_spec_v0.1.md`](docs/spec/new_ai_platform_design_spec_v0.1.md) | **正本**（製品仕様 v0.1、凍結）                 |
+| [`docs/spec/astra_ui_ux_detailed_spec_v0.1.md`](docs/spec/astra_ui_ux_detailed_spec_v0.1.md)     | UI/UX 詳細仕様 v0.1（凍結。正本は同名 `.docx`） |
+| [`docs/spec/phase-0-implementation-spec.md`](docs/spec/phase-0-implementation-spec.md)           | Phase 0 実装仕様                                |
+| [`docs/adr/`](docs/adr/)                                                                         | 設計判断の記録                                  |
 
 ## 現在地
 

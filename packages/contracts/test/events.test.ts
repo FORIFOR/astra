@@ -32,6 +32,46 @@ describe('event envelope', () => {
     expect(parsed.success).toBe(true);
   });
 
+  it('carries the detail an unbounded task needs to feel alive', () => {
+    // UI/UX §6.1「12 sources」/ §6.2「段数が決まらない処理は %を出さない」
+    const raw = base('task.progress', {
+      phase: 'researching',
+      step_index: 1,
+      step_count: null,
+      message: '公式資料と最新ニュースを照合中',
+      detail: '12 sources',
+      elapsed_ms: 8400,
+      retrying: false,
+    });
+    const parsed = EventEnvelope.parse(raw);
+    expect(parsed.type).toBe('task.progress');
+    if (parsed.type === 'task.progress') {
+      expect(parsed.payload.detail).toBe('12 sources');
+      expect(parsed.payload.step_count).toBeNull();
+    }
+  });
+
+  it('defaults the optional progress fields so old emitters keep working', () => {
+    const parsed = EventEnvelope.parse(
+      base('task.progress', { phase: 'thinking', step_index: 0, step_count: 1, message: 'x' }),
+    );
+    if (parsed.type === 'task.progress') {
+      expect(parsed.payload.detail).toBeNull();
+      expect(parsed.payload.retrying).toBe(false);
+    }
+  });
+
+  it('gives the approval event the label the primary button needs', () => {
+    const raw = base('task.waiting_approval', {
+      approval_id: uuidv7(),
+      risk: 'EXTERNAL_COMMIT',
+      summary: '3人にメールを送信します',
+      primary_action_label: '3件送信する',
+      expires_at: new Date().toISOString(),
+    });
+    expect(EventEnvelope.safeParse(raw).success).toBe(true);
+  });
+
   it('discriminates payloads by type', () => {
     // task.completed の payload を task.progress に付けたら落ちる
     const bad = base('task.progress', { result_artifact_id: null, duration_ms: 1 });

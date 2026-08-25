@@ -1,11 +1,12 @@
 # Astra — Phase 0 実装仕様書
 
-| 項目           | 内容                                                                                              |
-| -------------- | ------------------------------------------------------------------------------------------------- |
-| 正本           | `docs/spec/new_ai_platform_design_spec_v0.1.md`（sha256 `8324a139…52eb516d`, 読み取り専用で凍結） |
-| 本書の位置づけ | 正本 §28 Phase 0 を「コードが書ける粒度」まで確定した従属文書                                     |
-| 版             | 0.1（2026-08-26）                                                                                 |
-| 対象読者       | Phase 0 を実装する担当（人 / エージェント）                                                       |
+| 項目           | 内容                                                                                                                   |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| 正本           | `docs/spec/new_ai_platform_design_spec_v0.1.md`（sha256 `8324a139…52eb516d`, 読み取り専用で凍結）                      |
+| UI/UX 正本     | `docs/spec/astra_ui_ux_detailed_spec_v0.1.docx`（sha256 `caeb149f…a1a51a1a`, 凍結）。**UI に関しては製品仕様より優先** |
+| 本書の位置づけ | 正本 §28 Phase 0 を「コードが書ける粒度」まで確定した従属文書                                                          |
+| 版             | 0.2（2026-08-26。UI/UX 詳細仕様 v0.1 との突合を反映）                                                                  |
+| 対象読者       | Phase 0 を実装する担当（人 / エージェント）                                                                            |
 
 本書に書かれていないことは実装しない。正本と本書が矛盾した場合は **正本が優先**し、
 本書側を修正する（逸脱は §17 に登録してから採用する）。
@@ -1436,24 +1437,28 @@ AC-8〜AC-16 は「後から入れられない性質」を Phase 0 で固定す�
 いずれも正本の記述を否定するものではなく、実装可能な粒度へ落とす際の決定。
 新たな逸脱を作る場合は本表に追記してから実装する。
 
-| ID    | 逸脱・確定                                                                                        | 根拠                                                                                                                                                                       |
-| ----- | ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| D-01  | Phase 0〜3 はサービス境界を保ったまま **1 プロセスにデプロイ**する                                | §2.3。Phase 0 の検証対象を絞るため。境界維持ルールを §14.3 で機械検査                                                                                                      |
-| D-02  | `packages/db` を §26 の構成に追加                                                                 | SQL 正本 + 型付きアクセスの置き場所が §26 に無い                                                                                                                           |
-| D-03  | Event envelope に `stream_kind` / `stream_id` / `tenant_id` を追加                                | 正本 §20 の「sequence で再送」を実装するには列の識別子が必要                                                                                                               |
-| D-03b | イベント型に `task.cancelled` を追加                                                              | 正本 §24 が cancellation を必須にしているため                                                                                                                              |
-| D-04  | サーバ→クライアントは SSE、双方向のみ WS                                                          | 正本 §19 の `GET …/stream` と `WS …/audio` の書き分けに一致                                                                                                                |
-| D-05  | ID は UUIDv7、prefix 無し                                                                         | §1.2                                                                                                                                                                       |
-| D-06  | `conversations` / `turns` の DDL を Phase 0 で作る（書き込みは Phase 1）                          | `tasks.conversation_id` の FK 先が必要                                                                                                                                     |
-| D-07  | ORM を使わず dbmate(SQL) + Kysely                                                                 | 正本 §18 が SQL 前提。スキーマ所有権を SQL に残す                                                                                                                          |
-| D-08  | JSON は snake_case で統一                                                                         | 正本 §20 の封筒が snake_case。二重規約を作らない                                                                                                                           |
-| D-09  | Phase 0 で承認状態機械と action receipt を実装する                                                | 後付け困難。正本 §9 の「勝手に成功扱いしない」は骨格側の性質                                                                                                               |
-| D-10  | manifest に `data_accessed` / `compliance_profile` / `builtin` / `removable` を必須追加           | 正本 §2.4 の Plugin detail page 必須表示項目と §22 の profile mandatory を manifest 側で強制するため                                                                       |
-| D-11  | 越境アクセスは 403 ではなく 404 を返す                                                            | 資源の存在自体を漏らさない                                                                                                                                                 |
-| D-12  | plugin manifest のスキーマと不変条件を `packages/plugin-sdk` ではなく `packages/contracts` に置く | manifest は catalog 応答としても境界を越えるため。plugin-sdk は YAML 読み込みと署名検証を担当                                                                              |
-| D-13  | codec に不透明キー集合（`OPAQUE_KEYS`）を設ける                                                   | `task.input` などユーザー由来 JSON のキーを変換すると値が壊れる。§1.1                                                                                                      |
-| D-14  | 認証専用の DB スコープ `withIdentity` と最小権限 BYPASSRLS ロール `astra_identity` を追加         | 認証はテナント確定前に走るため RLS 下では users を引けず、サインアップは membership 不在で INSERT が弾かれる。RLS 緩和ではなく GRANT で BYPASSRLS の範囲を閉じ込める。§5.4 |
-| D-15  | refresh token のハッシュに Argon2id ではなく sha256 を使う                                        | 対象が 256bit の乱数で辞書攻撃が成立しないため。Argon2id は利用者が選ぶ低エントロピーの秘密（共有リンクのパスワード）に限定する。§4.2                                      |
+| ID    | 逸脱・確定                                                                                                                       | 根拠                                                                                                                                                                       |
+| ----- | -------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D-01  | Phase 0〜3 はサービス境界を保ったまま **1 プロセスにデプロイ**する                                                               | §2.3。Phase 0 の検証対象を絞るため。境界維持ルールを §14.3 で機械検査                                                                                                      |
+| D-02  | `packages/db` を §26 の構成に追加                                                                                                | SQL 正本 + 型付きアクセスの置き場所が §26 に無い                                                                                                                           |
+| D-03  | Event envelope に `stream_kind` / `stream_id` / `tenant_id` を追加                                                               | 正本 §20 の「sequence で再送」を実装するには列の識別子が必要                                                                                                               |
+| D-03b | イベント型に `task.cancelled` を追加                                                                                             | 正本 §24 が cancellation を必須にしているため                                                                                                                              |
+| D-04  | サーバ→クライアントは SSE、双方向のみ WS                                                                                         | 正本 §19 の `GET …/stream` と `WS …/audio` の書き分けに一致                                                                                                                |
+| D-05  | ID は UUIDv7、prefix 無し                                                                                                        | §1.2                                                                                                                                                                       |
+| D-06  | `conversations` / `turns` の DDL を Phase 0 で作る（書き込みは Phase 1）                                                         | `tasks.conversation_id` の FK 先が必要                                                                                                                                     |
+| D-07  | ORM を使わず dbmate(SQL) + Kysely                                                                                                | 正本 §18 が SQL 前提。スキーマ所有権を SQL に残す                                                                                                                          |
+| D-08  | JSON は snake_case で統一                                                                                                        | 正本 §20 の封筒が snake_case。二重規約を作らない                                                                                                                           |
+| D-09  | Phase 0 で承認状態機械と action receipt を実装する                                                                               | 後付け困難。正本 §9 の「勝手に成功扱いしない」は骨格側の性質                                                                                                               |
+| D-10  | manifest に `data_accessed` / `compliance_profile` / `builtin` / `removable` を必須追加                                          | 正本 §2.4 の Plugin detail page 必須表示項目と §22 の profile mandatory を manifest 側で強制するため                                                                       |
+| D-11  | 越境アクセスは 403 ではなく 404 を返す                                                                                           | 資源の存在自体を漏らさない                                                                                                                                                 |
+| D-12  | plugin manifest のスキーマと不変条件を `packages/plugin-sdk` ではなく `packages/contracts` に置く                                | manifest は catalog 応答としても境界を越えるため。plugin-sdk は YAML 読み込みと署名検証を担当                                                                              |
+| D-13  | codec に不透明キー集合（`OPAQUE_KEYS`）を設ける                                                                                  | `task.input` などユーザー由来 JSON のキーを変換すると値が壊れる。§1.1                                                                                                      |
+| D-14  | 認証専用の DB スコープ `withIdentity` と最小権限 BYPASSRLS ロール `astra_identity` を追加                                        | 認証はテナント確定前に走るため RLS 下では users を引けず、サインアップは membership 不在で INSERT が弾かれる。RLS 緩和ではなく GRANT で BYPASSRLS の範囲を閉じ込める。§5.4 |
+| D-15  | refresh token のハッシュに Argon2id ではなく sha256 を使う                                                                       | 対象が 256bit の乱数で辞書攻撃が成立しないため。Argon2id は利用者が選ぶ低エントロピーの秘密（共有リンクのパスワード）に限定する。§4.2                                      |
+| D-16  | トップ Navigation の表示名を Home / Work / Library / Apps にする（正本 §2 は ホーム / AIエージェント / ライブラリ / プラグイン） | UI/UX §2.1 の名称方針。内部実装は Agent Runtime / Plugin Registry の名前を保持し、一般ユーザー向け表示だけ変える。タブが 4 つである点は変わらない                          |
+| D-17  | `TaskDockState` を UI/UX §3 の状態機械に合わせる                                                                                 | THINKING/RESEARCHING/ACTING を `WORKING` へ畳み、`TYPING` を追加、`ERROR` を `FAILED_RECOVERABLE` / `FAILED_BLOCKED` に分割。§20                                           |
+| D-18  | `Approval` に `impact`（主ボタン文言・対象件数・外部/内部・取り消し可否）を必須で持たせる                                        | UI/UX §14.1「Primary button は『承認』ではなく結果を書く」。サーバが影響範囲を持たないとクライアントが文言を組み立てられない。§20                                          |
+| D-19  | `task.progress` に `detail` / `elapsed_ms` / `retrying` を追加                                                                   | UI/UX §6.1「12 sources」/ §6.2「段数が決まらない処理は % を出さない」「retry 中は『再試行中』に置き換える」。§20                                                           |
 
 ---
 
@@ -1474,8 +1479,69 @@ AC-8〜AC-16 は「後から入れられない性質」を Phase 0 で固定す�
 
 ---
 
+## 20. UI/UX 仕様との突合
+
+`docs/spec/astra_ui_ux_detailed_spec_v0.1.docx` を読み込み、Phase 0 の契約と突き合わせた結果。
+**UI に関しては UI/UX 仕様が製品仕様より優先**する（`docs/README.md`）。
+
+### 20.1 契約へ反映した差分
+
+| #   | UI/UX 仕様                                                                   | Phase 0 での対応                                                                                      |
+| --- | ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| 1   | §2.1 トップ Navigation は Home / Work / Library / Apps                       | 表示名のみ変更（逸脱 D-16）。タブ数 4 固定は不変。API・DB の名前は変えない                            |
+| 2   | §3 状態機械に `TYPING` / `WORKING` / `FAILED_RECOVERABLE` / `FAILED_BLOCKED` | `TaskDockState` を差し替え（D-17）。`dockStateFor` はエラーコードから 2 種の失敗を判別する            |
+| 3   | §14.1 主ボタンは結果を書く。対象件数・外部/内部・取り消し可否を表示          | `Approval.impact` を必須化（D-18）。`task.waiting_approval` にも `primary_action_label` を載せる      |
+| 4   | §6.1「12 sources」/ §6.2 進捗率は算出できるときだけ                          | `task.progress` に `detail` / `elapsed_ms` / `retrying` を追加（D-19）。段数不明は `step_count: null` |
+| 5   | §21 エラーは次の行動を説明する                                               | `TaskError.recovery`（retry / reconnect / grant_permission / reauthenticate / handoff / none）を追加  |
+
+契約のメジャー版を `0.2.0` へ上げた（§3.8）。
+
+### 20.2 すでに一致していたもの
+
+- §2.2 の 4 段階 Surface と正本 §4.4 の Progressive Surface
+- §4.4「Dismiss と Cancel を同一操作にしない」→ `task.cancelled` は明示的な取消のみ（D-03b）
+- §14 の Risk 表 → `packages/policy` の判定表（§3.4）と同一
+- §23 の Telemetry 目標値 → 正本 §23 の SLO と同一
+- §22「permission は利用直前に purpose-first」→ §9.3 の install 時スコープ部分許可
+
+### 20.3 Phase 0 では扱わないが、後続で必要になるもの
+
+| UI/UX §  | 内容                                                                | 対応 Phase                                  |
+| -------- | ------------------------------------------------------------------- | ------------------------------------------- |
+| §4.1     | Task Dock の geometry（Ready 560×56 など）                          | UI-1 / Phase 1                              |
+| §5       | Context Lens。context を remove でき、remove 後は plan を再評価する | UI-1 / Phase 1。Context Engine の設計に効く |
+| §7.1–7.2 | Workspace の 3-column とブレークポイント                            | UI-0 / Phase 1                              |
+| §17      | Design tokens（色・タイポ・spacing・radius）                        | UI-0 / Phase 1。`packages/ui-kit` に置く    |
+| §18–19   | Motion と Accessibility                                             | UI-0 / Phase 1                              |
+| §20      | ショートカット（Option+Space 等、OS/IME 競合の検出）                | UI-1 / Phase 1                              |
+| §12      | Meeting UX（Notes first、minimal indicator、citation jump）         | Phase 3                                     |
+| §13・§15 | Research / Evidence の Progressive Disclosure（L0〜L3）             | Phase 2                                     |
+| §16      | Notifications の Severity 4 段階                                    | Phase 6                                     |
+
+### 20.4 UI 実装順（UI/UX §24）
+
+Phase 0 の完了後、Phase 1 は UI-0 から始める。
+
+```text
+UI-0  Design tokens + shell + shared state      Light/Dark + 4-tab shell
+UI-1  Task Dock + Context Lens                  OS 上で intent → context 確認
+UI-2  Work Surface + progress + result          durable task の状態が見える
+UI-3  Home / Work / Library                     task → artifact continuity
+UI-4  Meeting start / indicator / notes / transcript
+UI-5  Meeting finalize / citation jump
+UI-6  Approval / receipts
+UI-7  Apps / Pack install
+```
+
+UI/UX 仕様 §25 の AC-01〜AC-15 は Phase 1 以降の受け入れ条件であり、
+Phase 0 の Exit（§16 の AC-1〜AC-16）とは別物。混同しない。
+
+---
+
 ## 19. 参照
 
 - 正本: `docs/spec/new_ai_platform_design_spec_v0.1.md`
+- UI/UX 正本: `docs/spec/astra_ui_ux_detailed_spec_v0.1.docx`（閲覧用抽出: 同名 `.md`）
+- 仕様書の階層と優先順位: `docs/README.md`
 - ADR: `docs/adr/`
 - 旧資産: `/Users/horioshuuhei/Projects/deepnote-desktop`（§12）

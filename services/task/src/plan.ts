@@ -97,16 +97,60 @@ export function planTask(kind: string, input: Record<string, unknown>): TaskPlan
   }
 }
 
-/** 承認カードに出す内容。tool 名や JSON を含めない（正本 §9.3）。 */
-export function approvalSummaryFor(step: TaskStep): {
-  summary: string;
-  details: { label: string; value: string }[];
-} {
+export interface ApprovalCard {
+  readonly summary: string;
+  readonly details: { label: string; value: string }[];
+  readonly impact: {
+    readonly primary_action_label: string;
+    readonly affected_count: number | null;
+    readonly scope: 'internal' | 'external';
+    readonly reversible: boolean;
+    readonly recovery_note: string | null;
+  };
+}
+
+/**
+ * 承認カードに出す内容。tool 名や JSON を含めない（正本 §9.3）。
+ *
+ * 主ボタンの文言は「承認」ではなく**結果**を書く（UI/UX §14.1）。
+ * クライアント側で組み立てられるようにサーバが影響範囲を持つ。
+ */
+export function approvalSummaryFor(step: TaskStep): ApprovalCard {
+  const external =
+    step.risk === 'EXTERNAL_COMMIT' ||
+    step.risk === 'DESTRUCTIVE' ||
+    step.risk === 'REGULATED' ||
+    step.risk === 'FINANCIAL';
+  const count = typeof step.args['count'] === 'number' ? step.args['count'] : null;
+
   return {
     summary: step.message,
     details: Object.entries(step.args)
       .filter(([, v]) => typeof v === 'string' || typeof v === 'number')
       .slice(0, 10)
       .map(([label, value]) => ({ label, value: String(value) })),
+    impact: {
+      primary_action_label: primaryActionLabel(step, count),
+      affected_count: count,
+      scope: external ? 'external' : 'internal',
+      reversible: step.risk === 'REVERSIBLE_WRITE',
+      recovery_note: step.risk === 'REVERSIBLE_WRITE' ? '実行後に取り消せます' : null,
+    },
   };
+}
+
+function primaryActionLabel(step: TaskStep, count: number | null): string {
+  const suffix = count === null ? '' : `${count}件`;
+  switch (step.risk) {
+    case 'DESTRUCTIVE':
+      return suffix ? `${suffix}削除する` : '削除する';
+    case 'FINANCIAL':
+      return '注文を確定する';
+    case 'REGULATED':
+      return '記録を更新する';
+    case 'EXTERNAL_COMMIT':
+      return suffix ? `${suffix}実行する` : '実行する';
+    default:
+      return '実行する';
+  }
 }

@@ -4,6 +4,7 @@ import {
   ActionReceipt,
   Approval,
   ApprovalDetail,
+  ApprovalImpact,
   riskRank,
 } from '../src/approval.js';
 import { uuidv7 } from '../src/uuid.js';
@@ -43,6 +44,13 @@ describe('approval card', () => {
       risk: 'EXTERNAL_COMMIT',
       summary: '送信します',
       details: [{ label: 'To', value: 'a@example.com' }],
+      impact: {
+        primary_action_label: '3件送信する',
+        affected_count: 3,
+        scope: 'external',
+        reversible: false,
+        recovery_note: null,
+      },
       editable_fields: ['subject'],
       status: 'PENDING',
       expires_at: now,
@@ -51,6 +59,29 @@ describe('approval card', () => {
       created_at: now,
     });
     expect(r.success).toBe(true);
+  });
+
+  it('requires the impact the confirmation card has to render', () => {
+    // UI/UX §14.1: 対象件数・外部/内部・取り消し可否・主ボタン文言
+    expect(Object.keys(ApprovalImpact.shape).sort()).toEqual([
+      'affected_count',
+      'primary_action_label',
+      'recovery_note',
+      'reversible',
+      'scope',
+    ]);
+  });
+
+  it('rejects an empty primary action label', () => {
+    // 「承認」ではなく結果を書かせるための最低限の歯止め
+    const impact = {
+      primary_action_label: '',
+      affected_count: null,
+      scope: 'external',
+      reversible: false,
+      recovery_note: null,
+    };
+    expect(ApprovalImpact.safeParse(impact).success).toBe(false);
   });
 });
 

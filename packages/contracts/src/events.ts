@@ -78,15 +78,29 @@ export const TaskStartedPayload = z.object({
 export const TaskProgressPayload = z.object({
   phase: ProgressPhase,
   step_index: z.number().int().nonnegative().nullable(),
+  /**
+   * 全体の段数。UI/UX §6.2「進捗率は真の進行率を計算できる Task のみ表示」。
+   * 段数が事前に決まらない処理（Research 等）は null にして、%表示させない。
+   */
   step_count: z.number().int().nonnegative().nullable(),
   /** ユーザーに見せる自然文（正本 §7.2「tool progress naturalization」）。tool 名を出さない。 */
   message: z.string().max(200),
+  /**
+   * 進行の実感を出す補助表示。UI/UX §6.1 の「12 sources」に相当。
+   * 段数が不明な処理では、これと経過時間が唯一の手掛かりになる。
+   */
+  detail: z.string().max(60).nullable().default(null),
+  elapsed_ms: z.number().int().nonnegative().nullable().default(null),
+  /** 再試行中か。UI/UX §6.2「失敗 step は赤く固定せず、retry 中なら『再試行中』に置き換える」。 */
+  retrying: z.boolean().default(false),
 });
 
 export const TaskWaitingApprovalPayload = z.object({
   approval_id: ApprovalId,
   risk: ActionRisk,
   summary: z.string().max(200),
+  /** 主ボタンの文言。UI/UX §14.1「Primary button は結果を書く」。 */
+  primary_action_label: z.string().max(40),
   expires_at: Timestamp,
 });
 

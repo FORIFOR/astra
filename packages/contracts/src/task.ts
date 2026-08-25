@@ -47,12 +47,27 @@ export function canTransition(from: TaskStatus, to: TaskStatus): boolean {
   return TASK_TRANSITIONS[from].includes(to);
 }
 
+/**
+ * 次に取れる行動。UI/UX §21「エラーは仕事への影響と next action を説明する」の機械可読な半分。
+ * 表示文言はクライアントが `code` と合わせて組み立てる（サーバに i18n を持たせない）。
+ */
+export const RecoveryHint = z.enum([
+  'retry', // 再試行で直り得る
+  'reconnect', // 接続が切れている
+  'grant_permission', // 権限が足りない
+  'reauthenticate', // 認証し直しが要る
+  'handoff', // 人が引き取るしかない
+  'none',
+]);
+export type RecoveryHint = z.infer<typeof RecoveryHint>;
+
 export const TaskError = z.object({
   code: ErrorCode,
   message: z.string(),
   /** どの step で落ちたか。正本 §24「勝手に成功扱いしない」の説明責任のため。 */
   step_index: z.number().int().nonnegative().nullable(),
   retryable: z.boolean(),
+  recovery: RecoveryHint.default('none'),
 });
 export type TaskError = z.infer<typeof TaskError>;
 
@@ -88,43 +103,68 @@ export const CancelTaskRequest = z.object({
 export type CancelTaskRequest = z.infer<typeof CancelTaskRequest>;
 
 /**
- * Task Dock の UI ステート（正本 §4.2）。
- * サーバの TaskStatus と 1:1 にしない。HIDDEN/READY/LISTENING/UNDERSTANDING/MINIMIZED は
- * クライアント固有で、サーバ状態を持たない（実装仕様 §3.3 の対応表）。
+ * Task Dock の UI ステート。**UI/UX 仕様 §3 が正**（正本 §4.2 をより細かくしたもの）。
+ *
+ * サーバの TaskStatus と 1:1 にしない。
+ * HIDDEN / READY / LISTENING / TYPING / UNDERSTANDING / MINIMIZED は
+ * クライアント固有で、サーバ状態を持たない。
+ *
+ * 正本 §4.2 との差分（逸脱 D-17）:
+ *   - THINKING / RESEARCHING / ACTING を `WORKING` 1 つに畳む。
+ *     どの工程かは Work Surface の semantic step が示すので、Dock 側で分ける必要がない
+ *     （UI/UX §1.2「Show Work, Not Agents」/ §6.1）。
+ *   - `TYPING` を追加（UI/UX §3・§4.1 で Ready と別の geometry を持つ）。
+ *   - `ERROR` を `FAILED_RECOVERABLE` / `FAILED_BLOCKED` に分ける。
+ *     再試行で直るものと、人間の操作（権限・接続・入力）が要るものとで
+ *     見せる次の行動が違う（UI/UX §3・§21）。
  */
 export const TaskDockState = z.enum([
   'HIDDEN',
   'READY',
   'LISTENING',
+  'TYPING',
   'UNDERSTANDING',
-  'THINKING',
-  'RESEARCHING',
-  'ACTING',
+  'WORKING',
   'WAITING_APPROVAL',
   'RESULT',
-  'ERROR',
+  'FAILED_RECOVERABLE',
+  'FAILED_BLOCKED',
   'MINIMIZED',
 ]);
 export type TaskDockState = z.infer<typeof TaskDockState>;
 
-/** サーバ状態から Task Dock の既定表示状態を導く。phase 未指定なら THINKING。 */
-export function dockStateFor(
-  status: TaskStatus,
-  phase?: 'thinking' | 'researching' | 'acting',
-): TaskDockState {
+/**
+ * 人間の操作なしには先へ進めないエラー。UI/UX §3 FAILED_BLOCKED / §21。
+ * これ以外は再試行や代替経路で回復し得るものとして FAILED_RECOVERABLE に倒す。
+ */
+const BLOCKING_ERROR_CODES: readonly string[] = [
+  'auth.forbidden',
+  'auth.expired_token',
+  'auth.invalid_token',
+  'plugin.permission_denied',
+  'plugin.incompatible',
+  'host.capability_denied',
+  'host.not_connected',
+  'approval.expired',
+  'approval.rejected',
+  'task.approval_timeout',
+];
+
+/** サーバ状態から Task Dock の既定表示状態を導く。 */
+export function dockStateFor(status: TaskStatus, error?: TaskError | null): TaskDockState {
   switch (status) {
     case 'PENDING':
     case 'RUNNING':
     case 'CANCELLING':
-      if (phase === 'researching') return 'RESEARCHING';
-      if (phase === 'acting') return 'ACTING';
-      return 'THINKING';
+      return 'WORKING';
     case 'WAITING_APPROVAL':
       return 'WAITING_APPROVAL';
     case 'COMPLETED':
       return 'RESULT';
     case 'FAILED':
-      return 'ERROR';
+      return error && BLOCKING_ERROR_CODES.includes(error.code)
+        ? 'FAILED_BLOCKED'
+        : 'FAILED_RECOVERABLE';
     case 'CANCELLED':
       return 'READY';
   }
