@@ -1,11 +1,32 @@
 /**
  * @astra/service-task
  *
- * Task lifecycle, Temporal integration, durable progress and approval handling.
- *
- * Phase 0 scaffold only — no implementation yet.
- * Normative spec: docs/spec/phase-0-implementation-spec.md
- * Product spec:   docs/spec/new_ai_platform_design_spec_v0.1.md
+ * タスクのライフサイクル、Temporal 連携、進捗。実装仕様 §6・§11。
  */
-
-export const SERVICE_TASK_PACKAGE = '@astra/service-task' as const;
+export { TaskService, type CreateTaskParams, type CreateTaskResult } from './service.js';
+export { createTaskActivities, type ActivityDeps } from './activities.js';
+export {
+  appendEvent,
+  readEventsAfter,
+  ensureStream,
+  channelFor,
+  NoopPublisher,
+  type EventPublisher,
+} from './events.js';
+export {
+  planTask,
+  isKnownTaskKind,
+  KNOWN_TASK_KINDS,
+  type TaskPlan,
+  type TaskStep,
+} from './plan.js';
+export {
+  TASK_QUEUE,
+  workflowIdFor,
+  TemporalTaskRuntime,
+  type TaskRuntime,
+  type StartedWorkflow,
+} from './runtime/index.js';
+export type { TaskWorkflowInput, TaskResult, TaskStateSnapshot } from './workflows.js';
+export type { TaskActivities } from './activity-types.js';
+export { createTaskWorker, defaultWorkflowsPath, type TaskWorkerOptions } from './worker.js';

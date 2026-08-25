@@ -923,6 +923,18 @@ const persistenceActivityOptions = {
 
 - workflow 実行時間の上限は `workflowExecutionTimeout: '7 days'`（承認待ちを許容）。
 - 承認待ちの上限は 24 時間（`approvals.expires_at` と一致させる）。
+
+#### 実装で確定した順序（守らないと壊れる）
+
+1. **ワークフローの起動は DB のコミット後。** 逆順にすると、タスク行が見える前に
+   activity が走り「知らないタスク」を更新しに行く。
+2. **計画（`planTask`）は純粋関数。** ワークフローのコードはサンドボックスで動くため、
+   乱数・時刻・I/O・Node の API に触れない。`@astra/contracts` も import しない
+   （`uuidv7` が Web Crypto を触る）。ID 採番と時刻取得はすべて activity 側。
+3. **冪等キーは `<taskId>:<stepIndex>:<activityName>`。** Temporal は activity を
+   再実行し得るので、二重発火は DB の一意制約で吸収する。
+4. **取消は実行中の外部書き込みを中断しない。**中途半端な副作用を作らない（正本 §24）。
+
 - 失敗は握りつぶさない。正本 §24「勝手に成功扱いしない」に従い、
   代替経路が無い場合は必ず `task.failed` を発火して停止する。
 
@@ -1357,26 +1369,26 @@ CI で検査する（実装は Phase 0 の P0-16）:
 
 依存順。カッコ内は前提チケット。
 
-| ID    | 内容                                                                                      | DoD                                                                                                  |
-| ----- | ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| P0-01 | monorepo scaffold（本コミットで完了）                                                     | `pnpm install` / `pnpm build` が通る                                                                 |
-| P0-02 | `packages/contracts`: ID / エラー / codec / EventEnvelope / EventType union               | unit test green、snake⇄camel 往復が同型                                                              |
-| P0-03 | `packages/contracts`: Task / Approval / ActionReceipt / Artifact / PluginManifest (P0-02) | 全スキーマの正常系・異常系 test                                                                      |
-| P0-04 | `infra/db` マイグレーション 0001〜0005 + RLS + append-only トリガ (P0-03)                 | `pnpm db:migrate` 成功、`schema.sql` 生成物をコミット                                                |
-| P0-05 | `packages/db`: pool / `withTenant` / `withSystem` / `withIdentity` / 生成型 (P0-04)       | 別テナントの行が見えないことの結合テスト。ネスト規則と identity ロールの権限境界も検査               |
-| P0-06 | `packages/telemetry`: logger / span / auditEvent + ハッシュ連鎖 (P0-05)                   | 連鎖の検証・改竄検出・並行追記の直列化を実 DB で検査                                                 |
-| P0-07 | `packages/policy`: ActionRisk → 承認要否の判定表 (P0-03)                                  | 正本 §9.2 の全リスク区分 × compliance profile を網羅する test                                        |
-| P0-08 | api-gateway: HTTP 基盤 / エラー / request_id / rate limit / healthz / readyz (P0-05,06)   | `/readyz` が依存断で 503。内部例外の文面が外へ出ない。拒否が窓を延ばさない                           |
-| P0-09 | 認証: dev token 発行 / refresh ローテーション / 再利用検知 / `GET /v1/me` (P0-08)         | 再利用検知でデバイスの全 session 失効 + audit（コミットされること）。device token で REST を叩けない |
-| P0-10 | task-service: `POST /v1/tasks` の受理と冪等化、Temporal 起動 (P0-09)                      | 同一 Idempotency-Key の二重 POST が同一 task を返す                                                  |
-| P0-11 | Task Runtime: `TaskWorkflow` + activity 群 + `echo` handler (P0-10)                       | Temporal test environment で green                                                                   |
-| P0-12 | イベント: `event_streams` 採番 / `appendEvent` / Redis publish (P0-11)                    | 並行 100 発火で欠番・重複なし                                                                        |
-| P0-13 | SSE: `GET /v1/tasks/{id}/stream` + `Last-Event-ID` 再開 (P0-12)                           | 途中切断→再接続で全イベントが1回ずつ届く                                                             |
-| P0-14 | 承認: `requestApproval` / `POST /approve` / 失効 (P0-11)                                  | 承認・却下・失効の3経路 test                                                                         |
-| P0-15 | library-service: ObjectStore(fs) / artifact 作成 / 取得 / content (P0-05)                 | sha256 一致、越境アクセスが 404                                                                      |
-| P0-16 | plugin-registry: manifest 検証 / builtin seed / catalog / install (P0-05)                 | builtin 5 本が検証を通り、不変条件違反を全部検出                                                     |
-| P0-17 | Local Host Bridge: WS / device token / capability gate / `host.ping` (P0-09)              | 未申告 capability が denied、重複 call_id が再実行されない                                           |
-| P0-18 | CI: build / typecheck / test / §14.3 の規約検査 / 受け入れテスト (全部)                   | main への push で全 gate green                                                                       |
+| ID    | 内容                                                                                      | DoD                                                                                                   |
+| ----- | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| P0-01 | monorepo scaffold（本コミットで完了）                                                     | `pnpm install` / `pnpm build` が通る                                                                  |
+| P0-02 | `packages/contracts`: ID / エラー / codec / EventEnvelope / EventType union               | unit test green、snake⇄camel 往復が同型                                                               |
+| P0-03 | `packages/contracts`: Task / Approval / ActionReceipt / Artifact / PluginManifest (P0-02) | 全スキーマの正常系・異常系 test                                                                       |
+| P0-04 | `infra/db` マイグレーション 0001〜0005 + RLS + append-only トリガ (P0-03)                 | `pnpm db:migrate` 成功、`schema.sql` 生成物をコミット                                                 |
+| P0-05 | `packages/db`: pool / `withTenant` / `withSystem` / `withIdentity` / 生成型 (P0-04)       | 別テナントの行が見えないことの結合テスト。ネスト規則と identity ロールの権限境界も検査                |
+| P0-06 | `packages/telemetry`: logger / span / auditEvent + ハッシュ連鎖 (P0-05)                   | 連鎖の検証・改竄検出・並行追記の直列化を実 DB で検査                                                  |
+| P0-07 | `packages/policy`: ActionRisk → 承認要否の判定表 (P0-03)                                  | 正本 §9.2 の全リスク区分 × compliance profile を網羅する test                                         |
+| P0-08 | api-gateway: HTTP 基盤 / エラー / request_id / rate limit / healthz / readyz (P0-05,06)   | `/readyz` が依存断で 503。内部例外の文面が外へ出ない。拒否が窓を延ばさない                            |
+| P0-09 | 認証: dev token 発行 / refresh ローテーション / 再利用検知 / `GET /v1/me` (P0-08)         | 再利用検知でデバイスの全 session 失効 + audit（コミットされること）。device token で REST を叩けない  |
+| P0-10 | task-service: `POST /v1/tasks` の受理と冪等化、Temporal 起動 (P0-09)                      | 同一 Idempotency-Key の二重 POST が同一 task を返し、workflow は 1 本だけ                             |
+| P0-11 | Task Runtime: `TaskWorkflow` + activity 群 + `echo` handler (P0-10)                       | Temporal の test environment で green（`@temporalio/testing` はローカルサーバ内蔵なので Docker 不要） |
+| P0-12 | イベント: `event_streams` 採番 / `appendEvent` / Redis publish (P0-11)                    | 縦串で欠番・重複なし。冪等キー付き再送で採番を消費しない                                              |
+| P0-13 | SSE: `GET /v1/tasks/{id}/stream` + `Last-Event-ID` 再開 (P0-12)                           | 途中切断→再接続で全イベントが1回ずつ届く                                                              |
+| P0-14 | 承認: `requestApproval` / `POST /approve` / 失効 (P0-11)                                  | 承認・却下・失効の3経路 test                                                                          |
+| P0-15 | library-service: ObjectStore(fs) / artifact 作成 / 取得 / content (P0-05)                 | sha256 一致、越境アクセスが 404                                                                       |
+| P0-16 | plugin-registry: manifest 検証 / builtin seed / catalog / install (P0-05)                 | builtin 5 本が検証を通り、不変条件違反を全部検出                                                      |
+| P0-17 | Local Host Bridge: WS / device token / capability gate / `host.ping` (P0-09)              | 未申告 capability が denied、重複 call_id が再実行されない                                            |
+| P0-18 | CI: build / typecheck / test / §14.3 の規約検査 / 受け入れテスト (全部)                   | main への push で全 gate green                                                                        |
 
 `packages/{ui-kit,agent-sdk,plugin-sdk除く}` と `services/{conversation,context,research,meeting,share,agent-runtime,world-model,notification}`、
 `workers/{research,media,domain}` は Phase 0 では **placeholder のまま**。

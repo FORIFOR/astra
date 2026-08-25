@@ -19,7 +19,8 @@ OS のどこからでも呼び出せる **Task Dock**。North Star は **Intent 
 
 **Phase 0 進行中。** 完了: P0-01（scaffold）/ P0-02・P0-03（`@astra/contracts`）/
 P0-04（DB スキーマ）/ P0-05（`@astra/db`）/ P0-06（`@astra/telemetry`）/ P0-07（`@astra/policy`）/
-P0-08（HTTP 基盤）/ P0-09（認証）。次: P0-10（タスク受理）。
+P0-08（HTTP 基盤）/ P0-09（認証）/ P0-10・P0-11・P0-12（Task Runtime）/ P0-15（Library）。
+次: P0-13（SSE）/ P0-14（承認 API）/ P0-16（プラグイン）/ P0-17（host bridge）/ P0-18（CI）。
 
 実装順は正本 §28 に従う。
 

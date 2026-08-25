@@ -1,11 +1,7 @@
 /**
  * @astra/service-library
  *
- * Artifact metadata, object upload/download, versions and indexing.
- *
- * Phase 0 scaffold only — no implementation yet.
- * Normative spec: docs/spec/phase-0-implementation-spec.md
- * Product spec:   docs/spec/new_ai_platform_design_spec_v0.1.md
+ * artifact のメタデータ、アップロード/ダウンロード、バージョン、索引。実装仕様 §8。
  */
-
-export const SERVICE_LIBRARY_PACKAGE = '@astra/service-library' as const;
+export { LibraryService, type CreateArtifactInput, type ListArtifactsQuery } from './service.js';
+export { FsObjectStore, type ObjectStore } from './store/index.js';
