@@ -10,7 +10,7 @@
  *   - サービス境界をまたぐトランザクションを張らない
  */
 export { dbConfigFromEnv, type DbConfig } from './config.js';
-export { createDb, type Db, type DbHandle } from './pool.js';
+export { createDb, pingDb, type Db, type DbHandle } from './pool.js';
 export {
   withTenant,
   withSystem,

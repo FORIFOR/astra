@@ -1148,6 +1148,62 @@ GET    /healthz                           liveness
 GET    /readyz                            DB / Redis / Temporal 接続確認
 ```
 
+### 11.1 HTTP 基盤
+
+フレームワークは Fastify 5（ADR 0004）。フックの順序が挙動を決めるので固定する。
+
+```text
+genReqId          request id を 1 回だけ確定させる（採番はここだけ）
+  ↓
+onRequest         request id をレスポンスヘッダとログの相関 ID に載せる
+  ↓
+preHandler(auth)  トークン検証 → RequestContext に user / tenant / device を入れる … P0-09
+  ↓
+preHandler(rate)  レート制限。user 単位で数えるので認証より後
+  ↓
+handler
+  ↓
+errorHandler      AstraError / ZodError / それ以外 を §3.7 の形へ写す
+```
+
+**request id を信用しない**: 受け取った `X-Request-Id` はログの相関キーになるので、
+`^[A-Za-z0-9._:-]{8,128}$` に合わないものはサーバ側で採番し直す。
+
+**内部例外を外へ出さない**: 未知の例外は `common.internal` / `internal error` に潰す。
+接続文字列や秘密が例外メッセージに載ることがあるため、文面をそのまま返さない。
+詳細はログと trace にだけ残す。
+
+**liveness と readiness を分ける**:
+
+| 経路       | 見るもの                             | 落ちたとき                 |
+| ---------- | ------------------------------------ | -------------------------- |
+| `/healthz` | プロセスが生きているか。依存を見ない | 再起動される               |
+| `/readyz`  | DB / Redis（後に Temporal）に届くか  | トラフィックから外れるだけ |
+
+混ぜると DB の一時的な不調でプロセスが再起動され続ける。
+依存確認には 2 秒のタイムアウトを掛ける（probe が固まるとローリング更新が止まる）。
+
+### 11.2 レート制限
+
+`RateLimiter` インターフェースの背後に 2 実装:
+
+| 実装                | 用途                                                               |
+| ------------------- | ------------------------------------------------------------------ |
+| `MemoryRateLimiter` | 開発とテスト。**本番では使わない**（水平スケールすると実質無制限） |
+| `RedisRateLimiter`  | 本番。sorted set のスライディングウィンドウ                        |
+
+Redis 実装は判定・掃除・追加を 1 本の Lua スクリプトにまとめる。
+分割して発行すると、読み取りと書き込みの間に別プロセスが割り込んで上限を超えて通る。
+
+守る性質:
+
+1. **拒否は窓を埋めない。** 拒否がさらに窓を延ばすと、叩き続ける限り永久に開かなくなる。
+2. **固定境界でリセットしない。** スライディングウィンドウにして境界直後のバースト（実質 2 倍）を防ぐ。
+3. **同一ミリ秒の複数リクエストを 1 件に潰さない。** member にプロセス内カウンタを混ぜる。
+4. ヘルスプローブは対象外（`config.rateLimit: false`）。
+
+制限単位はルートが `config.rateLimit` で宣言する。未認証で `by: 'user'` の場合は IP へ落ちる。
+
 共通ヘッダ:
 
 | ヘッダ                                 | 用途                                             |
@@ -1282,7 +1338,7 @@ CI で検査する（実装は Phase 0 の P0-16）:
 | P0-05 | `packages/db`: pool / `withTenant` / `withSystem` / `withIdentity` / 生成型 (P0-04)       | 別テナントの行が見えないことの結合テスト。ネスト規則と identity ロールの権限境界も検査 |
 | P0-06 | `packages/telemetry`: logger / span / auditEvent + ハッシュ連鎖 (P0-05)                   | 連鎖の検証・改竄検出・並行追記の直列化を実 DB で検査                                   |
 | P0-07 | `packages/policy`: ActionRisk → 承認要否の判定表 (P0-03)                                  | 正本 §9.2 の全リスク区分 × compliance profile を網羅する test                          |
-| P0-08 | api-gateway: HTTP 基盤 / エラー / request_id / rate limit / healthz / readyz (P0-05,06)   | `/readyz` が依存断で 503                                                               |
+| P0-08 | api-gateway: HTTP 基盤 / エラー / request_id / rate limit / healthz / readyz (P0-05,06)   | `/readyz` が依存断で 503。内部例外の文面が外へ出ない。拒否が窓を延ばさない             |
 | P0-09 | 認証: dev token 発行 / refresh ローテーション / 再利用検知 / `GET /v1/me` (P0-08)         | 再利用検知で全 session 失効 + audit                                                    |
 | P0-10 | task-service: `POST /v1/tasks` の受理と冪等化、Temporal 起動 (P0-09)                      | 同一 Idempotency-Key の二重 POST が同一 task を返す                                    |
 | P0-11 | Task Runtime: `TaskWorkflow` + activity 群 + `echo` handler (P0-10)                       | Temporal test environment で green                                                     |

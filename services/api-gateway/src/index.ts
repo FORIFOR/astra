@@ -1,11 +1,23 @@
 /**
  * @astra/service-api-gateway
  *
- * Auth, tenant routing, rate limiting, REST entrypoint and realtime WebSocket fan-out.
- *
- * Phase 0 scaffold only — no implementation yet.
- * Normative spec: docs/spec/phase-0-implementation-spec.md
- * Product spec:   docs/spec/new_ai_platform_design_spec_v0.1.md
+ * 認証・テナントルーティング・レート制限・REST の入口。実装仕様 §11・§17。
  */
-
-export const SERVICE_API_GATEWAY_PACKAGE = '@astra/service-api-gateway' as const;
+export { buildApp, type AppDeps } from './app.js';
+export type { App } from './fastify.js';
+export { gatewayConfigFromEnv, allowsDevelopmentRoutes, type GatewayConfig } from './config.js';
+export { toApiError } from './errors.js';
+export {
+  currentRequestContext,
+  currentRequestId,
+  runWithRequestContext,
+  type RequestContext,
+} from './request-context.js';
+export { normalizeRequestId } from './plugins/request-id.js';
+export {
+  AUTH_RATE_LIMIT,
+  CREATE_TASK_RATE_LIMIT,
+  GENERAL_RATE_LIMIT,
+  type RouteRateLimit,
+} from './plugins/rate-limit.js';
+export { MemoryRateLimiter, RedisRateLimiter, type RateLimiter } from './rate-limit/index.js';

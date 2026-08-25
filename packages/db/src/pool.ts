@@ -1,5 +1,5 @@
 /** 接続プールと Kysely インスタンス。実装仕様 §5.4。 */
-import { Kysely, PostgresDialect } from 'kysely';
+import { Kysely, PostgresDialect, sql } from 'kysely';
 import pg from 'pg';
 import type { DbConfig } from './config.js';
 import type { Database } from './types.js';
@@ -27,6 +27,14 @@ function makePool(url: string, config: DbConfig, max: number, suffix: string): p
     application_name: `${config.applicationName}:${suffix}`,
     options: `-c statement_timeout=${config.statementTimeoutMillis}`,
   });
+}
+
+/**
+ * 疎通確認。readiness probe から呼ぶ。
+ * テナントスコープを開かないので RLS の影響を受けない（`select 1` しかしない）。
+ */
+export async function pingDb(handle: DbHandle): Promise<void> {
+  await sql`select 1`.execute(handle.app);
 }
 
 export function createDb(config: DbConfig): DbHandle {
