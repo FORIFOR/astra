@@ -20,11 +20,14 @@
     "dev:infra:down": "docker compose -f infra/docker-compose.dev.yml down",
     "db:new": "dbmate --migrations-dir infra/db/migrations new",
     "db:rollback": "dbmate --migrations-dir infra/db/migrations --schema-file infra/db/schema.sql rollback",
-    "test:acceptance": "vitest run --dir evals/actions --passWithNoTests",
+    "test:acceptance": "./infra/db/with-test-db.sh pnpm --filter @astra/evals test",
     "db:verify": "./infra/db/verify.sh",
     "db:drop": "dbmate --migrations-dir infra/db/migrations --no-dump-schema drop",
     "test:db": "./infra/db/with-test-db.sh pnpm -r --no-bail run test",
-    "db:codegen": "./infra/db/with-test-db.sh sh -c 'cd packages/db && npx kysely-codegen --url \"$TEST_ADMIN_DATABASE_URL\" --dialect postgres --out-file src/generated/schema.ts'"
+    "db:codegen": "./infra/db/with-test-db.sh sh -c 'cd packages/db && npx kysely-codegen --url \"$TEST_ADMIN_DATABASE_URL\" --dialect postgres --out-file src/generated/schema.ts'",
+    "check:conventions": "node scripts/check-conventions.mjs",
+    "check:generated": "./scripts/check-generated.sh",
+    "check:contracts-version": "node scripts/check-contracts-version.mjs"
   },
   "devDependencies": {
     "@types/node": "catalog:",

@@ -11,6 +11,7 @@
 # 必要: dbmate, psql, ローカルクラスタで CREATE DATABASE / CREATE ROLE できる権限
 # 環境変数:
 #   ASTRA_TEST_PGHOST (既定 localhost) / ASTRA_TEST_PGPORT (既定 5432)
+#   ASTRA_TEST_PGUSER (省略時は OS ユーザー。CI では postgres 等)
 #   ASTRA_TEST_DB     (既定 astra_test_$$)
 set -euo pipefail
 
@@ -20,7 +21,11 @@ PORT="${ASTRA_TEST_PGPORT:-5432}"
 DB="${ASTRA_TEST_DB:-astra_test_$$}"
 APP_PASSWORD='astra_app'
 
-ADMIN_URL="postgres://${HOST}:${PORT}/${DB}?sslmode=disable"
+# 管理接続のユーザー。ローカルは OS ユーザー、CI はコンテナの superuser。
+ADMIN_USER="${ASTRA_TEST_PGUSER:-}"
+ADMIN_PREFIX="${ADMIN_USER:+${ADMIN_USER}@}"
+
+ADMIN_URL="postgres://${ADMIN_PREFIX}${HOST}:${PORT}/${DB}?sslmode=disable"
 APP_URL="postgres://astra_app:${APP_PASSWORD}@${HOST}:${PORT}/${DB}?sslmode=disable"
 IDENTITY_URL="postgres://astra_identity:astra_identity@${HOST}:${PORT}/${DB}?sslmode=disable"
 
@@ -28,9 +33,9 @@ cleanup() {
   local rc=$?
   dbmate --url "$ADMIN_URL" --migrations-dir "$ROOT/infra/db/migrations" --no-dump-schema drop >/dev/null 2>&1 || true
   # ロールは他のデータベースを跨ぐので、検証で作ったものは必ず落とす
-  psql "postgres://${HOST}:${PORT}/postgres" -X -q -c 'DROP ROLE IF EXISTS astra_app' >/dev/null 2>&1 || true
-  psql "postgres://${HOST}:${PORT}/postgres" -X -q -c 'DROP ROLE IF EXISTS astra_migrate' >/dev/null 2>&1 || true
-  psql "postgres://${HOST}:${PORT}/postgres" -X -q -c 'DROP ROLE IF EXISTS astra_identity' >/dev/null 2>&1 || true
+  psql "postgres://${ADMIN_PREFIX}${HOST}:${PORT}/postgres" -X -q -c 'DROP ROLE IF EXISTS astra_app' >/dev/null 2>&1 || true
+  psql "postgres://${ADMIN_PREFIX}${HOST}:${PORT}/postgres" -X -q -c 'DROP ROLE IF EXISTS astra_migrate' >/dev/null 2>&1 || true
+  psql "postgres://${ADMIN_PREFIX}${HOST}:${PORT}/postgres" -X -q -c 'DROP ROLE IF EXISTS astra_identity' >/dev/null 2>&1 || true
   exit $rc
 }
 trap cleanup EXIT

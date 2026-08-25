@@ -3,6 +3,7 @@ packages:
   - services/*
   - workers/*
   - packages/*
+  - evals
 
 catalog:
   '@types/node': ^22.15.0

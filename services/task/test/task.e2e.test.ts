@@ -238,7 +238,10 @@ describe.skipIf(!url)('task runtime end to end', () => {
         tx.selectFrom('action_receipts').selectAll().where('task_id', '=', task.id).execute(),
       );
       expect(receipts.length).toBeGreaterThan(0);
-      expect(receipts.some((r) => r.risk === 'EXTERNAL_COMMIT')).toBe(true);
+      const external = receipts.filter((r) => r.risk === 'EXTERNAL_COMMIT');
+      expect(external).toHaveLength(1);
+      // 「その操作は誰の判断だったか」を後から答えられること（正本 §9.4）
+      expect(external[0]!.approved_by).toBe(userId);
     }, 60_000);
 
     it('cancels the task when rejected and performs no external write', async () => {

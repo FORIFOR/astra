@@ -119,6 +119,25 @@ export class LibraryService {
     return withTenant(this.#db, tenantId, (tx) => this.#load(tx, artifactId));
   }
 
+  /**
+   * あるタスクが作った成果物を探す。無ければ null。
+   *
+   * activity の再実行で成果物を二重に作らないために task 側が使う。
+   * `artifacts` は library の所有テーブルなので、他サービスから直接引かせない（§5.1）。
+   */
+  async findBySourceTask(tenantId: string, taskId: string): Promise<Artifact | null> {
+    return withTenant(this.#db, tenantId, async (tx) => {
+      const row = await tx
+        .selectFrom('artifacts')
+        .select(['id'])
+        .where('source_task_id', '=', taskId)
+        .where('deleted_at', 'is', null)
+        .orderBy('id', 'asc')
+        .executeTakeFirst();
+      return row ? this.#load(tx, row.id) : null;
+    });
+  }
+
   async list(query: ListArtifactsQuery): Promise<{ items: Artifact[]; nextCursor: string | null }> {
     return withTenant(this.#db, query.tenantId, async (tx) => {
       let statement = tx

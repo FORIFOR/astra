@@ -245,7 +245,21 @@ export function createTaskActivities(deps: ActivityDeps): TaskActivities {
 
       await inTenant(input, async (tx) => {
         if (receiptId) {
-          // 正本 §9.4: 全 write action は receipt を残す
+          // 正本 §9.4: 全 write action は receipt を残す。
+          // 承認を要した step は「誰が承認したか」まで残さないと、
+          // 後から「その操作は誰の判断だったか」を答えられない。
+          const approver = decision.requiresApproval
+            ? ((
+                await tx
+                  .selectFrom('approvals')
+                  .select(['decided_by'])
+                  .where('task_id', '=', input.taskId)
+                  .where('step_index', '=', step.index)
+                  .where('status', '=', 'APPROVED')
+                  .executeTakeFirst()
+              )?.decided_by ?? null)
+            : null;
+
           const inputsHash = await canonicalSha256(step.args);
           await tx
             .insertInto('action_receipts')
@@ -258,7 +272,7 @@ export function createTaskActivities(deps: ActivityDeps): TaskActivities {
               inputs_hash: inputsHash,
               result_ref: null,
               risk: step.risk,
-              approved_by: null,
+              approved_by: approver,
               reversible_until: null,
               executed_at: now(),
             })
@@ -313,15 +327,9 @@ export function createTaskActivities(deps: ActivityDeps): TaskActivities {
     },
 
     async composeArtifact(input, spec: ArtifactSpec, results) {
-      // 同一タスクで既に成果物があれば作り直さない（activity 再実行対策）
-      const existing = await inTenant(input, (tx) =>
-        tx
-          .selectFrom('artifacts')
-          .select(['id'])
-          .where('source_task_id', '=', input.taskId)
-          .where('deleted_at', 'is', null)
-          .executeTakeFirst(),
-      );
+      // 同一タスクで既に成果物があれば作り直さない（activity 再実行対策）。
+      // artifacts は library の所有テーブルなので、直接引かず service に尋ねる（§5.1）。
+      const existing = await deps.library.findBySourceTask(input.tenantId, input.taskId);
       if (existing) return existing.id;
 
       const lines = [

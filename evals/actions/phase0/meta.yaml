@@ -1,0 +1,8 @@
+# 実装仕様 §14.2 の eval harness 契約
+phase: 0
+tags: [acceptance, blocking]
+# Phase 0 の Exit 判定そのもの。落ちたら CI を止める。
+blocking: true
+description: >
+  実装仕様 §16 の AC-1〜AC-16。正本 §28 Phase 0 Exit
+  「create task → progress → result artifact」を HTTP から検証する。

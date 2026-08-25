@@ -1354,12 +1354,20 @@ evals/<domain>/<case-id>/
 
 ### 14.3 機械的に守らせる規約
 
-CI で検査する（実装は Phase 0 の P0-16）:
+境界の形骸化を人のレビューに任せない（ADR 0001）。CI が機械的に落とす。
 
-1. service コードからの生 `pool.query` 直呼び禁止（`withTenant` / `withSystem` 経由のみ）
-2. `services/*` が他 `services/*` の内部パスを import していないこと
-3. `infra/db/schema.sql` と `packages/db` の生成型が最新であること
-4. `packages/contracts` に破壊的変更が入った場合、`CONTRACTS_VERSION` が上がっていること
+| 検査                                                                          | 実装                                  |
+| ----------------------------------------------------------------------------- | ------------------------------------- |
+| service からの生 `pg` / `pool.query` 直呼び禁止                               | `scripts/check-conventions.mjs`       |
+| `services/*` が他サービスの内部パスを import しない（相対・deep import とも） | 同上                                  |
+| **所有していないテーブルへ直接 SQL を投げない**（§5.1 の所有権表）            | 同上                                  |
+| 同梱プラグインが 5 本あること                                                 | 同上                                  |
+| `infra/db/schema.sql` と `packages/db` の生成型が最新                         | `scripts/check-generated.sh`          |
+| 契約が変わったら `CONTRACTS_VERSION` が上がっている                           | `scripts/check-contracts-version.mjs` |
+| マイグレーションが up / down 両方向で通る                                     | `infra/db/verify.sh`                  |
+
+テーブル所有権の検査は実際に違反を 1 件見つけた（task-service が library 所有の
+`artifacts` を直接引いていた）。所有権は宣言だけでは守られない。
 
 ---
 
@@ -1386,7 +1394,7 @@ CI で検査する（実装は Phase 0 の P0-16）:
 | P0-15 | library-service: ObjectStore(fs) / artifact 作成 / 取得 / content (P0-05)                 | sha256 一致、越境アクセスが 404                                                                       |
 | P0-16 | plugin-registry: manifest 検証 / builtin seed / catalog / install (P0-05)                 | 同梱 5 本が検証を通り、不変条件違反を全部検出。install は未許可スコープを denied で残す               |
 | P0-17 | Local Host Bridge: WS / device token / capability gate / `host.ping` (P0-09)              | 未申告 capability が denied、非 READ は承認 ID 必須、重複接続で古い方を切る                           |
-| P0-18 | CI: build / typecheck / test / §14.3 の規約検査 / 受け入れテスト (全部)                   | main への push で全 gate green                                                                        |
+| P0-18 | CI: build / typecheck / test / §14.3 の規約検査 / 受け入れテスト (全部)                   | main への push で全 gate green。`.github/workflows/ci.yml`                                            |
 
 `packages/{ui-kit,agent-sdk,plugin-sdk除く}` と `services/{conversation,context,research,meeting,share,agent-runtime,world-model,notification}`、
 `workers/{research,media,domain}` は Phase 0 では **placeholder のまま**。
@@ -1395,7 +1403,8 @@ CI で検査する（実装は Phase 0 の P0-16）:
 
 ## 16. Exit 判定 — 受け入れテスト
 
-`evals/actions/phase0/` に置き、CI の blocking gate にする。
+`evals/actions/phase0/acceptance.test.ts` に置き、CI の blocking gate にする。
+`pnpm test:acceptance` で、使い捨て DB と Temporal のローカルサーバを立てて **HTTP から**検証する。
 
 ```text
 AC-1  POST /v1/auth/dev/token → access/refresh 取得。tenant が自動作成される

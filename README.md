@@ -18,10 +18,12 @@ OS のどこからでも呼び出せる **Task Dock**。North Star は **Intent 
 
 ## 現在地
 
-**Phase 0 進行中。** 完了: P0-01（scaffold）/ P0-02・P0-03（`@astra/contracts`）/
-P0-04（DB スキーマ）/ P0-05（`@astra/db`）/ P0-06（`@astra/telemetry`）/ P0-07（`@astra/policy`）/
-P0-08（HTTP 基盤）/ P0-09（認証）/ P0-10〜P0-15（Task Runtime / SSE / 承認 / Library）。
-次: P0-16（プラグイン）/ P0-17（host bridge）/ P0-18（CI + 受け入れテスト）。
+**Phase 0 完了。** P0-01 〜 P0-18 まで実装済みで、受け入れテスト AC-1〜AC-16 が green。
+
+> **Exit**: `pnpm test:acceptance` が「create task → progress → result artifact」を
+> HTTP から検証する（正本 §28 Phase 0）。
+
+次は Phase 1。UI/UX 仕様 §24 の **UI-0**（design tokens + 4-tab shell）から始める。
 
 実装順は正本 §28 に従う。
 
@@ -65,6 +67,10 @@ pnpm db:migrate       # スキーマ適用
 pnpm build
 pnpm test             # DB 不要のテスト
 pnpm test:db          # 使い捨て DB を用意して DB 依存のテストも実行
+pnpm test:acceptance  # Phase 0 の受け入れテスト（AC-1〜AC-16）
+
+pnpm check:conventions  # サービス境界とテーブル所有権の検査
+pnpm db:verify          # マイグレーションの up / RLS / append-only / down
 ```
 
 Temporal UI: http://localhost:8233

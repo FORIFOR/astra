@@ -1,0 +1,92 @@
+# Phase 0 の CI gate。実装仕様 §14.3・§16。
+#
+# Docker 上の PostgreSQL 16 + pgvector を使う。Temporal は
+# @temporalio/testing がローカルサーバを内蔵するので service コンテナは要らない。
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  ASTRA_TEST_PGHOST: localhost
+  ASTRA_TEST_PGPORT: '5432'
+  PGPASSWORD: postgres
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # contracts の版検査でベースと比較するため履歴が要る
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Install dbmate
+        run: |
+          sudo curl -fsSL -o /usr/local/bin/dbmate \
+            https://github.com/amacneil/dbmate/releases/latest/download/dbmate-linux-amd64
+          sudo chmod +x /usr/local/bin/dbmate
+
+      - run: pnpm build
+      - run: pnpm exec tsc -p tsconfig.tests.json
+      - run: pnpm format:check
+
+      # 境界の形骸化を人のレビューに任せない（ADR 0001）
+      - run: pnpm check:conventions
+      - name: Check the contracts version was bumped
+        if: github.event_name == 'pull_request'
+        run: node scripts/check-contracts-version.mjs origin/${{ github.base_ref }}
+
+      - name: Migrations apply and roll back cleanly
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/astra_verify?sslmode=disable
+        run: ./infra/db/verify.sh
+
+      - name: Generated artifacts are current
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/astra_generated?sslmode=disable
+        run: ./scripts/check-generated.sh
+
+      - name: Unit and integration tests
+        env:
+          ASTRA_TEST_PGUSER: postgres
+          TEST_REDIS_URL: redis://localhost:6379
+        run: pnpm test:db
+
+      # Phase 0 の Exit 判定そのもの（実装仕様 §16 / evals/actions/phase0）
+      - name: Phase 0 acceptance (AC-1 … AC-16)
+        run: pnpm test:acceptance
