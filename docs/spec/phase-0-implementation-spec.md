@@ -543,10 +543,38 @@ access token のクレーム:
 }
 ```
 
-- refresh token は平文保存しない。`sessions.refresh_token_hash` に **Argon2id**（正本 §2.3 が
-  共有リンクのパスワードに Argon2id を指定しているのと同じ方針を揃える）。
-- ローテーション時に旧トークンを即時失効。再利用検知時はその device の全 session を失効し
-  `audit_events` に記録する。
+#### refresh token の形式
+
+```text
+v1.<tenantId>.<sessionId>.<secret>
+```
+
+`secret` は 256bit の乱数（base64url）。テナント ID を載せるのは、`sessions` が RLS 配下に
+あるためで、これが無いと「セッションを読むにはテナントが要る / テナントを知るには
+セッションを読む必要がある」という循環になり、認証のたびに identity スコープ（§5.4）へ
+落ちることになる。偽のテナント ID を入れても、そのテナントに当該セッションが無いので
+単に見つからない。
+
+**保存はハッシュのみ。**平文の refresh token を DB に置かない（正本 §21）。
+
+**逸脱 D-15: ハッシュに Argon2id を使わない。** 対象は利用者が選んだパスワードではなく
+256bit の乱数なので、辞書攻撃も総当たりも成立しない。refresh のたびに数十ミリ秒を払う
+意味がない。`sha256(context | sessionId | secret)` を使い、比較は定時間で行う。
+Argon2id は利用者が選ぶ低エントロピーの秘密（正本 §2.3 の共有リンクのパスワード、Phase 2）
+に取っておく。
+
+#### ローテーションと再利用検知
+
+- ローテーション時に旧セッションを即時失効させ、新セッションの `rotated_from` に繋ぐ。
+- **失効済みのトークンが再提示されたら漏洩とみなす。**秘密値が一致するかは問わない
+  （一致しないなら総当たりであり、いずれにせよそのデバイスは信用できない）。
+  該当 device の**全セッションを失効**させ、`session.reuse_detected` を監査に残す。
+- 「存在しないセッション」と「秘密値の不一致」を区別して返さない（列挙の手掛かりになる）。
+
+> **実装上の必須事項**: 再利用検知のように**状態を変えてから拒否する**処理は、
+> 失効と監査記録をコミットしてから例外を投げること。トランザクションの中で投げると
+> 巻き戻り、「検知したのに何も起きていない」状態になる（実装時に踏んだ）。
+> 判定結果はトランザクションの戻り値で返し、例外はその外で投げる。
 
 ### 4.3 Phase 0 の ID プロバイダ
 
@@ -1329,26 +1357,26 @@ CI で検査する（実装は Phase 0 の P0-16）:
 
 依存順。カッコ内は前提チケット。
 
-| ID    | 内容                                                                                      | DoD                                                                                    |
-| ----- | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| P0-01 | monorepo scaffold（本コミットで完了）                                                     | `pnpm install` / `pnpm build` が通る                                                   |
-| P0-02 | `packages/contracts`: ID / エラー / codec / EventEnvelope / EventType union               | unit test green、snake⇄camel 往復が同型                                                |
-| P0-03 | `packages/contracts`: Task / Approval / ActionReceipt / Artifact / PluginManifest (P0-02) | 全スキーマの正常系・異常系 test                                                        |
-| P0-04 | `infra/db` マイグレーション 0001〜0005 + RLS + append-only トリガ (P0-03)                 | `pnpm db:migrate` 成功、`schema.sql` 生成物をコミット                                  |
-| P0-05 | `packages/db`: pool / `withTenant` / `withSystem` / `withIdentity` / 生成型 (P0-04)       | 別テナントの行が見えないことの結合テスト。ネスト規則と identity ロールの権限境界も検査 |
-| P0-06 | `packages/telemetry`: logger / span / auditEvent + ハッシュ連鎖 (P0-05)                   | 連鎖の検証・改竄検出・並行追記の直列化を実 DB で検査                                   |
-| P0-07 | `packages/policy`: ActionRisk → 承認要否の判定表 (P0-03)                                  | 正本 §9.2 の全リスク区分 × compliance profile を網羅する test                          |
-| P0-08 | api-gateway: HTTP 基盤 / エラー / request_id / rate limit / healthz / readyz (P0-05,06)   | `/readyz` が依存断で 503。内部例外の文面が外へ出ない。拒否が窓を延ばさない             |
-| P0-09 | 認証: dev token 発行 / refresh ローテーション / 再利用検知 / `GET /v1/me` (P0-08)         | 再利用検知で全 session 失効 + audit                                                    |
-| P0-10 | task-service: `POST /v1/tasks` の受理と冪等化、Temporal 起動 (P0-09)                      | 同一 Idempotency-Key の二重 POST が同一 task を返す                                    |
-| P0-11 | Task Runtime: `TaskWorkflow` + activity 群 + `echo` handler (P0-10)                       | Temporal test environment で green                                                     |
-| P0-12 | イベント: `event_streams` 採番 / `appendEvent` / Redis publish (P0-11)                    | 並行 100 発火で欠番・重複なし                                                          |
-| P0-13 | SSE: `GET /v1/tasks/{id}/stream` + `Last-Event-ID` 再開 (P0-12)                           | 途中切断→再接続で全イベントが1回ずつ届く                                               |
-| P0-14 | 承認: `requestApproval` / `POST /approve` / 失効 (P0-11)                                  | 承認・却下・失効の3経路 test                                                           |
-| P0-15 | library-service: ObjectStore(fs) / artifact 作成 / 取得 / content (P0-05)                 | sha256 一致、越境アクセスが 404                                                        |
-| P0-16 | plugin-registry: manifest 検証 / builtin seed / catalog / install (P0-05)                 | builtin 5 本が検証を通り、不変条件違反を全部検出                                       |
-| P0-17 | Local Host Bridge: WS / device token / capability gate / `host.ping` (P0-09)              | 未申告 capability が denied、重複 call_id が再実行されない                             |
-| P0-18 | CI: build / typecheck / test / §14.3 の規約検査 / 受け入れテスト (全部)                   | main への push で全 gate green                                                         |
+| ID    | 内容                                                                                      | DoD                                                                                                  |
+| ----- | ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| P0-01 | monorepo scaffold（本コミットで完了）                                                     | `pnpm install` / `pnpm build` が通る                                                                 |
+| P0-02 | `packages/contracts`: ID / エラー / codec / EventEnvelope / EventType union               | unit test green、snake⇄camel 往復が同型                                                              |
+| P0-03 | `packages/contracts`: Task / Approval / ActionReceipt / Artifact / PluginManifest (P0-02) | 全スキーマの正常系・異常系 test                                                                      |
+| P0-04 | `infra/db` マイグレーション 0001〜0005 + RLS + append-only トリガ (P0-03)                 | `pnpm db:migrate` 成功、`schema.sql` 生成物をコミット                                                |
+| P0-05 | `packages/db`: pool / `withTenant` / `withSystem` / `withIdentity` / 生成型 (P0-04)       | 別テナントの行が見えないことの結合テスト。ネスト規則と identity ロールの権限境界も検査               |
+| P0-06 | `packages/telemetry`: logger / span / auditEvent + ハッシュ連鎖 (P0-05)                   | 連鎖の検証・改竄検出・並行追記の直列化を実 DB で検査                                                 |
+| P0-07 | `packages/policy`: ActionRisk → 承認要否の判定表 (P0-03)                                  | 正本 §9.2 の全リスク区分 × compliance profile を網羅する test                                        |
+| P0-08 | api-gateway: HTTP 基盤 / エラー / request_id / rate limit / healthz / readyz (P0-05,06)   | `/readyz` が依存断で 503。内部例外の文面が外へ出ない。拒否が窓を延ばさない                           |
+| P0-09 | 認証: dev token 発行 / refresh ローテーション / 再利用検知 / `GET /v1/me` (P0-08)         | 再利用検知でデバイスの全 session 失効 + audit（コミットされること）。device token で REST を叩けない |
+| P0-10 | task-service: `POST /v1/tasks` の受理と冪等化、Temporal 起動 (P0-09)                      | 同一 Idempotency-Key の二重 POST が同一 task を返す                                                  |
+| P0-11 | Task Runtime: `TaskWorkflow` + activity 群 + `echo` handler (P0-10)                       | Temporal test environment で green                                                                   |
+| P0-12 | イベント: `event_streams` 採番 / `appendEvent` / Redis publish (P0-11)                    | 並行 100 発火で欠番・重複なし                                                                        |
+| P0-13 | SSE: `GET /v1/tasks/{id}/stream` + `Last-Event-ID` 再開 (P0-12)                           | 途中切断→再接続で全イベントが1回ずつ届く                                                             |
+| P0-14 | 承認: `requestApproval` / `POST /approve` / 失効 (P0-11)                                  | 承認・却下・失効の3経路 test                                                                         |
+| P0-15 | library-service: ObjectStore(fs) / artifact 作成 / 取得 / content (P0-05)                 | sha256 一致、越境アクセスが 404                                                                      |
+| P0-16 | plugin-registry: manifest 検証 / builtin seed / catalog / install (P0-05)                 | builtin 5 本が検証を通り、不変条件違反を全部検出                                                     |
+| P0-17 | Local Host Bridge: WS / device token / capability gate / `host.ping` (P0-09)              | 未申告 capability が denied、重複 call_id が再実行されない                                           |
+| P0-18 | CI: build / typecheck / test / §14.3 の規約検査 / 受け入れテスト (全部)                   | main への push で全 gate green                                                                       |
 
 `packages/{ui-kit,agent-sdk,plugin-sdk除く}` と `services/{conversation,context,research,meeting,share,agent-runtime,world-model,notification}`、
 `workers/{research,media,domain}` は Phase 0 では **placeholder のまま**。
@@ -1413,6 +1441,7 @@ AC-8〜AC-16 は「後から入れられない性質」を Phase 0 で固定す�
 | D-12  | plugin manifest のスキーマと不変条件を `packages/plugin-sdk` ではなく `packages/contracts` に置く | manifest は catalog 応答としても境界を越えるため。plugin-sdk は YAML 読み込みと署名検証を担当                                                                              |
 | D-13  | codec に不透明キー集合（`OPAQUE_KEYS`）を設ける                                                   | `task.input` などユーザー由来 JSON のキーを変換すると値が壊れる。§1.1                                                                                                      |
 | D-14  | 認証専用の DB スコープ `withIdentity` と最小権限 BYPASSRLS ロール `astra_identity` を追加         | 認証はテナント確定前に走るため RLS 下では users を引けず、サインアップは membership 不在で INSERT が弾かれる。RLS 緩和ではなく GRANT で BYPASSRLS の範囲を閉じ込める。§5.4 |
+| D-15  | refresh token のハッシュに Argon2id ではなく sha256 を使う                                        | 対象が 256bit の乱数で辞書攻撃が成立しないため。Argon2id は利用者が選ぶ低エントロピーの秘密（共有リンクのパスワード）に限定する。§4.2                                      |
 
 ---
 

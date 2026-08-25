@@ -4,6 +4,8 @@ import { createDb } from '@astra/db';
 import { createLogger } from '@astra/telemetry';
 import { buildApp } from './app.js';
 import { gatewayConfigFromEnv } from './config.js';
+import { keyConfigFromEnv, loadSigningKeys } from './auth/keys.js';
+import { JwtTokens } from './auth/tokens.js';
 import { MemoryRateLimiter, RedisRateLimiter, type RateLimiter } from './rate-limit/index.js';
 
 async function main(): Promise<void> {
@@ -24,7 +26,17 @@ async function main(): Promise<void> {
   }
   const rateLimiter: RateLimiter = redis ? new RedisRateLimiter(redis) : new MemoryRateLimiter();
 
-  const app = buildApp({ config, db, redis, rateLimiter, logger });
+  const keys = await loadSigningKeys(keyConfigFromEnv(), logger);
+  if (keys.ephemeral && config.env === 'production') {
+    // 再起動のたびに全トークンが無効になる
+    throw new Error('ASTRA_JWT_PRIVATE_KEY / ASTRA_JWT_PUBLIC_KEY are required in production');
+  }
+  const tokens = new JwtTokens({
+    issuer: process.env['ASTRA_JWT_ISSUER'] ?? 'https://auth.astra.local',
+    keys,
+  });
+
+  const app = buildApp({ config, db, redis, rateLimiter, logger, tokens });
 
   const shutdown = async (signal: string): Promise<void> => {
     logger.info({ signal }, 'shutting down');

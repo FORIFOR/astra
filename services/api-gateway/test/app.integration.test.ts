@@ -9,6 +9,8 @@ import { createLogger } from '@astra/telemetry';
 import { Writable } from 'node:stream';
 import { buildApp } from '../src/app.js';
 import { MemoryRateLimiter } from '../src/rate-limit/memory.js';
+import { loadSigningKeys } from '../src/auth/keys.js';
+import { JwtTokens } from '../src/auth/tokens.js';
 import type { GatewayConfig } from '../src/config.js';
 import type { App } from '../src/fastify.js';
 
@@ -20,7 +22,7 @@ const sink = new Writable({
   },
 });
 
-function makeApp(db: DbHandle): App {
+function makeApp(db: DbHandle, tokens: JwtTokens): App {
   const config: GatewayConfig = {
     env: 'test',
     port: 0,
@@ -44,14 +46,20 @@ function makeApp(db: DbHandle): App {
     redis: null,
     rateLimiter: new MemoryRateLimiter(),
     logger: createLogger({ service: 'test', level: 'silent' }, sink),
+    tokens,
   });
 }
 
 describe.skipIf(!url)('api-gateway http foundation', () => {
   let db: DbHandle;
   let app: App;
+  let tokens: JwtTokens;
 
   beforeAll(async () => {
+    tokens = new JwtTokens({
+      issuer: 'https://auth.astra.test',
+      keys: await loadSigningKeys({ keyId: 'test-1' }),
+    });
     db = createDb({
       url: url!,
       maxConnections: 2,
@@ -61,17 +69,22 @@ describe.skipIf(!url)('api-gateway http foundation', () => {
       statementTimeoutMillis: 10_000,
       applicationName: 'astra-test',
     });
-    app = makeApp(db);
+    app = makeApp(db, tokens);
 
-    app.get('/__test/boom', { config: { rateLimit: false } }, async () => {
+    app.get('/__test/boom', { config: { rateLimit: false, auth: false } }, async () => {
       throw new Error('secret connection string hunter2');
     });
-    app.get('/__test/known', { config: { rateLimit: false } }, async () => {
+    app.get('/__test/known', { config: { rateLimit: false, auth: false } }, async () => {
       throw new AstraError('task.not_found', 'no such task');
     });
     app.get(
       '/__test/limited',
-      { config: { rateLimit: { limit: 2, windowMs: 60_000, by: 'ip', bucket: 'test' } } },
+      {
+        config: {
+          auth: false,
+          rateLimit: { limit: 2, windowMs: 60_000, by: 'ip', bucket: 'test' },
+        },
+      },
       async () => ({ ok: true }),
     );
     await app.ready();
@@ -105,7 +118,7 @@ describe.skipIf(!url)('api-gateway http foundation', () => {
         statementTimeoutMillis: 500,
         applicationName: 'astra-test-broken',
       });
-      const broken = makeApp(brokenDb);
+      const broken = makeApp(brokenDb, tokens);
       await broken.ready();
       try {
         const res = await broken.inject({ method: 'GET', url: '/readyz' });

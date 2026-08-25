@@ -39,11 +39,11 @@ async function withTimeout(work: Promise<unknown>, ms: number): Promise<boolean>
 export function registerHealthRoutes(app: App, deps: HealthDeps): void {
   const timeout = deps.checkTimeoutMs ?? 2_000;
 
-  app.get('/healthz', { config: { rateLimit: false } }, async () => {
+  app.get('/healthz', { config: { rateLimit: false, auth: false } }, async () => {
     return { status: 'ok', version: deps.version } satisfies HealthResponse;
   });
 
-  app.get('/readyz', { config: { rateLimit: false } }, async (_request, reply) => {
+  app.get('/readyz', { config: { rateLimit: false, auth: false } }, async (_request, reply) => {
     const checks: Record<string, 'ok' | 'down'> = {};
 
     checks['database'] = (await withTimeout(pingDb(deps.db), timeout)) ? 'ok' : 'down';

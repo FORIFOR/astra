@@ -247,6 +247,12 @@ importers:
       ioredis:
         specifier: ^6.0.0
         version: 6.0.0
+      jose:
+        specifier: ^6.2.10
+        version: 6.2.10
+      kysely:
+        specifier: 'catalog:'
+        version: 0.29.5
       zod:
         specifier: 'catalog:'
         version: 4.4.3
@@ -1149,6 +1155,9 @@ packages:
   is-number@7.0.0:
     resolution: {integrity: sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==}
     engines: {node: '>=0.12.0'}
+
+  jose@6.2.10:
+    resolution: {integrity: sha512-iiW7J9qRFlGxvCOIBDBDxFePQSn7ZMAnrYGhrrOo6siO/MIqwfyilLR27pkfDgUk+raLuzADS8A3S/KLBisc0g==}
 
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
@@ -2269,6 +2278,8 @@ snapshots:
   is-arrayish@0.2.1: {}
 
   is-number@7.0.0: {}
+
+  jose@6.2.10: {}
 
   js-tokens@4.0.0: {}
 

@@ -9,11 +9,14 @@ import { HEADER_REQUEST_ID } from '@astra/contracts';
 import type { Redis } from 'ioredis';
 import type { DbHandle } from '@astra/db';
 import type { Logger } from '@astra/telemetry';
-import type { GatewayConfig } from './config.js';
+import { allowsDevelopmentRoutes, type GatewayConfig } from './config.js';
 import { installErrorHandlers } from './errors.js';
 import { normalizeRequestId, registerRequestId } from './plugins/request-id.js';
 import { registerRateLimit } from './plugins/rate-limit.js';
 import { registerHealthRoutes } from './routes/health.js';
+import { registerAuth } from './auth/middleware.js';
+import { registerAuthRoutes } from './auth/routes.js';
+import type { JwtTokens } from './auth/tokens.js';
 import type { RateLimiter } from './rate-limit/index.js';
 import type { App } from './fastify.js';
 
@@ -23,6 +26,7 @@ export interface AppDeps {
   readonly redis: Redis | null;
   readonly rateLimiter: RateLimiter;
   readonly logger: Logger;
+  readonly tokens: JwtTokens;
 }
 
 export function buildApp(deps: AppDeps): App {
@@ -36,7 +40,10 @@ export function buildApp(deps: AppDeps): App {
     bodyLimit: 1024 * 1024,
   });
 
+  // フックの登録順が実行順。認証はレート制限より前でなければならない
+  // （user 単位で数えるには user が確定している必要がある。実装仕様 §11.1）
   registerRequestId(app);
+  registerAuth(app, deps.tokens);
   registerRateLimit(app, deps.rateLimiter);
   installErrorHandlers(app);
 
@@ -44,6 +51,11 @@ export function buildApp(deps: AppDeps): App {
     db: deps.db,
     redis: deps.redis,
     version: deps.config.version,
+  });
+  registerAuthRoutes(app, {
+    db: deps.db,
+    tokens: deps.tokens,
+    enableDevTokens: allowsDevelopmentRoutes(deps.config),
   });
 
   return app;

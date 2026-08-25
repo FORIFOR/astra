@@ -21,3 +21,13 @@ export {
   type RouteRateLimit,
 } from './plugins/rate-limit.js';
 export { MemoryRateLimiter, RedisRateLimiter, type RateLimiter } from './rate-limit/index.js';
+export { JwtTokens, bearerToken, type Principal, type TokenVerifier } from './auth/tokens.js';
+export { loadSigningKeys, keyConfigFromEnv, type SigningKeys } from './auth/keys.js';
+export { requirePrincipal } from './auth/middleware.js';
+export {
+  createSession,
+  rotateRefreshToken,
+  revokeSession,
+  revokeDeviceSessions,
+  countActiveSessions,
+} from './auth/sessions.js';
