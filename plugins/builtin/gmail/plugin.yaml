@@ -1,0 +1,41 @@
+# Connector Plugin — product spec §2.4
+id: com.astra.gmail
+name: Gmail
+version: 0.1.0
+publisher: astra
+verified: true
+min_core_version: 0.1.0
+category: connector
+compliance_profile: GENERAL
+execution_surfaces: [cloud]
+permissions:
+  - email.read
+  - email.draft
+  - email.send
+  - contacts.read
+data_accessed:
+  - Gmail messages, threads, labels and drafts
+  - Contact names and addresses appearing in those messages
+connectors:
+  - id: gmail
+    auth: oauth2
+    provider: google
+    scopes:
+      - https://www.googleapis.com/auth/gmail.modify
+      - https://www.googleapis.com/auth/gmail.send
+tools:
+  - id: mail.search
+    risk: READ
+  - id: mail.read
+    risk: READ
+  - id: mail.draft.create
+    risk: REVERSIBLE_WRITE
+  - id: mail.send
+    risk: EXTERNAL_COMMIT
+    requires_confirmation: true
+  - id: mail.trash
+    risk: DESTRUCTIVE
+    requires_confirmation: true
+agents: []
+dashboards: []
+policies: []

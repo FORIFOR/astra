@@ -1,0 +1,23 @@
+{
+  "name": "@astra/ui-kit",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Shared React primitives and the dashboard-schema renderer used by desktop and share-web.",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "tsc -b --clean",
+    "test": "vitest run --passWithNoTests"
+  }
+}

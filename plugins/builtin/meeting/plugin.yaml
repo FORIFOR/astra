@@ -1,0 +1,30 @@
+# Core Agent Plugin (built-in, non-removable) — product spec §2.2, §11.2, §13
+id: com.astra.meeting
+name: Meeting Agent
+version: 0.1.0
+publisher: astra
+verified: true
+min_core_version: 0.1.0
+category: domain-agent
+builtin: true
+removable: false
+compliance_profile: GENERAL
+execution_surfaces: [local, cloud]
+permissions:
+  - microphone.capture
+  - system_audio.capture
+  - calendar.read
+  - artifacts.write
+data_accessed:
+  - Meeting audio captured on this device
+  - Live and final transcripts, translations and derived minutes
+connectors: []
+agents:
+  - id: meeting
+    skill: skills/meeting.md
+    tools: [meeting.start, meeting.stop, meeting.mark_decision, meeting.mark_task]
+dashboards:
+  - id: meetings
+    schema: dashboards/meetings.json
+policies:
+  - policies/meeting-recording.yaml

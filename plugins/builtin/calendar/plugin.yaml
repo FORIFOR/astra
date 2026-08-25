@@ -1,0 +1,34 @@
+# Connector Plugin — product spec §2.4
+id: com.astra.google-calendar
+name: Google Calendar
+version: 0.1.0
+publisher: astra
+verified: true
+min_core_version: 0.1.0
+category: connector
+compliance_profile: GENERAL
+execution_surfaces: [cloud]
+permissions:
+  - calendar.read
+  - calendar.write
+data_accessed:
+  - Calendar events, attendees, locations and conferencing links
+connectors:
+  - id: google-calendar
+    auth: oauth2
+    provider: google
+    scopes:
+      - https://www.googleapis.com/auth/calendar.events
+tools:
+  - id: calendar.list_events
+    risk: READ
+  - id: calendar.create_event
+    risk: REVERSIBLE_WRITE
+  - id: calendar.update_event
+    risk: REVERSIBLE_WRITE
+  - id: calendar.delete_event
+    risk: DESTRUCTIVE
+    requires_confirmation: true
+agents: []
+dashboards: []
+policies: []

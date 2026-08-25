@@ -1,0 +1,27 @@
+{
+  "name": "@astra/agent-sdk",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Authoring surface for skills, tools and delegation used by core and plugin agents.",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "tsc -b --clean",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@astra/contracts": "workspace:*",
+    "@astra/policy": "workspace:*"
+  }
+}

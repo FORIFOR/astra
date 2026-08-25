@@ -1,0 +1,38 @@
+# Connector Plugin (local execution surface) — product spec §2.4, §9.1
+id: com.astra.finder
+name: Finder
+version: 0.1.0
+publisher: astra
+verified: true
+min_core_version: 0.1.0
+category: connector
+compliance_profile: GENERAL
+execution_surfaces: [local]
+permissions:
+  - files.read
+  - files.write
+  - files.index
+data_accessed:
+  - User-selected folders on this device only
+  - Local file index metadata (never raw contents unless attached)
+connectors:
+  - id: local-fs
+    auth: os-permission
+    provider: host
+tools:
+  - id: files.search
+    risk: READ
+    surface: local
+  - id: files.read
+    risk: READ
+    surface: local
+  - id: files.write
+    risk: REVERSIBLE_WRITE
+    surface: local
+  - id: files.move_to_trash
+    risk: DESTRUCTIVE
+    surface: local
+    requires_confirmation: true
+agents: []
+dashboards: []
+policies: []

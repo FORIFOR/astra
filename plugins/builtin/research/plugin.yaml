@@ -1,0 +1,29 @@
+# Core Agent Plugin (built-in, non-removable) — product spec §2.2, §8
+id: com.astra.research
+name: Research Agent
+version: 0.1.0
+publisher: astra
+verified: true
+min_core_version: 0.1.0
+category: domain-agent
+builtin: true
+removable: false
+compliance_profile: GENERAL
+execution_surfaces: [cloud]
+permissions:
+  - web.search
+  - web.fetch
+  - artifacts.write
+data_accessed:
+  - Public web pages retrieved for the current research run
+  - Library artifacts explicitly referenced by the user
+connectors: []
+agents:
+  - id: research
+    skill: skills/research.md
+    tools: [web.search, web.fetch, evidence.record, report.compose]
+dashboards:
+  - id: research-runs
+    schema: dashboards/research-runs.json
+policies:
+  - policies/research-sources.yaml

@@ -1,0 +1,26 @@
+{
+  "name": "@astra/desktop",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Astra desktop client (Tauri v2 + React). Hosts the 4-tab shell and Task Dock.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
+    "preview": "vite preview",
+    "tauri": "tauri"
+  },
+  "dependencies": {
+    "@astra/contracts": "workspace:*",
+    "@astra/ui-kit": "workspace:*",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "@vitejs/plugin-react": "^4.6.0",
+    "vite": "^7.0.0"
+  }
+}

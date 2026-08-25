@@ -1,0 +1,61 @@
+# Local development dependencies for the Astra cloud control plane.
+#   pnpm dev:infra      # up
+#   pnpm dev:infra:down # down
+#
+# Production targets (product spec §16.2): Cloud SQL, Memorystore, Temporal Cloud, GCS.
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: astra-postgres
+    environment:
+      POSTGRES_USER: astra
+      POSTGRES_PASSWORD: astra
+      POSTGRES_DB: astra
+    ports:
+      - '5433:5432'
+    volumes:
+      - astra-pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U astra -d astra']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    container_name: astra-redis
+    ports:
+      - '6380:6379'
+    command: ['redis-server', '--appendonly', 'yes']
+    volumes:
+      - astra-redis:/data
+
+  temporal:
+    image: temporalio/auto-setup:1.27.2
+    container_name: astra-temporal
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB: postgres12
+      DB_PORT: 5432
+      POSTGRES_USER: astra
+      POSTGRES_PWD: astra
+      POSTGRES_SEEDS: postgres
+    ports:
+      - '7233:7233'
+
+  temporal-ui:
+    image: temporalio/ui:2.34.0
+    container_name: astra-temporal-ui
+    depends_on:
+      - temporal
+    environment:
+      TEMPORAL_ADDRESS: temporal:7233
+      TEMPORAL_CORS_ORIGINS: http://localhost:3000
+    ports:
+      - '8233:8080'
+
+volumes:
+  astra-pg:
+  astra-redis:

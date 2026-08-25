@@ -1,0 +1,5 @@
+dist
+node_modules
+*.tsbuildinfo
+pnpm-lock.yaml
+docs/spec/new_ai_platform_design_spec_v0.1.md
