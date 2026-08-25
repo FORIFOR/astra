@@ -1,11 +1,25 @@
 /**
  * @astra/db
  *
- * Typed PostgreSQL access: connection factory, tenant-scoped query guard, generated schema types.
+ * PostgreSQL への型付きアクセスとテナント境界。
+ * スキーマの正本は `infra/db/migrations/*.sql`（ADR 0002）。
  *
- * Phase 0 scaffold only — no implementation yet.
- * Normative spec: docs/spec/phase-0-implementation-spec.md
- * Product spec:   docs/spec/new_ai_platform_design_spec_v0.1.md
+ * 規約:
+ *   - service コードは withTenant / withSystem / withIdentity 以外から DB を触らない
+ *   - 所有していないテーブルに直接 SQL を投げない（実装仕様 §5.1 の所有権表）
+ *   - サービス境界をまたぐトランザクションを張らない
  */
-
-export const DB_PACKAGE = '@astra/db' as const;
+export { dbConfigFromEnv, type DbConfig } from './config.js';
+export { createDb, type Db, type DbHandle } from './pool.js';
+export {
+  withTenant,
+  withSystem,
+  withIdentity,
+  currentTenantId,
+  currentScopeKind,
+  readTenantSetting,
+  type ScopedDb,
+  type ScopeKind,
+} from './tenant.js';
+export type { Database } from './types.js';
+export type * from './generated/schema.js';

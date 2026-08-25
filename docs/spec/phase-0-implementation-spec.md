@@ -541,8 +541,17 @@ CREATE POLICY tasks_tenant_isolation ON tasks
   WITH CHECK (tenant_id = current_setting('app.tenant_id', true)::uuid);
 ```
 
-マイグレーション実行ロールと Temporal のシステム操作用ロールのみ `BYPASSRLS` を持つ。
-アプリ用ロール `astra_app` は持たない。
+接続ロールは 3 つに分ける（`infra/db/bootstrap.sql`）。ロールはデータベースを跨ぐため
+マイグレーションではなく運用手順に置く。
+
+| ロール           | 権限                                           | 用途                         |
+| ---------------- | ---------------------------------------------- | ---------------------------- |
+| `astra_app`      | 非 superuser・非 BYPASSRLS。全テーブルに GRANT | アプリの通常動作             |
+| `astra_identity` | BYPASSRLS。**identity 5 テーブルにのみ GRANT** | 認証（テナント確定前）。§5.4 |
+| `astra_migrate`  | BYPASSRLS                                      | マイグレーションと横断保守   |
+
+`astra_app` に `BYPASSRLS` を与えない。superuser も同様で、
+superuser は `FORCE ROW LEVEL SECURITY` すら無視するため隔離が消える。
 
 ### 4.5 レート制限
 
@@ -566,7 +575,7 @@ api-gateway で Redis のスライディングウィンドウ。Phase 0 の既�
 
 | 所有サービス           | テーブル                                                                               |
 | ---------------------- | -------------------------------------------------------------------------------------- |
-| api-gateway (identity) | `tenants` `users` `memberships` `devices` `sessions`                                   |
+| api-gateway (identity) | `tenants` `users` `memberships` `devices` `sessions`（`withIdentity` の対象。§5.4）    |
 | conversation           | `conversations` `turns`                                                                |
 | task                   | `tasks` `task_events` `event_streams` `approvals` `action_receipts`                    |
 | library                | `artifacts` `artifact_versions`                                                        |
@@ -679,28 +688,70 @@ $$;
 
 ### 5.4 `packages/db`
 
+DB へのアクセスは**必ず**この 3 つのスコープを通す。生の `pool.query` を service から
+直接呼ばない（実装仕様 §14.3-1 で CI が機械検査する）。
+
 ```ts
-export interface Database {
-  tasks: TasksTable;
-  task_events: TaskEventsTable; /* … */
-}
+export function createDb(config: DbConfig): DbHandle;
 
-export function createPool(cfg: DbConfig): Pool;
-
-/** テナント境界。RLS の GUC 設定とトランザクションを一体で扱う唯一の入口 */
+/** テナントに属する全処理。既定。 */
 export function withTenant<T>(
-  tenantId: TenantId,
-  fn: (db: Kysely<Database>) => Promise<T>,
+  h: DbHandle,
+  tenantId: string,
+  fn: (tx: ScopedDb) => Promise<T>,
 ): Promise<T>;
 
-/** テナントを持たない処理（マイグレーション・publisher 登録）専用。使用箇所は許可リスト管理 */
-export function withSystem<T>(fn: (db: Kysely<Database>) => Promise<T>): Promise<T>;
+/** テナントを持たない処理（プラグインカタログ）。RLS 対象は 1 行も見えない。 */
+export function withSystem<T>(h: DbHandle, fn: (tx: ScopedDb) => Promise<T>): Promise<T>;
+
+/** 認証だけ。テナント確定前に users を引く必要がある（逸脱 D-14）。 */
+export function withIdentity<T>(h: DbHandle, fn: (tx: ScopedDb) => Promise<T>): Promise<T>;
+
+export function currentTenantId(): string | null;
+export function currentScopeKind(): 'tenant' | 'system' | 'identity' | null;
 ```
 
-`Database` 型は `kysely-codegen` で `infra/db/schema.sql` から生成し、生成物をコミットする
-（CI で「生成物が最新か」を検査）。
+#### スコープと接続ロールの対応
 
----
+| スコープ       | 接続ロール       | RLS                             | 触れるテーブル                                                            |
+| -------------- | ---------------- | ------------------------------- | ------------------------------------------------------------------------- |
+| `withTenant`   | `astra_app`      | 効く（`app.tenant_id` を設定）  | 全テーブル。ただし自テナント行のみ                                        |
+| `withSystem`   | `astra_app`      | 効く（GUC 未設定 → 全行不可視） | 実質カタログのみ（`plugins` 系）                                          |
+| `withIdentity` | `astra_identity` | BYPASSRLS                       | `tenants` `users` `memberships` `devices` `sessions` のみ（GRANT で限定） |
+
+#### なぜ identity スコープが要るか（逸脱 D-14）
+
+**認証はテナントが決まる前に走る。**
+
+- ログイン: メールアドレスから `users` を引く時点では、どのテナントかまだ分からない。
+  `users` の RLS ポリシーは membership 依存なので、テナント未設定では 0 行しか見えない。
+- サインアップ: `users` を作る時点では membership がまだ無いので、
+  `WITH CHECK` を満たせず INSERT 自体が弾かれる（鶏と卵）。
+
+これを RLS ポリシーの緩和（`users` の INSERT を permissive にする等）で解こうとすると、
+アプリのバグが即座に他テナントへ波及する経路を作ることになる。
+そこで **BYPASSRLS だが identity テーブルにしか GRANT されていない専用ロール**を分ける。
+BYPASSRLS の影響範囲を GRANT で物理的に閉じ込めるのが要点で、
+`withIdentity` から `tasks` を触ると DB が `permission denied` を返す（結合テストで検査済み）。
+
+`ASTRA_DB_IDENTITY_URL` が未設定なら `withIdentity` は**明示的に失敗する**。
+黙ってアプリロールへフォールバックしない（気づかないまま認証が壊れるより落ちる方がよい）。
+
+#### ネスト規則
+
+in-process composition（ADR 0001）でサービス同士が呼び合うため、スコープのネストは起きる。
+
+- `withTenant` の中の同一テナント `withTenant` → **既存トランザクションに相乗り**。
+  トランザクションが分裂しないので、外側の rollback で内側の書き込みも消える。
+- `withTenant` の中の**別テナント** `withTenant` → 例外。
+  テナントをまたぐ書き込みを 1 つの論理処理にさせない。
+- スコープ種別をまたぐネスト（tenant の中で system / identity 等）→ すべて例外。
+
+#### 型生成
+
+`Database` 型は `infra/db/schema.sql` から `kysely-codegen` で生成し、
+`packages/db/src/generated/schema.ts` としてコミットする（`pnpm db:codegen`）。
+CI で「生成物が最新か」を検査する（§14.3-3）。
 
 ## 6. Task Runtime（Temporal）
 
@@ -1171,26 +1222,26 @@ CI で検査する（実装は Phase 0 の P0-16）:
 
 依存順。カッコ内は前提チケット。
 
-| ID    | 内容                                                                                      | DoD                                                        |
-| ----- | ----------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| P0-01 | monorepo scaffold（本コミットで完了）                                                     | `pnpm install` / `pnpm build` が通る                       |
-| P0-02 | `packages/contracts`: ID / エラー / codec / EventEnvelope / EventType union               | unit test green、snake⇄camel 往復が同型                    |
-| P0-03 | `packages/contracts`: Task / Approval / ActionReceipt / Artifact / PluginManifest (P0-02) | 全スキーマの正常系・異常系 test                            |
-| P0-04 | `infra/db` マイグレーション 0001〜0005 + RLS + append-only トリガ (P0-03)                 | `pnpm db:migrate` 成功、`schema.sql` 生成物をコミット      |
-| P0-05 | `packages/db`: pool / `withTenant` / `withSystem` / 生成型 (P0-04)                        | 別テナントの行が見えないことの test                        |
-| P0-06 | `packages/telemetry`: logger / span / auditEvent + ハッシュ連鎖 (P0-05)                   | 連鎖検証ユーティリティの test                              |
-| P0-07 | `packages/policy`: ActionRisk → 承認要否の判定表 (P0-03)                                  | 正本 §9.2 の全リスク区分を網羅する test                    |
-| P0-08 | api-gateway: HTTP 基盤 / エラー / request_id / rate limit / healthz / readyz (P0-05,06)   | `/readyz` が依存断で 503                                   |
-| P0-09 | 認証: dev token 発行 / refresh ローテーション / 再利用検知 / `GET /v1/me` (P0-08)         | 再利用検知で全 session 失効 + audit                        |
-| P0-10 | task-service: `POST /v1/tasks` の受理と冪等化、Temporal 起動 (P0-09)                      | 同一 Idempotency-Key の二重 POST が同一 task を返す        |
-| P0-11 | Task Runtime: `TaskWorkflow` + activity 群 + `echo` handler (P0-10)                       | Temporal test environment で green                         |
-| P0-12 | イベント: `event_streams` 採番 / `appendEvent` / Redis publish (P0-11)                    | 並行 100 発火で欠番・重複なし                              |
-| P0-13 | SSE: `GET /v1/tasks/{id}/stream` + `Last-Event-ID` 再開 (P0-12)                           | 途中切断→再接続で全イベントが1回ずつ届く                   |
-| P0-14 | 承認: `requestApproval` / `POST /approve` / 失効 (P0-11)                                  | 承認・却下・失効の3経路 test                               |
-| P0-15 | library-service: ObjectStore(fs) / artifact 作成 / 取得 / content (P0-05)                 | sha256 一致、越境アクセスが 404                            |
-| P0-16 | plugin-registry: manifest 検証 / builtin seed / catalog / install (P0-05)                 | builtin 5 本が検証を通り、不変条件違反を全部検出           |
-| P0-17 | Local Host Bridge: WS / device token / capability gate / `host.ping` (P0-09)              | 未申告 capability が denied、重複 call_id が再実行されない |
-| P0-18 | CI: build / typecheck / test / §14.3 の規約検査 / 受け入れテスト (全部)                   | main への push で全 gate green                             |
+| ID    | 内容                                                                                      | DoD                                                                                    |
+| ----- | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| P0-01 | monorepo scaffold（本コミットで完了）                                                     | `pnpm install` / `pnpm build` が通る                                                   |
+| P0-02 | `packages/contracts`: ID / エラー / codec / EventEnvelope / EventType union               | unit test green、snake⇄camel 往復が同型                                                |
+| P0-03 | `packages/contracts`: Task / Approval / ActionReceipt / Artifact / PluginManifest (P0-02) | 全スキーマの正常系・異常系 test                                                        |
+| P0-04 | `infra/db` マイグレーション 0001〜0005 + RLS + append-only トリガ (P0-03)                 | `pnpm db:migrate` 成功、`schema.sql` 生成物をコミット                                  |
+| P0-05 | `packages/db`: pool / `withTenant` / `withSystem` / `withIdentity` / 生成型 (P0-04)       | 別テナントの行が見えないことの結合テスト。ネスト規則と identity ロールの権限境界も検査 |
+| P0-06 | `packages/telemetry`: logger / span / auditEvent + ハッシュ連鎖 (P0-05)                   | 連鎖検証ユーティリティの test                                                          |
+| P0-07 | `packages/policy`: ActionRisk → 承認要否の判定表 (P0-03)                                  | 正本 §9.2 の全リスク区分を網羅する test                                                |
+| P0-08 | api-gateway: HTTP 基盤 / エラー / request_id / rate limit / healthz / readyz (P0-05,06)   | `/readyz` が依存断で 503                                                               |
+| P0-09 | 認証: dev token 発行 / refresh ローテーション / 再利用検知 / `GET /v1/me` (P0-08)         | 再利用検知で全 session 失効 + audit                                                    |
+| P0-10 | task-service: `POST /v1/tasks` の受理と冪等化、Temporal 起動 (P0-09)                      | 同一 Idempotency-Key の二重 POST が同一 task を返す                                    |
+| P0-11 | Task Runtime: `TaskWorkflow` + activity 群 + `echo` handler (P0-10)                       | Temporal test environment で green                                                     |
+| P0-12 | イベント: `event_streams` 採番 / `appendEvent` / Redis publish (P0-11)                    | 並行 100 発火で欠番・重複なし                                                          |
+| P0-13 | SSE: `GET /v1/tasks/{id}/stream` + `Last-Event-ID` 再開 (P0-12)                           | 途中切断→再接続で全イベントが1回ずつ届く                                               |
+| P0-14 | 承認: `requestApproval` / `POST /approve` / 失効 (P0-11)                                  | 承認・却下・失効の3経路 test                                                           |
+| P0-15 | library-service: ObjectStore(fs) / artifact 作成 / 取得 / content (P0-05)                 | sha256 一致、越境アクセスが 404                                                        |
+| P0-16 | plugin-registry: manifest 検証 / builtin seed / catalog / install (P0-05)                 | builtin 5 本が検証を通り、不変条件違反を全部検出                                       |
+| P0-17 | Local Host Bridge: WS / device token / capability gate / `host.ping` (P0-09)              | 未申告 capability が denied、重複 call_id が再実行されない                             |
+| P0-18 | CI: build / typecheck / test / §14.3 の規約検査 / 受け入れテスト (全部)                   | main への push で全 gate green                                                         |
 
 `packages/{ui-kit,agent-sdk,plugin-sdk除く}` と `services/{conversation,context,research,meeting,share,agent-runtime,world-model,notification}`、
 `workers/{research,media,domain}` は Phase 0 では **placeholder のまま**。
@@ -1238,22 +1289,23 @@ AC-8〜AC-16 は「後から入れられない性質」を Phase 0 で固定す�
 いずれも正本の記述を否定するものではなく、実装可能な粒度へ落とす際の決定。
 新たな逸脱を作る場合は本表に追記してから実装する。
 
-| ID    | 逸脱・確定                                                                                        | 根拠                                                                                                 |
-| ----- | ------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| D-01  | Phase 0〜3 はサービス境界を保ったまま **1 プロセスにデプロイ**する                                | §2.3。Phase 0 の検証対象を絞るため。境界維持ルールを §14.3 で機械検査                                |
-| D-02  | `packages/db` を §26 の構成に追加                                                                 | SQL 正本 + 型付きアクセスの置き場所が §26 に無い                                                     |
-| D-03  | Event envelope に `stream_kind` / `stream_id` / `tenant_id` を追加                                | 正本 §20 の「sequence で再送」を実装するには列の識別子が必要                                         |
-| D-03b | イベント型に `task.cancelled` を追加                                                              | 正本 §24 が cancellation を必須にしているため                                                        |
-| D-04  | サーバ→クライアントは SSE、双方向のみ WS                                                          | 正本 §19 の `GET …/stream` と `WS …/audio` の書き分けに一致                                          |
-| D-05  | ID は UUIDv7、prefix 無し                                                                         | §1.2                                                                                                 |
-| D-06  | `conversations` / `turns` の DDL を Phase 0 で作る（書き込みは Phase 1）                          | `tasks.conversation_id` の FK 先が必要                                                               |
-| D-07  | ORM を使わず dbmate(SQL) + Kysely                                                                 | 正本 §18 が SQL 前提。スキーマ所有権を SQL に残す                                                    |
-| D-08  | JSON は snake_case で統一                                                                         | 正本 §20 の封筒が snake_case。二重規約を作らない                                                     |
-| D-09  | Phase 0 で承認状態機械と action receipt を実装する                                                | 後付け困難。正本 §9 の「勝手に成功扱いしない」は骨格側の性質                                         |
-| D-10  | manifest に `data_accessed` / `compliance_profile` / `builtin` / `removable` を必須追加           | 正本 §2.4 の Plugin detail page 必須表示項目と §22 の profile mandatory を manifest 側で強制するため |
-| D-11  | 越境アクセスは 403 ではなく 404 を返す                                                            | 資源の存在自体を漏らさない                                                                           |
-| D-12  | plugin manifest のスキーマと不変条件を `packages/plugin-sdk` ではなく `packages/contracts` に置く | manifest は catalog 応答としても境界を越えるため。plugin-sdk は YAML 読み込みと署名検証を担当        |
-| D-13  | codec に不透明キー集合（`OPAQUE_KEYS`）を設ける                                                   | `task.input` などユーザー由来 JSON のキーを変換すると値が壊れる。§1.1                                |
+| ID    | 逸脱・確定                                                                                        | 根拠                                                                                                                                                                       |
+| ----- | ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D-01  | Phase 0〜3 はサービス境界を保ったまま **1 プロセスにデプロイ**する                                | §2.3。Phase 0 の検証対象を絞るため。境界維持ルールを §14.3 で機械検査                                                                                                      |
+| D-02  | `packages/db` を §26 の構成に追加                                                                 | SQL 正本 + 型付きアクセスの置き場所が §26 に無い                                                                                                                           |
+| D-03  | Event envelope に `stream_kind` / `stream_id` / `tenant_id` を追加                                | 正本 §20 の「sequence で再送」を実装するには列の識別子が必要                                                                                                               |
+| D-03b | イベント型に `task.cancelled` を追加                                                              | 正本 §24 が cancellation を必須にしているため                                                                                                                              |
+| D-04  | サーバ→クライアントは SSE、双方向のみ WS                                                          | 正本 §19 の `GET …/stream` と `WS …/audio` の書き分けに一致                                                                                                                |
+| D-05  | ID は UUIDv7、prefix 無し                                                                         | §1.2                                                                                                                                                                       |
+| D-06  | `conversations` / `turns` の DDL を Phase 0 で作る（書き込みは Phase 1）                          | `tasks.conversation_id` の FK 先が必要                                                                                                                                     |
+| D-07  | ORM を使わず dbmate(SQL) + Kysely                                                                 | 正本 §18 が SQL 前提。スキーマ所有権を SQL に残す                                                                                                                          |
+| D-08  | JSON は snake_case で統一                                                                         | 正本 §20 の封筒が snake_case。二重規約を作らない                                                                                                                           |
+| D-09  | Phase 0 で承認状態機械と action receipt を実装する                                                | 後付け困難。正本 §9 の「勝手に成功扱いしない」は骨格側の性質                                                                                                               |
+| D-10  | manifest に `data_accessed` / `compliance_profile` / `builtin` / `removable` を必須追加           | 正本 §2.4 の Plugin detail page 必須表示項目と §22 の profile mandatory を manifest 側で強制するため                                                                       |
+| D-11  | 越境アクセスは 403 ではなく 404 を返す                                                            | 資源の存在自体を漏らさない                                                                                                                                                 |
+| D-12  | plugin manifest のスキーマと不変条件を `packages/plugin-sdk` ではなく `packages/contracts` に置く | manifest は catalog 応答としても境界を越えるため。plugin-sdk は YAML 読み込みと署名検証を担当                                                                              |
+| D-13  | codec に不透明キー集合（`OPAQUE_KEYS`）を設ける                                                   | `task.input` などユーザー由来 JSON のキーを変換すると値が壊れる。§1.1                                                                                                      |
+| D-14  | 認証専用の DB スコープ `withIdentity` と最小権限 BYPASSRLS ロール `astra_identity` を追加         | 認証はテナント確定前に走るため RLS 下では users を引けず、サインアップは membership 不在で INSERT が弾かれる。RLS 緩和ではなく GRANT で BYPASSRLS の範囲を閉じ込める。§5.4 |
 
 ---
 

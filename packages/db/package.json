@@ -21,6 +21,13 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@astra/contracts": "workspace:*"
+    "@astra/contracts": "workspace:*",
+    "kysely": "catalog:",
+    "pg": "catalog:"
+  },
+  "devDependencies": {
+    "@types/pg": "catalog:",
+    "kysely-codegen": "catalog:",
+    "vitest": "catalog:"
   }
 }

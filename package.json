@@ -22,13 +22,15 @@
     "db:rollback": "dbmate --migrations-dir infra/db/migrations --schema-file infra/db/schema.sql rollback",
     "test:acceptance": "vitest run --dir evals/actions --passWithNoTests",
     "db:verify": "./infra/db/verify.sh",
-    "db:drop": "dbmate --migrations-dir infra/db/migrations --no-dump-schema drop"
+    "db:drop": "dbmate --migrations-dir infra/db/migrations --no-dump-schema drop",
+    "test:db": "./infra/db/with-test-db.sh pnpm -r --no-bail run test",
+    "db:codegen": "./infra/db/with-test-db.sh sh -c 'cd packages/db && npx kysely-codegen --url \"$TEST_ADMIN_DATABASE_URL\" --dialect postgres --out-file src/generated/schema.ts'"
   },
   "devDependencies": {
-    "@types/node": "^22.15.0",
-    "prettier": "^3.6.0",
-    "tsx": "^4.20.0",
-    "typescript": "^5.9.0",
-    "vitest": "^3.2.0"
+    "@types/node": "catalog:",
+    "prettier": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }

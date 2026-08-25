@@ -21,9 +21,9 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "zod": "^4.4.3"
+    "zod": "catalog:"
   },
   "devDependencies": {
-    "vitest": "^3.2.7"
+    "vitest": "catalog:"
   }
 }

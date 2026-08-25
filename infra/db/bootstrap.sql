@@ -16,9 +16,20 @@ BEGIN
     -- マイグレーションと世界横断の保守だけがこのロールを使う
     CREATE ROLE astra_migrate LOGIN PASSWORD 'astra_migrate' BYPASSRLS;
   END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'astra_identity') THEN
+    -- 認証専用（逸脱 D-14）。ログインとサインアップはテナント確定前に走るため、
+    -- RLS 下では users を引けない。BYPASSRLS だが GRANT を identity テーブルに限定し、
+    -- このロールでは他のテーブルに一切触れないようにする。
+    CREATE ROLE astra_identity LOGIN PASSWORD 'astra_identity' BYPASSRLS;
+  END IF;
 END $$;
 
 GRANT USAGE ON SCHEMA public TO astra_app;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO astra_app;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public
   GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO astra_app;
+
+-- 認証専用ロール: identity テーブルだけ。DELETE も与えない（identity は論理削除）。
+GRANT USAGE ON SCHEMA public TO astra_identity;
+GRANT SELECT, INSERT, UPDATE ON tenants, users, memberships, devices, sessions
+  TO astra_identity;
