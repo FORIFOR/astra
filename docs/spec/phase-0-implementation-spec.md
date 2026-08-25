@@ -988,21 +988,16 @@ ON CONFLICT (stream_kind, stream_id, idempotency_key) DO NOTHING;
 
 ### 7.3 購読と再開
 
-```text
-GET /v1/tasks/{taskId}/stream
-Accept: text/event-stream
-Last-Event-ID: 42            （任意。無ければ 0 扱い）
-```
+**DB を唯一の真実にする。**Redis の pub/sub は「早く起こす」ためだけに使い、
+配信の正しさを pub/sub の到達性に依存させない。取りこぼしても次の周回で DB から拾えるので、
+欠番なしの契約（§7.2）が pub/sub の品質に左右されない。Redis が無い環境では
+そのまま間隔ポーリングに落ちる（開発とテスト）。
 
-サーバ側の手順:
+**欠番を見つけたら進めずに切る。**`sequence` の連続性はクライアントの取りこぼし検知に
+使う契約なので、サーバ側が黙って飛ばすとその契約が意味を失う。
 
-1. Redis チャネル `astra:stream:task:{taskId}` を先に購読し、受信分をバッファへ退避
-2. DB から `sequence > lastEventId` を昇順で読み、そのまま送出
-3. バッファのうち「DB 読み出しの最大 sequence 以下」を捨て、残りを送出
-4. 以降はライブ配信
-
-購読を先に張ってから DB を読むことで、リプレイとライブの隙間で落ちるイベントを無くす。
-クライアントは `sequence` の欠番を検知したら再接続する。
+**接続を無限に抱えない。**終端イベント（`task.completed` / `task.failed` / `task.cancelled`）を
+送ったら閉じる。終端が来なくても上限時間で打ち切り、クライアントに再接続させる。
 
 SSE フレーム:
 
@@ -1384,8 +1379,8 @@ CI で検査する（実装は Phase 0 の P0-16）:
 | P0-10 | task-service: `POST /v1/tasks` の受理と冪等化、Temporal 起動 (P0-09)                      | 同一 Idempotency-Key の二重 POST が同一 task を返し、workflow は 1 本だけ                             |
 | P0-11 | Task Runtime: `TaskWorkflow` + activity 群 + `echo` handler (P0-10)                       | Temporal の test environment で green（`@temporalio/testing` はローカルサーバ内蔵なので Docker 不要） |
 | P0-12 | イベント: `event_streams` 採番 / `appendEvent` / Redis publish (P0-11)                    | 縦串で欠番・重複なし。冪等キー付き再送で採番を消費しない                                              |
-| P0-13 | SSE: `GET /v1/tasks/{id}/stream` + `Last-Event-ID` 再開 (P0-12)                           | 途中切断→再接続で全イベントが1回ずつ届く                                                              |
-| P0-14 | 承認: `requestApproval` / `POST /approve` / 失効 (P0-11)                                  | 承認・却下・失効の3経路 test                                                                          |
+| P0-13 | SSE: `GET /v1/tasks/{id}/stream` + `Last-Event-ID` 再開 (P0-12)                           | 途中切断→再接続で全イベントが 1 回ずつ届く。欠番を検出したら進めずに切る                              |
+| P0-14 | 承認: `requestApproval` / `POST /approve` / 失効 (P0-11)                                  | 承認・却下・二重決定・失効の 4 経路 test                                                              |
 | P0-15 | library-service: ObjectStore(fs) / artifact 作成 / 取得 / content (P0-05)                 | sha256 一致、越境アクセスが 404                                                                       |
 | P0-16 | plugin-registry: manifest 検証 / builtin seed / catalog / install (P0-05)                 | builtin 5 本が検証を通り、不変条件違反を全部検出                                                      |
 | P0-17 | Local Host Bridge: WS / device token / capability gate / `host.ping` (P0-09)              | 未申告 capability が denied、重複 call_id が再実行されない                                            |

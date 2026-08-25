@@ -2,6 +2,8 @@
 import { Redis } from 'ioredis';
 import { createDb } from '@astra/db';
 import { createLogger } from '@astra/telemetry';
+import { FsObjectStore, LibraryService } from '@astra/service-library';
+import { TaskService, TemporalTaskRuntime } from '@astra/service-task';
 import { buildApp } from './app.js';
 import { gatewayConfigFromEnv } from './config.js';
 import { keyConfigFromEnv, loadSigningKeys } from './auth/keys.js';
@@ -36,12 +38,23 @@ async function main(): Promise<void> {
     keys,
   });
 
-  const app = buildApp({ config, db, redis, rateLimiter, logger, tokens });
+  const library = new LibraryService(
+    db,
+    new FsObjectStore(process.env['ASTRA_OBJECT_STORE_ROOT'] ?? './.data/objects'),
+  );
+  const runtime = await TemporalTaskRuntime.connect({
+    address: process.env['TEMPORAL_ADDRESS'] ?? 'localhost:7233',
+    namespace: process.env['TEMPORAL_NAMESPACE'] ?? 'default',
+  });
+  const tasks = new TaskService(db, runtime);
+
+  const app = buildApp({ config, db, redis, rateLimiter, logger, tokens, tasks, library });
 
   const shutdown = async (signal: string): Promise<void> => {
     logger.info({ signal }, 'shutting down');
     await app.close();
     await rateLimiter.close();
+    await runtime.close();
     await db.close();
     process.exit(0);
   };

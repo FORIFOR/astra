@@ -24,6 +24,15 @@ export { MemoryRateLimiter, RedisRateLimiter, type RateLimiter } from './rate-li
 export { JwtTokens, bearerToken, type Principal, type TokenVerifier } from './auth/tokens.js';
 export { loadSigningKeys, keyConfigFromEnv, type SigningKeys } from './auth/keys.js';
 export { requirePrincipal } from './auth/middleware.js';
+export { registerTaskRoutes, type TaskRouteDeps } from './routes/tasks.js';
+export { registerArtifactRoutes, type ArtifactRouteDeps } from './routes/artifacts.js';
+export {
+  pumpEventStream,
+  parseLastEventId,
+  pollingWaker,
+  redisWaker,
+  type EventWaker,
+} from './routes/sse.js';
 export {
   createSession,
   rotateRefreshToken,

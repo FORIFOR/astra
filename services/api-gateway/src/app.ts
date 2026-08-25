@@ -8,6 +8,8 @@ import Fastify from 'fastify';
 import { HEADER_REQUEST_ID } from '@astra/contracts';
 import type { Redis } from 'ioredis';
 import type { DbHandle } from '@astra/db';
+import type { TaskService } from '@astra/service-task';
+import type { LibraryService } from '@astra/service-library';
 import type { Logger } from '@astra/telemetry';
 import { allowsDevelopmentRoutes, type GatewayConfig } from './config.js';
 import { installErrorHandlers } from './errors.js';
@@ -17,6 +19,8 @@ import { registerHealthRoutes } from './routes/health.js';
 import { registerAuth } from './auth/middleware.js';
 import { registerAuthRoutes } from './auth/routes.js';
 import type { JwtTokens } from './auth/tokens.js';
+import { registerTaskRoutes } from './routes/tasks.js';
+import { registerArtifactRoutes } from './routes/artifacts.js';
 import type { RateLimiter } from './rate-limit/index.js';
 import type { App } from './fastify.js';
 
@@ -27,6 +31,10 @@ export interface AppDeps {
   readonly rateLimiter: RateLimiter;
   readonly logger: Logger;
   readonly tokens: JwtTokens;
+  readonly tasks: TaskService;
+  readonly library: LibraryService;
+  /** SSE のポーリング間隔。テストは短くする。 */
+  readonly ssePollIntervalMs?: number;
 }
 
 export function buildApp(deps: AppDeps): App {
@@ -57,6 +65,12 @@ export function buildApp(deps: AppDeps): App {
     tokens: deps.tokens,
     enableDevTokens: allowsDevelopmentRoutes(deps.config),
   });
+  registerTaskRoutes(app, {
+    tasks: deps.tasks,
+    redis: deps.redis,
+    ...(deps.ssePollIntervalMs === undefined ? {} : { ssePollIntervalMs: deps.ssePollIntervalMs }),
+  });
+  registerArtifactRoutes(app, { library: deps.library });
 
   return app;
 }

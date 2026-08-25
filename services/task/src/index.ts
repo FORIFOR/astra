@@ -25,6 +25,7 @@ export {
   workflowIdFor,
   TemporalTaskRuntime,
   type TaskRuntime,
+  InMemoryTaskRuntime,
   type StartedWorkflow,
 } from './runtime/index.js';
 export type { TaskWorkflowInput, TaskResult, TaskStateSnapshot } from './workflows.js';

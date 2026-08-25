@@ -17,6 +17,12 @@
     },
     {
       "path": "../../packages/telemetry"
+    },
+    {
+      "path": "../../services/library"
+    },
+    {
+      "path": "../../services/task"
     }
   ]
 }

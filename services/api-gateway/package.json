@@ -31,7 +31,9 @@
     "ioredis": "^6.0.0",
     "jose": "^6.2.10",
     "zod": "catalog:",
-    "kysely": "catalog:"
+    "kysely": "catalog:",
+    "@astra/service-task": "workspace:*",
+    "@astra/service-library": "workspace:*"
   },
   "devDependencies": {
     "vitest": "catalog:"

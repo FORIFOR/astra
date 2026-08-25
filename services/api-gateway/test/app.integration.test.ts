@@ -5,94 +5,46 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { ApiError, AstraError, HEADER_REQUEST_ID } from '@astra/contracts';
 import { createDb, type DbHandle } from '@astra/db';
-import { createLogger } from '@astra/telemetry';
-import { Writable } from 'node:stream';
-import { buildApp } from '../src/app.js';
-import { MemoryRateLimiter } from '../src/rate-limit/memory.js';
-import { loadSigningKeys } from '../src/auth/keys.js';
-import { JwtTokens } from '../src/auth/tokens.js';
-import type { GatewayConfig } from '../src/config.js';
+import { makeTestApp, makeTokens, testDbConfig, type TestApp } from './support.js';
+import type { JwtTokens } from '../src/auth/tokens.js';
 import type { App } from '../src/fastify.js';
 
 const url = process.env['TEST_DATABASE_URL'];
 
-const sink = new Writable({
-  write(_c, _e, cb) {
-    cb();
-  },
-});
-
-function makeApp(db: DbHandle, tokens: JwtTokens): App {
-  const config: GatewayConfig = {
-    env: 'test',
-    port: 0,
-    host: '127.0.0.1',
-    logLevel: 'silent',
-    redisUrl: undefined,
-    version: '0.1.0',
-    db: {
-      url: url!,
-      maxConnections: 2,
-      identityMaxConnections: 1,
-      idleTimeoutMillis: 5_000,
-      connectionTimeoutMillis: 5_000,
-      statementTimeoutMillis: 10_000,
-      applicationName: 'astra-test',
-    },
-  };
-  return buildApp({
-    config,
-    db,
-    redis: null,
-    rateLimiter: new MemoryRateLimiter(),
-    logger: createLogger({ service: 'test', level: 'silent' }, sink),
-    tokens,
-  });
-}
-
 describe.skipIf(!url)('api-gateway http foundation', () => {
-  let db: DbHandle;
+  let harness: TestApp;
   let app: App;
   let tokens: JwtTokens;
 
   beforeAll(async () => {
-    tokens = new JwtTokens({
-      issuer: 'https://auth.astra.test',
-      keys: await loadSigningKeys({ keyId: 'test-1' }),
-    });
-    db = createDb({
-      url: url!,
-      maxConnections: 2,
-      identityMaxConnections: 1,
-      idleTimeoutMillis: 5_000,
-      connectionTimeoutMillis: 5_000,
-      statementTimeoutMillis: 10_000,
-      applicationName: 'astra-test',
-    });
-    app = makeApp(db, tokens);
-
-    app.get('/__test/boom', { config: { rateLimit: false, auth: false } }, async () => {
-      throw new Error('secret connection string hunter2');
-    });
-    app.get('/__test/known', { config: { rateLimit: false, auth: false } }, async () => {
-      throw new AstraError('task.not_found', 'no such task');
-    });
-    app.get(
-      '/__test/limited',
-      {
-        config: {
-          auth: false,
-          rateLimit: { limit: 2, windowMs: 60_000, by: 'ip', bucket: 'test' },
-        },
+    tokens = await makeTokens();
+    harness = await makeTestApp({
+      dbConfig: testDbConfig(url!),
+      tokens,
+      configure(instance) {
+        instance.get('/__test/boom', { config: { rateLimit: false, auth: false } }, async () => {
+          throw new Error('secret connection string hunter2');
+        });
+        instance.get('/__test/known', { config: { rateLimit: false, auth: false } }, async () => {
+          throw new AstraError('task.not_found', 'no such task');
+        });
+        instance.get(
+          '/__test/limited',
+          {
+            config: {
+              auth: false,
+              rateLimit: { limit: 2, windowMs: 60_000, by: 'ip', bucket: 'test' },
+            },
+          },
+          async () => ({ ok: true }),
+        );
       },
-      async () => ({ ok: true }),
-    );
-    await app.ready();
+    });
+    app = harness.app;
   });
 
   afterAll(async () => {
-    await app?.close();
-    await db?.close();
+    await harness?.close();
   });
 
   describe('health probes', () => {
@@ -109,19 +61,14 @@ describe.skipIf(!url)('api-gateway http foundation', () => {
     });
 
     it('fails readiness when the database is unreachable', async () => {
-      const brokenDb = createDb({
-        url: 'postgres://nobody@127.0.0.1:1/nothing?sslmode=disable',
-        maxConnections: 1,
-        identityMaxConnections: 1,
-        idleTimeoutMillis: 500,
+      const brokenConfig = {
+        ...testDbConfig('postgres://nobody@127.0.0.1:1/nothing?sslmode=disable'),
         connectionTimeoutMillis: 300,
-        statementTimeoutMillis: 500,
-        applicationName: 'astra-test-broken',
-      });
-      const broken = makeApp(brokenDb, tokens);
-      await broken.ready();
+      };
+      const brokenDb = createDb(brokenConfig);
+      const broken = await makeTestApp({ db: brokenDb, dbConfig: brokenConfig, tokens });
       try {
-        const res = await broken.inject({ method: 'GET', url: '/readyz' });
+        const res = await broken.app.inject({ method: 'GET', url: '/readyz' });
         expect(res.statusCode).toBe(503);
         expect(res.json()).toMatchObject({ status: 'down', checks: { database: 'down' } });
       } finally {

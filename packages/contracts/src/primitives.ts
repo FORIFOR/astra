@@ -26,9 +26,14 @@ export function compareSemver(a: string, b: string): number {
   return 0;
 }
 
-/** カーソルページング。UUIDv7 の時系列性を利用し、id をそのままカーソルにする。 */
+/**
+ * カーソルページング。UUIDv7 の時系列性を利用し、id をそのままカーソルにする。
+ *
+ * クエリ文字列から来るので `limit` は必ず文字列。数値として受けるために coerce する
+ * （ここを忘れると `?limit=2` が丸ごと検証エラーになる）。
+ */
 export const PageQuery = z.object({
-  limit: z.number().int().min(1).max(100).default(20),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
   cursor: z.uuid().optional(),
 });
 export type PageQuery = z.infer<typeof PageQuery>;

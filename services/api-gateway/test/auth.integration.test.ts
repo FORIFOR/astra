@@ -2,62 +2,24 @@
  * 認証の結合テスト。チケット P0-09 の DoD（再利用検知で全 session 失効 + audit）。
  *   ./infra/db/with-test-db.sh pnpm --filter @astra/service-api-gateway test
  */
-import { Writable } from 'node:stream';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { type ApiError, type MeResponse, type TokenResponse, uuidv7 } from '@astra/contracts';
 import { createDb, withTenant, type DbHandle } from '@astra/db';
-import { createLogger, readAuditChain, verifyAuditChain } from '@astra/telemetry';
-import { buildApp } from '../src/app.js';
-import { MemoryRateLimiter } from '../src/rate-limit/memory.js';
-import { loadSigningKeys } from '../src/auth/keys.js';
-import { JwtTokens } from '../src/auth/tokens.js';
+import { readAuditChain, verifyAuditChain } from '@astra/telemetry';
 import { countActiveSessions } from '../src/auth/sessions.js';
-import type { GatewayConfig, Environment } from '../src/config.js';
+import { makeTestApp, makeTokens, testDbConfig, type TestApp } from './support.js';
+import { JwtTokens } from '../src/auth/tokens.js';
+import { loadSigningKeys } from '../src/auth/keys.js';
+import type { Environment } from '../src/config.js';
 import type { App } from '../src/fastify.js';
 
 const url = process.env['TEST_DATABASE_URL'];
 const identityUrl = process.env['TEST_IDENTITY_DATABASE_URL'];
 
-const sink = new Writable({
-  write(_c, _e, cb) {
-    cb();
-  },
-});
-
-const dbConfig = {
-  url: url!,
-  identityUrl,
-  maxConnections: 6,
-  identityMaxConnections: 2,
-  idleTimeoutMillis: 5_000,
-  connectionTimeoutMillis: 5_000,
-  statementTimeoutMillis: 10_000,
-  applicationName: 'astra-test',
-};
-
-function makeApp(db: DbHandle, tokens: JwtTokens, env: Environment = 'test'): App {
-  const config: GatewayConfig = {
-    env,
-    port: 0,
-    host: '127.0.0.1',
-    logLevel: 'silent',
-    redisUrl: undefined,
-    version: '0.1.0',
-    db: dbConfig,
-  };
-  return buildApp({
-    config,
-    db,
-    redis: null,
-    rateLimiter: new MemoryRateLimiter(),
-    logger: createLogger({ service: 'test', level: 'silent' }, sink),
-    tokens,
-  });
-}
-
 describe.skipIf(!url)('authentication', () => {
   let db: DbHandle;
   let app: App;
+  let harness: TestApp;
   let tokens: JwtTokens;
 
   const signUp = async (email = `u-${uuidv7()}@example.com`): Promise<TokenResponse> => {
@@ -71,23 +33,20 @@ describe.skipIf(!url)('authentication', () => {
   };
 
   beforeAll(async () => {
-    db = createDb(dbConfig);
-    tokens = new JwtTokens({
-      issuer: 'https://auth.astra.test',
-      keys: await loadSigningKeys({ keyId: 'test-1' }),
-    });
+    db = createDb(testDbConfig(url!, identityUrl));
+    tokens = await makeTokens();
   });
 
   // 認証経路には 10 req/分/IP の制限が掛かっている（実装仕様 §4.5）。
   // テストごとに新しいアプリ（= 新しいレート制限の状態）を立てる。
   // 制限そのものは専用のテストで確認する。
   beforeEach(async () => {
-    app = makeApp(db, tokens);
-    await app.ready();
+    harness = await makeTestApp({ db, dbConfig: testDbConfig(url!, identityUrl), tokens });
+    app = harness.app;
   });
 
   afterEach(async () => {
-    await app?.close();
+    await harness?.close();
   });
 
   afterAll(async () => {
@@ -128,11 +87,10 @@ describe.skipIf(!url)('authentication', () => {
     });
 
     it('rate limits the auth routes per IP', async () => {
-      const fresh = makeApp(db, tokens);
-      await fresh.ready();
+      const fresh = await makeTestApp({ db, dbConfig: testDbConfig(url!, identityUrl), tokens });
       try {
         const hit = () =>
-          fresh.inject({
+          fresh.app.inject({
             method: 'POST',
             url: '/v1/auth/refresh',
             payload: { refresh_token: 'v1.x.y.z' },
@@ -148,10 +106,14 @@ describe.skipIf(!url)('authentication', () => {
     });
 
     it('is not registered outside development', async () => {
-      const prod = makeApp(db, tokens, 'production');
-      await prod.ready();
+      const prod = await makeTestApp({
+        db,
+        dbConfig: testDbConfig(url!, identityUrl),
+        tokens,
+        env: 'production' as Environment,
+      });
       try {
-        const res = await prod.inject({
+        const res = await prod.app.inject({
           method: 'POST',
           url: '/v1/auth/dev/token',
           payload: { email: 'x@example.com' },
