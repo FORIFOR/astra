@@ -4,6 +4,7 @@ import { createDb } from '@astra/db';
 import { createLogger } from '@astra/telemetry';
 import { FsObjectStore, LibraryService } from '@astra/service-library';
 import { TaskService, TemporalTaskRuntime } from '@astra/service-task';
+import { PluginRegistryService } from '@astra/service-plugin-registry';
 import { buildApp } from './app.js';
 import { gatewayConfigFromEnv } from './config.js';
 import { keyConfigFromEnv, loadSigningKeys } from './auth/keys.js';
@@ -47,8 +48,21 @@ async function main(): Promise<void> {
     namespace: process.env['TEMPORAL_NAMESPACE'] ?? 'default',
   });
   const tasks = new TaskService(db, runtime);
+  const registry = new PluginRegistryService({ db, coreVersion: config.version });
+  // 同梱プラグインは起動のたびに読み直す。バンドルが正、DB はその写し。
+  await registry.seedBuiltins(process.env['ASTRA_BUILTIN_PLUGINS_DIR'] ?? './plugins/builtin');
 
-  const app = buildApp({ config, db, redis, rateLimiter, logger, tokens, tasks, library });
+  const app = buildApp({
+    config,
+    db,
+    redis,
+    rateLimiter,
+    logger,
+    tokens,
+    tasks,
+    library,
+    registry,
+  });
 
   const shutdown = async (signal: string): Promise<void> => {
     logger.info({ signal }, 'shutting down');

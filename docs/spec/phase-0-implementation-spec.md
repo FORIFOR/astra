@@ -1143,13 +1143,15 @@ WS /v1/host/bridge
 
 ### 10.4 実行セマンティクス
 
-- `call_id` で at-most-once。ホストは処理済み `call_id` を 10 分間保持し、重複は前回結果を返す。
-- `deadline_ms` 超過はホスト側で中断し `host.timeout` を返す。クラウド側は再試行しない
-  （副作用の二重実行を避ける。再試行は上位の workflow が明示的に行う）。
+- `call_id` で at-most-once。ホストは処理済み `call_id` を 10 分保持し、重複は前回結果を返す。
+- `deadline_ms` 超過はホスト側で中断し `host.timeout` を返す。
+  **クラウド側は再試行しない。**ホストで副作用が起きたか分からない以上、勝手に二重実行させない。
+  再試行は上位の workflow が明示的に判断する。
+- 1 device 1 接続。重複接続は古い方を切り、その接続で待っていた呼び出しは全部失敗させる。
+- 認証は **upgrade の前**に済ませる。接続を受け入れてから閉じると、クライアントには
+  「開いた直後に切れた」としか見えず原因が分からない。`preValidation` で 401 を返す。
 - Phase 0 の capability は `host.ping` と `host.system.info` の 2 つだけ。
   ファイル・画面・音声は Phase 1 以降。
-
----
 
 ## 11. Phase 0 の API 一覧
 
@@ -1382,8 +1384,8 @@ CI で検査する（実装は Phase 0 の P0-16）:
 | P0-13 | SSE: `GET /v1/tasks/{id}/stream` + `Last-Event-ID` 再開 (P0-12)                           | 途中切断→再接続で全イベントが 1 回ずつ届く。欠番を検出したら進めずに切る                              |
 | P0-14 | 承認: `requestApproval` / `POST /approve` / 失効 (P0-11)                                  | 承認・却下・二重決定・失効の 4 経路 test                                                              |
 | P0-15 | library-service: ObjectStore(fs) / artifact 作成 / 取得 / content (P0-05)                 | sha256 一致、越境アクセスが 404                                                                       |
-| P0-16 | plugin-registry: manifest 検証 / builtin seed / catalog / install (P0-05)                 | builtin 5 本が検証を通り、不変条件違反を全部検出                                                      |
-| P0-17 | Local Host Bridge: WS / device token / capability gate / `host.ping` (P0-09)              | 未申告 capability が denied、重複 call_id が再実行されない                                            |
+| P0-16 | plugin-registry: manifest 検証 / builtin seed / catalog / install (P0-05)                 | 同梱 5 本が検証を通り、不変条件違反を全部検出。install は未許可スコープを denied で残す               |
+| P0-17 | Local Host Bridge: WS / device token / capability gate / `host.ping` (P0-09)              | 未申告 capability が denied、非 READ は承認 ID 必須、重複接続で古い方を切る                           |
 | P0-18 | CI: build / typecheck / test / §14.3 の規約検査 / 受け入れテスト (全部)                   | main への push で全 gate green                                                                        |
 
 `packages/{ui-kit,agent-sdk,plugin-sdk除く}` と `services/{conversation,context,research,meeting,share,agent-runtime,world-model,notification}`、

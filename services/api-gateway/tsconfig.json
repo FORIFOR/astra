@@ -22,6 +22,9 @@
       "path": "../../services/library"
     },
     {
+      "path": "../../services/plugin-registry"
+    },
+    {
       "path": "../../services/task"
     }
   ]

@@ -5,11 +5,13 @@
  * 依存は引数で受け取る（テストが実物と同じ経路を通れるようにするため）。
  */
 import Fastify from 'fastify';
+import websocket from '@fastify/websocket';
 import { HEADER_REQUEST_ID } from '@astra/contracts';
 import type { Redis } from 'ioredis';
 import type { DbHandle } from '@astra/db';
 import type { TaskService } from '@astra/service-task';
 import type { LibraryService } from '@astra/service-library';
+import type { PluginRegistryService } from '@astra/service-plugin-registry';
 import type { Logger } from '@astra/telemetry';
 import { allowsDevelopmentRoutes, type GatewayConfig } from './config.js';
 import { installErrorHandlers } from './errors.js';
@@ -21,6 +23,9 @@ import { registerAuthRoutes } from './auth/routes.js';
 import type { JwtTokens } from './auth/tokens.js';
 import { registerTaskRoutes } from './routes/tasks.js';
 import { registerArtifactRoutes } from './routes/artifacts.js';
+import { registerPluginRoutes } from './routes/plugins.js';
+import { HostBridge } from './host/bridge.js';
+import { registerHostRoutes } from './host/routes.js';
 import type { RateLimiter } from './rate-limit/index.js';
 import type { App } from './fastify.js';
 
@@ -33,6 +38,8 @@ export interface AppDeps {
   readonly tokens: JwtTokens;
   readonly tasks: TaskService;
   readonly library: LibraryService;
+  readonly registry: PluginRegistryService;
+  readonly bridge?: HostBridge;
   /** SSE のポーリング間隔。テストは短くする。 */
   readonly ssePollIntervalMs?: number;
 }
@@ -71,6 +78,20 @@ export function buildApp(deps: AppDeps): App {
     ...(deps.ssePollIntervalMs === undefined ? {} : { ssePollIntervalMs: deps.ssePollIntervalMs }),
   });
   registerArtifactRoutes(app, { library: deps.library });
+  registerPluginRoutes(app, { registry: deps.registry });
+
+  // WebSocket のルートは、プラグインの読み込みが終わったスコープで登録する。
+  // 同じ tick で app.register(websocket) の直後に足すと、まだ `websocket: true` を
+  // 解釈できず通常の HTTP ルートとして登録されてしまう。
+  const bridge = deps.bridge ?? new HostBridge({ logger: deps.logger });
+  void app.register(async (instance) => {
+    await instance.register(websocket);
+    registerHostRoutes(instance as unknown as App, {
+      bridge,
+      tokens: deps.tokens,
+      logger: deps.logger,
+    });
+  });
 
   return app;
 }

@@ -1,11 +1,20 @@
 /**
  * @astra/plugin-sdk
  *
- * Plugin manifest parsing, signature verification and permission scope helpers.
- *
- * Phase 0 scaffold only — no implementation yet.
- * Normative spec: docs/spec/phase-0-implementation-spec.md
- * Product spec:   docs/spec/new_ai_platform_design_spec_v0.1.md
+ * Plugin manifest の読み込み・正規化・署名検証・permission スコープの補助。
+ * スキーマと不変条件は `@astra/contracts` 側（実装仕様 §3.6・§9）。
  */
-
-export const PLUGIN_SDK_PACKAGE = '@astra/plugin-sdk' as const;
+export {
+  loadManifest,
+  loadManifestFile,
+  parseManifest,
+  signingPayload,
+  signatureStateFor,
+  type LoadedManifest,
+} from './manifest.js';
+export {
+  generatePublisherKeyPair,
+  signManifest,
+  verifyManifestSignature,
+  type PublisherKey,
+} from './signature.js';

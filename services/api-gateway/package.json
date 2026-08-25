@@ -26,16 +26,20 @@
     "@astra/contracts": "workspace:*",
     "@astra/db": "workspace:*",
     "@astra/policy": "workspace:*",
+    "@astra/service-library": "workspace:*",
+    "@astra/service-plugin-registry": "workspace:*",
+    "@astra/service-task": "workspace:*",
     "@astra/telemetry": "workspace:*",
+    "@fastify/websocket": "^11.3.0",
     "fastify": "^5.12.1",
     "ioredis": "^6.0.0",
     "jose": "^6.2.10",
-    "zod": "catalog:",
     "kysely": "catalog:",
-    "@astra/service-task": "workspace:*",
-    "@astra/service-library": "workspace:*"
+    "zod": "catalog:"
   },
   "devDependencies": {
-    "vitest": "catalog:"
+    "@types/ws": "^8.18.1",
+    "vitest": "catalog:",
+    "ws": "^8.21.3"
   }
 }

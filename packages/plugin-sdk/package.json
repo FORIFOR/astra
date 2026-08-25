@@ -21,6 +21,10 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@astra/contracts": "workspace:*"
+    "@astra/contracts": "workspace:*",
+    "yaml": "^2.9.0"
+  },
+  "devDependencies": {
+    "vitest": "catalog:"
   }
 }

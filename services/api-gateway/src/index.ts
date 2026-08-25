@@ -26,6 +26,9 @@ export { loadSigningKeys, keyConfigFromEnv, type SigningKeys } from './auth/keys
 export { requirePrincipal } from './auth/middleware.js';
 export { registerTaskRoutes, type TaskRouteDeps } from './routes/tasks.js';
 export { registerArtifactRoutes, type ArtifactRouteDeps } from './routes/artifacts.js';
+export { registerPluginRoutes, type PluginRouteDeps } from './routes/plugins.js';
+export { HostBridge, type HostCallOptions, type HostSocket } from './host/bridge.js';
+export { registerHostRoutes, extractDeviceToken, type HostRouteDeps } from './host/routes.js';
 export {
   pumpEventStream,
   parseLastEventId,

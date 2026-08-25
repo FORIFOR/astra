@@ -2,12 +2,15 @@
 import { mkdtemp } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { Writable } from 'node:stream';
 import { createDb, type DbConfig, type DbHandle } from '@astra/db';
 import { createLogger } from '@astra/telemetry';
 import { FsObjectStore, LibraryService } from '@astra/service-library';
 import { InMemoryTaskRuntime, TaskService } from '@astra/service-task';
+import { PluginRegistryService } from '@astra/service-plugin-registry';
 import { buildApp } from '../src/app.js';
+import type { HostBridge } from '../src/host/bridge.js';
 import { MemoryRateLimiter } from '../src/rate-limit/memory.js';
 import { loadSigningKeys } from '../src/auth/keys.js';
 import { JwtTokens } from '../src/auth/tokens.js';
@@ -46,6 +49,7 @@ export interface TestApp {
   readonly tasks: TaskService;
   readonly library: LibraryService;
   readonly runtime: InMemoryTaskRuntime;
+  readonly registry: PluginRegistryService;
   close(): Promise<void>;
 }
 
@@ -56,6 +60,9 @@ export interface MakeAppOptions {
   readonly env?: Environment;
   /** ready() の前に呼ばれる。テスト専用ルートを足す用。 */
   readonly configure?: (app: App) => void;
+  /** 同梱プラグインを DB へ seed するか。プラグインを見るテストだけ true。 */
+  readonly seedPlugins?: boolean;
+  readonly bridge?: HostBridge;
 }
 
 export async function makeTestApp(options: MakeAppOptions): Promise<TestApp> {
@@ -65,6 +72,12 @@ export async function makeTestApp(options: MakeAppOptions): Promise<TestApp> {
   const library = new LibraryService(db, new FsObjectStore(storeRoot));
   const runtime = new InMemoryTaskRuntime();
   const tasks = new TaskService(db, runtime);
+  const registry = new PluginRegistryService({ db, coreVersion: '0.1.0' });
+  if (options.seedPlugins) {
+    await registry.seedBuiltins(
+      fileURLToPath(new URL('../../../plugins/builtin', import.meta.url)),
+    );
+  }
 
   const config: GatewayConfig = {
     env: options.env ?? 'test',
@@ -85,6 +98,8 @@ export async function makeTestApp(options: MakeAppOptions): Promise<TestApp> {
     tokens: options.tokens,
     tasks,
     library,
+    registry,
+    ...(options.bridge === undefined ? {} : { bridge: options.bridge }),
     // テストは待ちたくないので短く回す
     ssePollIntervalMs: 20,
   });
@@ -97,6 +112,7 @@ export async function makeTestApp(options: MakeAppOptions): Promise<TestApp> {
     tasks,
     library,
     runtime,
+    registry,
     async close() {
       await app.close();
       if (owned) await db.close();
