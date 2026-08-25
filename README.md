@@ -17,7 +17,8 @@ OS のどこからでも呼び出せる **Task Dock**。North Star は **Intent 
 
 ## 現在地
 
-**Phase 0 / P0-01 完了（scaffold のみ）。プロダクトコードは未実装。**
+**Phase 0 進行中。** 完了: P0-01（scaffold）/ P0-02・P0-03（`@astra/contracts`）。
+次: P0-04（DB マイグレーション）。
 
 実装順は正本 §28 に従う。
 

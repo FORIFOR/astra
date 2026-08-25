@@ -75,6 +75,12 @@
 > 封筒だけ snake、他は camel という二重規約を作らない。変換は `packages/contracts` の
 > codec が一手に引き受ける（§3.8）。
 
+**不透明領域（逸脱 D-13）**: `task.input` / `event.payload` / `approval.details` /
+`approval.edits` / `host.call.args` / `host.result.value` / `plugin_versions.manifest` /
+`metadata` はユーザー由来または署名対象の任意 JSON であり、**キー変換をしてはならない**。
+codec はこれらのキー配下を原文のまま複製する（`OPAQUE_KEYS`）。この集合は契約の一部であり、
+勝手に増減させない。
+
 ### 1.2 ID
 
 - すべての主キーは **UUIDv7**。PostgreSQL 側の型は `uuid`、生成は**アプリ側**（PG16 に `uuidv7()` は無い）。
@@ -167,22 +173,35 @@ pnpm test:acceptance           # §16 の受け入れテスト
 
 ```ts
 // packages/contracts/src/ids.ts
-declare const brand: unique symbol;
-type Branded<T, B extends string> = T & { readonly [brand]: B };
+import { z } from 'zod';
 
-export type TenantId = Branded<string, 'TenantId'>;
-export type UserId = Branded<string, 'UserId'>;
-export type DeviceId = Branded<string, 'DeviceId'>;
-export type TaskId = Branded<string, 'TaskId'>;
-export type ArtifactId = Branded<string, 'ArtifactId'>;
-export type ConversationId = Branded<string, 'ConversationId'>;
-export type ApprovalId = Branded<string, 'ApprovalId'>;
-export type PluginId = Branded<string, 'PluginId'>;
-export type EventId = Branded<string, 'EventId'>;
+const id = <B extends string>(brand: B) => z.uuid().brand<B>();
 
-export const uuidv7 = (): string => {
-  /* impl in packages/contracts/src/uuid.ts */
-};
+export const TenantId = id('TenantId');
+export const UserId = id('UserId');
+export const TaskId = id('TaskId');
+export const ArtifactId = id('ArtifactId');
+// … ConversationId / ApprovalId / ReceiptId / DeviceId / SessionId / EventId / InstallId
+export type TaskId = z.infer<typeof TaskId>; // string & brand<'TaskId'>
+
+// plugin id は逆ドメイン。UUID ではない
+export const PluginId = z
+  .string()
+  .regex(/^[a-z0-9]+(\.[a-z0-9-]+)+$/)
+  .brand<'PluginId'>();
+```
+
+```ts
+// packages/contracts/src/uuid.ts
+/**
+ * 単調増加の状態を持つ生成器。既定インスタンスが `uuidv7`。
+ * `now` を明示しても、既に発行済みの論理時刻より前には戻らない（単調性が優先される）。
+ * 決定的な時刻が必要なテストは独立した生成器を作る。
+ */
+export function createUuidv7Generator(): (now?: number) => string;
+export const uuidv7: (now?: number) => string;
+export function uuidv7Timestamp(uuid: string): number | null;
+export function isUuidV7(value: string): boolean;
 ```
 
 ### 3.2 Realtime Event Envelope（正本 §20 の確定版）
@@ -413,14 +432,20 @@ export const ToolDecl = z.object({
 });
 ```
 
+スキーマと不変条件は **`packages/contracts` に置く**（逸脱 D-12）。
+`@astra/plugin-sdk` は本スキーマを再利用して YAML 読み込みと署名検証を実装する。
+
 **不変条件（パーサが強制する）**
 
 1. `risk` が `EXTERNAL_COMMIT` / `DESTRUCTIVE` / `REGULATED` / `FINANCIAL` の tool は
    `requires_confirmation: true` でなければならない（正本 §9.2・§22）。
-2. `tools[].surface` に `local` があるなら `execution_surfaces` に `local` が含まれること。
+2. `tools[].surface` は `execution_surfaces` に含まれていなければならない。
 3. `builtin: true` なら `verified: true`。
-4. `compliance_profile` が `REGULATED_HEALTH` / `FINANCIAL` の場合、`policies` が空であってはならない。
-5. `permissions` は既知スコープ集合（`packages/plugin-sdk` の allowlist）に含まれること。未知スコープは拒否。
+4. `compliance_profile` が `REGULATED_HEALTH` / `CARE` / `FINANCIAL` の場合、
+   `policies` が空であってはならない（正本 §22 の個別 compliance gate）。
+5. `permissions` は既知スコープ集合 `PERMISSION_SCOPES` に含まれること。未知スコープは拒否。
+   スコープの追加は契約の変更にあたる（§3.8）。
+6. `agents[].tools` が参照する tool id は、同一 manifest 内で宣言済みであること。
 
 ### 3.7 エラー契約
 
@@ -1125,7 +1150,8 @@ t/{tenantId}/a/{artifactId}/v/{version}/{safeFileName}
 
 ### 9.1 やること
 
-1. `packages/plugin-sdk` に §3.6 の manifest スキーマと不変条件チェックを実装
+1. `packages/plugin-sdk` に YAML 読み込み・正規化・署名検証・publisher 鍵管理を実装
+   （manifest スキーマと不変条件は `packages/contracts` 側。§3.6）
 2. `plugins/builtin/*/plugin.yaml` 5 本を検証して registry テーブルへ **seed** する
 3. カタログ参照と install 記録の API（実行は無し）
 
@@ -1414,20 +1440,22 @@ AC-8〜AC-16 は「後から入れられない性質」を Phase 0 で固定す�
 いずれも正本の記述を否定するものではなく、実装可能な粒度へ落とす際の決定。
 新たな逸脱を作る場合は本表に追記してから実装する。
 
-| ID    | 逸脱・確定                                                                              | 根拠                                                                                                 |
-| ----- | --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| D-01  | Phase 0〜3 はサービス境界を保ったまま **1 プロセスにデプロイ**する                      | §2.3。Phase 0 の検証対象を絞るため。境界維持ルールを §14.3 で機械検査                                |
-| D-02  | `packages/db` を §26 の構成に追加                                                       | SQL 正本 + 型付きアクセスの置き場所が §26 に無い                                                     |
-| D-03  | Event envelope に `stream_kind` / `stream_id` / `tenant_id` を追加                      | 正本 §20 の「sequence で再送」を実装するには列の識別子が必要                                         |
-| D-03b | イベント型に `task.cancelled` を追加                                                    | 正本 §24 が cancellation を必須にしているため                                                        |
-| D-04  | サーバ→クライアントは SSE、双方向のみ WS                                                | 正本 §19 の `GET …/stream` と `WS …/audio` の書き分けに一致                                          |
-| D-05  | ID は UUIDv7、prefix 無し                                                               | §1.2                                                                                                 |
-| D-06  | `conversations` / `turns` の DDL を Phase 0 で作る（書き込みは Phase 1）                | `tasks.conversation_id` の FK 先が必要                                                               |
-| D-07  | ORM を使わず dbmate(SQL) + Kysely                                                       | 正本 §18 が SQL 前提。スキーマ所有権を SQL に残す                                                    |
-| D-08  | JSON は snake_case で統一                                                               | 正本 §20 の封筒が snake_case。二重規約を作らない                                                     |
-| D-09  | Phase 0 で承認状態機械と action receipt を実装する                                      | 後付け困難。正本 §9 の「勝手に成功扱いしない」は骨格側の性質                                         |
-| D-10  | manifest に `data_accessed` / `compliance_profile` / `builtin` / `removable` を必須追加 | 正本 §2.4 の Plugin detail page 必須表示項目と §22 の profile mandatory を manifest 側で強制するため |
-| D-11  | 越境アクセスは 403 ではなく 404 を返す                                                  | 資源の存在自体を漏らさない                                                                           |
+| ID    | 逸脱・確定                                                                                        | 根拠                                                                                                 |
+| ----- | ------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| D-01  | Phase 0〜3 はサービス境界を保ったまま **1 プロセスにデプロイ**する                                | §2.3。Phase 0 の検証対象を絞るため。境界維持ルールを §14.3 で機械検査                                |
+| D-02  | `packages/db` を §26 の構成に追加                                                                 | SQL 正本 + 型付きアクセスの置き場所が §26 に無い                                                     |
+| D-03  | Event envelope に `stream_kind` / `stream_id` / `tenant_id` を追加                                | 正本 §20 の「sequence で再送」を実装するには列の識別子が必要                                         |
+| D-03b | イベント型に `task.cancelled` を追加                                                              | 正本 §24 が cancellation を必須にしているため                                                        |
+| D-04  | サーバ→クライアントは SSE、双方向のみ WS                                                          | 正本 §19 の `GET …/stream` と `WS …/audio` の書き分けに一致                                          |
+| D-05  | ID は UUIDv7、prefix 無し                                                                         | §1.2                                                                                                 |
+| D-06  | `conversations` / `turns` の DDL を Phase 0 で作る（書き込みは Phase 1）                          | `tasks.conversation_id` の FK 先が必要                                                               |
+| D-07  | ORM を使わず dbmate(SQL) + Kysely                                                                 | 正本 §18 が SQL 前提。スキーマ所有権を SQL に残す                                                    |
+| D-08  | JSON は snake_case で統一                                                                         | 正本 §20 の封筒が snake_case。二重規約を作らない                                                     |
+| D-09  | Phase 0 で承認状態機械と action receipt を実装する                                                | 後付け困難。正本 §9 の「勝手に成功扱いしない」は骨格側の性質                                         |
+| D-10  | manifest に `data_accessed` / `compliance_profile` / `builtin` / `removable` を必須追加           | 正本 §2.4 の Plugin detail page 必須表示項目と §22 の profile mandatory を manifest 側で強制するため |
+| D-11  | 越境アクセスは 403 ではなく 404 を返す                                                            | 資源の存在自体を漏らさない                                                                           |
+| D-12  | plugin manifest のスキーマと不変条件を `packages/plugin-sdk` ではなく `packages/contracts` に置く | manifest は catalog 応答としても境界を越えるため。plugin-sdk は YAML 読み込みと署名検証を担当        |
+| D-13  | codec に不透明キー集合（`OPAQUE_KEYS`）を設ける                                                   | `task.input` などユーザー由来 JSON のキーを変換すると値が壊れる。§1.1                                |
 
 ---
 

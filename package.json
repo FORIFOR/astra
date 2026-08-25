@@ -9,7 +9,7 @@
   },
   "scripts": {
     "build": "tsc -b tsconfig.build.json",
-    "typecheck": "tsc -b tsconfig.build.json",
+    "typecheck": "tsc -b tsconfig.build.json && tsc -p tsconfig.tests.json",
     "clean": "tsc -b tsconfig.build.json --clean",
     "test": "pnpm -r --no-bail run test",
     "format": "prettier --write .",
