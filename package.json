@@ -19,9 +19,10 @@
     "dev:infra": "docker compose -f infra/docker-compose.dev.yml up -d",
     "dev:infra:down": "docker compose -f infra/docker-compose.dev.yml down",
     "db:new": "dbmate --migrations-dir infra/db/migrations new",
-    "db:rollback": "dbmate --migrations-dir infra/db/migrations rollback",
+    "db:rollback": "dbmate --migrations-dir infra/db/migrations --schema-file infra/db/schema.sql rollback",
     "test:acceptance": "vitest run --dir evals/actions --passWithNoTests",
-    "db:verify": "./infra/db/verify.sh"
+    "db:verify": "./infra/db/verify.sh",
+    "db:drop": "dbmate --migrations-dir infra/db/migrations --no-dump-schema drop"
   },
   "devDependencies": {
     "@types/node": "^22.15.0",
