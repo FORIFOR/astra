@@ -1,0 +1,7 @@
+# 実装仕様 §14.2 の eval harness 契約
+phase: conversation
+tags: [acceptance, blocking]
+blocking: true
+description: >
+  正本 §25 Conversation の評価軸。
+  30 turn の参照解決、話題の切り替わり、声と文字の混在、打ち切り、「昨日の続き」。
