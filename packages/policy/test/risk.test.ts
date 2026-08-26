@@ -130,3 +130,58 @@ describe('approval lifetime', () => {
     expect(isApprovalUsable({ status: 'EXPIRED', expiresAt: future }, now)).toBe(false);
   });
 });
+
+describe('requirements a plugin rule can ask for', () => {
+  const doc = (requirement: string, when: Record<string, unknown> = { when: 'always' }) => ({
+    id: 'test',
+    profiles: [],
+    rules: [
+      {
+        id: `wants-${requirement}`,
+        description: 'x',
+        when,
+        require: requirement,
+        severity: 'block',
+      },
+    ],
+  });
+
+  it('honours readback, which used to be matched by rule id', () => {
+    /*
+     * ここは以前、規則 id に 'order-preview' が含まれるかで決まっていた。
+     * `require: readback` と書いた規則は、検証も一致もするのに何もしていなかった。
+     */
+    const decision = evaluate({
+      risk: 'REVERSIBLE_WRITE',
+      complianceProfile: 'GENERAL',
+      toolId: 'x.write',
+      policies: [doc('readback') as never],
+    });
+    expect(decision.requiresReadback).toBe(true);
+  });
+
+  it('honours local_execution', () => {
+    const decision = evaluate({
+      risk: 'READ',
+      complianceProfile: 'GENERAL',
+      toolId: 'x.read',
+      policies: [doc('local_execution') as never],
+    });
+    expect(decision.requiresLocalExecution).toBe(true);
+  });
+
+  it('asks for neither when no rule says so', () => {
+    const decision = evaluate({ risk: 'READ', complianceProfile: 'GENERAL', toolId: 'x.read' });
+    expect(decision.requiresReadback).toBe(false);
+    expect(decision.requiresLocalExecution).toBe(false);
+  });
+
+  it('still reads back every financial action, rule or not', () => {
+    const decision = evaluate({
+      risk: 'FINANCIAL',
+      complianceProfile: 'GENERAL',
+      toolId: 'broker.order',
+    });
+    expect(decision.requiresReadback).toBe(true);
+  });
+});

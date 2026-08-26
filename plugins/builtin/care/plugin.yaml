@@ -1,0 +1,59 @@
+# 介護の記録を助ける。正本 §15.4。
+#
+# **REGULATED policy required** と仕様が言っている。
+# ここでの「助ける」は、下書きと要約と見落としの指摘までで、
+# **ケアの判断は人がする。**
+#
+# 外部の記録システムへの接続は接続先が決まってから（OQ-20）。
+# 繋がっていない状態でも、手元の記録の整理と引き継ぎの下書きは成り立つ。
+id: com.astra.care
+name: Care Support
+version: 0.1.0
+publisher: astra
+verified: true
+min_core_version: 0.1.0
+category: domain-agent
+builtin: true
+removable: true
+# §15.4「REGULATED policy required」
+compliance_profile: CARE
+execution_surfaces: [cloud]
+permissions:
+  - artifacts.read
+  - artifacts.write
+data_accessed:
+  - Resident profiles, shift notes and care plans this user already has access to
+connectors: []
+tools:
+  - id: care.handoff
+    risk: READ
+    surface: cloud
+  - id: care.plan_review
+    risk: READ
+    surface: cloud
+  - id: care.incident_draft
+    # 下書きを残すだけ。提出はしない。
+    risk: REVERSIBLE_WRITE
+    surface: cloud
+    requires_confirmation: true
+agents:
+  - id: assistant
+    skill: skills/assistant.md
+    tools: [care.handoff, care.plan_review, care.incident_draft]
+dashboards:
+  - id: shift
+    schema: dashboards/shift.json
+data_sources:
+  - id: care.residents
+    kind: count
+    query: care_residents
+  - id: care.open_incidents
+    kind: rows
+    query: care_open_incidents
+  - id: care.plan_review_due
+    kind: rows
+    query: care_plan_review_due
+policies:
+  - policies/care.yaml
+data_extensions:
+  - schemas/entities.json

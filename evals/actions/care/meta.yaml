@@ -1,0 +1,7 @@
+# 実装仕様 §14.2 の eval harness 契約
+phase: care
+tags: [acceptance, blocking]
+blocking: true
+description: >
+  正本 §15.4 Care Support。REGULATED policy が実際に効いているか、
+  そして「記録に無いことを書いていないか」。

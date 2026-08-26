@@ -1,0 +1,28 @@
+# 介護の記録を扱うときに守ること。正本 §15.4・§22。
+# **host が判定できる語彙だけ**で書く。散文は description に置く。
+#
+# 組み込みの CARE 規則（書き込みは承認・全部監査）に加えて、
+# この領域でとくに守らせたいことを足す。
+id: care
+profiles: [CARE]
+rules:
+  - id: incident-needs-confirmation
+    description: 事故・ヒヤリハットの記録は、必ず人が確かめてから残す
+    when: { when: risk_at_least, risk: REVERSIBLE_WRITE }
+    require: confirmation
+    severity: block
+  - id: read-back-before-write
+    description: 書き込む内容を読み上げて確かめる
+    when: { when: risk_at_least, risk: REVERSIBLE_WRITE }
+    require: readback
+    severity: block
+  - id: no-destructive
+    description: 記録の破壊的な操作は行わない
+    when: { when: risk_at_least, risk: DESTRUCTIVE }
+    require: deny
+    severity: block
+  - id: audit-sensitive-reads
+    description: 個人の記録は、参照も監査に残す
+    when: { when: sensitivity_at_least, sensitivity: CONFIDENTIAL }
+    require: audit
+    severity: block

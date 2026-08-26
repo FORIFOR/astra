@@ -489,6 +489,20 @@ export function createTaskActivities(deps: ActivityDeps): TaskActivities {
         );
       }
 
+      /*
+       * 規則が「手元でだけ」と言ったなら、cloud で動かさない。
+       *
+       * **宣言（surface）と規則（local_execution）は別の入口**で、
+       * plugin が surface: cloud と書いていても、規則の方が厳しければ
+       * 規則が勝つ。ここを見ないと、規則は書けるが効かないものになる。
+       */
+      if (decision.requiresLocalExecution && step.surface !== 'local') {
+        throw ApplicationFailure.nonRetryable(
+          `${step.toolId} must run on the device, but this step is declared cloud`,
+          'LocalExecutionRequired',
+        );
+      }
+
       const executor = step.surface === 'local' ? deps.hostExecutor : deps.executors?.[step.toolId];
       let outcome;
       try {

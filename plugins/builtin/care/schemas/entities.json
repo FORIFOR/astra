@@ -1,0 +1,147 @@
+{
+  "entities": [
+    {
+      "id": "resident",
+      "title": "利用者",
+      "title_field": "name",
+      "fields": [
+        {
+          "id": "name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "room",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "care_level",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "note",
+          "type": "text",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "shift_note",
+      "title": "記録",
+      "title_field": "summary",
+      "fields": [
+        {
+          "id": "summary",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "resident",
+          "type": "reference",
+          "entity": "resident",
+          "required": true
+        },
+        {
+          "id": "shift",
+          "type": "enum",
+          "values": ["日勤", "夜勤", "早番", "遅番"],
+          "required": true
+        },
+        {
+          "id": "recorded_at",
+          "type": "date",
+          "required": true
+        },
+        {
+          "id": "observation",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "changed",
+          "type": "boolean",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "care_plan",
+      "title": "ケアプラン",
+      "title_field": "title",
+      "fields": [
+        {
+          "id": "title",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "resident",
+          "type": "reference",
+          "entity": "resident",
+          "required": true
+        },
+        {
+          "id": "goal",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "review_due",
+          "type": "date",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "incident",
+      "title": "事故・ヒヤリハット",
+      "title_field": "title",
+      "fields": [
+        {
+          "id": "title",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "resident",
+          "type": "reference",
+          "entity": "resident",
+          "required": true
+        },
+        {
+          "id": "occurred_at",
+          "type": "date",
+          "required": false
+        },
+        {
+          "id": "where",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "who_found",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "what_happened",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "response",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "status",
+          "type": "enum",
+          "values": ["DRAFT", "SUBMITTED", "CLOSED"],
+          "required": true
+        }
+      ]
+    }
+  ]
+}

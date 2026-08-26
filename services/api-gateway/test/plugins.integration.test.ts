@@ -60,6 +60,7 @@ describe.skipIf(!url)('plugin catalog', () => {
       // 同じ DB を使う別スイートが publish した plugin で壊れる。
       const bundled = items.map((p) => p.id as string).filter((id) => id.startsWith('com.astra.'));
       expect(bundled.sort()).toEqual([
+        'com.astra.care',
         'com.astra.finder',
         'com.astra.general',
         'com.astra.gmail',
@@ -212,6 +213,7 @@ describe.skipIf(!url)('plugin catalog', () => {
         'com.astra.research',
         'com.astra.meeting',
         'com.astra.google-calendar',
+        'com.astra.care',
         'com.astra.finder',
         'com.astra.general',
         'com.astra.gmail',

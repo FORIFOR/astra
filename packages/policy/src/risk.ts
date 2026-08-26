@@ -78,6 +78,13 @@ export interface PolicyDecision {
   readonly requiresReceipt: boolean;
   /** `audit_events` への記録が必要か。正本 §21 / §22。 */
   readonly requiresAudit: boolean;
+  /**
+   * 手元でだけ実行するか。正本 §16.1。
+   *
+   * 規則が `local_execution` を求めたときに立つ。
+   * **cloud の surface で動かしてはいけない**という意味。
+   */
+  readonly requiresLocalExecution: boolean;
   readonly externalEffect: boolean;
   /** なぜそう決まったか。承認カードには出さず、監査とデバッグに使う。 */
   readonly reasons: readonly string[];
@@ -114,6 +121,16 @@ export function evaluate(context: ActionContext): PolicyDecision {
 
   let requiresReceipt = write;
   let denied = false;
+  /*
+   * 規則が求めた読み上げ。
+   *
+   * **要求そのものを見る。**以前はここが規則 id に 'order-preview' が
+   * 含まれるかで決まっていて、`require: readback` と書いた規則は
+   * 検証も一致もするのに**何もしていなかった**。
+   */
+  let policyWantsReadback = false;
+  /** 規則が「手元でだけ実行する」と言ったか。 */
+  let policyWantsLocal = false;
   const appliedRules: string[] = [];
 
   /*
@@ -149,7 +166,13 @@ export function evaluate(context: ActionContext): PolicyDecision {
           reasons.push(`policy:${rule.ruleId}`);
           break;
         case 'readback':
+          policyWantsReadback = true;
+          reasons.push(`policy:${rule.ruleId}`);
+          break;
         case 'local_execution':
+          policyWantsLocal = true;
+          reasons.push(`policy:${rule.ruleId}`);
+          break;
         case 'deny':
           reasons.push(`policy:${rule.ruleId}`);
           break;
@@ -160,8 +183,6 @@ export function evaluate(context: ActionContext): PolicyDecision {
   }
 
   const policyWantsAudit = appliedRules.some((id) => id.includes('audit'));
-  const policyWantsReadback =
-    documents.length > 0 && appliedRules.some((id) => id.includes('order-preview'));
 
   return {
     denied,
@@ -170,6 +191,8 @@ export function evaluate(context: ActionContext): PolicyDecision {
     requiresReadback: requiresReadback || policyWantsReadback,
     requiresReceipt,
     requiresAudit: requiresAudit || policyWantsAudit,
+    /** 規則が手元での実行を求めたか。正本 §16.1 の local-first を規則から要求できる。 */
+    requiresLocalExecution: policyWantsLocal,
     externalEffect: hasExternalEffect(risk),
     reasons,
   };

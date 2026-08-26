@@ -1,0 +1,10 @@
+{
+  "id": "shift",
+  "title": "申し送り",
+  "layout": "grid",
+  "items": [
+    { "type": "metric", "title": "担当している方", "bind": "care.residents", "span": 4 },
+    { "type": "table", "title": "未クローズの記録", "bind": "care.open_incidents", "span": 8 },
+    { "type": "table", "title": "見直しの時期", "bind": "care.plan_review_due", "span": 12 }
+  ]
+}
