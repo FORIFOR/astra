@@ -29,6 +29,19 @@ async function call<T>(command: string, args?: Record<string, unknown>): Promise
   }
 }
 
+/**
+ * 失敗を呼び出し側へ返す版。
+ *
+ * `call` は見た目の都合で落とさないために失敗を飲むが、
+ * **設定の変更は飲んではいけない。**「取られている組み合わせを選んだ」ことを
+ * 黙って握り潰すと、変えたつもりで効いていない状態になる。
+ */
+async function callStrict<T>(command: string, args?: Record<string, unknown>): Promise<T> {
+  if (!isTauri()) throw new Error('この環境では変更できません');
+  const { invoke } = await import('@tauri-apps/api/core');
+  return (await invoke(command, args)) as T;
+}
+
 export interface LocalContext {
   readonly active_app: string | null;
   readonly window_title: string | null;
@@ -46,6 +59,48 @@ export const secrets = {
   set: (key: string, value: string) => call<void>('secret_set', { key, value }),
   get: (key: string) => call<string | null>('secret_get', { key }),
   delete: (key: string) => call<void>('secret_delete', { key }),
+};
+
+/** §20: いま効いているショートカット。Rust 側の登録結果をそのまま持つ。 */
+export interface ShortcutStatus {
+  readonly id: string;
+  readonly label: string;
+  /** 効いている割り当て。登録できていなければ null。 */
+  readonly code: string | null;
+  readonly modifiers: { primary: boolean; alt: boolean; shift: boolean; control: boolean };
+  /** 既定を使えているか。false なら OS / IME に取られている。 */
+  readonly usingDefault: boolean;
+  readonly alternates: readonly {
+    code: string;
+    modifiers: { primary: boolean; alt: boolean; shift: boolean; control: boolean };
+  }[];
+}
+
+/**
+ * 押している間だけ効くショートカット（push-to-talk）。
+ *
+ * ブラウザには global shortcut が無いので、購読できないときは
+ * **何も購読していないことを返す**。効いているふりをしない。
+ */
+async function onHold(handler: (id: string, pressed: boolean) => void): Promise<() => void> {
+  if (!isTauri()) return () => undefined;
+  try {
+    const { listen } = await import('@tauri-apps/api/event');
+    return await listen<{ id: string; pressed: boolean }>('astra://shortcut-hold', (event) => {
+      handler(event.payload.id, event.payload.pressed);
+    });
+  } catch (error) {
+    console.warn('could not subscribe to push-to-talk', error);
+    return () => undefined;
+  }
+}
+
+export const shortcuts = {
+  status: () => call<ShortcutStatus[]>('shortcut_status'),
+  // 失敗は握り潰さない。変えたつもりで効いていない状態を作らない。
+  rebind: (id: string, code: string, modifiers: ShortcutStatus['modifiers']) =>
+    callStrict<ShortcutStatus>('shortcut_rebind', { id, code, modifiers }),
+  onHold,
 };
 
 export const host = {

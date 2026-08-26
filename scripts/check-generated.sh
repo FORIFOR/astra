@@ -43,4 +43,7 @@ node "$ROOT/scripts/gen-dock-geometry.mjs" --check
 # Sales CRM の entity 定義も TypeScript が正本
 node "$ROOT/scripts/gen-crm-entities.mjs" --check
 
+# §20 のショートカット表も TypeScript が正本
+node "$ROOT/scripts/gen-shortcuts.mjs" --check
+
 dbmate --url "$DATABASE_URL" --migrations-dir "$ROOT/infra/db/migrations" --no-dump-schema drop >/dev/null

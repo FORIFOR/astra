@@ -43,7 +43,7 @@ describe('AC-01: start work without picking an agent or a mode', () => {
 
     await userEvent.type(screen.getByRole('textbox'), '来週の商談準備して');
     await userEvent.keyboard('{Enter}');
-    expect(conversation.send).toHaveBeenCalledWith('来週の商談準備して');
+    expect(conversation.send).toHaveBeenCalledWith('来週の商談準備して', []);
   });
 });
 

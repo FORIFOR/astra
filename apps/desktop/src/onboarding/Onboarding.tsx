@@ -16,6 +16,7 @@ import {
   type OnboardingStep,
   type PackRecommendation,
 } from '@astra/contracts';
+import { ShortcutSettings } from '../settings/ShortcutSettings.js';
 import './onboarding.css';
 
 const PERMISSION_LABELS: Record<string, string> = {
@@ -277,9 +278,12 @@ export function Onboarding({
       {step === 'shortcut' && (
         <section aria-label={title}>
           <h2>{title}</h2>
-          <p>
-            <kbd>⌘</kbd> + <kbd>Shift</kbd> + <kbd>Space</kbd> でどこからでも呼び出せます。
-          </p>
+          {/*
+           * 打鍵を文面に書かない。**実際に登録できたものを出す。**
+           * ここに固定の綴りを書くと、OS / IME に取られていたときに
+           * 「押しても出ない鍵」を教えることになる（§20）。
+           */}
+          <ShortcutSettings />
           <p className="astra-onboarding__note">押すと入力、長押しで話しかけられます。</p>
           <button
             type="button"

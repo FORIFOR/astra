@@ -5,13 +5,21 @@
  * 同一 Conversation へ入れる入口。
  */
 import { useCallback, useEffect, useMemo, useState, type ReactElement } from 'react';
-import { DOCK_MAX_INPUT_LINES, dockGeometry, dockGeometryFor } from '@astra/ui-kit';
+import {
+  DOCK_MAX_INPUT_LINES,
+  currentPlatform,
+  dockGeometry,
+  dockGeometryFor,
+  isComposing,
+  resolveShortcut,
+  type BindingOverrides,
+} from '@astra/ui-kit';
 import type { ContextSource } from '@astra/contracts';
 import { useDockMachine, type DockConversation, type DockDictation } from './useDockMachine.js';
 import { ContextLens } from './ContextLens.js';
 import { WorkCard } from '../work/WorkCard.js';
 import type { WorkView } from '../work/workView.js';
-import { host } from '../host/tauri.js';
+import { host, shortcuts } from '../host/tauri.js';
 import '../work/work.css';
 
 export function TaskDock({
@@ -23,8 +31,11 @@ export function TaskDock({
   onOpenWorkspace,
   conversation,
   dictation,
+  shortcutOverrides = {},
 }: {
   initialSources?: readonly ContextSource[];
+  /** Settings で変更されたショートカット（§20）。 */
+  shortcutOverrides?: BindingOverrides;
   /** Conversation Engine。未接続なら状態遷移だけ行う。 */
   conversation?: DockConversation;
   /** 音声入力。未接続なら LISTENING に入るだけ（正本 §11.1）。 */
@@ -70,21 +81,84 @@ export function TaskDock({
   const geometry = dockGeometryFor(machine.state, machine.contextExpanded);
   const size = dockGeometry[geometry];
 
+  const platform = useMemo(() => currentPlatform(), []);
+
+  /*
+   * 指示語の解決先。**Context Lens が見せているものと同じにする。**
+   * 見せているのに送らないと、利用者からは「画面に出ているのに聞き返された」
+   * ように見える（正本 §6、§30 Case A）。
+   */
+  const referents = useMemo(
+    () => sources.map((source) => ({ label: source.label, kind: source.category })),
+    [sources],
+  );
+
   const onKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (event.key === 'Escape') {
+      /*
+       * **変換確定の Enter を送信にしない。**日本語入力では Enter が
+       * 「変換を確定する」キーでもある。ここを見落とすと、
+       * 変換途中の文がそのまま依頼として送られる（§20）。
+       */
+      if (isComposing(event.nativeEvent)) return;
+
+      // §4.3: Enter 送信 / Shift+Enter 改行 / Cmd-Ctrl+Enter でも送信
+      const hit = resolveShortcut(event, platform, shortcutOverrides, 'surface');
+      if (hit === 'dock.send') {
+        event.preventDefault();
+        // Context Lens に出しているものを一緒に送る（正本 §6）
+        machine.submit(referents);
+      }
+      // Esc と Context Lens は面の全体で受ける（下の window listener）。
+      // 入力欄にいるときだけ効く操作にしない。
+    },
+    [machine, platform, shortcutOverrides],
+  );
+
+  /*
+   * §20 の「面に効く」ショートカット。**入力欄に focus が無くても効く。**
+   * 承認ボタンに focus があるときに Esc が死ぬと、閉じ方が分からなくなる。
+   */
+  useEffect(() => {
+    const handle = (event: KeyboardEvent): void => {
+      if (isComposing(event)) return;
+      const hit = resolveShortcut(event, platform, shortcutOverrides, 'surface');
+      if (hit === 'surface.dismiss') {
         event.preventDefault();
         machine.escape();
         return;
       }
-      // §4.3: Enter 送信 / Shift+Enter 改行 / Cmd-Ctrl+Enter でも送信
-      if (event.key === 'Enter' && !event.shiftKey) {
+      if (hit === 'context.open') {
         event.preventDefault();
-        machine.submit();
+        machine.toggleContext();
       }
-    },
-    [machine],
-  );
+    };
+    window.addEventListener('keydown', handle);
+    return () => window.removeEventListener('keydown', handle);
+  }, [machine, platform, shortcutOverrides]);
+
+  /*
+   * Push-to-talk（§20「shortcut hold」）。押している間だけ聞く。
+   * **離したら必ず止める。**止め損ねると、押していないのに録り続ける。
+   */
+  useEffect(() => {
+    let stop: (() => void) | null = null;
+    let cancelled = false;
+    void shortcuts
+      .onHold((id, pressed) => {
+        if (id !== 'dock.pushToTalk') return;
+        if (pressed) machine.startListening();
+        else machine.stopListening();
+      })
+      .then((unlisten) => {
+        if (cancelled) unlisten();
+        else stop = unlisten;
+      });
+    return () => {
+      cancelled = true;
+      stop?.();
+    };
+  }, [machine]);
 
   const removeSource = useCallback((id: string) => {
     // §5.2: remove したら plan を再評価する。UI-2 で Conversation Engine へ通知する。

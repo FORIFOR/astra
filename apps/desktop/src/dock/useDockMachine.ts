@@ -15,7 +15,8 @@ export interface DockMachine {
   setIntent(value: string): void;
   startListening(): void;
   stopListening(): void;
-  submit(): void;
+  /** 送る。Context Lens が出しているものを一緒に渡す（正本 §6）。 */
+  submit(referents?: readonly ContextReferent[]): void;
   /** 聞き返しの文面。無ければ null。 */
   readonly clarification: string | null;
   toggleContext(): void;
@@ -24,9 +25,18 @@ export interface DockMachine {
   dismiss(): void;
 }
 
+/** 画面に出ていて、指示語の解決先になり得るもの（正本 §6）。 */
+export interface ContextReferent {
+  readonly label: string;
+  readonly kind: string;
+}
+
 /** Conversation Engine へ渡す口。未接続なら状態遷移だけを行う。 */
 export interface DockConversation {
-  send(text: string): Promise<{ needsClarification: boolean; answer: string | null }>;
+  send(
+    text: string,
+    referents: readonly ContextReferent[],
+  ): Promise<{ needsClarification: boolean; answer: string | null }>;
 }
 
 /**
@@ -112,7 +122,7 @@ export function useDockMachine(
       void dictation?.stop().catch(() => undefined);
       setState(intent.length > 0 ? 'TYPING' : 'READY');
     },
-    submit: () => {
+    submit: (referents = []) => {
       const text = intent.trim();
       if (text.length === 0) return;
       shrunk.current = false;
@@ -123,7 +133,7 @@ export function useDockMachine(
       if (!conversation) return;
 
       void conversation
-        .send(text)
+        .send(text, referents)
         .then((result) => {
           /*
            * 指示語が解けなかったときは、**進めずに聞き返す**。

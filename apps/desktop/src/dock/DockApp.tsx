@@ -9,7 +9,7 @@ import { AstraClient } from '@astra/api-client';
 import { ThemeProvider } from '../state/ThemeProvider.js';
 import { SessionProvider, useSession } from '../state/SessionProvider.js';
 import { TaskDock } from './TaskDock.js';
-import type { DockConversation } from './useDockMachine.js';
+import type { ContextReferent, DockConversation } from './useDockMachine.js';
 import './dock.css';
 
 function useConversation(client: AstraClient | null): DockConversation | undefined {
@@ -17,7 +17,7 @@ function useConversation(client: AstraClient | null): DockConversation | undefin
   const conversationId = useRef<string | null>(null);
 
   const send = useCallback(
-    async (text: string) => {
+    async (text: string, referents: readonly ContextReferent[]) => {
       if (!client) throw new Error('まだ接続していません');
       if (!conversationId.current) {
         conversationId.current = (await client.startConversation()).id;
@@ -27,6 +27,12 @@ function useConversation(client: AstraClient | null): DockConversation | undefin
         modality: 'text',
         // 新しい入力が来たら、走っている応答を打ち切る（正本 §7.2）
         interrupt: true,
+        /*
+         * 画面に出ているものを一緒に渡す（正本 §6）。
+         * **これを渡さないと、一言目の「この会社」で必ず聞き返す。**
+         * Context Lens に出しておきながら送らないのは、出していないのと同じ。
+         */
+        context_referents: referents.map((r) => ({ label: r.label, kind: r.kind })),
       });
       return { needsClarification: result.needsClarification, answer: result.answer };
     },

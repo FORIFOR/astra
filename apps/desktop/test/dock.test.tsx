@@ -3,10 +3,11 @@
  * UI/UX §3・§4.3・§4.4・§5。
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import type { ContextSource } from '@astra/contracts';
 import { TaskDock } from '../src/dock/TaskDock.js';
+import { shortcuts } from '../src/host/tauri.js';
 
 const source = (
   over: Partial<ContextSource> & Pick<ContextSource, 'id' | 'label'>,
@@ -30,7 +31,10 @@ beforeEach(() => {
   });
 });
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
 
 describe('intent bar (§4.3)', () => {
   it('offers text, voice and attach without naming any tool', () => {
@@ -153,6 +157,182 @@ describe('escape (§4.4)', () => {
     // 先に畳む。いきなり消さない。
     expect(screen.queryByRole('button', { name: '関連メール8件 を外す' })).toBeNull();
     expect((document.querySelector('.astra-dock') as HTMLElement).dataset['state']).toBe('READY');
+  });
+});
+
+describe('keyboard (§20)', () => {
+  /** §20 の表は OS ごとに違う。どちらの OS の話をしているかを固定する。 */
+  const onPlatform = (userAgent: string): void => {
+    Object.defineProperty(window.navigator, 'userAgent', {
+      configurable: true,
+      value: userAgent,
+    });
+  };
+  const MAC = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)';
+  const WINDOWS = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)';
+
+  it('does not send while the IME is still converting', async () => {
+    const send = vi.fn(async () => ({ needsClarification: false, answer: null }));
+    render(<TaskDock conversation={{ send }} />);
+    const field = screen.getByLabelText('依頼を入力') as HTMLTextAreaElement;
+
+    await userEvent.type(field, 'かいぎ');
+    // 変換確定の Enter。**これは送信ではない。**
+    fireEvent.keyDown(field, { key: 'Enter', code: 'Enter', isComposing: true });
+    expect(send).not.toHaveBeenCalled();
+    expect(field.value).toBe('かいぎ');
+
+    // 確定したあとの Enter で初めて送る
+    fireEvent.keyDown(field, { key: 'Enter', code: 'Enter' });
+    await waitFor(() => expect(send).toHaveBeenCalledWith('かいぎ', []));
+  });
+
+  it('takes Esc even when the focus is not in the input', async () => {
+    render(<TaskDock initialSources={[source({ id: 'a', label: 'A社' })]} />);
+    const dock = document.querySelector('.astra-dock') as HTMLElement;
+    // 入力欄から focus を外す。承認ボタン等にいる状況。
+    (screen.getByRole('button', { name: '音声で入力する' }) as HTMLElement).focus();
+
+    fireEvent.keyDown(window, { key: 'Escape', code: 'Escape' });
+    expect(dock.dataset['state']).toBe('HIDDEN');
+  });
+
+  it('opens the Context Lens with the shortcut the spec names', async () => {
+    onPlatform(MAC);
+    render(
+      <TaskDock
+        initialSources={[
+          source({ id: 'a', label: 'A社' }),
+          source({ id: 'b', label: 'Q4提案.pptx' }),
+          source({ id: 'c', label: '明日 10:00' }),
+          source({ id: 'd', label: '関連メール8件' }),
+        ]}
+      />,
+    );
+    expect(screen.queryByRole('button', { name: '関連メール8件 を外す' })).toBeNull();
+
+    // §20: macOS は Cmd+Shift+C
+    fireEvent.keyDown(window, { key: 'C', code: 'KeyC', metaKey: true, shiftKey: true });
+    expect(screen.getByRole('button', { name: '関連メール8件 を外す' })).toBeTruthy();
+    cleanup();
+
+    // Windows は Ctrl+Shift+C。Cmd 相当を押しても効かない。
+    onPlatform(WINDOWS);
+    render(
+      <TaskDock
+        initialSources={[
+          source({ id: 'a', label: 'A社' }),
+          source({ id: 'b', label: 'Q4提案.pptx' }),
+          source({ id: 'c', label: '明日 10:00' }),
+          source({ id: 'd', label: '関連メール8件' }),
+        ]}
+      />,
+    );
+    fireEvent.keyDown(window, { key: 'C', code: 'KeyC', metaKey: true, shiftKey: true });
+    expect(screen.queryByRole('button', { name: '関連メール8件 を外す' })).toBeNull();
+    fireEvent.keyDown(window, { key: 'C', code: 'KeyC', ctrlKey: true, shiftKey: true });
+    expect(screen.getByRole('button', { name: '関連メール8件 を外す' })).toBeTruthy();
+  });
+
+  it('follows a shortcut the user changed in Settings', async () => {
+    onPlatform(MAC);
+    render(
+      <TaskDock
+        initialSources={[
+          source({ id: 'a', label: 'A社' }),
+          source({ id: 'b', label: 'Q4提案.pptx' }),
+          source({ id: 'c', label: '明日 10:00' }),
+          source({ id: 'd', label: '関連メール8件' }),
+        ]}
+        shortcutOverrides={{
+          'context.open': {
+            code: 'KeyK',
+            modifiers: { primary: true, alt: false, shift: true, control: false },
+          },
+        }}
+      />,
+    );
+    // 既定は、変更したあとは効かない
+    fireEvent.keyDown(window, { key: 'C', code: 'KeyC', metaKey: true, shiftKey: true });
+    expect(screen.queryByRole('button', { name: '関連メール8件 を外す' })).toBeNull();
+
+    fireEvent.keyDown(window, { key: 'K', code: 'KeyK', metaKey: true, shiftKey: true });
+    expect(screen.getByRole('button', { name: '関連メール8件 を外す' })).toBeTruthy();
+  });
+});
+
+describe('what the dock actually sends (正本 §6)', () => {
+  it('sends the context it is showing, so the first sentence is not questioned', async () => {
+    const send = vi.fn(async () => ({ needsClarification: false, answer: null }));
+    render(
+      <TaskDock
+        conversation={{ send }}
+        initialSources={[
+          source({ id: 'a', label: 'Example Inc', category: 'current' }),
+          source({ id: 'b', label: 'Q4提案.pptx', category: 'internal' }),
+        ]}
+      />,
+    );
+
+    await userEvent.type(screen.getByLabelText('依頼を入力'), 'この会社について調べて{Enter}');
+    // 画面に出しておきながら送らないのは、出していないのと同じ
+    await waitFor(() =>
+      expect(send).toHaveBeenCalledWith('この会社について調べて', [
+        { label: 'Example Inc', kind: 'current' },
+        { label: 'Q4提案.pptx', kind: 'internal' },
+      ]),
+    );
+  });
+
+  it('stops sending a source the user removed', async () => {
+    const send = vi.fn(async () => ({ needsClarification: false, answer: null }));
+    render(
+      <TaskDock
+        conversation={{ send }}
+        initialSources={[
+          source({ id: 'a', label: 'Example Inc', category: 'current' }),
+          source({ id: 'b', label: 'Q4提案.pptx', category: 'internal' }),
+        ]}
+      />,
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Q4提案.pptx を外す' }));
+    await userEvent.type(screen.getByLabelText('依頼を入力'), '調べて{Enter}');
+
+    await waitFor(() =>
+      expect(send).toHaveBeenCalledWith('調べて', [{ label: 'Example Inc', kind: 'current' }]),
+    );
+  });
+});
+
+describe('push-to-talk (§20)', () => {
+  it('listens while the key is held and stops the moment it is released', async () => {
+    let fire: ((id: string, pressed: boolean) => void) | null = null;
+    const unlisten = vi.fn();
+    vi.spyOn(shortcuts, 'onHold').mockImplementation(async (handler) => {
+      fire = handler;
+      return unlisten;
+    });
+    const stop = vi.fn(async () => undefined);
+    const dictation = { start: vi.fn(async () => undefined), stop };
+
+    const { unmount } = render(<TaskDock dictation={dictation} />);
+    const dock = document.querySelector('.astra-dock') as HTMLElement;
+    await waitFor(() => expect(fire).not.toBeNull());
+
+    act(() => fire!('dock.pushToTalk', true));
+    expect(dock.dataset['state']).toBe('LISTENING');
+
+    // **離したら必ず止める。**押していないのに録り続けない。
+    act(() => fire!('dock.pushToTalk', false));
+    expect(dock.dataset['state']).toBe('READY');
+    expect(stop).toHaveBeenCalled();
+
+    // 別のショートカットの hold には反応しない
+    act(() => fire!('dock.toggle', true));
+    expect(dock.dataset['state']).toBe('READY');
+
+    unmount();
+    expect(unlisten).toHaveBeenCalled();
   });
 });
 
@@ -316,7 +496,7 @@ describe('the dock talking to the Conversation Engine (Phase 7)', () => {
     await waitFor(() =>
       expect((screen.getByRole('textbox') as HTMLTextAreaElement).value).toBe(''),
     );
-    expect(engine.send).toHaveBeenCalledWith('競合を調べて');
+    expect(engine.send).toHaveBeenCalledWith('競合を調べて', []);
   });
 
   it('says what went wrong rather than going quiet', async () => {

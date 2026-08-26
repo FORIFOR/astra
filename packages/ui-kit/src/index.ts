@@ -16,3 +16,4 @@ export * from './tokens/dock.js';
 export { buildTokensCss, TOKENS_CSS } from './tokens/css.js';
 export * from './theme.js';
 export * from './navigation.js';
+export * from './shortcuts.js';

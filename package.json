@@ -34,7 +34,8 @@
     "dev:worker": "tsx workers/task-worker/src/worker-main.ts",
     "smoke": "./scripts/smoke.sh",
     "gen:crm-entities": "node scripts/gen-crm-entities.mjs",
-    "build:apps": "pnpm --filter @astra/desktop build && pnpm --filter @astra/share-web build"
+    "build:apps": "pnpm --filter @astra/desktop build && pnpm --filter @astra/share-web build",
+    "gen:shortcuts": "node scripts/gen-shortcuts.mjs"
   },
   "devDependencies": {
     "@types/node": "catalog:",

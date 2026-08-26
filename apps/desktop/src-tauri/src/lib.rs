@@ -4,14 +4,17 @@ pub mod context;
 pub mod dock;
 pub mod secrets;
 pub mod shortcut;
+pub mod shortcut_generated;
 
 use dock::DockRuntime;
+use shortcut::ShortcutRuntime;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .manage(DockRuntime::default())
+        .manage(ShortcutRuntime::default())
         .invoke_handler(tauri::generate_handler![
             dock::dock_show,
             dock::dock_hide,
@@ -22,6 +25,8 @@ pub fn run() {
             secrets::secret_set,
             secrets::secret_get,
             secrets::secret_delete,
+            shortcut::shortcut_status,
+            shortcut::shortcut_rebind,
         ])
         .setup(|app| {
             if cfg!(debug_assertions) {

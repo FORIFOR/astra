@@ -1,0 +1,46 @@
+/* ショートカット設定（§20）。設定面と初回設定で同じ見た目を使う。 */
+.astra-shortcuts__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--astra-space-sm, 8px);
+}
+
+.astra-shortcuts__row {
+  display: grid;
+  gap: var(--astra-space-xs, 4px);
+}
+
+.astra-shortcuts__label {
+  color: var(--astra-color-text);
+}
+
+.astra-shortcuts__keys {
+  font-family: var(--astra-font-mono, ui-monospace, monospace);
+  border: 1px solid var(--astra-color-border);
+  border-radius: var(--astra-radius-sm, 4px);
+  padding: 0 var(--astra-space-xs, 4px);
+  align-self: start;
+}
+
+/* §19: 使えないことを色だけで表さない。文言でも言う。 */
+.astra-shortcuts__unavailable {
+  color: var(--astra-color-danger);
+}
+
+.astra-shortcuts__note {
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-sm, 0.875rem);
+}
+
+.astra-shortcuts__alternates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--astra-space-xs, 4px);
+  align-items: center;
+}
+
+.astra-shortcuts__error {
+  color: var(--astra-color-danger);
+}

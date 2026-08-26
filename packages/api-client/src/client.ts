@@ -202,7 +202,8 @@ export class AstraClient {
    */
   async sendTurn(
     conversationId: string,
-    request: SendTurnRequest,
+    // 既定のある項目まで呼び出し側に書かせない（context_referents 等）
+    request: z.input<typeof SendTurnRequest>,
   ): Promise<{ needsClarification: boolean; answer: string | null; intent: string | null }> {
     const parsed = await this.http.request(
       {
