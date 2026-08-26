@@ -164,3 +164,116 @@ describe('choosing real over stand-in', () => {
     expect(withRecognizer.batch.isStandIn).toBe(false);
   });
 });
+
+describe('what the REST transport changed', () => {
+  it('reads a duration string as well as the SDK object', async () => {
+    const { durationToMs } = await import('../src/google.js');
+    // SDK (gRPC)
+    expect(durationToMs({ seconds: 4, nanos: 870_000_000 })).toBe(4_870);
+    // REST。読めないと**時刻だけが静かに消え**、引用と字幕が壊れる
+    expect(durationToMs('4.870s')).toBe(4_870);
+    expect(durationToMs('11.610s')).toBe(11_610);
+    expect(durationToMs('0s')).toBe(0);
+    // 壊れた値は 0。落ちるより、時刻が無いほうがまだ扱える
+    expect(durationToMs('なにか')).toBe(0);
+    expect(durationToMs(null)).toBe(0);
+  });
+
+  it('sends the audio as base64, not as a numbered object', async () => {
+    let body = '';
+    const client = speechV2ClientFromEnv(
+      config(async (_url, init) => {
+        body = String(init?.body);
+        return json({ results: [] });
+      }),
+    );
+    await client.recognize({
+      recognizer: 'projects/p/locations/global/recognizers/_',
+      content: new Uint8Array([82, 73, 70, 70]),
+    });
+    /*
+     * JSON.stringify はバイト列を {"0":82,...} にする。
+     * **落ちずに無音として通ってしまう**ので、ここで固定する。
+     */
+    expect(JSON.parse(body).content).toBe('UklGRg==');
+  });
+});
+
+describe('when the recogniser cannot separate speakers', () => {
+  const V2_RESULT = {
+    results: [
+      { alternatives: [{ transcript: '一つ目' }], resultEndOffset: '4.870s' },
+      { alternatives: [{ transcript: '二つ目' }], resultEndOffset: '11.610s' },
+    ],
+  };
+
+  it('drops diarization and keeps the meeting, saying so', async () => {
+    const { GoogleBatchTranscriber } = await import('../src/google.js');
+    const attempts: unknown[] = [];
+    const told: string[] = [];
+
+    const transcriber = new GoogleBatchTranscriber({
+      recognizer: 'projects/p/locations/global/recognizers/_',
+      onDiarizationUnavailable: (reason) => told.push(reason),
+      client: {
+        async recognize(request: unknown) {
+          attempts.push(request);
+          const features = (request as { config: { features: Record<string, unknown> } }).config
+            .features;
+          if (features['diarizationConfig']) {
+            throw new Error('Recognizer does not support feature: speaker_diarization');
+          }
+          return [V2_RESULT] as never;
+        },
+      },
+    });
+
+    const results = await transcriber.transcribe(new Uint8Array([1, 2, 3, 4]), {
+      language: 'ja-JP',
+    });
+
+    // 2 回試している（分離あり → 無し）
+    expect(attempts).toHaveLength(2);
+    // 諦めたことを黙らない
+    expect(told[0]).toContain('speaker_diarization');
+    // 会議そのものは録れる
+    expect(results.map((r) => r.text)).toEqual(['一つ目', '二つ目']);
+    // **全部を Speaker 1 にしない。**分からないものは分からないと返す
+    expect(results.every((r) => r.speakerTag === null)).toBe(true);
+    // 時刻は残る
+    expect(results[1]!.endMs).toBe(11_610);
+  });
+
+  it('does not swallow a failure that has nothing to do with diarization', async () => {
+    const { GoogleBatchTranscriber } = await import('../src/google.js');
+    const transcriber = new GoogleBatchTranscriber({
+      recognizer: 'r',
+      client: {
+        async recognize() {
+          throw new Error('Cloud Speech-to-Text API has not been used');
+        },
+      },
+    });
+    await expect(
+      transcriber.transcribe(new Uint8Array([1]), { language: 'ja-JP' }),
+    ).rejects.toThrow(/has not been used/);
+  });
+
+  it('does not default to a model that is no longer generally available', async () => {
+    const { GoogleBatchTranscriber } = await import('../src/google.js');
+    let model = '';
+    const transcriber = new GoogleBatchTranscriber({
+      recognizer: 'r',
+      client: {
+        async recognize(request: unknown) {
+          model = (request as { config: { model: string } }).config.model;
+          return [{ results: [] }] as never;
+        },
+      },
+    });
+    await transcriber.transcribe(new Uint8Array([1]), { language: 'ja-JP' });
+    // chirp_3 は 403（no longer generally available）。既定にすると繋いだ瞬間に落ちる
+    expect(model).not.toBe('chirp_3');
+    expect(model).toBe('long');
+  });
+});

@@ -72,9 +72,24 @@ export interface GoogleStreamingConfig {
 
 /** ミリ秒へ直す。protobuf の Duration は seconds が文字列で来ることがある。 */
 export function durationToMs(
-  value: { seconds?: number | string | null; nanos?: number | null } | null | undefined,
+  value: { seconds?: number | string | null; nanos?: number | null } | string | null | undefined,
 ): number {
   if (!value) return 0;
+
+  /*
+   * **2 つの形が来る。**
+   *   SDK (gRPC): `{ seconds: 4, nanos: 870000000 }`
+   *   REST:       `"4.870s"`
+   *
+   * REST を足したとき、文字列を読めずに全部 0 になった。
+   * 落ちるのではなく**時刻だけが静かに消える**ので、
+   * 引用（§12.6）と字幕が壊れてから気付くことになる。
+   */
+  if (typeof value === 'string') {
+    const seconds = Number(value.endsWith('s') ? value.slice(0, -1) : value);
+    return Number.isFinite(seconds) ? Math.round(seconds * 1000) : 0;
+  }
+
   const seconds = typeof value.seconds === 'string' ? Number(value.seconds) : (value.seconds ?? 0);
   return Math.round(seconds * 1000 + (value.nanos ?? 0) / 1e6);
 }
@@ -238,6 +253,23 @@ export interface GoogleBatchConfig {
   readonly recognizer: string;
   readonly model?: string;
   readonly sampleRateHz?: number;
+  /** 話者分離が使えなかったことを知らせる先。**黙って落とさない。** */
+  readonly onDiarizationUnavailable?: (reason: string) => void;
+}
+
+/**
+ * その失敗が「話者分離に対応していない」か。
+ *
+ * 正本 §11.2 は Chirp 3 を指名しているが、**一般提供が終わっており**
+ * （`no longer generally available`）、普通のプロジェクトでは使えない。
+ * 使える `long` は話者分離に対応していない。
+ *
+ * 全部を失敗にすると会議そのものが録れなくなるので、
+ * **分離だけを諦めて、諦めたことを言う。**
+ */
+export function isDiarizationUnsupported(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return /diarization|speaker_diarization|unsupported fields/i.test(message);
 }
 
 /**
@@ -309,19 +341,31 @@ export class GoogleBatchTranscriber implements BatchTranscriber {
   ): Promise<readonly TranscriptResult[]> {
     if (audio.byteLength === 0) return [];
 
-    const [response] = await this.#config.client.recognize({
+    const request = (diarize: boolean): unknown => ({
       recognizer: this.#config.recognizer,
       config: {
-        // Chirp 3。正本 §11.2 が精度側に指定したモデル。
-        model: this.#config.model ?? 'chirp_3',
+        /*
+         * 既定を `long` にしてある。正本 §11.2 は Chirp 3 を指名しているが、
+         * **一般提供が終わっていて**普通のプロジェクトでは 403 になる。
+         * 使えないものを既定にすると、繋いだ瞬間に落ちる。
+         */
+        model: this.#config.model ?? 'long',
         languageCodes: [config.language],
         features: {
           enableAutomaticPunctuation: true,
           enableWordTimeOffsets: true,
-          diarizationConfig: {
-            ...(config.minSpeakers === undefined ? {} : { minSpeakerCount: config.minSpeakers }),
-            ...(config.maxSpeakers === undefined ? {} : { maxSpeakerCount: config.maxSpeakers }),
-          },
+          ...(diarize
+            ? {
+                diarizationConfig: {
+                  ...(config.minSpeakers === undefined
+                    ? {}
+                    : { minSpeakerCount: config.minSpeakers }),
+                  ...(config.maxSpeakers === undefined
+                    ? {}
+                    : { maxSpeakerCount: config.maxSpeakers }),
+                },
+              }
+            : {}),
         },
         explicitDecodingConfig: {
           encoding: 'LINEAR16',
@@ -331,6 +375,22 @@ export class GoogleBatchTranscriber implements BatchTranscriber {
       },
       content: audio,
     });
+
+    let response: { results?: readonly V2Result[] | null };
+    try {
+      [response] = await this.#config.client.recognize(request(true));
+    } catch (error) {
+      if (!isDiarizationUnsupported(error)) throw error;
+      /*
+       * 分離だけを諦める。**会議そのものは録れる。**
+       * 諦めたことを知らせるので、画面は「話者は分かりません」と出せる
+       * （全部を Speaker 1 にしない — `fromV2Results` は null を返す）。
+       */
+      this.#config.onDiarizationUnavailable?.(
+        error instanceof Error ? error.message : String(error),
+      );
+      [response] = await this.#config.client.recognize(request(false));
+    }
 
     return fromV2Results(response.results ?? [], config.language);
   }

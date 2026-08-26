@@ -95,11 +95,21 @@ describe.skipIf(!url)('plugin catalog', () => {
     });
 
     it('is idempotent across restarts', async () => {
-      const before = await catalog();
+      /*
+       * 見たいのは「同梱を読み直しても同梱の姿が変わらないこと」。
+       * カタログ全体を比べると、**同じ DB を使う別スイートが publish した
+       * plugin で落ちる**（実際に落ちた）。同梱だけを比べる。
+       */
+      const bundled = async () =>
+        (await catalog())
+          .filter((p) => (p.id as string).startsWith('com.astra.'))
+          .sort((a, b) => (a.id as string).localeCompare(b.id as string));
+
+      const before = await bundled();
       await harness.registry.seedBuiltins(
         new URL('../../../plugins/builtin', import.meta.url).pathname,
       );
-      expect(await catalog()).toEqual(before);
+      expect(await bundled()).toEqual(before);
     });
   });
 

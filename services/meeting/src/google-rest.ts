@@ -123,12 +123,24 @@ export function speechV2ClientFromEnv(config: GoogleRestConfig): V2SpeechClient 
   const getToken = tokenSource(config);
   return {
     async recognize(request: unknown) {
-      const parameters = request as { recognizer: string };
+      const parameters = request as { recognizer: string; content?: unknown };
       const url = `https://speech.googleapis.com/v2/${parameters.recognizer}:recognize`;
-      const body = (await callJson(url, request, config, getToken)) as {
+
+      /*
+       * REST は音声を base64 で受ける。SDK はバイト列をそのまま渡せるので、
+       * **ここで直さないと、JSON.stringify がバイト列を
+       * `{"0":82,"1":73,...}` にして送り、無音として通ってしまう。**
+       * 落ちるのではなく、静かに何も聞こえない結果になる。
+       */
+      const body =
+        parameters.content instanceof Uint8Array
+          ? { ...parameters, content: Buffer.from(parameters.content).toString('base64') }
+          : request;
+
+      const parsed = (await callJson(url, body, config, getToken)) as {
         results?: readonly unknown[] | null;
       };
-      return [body as { results?: readonly never[] | null }];
+      return [parsed as { results?: readonly never[] | null }];
     },
   };
 }
