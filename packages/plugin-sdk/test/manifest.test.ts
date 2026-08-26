@@ -31,7 +31,7 @@ describe('bundled manifests', () => {
     // 数を固定してあるのは、同梱を**意図せず**増やさないため。
     // 増やすときはここも直す（増やしたことが diff に残る）。
     const paths = await builtinPaths();
-    expect(paths).toHaveLength(6);
+    expect(paths).toHaveLength(7);
   });
 
   it('every bundled manifest passes validation (AC-12)', async () => {

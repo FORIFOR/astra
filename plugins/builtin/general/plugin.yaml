@@ -1,0 +1,34 @@
+# General Assistant。正本 §2.2 Core Agents、§29 MVP 必須。
+# 何をする話か決まらないときの受け皿。chat lane がここへ来る。
+id: com.astra.general
+name: General Assistant
+version: 0.1.0
+publisher: astra
+verified: true
+min_core_version: 0.1.0
+category: capability
+builtin: true
+removable: false
+compliance_profile: GENERAL
+execution_surfaces: [cloud]
+permissions:
+  - artifacts.read
+  - artifacts.write
+data_accessed:
+  - Only what the user put in front of it for this request
+connectors: []
+tools:
+  - id: general.answer
+    risk: READ
+    surface: cloud
+  - id: general.compose
+    risk: READ
+    surface: cloud
+agents:
+  - id: assistant
+    skill: skills/assistant.md
+    tools: [general.answer, general.compose]
+dashboards: []
+data_sources: []
+policies:
+  - policies/general.yaml

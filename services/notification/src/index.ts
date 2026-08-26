@@ -1,11 +1,14 @@
 /**
  * @astra/service-notification
  *
- * Desktop push, proactive heartbeat and future email/mobile delivery.
- *
- * Phase 0 scaffold only — no implementation yet.
- * Normative spec: docs/spec/phase-0-implementation-spec.md
- * Product spec:   docs/spec/new_ai_platform_design_spec_v0.1.md
+ * desktop push と proactive heartbeat。正本 §17。
+ * **黙っている価値**を尊重するのが、この service の存在理由。
  */
-
-export const SERVICE_NOTIFICATION_PACKAGE = '@astra/service-notification' as const;
+export {
+  Heartbeat,
+  shouldNotify,
+  type HeartbeatDeps,
+  type HeartbeatOptions,
+  type NotificationSink,
+  type PendingNotification,
+} from './heartbeat.js';

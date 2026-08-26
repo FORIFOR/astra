@@ -24,5 +24,8 @@
     "@astra/contracts": "workspace:*",
     "@astra/db": "workspace:*",
     "@astra/telemetry": "workspace:*"
+  },
+  "devDependencies": {
+    "vitest": "catalog:"
   }
 }

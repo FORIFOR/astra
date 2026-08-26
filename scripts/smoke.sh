@@ -113,7 +113,7 @@ echo "  tenant $TENANT"
 
 say "the bundled plugins are in the catalog"
 COUNT="$(curl -fsS "$BASE/v1/plugins/catalog" -H "authorization: Bearer $AT" | json 'len(d["items"])')"
-[ "$COUNT" = "6" ] || fail "expected 6 bundled plugins, found $COUNT"
+[ "$COUNT" = "7" ] || fail "expected 7 bundled plugins, found $COUNT"
 echo "  $COUNT plugins"
 
 say "a task runs through the real Temporal server"

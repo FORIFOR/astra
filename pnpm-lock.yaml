@@ -578,6 +578,10 @@ importers:
       '@astra/telemetry':
         specifier: workspace:*
         version: link:../../packages/telemetry
+    devDependencies:
+      vitest:
+        specifier: 'catalog:'
+        version: 3.2.7(@types/node@22.20.1)(happy-dom@20.11.6)(terser@5.50.0)(tsx@4.23.12)(yaml@2.9.0)
 
   services/plugin-registry:
     dependencies:

@@ -435,6 +435,7 @@ describe.skipIf(!url)('Phase 0 acceptance', () => {
       const ids = new Set(items.map((p) => p.id as string));
       expect([...ids].filter((id) => id.startsWith('com.astra.')).sort()).toEqual([
         'com.astra.finder',
+        'com.astra.general',
         'com.astra.gmail',
         'com.astra.google-calendar',
         'com.astra.meeting',

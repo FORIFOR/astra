@@ -220,7 +220,7 @@ async function checkBuiltinPlugins() {
   const entries = await readdir(path.join(root, 'plugins/builtin'), { withFileTypes: true });
   const dirs = entries.filter((e) => e.isDirectory());
   // 同梱を勝手に増やさないための検査。増やすときはここも直す（意図的な変更にする）。
-  const EXPECTED = 6;
+  const EXPECTED = 7;
   if (dirs.length !== EXPECTED) {
     fail('plugins/builtin', 0, `expected ${EXPECTED} bundled plugins, found ${dirs.length}`);
   }
