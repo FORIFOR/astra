@@ -13,16 +13,36 @@
 /** provider から返る 1 かたまり。まだ確定とは限らない。 */
 export interface TranscriptResult {
   readonly isFinal: boolean;
+  /**
+   * 分離で付いた番号。**二次情報。**
+   * 分離が無い / 使えない構成では null（`source` が一次情報になる）。
+   */
   readonly speakerTag: number | null;
   readonly text: string;
   readonly startMs: number;
   readonly endMs: number;
   readonly language: string | null;
   readonly confidence: number | null;
+  /**
+   * どの音源から来たか。**一次情報**（正本 §11.3・§12.2）。
+   *
+   * `microphone` = 自分 / `system` = 相手。混ぜたものからは決まらない。
+   * 分離が落ちても、この事実は残る。
+   */
+  readonly source?: 'microphone' | 'system' | 'mixed' | undefined;
+  /** どの実装で起こしたか。モデルを変えたときの比較に要る。 */
+  readonly provider?: string | undefined;
+  /** 指名したモデルが使えず落ちたか。**黙って落ちない**ための印。 */
+  readonly fallbackUsed?: boolean | undefined;
 }
 
 export interface StreamingConfig {
   readonly language: string;
+  /**
+   * この流れがどの音源か。**リアルタイムでは出所が一次情報。**
+   * マイクと相手側は別の流れにして、混ぜてから起こさない。
+   */
+  readonly source?: 'microphone' | 'system' | 'mixed' | undefined;
   /** diarization のための話者数の見当。正本 §11.2「speaker count range」。 */
   readonly minSpeakers?: number;
   readonly maxSpeakers?: number;

@@ -13,6 +13,7 @@
 import { GoogleAuth } from 'google-auth-library';
 
 import type { TranslateClient, V2SpeechClient } from './google.js';
+import { locationOf, resolveSpeechEndpoint } from './google-streaming.js';
 
 /** ADC が要求する scope。**これ以上を求めない。** */
 const SCOPES = ['https://www.googleapis.com/auth/cloud-platform'];
@@ -126,12 +127,12 @@ export function translateClientFromEnv(config: GoogleRestConfig): TranslateClien
  * `speech.googleapis.com` へ投げると、そこには無いと言われる。
  * Chirp 3 は `us` / `eu` の multi-region 提供なので、ここを間違えると
  * 「モデルが無い」に見える（実際には endpoint 違い）。
+ *
+ * host の組み立ては `resolveSpeechEndpoint` が唯一の入口。
+ * 2 箇所で組むと、片方だけ直る。
  */
 export function speechEndpoint(recognizer: string): string {
-  const location = /\/locations\/([^/]+)/.exec(recognizer)?.[1];
-  return !location || location === 'global'
-    ? 'https://speech.googleapis.com'
-    : `https://${location}-speech.googleapis.com`;
+  return `https://${resolveSpeechEndpoint(locationOf(recognizer))}`;
 }
 
 export function speechV2ClientFromEnv(config: GoogleRestConfig): V2SpeechClient {

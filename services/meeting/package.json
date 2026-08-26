@@ -26,6 +26,7 @@
     "@astra/service-library": "workspace:*",
     "@astra/service-task": "workspace:*",
     "@astra/telemetry": "workspace:*",
+    "@google-cloud/speech": "^6.7.1",
     "google-auth-library": "^11.0.2",
     "kysely": "catalog:",
     "zod": "catalog:"

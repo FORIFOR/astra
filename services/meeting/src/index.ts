@@ -75,3 +75,4 @@ export {
   translateClientFromEnv,
   type GoogleRestConfig,
 } from './google-rest.js';
+export * from './google-streaming.js';

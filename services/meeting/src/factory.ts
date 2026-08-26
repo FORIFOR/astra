@@ -81,6 +81,7 @@ function clientsFromEnv(env: MeetingProviderEnv):
   | {
       speechV1?: () => Promise<import('./google.js').V1SpeechClient>;
       speechV2?: () => Promise<import('./google.js').V2SpeechClient>;
+      speechStreaming?: () => Promise<import('./google-streaming.js').StreamingSpeechClient>;
       translate?: () => Promise<import('./google.js').TranslateClient>;
     }
   | undefined {
@@ -97,6 +98,14 @@ function clientsFromEnv(env: MeetingProviderEnv):
       const { speechV2ClientFromEnv } = await import('./google-rest.js');
       return speechV2ClientFromEnv({ projectId });
     },
+    ...(env.GOOGLE_STT_RECOGNIZER
+      ? {
+          speechStreaming: async () => {
+            const { streamingSpeechClient } = await import('./google-grpc.js');
+            return streamingSpeechClient(env.GOOGLE_STT_RECOGNIZER as string, projectId);
+          },
+        }
+      : {}),
     translate: async () => {
       const { translateClientFromEnv } = await import('./google-rest.js');
       return translateClientFromEnv({ projectId });
@@ -115,6 +124,7 @@ export async function meetingProvidersFromEnv(
   provided?: {
     speechV1?: () => Promise<import('./google.js').V1SpeechClient>;
     speechV2?: () => Promise<import('./google.js').V2SpeechClient>;
+    speechStreaming?: () => Promise<import('./google-streaming.js').StreamingSpeechClient>;
     translate?: () => Promise<import('./google.js').TranslateClient>;
   },
 ): Promise<MeetingProviders> {
@@ -122,10 +132,20 @@ export async function meetingProvidersFromEnv(
   const clients = provided ?? clientsFromEnv(env);
   const { GoogleBatchTranscriber, GoogleStreamingTranscriber, GoogleTranslationProvider } =
     await import('./google.js');
+  const { GoogleStreamingV2Transcriber } = await import('./google-streaming.js');
 
+  /*
+   * live path。**Batch を流用しない。**
+   * V2 の streaming は gRPC の双方向 stream なので、REST では代われない。
+   */
   const streaming: StreamingTranscriber = clients?.speechV1
     ? new GoogleStreamingTranscriber({ client: await clients.speechV1() })
-    : new ScriptedStreamingTranscriber([]);
+    : clients?.speechStreaming && env.GOOGLE_STT_RECOGNIZER
+      ? new GoogleStreamingV2Transcriber({
+          client: await clients.speechStreaming(),
+          recognizer: env.GOOGLE_STT_RECOGNIZER,
+        })
+      : new ScriptedStreamingTranscriber([]);
 
   const batch: BatchTranscriber =
     clients?.speechV2 && env.GOOGLE_STT_RECOGNIZER
