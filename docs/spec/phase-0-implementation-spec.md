@@ -1467,6 +1467,7 @@ AC-8〜AC-16 は「後から入れられない性質」を Phase 0 で固定す�
 | D-19  | `task.progress` に `detail` / `elapsed_ms` / `retrying` を追加                                                                   | UI/UX §6.1「12 sources」/ §6.2「段数が決まらない処理は % を出さない」「retry 中は『再試行中』に置き換える」。§19                                                           |
 | D-20  | `packages/api-client` を §26 の構成に追加                                                                                        | `packages/contracts` の client 側。desktop / share-web / evals が同じ検証済みクライアントを使う。`packages/db` と同じ扱いの拡張                                            |
 | D-21  | api-gateway に CORS を追加（許可オリジンの既定は空）                                                                             | Vite と Tauri の webview は別オリジンなので、無いと UI から一切叩けない。`*` を既定にすると認証済み API が任意のサイトから叩ける。§19.8                                    |
+| D-22  | 公開 viewer 用の DB スコープ `withShare` と最小権限 BYPASSRLS ロール `astra_share` を追加                                        | 共有リンクの解決はテナント確定前に始まるため、D-14 と同じ循環が起きる。artifact は解決後に `withTenant` で読む。Phase 2 実装仕様 §4.1                                      |
 
 ---
 

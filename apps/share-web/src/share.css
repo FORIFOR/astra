@@ -1,0 +1,83 @@
+/* 共有 viewer。Astra 本体のトークンをそのまま使う。 */
+
+.share {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: var(--astra-space-section) var(--astra-padding-panel);
+  display: flex;
+  flex-direction: column;
+  gap: var(--astra-space-lg);
+}
+
+.share__title {
+  margin: 0;
+  font-size: var(--astra-font-size-page-title);
+  font-weight: var(--astra-font-weight-page-title);
+}
+
+.share__meta,
+.share__note {
+  margin: 0;
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-secondary);
+}
+
+.share__body {
+  margin: 0;
+  padding: var(--astra-padding-panel);
+  border: var(--astra-border-hairline) solid var(--astra-color-border);
+  border-radius: var(--astra-radius-standard);
+  background: var(--astra-color-surface);
+  font-family: var(--astra-font-mono);
+  font-size: var(--astra-font-size-secondary);
+  white-space: pre-wrap;
+  overflow-x: auto;
+}
+
+/* 透かし。読めなくならない程度に薄く敷く。 */
+.share[data-watermark='true'] .share__body {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 80px,
+    color-mix(in srgb, var(--astra-color-muted) 8%, transparent) 80px,
+    color-mix(in srgb, var(--astra-color-muted) 8%, transparent) 160px
+  );
+}
+
+.share__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--astra-space-base);
+  max-width: 360px;
+}
+
+.share__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--astra-space-compact);
+  font-size: var(--astra-font-size-secondary);
+}
+
+.share__field input {
+  min-height: 40px;
+  padding-inline: var(--astra-space-base);
+  border: var(--astra-border-hairline) solid var(--astra-color-border);
+  border-radius: var(--astra-radius-small);
+  background: var(--astra-color-surface);
+  color: var(--astra-color-text);
+  font: inherit;
+}
+
+.share__form button,
+.share__download {
+  align-self: flex-start;
+  min-height: 44px;
+  padding-inline: var(--astra-space-panel);
+  border: 0;
+  border-radius: var(--astra-radius-small);
+  background: var(--astra-color-accent);
+  color: var(--astra-color-accent-on);
+  font: inherit;
+  cursor: pointer;
+}
