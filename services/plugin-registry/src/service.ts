@@ -20,11 +20,13 @@ import {
   type InstallPluginRequest,
   type PermissionScope,
   type PluginInstall,
+  type ComplianceProfile,
   type McpServerDecl,
   type PluginManifest,
 } from '@astra/contracts';
 import { withSystem, withTenant, type DbHandle, type ScopedDb } from '@astra/db';
 import type { InstalledAgent } from '@astra/service-task';
+import { assertPolicyEnforcementAvailable } from './compliance.js';
 import type { DataSourceResolver } from './data-sources.js';
 import { appendAuditEvent } from '@astra/telemetry';
 import {
@@ -39,6 +41,8 @@ import {
 } from '@astra/plugin-sdk';
 
 export interface RegistryDeps {
+  /** 実行環境。本番で未実装のゲートに寄りかからないための判定に使う。 */
+  readonly env?: string;
   readonly db: DbHandle;
   /** アプリ本体の版。manifest の `min_core_version` と突き合わせる。 */
   readonly coreVersion?: string;
@@ -47,10 +51,12 @@ export interface RegistryDeps {
 export class PluginRegistryService {
   readonly #db: DbHandle;
   readonly #coreVersion: string;
+  readonly #env: string;
 
   constructor(deps: RegistryDeps) {
     this.#db = deps.db;
     this.#coreVersion = deps.coreVersion ?? CORE_VERSION;
+    this.#env = deps.env ?? 'development';
   }
 
   /**
@@ -213,13 +219,26 @@ export class PluginRegistryService {
     const version = await withSystem(this.#db, async (tx) => {
       const row = await tx
         .selectFrom('plugin_versions')
-        .select(['plugin_id', 'version', 'min_core_version', 'manifest', 'yanked_at'])
+        .select([
+          'plugin_id',
+          'version',
+          'min_core_version',
+          'compliance_profile',
+          'manifest',
+          'yanked_at',
+        ])
         .where('plugin_id', '=', pluginId)
         .where('version', '=', request.version)
         .executeTakeFirst();
       if (!row || row.yanked_at !== null) {
         throw new AstraError('plugin.not_found', `no plugin ${pluginId}@${request.version}`);
       }
+      // 規則が効いていないのに規制 plugin を本番で動かさない
+      assertPolicyEnforcementAvailable(
+        row.compliance_profile as ComplianceProfile,
+        this.#env,
+        pluginId,
+      );
       if (!isCompatible(row.min_core_version, this.#coreVersion)) {
         throw new AstraError(
           'plugin.incompatible',
@@ -593,6 +612,7 @@ export class PluginRegistryService {
       pluginId,
       agentId,
       agentName: manifest.name,
+      complianceProfile: manifest.compliance_profile,
       tools,
       skill: skillFile ? skillFile.toString('utf8') : null,
       grantedScopes: granted.map((g) => g.scope),

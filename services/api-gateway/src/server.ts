@@ -69,7 +69,12 @@ async function main(): Promise<void> {
     // ワークフローがもう片方の worker の枠を食う（実際に踏んだ）。
     ...(process.env['ASTRA_TASK_QUEUE'] ? { taskQueue: process.env['ASTRA_TASK_QUEUE'] } : {}),
   });
-  const registry = new PluginRegistryService({ db, coreVersion: config.version });
+  const registry = new PluginRegistryService({
+    db,
+    coreVersion: config.version,
+    // 本番で未実装のゲートに寄りかからないための判定に使う
+    env: config.env,
+  });
   // install した plugin の agent を task として実行できるようにする（Phase 5 §2）
   const tasks = new TaskService(db, runtime, agentResolver(registry));
   const shares = new ShareService({ db, library, shareHost: config.shareHost });

@@ -6,7 +6,7 @@
  * DB を要るこちらは別ファイルにしてある。計画は task を作る時点で確定させ、
  * workflow へ持ち込む（D-40）。
  */
-import type { TaskPlan, TaskStep } from './plan.js';
+import type { StepComplianceProfile, TaskPlan, TaskStep } from './plan.js';
 
 /** `plugin:<pluginId>:<agentId>` の形。ここ以外で組み立てない。 */
 export const AGENT_KIND_PREFIX = 'plugin:';
@@ -36,6 +36,8 @@ export interface InstalledAgent {
     readonly surface: 'local' | 'cloud';
     readonly requiresConfirmation: boolean;
   }[];
+  /** その plugin の規制区分。**運ばないと規制の意味が無くなる**（正本 §22）。 */
+  readonly complianceProfile: StepComplianceProfile;
   /** 実体ファイルから読んだ skill。無ければ null。 */
   readonly skill: string | null;
   /** 同意済みの scope。 */
@@ -96,6 +98,9 @@ export function planInstalledAgent(
     // tool 名を利用者に見せない（正本 §7.2 / §9.3）。何をしているかを言う。
     message: `${agent.agentName} が作業しています`,
     args: { request, ...(agent.skill === null ? {} : { skill: agent.skill }) },
+    // 作者が確認を求めた tool は、低リスクでも確認する（正本 §9.2）
+    requiresConfirmation: tool.requiresConfirmation,
+    complianceProfile: agent.complianceProfile,
   }));
 
   return {

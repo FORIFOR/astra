@@ -8,7 +8,7 @@ import { ApplicationFailure } from '@temporalio/common';
 import { canonicalSha256, uuidv7, type ActionRisk } from '@astra/contracts';
 import { withTenant, type DbHandle, type ScopedDb } from '@astra/db';
 import { appendAuditEvent } from '@astra/telemetry';
-import { approvalTtlMs, evaluate } from '@astra/policy';
+import { approvalTtlMs, evaluate, type ActionContext } from '@astra/policy';
 import type { LibraryService } from '@astra/service-library';
 import { appendEvent, type EventPublisher } from './events.js';
 import { approvalSummaryFor, type TaskStep } from './plan.js';
@@ -48,6 +48,26 @@ export interface ActivityDeps {
   readonly executors?: Readonly<Record<string, StepExecutor>>;
   /** 監査に載せるアプリ版など、将来の付帯情報 */
   readonly now?: () => Date;
+}
+
+/**
+ * step から policy の入力を作る。
+ *
+ * **ここを固定値にしない。**`complianceProfile: 'GENERAL'` を書き込んでいた間、
+ * 規制区分の plugin も一般として評価され、正本 §22 の追加ゲート
+ * （write-back の明示承認・参照の監査）が一度も効いていなかった。
+ * `requires_confirmation` も同じで、manifest で検証されるだけで効いていなかった。
+ */
+function policyContextFor(step: TaskStep): ActionContext {
+  return {
+    risk: step.risk as ActionRisk,
+    surface: step.surface,
+    // 省略は GENERAL。組み込みの kind はこれでよい。
+    complianceProfile: step.complianceProfile ?? 'GENERAL',
+    ...(step.requiresConfirmation === undefined
+      ? {}
+      : { toolRequiresConfirmation: step.requiresConfirmation }),
+  };
 }
 
 const stepKey = (taskId: string, index: number, name: string): string =>
@@ -123,11 +143,7 @@ export function createTaskActivities(deps: ActivityDeps): TaskActivities {
     },
 
     async requestApprovalIfNeeded(input, step: TaskStep): Promise<RequestedApproval | null> {
-      const decision = evaluate({
-        risk: step.risk as ActionRisk,
-        complianceProfile: 'GENERAL',
-        surface: step.surface,
-      });
+      const decision = evaluate(policyContextFor(step));
       if (!decision.requiresApproval) return null;
 
       return inTenant(input, async (tx) => {
@@ -262,11 +278,7 @@ export function createTaskActivities(deps: ActivityDeps): TaskActivities {
     },
 
     async executeStep(input, step: TaskStep) {
-      const decision = evaluate({
-        risk: step.risk as ActionRisk,
-        complianceProfile: 'GENERAL',
-        surface: step.surface,
-      });
+      const decision = evaluate(policyContextFor(step));
       const startedAt = Date.now();
 
       await inTenant(input, (tx) =>

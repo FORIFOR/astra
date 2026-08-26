@@ -15,6 +15,7 @@ const agent = (over: Partial<InstalledAgent> = {}): InstalledAgent => ({
   pluginId: 'com.acme.crm',
   agentId: 'analyst',
   agentName: 'CRM Analyst',
+  complianceProfile: 'GENERAL',
   tools: [
     { id: 'crm.search', risk: 'READ', surface: 'cloud', requiresConfirmation: false },
     {

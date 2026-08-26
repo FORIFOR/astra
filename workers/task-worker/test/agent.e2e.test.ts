@@ -13,7 +13,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { TestWorkflowEnvironment } from '@temporalio/testing';
 import type { Worker } from '@temporalio/worker';
 import { AstraError, sha256Hex, uuidv7 } from '@astra/contracts';
-import { createDb, withIdentity, withSystem, type DbHandle } from '@astra/db';
+import { createDb, withIdentity, withSystem, withTenant, type DbHandle } from '@astra/db';
 import { FsObjectStore, LibraryService } from '@astra/service-library';
 import { PluginRegistryService, agentResolver } from '@astra/service-plugin-registry';
 import {
@@ -183,6 +183,23 @@ describe.skipIf(!url)('an installed agent', () => {
     if (storeRoot) await rm(storeRoot, { recursive: true, force: true });
   });
 
+  /** 承認が現れるまで待つ。現れなければ null。 */
+  const waitForApproval = async (taskId: string): Promise<string | null> => {
+    for (let i = 0; i < 100; i += 1) {
+      const row = await withTenant(db, tenantId, (tx) =>
+        tx
+          .selectFrom('approvals')
+          .select(['id'])
+          .where('task_id', '=', taskId)
+          .where('status', '=', 'PENDING')
+          .executeTakeFirst(),
+      );
+      if (row) return row.id;
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+    return null;
+  };
+
   const run = async (kind: string) => {
     const { task } = await tasks.create({
       tenantId,
@@ -252,6 +269,60 @@ describe.skipIf(!url)('an installed agent', () => {
       }),
     ).rejects.toThrow(/unknown task kind/);
   });
+
+  it('makes a regulated write wait for approval, where a general one would not', async () => {
+    // 一度壊れていた経路。complianceProfile が固定値だった間、
+    // 規制区分の plugin も一般として評価されていた（正本 §22）。
+    const CARE_ID = 'com.agentest.care';
+    const base = {
+      id: CARE_ID,
+      name: 'Care Assistant',
+      version: '1.0.0',
+      publisher: PUBLISHER,
+      verified: false,
+      min_core_version: '0.1.0',
+      category: 'domain-agent',
+      compliance_profile: 'CARE',
+      execution_surfaces: ['cloud'],
+      permissions: [],
+      data_accessed: ['Care records this user already has access to'],
+      // REVERSIBLE_WRITE は一般なら確認不要。規制区分では確認が要る。
+      tools: [{ id: 'care.note', risk: 'REVERSIBLE_WRITE', surface: 'cloud' }],
+      agents: [{ id: 'assistant', skill: 'skills/analyst.md', tools: ['care.note'] }],
+      // 規制 profile は policies 必須（manifest の不変条件）
+      policies: ['policies/care.yaml'],
+    };
+    const unsigned = await loadManifest(base, 'care-e2e');
+    const manifest = await loadManifest(
+      { ...base, signature: signManifest(unsigned.canonical, keys.privateKey) },
+      'care-e2e',
+    );
+    const policy = Buffer.from('id: care\nrules: []\n');
+    await registry.publish(manifest, [
+      ...(await skillAsset()),
+      {
+        path: 'policies/care.yaml',
+        kind: 'policy',
+        content: policy,
+        sha256: await sha256Hex(policy),
+      },
+    ]);
+    await registry.install(tenantId, userId, CARE_ID, { version: '1.0.0', granted_scopes: [] });
+
+    const { task } = await tasks.create({
+      tenantId,
+      userId,
+      request: { kind: agentKindFor(CARE_ID, 'assistant'), input: { message: '記録する' } },
+      idempotencyKey: `care-${uuidv7()}`,
+    });
+
+    // 承認待ちで止まる。走り切らない。
+    const pending = await waitForApproval(task.id);
+    expect(pending).not.toBeNull();
+
+    const running = await tasks.get(tenantId, task.id);
+    expect(running.status).toBe('WAITING_APPROVAL');
+  }, 120_000);
 
   it('refuses an agent id the plugin never declared', async () => {
     await registry.install(tenantId, userId, PLUGIN_ID, {

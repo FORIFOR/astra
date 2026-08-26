@@ -9,6 +9,10 @@
 export type StepRisk =
   'READ' | 'REVERSIBLE_WRITE' | 'EXTERNAL_COMMIT' | 'DESTRUCTIVE' | 'REGULATED' | 'FINANCIAL';
 
+/** contracts の ComplianceProfile と同じ値。ここは import できない（冒頭の注意）。 */
+export type StepComplianceProfile =
+  'GENERAL' | 'ENTERPRISE' | 'REGULATED_HEALTH' | 'CARE' | 'FINANCIAL';
+
 export interface TaskStep {
   readonly index: number;
   readonly toolId: string;
@@ -17,6 +21,17 @@ export interface TaskStep {
   /** ユーザーに見せる自然文。tool 名を出さない（正本 §7.2 / §9.3）。 */
   readonly message: string;
   readonly args: Record<string, unknown>;
+  /**
+   * manifest の `requires_confirmation`。
+   * **低リスクでも作者が確認を要求できる**（正本 §9.2）。
+   * ここを運ばないと、宣言が検証されるだけで効かなくなる。
+   */
+  readonly requiresConfirmation?: boolean;
+  /**
+   * どの規制区分で実行されるか（正本 §22）。
+   * 省略は `GENERAL`。**規制区分を運ばないと、規制の意味が無くなる。**
+   */
+  readonly complianceProfile?: StepComplianceProfile;
 }
 
 export interface TaskPlan {
