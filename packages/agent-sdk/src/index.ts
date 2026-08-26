@@ -1,11 +1,17 @@
 /**
  * @astra/agent-sdk
  *
- * Authoring surface for skills, tools and delegation used by core and plugin agents.
- *
- * Phase 0 scaffold only — no implementation yet.
- * Normative spec: docs/spec/phase-0-implementation-spec.md
- * Product spec:   docs/spec/new_ai_platform_design_spec_v0.1.md
+ * Agent Package を書くための道具。正本 §14。
+ * **宣言どうしの食い違いを、publish まで持っていかない**のが役目。
  */
-
-export const AGENT_SDK_PACKAGE = '@astra/agent-sdk' as const;
+export {
+  build,
+  buildEvaluations,
+  review,
+  type AgentSpec,
+  type BuiltPackage,
+  type PackageDraft,
+  type Problem,
+  type ToolSpec,
+  type WorkflowStepSpec,
+} from './author.js';
