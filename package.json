@@ -33,7 +33,8 @@
     "dev:gateway": "tsx services/api-gateway/src/server.ts",
     "dev:worker": "tsx workers/task-worker/src/worker-main.ts",
     "smoke": "./scripts/smoke.sh",
-    "gen:crm-entities": "node scripts/gen-crm-entities.mjs"
+    "gen:crm-entities": "node scripts/gen-crm-entities.mjs",
+    "build:apps": "pnpm --filter @astra/desktop build && pnpm --filter @astra/share-web build"
   },
   "devDependencies": {
     "@types/node": "catalog:",
