@@ -4,7 +4,9 @@ import { createDb } from '@astra/db';
 import { createLogger } from '@astra/telemetry';
 import { FsObjectStore, LibraryService } from '@astra/service-library';
 import { TaskService, TemporalTaskRuntime } from '@astra/service-task';
-import { PluginRegistryService } from '@astra/service-plugin-registry';
+import { PluginRegistryService, composeDataSources } from '@astra/service-plugin-registry';
+import { researchDataSources } from '@astra/service-research';
+import { meetingDataSources } from '@astra/service-meeting';
 import { ShareService } from '@astra/service-share';
 import {
   FsRecordingStore,
@@ -73,6 +75,10 @@ async function main(): Promise<void> {
   // 同梱プラグインは起動のたびに読み直す。バンドルが正、DB はその写し。
   await registry.seedBuiltins(config.builtinPluginsDir);
 
+  // dashboard の bind を解決する先。**引くのは所有サービス**で、
+  // gateway は束ねるだけ（実装仕様 §5.1）。
+  const dataSources = composeDataSources(researchDataSources(db), meetingDataSources(db));
+
   const app = buildApp({
     config,
     db,
@@ -90,6 +96,7 @@ async function main(): Promise<void> {
       recordings: new FsRecordingStore(config.recordingRoot),
       transcriber: meetingProviders.streaming,
     },
+    dataSources,
   });
 
   const shutdown = async (signal: string): Promise<void> => {

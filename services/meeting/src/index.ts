@@ -69,3 +69,4 @@ export {
   type MeetingProviderEnv,
   type MeetingProviders,
 } from './factory.js';
+export { meetingDataSources } from './data-sources.js';

@@ -22,6 +22,7 @@ export * from './meeting.js';
 export * from './task.js';
 export * from './events.js';
 export * from './plugin.js';
+export * from './dashboard.js';
 export * from './identity.js';
 export * from './host.js';
 export * from './api.js';

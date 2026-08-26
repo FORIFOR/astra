@@ -212,11 +212,22 @@ export interface Memberships {
   user_id: string;
 }
 
+export interface PluginAssets {
+  content: Buffer;
+  created_at: Generated<Timestamp>;
+  kind: string;
+  path: string;
+  plugin_id: string;
+  sha256: string;
+  version: string;
+}
+
 export interface PluginInstalls {
   id: string;
   installed_at: Generated<Timestamp>;
   installed_by: string;
   plugin_id: string;
+  previous_version: string | null;
   state: string;
   tenant_id: string;
   updated_at: Generated<Timestamp>;
@@ -410,6 +421,7 @@ export interface DB {
   meeting_speakers: MeetingSpeakers;
   meetings: Meetings;
   memberships: Memberships;
+  plugin_assets: PluginAssets;
   plugin_installs: PluginInstalls;
   plugin_permissions: PluginPermissions;
   plugin_publishers: PluginPublishers;

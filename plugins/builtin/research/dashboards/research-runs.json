@@ -1,0 +1,16 @@
+{
+  "id": "research-runs",
+  "title": "調査",
+  "layout": "grid",
+  "items": [
+    { "type": "metric", "title": "調査した数", "bind": "research.total", "span": 3 },
+    {
+      "type": "metric",
+      "title": "矛盾が見つかった調査",
+      "bind": "research.contradicted",
+      "span": 3
+    },
+    { "type": "chart", "title": "確信度の分布", "bind": "research.by_confidence", "span": 6 },
+    { "type": "table", "title": "最近の調査", "bind": "research.recent", "span": 12 }
+  ]
+}

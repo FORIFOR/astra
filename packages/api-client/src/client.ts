@@ -7,6 +7,7 @@
 import {
   Artifact,
   CreateMeetingRequest,
+  DashboardView,
   CreateTaskRequest,
   Meeting,
   MeetingSegment,
@@ -258,6 +259,57 @@ export class AstraClient {
   installPlugin(pluginId: string, request: InstallPluginRequest): Promise<PluginInstall> {
     return this.http.request(
       { method: 'POST', path: `/v1/plugins/${pluginId}/install`, body: request },
+      (value) => PluginInstall.parse(value),
+    );
+  }
+
+  /** install しただけで増えた dashboard の一覧（Phase 4 Exit）。 */
+  async dashboards(): Promise<
+    { plugin_id: string; plugin_name: string; id: string; title: string }[]
+  > {
+    const parsed = await this.http.request({ path: '/v1/dashboards' }, (value) =>
+      z
+        .object({
+          items: z.array(
+            z.object({
+              plugin_id: z.string(),
+              plugin_name: z.string(),
+              id: z.string(),
+              title: z.string(),
+            }),
+          ),
+        })
+        .parse(value),
+    );
+    return parsed.items;
+  }
+
+  /** schema と、解決済みのデータ。解決できなかったものは理由が入る。 */
+  dashboard(pluginId: string, dashboardId: string): Promise<DashboardView> {
+    return this.http.request(
+      { path: `/v1/plugins/${pluginId}/dashboards/${dashboardId}` },
+      (value) => DashboardView.parse(value),
+    );
+  }
+
+  async updatePlugin(
+    pluginId: string,
+    version: string,
+    grantedScopes: readonly string[] = [],
+  ): Promise<PluginInstall> {
+    return this.http.request(
+      {
+        method: 'POST',
+        path: `/v1/plugins/${pluginId}/update`,
+        body: { version, granted_scopes: grantedScopes },
+      },
+      (value) => PluginInstall.parse(value),
+    );
+  }
+
+  async rollbackPlugin(pluginId: string): Promise<PluginInstall> {
+    return this.http.request(
+      { method: 'POST', path: `/v1/plugins/${pluginId}/rollback` },
       (value) => PluginInstall.parse(value),
     );
   }

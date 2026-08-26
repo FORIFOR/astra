@@ -9,6 +9,7 @@ import { createLogger } from '@astra/telemetry';
 import { FsObjectStore, LibraryService } from '@astra/service-library';
 import { InMemoryTaskRuntime, TaskService } from '@astra/service-task';
 import { PluginRegistryService } from '@astra/service-plugin-registry';
+import type { DataSourceResolver } from '@astra/service-plugin-registry';
 import { ShareService } from '@astra/service-share';
 import {
   MeetingService,
@@ -78,6 +79,8 @@ export interface MakeAppOptions {
   readonly allowedOrigins?: readonly string[];
   /** live STT の代役に読ませる台本。省略すると録音だけになる。 */
   readonly script?: readonly ScriptLine[];
+  /** dashboard の bind を解決する先。 */
+  readonly dataSources?: DataSourceResolver;
 }
 
 export async function makeTestApp(options: MakeAppOptions): Promise<TestApp> {
@@ -124,6 +127,7 @@ export async function makeTestApp(options: MakeAppOptions): Promise<TestApp> {
     library,
     registry,
     shares,
+    ...(options.dataSources === undefined ? {} : { dataSources: options.dataSources }),
     meetings: {
       meetings,
       recordings,

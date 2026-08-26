@@ -430,7 +430,10 @@ describe.skipIf(!url)('Phase 0 acceptance', () => {
         headers: me.auth,
       });
       const items = res.json<{ items: PluginCatalogEntry[] }>().items;
-      expect(items.map((p) => p.id).sort()).toEqual([
+      // 同梱の 5 つが載っていること。**完全一致では見ない**:
+      // 同じ DB を使う別スイートが publish した plugin で壊れる。
+      const ids = new Set(items.map((p) => p.id as string));
+      expect([...ids].filter((id) => id.startsWith('com.astra.')).sort()).toEqual([
         'com.astra.finder',
         'com.astra.gmail',
         'com.astra.google-calendar',

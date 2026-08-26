@@ -4,3 +4,10 @@
  * カタログ、署名、バージョン、互換性、install 状態。実装仕様 §9。
  */
 export { PluginRegistryService, type RegistryDeps } from './service.js';
+export {
+  NO_DATA_SOURCES,
+  composeDataSources,
+  type DataSourceHandler,
+  type DataSourceMap,
+  type DataSourceResolver,
+} from './data-sources.js';

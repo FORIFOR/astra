@@ -142,6 +142,17 @@ ACTUAL="$(curl -fsS "$BASE/v1/artifacts/$ARTIFACT/content" -H "authorization: Be
 [ "$RECORDED" = "$ACTUAL" ] || fail "checksum mismatch: $RECORDED vs $ACTUAL"
 echo "  sha256 $RECORDED"
 
+say "installing a plugin adds its dashboard, with no code change"
+BEFORE="$(curl -fsS "$BASE/v1/dashboards" -H "authorization: Bearer $AT" | json 'len(d["items"])')"
+curl -fsS -X POST "$BASE/v1/plugins/com.astra.research/install" -H "authorization: Bearer $AT" \
+  -H 'content-type: application/json' -d '{"version":"0.1.0","granted_scopes":["web.search"]}' >/dev/null
+AFTER="$(curl -fsS "$BASE/v1/dashboards" -H "authorization: Bearer $AT" | json 'len(d["items"])')"
+[ "$AFTER" -gt "$BEFORE" ] || fail "installing did not add a dashboard ($BEFORE -> $AFTER)"
+# schema と、解決済みのデータが両方返ること
+BOARD="$(curl -fsS "$BASE/v1/plugins/com.astra.research/dashboards/research-runs" -H "authorization: Bearer $AT")"
+echo "$BOARD" | json 'd["schema"]["items"][0]["type"]' >/dev/null || fail "the dashboard had no schema"
+echo "  dashboards $BEFORE -> $AFTER, first item $(echo "$BOARD" | json 'd["schema"]["items"][0]["type"]')"
+
 say "the real process names which providers are still stand-ins"
 # 代役のまま動いていることを黙らない。本番ではこれが起動拒否になる。
 grep -q 'stand-in' "$STORE/worker.log" || fail "the worker did not report its stand-in providers"

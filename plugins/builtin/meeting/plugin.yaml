@@ -26,5 +26,15 @@ agents:
 dashboards:
   - id: meetings
     schema: dashboards/meetings.json
+data_sources:
+  - id: meeting.total
+    kind: count
+    query: meetings
+  - id: meeting.finalizing
+    kind: count
+    query: meetings_finalizing
+  - id: meeting.recent
+    kind: rows
+    query: meetings_recent
 policies:
   - policies/meeting-recording.yaml

@@ -49,7 +49,7 @@ function ActivePage(): ReactElement {
         />
       );
     case 'apps':
-      return <AppsPage />;
+      return <AppsPage client={client} />;
   }
 }
 

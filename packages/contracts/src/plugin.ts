@@ -5,6 +5,7 @@
  * `@astra/plugin-sdk` が本スキーマを再利用して実装する。
  */
 import { z } from 'zod';
+import { DataSourceDecl } from './dashboard.js';
 import { InstallId, PluginId, PublisherId, TenantId, UserId } from './ids.js';
 import { Semver, Sha256Hex, Timestamp, compareSemver } from './primitives.js';
 import { ActionRisk } from './approval.js';
@@ -119,6 +120,8 @@ const manifestShape = z.object({
   tools: z.array(ToolDecl).default([]),
   agents: z.array(AgentDecl).default([]),
   dashboards: z.array(DashboardDecl).default([]),
+  /** dashboard が結ぶ先。**任意の SQL は書かせない**（D-33）。 */
+  data_sources: z.array(DataSourceDecl).default([]),
   policies: z.array(z.string()).default([]),
   data_extensions: z.array(z.string()).default([]),
   signature: z.string().optional(),
@@ -188,6 +191,42 @@ export const PluginManifest = manifestShape.superRefine((m, ctx) => {
         });
       }
     }
+  }
+
+  // 6. dashboard の id は重複させない（どちらが出るか決まらなくなる）
+  const dashboardIds = new Set<string>();
+  for (const [i, dashboard] of m.dashboards.entries()) {
+    if (dashboardIds.has(dashboard.id)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['dashboards', i, 'id'],
+        message: `duplicate dashboard id "${dashboard.id}"`,
+      });
+    }
+    dashboardIds.add(dashboard.id);
+  }
+
+  // 7. data source の id も同様。同じ bind が 2 つの引き方を持てない。
+  const sourceIds = new Set<string>();
+  for (const [i, source] of m.data_sources.entries()) {
+    if (sourceIds.has(source.id)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['data_sources', i, 'id'],
+        message: `duplicate data source id "${source.id}"`,
+      });
+    }
+    sourceIds.add(source.id);
+  }
+
+  // 8. dashboard を持つなら、結ぶ先を宣言していること。
+  //    宣言の無い bind は install 後に必ず穴になる。publish で止める。
+  if (m.dashboards.length > 0 && m.data_sources.length === 0) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['data_sources'],
+      message: 'a plugin with dashboards must declare the data sources they bind to',
+    });
   }
 });
 export type PluginManifest = z.infer<typeof PluginManifest>;

@@ -1,0 +1,12 @@
+# 調査で守ること。正本 §8。
+id: research-sources
+rules:
+  - id: cite-everything
+    description: 結論には必ず出典を付ける
+    severity: block
+  - id: keep-contradictions
+    description: 食い違う出典は、片方を捨てずに矛盾として残す
+    severity: block
+  - id: no-confident-tone-without-primary
+    description: 一次情報が無いまま「高い確信度」を出さない
+    severity: warn

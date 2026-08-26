@@ -27,6 +27,7 @@ import { registerTaskRoutes } from './routes/tasks.js';
 import { registerArtifactRoutes } from './routes/artifacts.js';
 import { registerPluginRoutes } from './routes/plugins.js';
 import { registerShareRoutes } from './routes/shares.js';
+import type { DataSourceResolver } from '@astra/service-plugin-registry';
 import {
   registerMeetingAudioRoute,
   registerMeetingRoutes,
@@ -49,6 +50,8 @@ export interface AppDeps {
   readonly registry: PluginRegistryService;
   readonly shares?: ShareService;
   readonly meetings?: MeetingRuntime;
+  /** dashboard の bind を解決する先。gateway が各サービスの束を合成して渡す。 */
+  readonly dataSources?: DataSourceResolver;
   readonly bridge?: HostBridge;
   /** SSE のポーリング間隔。テストは短くする。 */
   readonly ssePollIntervalMs?: number;
@@ -106,7 +109,10 @@ export function buildApp(deps: AppDeps): App {
     ...(deps.ssePollIntervalMs === undefined ? {} : { ssePollIntervalMs: deps.ssePollIntervalMs }),
   });
   registerArtifactRoutes(app, { library: deps.library });
-  registerPluginRoutes(app, { registry: deps.registry });
+  registerPluginRoutes(app, {
+    registry: deps.registry,
+    ...(deps.dataSources === undefined ? {} : { dataSources: deps.dataSources }),
+  });
   if (deps.meetings) {
     registerMeetingRoutes(app, {
       ...deps.meetings,

@@ -1,0 +1,7 @@
+# 実装仕様 §14.2 の eval harness 契約
+phase: 4
+tags: [acceptance, blocking]
+blocking: true
+description: >
+  Phase 4 実装仕様 §0 の AC4-1〜AC4-12。
+  正本 §28 Phase 4 Exit「plugin install だけで Agent + Dashboard が増える」を HTTP から検証する。

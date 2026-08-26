@@ -26,6 +26,8 @@ export const AUDIT_ACTIONS = [
   'session.reuse_detected',
   'session.revoked',
   'plugin.install',
+  'plugin.update',
+  'plugin.rollback',
   'plugin.uninstall',
   'plugin.permission.grant',
   'plugin.permission.revoke',

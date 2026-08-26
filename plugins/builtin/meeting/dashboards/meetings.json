@@ -1,0 +1,10 @@
+{
+  "id": "meetings",
+  "title": "会議",
+  "layout": "grid",
+  "items": [
+    { "type": "metric", "title": "記録した会議", "bind": "meeting.total", "span": 4 },
+    { "type": "metric", "title": "処理中", "bind": "meeting.finalizing", "span": 4 },
+    { "type": "timeline", "title": "最近の会議", "bind": "meeting.recent", "span": 12 }
+  ]
+}

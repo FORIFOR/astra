@@ -32,6 +32,12 @@
     },
     {
       "path": "../meeting"
+    },
+    {
+      "path": "../research"
+    },
+    {
+      "path": "../../packages/plugin-sdk"
     }
   ]
 }

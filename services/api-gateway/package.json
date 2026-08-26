@@ -38,11 +38,13 @@
     "kysely": "catalog:",
     "zod": "catalog:",
     "@astra/service-share": "workspace:*",
-    "@astra/service-meeting": "workspace:*"
+    "@astra/service-meeting": "workspace:*",
+    "@astra/service-research": "workspace:*"
   },
   "devDependencies": {
     "@types/ws": "^8.18.1",
     "vitest": "catalog:",
-    "ws": "^8.21.3"
+    "ws": "^8.21.3",
+    "@astra/plugin-sdk": "workspace:*"
   }
 }

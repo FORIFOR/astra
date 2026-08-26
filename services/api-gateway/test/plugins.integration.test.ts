@@ -199,7 +199,18 @@ describe.skipIf(!url)('plugin catalog', () => {
         headers: { authorization: `Bearer ${other.json<TokenResponse>().access_token}` },
       });
       const items = res.json<{ items: PluginCatalogEntry[] }>().items;
-      expect(items).toHaveLength(5);
+      // 同梱の 5 つが見えていること。件数で見ると、
+      // ほかのテストが publish した plugin で壊れる。
+      const ids = new Set(items.map((p) => p.id));
+      for (const id of [
+        'com.astra.research',
+        'com.astra.meeting',
+        'com.astra.google-calendar',
+        'com.astra.finder',
+        'com.astra.gmail',
+      ]) {
+        expect(ids.has(id as never), id).toBe(true);
+      }
       expect(items.every((p) => !p.installed)).toBe(true);
     });
   });

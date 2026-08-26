@@ -9,21 +9,31 @@ import path from 'node:path';
 import {
   AstraError,
   CORE_VERSION,
+  DashboardSchema,
   PluginCatalogEntry,
+  compareSemver,
   isCompatible,
+  sha256Hex,
   uuidv7,
+  type DashboardView,
+  type ResolvedValue,
   type InstallPluginRequest,
   type PermissionScope,
   type PluginInstall,
   type PluginManifest,
 } from '@astra/contracts';
 import { withSystem, withTenant, type DbHandle, type ScopedDb } from '@astra/db';
+import type { DataSourceResolver } from './data-sources.js';
 import { appendAuditEvent } from '@astra/telemetry';
 import {
+  declaredAssets,
+  loadAssets,
   loadManifestFile,
   signatureStateFor,
+  validateDashboards,
   verifyManifestSignature,
   type LoadedManifest,
+  type PluginAsset,
 } from '@astra/plugin-sdk';
 
 export interface RegistryDeps {
@@ -51,22 +61,52 @@ export class PluginRegistryService {
     const entries = await readdir(builtinDir, { withFileTypes: true });
     const loaded: LoadedManifest[] = [];
 
+    const assetsFor = new Map<string, PluginAsset[]>();
     for (const entry of entries.filter((e) => e.isDirectory())) {
-      loaded.push(await loadManifestFile(path.join(builtinDir, entry.name, 'plugin.yaml')));
+      const dir = path.join(builtinDir, entry.name);
+      const item = await loadManifestFile(path.join(dir, 'plugin.yaml'));
+      // 宣言と実体が食い違う plugin は載せない（D-31）。
+      // 同梱だからといって甘くしない。ここを緩めると本番で穴になる。
+      assetsFor.set(item.manifest.id, await loadAssets(item.manifest, dir));
+      loaded.push(item);
     }
 
     await withSystem(this.#db, async (tx) => {
       for (const item of loaded) {
-        await this.#upsert(tx, item, 'BUILTIN_TRUSTED');
+        await this.#upsert(tx, item, 'BUILTIN_TRUSTED', assetsFor.get(item.manifest.id) ?? []);
       }
     });
 
     return loaded.map((l) => l.manifest);
   }
 
-  /** 外部プラグインの登録。署名が検証できないものは受け付けない（§9.2）。 */
-  async publish(loaded: LoadedManifest): Promise<void> {
+  /**
+   * 外部プラグインの登録。署名が検証できないものは受け付けない（§9.2）。
+   * 宣言されたファイルは呼び出し側が読み込んで渡す（どこから来るかは
+   * 配布形態次第なので、registry は場所を知らない）。
+   */
+  async publish(loaded: LoadedManifest, assets: readonly PluginAsset[] = []): Promise<void> {
     const { manifest } = loaded;
+    // 宣言と実体の食い違いは、署名を見る前に落とす
+    validateDashboards(manifest, assets);
+    // 呼び出し側が申告したハッシュを信用しない。中身から取り直して照合する。
+    for (const asset of assets) {
+      const actual = await sha256Hex(asset.content);
+      if (actual !== asset.sha256) {
+        throw new AstraError(
+          'plugin.manifest_invalid',
+          `asset "${asset.path}" does not match its checksum`,
+        );
+      }
+    }
+    for (const declared of declaredAssets(manifest)) {
+      if (!assets.some((a) => a.path === declared.path)) {
+        throw new AstraError(
+          'plugin.manifest_invalid',
+          `${manifest.id} declares "${declared.path}" but no such asset was provided`,
+        );
+      }
+    }
     await withSystem(this.#db, async (tx) => {
       const publisher = await tx
         .selectFrom('plugin_publishers')
@@ -86,7 +126,7 @@ export class PluginRegistryService {
       if (state === 'UNSIGNED') {
         throw new AstraError('plugin.unsigned', `manifest for ${manifest.id} is not signed`);
       }
-      await this.#upsert(tx, loaded, state);
+      await this.#upsert(tx, loaded, state, assets);
     });
   }
 
@@ -309,7 +349,12 @@ export class PluginRegistryService {
     });
   }
 
-  async #upsert(tx: ScopedDb, loaded: LoadedManifest, state: string): Promise<void> {
+  async #upsert(
+    tx: ScopedDb,
+    loaded: LoadedManifest,
+    state: string,
+    assets: readonly PluginAsset[] = [],
+  ): Promise<void> {
     const { manifest } = loaded;
 
     await tx
@@ -366,5 +411,286 @@ export class PluginRegistryService {
         }),
       )
       .execute();
+
+    // 宣言された実体。append-only なので、同じ版の再登録では何もしない。
+    for (const asset of assets) {
+      await tx
+        .insertInto('plugin_assets')
+        .values({
+          plugin_id: manifest.id,
+          version: manifest.version,
+          path: asset.path,
+          kind: asset.kind,
+          content: Buffer.from(asset.content),
+          sha256: asset.sha256,
+        })
+        .onConflict((oc) => oc.doNothing())
+        .execute();
+    }
   }
+
+  // ------------------------------------------------------- Phase 4 の追加
+
+  /**
+   * install 済み plugin が持ち込んだ dashboard の一覧。
+   * **install しただけで増える**（AC4-3）ので、ここはコードを持たない。
+   */
+  async dashboards(
+    tenantId: string,
+  ): Promise<{ pluginId: string; pluginName: string; id: string; title: string }[]> {
+    const installs = await withTenant(this.#db, tenantId, (tx) =>
+      tx
+        .selectFrom('plugin_installs')
+        .select(['plugin_id', 'version'])
+        .where('state', '=', 'INSTALLED')
+        .execute(),
+    );
+    if (installs.length === 0) return [];
+
+    return withSystem(this.#db, async (tx) => {
+      const out: { pluginId: string; pluginName: string; id: string; title: string }[] = [];
+      for (const install of installs) {
+        const row = await tx
+          .selectFrom('plugin_versions')
+          .innerJoin('plugins', 'plugins.id', 'plugin_versions.plugin_id')
+          .select(['plugin_versions.manifest as manifest', 'plugins.name as name'])
+          .where('plugin_versions.plugin_id', '=', install.plugin_id)
+          .where('plugin_versions.version', '=', install.version)
+          .executeTakeFirst();
+        if (!row) continue;
+        const manifest = row.manifest as unknown as PluginManifest;
+        for (const dashboard of manifest.dashboards) {
+          out.push({
+            pluginId: install.plugin_id,
+            pluginName: row.name,
+            id: dashboard.id,
+            title: dashboard.id,
+          });
+        }
+      }
+      return out;
+    });
+  }
+
+  /**
+   * dashboard の schema と、bind を解決した値を返す。
+   *
+   * **install していない plugin の dashboard は返さない**（404）。
+   * 解決できない bind は値を返さず理由を返す（D-34）。
+   */
+  async dashboardView(
+    tenantId: string,
+    pluginId: string,
+    dashboardId: string,
+    resolver: DataSourceResolver,
+  ): Promise<DashboardView> {
+    const install = await withTenant(this.#db, tenantId, (tx) =>
+      tx
+        .selectFrom('plugin_installs')
+        .select(['version'])
+        .where('plugin_id', '=', pluginId)
+        .where('state', '=', 'INSTALLED')
+        .executeTakeFirst(),
+    );
+    if (!install) throw new AstraError('plugin.not_found', `${pluginId} is not installed`);
+
+    const version = await withSystem(this.#db, (tx) =>
+      tx
+        .selectFrom('plugin_versions')
+        .select(['manifest'])
+        .where('plugin_id', '=', pluginId)
+        .where('version', '=', install.version)
+        .executeTakeFirst(),
+    );
+    if (!version) throw new AstraError('plugin.not_found', `no plugin ${pluginId}`);
+
+    const manifest = version.manifest as unknown as PluginManifest;
+    const decl = manifest.dashboards.find((d) => d.id === dashboardId);
+    if (!decl) throw new AstraError('plugin.not_found', `no dashboard ${dashboardId}`);
+
+    const content = await this.asset(pluginId, install.version, decl.schema);
+    if (!content) {
+      // publish で止めているはずなので、ここに来るのは配線ミス
+      throw new AstraError('plugin.manifest_invalid', `dashboard ${decl.schema} is missing`);
+    }
+    const schema = DashboardSchema.parse(JSON.parse(content.toString('utf8')));
+
+    const sources = new Map(manifest.data_sources.map((s) => [s.id, s]));
+    const data: Record<string, ResolvedValue> = {};
+    for (const item of schema.items) {
+      if (item.bind === undefined || data[item.bind]) continue;
+      const source = sources.get(item.bind);
+      data[item.bind] = source
+        ? await resolver.resolve(tenantId, source.query)
+        : { kind: 'unavailable', reason: `the plugin does not declare "${item.bind}"` };
+    }
+
+    return { plugin_id: pluginId, schema, data };
+  }
+
+  /**
+   * この install が、その scope を許されているか。
+   *
+   * install 画面で見せるだけでは足りない。**同意していない権限で
+   * tool を呼べてはならない**（AC4-7）。
+   */
+  async isPermitted(tenantId: string, pluginId: string, scope: string): Promise<boolean> {
+    const row = await withTenant(this.#db, tenantId, (tx) =>
+      tx
+        .selectFrom('plugin_permissions')
+        .innerJoin('plugin_installs', 'plugin_installs.id', 'plugin_permissions.install_id')
+        .select(['plugin_permissions.granted as granted'])
+        .where('plugin_installs.plugin_id', '=', pluginId)
+        .where('plugin_installs.state', '=', 'INSTALLED')
+        .where('plugin_permissions.scope', '=', scope)
+        .executeTakeFirst(),
+    );
+    return row?.granted === true;
+  }
+
+  /**
+   * 版を上げる。
+   *
+   * - `min_core_version` を満たさない版へは上げない（AC4-9）
+   * - major が上がるときは**同意を取り直す**。権限が増え得るため
+   * - 前の版は消さない。`rollback` で戻せる（AC4-10）
+   */
+  async update(
+    tenantId: string,
+    userId: string,
+    pluginId: string,
+    toVersion: string,
+    grantedScopes: readonly PermissionScope[] = [],
+  ): Promise<PluginInstall> {
+    const current = await withTenant(this.#db, tenantId, (tx) =>
+      tx
+        .selectFrom('plugin_installs')
+        .select(['version'])
+        .where('plugin_id', '=', pluginId)
+        .where('state', '=', 'INSTALLED')
+        .executeTakeFirst(),
+    );
+    if (!current) throw new AstraError('plugin.not_found', `${pluginId} is not installed`);
+
+    if (compareSemver(toVersion, current.version) <= 0) {
+      // 下げるのは rollback の仕事。update で下げられると、
+      // 「上げたつもりが下がっていた」が起きる。
+      throw new AstraError(
+        'plugin.incompatible',
+        `${toVersion} is not newer than the installed ${current.version}`,
+      );
+    }
+
+    const majorChange = majorOf(toVersion) !== majorOf(current.version);
+    const carried = majorChange
+      ? grantedScopes
+      : await this.#grantedScopes(tenantId, pluginId, grantedScopes);
+
+    const install = await this.install(tenantId, userId, pluginId, {
+      version: toVersion,
+      granted_scopes: [...carried],
+    });
+
+    // 戻る先を残す。監査から引くのではなく、状態として持つ。
+    await withTenant(this.#db, tenantId, (tx) =>
+      tx
+        .updateTable('plugin_installs')
+        .set({ previous_version: current.version })
+        .where('plugin_id', '=', pluginId)
+        .where('state', '=', 'INSTALLED')
+        .execute(),
+    );
+
+    await withTenant(this.#db, tenantId, (tx) =>
+      appendAuditEvent(tx, tenantId, {
+        actorType: 'user',
+        actorId: userId,
+        action: 'plugin.update',
+        payload: { plugin_id: pluginId, from: current.version, to: toVersion, majorChange },
+      }),
+    );
+    return install;
+  }
+
+  /** 前の版へ戻す。戻る先は install 行が持っている。 */
+  async rollback(tenantId: string, userId: string, pluginId: string): Promise<PluginInstall> {
+    const row = await withTenant(this.#db, tenantId, (tx) =>
+      tx
+        .selectFrom('plugin_installs')
+        .select(['previous_version'])
+        .where('plugin_id', '=', pluginId)
+        .where('state', '=', 'INSTALLED')
+        .executeTakeFirst(),
+    );
+    const previous = row?.previous_version ?? null;
+    if (!previous) {
+      throw new AstraError('plugin.not_found', `${pluginId} has no version to roll back to`);
+    }
+
+    const scopes = await this.#grantedScopes(tenantId, pluginId, []);
+    const install = await this.install(tenantId, userId, pluginId, {
+      version: previous,
+      granted_scopes: [...scopes],
+    });
+
+    // 戻ったので、もう一度戻る先は無い。無いまま残すと往復し続けられる。
+    await withTenant(this.#db, tenantId, (tx) =>
+      tx
+        .updateTable('plugin_installs')
+        .set({ previous_version: null })
+        .where('plugin_id', '=', pluginId)
+        .where('state', '=', 'INSTALLED')
+        .execute(),
+    );
+
+    await withTenant(this.#db, tenantId, (tx) =>
+      appendAuditEvent(tx, tenantId, {
+        actorType: 'user',
+        actorId: userId,
+        action: 'plugin.rollback',
+        payload: { plugin_id: pluginId, to: previous },
+      }),
+    );
+    return install;
+  }
+
+  /** いま許されている scope。update で引き継ぐのに使う。 */
+  async #grantedScopes(
+    tenantId: string,
+    pluginId: string,
+    extra: readonly PermissionScope[],
+  ): Promise<PermissionScope[]> {
+    const rows = await withTenant(this.#db, tenantId, (tx) =>
+      tx
+        .selectFrom('plugin_permissions')
+        .innerJoin('plugin_installs', 'plugin_installs.id', 'plugin_permissions.install_id')
+        .select(['plugin_permissions.scope as scope'])
+        .where('plugin_installs.plugin_id', '=', pluginId)
+        .where('plugin_installs.state', '=', 'INSTALLED')
+        .where('plugin_permissions.granted', '=', true)
+        .execute(),
+    );
+    return [...new Set([...rows.map((r) => r.scope as PermissionScope), ...extra])];
+  }
+
+  /**
+   * 宣言されたファイルの中身を返す。dashboard の描画と skill の読み込みに使う。
+   */
+  async asset(pluginId: string, version: string, assetPath: string): Promise<Buffer | null> {
+    const row = await withSystem(this.#db, (tx) =>
+      tx
+        .selectFrom('plugin_assets')
+        .select(['content'])
+        .where('plugin_id', '=', pluginId)
+        .where('version', '=', version)
+        .where('path', '=', assetPath)
+        .executeTakeFirst(),
+    );
+    return row ? Buffer.from(row.content) : null;
+  }
+}
+
+/** semver の major。同意を取り直すかの判定に使う。 */
+function majorOf(version: string): number {
+  return Number(version.split('.')[0] ?? 0);
 }

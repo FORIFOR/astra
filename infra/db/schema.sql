@@ -373,6 +373,24 @@ ALTER TABLE ONLY public.memberships FORCE ROW LEVEL SECURITY;
 
 
 --
+-- Name: plugin_assets; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.plugin_assets (
+    plugin_id text NOT NULL,
+    version text NOT NULL,
+    path text NOT NULL,
+    kind text NOT NULL,
+    content bytea NOT NULL,
+    sha256 character(64) NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT plugin_assets_kind_check CHECK ((kind = ANY (ARRAY['skill'::text, 'dashboard'::text, 'policy'::text, 'data_extension'::text]))),
+    CONSTRAINT plugin_assets_path_check CHECK (((path <> ''::text) AND (path !~ '\.\.'::text))),
+    CONSTRAINT plugin_assets_sha256_check CHECK ((sha256 ~ '^[0-9a-f]{64}$'::text))
+);
+
+
+--
 -- Name: plugin_installs; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -385,6 +403,7 @@ CREATE TABLE public.plugin_installs (
     state text NOT NULL,
     installed_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    previous_version text,
     CONSTRAINT plugin_installs_state_check CHECK ((state = ANY (ARRAY['INSTALLED'::text, 'DISABLED'::text, 'UNINSTALLED'::text])))
 );
 
@@ -796,6 +815,14 @@ ALTER TABLE ONLY public.memberships
 
 
 --
+-- Name: plugin_assets plugin_assets_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.plugin_assets
+    ADD CONSTRAINT plugin_assets_pkey PRIMARY KEY (plugin_id, version, path);
+
+
+--
 -- Name: plugin_installs plugin_installs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1071,6 +1098,13 @@ CREATE INDEX meetings_recent ON public.meetings USING btree (tenant_id, started_
 
 
 --
+-- Name: plugin_assets_by_kind; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX plugin_assets_by_kind ON public.plugin_assets USING btree (plugin_id, version, kind);
+
+
+--
 -- Name: plugin_installs_unique; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1229,6 +1263,13 @@ CREATE TRIGGER evidence_append_only BEFORE DELETE OR TRUNCATE ON public.evidence
 --
 
 CREATE TRIGGER meeting_segments_append_only BEFORE DELETE OR UPDATE OR TRUNCATE ON public.meeting_segments FOR EACH STATEMENT EXECUTE FUNCTION public.astra_deny_mutation();
+
+
+--
+-- Name: plugin_assets plugin_assets_append_only; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER plugin_assets_append_only BEFORE DELETE OR UPDATE OR TRUNCATE ON public.plugin_assets FOR EACH STATEMENT EXECUTE FUNCTION public.astra_deny_mutation();
 
 
 --
@@ -1523,6 +1564,22 @@ ALTER TABLE ONLY public.memberships
 
 ALTER TABLE ONLY public.memberships
     ADD CONSTRAINT memberships_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
+-- Name: plugin_assets plugin_assets_plugin_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.plugin_assets
+    ADD CONSTRAINT plugin_assets_plugin_id_fkey FOREIGN KEY (plugin_id) REFERENCES public.plugins(id);
+
+
+--
+-- Name: plugin_assets plugin_assets_plugin_id_version_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.plugin_assets
+    ADD CONSTRAINT plugin_assets_plugin_id_version_fkey FOREIGN KEY (plugin_id, version) REFERENCES public.plugin_versions(plugin_id, version);
 
 
 --
@@ -2157,3 +2214,4 @@ INSERT INTO schema_migrations (version) VALUES ('20260826010008');
 INSERT INTO schema_migrations (version) VALUES ('20260826020001');
 INSERT INTO schema_migrations (version) VALUES ('20260826020002');
 INSERT INTO schema_migrations (version) VALUES ('20260826030001');
+INSERT INTO schema_migrations (version) VALUES ('20260826040001');

@@ -1,0 +1,12 @@
+# 録音で守ること。正本 §11.3、UI/UX §12.1。
+id: meeting-recording
+rules:
+  - id: consent-before-recording
+    description: 参加者への同意確認なしに録音を始めない
+    severity: block
+  - id: no-voice-identification
+    description: 音声による人物特定はしない（biometric 扱いになり得る）
+    severity: block
+  - id: recording-survives-stt-failure
+    description: 文字起こしが落ちても録音は続ける
+    severity: block

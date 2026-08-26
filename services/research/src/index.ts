@@ -37,3 +37,4 @@ export {
   type ResearchProviderEnv,
   type ResearchProviders,
 } from './factory.js';
+export { researchDataSources } from './data-sources.js';

@@ -13,6 +13,14 @@ export {
   type LoadedManifest,
 } from './manifest.js';
 export {
+  declaredAssets,
+  loadAssets,
+  validateDashboards,
+  MAX_ASSET_BYTES,
+  type AssetKind,
+  type PluginAsset,
+} from './assets.js';
+export {
   generatePublisherKeyPair,
   signManifest,
   verifyManifestSignature,

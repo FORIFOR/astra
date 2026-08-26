@@ -25,5 +25,18 @@ agents:
 dashboards:
   - id: research-runs
     schema: dashboards/research-runs.json
+data_sources:
+  - id: research.total
+    kind: count
+    query: research_runs
+  - id: research.contradicted
+    kind: count
+    query: research_contradicted
+  - id: research.by_confidence
+    kind: series
+    query: research_by_confidence
+  - id: research.recent
+    kind: rows
+    query: research_recent
 policies:
   - policies/research-sources.yaml
