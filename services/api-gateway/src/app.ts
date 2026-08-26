@@ -33,7 +33,7 @@ import { registerConversationRoutes } from './routes/conversations.js';
 import { registerOnboardingRoutes } from './routes/onboarding.js';
 import type { ConversationService } from '@astra/service-conversation';
 import type { WorldModelService } from '@astra/service-world-model';
-import type { DataSourceResolver } from '@astra/service-plugin-registry';
+import type { ConnectionService, DataSourceResolver } from '@astra/service-plugin-registry';
 import {
   registerMeetingAudioRoute,
   registerMeetingRoutes,
@@ -64,6 +64,8 @@ export interface AppDeps {
   readonly world?: WorldModelService;
   /** Conversation Engine。Task Dock の入口（Phase 7 §3）。 */
   readonly conversations?: ConversationService;
+  /** connector の接続状態（正本 §2.4・§21）。 */
+  readonly connections?: ConnectionService;
   readonly bridge?: HostBridge;
   /** SSE のポーリング間隔。テストは短くする。 */
   readonly ssePollIntervalMs?: number;
@@ -125,6 +127,7 @@ export function buildApp(deps: AppDeps): App {
   registerOnboardingRoutes(app, { db: deps.db, registry: deps.registry, tasks: deps.tasks });
   registerPluginRoutes(app, {
     registry: deps.registry,
+    ...(deps.connections === undefined ? {} : { connections: deps.connections }),
     ...(deps.dataSources === undefined ? {} : { dataSources: deps.dataSources }),
   });
   if (deps.domain) registerDomainRoutes(app, deps.domain);

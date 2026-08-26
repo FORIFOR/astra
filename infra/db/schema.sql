@@ -198,6 +198,37 @@ ALTER TABLE ONLY public.audit_sequences FORCE ROW LEVEL SECURITY;
 
 
 --
+-- Name: connector_connections; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.connector_connections (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    plugin_id text NOT NULL,
+    connector_id text NOT NULL,
+    provider text NOT NULL,
+    state text NOT NULL,
+    granted_scopes text[] DEFAULT '{}'::text[] NOT NULL,
+    credential_ref text,
+    account_label text,
+    connected_by uuid NOT NULL,
+    connected_at timestamp with time zone DEFAULT now() NOT NULL,
+    expires_at timestamp with time zone,
+    revoked_at timestamp with time zone,
+    last_error text,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT connector_connections_connected_needs_ref CHECK (((state <> 'CONNECTED'::text) OR (credential_ref IS NOT NULL))),
+    CONSTRAINT connector_connections_connector_id_check CHECK ((connector_id ~ '^[a-z][a-z0-9_-]*$'::text)),
+    CONSTRAINT connector_connections_credential_ref_check CHECK (((credential_ref IS NULL) OR (credential_ref <> ''::text))),
+    CONSTRAINT connector_connections_provider_check CHECK ((provider <> ''::text)),
+    CONSTRAINT connector_connections_revoked_needs_time CHECK (((state <> 'REVOKED'::text) OR (revoked_at IS NOT NULL))),
+    CONSTRAINT connector_connections_state_check CHECK ((state = ANY (ARRAY['CONNECTED'::text, 'EXPIRED'::text, 'REVOKED'::text, 'ERROR'::text])))
+);
+
+ALTER TABLE ONLY public.connector_connections FORCE ROW LEVEL SECURITY;
+
+
+--
 -- Name: conversation_states; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -944,6 +975,14 @@ ALTER TABLE ONLY public.audit_sequences
 
 
 --
+-- Name: connector_connections connector_connections_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.connector_connections
+    ADD CONSTRAINT connector_connections_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: conversation_states conversation_states_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1304,6 +1343,20 @@ CREATE INDEX audit_events_external ON public.audit_events USING btree (tenant_id
 --
 
 CREATE UNIQUE INDEX audit_events_prev ON public.audit_events USING btree (tenant_id, prev_hash) WHERE (prev_hash IS NOT NULL);
+
+
+--
+-- Name: connector_connections_by_tenant; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX connector_connections_by_tenant ON public.connector_connections USING btree (tenant_id, plugin_id);
+
+
+--
+-- Name: connector_connections_unique; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX connector_connections_unique ON public.connector_connections USING btree (tenant_id, plugin_id, connector_id) WHERE (state <> 'REVOKED'::text);
 
 
 --
@@ -1768,6 +1821,30 @@ ALTER TABLE ONLY public.audit_events
 
 ALTER TABLE ONLY public.audit_sequences
     ADD CONSTRAINT audit_sequences_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+
+--
+-- Name: connector_connections connector_connections_connected_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.connector_connections
+    ADD CONSTRAINT connector_connections_connected_by_fkey FOREIGN KEY (connected_by) REFERENCES public.users(id);
+
+
+--
+-- Name: connector_connections connector_connections_plugin_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.connector_connections
+    ADD CONSTRAINT connector_connections_plugin_id_fkey FOREIGN KEY (plugin_id) REFERENCES public.plugins(id);
+
+
+--
+-- Name: connector_connections connector_connections_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.connector_connections
+    ADD CONSTRAINT connector_connections_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
 
 
 --
@@ -2513,6 +2590,19 @@ CREATE POLICY audit_sequences_tenant_isolation ON public.audit_sequences USING (
 
 
 --
+-- Name: connector_connections; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.connector_connections ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: connector_connections connector_connections_tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY connector_connections_tenant_isolation ON public.connector_connections USING ((tenant_id = public.astra_current_tenant())) WITH CHECK ((tenant_id = public.astra_current_tenant()));
+
+
+--
 -- Name: conversation_states; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -2916,3 +3006,4 @@ INSERT INTO schema_migrations (version) VALUES ('20260826050001');
 INSERT INTO schema_migrations (version) VALUES ('20260826060001');
 INSERT INTO schema_migrations (version) VALUES ('20260827010001');
 INSERT INTO schema_migrations (version) VALUES ('20260827020001');
+INSERT INTO schema_migrations (version) VALUES ('20260827030001');

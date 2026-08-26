@@ -85,6 +85,8 @@ export const ConnectorDecl = z.object({
   scopes: z.array(z.string()).default([]),
 });
 
+export type ConnectorDecl = z.infer<typeof ConnectorDecl>;
+
 export const AgentDecl = z.object({
   id: z.string().min(1),
   skill: z.string().min(1),

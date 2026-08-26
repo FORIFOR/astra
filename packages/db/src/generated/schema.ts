@@ -112,6 +112,24 @@ export interface AuditSequences {
   tenant_id: string;
 }
 
+export interface ConnectorConnections {
+  account_label: string | null;
+  connected_at: Generated<Timestamp>;
+  connected_by: string;
+  connector_id: string;
+  credential_ref: string | null;
+  expires_at: Timestamp | null;
+  granted_scopes: Generated<string[]>;
+  id: string;
+  last_error: string | null;
+  plugin_id: string;
+  provider: string;
+  revoked_at: Timestamp | null;
+  state: string;
+  tenant_id: string;
+  updated_at: Generated<Timestamp>;
+}
+
 export interface Conversations {
   created_at: Generated<Timestamp>;
   created_by: string;
@@ -520,6 +538,7 @@ export interface DB {
   artifacts: Artifacts;
   audit_events: AuditEvents;
   audit_sequences: AuditSequences;
+  connector_connections: ConnectorConnections;
   conversation_states: ConversationStates;
   conversation_summaries: ConversationSummaries;
   conversations: Conversations;

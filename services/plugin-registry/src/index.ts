@@ -13,3 +13,10 @@ export {
 } from './data-sources.js';
 export { agentResolver, assetReader } from './agent-resolver.js';
 export { assertPolicyEnforcementAvailable, isStrictProfile } from './compliance.js';
+export {
+  ConnectionService,
+  looksLikeCredential,
+  type Connection,
+  type ConnectInput,
+  type ConnectionState,
+} from './connections.js';

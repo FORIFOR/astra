@@ -5,6 +5,7 @@ import { createLogger } from '@astra/telemetry';
 import { FsObjectStore, LibraryService } from '@astra/service-library';
 import { TaskService, TemporalTaskRuntime } from '@astra/service-task';
 import {
+  ConnectionService,
   PluginRegistryService,
   agentResolver,
   assetReader,
@@ -98,6 +99,7 @@ async function main(): Promise<void> {
   const domain = new DomainService({ db });
   const world = new WorldModelService({ db });
   const conversations = new ConversationService({ db });
+  const connections = new ConnectionService({ db });
   const dataSources = composeDataSources(
     researchDataSources(db),
     meetingDataSources(db),
@@ -125,6 +127,7 @@ async function main(): Promise<void> {
     domain: { domain, definitions: entityDefinitions(assetReader(registry)) },
     world,
     conversations,
+    connections,
   });
 
   const shutdown = async (signal: string): Promise<void> => {

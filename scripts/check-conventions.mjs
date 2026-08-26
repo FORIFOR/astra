@@ -41,6 +41,7 @@ const TABLE_OWNERS = {
     'plugin_installs',
     'plugin_permissions',
     'plugin_assets',
+    'connector_connections',
     'plugin_publishers',
   ],
   'services/agent-runtime': ['agent_profiles', 'agent_runs', 'domain_entities', 'domain_links'],
