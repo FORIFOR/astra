@@ -5,7 +5,13 @@
  * 見に来た人へ出す基準で話しかけると、多すぎる。
  */
 import { describe, expect, it, vi } from 'vitest';
-import type { BriefItem, DailyBrief } from '@astra/contracts';
+import {
+  SEVERITIES,
+  interrupts,
+  surfacesFor,
+  type BriefItem,
+  type DailyBrief,
+} from '@astra/contracts';
 import { Heartbeat, inQuietHours, shouldNotify } from '../src/heartbeat.js';
 
 const item = (over: Partial<BriefItem> = {}): BriefItem =>
@@ -59,6 +65,16 @@ describe('shouldNotify', () => {
     expect(verdict.reason).toBe('quiet hours');
   });
 
+  it('still speaks at night when staying quiet would be worse (§16 critical)', () => {
+    const night = new Date('2026-08-27T02:00:00');
+    // 「録音に失敗した」を朝まで黙るのは、静かにする価値より高くつく
+    const verdict = shouldNotify(item({ severity: 'critical', score: 1 }), {
+      now: night,
+      options: { quietHours: { from: 22, to: 7 } },
+    });
+    expect(verdict.notify).toBe(true);
+  });
+
   it('does not say the same thing twice in a row', () => {
     const verdict = shouldNotify(item(), {
       now: NOON,
@@ -85,6 +101,37 @@ describe('shouldNotify', () => {
       expect(verdict.notify).toBe(false);
       expect(verdict.reason.length).toBeGreaterThan(0);
     }
+  });
+});
+
+describe('which surface a severity belongs on (§16)', () => {
+  it('never lets Home-only news interrupt, however high it scores', () => {
+    // 「調査が終わりました」で OS 通知を鳴らさない
+    for (const severity of ['info', 'attention'] as const) {
+      const verdict = shouldNotify(item({ severity, score: 1 }), { now: NOON });
+      expect(verdict.notify).toBe(false);
+      expect(verdict.reason).toContain('Home');
+    }
+  });
+
+  it('lets an approval and a critical failure through', () => {
+    for (const severity of ['action-required', 'critical'] as const) {
+      expect(shouldNotify(item({ severity, score: 0.8 }), { now: NOON }).notify).toBe(true);
+    }
+  });
+
+  it('maps every severity to the surfaces the table names', () => {
+    expect(surfacesFor('info')).toEqual(['home']);
+    expect(surfacesFor('attention')).toEqual(['home', 'badge']);
+    expect(surfacesFor('action-required')).toEqual(['home', 'work_waiting', 'os_notification']);
+    expect(surfacesFor('critical')).toEqual(['home', 'os_alert']);
+  });
+
+  it('puts every severity on Home, and only some beyond it', () => {
+    for (const severity of SEVERITIES) {
+      expect(surfacesFor(severity)).toContain('home');
+    }
+    expect(SEVERITIES.filter(interrupts)).toEqual(['action-required', 'critical']);
   });
 });
 

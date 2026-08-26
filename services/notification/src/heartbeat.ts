@@ -11,7 +11,13 @@
  *   - 静かにしていてほしい時間には出さない
  *   - 一度に浴びせない
  */
-import { MAX_ATTENTION_ITEMS, type BriefItem, type DailyBrief } from '@astra/contracts';
+import {
+  MAX_ATTENTION_ITEMS,
+  interrupts,
+  overridesQuietHours,
+  type BriefItem,
+  type DailyBrief,
+} from '@astra/contracts';
 
 export interface NotificationSink {
   /** 端末へ出す。失敗しても heartbeat は止めない。 */
@@ -67,8 +73,22 @@ export function shouldNotify(
   const minScore = options.minScore ?? DEFAULTS.minScore;
   const repeatAfterMs = options.repeatAfterMs ?? DEFAULTS.repeatAfterMs;
 
+  /*
+   * §16: 出す面は severity が決める。
+   *
+   * **score だけで割り込まない。**「調査が終わりました」(info) は
+   * Home に出すものであって、OS 通知で鳴らすものではない。
+   * ここを通さないと、点数の高い info が割り込んでくる。
+   */
+  if (!interrupts(item.severity)) {
+    return { notify: false, reason: `${item.severity} belongs on Home, not the OS` };
+  }
+
   if (inQuietHours(context.now.getHours(), options.quietHours)) {
-    return { notify: false, reason: 'quiet hours' };
+    // critical は静けさより優先する。黙っていると取り返しがつかない。
+    if (!overridesQuietHours(item.severity)) {
+      return { notify: false, reason: 'quiet hours' };
+    }
   }
   if (item.score < minScore) {
     return { notify: false, reason: `score ${item.score.toFixed(2)} is below ${minScore}` };

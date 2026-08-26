@@ -7,11 +7,15 @@
  * 4 件目以降は「すべて見る」へ送る（§8.1）。
  */
 import type { TaskView } from '@astra/api-client';
-import type { DailyBrief } from '@astra/contracts';
+import type { DailyBrief, Severity } from '@astra/contracts';
 
-/** UI/UX §16 の Severity。出す面が違う。 */
-export type Severity = 'info' | 'attention' | 'action-required' | 'critical';
-
+/**
+ * UI/UX §16 の Severity。出す面が違う。
+ *
+ * **ここで定義し直さない。**正本と別々に持つと、片方だけ増えて
+ * 「Home には出るが通知の面が決まらない severity」ができる。
+ */
+export type { Severity };
 export interface AttentionItem {
   readonly id: string;
   readonly severity: Severity;

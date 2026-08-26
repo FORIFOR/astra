@@ -117,8 +117,63 @@ export type WorldFact = z.infer<typeof WorldFact>;
 // ------------------------------------------------------------- attention
 
 /** UI/UX §16 の severity。出す面が違う。 */
-export const Severity = z.enum(['info', 'attention', 'action-required', 'critical']);
+export const SEVERITIES = ['info', 'attention', 'action-required', 'critical'] as const;
+export const Severity = z.enum(SEVERITIES);
 export type Severity = z.infer<typeof Severity>;
+
+/**
+ * 出す面。UI/UX §16 の表そのもの。
+ *
+ * | Severity        | Surface                              |
+ * | Info            | Home only                            |
+ * | Attention       | Home + subtle badge                  |
+ * | Action required | OS notification + Work Waiting       |
+ * | Critical        | OS alert only when policy requires   |
+ *
+ * **severity を持っているだけでは面は分かれない。**
+ * ここを通さずに score だけで割り込むと、
+ * 「調査が終わりました」で OS 通知が鳴る。§16 はそれを禁じている。
+ */
+export const NOTIFICATION_SURFACES = [
+  'home',
+  'badge',
+  'work_waiting',
+  'os_notification',
+  'os_alert',
+] as const;
+export const NotificationSurface = z.enum(NOTIFICATION_SURFACES);
+export type NotificationSurface = z.infer<typeof NotificationSurface>;
+
+const SURFACES: Readonly<Record<Severity, readonly NotificationSurface[]>> = {
+  // Home only。**割り込まない。**
+  info: ['home'],
+  // Home + 控えめな印。まだ割り込まない。
+  attention: ['home', 'badge'],
+  // ここで初めて OS へ出す。Work の「確認待ち」にも並ぶ。
+  'action-required': ['home', 'work_waiting', 'os_notification'],
+  // policy が要求するときだけの警告。
+  critical: ['home', 'os_alert'],
+};
+
+export function surfacesFor(severity: Severity): readonly NotificationSurface[] {
+  return SURFACES[severity];
+}
+
+/** OS まで割り込むか。**info と attention は決して割り込まない。** */
+export function interrupts(severity: Severity): boolean {
+  return surfacesFor(severity).some((s) => s === 'os_notification' || s === 'os_alert');
+}
+
+/**
+ * 静けさより優先するか。
+ *
+ * critical は「録音に失敗した」「規制対象の書き込みを止めた」のような、
+ * **黙っていると取り返しがつかない**もの。静かな時間帯でも出す。
+ * それ以外は、静けさのほうを優先する。
+ */
+export function overridesQuietHours(severity: Severity): boolean {
+  return severity === 'critical';
+}
 
 /**
  * Home に出す 1 件。**根拠を必ず持つ**（AC6-9）。
