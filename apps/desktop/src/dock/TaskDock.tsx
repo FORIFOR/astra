@@ -7,7 +7,7 @@
 import { useCallback, useEffect, useMemo, useState, type ReactElement } from 'react';
 import { DOCK_MAX_INPUT_LINES, dockGeometry, dockGeometryFor } from '@astra/ui-kit';
 import type { ContextSource } from '@astra/contracts';
-import { useDockMachine, type DockConversation } from './useDockMachine.js';
+import { useDockMachine, type DockConversation, type DockDictation } from './useDockMachine.js';
 import { ContextLens } from './ContextLens.js';
 import { WorkCard } from '../work/WorkCard.js';
 import type { WorkView } from '../work/workView.js';
@@ -22,10 +22,13 @@ export function TaskDock({
   onStop,
   onOpenWorkspace,
   conversation,
+  dictation,
 }: {
   initialSources?: readonly ContextSource[];
   /** Conversation Engine。未接続なら状態遷移だけ行う。 */
   conversation?: DockConversation;
+  /** 音声入力。未接続なら LISTENING に入るだけ（正本 §11.1）。 */
+  dictation?: DockDictation;
   /** 進行中の仕事。あれば working 面に出す（§6）。 */
   work?: WorkView | null;
   onApprove?(approvalId: string): void;
@@ -33,7 +36,7 @@ export function TaskDock({
   onStop?(): void;
   onOpenWorkspace?(): void;
 }): ReactElement {
-  const machine = useDockMachine('READY', conversation);
+  const machine = useDockMachine('READY', conversation, dictation);
   const [sources, setSources] = useState<readonly ContextSource[]>(initialSources);
   const [explanation, setExplanation] = useState<string | null>(null);
 

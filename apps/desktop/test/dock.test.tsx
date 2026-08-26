@@ -3,7 +3,7 @@
  * UI/UX §3・§4.3・§4.4・§5。
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import type { ContextSource } from '@astra/contracts';
 import { TaskDock } from '../src/dock/TaskDock.js';
@@ -327,5 +327,50 @@ describe('the dock talking to the Conversation Engine (Phase 7)', () => {
     await userEvent.keyboard('{Enter}');
 
     expect((await screen.findByRole('alert')).textContent).toContain('接続できませんでした');
+  });
+});
+
+describe('the dock taking voice (正本 §11.1)', () => {
+  const dictation = () => {
+    let handlers: { onPartial(t: string): void; onFinal(t: string): void } | null = null;
+    return {
+      start: vi.fn(async (h: typeof handlers) => {
+        handlers = h;
+      }),
+      stop: vi.fn(async () => {}),
+      say: (text: string, final = false) =>
+        final ? handlers?.onFinal(text) : handlers?.onPartial(text),
+    };
+  };
+
+  it('shows what it heard while it is still hearing it', async () => {
+    const voice = dictation();
+    render(<TaskDock dictation={voice} />);
+
+    await userEvent.click(screen.getByRole('button', { name: '音声で入力する' }));
+    await waitFor(() => expect(voice.start).toHaveBeenCalled());
+
+    act(() => voice.say('競合を'));
+    await waitFor(() =>
+      expect((screen.getByRole('textbox') as HTMLTextAreaElement).value).toBe('競合を'),
+    );
+
+    // 確定したら入れ替わる
+    act(() => voice.say('競合を調べて', true));
+    await waitFor(() =>
+      expect((screen.getByRole('textbox') as HTMLTextAreaElement).value).toBe('競合を調べて'),
+    );
+  });
+
+  it('says so when it could not listen at all', async () => {
+    const broken = {
+      start: vi.fn(async () => {
+        throw new Error('マイクを使えません');
+      }),
+      stop: vi.fn(async () => {}),
+    };
+    render(<TaskDock dictation={broken} />);
+    await userEvent.click(screen.getByRole('button', { name: '音声で入力する' }));
+    expect((await screen.findByRole('alert')).textContent).toContain('マイクを使えません');
   });
 });

@@ -29,9 +29,22 @@ export interface DockConversation {
   send(text: string): Promise<{ needsClarification: boolean; answer: string | null }>;
 }
 
+/**
+ * 音声入力の口。正本 §11.1。
+ *
+ * **Dock は音を持たない。**取り込みと認識は外（`@astra/stt`）でやり、
+ * ここへは確定した文字だけが来る。Dock に音の扱いを持ち込むと、
+ * 「どこでクラウドへ出ているか」が追えなくなる。
+ */
+export interface DockDictation {
+  start(handlers: { onPartial(text: string): void; onFinal(text: string): void }): Promise<void>;
+  stop(): Promise<void>;
+}
+
 export function useDockMachine(
   initial: InteractionState = 'READY',
   conversation?: DockConversation,
+  dictation?: DockDictation,
 ): DockMachine {
   const [state, setState] = useState<InteractionState>(initial);
   const [contextExpanded, setContextExpanded] = useState(false);
@@ -81,8 +94,24 @@ export function useDockMachine(
     startListening: () => {
       shrunk.current = false;
       setState('LISTENING');
+      if (!dictation) return;
+
+      void dictation
+        .start({
+          // 途中経過はそのまま入力欄へ。確定したら入れ替える（§4.3）。
+          onPartial: (text) => setIntentValue(text),
+          onFinal: (text) => setIntentValue(text),
+        })
+        .catch((error: unknown) => {
+          // 聞けなかったことを黙って飲み込まない
+          setClarification(error instanceof Error ? error.message : String(error));
+          setState('READY');
+        });
     },
-    stopListening: () => setState(intent.length > 0 ? 'TYPING' : 'READY'),
+    stopListening: () => {
+      void dictation?.stop().catch(() => undefined);
+      setState(intent.length > 0 ? 'TYPING' : 'READY');
+    },
     submit: () => {
       const text = intent.trim();
       if (text.length === 0) return;

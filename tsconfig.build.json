@@ -23,6 +23,9 @@
       "path": "./packages/policy"
     },
     {
+      "path": "./packages/stt"
+    },
+    {
       "path": "./packages/telemetry"
     },
     {
