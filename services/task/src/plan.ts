@@ -28,7 +28,7 @@ export interface TaskPlan {
   };
 }
 
-export const KNOWN_TASK_KINDS = ['echo'] as const;
+export const KNOWN_TASK_KINDS = ['echo', 'research'] as const;
 export type TaskKind = (typeof KNOWN_TASK_KINDS)[number];
 
 export function isKnownTaskKind(kind: string): kind is TaskKind {
@@ -88,10 +88,67 @@ function planEcho(input: Record<string, unknown>): TaskPlan {
   };
 }
 
+/**
+ * Research。正本 §8.1 の流れを、UI/UX §13.1 が見せる 4 つの工程にまとめる。
+ *
+ * 工程は 4 つで固定なので**進捗率は本物**になる。
+ * 各工程の中身（検索件数）は事前に決まらないので、それは detail 側で示す（§6.2）。
+ */
+function planResearch(input: Record<string, unknown>): TaskPlan {
+  const question =
+    typeof input['question'] === 'string' && input['question'].trim().length > 0
+      ? input['question'].trim()
+      : typeof input['message'] === 'string'
+        ? input['message'].trim()
+        : '';
+
+  const steps: TaskStep[] = [
+    {
+      index: 0,
+      toolId: 'research.plan',
+      risk: 'READ',
+      surface: 'cloud',
+      message: '調べることを整理しています',
+      args: { question },
+    },
+    {
+      index: 1,
+      toolId: 'research.search',
+      risk: 'READ',
+      surface: 'cloud',
+      message: '公式資料と最新ニュースを照合中',
+      args: { question },
+    },
+    {
+      index: 2,
+      toolId: 'research.verify',
+      risk: 'READ',
+      surface: 'cloud',
+      message: '食い違いを確認しています',
+      args: { question },
+    },
+    {
+      index: 3,
+      toolId: 'research.report',
+      risk: 'READ',
+      surface: 'cloud',
+      message: 'レポートを作成しています',
+      args: { question },
+    },
+  ];
+
+  return {
+    steps,
+    artifact: { type: 'REPORT', title: question || '調査レポート', mimeType: 'text/markdown' },
+  };
+}
+
 export function planTask(kind: string, input: Record<string, unknown>): TaskPlan {
   switch (kind) {
     case 'echo':
       return planEcho(input);
+    case 'research':
+      return planResearch(input);
     default:
       throw new UnknownTaskKindError(kind);
   }

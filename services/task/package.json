@@ -18,9 +18,7 @@
   "scripts": {
     "build": "tsc -b",
     "clean": "tsc -b --clean",
-    "test": "vitest run --passWithNoTests",
-    "dev": "pnpm -w dev:worker",
-    "start": "node dist/worker-main.js"
+    "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
     "@astra/contracts": "workspace:*",

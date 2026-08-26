@@ -72,6 +72,9 @@
     },
     {
       "path": "./workers/research-worker"
+    },
+    {
+      "path": "./workers/task-worker"
     }
   ]
 }

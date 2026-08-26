@@ -1,0 +1,8 @@
+# 実装仕様 §14.2 の eval harness 契約
+phase: 2
+tags: [acceptance, blocking]
+# Phase 2 の Exit 判定そのもの。落ちたら CI を止める。
+blocking: true
+description: >
+  Phase 2 実装仕様 §5 の AC2-1〜AC2-12。
+  「調べる → レポートが残る → 安全に共有する」を HTTP から一続きで検証する。

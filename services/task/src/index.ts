@@ -4,7 +4,7 @@
  * タスクのライフサイクル、Temporal 連携、進捗。実装仕様 §6・§11。
  */
 export { TaskService, type CreateTaskParams, type CreateTaskResult } from './service.js';
-export { createTaskActivities, type ActivityDeps } from './activities.js';
+export { createTaskActivities, type ActivityDeps, type StepExecutor } from './activities.js';
 export {
   appendEvent,
   readEventsAfter,

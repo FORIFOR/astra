@@ -31,7 +31,7 @@
     "gen:dock-geometry": "node scripts/gen-dock-geometry.mjs",
     "db:dump": "./scripts/dump-schema.sh \"$DATABASE_URL\" infra/db/schema.sql",
     "dev:gateway": "tsx services/api-gateway/src/server.ts",
-    "dev:worker": "tsx services/task/src/worker-main.ts",
+    "dev:worker": "tsx workers/task-worker/src/worker-main.ts",
     "smoke": "./scripts/smoke.sh"
   },
   "devDependencies": {

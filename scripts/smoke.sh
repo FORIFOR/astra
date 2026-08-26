@@ -19,6 +19,8 @@ PGPORT="${ASTRA_TEST_PGPORT:-5433}"
 PGSUPER="${ASTRA_TEST_PGUSER:-astra}"
 export PGPASSWORD="${ASTRA_TEST_PGPASSWORD:-astra}"
 DB="astra_smoke_$$"
+# 実行ごとに専用の queue を使う。前の実行の残骸に枠を食われないため。
+TASK_QUEUE="astra.task.smoke.$$"
 ADMIN_URL="postgres://${PGSUPER}:${PGPASSWORD}@${PGHOST}:${PGPORT}/${DB}?sslmode=disable"
 STORE="$(mktemp -d)"
 BASE="http://127.0.0.1:${PORT}"
@@ -36,6 +38,26 @@ cleanup() {
   psql "postgres://${PGSUPER}:${PGPASSWORD}@${PGHOST}:${PGPORT}/postgres" -X -q \
     -c 'DROP ROLE IF EXISTS astra_app' -c 'DROP ROLE IF EXISTS astra_identity' \
     -c 'DROP ROLE IF EXISTS astra_migrate' >/dev/null 2>&1 || true
+  if [ $rc -ne 0 ] && [ -f "$STORE/worker.log" ]; then
+    echo "--- worker log ---" >&2
+    tail -30 "$STORE/worker.log" >&2
+  fi
+  # この実行が起こしたワークフローを残さない。
+  # 使い捨て DB は消えるので、残すと永久に再試行し続ける。
+  if command -v docker >/dev/null 2>&1; then
+    docker exec astra-temporal temporal --address temporal:7233 workflow list \
+      --query "TaskQueue='$TASK_QUEUE' AND ExecutionStatus='Running'" --limit 50 --output json 2>/dev/null \
+      | python3 -c 'import json,sys
+try:
+    for row in json.load(sys.stdin) or []:
+        print(row["execution"]["workflowId"])
+except Exception:
+    pass' 2>/dev/null \
+      | while read -r wid; do
+          [ -n "$wid" ] && docker exec astra-temporal temporal --address temporal:7233 \
+            workflow terminate --workflow-id "$wid" --reason "smoke cleanup" >/dev/null 2>&1 || true
+        done
+  fi
   rm -rf "$STORE"
   exit $rc
 }
@@ -57,9 +79,10 @@ export REDIS_URL="${REDIS_URL:-redis://localhost:6380}"
 export TEMPORAL_ADDRESS="${TEMPORAL_ADDRESS:-localhost:7233}"
 export ASTRA_OBJECT_STORE_ROOT="$STORE"
 export ASTRA_BUILTIN_PLUGINS_DIR="$ROOT/plugins/builtin"
+export ASTRA_TASK_QUEUE="$TASK_QUEUE"
 
 say "starting the worker and the gateway"
-pnpm exec tsx services/task/src/worker-main.ts > "$STORE/worker.log" 2>&1 &
+pnpm exec tsx workers/task-worker/src/worker-main.ts > "$STORE/worker.log" 2>&1 &
 WORKER_PID=$!
 pnpm exec tsx services/api-gateway/src/server.ts > "$STORE/gateway.log" 2>&1 &
 GATEWAY_PID=$!

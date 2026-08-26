@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "\u6b63\u672c \u00a725 \u306e\u53d7\u3051\u5165\u308c\u30b9\u30a4\u30fc\u30c8\u3002Phase 0 \u306f actions/phase0 \u306e\u307f blocking\u3002",
+  "description": "正本 §25 の受け入れスイート。Phase 0 は actions/phase0 のみ blocking。",
   "scripts": {
     "test": "vitest run --passWithNoTests"
   },
@@ -15,7 +15,9 @@
     "@astra/service-task": "workspace:*",
     "@astra/service-library": "workspace:*",
     "@astra/service-plugin-registry": "workspace:*",
-    "@astra/plugin-sdk": "workspace:*"
+    "@astra/plugin-sdk": "workspace:*",
+    "@astra/service-research": "workspace:*",
+    "@astra/service-share": "workspace:*"
   },
   "devDependencies": {
     "@temporalio/testing": "^1.22.0",

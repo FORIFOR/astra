@@ -1,0 +1,28 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist"
+  },
+  "include": ["src"],
+  "references": [
+    {
+      "path": "../../packages/contracts"
+    },
+    {
+      "path": "../../packages/db"
+    },
+    {
+      "path": "../../packages/telemetry"
+    },
+    {
+      "path": "../../services/library"
+    },
+    {
+      "path": "../../services/research"
+    },
+    {
+      "path": "../../services/task"
+    }
+  ]
+}

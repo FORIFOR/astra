@@ -121,17 +121,17 @@ source 数と経過時間で表す（Phase 0 §19.7 / UI/UX §6.2）。
 
 ## 4. チケット
 
-| ID    | 内容                                                                                          | DoD                                                  |
-| ----- | --------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| P2-01 | contracts: Share / SharePolicy / ShareAccess / ResearchRun / Evidence                         | スキーマの正常系・異常系 test                        |
-| P2-02 | マイグレーション: `shares` `share_access_logs` `research_runs` `evidence` + RLS + append-only | `pnpm db:verify` が通る                              |
-| P2-03 | share-service: 発行 / 検証 / 失効 / 一回限り / allowlist / アクセス記録                       | 期限切れ・失効・誤パスワード・使い切りの 4 経路 test |
-| P2-04 | api-gateway: 共有 API と**未認証の公開 viewer 経路**                                          | 総当たりがレート制限で止まる。理由を区別して返さない |
-| P2-05 | apps/share-web: 公開 viewer                                                                   | パスワード入力 → 表示 → ダウンロード可否             |
-| P2-06 | research: `SearchProvider` / `LanguageModel` interface と決定的な実装                         | 差し替えだけで実プロバイダへ移れる                   |
-| P2-07 | research: 品質評価 / 重複排除 / 矛盾検出 / Evidence Ledger                                    | モデル無しで成立する部分の test                      |
-| P2-08 | research: Temporal workflow（`kind: 'research'`）とレポート生成                               | Library に artifact が残る                           |
-| P2-09 | 受け入れテスト AC2-1〜AC2-12                                                                  | CI の blocking gate                                  |
+| ID    | 内容                                                                                          | DoD                                                   |
+| ----- | --------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| P2-01 | contracts: Share / SharePolicy / ShareAccess / ResearchRun / Evidence                         | スキーマの正常系・異常系 test                         |
+| P2-02 | マイグレーション: `shares` `share_access_logs` `research_runs` `evidence` + RLS + append-only | `pnpm db:verify` が通る                               |
+| P2-03 | share-service: 発行 / 検証 / 失効 / 一回限り / allowlist / アクセス記録                       | 期限切れ・失効・誤パスワード・使い切りの 4 経路 test  |
+| P2-04 | api-gateway: 共有 API と**未認証の公開 viewer 経路**                                          | 総当たりがレート制限で止まる。理由を区別して返さない  |
+| P2-05 | apps/share-web: 公開 viewer                                                                   | パスワード入力 → 表示 → ダウンロード可否              |
+| P2-06 | research: `SearchProvider` / `LanguageModel` interface と決定的な実装                         | 差し替えだけで実プロバイダへ移れる **完了**           |
+| P2-07 | research: 品質評価 / 重複排除 / 矛盾検出 / Evidence Ledger                                    | モデル無しで成立する部分の test **完了**              |
+| P2-08 | research: Temporal workflow（`kind: 'research'`）とレポート生成                               | Library に artifact が残る **完了**                   |
+| P2-09 | 受け入れテスト AC2-1〜AC2-12                                                                  | CI の blocking gate（`evals/actions/phase2`）**完了** |
 
 ---
 
@@ -161,6 +161,48 @@ unlock を通った相手にだけ 5 分の閲覧トークンを渡す。
 公開 viewer 用の DB スコープ `withShare`。共有リンクの解決はテナントが分からない
 状態で始まるので、認証（D-14）と同じ循環が起きる。共有テーブルにしか GRANT されて
 いない BYPASSRLS ロール `astra_share` を使い、artifact は解決後に `withTenant` で読む。
+
+## 4.2 実装で確定したこと（Research）
+
+### 工程は 4 つで固定
+
+正本 §8.1 の流れを、UI/UX §13.1 が見せる 4 工程にまとめた
+（調べることを整理 → 照合 → 食い違いを確認 → レポート作成）。
+
+工程数が決まっているので**進捗率は本物**になる。
+各工程の中身（検索件数）は事前に決まらないので、それは `detail` 側で示す（§6.2）。
+
+### 手順の間で状態を持ち回さない
+
+activity は何度でも再実行され得る。途中経過をメモリに置くと壊れるので、
+**Evidence Ledger と `research_runs` が状態そのもの**。
+各工程は DB から必要なものを読み直す。同じ URL の同じ主張は積み直さない。
+
+### 決定的にできることだけを規則でやる
+
+| 判定           | 実装                                                                 |
+| -------------- | -------------------------------------------------------------------- |
+| source の質    | 種別の重み（一次情報 > 二次情報）。規則                              |
+| 新しさ         | 半減期 180 日。日付不明は 0.5（良くも悪くも扱わない）                |
+| 重複           | URL の正規化（追跡パラメータ・`www.`・末尾スラッシュ）+ 主張の正規化 |
+| **数値の矛盾** | 同じ話題（数字を除いた骨組み）で違う数字。規則                       |
+| **意味の矛盾** | `LanguageModel.detectContradictions`。**規則では確実に拾えない**     |
+| 確信度         | 矛盾があれば上げない。独立した強い source が 3 つ以上で `high`       |
+
+否定や言い換えを跨ぐ矛盾は正規表現では拾えない。
+**拾えない仕組みを置いて「検出できている」と思わせる方が、拾えないと分かっている状態より危ない。**
+最初は正規表現で否定を見ようとしたが、日本語では確実に効かないので落とした。
+
+### 本番で決定的実装のまま動かさない
+
+worker は `ASTRA_ENV=production` で決定的プロバイダを使おうとしたら起動を拒む。
+「動いているが中身が偽物」を本番へ持ち込まないため。
+
+### 逸脱 D-23
+
+`workers/task-worker` を新設した。`services/task` が research を直接持つと循環になる。
+サービス同士を組み立てるのは worker / gateway の役目（ADR 0001）。
+規約検査に**依存の循環**の検出を足し、意図的に循環を作って発火することを確かめた。
 
 ## 5. 参照
 

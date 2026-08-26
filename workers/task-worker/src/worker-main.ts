@@ -11,9 +11,13 @@ import { NativeConnection } from '@temporalio/worker';
 import { createDb, dbConfigFromEnv } from '@astra/db';
 import { createLogger } from '@astra/telemetry';
 import { FsObjectStore, LibraryService } from '@astra/service-library';
-import { createTaskWorker } from './worker.js';
-import { TASK_QUEUE } from './runtime/types.js';
-import { NoopPublisher } from './events.js';
+import {
+  DeterministicLanguageModel,
+  ResearchService,
+  StaticSearchProvider,
+  researchExecutors,
+} from '@astra/service-research';
+import { createTaskWorker, TASK_QUEUE, NoopPublisher } from '@astra/service-task';
 
 async function main(): Promise<void> {
   const logger = createLogger({
@@ -31,9 +35,23 @@ async function main(): Promise<void> {
   const namespace = process.env['TEMPORAL_NAMESPACE'] ?? 'default';
   const taskQueue = process.env['ASTRA_TASK_QUEUE'] ?? TASK_QUEUE;
 
+  // LLM と検索のプロバイダは未決（Phase 0 §18 OQ-3）。決定的な実装で先に配線しておき、
+  // 決まったら差し替える（Phase 2 実装仕様 §1.1）。
+  // 本番で決定的実装のまま動かさないよう、明示的に拒む。
+  if (process.env['ASTRA_ENV'] === 'production') {
+    throw new Error(
+      'research providers are still the deterministic stand-ins; wire a real search/model provider before production',
+    );
+  }
+  const research = new ResearchService({
+    db,
+    search: new StaticSearchProvider([]),
+    model: new DeterministicLanguageModel(),
+  });
+
   const connection = await NativeConnection.connect({ address });
   const worker = await createTaskWorker(
-    { db, library, publisher: NoopPublisher },
+    { db, library, publisher: NoopPublisher, executors: researchExecutors(research) },
     { connection, namespace, taskQueue },
   );
 

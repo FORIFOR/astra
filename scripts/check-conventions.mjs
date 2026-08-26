@@ -149,6 +149,66 @@ const ALL_TABLES = new Set(Object.values(TABLE_OWNERS).flat());
 const isKnownTable = (name) => ALL_TABLES.has(name);
 
 /** 4. 同梱プラグインの manifest がリポジトリに 5 本あること（seed の前提）。 */
+/**
+ * 5. ワークスペース内に依存の循環が無いこと。
+ *
+ * サービス同士が公開 API を通して依存するのは構わない（task → library など）。
+ * 駄目なのは**循環**で、これはビルドできなくなるうえ、
+ * 「どちらが上位か」が決まっていない印でもある。
+ * 実際に task ↔ research で踏んだ。合流点は worker / gateway に置く。
+ */
+async function checkNoDependencyCycles() {
+  const manifests = [];
+  for (const group of ['packages', 'services', 'workers', 'apps']) {
+    let entries;
+    try {
+      entries = await readdir(path.join(root, group), { withFileTypes: true });
+    } catch {
+      continue;
+    }
+    for (const entry of entries.filter((e) => e.isDirectory())) {
+      const rel = path.join(group, entry.name, 'package.json');
+      try {
+        const pkg = JSON.parse(await readFile(path.join(root, rel), 'utf8'));
+        manifests.push({
+          rel,
+          name: pkg.name,
+          deps: { ...pkg.dependencies, ...pkg.devDependencies },
+        });
+      } catch {
+        /* package.json が無いディレクトリは飛ばす */
+      }
+    }
+  }
+
+  const graph = new Map(
+    manifests.map((m) => [
+      m.name,
+      Object.keys(m.deps ?? {}).filter((dep) => manifests.some((other) => other.name === dep)),
+    ]),
+  );
+  const where = new Map(manifests.map((m) => [m.name, m.rel]));
+
+  const state = new Map();
+  const stack = [];
+
+  const walk = (name) => {
+    if (state.get(name) === 'done') return;
+    if (state.get(name) === 'open') {
+      const cycle = [...stack.slice(stack.indexOf(name)), name].join(' → ');
+      fail(where.get(name) ?? name, 0, `dependency cycle: ${cycle}`);
+      return;
+    }
+    state.set(name, 'open');
+    stack.push(name);
+    for (const dep of graph.get(name) ?? []) walk(dep);
+    stack.pop();
+    state.set(name, 'done');
+  };
+
+  for (const name of graph.keys()) walk(name);
+}
+
 async function checkBuiltinPlugins() {
   const entries = await readdir(path.join(root, 'plugins/builtin'), { withFileTypes: true });
   const dirs = entries.filter((e) => e.isDirectory());
@@ -161,6 +221,7 @@ const dirs = await serviceDirs();
 await checkNoRawQueries(dirs);
 await checkNoCrossServiceInternals(dirs);
 await checkTableOwnership();
+await checkNoDependencyCycles();
 await checkBuiltinPlugins();
 
 if (problems.length > 0) {

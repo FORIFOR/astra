@@ -1,11 +1,27 @@
 /**
  * @astra/service-research
  *
- * Research planning, search adapters, evidence ledger and report generation.
- *
- * Phase 0 scaffold only — no implementation yet.
- * Normative spec: docs/spec/phase-0-implementation-spec.md
- * Product spec:   docs/spec/new_ai_platform_design_spec_v0.1.md
+ * 計画・検索・突き合わせ・統合と Evidence Ledger。正本 §8。
  */
-
-export const SERVICE_RESEARCH_PACKAGE = '@astra/service-research' as const;
+export { ResearchService, composeReport, type ResearchDeps, type StepOutcome } from './service.js';
+export { researchExecutors } from './executor.js';
+export {
+  DeterministicLanguageModel,
+  StaticSearchProvider,
+  type LanguageModel,
+  type SearchProvider,
+  type SearchHit,
+  type SourceType,
+} from './providers.js';
+export {
+  confidenceOf,
+  dedupe,
+  findContradictions,
+  freshness,
+  normalizeClaim,
+  normalizeUrl,
+  score,
+  sourceQuality,
+  type Contradiction,
+  type ScoredCandidate,
+} from './quality.js';

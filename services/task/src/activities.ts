@@ -4,6 +4,7 @@
  * すべて冪等。Temporal は activity を再実行し得るので、
  * 「2 回走っても結果が変わらない」ことを DB の制約で担保する。
  */
+import { ApplicationFailure } from '@temporalio/common';
 import { canonicalSha256, uuidv7, type ActionRisk } from '@astra/contracts';
 import { withTenant, type DbHandle, type ScopedDb } from '@astra/db';
 import { appendAuditEvent } from '@astra/telemetry';
@@ -20,10 +21,31 @@ import type {
 } from './activity-types.js';
 import type { TaskWorkflowInput } from './workflows.js';
 
+/**
+ * 1 つの step を実際にやる人。
+ *
+ * task-service は「何をどの順でやるか」だけを持ち、中身は知らない。
+ * research などの実装をここに直接書くと、task が全ドメインを抱えることになる。
+ */
+export interface StepExecutor {
+  execute(
+    input: TaskWorkflowInput,
+    step: TaskStep,
+  ): Promise<{
+    result: unknown;
+    /** 進捗に添える一言（UI/UX §6.1 の「12 sources」）。 */
+    detail?: string | null;
+    /** 成果物を自分で組み立てた step はここに置く。 */
+    artifact?: { title: string; markdown: string };
+  }>;
+}
+
 export interface ActivityDeps {
   readonly db: DbHandle;
   readonly library: LibraryService;
   readonly publisher: EventPublisher;
+  /** tool id から引く。無ければ何もしない step として扱う。 */
+  readonly executors?: Readonly<Record<string, StepExecutor>>;
   /** 監査に載せるアプリ版など、将来の付帯情報 */
   readonly now?: () => Date;
 }
@@ -31,11 +53,41 @@ export interface ActivityDeps {
 const stepKey = (taskId: string, index: number, name: string): string =>
   `${taskId}:${index}:${name}`;
 
+/** PostgreSQL の外部キー違反。 */
+const FOREIGN_KEY_VIOLATION = '23503';
+
+/**
+ * 「もう存在しないタスク」への操作を、**再試行しない失敗**に変える。
+ *
+ * これが無いと、テナントやタスクが消えたあとも activity が永久に再試行し続け、
+ * worker の枠を食い潰す。使い捨て DB で動かしたあと実際にそうなった。
+ */
+function taskGone(cause: unknown): never {
+  throw ApplicationFailure.nonRetryable(
+    `the task this activity belongs to no longer exists (${String(cause)})`,
+    'TaskGone',
+  );
+}
+
+function isMissingParent(error: unknown): boolean {
+  return (error as { code?: string } | null)?.code === FOREIGN_KEY_VIOLATION;
+}
+
 export function createTaskActivities(deps: ActivityDeps): TaskActivities {
   const now = deps.now ?? (() => new Date());
 
-  const inTenant = <T>(input: TaskWorkflowInput, fn: (tx: ScopedDb) => Promise<T>): Promise<T> =>
-    withTenant(deps.db, input.tenantId, fn);
+  const inTenant = async <T>(
+    input: TaskWorkflowInput,
+    fn: (tx: ScopedDb) => Promise<T>,
+  ): Promise<T> => {
+    try {
+      return await withTenant(deps.db, input.tenantId, fn);
+    } catch (error) {
+      // 親が消えているなら、何度やっても同じ。止める。
+      if (isMissingParent(error)) taskGone(error);
+      throw error;
+    }
+  };
 
   return {
     async startTask(input, meta: StartTaskMeta) {
@@ -238,8 +290,14 @@ export function createTaskActivities(deps: ActivityDeps): TaskActivities {
         ),
       );
 
-      // Phase 0 の唯一の tool。実際の副作用は無い（実装仕様 §6.6）
-      const result = { echoed: step.args['message'] ?? null, step: step.index };
+      const executor = deps.executors?.[step.toolId];
+      const outcome = executor
+        ? await executor.execute(input, step)
+        : // 登録が無い tool は何もしない。Phase 0 の echo がこれにあたる。
+          { result: { echoed: step.args['message'] ?? null, step: step.index }, detail: null };
+      const result = outcome.artifact
+        ? { ...(outcome.result as object), artifact: outcome.artifact }
+        : outcome.result;
 
       const receiptId = decision.requiresReceipt ? uuidv7() : null;
 
@@ -313,7 +371,7 @@ export function createTaskActivities(deps: ActivityDeps): TaskActivities {
               step_index: step.index,
               step_count: null,
               message: step.message,
-              detail: null,
+              detail: outcome.detail ?? null,
               elapsed_ms: Date.now() - startedAt,
               retrying: false,
             },
@@ -332,19 +390,30 @@ export function createTaskActivities(deps: ActivityDeps): TaskActivities {
       const existing = await deps.library.findBySourceTask(input.tenantId, input.taskId);
       if (existing) return existing.id;
 
-      const lines = [
-        `# ${spec.title}`,
-        '',
-        ...results.map((r, i) => `- step ${i + 1}: ${JSON.stringify(r)}`),
-      ];
+      // step が自分で本文を組み立てているならそれを使う。
+      // 使わずに汎用の整形をかけると、せっかくのレポートが台無しになる。
+      const composed = results
+        .map((value) => (value as { artifact?: { title: string; markdown: string } })?.artifact)
+        .filter((value): value is { title: string; markdown: string } => Boolean(value))
+        .at(-1);
+
+      const body =
+        composed?.markdown ??
+        [
+          `# ${spec.title}`,
+          '',
+          ...results.map((r, i) => `- step ${i + 1}: ${JSON.stringify(r)}`),
+        ].join('\n');
+      const title = composed?.title ?? spec.title;
+
       const artifact = await deps.library.create({
         tenantId: input.tenantId,
         ownerId: input.userId,
         type: spec.type,
-        title: spec.title,
+        title,
         mimeType: spec.mimeType,
-        body: Buffer.from(lines.join('\n'), 'utf8'),
-        fileName: `${spec.title}.md`,
+        body: Buffer.from(body, 'utf8'),
+        fileName: `${title}.md`,
         sourceTaskId: input.taskId,
         sourceAgentId: 'general',
       });

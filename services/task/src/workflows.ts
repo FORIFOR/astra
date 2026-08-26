@@ -18,7 +18,8 @@ import type { TaskActivities } from './activity-types.js';
 
 const persistence = proxyActivities<TaskActivities>({
   startToCloseTimeout: '30 seconds',
-  retry: { maximumAttempts: 10 },
+  // DB は粘る。ただし親が消えているなら粘っても無駄なので止める。
+  retry: { maximumAttempts: 10, nonRetryableErrorTypes: ['TaskGone'] },
 });
 
 const tools = proxyActivities<TaskActivities>({
@@ -36,6 +37,8 @@ const tools = proxyActivities<TaskActivities>({
       'ApprovalRejected',
       'UnknownTaskKind',
       'TenantMismatch',
+      // タスクやテナントが消えたあとに再試行し続けない
+      'TaskGone',
     ],
   },
 });

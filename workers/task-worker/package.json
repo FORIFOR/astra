@@ -1,0 +1,29 @@
+{
+  "name": "@astra/worker-task",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "TaskWorkflow \u3068\u5168 activity \u3092\u8f09\u305b\u308b Temporal worker\u3002\u30b5\u30fc\u30d3\u30b9\u3092\u7d44\u307f\u7acb\u3066\u308b\u5408\u6d41\u70b9\u3002",
+  "main": "./dist/worker-main.js",
+  "types": "./dist/worker-main.d.ts",
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "tsc -b --clean",
+    "test": "vitest run --passWithNoTests",
+    "dev": "pnpm -w dev:worker",
+    "start": "node dist/worker-main.js"
+  },
+  "dependencies": {
+    "@astra/contracts": "workspace:*",
+    "@astra/db": "workspace:*",
+    "@astra/telemetry": "workspace:*",
+    "@astra/service-task": "workspace:*",
+    "@astra/service-research": "workspace:*",
+    "@astra/service-library": "workspace:*",
+    "@temporalio/worker": "^1.22.0"
+  },
+  "devDependencies": {
+    "@temporalio/testing": "^1.22.0",
+    "vitest": "catalog:"
+  }
+}

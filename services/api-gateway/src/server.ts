@@ -45,6 +45,9 @@ async function main(): Promise<void> {
   const runtime = await TemporalTaskRuntime.connect({
     address: process.env['TEMPORAL_ADDRESS'] ?? 'localhost:7233',
     namespace: process.env['TEMPORAL_NAMESPACE'] ?? 'default',
+    // 環境ごとに分ける。同じ queue を共有すると、片方の使い捨て DB に紐づく
+    // ワークフローがもう片方の worker の枠を食う（実際に踏んだ）。
+    ...(process.env['ASTRA_TASK_QUEUE'] ? { taskQueue: process.env['ASTRA_TASK_QUEUE'] } : {}),
   });
   const tasks = new TaskService(db, runtime);
   const shares = new ShareService({ db, library, shareHost: config.shareHost });
