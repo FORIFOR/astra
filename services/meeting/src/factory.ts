@@ -64,6 +64,44 @@ export interface MeetingProviderEnv {
   readonly GOOGLE_STT_RECOGNIZER?: string | undefined;
   /** `projects/<id>/locations/<loc>` */
   readonly GOOGLE_TRANSLATE_PARENT?: string | undefined;
+  /**
+   * 課金と割り当ての先。**利用者資格情報の ADC では必須。**
+   * 無いと Google が 403 を返し、原因が「権限」に見えてしまう。
+   */
+  readonly GOOGLE_CLOUD_PROJECT?: string | undefined;
+}
+
+/**
+ * env から実クライアントを組む。**設定されているものだけ本物にする。**
+ *
+ * ここが無かったので、seam はあるのに誰も実物を差さず、
+ * 常に代役が返っていた（`clients` を渡す呼び出しがどこにも無かった）。
+ */
+function clientsFromEnv(env: MeetingProviderEnv):
+  | {
+      speechV1?: () => Promise<import('./google.js').V1SpeechClient>;
+      speechV2?: () => Promise<import('./google.js').V2SpeechClient>;
+      translate?: () => Promise<import('./google.js').TranslateClient>;
+    }
+  | undefined {
+  const projectId = env.GOOGLE_CLOUD_PROJECT?.trim();
+  if (!projectId) return undefined;
+
+  return {
+    /*
+     * live path（streaming）はまだ実物を持たない。
+     * gRPC の双方向 stream が要るので、REST では代われない。
+     * **持っていないものを持っていると言わない。**
+     */
+    speechV2: async () => {
+      const { speechV2ClientFromEnv } = await import('./google-rest.js');
+      return speechV2ClientFromEnv({ projectId });
+    },
+    translate: async () => {
+      const { translateClientFromEnv } = await import('./google-rest.js');
+      return translateClientFromEnv({ projectId });
+    },
+  };
 }
 
 /**
@@ -74,12 +112,14 @@ export interface MeetingProviderEnv {
  */
 export async function meetingProvidersFromEnv(
   env: MeetingProviderEnv,
-  clients?: {
+  provided?: {
     speechV1?: () => Promise<import('./google.js').V1SpeechClient>;
     speechV2?: () => Promise<import('./google.js').V2SpeechClient>;
     translate?: () => Promise<import('./google.js').TranslateClient>;
   },
 ): Promise<MeetingProviders> {
+  // 明示的に渡されたものが優先。試験は実物を呼ばずに済む。
+  const clients = provided ?? clientsFromEnv(env);
   const { GoogleBatchTranscriber, GoogleStreamingTranscriber, GoogleTranslationProvider } =
     await import('./google.js');
 

@@ -70,3 +70,8 @@ export {
   type MeetingProviders,
 } from './factory.js';
 export { meetingDataSources } from './data-sources.js';
+export {
+  speechV2ClientFromEnv,
+  translateClientFromEnv,
+  type GoogleRestConfig,
+} from './google-rest.js';

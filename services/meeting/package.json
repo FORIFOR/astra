@@ -23,10 +23,11 @@
   "dependencies": {
     "@astra/contracts": "workspace:*",
     "@astra/db": "workspace:*",
-    "@astra/telemetry": "workspace:*",
-    "kysely": "catalog:",
-    "@astra/service-task": "workspace:*",
     "@astra/service-library": "workspace:*",
+    "@astra/service-task": "workspace:*",
+    "@astra/telemetry": "workspace:*",
+    "google-auth-library": "^11.0.2",
+    "kysely": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

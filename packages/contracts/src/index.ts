@@ -26,6 +26,7 @@ export * from './evidence.js';
 export * from './surface.js';
 export * from './plugin.js';
 export * from './dashboard.js';
+export * from './language-model.js';
 export * from './mcp.js';
 export * from './domain.js';
 export * from './world.js';
