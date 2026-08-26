@@ -26,7 +26,12 @@ import {
 import { assertNoStandIns } from '@astra/contracts';
 import { capabilityReport } from '@astra/service-capabilities';
 import { createTaskWorker, TASK_QUEUE, NoopPublisher } from '@astra/service-task';
-import { DomainService, careExecutors, videoExecutors } from '@astra/service-agent-runtime';
+import {
+  DomainService,
+  careExecutors,
+  ehrExecutors,
+  videoExecutors,
+} from '@astra/service-agent-runtime';
 
 async function main(): Promise<void> {
   const logger = createLogger({
@@ -88,6 +93,8 @@ async function main(): Promise<void> {
         ...videoExecutors(new DomainService({ db })),
         // 正本 §15.4。書き込みは CARE profile の規則で確認と読み上げを通る。
         ...careExecutors(new DomainService({ db })),
+        // 正本 §15.5。下書きが線を越えていたら、残さずに止める。
+        ...ehrExecutors(new DomainService({ db })),
         ...meetingExecutors({
           meetings,
           library,

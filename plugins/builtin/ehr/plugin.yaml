@@ -1,0 +1,58 @@
+# 診療記録を読む手伝い。正本 §15.5。
+#
+# 仕様が「高リスク領域」「初期版は read/assist/draft 中心」
+# 「Write-back は明示承認 + audit」「診断/治療を自律決定しない」と言っている。
+#
+# **書ける tool を 1 つしか置いていない**のは、そのためである。
+# 増やすときは、増やす理由を先に決めること。
+id: com.astra.ehr
+name: EHR Assist
+version: 0.1.0
+publisher: astra
+verified: true
+min_core_version: 0.1.0
+category: domain-agent
+builtin: true
+removable: true
+# §15.5 高リスク領域
+compliance_profile: REGULATED_HEALTH
+execution_surfaces: [cloud]
+permissions:
+  - artifacts.read
+  - artifacts.write
+data_accessed:
+  - Encounters and clinical notes this user already has access to
+connectors: []
+tools:
+  - id: ehr.search
+    risk: READ
+    surface: cloud
+  - id: ehr.encounter_summary
+    risk: READ
+    surface: cloud
+  - id: ehr.extract
+    risk: READ
+    surface: cloud
+  - id: ehr.draft_note
+    # 下書きを残すだけ。記録への反映は人の操作。
+    risk: REVERSIBLE_WRITE
+    surface: cloud
+    requires_confirmation: true
+agents:
+  - id: assist
+    skill: skills/assist.md
+    tools: [ehr.search, ehr.encounter_summary, ehr.extract, ehr.draft_note]
+dashboards:
+  - id: encounters
+    schema: dashboards/encounters.json
+data_sources:
+  - id: ehr.encounters
+    kind: count
+    query: ehr_encounters
+  - id: ehr.unsigned_drafts
+    kind: rows
+    query: ehr_unsigned_drafts
+policies:
+  - policies/ehr.yaml
+data_extensions:
+  - schemas/entities.json

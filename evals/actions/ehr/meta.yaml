@@ -1,0 +1,7 @@
+# 実装仕様 §14.2 の eval harness 契約
+phase: ehr
+tags: [acceptance, blocking]
+blocking: true
+description: >
+  正本 §15.5 EHR Assist。高リスク領域の規則が実際に効いているか、
+  そして「診断・治療を自律決定していないか」。

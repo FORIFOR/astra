@@ -1,0 +1,35 @@
+# 診療記録を扱うときに守ること。正本 §15.5・§22。
+# **host が判定できる語彙だけ**で書く。散文は description に置く。
+id: ehr
+profiles: [REGULATED_HEALTH]
+rules:
+  - id: write-back-needs-approval
+    description: 記録への反映は、必ず人が明示的に承認する
+    when: { when: risk_at_least, risk: REVERSIBLE_WRITE }
+    require: confirmation
+    severity: block
+  - id: read-back-before-write
+    description: 反映する内容を読み上げて確かめる
+    when: { when: risk_at_least, risk: REVERSIBLE_WRITE }
+    require: readback
+    severity: block
+  - id: audit-every-access
+    description: 参照も含めて監査に残す
+    when: { when: always }
+    require: audit
+    severity: block
+  - id: receipt-for-write-back
+    description: 反映は記録として残す
+    when: { when: risk_at_least, risk: REVERSIBLE_WRITE }
+    require: receipt
+    severity: block
+  - id: no-destructive
+    description: 診療記録の破壊的操作は行わない
+    when: { when: risk_at_least, risk: DESTRUCTIVE }
+    require: deny
+    severity: block
+  - id: no-external-send
+    description: 診療情報を外部へ送らない
+    when: { when: risk_at_least, risk: EXTERNAL_COMMIT }
+    require: deny
+    severity: block

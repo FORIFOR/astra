@@ -1,0 +1,9 @@
+{
+  "id": "encounters",
+  "title": "診療",
+  "layout": "grid",
+  "items": [
+    { "type": "metric", "title": "記録のある受診", "bind": "ehr.encounters", "span": 4 },
+    { "type": "table", "title": "未署名の下書き", "bind": "ehr.unsigned_drafts", "span": 8 }
+  ]
+}

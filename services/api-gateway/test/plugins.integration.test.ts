@@ -61,6 +61,7 @@ describe.skipIf(!url)('plugin catalog', () => {
       const bundled = items.map((p) => p.id as string).filter((id) => id.startsWith('com.astra.'));
       expect(bundled.sort()).toEqual([
         'com.astra.care',
+        'com.astra.ehr',
         'com.astra.finder',
         'com.astra.general',
         'com.astra.gmail',
@@ -214,6 +215,7 @@ describe.skipIf(!url)('plugin catalog', () => {
         'com.astra.meeting',
         'com.astra.google-calendar',
         'com.astra.care',
+        'com.astra.ehr',
         'com.astra.finder',
         'com.astra.general',
         'com.astra.gmail',

@@ -11,6 +11,7 @@ import { reviewsDue } from './care.js';
 const CRM_PLUGIN = 'com.astra.sales-crm';
 const VIDEO_PLUGIN = 'com.astra.video';
 const CARE_PLUGIN = 'com.astra.care';
+const EHR_PLUGIN = 'com.astra.ehr';
 
 export function salesCrmDataSources(
   domain: DomainService,
@@ -167,6 +168,38 @@ export function careDataSources(
           // 期日が無いことを空欄にしない。空欄だと見落とす。
           due.dueAt === null ? '期日が入っていません' : `残り ${due.daysLeft} 日`,
         ]),
+      };
+    },
+  };
+}
+
+/**
+ * EHR が dashboard へ出せるもの。正本 §15.5。
+ *
+ * **未署名の下書きを数える。**署名されていないものが溜まっていることは、
+ * 見えていなければならない。
+ */
+export function ehrDataSources(
+  domain: DomainService,
+): Record<string, (tenantId: string) => Promise<ResolvedValue>> {
+  return {
+    ehr_encounters: async (tenantId) => ({
+      kind: 'count',
+      value: (await domain.list(tenantId, EHR_PLUGIN, 'encounter', 1_000)).length,
+    }),
+
+    ehr_unsigned_drafts: async (tenantId) => {
+      const notes = await domain.list(tenantId, EHR_PLUGIN, 'clinical_note', 500);
+      return {
+        kind: 'rows',
+        columns: ['記録', '書いた人'],
+        rows: notes
+          // 署名の記録が無いものは未署名として扱う。署名済みに寄せない。
+          .filter((note) => note.fields['signed'] !== true)
+          .map((note) => [
+            String(note.fields['title'] ?? '無題'),
+            String(note.fields['author'] ?? '不明'),
+          ]),
       };
     },
   };

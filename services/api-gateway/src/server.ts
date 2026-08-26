@@ -15,6 +15,7 @@ import {
   DomainService,
   entityDefinitions,
   careDataSources,
+  ehrDataSources,
   salesCrmDataSources,
   videoDataSources,
 } from '@astra/service-agent-runtime';
@@ -122,6 +123,8 @@ async function main(): Promise<void> {
     videoDataSources(domain),
     // 正本 §15.4 の申し送り面
     careDataSources(domain),
+    // 正本 §15.5 の診療面
+    ehrDataSources(domain),
   );
 
   const app = buildApp({

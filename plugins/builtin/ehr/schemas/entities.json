@@ -1,0 +1,87 @@
+{
+  "entities": [
+    {
+      "id": "patient",
+      "title": "患者",
+      "title_field": "label",
+      "fields": [
+        {
+          "id": "label",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "note",
+          "type": "text",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "encounter",
+      "title": "受診",
+      "title_field": "title",
+      "fields": [
+        {
+          "id": "title",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "patient",
+          "type": "reference",
+          "entity": "patient",
+          "required": true
+        },
+        {
+          "id": "occurred_at",
+          "type": "date",
+          "required": true
+        },
+        {
+          "id": "department",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "note",
+          "type": "text",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "clinical_note",
+      "title": "記録",
+      "title_field": "title",
+      "fields": [
+        {
+          "id": "title",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "encounter",
+          "type": "reference",
+          "entity": "encounter",
+          "required": true
+        },
+        {
+          "id": "body",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "author",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "signed",
+          "type": "boolean",
+          "required": false
+        }
+      ]
+    }
+  ]
+}
