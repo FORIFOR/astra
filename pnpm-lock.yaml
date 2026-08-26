@@ -187,6 +187,9 @@ importers:
       '@astra/policy':
         specifier: workspace:*
         version: link:../packages/policy
+      '@astra/service-agent-host':
+        specifier: workspace:*
+        version: link:../services/agent-host
       '@astra/service-agent-runtime':
         specifier: workspace:*
         version: link:../services/agent-runtime
@@ -469,6 +472,9 @@ importers:
       '@astra/policy':
         specifier: workspace:*
         version: link:../../packages/policy
+      '@astra/service-agent-host':
+        specifier: workspace:*
+        version: link:../agent-host
       '@astra/service-agent-runtime':
         specifier: workspace:*
         version: link:../agent-runtime
@@ -792,6 +798,19 @@ importers:
       kysely:
         specifier: 'catalog:'
         version: 0.29.5
+    devDependencies:
+      vitest:
+        specifier: 'catalog:'
+        version: 3.2.7(@types/node@22.20.1)(happy-dom@20.11.6)(terser@5.50.0)(tsx@4.23.12)(yaml@2.9.0)
+
+  workers/agent-host:
+    dependencies:
+      '@astra/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
+      '@astra/telemetry':
+        specifier: workspace:*
+        version: link:../../packages/telemetry
     devDependencies:
       vitest:
         specifier: 'catalog:'

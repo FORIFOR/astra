@@ -8,7 +8,7 @@ evals/<domain>/<case-id>/
   *.test.ts     実行内容
 ```
 
-`blocking: true` のケースは CI を止める。現状 `actions/phase0` `phase2` `phase3` `phase4` `phase5` `phase6` `phase7` `security` `product` `conversation` `research` `slo` `care` `ehr` `domain-agents` が blocking。
+`blocking: true` のケースは CI を止める。現状 `actions/phase0` `phase2` `phase3` `phase4` `phase5` `phase6` `phase7` `security` `product` `conversation` `research` `slo` `care` `ehr` `domain-agents` `agent-host` が blocking。
 
 ```sh
 pnpm test:acceptance     # 使い捨て DB を用意して受け入れテストを実行
@@ -31,4 +31,5 @@ pnpm test:acceptance     # 使い捨て DB を用意して受け入れテスト�
 | `actions/care`                                      | 正本 §15.4 Care Support の REGULATED policy            | **blocking** |
 | `actions/ehr`                                       | 正本 §15.5 EHR Assist（承認・監査・診断しないこと）    | **blocking** |
 | `actions/domain-agents`                             | 正本 §15 の 7 領域が揃い、決めないと書いた所は決めない | **blocking** |
+| `actions/agent-host`                                | 正本 §4.4・§16.1（Dock を閉じても続く・故障注入）      | **blocking** |
 | `conversation` `stt` `meeting` `research` `plugins` | 正本 §25 の各スイート                                  | Phase 1 以降 |

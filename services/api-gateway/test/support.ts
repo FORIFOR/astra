@@ -12,6 +12,7 @@ import { PluginRegistryService } from '@astra/service-plugin-registry';
 import type { DataSourceResolver } from '@astra/service-plugin-registry';
 import { ShareService } from '@astra/service-share';
 import { ResearchLedgerService } from '@astra/service-research';
+import { AgentHostService } from '@astra/service-agent-host';
 import {
   MeetingService,
   MemoryRecordingStore,
@@ -130,6 +131,8 @@ export async function makeTestApp(options: MakeAppOptions): Promise<TestApp> {
     shares,
     // UI/UX §15 の Evidence。本番と同じく db だけで読む。
     evidence: new ResearchLedgerService(db),
+    // 正本 §4.4: Dock を閉じても仕事が続くための調整役
+    agentHosts: new AgentHostService({ db }),
     ...(options.dataSources === undefined ? {} : { dataSources: options.dataSources }),
     meetings: {
       meetings,

@@ -24,6 +24,7 @@ import { registerAuth } from './auth/middleware.js';
 import { registerAuthRoutes } from './auth/routes.js';
 import type { JwtTokens } from './auth/tokens.js';
 import { registerTaskRoutes, type EvidenceReader } from './routes/tasks.js';
+import { registerAgentHostRoutes } from './routes/agent-host.js';
 import { registerArtifactRoutes } from './routes/artifacts.js';
 import { registerPluginRoutes } from './routes/plugins.js';
 import { registerShareRoutes } from './routes/shares.js';
@@ -57,6 +58,8 @@ export interface AppDeps {
   readonly shares?: ShareService;
   /** UI/UX §15 の Evidence Ledger を引く先。 */
   readonly evidence?: EvidenceReader;
+  /** 手元の実行基盤の調整役。無ければその経路は生えない（§4.4）。 */
+  readonly agentHosts?: import('@astra/service-agent-host').AgentHostService;
   readonly meetings?: MeetingRuntime;
   /** dashboard の bind を解決する先。gateway が各サービスの束を合成して渡す。 */
   readonly dataSources?: DataSourceResolver;
@@ -125,6 +128,9 @@ export function buildApp(deps: AppDeps): App {
     ...(deps.evidence === undefined ? {} : { evidence: deps.evidence }),
     ...(deps.ssePollIntervalMs === undefined ? {} : { ssePollIntervalMs: deps.ssePollIntervalMs }),
   });
+  if (deps.agentHosts) {
+    registerAgentHostRoutes(app, { hosts: deps.agentHosts, tasks: deps.tasks });
+  }
   registerArtifactRoutes(app, { library: deps.library });
   // §3 の初期セットアップ。catalog を見るので registry の後。
   registerOnboardingRoutes(app, { db: deps.db, registry: deps.registry, tasks: deps.tasks });

@@ -53,6 +53,9 @@
     },
     {
       "path": "../agent-runtime"
+    },
+    {
+      "path": "../agent-host"
     }
   ]
 }

@@ -21,6 +21,7 @@ import {
   stockDataSources,
   videoDataSources,
 } from '@astra/service-agent-runtime';
+import { AgentHostService } from '@astra/service-agent-host';
 import { WorldModelService } from '@astra/service-world-model';
 import { ConversationService } from '@astra/service-conversation';
 import {
@@ -147,6 +148,8 @@ async function main(): Promise<void> {
     shares,
     // UI/UX §15 の Evidence。読むだけなので db だけで足りる。
     evidence: new ResearchLedgerService(db),
+    // 正本 §4.4: Dock を閉じても仕事が続くための調整役
+    agentHosts: new AgentHostService({ db }),
     meetings: {
       meetings,
       recordings: new FsRecordingStore(config.recordingRoot),

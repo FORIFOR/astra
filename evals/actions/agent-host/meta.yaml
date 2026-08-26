@@ -1,0 +1,7 @@
+# 実装仕様 §14.2 の eval harness 契約
+phase: agent-host
+tags: [acceptance, blocking, chaos]
+blocking: true
+description: >
+  正本 §4.4・§16.1。Dock を閉じても仕事が続き、端末が落ちても失われないこと。
+  故障注入（host kill / 二重配信 / 古い lease / 承認待ち）を含む。

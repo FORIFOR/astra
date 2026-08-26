@@ -92,6 +92,9 @@
       "path": "./workers/research-worker"
     },
     {
+      "path": "./workers/agent-host"
+    },
+    {
       "path": "./workers/task-worker"
     }
   ]

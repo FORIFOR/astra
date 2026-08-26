@@ -44,7 +44,8 @@
     "@astra/service-conversation": "workspace:*",
     "@astra/service-context": "workspace:*",
     "@astra/service-capabilities": "workspace:*",
-    "@astra/service-agent-runtime": "workspace:*"
+    "@astra/service-agent-runtime": "workspace:*",
+    "@astra/service-agent-host": "workspace:*"
   },
   "devDependencies": {
     "@types/ws": "^8.18.1",
