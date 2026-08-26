@@ -117,6 +117,26 @@ export const notifications = {
     callStrict<void>('notify_send', { severity, title, body }),
 };
 
+/**
+ * 認可の折り返しを待ち受ける。RFC 8252。
+ *
+ * **交換も保管もここではしない。**このプロセスは code と state を
+ * 右から左へ渡すだけ（`@astra/oauth` が続きをやる）。
+ */
+export const oauthCallback = {
+  /** 待ち受けを開き、実際の折り返し先を返す。port は OS が選ぶ。 */
+  listen: () => callStrict<{ redirectUri: string; port: number }>('oauth_listen'),
+  /** 1 回だけ受け取る。受け取ったら閉じる。 */
+  await: () =>
+    callStrict<{
+      code?: string;
+      state?: string;
+      error?: string;
+      error_description?: string;
+    }>('oauth_await_callback'),
+  cancel: () => call<void>('oauth_cancel'),
+};
+
 export const shortcuts = {
   status: () => call<ShortcutStatus[]>('shortcut_status'),
   // 失敗は握り潰さない。変えたつもりで効いていない状態を作らない。

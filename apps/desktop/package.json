@@ -19,7 +19,8 @@
     "react": "catalog:",
     "react-dom": "catalog:",
     "@astra/api-client": "workspace:*",
-    "@astra/service-notification": "workspace:*"
+    "@astra/service-notification": "workspace:*",
+    "@astra/oauth": "workspace:*"
   },
   "devDependencies": {
     "@testing-library/react": "^16.3.2",

@@ -484,6 +484,36 @@ export class AstraClient {
     );
   }
 
+  /**
+   * connector を繋ぐ。正本 §21。
+   *
+   * **渡すのは参照だけ。**値そのものはサーバへ送らない
+   * （送っても ConnectionService が断るが、送る側でも作らない）。
+   */
+  async connectConnector(
+    pluginId: string,
+    request: {
+      connector_id: string;
+      credential_ref: string;
+      granted_scopes: string[];
+      account_label: string | null;
+      expires_at: string | null;
+    },
+  ): Promise<void> {
+    await this.http.send({
+      method: 'POST',
+      path: `/v1/plugins/${pluginId}/connect`,
+      body: request,
+    });
+  }
+
+  async disconnectConnector(pluginId: string, connectorId: string): Promise<void> {
+    await this.http.send({
+      method: 'DELETE',
+      path: `/v1/plugins/${pluginId}/connections/${connectorId}`,
+    });
+  }
+
   async uninstallPlugin(pluginId: string): Promise<void> {
     await this.http.send({ method: 'DELETE', path: `/v1/plugins/${pluginId}` });
   }

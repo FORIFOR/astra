@@ -86,6 +86,9 @@ importers:
       '@astra/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
+      '@astra/oauth':
+        specifier: workspace:*
+        version: link:../../packages/oauth
       '@astra/service-notification':
         specifier: workspace:*
         version: link:../../services/notification

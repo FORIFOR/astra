@@ -3,12 +3,14 @@
 pub mod context;
 pub mod dock;
 pub mod notify;
+pub mod oauth;
 pub mod permission;
 pub mod secrets;
 pub mod shortcut;
 pub mod shortcut_generated;
 
 use dock::DockRuntime;
+use oauth::OauthRuntime;
 use shortcut::ShortcutRuntime;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -18,6 +20,7 @@ pub fn run() {
         .plugin(tauri_plugin_notification::init())
         .manage(DockRuntime::default())
         .manage(ShortcutRuntime::default())
+        .manage(OauthRuntime::default())
         .invoke_handler(tauri::generate_handler![
             dock::dock_show,
             dock::dock_hide,
@@ -27,6 +30,9 @@ pub fn run() {
             context::context_snapshot,
             permission::permission_open_settings,
             notify::notify_send,
+            oauth::oauth_listen,
+            oauth::oauth_await_callback,
+            oauth::oauth_cancel,
             secrets::secret_set,
             secrets::secret_get,
             secrets::secret_delete,
