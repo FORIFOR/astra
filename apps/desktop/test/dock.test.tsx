@@ -2,7 +2,7 @@
  * Task Dock と Context Lens。UI-1。
  * UI/UX §3・§4.3・§4.4・§5。
  */
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import type { ContextSource } from '@astra/contracts';
@@ -226,5 +226,56 @@ describe('context lens (§5)', () => {
       const labels = [...document.querySelectorAll('.astra-chip__label')].map((n) => n.textContent);
       expect(labels[0]).toBe('Q4提案.pptx');
     });
+  });
+});
+
+describe('work surface inside the dock (§4.4 / §6)', () => {
+  const view = {
+    title: 'A社 商談準備',
+    status: 'WAITING_APPROVAL' as const,
+    steps: [
+      { index: 0, state: 'done' as const, label: '関連情報を確認', detail: null },
+      { index: 1, state: 'active' as const, label: '競合情報を調査中', detail: '12 sources' },
+    ],
+    percent: 50,
+    attention: {
+      kind: 'approval' as const,
+      approvalId: 'ap-1',
+      summary: '3人にメールを送信します',
+      primaryActionLabel: '3件送信する',
+      expiresAt: new Date().toISOString(),
+    },
+    resultArtifactId: null,
+    error: null,
+    elapsedMs: 12_000,
+    lastSequence: 5,
+  };
+
+  it('keeps the progress inside the dock instead of pushing to the full app', async () => {
+    const user = userEvent.setup();
+    render(<TaskDock work={view} />);
+    // working 面へ移るには対話状態も進んでいる必要がある
+    await user.type(screen.getByLabelText('依頼を入力'), '商談準備して{Enter}');
+
+    expect(screen.getByText('A社 商談準備')).toBeTruthy();
+    expect(screen.getByText('12 sources')).toBeTruthy();
+    expect((document.querySelector('.astra-dock') as HTMLElement).dataset['geometry']).toBe(
+      'working',
+    );
+  });
+
+  it('offers the workspace only as an explicit next step', async () => {
+    const onOpenWorkspace = vi.fn();
+    const user = userEvent.setup();
+    render(<TaskDock work={view} onOpenWorkspace={onOpenWorkspace} />);
+    await user.type(screen.getByLabelText('依頼を入力'), 'x{Enter}');
+
+    await user.click(screen.getByRole('button', { name: '詳しく見る' }));
+    expect(onOpenWorkspace).toHaveBeenCalled();
+  });
+
+  it('does not show the work card while still in the ready state', () => {
+    render(<TaskDock work={view} />);
+    expect(screen.queryByText('A社 商談準備')).toBeNull();
   });
 });

@@ -77,6 +77,9 @@ importers:
 
   apps/desktop:
     dependencies:
+      '@astra/api-client':
+        specifier: workspace:*
+        version: link:../../packages/api-client
       '@astra/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
@@ -194,6 +197,19 @@ importers:
       '@astra/policy':
         specifier: workspace:*
         version: link:../policy
+
+  packages/api-client:
+    dependencies:
+      '@astra/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+      zod:
+        specifier: 'catalog:'
+        version: 4.4.3
+    devDependencies:
+      vitest:
+        specifier: 'catalog:'
+        version: 3.2.7(@types/node@22.20.1)(happy-dom@20.11.6)(terser@5.50.0)(tsx@4.23.12)(yaml@2.9.0)
 
   packages/contracts:
     dependencies:

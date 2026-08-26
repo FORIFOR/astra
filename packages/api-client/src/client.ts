@@ -1,0 +1,161 @@
+/**
+ * Astra API クライアント。実装仕様 §11 の表面をそのまま写す。
+ *
+ * 応答は必ず contracts のスキーマで検証してから返す。
+ * サーバを信用して素通しすると、契約のずれが UI の奥深くで初めて露見する。
+ */
+import {
+  Artifact,
+  CreateTaskRequest,
+  PluginCatalogEntry,
+  PluginInstall,
+  Task,
+  dockStateFor,
+  uuidv7,
+  type ApprovalDecision,
+  type ArtifactType,
+  type InstallPluginRequest,
+  type MeResponse,
+  type TaskDockState,
+} from '@astra/contracts';
+import { z } from 'zod';
+import { HttpClient, type ClientConfig } from './http.js';
+import { streamTaskEvents, type StreamOptions } from './sse.js';
+
+const page = <T extends z.ZodTypeAny>(item: T) =>
+  z.object({ items: z.array(item), next_cursor: z.string().nullable() });
+
+/** 一覧の返り値。cursor は UUIDv7 なので時系列で辿れる。 */
+export interface Page<T> {
+  readonly items: T[];
+  readonly nextCursor: string | null;
+}
+
+/** サーバが導いた Dock 表示状態を同梱した Task（実装仕様 §11）。 */
+export const TaskWithDockState = Task.extend({ dock_state: z.string().optional() });
+export interface TaskView extends Task {
+  readonly dockState: TaskDockState;
+}
+
+function toView(task: Task, dockState?: string): TaskView {
+  return {
+    ...task,
+    // サーバが付けてくれるならそれを使う。無ければ同じ規則で導く。
+    dockState: (dockState as TaskDockState | undefined) ?? dockStateFor(task.status, task.error),
+  };
+}
+
+export class AstraClient {
+  readonly http: HttpClient;
+
+  constructor(config: ClientConfig) {
+    this.http = new HttpClient(config);
+  }
+
+  me(): Promise<MeResponse> {
+    return this.http.request({ path: '/v1/me' }, (value) => value as MeResponse);
+  }
+
+  /**
+   * タスクを作る。
+   *
+   * Idempotency-Key は**呼び出し側が渡せる**ようにしてある。
+   * 再送で同じ鍵を使えるのが冪等性の意味であって、毎回新しく作ると意味が無い。
+   */
+  async createTask(
+    request: CreateTaskRequest,
+    idempotencyKey: string = uuidv7(),
+  ): Promise<TaskView> {
+    const raw = await this.http.request(
+      { method: 'POST', path: '/v1/tasks', body: request, idempotencyKey },
+      (value) => TaskWithDockState.parse(value),
+    );
+    return toView(Task.parse(raw), raw.dock_state);
+  }
+
+  async getTask(taskId: string): Promise<TaskView> {
+    const raw = await this.http.request({ path: `/v1/tasks/${taskId}` }, (value) =>
+      TaskWithDockState.parse(value),
+    );
+    return toView(Task.parse(raw), raw.dock_state);
+  }
+
+  async listTasks(options: { limit?: number; cursor?: string } = {}): Promise<Page<TaskView>> {
+    const parsed = await this.http.request(
+      { path: '/v1/tasks', query: { limit: options.limit, cursor: options.cursor } },
+      (value) => page(Task).parse(value),
+    );
+    return { items: parsed.items.map((t) => toView(t)), nextCursor: parsed.next_cursor };
+  }
+
+  async cancelTask(taskId: string, reason = 'user_requested'): Promise<TaskView> {
+    const task = await this.http.request(
+      { method: 'POST', path: `/v1/tasks/${taskId}/cancel`, body: { reason } },
+      (value) => Task.parse(value),
+    );
+    return toView(task);
+  }
+
+  async decideApproval(taskId: string, decision: ApprovalDecision): Promise<void> {
+    await this.http.send({
+      method: 'POST',
+      path: `/v1/tasks/${taskId}/approve`,
+      body: decision,
+    });
+  }
+
+  /** タスクの進捗を購読する。切断からの再開は clientside で面倒を見る（§7.3）。 */
+  streamTask(taskId: string, options: StreamOptions): Promise<number> {
+    return streamTaskEvents(this.http, taskId, options);
+  }
+
+  async listArtifacts(
+    options: { limit?: number; cursor?: string; type?: ArtifactType } = {},
+  ): Promise<Page<Artifact>> {
+    const parsed = await this.http.request(
+      {
+        path: '/v1/artifacts',
+        query: { limit: options.limit, cursor: options.cursor, type: options.type },
+      },
+      (value) => page(Artifact).parse(value),
+    );
+    return { items: parsed.items, nextCursor: parsed.next_cursor };
+  }
+
+  getArtifact(artifactId: string): Promise<Artifact> {
+    return this.http.request({ path: `/v1/artifacts/${artifactId}` }, (value) =>
+      Artifact.parse(value),
+    );
+  }
+
+  /**
+   * 本体の取得先。**raw なストレージ URL は返らない**（正本 §2.3）。
+   * 認証が要るので、そのまま `<img src>` には使えない。fetch して blob にする。
+   */
+  artifactContentUrl(artifactId: string): string {
+    return this.http.urlFor(`/v1/artifacts/${artifactId}/content`);
+  }
+
+  async artifactContent(artifactId: string): Promise<Blob> {
+    const response = await this.http.send({ path: `/v1/artifacts/${artifactId}/content` });
+    return response.blob();
+  }
+
+  async pluginCatalog(): Promise<PluginCatalogEntry[]> {
+    const parsed = await this.http.request({ path: '/v1/plugins/catalog' }, (value) =>
+      z.object({ items: z.array(PluginCatalogEntry) }).parse(value),
+    );
+    return parsed.items;
+  }
+
+  installPlugin(pluginId: string, request: InstallPluginRequest): Promise<PluginInstall> {
+    return this.http.request(
+      { method: 'POST', path: `/v1/plugins/${pluginId}/install`, body: request },
+      (value) => PluginInstall.parse(value),
+    );
+  }
+
+  async uninstallPlugin(pluginId: string): Promise<void> {
+    await this.http.send({ method: 'DELETE', path: `/v1/plugins/${pluginId}` });
+  }
+}

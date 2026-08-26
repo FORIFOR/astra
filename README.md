@@ -25,7 +25,8 @@ OS のどこからでも呼び出せる **Task Dock**。North Star は **Intent 
 - Phase 1: **UI-0・UI-1 完了**。
   UI-0 = design tokens + shell + shared state（Light・Dark + 4-tab shell）。
   UI-1 = Task Dock + Context Lens（OS 上で intent → context 確認）。
-  次は UI-2（Work Surface + progress + result）。
+  UI-2 = Work Surface + progress + result（durable task の状態が見える）。
+  次は UI-3（Home / Work / Library の task → artifact continuity）。
 
 実装順は正本 §28 に従う。
 
@@ -48,6 +49,7 @@ apps/share-web       共有リンクの公開 viewer
 services/*           Cloud Control Plane（正本 §17 のサービス境界）
 workers/*            Temporal worker
 packages/contracts   Zod を一次ソースとする API / イベント契約
+packages/api-client  contracts に対する HTTP / SSE クライアント
 packages/db          PostgreSQL 型付きアクセスとテナント境界
 packages/*           ui-kit / agent-sdk / plugin-sdk / policy / telemetry
 plugins/builtin/*    同梱プラグインの manifest

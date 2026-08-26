@@ -2,13 +2,13 @@
   "files": [],
   "references": [
     {
+      "path": "./packages/agent-sdk"
+    },
+    {
+      "path": "./packages/api-client"
+    },
+    {
       "path": "./packages/contracts"
-    },
-    {
-      "path": "./packages/telemetry"
-    },
-    {
-      "path": "./packages/policy"
     },
     {
       "path": "./packages/db"
@@ -17,58 +17,61 @@
       "path": "./packages/plugin-sdk"
     },
     {
-      "path": "./packages/agent-sdk"
+      "path": "./packages/policy"
+    },
+    {
+      "path": "./packages/telemetry"
     },
     {
       "path": "./packages/ui-kit"
     },
     {
-      "path": "./services/api-gateway"
+      "path": "./services/agent-runtime"
     },
     {
-      "path": "./services/conversation"
+      "path": "./services/api-gateway"
     },
     {
       "path": "./services/context"
     },
     {
-      "path": "./services/task"
-    },
-    {
-      "path": "./services/research"
-    },
-    {
-      "path": "./services/meeting"
+      "path": "./services/conversation"
     },
     {
       "path": "./services/library"
     },
     {
-      "path": "./services/share"
-    },
-    {
-      "path": "./services/plugin-registry"
-    },
-    {
-      "path": "./services/agent-runtime"
-    },
-    {
-      "path": "./services/world-model"
+      "path": "./services/meeting"
     },
     {
       "path": "./services/notification"
     },
     {
-      "path": "./workers/research-worker"
+      "path": "./services/plugin-registry"
+    },
+    {
+      "path": "./services/research"
+    },
+    {
+      "path": "./services/share"
+    },
+    {
+      "path": "./services/task"
+    },
+    {
+      "path": "./services/world-model"
     },
     {
       "path": "./workers/document-worker"
     },
     {
+      "path": "./workers/domain-worker"
+    },
+    {
       "path": "./workers/media-worker"
     },
     {
-      "path": "./workers/domain-worker"
+      "path": "./workers/research-worker"
     }
   ]
 }

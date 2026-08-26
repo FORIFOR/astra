@@ -9,15 +9,26 @@ import { DOCK_MAX_INPUT_LINES, dockGeometry, dockGeometryFor } from '@astra/ui-k
 import type { ContextSource } from '@astra/contracts';
 import { useDockMachine } from './useDockMachine.js';
 import { ContextLens } from './ContextLens.js';
+import { WorkCard } from '../work/WorkCard.js';
+import type { WorkView } from '../work/workView.js';
 import { host } from '../host/tauri.js';
-
-/** §3 の各状態でユーザーに見せる短い status。spinner だけの状態を作らない。 */
-const STATUS_TEXT: Partial<Record<ReturnType<typeof dockGeometryFor>, string>> = {};
+import '../work/work.css';
 
 export function TaskDock({
   initialSources = [],
+  work = null,
+  onApprove,
+  onReject,
+  onStop,
+  onOpenWorkspace,
 }: {
   initialSources?: readonly ContextSource[];
+  /** 進行中の仕事。あれば working 面に出す（§6）。 */
+  work?: WorkView | null;
+  onApprove?(approvalId: string): void;
+  onReject?(approvalId: string): void;
+  onStop?(): void;
+  onOpenWorkspace?(): void;
 }): ReactElement {
   const machine = useDockMachine();
   const [sources, setSources] = useState<readonly ContextSource[]>(initialSources);
@@ -141,10 +152,21 @@ export function TaskDock({
         </button>
       </div>
 
-      {statusLabel && (
+      {statusLabel && !work && (
         <p className="astra-dock__status" role="status">
           {statusLabel}
         </p>
+      )}
+
+      {/* §4.4: 簡単な返事のために full app へ遷移しない。進行は Dock の中で見せる。 */}
+      {work && geometry === 'working' && (
+        <WorkCard
+          view={work}
+          {...(onApprove ? { onApprove } : {})}
+          {...(onReject ? { onReject } : {})}
+          {...(onStop ? { onStop } : {})}
+          {...(onOpenWorkspace ? { onOpen: onOpenWorkspace } : {})}
+        />
       )}
 
       <ContextLens
@@ -158,5 +180,3 @@ export function TaskDock({
     </div>
   );
 }
-
-export { STATUS_TEXT };
