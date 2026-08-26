@@ -261,6 +261,106 @@ describe.skipIf(!url)('task and artifact http surface', () => {
     });
   });
 
+  describe('GET /v1/tasks/{id}/receipts', () => {
+    /** 承認された step と、その結果の receipt を 1 組置く。 */
+    const seedReceipt = async (
+      taskId: string,
+      over: { risk?: string; stepIndex?: number; approved?: boolean } = {},
+    ): Promise<void> => {
+      const stepIndex = over.stepIndex ?? 0;
+      const risk = over.risk ?? 'EXTERNAL_COMMIT';
+      const approved = over.approved ?? true;
+      await withTenant(harness.db, tenantId, async (tx) => {
+        if (approved) {
+          await tx
+            .insertInto('approvals')
+            .values({
+              id: uuidv7(),
+              tenant_id: tenantId,
+              task_id: taskId,
+              step_index: stepIndex,
+              risk,
+              summary: '3人にメールを送信します',
+              details: JSON.stringify({ items: [], impact: {} }),
+              editable_fields: JSON.stringify([]),
+              status: 'APPROVED',
+              expires_at: new Date(Date.now() + 60_000),
+              decided_by: userId,
+              decided_at: new Date(),
+            })
+            .execute();
+        }
+        await tx
+          .insertInto('action_receipts')
+          .values({
+            id: uuidv7(),
+            tenant_id: tenantId,
+            task_id: taskId,
+            tool_id: 'gmail.send',
+            actor: 'agent',
+            inputs_hash: 'a'.repeat(64),
+            result_ref: null,
+            risk,
+            approved_by: approved ? userId : null,
+            reversible_until: null,
+            executed_at: new Date(),
+            step_index: stepIndex,
+          })
+          .execute();
+      });
+    };
+
+    it('returns the sentence the user agreed to, not the audit row', async () => {
+      const created = (await createTask(`k-${uuidv7()}`)).json<Task>();
+      await seedReceipt(created.id);
+
+      const res = await app.inject({
+        method: 'GET',
+        url: `/v1/tasks/${created.id}/receipts`,
+        headers: auth,
+      });
+      expect(res.statusCode).toBe(200);
+      const items = res.json<{ items: { summary: string; approved_by_name: string }[] }>().items;
+      expect(items).toHaveLength(1);
+      expect(items[0]!.summary).toBe('3人にメールを送信します');
+      expect(items[0]!.approved_by_name).not.toBeNull();
+    });
+
+    it('leaves the summary empty when nothing was confirmed', async () => {
+      const created = (await createTask(`k-${uuidv7()}`)).json<Task>();
+      await seedReceipt(created.id, { risk: 'REVERSIBLE_WRITE', approved: false });
+
+      const items = (
+        await app.inject({
+          method: 'GET',
+          url: `/v1/tasks/${created.id}/receipts`,
+          headers: auth,
+        })
+      ).json<{ items: { summary: string | null; approved_by_name: string | null }[] }>().items;
+      // それらしい文を作らない
+      expect(items[0]!.summary).toBeNull();
+      expect(items[0]!.approved_by_name).toBeNull();
+    });
+
+    it('hides another tenant behind 404 rather than an empty list', async () => {
+      const created = (await createTask(`k-${uuidv7()}`)).json<Task>();
+      await seedReceipt(created.id);
+
+      const other = await app.inject({
+        method: 'POST',
+        url: '/v1/auth/dev/token',
+        payload: { email: `o-${uuidv7()}@example.com`, display_name: 'O' },
+      });
+      const res = await app.inject({
+        method: 'GET',
+        url: `/v1/tasks/${created.id}/receipts`,
+        headers: { authorization: `Bearer ${other.json<TokenResponse>().access_token}` },
+      });
+      // 空リストだと「操作が無かった」と読める。存在ごと隠す。
+      expect(res.statusCode).toBe(404);
+    });
+  });
+
   describe('GET /v1/tasks/{id}/stream', () => {
     it('replays the whole stream and closes on the terminal event', async () => {
       const created = (await createTask(`k-${uuidv7()}`)).json<Task>();

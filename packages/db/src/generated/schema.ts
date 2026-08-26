@@ -36,6 +36,10 @@ export interface ActionReceipts {
   result_ref: string | null;
   reversible_until: Timestamp | null;
   risk: string;
+  /**
+   * 受け取り元の step。古い行は NULL（後から復元できないため埋めていない）。
+   */
+  step_index: number | null;
   task_id: string;
   tenant_id: string;
   tool_id: string;

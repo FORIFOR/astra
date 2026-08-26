@@ -12,6 +12,7 @@ import {
   PackRecommendation,
   DailyBrief,
   DashboardView,
+  ActionReceiptView,
   CreateTaskRequest,
   Meeting,
   MeetingSegment,
@@ -139,6 +140,14 @@ export class AstraClient {
       (value) => Task.parse(value),
     );
     return toView(task);
+  }
+
+  /** 受け取りの控え。UI/UX §22。新しい順。 */
+  async taskReceipts(taskId: string): Promise<ActionReceiptView[]> {
+    return this.http.request(
+      { method: 'GET', path: `/v1/tasks/${taskId}/receipts` },
+      (value) => z.object({ items: z.array(ActionReceiptView) }).parse(value).items,
+    );
   }
 
   async decideApproval(taskId: string, decision: ApprovalDecision): Promise<void> {

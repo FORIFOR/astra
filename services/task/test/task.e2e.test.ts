@@ -242,6 +242,59 @@ describe.skipIf(!url)('task runtime end to end', () => {
       expect(external).toHaveLength(1);
       // 「その操作は誰の判断だったか」を後から答えられること（正本 §9.4）
       expect(external[0]!.approved_by).toBe(userId);
+      // どの step の結果かを残す。残さないと人の言葉で言えない（UI/UX §22）
+      expect(external[0]!.step_index).not.toBeNull();
+
+      /*
+       * UI/UX §22: 一般ユーザーには、監査ログではなく
+       * **人が読める控え**を返す。文面は承認時に読んだものと同じであること。
+       */
+      const view = await service.receipts(tenantId, task.id);
+      const commit = view.find((r) => r.risk === 'EXTERNAL_COMMIT');
+      expect(commit).toBeDefined();
+      const approvalRow = await withTenant(db, tenantId, (tx) =>
+        tx
+          .selectFrom('approvals')
+          .select(['summary'])
+          .where('task_id', '=', task.id)
+          .executeTakeFirstOrThrow(),
+      );
+      expect(commit!.summary).toBe(approvalRow.summary);
+      expect(commit!.approved_by_name).not.toBeNull();
+      // 新しい順
+      const stamps = view.map((r) => new Date(r.executed_at).getTime());
+      expect([...stamps].sort((a, b) => b - a)).toEqual(stamps);
+    }, 60_000);
+
+    it('does not invent a summary for a write that needed no confirmation', async () => {
+      const { task } = await service.create({
+        tenantId,
+        userId,
+        request: { kind: 'echo', input: { message: 'quiet write' } },
+        idempotencyKey: `k-${uuidv7()}`,
+      });
+      await waitForWorkflow(task.id);
+
+      const view = await service.receipts(tenantId, task.id);
+      for (const receipt of view.filter((r) => r.approved_by_name === null)) {
+        // 承認していないものに、それらしい文面を作らない
+        expect(receipt.summary).toBeNull();
+      }
+    }, 60_000);
+
+    it("refuses to read another tenant's receipts", async () => {
+      const { task } = await service.create({
+        tenantId,
+        userId,
+        request: { kind: 'echo', input: { message: 'mine' } },
+        idempotencyKey: `k-${uuidv7()}`,
+      });
+      await waitForWorkflow(task.id);
+
+      // receipt の有無で存在を漏らさない。まず 404 になる。
+      await expect(service.receipts(uuidv7(), task.id)).rejects.toMatchObject({
+        code: 'task.not_found',
+      });
     }, 60_000);
 
     it('cancels the task when rejected and performs no external write', async () => {

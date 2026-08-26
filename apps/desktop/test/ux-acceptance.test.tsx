@@ -24,6 +24,7 @@ import { MeetingSurface } from '../src/meeting/MeetingSurface.js';
 import { MeetingArtifact } from '../src/meeting/MeetingArtifact.js';
 import { DashboardRenderer } from '../src/apps/DashboardRenderer.js';
 import { WorkCard } from '../src/work/WorkCard.js';
+import { ReceiptList } from '../src/work/Receipts.js';
 import { ATTENTION_LIMIT, buildAttentionFeed } from '../src/home/attention.js';
 import { RecordingIndicator } from '../src/meeting/RecordingIndicator.js';
 import { StartConfirmation } from '../src/meeting/StartConfirmation.js';
@@ -166,6 +167,33 @@ describe('AC-06: an external commit is confirmed and leaves a receipt', () => {
     );
     expect(screen.getByText('A社へ見積を送ります')).toBeTruthy();
     expect(screen.getByRole('button', { name: '送信する' })).toBeTruthy();
+  });
+
+  it('leaves a receipt the person can read afterwards', () => {
+    // 承認した文面と同じものが、あとから残っていること（§14.1・§22）
+    render(
+      <ReceiptList
+        receipts={[
+          {
+            id: uuidv7(),
+            task_id: uuidv7(),
+            summary: 'A社へ見積を送ります',
+            risk: 'EXTERNAL_COMMIT',
+            actor: 'agent',
+            approved_by_name: '堀尾',
+            executed_at: '2026-08-27T03:30:00.000Z',
+            reversible_until: null,
+            result_ref: null,
+            tool_id: 'gmail.send',
+          } as never,
+        ]}
+        now={new Date('2026-08-27T04:00:00.000Z')}
+      />,
+    );
+    expect(screen.getByText('A社へ見積を送ります')).toBeTruthy();
+    expect(screen.getByText('堀尾 が確認しました')).toBeTruthy();
+    // 監査ログの用語をそのまま出さない
+    expect(screen.queryByText('EXTERNAL_COMMIT')).toBeNull();
   });
 });
 

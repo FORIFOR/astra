@@ -486,6 +486,9 @@ export function createTaskActivities(deps: ActivityDeps): TaskActivities {
               approved_by: approver,
               reversible_until: null,
               executed_at: now(),
+              // どの step の結果かを残す。**残さないと「何をしたか」を人の言葉で言えない**
+              // （UI/UX §22。承認文面へはこれで辿る）。
+              step_index: step.index,
             })
             .onConflict((oc) => oc.columns(['task_id', 'tool_id', 'inputs_hash']).doNothing())
             .execute();

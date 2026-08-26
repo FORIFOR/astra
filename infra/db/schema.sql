@@ -69,6 +69,7 @@ CREATE TABLE public.action_receipts (
     approved_by uuid,
     reversible_until timestamp with time zone,
     executed_at timestamp with time zone DEFAULT now() NOT NULL,
+    step_index integer,
     CONSTRAINT action_receipts_actor_check CHECK ((actor = ANY (ARRAY['user'::text, 'agent'::text, 'system'::text]))),
     CONSTRAINT action_receipts_inputs_hash_check CHECK ((inputs_hash ~ '^[0-9a-f]{64}$'::text))
 );
@@ -1266,6 +1267,13 @@ CREATE INDEX action_receipts_by_task ON public.action_receipts USING btree (tena
 --
 
 CREATE UNIQUE INDEX action_receipts_idem ON public.action_receipts USING btree (task_id, tool_id, inputs_hash);
+
+
+--
+-- Name: action_receipts_task_executed_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX action_receipts_task_executed_idx ON public.action_receipts USING btree (tenant_id, task_id, executed_at DESC);
 
 
 --
@@ -3008,3 +3016,4 @@ INSERT INTO schema_migrations (version) VALUES ('20260827010001');
 INSERT INTO schema_migrations (version) VALUES ('20260827020001');
 INSERT INTO schema_migrations (version) VALUES ('20260827030001');
 INSERT INTO schema_migrations (version) VALUES ('20260827040001');
+INSERT INTO schema_migrations (version) VALUES ('20260827050001');

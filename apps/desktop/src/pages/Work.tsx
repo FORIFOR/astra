@@ -9,6 +9,7 @@ import type { TaskView } from '@astra/api-client';
 import type { TaskStatus } from '@astra/contracts';
 import { WorkCard } from '../work/WorkCard.js';
 import { useTaskStream } from '../work/useTaskStream.js';
+import { Receipts } from '../work/Receipts.js';
 import type { AstraClient } from '@astra/api-client';
 import '../work/work.css';
 
@@ -123,6 +124,11 @@ export function WorkPage({
             </p>
           )}
           <WorkCard view={view} onOpen={() => undefined} />
+          {/* §9.2 Outputs / §14.1: 承認した操作は、あとから本人が辿れる */}
+          <section className="astra-work-outputs" aria-label="実行した操作">
+            <h3>実行した操作</h3>
+            <Receipts client={client} taskId={openTaskId} />
+          </section>
         </>
       )}
     </section>

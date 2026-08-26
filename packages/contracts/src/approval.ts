@@ -96,5 +96,39 @@ export const ActionReceipt = z.object({
   approved_by: UserId.nullable(),
   reversible_until: Timestamp.nullable(),
   executed_at: Timestamp,
+  /** どの step の結果か。古い行は null（後から復元できない）。 */
+  step_index: z.number().int().min(0).nullable().default(null),
 });
 export type ActionReceipt = z.infer<typeof ActionReceipt>;
+
+/**
+ * 受け取りの控え。UI/UX §22「一般ユーザーには Action Receipt を人間可読に提示する」。
+ *
+ * 生の receipt は tool_id と inputs_hash しか持たない。**それは控えではない。**
+ * 「何をしたか」は、承認したときに読んだ文面（approvals.summary）が正で、
+ * それが無い操作（確認の要らない write）では **無いと言う**。
+ * 表示のために、それらしい文をこちらで作らない。
+ */
+export const ActionReceiptView = z.object({
+  id: ReceiptId,
+  task_id: TaskId,
+  /** 承認時に読んだ文面。確認を要さなかった操作では null。 */
+  summary: z.string().nullable(),
+  risk: ActionRisk,
+  actor: z.enum(['user', 'agent', 'system']),
+  /** 承認した人の表示名。承認が要らなかったなら null。 */
+  approved_by_name: z.string().nullable(),
+  executed_at: Timestamp,
+  /** 取り消せる期限。無期限に取り消せるかのように見せない。 */
+  reversible_until: Timestamp.nullable(),
+  /** 参照できる成果物。無ければ null。 */
+  result_ref: z.string().nullable(),
+  /** 技術的な識別子。詳細を開いたときだけ出す（§9.2 Activity 相当）。 */
+  tool_id: z.string(),
+});
+export type ActionReceiptView = z.infer<typeof ActionReceiptView>;
+
+/** いま取り消せるか。期限そのものを見せるだけでは、過ぎたかどうかを読ませてしまう。 */
+export function isReversible(receipt: ActionReceiptView, now: Date = new Date()): boolean {
+  return receipt.reversible_until !== null && new Date(receipt.reversible_until) > now;
+}

@@ -70,6 +70,13 @@ export function registerTaskRoutes(app: App, deps: TaskRouteDeps): void {
     return { ...task, dock_state: dockStateFor(task.status, task.error) };
   });
 
+  app.get<{ Params: { taskId: string } }>('/v1/tasks/:taskId/receipts', async (request) => {
+    const principal = requirePrincipal();
+    // UI/UX §22: 監査ログは管理者向け。本人には受け取りの控えを人が読める形で返す。
+    const items = await deps.tasks.receipts(principal.tenantId, request.params.taskId);
+    return { items };
+  });
+
   app.post<{ Params: { taskId: string } }>('/v1/tasks/:taskId/cancel', async (request) => {
     const principal = requirePrincipal();
     const body = CancelTaskRequest.parse(request.body ?? {});

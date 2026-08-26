@@ -4,6 +4,7 @@
  * HTTP を知らない。Fastify 型はここへ持ち込まない（ADR 0004）。
  */
 import {
+  ActionReceiptView,
   AstraError,
   Task,
   isTerminal,
@@ -204,6 +205,60 @@ export class TaskService {
         items: page.map(toTask),
         nextCursor: rows.length > limit ? (page.at(-1)?.id ?? null) : null,
       };
+    });
+  }
+
+  /**
+   * この仕事の受け取りの控え。UI/UX §22・§14.1。
+   *
+   * **人が読める文面は、承認したときに読んだものが正。**
+   * approvals.summary へ step_index で辿る。承認が要らなかった write は
+   * 文面が無いので null のまま返す。ここで作文しない。
+   */
+  async receipts(tenantId: string, taskId: string): Promise<ActionReceiptView[]> {
+    return withTenant(this.#db, tenantId, async (tx) => {
+      // 存在しない / 他テナントなら 404。receipt の有無で存在を漏らさない。
+      await loadTask(tx, taskId);
+
+      const rows = await tx
+        .selectFrom('action_receipts as r')
+        .leftJoin('approvals as a', (join) =>
+          join
+            .onRef('a.task_id', '=', 'r.task_id')
+            .onRef('a.step_index', '=', 'r.step_index')
+            .on('a.status', '=', 'APPROVED'),
+        )
+        .leftJoin('users as u', 'u.id', 'r.approved_by')
+        .select([
+          'r.id',
+          'r.task_id',
+          'r.tool_id',
+          'r.actor',
+          'r.risk',
+          'r.result_ref',
+          'r.reversible_until',
+          'r.executed_at',
+          'a.summary',
+          'u.display_name',
+        ])
+        .where('r.task_id', '=', taskId)
+        .orderBy('r.executed_at', 'desc')
+        .execute();
+
+      return rows.map((row) =>
+        ActionReceiptView.parse({
+          id: row.id,
+          task_id: row.task_id,
+          summary: row.summary,
+          risk: row.risk,
+          actor: row.actor,
+          approved_by_name: row.display_name,
+          executed_at: row.executed_at.toISOString(),
+          reversible_until: row.reversible_until?.toISOString() ?? null,
+          result_ref: row.result_ref,
+          tool_id: row.tool_id,
+        }),
+      );
     });
   }
 

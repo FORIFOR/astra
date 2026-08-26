@@ -217,3 +217,40 @@
   justify-content: flex-end;
   gap: var(--astra-space-compact);
 }
+
+/* 受け取りの控え（UI/UX §22・§14.1）。 */
+.astra-receipts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--astra-space-sm, 8px);
+}
+
+.astra-receipt {
+  border: 1px solid var(--astra-color-border);
+  border-radius: var(--astra-radius-md, 8px);
+  padding: var(--astra-space-sm, 8px);
+  display: grid;
+  gap: var(--astra-space-xs, 4px);
+}
+
+.astra-receipt__what {
+  color: var(--astra-color-text);
+  margin: 0;
+}
+
+.astra-receipt__meta,
+.astra-receipt__recovery {
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-sm, 0.875rem);
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--astra-space-xs, 4px);
+}
+
+.astra-receipt__detail {
+  font-size: var(--astra-font-size-sm, 0.875rem);
+  color: var(--astra-color-muted);
+}
