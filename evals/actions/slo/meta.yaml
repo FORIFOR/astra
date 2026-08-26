@@ -1,0 +1,8 @@
+# 実装仕様 §14.2 の eval harness 契約
+phase: slo
+tags: [acceptance, blocking]
+blocking: true
+description: >
+  正本 §23 / UI/UX §23 の UX Performance SLO。
+  **代役で速く見えるものは測らない。**測ったものだけを MEASURED に載せ、
+  測っていないものは理由と一緒に残す。

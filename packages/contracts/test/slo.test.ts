@@ -8,8 +8,10 @@ import {
   MEASURED,
   PROGRESS_REQUIRED_AFTER_MS,
   SLO_TARGETS,
+  WHY_NOT_MEASURED,
   p95,
   withinBudget,
+  type SloName,
 } from '../src/slo.js';
 
 describe('SLO_TARGETS', () => {
@@ -57,5 +59,25 @@ describe('p95', () => {
 
   it('handles a single sample', () => {
     expect(p95([42])).toBe(42);
+  });
+});
+
+describe('what we admit to not measuring', () => {
+  it('accounts for every target, one way or the other', () => {
+    const names = Object.keys(SLO_TARGETS) as SloName[];
+    for (const name of names) {
+      const measured = MEASURED.includes(name);
+      const excused = WHY_NOT_MEASURED[name] !== undefined;
+      // 測っているか、なぜ測っていないかを言うか。**どちらでもない状態を作らない。**
+      expect(measured !== excused).toBe(true);
+    }
+  });
+
+  it('gives a reason, not just a promise', () => {
+    for (const reason of Object.values(WHY_NOT_MEASURED)) {
+      expect(reason.length).toBeGreaterThan(10);
+      // 「あとで」「TODO」で済ませない
+      expect(reason).not.toMatch(/TODO|あとで|そのうち/);
+    }
   });
 });

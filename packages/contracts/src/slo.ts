@@ -92,7 +92,35 @@ export type SloName = keyof typeof SLO_TARGETS;
 export const MEASURED: readonly SloName[] = [
   // Phase 0 の受け入れ（AC-6）が、進捗の間隔をこの予算で見ている
   'simpleReadTool',
+  // evals/actions/slo が、実プロセスを通して受付までの時間を見ている
+  'researchAcknowledgement',
 ];
+
+/**
+ * なぜ測っていないか。**「まだ」と書くだけにしない。**
+ *
+ * 測れない理由は 2 種類しかない:
+ *   - 代役を挟むと数字の意味が変わる（実モデル・実音声・実描画が要る）
+ *   - 測る場所がまだ無い
+ * どちらなのかを書いておかないと、「そのうち測る」が永久に続く。
+ *
+ * MEASURED と合わせて `SloName` を過不足なく覆う（slo.test.ts で機械的に見る）。
+ */
+export const WHY_NOT_MEASURED: Readonly<Partial<Record<SloName, string>>> = {
+  dockShow:
+    'window が出て入力できるまでの実測が要る。jsdom は実際の描画より速いので、' +
+    'ここで通しても守れている証拠にならない。',
+  micCaptureStart: '実際の入力装置が要る。代役では OS の取り込み時間が入らない。',
+  localSttFirstPartial: '手元の認識モデルが要る。代役の即答を測っても意味がない。',
+  textFirstToken: '実際の言語モデルが要る。決定的な代役では最初の 1 文字が即座に出る。',
+  firstResearchEvidence:
+    '検索の外部提供者が要る。代役の corpus では往復が入らず、' + '自前の処理時間しか測れない。',
+  meetingLiveTranscript: '実音声と認識モデルが要る。台本の代役では体感時間にならない。',
+  translationAfterSegment: '実際の翻訳提供者が要る。',
+  homeCachedLoad:
+    'これは「手元の内容が画面に出るまで」なので、実際の描画が要る。' +
+    'サーバの応答時間だけを測って守れているとは言えない。',
+};
 
 /** 2 秒を超える処理には進捗を出す（正本 §4.3・§23）。 */
 export const PROGRESS_REQUIRED_AFTER_MS = 2_000;
