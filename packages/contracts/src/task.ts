@@ -2,6 +2,7 @@
  * Task。正本 §4.2 / §19 / §24、実装仕様 §3.3 / §6。
  */
 import { z } from 'zod';
+import { PROGRESS_REQUIRED_AFTER_MS } from './slo.js';
 import { ArtifactId, ConversationId, TaskId, TenantId, UserId } from './ids.js';
 import { JsonObject, Timestamp } from './primitives.js';
 import { ErrorCode } from './errors.js';
@@ -171,4 +172,8 @@ export function dockStateFor(status: TaskStatus, error?: TaskError | null): Task
 }
 
 /** 正本 §4.3「2秒を超える処理は progress event を出す」。受け入れテスト AC-6 の閾値。 */
-export const PROGRESS_HEARTBEAT_MAX_MS = 2000;
+/**
+ * 2 秒を超える処理には進捗を出す（正本 §4.3・§23）。
+ * 数字は §23 の表（`slo.ts`）から引く。ここで別に持たない。
+ */
+export const PROGRESS_HEARTBEAT_MAX_MS = PROGRESS_REQUIRED_AFTER_MS;
