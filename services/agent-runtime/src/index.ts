@@ -1,11 +1,16 @@
 /**
  * @astra/service-agent-runtime
  *
- * Skills, tools, domain policies and agent delegation.
- *
- * Phase 0 scaffold only — no implementation yet.
- * Normative spec: docs/spec/phase-0-implementation-spec.md
- * Product spec:   docs/spec/new_ai_platform_design_spec_v0.1.md
+ * Skill / tool / domain entity と、専業 Agent の土台。
+ * 正本 §14・§15、実装仕様: docs/spec/phase-5-implementation-spec.md
  */
-
-export const SERVICE_AGENT_RUNTIME_PACKAGE = '@astra/service-agent-runtime' as const;
+export { DomainService, type CreateEntityInput, type DomainDeps } from './domain.js';
+export {
+  SALES_CRM_ENTITIES,
+  nextBestActions,
+  pipelineSummary,
+  type NextBestAction,
+  type PipelineStage,
+} from './sales-crm.js';
+export { salesCrmDataSources } from './data-sources.js';
+export { entityDefinitions, type AssetReader } from './definitions.js';

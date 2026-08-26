@@ -1,0 +1,134 @@
+{
+  "entities": [
+    {
+      "id": "account",
+      "title": "取引先",
+      "title_field": "name",
+      "fields": [
+        {
+          "id": "name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "industry",
+          "type": "text",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "contact",
+      "title": "担当者",
+      "title_field": "name",
+      "fields": [
+        {
+          "id": "name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "email",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "account",
+          "type": "reference",
+          "entity": "account",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "opportunity",
+      "title": "商談",
+      "title_field": "name",
+      "fields": [
+        {
+          "id": "name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "amount",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "stage",
+          "type": "enum",
+          "values": [
+            "lead",
+            "qualified",
+            "proposal",
+            "won",
+            "lost"
+          ],
+          "required": true
+        },
+        {
+          "id": "close_date",
+          "type": "date",
+          "required": false
+        },
+        {
+          "id": "account",
+          "type": "reference",
+          "entity": "account",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "activity",
+      "title": "活動",
+      "title_field": "summary",
+      "fields": [
+        {
+          "id": "summary",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "occurred_at",
+          "type": "date",
+          "required": true
+        },
+        {
+          "id": "kind",
+          "type": "enum",
+          "values": [
+            "call",
+            "meeting",
+            "email",
+            "note"
+          ],
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "next_action",
+      "title": "次の一手",
+      "title_field": "what",
+      "fields": [
+        {
+          "id": "what",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "due",
+          "type": "date",
+          "required": false
+        },
+        {
+          "id": "why",
+          "type": "text",
+          "required": true
+        }
+      ]
+    }
+  ]
+}

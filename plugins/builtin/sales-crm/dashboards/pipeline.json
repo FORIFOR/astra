@@ -1,0 +1,10 @@
+{
+  "id": "pipeline",
+  "title": "パイプライン",
+  "layout": "grid",
+  "items": [
+    { "type": "metric", "title": "進行中の合計", "bind": "crm.open_total", "span": 4 },
+    { "type": "chart", "title": "stage ごと", "bind": "crm.by_stage", "span": 8 },
+    { "type": "table", "title": "放置されている商談", "bind": "crm.stale", "span": 12 }
+  ]
+}

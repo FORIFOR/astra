@@ -24,6 +24,7 @@ import {
   type PluginManifest,
 } from '@astra/contracts';
 import { withSystem, withTenant, type DbHandle, type ScopedDb } from '@astra/db';
+import type { InstalledAgent } from '@astra/service-task';
 import type { DataSourceResolver } from './data-sources.js';
 import { appendAuditEvent } from '@astra/telemetry';
 import {
@@ -530,6 +531,76 @@ export class PluginRegistryService {
   }
 
   /**
+   * install 済みの agent を、実行に要る事実ごと返す。
+   *
+   * **uninstall した plugin の agent は返さない**（AC5-6）。
+   * 宣言に無い tool は載せない（AC5-2 / D-42）。
+   */
+  async installedAgent(
+    tenantId: string,
+    pluginId: string,
+    agentId: string,
+  ): Promise<InstalledAgent | null> {
+    const install = await withTenant(this.#db, tenantId, (tx) =>
+      tx
+        .selectFrom('plugin_installs')
+        .select(['id', 'version'])
+        .where('plugin_id', '=', pluginId)
+        .where('state', '=', 'INSTALLED')
+        .executeTakeFirst(),
+    );
+    if (!install) return null;
+
+    const version = await withSystem(this.#db, (tx) =>
+      tx
+        .selectFrom('plugin_versions')
+        .select(['manifest'])
+        .where('plugin_id', '=', pluginId)
+        .where('version', '=', install.version)
+        .executeTakeFirst(),
+    );
+    if (!version) return null;
+
+    const manifest = version.manifest as unknown as PluginManifest;
+    const agent = manifest.agents.find((a) => a.id === agentId);
+    if (!agent) return null;
+
+    // 宣言された tool だけ。agent が参照していても manifest に無い tool は載せない。
+    const declared = new Map(manifest.tools.map((t) => [t.id, t]));
+    const tools = agent.tools
+      .map((id) => declared.get(id))
+      .filter((t): t is NonNullable<typeof t> => t !== undefined)
+      .map((t) => ({
+        id: t.id,
+        risk: t.risk,
+        surface: t.surface,
+        requiresConfirmation: t.requires_confirmation,
+      }));
+
+    const granted = await withTenant(this.#db, tenantId, (tx) =>
+      tx
+        .selectFrom('plugin_permissions')
+        .select(['scope'])
+        .where('install_id', '=', install.id)
+        .where('granted', '=', true)
+        .execute(),
+    );
+
+    // skill は実体ファイルから読む（AC5-5）。manifest の宣言だけでは中身が無い。
+    const skillFile = await this.asset(pluginId, install.version, agent.skill);
+
+    return {
+      pluginId,
+      agentId,
+      agentName: manifest.name,
+      tools,
+      skill: skillFile ? skillFile.toString('utf8') : null,
+      grantedScopes: granted.map((g) => g.scope),
+      requiredScopes: manifest.permissions,
+    };
+  }
+
+  /**
    * install 済み plugin が持ち込んだ MCP サーバ。
    *
    * **接続はここでしない。**接続するかどうかは、trust state と
@@ -707,6 +778,51 @@ export class PluginRegistryService {
         .execute(),
     );
     return [...new Set([...rows.map((r) => r.scope as PermissionScope), ...extra])];
+  }
+
+  /**
+   * install 済み plugin の asset を、そのテナントが使っている版から読む。
+   * **install していない plugin の中身は返さない。**
+   */
+  async installedAsset(
+    tenantId: string,
+    pluginId: string,
+    assetPath: string,
+  ): Promise<Buffer | null> {
+    const install = await withTenant(this.#db, tenantId, (tx) =>
+      tx
+        .selectFrom('plugin_installs')
+        .select(['version'])
+        .where('plugin_id', '=', pluginId)
+        .where('state', '=', 'INSTALLED')
+        .executeTakeFirst(),
+    );
+    if (!install) return null;
+    return this.asset(pluginId, install.version, assetPath);
+  }
+
+  /** その plugin が宣言した `data_extensions` のパス。 */
+  async dataExtensions(tenantId: string, pluginId: string): Promise<string[]> {
+    const install = await withTenant(this.#db, tenantId, (tx) =>
+      tx
+        .selectFrom('plugin_installs')
+        .select(['version'])
+        .where('plugin_id', '=', pluginId)
+        .where('state', '=', 'INSTALLED')
+        .executeTakeFirst(),
+    );
+    if (!install) return [];
+
+    const version = await withSystem(this.#db, (tx) =>
+      tx
+        .selectFrom('plugin_versions')
+        .select(['manifest'])
+        .where('plugin_id', '=', pluginId)
+        .where('version', '=', install.version)
+        .executeTakeFirst(),
+    );
+    if (!version) return [];
+    return [...(version.manifest as unknown as PluginManifest).data_extensions];
   }
 
   /**

@@ -49,6 +49,14 @@ export interface TaskWorkflowInput {
   readonly userId: string;
   readonly kind: string;
   readonly input: Record<string, unknown>;
+  /**
+   * 作成時に確定した計画（D-40）。
+   *
+   * **workflow に計画を作らせない。**install した plugin の agent は
+   * 固定リストに入らないので DB を読む必要があるが、workflow のコードは
+   * 決定的でなければならない。だから作る側で確定させて持ち込む。
+   */
+  readonly plan?: TaskPlan;
 }
 
 export interface TaskResult {
@@ -92,7 +100,8 @@ export async function TaskWorkflow(input: TaskWorkflowInput): Promise<TaskResult
 
   let plan: TaskPlan;
   try {
-    plan = planTask(input.kind, input.input);
+    // 持ち込まれた計画を優先する。無ければ組み込みの種別として計画する。
+    plan = input.plan ?? planTask(input.kind, input.input);
   } catch {
     // 未知の種別は再試行しても変わらない。即座に失敗させる。
     await persistence.failTask(input, {

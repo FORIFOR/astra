@@ -6,4 +6,6 @@ docs/spec/new_ai_platform_design_spec_v0.1.md
 docs/spec/astra_ui_ux_detailed_spec_v0.1.md
 infra/db/schema.sql
 packages/db/src/generated/
+# TypeScript 側から生成している。整形すると生成器の出力とずれる。
+plugins/builtin/sales-crm/schemas/
 apps/desktop/src-tauri/

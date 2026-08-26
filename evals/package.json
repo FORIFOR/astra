@@ -18,7 +18,8 @@
     "@astra/plugin-sdk": "workspace:*",
     "@astra/service-research": "workspace:*",
     "@astra/service-share": "workspace:*",
-    "@astra/service-meeting": "workspace:*"
+    "@astra/service-meeting": "workspace:*",
+    "@astra/service-agent-runtime": "workspace:*"
   },
   "devDependencies": {
     "@temporalio/testing": "^1.22.0",

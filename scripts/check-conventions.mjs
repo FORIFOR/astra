@@ -37,7 +37,7 @@ const TABLE_OWNERS = {
     'plugin_assets',
     'plugin_publishers',
   ],
-  'services/agent-runtime': ['agent_profiles', 'agent_runs'],
+  'services/agent-runtime': ['agent_profiles', 'agent_runs', 'domain_entities', 'domain_links'],
   'services/notification': [],
   'services/context': [],
   // 横断・追記のみ。監査は telemetry が一手に引き受ける。
@@ -213,8 +213,10 @@ async function checkNoDependencyCycles() {
 async function checkBuiltinPlugins() {
   const entries = await readdir(path.join(root, 'plugins/builtin'), { withFileTypes: true });
   const dirs = entries.filter((e) => e.isDirectory());
-  if (dirs.length !== 5) {
-    fail('plugins/builtin', 0, `expected 5 bundled plugins, found ${dirs.length}`);
+  // 同梱を勝手に増やさないための検査。増やすときはここも直す（意図的な変更にする）。
+  const EXPECTED = 6;
+  if (dirs.length !== EXPECTED) {
+    fail('plugins/builtin', 0, `expected ${EXPECTED} bundled plugins, found ${dirs.length}`);
   }
 }
 

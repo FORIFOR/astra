@@ -8,7 +8,7 @@ evals/<domain>/<case-id>/
   *.test.ts     実行内容
 ```
 
-`blocking: true` のケースは CI を止める。現状 `actions/phase0` `phase2` `phase3` `phase4` が blocking。
+`blocking: true` のケースは CI を止める。現状 `actions/phase0` `phase2` `phase3` `phase4` `phase5` が blocking。
 
 ```sh
 pnpm test:acceptance     # 使い捨て DB を用意して受け入れテストを実行
@@ -19,5 +19,6 @@ pnpm test:acceptance     # 使い捨て DB を用意して受け入れテスト�
 | `actions/phase0`                                    | 実装仕様 §16 の AC-1〜AC-16          | **blocking** |
 | `actions/phase2`                                    | Phase 2 実装仕様 §5 の AC2-1〜AC2-12 | **blocking** |
 | `actions/phase3`                                    | Phase 3 実装仕様 §0 の AC3-1〜AC3-12 | **blocking** |
-| `actions/phase4`                                    | Phase 4 実装仕様 §0 の AC4-1〜AC4-12 | **blocking** |
+| `actions/phase4`                                    | Phase 4 実装仕様 §0 の AC4-1〜AC4-14 | **blocking** |
+| `actions/phase5`                                    | Phase 5 実装仕様 §1 の AC5-1〜AC5-10 | **blocking** |
 | `conversation` `stt` `meeting` `research` `plugins` | 正本 §25 の各スイート                | Phase 1 以降 |

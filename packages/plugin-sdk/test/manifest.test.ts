@@ -27,9 +27,11 @@ async function builtinPaths(): Promise<string[]> {
 }
 
 describe('bundled manifests', () => {
-  it('ships exactly the five the spec lists', async () => {
+  it('ships exactly the ones the spec lists', async () => {
+    // 数を固定してあるのは、同梱を**意図せず**増やさないため。
+    // 増やすときはここも直す（増やしたことが diff に残る）。
     const paths = await builtinPaths();
-    expect(paths).toHaveLength(5);
+    expect(paths).toHaveLength(6);
   });
 
   it('every bundled manifest passes validation (AC-12)', async () => {

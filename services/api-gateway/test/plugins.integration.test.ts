@@ -54,14 +54,18 @@ describe.skipIf(!url)('plugin catalog', () => {
   });
 
   describe('seeding', () => {
-    it('lists all five bundled plugins (AC-12)', async () => {
+    it('lists every bundled plugin (AC-12)', async () => {
       const items = await catalog();
-      expect(items.map((p) => p.id).sort()).toEqual([
+      // 同梱の分だけを見る。**完全一致では見ない**:
+      // 同じ DB を使う別スイートが publish した plugin で壊れる。
+      const bundled = items.map((p) => p.id as string).filter((id) => id.startsWith('com.astra.'));
+      expect(bundled.sort()).toEqual([
         'com.astra.finder',
         'com.astra.gmail',
         'com.astra.google-calendar',
         'com.astra.meeting',
         'com.astra.research',
+        'com.astra.sales-crm',
       ]);
     });
 

@@ -4,7 +4,17 @@ import { createDb } from '@astra/db';
 import { createLogger } from '@astra/telemetry';
 import { FsObjectStore, LibraryService } from '@astra/service-library';
 import { TaskService, TemporalTaskRuntime } from '@astra/service-task';
-import { PluginRegistryService, composeDataSources } from '@astra/service-plugin-registry';
+import {
+  PluginRegistryService,
+  agentResolver,
+  assetReader,
+  composeDataSources,
+} from '@astra/service-plugin-registry';
+import {
+  DomainService,
+  entityDefinitions,
+  salesCrmDataSources,
+} from '@astra/service-agent-runtime';
 import { researchDataSources } from '@astra/service-research';
 import { meetingDataSources } from '@astra/service-meeting';
 import { ShareService } from '@astra/service-share';
@@ -58,9 +68,10 @@ async function main(): Promise<void> {
     // ワークフローがもう片方の worker の枠を食う（実際に踏んだ）。
     ...(process.env['ASTRA_TASK_QUEUE'] ? { taskQueue: process.env['ASTRA_TASK_QUEUE'] } : {}),
   });
-  const tasks = new TaskService(db, runtime);
-  const shares = new ShareService({ db, library, shareHost: config.shareHost });
   const registry = new PluginRegistryService({ db, coreVersion: config.version });
+  // install した plugin の agent を task として実行できるようにする（Phase 5 §2）
+  const tasks = new TaskService(db, runtime, agentResolver(registry));
+  const shares = new ShareService({ db, library, shareHost: config.shareHost });
 
   // STT は設定されていれば本物、無ければ代役（Phase 3 §10 OQ-11）。
   const meetingProviders = await meetingProvidersFromEnv(process.env);
@@ -77,7 +88,12 @@ async function main(): Promise<void> {
 
   // dashboard の bind を解決する先。**引くのは所有サービス**で、
   // gateway は束ねるだけ（実装仕様 §5.1）。
-  const dataSources = composeDataSources(researchDataSources(db), meetingDataSources(db));
+  const domain = new DomainService({ db });
+  const dataSources = composeDataSources(
+    researchDataSources(db),
+    meetingDataSources(db),
+    salesCrmDataSources(domain),
+  );
 
   const app = buildApp({
     config,
@@ -97,6 +113,7 @@ async function main(): Promise<void> {
       transcriber: meetingProviders.streaming,
     },
     dataSources,
+    domain: { domain, definitions: entityDefinitions(assetReader(registry)) },
   });
 
   const shutdown = async (signal: string): Promise<void> => {

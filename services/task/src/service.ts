@@ -14,7 +14,13 @@ import {
 import { withTenant, type DbHandle, type ScopedDb } from '@astra/db';
 import { appendAuditEvent } from '@astra/telemetry';
 import { ensureStream, readEventsAfter } from './events.js';
-import { isKnownTaskKind } from './plan.js';
+import { isKnownTaskKind, type TaskPlan } from './plan.js';
+import {
+  AgentNotRunnableError,
+  parseAgentKind,
+  planInstalledAgent,
+  type InstalledAgent,
+} from './agent-plan.js';
 import { workflowIdFor, type TaskRuntime } from './runtime/index.js';
 
 export interface CreateTaskParams {
@@ -30,13 +36,25 @@ export interface CreateTaskResult {
   readonly deduplicated: boolean;
 }
 
+/**
+ * install した plugin の agent を引く先。
+ *
+ * task が plugin-registry を直接持つと循環するので、口だけを切ってある。
+ * 誰が実装を渡すかは組み立て側（gateway / worker）の判断（ADR 0001）。
+ */
+export interface AgentResolver {
+  resolve(tenantId: string, kind: string): Promise<InstalledAgent | null>;
+}
+
 export class TaskService {
   readonly #db: DbHandle;
   readonly #runtime: TaskRuntime;
+  readonly #agents: AgentResolver | undefined;
 
-  constructor(db: DbHandle, runtime: TaskRuntime) {
+  constructor(db: DbHandle, runtime: TaskRuntime, agents?: AgentResolver) {
     this.#db = db;
     this.#runtime = runtime;
+    this.#agents = agents;
   }
 
   /**
@@ -50,9 +68,9 @@ export class TaskService {
    * activity が走って「知らないタスク」を更新しに行く。
    */
   async create(params: CreateTaskParams): Promise<CreateTaskResult> {
-    if (!isKnownTaskKind(params.request.kind)) {
-      throw new AstraError('task.unknown_kind', `unknown task kind: ${params.request.kind}`);
-    }
+    // 計画は**ここで**確定させる（D-40）。workflow は決定的でなければならず、
+    // install した agent は DB を読まないと分からないため。
+    const plan = await this.#planFor(params);
 
     const taskId = uuidv7();
     const workflowId = workflowIdFor(params.tenantId, taskId);
@@ -69,6 +87,7 @@ export class TaskService {
           title: params.request.title ?? null,
           status: 'PENDING',
           input: JSON.stringify(params.request.input),
+          plan: plan === null ? null : JSON.stringify(plan),
           idempotency_key: params.idempotencyKey,
           workflow_id: workflowId,
         })
@@ -114,12 +133,52 @@ export class TaskService {
           userId: params.userId,
           kind: stored.row.kind,
           input: (stored.row.input ?? {}) as Record<string, unknown>,
+          // 再送では既存行の計画を使う。作り直すと、install 内容が変わった
+          // あとの再送で別の計画が走ってしまう。
+          ...(stored.row.plan ? { plan: stored.row.plan as unknown as TaskPlan } : {}),
         },
         stored.row.workflow_id,
       );
     }
 
     return { task: toTask(stored.row), deduplicated: !stored.created };
+  }
+
+  /**
+   * 計画を確定させる。
+   *
+   * 組み込みの種別は `plan.ts` が決める（純粋関数）。
+   * `plugin:<id>:<agent>` は install 済みの宣言から組み立てる。
+   * どちらでもない種別は、ここで断る。**走らせてから気づかない。**
+   */
+  async #planFor(params: CreateTaskParams): Promise<TaskPlan | null> {
+    const kind = params.request.kind;
+    if (isKnownTaskKind(kind)) {
+      // 組み込みは workflow 側で同じ計画が導ける。保存しない。
+      return null;
+    }
+
+    const parsed = parseAgentKind(kind);
+    if (!parsed || !this.#agents) {
+      throw new AstraError('task.unknown_kind', `unknown task kind: ${kind}`);
+    }
+
+    const agent = await this.#agents.resolve(params.tenantId, kind);
+    if (!agent) {
+      // uninstall 済み / 未 install。「無い」として断る（AC5-6）。
+      throw new AstraError('task.unknown_kind', `unknown task kind: ${kind}`);
+    }
+
+    try {
+      return planInstalledAgent(agent, params.request.input);
+    } catch (error) {
+      if (error instanceof AgentNotRunnableError) {
+        throw new AstraError('plugin.permission_denied', error.message, {
+          details: { missing_scopes: error.missing },
+        });
+      }
+      throw error;
+    }
   }
 
   async get(tenantId: string, taskId: string): Promise<Task> {

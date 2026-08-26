@@ -1,0 +1,7 @@
+# 実装仕様 §14.2 の eval harness 契約
+phase: 5
+tags: [acceptance, blocking]
+blocking: true
+description: >
+  Phase 5 実装仕様 §1 の AC5-1〜AC5-10。
+  install した agent が実際に走ること、domain entity と Sales CRM が成立することを HTTP から検証する。

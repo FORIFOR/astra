@@ -1,0 +1,12 @@
+# 商談を扱うときに守ること。正本 §15.3。
+id: sales-crm
+rules:
+  - id: evidence-for-every-action
+    description: 次の一手には根拠になった活動を必ず添える
+    severity: block
+  - id: no-invented-fields
+    description: 定義に無い項目を書き込まない
+    severity: block
+  - id: no-external-write-without-confirmation
+    description: 外部 CRM への書き戻しは確認を取る
+    severity: block

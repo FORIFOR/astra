@@ -1,0 +1,47 @@
+# 最初の専業 Agent。正本 §15.3、Phase 5 実装仕様 §4。
+# 外部 CRM への接続は接続先が決まってから（OQ-20）。
+id: com.astra.sales-crm
+name: Sales CRM
+version: 0.1.0
+publisher: astra
+verified: true
+min_core_version: 0.1.0
+category: domain-agent
+builtin: true
+removable: true
+compliance_profile: GENERAL
+execution_surfaces: [cloud]
+permissions:
+  - artifacts.read
+  - artifacts.write
+data_accessed:
+  - Accounts, contacts, opportunities and activities this user already has access to
+connectors: []
+tools:
+  - id: crm.pipeline
+    risk: READ
+    surface: cloud
+  - id: crm.next_action
+    risk: READ
+    surface: cloud
+agents:
+  - id: analyst
+    skill: skills/analyst.md
+    tools: [crm.pipeline, crm.next_action]
+dashboards:
+  - id: pipeline
+    schema: dashboards/pipeline.json
+data_sources:
+  - id: crm.by_stage
+    kind: series
+    query: crm_by_stage
+  - id: crm.open_total
+    kind: count
+    query: crm_open_total
+  - id: crm.stale
+    kind: rows
+    query: crm_stale
+policies:
+  - policies/sales-crm.yaml
+data_extensions:
+  - schemas/entities.json

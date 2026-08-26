@@ -40,4 +40,7 @@ echo "generated database types are current"
 # Dock の geometry は TypeScript を正として Rust の定数を生成している
 node "$ROOT/scripts/gen-dock-geometry.mjs" --check
 
+# Sales CRM の entity 定義も TypeScript が正本
+node "$ROOT/scripts/gen-crm-entities.mjs" --check
+
 dbmate --url "$DATABASE_URL" --migrations-dir "$ROOT/infra/db/migrations" --no-dump-schema drop >/dev/null

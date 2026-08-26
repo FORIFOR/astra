@@ -31,3 +31,11 @@ export {
 export type { TaskWorkflowInput, TaskResult, TaskStateSnapshot } from './workflows.js';
 export type { TaskActivities } from './activity-types.js';
 export { createTaskWorker, defaultWorkflowsPath, type TaskWorkerOptions } from './worker.js';
+export {
+  AGENT_KIND_PREFIX,
+  AgentNotRunnableError,
+  agentKindFor,
+  parseAgentKind,
+  planInstalledAgent,
+  type InstalledAgent,
+} from './agent-plan.js';

@@ -113,7 +113,7 @@ echo "  tenant $TENANT"
 
 say "the bundled plugins are in the catalog"
 COUNT="$(curl -fsS "$BASE/v1/plugins/catalog" -H "authorization: Bearer $AT" | json 'len(d["items"])')"
-[ "$COUNT" = "5" ] || fail "expected 5 bundled plugins, found $COUNT"
+[ "$COUNT" = "6" ] || fail "expected 6 bundled plugins, found $COUNT"
 echo "  $COUNT plugins"
 
 say "a task runs through the real Temporal server"
@@ -152,6 +152,18 @@ AFTER="$(curl -fsS "$BASE/v1/dashboards" -H "authorization: Bearer $AT" | json '
 BOARD="$(curl -fsS "$BASE/v1/plugins/com.astra.research/dashboards/research-runs" -H "authorization: Bearer $AT")"
 echo "$BOARD" | json 'd["schema"]["items"][0]["type"]' >/dev/null || fail "the dashboard had no schema"
 echo "  dashboards $BEFORE -> $AFTER, first item $(echo "$BOARD" | json 'd["schema"]["items"][0]["type"]')"
+
+say "an installed plugin's agent can be created as a task"
+# Phase 5: core に kind を足さずに、install した宣言から計画が立つ
+curl -fsS -X POST "$BASE/v1/plugins/com.astra.sales-crm/install" -H "authorization: Bearer $AT" \
+  -H 'content-type: application/json' \
+  -d '{"version":"0.1.0","granted_scopes":["artifacts.read","artifacts.write"]}' >/dev/null
+AGENT_TASK="$(curl -fsS -X POST "$BASE/v1/tasks" -H "authorization: Bearer $AT" \
+  -H "idempotency-key: smoke-agent-$$" -H 'content-type: application/json' \
+  -d '{"kind":"plugin:com.astra.sales-crm:analyst","input":{"message":"今月の商談"}}' \
+  | json 'd["id"]')"
+[ -n "$AGENT_TASK" ] || fail "the installed agent could not be started"
+echo "  agent task $AGENT_TASK"
 
 say "the real process names which providers are still stand-ins"
 # 代役のまま動いていることを黙らない。本番ではこれが起動拒否になる。

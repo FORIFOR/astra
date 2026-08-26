@@ -423,7 +423,7 @@ describe.skipIf(!url)('Phase 0 acceptance', () => {
   });
 
   describe('AC-12 … AC-14: plugins and the host bridge', () => {
-    it('AC-12: all five bundled manifests are in the catalog', async () => {
+    it('AC-12: every bundled manifest is in the catalog', async () => {
       const res = await app.inject({
         method: 'GET',
         url: '/v1/plugins/catalog',
@@ -439,6 +439,7 @@ describe.skipIf(!url)('Phase 0 acceptance', () => {
         'com.astra.google-calendar',
         'com.astra.meeting',
         'com.astra.research',
+        'com.astra.sales-crm',
       ]);
     });
 

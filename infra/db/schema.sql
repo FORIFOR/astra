@@ -235,6 +235,46 @@ ALTER TABLE ONLY public.devices FORCE ROW LEVEL SECURITY;
 
 
 --
+-- Name: domain_entities; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.domain_entities (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    plugin_id text NOT NULL,
+    entity_type text NOT NULL,
+    title text NOT NULL,
+    fields jsonb DEFAULT '{}'::jsonb NOT NULL,
+    source_task_id uuid,
+    source_meeting_id uuid,
+    created_by uuid NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT domain_entities_entity_type_check CHECK ((entity_type ~ '^[a-z][a-z0-9_]*$'::text)),
+    CONSTRAINT domain_entities_title_check CHECK ((title <> ''::text))
+);
+
+ALTER TABLE ONLY public.domain_entities FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: domain_links; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.domain_links (
+    tenant_id uuid NOT NULL,
+    from_id uuid NOT NULL,
+    to_id uuid NOT NULL,
+    relation text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT domain_links_not_self CHECK ((from_id <> to_id)),
+    CONSTRAINT domain_links_relation_check CHECK ((relation ~ '^[a-z][a-z0-9_]*$'::text))
+);
+
+ALTER TABLE ONLY public.domain_links FORCE ROW LEVEL SECURITY;
+
+
+--
 -- Name: event_streams; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -628,6 +668,7 @@ CREATE TABLE public.tasks (
     started_at timestamp with time zone,
     completed_at timestamp with time zone,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    plan jsonb,
     CONSTRAINT tasks_status_check CHECK ((status = ANY (ARRAY['PENDING'::text, 'RUNNING'::text, 'WAITING_APPROVAL'::text, 'CANCELLING'::text, 'COMPLETED'::text, 'FAILED'::text, 'CANCELLED'::text])))
 );
 
@@ -764,6 +805,22 @@ ALTER TABLE ONLY public.conversations
 
 ALTER TABLE ONLY public.devices
     ADD CONSTRAINT devices_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: domain_entities domain_entities_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.domain_entities
+    ADD CONSTRAINT domain_entities_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: domain_links domain_links_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.domain_links
+    ADD CONSTRAINT domain_links_pkey PRIMARY KEY (from_id, to_id, relation);
 
 
 --
@@ -1053,6 +1110,27 @@ CREATE INDEX conversations_recent ON public.conversations USING btree (tenant_id
 --
 
 CREATE INDEX devices_by_user ON public.devices USING btree (tenant_id, user_id) WHERE (revoked_at IS NULL);
+
+
+--
+-- Name: domain_entities_by_type; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX domain_entities_by_type ON public.domain_entities USING btree (tenant_id, plugin_id, entity_type, id DESC);
+
+
+--
+-- Name: domain_entities_fields; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX domain_entities_fields ON public.domain_entities USING gin (fields);
+
+
+--
+-- Name: domain_links_reverse; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX domain_links_reverse ON public.domain_links USING btree (to_id, relation);
 
 
 --
@@ -1444,6 +1522,70 @@ ALTER TABLE ONLY public.devices
 
 ALTER TABLE ONLY public.devices
     ADD CONSTRAINT devices_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
+-- Name: domain_entities domain_entities_created_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.domain_entities
+    ADD CONSTRAINT domain_entities_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.users(id);
+
+
+--
+-- Name: domain_entities domain_entities_plugin_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.domain_entities
+    ADD CONSTRAINT domain_entities_plugin_id_fkey FOREIGN KEY (plugin_id) REFERENCES public.plugins(id);
+
+
+--
+-- Name: domain_entities domain_entities_source_meeting_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.domain_entities
+    ADD CONSTRAINT domain_entities_source_meeting_id_fkey FOREIGN KEY (source_meeting_id) REFERENCES public.meetings(id);
+
+
+--
+-- Name: domain_entities domain_entities_source_task_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.domain_entities
+    ADD CONSTRAINT domain_entities_source_task_id_fkey FOREIGN KEY (source_task_id) REFERENCES public.tasks(id);
+
+
+--
+-- Name: domain_entities domain_entities_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.domain_entities
+    ADD CONSTRAINT domain_entities_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+
+--
+-- Name: domain_links domain_links_from_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.domain_links
+    ADD CONSTRAINT domain_links_from_id_fkey FOREIGN KEY (from_id) REFERENCES public.domain_entities(id);
+
+
+--
+-- Name: domain_links domain_links_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.domain_links
+    ADD CONSTRAINT domain_links_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+
+--
+-- Name: domain_links domain_links_to_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.domain_links
+    ADD CONSTRAINT domain_links_to_id_fkey FOREIGN KEY (to_id) REFERENCES public.domain_entities(id);
 
 
 --
@@ -1959,6 +2101,32 @@ CREATE POLICY devices_tenant_isolation ON public.devices USING ((tenant_id = pub
 
 
 --
+-- Name: domain_entities; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.domain_entities ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: domain_entities domain_entities_tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY domain_entities_tenant_isolation ON public.domain_entities USING ((tenant_id = public.astra_current_tenant())) WITH CHECK ((tenant_id = public.astra_current_tenant()));
+
+
+--
+-- Name: domain_links; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.domain_links ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: domain_links domain_links_tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY domain_links_tenant_isolation ON public.domain_links USING ((tenant_id = public.astra_current_tenant())) WITH CHECK ((tenant_id = public.astra_current_tenant()));
+
+
+--
 -- Name: event_streams; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -2215,3 +2383,4 @@ INSERT INTO schema_migrations (version) VALUES ('20260826020001');
 INSERT INTO schema_migrations (version) VALUES ('20260826020002');
 INSERT INTO schema_migrations (version) VALUES ('20260826030001');
 INSERT INTO schema_migrations (version) VALUES ('20260826040001');
+INSERT INTO schema_migrations (version) VALUES ('20260826050001');

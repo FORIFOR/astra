@@ -11,3 +11,4 @@ export {
   type DataSourceMap,
   type DataSourceResolver,
 } from './data-sources.js';
+export { agentResolver, assetReader } from './agent-resolver.js';

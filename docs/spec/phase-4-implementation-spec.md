@@ -23,6 +23,8 @@ Phase 0 の規約（テーブル所有権 §5.1、スコープ §5.4、冪等性
 ```text
 AC4-1  manifest が宣言した skill / dashboard / policy の**実体が無ければ publish が失敗する**
 AC4-2  install すると、その plugin の agent が使えるようになる（コード変更なし）
+       ※ Phase 4 時点の検査は `installed: true` を見ただけで**不十分だった**。
+         実際に走ることは Phase 5（AC5-1）で確かめている
 AC4-3  install すると、その plugin の dashboard が出る（コード変更なし）
 AC4-4  dashboard は任意の HTML/JS を実行しない。既定の component だけを描く
 AC4-5  dashboard の bind が、存在しないデータを指していたら描かずに理由を出す

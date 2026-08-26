@@ -134,6 +134,28 @@ export interface Devices {
   user_id: string;
 }
 
+export interface DomainEntities {
+  created_at: Generated<Timestamp>;
+  created_by: string;
+  entity_type: string;
+  fields: Generated<Json>;
+  id: string;
+  plugin_id: string;
+  source_meeting_id: string | null;
+  source_task_id: string | null;
+  tenant_id: string;
+  title: string;
+  updated_at: Generated<Timestamp>;
+}
+
+export interface DomainLinks {
+  created_at: Generated<Timestamp>;
+  from_id: string;
+  relation: string;
+  tenant_id: string;
+  to_id: string;
+}
+
 export interface EventStreams {
   closed_at: Timestamp | null;
   created_at: Generated<Timestamp>;
@@ -360,6 +382,7 @@ export interface Tasks {
   idempotency_key: string;
   input: Generated<Json>;
   kind: string;
+  plan: Json | null;
   result_artifact_id: string | null;
   run_id: string | null;
   started_at: Timestamp | null;
@@ -415,6 +438,8 @@ export interface DB {
   audit_sequences: AuditSequences;
   conversations: Conversations;
   devices: Devices;
+  domain_entities: DomainEntities;
+  domain_links: DomainLinks;
   event_streams: EventStreams;
   evidence: Evidence;
   meeting_segments: MeetingSegments;

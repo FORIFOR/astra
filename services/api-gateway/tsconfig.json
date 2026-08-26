@@ -38,6 +38,9 @@
     },
     {
       "path": "../../packages/plugin-sdk"
+    },
+    {
+      "path": "../agent-runtime"
     }
   ]
 }

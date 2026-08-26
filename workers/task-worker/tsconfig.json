@@ -26,6 +26,12 @@
     },
     {
       "path": "../../services/meeting"
+    },
+    {
+      "path": "../../services/plugin-registry"
+    },
+    {
+      "path": "../../packages/plugin-sdk"
     }
   ]
 }

@@ -25,6 +25,10 @@
     "@astra/contracts": "workspace:*",
     "@astra/db": "workspace:*",
     "@astra/policy": "workspace:*",
-    "@astra/telemetry": "workspace:*"
+    "@astra/telemetry": "workspace:*",
+    "kysely": "catalog:"
+  },
+  "devDependencies": {
+    "vitest": "catalog:"
   }
 }
