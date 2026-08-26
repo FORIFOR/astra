@@ -14,15 +14,15 @@ evals/<domain>/<case-id>/
 pnpm test:acceptance     # 使い捨て DB を用意して受け入れテストを実行
 ```
 
-| ディレクトリ                                        | 対象                                          | 状態         |
-| --------------------------------------------------- | --------------------------------------------- | ------------ |
-| `actions/phase0`                                    | 実装仕様 §16 の AC-1〜AC-16                   | **blocking** |
-| `actions/phase2`                                    | Phase 2 実装仕様 §5 の AC2-1〜AC2-12          | **blocking** |
-| `actions/phase3`                                    | Phase 3 実装仕様 §0 の AC3-1〜AC3-12          | **blocking** |
-| `actions/phase4`                                    | Phase 4 実装仕様 §0 の AC4-1〜AC4-14          | **blocking** |
-| `actions/phase5`                                    | Phase 5 実装仕様 §1 の AC5-1〜AC5-10          | **blocking** |
-| `actions/phase6`                                    | Phase 6 実装仕様 §0 の AC6-1〜AC6-10          | **blocking** |
-| `actions/phase7`                                    | Phase 7 実装仕様 §0 の AC7-1〜AC7-10          | **blocking** |
-| `actions/security`                                  | 正本 §25 の Action / Plugin 評価軸（敵対的）  | **blocking** |
-| `actions/product`                                   | 正本 §30 Product Acceptance の Case A（通し） | **blocking** |
-| `conversation` `stt` `meeting` `research` `plugins` | 正本 §25 の各スイート                         | Phase 1 以降 |
+| ディレクトリ                                        | 対象                                              | 状態         |
+| --------------------------------------------------- | ------------------------------------------------- | ------------ |
+| `actions/phase0`                                    | 実装仕様 §16 の AC-1〜AC-16                       | **blocking** |
+| `actions/phase2`                                    | Phase 2 実装仕様 §5 の AC2-1〜AC2-12              | **blocking** |
+| `actions/phase3`                                    | Phase 3 実装仕様 §0 の AC3-1〜AC3-12              | **blocking** |
+| `actions/phase4`                                    | Phase 4 実装仕様 §0 の AC4-1〜AC4-14              | **blocking** |
+| `actions/phase5`                                    | Phase 5 実装仕様 §1 の AC5-1〜AC5-10              | **blocking** |
+| `actions/phase6`                                    | Phase 6 実装仕様 §0 の AC6-1〜AC6-10              | **blocking** |
+| `actions/phase7`                                    | Phase 7 実装仕様 §0 の AC7-1〜AC7-10              | **blocking** |
+| `actions/security`                                  | 正本 §25 の Action / Plugin 評価軸（敵対的）      | **blocking** |
+| `actions/product`                                   | 正本 §30 Product Acceptance の Case A / B（通し） | **blocking** |
+| `conversation` `stt` `meeting` `research` `plugins` | 正本 §25 の各スイート                             | Phase 1 以降 |
