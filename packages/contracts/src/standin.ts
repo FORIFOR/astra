@@ -26,6 +26,8 @@ export const EXTERNAL_CAPABILITIES = [
   'video_generation',
   // 正本 §2.4（Connector）
   'oauth_providers',
+  // 正本 §27（DeepNote から引き継ぐ TTS）。**製品の必須ではない**
+  'text_to_speech',
 ] as const;
 
 export const ExternalCapability = z.enum(EXTERNAL_CAPABILITIES);
@@ -39,7 +41,28 @@ export const CAPABILITY_LABEL: Readonly<Record<ExternalCapability, string>> = {
   image_generation: '画像の生成',
   video_generation: '動画の生成',
   oauth_providers: '外部サービスへの接続',
+  text_to_speech: '読み上げ',
 };
+
+/**
+ * 本番で必須の能力。**ここに無いものは、無くても起動してよい。**
+ *
+ * 分けてある理由: 読み上げが無くても Astra は使える（文字で読める）。
+ * 必須と任意を混ぜると、任意のものが 1 つ欠けただけで本番が上がらなくなり、
+ * やがて「とりあえず必須から外す」が始まる。
+ */
+export const REQUIRED_CAPABILITIES: readonly ExternalCapability[] = [
+  'search',
+  'language_model',
+  'speech_to_text',
+  'translation',
+  'oauth_providers',
+];
+
+/** 任意。欠けていても本番は起動する（できないことは申告する）。 */
+export function isRequiredCapability(capability: ExternalCapability): boolean {
+  return REQUIRED_CAPABILITIES.includes(capability);
+}
 
 export const CapabilityStatus = z.object({
   capability: ExternalCapability,
@@ -80,13 +103,24 @@ export function assertNoStandIns(
     .join(', ');
 
   if (env === 'production') {
-    const how = remaining
-      .map((item) => item.configureWith)
-      .filter((v): v is string => v !== null)
-      .join(', ');
-    throw new Error(
-      `these capabilities are still stand-ins: ${list}. Configure them first${how ? ` (${how})` : ''}.`,
-    );
+    /*
+     * **必須だけで止める。**任意のものまで止めると、
+     * 1 つ欠けただけで本番が上がらなくなり、
+     * やがて「とりあえず必須から外す」が始まる。
+     */
+    const blocking = remaining.filter((item) => isRequiredCapability(item.capability));
+    if (blocking.length > 0) {
+      const how = blocking
+        .map((item) => item.configureWith)
+        .filter((v): v is string => v !== null)
+        .join(', ');
+      const names = blocking
+        .map((item) => `${CAPABILITY_LABEL[item.capability]} (${item.implementation})`)
+        .join(', ');
+      throw new Error(
+        `these required capabilities are still stand-ins: ${names}. Configure them first${how ? ` (${how})` : ''}.`,
+      );
+    }
   }
   return { warn: `running with stand-ins: ${list}`, remaining };
 }

@@ -7,8 +7,10 @@ import { describe, expect, it } from 'vitest';
 import {
   EXTERNAL_CAPABILITIES,
   NOT_IMPLEMENTED,
+  REQUIRED_CAPABILITIES,
   assertNoStandIns,
   buildCapabilityReport,
+  isRequiredCapability,
   missingFromReport,
   remainingStandIns,
   type CapabilityInput,
@@ -45,6 +47,7 @@ describe('the list of what comes from outside', () => {
       'image_generation',
       'video_generation',
       'oauth_providers',
+      'text_to_speech',
     ]);
   });
 
@@ -95,12 +98,66 @@ describe('what is not implemented at all', () => {
     expect(missing.implementation).toBe('none');
   });
 
-  it('stops production the same way a stand-in does', () => {
+  it('stops production when the missing one is required', () => {
+    const inputs = Object.fromEntries(EXTERNAL_CAPABILITIES.map((c) => [c, real(c)])) as Record<
+      ExternalCapability,
+      CapabilityInput
+    >;
+    inputs.search = NOT_IMPLEMENTED('検索の提供者が決まっていません');
+    expect(() => assertNoStandIns(buildCapabilityReport(inputs), 'production')).toThrow(/検索/);
+  });
+
+  it('still reports an optional one that does not exist, without blocking', () => {
     const inputs = Object.fromEntries(EXTERNAL_CAPABILITIES.map((c) => [c, real(c)])) as Record<
       ExternalCapability,
       CapabilityInput
     >;
     inputs.video_generation = NOT_IMPLEMENTED('動画の生成はまだありません');
-    expect(() => assertNoStandIns(buildCapabilityReport(inputs), 'production')).toThrow(/動画/);
+    // 起動は止めないが、**無いことは言う**
+    const { warn, remaining } = assertNoStandIns(buildCapabilityReport(inputs), 'production');
+    expect(warn).toContain('動画');
+    expect(remaining.map((r) => r.capability)).toEqual(['video_generation']);
+  });
+});
+
+describe('required and optional', () => {
+  const inputs = () =>
+    Object.fromEntries(EXTERNAL_CAPABILITIES.map((c) => [c, real(c)])) as Record<
+      ExternalCapability,
+      CapabilityInput
+    >;
+
+  it('does not require what the product can live without', () => {
+    // 読み上げが無くても Astra は使える（文字で読める）
+    expect(isRequiredCapability('text_to_speech')).toBe(false);
+    expect(isRequiredCapability('video_generation')).toBe(false);
+    expect(isRequiredCapability('image_generation')).toBe(false);
+  });
+
+  it('requires what the product cannot work without', () => {
+    for (const capability of REQUIRED_CAPABILITIES) {
+      expect(isRequiredCapability(capability)).toBe(true);
+    }
+    expect(REQUIRED_CAPABILITIES).toContain('language_model');
+    expect(REQUIRED_CAPABILITIES).toContain('speech_to_text');
+  });
+
+  it('lets production start with an optional stand-in, but still says so', () => {
+    const withOptional = inputs();
+    withOptional.text_to_speech = standIn('none', 'GOOGLE_CLOUD_PROJECT');
+    const report = buildCapabilityReport(withOptional);
+
+    // 1 つ欠けただけで本番が上がらないと、やがて必須から外され始める
+    const { warn, remaining } = assertNoStandIns(report, 'production');
+    expect(warn).toContain('読み上げ');
+    expect(remaining).toHaveLength(1);
+  });
+
+  it('still refuses production when a required one is a stand-in', () => {
+    const withRequired = inputs();
+    withRequired.speech_to_text = standIn('scripted', 'GOOGLE_STT_RECOGNIZER');
+    expect(() => assertNoStandIns(buildCapabilityReport(withRequired), 'production')).toThrow(
+      /required capabilities/,
+    );
   });
 });

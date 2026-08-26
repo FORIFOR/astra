@@ -395,6 +395,16 @@ importers:
         specifier: 'catalog:'
         version: 3.2.7(@types/node@22.20.1)(happy-dom@20.11.6)(terser@5.50.0)(tsx@4.23.12)(yaml@2.9.0)
 
+  packages/tts:
+    dependencies:
+      '@astra/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+    devDependencies:
+      vitest:
+        specifier: 'catalog:'
+        version: 3.2.7(@types/node@22.20.1)(happy-dom@20.11.6)(terser@5.50.0)(tsx@4.23.12)(yaml@2.9.0)
+
   packages/ui-kit:
     dependencies:
       '@astra/contracts':
@@ -639,6 +649,9 @@ importers:
       '@astra/telemetry':
         specifier: workspace:*
         version: link:../../packages/telemetry
+      '@astra/tts':
+        specifier: workspace:*
+        version: link:../../packages/tts
       '@google-cloud/speech':
         specifier: ^6.7.1
         version: 6.7.1

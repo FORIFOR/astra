@@ -63,6 +63,14 @@ export function capabilityReport(input: {
     image_generation: imageCapability(new DeterministicImageGenerator()),
     video_generation: videoCapability(),
     oauth_providers: oauthCapability(input.env),
+    // 任意。無くても本番は起動する（§27 の再利用候補で、製品の必須ではない）
+    text_to_speech: input.env['GOOGLE_CLOUD_PROJECT']
+      ? { implementation: 'google-tts', isStandIn: false, configureWith: null }
+      : {
+          implementation: 'none',
+          isStandIn: true,
+          configureWith: 'GOOGLE_CLOUD_PROJECT',
+        },
   };
   return buildCapabilityReport(inputs);
 }
