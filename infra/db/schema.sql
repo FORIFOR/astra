@@ -281,6 +281,83 @@ ALTER TABLE ONLY public.evidence FORCE ROW LEVEL SECURITY;
 
 
 --
+-- Name: meeting_segments; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.meeting_segments (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    meeting_id uuid NOT NULL,
+    pass text NOT NULL,
+    speaker_tag integer,
+    text text NOT NULL,
+    start_ms integer NOT NULL,
+    end_ms integer NOT NULL,
+    language text,
+    confidence numeric(3,2),
+    supersedes uuid[] DEFAULT '{}'::uuid[] NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT meeting_segments_check CHECK ((end_ms >= start_ms)),
+    CONSTRAINT meeting_segments_confidence_check CHECK (((confidence >= (0)::numeric) AND (confidence <= (1)::numeric))),
+    CONSTRAINT meeting_segments_only_final_supersedes CHECK (((pass = 'final'::text) OR (cardinality(supersedes) = 0))),
+    CONSTRAINT meeting_segments_pass_check CHECK ((pass = ANY (ARRAY['live'::text, 'final'::text]))),
+    CONSTRAINT meeting_segments_speaker_tag_check CHECK ((speaker_tag > 0)),
+    CONSTRAINT meeting_segments_start_ms_check CHECK ((start_ms >= 0))
+);
+
+ALTER TABLE ONLY public.meeting_segments FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: meeting_speakers; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.meeting_speakers (
+    tenant_id uuid NOT NULL,
+    meeting_id uuid NOT NULL,
+    speaker_tag integer NOT NULL,
+    display_name text NOT NULL,
+    named_by uuid NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT meeting_speakers_display_name_check CHECK (((length(display_name) >= 1) AND (length(display_name) <= 100))),
+    CONSTRAINT meeting_speakers_speaker_tag_check CHECK ((speaker_tag > 0))
+);
+
+ALTER TABLE ONLY public.meeting_speakers FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: meetings; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.meetings (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    title text NOT NULL,
+    status text NOT NULL,
+    language text NOT NULL,
+    target_language text,
+    audio_sources text[] NOT NULL,
+    consent_at timestamp with time zone NOT NULL,
+    started_at timestamp with time zone DEFAULT now() NOT NULL,
+    ended_at timestamp with time zone,
+    degraded_at timestamp with time zone,
+    recording_artifact_id uuid,
+    bundle_artifact_id uuid,
+    finalize_task_id uuid,
+    created_by uuid NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT meetings_audio_sources_check CHECK ((array_length(audio_sources, 1) >= 1)),
+    CONSTRAINT meetings_ended_when_done CHECK (((status <> 'COMPLETE'::text) OR (ended_at IS NOT NULL))),
+    CONSTRAINT meetings_status_check CHECK ((status = ANY (ARRAY['RECORDING'::text, 'PAUSED'::text, 'FINALIZING'::text, 'COMPLETE'::text, 'FAILED'::text]))),
+    CONSTRAINT meetings_title_check CHECK (((length(title) >= 1) AND (length(title) <= 200)))
+);
+
+ALTER TABLE ONLY public.meetings FORCE ROW LEVEL SECURITY;
+
+
+--
 -- Name: memberships; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -557,6 +634,22 @@ ALTER TABLE ONLY public.tenants FORCE ROW LEVEL SECURITY;
 
 
 --
+-- Name: translations; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.translations (
+    segment_id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    meeting_id uuid NOT NULL,
+    target_language text NOT NULL,
+    text text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+ALTER TABLE ONLY public.translations FORCE ROW LEVEL SECURITY;
+
+
+--
 -- Name: turns; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -668,6 +761,30 @@ ALTER TABLE ONLY public.event_streams
 
 ALTER TABLE ONLY public.evidence
     ADD CONSTRAINT evidence_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: meeting_segments meeting_segments_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.meeting_segments
+    ADD CONSTRAINT meeting_segments_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: meeting_speakers meeting_speakers_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.meeting_speakers
+    ADD CONSTRAINT meeting_speakers_pkey PRIMARY KEY (meeting_id, speaker_tag);
+
+
+--
+-- Name: meetings meetings_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.meetings
+    ADD CONSTRAINT meetings_pkey PRIMARY KEY (id);
 
 
 --
@@ -783,6 +900,14 @@ ALTER TABLE ONLY public.tenants
 
 
 --
+-- Name: translations translations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.translations
+    ADD CONSTRAINT translations_pkey PRIMARY KEY (segment_id, target_language);
+
+
+--
 -- Name: turns turns_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -831,6 +956,13 @@ CREATE UNIQUE INDEX approvals_task_step ON public.approvals USING btree (task_id
 --
 
 CREATE INDEX artifact_versions_sha ON public.artifact_versions USING btree (tenant_id, sha256);
+
+
+--
+-- Name: artifacts_by_meeting; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX artifacts_by_meeting ON public.artifacts USING btree (tenant_id, source_meeting_id) WHERE (source_meeting_id IS NOT NULL);
 
 
 --
@@ -908,6 +1040,34 @@ CREATE INDEX evidence_by_run ON public.evidence USING btree (research_run_id, qu
 --
 
 CREATE UNIQUE INDEX evidence_dedupe ON public.evidence USING btree (research_run_id, source_url, md5(claim));
+
+
+--
+-- Name: meeting_segments_dedupe; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX meeting_segments_dedupe ON public.meeting_segments USING btree (meeting_id, pass, start_ms, COALESCE(speaker_tag, 0));
+
+
+--
+-- Name: meeting_segments_ordered; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX meeting_segments_ordered ON public.meeting_segments USING btree (meeting_id, pass, start_ms);
+
+
+--
+-- Name: meetings_live; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX meetings_live ON public.meetings USING btree (tenant_id) WHERE (status = ANY (ARRAY['RECORDING'::text, 'PAUSED'::text]));
+
+
+--
+-- Name: meetings_recent; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX meetings_recent ON public.meetings USING btree (tenant_id, started_at DESC);
 
 
 --
@@ -1023,6 +1183,13 @@ CREATE UNIQUE INDEX tasks_workflow_id ON public.tasks USING btree (workflow_id);
 
 
 --
+-- Name: translations_by_meeting; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX translations_by_meeting ON public.translations USING btree (meeting_id, target_language);
+
+
+--
 -- Name: turns_by_conversation; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1055,6 +1222,13 @@ CREATE TRIGGER audit_events_append_only BEFORE DELETE OR UPDATE OR TRUNCATE ON p
 --
 
 CREATE TRIGGER evidence_append_only BEFORE DELETE OR TRUNCATE ON public.evidence FOR EACH STATEMENT EXECUTE FUNCTION public.astra_deny_mutation();
+
+
+--
+-- Name: meeting_segments meeting_segments_append_only; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER meeting_segments_append_only BEFORE DELETE OR UPDATE OR TRUNCATE ON public.meeting_segments FOR EACH STATEMENT EXECUTE FUNCTION public.astra_deny_mutation();
 
 
 --
@@ -1160,6 +1334,14 @@ ALTER TABLE ONLY public.artifacts
 
 
 --
+-- Name: artifacts artifacts_source_meeting_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.artifacts
+    ADD CONSTRAINT artifacts_source_meeting_fk FOREIGN KEY (source_meeting_id) REFERENCES public.meetings(id);
+
+
+--
 -- Name: artifacts artifacts_source_task_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1245,6 +1427,86 @@ ALTER TABLE ONLY public.evidence
 
 ALTER TABLE ONLY public.evidence
     ADD CONSTRAINT evidence_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+
+--
+-- Name: meeting_segments meeting_segments_meeting_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.meeting_segments
+    ADD CONSTRAINT meeting_segments_meeting_id_fkey FOREIGN KEY (meeting_id) REFERENCES public.meetings(id);
+
+
+--
+-- Name: meeting_segments meeting_segments_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.meeting_segments
+    ADD CONSTRAINT meeting_segments_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+
+--
+-- Name: meeting_speakers meeting_speakers_meeting_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.meeting_speakers
+    ADD CONSTRAINT meeting_speakers_meeting_id_fkey FOREIGN KEY (meeting_id) REFERENCES public.meetings(id);
+
+
+--
+-- Name: meeting_speakers meeting_speakers_named_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.meeting_speakers
+    ADD CONSTRAINT meeting_speakers_named_by_fkey FOREIGN KEY (named_by) REFERENCES public.users(id);
+
+
+--
+-- Name: meeting_speakers meeting_speakers_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.meeting_speakers
+    ADD CONSTRAINT meeting_speakers_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+
+--
+-- Name: meetings meetings_bundle_artifact_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.meetings
+    ADD CONSTRAINT meetings_bundle_artifact_id_fkey FOREIGN KEY (bundle_artifact_id) REFERENCES public.artifacts(id);
+
+
+--
+-- Name: meetings meetings_created_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.meetings
+    ADD CONSTRAINT meetings_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.users(id);
+
+
+--
+-- Name: meetings meetings_finalize_task_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.meetings
+    ADD CONSTRAINT meetings_finalize_task_id_fkey FOREIGN KEY (finalize_task_id) REFERENCES public.tasks(id);
+
+
+--
+-- Name: meetings meetings_recording_artifact_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.meetings
+    ADD CONSTRAINT meetings_recording_artifact_id_fkey FOREIGN KEY (recording_artifact_id) REFERENCES public.artifacts(id);
+
+
+--
+-- Name: meetings meetings_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.meetings
+    ADD CONSTRAINT meetings_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
 
 
 --
@@ -1496,6 +1758,30 @@ ALTER TABLE ONLY public.tasks
 
 
 --
+-- Name: translations translations_meeting_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.translations
+    ADD CONSTRAINT translations_meeting_id_fkey FOREIGN KEY (meeting_id) REFERENCES public.meetings(id);
+
+
+--
+-- Name: translations translations_segment_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.translations
+    ADD CONSTRAINT translations_segment_id_fkey FOREIGN KEY (segment_id) REFERENCES public.meeting_segments(id);
+
+
+--
+-- Name: translations translations_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.translations
+    ADD CONSTRAINT translations_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+
+--
 -- Name: turns turns_conversation_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1642,6 +1928,45 @@ CREATE POLICY evidence_tenant_isolation ON public.evidence USING ((tenant_id = p
 
 
 --
+-- Name: meeting_segments; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.meeting_segments ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: meeting_segments meeting_segments_tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY meeting_segments_tenant_isolation ON public.meeting_segments USING ((tenant_id = public.astra_current_tenant())) WITH CHECK ((tenant_id = public.astra_current_tenant()));
+
+
+--
+-- Name: meeting_speakers; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.meeting_speakers ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: meeting_speakers meeting_speakers_tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY meeting_speakers_tenant_isolation ON public.meeting_speakers USING ((tenant_id = public.astra_current_tenant())) WITH CHECK ((tenant_id = public.astra_current_tenant()));
+
+
+--
+-- Name: meetings; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.meetings ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: meetings meetings_tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY meetings_tenant_isolation ON public.meetings USING ((tenant_id = public.astra_current_tenant())) WITH CHECK ((tenant_id = public.astra_current_tenant()));
+
+
+--
 -- Name: memberships; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -1772,6 +2097,19 @@ CREATE POLICY tenants_tenant_isolation ON public.tenants USING ((id = public.ast
 
 
 --
+-- Name: translations; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.translations ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: translations translations_tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY translations_tenant_isolation ON public.translations USING ((tenant_id = public.astra_current_tenant())) WITH CHECK ((tenant_id = public.astra_current_tenant()));
+
+
+--
 -- Name: turns; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -1818,3 +2156,4 @@ INSERT INTO schema_migrations (version) VALUES ('20260826010007');
 INSERT INTO schema_migrations (version) VALUES ('20260826010008');
 INSERT INTO schema_migrations (version) VALUES ('20260826020001');
 INSERT INTO schema_migrations (version) VALUES ('20260826020002');
+INSERT INTO schema_migrations (version) VALUES ('20260826030001');

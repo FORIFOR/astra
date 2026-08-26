@@ -10,6 +10,12 @@ import { FsObjectStore, LibraryService } from '@astra/service-library';
 import { InMemoryTaskRuntime, TaskService } from '@astra/service-task';
 import { PluginRegistryService } from '@astra/service-plugin-registry';
 import { ShareService } from '@astra/service-share';
+import {
+  MeetingService,
+  MemoryRecordingStore,
+  ScriptedStreamingTranscriber,
+  type ScriptLine,
+} from '@astra/service-meeting';
 import { buildApp } from '../src/app.js';
 import type { HostBridge } from '../src/host/bridge.js';
 import { MemoryRateLimiter } from '../src/rate-limit/memory.js';
@@ -54,6 +60,8 @@ export interface TestApp {
   readonly runtime: InMemoryTaskRuntime;
   readonly registry: PluginRegistryService;
   readonly shares: ShareService;
+  readonly meetings: MeetingService;
+  readonly recordings: MemoryRecordingStore;
   close(): Promise<void>;
 }
 
@@ -68,6 +76,8 @@ export interface MakeAppOptions {
   readonly seedPlugins?: boolean;
   readonly bridge?: HostBridge;
   readonly allowedOrigins?: readonly string[];
+  /** live STT の代役に読ませる台本。省略すると録音だけになる。 */
+  readonly script?: readonly ScriptLine[];
 }
 
 export async function makeTestApp(options: MakeAppOptions): Promise<TestApp> {
@@ -79,6 +89,8 @@ export async function makeTestApp(options: MakeAppOptions): Promise<TestApp> {
   const tasks = new TaskService(db, runtime);
   const registry = new PluginRegistryService({ db, coreVersion: '0.1.0' });
   const shares = new ShareService({ db, library, shareHost: 'http://localhost:1430' });
+  const meetings = new MeetingService({ db, publisher: { async publish() {} } });
+  const recordings = new MemoryRecordingStore();
   if (options.seedPlugins) {
     await registry.seedBuiltins(
       fileURLToPath(new URL('../../../plugins/builtin', import.meta.url)),
@@ -95,6 +107,7 @@ export async function makeTestApp(options: MakeAppOptions): Promise<TestApp> {
     db: options.dbConfig,
     builtinPluginsDir: fileURLToPath(new URL('../../../plugins/builtin', import.meta.url)),
     objectStoreRoot: storeRoot,
+    recordingRoot: storeRoot,
     allowedOrigins: options.allowedOrigins ?? [],
     shareHost: 'http://localhost:1430',
     requesterSalt: 'test-salt',
@@ -111,6 +124,11 @@ export async function makeTestApp(options: MakeAppOptions): Promise<TestApp> {
     library,
     registry,
     shares,
+    meetings: {
+      meetings,
+      recordings,
+      ...(options.script ? { transcriber: new ScriptedStreamingTranscriber(options.script) } : {}),
+    },
     ...(options.bridge === undefined ? {} : { bridge: options.bridge }),
     // テストは待ちたくないので短く回す
     ssePollIntervalMs: 20,
@@ -126,6 +144,8 @@ export async function makeTestApp(options: MakeAppOptions): Promise<TestApp> {
     runtime,
     registry,
     shares,
+    meetings,
+    recordings,
     async close() {
       await app.close();
       if (owned) await db.close();

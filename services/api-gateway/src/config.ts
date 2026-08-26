@@ -19,6 +19,11 @@ export interface GatewayConfig {
   /** オブジェクト保存先。**絶対パス**に解決済み。 */
   readonly objectStoreRoot: string;
   /**
+   * 会議の録音の置き場。**絶対パス**に解決済み。
+   * STT より先に音を残すので、object store とは別に持つ（Phase 3 §3）。
+   */
+  readonly recordingRoot: string;
+  /**
    * ブラウザから叩けるオリジン。
    * **既定は空**。許すオリジンは必ず明示させる（`*` を既定にしない）。
    */
@@ -55,6 +60,7 @@ export function gatewayConfigFromEnv(env: NodeJS.ProcessEnv = process.env): Gate
     // ここで絶対化して、診断のときに実際に見た場所が分かるようにする。
     builtinPluginsDir: path.resolve(env['ASTRA_BUILTIN_PLUGINS_DIR'] ?? './plugins/builtin'),
     objectStoreRoot: path.resolve(env['ASTRA_OBJECT_STORE_ROOT'] ?? './.data/objects'),
+    recordingRoot: path.resolve(env['ASTRA_RECORDING_ROOT'] ?? './.data/recordings'),
     allowedOrigins: parseOrigins(env['ASTRA_ALLOWED_ORIGINS'], parseEnvironment(env['ASTRA_ENV'])),
     shareHost: env['ASTRA_SHARE_HOST'] ?? 'http://localhost:1430',
     requesterSalt: env['ASTRA_REQUESTER_SALT'] ?? 'astra-development-salt',

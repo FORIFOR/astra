@@ -19,7 +19,13 @@ import {
 import { channelFor } from '@astra/service-task';
 
 /** 終端イベント。これを送ったらサーバから閉じる。 */
-const TERMINAL_TYPES = new Set(['task.completed', 'task.failed', 'task.cancelled']);
+const TERMINAL_TYPES = new Set([
+  'task.completed',
+  'task.failed',
+  'task.cancelled',
+  // 会議も終端を持つ。無いと終わった会議の購読が開いたままになる。
+  'meeting.ended',
+]);
 
 export interface EventWaker {
   /** 新着があれば早く resolve する。無ければ `timeoutMs` 後に resolve。 */

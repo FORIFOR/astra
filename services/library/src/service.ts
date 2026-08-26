@@ -27,6 +27,7 @@ export interface CreateArtifactInput {
   readonly body: Buffer;
   readonly fileName?: string;
   readonly sourceTaskId?: string | null;
+  readonly sourceMeetingId?: string | null;
   readonly sourceAgentId?: string | null;
   readonly parentArtifactId?: string | null;
   readonly tags?: readonly string[];
@@ -80,6 +81,7 @@ export class LibraryService {
           mime_type: input.mimeType,
           source_agent_id: input.sourceAgentId ?? null,
           source_task_id: input.sourceTaskId ?? null,
+          source_meeting_id: input.sourceMeetingId ?? null,
           parent_artifact_id: input.parentArtifactId ?? null,
           current_version: 1,
           tags: [...(input.tags ?? [])],

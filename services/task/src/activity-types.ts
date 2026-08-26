@@ -17,9 +17,11 @@ export interface StartTaskMeta {
 }
 
 export interface ArtifactSpec {
-  readonly type: 'REPORT' | 'DOCUMENT' | 'OTHER';
+  readonly type: 'REPORT' | 'DOCUMENT' | 'MEETING_BUNDLE' | 'OTHER';
   readonly title: string;
   readonly mimeType: string;
+  /** 会議から生まれた成果物は、会議へ辿れるようにする（AC3-10）。 */
+  readonly sourceMeetingId?: string;
 }
 
 export interface RequestedApproval {

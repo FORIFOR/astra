@@ -184,6 +184,7 @@ describe.skipIf(!url || !shareUrl)('Phase 2 acceptance', () => {
         db: dbConfig,
         builtinPluginsDir: path.join(repoRoot, 'plugins/builtin'),
         objectStoreRoot: storeRoot,
+        recordingRoot: storeRoot,
         allowedOrigins: [],
         shareHost: SHARE_HOST,
         requesterSalt: 'acceptance2-salt',

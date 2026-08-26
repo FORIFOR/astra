@@ -78,6 +78,7 @@ export ASTRA_DB_IDENTITY_URL="postgres://astra_identity:astra_identity@${PGHOST}
 export REDIS_URL="${REDIS_URL:-redis://localhost:6380}"
 export TEMPORAL_ADDRESS="${TEMPORAL_ADDRESS:-localhost:7233}"
 export ASTRA_OBJECT_STORE_ROOT="$STORE"
+export ASTRA_RECORDING_ROOT="$STORE/recordings"
 export ASTRA_BUILTIN_PLUGINS_DIR="$ROOT/plugins/builtin"
 export ASTRA_TASK_QUEUE="$TASK_QUEUE"
 
@@ -141,13 +142,27 @@ ACTUAL="$(curl -fsS "$BASE/v1/artifacts/$ARTIFACT/content" -H "authorization: Be
 [ "$RECORDED" = "$ACTUAL" ] || fail "checksum mismatch: $RECORDED vs $ACTUAL"
 echo "  sha256 $RECORDED"
 
+say "a meeting records audio through the real websocket"
+MEETING="$(curl -fsS -X POST "$BASE/v1/meetings" -H "authorization: Bearer $AT" \
+  -H 'content-type: application/json' \
+  -d '{"title":"smoke meeting","consent_confirmed":true}' | json 'd["id"]')"
+[ -n "$MEETING" ] || fail "the meeting was not created"
+# WS は curl で張れないので、実クライアントで音を流す
+node "$ROOT/scripts/smoke-audio.mjs" "$BASE" "$AT" "$MEETING" || fail "the audio websocket refused the frames"
+# 音が実際にディスクへ落ちていること。STT より先に録音を残すのが約束（AC3-11）。
+RECORDED_BYTES="$(wc -c < "$STORE/recordings/$MEETING.pcm" 2>/dev/null | tr -d ' ')"
+[ "${RECORDED_BYTES:-0}" -gt 0 ] || fail "no audio was written for $MEETING"
+FINISH="$(curl -fsS -X POST "$BASE/v1/meetings/$MEETING/finish" -H "authorization: Bearer $AT" | json 'd["task_id"]')"
+[ -n "$FINISH" ] || fail "finalize did not start"
+echo "  meeting $MEETING recorded ${RECORDED_BYTES}B, finalizing as task $FINISH"
+
 say "another tenant sees 404, not 403"
 OTHER="$(curl -fsS -X POST "$BASE/v1/auth/dev/token" -H 'content-type: application/json' \
   -d '{"email":"other@example.com","display_name":"Other"}' | json 'd["access_token"]')"
-for path in "/v1/tasks/$TASK" "/v1/artifacts/$ARTIFACT"; do
+for path in "/v1/tasks/$TASK" "/v1/artifacts/$ARTIFACT" "/v1/meetings/$MEETING"; do
   CODE="$(curl -s -o /dev/null -w '%{http_code}' "$BASE$path" -H "authorization: Bearer $OTHER")"
   [ "$CODE" = "404" ] || fail "$path returned $CODE for another tenant"
 done
-echo "  both 404"
+echo "  all 404"
 
 printf '\n\033[1;32mSMOKE PASSED\033[0m\n'

@@ -17,6 +17,13 @@ import {
   StaticSearchProvider,
   researchExecutors,
 } from '@astra/service-research';
+import {
+  FsRecordingStore,
+  KeywordSummarizer,
+  MeetingService,
+  ScriptedBatchTranscriber,
+  meetingExecutors,
+} from '@astra/service-meeting';
 import { createTaskWorker, TASK_QUEUE, NoopPublisher } from '@astra/service-task';
 
 async function main(): Promise<void> {
@@ -35,12 +42,12 @@ async function main(): Promise<void> {
   const namespace = process.env['TEMPORAL_NAMESPACE'] ?? 'default';
   const taskQueue = process.env['ASTRA_TASK_QUEUE'] ?? TASK_QUEUE;
 
-  // LLM と検索のプロバイダは未決（Phase 0 §18 OQ-3）。決定的な実装で先に配線しておき、
-  // 決まったら差し替える（Phase 2 実装仕様 §1.1）。
-  // 本番で決定的実装のまま動かさないよう、明示的に拒む。
+  // LLM・検索・STT のプロバイダは未決（OQ-3 / OQ-11）。決定的な実装で先に配線しておき、
+  // 決まったら差し替える（Phase 2 実装仕様 §1.1 / Phase 3 実装仕様 §1.1）。
+  // 本番で代役のまま動かさないよう、明示的に拒む。
   if (process.env['ASTRA_ENV'] === 'production') {
     throw new Error(
-      'research providers are still the deterministic stand-ins; wire a real search/model provider before production',
+      'research and meeting providers are still the deterministic stand-ins; wire real search/model/STT providers before production',
     );
   }
   const research = new ResearchService({
@@ -49,9 +56,26 @@ async function main(): Promise<void> {
     model: new DeterministicLanguageModel(),
   });
 
+  const recordingRoot = path.resolve(process.env['ASTRA_RECORDING_ROOT'] ?? './.data/recordings');
+  const meetings = new MeetingService({ db, publisher: NoopPublisher });
+
   const connection = await NativeConnection.connect({ address });
   const worker = await createTaskWorker(
-    { db, library, publisher: NoopPublisher, executors: researchExecutors(research) },
+    {
+      db,
+      library,
+      publisher: NoopPublisher,
+      executors: {
+        ...researchExecutors(research),
+        ...meetingExecutors({
+          meetings,
+          library,
+          recordings: new FsRecordingStore(recordingRoot),
+          batch: new ScriptedBatchTranscriber([]),
+          summarizer: new KeywordSummarizer(),
+        }),
+      },
+    },
     { connection, namespace, taskQueue },
   );
 
@@ -63,7 +87,7 @@ async function main(): Promise<void> {
   process.on('SIGINT', () => shutdown('SIGINT'));
 
   logger.info(
-    { address, namespace, taskQueue, object_store: objectStoreRoot },
+    { address, namespace, taskQueue, object_store: objectStoreRoot, recordings: recordingRoot },
     'task worker listening',
   );
   await worker.run();

@@ -416,6 +416,7 @@ export function createTaskActivities(deps: ActivityDeps): TaskActivities {
         fileName: `${title}.md`,
         sourceTaskId: input.taskId,
         sourceAgentId: 'general',
+        ...(spec.sourceMeetingId ? { sourceMeetingId: spec.sourceMeetingId } : {}),
       });
 
       await inTenant(input, (tx) =>

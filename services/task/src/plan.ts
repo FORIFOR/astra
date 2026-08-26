@@ -22,13 +22,15 @@ export interface TaskStep {
 export interface TaskPlan {
   readonly steps: readonly TaskStep[];
   readonly artifact: {
-    readonly type: 'REPORT' | 'DOCUMENT' | 'OTHER';
+    /** contracts の ArtifactType の部分集合。ここは import できない（冒頭の注意）。 */
+    readonly type: 'REPORT' | 'DOCUMENT' | 'MEETING_BUNDLE' | 'OTHER';
     readonly title: string;
     readonly mimeType: string;
+    readonly sourceMeetingId?: string;
   };
 }
 
-export const KNOWN_TASK_KINDS = ['echo', 'research'] as const;
+export const KNOWN_TASK_KINDS = ['echo', 'research', 'meeting.finalize'] as const;
 export type TaskKind = (typeof KNOWN_TASK_KINDS)[number];
 
 export function isKnownTaskKind(kind: string): kind is TaskKind {
@@ -143,12 +145,79 @@ function planResearch(input: Record<string, unknown>): TaskPlan {
   };
 }
 
+/**
+ * 会議の finalize。正本 §11.2 Final Accuracy Path、Phase 3 実装仕様 §5。
+ *
+ * UI/UX §12.5「Finalize 中に window を閉じても継続」は、これを durable task に
+ * することで満たす。会議のために別の仕組みを作らない（D-28）。
+ */
+function planMeetingFinalize(input: Record<string, unknown>): TaskPlan {
+  const meetingId = typeof input['meeting_id'] === 'string' ? input['meeting_id'] : '';
+  const title = typeof input['title'] === 'string' ? input['title'] : '会議';
+  const args = { meeting_id: meetingId };
+
+  const steps: TaskStep[] = [
+    {
+      index: 0,
+      toolId: 'meeting.seal',
+      risk: 'READ',
+      surface: 'cloud',
+      message: '録音を保存しています',
+      args,
+    },
+    {
+      index: 1,
+      toolId: 'meeting.transcribe',
+      risk: 'READ',
+      surface: 'cloud',
+      message: '高精度の文字起こしを作成中',
+      args,
+    },
+    {
+      index: 2,
+      toolId: 'meeting.reconcile',
+      risk: 'READ',
+      surface: 'cloud',
+      message: '話者を突き合わせています',
+      args,
+    },
+    {
+      index: 3,
+      toolId: 'meeting.summarize',
+      risk: 'READ',
+      surface: 'cloud',
+      message: '要点・決定事項・ToDo をまとめています',
+      args,
+    },
+    {
+      index: 4,
+      toolId: 'meeting.bundle',
+      risk: 'READ',
+      surface: 'cloud',
+      message: '議事録を保存しています',
+      args,
+    },
+  ];
+
+  return {
+    steps,
+    artifact: {
+      type: 'MEETING_BUNDLE',
+      title,
+      mimeType: 'text/markdown',
+      sourceMeetingId: meetingId,
+    },
+  };
+}
+
 export function planTask(kind: string, input: Record<string, unknown>): TaskPlan {
   switch (kind) {
     case 'echo':
       return planEcho(input);
     case 'research':
       return planResearch(input);
+    case 'meeting.finalize':
+      return planMeetingFinalize(input);
     default:
       throw new UnknownTaskKindError(kind);
   }

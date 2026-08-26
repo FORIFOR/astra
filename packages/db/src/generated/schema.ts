@@ -161,6 +161,50 @@ export interface Evidence {
   tenant_id: string;
 }
 
+export interface Meetings {
+  audio_sources: string[];
+  bundle_artifact_id: string | null;
+  consent_at: Timestamp;
+  created_at: Generated<Timestamp>;
+  created_by: string;
+  degraded_at: Timestamp | null;
+  ended_at: Timestamp | null;
+  finalize_task_id: string | null;
+  id: string;
+  language: string;
+  recording_artifact_id: string | null;
+  started_at: Generated<Timestamp>;
+  status: string;
+  target_language: string | null;
+  tenant_id: string;
+  title: string;
+  updated_at: Generated<Timestamp>;
+}
+
+export interface MeetingSegments {
+  confidence: Numeric | null;
+  created_at: Generated<Timestamp>;
+  end_ms: number;
+  id: string;
+  language: string | null;
+  meeting_id: string;
+  pass: string;
+  speaker_tag: number | null;
+  start_ms: number;
+  supersedes: Generated<string[]>;
+  tenant_id: string;
+  text: string;
+}
+
+export interface MeetingSpeakers {
+  created_at: Generated<Timestamp>;
+  display_name: string;
+  meeting_id: string;
+  named_by: string;
+  speaker_tag: number;
+  tenant_id: string;
+}
+
 export interface Memberships {
   created_at: Generated<Timestamp>;
   role: string;
@@ -324,6 +368,15 @@ export interface Tenants {
   name: string;
 }
 
+export interface Translations {
+  created_at: Generated<Timestamp>;
+  meeting_id: string;
+  segment_id: string;
+  target_language: string;
+  tenant_id: string;
+  text: string;
+}
+
 export interface Turns {
   content: Generated<Json>;
   conversation_id: string;
@@ -353,6 +406,9 @@ export interface DB {
   devices: Devices;
   event_streams: EventStreams;
   evidence: Evidence;
+  meeting_segments: MeetingSegments;
+  meeting_speakers: MeetingSpeakers;
+  meetings: Meetings;
   memberships: Memberships;
   plugin_installs: PluginInstalls;
   plugin_permissions: PluginPermissions;
@@ -367,6 +423,7 @@ export interface DB {
   task_events: TaskEvents;
   tasks: Tasks;
   tenants: Tenants;
+  translations: Translations;
   turns: Turns;
   users: Users;
 }

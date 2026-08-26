@@ -45,6 +45,7 @@ export const EVENT_TYPES = [
   'meeting.transcript.partial',
   'meeting.transcript.final',
   'meeting.translation.final',
+  'meeting.ended',
 ] as const;
 
 export const EventType = z.enum(EVENT_TYPES);
@@ -167,6 +168,16 @@ export const MeetingTranscriptPayload = z.object({
   language: z.string().nullable(),
 });
 
+/**
+ * 会議の終わり。**この列の終端**なので、SSE はこれを送ったら閉じる。
+ * 終端が無いと、終わった会議の購読が永久に開いたままになる。
+ */
+export const MeetingEndedPayload = z.object({
+  status: z.enum(['COMPLETE', 'FAILED']),
+  /** finalize を回している task。閉じたあとの続きはここで追える。 */
+  finalize_task_id: z.string().nullable(),
+});
+
 export const MeetingTranslationPayload = z.object({
   segment_id: z.string(),
   target_language: z.string(),
@@ -221,6 +232,7 @@ export const MeetingTranslationFinalEvent = evt(
   'meeting.translation.final',
   MeetingTranslationPayload,
 );
+export const MeetingEndedEvent = evt('meeting.ended', MeetingEndedPayload);
 
 export const EventEnvelope = z.discriminatedUnion('type', [
   TaskStartedEvent,
@@ -239,6 +251,7 @@ export const EventEnvelope = z.discriminatedUnion('type', [
   MeetingTranscriptPartialEvent,
   MeetingTranscriptFinalEvent,
   MeetingTranslationFinalEvent,
+  MeetingEndedEvent,
 ]);
 export type EventEnvelope = z.infer<typeof EventEnvelope>;
 

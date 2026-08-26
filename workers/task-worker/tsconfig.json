@@ -23,6 +23,9 @@
     },
     {
       "path": "../../services/task"
+    },
+    {
+      "path": "../../services/meeting"
     }
   ]
 }

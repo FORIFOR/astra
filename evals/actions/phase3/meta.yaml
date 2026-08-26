@@ -1,0 +1,8 @@
+# 実装仕様 §14.2 の eval harness 契約
+phase: 3
+tags: [acceptance, blocking]
+# Phase 3 の Exit 判定そのもの。落ちたら CI を止める。
+blocking: true
+description: >
+  Phase 3 実装仕様 §0 の AC3-1〜AC3-12。
+  「録音を始める → 話者付きで文字起こし → 終了 → 議事録が残る」を HTTP から検証する。

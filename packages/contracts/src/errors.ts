@@ -37,6 +37,10 @@ export const ERROR_CODES = [
   'artifact.too_large',
   'artifact.checksum_mismatch',
   'artifact.unsupported_type',
+  // meeting
+  'meeting.not_found',
+  'meeting.not_recording',
+  'meeting.already_finalizing',
   // plugin
   'plugin.not_found',
   'plugin.manifest_invalid',
@@ -92,6 +96,9 @@ const STATUS: Partial<Record<ErrorCode, number>> = {
   'artifact.too_large': 413,
   'artifact.checksum_mismatch': 422,
   'artifact.unsupported_type': 415,
+  'meeting.not_found': 404,
+  'meeting.not_recording': 409,
+  'meeting.already_finalizing': 409,
   'plugin.not_found': 404,
   'plugin.manifest_invalid': 400,
   'plugin.incompatible': 409,

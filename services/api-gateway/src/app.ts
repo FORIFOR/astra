@@ -27,6 +27,11 @@ import { registerTaskRoutes } from './routes/tasks.js';
 import { registerArtifactRoutes } from './routes/artifacts.js';
 import { registerPluginRoutes } from './routes/plugins.js';
 import { registerShareRoutes } from './routes/shares.js';
+import {
+  registerMeetingAudioRoute,
+  registerMeetingRoutes,
+  type MeetingRuntime,
+} from './routes/meetings.js';
 import { HostBridge } from './host/bridge.js';
 import { registerHostRoutes } from './host/routes.js';
 import type { RateLimiter } from './rate-limit/index.js';
@@ -43,6 +48,7 @@ export interface AppDeps {
   readonly library: LibraryService;
   readonly registry: PluginRegistryService;
   readonly shares?: ShareService;
+  readonly meetings?: MeetingRuntime;
   readonly bridge?: HostBridge;
   /** SSE のポーリング間隔。テストは短くする。 */
   readonly ssePollIntervalMs?: number;
@@ -101,6 +107,18 @@ export function buildApp(deps: AppDeps): App {
   });
   registerArtifactRoutes(app, { library: deps.library });
   registerPluginRoutes(app, { registry: deps.registry });
+  if (deps.meetings) {
+    registerMeetingRoutes(app, {
+      ...deps.meetings,
+      tasks: deps.tasks,
+      tokens: deps.tokens,
+      logger: deps.logger,
+      redis: deps.redis,
+      ...(deps.ssePollIntervalMs === undefined
+        ? {}
+        : { ssePollIntervalMs: deps.ssePollIntervalMs }),
+    });
+  }
   if (deps.shares) {
     registerShareRoutes(app, {
       shares: deps.shares,
@@ -123,6 +141,15 @@ export function buildApp(deps: AppDeps): App {
       tokens: deps.tokens,
       logger: deps.logger,
     });
+    if (deps.meetings) {
+      registerMeetingAudioRoute(instance as unknown as App, {
+        ...deps.meetings,
+        tasks: deps.tasks,
+        tokens: deps.tokens,
+        logger: deps.logger,
+        redis: deps.redis,
+      });
+    }
   });
 
   return app;

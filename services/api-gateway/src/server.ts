@@ -6,6 +6,11 @@ import { FsObjectStore, LibraryService } from '@astra/service-library';
 import { TaskService, TemporalTaskRuntime } from '@astra/service-task';
 import { PluginRegistryService } from '@astra/service-plugin-registry';
 import { ShareService } from '@astra/service-share';
+import {
+  FsRecordingStore,
+  MeetingService,
+  ScriptedStreamingTranscriber,
+} from '@astra/service-meeting';
 import { buildApp } from './app.js';
 import { assertPathsExist, gatewayConfigFromEnv } from './config.js';
 import { keyConfigFromEnv, loadSigningKeys } from './auth/keys.js';
@@ -52,6 +57,15 @@ async function main(): Promise<void> {
   const tasks = new TaskService(db, runtime);
   const shares = new ShareService({ db, library, shareHost: config.shareHost });
   const registry = new PluginRegistryService({ db, coreVersion: config.version });
+
+  // STT のプロバイダは未決（Phase 3 §10 OQ-11）。代役で先に配線しておき、
+  // 決まったら差し替える。本番で代役のまま動かさない。
+  if (config.env === 'production') {
+    throw new Error(
+      'the meeting transcriber is still a stand-in; wire a real STT provider before production',
+    );
+  }
+  const meetings = new MeetingService({ db, publisher: { async publish() {} } });
   // 同梱プラグインは起動のたびに読み直す。バンドルが正、DB はその写し。
   await registry.seedBuiltins(config.builtinPluginsDir);
 
@@ -65,6 +79,13 @@ async function main(): Promise<void> {
     tasks,
     library,
     registry,
+    // Phase 2 の共有経路。渡し忘れると本番だけ 404 になる（実際に抜けていた）。
+    shares,
+    meetings: {
+      meetings,
+      recordings: new FsRecordingStore(config.recordingRoot),
+      transcriber: new ScriptedStreamingTranscriber([]),
+    },
   });
 
   const shutdown = async (signal: string): Promise<void> => {

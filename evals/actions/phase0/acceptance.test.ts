@@ -208,6 +208,7 @@ describe.skipIf(!url)('Phase 0 acceptance', () => {
         },
         builtinPluginsDir: path.join(repoRoot, 'plugins/builtin'),
         objectStoreRoot: storeRoot,
+        recordingRoot: storeRoot,
         allowedOrigins: [],
         shareHost: 'http://localhost:1430',
         requesterSalt: 'acceptance-salt',
