@@ -18,7 +18,7 @@ import {
 } from '@astra/service-agent-runtime';
 import { WorldModelService } from '@astra/service-world-model';
 import { ConversationService } from '@astra/service-conversation';
-import { researchDataSources } from '@astra/service-research';
+import { ResearchLedgerService, researchDataSources } from '@astra/service-research';
 import { meetingDataSources } from '@astra/service-meeting';
 import { ShareService } from '@astra/service-share';
 import {
@@ -118,6 +118,8 @@ async function main(): Promise<void> {
     registry,
     // Phase 2 の共有経路。渡し忘れると本番だけ 404 になる（実際に抜けていた）。
     shares,
+    // UI/UX §15 の Evidence。読むだけなので db だけで足りる。
+    evidence: new ResearchLedgerService(db),
     meetings: {
       meetings,
       recordings: new FsRecordingStore(config.recordingRoot),

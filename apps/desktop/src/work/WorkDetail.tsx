@@ -16,6 +16,7 @@ import { useEffect, useMemo, useState, type ReactElement } from 'react';
 import type { Artifact, ContextSource } from '@astra/contracts';
 import type { AstraClient } from '@astra/api-client';
 import { Receipts } from './Receipts.js';
+import { TaskEvidence } from './EvidenceLedger.js';
 import { formatElapsed, type WorkStep, type WorkView } from './workView.js';
 
 export const WORK_DETAIL_TABS = [
@@ -161,22 +162,6 @@ function Outputs({
   );
 }
 
-function Evidence({ artifacts }: { artifacts: readonly Artifact[] | null }): ReactElement {
-  // 根拠は調査の成果物が持つ。持っていないなら、無いと言う。
-  const reports = (artifacts ?? []).filter((a) => a.type === 'REPORT');
-  if (artifacts === null) return <p className="astra-empty">読み込んでいます。</p>;
-  if (reports.length === 0) {
-    return <p className="astra-empty">この仕事は、根拠を集める仕事ではありませんでした。</p>;
-  }
-  return (
-    <ul className="astra-detail__evidence">
-      {reports.map((report) => (
-        <li key={report.id}>{report.title}</li>
-      ))}
-    </ul>
-  );
-}
-
 /** §9.2 Activity: tool/audit event を**人間可読に要約**する。tool 名は出さない。 */
 export function activityLines(view: WorkView): { at: string | null; text: string }[] {
   const lines: { at: string | null; text: string }[] = [];
@@ -272,7 +257,8 @@ export function WorkDetail({
           />
         );
       case 'evidence':
-        return <Evidence artifacts={artifacts} />;
+        // §15: L0 から 1 段ずつ掘る。最初から全部は出さない。
+        return <TaskEvidence client={client} taskId={taskId} />;
       case 'activity':
         return <Activity view={view} />;
     }

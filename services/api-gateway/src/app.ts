@@ -23,7 +23,7 @@ import { registerHealthRoutes } from './routes/health.js';
 import { registerAuth } from './auth/middleware.js';
 import { registerAuthRoutes } from './auth/routes.js';
 import type { JwtTokens } from './auth/tokens.js';
-import { registerTaskRoutes } from './routes/tasks.js';
+import { registerTaskRoutes, type EvidenceReader } from './routes/tasks.js';
 import { registerArtifactRoutes } from './routes/artifacts.js';
 import { registerPluginRoutes } from './routes/plugins.js';
 import { registerShareRoutes } from './routes/shares.js';
@@ -55,6 +55,8 @@ export interface AppDeps {
   readonly library: LibraryService;
   readonly registry: PluginRegistryService;
   readonly shares?: ShareService;
+  /** UI/UX §15 の Evidence Ledger を引く先。 */
+  readonly evidence?: EvidenceReader;
   readonly meetings?: MeetingRuntime;
   /** dashboard の bind を解決する先。gateway が各サービスの束を合成して渡す。 */
   readonly dataSources?: DataSourceResolver;
@@ -120,6 +122,7 @@ export function buildApp(deps: AppDeps): App {
   registerTaskRoutes(app, {
     tasks: deps.tasks,
     redis: deps.redis,
+    ...(deps.evidence === undefined ? {} : { evidence: deps.evidence }),
     ...(deps.ssePollIntervalMs === undefined ? {} : { ssePollIntervalMs: deps.ssePollIntervalMs }),
   });
   registerArtifactRoutes(app, { library: deps.library });

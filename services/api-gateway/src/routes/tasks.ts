@@ -20,8 +20,15 @@ import { requirePrincipal } from '../auth/middleware.js';
 import { CREATE_TASK_RATE_LIMIT } from '../plugins/rate-limit.js';
 import { parseLastEventId, pollingWaker, pumpEventStream, redisWaker } from './sse.js';
 
+/** Evidence Ledger を引く口。読むだけなので、検索も生成も要らない（§5.1）。 */
+export interface EvidenceReader {
+  ledger(tenantId: string, taskId: string): Promise<unknown>;
+}
+
 export interface TaskRouteDeps {
   readonly tasks: TaskService;
+  /** UI/UX §15 の Evidence。無ければその経路は 404 のまま。 */
+  readonly evidence?: EvidenceReader;
   readonly redis: Redis | null;
   /** SSE のポーリング間隔。Redis があれば「起こされなかったとき」の上限として働く。 */
   readonly ssePollIntervalMs?: number;
@@ -75,6 +82,17 @@ export function registerTaskRoutes(app: App, deps: TaskRouteDeps): void {
     // UI/UX §22: 監査ログは管理者向け。本人には受け取りの控えを人が読める形で返す。
     const items = await deps.tasks.receipts(principal.tenantId, request.params.taskId);
     return { items };
+  });
+
+  app.get<{ Params: { taskId: string } }>('/v1/tasks/:taskId/evidence', async (request) => {
+    const principal = requirePrincipal();
+    // 存在しない / 他テナントなら、evidence を見に行く前に 404
+    await deps.tasks.get(principal.tenantId, request.params.taskId);
+    if (!deps.evidence) {
+      throw new AstraError('common.not_found', 'evidence is not available in this deployment');
+    }
+    // UI/UX §15: L0〜L3 を 1 度に返す。段ごとに待たせない。
+    return deps.evidence.ledger(principal.tenantId, request.params.taskId);
   });
 
   app.post<{ Params: { taskId: string } }>('/v1/tasks/:taskId/cancel', async (request) => {

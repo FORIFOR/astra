@@ -4,7 +4,13 @@
  * 手順の間で状態を持ち回さない。**Evidence Ledger と research_runs が状態そのもの**。
  * activity は何度でも再実行され得るので、途中経過をメモリに置くと壊れる。
  */
-import { AstraError, canonicalSha256, uuidv7 } from '@astra/contracts';
+import {
+  AstraError,
+  canonicalSha256,
+  countContradictionPairs,
+  uuidv7,
+  type EvidenceLedger,
+} from '@astra/contracts';
 import { withTenant, type DbHandle, type ScopedDb } from '@astra/db';
 import {
   candidateFrom,
@@ -15,6 +21,7 @@ import {
   type ScoredCandidate,
 } from './quality.js';
 import type { LanguageModel, SearchProvider } from './providers.js';
+import { ResearchLedgerService } from './ledger.js';
 
 export interface ResearchDeps {
   readonly db: DbHandle;
@@ -257,6 +264,11 @@ export class ResearchService {
     };
   }
 
+  /** Evidence Ledger。実装は ResearchLedgerService（読むだけなら db で足りる）。 */
+  async ledger(tenantId: string, taskId: string): Promise<EvidenceLedger> {
+    return new ResearchLedgerService(this.#db).ledger(tenantId, taskId);
+  }
+
   async #find(tx: ScopedDb, taskId: string): Promise<RunRow | undefined> {
     const row = await tx
       .selectFrom('research_runs')
@@ -298,9 +310,11 @@ interface EvidenceRow {
   source_type: string;
   publisher: string | null;
   published_at: Date | null;
+  retrieved_at: Date;
   claim: string;
   quality_score: string;
   freshness_score: string;
+  supports: string[];
   contradicts: string[];
 }
 
@@ -316,6 +330,8 @@ export function composeReport(
   evidence: readonly EvidenceRow[],
 ): string {
   const distinct = [...new Set(evidence.map((row) => row.source_url))];
+  // 行数ではなく組の数。1 件の食い違いを 2 件と書かない。
+  const contradictionCount = countContradictionPairs(evidence);
   const contradictions = evidence.filter((row) => row.contradicts.length > 0);
   const byType = new Map<string, number>();
   for (const row of evidence) byType.set(row.source_type, (byType.get(row.source_type) ?? 0) + 1);
@@ -329,7 +345,7 @@ export function composeReport(
       ? summary.map((point, index) => `${index + 1}. ${point}`)
       : ['確かなことは分かりませんでした。']),
     '',
-    `${distinct.length} sources · confidence: ${run.confidence ?? 'low'} · contradictions: ${contradictions.length}`,
+    `${distinct.length} sources · confidence: ${run.confidence ?? 'low'} · contradictions: ${contradictionCount}`,
     '',
     '## 出典',
     '',

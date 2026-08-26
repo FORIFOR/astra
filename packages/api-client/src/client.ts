@@ -14,6 +14,7 @@ import {
   DashboardView,
   ActionReceiptView,
   CreateTaskRequest,
+  EvidenceLedger,
   Meeting,
   MeetingSegment,
   MeetingSpeaker,
@@ -148,6 +149,16 @@ export class AstraClient {
     return this.http.request(
       { method: 'GET', path: `/v1/artifacts/${artifactId}/shares` },
       (value) => z.object({ items: z.array(Share) }).parse(value).items,
+    );
+  }
+
+  /**
+   * 根拠の台帳。UI/UX §15。**L0〜L3 を 1 度に取る。**
+   * 調査でない仕事では 404（空の台帳を返さない）。
+   */
+  async taskEvidence(taskId: string): Promise<EvidenceLedger> {
+    return this.http.request({ method: 'GET', path: `/v1/tasks/${taskId}/evidence` }, (value) =>
+      EvidenceLedger.parse(value),
     );
   }
 

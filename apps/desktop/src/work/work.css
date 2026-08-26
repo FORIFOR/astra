@@ -311,3 +311,41 @@
   color: var(--astra-color-muted);
   font-size: var(--astra-font-size-sm, 0.875rem);
 }
+
+/* Evidence Ledger（UI/UX §15）。掘るまで前に出さない。 */
+.astra-evidence__headline {
+  margin: 0;
+  font-weight: 600;
+}
+
+.astra-evidence__groups,
+.astra-evidence__claims,
+.astra-evidence__pairs,
+.astra-evidence__items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--astra-space-xs, 4px);
+}
+
+.astra-evidence__groups {
+  grid-auto-flow: column;
+  justify-content: start;
+  gap: var(--astra-space-sm, 8px);
+}
+
+.astra-evidence__claim {
+  margin: 0;
+}
+
+.astra-evidence__versus,
+.astra-evidence__relation,
+.astra-evidence__source {
+  margin: 0;
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-sm, 0.875rem);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--astra-space-xs, 4px);
+}

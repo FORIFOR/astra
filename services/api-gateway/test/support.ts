@@ -11,6 +11,7 @@ import { InMemoryTaskRuntime, TaskService } from '@astra/service-task';
 import { PluginRegistryService } from '@astra/service-plugin-registry';
 import type { DataSourceResolver } from '@astra/service-plugin-registry';
 import { ShareService } from '@astra/service-share';
+import { ResearchLedgerService } from '@astra/service-research';
 import {
   MeetingService,
   MemoryRecordingStore,
@@ -127,6 +128,8 @@ export async function makeTestApp(options: MakeAppOptions): Promise<TestApp> {
     library,
     registry,
     shares,
+    // UI/UX §15 の Evidence。本番と同じく db だけで読む。
+    evidence: new ResearchLedgerService(db),
     ...(options.dataSources === undefined ? {} : { dataSources: options.dataSources }),
     meetings: {
       meetings,

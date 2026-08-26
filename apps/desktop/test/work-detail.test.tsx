@@ -68,10 +68,15 @@ const artifact = (over: Partial<Artifact> = {}): Artifact =>
     ...over,
   }) as Artifact;
 
-const clientWith = (artifacts: Artifact[]) =>
+const clientWith = (artifacts: Artifact[], evidence?: unknown) =>
   ({
     listArtifacts: vi.fn(async () => ({ items: artifacts, nextCursor: null })),
     taskReceipts: vi.fn(async () => []),
+    taskEvidence: vi.fn(async () => {
+      // 調査でない仕事は 404。空の台帳を返さない。
+      if (evidence === undefined) throw new Error('common.not_found');
+      return evidence;
+    }),
   }) as never;
 
 describe('the five tabs the spec names', () => {
@@ -217,7 +222,7 @@ describe('Outputs', () => {
 });
 
 describe('Evidence', () => {
-  it('separates "no evidence" from "this was not that kind of work"', async () => {
+  it('says so when the work was not a research run', async () => {
     render(<WorkDetail view={view()} taskId={TASK} client={clientWith([])} />);
     await userEvent.click(screen.getByRole('tab', { name: '根拠' }));
     await waitFor(() =>
@@ -225,10 +230,23 @@ describe('Evidence', () => {
     );
   });
 
-  it('shows the report when there is one', async () => {
-    render(<WorkDetail view={view()} taskId={TASK} client={clientWith([artifact()])} />);
+  it('opens the ledger at L0, not at everything (§15)', async () => {
+    const evidence = {
+      task_id: TASK,
+      question: 'A社の売上は',
+      source_count: 12,
+      confidence: 'high',
+      contradiction_count: 0,
+      groups: [{ source_type: 'official', count: 12 }],
+      key_claims: ['売上は 100 億円'],
+      items: [],
+    };
+    render(<WorkDetail view={view()} taskId={TASK} client={clientWith([artifact()], evidence)} />);
     await userEvent.click(screen.getByRole('tab', { name: '根拠' }));
-    expect(await screen.findByText('競合レポート')).toBeTruthy();
+
+    expect(await screen.findByText(/出典 12 件/)).toBeTruthy();
+    // 掘る前に主張は出さない
+    expect(screen.queryByText('売上は 100 億円')).toBeNull();
   });
 });
 

@@ -361,6 +361,161 @@ describe.skipIf(!url)('task and artifact http surface', () => {
     });
   });
 
+  describe('GET /v1/tasks/{id}/evidence', () => {
+    /** 調査 1 件と、食い違う根拠 2 件を置く。 */
+    const seedResearch = async (taskId: string): Promise<{ a: string; b: string }> => {
+      const runId = uuidv7();
+      const a = uuidv7();
+      const b = uuidv7();
+      await withTenant(harness.db, tenantId, async (tx) => {
+        await tx
+          .insertInto('research_runs')
+          .values({
+            id: runId,
+            tenant_id: tenantId,
+            task_id: taskId,
+            question: 'A社の売上は',
+            sub_queries: JSON.stringify([]),
+            status: 'COMPLETE',
+            source_count: 2,
+            confidence: 'low',
+          })
+          .execute();
+        const evidence = (id: string, url: string, claim: string, contradicts: string[]) => ({
+          id,
+          tenant_id: tenantId,
+          research_run_id: runId,
+          source_url: url,
+          source_type: 'official',
+          publisher: 'Example Inc',
+          published_at: new Date('2026-08-01T00:00:00.000Z'),
+          claim,
+          support_text_ref: null,
+          quality_score: '0.90',
+          freshness_score: '0.80',
+          supports: [],
+          contradicts,
+        });
+        await tx
+          .insertInto('evidence')
+          .values([
+            evidence(a, 'https://official.example.com/ir', '売上は 100 億円', [b]),
+            evidence(b, 'https://news.example.com/story', '売上は 120 億円', [a]),
+          ])
+          .execute();
+      });
+      return { a, b };
+    };
+
+    it('returns L0 through L3 in one call (§15)', async () => {
+      const created = (await createTask(`k-${uuidv7()}`)).json<Task>();
+      await seedResearch(created.id);
+
+      const res = await app.inject({
+        method: 'GET',
+        url: `/v1/tasks/${created.id}/evidence`,
+        headers: auth,
+      });
+      expect(res.statusCode).toBe(200);
+      const ledger = res.json<{
+        source_count: number;
+        confidence: string;
+        contradiction_count: number;
+        groups: { source_type: string; count: number }[];
+        items: { claim: string; contradicts: string[]; retrieved_at: string }[];
+      }>();
+
+      // L0
+      expect(ledger.source_count).toBe(2);
+      expect(ledger.confidence).toBe('low');
+      // 行は 2 つでも、食い違いは 1 件
+      expect(ledger.contradiction_count).toBe(1);
+      // L1
+      expect(ledger.groups).toEqual([{ source_type: 'official', count: 2 }]);
+      // L2 / L3
+      expect(ledger.items).toHaveLength(2);
+      expect(ledger.items[0]!.contradicts).toHaveLength(1);
+      expect(ledger.items[0]!.retrieved_at).toBeTruthy();
+    });
+
+    it('counts one source when the same page was used twice', async () => {
+      const created = (await createTask(`k-${uuidv7()}`)).json<Task>();
+      const runId = uuidv7();
+      await withTenant(harness.db, tenantId, async (tx) => {
+        await tx
+          .insertInto('research_runs')
+          .values({
+            id: runId,
+            tenant_id: tenantId,
+            task_id: created.id,
+            question: '同じページ',
+            sub_queries: JSON.stringify([]),
+            status: 'COMPLETE',
+            source_count: 2,
+            confidence: 'medium',
+          })
+          .execute();
+        await tx
+          .insertInto('evidence')
+          .values(
+            ['一つ目', '二つ目'].map((claim) => ({
+              id: uuidv7(),
+              tenant_id: tenantId,
+              research_run_id: runId,
+              source_url: 'https://official.example.com/ir',
+              source_type: 'official',
+              publisher: null,
+              published_at: null,
+              claim,
+              support_text_ref: null,
+              quality_score: '0.50',
+              freshness_score: '0.50',
+              supports: [],
+              contradicts: [],
+            })),
+          )
+          .execute();
+      });
+
+      const ledger = (
+        await app.inject({
+          method: 'GET',
+          url: `/v1/tasks/${created.id}/evidence`,
+          headers: auth,
+        })
+      ).json<{ source_count: number }>();
+      // 同じページを 2 回引いて「2 sources」と言わない
+      expect(ledger.source_count).toBe(1);
+    });
+
+    it('is 404 for a task that never gathered anything', async () => {
+      const created = (await createTask(`k-${uuidv7()}`)).json<Task>();
+      const res = await app.inject({
+        method: 'GET',
+        url: `/v1/tasks/${created.id}/evidence`,
+        headers: auth,
+      });
+      // 空の台帳を返すと「調べたが何も無かった」に見える
+      expect(res.statusCode).toBe(404);
+    });
+
+    it('is 404 for another tenant, before it looks at the evidence', async () => {
+      const created = (await createTask(`k-${uuidv7()}`)).json<Task>();
+      await seedResearch(created.id);
+      const other = await app.inject({
+        method: 'POST',
+        url: '/v1/auth/dev/token',
+        payload: { email: `e-${uuidv7()}@example.com`, display_name: 'E' },
+      });
+      const res = await app.inject({
+        method: 'GET',
+        url: `/v1/tasks/${created.id}/evidence`,
+        headers: { authorization: `Bearer ${other.json<TokenResponse>().access_token}` },
+      });
+      expect(res.statusCode).toBe(404);
+    });
+  });
+
   describe('GET /v1/tasks/{id}/stream', () => {
     it('replays the whole stream and closes on the terminal event', async () => {
       const created = (await createTask(`k-${uuidv7()}`)).json<Task>();
