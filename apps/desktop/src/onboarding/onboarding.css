@@ -1,0 +1,61 @@
+/* 初期セットアップ。正本 §3。**説明を並べない。** */
+
+.astra-onboarding {
+  display: flex;
+  flex-direction: column;
+  gap: var(--astra-space-lg);
+  max-width: 640px;
+  margin: 0 auto;
+  padding: var(--astra-space-lg);
+}
+
+.astra-onboarding__promise {
+  margin: 0;
+  font-size: var(--astra-font-size-card-title);
+  line-height: var(--astra-line-height-body);
+}
+
+.astra-onboarding__choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--astra-space-compact);
+}
+
+.astra-onboarding__choices button[aria-pressed='true'] {
+  border-color: var(--astra-color-accent);
+  background: var(--astra-color-accent);
+  color: var(--astra-color-accent-on);
+}
+
+.astra-onboarding__packs,
+.astra-onboarding__permissions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--astra-space-base);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.astra-onboarding__packs li,
+.astra-onboarding__permissions li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--astra-padding-card);
+  border: var(--astra-border-hairline) solid var(--astra-color-border);
+  border-radius: var(--astra-radius-standard);
+  background: var(--astra-color-surface);
+}
+
+.astra-onboarding__pack-name {
+  font-weight: 600;
+}
+
+.astra-onboarding__pack-why,
+.astra-onboarding__pack-perms,
+.astra-onboarding__why,
+.astra-onboarding__note {
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-micro);
+}

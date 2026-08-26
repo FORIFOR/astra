@@ -456,6 +456,29 @@ ALTER TABLE ONLY public.memberships FORCE ROW LEVEL SECURITY;
 
 
 --
+-- Name: onboarding_states; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.onboarding_states (
+    tenant_id uuid NOT NULL,
+    user_id uuid NOT NULL,
+    step text DEFAULT 'promise'::text NOT NULL,
+    input_preference text,
+    interests text[] DEFAULT '{}'::text[] NOT NULL,
+    installed_plugins text[] DEFAULT '{}'::text[] NOT NULL,
+    granted_permissions text[] DEFAULT '{}'::text[] NOT NULL,
+    first_task_id uuid,
+    completed_at timestamp with time zone,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT onboarding_done_needs_a_first_task CHECK (((completed_at IS NULL) OR (first_task_id IS NOT NULL))),
+    CONSTRAINT onboarding_states_input_preference_check CHECK ((input_preference = ANY (ARRAY['voice'::text, 'text'::text, 'both'::text]))),
+    CONSTRAINT onboarding_states_step_check CHECK ((step = ANY (ARRAY['promise'::text, 'input_preference'::text, 'interests'::text, 'packs'::text, 'permissions'::text, 'shortcut'::text, 'first_task'::text, 'done'::text])))
+);
+
+ALTER TABLE ONLY public.onboarding_states FORCE ROW LEVEL SECURITY;
+
+
+--
 -- Name: plugin_assets; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1014,6 +1037,14 @@ ALTER TABLE ONLY public.meetings
 
 ALTER TABLE ONLY public.memberships
     ADD CONSTRAINT memberships_pkey PRIMARY KEY (tenant_id, user_id);
+
+
+--
+-- Name: onboarding_states onboarding_states_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.onboarding_states
+    ADD CONSTRAINT onboarding_states_pkey PRIMARY KEY (tenant_id, user_id);
 
 
 --
@@ -2028,6 +2059,30 @@ ALTER TABLE ONLY public.memberships
 
 
 --
+-- Name: onboarding_states onboarding_states_first_task_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.onboarding_states
+    ADD CONSTRAINT onboarding_states_first_task_id_fkey FOREIGN KEY (first_task_id) REFERENCES public.tasks(id);
+
+
+--
+-- Name: onboarding_states onboarding_states_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.onboarding_states
+    ADD CONSTRAINT onboarding_states_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+
+--
+-- Name: onboarding_states onboarding_states_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.onboarding_states
+    ADD CONSTRAINT onboarding_states_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
 -- Name: plugin_assets plugin_assets_plugin_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2614,6 +2669,19 @@ CREATE POLICY memberships_tenant_isolation ON public.memberships USING ((tenant_
 
 
 --
+-- Name: onboarding_states; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.onboarding_states ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: onboarding_states onboarding_states_tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY onboarding_states_tenant_isolation ON public.onboarding_states USING ((tenant_id = public.astra_current_tenant())) WITH CHECK ((tenant_id = public.astra_current_tenant()));
+
+
+--
 -- Name: plugin_installs; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -2847,3 +2915,4 @@ INSERT INTO schema_migrations (version) VALUES ('20260826040001');
 INSERT INTO schema_migrations (version) VALUES ('20260826050001');
 INSERT INTO schema_migrations (version) VALUES ('20260826060001');
 INSERT INTO schema_migrations (version) VALUES ('20260827010001');
+INSERT INTO schema_migrations (version) VALUES ('20260827020001');

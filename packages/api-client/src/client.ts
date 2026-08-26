@@ -8,6 +8,8 @@ import {
   Artifact,
   ConversationState,
   CreateMeetingRequest,
+  OnboardingState,
+  PackRecommendation,
   DailyBrief,
   DashboardView,
   CreateTaskRequest,
@@ -150,6 +152,34 @@ export class AstraClient {
   /** タスクの進捗を購読する。切断からの再開は clientside で面倒を見る（§7.3）。 */
   streamTask(taskId: string, options: StreamOptions): Promise<number> {
     return streamTaskEvents(this.http, taskId, options);
+  }
+
+  // ---------------------------------------------------------- onboarding
+
+  async onboarding(): Promise<OnboardingState> {
+    return this.http.request({ path: '/v1/onboarding' }, (value) => OnboardingState.parse(value));
+  }
+
+  async updateOnboarding(patch: Record<string, unknown>): Promise<OnboardingState> {
+    return this.http.request({ method: 'PATCH', path: '/v1/onboarding', body: patch }, (value) =>
+      OnboardingState.parse(value),
+    );
+  }
+
+  /** 薦めるものと、そのために要る許可。**まとめて要求はしない。** */
+  async onboardingRecommendations(
+    interests: readonly string[],
+  ): Promise<{ items: PackRecommendation[]; permissions: string[] }> {
+    return this.http.request(
+      {
+        path: '/v1/onboarding/recommendations',
+        query: { interests: interests.join(',') },
+      },
+      (value) =>
+        z
+          .object({ items: z.array(PackRecommendation), permissions: z.array(z.string()) })
+          .parse(value),
+    );
   }
 
   // --------------------------------------------------------- conversation

@@ -244,4 +244,43 @@ describe.skipIf(!url)('Phase 7 acceptance', () => {
     const headers = { authorization: `Bearer ${outsider.json<TokenResponse>().access_token}` };
     expect((await get(`/v1/conversations/${conversationId}`, headers)).statusCode).toBe(404);
   });
+  describe('the first run (正本 §3)', () => {
+    it('does not call itself finished without one real task', async () => {
+      // 送り切っただけで完了にすると、成功体験のないまま製品が始まる
+      const state = await get('/v1/onboarding');
+      expect(state.statusCode).toBe(200);
+      expect(state.json<{ completed_at: string | null }>().completed_at).toBeNull();
+
+      const premature = await app.inject({
+        method: 'PATCH',
+        url: '/v1/onboarding',
+        headers: auth,
+        payload: { step: 'done' },
+      });
+      expect(premature.statusCode).toBe(400);
+    });
+
+    it('recommends from what was chosen, and says why', async () => {
+      const res = await get('/v1/onboarding/recommendations?interests=sales');
+      const body = res.json<{
+        items: { plugin_id: string; because: string; permissions: string[] }[];
+        permissions: string[];
+      }>();
+
+      expect(body.items.map((i) => i.plugin_id)).toContain('com.astra.sales-crm');
+      for (const item of body.items) {
+        // 「たぶん要る」で薦めない
+        expect(item.because).toContain('営業');
+      }
+      // 使う直前に求めるための一覧。ここではまとめて要求しない。
+      expect(body.permissions).toContain('calendar_contacts');
+    });
+
+    it('recommends nothing when nothing was chosen', async () => {
+      const body = (await get('/v1/onboarding/recommendations?interests=media')).json<{
+        items: unknown[];
+      }>();
+      expect(body.items).toEqual([]);
+    });
+  });
 });

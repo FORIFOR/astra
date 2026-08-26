@@ -260,6 +260,19 @@ export interface Memberships {
   user_id: string;
 }
 
+export interface OnboardingStates {
+  completed_at: Timestamp | null;
+  first_task_id: string | null;
+  granted_permissions: Generated<string[]>;
+  input_preference: string | null;
+  installed_plugins: Generated<string[]>;
+  interests: Generated<string[]>;
+  step: Generated<string>;
+  tenant_id: string;
+  updated_at: Generated<Timestamp>;
+  user_id: string;
+}
+
 export interface PluginAssets {
   content: Buffer;
   created_at: Generated<Timestamp>;
@@ -519,6 +532,7 @@ export interface DB {
   meeting_speakers: MeetingSpeakers;
   meetings: Meetings;
   memberships: Memberships;
+  onboarding_states: OnboardingStates;
   plugin_assets: PluginAssets;
   plugin_installs: PluginInstalls;
   plugin_permissions: PluginPermissions;

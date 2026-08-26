@@ -30,6 +30,7 @@ import { registerShareRoutes } from './routes/shares.js';
 import { registerDomainRoutes, type DomainRouteDeps } from './routes/domain.js';
 import { registerBriefRoutes } from './routes/brief.js';
 import { registerConversationRoutes } from './routes/conversations.js';
+import { registerOnboardingRoutes } from './routes/onboarding.js';
 import type { ConversationService } from '@astra/service-conversation';
 import type { WorldModelService } from '@astra/service-world-model';
 import type { DataSourceResolver } from '@astra/service-plugin-registry';
@@ -120,6 +121,8 @@ export function buildApp(deps: AppDeps): App {
     ...(deps.ssePollIntervalMs === undefined ? {} : { ssePollIntervalMs: deps.ssePollIntervalMs }),
   });
   registerArtifactRoutes(app, { library: deps.library });
+  // §3 の初期セットアップ。catalog を見るので registry の後。
+  registerOnboardingRoutes(app, { db: deps.db, registry: deps.registry, tasks: deps.tasks });
   registerPluginRoutes(app, {
     registry: deps.registry,
     ...(deps.dataSources === undefined ? {} : { dataSources: deps.dataSources }),
