@@ -1,0 +1,25 @@
+# 銘柄と注文を扱うときに守ること。正本 §15.7・§22。
+# **host が判定できる語彙だけ**で書く。散文は description に置く。
+id: stock
+profiles: [FINANCIAL]
+rules:
+  - id: order-readback
+    description: 数量・価格・注文種別を読み上げて確かめる
+    when: { when: risk_at_least, risk: REVERSIBLE_WRITE }
+    require: readback
+    severity: block
+  - id: order-confirmation
+    description: 注文に関わる操作は必ず確認を取る
+    when: { when: risk_at_least, risk: REVERSIBLE_WRITE }
+    require: confirmation
+    severity: block
+  - id: audit-orders
+    description: 注文に関わる操作は監査に残す
+    when: { when: always }
+    require: audit
+    severity: block
+  - id: receipt-for-orders
+    description: 注文に関わる操作は記録として残す
+    when: { when: risk_at_least, risk: REVERSIBLE_WRITE }
+    require: receipt
+    severity: block

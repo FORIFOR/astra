@@ -222,8 +222,9 @@ async function checkBuiltinPlugins() {
   const dirs = entries.filter((e) => e.isDirectory());
   // 同梱を勝手に増やさないための検査。増やすときはここも直す（意図的な変更にする）。
   // 8 つ目は Video（正本 §15.2）、9 つ目は Care Support（§15.4）、
-  // 10 個目は EHR Assist（§15.5）。
-  const EXPECTED = 10;
+  // 10 個目は EHR Assist（§15.5）、11 個目は Architecture（§15.6）、
+  // 12 個目は Stock Research（§15.7）。これで §15 の 7 領域が揃う。
+  const EXPECTED = 12;
   if (dirs.length !== EXPECTED) {
     fail('plugins/builtin', 0, `expected ${EXPECTED} bundled plugins, found ${dirs.length}`);
   }

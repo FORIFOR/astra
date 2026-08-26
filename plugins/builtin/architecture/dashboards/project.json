@@ -1,0 +1,11 @@
+{
+  "id": "project",
+  "title": "案件",
+  "layout": "grid",
+  "items": [
+    { "type": "metric", "title": "未解決の課題", "bind": "arch.open_issues", "span": 4 },
+    { "type": "table", "title": "未回答の質疑", "bind": "arch.open_rfis", "span": 8 },
+    { "type": "table", "title": "最新の図面", "bind": "arch.latest_revisions", "span": 12 },
+    { "type": "table", "title": "案件", "bind": "arch.projects", "span": 12 }
+  ]
+}

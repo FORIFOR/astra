@@ -7,11 +7,15 @@ import type { DomainService } from './domain.js';
 import { nextBestActions, pipelineSummary } from './sales-crm.js';
 import { toClip, totalDurationMs } from './video.js';
 import { reviewsDue } from './care.js';
+import { issueGaps, latestRevisions, openRfis, toRevision, toRfi } from './architecture.js';
+import { concentration, toPosition } from './stock.js';
 
 const CRM_PLUGIN = 'com.astra.sales-crm';
 const VIDEO_PLUGIN = 'com.astra.video';
 const CARE_PLUGIN = 'com.astra.care';
 const EHR_PLUGIN = 'com.astra.ehr';
+const ARCH_PLUGIN = 'com.astra.architecture';
+const STOCK_PLUGIN = 'com.astra.stock';
 
 export function salesCrmDataSources(
   domain: DomainService,
@@ -200,6 +204,130 @@ export function ehrDataSources(
             String(note.fields['title'] ?? '無題'),
             String(note.fields['author'] ?? '不明'),
           ]),
+      };
+    },
+  };
+}
+
+/**
+ * Architecture が dashboard へ出せるもの。正本 §15.6。
+ *
+ * **決められないことを、決めたことにしない。**
+ */
+export function architectureDataSources(
+  domain: DomainService,
+  now: () => Date = () => new Date(),
+): Record<string, (tenantId: string) => Promise<ResolvedValue>> {
+  const nameOf = async (tenantId: string, id: string): Promise<string> => {
+    const entity = await domain.get(tenantId, id).catch(() => null);
+    return entity ? String(entity.fields['name'] ?? id) : id;
+  };
+
+  return {
+    arch_projects: async (tenantId) => {
+      const projects = await domain.list(tenantId, ARCH_PLUGIN, 'arch_project', 500);
+      return {
+        kind: 'rows',
+        columns: ['案件', '段階', '施主'],
+        rows: projects.map((project) => [
+          String(project.fields['name'] ?? '無題'),
+          // 入っていないことを空欄にしない
+          String(project.fields['phase'] ?? '未設定'),
+          String(project.fields['client'] ?? '未設定'),
+        ]),
+      };
+    },
+
+    arch_latest_revisions: async (tenantId) => {
+      const revisions = (await domain.list(tenantId, ARCH_PLUGIN, 'revision', 1_000)).map(
+        toRevision,
+      );
+      const rows = await Promise.all(
+        latestRevisions(revisions).map(async (drawing) => [
+          await nameOf(tenantId, drawing.drawingId),
+          drawing.revisions.length === 0
+            ? '発行日なし'
+            : drawing.revisions.map((r) => r.label).join('・'),
+          // 同じ日に複数あることを黙らない
+          drawing.ambiguous ? '同日に複数' : '',
+        ]),
+      );
+      return { kind: 'rows', columns: ['図面', '最新', '注意'], rows };
+    },
+
+    arch_open_rfis: async (tenantId) => {
+      const rfis = (await domain.list(tenantId, ARCH_PLUGIN, 'rfi', 500)).map(toRfi);
+      return {
+        kind: 'rows',
+        columns: ['質疑', '期限'],
+        rows: openRfis(rfis, now()).map((rfi) => [
+          rfi.question,
+          rfi.daysLeft === null
+            ? '期限が入っていません'
+            : rfi.daysLeft < 0
+              ? `${-rfi.daysLeft} 日超過`
+              : `残り ${rfi.daysLeft} 日`,
+        ]),
+      };
+    },
+
+    arch_open_issue_count: async (tenantId) => {
+      const issues = await domain.list(tenantId, ARCH_PLUGIN, 'arch_issue', 500);
+      return {
+        kind: 'count',
+        // 開いているものを数える。抜けの有無ではなく、未解決の数。
+        value: issues.filter((issue) => issue.fields['status'] !== 'CLOSED').length,
+      };
+    },
+  };
+}
+
+/**
+ * Stock が dashboard へ出せるもの。正本 §15.7。
+ *
+ * **割合を出せないときは、出せないと書く。**
+ */
+export function stockDataSources(
+  domain: DomainService,
+): Record<string, (tenantId: string) => Promise<ResolvedValue>> {
+  return {
+    stock_watchlist: async (tenantId) => {
+      const items = await domain.list(tenantId, STOCK_PLUGIN, 'watch_item', 500);
+      return {
+        kind: 'rows',
+        columns: ['銘柄', '名前', '最終確認'],
+        rows: items.map((item) => [
+          String(item.fields['symbol'] ?? '不明'),
+          String(item.fields['name'] ?? ''),
+          // 見ていないことを、最近見たことにしない
+          typeof item.fields['last_reviewed_at'] === 'string'
+            ? String(item.fields['last_reviewed_at'])
+            : '未確認',
+        ]),
+      };
+    },
+
+    stock_positions: async (tenantId) => {
+      const positions = (await domain.list(tenantId, STOCK_PLUGIN, 'position', 500)).map(
+        toPosition,
+      );
+      return {
+        kind: 'rows',
+        columns: ['銘柄', '数量', '割合'],
+        rows: concentration(positions).map((row) => [
+          row.symbol,
+          String(positions.find((p) => p.symbol === row.symbol)?.quantity ?? 0),
+          row.share === null ? '取得単価が未入力' : `${(row.share * 100).toFixed(1)}%`,
+        ]),
+      };
+    },
+
+    stock_draft_orders: async (tenantId) => {
+      const drafts = await domain.list(tenantId, STOCK_PLUGIN, 'order_draft', 500);
+      return {
+        kind: 'count',
+        // 取り消したものは待ちではない
+        value: drafts.filter((draft) => draft.fields['status'] === 'DRAFT').length,
       };
     },
   };

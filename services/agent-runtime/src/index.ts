@@ -13,9 +13,11 @@ export {
   type PipelineStage,
 } from './sales-crm.js';
 export {
+  architectureDataSources,
   careDataSources,
   ehrDataSources,
   salesCrmDataSources,
+  stockDataSources,
   videoDataSources,
 } from './data-sources.js';
 export { entityDefinitions, type AssetReader } from './definitions.js';
@@ -36,3 +38,7 @@ export * from './care.js';
 export * from './care-executor.js';
 export * from './ehr.js';
 export * from './ehr-executor.js';
+export * from './architecture.js';
+export * from './architecture-executor.js';
+export * from './stock.js';
+export * from './stock-executor.js';

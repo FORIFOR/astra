@@ -1,0 +1,98 @@
+{
+  "entities": [
+    {
+      "id": "watch_item",
+      "title": "ウォッチ銘柄",
+      "title_field": "symbol",
+      "fields": [
+        {
+          "id": "symbol",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "name",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "note",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "last_reviewed_at",
+          "type": "date",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "position",
+      "title": "保有",
+      "title_field": "symbol",
+      "fields": [
+        {
+          "id": "symbol",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "quantity",
+          "type": "number",
+          "required": true
+        },
+        {
+          "id": "average_price",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "currency",
+          "type": "text",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "order_draft",
+      "title": "注文の下書き",
+      "title_field": "symbol",
+      "fields": [
+        {
+          "id": "symbol",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "side",
+          "type": "enum",
+          "values": ["BUY", "SELL"],
+          "required": true
+        },
+        {
+          "id": "quantity",
+          "type": "number",
+          "required": true
+        },
+        {
+          "id": "order_type",
+          "type": "enum",
+          "values": ["MARKET", "LIMIT"],
+          "required": true
+        },
+        {
+          "id": "limit_price",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "status",
+          "type": "enum",
+          "values": ["DRAFT", "CANCELLED"],
+          "required": true
+        }
+      ]
+    }
+  ]
+}

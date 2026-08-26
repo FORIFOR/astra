@@ -1,0 +1,57 @@
+# 設計案件の記録。正本 §15.6。
+#
+# 図面そのものは作らない。**どの版が最新で、何が未回答か**を落とさないための道具。
+# 図面ファイルの読み取り（BIM）は、扱える形式が決まってから（OQ-19 と同じ扱い）。
+id: com.astra.architecture
+name: Architecture
+version: 0.1.0
+publisher: astra
+verified: true
+min_core_version: 0.1.0
+category: domain-agent
+builtin: true
+removable: true
+compliance_profile: GENERAL
+execution_surfaces: [cloud]
+permissions:
+  - artifacts.read
+  - artifacts.write
+data_accessed:
+  - Projects, drawings, revisions and RFIs this user already has access to
+connectors: []
+tools:
+  - id: arch.revisions
+    risk: READ
+    surface: cloud
+  - id: arch.open_issues
+    risk: READ
+    surface: cloud
+  - id: arch.rfi_draft
+    # 下書きを残すだけ。送るのは人の操作。
+    risk: REVERSIBLE_WRITE
+    surface: cloud
+    requires_confirmation: true
+agents:
+  - id: coordinator
+    skill: skills/coordinator.md
+    tools: [arch.revisions, arch.open_issues, arch.rfi_draft]
+dashboards:
+  - id: project
+    schema: dashboards/project.json
+data_sources:
+  - id: arch.projects
+    kind: rows
+    query: arch_projects
+  - id: arch.latest_revisions
+    kind: rows
+    query: arch_latest_revisions
+  - id: arch.open_rfis
+    kind: rows
+    query: arch_open_rfis
+  - id: arch.open_issues
+    kind: count
+    query: arch_open_issue_count
+policies:
+  - policies/architecture.yaml
+data_extensions:
+  - schemas/entities.json

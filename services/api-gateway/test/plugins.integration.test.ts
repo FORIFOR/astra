@@ -60,6 +60,7 @@ describe.skipIf(!url)('plugin catalog', () => {
       // 同じ DB を使う別スイートが publish した plugin で壊れる。
       const bundled = items.map((p) => p.id as string).filter((id) => id.startsWith('com.astra.'));
       expect(bundled.sort()).toEqual([
+        'com.astra.architecture',
         'com.astra.care',
         'com.astra.ehr',
         'com.astra.finder',
@@ -69,6 +70,7 @@ describe.skipIf(!url)('plugin catalog', () => {
         'com.astra.meeting',
         'com.astra.research',
         'com.astra.sales-crm',
+        'com.astra.stock',
         'com.astra.video',
       ]);
     });
@@ -214,6 +216,7 @@ describe.skipIf(!url)('plugin catalog', () => {
         'com.astra.research',
         'com.astra.meeting',
         'com.astra.google-calendar',
+        'com.astra.architecture',
         'com.astra.care',
         'com.astra.ehr',
         'com.astra.finder',

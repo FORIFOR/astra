@@ -1,0 +1,10 @@
+{
+  "id": "watchlist",
+  "title": "銘柄",
+  "layout": "grid",
+  "items": [
+    { "type": "metric", "title": "未送信の注文下書き", "bind": "stock.draft_orders", "span": 4 },
+    { "type": "table", "title": "保有", "bind": "stock.positions", "span": 8 },
+    { "type": "table", "title": "ウォッチリスト", "bind": "stock.watchlist", "span": 12 }
+  ]
+}

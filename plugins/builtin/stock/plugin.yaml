@@ -1,0 +1,64 @@
+# 銘柄の調査。正本 §15.7。
+#
+# 仕様が言っていること:
+#   Execution:
+#     - default = research/draft order only
+#     - broker order = FINANCIAL policy
+#     - explicit confirmation
+#     - amount/price/order-type readback
+#     - audit
+#
+# **証券会社へは繋いでいない。**接続先が決まるまで、注文は下書きまで。
+# 下書きであることを、tool の risk と規則の両方で担保する。
+id: com.astra.stock
+name: Stock Research
+version: 0.1.0
+publisher: astra
+verified: true
+min_core_version: 0.1.0
+category: domain-agent
+builtin: true
+removable: true
+# §15.7 broker order = FINANCIAL policy
+compliance_profile: FINANCIAL
+execution_surfaces: [cloud]
+permissions:
+  - artifacts.read
+  - artifacts.write
+  - web.search
+data_accessed:
+  - Watchlists, positions and research notes this user already has access to
+connectors: []
+tools:
+  - id: stock.watchlist
+    risk: READ
+    surface: cloud
+  - id: stock.position_risk
+    risk: READ
+    surface: cloud
+  # **既定は下書きまで。**発注そのものは、繋がってから足す。
+  - id: stock.draft_order
+    risk: REVERSIBLE_WRITE
+    surface: cloud
+    requires_confirmation: true
+agents:
+  - id: analyst
+    skill: skills/analyst.md
+    tools: [stock.watchlist, stock.position_risk, stock.draft_order]
+dashboards:
+  - id: watchlist
+    schema: dashboards/watchlist.json
+data_sources:
+  - id: stock.watchlist
+    kind: rows
+    query: stock_watchlist
+  - id: stock.positions
+    kind: rows
+    query: stock_positions
+  - id: stock.draft_orders
+    kind: count
+    query: stock_draft_orders
+policies:
+  - policies/stock.yaml
+data_extensions:
+  - schemas/entities.json

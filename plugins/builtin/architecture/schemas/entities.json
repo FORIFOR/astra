@@ -1,0 +1,167 @@
+{
+  "entities": [
+    {
+      "id": "arch_project",
+      "title": "案件",
+      "title_field": "name",
+      "fields": [
+        {
+          "id": "name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "phase",
+          "type": "enum",
+          "values": ["基本設計", "実施設計", "監理"],
+          "required": false
+        },
+        {
+          "id": "client",
+          "type": "text",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "drawing",
+      "title": "図面",
+      "title_field": "name",
+      "fields": [
+        {
+          "id": "name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "project",
+          "type": "reference",
+          "entity": "arch_project",
+          "required": true
+        },
+        {
+          "id": "discipline",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "number",
+          "type": "text",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "revision",
+      "title": "版",
+      "title_field": "label",
+      "fields": [
+        {
+          "id": "label",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "drawing",
+          "type": "reference",
+          "entity": "drawing",
+          "required": true
+        },
+        {
+          "id": "issued_at",
+          "type": "date",
+          "required": true
+        },
+        {
+          "id": "artifact",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "note",
+          "type": "text",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "rfi",
+      "title": "質疑",
+      "title_field": "question",
+      "fields": [
+        {
+          "id": "question",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "project",
+          "type": "reference",
+          "entity": "arch_project",
+          "required": true
+        },
+        {
+          "id": "drawing",
+          "type": "reference",
+          "entity": "drawing",
+          "required": false
+        },
+        {
+          "id": "asked_at",
+          "type": "date",
+          "required": false
+        },
+        {
+          "id": "due_at",
+          "type": "date",
+          "required": false
+        },
+        {
+          "id": "answer",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "status",
+          "type": "enum",
+          "values": ["DRAFT", "SENT", "ANSWERED"],
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "arch_issue",
+      "title": "課題",
+      "title_field": "title",
+      "fields": [
+        {
+          "id": "title",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "project",
+          "type": "reference",
+          "entity": "arch_project",
+          "required": true
+        },
+        {
+          "id": "owner",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "due_at",
+          "type": "date",
+          "required": false
+        },
+        {
+          "id": "status",
+          "type": "enum",
+          "values": ["OPEN", "CLOSED"],
+          "required": true
+        }
+      ]
+    }
+  ]
+}

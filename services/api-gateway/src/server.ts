@@ -14,9 +14,11 @@ import {
 import {
   DomainService,
   entityDefinitions,
+  architectureDataSources,
   careDataSources,
   ehrDataSources,
   salesCrmDataSources,
+  stockDataSources,
   videoDataSources,
 } from '@astra/service-agent-runtime';
 import { WorldModelService } from '@astra/service-world-model';
@@ -125,6 +127,10 @@ async function main(): Promise<void> {
     careDataSources(domain),
     // 正本 §15.5 の診療面
     ehrDataSources(domain),
+    // 正本 §15.6 の案件面
+    architectureDataSources(domain),
+    // 正本 §15.7 の銘柄面
+    stockDataSources(domain),
   );
 
   const app = buildApp({

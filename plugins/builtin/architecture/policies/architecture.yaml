@@ -1,0 +1,15 @@
+# 設計案件を扱うときに守ること。正本 §15.6・§22。
+# **host が判定できる語彙だけ**で書く。散文は description に置く。
+id: architecture
+profiles: []
+rules:
+  - id: confirm-outgoing-rfi
+    description: 質疑を外へ出すときは確認を取る
+    when: { when: risk_at_least, risk: EXTERNAL_COMMIT }
+    require: confirmation
+    severity: block
+  - id: receipt-for-writes
+    description: 書き込みは必ず記録を残す
+    when: { when: risk_at_least, risk: REVERSIBLE_WRITE }
+    require: receipt
+    severity: block
