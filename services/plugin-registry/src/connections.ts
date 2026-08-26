@@ -8,7 +8,13 @@
  *   - **繋がっていない connector の tool を、黙って動かさない。**
  *     何も起きないのと、繋がっていないのは違う
  */
-import { AstraError, uuidv7, type ConnectorDecl, type PluginManifest } from '@astra/contracts';
+import {
+  AstraError,
+  looksLikeCredential,
+  uuidv7,
+  type ConnectorDecl,
+  type PluginManifest,
+} from '@astra/contracts';
 import { withSystem, withTenant, type DbHandle } from '@astra/db';
 
 export type ConnectionState = 'CONNECTED' | 'EXPIRED' | 'REVOKED' | 'ERROR';
@@ -39,20 +45,6 @@ export interface ConnectInput {
   readonly grantedScopes: readonly string[];
   readonly accountLabel?: string | null;
   readonly expiresAt?: string | null;
-}
-
-/** 資格情報そのものを渡そうとしていないか。**形で弾く。** */
-const LOOKS_LIKE_A_SECRET = [
-  /^ya29\./, // Google の access token
-  /^gh[pousr]_/, // GitHub
-  /^xox[baprs]-/, // Slack
-  /^eyJ[A-Za-z0-9_-]{10,}\./, // JWT
-];
-
-export function looksLikeCredential(value: string): boolean {
-  if (LOOKS_LIKE_A_SECRET.some((p) => p.test(value))) return true;
-  // 参照は短い。長い不透明な文字列は、たいてい値そのもの。
-  return value.length > 200;
 }
 
 export class ConnectionService {

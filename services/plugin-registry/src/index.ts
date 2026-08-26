@@ -15,8 +15,9 @@ export { agentResolver, assetReader } from './agent-resolver.js';
 export { assertRegulatedPluginHasRules, isStrictProfile } from './compliance.js';
 export {
   ConnectionService,
-  looksLikeCredential,
   type Connection,
   type ConnectInput,
   type ConnectionState,
 } from './connections.js';
+// 資格情報の形の規則は contracts が正。両側が別の規則を持つと、片方だけ緩む。
+export { looksLikeCredential } from '@astra/contracts';

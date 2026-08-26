@@ -111,6 +111,27 @@ export const ToolDecl = z.object({
 });
 export type ToolDecl = z.infer<typeof ToolDecl>;
 
+/**
+ * 資格情報そのものを渡そうとしていないか。**形で弾く。**正本 §21。
+ *
+ * 端末側（`@astra/oauth`）が参照を作り、サーバ側（ConnectionService）が
+ * 値を断る。**両側が別の規則を持つと、片方だけ緩む。**ここに 1 つ置く。
+ */
+const LOOKS_LIKE_A_SECRET = [
+  /^ya29\./, // Google の access token
+  /^gh[pousr]_/, // GitHub
+  /^xox[baprs]-/, // Slack
+  /^eyJ[A-Za-z0-9_-]{10,}\./, // JWT
+];
+
+/** 参照の最大長。長い不透明な文字列は、たいてい値そのもの。 */
+export const MAX_CREDENTIAL_REF_LENGTH = 200;
+
+export function looksLikeCredential(value: string): boolean {
+  if (LOOKS_LIKE_A_SECRET.some((p) => p.test(value))) return true;
+  return value.length > MAX_CREDENTIAL_REF_LENGTH;
+}
+
 export const ConnectorDecl = z.object({
   id: z.string().min(1),
   auth: z.enum(['oauth2', 'api-key', 'os-permission', 'none']),

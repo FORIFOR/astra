@@ -8,9 +8,9 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { uuidv7 } from '@astra/contracts';
+import { looksLikeCredential, uuidv7 } from '@astra/contracts';
 import { createDb, withIdentity, type DbHandle } from '@astra/db';
-import { ConnectionService, looksLikeCredential } from '../src/connections.js';
+import { ConnectionService } from '../src/connections.js';
 import { PluginRegistryService } from '../src/service.js';
 
 const url = process.env['TEST_DATABASE_URL'];
@@ -165,5 +165,20 @@ describe.skipIf(!url)('ConnectionService', () => {
   it('shows another tenant nothing', async () => {
     await connect();
     expect(await connections.list(otherTenantId, GMAIL)).toEqual([]);
+  });
+});
+
+describe('the reference the device hands over (正本 §21)', () => {
+  it('accepts what @astra/oauth produces', () => {
+    // 端末側が作る参照が、サーバ側の門で弾かれては繋げない。
+    // 規則は contracts に 1 つ。ここは、その形が実際に通ることを見る。
+    expect(looksLikeCredential('keychain:com.acme.mail/gmail')).toBe(false);
+    expect(looksLikeCredential('secret-manager:projects/x/secrets/y')).toBe(false);
+  });
+
+  it('still refuses the values themselves', () => {
+    expect(looksLikeCredential('ya29.a0AfH6SM...')).toBe(true);
+    expect(looksLikeCredential('ghp_0123456789')).toBe(true);
+    expect(looksLikeCredential('a'.repeat(201))).toBe(true);
   });
 });
