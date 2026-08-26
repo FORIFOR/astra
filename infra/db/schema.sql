@@ -78,6 +78,26 @@ ALTER TABLE ONLY public.action_receipts FORCE ROW LEVEL SECURITY;
 
 
 --
+-- Name: agent_hosts; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.agent_hosts (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    user_id uuid NOT NULL,
+    device_label text NOT NULL,
+    models text[] DEFAULT '{}'::text[] NOT NULL,
+    capabilities jsonb DEFAULT '{}'::jsonb NOT NULL,
+    last_seen_at timestamp with time zone DEFAULT now() NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT agent_hosts_device_label_check CHECK ((device_label <> ''::text))
+);
+
+ALTER TABLE ONLY public.agent_hosts FORCE ROW LEVEL SECURITY;
+
+
+--
 -- Name: approvals; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -410,6 +430,41 @@ CREATE TABLE public.evidence (
 );
 
 ALTER TABLE ONLY public.evidence FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: job_checkpoints; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.job_checkpoints (
+    task_id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    state jsonb DEFAULT '{}'::jsonb NOT NULL,
+    step_index integer DEFAULT 0 NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT job_checkpoints_step_index_check CHECK ((step_index >= 0))
+);
+
+ALTER TABLE ONLY public.job_checkpoints FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: job_leases; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.job_leases (
+    task_id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    host_id uuid NOT NULL,
+    lease_id uuid NOT NULL,
+    expires_at timestamp with time zone NOT NULL,
+    attempt integer DEFAULT 1 NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT job_leases_attempt_check CHECK ((attempt >= 1))
+);
+
+ALTER TABLE ONLY public.job_leases FORCE ROW LEVEL SECURITY;
 
 
 --
@@ -784,7 +839,7 @@ CREATE TABLE public.tasks (
     completed_at timestamp with time zone,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     plan jsonb,
-    CONSTRAINT tasks_status_check CHECK ((status = ANY (ARRAY['PENDING'::text, 'RUNNING'::text, 'WAITING_APPROVAL'::text, 'CANCELLING'::text, 'COMPLETED'::text, 'FAILED'::text, 'CANCELLED'::text])))
+    CONSTRAINT tasks_status_check CHECK ((status = ANY (ARRAY['PENDING'::text, 'RUNNING'::text, 'WAITING_APPROVAL'::text, 'PAUSED_HOST_OFFLINE'::text, 'CANCELLING'::text, 'COMPLETED'::text, 'FAILED'::text, 'CANCELLED'::text])))
 );
 
 ALTER TABLE ONLY public.tasks FORCE ROW LEVEL SECURITY;
@@ -953,6 +1008,14 @@ ALTER TABLE ONLY public.action_receipts
 
 
 --
+-- Name: agent_hosts agent_hosts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.agent_hosts
+    ADD CONSTRAINT agent_hosts_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: approvals approvals_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1070,6 +1133,22 @@ ALTER TABLE ONLY public.event_streams
 
 ALTER TABLE ONLY public.evidence
     ADD CONSTRAINT evidence_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: job_checkpoints job_checkpoints_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.job_checkpoints
+    ADD CONSTRAINT job_checkpoints_pkey PRIMARY KEY (task_id);
+
+
+--
+-- Name: job_leases job_leases_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.job_leases
+    ADD CONSTRAINT job_leases_pkey PRIMARY KEY (task_id);
 
 
 --
@@ -1302,6 +1381,20 @@ CREATE INDEX action_receipts_task_executed_idx ON public.action_receipts USING b
 
 
 --
+-- Name: agent_hosts_alive; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX agent_hosts_alive ON public.agent_hosts USING btree (tenant_id, last_seen_at DESC);
+
+
+--
+-- Name: agent_hosts_device; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX agent_hosts_device ON public.agent_hosts USING btree (tenant_id, user_id, device_label);
+
+
+--
 -- Name: approvals_pending; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1453,6 +1546,20 @@ CREATE INDEX evidence_by_run ON public.evidence USING btree (research_run_id, qu
 --
 
 CREATE UNIQUE INDEX evidence_dedupe ON public.evidence USING btree (research_run_id, source_url, md5(claim));
+
+
+--
+-- Name: job_leases_expiry; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX job_leases_expiry ON public.job_leases USING btree (tenant_id, expires_at);
+
+
+--
+-- Name: job_leases_host; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX job_leases_host ON public.job_leases USING btree (host_id);
 
 
 --
@@ -1757,6 +1864,22 @@ ALTER TABLE ONLY public.action_receipts
 
 ALTER TABLE ONLY public.action_receipts
     ADD CONSTRAINT action_receipts_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+
+--
+-- Name: agent_hosts agent_hosts_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.agent_hosts
+    ADD CONSTRAINT agent_hosts_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+
+--
+-- Name: agent_hosts agent_hosts_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.agent_hosts
+    ADD CONSTRAINT agent_hosts_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
 
 
 --
@@ -2093,6 +2216,46 @@ ALTER TABLE ONLY public.evidence
 
 ALTER TABLE ONLY public.evidence
     ADD CONSTRAINT evidence_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+
+--
+-- Name: job_checkpoints job_checkpoints_task_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.job_checkpoints
+    ADD CONSTRAINT job_checkpoints_task_id_fkey FOREIGN KEY (task_id) REFERENCES public.tasks(id) ON DELETE CASCADE;
+
+
+--
+-- Name: job_checkpoints job_checkpoints_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.job_checkpoints
+    ADD CONSTRAINT job_checkpoints_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+
+--
+-- Name: job_leases job_leases_host_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.job_leases
+    ADD CONSTRAINT job_leases_host_id_fkey FOREIGN KEY (host_id) REFERENCES public.agent_hosts(id) ON DELETE CASCADE;
+
+
+--
+-- Name: job_leases job_leases_task_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.job_leases
+    ADD CONSTRAINT job_leases_task_id_fkey FOREIGN KEY (task_id) REFERENCES public.tasks(id) ON DELETE CASCADE;
+
+
+--
+-- Name: job_leases job_leases_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.job_leases
+    ADD CONSTRAINT job_leases_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
 
 
 --
@@ -2581,6 +2744,19 @@ CREATE POLICY action_receipts_tenant_isolation ON public.action_receipts USING (
 
 
 --
+-- Name: agent_hosts; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.agent_hosts ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: agent_hosts agent_hosts_tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY agent_hosts_tenant_isolation ON public.agent_hosts USING ((tenant_id = public.astra_current_tenant())) WITH CHECK ((tenant_id = public.astra_current_tenant()));
+
+
+--
 -- Name: approvals; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -2773,6 +2949,32 @@ ALTER TABLE public.evidence ENABLE ROW LEVEL SECURITY;
 --
 
 CREATE POLICY evidence_tenant_isolation ON public.evidence USING ((tenant_id = public.astra_current_tenant())) WITH CHECK ((tenant_id = public.astra_current_tenant()));
+
+
+--
+-- Name: job_checkpoints; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.job_checkpoints ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: job_checkpoints job_checkpoints_tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY job_checkpoints_tenant_isolation ON public.job_checkpoints USING ((tenant_id = public.astra_current_tenant())) WITH CHECK ((tenant_id = public.astra_current_tenant()));
+
+
+--
+-- Name: job_leases; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.job_leases ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: job_leases job_leases_tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY job_leases_tenant_isolation ON public.job_leases USING ((tenant_id = public.astra_current_tenant())) WITH CHECK ((tenant_id = public.astra_current_tenant()));
 
 
 --
@@ -3079,3 +3281,4 @@ INSERT INTO schema_migrations (version) VALUES ('20260827030001');
 INSERT INTO schema_migrations (version) VALUES ('20260827040001');
 INSERT INTO schema_migrations (version) VALUES ('20260827050001');
 INSERT INTO schema_migrations (version) VALUES ('20260827060001');
+INSERT INTO schema_migrations (version) VALUES ('20260827070001');

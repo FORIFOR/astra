@@ -38,6 +38,9 @@
       "path": "./packages/ui-kit"
     },
     {
+      "path": "./services/agent-host"
+    },
+    {
       "path": "./services/agent-runtime"
     },
     {

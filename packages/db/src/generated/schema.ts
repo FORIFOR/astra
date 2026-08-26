@@ -45,6 +45,18 @@ export interface ActionReceipts {
   tool_id: string;
 }
 
+export interface AgentHosts {
+  capabilities: Generated<Json>;
+  created_at: Generated<Timestamp>;
+  device_label: string;
+  id: string;
+  last_seen_at: Generated<Timestamp>;
+  models: Generated<string[]>;
+  tenant_id: string;
+  updated_at: Generated<Timestamp>;
+  user_id: string;
+}
+
 export interface Approvals {
   created_at: Generated<Timestamp>;
   decided_at: Timestamp | null;
@@ -237,6 +249,25 @@ export interface Evidence {
   support_text_ref: string | null;
   supports: Generated<string[]>;
   tenant_id: string;
+}
+
+export interface JobCheckpoints {
+  state: Generated<Json>;
+  step_index: Generated<number>;
+  task_id: string;
+  tenant_id: string;
+  updated_at: Generated<Timestamp>;
+}
+
+export interface JobLeases {
+  attempt: Generated<number>;
+  created_at: Generated<Timestamp>;
+  expires_at: Timestamp;
+  host_id: string;
+  lease_id: string;
+  task_id: string;
+  tenant_id: string;
+  updated_at: Generated<Timestamp>;
 }
 
 export interface Meetings {
@@ -545,6 +576,7 @@ export interface WorldFacts {
 
 export interface DB {
   action_receipts: ActionReceipts;
+  agent_hosts: AgentHosts;
   approvals: Approvals;
   artifact_versions: ArtifactVersions;
   artifacts: Artifacts;
@@ -560,6 +592,8 @@ export interface DB {
   domain_links: DomainLinks;
   event_streams: EventStreams;
   evidence: Evidence;
+  job_checkpoints: JobCheckpoints;
+  job_leases: JobLeases;
   meeting_segments: MeetingSegments;
   meeting_speakers: MeetingSpeakers;
   meetings: Meetings;
