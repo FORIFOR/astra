@@ -27,3 +27,15 @@ export {
   type DictationEvents,
   type DictationOptions,
 } from './dictation.js';
+export {
+  MeasurementRecorder,
+  MARK_TO_SLO,
+  STT_MARKS,
+  canMeetFirstPartial,
+  elapsedBetween,
+  firstPartialFloorMs,
+  measurementProblems,
+  type MeasurementProblem,
+  type SttMark,
+  type SttMeasurement,
+} from './measurement.js';

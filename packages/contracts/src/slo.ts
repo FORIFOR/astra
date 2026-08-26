@@ -111,7 +111,11 @@ export const WHY_NOT_MEASURED: Readonly<Partial<Record<SloName, string>>> = {
     'window が出て入力できるまでの実測が要る。jsdom は実際の描画より速いので、' +
     'ここで通しても守れている証拠にならない。',
   micCaptureStart: '実際の入力装置が要る。代役では OS の取り込み時間が入らない。',
-  localSttFirstPartial: '手元の認識モデルが要る。代役の即答を測っても意味がない。',
+  localSttFirstPartial:
+    '実測した結果、**届かなかった**。ReazonSpeech は offline（非ストリーミング）で、' +
+    '窓が埋まるまで 1 文字も出ない。窓 1500ms で最初の途中経過まで 1543ms、' +
+    '700ms まで縮めても音の待ちだけで予算の 2 倍になり、しかも文が崩れる。' +
+    '届かせるには streaming の日本語モデルが要る（docs/deepnote-audio-stt-migration.md §4）。',
   textFirstToken: '実際の言語モデルが要る。決定的な代役では最初の 1 文字が即座に出る。',
   firstResearchEvidence:
     '検索の外部提供者が要る。代役の corpus では往復が入らず、' + '自前の処理時間しか測れない。',

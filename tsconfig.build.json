@@ -5,6 +5,9 @@
       "path": "./packages/agent-sdk"
     },
     {
+      "path": "./packages/audio"
+    },
+    {
       "path": "./packages/api-client"
     },
     {

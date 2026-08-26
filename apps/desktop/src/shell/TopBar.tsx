@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { TOP_LEVEL_TABS, THEME_MODES, type ThemeMode } from '@astra/ui-kit';
 import { useShell } from '../state/ShellProvider.js';
 import { useTheme } from '../state/ThemeProvider.js';
+import { DeviceCapabilities } from '../settings/DeviceCapabilities.js';
 import { ShortcutSettings } from '../settings/ShortcutSettings.js';
 
 const THEME_LABELS: Record<ThemeMode, string> = {
@@ -52,6 +53,8 @@ export function TopBar(): ReactElement {
       {settingsOpen && (
         <div className="astra-topbar__panel" role="group" aria-label="設定">
           <ShortcutSettings />
+          {/* §25: できないことを、黙って落とさない */}
+          <DeviceCapabilities />
         </div>
       )}
     </header>

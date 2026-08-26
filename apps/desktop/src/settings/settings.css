@@ -44,3 +44,33 @@
 .astra-shortcuts__error {
   color: var(--astra-color-danger);
 }
+
+/* 端末でできること（正本 §25）。 */
+.astra-capabilities ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--astra-space-xs, 4px);
+}
+
+.astra-capability {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--astra-space-xs, 4px);
+  align-items: baseline;
+}
+
+.astra-capability__state {
+  font-size: var(--astra-font-size-sm, 0.875rem);
+}
+
+.astra-capability[data-available='false'] .astra-capability__state {
+  color: var(--astra-color-warning);
+}
+
+.astra-capability__detail,
+.astra-capability__reason {
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-sm, 0.875rem);
+}

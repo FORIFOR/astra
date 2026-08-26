@@ -1,5 +1,7 @@
 //! Astra desktop の Local Control Plane。正本 §16.1。
 
+pub mod audio;
+pub mod capability;
 pub mod context;
 pub mod dock;
 pub mod notify;
@@ -8,6 +10,7 @@ pub mod permission;
 pub mod secrets;
 pub mod shortcut;
 pub mod shortcut_generated;
+pub mod stt;
 
 use dock::DockRuntime;
 use oauth::OauthRuntime;
@@ -30,6 +33,7 @@ pub fn run() {
             context::context_snapshot,
             permission::permission_open_settings,
             notify::notify_send,
+            capability::capability_report,
             oauth::oauth_listen,
             oauth::oauth_await_callback,
             oauth::oauth_cancel,

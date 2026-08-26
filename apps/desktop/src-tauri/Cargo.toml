@@ -28,3 +28,7 @@ tauri-plugin-global-shortcut = "2"
 # OS の資格情報ストア。refresh token を平文で置かないため（正本 §21）
 keyring = { version = "3", features = ["apple-native", "windows-native", "sync-secret-service"] }
 tauri-plugin-notification = "2"
+cpal = "0.15"
+rubato = "0.15"
+libloading = "0.8"
+dirs = "5"

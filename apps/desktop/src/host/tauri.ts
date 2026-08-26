@@ -137,6 +137,26 @@ export const oauthCallback = {
   cancel: () => call<void>('oauth_cancel'),
 };
 
+/**
+ * 端末でできること。正本 §25。
+ *
+ * サーバ側の report と違い、**これは起動を止めない。**
+ * マイクの無い機械でも Astra は使える（文字で頼める）。
+ * 止める代わりに、できないことを名指しで言う。
+ */
+export interface DeviceCapability {
+  readonly capability: string;
+  readonly available: boolean;
+  /** 使えないときの理由。**available=false なら必ず入る。** */
+  readonly reason: string | null;
+  readonly implementation: string | null;
+}
+
+export const capabilities = {
+  /** ブラウザでは端末の能力を答えられない。空を返す（「無い」ではない）。 */
+  report: () => call<DeviceCapability[]>('capability_report'),
+};
+
 export const shortcuts = {
   status: () => call<ShortcutStatus[]>('shortcut_status'),
   // 失敗は握り潰さない。変えたつもりで効いていない状態を作らない。
