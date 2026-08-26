@@ -14,3 +14,13 @@ export {
 } from './sales-crm.js';
 export { salesCrmDataSources } from './data-sources.js';
 export { entityDefinitions, type AssetReader } from './definitions.js';
+export {
+  DeterministicImageGenerator,
+  ImageService,
+  MAX_IMAGE_BYTES,
+  titleFor,
+  type GenerateImageRequest,
+  type GeneratedImage,
+  type ImageGenerator,
+  type ImageServiceDeps,
+} from './image.js';

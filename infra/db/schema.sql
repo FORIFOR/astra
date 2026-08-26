@@ -744,6 +744,91 @@ ALTER TABLE ONLY public.users FORCE ROW LEVEL SECURITY;
 
 
 --
+-- Name: world_edges; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.world_edges (
+    tenant_id uuid NOT NULL,
+    from_id uuid NOT NULL,
+    to_id uuid NOT NULL,
+    relation text NOT NULL,
+    weight numeric(4,3) DEFAULT 1.0 NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT world_edges_not_self CHECK ((from_id <> to_id)),
+    CONSTRAINT world_edges_relation_check CHECK ((relation = ANY (ARRAY['belongs_to'::text, 'works_with'::text, 'mentioned_in'::text, 'decided_in'::text, 'produced_by'::text, 'assigned_to'::text, 'depends_on'::text, 'related_to'::text]))),
+    CONSTRAINT world_edges_weight_check CHECK (((weight >= (0)::numeric) AND (weight <= (1)::numeric)))
+);
+
+ALTER TABLE ONLY public.world_edges FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: world_entities; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.world_entities (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    kind text NOT NULL,
+    name text NOT NULL,
+    normalized_name text NOT NULL,
+    mention_count integer DEFAULT 1 NOT NULL,
+    attributes jsonb DEFAULT '{}'::jsonb NOT NULL,
+    first_seen_at timestamp with time zone DEFAULT now() NOT NULL,
+    last_seen_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT world_entities_kind_check CHECK ((kind = ANY (ARRAY['person'::text, 'organization'::text, 'project'::text, 'conversation'::text, 'meeting'::text, 'task'::text, 'commitment'::text, 'decision'::text, 'artifact'::text, 'research_run'::text, 'evidence'::text, 'event'::text, 'preference'::text, 'domain_entity'::text]))),
+    CONSTRAINT world_entities_mention_count_check CHECK ((mention_count >= 0)),
+    CONSTRAINT world_entities_name_check CHECK ((name <> ''::text)),
+    CONSTRAINT world_entities_normalized_name_check CHECK ((normalized_name <> ''::text))
+);
+
+ALTER TABLE ONLY public.world_entities FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: world_events; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.world_events (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    entity_id uuid,
+    kind text NOT NULL,
+    payload jsonb DEFAULT '{}'::jsonb NOT NULL,
+    occurred_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT world_events_kind_check CHECK ((kind <> ''::text))
+);
+
+ALTER TABLE ONLY public.world_events FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: world_facts; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.world_facts (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    kind text NOT NULL,
+    statement text NOT NULL,
+    subject_entity_id uuid,
+    source jsonb NOT NULL,
+    status text,
+    due_at timestamp with time zone,
+    confidence numeric(3,2) DEFAULT 1.0 NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT world_facts_confidence_check CHECK (((confidence >= (0)::numeric) AND (confidence <= (1)::numeric))),
+    CONSTRAINT world_facts_kind_check CHECK ((kind = ANY (ARRAY['preference'::text, 'commitment'::text, 'decision'::text, 'artifact_lineage'::text, 'task_status'::text, 'correction'::text]))),
+    CONSTRAINT world_facts_statement_check CHECK ((statement <> ''::text)),
+    CONSTRAINT world_facts_status_check CHECK ((status = ANY (ARRAY['OPEN'::text, 'DONE'::text, 'DROPPED'::text]))),
+    CONSTRAINT world_facts_status_only_for_commitment CHECK (((kind = 'commitment'::text) OR (status IS NULL)))
+);
+
+ALTER TABLE ONLY public.world_facts FORCE ROW LEVEL SECURITY;
+
+
+--
 -- Name: action_receipts action_receipts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1005,6 +1090,38 @@ ALTER TABLE ONLY public.turns
 
 ALTER TABLE ONLY public.users
     ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: world_edges world_edges_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.world_edges
+    ADD CONSTRAINT world_edges_pkey PRIMARY KEY (from_id, to_id, relation);
+
+
+--
+-- Name: world_entities world_entities_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.world_entities
+    ADD CONSTRAINT world_entities_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: world_events world_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.world_events
+    ADD CONSTRAINT world_events_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: world_facts world_facts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.world_facts
+    ADD CONSTRAINT world_facts_pkey PRIMARY KEY (id);
 
 
 --
@@ -1316,6 +1433,55 @@ CREATE UNIQUE INDEX users_email_key ON public.users USING btree (email) WHERE (d
 
 
 --
+-- Name: world_edges_reverse; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX world_edges_reverse ON public.world_edges USING btree (to_id, relation);
+
+
+--
+-- Name: world_entities_identity; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX world_entities_identity ON public.world_entities USING btree (tenant_id, kind, normalized_name);
+
+
+--
+-- Name: world_entities_recent; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX world_entities_recent ON public.world_entities USING btree (tenant_id, last_seen_at DESC);
+
+
+--
+-- Name: world_events_recent; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX world_events_recent ON public.world_events USING btree (tenant_id, occurred_at DESC);
+
+
+--
+-- Name: world_facts_by_subject; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX world_facts_by_subject ON public.world_facts USING btree (subject_entity_id, kind);
+
+
+--
+-- Name: world_facts_dedupe; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX world_facts_dedupe ON public.world_facts USING btree (tenant_id, kind, md5(statement), md5((source)::text));
+
+
+--
+-- Name: world_facts_open_commitments; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX world_facts_open_commitments ON public.world_facts USING btree (tenant_id, due_at) WHERE ((kind = 'commitment'::text) AND (status = 'OPEN'::text));
+
+
+--
 -- Name: action_receipts action_receipts_append_only; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -1362,6 +1528,13 @@ CREATE TRIGGER share_access_logs_append_only BEFORE DELETE OR UPDATE OR TRUNCATE
 --
 
 CREATE TRIGGER task_events_append_only BEFORE DELETE OR UPDATE OR TRUNCATE ON public.task_events FOR EACH STATEMENT EXECUTE FUNCTION public.astra_deny_mutation();
+
+
+--
+-- Name: world_events world_events_append_only; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER world_events_append_only BEFORE DELETE OR UPDATE OR TRUNCATE ON public.world_events FOR EACH STATEMENT EXECUTE FUNCTION public.astra_deny_mutation();
 
 
 --
@@ -1997,6 +2170,70 @@ ALTER TABLE ONLY public.turns
 
 
 --
+-- Name: world_edges world_edges_from_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.world_edges
+    ADD CONSTRAINT world_edges_from_id_fkey FOREIGN KEY (from_id) REFERENCES public.world_entities(id);
+
+
+--
+-- Name: world_edges world_edges_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.world_edges
+    ADD CONSTRAINT world_edges_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+
+--
+-- Name: world_edges world_edges_to_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.world_edges
+    ADD CONSTRAINT world_edges_to_id_fkey FOREIGN KEY (to_id) REFERENCES public.world_entities(id);
+
+
+--
+-- Name: world_entities world_entities_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.world_entities
+    ADD CONSTRAINT world_entities_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+
+--
+-- Name: world_events world_events_entity_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.world_events
+    ADD CONSTRAINT world_events_entity_id_fkey FOREIGN KEY (entity_id) REFERENCES public.world_entities(id);
+
+
+--
+-- Name: world_events world_events_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.world_events
+    ADD CONSTRAINT world_events_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+
+--
+-- Name: world_facts world_facts_subject_entity_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.world_facts
+    ADD CONSTRAINT world_facts_subject_entity_id_fkey FOREIGN KEY (subject_entity_id) REFERENCES public.world_entities(id);
+
+
+--
+-- Name: world_facts world_facts_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.world_facts
+    ADD CONSTRAINT world_facts_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+
+--
 -- Name: action_receipts; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -2365,6 +2602,58 @@ CREATE POLICY users_tenant_isolation ON public.users USING ((EXISTS ( SELECT 1
 
 
 --
+-- Name: world_edges; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.world_edges ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: world_edges world_edges_tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY world_edges_tenant_isolation ON public.world_edges USING ((tenant_id = public.astra_current_tenant())) WITH CHECK ((tenant_id = public.astra_current_tenant()));
+
+
+--
+-- Name: world_entities; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.world_entities ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: world_entities world_entities_tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY world_entities_tenant_isolation ON public.world_entities USING ((tenant_id = public.astra_current_tenant())) WITH CHECK ((tenant_id = public.astra_current_tenant()));
+
+
+--
+-- Name: world_events; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.world_events ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: world_events world_events_tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY world_events_tenant_isolation ON public.world_events USING ((tenant_id = public.astra_current_tenant())) WITH CHECK ((tenant_id = public.astra_current_tenant()));
+
+
+--
+-- Name: world_facts; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.world_facts ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: world_facts world_facts_tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY world_facts_tenant_isolation ON public.world_facts USING ((tenant_id = public.astra_current_tenant())) WITH CHECK ((tenant_id = public.astra_current_tenant()));
+
+
+--
 -- PostgreSQL database dump complete
 --
 
@@ -2384,3 +2673,4 @@ INSERT INTO schema_migrations (version) VALUES ('20260826020002');
 INSERT INTO schema_migrations (version) VALUES ('20260826030001');
 INSERT INTO schema_migrations (version) VALUES ('20260826040001');
 INSERT INTO schema_migrations (version) VALUES ('20260826050001');
+INSERT INTO schema_migrations (version) VALUES ('20260826060001');

@@ -7,11 +7,13 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import type { AstraClient, TaskView } from '@astra/api-client';
-import type { Artifact } from '@astra/contracts';
+import type { Artifact, DailyBrief } from '@astra/contracts';
 
 interface WorkspaceDataValue {
   readonly tasks: readonly TaskView[];
   readonly artifacts: readonly Artifact[];
+  /** server が組んだ「今日気にすべきこと」。取れなければ null。 */
+  readonly brief: DailyBrief | null;
   readonly loading: boolean;
   /** 取得できなかった理由。UI/UX §21: 影響と次の行動を伝えるため。 */
   readonly error: string | null;
@@ -29,6 +31,7 @@ export function WorkspaceDataProvider({
 }): ReactElement {
   const [tasks, setTasks] = useState<readonly TaskView[]>([]);
   const [artifacts, setArtifacts] = useState<readonly Artifact[]>([]);
+  const [brief, setBrief] = useState<DailyBrief | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -36,12 +39,15 @@ export function WorkspaceDataProvider({
     setLoading(true);
     try {
       // 片方だけ落ちても、取れた方は見せる。全部か無かにしない。
-      const [taskPage, artifactPage] = await Promise.allSettled([
+      const [taskPage, artifactPage, dailyBrief] = await Promise.allSettled([
         client.listTasks({ limit: 50 }),
         client.listArtifacts({ limit: 50 }),
+        client.brief(),
       ]);
       if (taskPage.status === 'fulfilled') setTasks(taskPage.value.items);
       if (artifactPage.status === 'fulfilled') setArtifacts(artifactPage.value.items);
+      // brief が取れなければ null のまま。Home は task だけで組み直す。
+      setBrief(dailyBrief.status === 'fulfilled' ? dailyBrief.value : null);
 
       const failed = [taskPage, artifactPage].filter((r) => r.status === 'rejected');
       setError(failed.length > 0 ? '一部の情報を取得できませんでした。' : null);
@@ -55,8 +61,8 @@ export function WorkspaceDataProvider({
   }, [reload]);
 
   const value = useMemo<WorkspaceDataValue>(
-    () => ({ tasks, artifacts, loading, error, reload }),
-    [tasks, artifacts, loading, error, reload],
+    () => ({ tasks, artifacts, brief, loading, error, reload }),
+    [tasks, artifacts, brief, loading, error, reload],
   );
 
   return <WorkspaceDataContext.Provider value={value}>{children}</WorkspaceDataContext.Provider>;

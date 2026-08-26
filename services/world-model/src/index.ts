@@ -1,11 +1,15 @@
 /**
  * @astra/service-world-model
  *
- * Entities, edges, facts and memory retrieval/write policy.
- *
- * Phase 0 scaffold only — no implementation yet.
- * Normative spec: docs/spec/phase-0-implementation-spec.md
- * Product spec:   docs/spec/new_ai_platform_design_spec_v0.1.md
+ * 「ユーザーの世界の現在状態」。正本 §10。
+ * 実装仕様: docs/spec/phase-6-implementation-spec.md
  */
-
-export const SERVICE_WORLD_MODEL_PACKAGE = '@astra/service-world-model' as const;
+export { WorldModelService, type RememberResult, type WorldDeps } from './service.js';
+export {
+  MIN_CONFIDENCE,
+  MIN_STATEMENT_LENGTH,
+  shouldRemember,
+  type MemoryCandidate,
+  type MemoryVerdict,
+} from './memory.js';
+export { buildBrief, type BriefInput, type MeetingLike, type TaskLike } from './brief.js';

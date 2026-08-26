@@ -8,7 +8,13 @@
 import { useMemo, type ReactElement } from 'react';
 import type { TaskView } from '@astra/api-client';
 import type { Artifact } from '@astra/contracts';
-import { buildAttentionFeed, greeting, type AttentionItem } from '../home/attention.js';
+import {
+  buildAttentionFeed,
+  feedFromBrief,
+  greeting,
+  type AttentionItem,
+} from '../home/attention.js';
+import type { DailyBrief } from '@astra/contracts';
 import '../work/work.css';
 import '../home/home.css';
 
@@ -24,6 +30,7 @@ export function HomePage({
   artifacts = [],
   displayName = null,
   now = Date.now(),
+  brief = null,
   onOpenTask,
   onOpenArtifact,
   onShowAll,
@@ -32,11 +39,19 @@ export function HomePage({
   artifacts?: readonly Artifact[];
   displayName?: string | null;
   now?: number;
+  /**
+   * server が組んだ「今日気にすべきこと」。
+   * 無ければ task だけから組む（server が古い / 落ちているとき）。
+   */
+  brief?: DailyBrief | null;
   onOpenTask?(taskId: string): void;
   onOpenArtifact?(artifactId: string): void;
   onShowAll?(): void;
 }): ReactElement {
-  const feed = useMemo(() => buildAttentionFeed(tasks, now), [tasks, now]);
+  const feed = useMemo(
+    () => (brief ? feedFromBrief(brief) : buildAttentionFeed(tasks, now)),
+    [brief, tasks, now],
+  );
   const active = useMemo(
     () => tasks.filter((t) => t.status === 'RUNNING' || t.status === 'PENDING').slice(0, 3),
     [tasks],

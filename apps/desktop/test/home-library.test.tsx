@@ -284,3 +284,57 @@ describe('Library (§10)', () => {
     expect(screen.getByText('CONFIDENTIAL')).toBeTruthy();
   });
 });
+
+describe('Home with the server brief (Phase 6)', () => {
+  const briefItem = (over: Record<string, unknown> = {}) => ({
+    id: 'commitment:1',
+    severity: 'action-required',
+    title: '見積を送る',
+    detail: '2 日過ぎています',
+    action_label: '確認する',
+    target: { kind: 'commitment', fact_id: uuidv7() },
+    score: 0.8,
+    ...over,
+  });
+
+  it('shows what the server decided, not a client rebuild', () => {
+    // client は commitment も会議も持っていない。組み直すと task だけの feed に戻る。
+    render(
+      <HomePage
+        tasks={[]}
+        brief={
+          {
+            attention: [briefItem()],
+            more: [],
+            generated_at: new Date().toISOString(),
+          } as never
+        }
+      />,
+    );
+    expect(screen.getByText('見積を送る')).toBeTruthy();
+    expect(screen.getByText('2 日過ぎています')).toBeTruthy();
+  });
+
+  it('says how many more there are without listing them', () => {
+    render(
+      <HomePage
+        tasks={[]}
+        brief={
+          {
+            attention: [briefItem()],
+            more: [briefItem({ id: 'commitment:2', title: '見えないはず' })],
+            generated_at: new Date().toISOString(),
+          } as never
+        }
+      />,
+    );
+    // 4 件目以降は「すべて見る」へ（UI/UX §8.1）
+    expect(screen.queryByText('見えないはず')).toBeNull();
+    expect(screen.getByText(/すべて見る/)).toBeTruthy();
+  });
+
+  it('falls back to the tasks it has when the brief could not be fetched', () => {
+    render(<HomePage tasks={[]} brief={null} />);
+    expect(screen.getByText('今、面倒なことを1つ頼んでください。')).toBeTruthy();
+  });
+});

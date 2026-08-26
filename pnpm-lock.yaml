@@ -202,6 +202,9 @@ importers:
       '@astra/service-task':
         specifier: workspace:*
         version: link:../services/task
+      '@astra/service-world-model':
+        specifier: workspace:*
+        version: link:../services/world-model
       '@astra/telemetry':
         specifier: workspace:*
         version: link:../packages/telemetry
@@ -373,6 +376,9 @@ importers:
       '@astra/policy':
         specifier: workspace:*
         version: link:../../packages/policy
+      '@astra/service-library':
+        specifier: workspace:*
+        version: link:../library
       '@astra/telemetry':
         specifier: workspace:*
         version: link:../../packages/telemetry
@@ -416,6 +422,9 @@ importers:
       '@astra/service-task':
         specifier: workspace:*
         version: link:../task
+      '@astra/service-world-model':
+        specifier: workspace:*
+        version: link:../world-model
       '@astra/telemetry':
         specifier: workspace:*
         version: link:../../packages/telemetry
@@ -663,6 +672,13 @@ importers:
       '@astra/telemetry':
         specifier: workspace:*
         version: link:../../packages/telemetry
+      kysely:
+        specifier: 'catalog:'
+        version: 0.29.5
+    devDependencies:
+      vitest:
+        specifier: 'catalog:'
+        version: 3.2.7(@types/node@22.20.1)(happy-dom@20.11.6)(terser@5.50.0)(tsx@4.23.12)(yaml@2.9.0)
 
   workers/document-worker:
     dependencies:

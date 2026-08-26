@@ -22,13 +22,7 @@ const TABLE_OWNERS = {
   'services/share': ['shares', 'share_access_logs'],
   'services/meeting': ['meetings', 'meeting_segments', 'meeting_speakers', 'translations'],
   'services/research': ['research_runs', 'evidence'],
-  'services/world-model': [
-    'world_entities',
-    'world_edges',
-    'world_facts',
-    'world_embeddings',
-    'world_events',
-  ],
+  'services/world-model': ['world_entities', 'world_edges', 'world_facts', 'world_events'],
   'services/plugin-registry': [
     'plugins',
     'plugin_versions',

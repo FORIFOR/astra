@@ -40,7 +40,8 @@
     "@astra/service-share": "workspace:*",
     "@astra/service-meeting": "workspace:*",
     "@astra/service-research": "workspace:*",
-    "@astra/service-agent-runtime": "workspace:*"
+    "@astra/service-agent-runtime": "workspace:*",
+    "@astra/service-world-model": "workspace:*"
   },
   "devDependencies": {
     "@types/ws": "^8.18.1",

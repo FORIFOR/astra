@@ -7,6 +7,7 @@
 import {
   Artifact,
   CreateMeetingRequest,
+  DailyBrief,
   DashboardView,
   CreateTaskRequest,
   Meeting,
@@ -17,6 +18,7 @@ import {
   PluginCatalogEntry,
   PluginInstall,
   Task,
+  WorldFact,
   dockStateFor,
   uuidv7,
   type ApprovalDecision,
@@ -145,6 +147,31 @@ export class AstraClient {
   /** タスクの進捗を購読する。切断からの再開は clientside で面倒を見る（§7.3）。 */
   streamTask(taskId: string, options: StreamOptions): Promise<number> {
     return streamTaskEvents(this.http, taskId, options);
+  }
+
+  /**
+   * 「今日気にすべきこと」。正本 §2.1、Phase 6 §4。
+   *
+   * **server 側で組む。**commitment も会議も client は持っていないので、
+   * 画面で組み立てると task しか見えない feed になる。
+   */
+  brief(): Promise<DailyBrief> {
+    return this.http.request({ path: '/v1/brief' }, (value) => DailyBrief.parse(value));
+  }
+
+  async commitments(): Promise<WorldFact[]> {
+    const parsed = await this.http.request({ path: '/v1/commitments' }, (value) =>
+      z.object({ items: z.array(WorldFact) }).parse(value),
+    );
+    return parsed.items;
+  }
+
+  /** 済ませる / やめる。**消さずに残る。** */
+  settleCommitment(factId: string, status: 'DONE' | 'DROPPED'): Promise<WorldFact> {
+    return this.http.request(
+      { method: 'POST', path: `/v1/commitments/${factId}/settle`, body: { status } },
+      (value) => WorldFact.parse(value),
+    );
   }
 
   // ------------------------------------------------------------- meetings

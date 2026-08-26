@@ -1,0 +1,7 @@
+# 実装仕様 §14.2 の eval harness 契約
+phase: 6
+tags: [acceptance, blocking]
+blocking: true
+description: >
+  Phase 6 実装仕様 §0 の AC6-1〜AC6-10。
+  正本 §28 Phase 6 Exit「今日気にすべきことが精度高く出る」を HTTP から検証する。

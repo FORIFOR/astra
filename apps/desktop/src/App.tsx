@@ -15,7 +15,7 @@ import './shell/shell.css';
 
 function ActivePage(): ReactElement {
   const { activeTab, focusedTaskId, focusedArtifactId, openTask, openArtifact } = useShell();
-  const { tasks, artifacts } = useWorkspaceData();
+  const { tasks, artifacts, brief } = useWorkspaceData();
   const { client, me } = useSession();
   const { requestStart: requestStartMeeting } = useMeeting();
 
@@ -25,6 +25,7 @@ function ActivePage(): ReactElement {
         <HomePage
           tasks={tasks}
           artifacts={artifacts}
+          brief={brief}
           displayName={me?.user.display_name ?? null}
           onOpenTask={openTask}
           onOpenArtifact={openArtifact}

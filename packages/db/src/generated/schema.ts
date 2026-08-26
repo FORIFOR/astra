@@ -429,6 +429,50 @@ export interface Users {
   id: string;
 }
 
+export interface WorldEdges {
+  created_at: Generated<Timestamp>;
+  from_id: string;
+  relation: string;
+  tenant_id: string;
+  to_id: string;
+  weight: Generated<Numeric>;
+}
+
+export interface WorldEntities {
+  attributes: Generated<Json>;
+  first_seen_at: Generated<Timestamp>;
+  id: string;
+  kind: string;
+  last_seen_at: Generated<Timestamp>;
+  mention_count: Generated<number>;
+  name: string;
+  normalized_name: string;
+  tenant_id: string;
+}
+
+export interface WorldEvents {
+  entity_id: string | null;
+  id: string;
+  kind: string;
+  occurred_at: Generated<Timestamp>;
+  payload: Generated<Json>;
+  tenant_id: string;
+}
+
+export interface WorldFacts {
+  confidence: Generated<Numeric>;
+  created_at: Generated<Timestamp>;
+  due_at: Timestamp | null;
+  id: string;
+  kind: string;
+  source: Json;
+  statement: string;
+  status: string | null;
+  subject_entity_id: string | null;
+  tenant_id: string;
+  updated_at: Generated<Timestamp>;
+}
+
 export interface DB {
   action_receipts: ActionReceipts;
   approvals: Approvals;
@@ -463,4 +507,8 @@ export interface DB {
   translations: Translations;
   turns: Turns;
   users: Users;
+  world_edges: WorldEdges;
+  world_entities: WorldEntities;
+  world_events: WorldEvents;
+  world_facts: WorldFacts;
 }

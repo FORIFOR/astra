@@ -11,9 +11,6 @@
     },
     {
       "path": "../../packages/db"
-    },
-    {
-      "path": "../../packages/telemetry"
     }
   ]
 }

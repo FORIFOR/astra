@@ -185,6 +185,13 @@ FINISH="$(curl -fsS -X POST "$BASE/v1/meetings/$MEETING/finish" -H "authorizatio
 [ -n "$FINISH" ] || fail "finalize did not start"
 echo "  meeting $MEETING recorded ${RECORDED_BYTES}B, finalizing as task $FINISH"
 
+say "the brief stays quiet when there is nothing worth saying"
+# Phase 6: 出さないほうが壊れやすい。何も無いときに黙ることを確かめる。
+BRIEF="$(curl -fsS "$BASE/v1/brief" -H "authorization: Bearer $AT")"
+ATTENTION="$(echo "$BRIEF" | json 'len(d["attention"])')"
+[ "$ATTENTION" -le 3 ] || fail "the brief showed $ATTENTION items (max is 3)"
+echo "  $ATTENTION attention item(s)"
+
 say "another tenant sees 404, not 403"
 OTHER="$(curl -fsS -X POST "$BASE/v1/auth/dev/token" -H 'content-type: application/json' \
   -d '{"email":"other@example.com","display_name":"Other"}' | json 'd["access_token"]')"

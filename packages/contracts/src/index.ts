@@ -26,6 +26,7 @@ export * from './plugin.js';
 export * from './dashboard.js';
 export * from './mcp.js';
 export * from './domain.js';
+export * from './world.js';
 export * from './identity.js';
 export * from './host.js';
 export * from './api.js';

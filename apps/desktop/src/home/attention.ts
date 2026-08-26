@@ -7,6 +7,7 @@
  * 4 件目以降は「すべて見る」へ送る（§8.1）。
  */
 import type { TaskView } from '@astra/api-client';
+import type { DailyBrief } from '@astra/contracts';
 
 /** UI/UX §16 の Severity。出す面が違う。 */
 export type Severity = 'info' | 'attention' | 'action-required' | 'critical';
@@ -149,4 +150,26 @@ export function greeting(hour: number): string {
   if (hour < 11) return 'おはようございます';
   if (hour < 18) return 'こんにちは';
   return 'こんばんは';
+}
+
+/**
+ * server が組んだ brief を、画面が扱う形へ落とす。
+ *
+ * **client 側で組み直さない。**commitment も会議も client は持っていないので、
+ * ここで作り直すと task しか見えない feed に戻る（Phase 6 §4）。
+ */
+export function feedFromBrief(brief: DailyBrief): AttentionFeed {
+  return {
+    items: brief.attention.map((item) => ({
+      id: item.id,
+      severity: item.severity,
+      title: item.title,
+      detail: item.detail,
+      actionLabel: item.action_label,
+      // task 以外（commitment / 会議）は、押しても task へは飛ばない
+      taskId: item.target.kind === 'task' ? item.target.task_id : '',
+      score: item.score,
+    })),
+    overflow: brief.more.length,
+  };
 }

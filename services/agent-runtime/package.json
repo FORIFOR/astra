@@ -26,7 +26,8 @@
     "@astra/db": "workspace:*",
     "@astra/policy": "workspace:*",
     "@astra/telemetry": "workspace:*",
-    "kysely": "catalog:"
+    "kysely": "catalog:",
+    "@astra/service-library": "workspace:*"
   },
   "devDependencies": {
     "vitest": "catalog:"

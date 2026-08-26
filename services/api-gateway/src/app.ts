@@ -28,6 +28,8 @@ import { registerArtifactRoutes } from './routes/artifacts.js';
 import { registerPluginRoutes } from './routes/plugins.js';
 import { registerShareRoutes } from './routes/shares.js';
 import { registerDomainRoutes, type DomainRouteDeps } from './routes/domain.js';
+import { registerBriefRoutes } from './routes/brief.js';
+import type { WorldModelService } from '@astra/service-world-model';
 import type { DataSourceResolver } from '@astra/service-plugin-registry';
 import {
   registerMeetingAudioRoute,
@@ -55,6 +57,8 @@ export interface AppDeps {
   readonly dataSources?: DataSourceResolver;
   /** plugin が持ち込む entity。定義を引く先ごと渡す（Phase 5 §5）。 */
   readonly domain?: DomainRouteDeps;
+  /** 「今日気にすべきこと」を組む先（Phase 6 §4）。 */
+  readonly world?: WorldModelService;
   readonly bridge?: HostBridge;
   /** SSE のポーリング間隔。テストは短くする。 */
   readonly ssePollIntervalMs?: number;
@@ -117,6 +121,13 @@ export function buildApp(deps: AppDeps): App {
     ...(deps.dataSources === undefined ? {} : { dataSources: deps.dataSources }),
   });
   if (deps.domain) registerDomainRoutes(app, deps.domain);
+  if (deps.world) {
+    registerBriefRoutes(app, {
+      world: deps.world,
+      tasks: deps.tasks,
+      ...(deps.meetings ? { meetings: deps.meetings.meetings } : {}),
+    });
+  }
   if (deps.meetings) {
     registerMeetingRoutes(app, {
       ...deps.meetings,
