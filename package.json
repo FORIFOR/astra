@@ -27,7 +27,8 @@
     "db:codegen": "./infra/db/with-test-db.sh sh -c 'cd packages/db && npx kysely-codegen --url \"$TEST_ADMIN_DATABASE_URL\" --dialect postgres --out-file src/generated/schema.ts'",
     "check:conventions": "node scripts/check-conventions.mjs",
     "check:generated": "./scripts/check-generated.sh",
-    "check:contracts-version": "node scripts/check-contracts-version.mjs"
+    "check:contracts-version": "node scripts/check-contracts-version.mjs",
+    "gen:dock-geometry": "node scripts/gen-dock-geometry.mjs"
   },
   "devDependencies": {
     "@types/node": "catalog:",

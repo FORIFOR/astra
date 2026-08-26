@@ -14,3 +14,5 @@ coverage/
 /infra/db/.dbstate
 .data/
 /tmp/
+/apps/desktop/src-tauri/target/
+/apps/desktop/src-tauri/gen/

@@ -16,6 +16,7 @@ export * from './canonical.js';
 export * from './errors.js';
 export * from './approval.js';
 export * from './artifact.js';
+export * from './context.js';
 export * from './task.js';
 export * from './events.js';
 export * from './plugin.js';

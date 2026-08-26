@@ -15,6 +15,7 @@
   "dependencies": {
     "@astra/contracts": "workspace:*",
     "@astra/ui-kit": "workspace:*",
+    "@tauri-apps/api": "^2.11.1",
     "react": "catalog:",
     "react-dom": "catalog:"
   },

@@ -4,8 +4,15 @@
  * 色は目視で決めない。コントラストは計算できるので、ここで機械的に守る。
  */
 import { describe, expect, it } from 'vitest';
+import { chipsFor, mayLeaveDevice } from '@astra/contracts';
 import {
   AA_LARGE_TEXT,
+  DOCK_STATES,
+  clampToWorkArea,
+  defaultDockPosition,
+  dockGeometry,
+  dockGeometryFor,
+  escapeOutcome,
   AA_NORMAL_TEXT,
   BACKGROUND_TOKENS,
   FOREGROUND_TOKENS,
@@ -261,5 +268,140 @@ describe('generated css', () => {
     expect(TOKENS_CSS).toContain('--astra-layout-sidebar-expanded: 208px');
     expect(TOKENS_CSS).toContain('--astra-layout-top-bar: 56px');
     expect(TOKENS_CSS).toContain('--astra-motion-dock-morph-duration: 200ms');
+  });
+});
+
+describe('task dock geometry (§4.1)', () => {
+  it('uses the sizes the spec fixes', () => {
+    expect(dockGeometry.ready).toEqual({ width: 560, minHeight: 56, maxHeight: 56 });
+    expect(dockGeometry.typing.width).toBe(640);
+    expect(dockGeometry.typing.maxHeight).toBe(140);
+    expect(dockGeometry.listening).toEqual({ width: 560, minHeight: 96, maxHeight: 96 });
+    expect(dockGeometry.contextPeek.width).toBe(640);
+    expect(dockGeometry.contextPeek.maxHeight).toBe(220);
+    expect(dockGeometry.working.maxHeight).toBe(520);
+  });
+
+  it('never lets a state grow past its own ceiling', () => {
+    for (const state of DOCK_STATES) {
+      const size = dockGeometry[state];
+      expect(size.minHeight, state).toBeLessThanOrEqual(size.maxHeight);
+      expect(size.width, state).toBeGreaterThan(0);
+    }
+  });
+
+  it('maps every interaction state to a geometry', () => {
+    const states = [
+      'HIDDEN',
+      'READY',
+      'LISTENING',
+      'TYPING',
+      'UNDERSTANDING',
+      'WORKING',
+      'WAITING_APPROVAL',
+      'RESULT',
+      'FAILED_RECOVERABLE',
+      'FAILED_BLOCKED',
+      'MINIMIZED',
+    ] as const;
+    for (const state of states) {
+      expect(DOCK_STATES, state).toContain(dockGeometryFor(state));
+    }
+  });
+
+  it('shows progress, approval and result on the same card surface', () => {
+    // §6: Agent orchestration を隠し、仕事の単位で見せる。面を分けない。
+    for (const state of ['WORKING', 'WAITING_APPROVAL', 'RESULT'] as const) {
+      expect(dockGeometryFor(state)).toBe('working');
+    }
+  });
+
+  it('opens the context peek regardless of the interaction state', () => {
+    expect(dockGeometryFor('READY', true)).toBe('contextPeek');
+    expect(dockGeometryFor('WORKING', true)).toBe('contextPeek');
+  });
+});
+
+describe('dock placement (§4.2)', () => {
+  const fhd = { x: 0, y: 0, width: 1920, height: 1080 };
+
+  it('centres horizontally and sits 48–72px from the bottom', () => {
+    const position = defaultDockPosition(fhd, { width: 560, height: 56 });
+    expect(position.x).toBe((1920 - 560) / 2);
+    const gap = fhd.height - (position.y + 56);
+    expect(gap).toBeGreaterThanOrEqual(48);
+    expect(gap).toBeLessThanOrEqual(72);
+  });
+
+  it('clamps a requested offset into the allowed band', () => {
+    for (const requested of [0, 10, 200]) {
+      const position = defaultDockPosition(fhd, { width: 560, height: 56 }, requested);
+      const gap = fhd.height - (position.y + 56);
+      expect(gap).toBeGreaterThanOrEqual(48);
+      expect(gap).toBeLessThanOrEqual(72);
+    }
+  });
+
+  it('uses the origin of a secondary display', () => {
+    const secondary = { x: 1920, y: 0, width: 2560, height: 1440 };
+    const position = defaultDockPosition(secondary, { width: 560, height: 56 });
+    expect(position.x).toBeGreaterThanOrEqual(secondary.x);
+    expect(position.x + 560).toBeLessThanOrEqual(secondary.x + secondary.width);
+  });
+
+  it('pulls a dragged dock back on screen', () => {
+    // 画面外へ出すと二度と掴めない
+    const position = clampToWorkArea({ x: 9999, y: -400 }, fhd, { width: 560, height: 56 });
+    expect(position).toEqual({ x: 1920 - 560, y: 0 });
+  });
+});
+
+describe('escape behaviour (§4.4)', () => {
+  it('shrinks first and dismisses second', () => {
+    expect(escapeOutcome('working', false)).toBe('shrink');
+    expect(escapeOutcome('working', true)).toBe('dismiss');
+    expect(escapeOutcome('contextPeek', false)).toBe('shrink');
+  });
+
+  it('dismisses straight away when there is nothing to shrink', () => {
+    expect(escapeOutcome('ready', false)).toBe('dismiss');
+  });
+});
+
+describe('context chips (§4.3 / §5)', () => {
+  const source = (id: string, used: boolean) => ({
+    id,
+    category: 'internal' as const,
+    label: id,
+    reason: null,
+    sensitivity: 'PRIVATE' as const,
+    removable: true,
+    used,
+  });
+
+  it('shows at most three chips and counts the rest', () => {
+    const chips = chipsFor([
+      source('a', false),
+      source('b', false),
+      source('c', false),
+      source('d', false),
+      source('e', false),
+    ]);
+    expect(chips.visible).toHaveLength(3);
+    expect(chips.overflow).toBe(2);
+  });
+
+  it('puts what was actually used ahead of mere candidates', () => {
+    const chips = chipsFor([source('candidate', false), source('used', true)]);
+    expect(chips.visible[0]?.id).toBe('used');
+    expect(chips.overflow).toBe(0);
+  });
+});
+
+describe('regulated data (§6.3)', () => {
+  it('keeps regulated context on the device unless policy allows otherwise', () => {
+    expect(mayLeaveDevice('REGULATED')).toBe(false);
+    expect(mayLeaveDevice('REGULATED', true)).toBe(true);
+    expect(mayLeaveDevice('CONFIDENTIAL')).toBe(true);
   });
 });

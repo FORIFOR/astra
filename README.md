@@ -22,8 +22,10 @@ OS のどこからでも呼び出せる **Task Dock**。North Star は **Intent 
 
 - Phase 0: P0-01 〜 P0-18。受け入れテスト AC-1〜AC-16 が green。
   `pnpm test:acceptance` が「create task → progress → result artifact」を HTTP から検証する。
-- Phase 1: **UI-0 完了**（design tokens + shell + shared state / Light・Dark + 4-tab shell）。
-  次は UI-1（Task Dock + Context Lens）。
+- Phase 1: **UI-0・UI-1 完了**。
+  UI-0 = design tokens + shell + shared state（Light・Dark + 4-tab shell）。
+  UI-1 = Task Dock + Context Lens（OS 上で intent → context 確認）。
+  次は UI-2（Work Surface + progress + result）。
 
 実装順は正本 §28 に従う。
 
@@ -41,7 +43,7 @@ Phase 7  Regulated / Financial
 ## 構成
 
 ```text
-apps/desktop         Tauri v2 + React。Local Control Plane と 4 タブ shell
+apps/desktop         Tauri v2 + React。Local Control Plane / 4 タブ shell / Task Dock
 apps/share-web       共有リンクの公開 viewer
 services/*           Cloud Control Plane（正本 §17 のサービス境界）
 workers/*            Temporal worker
@@ -70,7 +72,10 @@ pnpm test:db          # 使い捨て DB を用意して DB 依存のテストも
 pnpm test:acceptance  # Phase 0 の受け入れテスト（AC-1〜AC-16）
 
 pnpm check:conventions  # サービス境界とテーブル所有権の検査
+pnpm check:generated    # schema.sql / Kysely 型 / Dock geometry の鮮度
 pnpm db:verify          # マイグレーションの up / RLS / append-only / down
+
+cd apps/desktop/src-tauri && cargo test   # Dock の配置計算
 ```
 
 Temporal UI: http://localhost:8233

@@ -37,3 +37,6 @@ fi
 echo "generated database types are current"
 
 dbmate --url "$DATABASE_URL" --migrations-dir "$ROOT/infra/db/migrations" --no-dump-schema drop >/dev/null
+
+# Dock の geometry は TypeScript を正として Rust の定数を生成している
+node "$ROOT/scripts/gen-dock-geometry.mjs" --check

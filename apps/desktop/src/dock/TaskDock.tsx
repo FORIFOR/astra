@@ -1,0 +1,162 @@
+/**
+ * Task Dock。UI/UX §4。
+ *
+ * Chat 画面ではなく Intent Bar。Voice / Text / 画面 / 選択範囲 / ファイルを
+ * 同一 Conversation へ入れる入口。
+ */
+import { useCallback, useEffect, useMemo, useState, type ReactElement } from 'react';
+import { DOCK_MAX_INPUT_LINES, dockGeometry, dockGeometryFor } from '@astra/ui-kit';
+import type { ContextSource } from '@astra/contracts';
+import { useDockMachine } from './useDockMachine.js';
+import { ContextLens } from './ContextLens.js';
+import { host } from '../host/tauri.js';
+
+/** §3 の各状態でユーザーに見せる短い status。spinner だけの状態を作らない。 */
+const STATUS_TEXT: Partial<Record<ReturnType<typeof dockGeometryFor>, string>> = {};
+
+export function TaskDock({
+  initialSources = [],
+}: {
+  initialSources?: readonly ContextSource[];
+}): ReactElement {
+  const machine = useDockMachine();
+  const [sources, setSources] = useState<readonly ContextSource[]>(initialSources);
+  const [explanation, setExplanation] = useState<string | null>(null);
+
+  // 前面アプリを文脈として取り込む。取れなければ何も足さない（推測で埋めない）。
+  useEffect(() => {
+    let cancelled = false;
+    void host.contextSnapshot().then((snapshot) => {
+      if (cancelled || !snapshot?.active_app) return;
+      setSources((current) =>
+        current.some((s) => s.id === 'current-app')
+          ? current
+          : [
+              {
+                id: 'current-app',
+                category: 'current',
+                label: snapshot.active_app!,
+                reason: '今このアプリを操作しているため',
+                sensitivity: 'PRIVATE',
+                removable: true,
+                used: false,
+              },
+              ...current,
+            ],
+      );
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const geometry = dockGeometryFor(machine.state, machine.contextExpanded);
+  const size = dockGeometry[geometry];
+
+  const onKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        machine.escape();
+        return;
+      }
+      // §4.3: Enter 送信 / Shift+Enter 改行 / Cmd-Ctrl+Enter でも送信
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        machine.submit();
+      }
+    },
+    [machine],
+  );
+
+  const removeSource = useCallback((id: string) => {
+    // §5.2: remove したら plan を再評価する。UI-2 で Conversation Engine へ通知する。
+    setSources((current) => current.filter((s) => s.id !== id));
+    setExplanation(null);
+  }, []);
+
+  const explain = useCallback(
+    (id: string) => {
+      const source = sources.find((s) => s.id === id);
+      setExplanation(source?.reason ?? null);
+    },
+    [sources],
+  );
+
+  const statusLabel = useMemo(() => {
+    switch (machine.state) {
+      case 'LISTENING':
+        return '聞いています';
+      case 'UNDERSTANDING':
+        return '文脈を確認しています';
+      case 'WORKING':
+        return '進めています';
+      default:
+        return null;
+    }
+  }, [machine.state]);
+
+  return (
+    <div
+      className="astra-dock"
+      data-state={machine.state}
+      data-geometry={geometry}
+      style={{
+        ['--astra-dock-width' as string]: `${size.width}px`,
+        ['--astra-dock-min-height' as string]: `${size.minHeight}px`,
+        ['--astra-dock-max-height' as string]: `${size.maxHeight}px`,
+      }}
+    >
+      <div className="astra-dock__row">
+        <span className="astra-dock__mark" aria-hidden="true">
+          ✦
+        </span>
+        <textarea
+          className="astra-dock__intent"
+          // §4.3: 機能例を常時ローテーションしない
+          placeholder="何をしますか？"
+          aria-label="依頼を入力"
+          rows={Math.min(DOCK_MAX_INPUT_LINES, Math.max(1, machine.intent.split('\n').length))}
+          value={machine.intent}
+          onChange={(event) => machine.setIntent(event.target.value)}
+          onKeyDown={onKeyDown}
+        />
+        <button
+          type="button"
+          className="astra-dock__mic"
+          aria-pressed={machine.state === 'LISTENING'}
+          onClick={() =>
+            machine.state === 'LISTENING' ? machine.stopListening() : machine.startListening()
+          }
+        >
+          <span aria-hidden="true">🎙</span>
+          <span className="astra-visually-hidden">
+            {machine.state === 'LISTENING' ? '音声入力を止める' : '音声で入力する'}
+          </span>
+        </button>
+        <button type="button" className="astra-dock__attach">
+          <span aria-hidden="true">＋</span>
+          {/* §4.3: 技術的な tool 一覧は出さない */}
+          <span className="astra-visually-hidden">ファイルや画面を追加する</span>
+        </button>
+      </div>
+
+      {statusLabel && (
+        <p className="astra-dock__status" role="status">
+          {statusLabel}
+        </p>
+      )}
+
+      <ContextLens
+        sources={sources}
+        expanded={machine.contextExpanded}
+        onToggle={machine.toggleContext}
+        onRemove={removeSource}
+        onWhy={explain}
+        explanation={explanation}
+      />
+    </div>
+  );
+}
+
+export { STATUS_TEXT };

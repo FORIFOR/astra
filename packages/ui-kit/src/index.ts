@@ -12,6 +12,7 @@ export * from './tokens/typography.js';
 export * from './tokens/space.js';
 export * from './tokens/motion.js';
 export * from './tokens/layout.js';
+export * from './tokens/dock.js';
 export { buildTokensCss, TOKENS_CSS } from './tokens/css.js';
 export * from './theme.js';
 export * from './navigation.js';

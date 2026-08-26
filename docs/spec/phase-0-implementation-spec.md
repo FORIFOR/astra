@@ -1565,6 +1565,50 @@ Phase 0 の Exit（§16 の AC-1〜AC-16）とは別物。混同しない。
 各コンポーネントで px を比較させない。**幅が足りないときはユーザーの指定より
 main の最低幅 640px を優先**して sidebar を畳む。720px 未満は潰さず必要幅を伝える。
 
+### 20.6 UI-1 で確定したこと
+
+**Dock の geometry は TypeScript を正とし、Rust の定数を生成する**
+（`scripts/gen-dock-geometry.mjs` → `src-tauri/src/dock/geometry_generated.rs`）。
+同じ数字を CSS（React）と window サイズ（Rust）の両方が使うので、
+手で二重に持つと必ずずれる。`pnpm check:generated` が鮮度を検査する。
+
+#### window 構成
+
+| label  | 役割                  | 設定                                                             |
+| ------ | --------------------- | ---------------------------------------------------------------- |
+| `main` | Workspace shell（§7） | 最小 720×560（§7.2 の下限）                                      |
+| `dock` | Task Dock（§4）       | 装飾なし・透過・常に最前面・タスクバーに出さない・起動時は非表示 |
+
+透過 window には `macOSPrivateApi` と cargo の `macos-private-api` feature が対で要る。
+
+#### 配置で守ること（§4.2）
+
+- **画面外へ出さない。**一度出すとユーザーは二度と掴めない。
+  作業領域が Dock より狭くても、はみ出して見える方を選ぶ。
+- 位置の記憶は **display ごと**。外部ディスプレイを抜いたら、その記憶は捨てて
+  primary へ戻す。残すと「見えない場所」を復元し続ける。
+- 下端からの距離は 48–72px に clamp する。要求値が範囲外でも黙って従わない。
+
+#### Esc の扱い（§4.4）
+
+1 回目は縮小（context lens が開いていればまず畳む）、2 回目で dismiss。
+**実行中の Task はキャンセルしない。**Dismiss と Cancel を同じ操作にしない。
+
+#### Context Lens（§5）
+
+- 出すのは「今回の依頼で実際に使う / 使った情報」だけ。アクセスできる全データではない。
+- chip は最大 3 + `+N`。実際に使ったものを先に出す。
+- 機密（CONFIDENTIAL / REGULATED）は色だけでなく**文字ラベル**でも示す（§19）。
+- `context_snapshot` は取れなかった項目を `null` のままにする。**推測で埋めない。**
+  Lens は「Astra が実際に見たもの」を映す面なので、埋め草を入れると意味が壊れる。
+  取れなかった理由（`requires_permission`）は返し、権限要求は利用直前に行う（§22）。
+
+#### global shortcut（§20）
+
+macOS は `Option+Space`、Windows は `Ctrl+Alt+Space`。
+**登録に失敗しても起動は止めない。**OS や IME との衝突は珍しくないので、
+起動しないよりショートカットが効かない方がまし（設定から変更できる）。
+
 ---
 
 ## 19. 参照

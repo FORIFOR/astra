@@ -6,3 +6,4 @@ docs/spec/new_ai_platform_design_spec_v0.1.md
 docs/spec/astra_ui_ux_detailed_spec_v0.1.md
 infra/db/schema.sql
 packages/db/src/generated/
+apps/desktop/src-tauri/
