@@ -12,7 +12,7 @@ export {
   type NextBestAction,
   type PipelineStage,
 } from './sales-crm.js';
-export { salesCrmDataSources } from './data-sources.js';
+export { salesCrmDataSources, videoDataSources } from './data-sources.js';
 export { entityDefinitions, type AssetReader } from './definitions.js';
 export {
   DeterministicImageGenerator,
@@ -25,3 +25,5 @@ export {
   type ImageServiceDeps,
 } from './image.js';
 export * from './media-factory.js';
+export * from './video.js';
+export * from './video-executor.js';

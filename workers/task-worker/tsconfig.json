@@ -35,6 +35,9 @@
     },
     {
       "path": "../../services/capabilities"
+    },
+    {
+      "path": "../../services/agent-runtime"
     }
   ]
 }

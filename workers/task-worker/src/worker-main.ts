@@ -26,6 +26,7 @@ import {
 import { assertNoStandIns } from '@astra/contracts';
 import { capabilityReport } from '@astra/service-capabilities';
 import { createTaskWorker, TASK_QUEUE, NoopPublisher } from '@astra/service-task';
+import { DomainService, videoExecutors } from '@astra/service-agent-runtime';
 
 async function main(): Promise<void> {
   const logger = createLogger({
@@ -79,6 +80,12 @@ async function main(): Promise<void> {
       publisher: NoopPublisher,
       executors: {
         ...researchExecutors(research),
+        /*
+         * 正本 §15.2。**renderer は渡していない。**
+         * 生成モデルが未決（OQ-19）なので、書き出しは
+         * 「繋がっていない」と言って止まる。構成と字幕はそれでも作れる。
+         */
+        ...videoExecutors(new DomainService({ db })),
         ...meetingExecutors({
           meetings,
           library,

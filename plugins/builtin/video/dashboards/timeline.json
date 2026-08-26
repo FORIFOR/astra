@@ -1,0 +1,10 @@
+{
+  "id": "timeline",
+  "title": "映像",
+  "layout": "grid",
+  "items": [
+    { "type": "metric", "title": "書き出した本数", "bind": "video.assets", "span": 4 },
+    { "type": "table", "title": "書き出し待ち", "bind": "video.render_queue", "span": 8 },
+    { "type": "table", "title": "プロジェクト", "bind": "video.projects", "span": 12 }
+  ]
+}

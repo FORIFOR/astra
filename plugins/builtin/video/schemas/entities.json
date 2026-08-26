@@ -1,0 +1,109 @@
+{
+  "entities": [
+    {
+      "id": "video_project",
+      "title": "映像プロジェクト",
+      "title_field": "name",
+      "fields": [
+        {
+          "id": "name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "aspect",
+          "type": "enum",
+          "values": ["16:9", "9:16", "1:1"],
+          "required": false
+        },
+        {
+          "id": "note",
+          "type": "text",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "video_clip",
+      "title": "クリップ",
+      "title_field": "name",
+      "fields": [
+        {
+          "id": "name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "project",
+          "type": "reference",
+          "entity": "video_project",
+          "required": true
+        },
+        {
+          "id": "order",
+          "type": "number",
+          "required": true
+        },
+        {
+          "id": "prompt",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "source_artifact",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "duration_ms",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "subtitle",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "voiceover",
+          "type": "text",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "render_job",
+      "title": "書き出し",
+      "title_field": "name",
+      "fields": [
+        {
+          "id": "name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "project",
+          "type": "reference",
+          "entity": "video_project",
+          "required": true
+        },
+        {
+          "id": "status",
+          "type": "enum",
+          "values": ["QUEUED", "RENDERING", "DONE", "FAILED"],
+          "required": true
+        },
+        {
+          "id": "artifact",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "reason",
+          "type": "text",
+          "required": false
+        }
+      ]
+    }
+  ]
+}

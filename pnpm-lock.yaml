@@ -840,6 +840,9 @@ importers:
       '@astra/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@astra/service-agent-runtime':
+        specifier: workspace:*
+        version: link:../../services/agent-runtime
       '@astra/service-capabilities':
         specifier: workspace:*
         version: link:../../services/capabilities

@@ -242,6 +242,15 @@ describe.skipIf(!url)('what we do measure, through the real process', () => {
     // サーバの取り分は予算の 1/3 まで。残りを描画に残す。
     const serverShare = budget / 3;
 
+    /*
+     * 1 回目は接続の確立と問い合わせ計画の作成を含む。
+     * **利用者が Home を開くころには、それは済んでいる。**
+     * ここで見たいのは定常の取り分なので、温めてから測る
+     * （温めたことを黙ると、数字が何を指すのか分からなくなる）。
+     */
+    const warmUp = await app.inject({ method: 'GET', url: '/v1/brief', headers: auth });
+    expect(warmUp.statusCode).toBe(200);
+
     const samples: number[] = [];
     for (let i = 0; i < SAMPLES; i += 1) {
       const started = performance.now();
@@ -253,7 +262,7 @@ describe.skipIf(!url)('what we do measure, through the real process', () => {
     const worst = Math.max(...samples);
     expect(
       worst,
-      `brief の最悪値 ${worst.toFixed(0)}ms が、サーバの取り分 ${serverShare}ms を超えた`,
+      `温めたあとの brief の最悪値 ${worst.toFixed(0)}ms が、サーバの取り分 ${serverShare}ms を超えた`,
     ).toBeLessThanOrEqual(serverShare);
     // それでも SLO を守れているとは言わない
     expect(MEASURED).not.toContain('homeCachedLoad');

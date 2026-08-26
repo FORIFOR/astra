@@ -59,7 +59,7 @@ export function capabilityReport(input: {
       'GOOGLE_STT_RECOGNIZER',
     ),
     translation: fromProvider(input.meeting.translation, 'translation', 'GOOGLE_TRANSLATE_PARENT'),
-    // 画像は代役の実装がある。動画は実装そのものが無い。
+    // 画像は代役の実装がある。動画は段取りだけがあり、生成の先が無い。
     image_generation: imageCapability(new DeterministicImageGenerator()),
     video_generation: videoCapability(),
     oauth_providers: oauthCapability(input.env),

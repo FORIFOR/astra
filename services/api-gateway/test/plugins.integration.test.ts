@@ -67,6 +67,7 @@ describe.skipIf(!url)('plugin catalog', () => {
         'com.astra.meeting',
         'com.astra.research',
         'com.astra.sales-crm',
+        'com.astra.video',
       ]);
     });
 

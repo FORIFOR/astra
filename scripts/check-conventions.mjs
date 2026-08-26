@@ -221,7 +221,8 @@ async function checkBuiltinPlugins() {
   const entries = await readdir(path.join(root, 'plugins/builtin'), { withFileTypes: true });
   const dirs = entries.filter((e) => e.isDirectory());
   // 同梱を勝手に増やさないための検査。増やすときはここも直す（意図的な変更にする）。
-  const EXPECTED = 7;
+  // 8 つ目は Video（正本 §15.2）。
+  const EXPECTED = 8;
   if (dirs.length !== EXPECTED) {
     fail('plugins/builtin', 0, `expected ${EXPECTED} bundled plugins, found ${dirs.length}`);
   }

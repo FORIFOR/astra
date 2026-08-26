@@ -1,0 +1,55 @@
+# 映像の段取り。正本 §15.2。
+#
+# **モデルは持っていない。**text/image-to-video の提供者は未決（OQ-19）で、
+# 書き出しは繋がるまで失敗する。段取り（構成・字幕・読み上げ・書き出しの列）は
+# それでも全部動く。代役で「それらしい動画」を作ると、
+# 中身の無い映像が Library に残り、あとから本物と見分けられなくなる。
+id: com.astra.video
+name: Video
+version: 0.1.0
+publisher: astra
+verified: true
+min_core_version: 0.1.0
+category: domain-agent
+builtin: true
+removable: true
+compliance_profile: GENERAL
+execution_surfaces: [cloud]
+permissions:
+  - artifacts.read
+  - artifacts.write
+data_accessed:
+  - Video projects, clips and renders this user already has access to
+connectors: []
+tools:
+  - id: video.storyboard
+    risk: READ
+    surface: cloud
+  - id: video.subtitles
+    risk: READ
+    surface: cloud
+  - id: video.render
+    # 書き出しは Library に残る。取り消せる書き込みとして扱う。
+    risk: REVERSIBLE_WRITE
+    surface: cloud
+agents:
+  - id: editor
+    skill: skills/editor.md
+    tools: [video.storyboard, video.subtitles, video.render]
+dashboards:
+  - id: timeline
+    schema: dashboards/timeline.json
+data_sources:
+  - id: video.projects
+    kind: rows
+    query: video_projects
+  - id: video.render_queue
+    kind: rows
+    query: video_render_queue
+  - id: video.assets
+    kind: count
+    query: video_assets
+policies:
+  - policies/video.yaml
+data_extensions:
+  - schemas/entities.json

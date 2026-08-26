@@ -32,11 +32,18 @@ export function imageCapability(generator: ImageGenerator): CapabilityInput {
 }
 
 /**
- * 動画（正本 §15.2）。**まだ実装が無い。**
+ * 動画（正本 §15.2）。
  *
- * 代役すら置いていないのは、置くと「動くが中身が無い」ものが
- * Library に残るため。無いことを、無いと答える。
+ * **段取りはある。生成の先が無い。**
+ * 構成・字幕・読み上げ原稿・書き出しの列は動くが、
+ * text/image-to-video のモデルが未決（OQ-19）なので書き出せない。
+ *
+ * 代役を置かないのは、置くと「動くが中身が無い」映像が Library に残り、
+ * あとから本物と見分けられなくなるため。無いことを、無いと答える。
  */
-export function videoCapability(): CapabilityInput {
-  return NOT_IMPLEMENTED('動画エージェント（正本 §15.2）はまだ実装がありません');
+export function videoCapability(renderer?: { name: string }): CapabilityInput {
+  if (renderer) {
+    return { implementation: renderer.name, isStandIn: false, configureWith: null };
+  }
+  return NOT_IMPLEMENTED('映像の生成（正本 §15.2・OQ-19）。段取りは動くが、書き出しの先が無い');
 }

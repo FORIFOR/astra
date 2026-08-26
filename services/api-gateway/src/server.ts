@@ -15,6 +15,7 @@ import {
   DomainService,
   entityDefinitions,
   salesCrmDataSources,
+  videoDataSources,
 } from '@astra/service-agent-runtime';
 import { WorldModelService } from '@astra/service-world-model';
 import { ConversationService } from '@astra/service-conversation';
@@ -116,6 +117,8 @@ async function main(): Promise<void> {
     researchDataSources(db),
     meetingDataSources(db),
     salesCrmDataSources(domain),
+    // 正本 §15.2 の timeline/projects・render queue・assets
+    videoDataSources(domain),
   );
 
   const app = buildApp({

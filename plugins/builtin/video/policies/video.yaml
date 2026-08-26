@@ -1,0 +1,15 @@
+# 映像を扱うときに守ること。正本 §15.2・§22。
+# **host が判定できる語彙だけ**で書く。散文は description に置く。
+id: video
+profiles: []
+rules:
+  - id: receipt-for-renders
+    description: 書き出しは必ず記録を残す
+    when: { when: risk_at_least, risk: REVERSIBLE_WRITE }
+    require: receipt
+    severity: block
+  - id: confirm-publishing
+    description: 外部へ出すときは確認を取る
+    when: { when: risk_at_least, risk: EXTERNAL_COMMIT }
+    require: confirmation
+    severity: block
