@@ -80,6 +80,17 @@ export const SendTurnRequest = z.object({
   modality: Modality.default('text'),
   /** 直前の応答を打ち切るか。voice の barge-in はこれ（§7.2）。 */
   interrupt: z.boolean().default(true),
+  /**
+   * いま見ているもの。正本 §6「ユーザーに説明し直させない」。
+   *
+   * 「この会社」は会話に出ていなくても、画面に出ていれば解ける。
+   * **文脈からの指示先も、会話からのそれと同じに扱う。**
+   * ここが無いと、初回の一言目で必ず聞き返すことになる。
+   */
+  context_referents: z
+    .array(z.object({ label: z.string().min(1).max(200), kind: z.string().max(40) }))
+    .max(10)
+    .default([]),
 });
 export type SendTurnRequest = z.infer<typeof SendTurnRequest>;
 

@@ -97,3 +97,28 @@ describe('remember', () => {
     expect(list[0]!.label).toBe('item-29');
   });
 });
+
+describe('what is on screen (正本 §6)', () => {
+  it('resolves "この会社" from what the user is looking at', () => {
+    // 会話に出ていなくても、画面に出ていれば説明し直させない
+    const resolutions = resolveReferences('この会社について調べて', {
+      referents: [],
+      contextLabels: ['Example Inc'],
+    });
+    expect(clarificationFor(resolutions)).toBeNull();
+  });
+
+  it('still asks when there is nothing on screen either', () => {
+    const resolutions = resolveReferences('この会社について調べて', { referents: [] });
+    expect(clarificationFor(resolutions)).not.toBeNull();
+  });
+
+  it('does not treat a standalone pronoun as resolved by the screen', () => {
+    // 「それ」は名詞を取らない。画面に何かあっても、どれかは決まらない。
+    const resolutions = resolveReferences('それを消して', {
+      referents: [],
+      contextLabels: ['Example Inc'],
+    });
+    expect(clarificationFor(resolutions)).not.toBeNull();
+  });
+});

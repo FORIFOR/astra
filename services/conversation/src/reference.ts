@@ -7,8 +7,14 @@
  */
 import type { Referent, ReferenceResolution } from '@astra/contracts';
 
-/** 直近のものを指す語。 */
-const ANAPHORA = ['それ', 'あれ', 'これ', 'その', 'あの', 'この'];
+/** 単独で立つ指示語。**後ろに名詞を取らない。** */
+const ANAPHORA = ['それ', 'あれ', 'これ'];
+
+/**
+ * 連体詞。「この会社」のように名詞と組になる。
+ * 単独では立たないので、扱いを分ける。
+ */
+const DETERMINER = /(この|その|あの)([^\s、。]{1,20})/;
 
 /** 「2番」「3つ目」。1 始まりで数える（人が数える順）。 */
 const ORDINAL = /(\d+)\s*(番目|番|つ目|個目)/;
@@ -25,6 +31,11 @@ export interface ResolutionContext {
   readonly referents: readonly Referent[];
   /** 直近に提示した一覧。「2番」はここを指す。 */
   readonly lastList?: readonly Referent[];
+  /**
+   * いま見ているもの（正本 §6）。
+   * 会話に出ていなくても、画面に出ていれば「この◯◯」は解ける。
+   */
+  readonly contextLabels?: readonly string[];
 }
 
 /**
@@ -53,7 +64,24 @@ export function resolveReferences(text: string, context: ResolutionContext): Ref
     });
   }
 
-  // 「それ」「あれ」。直近の referent。
+  /*
+   * 「この◯◯」は連体詞で、後ろの名詞と組になっている。
+   * 会話に出ていなくても、**画面に出ていれば解ける**（正本 §6）。
+   * ここを見ないと、初回の一言目で必ず聞き返すことになる。
+   */
+  const determiner = DETERMINER.exec(text);
+  if (determiner) {
+    const onScreen = (context.contextLabels?.length ?? 0) > 0;
+    out.push({
+      phrase: determiner[0],
+      // 画面から来た指示先は、会話の referent には積まれていない。
+      // 「解けた」ことだけを伝え、どれかは呼び出し側の文脈が持つ。
+      resolved: null,
+      reason: onScreen ? null : 'nothing on screen or in the conversation matches it',
+    });
+  }
+
+  // 「それ」「あれ」。**単独で立つ指示語**は、直近の referent。
   const anaphor = ANAPHORA.find((word) => text.includes(word));
   if (anaphor) {
     const nearest = context.referents[0] ?? null;
@@ -91,7 +119,8 @@ export function fullyResolved(resolutions: readonly ReferenceResolution[]): bool
  * その語のまま尋ねる。「何について？」と丸ごと聞き直さない。
  */
 export function clarificationFor(resolutions: readonly ReferenceResolution[]): string | null {
-  const unresolved = resolutions.filter((r) => r.resolved === null);
+  // `reason` が無いものは、文脈で解けている（画面に出ている等）
+  const unresolved = resolutions.filter((r) => r.resolved === null && r.reason !== null);
   if (unresolved.length === 0) return null;
   const phrases = [...new Set(unresolved.map((r) => r.phrase))];
   return `「${phrases.join('」「')}」がどれを指すか分かりませんでした。`;

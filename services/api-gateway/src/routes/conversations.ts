@@ -76,6 +76,8 @@ export function registerConversationRoutes(app: App, deps: ConversationRouteDeps
 
       const resolutions = resolveReferences(body.text, {
         referents: state.referents as Referent[],
+        // いま見ているもの。会話に出ていなくても「この◯◯」は解ける（正本 §6）
+        contextLabels: body.context_referents.map((r) => r.label),
       });
       const clarification = clarificationFor(resolutions);
 

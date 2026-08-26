@@ -1,0 +1,7 @@
+# 実装仕様 §14.2 の eval harness 契約
+phase: product
+tags: [acceptance, blocking, journey]
+blocking: true
+description: >
+  正本 §30 Product Acceptance。初回ユーザーが 10 分以内に体験する 1 本の道筋を、
+  分割せずに通しで確かめる。Case A（調べる → レポート → Library → 共有）。
