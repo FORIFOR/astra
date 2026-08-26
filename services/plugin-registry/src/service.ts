@@ -11,6 +11,7 @@ import {
   CORE_VERSION,
   DashboardSchema,
   PluginCatalogEntry,
+  WorkflowFile,
   compareSemver,
   isCompatible,
   sha256Hex,
@@ -608,6 +609,9 @@ export class PluginRegistryService {
     // skill は実体ファイルから読む（AC5-5）。manifest の宣言だけでは中身が無い。
     const skillFile = await this.asset(pluginId, install.version, agent.skill);
 
+    // 宣言された仕事の流れ（正本 §14）。無ければ近似に落ちる。
+    const workflow = await this.#workflowFor(pluginId, install.version, manifest, agentId);
+
     return {
       pluginId,
       agentId,
@@ -615,9 +619,45 @@ export class PluginRegistryService {
       complianceProfile: manifest.compliance_profile,
       tools,
       skill: skillFile ? skillFile.toString('utf8') : null,
+      ...(workflow ? { workflow } : {}),
       grantedScopes: granted.map((g) => g.scope),
       requiredScopes: manifest.permissions,
     };
+  }
+
+  /**
+   * その agent の workflow。複数あれば**最初のもの**を使う。
+   * どれを使うかを利用者に選ばせるのは、モードを選ばせるのと同じ（正本 §2）。
+   */
+  async #workflowFor(
+    pluginId: string,
+    version: string,
+    manifest: PluginManifest,
+    agentId: string,
+  ): Promise<{ steps: { tool: string; message: string; applies: boolean }[] } | null> {
+    for (const path of manifest.workflows) {
+      const content = await this.asset(pluginId, version, path);
+      if (!content) continue;
+      let parsed;
+      try {
+        parsed = WorkflowFile.parse(JSON.parse(content.toString('utf8')));
+      } catch {
+        // publish で検証済み。ここに来るのは配線ミス。黙って近似へ落ちない。
+        continue;
+      }
+      const workflow = parsed.workflows.find((w) => w.agent === agentId);
+      if (!workflow) continue;
+
+      return {
+        steps: workflow.steps.map((step) => ({
+          tool: step.tool,
+          message: step.message,
+          // 条件は task を作る時点で評価する（計画は確定させる。D-40）
+          applies: true,
+        })),
+      };
+    }
+    return null;
   }
 
   /**

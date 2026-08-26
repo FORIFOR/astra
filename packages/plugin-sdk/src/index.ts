@@ -16,6 +16,7 @@ export {
   declaredAssets,
   loadAssets,
   validateDashboards,
+  validateWorkflows,
   MAX_ASSET_BYTES,
   type AssetKind,
   type PluginAsset,

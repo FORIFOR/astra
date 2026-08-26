@@ -521,7 +521,7 @@ CREATE TABLE public.plugin_assets (
     content bytea NOT NULL,
     sha256 character(64) NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT plugin_assets_kind_check CHECK ((kind = ANY (ARRAY['skill'::text, 'dashboard'::text, 'policy'::text, 'data_extension'::text]))),
+    CONSTRAINT plugin_assets_kind_check CHECK ((kind = ANY (ARRAY['skill'::text, 'dashboard'::text, 'policy'::text, 'data_extension'::text, 'workflow'::text, 'evaluation'::text]))),
     CONSTRAINT plugin_assets_path_check CHECK (((path <> ''::text) AND (path !~ '\.\.'::text))),
     CONSTRAINT plugin_assets_sha256_check CHECK ((sha256 ~ '^[0-9a-f]{64}$'::text))
 );
@@ -3007,3 +3007,4 @@ INSERT INTO schema_migrations (version) VALUES ('20260826060001');
 INSERT INTO schema_migrations (version) VALUES ('20260827010001');
 INSERT INTO schema_migrations (version) VALUES ('20260827020001');
 INSERT INTO schema_migrations (version) VALUES ('20260827030001');
+INSERT INTO schema_migrations (version) VALUES ('20260827040001');

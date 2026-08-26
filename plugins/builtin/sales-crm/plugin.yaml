@@ -43,5 +43,9 @@ data_sources:
     query: crm_stale
 policies:
   - policies/sales-crm.yaml
+workflows:
+  - workflows/analysis.json
+evaluations:
+  - evaluations/analysis.json
 data_extensions:
   - schemas/entities.json

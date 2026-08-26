@@ -7,9 +7,17 @@
  */
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
-import { AstraError, DashboardSchema, sha256Hex, type PluginManifest } from '@astra/contracts';
+import {
+  AstraError,
+  DashboardSchema,
+  EvalFile,
+  WorkflowFile,
+  sha256Hex,
+  type PluginManifest,
+} from '@astra/contracts';
 
-export type AssetKind = 'skill' | 'dashboard' | 'policy' | 'data_extension';
+export type AssetKind =
+  'skill' | 'dashboard' | 'policy' | 'data_extension' | 'workflow' | 'evaluation';
 
 export interface PluginAsset {
   readonly path: string;
@@ -28,6 +36,8 @@ export function declaredAssets(manifest: PluginManifest): { path: string; kind: 
     ...manifest.dashboards.map((d) => ({ path: d.schema, kind: 'dashboard' as const })),
     ...manifest.policies.map((p) => ({ path: p, kind: 'policy' as const })),
     ...manifest.data_extensions.map((p) => ({ path: p, kind: 'data_extension' as const })),
+    ...manifest.workflows.map((p) => ({ path: p, kind: 'workflow' as const })),
+    ...manifest.evaluations.map((p) => ({ path: p, kind: 'evaluation' as const })),
   ];
 }
 
@@ -77,7 +87,85 @@ export async function loadAssets(manifest: PluginManifest, root: string): Promis
   }
 
   validateDashboards(manifest, assets);
+  validateWorkflows(manifest, assets);
   return assets;
+}
+
+/**
+ * workflow と evaluation の中身まで検証する。
+ *
+ * **宣言に無い tool を使う workflow を publish させない。**
+ * install 後に「そんな tool は無い」で落ちるより、ここで止めるほうがよい。
+ */
+export function validateWorkflows(manifest: PluginManifest, assets: readonly PluginAsset[]): void {
+  const declaredTools = new Set(manifest.tools.map((t) => t.id));
+  const declaredAgents = new Set(manifest.agents.map((a) => a.id));
+  const workflowIds = new Set<string>();
+
+  for (const asset of assets.filter((a) => a.kind === 'workflow')) {
+    const parsed = WorkflowFile.safeParse(parseJson(asset));
+    if (!parsed.success) {
+      throw new AstraError(
+        'plugin.manifest_invalid',
+        `workflow "${asset.path}" is not a valid workflow file`,
+        {
+          details: parsed.error.issues.map((issue) => ({
+            path: issue.path.join('.'),
+            message: issue.message,
+          })),
+        },
+      );
+    }
+
+    for (const workflow of parsed.data.workflows) {
+      if (workflowIds.has(workflow.id)) {
+        throw new AstraError('plugin.manifest_invalid', `duplicate workflow id "${workflow.id}"`);
+      }
+      workflowIds.add(workflow.id);
+
+      if (!declaredAgents.has(workflow.agent)) {
+        throw new AstraError(
+          'plugin.manifest_invalid',
+          `workflow "${workflow.id}" belongs to agent "${workflow.agent}", which is not declared`,
+        );
+      }
+      for (const step of workflow.steps) {
+        if (!declaredTools.has(step.tool)) {
+          throw new AstraError(
+            'plugin.manifest_invalid',
+            `workflow "${workflow.id}" uses tool "${step.tool}", which is not declared`,
+          );
+        }
+      }
+    }
+  }
+
+  for (const asset of assets.filter((a) => a.kind === 'evaluation')) {
+    const parsed = EvalFile.safeParse(parseJson(asset));
+    if (!parsed.success) {
+      throw new AstraError(
+        'plugin.manifest_invalid',
+        `evaluation "${asset.path}" is not a valid evaluation file`,
+      );
+    }
+    for (const testCase of parsed.data.cases) {
+      // 存在しない workflow を試す評価は、何も確かめていない
+      if (!workflowIds.has(testCase.workflow)) {
+        throw new AstraError(
+          'plugin.manifest_invalid',
+          `evaluation "${testCase.id}" targets workflow "${testCase.workflow}", which does not exist`,
+        );
+      }
+    }
+  }
+}
+
+function parseJson(asset: PluginAsset): unknown {
+  try {
+    return JSON.parse(Buffer.from(asset.content).toString('utf8'));
+  } catch {
+    throw new AstraError('plugin.manifest_invalid', `${asset.path} is not JSON`);
+  }
 }
 
 /**

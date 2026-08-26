@@ -1,0 +1,22 @@
+{
+  "cases": [
+    {
+      "id": "pipeline-review-runs-both-steps",
+      "description": "パイプラインを見ると、状況の集計と放置商談の確認の両方が走る",
+      "workflow": "pipeline-review",
+      "input": { "message": "今月の商談を見て" },
+      "expect": {
+        "steps_ran": ["crm.pipeline", "crm.next_action"],
+        "artifact_contains": [],
+        "fails": false
+      }
+    },
+    {
+      "id": "pipeline-only-stops-at-one",
+      "description": "件数と金額だけなら、次の一手までは踏み込まない",
+      "workflow": "pipeline-only",
+      "input": { "message": "件数だけ" },
+      "expect": { "steps_ran": ["crm.pipeline"], "fails": false }
+    }
+  ]
+}

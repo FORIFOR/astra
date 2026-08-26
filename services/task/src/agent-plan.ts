@@ -38,6 +38,20 @@ export interface InstalledAgent {
   }[];
   /** その plugin の規制区分。**運ばないと規制の意味が無くなる**（正本 §22）。 */
   readonly complianceProfile: StepComplianceProfile;
+  /**
+   * 宣言された仕事の流れ（正本 §14）。
+   *
+   * 無ければ「宣言された tool を宣言順に」という近似に落ちる。
+   * **近似であることを、無いことと区別できるようにしてある。**
+   */
+  readonly workflow?: {
+    readonly steps: readonly {
+      readonly tool: string;
+      readonly message: string;
+      readonly risk?: TaskStep['risk'];
+      readonly applies: boolean;
+    }[];
+  };
   /** 実体ファイルから読んだ skill。無ければ null。 */
   readonly skill: string | null;
   /** 同意済みの scope。 */
@@ -90,16 +104,44 @@ export function planInstalledAgent(
         ? input['question'].trim()
         : '';
 
-  const steps: TaskStep[] = agent.tools.map((tool, index) => ({
+  const byId = new Map(agent.tools.map((t) => [t.id, t]));
+  const args = { request, ...(agent.skill === null ? {} : { skill: agent.skill }) };
+
+  /*
+   * workflow があればそれに従う。無ければ「宣言された tool を宣言順に」。
+   * 後者は近似なので、workflow を書いた plugin では使わない。
+   */
+  type PlannedStep = {
+    readonly tool: InstalledAgent['tools'][number];
+    readonly message: string;
+    readonly risk?: TaskStep['risk'] | undefined;
+  };
+
+  const source: PlannedStep[] = agent.workflow
+    ? agent.workflow.steps
+        // 条件に合わない step は載せない。載せてから飛ばすと、進捗が嘘になる。
+        .filter((s) => s.applies)
+        .flatMap((s) => {
+          const tool = byId.get(s.tool);
+          // 宣言に無い tool は使わせない（D-42）
+          return tool ? [{ tool, message: s.message, risk: s.risk }] : [];
+        })
+    : agent.tools.map((tool) => ({
+        tool,
+        message: `${agent.agentName} が作業しています`,
+      }));
+
+  const steps: TaskStep[] = source.map((entry, index) => ({
     index,
-    toolId: tool.id,
-    risk: tool.risk,
-    surface: tool.surface,
+    toolId: entry.tool.id,
+    // workflow は risk を**上げられるが下げられない**。軽く見せない。
+    risk: entry.risk && riskAbove(entry.risk, entry.tool.risk) ? entry.risk : entry.tool.risk,
+    surface: entry.tool.surface,
     // tool 名を利用者に見せない（正本 §7.2 / §9.3）。何をしているかを言う。
-    message: `${agent.agentName} が作業しています`,
-    args: { request, ...(agent.skill === null ? {} : { skill: agent.skill }) },
+    message: entry.message,
+    args,
     // 作者が確認を求めた tool は、低リスクでも確認する（正本 §9.2）
-    requiresConfirmation: tool.requiresConfirmation,
+    requiresConfirmation: entry.tool.requiresConfirmation,
     complianceProfile: agent.complianceProfile,
   }));
 
@@ -111,4 +153,19 @@ export function planInstalledAgent(
       mimeType: 'text/markdown',
     },
   };
+}
+
+/** risk の重さ。`plan.ts` は contracts を import できないので、ここに並べる。 */
+const RISK_ORDER: readonly TaskStep['risk'][] = [
+  'READ',
+  'REVERSIBLE_WRITE',
+  'EXTERNAL_COMMIT',
+  'DESTRUCTIVE',
+  'REGULATED',
+  'FINANCIAL',
+];
+
+/** workflow の指定が、tool の宣言より重いか。**軽い指定は無視する。** */
+function riskAbove(a: TaskStep['risk'], b: TaskStep['risk']): boolean {
+  return RISK_ORDER.indexOf(a) > RISK_ORDER.indexOf(b);
 }

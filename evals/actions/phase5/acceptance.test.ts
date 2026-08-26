@@ -231,6 +231,27 @@ describe.skipIf(!url)('Phase 5 acceptance', () => {
     expect(called).toEqual(['crm.pipeline', 'crm.next_action']);
   }, 120_000);
 
+  it('follows the workflow the plugin declared, in its words (正本 §14)', async () => {
+    const events = await app.inject({
+      method: 'GET',
+      url: `/v1/tasks/${(await get('/v1/tasks?limit=1')).json<{ items: { id: string }[] }>().items[0]!.id}/stream`,
+      headers: auth,
+    });
+    const messages = events.body
+      .split('\n\n')
+      .filter((block) => block.includes('event: task.progress'))
+      .map(
+        (block) =>
+          (JSON.parse(/data: (.+)/.exec(block)![1]!) as { payload: { message: string } }).payload
+            .message,
+      );
+
+    // 「CRM Analyst が作業しています」ではなく、workflow が書いた言葉が出る
+    expect(messages).toEqual(['商談の状況をまとめています', '放置されている商談を探しています']);
+    // tool 名は利用者に見せない（正本 §7.2 / §9.3）
+    for (const message of messages) expect(message).not.toContain('crm.');
+  });
+
   it('AC5-7: the entity definitions the plugin brought are what validation uses', async () => {
     const bad = await opportunity({ name: 'A社', stage: 'maybe' });
     expect(bad.statusCode).toBe(400);

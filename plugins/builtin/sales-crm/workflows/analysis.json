@@ -1,0 +1,35 @@
+{
+  "workflows": [
+    {
+      "id": "pipeline-review",
+      "title": "パイプラインを見る",
+      "agent": "analyst",
+      "surface": "cloud",
+      "steps": [
+        {
+          "tool": "crm.pipeline",
+          "message": "商談の状況をまとめています",
+          "condition": { "when": "always" }
+        },
+        {
+          "tool": "crm.next_action",
+          "message": "放置されている商談を探しています",
+          "condition": { "when": "always" }
+        }
+      ]
+    },
+    {
+      "id": "pipeline-only",
+      "title": "件数と金額だけ見る",
+      "agent": "analyst",
+      "surface": "cloud",
+      "steps": [
+        {
+          "tool": "crm.pipeline",
+          "message": "商談の状況をまとめています",
+          "condition": { "when": "always" }
+        }
+      ]
+    }
+  ]
+}

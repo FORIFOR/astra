@@ -122,6 +122,10 @@ const manifestShape = z.object({
   /** 持ち込む MCP サーバ。risk は host が決める（正本 §9.1、D-37）。 */
   mcp_servers: z.array(McpServerDecl).default([]),
   policies: z.array(z.string()).default([]),
+  /** 正本 §14。宣言で書く仕事の流れ。 */
+  workflows: z.array(z.string()).default([]),
+  /** 正本 §14・§25。plugin が持ち込む評価。 */
+  evaluations: z.array(z.string()).default([]),
   data_extensions: z.array(z.string()).default([]),
   signature: z.string().optional(),
 });

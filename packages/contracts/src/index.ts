@@ -29,6 +29,7 @@ export * from './domain.js';
 export * from './world.js';
 export * from './conversation.js';
 export * from './onboarding.js';
+export * from './workflow.js';
 export * from './identity.js';
 export * from './host.js';
 export * from './api.js';
