@@ -422,6 +422,17 @@ describe.skipIf(!url)('an installed agent', () => {
     expect(done.error?.step_index).toBe(0);
     // 何をすれば直るかを言う（正本 §24）
     expect(done.error?.recovery).toBe('handoff');
+
+    /*
+     * §24: 段を飛ばしたことを黙らない。
+     * **持っていないものを、試して駄目だったことにしない。**
+     * ここが無いと、利用者には「なぜ手でやらされるのか」が分からない。
+     */
+    const explained = done.error?.handoff_explanation ?? '';
+    expect(explained).toContain('ブラウザを操作して試すは使えません');
+    expect(explained).toContain('画面を操作して試すは使えません');
+    // message は tool 側の文言のまま。混ぜると、そのまま画面に出したとき漏れる（§7.2）
+    expect(done.error?.message).toBe('the CRM refused the request');
   }, 120_000);
 
   it('tries the alternate the plugin declared before giving up (正本 §24)', async () => {

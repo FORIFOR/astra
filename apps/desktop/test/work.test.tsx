@@ -5,7 +5,13 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { uuidv7, type EventEnvelope } from '@astra/contracts';
-import { applyEvent, applyEvents, emptyWorkView, formatElapsed } from '../src/work/workView.js';
+import {
+  applyEvent,
+  applyEvents,
+  emptyWorkView,
+  formatElapsed,
+  type WorkView,
+} from '../src/work/workView.js';
 import { WorkCard } from '../src/work/WorkCard.js';
 import { WorkPage, matchesFilter, WORK_FILTERS } from '../src/pages/Work.js';
 
@@ -317,5 +323,55 @@ describe('Work tab (§9)', () => {
   it('says so plainly when there is nothing to show', () => {
     render(<WorkPage tasks={[]} />);
     expect(screen.getByText('進行中の仕事はありません。')).toBeTruthy();
+  });
+});
+
+describe('what a failure tells the person (§24)', () => {
+  const failed = (explanation: string | null): WorkView =>
+    ({
+      title: '見積送信',
+      status: 'FAILED',
+      steps: [],
+      percent: null,
+      attention: null,
+      resultArtifactId: null,
+      error: { code: 'task.step_failed', recovery: 'handoff', explanation },
+      elapsedMs: 1_000,
+      startedAt: null,
+      endedAt: null,
+      lastSequence: 1,
+    }) as WorkView;
+
+  it('says what was tried and what was not available', () => {
+    render(
+      <WorkCard
+        view={failed(
+          'もう一度試す・別の経路で試すまで試しました。ブラウザを操作して試すは使えません（この環境に繋がっていません）。',
+        )}
+      />,
+    );
+    const alert = screen.getByRole('alert');
+    expect(alert.textContent).toContain('別の経路で試すまで試しました');
+    // 持っていないものを、試して駄目だったことにしない
+    expect(alert.textContent).toContain('ブラウザを操作して試すは使えません');
+    expect(alert.textContent).toContain('手動での対応が必要です');
+  });
+
+  it('says nothing extra when there is no trail', () => {
+    render(<WorkCard view={failed(null)} />);
+    const alert = screen.getByRole('alert');
+    expect(alert.textContent).toContain('完了できませんでした');
+    // 「試しました」と嘘をつくより、黙るほうがよい
+    expect(alert.textContent).not.toContain('試しました');
+  });
+
+  it('does not leak the tool that failed', () => {
+    render(
+      <WorkCard
+        view={failed('もう一度試すまで試しました。別の経路で試すは使えません（理由不明）。')}
+      />,
+    );
+    // §7.2: tool 名を利用者に見せない
+    expect(screen.getByRole('alert').textContent ?? '').not.toMatch(/gmail|crm\.|\.send/);
   });
 });

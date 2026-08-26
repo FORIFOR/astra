@@ -69,6 +69,14 @@ export const TaskError = z.object({
   step_index: z.number().int().nonnegative().nullable(),
   retryable: z.boolean(),
   recovery: RecoveryHint.default('none'),
+  /**
+   * 何を試して、何が使えなかったか。正本 §24 の梯子の跡。
+   *
+   * `message` とは別に持つ。message には tool 側の文言が入り得るので、
+   * **そのまま画面に出すと tool 名が漏れる**（§7.2）。
+   * こちらは利用者に見せてよい言葉だけで組んである。
+   */
+  handoff_explanation: z.string().nullable().default(null),
 });
 export type TaskError = z.infer<typeof TaskError>;
 
@@ -152,7 +160,11 @@ const BLOCKING_ERROR_CODES: readonly string[] = [
 ];
 
 /** サーバ状態から Task Dock の既定表示状態を導く。 */
-export function dockStateFor(status: TaskStatus, error?: TaskError | null): TaskDockState {
+export function dockStateFor(
+  status: TaskStatus,
+  // 見るのは code だけ。全体を要求すると、呼ぶ側が要らない項目まで組まされる。
+  error?: Pick<TaskError, 'code'> | null,
+): TaskDockState {
   switch (status) {
     case 'PENDING':
     case 'RUNNING':

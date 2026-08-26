@@ -108,6 +108,10 @@ export function WorkCard({
         <p className="astra-work__error" role="alert">
           {/* §21: 仕事への影響と次の選択肢を書く。抽象的な失敗表現にしない。 */}
           完了できませんでした。途中までの結果は保存されています。
+          {/* §24: 何を試して、何が使えなかったか。**無ければ出さない。** */}
+          {view.error.explanation && (
+            <span className="astra-work__attempts">{view.error.explanation}</span>
+          )}
           <span className="astra-work__recovery">{recoveryLabel(view.error.recovery)}</span>
         </p>
       )}

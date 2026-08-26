@@ -46,7 +46,11 @@ export interface WorkView {
   /** 承認待ち。進捗と混ぜず、別の attention state として扱う（§6.2）。 */
   readonly attention: WorkAttention | null;
   readonly resultArtifactId: string | null;
-  readonly error: { code: string; recovery: string } | null;
+  /**
+   * 失敗。**tool 側の文言は持ち込まない**（§7.2）。
+   * `explanation` は §24 の梯子の跡で、利用者に見せてよい言葉だけで組んである。
+   */
+  readonly error: { code: string; recovery: string; explanation: string | null } | null;
   readonly elapsedMs: number | null;
   /** 始まった時刻 / 終わった時刻。§9.2 Progress の timestamps。 */
   readonly startedAt: string | null;
@@ -195,7 +199,11 @@ export function applyEvent(view: WorkView, event: EventEnvelope): WorkView {
     case 'task.failed': {
       draft.status = 'FAILED';
       draft.attention = null;
-      draft.error = { code: event.payload.error.code, recovery: event.payload.error.recovery };
+      draft.error = {
+        code: event.payload.error.code,
+        recovery: event.payload.error.recovery,
+        explanation: event.payload.error.handoff_explanation,
+      };
       draft.endedAt = event.timestamp;
       for (const [index, step] of draft.steps) {
         if (step.state === 'active' || step.state === 'retrying') {

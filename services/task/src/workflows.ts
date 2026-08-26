@@ -216,6 +216,8 @@ export async function TaskWorkflow(input: TaskWorkflowInput): Promise<TaskResult
         retryable: false,
         // 何をすれば直るかを言う。**言わないと、利用者は何もできない**（正本 §24）
         recovery: recoveryFor(error),
+        // 何を試して、何が使えなかったか。無ければ null（作らない）。
+        handoff_explanation: explanationOf(error),
       });
     } catch {
       // 記録に失敗しても、元の失敗を投げ直すのは呼び出し側の責任
@@ -242,6 +244,26 @@ export async function TaskWorkflow(input: TaskWorkflowInput): Promise<TaskResult
     if (/declared local|no host/i.test(message)) return 'handoff';
     // 代替まで試した上で落ちている。もう一度やっても同じ。
     return 'handoff';
+  }
+
+  /**
+   * 梯子の跡の説明を取り出す。正本 §24。
+   *
+   * activity は `details` に分けて載せている。message に混ぜると、
+   * そのまま画面へ出したときに tool 名が漏れる（§7.2）。
+   * **無ければ作らない。**「試しました」と嘘をつくより、黙るほうがよい。
+   */
+  function explanationOf(error: unknown): string | null {
+    let current: unknown = error;
+    for (let depth = 0; depth < 8 && current !== null && current !== undefined; depth += 1) {
+      const details = (current as { details?: unknown }).details;
+      if (Array.isArray(details)) {
+        const text = details.find((d): d is string => typeof d === 'string' && d.length > 0);
+        if (text) return text;
+      }
+      current = (current as { cause?: unknown }).cause;
+    }
+    return null;
   }
 
   function messageOf(error: unknown): string {

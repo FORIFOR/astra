@@ -5,7 +5,14 @@
  * 「2 回走っても結果が変わらない」ことを DB の制約で担保する。
  */
 import { ApplicationFailure } from '@temporalio/common';
-import { canonicalSha256, uuidv7, type ActionRisk } from '@astra/contracts';
+import {
+  canonicalSha256,
+  handoffExplanation,
+  uuidv7,
+  type ActionRisk,
+  type EscalationStep,
+  type EscalationTrail,
+} from '@astra/contracts';
 import { withTenant, type DbHandle, type ScopedDb } from '@astra/db';
 import { appendAuditEvent } from '@astra/telemetry';
 import { approvalTtlMs, evaluate, isApprovalUsable, type ActionContext } from '@astra/policy';
@@ -63,6 +70,20 @@ export interface ActivityDeps {
    * **未接続なら local の step は実行しない。**クラウドで代わりに走らせない。
    */
   readonly hostExecutor?: StepExecutor;
+  /**
+   * 正本 §24 の下から 2 段。**繋いでいなければ「使えない」と言う。**
+   *
+   *   API connector fail → retry → alternate connector
+   *   → browser structured automation → screen automation → user handoff
+   *
+   * 黙って user handoff まで落ちると、利用者には
+   * 「なぜ手でやらされるのか」が分からない。
+   * 「試したが駄目だった」と「試せる手段が無かった」は、別のこと。
+   */
+  readonly automation?: {
+    readonly browser?: StepExecutor;
+    readonly screen?: StepExecutor;
+  };
   /** 監査に載せるアプリ版など、将来の付帯情報 */
   readonly now?: () => Date;
 }
@@ -89,28 +110,100 @@ function policyContextFor(step: TaskStep): ActionContext {
   };
 }
 
+/** 登った跡と、たどり着いた結果。 */
+interface Escalation {
+  readonly outcome: Awaited<ReturnType<StepExecutor['execute']>> | null;
+  readonly trail: EscalationTrail;
+}
+
 /**
- * 宣言された代替を順に試す。正本 §24。
+ * 正本 §24 の梯子を、上から順に登る。
  *
- * **全部落ちたら null。**「代替があったのに試さなかった」も
- * 「試して全部落ちた」も、呼び出し側からは同じに見えてはいけないので、
- * 試したこと自体は進捗に出す。
+ *   retry（Temporal が済ませている）
+ *   → alternate connector
+ *   → browser structured automation
+ *   → screen automation
+ *   → user handoff
+ *
+ * **段を飛ばしたことを黙らない。**使えない段は `unavailable` として
+ * 理由と一緒に残す。「試したが駄目だった」と「試せる手段が無かった」を
+ * 呼び出し側が区別できなければ、利用者にも説明できない。
  */
-async function tryFallbacks(
+async function escalate(
   input: TaskWorkflowInput,
   step: TaskStep,
   deps: ActivityDeps,
-): Promise<Awaited<ReturnType<StepExecutor['execute']>> | null> {
-  for (const toolId of step.fallbacks ?? []) {
-    const executor = deps.executors?.[toolId];
-    if (!executor) continue;
-    try {
-      return await executor.execute(input, { ...step, toolId });
-    } catch {
-      // 次の代替へ。最後まで落ちたら null を返す。
+): Promise<Escalation> {
+  const steps: EscalationStep[] = [
+    // ここへ来た時点で、Temporal の再試行は済んでいる
+    { rung: 'retry', outcome: 'failed', reason: null },
+  ];
+
+  // ---- alternate connector（宣言された代替）
+  const declared = step.fallbacks ?? [];
+  const runnable = declared.filter((toolId) => deps.executors?.[toolId] !== undefined);
+  if (declared.length === 0) {
+    steps.push({
+      rung: 'alternate_connector',
+      outcome: 'unavailable',
+      reason: 'この操作に代わりの経路が宣言されていません',
+    });
+  } else if (runnable.length === 0) {
+    // **宣言はあるのに動かせない**を、宣言が無いのと同じにしない
+    steps.push({
+      rung: 'alternate_connector',
+      outcome: 'unavailable',
+      reason: '宣言された代わりの経路が、この環境で動きません',
+    });
+  } else {
+    let succeeded = false;
+    for (const toolId of runnable) {
+      try {
+        const result = await deps.executors![toolId]!.execute(input, { ...step, toolId });
+        steps.push({ rung: 'alternate_connector', outcome: 'succeeded', reason: null });
+        succeeded = true;
+        return { outcome: result, trail: { steps } };
+      } catch {
+        // 次の代替へ
+      }
+    }
+    if (!succeeded) {
+      steps.push({ rung: 'alternate_connector', outcome: 'failed', reason: null });
     }
   }
-  return null;
+
+  // ---- browser structured automation / screen automation
+  const automation = [
+    { rung: 'browser_automation' as const, executor: deps.automation?.browser },
+    { rung: 'screen_automation' as const, executor: deps.automation?.screen },
+  ];
+  for (const { rung, executor } of automation) {
+    if (!executor) {
+      steps.push({
+        rung,
+        outcome: 'unavailable',
+        // **持っていないものを、試して駄目だったことにしない**
+        reason: 'この環境に繋がっていません',
+      });
+      continue;
+    }
+    try {
+      const result = await executor.execute(input, step);
+      steps.push({ rung, outcome: 'succeeded', reason: null });
+      return { outcome: result, trail: { steps } };
+    } catch {
+      steps.push({ rung, outcome: 'failed', reason: null });
+    }
+  }
+
+  // ---- user handoff
+  steps.push({ rung: 'user_handoff', outcome: 'not_reached', reason: null });
+  return { outcome: null, trail: { steps } };
+}
+
+/** 元の失敗の文言。包み直しても、本当の理由を残す。 */
+function messageOfCause(error: unknown): string {
+  return error instanceof Error && error.message ? error.message : String(error);
 }
 
 const stepKey = (taskId: string, index: number, name: string): string =>
@@ -411,8 +504,8 @@ export function createTaskActivities(deps: ActivityDeps): TaskActivities {
          * 代替も同じ確認と同じ規則を通る（宣言が検証済みで、
          * 元より重い代替は publish で落としてある）。
          */
-        const alternate = await tryFallbacks(input, step, deps);
-        if (alternate) {
+        const escalation = await escalate(input, step, deps);
+        if (escalation.outcome) {
           await inTenant(input, (tx) =>
             appendEvent(
               tx,
@@ -436,7 +529,7 @@ export function createTaskActivities(deps: ActivityDeps): TaskActivities {
               deps.publisher,
             ),
           );
-          outcome = alternate;
+          outcome = escalation.outcome;
         } else {
           // 自分の領域の状態を片付けさせてから投げ直す。
           // 後始末が落ちても、元の失敗を握りつぶさない。
@@ -445,7 +538,20 @@ export function createTaskActivities(deps: ActivityDeps): TaskActivities {
           } catch {
             /* 後始末の失敗で、本当の理由を見失わせない */
           }
-          throw error;
+          /*
+           * **何を試して、何が使えなかったかを載せて投げる。**
+           * 「できませんでした」だけでは、利用者は次に何をすればよいか分からない。
+           * ここで捨てると、workflow から先へは二度と伝わらない（正本 §24）。
+           *
+           * 説明は details に分けて載せる。message には tool 側の文言が入るので、
+           * 混ぜると、そのまま画面へ出したときに tool 名が漏れる（§7.2）。
+           */
+          throw ApplicationFailure.create({
+            message: messageOfCause(error),
+            type: 'StepEscalated',
+            details: [handoffExplanation(escalation.trail)],
+            ...(error instanceof Error ? { cause: error } : {}),
+          });
         }
       }
       const result = outcome.artifact

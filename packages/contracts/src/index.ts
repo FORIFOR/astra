@@ -21,6 +21,7 @@ export * from './share.js';
 export * from './meeting.js';
 export * from './task.js';
 export * from './events.js';
+export * from './escalation.js';
 export * from './evidence.js';
 export * from './surface.js';
 export * from './plugin.js';

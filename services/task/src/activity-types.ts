@@ -13,6 +13,13 @@ export interface TaskErrorPayload {
    */
   readonly recovery?:
     'retry' | 'reconnect' | 'grant_permission' | 'reauthenticate' | 'handoff' | 'none';
+  /**
+   * 何を試して、何が使えなかったか（正本 §24 の梯子の跡）。
+   *
+   * `message` と分けて持つ。message には tool 側の文言が入り得るので、
+   * **そのまま画面へ出すと tool 名が漏れる**（§7.2）。
+   */
+  readonly handoff_explanation?: string | null;
 }
 
 export interface StartTaskMeta {

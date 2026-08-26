@@ -349,3 +349,10 @@
   flex-wrap: wrap;
   gap: var(--astra-space-xs, 4px);
 }
+
+/* §24: 何を試したか。理由の一段下に置く。 */
+.astra-work__attempts {
+  display: block;
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-sm, 0.875rem);
+}
