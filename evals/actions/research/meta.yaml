@@ -1,0 +1,7 @@
+# 実装仕様 §14.2 の eval harness 契約
+phase: research
+tags: [acceptance, blocking]
+blocking: true
+description: >
+  正本 §25 Research の評価軸。
+  出典の新しさ・引用の正しさ・矛盾の扱い・裏付けのない主張の割合。
