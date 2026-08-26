@@ -44,6 +44,7 @@ function ActivePage(): ReactElement {
     case 'library':
       return (
         <LibraryPage
+          client={client}
           artifacts={artifacts}
           selectedId={focusedArtifactId}
           onSelect={openArtifact}

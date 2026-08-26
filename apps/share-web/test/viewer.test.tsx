@@ -16,6 +16,9 @@ const artifact = (over: Record<string, unknown> = {}) => ({
   mime_type: 'text/markdown',
   size: 42,
   created_at: '2026-08-26T00:00:00.000Z',
+  expires_at: '2026-09-02T00:00:00.000Z',
+  requires_password: false,
+  one_time: false,
   policy: { allow_download: false, watermark: false },
   ...over,
 });
@@ -180,5 +183,45 @@ describe('what the page reveals', () => {
     render(<ShareViewer client={client} hash={`#${TOKEN}`} />);
     await waitFor(() => expect(screen.getByText('A社 提案書')).toBeTruthy());
     expect(document.querySelector('.share')?.getAttribute('data-watermark')).toBe('true');
+  });
+});
+
+describe('the terms of the share (§22)', () => {
+  it('says when the link stops working', async () => {
+    const client = makeClient((url) =>
+      url.endsWith('/unlock') ? unlocked() : new Response('中身'),
+    );
+    render(<ShareViewer client={client} hash={`#${TOKEN}`} />);
+    // 黙って切れる方が、切れると言うより悪い
+    expect((await screen.findByLabelText('この共有の条件')).textContent).toContain('まで開けます');
+  });
+
+  it('warns that a one-time link will not open again', async () => {
+    const client = makeClient((url) =>
+      url.endsWith('/unlock') ? unlocked({ one_time: true }) : new Response('中身'),
+    );
+    render(<ShareViewer client={client} hash={`#${TOKEN}`} />);
+    expect((await screen.findByLabelText('この共有の条件')).textContent).toContain('一度きり');
+  });
+
+  it('states whether the file can be taken away', async () => {
+    const forbidden = makeClient((url) =>
+      url.endsWith('/unlock') ? unlocked() : new Response('中身'),
+    );
+    const { unmount } = render(<ShareViewer client={forbidden} hash={`#${TOKEN}`} />);
+    expect((await screen.findByLabelText('この共有の条件')).textContent).toContain(
+      'ダウンロードはできません',
+    );
+    unmount();
+
+    const allowed = makeClient((url) =>
+      url.endsWith('/unlock')
+        ? unlocked({ policy: { allow_download: true, watermark: false } })
+        : new Response('中身'),
+    );
+    render(<ShareViewer client={allowed} hash={`#${TOKEN}`} />);
+    expect((await screen.findByLabelText('この共有の条件')).textContent).toContain(
+      'ダウンロードできます',
+    );
   });
 });

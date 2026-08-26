@@ -2,7 +2,7 @@
  * Home と Library。UI-3。UI/UX §8・§10・§16、正本 §2.1。
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, render, screen, within } from '@testing-library/react';
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { TaskId, uuidv7, type Artifact } from '@astra/contracts';
 import type { TaskView } from '@astra/api-client';
@@ -272,10 +272,19 @@ describe('Library (§10)', () => {
     expect(screen.getByText('手動で追加されました。')).toBeTruthy();
   });
 
-  it('shows sharing as off by default (§10.2)', () => {
+  it('reports the real sharing state, not a hard-coded "off" (§10.2)', async () => {
+    const doc = artifact();
+    const client = { artifactShares: async () => [] } as never;
+    render(<LibraryPage client={client} artifacts={[doc]} selectedId={doc.id} />);
+    // サーバが「無い」と言ってから、はじめてオフと書く
+    await waitFor(() => expect(screen.getByText('共有: オフ')).toBeTruthy());
+  });
+
+  it('does not claim "off" while it has not asked yet', () => {
     const doc = artifact();
     render(<LibraryPage artifacts={[doc]} selectedId={doc.id} />);
-    expect(screen.getByText('共有: オフ')).toBeTruthy();
+    expect(screen.getByText('共有: 確認しています')).toBeTruthy();
+    expect(screen.queryByText('共有: オフ')).toBeNull();
   });
 
   it('labels sensitive artifacts in text, not colour alone', () => {

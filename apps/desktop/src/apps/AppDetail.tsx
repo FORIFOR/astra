@@ -5,7 +5,32 @@
  * 何個の tool があるかは、利用者が知りたいことではない。
  */
 import type { ReactElement } from 'react';
-import type { PluginCatalogEntry } from '@astra/contracts';
+import {
+  DATA_HANDLING_DETAIL,
+  DATA_HANDLING_LABEL,
+  EXTERNAL_SEND_SCOPES,
+  LOCAL_ONLY_SCOPES,
+  type DataHandling,
+  type PermissionScope,
+  type PluginCatalogEntry,
+} from '@astra/contracts';
+
+/**
+ * この plugin のデータがどこまで出るか。UI/UX §22。
+ *
+ * **一番外まで出るものに合わせる。**「local でも動きます」と書いて
+ * 外へ送ることを黙るのが、いちばん誤解を生む。
+ */
+function handlingOf(plugin: PluginCatalogEntry): DataHandling {
+  const scopes = plugin.permissions as readonly PermissionScope[];
+  if (scopes.some((scope) => (EXTERNAL_SEND_SCOPES as readonly string[]).includes(scope))) {
+    return 'external_send';
+  }
+  const staysLocal =
+    plugin.execution_surfaces.every((surface) => surface === 'local') &&
+    scopes.every((scope) => (LOCAL_ONLY_SCOPES as readonly string[]).includes(scope));
+  return staysLocal ? 'local_only' : 'cloud_used';
+}
 
 export function AppDetail({
   plugin,
@@ -46,6 +71,16 @@ export function AppDetail({
       </section>
 
       <dl className="astra-app-detail__meta">
+        {/* §22: local-only / cloud-used / external-send を短い言葉で出す */}
+        <dt>データの扱い</dt>
+        <dd>
+          <span className="astra-app-detail__handling">
+            {DATA_HANDLING_LABEL[handlingOf(plugin)]}
+          </span>
+          <span className="astra-app-detail__handling-why">
+            {DATA_HANDLING_DETAIL[handlingOf(plugin)]}
+          </span>
+        </dd>
         <dt>実行される場所</dt>
         <dd>{plugin.execution_surfaces.join(' / ')}</dd>
         <dt>署名</dt>

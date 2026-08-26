@@ -138,6 +138,10 @@ export function registerShareRoutes(app: App, deps: ShareRouteDeps): void {
           mime_type: resolved.artifact.mime_type,
           size: resolved.artifact.size,
           created_at: resolved.artifact.created_at,
+          // §22: いつ切れるか・合言葉が要ったか・一度きりかを header で言う
+          expires_at: resolved.share.expires_at,
+          requires_password: resolved.share.policy.requires_password,
+          one_time: resolved.share.policy.one_time,
           policy: {
             allow_download: resolved.share.policy.allow_download,
             watermark: resolved.share.policy.watermark,

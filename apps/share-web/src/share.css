@@ -81,3 +81,15 @@
   font: inherit;
   cursor: pointer;
 }
+
+/* 共有の条件（UI/UX §22・§10.2）。header に常時出す。 */
+.share__terms {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  font-size: 0.875rem;
+  color: #667085;
+}

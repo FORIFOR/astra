@@ -21,6 +21,7 @@ import {
   TokenResponse,
   PluginCatalogEntry,
   PluginInstall,
+  Share,
   SendTurnRequest,
   StartConversationRequest,
   Task,
@@ -140,6 +141,14 @@ export class AstraClient {
       (value) => Task.parse(value),
     );
     return toView(task);
+  }
+
+  /** この成果物に出ている共有。UI/UX §10.2「共有状態は header に常時可視化」。 */
+  async artifactShares(artifactId: string): Promise<Share[]> {
+    return this.http.request(
+      { method: 'GET', path: `/v1/artifacts/${artifactId}/shares` },
+      (value) => z.object({ items: z.array(Share) }).parse(value).items,
+    );
   }
 
   /** 受け取りの控え。UI/UX §22。新しい順。 */

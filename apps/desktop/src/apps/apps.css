@@ -176,3 +176,17 @@
 .astra-app-detail__meta dd {
   margin: 0;
 }
+
+/* データの扱い（UI/UX §22）。短い label と、もう一段だけの説明。 */
+.astra-app-detail__handling {
+  display: inline-block;
+  border: 1px solid var(--astra-color-border);
+  border-radius: var(--astra-radius-sm, 4px);
+  padding: 0 var(--astra-space-xs, 4px);
+  margin-right: var(--astra-space-xs, 4px);
+}
+
+.astra-app-detail__handling-why {
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-sm, 0.875rem);
+}

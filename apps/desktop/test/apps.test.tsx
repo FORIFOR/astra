@@ -138,6 +138,42 @@ describe('AppDetail (§11.1)', () => {
     expect(screen.getByText('cloud')).toBeTruthy();
   });
 
+  it('says how far the data goes, in one short phrase (§22)', () => {
+    // crm.write は外へ出て行く
+    const { unmount } = render(
+      <AppDetail plugin={plugin()} onInstall={() => {}} onUninstall={() => {}} />,
+    );
+    expect(screen.getByText('外部へ送信')).toBeTruthy();
+    expect(screen.getByText(/ほかのサービスへ送ります/)).toBeTruthy();
+    unmount();
+
+    // 自分の保管庫に書くだけのものを「外部へ送信」と言わない
+    render(
+      <AppDetail
+        plugin={plugin({ permissions: ['artifacts.read', 'artifacts.write'] })}
+        onInstall={() => {}}
+        onUninstall={() => {}}
+      />,
+    );
+    expect(screen.getByText('クラウドで処理')).toBeTruthy();
+    expect(screen.queryByText('外部へ送信')).toBeNull();
+  });
+
+  it('calls a plugin that never leaves the machine local (§22)', () => {
+    render(
+      <AppDetail
+        plugin={plugin({
+          permissions: ['microphone.capture', 'files.read'],
+          execution_surfaces: ['local'],
+        })}
+        onInstall={() => {}}
+        onUninstall={() => {}}
+      />,
+    );
+    expect(screen.getByText('手元だけ')).toBeTruthy();
+    expect(screen.getByText(/外には出ません/)).toBeTruthy();
+  });
+
   it('refuses to offer removal for a core capability', () => {
     render(
       <AppDetail

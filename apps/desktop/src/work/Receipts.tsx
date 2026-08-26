@@ -6,7 +6,12 @@
  * 文面が無い。**無いものを、それらしい文で埋めない。**
  */
 import { useEffect, useState, type ReactElement } from 'react';
-import { isReversible, type ActionReceiptView, type ActionRisk } from '@astra/contracts';
+import {
+  DATA_HANDLING_LABEL,
+  isReversible,
+  type ActionReceiptView,
+  type ActionRisk,
+} from '@astra/contracts';
 import type { AstraClient } from '@astra/api-client';
 
 /** §14 の Risk を、利用者の言葉にする。tool 名も内部の enum も出さない。 */
@@ -51,6 +56,15 @@ export function ReceiptList({
             <span>{when(receipt.executed_at)}</span>
             {/* §19: 種類を色だけで表さない */}
             <span className="astra-receipt__risk">{RISK_LABEL[receipt.risk]}</span>
+            {/*
+             * §22: 外へ出たと言えるのは、risk がそう決めているときだけ。
+             * receipt は実行の場所を持っていないので、
+             * それ以外を「クラウドで処理」と書くと、手元で終わった操作にも
+             * 出て行ったと言うことになる。**分からないものは言わない。**
+             */}
+            {(receipt.risk === 'EXTERNAL_COMMIT' || receipt.risk === 'FINANCIAL') && (
+              <span className="astra-receipt__handling">{DATA_HANDLING_LABEL.external_send}</span>
+            )}
             <span>
               {receipt.approved_by_name === null
                 ? '確認は不要でした'

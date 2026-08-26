@@ -216,3 +216,26 @@
   color: var(--astra-color-danger);
   font-size: var(--astra-font-size-secondary);
 }
+
+/* 共有の状態（UI/UX §10.2・§22）。header に常時出す。 */
+.astra-library__share ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--astra-space-xs, 4px);
+}
+
+.astra-library__share li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--astra-space-xs, 4px);
+  font-size: var(--astra-font-size-sm, 0.875rem);
+  color: var(--astra-color-muted);
+}
+
+/* §19: 「共有中」を色だけで表さない。文言でも言う。 */
+.astra-library__share-on {
+  color: var(--astra-color-warning);
+  margin: 0;
+}

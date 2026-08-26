@@ -7,6 +7,8 @@
  */
 import { useMemo, useState, type ReactElement } from 'react';
 import { ArtifactType, type Artifact } from '@astra/contracts';
+import type { AstraClient } from '@astra/api-client';
+import { ArtifactShareState } from '../library/ShareState.js';
 import '../library/library.css';
 
 /** §10.1 の Type chips。 */
@@ -37,11 +39,14 @@ export function matchesChip(type: Artifact['type'], chip: LibraryChip): boolean 
 export function LibraryPage({
   artifacts = [],
   selectedId = null,
+  client = null,
   onSelect,
   onOpenTask,
 }: {
   artifacts?: readonly Artifact[];
   selectedId?: string | null;
+  /** 共有の状態を引く先。無ければ「確認しています」のまま（オフとは言わない）。 */
+  client?: AstraClient | null;
   onSelect?(artifactId: string): void;
   onOpenTask?(taskId: string): void;
 }): ReactElement {
@@ -145,8 +150,8 @@ export function LibraryPage({
               )}
             </section>
 
-            {/* §10.2: Share は既定 OFF。共有状態は header に常時可視化する */}
-            <p className="astra-library__share">共有: オフ</p>
+            {/* §10.2: Share は既定 OFF。**実際の状態**を header に常時可視化する */}
+            <ArtifactShareState client={client} artifactId={selected.id} />
           </aside>
         )}
       </div>

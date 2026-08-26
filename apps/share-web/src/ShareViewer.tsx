@@ -139,11 +139,23 @@ export function ShareViewer({
   const artifact = share!.artifact;
   return (
     <main className="share" data-watermark={artifact.policy.watermark ? 'true' : 'false'}>
+      {/*
+       * §22・§10.2: 共有の条件を header に出す。
+       * **黙って切れる方が、切れると言うより悪い。**
+       */}
       <header className="share__header">
         <h1 className="share__title">{artifact.title}</h1>
         <p className="share__meta">
           {new Date(artifact.created_at).toLocaleDateString('ja-JP')} · {artifact.mime_type}
         </p>
+        <ul className="share__terms" aria-label="この共有の条件">
+          <li>{new Date(artifact.expires_at).toLocaleString('ja-JP')} まで開けます</li>
+          {artifact.one_time && <li>このリンクは一度きりです。閉じると開けなくなります</li>}
+          {artifact.requires_password && <li>合言葉で保護されています</li>}
+          <li>
+            {artifact.policy.allow_download ? 'ダウンロードできます' : 'ダウンロードはできません'}
+          </li>
+        </ul>
       </header>
 
       {text !== null ? (

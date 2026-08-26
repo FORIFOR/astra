@@ -65,6 +65,31 @@ export const PERMISSION_SCOPES = [
   'crm.write',
 ] as const;
 
+/**
+ * よそのサービスへ出て行く scope。UI/UX §22 の external-send。
+ *
+ * **一覧で持つ。**`.write` で終わるかどうかで判断すると、
+ * Astra 自身の保管庫に書くだけの `artifacts.write` まで
+ * 「外部へ送信」と言うことになる。名前の形は根拠にならない。
+ */
+export const EXTERNAL_SEND_SCOPES = [
+  'email.send',
+  'calendar.write',
+  'drive.write',
+  'crm.write',
+] as const satisfies readonly (typeof PERMISSION_SCOPES)[number][];
+
+/** 手元から出ない scope。取り込むだけで、どこへも送らないもの。 */
+export const LOCAL_ONLY_SCOPES = [
+  'microphone.capture',
+  'system_audio.capture',
+  'screen.capture',
+  'clipboard.read',
+  'files.read',
+  'files.write',
+  'files.index',
+] as const satisfies readonly (typeof PERMISSION_SCOPES)[number][];
+
 export const PermissionScope = z.enum(PERMISSION_SCOPES);
 export type PermissionScope = z.infer<typeof PermissionScope>;
 

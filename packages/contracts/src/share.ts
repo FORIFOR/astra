@@ -88,6 +88,17 @@ export const SharedArtifactView = z.object({
   mime_type: z.string(),
   size: z.number().int().nonnegative(),
   created_at: Timestamp,
+  /**
+   * この共有が切れる時刻。UI/UX §22「expiry を header に表示」。
+   *
+   * 相手はもうトークンを持っているので、いつ使えなくなるかを隠す理由が無い。
+   * **黙って切れる方が悪い。**（開く前には出ない。開けた相手にだけ返る。）
+   */
+  expires_at: Timestamp,
+  /** 開くのに合言葉が要ったか。開けた相手にだけ返るので、存在の手がかりにならない。 */
+  requires_password: z.boolean().default(false),
+  /** 一度きりの共有か。次に開けないことを、開いた時点で伝える。 */
+  one_time: z.boolean().default(false),
   policy: SharePolicy.pick({ allow_download: true, watermark: true }),
 });
 export type SharedArtifactView = z.infer<typeof SharedArtifactView>;
