@@ -5,10 +5,13 @@
  * 各 Agent や tool の実装がそれぞれ判断すると、必ずどこかが緩くなる。
  */
 import {
+  ACTION_RISKS,
   ActionRisk,
+  builtInPoliciesFor,
+  evaluatePolicyDocuments,
   type ComplianceProfile,
   type ExecutionSurface,
-  ACTION_RISKS,
+  type PolicyDocument,
 } from '@astra/contracts';
 
 /** 書き込み（= receipt を残す対象）。正本 §9.4「全 write action は receipt」。 */
@@ -54,9 +57,20 @@ export interface ActionContext {
   readonly toolRequiresConfirmation?: boolean;
   readonly complianceProfile: ComplianceProfile;
   readonly surface?: ExecutionSurface;
+  /** どの tool か。policy の `tool_is` 条件で使う。 */
+  readonly toolId?: string;
+  /**
+   * plugin が持ち込んだ policy（正本 §22）。
+   * profile ごとの組み込み規則は、渡されなくても効く。
+   */
+  readonly policies?: readonly PolicyDocument[];
 }
 
 export interface PolicyDecision {
+  /** 実行そのものを止めるか。**確認すれば通る、ではない場合がある。** */
+  readonly denied: boolean;
+  /** 効いた規則。監査とデバッグに使う。 */
+  readonly appliedRules: readonly string[];
   readonly requiresApproval: boolean;
   /** 金額・価格・注文種別の読み上げ確認。正本 §15.7。 */
   readonly requiresReadback: boolean;
@@ -98,11 +112,64 @@ export function evaluate(context: ActionContext): PolicyDecision {
   const requiresAudit = write || strict;
   if (!write && strict) reasons.push(`profile:${complianceProfile}:audit_reads`);
 
+  let requiresReceipt = write;
+  let denied = false;
+  const appliedRules: string[] = [];
+
+  /*
+   * plugin が持ち込んだ規則と、profile ごとの組み込み規則（正本 §22）。
+   *
+   * **組み込みは plugin の宣言に頼らない。**書き忘れても効く必要がある。
+   * 規則は**厳しくする方向にしか働かない**。緩める口を作ると、
+   * plugin が自分で自分を緩められることになる。
+   */
+  const documents = [...builtInPoliciesFor(complianceProfile), ...(context.policies ?? [])];
+  if (documents.length > 0) {
+    const outcome = evaluatePolicyDocuments(documents, {
+      toolId: context.toolId ?? '',
+      risk,
+      surface: context.surface ?? 'cloud',
+      complianceProfile,
+    });
+
+    for (const rule of outcome.blocking) {
+      appliedRules.push(rule.ruleId);
+      switch (rule.requirement) {
+        case 'confirmation':
+          if (!requiresApproval) {
+            requiresApproval = true;
+            reasons.push(`policy:${rule.ruleId}`);
+          }
+          break;
+        case 'receipt':
+          requiresReceipt = true;
+          break;
+        case 'audit':
+          // requiresAudit は下で使うので、ここでは印だけ
+          reasons.push(`policy:${rule.ruleId}`);
+          break;
+        case 'readback':
+        case 'local_execution':
+        case 'deny':
+          reasons.push(`policy:${rule.ruleId}`);
+          break;
+      }
+    }
+    for (const rule of outcome.warnings) appliedRules.push(`warn:${rule.ruleId}`);
+    denied = outcome.denied;
+  }
+
+  const policyWantsAudit = appliedRules.some((id) => id.includes('audit'));
+  const policyWantsReadback =
+    documents.length > 0 && appliedRules.some((id) => id.includes('order-preview'));
+
   return {
+    denied,
+    appliedRules,
     requiresApproval,
-    requiresReadback,
-    requiresReceipt: write,
-    requiresAudit,
+    requiresReadback: requiresReadback || policyWantsReadback,
+    requiresReceipt,
+    requiresAudit: requiresAudit || policyWantsAudit,
     externalEffect: hasExternalEffect(risk),
     reasons,
   };

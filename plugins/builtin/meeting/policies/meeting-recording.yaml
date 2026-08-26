@@ -1,12 +1,14 @@
-# 録音で守ること。正本 §11.3、UI/UX §12.1。
+# 録音で守ること。正本 §11.3・§22。
 id: meeting-recording
+profiles: []
 rules:
-  - id: consent-before-recording
-    description: 参加者への同意確認なしに録音を始めない
+  - id: confirm-before-sharing
+    description: 会議の記録を外へ出すときは確認を取る
+    when: { when: risk_at_least, risk: EXTERNAL_COMMIT }
+    require: confirmation
     severity: block
-  - id: no-voice-identification
-    description: 音声による人物特定はしない（biometric 扱いになり得る）
-    severity: block
-  - id: recording-survives-stt-failure
-    description: 文字起こしが落ちても録音は続ける
+  - id: recording-stays-local-until-asked
+    description: 録音の破壊的操作は自律的に行わない
+    when: { when: risk_at_least, risk: DESTRUCTIVE }
+    require: deny
     severity: block

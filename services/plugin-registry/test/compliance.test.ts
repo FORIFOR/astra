@@ -2,7 +2,7 @@
  * 規制区分の plugin を、実装していないゲートの上で動かさない。正本 §22。
  */
 import { describe, expect, it } from 'vitest';
-import { assertPolicyEnforcementAvailable, isStrictProfile } from '../src/compliance.js';
+import { assertRegulatedPluginHasRules, isStrictProfile } from '../src/compliance.js';
 
 describe('isStrictProfile', () => {
   it('names the profiles that need a compliance gate', () => {
@@ -15,33 +15,31 @@ describe('isStrictProfile', () => {
   });
 });
 
-describe('assertPolicyEnforcementAvailable', () => {
-  it('refuses a regulated plugin in production while the rules are inert', () => {
-    // 守っているつもりで守っていない状態が、一番まずい
-    expect(() => assertPolicyEnforcementAvailable('CARE', 'production', 'com.x.care')).toThrow(
-      /not enforced yet/,
+describe('assertRegulatedPluginHasRules', () => {
+  it('refuses a regulated plugin that ships no enforceable rule', () => {
+    // manifest の不変条件は policies を要求するが、中身が空でも通ってしまう
+    expect(() => assertRegulatedPluginHasRules('CARE', 0, 'com.x.care')).toThrow(
+      /must say what it will not do/,
     );
   });
 
   it('says which plugin and which profile, so it can be acted on', () => {
     expect.assertions(2);
     try {
-      assertPolicyEnforcementAvailable('FINANCIAL', 'production', 'com.x.trade');
+      assertRegulatedPluginHasRules('FINANCIAL', 0, 'com.x.trade');
     } catch (error) {
       expect((error as Error).message).toContain('com.x.trade');
       expect((error as Error).message).toContain('FINANCIAL');
     }
   });
 
-  it('does not get in the way of development', () => {
-    expect(() =>
-      assertPolicyEnforcementAvailable('CARE', 'development', 'com.x.care'),
-    ).not.toThrow();
+  it('lets a regulated plugin through once it has rules', () => {
+    expect(() => assertRegulatedPluginHasRules('CARE', 2, 'com.x.care')).not.toThrow();
   });
 
-  it('leaves ordinary plugins alone, even in production', () => {
+  it('leaves ordinary plugins alone', () => {
     for (const p of ['GENERAL', 'ENTERPRISE'] as const) {
-      expect(() => assertPolicyEnforcementAvailable(p, 'production', 'com.x.y')).not.toThrow();
+      expect(() => assertRegulatedPluginHasRules(p, 0, 'com.x.y')).not.toThrow();
     }
   });
 });

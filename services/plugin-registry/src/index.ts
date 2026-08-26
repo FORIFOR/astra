@@ -12,7 +12,7 @@ export {
   type DataSourceResolver,
 } from './data-sources.js';
 export { agentResolver, assetReader } from './agent-resolver.js';
-export { assertPolicyEnforcementAvailable, isStrictProfile } from './compliance.js';
+export { assertRegulatedPluginHasRules, isStrictProfile } from './compliance.js';
 export {
   ConnectionService,
   looksLikeCredential,

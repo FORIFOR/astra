@@ -41,6 +41,8 @@ const tools = proxyActivities<TaskActivities>({
       'TaskGone',
       // 手元でしか動かせない step。待っても状況は変わらない
       'LocalSurfaceUnavailable',
+      // 規則が禁じている。承認を取っても変わらない
+      'PolicyDenied',
     ],
   },
 });

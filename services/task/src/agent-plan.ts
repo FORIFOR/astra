@@ -58,6 +58,8 @@ export interface InstalledAgent {
   readonly grantedScopes: readonly string[];
   /** manifest が要求する scope。 */
   readonly requiredScopes: readonly string[];
+  /** 持ち込まれた規則（正本 §22）。step へそのまま載せる。 */
+  readonly policies?: readonly unknown[];
 }
 
 export class AgentNotRunnableError extends Error {
@@ -143,6 +145,7 @@ export function planInstalledAgent(
     // 作者が確認を求めた tool は、低リスクでも確認する（正本 §9.2）
     requiresConfirmation: entry.tool.requiresConfirmation,
     complianceProfile: agent.complianceProfile,
+    ...(agent.policies && agent.policies.length > 0 ? { policies: agent.policies } : {}),
   }));
 
   return {

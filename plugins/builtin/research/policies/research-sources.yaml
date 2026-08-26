@@ -1,12 +1,9 @@
-# 調査で守ること。正本 §8。
+# 調べるときに守ること。正本 §8・§22。
 id: research-sources
+profiles: []
 rules:
-  - id: cite-everything
-    description: 結論には必ず出典を付ける
-    severity: block
-  - id: keep-contradictions
-    description: 食い違う出典は、片方を捨てずに矛盾として残す
-    severity: block
-  - id: no-confident-tone-without-primary
-    description: 一次情報が無いまま「高い確信度」を出さない
+  - id: audit-external-fetches
+    description: 外部への取得は監査に残す
+    when: { when: risk_at_least, risk: READ }
+    require: audit
     severity: warn

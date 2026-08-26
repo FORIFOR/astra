@@ -32,6 +32,12 @@ export interface TaskStep {
    * 省略は `GENERAL`。**規制区分を運ばないと、規制の意味が無くなる。**
    */
   readonly complianceProfile?: StepComplianceProfile;
+  /**
+   * plugin が持ち込んだ規則（正本 §22）。
+   * 中身は `@astra/contracts` の `PolicyDocument` だが、
+   * このファイルは contracts を import できない（冒頭の注意）。
+   */
+  readonly policies?: readonly unknown[];
 }
 
 export interface TaskPlan {

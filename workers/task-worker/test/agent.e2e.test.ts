@@ -300,7 +300,19 @@ describe.skipIf(!url)('an installed agent', () => {
       { ...base, signature: signManifest(unsigned.canonical, keys.privateKey) },
       'care-e2e',
     );
-    const policy = Buffer.from('id: care\nrules: []\n');
+    // 規制 plugin は、実際に効く規則を持っていなければ publish できない
+    const policy = Buffer.from(
+      [
+        'id: care',
+        'rules:',
+        '  - id: confirm-writes',
+        '    description: ケア記録への書き込みは確認を取る',
+        '    when: { when: risk_at_least, risk: REVERSIBLE_WRITE }',
+        '    require: confirmation',
+        '    severity: block',
+        '',
+      ].join('\n'),
+    );
     await registry.publish(manifest, [
       ...(await skillAsset()),
       {

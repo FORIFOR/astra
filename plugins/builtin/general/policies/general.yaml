@@ -1,12 +1,9 @@
-# 一般的な受け答えで守ること。正本 §7.2。
+# 一般的な受け答えで守ること。正本 §7.2・§22。
 id: general
+profiles: []
 rules:
-  - id: short-answer-first
-    description: 短く答え、詳細は求められてから出す
-    severity: warn
-  - id: say-when-unknown
-    description: 知らないことを知っているように書かない
-    severity: block
-  - id: no-unsolicited-action
+  - id: no-unsolicited-external-action
     description: 聞かれていない外部操作を勝手に行わない
+    when: { when: risk_at_least, risk: EXTERNAL_COMMIT }
+    require: confirmation
     severity: block

@@ -603,6 +603,9 @@ importers:
       kysely:
         specifier: 'catalog:'
         version: 0.29.5
+      yaml:
+        specifier: ^2.9.0
+        version: 2.9.0
     devDependencies:
       vitest:
         specifier: 'catalog:'

@@ -1,12 +1,15 @@
-# 商談を扱うときに守ること。正本 §15.3。
+# 商談を扱うときに守ること。正本 §15.3・§22。
+# **host が判定できる語彙だけ**で書く。散文は description に置く。
 id: sales-crm
+profiles: []
 rules:
-  - id: evidence-for-every-action
-    description: 次の一手には根拠になった活動を必ず添える
-    severity: block
-  - id: no-invented-fields
-    description: 定義に無い項目を書き込まない
-    severity: block
-  - id: no-external-write-without-confirmation
+  - id: confirm-external-write
     description: 外部 CRM への書き戻しは確認を取る
+    when: { when: risk_at_least, risk: EXTERNAL_COMMIT }
+    require: confirmation
+    severity: block
+  - id: receipt-for-writes
+    description: 書き込みは必ず記録を残す
+    when: { when: risk_at_least, risk: REVERSIBLE_WRITE }
+    require: receipt
     severity: block

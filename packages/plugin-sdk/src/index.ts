@@ -16,6 +16,7 @@ export {
   declaredAssets,
   loadAssets,
   validateDashboards,
+  validatePolicies,
   validateWorkflows,
   MAX_ASSET_BYTES,
   type AssetKind,

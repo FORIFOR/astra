@@ -1,16 +1,13 @@
 /**
- * 規制区分の plugin を、実装していないゲートの上で動かさない。
- * 正本 §22、Phase 5/6 の積み残し。
+ * 規制区分の判定。正本 §22。
  *
- * いまの状態:
- *   - compliance **profile** は効いている。規制区分の write は明示承認になり、
- *     参照も監査される（`@astra/policy` の `evaluate`）
- *   - しかし manifest の `policies:` が指す **規則そのものは実行していない**。
- *     publish 時に「ファイルがあること」しか確かめていない
+ * かつてここには「規則が実行されていないので本番では拒む」ガードがあった。
+ * **規則エンジンが入ったので、そのガードは消した**（OQ-25 は閉じた）。
  *
- * 規則が効いていないのに規制 plugin を本番で動かすと、
- * **守っているつもりで守っていない**状態になる。それが一番まずい。
- * 規則エンジンを入れるまでは、本番で明示的に拒む。
+ * いま効いているもの:
+ *   - compliance profile による判定（`@astra/policy` の `evaluate`）
+ *   - profile ごとの組み込み規則（plugin が書き忘れても効く）
+ *   - plugin が持ち込んだ規則（publish で語彙を検証済み）
  */
 import { AstraError, type ComplianceProfile } from '@astra/contracts';
 
@@ -22,18 +19,22 @@ export function isStrictProfile(profile: ComplianceProfile): boolean {
 }
 
 /**
- * 規則エンジンが入ったら、この関数ごと消す。
- * フラグで無効化できるようにしないのは、フラグが立ったまま忘れられるため。
+ * 規制区分の plugin が、規則を持たずに入ってこないか確かめる。
+ *
+ * manifest の不変条件は「規制 profile なら policies が要る」と言っているが、
+ * **中身が空でも通ってしまう**ので、ここで実際の規則の有無を見る。
+ * 規則の無い規制 plugin は、組み込み規則しか効かない状態になる。
  */
-export function assertPolicyEnforcementAvailable(
+export function assertRegulatedPluginHasRules(
   profile: ComplianceProfile,
-  env: string,
+  ruleCount: number,
   pluginId: string,
 ): void {
-  if (env !== 'production' || !isStrictProfile(profile)) return;
+  if (!isStrictProfile(profile)) return;
+  if (ruleCount > 0) return;
   throw new AstraError(
-    'plugin.incompatible',
-    `${pluginId} declares ${profile}, but its policy documents are not enforced yet. ` +
-      'Do not run regulated plugins in production until the policy engine is implemented.',
+    'plugin.manifest_invalid',
+    `${pluginId} declares ${profile} but ships no enforceable rule. ` +
+      'A regulated plugin must say what it will not do.',
   );
 }

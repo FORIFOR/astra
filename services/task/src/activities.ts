@@ -9,6 +9,7 @@ import { canonicalSha256, uuidv7, type ActionRisk } from '@astra/contracts';
 import { withTenant, type DbHandle, type ScopedDb } from '@astra/db';
 import { appendAuditEvent } from '@astra/telemetry';
 import { approvalTtlMs, evaluate, type ActionContext } from '@astra/policy';
+import type { PolicyDocument } from '@astra/contracts';
 import type { LibraryService } from '@astra/service-library';
 import { appendEvent, type EventPublisher } from './events.js';
 import { approvalSummaryFor, type TaskStep } from './plan.js';
@@ -78,11 +79,13 @@ function policyContextFor(step: TaskStep): ActionContext {
   return {
     risk: step.risk as ActionRisk,
     surface: step.surface,
+    toolId: step.toolId,
     // 省略は GENERAL。組み込みの kind はこれでよい。
     complianceProfile: step.complianceProfile ?? 'GENERAL',
     ...(step.requiresConfirmation === undefined
       ? {}
       : { toolRequiresConfirmation: step.requiresConfirmation }),
+    ...(step.policies ? { policies: step.policies as PolicyDocument[] } : {}),
   };
 }
 
@@ -295,6 +298,17 @@ export function createTaskActivities(deps: ActivityDeps): TaskActivities {
 
     async executeStep(input, step: TaskStep) {
       const decision = evaluate(policyContextFor(step));
+
+      /*
+       * 規則が「やらない」と言っているなら、承認を取っても実行しない（正本 §22）。
+       * 規制領域では「確認すれば通る」ではなく「そもそもやらない」が要る。
+       */
+      if (decision.denied) {
+        throw ApplicationFailure.nonRetryable(
+          `${step.toolId} is not allowed here: ${decision.reasons.join(', ')}`,
+          'PolicyDenied',
+        );
+      }
       const startedAt = Date.now();
 
       await inTenant(input, (tx) =>

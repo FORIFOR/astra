@@ -6,11 +6,13 @@
  */
 import { readdir } from 'node:fs/promises';
 import path from 'node:path';
+import { parse as parseYaml } from 'yaml';
 import {
   AstraError,
   CORE_VERSION,
   DashboardSchema,
   PluginCatalogEntry,
+  PolicyDocument,
   WorkflowFile,
   compareSemver,
   isCompatible,
@@ -27,7 +29,7 @@ import {
 } from '@astra/contracts';
 import { withSystem, withTenant, type DbHandle, type ScopedDb } from '@astra/db';
 import type { InstalledAgent } from '@astra/service-task';
-import { assertPolicyEnforcementAvailable } from './compliance.js';
+import { assertRegulatedPluginHasRules } from './compliance.js';
 import type { DataSourceResolver } from './data-sources.js';
 import { appendAuditEvent } from '@astra/telemetry';
 import {
@@ -98,6 +100,8 @@ export class PluginRegistryService {
     const { manifest } = loaded;
     // 宣言と実体の食い違いは、署名を見る前に落とす
     validateDashboards(manifest, assets);
+    // 規制 profile なら、実際に効く規則を持っていること
+    assertRegulatedPluginHasRules(manifest.compliance_profile, countRules(assets), manifest.id);
     // 呼び出し側が申告したハッシュを信用しない。中身から取り直して照合する。
     for (const asset of assets) {
       const actual = await sha256Hex(asset.content);
@@ -234,12 +238,6 @@ export class PluginRegistryService {
       if (!row || row.yanked_at !== null) {
         throw new AstraError('plugin.not_found', `no plugin ${pluginId}@${request.version}`);
       }
-      // 規則が効いていないのに規制 plugin を本番で動かさない
-      assertPolicyEnforcementAvailable(
-        row.compliance_profile as ComplianceProfile,
-        this.#env,
-        pluginId,
-      );
       if (!isCompatible(row.min_core_version, this.#coreVersion)) {
         throw new AstraError(
           'plugin.incompatible',
@@ -611,6 +609,8 @@ export class PluginRegistryService {
 
     // 宣言された仕事の流れ（正本 §14）。無ければ近似に落ちる。
     const workflow = await this.#workflowFor(pluginId, install.version, manifest, agentId);
+    // 持ち込まれた規則（正本 §22）。profile ごとの組み込みは policy 側が足す。
+    const policies = await this.#policiesFor(pluginId, install.version, manifest);
 
     return {
       pluginId,
@@ -620,6 +620,7 @@ export class PluginRegistryService {
       tools,
       skill: skillFile ? skillFile.toString('utf8') : null,
       ...(workflow ? { workflow } : {}),
+      policies,
       grantedScopes: granted.map((g) => g.scope),
       requiredScopes: manifest.permissions,
     };
@@ -658,6 +659,23 @@ export class PluginRegistryService {
       };
     }
     return null;
+  }
+
+  /** 持ち込まれた policy。publish で検証済みのものを読むだけ。 */
+  async #policiesFor(
+    pluginId: string,
+    version: string,
+    manifest: PluginManifest,
+  ): Promise<PolicyDocument[]> {
+    const documents: PolicyDocument[] = [];
+    for (const path of manifest.policies) {
+      const content = await this.asset(pluginId, version, path);
+      if (!content) continue;
+      const parsed = PolicyDocument.safeParse(parseYaml(content.toString('utf8')));
+      // publish で検証済み。ここで落ちるのは配線ミスなので、緩めない。
+      if (parsed.success) documents.push(parsed.data);
+    }
+    return documents;
   }
 
   /**
@@ -905,4 +923,14 @@ export class PluginRegistryService {
 /** semver の major。同意を取り直すかの判定に使う。 */
 function majorOf(version: string): number {
   return Number(version.split('.')[0] ?? 0);
+}
+
+/** asset に入っている policy の規則数。空の policy を「持っている」と数えない。 */
+function countRules(assets: readonly PluginAsset[]): number {
+  let total = 0;
+  for (const asset of assets.filter((a) => a.kind === 'policy')) {
+    const parsed = PolicyDocument.safeParse(parseYaml(asset.content.toString()));
+    if (parsed.success) total += parsed.data.rules.length;
+  }
+  return total;
 }

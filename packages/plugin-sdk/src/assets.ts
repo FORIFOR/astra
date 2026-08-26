@@ -7,10 +7,12 @@
  */
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
+import { parse as parseYaml } from 'yaml';
 import {
   AstraError,
   DashboardSchema,
   EvalFile,
+  PolicyDocument,
   WorkflowFile,
   sha256Hex,
   type PluginManifest,
@@ -88,7 +90,39 @@ export async function loadAssets(manifest: PluginManifest, root: string): Promis
 
   validateDashboards(manifest, assets);
   validateWorkflows(manifest, assets);
+  validatePolicies(assets);
   return assets;
+}
+
+/**
+ * policy の中身まで検証する。
+ *
+ * **散文では機械検査できない。**host が実装した語彙で書けているかを
+ * ここで確かめる。書けていない policy は、あっても効かない。
+ */
+export function validatePolicies(assets: readonly PluginAsset[]): void {
+  for (const asset of assets.filter((a) => a.kind === 'policy')) {
+    let document: unknown;
+    try {
+      document = parseYaml(Buffer.from(asset.content).toString('utf8'));
+    } catch {
+      throw new AstraError('plugin.manifest_invalid', `policy "${asset.path}" is not YAML`);
+    }
+
+    const parsed = PolicyDocument.safeParse(document);
+    if (!parsed.success) {
+      throw new AstraError(
+        'plugin.manifest_invalid',
+        `policy "${asset.path}" does not use the vocabulary the host can check`,
+        {
+          details: parsed.error.issues.map((issue) => ({
+            path: issue.path.join('.'),
+            message: issue.message,
+          })),
+        },
+      );
+    }
+  }
 }
 
 /**
