@@ -41,6 +41,9 @@
       "path": "./services/api-gateway"
     },
     {
+      "path": "./services/capabilities"
+    },
+    {
       "path": "./services/context"
     },
     {

@@ -1,0 +1,33 @@
+{
+  "name": "@astra/service-capabilities",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "起動時に「何が本物で、何が代役か」を 1 箇所で答える。正本 §21・§25。",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "tsc -b --clean",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@astra/contracts": "workspace:*",
+    "@astra/oauth": "workspace:*",
+    "@astra/service-agent-runtime": "workspace:*",
+    "@astra/service-meeting": "workspace:*",
+    "@astra/service-research": "workspace:*"
+  },
+  "devDependencies": {
+    "vitest": "catalog:"
+  }
+}

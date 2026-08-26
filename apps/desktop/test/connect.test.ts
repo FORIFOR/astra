@@ -61,7 +61,9 @@ const tokenReply = () =>
 describe('connecting', () => {
   it('sends a reference and never the token', async () => {
     const host = stubHost();
-    const connect = vi.fn(async (_pluginId: string, _request: { credential_ref: string }) => undefined);
+    const connect = vi.fn(
+      async (_pluginId: string, _request: { credential_ref: string }) => undefined,
+    );
     const client = { connectConnector: connect } as never;
 
     const result = await connectConnector(target, {

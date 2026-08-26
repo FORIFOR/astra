@@ -443,6 +443,9 @@ importers:
       '@astra/service-agent-runtime':
         specifier: workspace:*
         version: link:../agent-runtime
+      '@astra/service-capabilities':
+        specifier: workspace:*
+        version: link:../capabilities
       '@astra/service-context':
         specifier: workspace:*
         version: link:../context
@@ -507,6 +510,28 @@ importers:
       ws:
         specifier: ^8.21.3
         version: 8.21.3
+
+  services/capabilities:
+    dependencies:
+      '@astra/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
+      '@astra/oauth':
+        specifier: workspace:*
+        version: link:../../packages/oauth
+      '@astra/service-agent-runtime':
+        specifier: workspace:*
+        version: link:../agent-runtime
+      '@astra/service-meeting':
+        specifier: workspace:*
+        version: link:../meeting
+      '@astra/service-research':
+        specifier: workspace:*
+        version: link:../research
+    devDependencies:
+      vitest:
+        specifier: 'catalog:'
+        version: 3.2.7(@types/node@22.20.1)(happy-dom@20.11.6)(terser@5.50.0)(tsx@4.23.12)(yaml@2.9.0)
 
   services/context:
     dependencies:
@@ -815,6 +840,9 @@ importers:
       '@astra/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@astra/service-capabilities':
+        specifier: workspace:*
+        version: link:../../services/capabilities
       '@astra/service-library':
         specifier: workspace:*
         version: link:../../services/library

@@ -40,9 +40,6 @@
       "path": "../../packages/plugin-sdk"
     },
     {
-      "path": "../agent-runtime"
-    },
-    {
       "path": "../world-model"
     },
     {
@@ -50,6 +47,12 @@
     },
     {
       "path": "../context"
+    },
+    {
+      "path": "../capabilities"
+    },
+    {
+      "path": "../agent-runtime"
     }
   ]
 }

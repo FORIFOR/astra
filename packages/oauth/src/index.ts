@@ -8,4 +8,5 @@
  */
 export * from './pkce.js';
 export * from './flow.js';
+export * from './providers.js';
 export * from './store.js';

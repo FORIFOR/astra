@@ -24,3 +24,4 @@ export {
   type ImageGenerator,
   type ImageServiceDeps,
 } from './image.js';
+export * from './media-factory.js';

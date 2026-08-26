@@ -18,16 +18,17 @@ import {
 } from '@astra/service-agent-runtime';
 import { WorldModelService } from '@astra/service-world-model';
 import { ConversationService } from '@astra/service-conversation';
-import { ResearchLedgerService, researchDataSources } from '@astra/service-research';
+import {
+  ResearchLedgerService,
+  researchDataSources,
+  researchProvidersFromEnv,
+} from '@astra/service-research';
 import { meetingDataSources } from '@astra/service-meeting';
 import { ShareService } from '@astra/service-share';
-import {
-  FsRecordingStore,
-  MeetingService,
-  assertNoStandIns,
-  meetingProvidersFromEnv,
-  standIns as meetingStandIns,
-} from '@astra/service-meeting';
+import { FsRecordingStore, MeetingService, meetingProvidersFromEnv } from '@astra/service-meeting';
+// 代役の判定は contracts が正。service ごとに数えると、片方だけ見落とす。
+import { assertNoStandIns } from '@astra/contracts';
+import { capabilityReport } from '@astra/service-capabilities';
 import { buildApp } from './app.js';
 import { assertPathsExist, gatewayConfigFromEnv } from './config.js';
 import { keyConfigFromEnv, loadSigningKeys } from './auth/keys.js';
@@ -81,11 +82,22 @@ async function main(): Promise<void> {
   const tasks = new TaskService(db, runtime, agentResolver(registry));
   const shares = new ShareService({ db, library, shareHost: config.shareHost });
 
-  // STT は設定されていれば本物、無ければ代役（Phase 3 §10 OQ-11）。
+  /*
+   * 設定されていれば本物、無ければ代役（Phase 2 §1.1 / Phase 3 §10）。
+   *
+   * **数え漏らさない。**以前は会議の提供者しか見ておらず、
+   * 代役の言語モデルのまま本番が起動できた。
+   * いまは能力の一覧（contracts）が過不足を型で塞ぐ。
+   */
   const meetingProviders = await meetingProvidersFromEnv(process.env);
-  const remaining = meetingStandIns(meetingProviders);
-  const { warn } = assertNoStandIns(remaining, config.env);
-  if (warn) logger.warn({ stand_ins: remaining }, warn);
+  const researchProviders = researchProvidersFromEnv(process.env);
+  const report = capabilityReport({
+    research: researchProviders,
+    meeting: meetingProviders,
+    env: process.env,
+  });
+  const { warn, remaining } = assertNoStandIns(report, config.env);
+  if (warn) logger.warn({ stand_ins: remaining.map((r) => r.capability) }, warn);
   const meetings = new MeetingService({
     db,
     publisher: { async publish() {} },

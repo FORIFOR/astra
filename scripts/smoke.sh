@@ -182,11 +182,16 @@ AGENT_TASK="$(curl -fsS -X POST "$BASE/v1/tasks" -H "authorization: Bearer $AT" 
 [ -n "$AGENT_TASK" ] || fail "the installed agent could not be started"
 echo "  agent task $AGENT_TASK"
 
-say "the real process names which providers are still stand-ins"
+say "the real process names which capabilities are still stand-ins"
 # 代役のまま動いていることを黙らない。本番ではこれが起動拒否になる。
-grep -q 'stand-in' "$STORE/worker.log" || fail "the worker did not report its stand-in providers"
-# 開発ログは pretty 形式なので、名前は続く行に出る
-grep -A5 'stand-in' "$STORE/worker.log" | grep -oE '"[a-z ]+"' | tr -d '"' | paste -sd', ' - | sed 's/^/  /'
+grep -q 'stand-in' "$STORE/worker.log" || fail "the worker did not report its stand-in capabilities"
+grep -q 'stand-in' "$STORE/gateway.log" || fail "the gateway did not report its stand-in capabilities"
+# **どちらの面も同じものを数えていること。**片方だけ見落とすのが、いちばん起きやすい壊れ方。
+for capability in search language_model speech_to_text image_generation video_generation oauth_providers; do
+  grep -q "$capability" "$STORE/worker.log" || fail "the worker did not account for $capability"
+  grep -q "$capability" "$STORE/gateway.log" || fail "the gateway did not account for $capability"
+done
+grep -A14 'stand-in' "$STORE/worker.log" | grep -oE '[a-z_]+' | grep -E '^(search|language_model|speech_to_text|translation|image_generation|video_generation|oauth_providers)$' | sort -u | paste -sd', ' - | sed 's/^/  /'
 
 say "a meeting records audio through the real websocket"
 MEETING="$(curl -fsS -X POST "$BASE/v1/meetings" -H "authorization: Bearer $AT" \

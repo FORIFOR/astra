@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "TaskWorkflow と全 activity を載せる Temporal worker。サービスを組み立てる合流点。",
+  "description": "TaskWorkflow \u3068\u5168 activity \u3092\u8f09\u305b\u308b Temporal worker\u3002\u30b5\u30fc\u30d3\u30b9\u3092\u7d44\u307f\u7acb\u3066\u308b\u5408\u6d41\u70b9\u3002",
   "main": "./dist/worker-main.js",
   "types": "./dist/worker-main.d.ts",
   "scripts": {
@@ -22,7 +22,8 @@
     "@astra/service-library": "workspace:*",
     "@temporalio/worker": "^1.22.0",
     "@astra/service-meeting": "workspace:*",
-    "@astra/service-plugin-registry": "workspace:*"
+    "@astra/service-plugin-registry": "workspace:*",
+    "@astra/service-capabilities": "workspace:*"
   },
   "devDependencies": {
     "@temporalio/testing": "^1.22.0",

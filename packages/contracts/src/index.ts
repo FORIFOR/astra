@@ -34,6 +34,7 @@ export * from './onboarding.js';
 export * from './workflow.js';
 export * from './policy-doc.js';
 export * from './slo.js';
+export * from './standin.js';
 export * from './identity.js';
 export * from './host.js';
 export * from './api.js';

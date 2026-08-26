@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist"
+  },
+  "include": ["src"],
+  "references": [
+    { "path": "../../packages/contracts" },
+    { "path": "../../packages/oauth" },
+    { "path": "../agent-runtime" },
+    { "path": "../meeting" },
+    { "path": "../research" }
+  ]
+}

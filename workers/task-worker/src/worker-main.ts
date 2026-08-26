@@ -15,16 +15,16 @@ import {
   ResearchService,
   researchExecutors,
   researchProvidersFromEnv,
-  researchStandIns,
 } from '@astra/service-research';
 import {
   FsRecordingStore,
   MeetingService,
-  assertNoStandIns,
   meetingExecutors,
   meetingProvidersFromEnv,
-  standIns as meetingStandIns,
 } from '@astra/service-meeting';
+// 数え方は gateway と同じものを使う。別々に数えると片方だけ見落とす。
+import { assertNoStandIns } from '@astra/contracts';
+import { capabilityReport } from '@astra/service-capabilities';
 import { createTaskWorker, TASK_QUEUE, NoopPublisher } from '@astra/service-task';
 
 async function main(): Promise<void> {
@@ -48,18 +48,19 @@ async function main(): Promise<void> {
   const researchProviders = researchProvidersFromEnv(process.env);
   const meetingProviders = await meetingProvidersFromEnv(process.env);
 
-  // 本番で代役のまま動かさない。**何が代役なのかを名指しで言う。**
-  // 「providers are stand-ins」とだけ言われても、どれを埋めればよいか分からない。
-  const remaining = [...researchStandIns(researchProviders), ...meetingStandIns(meetingProviders)];
-  if (process.env['ASTRA_ENV'] === 'production' && remaining.length > 0) {
-    throw new Error(
-      `these providers are still stand-ins: ${remaining.join(', ')}. ` +
-        'Configure them before running in production.',
-    );
-  }
-  if (remaining.length > 0) {
-    logger.warn({ stand_ins: remaining }, 'running with stand-in providers');
-  }
+  /*
+   * 本番で代役のまま動かさない。**何が代役なのかを名指しで言う。**
+   *
+   * 数え方は gateway と同じものを使う。別々に数えると、
+   * 片方だけ新しい能力を見落とす（実際、gateway は言語モデルを見ていなかった）。
+   */
+  const report = capabilityReport({
+    research: researchProviders,
+    meeting: meetingProviders,
+    env: process.env,
+  });
+  const { warn, remaining } = assertNoStandIns(report, process.env['ASTRA_ENV'] ?? 'development');
+  if (warn) logger.warn({ stand_ins: remaining.map((r) => r.capability) }, warn);
 
   const research = new ResearchService({
     db,
