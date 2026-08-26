@@ -1,0 +1,301 @@
+/* Meeting / Recording UX。UI/UX §12。 */
+
+/* --- 開始確認（§12.1）------------------------------------------------- */
+
+.astra-meeting-start {
+  display: flex;
+  flex-direction: column;
+  gap: var(--astra-space-base);
+  padding: var(--astra-padding-card);
+  border: var(--astra-border-hairline) solid var(--astra-color-border);
+  border-radius: var(--astra-radius-standard);
+  background: var(--astra-color-surface);
+}
+
+.astra-meeting-start label {
+  display: flex;
+  align-items: center;
+  gap: var(--astra-space-compact);
+}
+
+.astra-meeting-start__title {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.astra-meeting-start__sources {
+  display: flex;
+  gap: var(--astra-space-base);
+  align-items: center;
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.astra-meeting-start__consent {
+  color: var(--astra-color-text);
+  font-size: var(--astra-font-size-micro);
+}
+
+.astra-meeting-start__actions {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--astra-space-base);
+}
+
+/* --- 録音中の最小表示（§12.2）----------------------------------------- */
+
+.astra-rec {
+  display: flex;
+  align-items: center;
+  gap: var(--astra-space-base);
+  /* §12.2 の標準幅・高さ */
+  min-width: 360px;
+  max-width: 420px;
+  min-height: 48px;
+  padding: 0 var(--astra-space-base);
+  border: var(--astra-border-hairline) solid var(--astra-color-border);
+  border-radius: var(--astra-radius-standard);
+  background: var(--astra-color-surface-raised);
+  font-size: var(--astra-font-size-micro);
+}
+
+/* 録音中か分からない状態を作らない。透過させ過ぎない。 */
+.astra-rec__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--astra-color-danger);
+}
+
+.astra-rec[data-state='paused'] .astra-rec__dot {
+  background: var(--astra-color-muted);
+}
+
+.astra-rec[data-state='degraded'] .astra-rec__dot {
+  background: var(--astra-color-warning);
+}
+
+.astra-rec__title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.astra-rec__speakers,
+.astra-rec__degraded {
+  color: var(--astra-color-muted);
+}
+
+/* --- Notes first（§12.3）--------------------------------------------- */
+
+.astra-meeting {
+  display: flex;
+  flex-direction: column;
+  gap: var(--astra-space-base);
+}
+
+.astra-meeting__body {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--astra-space-base);
+}
+
+/* transcript は開いたときだけ右に出る。既定は Notes の 1 枚。 */
+.astra-meeting__body[data-transcript='open'] {
+  grid-template-columns: 1fr minmax(320px, 360px);
+}
+
+.astra-meeting__notes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--astra-space-compact);
+}
+
+.astra-meeting__notes textarea {
+  min-height: 240px;
+  padding: var(--astra-space-base);
+  border: var(--astra-border-hairline) solid var(--astra-color-border);
+  border-radius: var(--astra-radius-standard);
+  background: var(--astra-color-surface);
+  color: var(--astra-color-text);
+  font: inherit;
+  resize: vertical;
+}
+
+.astra-meeting__markers {
+  display: flex;
+  gap: var(--astra-space-compact);
+}
+
+.astra-meeting__transcript-toggle {
+  margin-left: auto;
+}
+
+/* --- transcript（§12.4）---------------------------------------------- */
+
+.astra-transcript {
+  display: flex;
+  flex-direction: column;
+  gap: var(--astra-space-compact);
+  margin: 0;
+  padding: var(--astra-space-base);
+  list-style: none;
+  border: var(--astra-border-hairline) solid var(--astra-color-border);
+  border-radius: var(--astra-radius-standard);
+  background: var(--astra-color-surface);
+  overflow-y: auto;
+}
+
+.astra-transcript__line {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  gap: var(--astra-space-compact);
+  align-items: baseline;
+}
+
+/* 確定前は淡く。確定で通常色へ。 */
+.astra-transcript__line[data-interim='true'] {
+  color: var(--astra-color-muted);
+}
+
+.astra-transcript__at {
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-micro);
+  font-variant-numeric: tabular-nums;
+}
+
+.astra-transcript__who {
+  font-weight: 600;
+}
+
+.astra-transcript__translation {
+  grid-column: 3;
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-micro);
+}
+
+.astra-transcript__empty {
+  margin: 0;
+  color: var(--astra-color-muted);
+}
+
+/* --- finalize（§12.5）------------------------------------------------ */
+
+.astra-finalize {
+  display: flex;
+  flex-direction: column;
+  gap: var(--astra-space-base);
+  padding: var(--astra-padding-card);
+  border: var(--astra-border-hairline) solid var(--astra-color-border);
+  border-radius: var(--astra-radius-standard);
+  background: var(--astra-color-surface);
+}
+
+.astra-finalize__title {
+  margin: 0;
+  font-size: var(--astra-font-size-card-title);
+}
+
+.astra-finalize__steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--astra-space-compact);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.astra-finalize__steps li[data-state='waiting'] {
+  color: var(--astra-color-muted);
+}
+
+.astra-finalize__note {
+  margin: 0;
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-micro);
+}
+
+/* --- 議事録（§12.6）-------------------------------------------------- */
+
+.astra-bundle {
+  display: flex;
+  flex-direction: column;
+  gap: var(--astra-space-base);
+}
+
+.astra-bundle__head h2 {
+  margin: 0;
+  font-size: var(--astra-font-size-card-title);
+}
+
+.astra-bundle__head p {
+  margin: 0;
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-micro);
+}
+
+.astra-bundle__section h3 {
+  margin: 0 0 var(--astra-space-compact);
+  font-size: var(--astra-font-size-body);
+}
+
+.astra-bundle__section ul {
+  margin: 0;
+  padding-left: var(--astra-space-base);
+}
+
+.astra-bundle__cite {
+  padding: 0 2px;
+  border: 0;
+  background: none;
+  color: var(--astra-color-accent);
+  font: inherit;
+  cursor: pointer;
+}
+
+.astra-bundle__evidence {
+  padding: var(--astra-padding-card);
+  border-left: 2px solid var(--astra-color-accent);
+  background: var(--astra-color-surface-raised);
+}
+
+.astra-bundle__evidence p {
+  margin: 0;
+}
+
+.astra-bundle__evidence-at,
+.astra-bundle__evidence-who {
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-micro);
+}
+
+/* --- shell に重ねる層 -------------------------------------------------- */
+
+.astra-meeting-layer {
+  position: fixed;
+  right: var(--astra-space-lg);
+  bottom: var(--astra-space-lg);
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  gap: var(--astra-space-compact);
+  align-items: flex-end;
+  max-width: min(880px, calc(100vw - var(--astra-space-lg) * 2));
+}
+
+.astra-meeting-layer[data-phase='live'] .astra-meeting {
+  padding: var(--astra-padding-card);
+  border: var(--astra-border-hairline) solid var(--astra-color-border);
+  border-radius: var(--astra-radius-standard);
+  background: var(--astra-color-surface);
+  box-shadow: var(--astra-elevation-dock);
+}
+
+.astra-meeting-layer__collapsed {
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}

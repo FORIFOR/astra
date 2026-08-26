@@ -211,18 +211,18 @@ Notes は**ユーザーのもの**。AI は自動で上書きしない（UI/UX �
 
 ## 8. チケット
 
-| ID    | 内容                                                                | 完了条件                                  |
-| ----- | ------------------------------------------------------------------- | ----------------------------------------- |
-| P3-01 | 契約: meeting / segment / speaker / translation と API 型           | contracts の test                         |
-| P3-02 | DB: 4 テーブル + RLS + append-only + 所有権表                       | `db:verify` / `check:generated`           |
-| P3-03 | provider 差し替え口と決定的な代役                                   | provider 抜きで stabilizer が test できる |
-| P3-04 | meeting-service: 開始 / segment 確定 / 話者命名 / 翻訳              | 単体 test                                 |
-| P3-05 | 音声 WS と録音の保存                                                | 落ちても録音が残る                        |
-| P3-06 | finalize task（seal → transcribe → reconcile → summarize → bundle） | E2E で bundle が Library に残る           |
-| P3-07 | HTTP 経路と SSE                                                     | 結合 test                                 |
-| P3-08 | UI-4: start / indicator / notes / transcript                        | live meeting E2E                          |
-| P3-09 | UI-5: finalize / citation jump                                      | meeting artifact E2E                      |
-| P3-10 | 受け入れテスト AC3-1〜AC3-12                                        | CI の blocking gate                       |
+| ID    | 内容                                                                | 完了条件                                           |
+| ----- | ------------------------------------------------------------------- | -------------------------------------------------- |
+| P3-01 | 契約: meeting / segment / speaker / translation と API 型           | contracts の test **完了**                         |
+| P3-02 | DB: 4 テーブル + RLS + append-only + 所有権表                       | `db:verify` / `check:generated` **完了**           |
+| P3-03 | provider 差し替え口と決定的な代役                                   | provider 抜きで stabilizer が test できる **完了** |
+| P3-04 | meeting-service: 開始 / segment 確定 / 話者命名 / 翻訳              | 単体 test **完了**                                 |
+| P3-05 | 音声 WS と録音の保存                                                | 落ちても録音が残る **完了**                        |
+| P3-06 | finalize task（seal → transcribe → reconcile → summarize → bundle） | E2E で bundle が Library に残る **完了**           |
+| P3-07 | HTTP 経路と SSE                                                     | 結合 test **完了**                                 |
+| P3-08 | UI-4: start / indicator / notes / transcript                        | live meeting E2E **完了**                          |
+| P3-09 | UI-5: finalize / citation jump                                      | meeting artifact E2E **完了**                      |
+| P3-10 | 受け入れテスト AC3-1〜AC3-12                                        | CI の blocking gate **完了**                       |
 
 ---
 

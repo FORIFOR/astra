@@ -211,3 +211,9 @@
 .astra-empty {
   color: var(--astra-color-muted);
 }
+
+.astra-work-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--astra-space-compact);
+}

@@ -9,12 +9,15 @@ import { HomePage } from './pages/Home.js';
 import { WorkPage } from './pages/Work.js';
 import { LibraryPage } from './pages/Library.js';
 import { AppsPage } from './pages/Apps.js';
+import { MeetingProvider, useMeeting } from './meeting/MeetingProvider.js';
+import { MeetingLayer } from './meeting/MeetingLayer.js';
 import './shell/shell.css';
 
 function ActivePage(): ReactElement {
   const { activeTab, focusedTaskId, focusedArtifactId, openTask, openArtifact } = useShell();
   const { tasks, artifacts } = useWorkspaceData();
   const { client, me } = useSession();
+  const { requestStart: requestStartMeeting } = useMeeting();
 
   switch (activeTab) {
     case 'home':
@@ -28,7 +31,14 @@ function ActivePage(): ReactElement {
         />
       );
     case 'work':
-      return <WorkPage client={client} tasks={tasks} initialTaskId={focusedTaskId} />;
+      return (
+        <WorkPage
+          client={client}
+          tasks={tasks}
+          initialTaskId={focusedTaskId}
+          onStartMeeting={requestStartMeeting}
+        />
+      );
     case 'library':
       return (
         <LibraryPage
@@ -41,6 +51,12 @@ function ActivePage(): ReactElement {
     case 'apps':
       return <AppsPage />;
   }
+}
+
+/** 会議の層。タブを跨いで見えている必要があるので shell の外に置く。 */
+function MeetingSurfaceLayer(): ReactElement | null {
+  const { openTask } = useShell();
+  return <MeetingLayer onOpenWork={openTask} />;
 }
 
 function Workspace(): ReactElement {
@@ -58,9 +74,13 @@ function Workspace(): ReactElement {
   return (
     <WorkspaceDataProvider client={client}>
       <ShellProvider>
-        <AppShell>
-          <ActivePage />
-        </AppShell>
+        <MeetingProvider client={client}>
+          <AppShell>
+            <ActivePage />
+          </AppShell>
+          {/* 会議はタブではなく状態。4 タブは増やさない（正本 §2）。 */}
+          <MeetingSurfaceLayer />
+        </MeetingProvider>
       </ShellProvider>
     </WorkspaceDataProvider>
   );

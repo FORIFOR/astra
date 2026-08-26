@@ -6,7 +6,11 @@
  */
 import {
   Artifact,
+  CreateMeetingRequest,
   CreateTaskRequest,
+  Meeting,
+  MeetingSegment,
+  MeetingSpeaker,
   MeResponse as MeResponseSchema,
   TokenResponse,
   PluginCatalogEntry,
@@ -22,7 +26,7 @@ import {
 } from '@astra/contracts';
 import { z } from 'zod';
 import { HttpClient, type ClientConfig } from './http.js';
-import { streamTaskEvents, type StreamOptions } from './sse.js';
+import { streamMeetingEvents, streamTaskEvents, type StreamOptions } from './sse.js';
 
 const page = <T extends z.ZodTypeAny>(item: T) =>
   z.object({ items: z.array(item), next_cursor: z.string().nullable() });
@@ -140,6 +144,76 @@ export class AstraClient {
   /** タスクの進捗を購読する。切断からの再開は clientside で面倒を見る（§7.3）。 */
   streamTask(taskId: string, options: StreamOptions): Promise<number> {
     return streamTaskEvents(this.http, taskId, options);
+  }
+
+  // ------------------------------------------------------------- meetings
+
+  /**
+   * 会議を始める。**同意の確認は呼び出し側の責任**で、
+   * `consent_confirmed: true` が無いと契約側で落ちる（UI/UX §12.1）。
+   */
+  async startMeeting(request: CreateMeetingRequest): Promise<Meeting> {
+    return this.http.request({ method: 'POST', path: '/v1/meetings', body: request }, (value) =>
+      Meeting.parse(value),
+    );
+  }
+
+  async getMeeting(meetingId: string): Promise<Meeting> {
+    return this.http.request({ path: `/v1/meetings/${meetingId}` }, (value) =>
+      Meeting.parse(value),
+    );
+  }
+
+  async listMeetings(): Promise<Meeting[]> {
+    const parsed = await this.http.request({ path: '/v1/meetings' }, (value) =>
+      z.object({ items: z.array(Meeting) }).parse(value),
+    );
+    return parsed.items;
+  }
+
+  /** transcript。pass を省くと final があれば final、無ければ live。 */
+  async meetingSegments(
+    meetingId: string,
+    pass?: 'live' | 'final',
+  ): Promise<{ segments: MeetingSegment[]; speakers: MeetingSpeaker[] }> {
+    const parsed = await this.http.request(
+      { path: `/v1/meetings/${meetingId}/segments`, query: { pass } },
+      (value) =>
+        z
+          .object({ items: z.array(MeetingSegment), speakers: z.array(MeetingSpeaker) })
+          .parse(value),
+    );
+    return { segments: parsed.items, speakers: parsed.speakers };
+  }
+
+  /** 話者に名前を付ける。この会議の中だけの対応（正本 §11.3）。 */
+  async nameSpeaker(
+    meetingId: string,
+    speakerTag: number,
+    displayName: string,
+  ): Promise<MeetingSpeaker> {
+    return this.http.request(
+      {
+        method: 'POST',
+        path: `/v1/meetings/${meetingId}/speakers`,
+        body: { speaker_tag: speakerTag, display_name: displayName },
+      },
+      (value) => MeetingSpeaker.parse(value),
+    );
+  }
+
+  /** 終了。返るのは finalize の task id。閉じても続く（UI/UX §12.5）。 */
+  async finishMeeting(meetingId: string): Promise<{ meetingId: string; taskId: string }> {
+    const parsed = await this.http.request(
+      { method: 'POST', path: `/v1/meetings/${meetingId}/finish` },
+      (value) => z.object({ meeting_id: z.string(), task_id: z.string() }).parse(value),
+    );
+    return { meetingId: parsed.meeting_id, taskId: parsed.task_id };
+  }
+
+  /** 会議の transcript を購読する。終端は meeting.ended。 */
+  streamMeeting(meetingId: string, options: StreamOptions): Promise<number> {
+    return streamMeetingEvents(this.http, meetingId, options);
   }
 
   async listArtifacts(

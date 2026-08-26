@@ -27,7 +27,13 @@ export interface StreamOptions {
   onReconnect?(attempt: number, reason: string): void;
 }
 
-const TERMINAL = new Set(['task.completed', 'task.failed', 'task.cancelled']);
+const TERMINAL = new Set([
+  'task.completed',
+  'task.failed',
+  'task.cancelled',
+  // 会議も終端を持つ。無いと終わった会議の購読が閉じない。
+  'meeting.ended',
+]);
 
 const defaultBackoff = (attempt: number): number => Math.min(250 * 2 ** attempt, 10_000);
 
@@ -57,6 +63,27 @@ export async function streamTaskEvents(
   taskId: string,
   options: StreamOptions,
 ): Promise<number> {
+  return streamEvents(http, `/v1/tasks/${taskId}/stream`, options);
+}
+
+/** 会議のイベント列。終端は `meeting.ended`。 */
+export async function streamMeetingEvents(
+  http: HttpClient,
+  meetingId: string,
+  options: StreamOptions,
+): Promise<number> {
+  return streamEvents(http, `/v1/meetings/${meetingId}/stream`, options);
+}
+
+/**
+ * イベント列を、終端イベントまで購読し続ける。戻り値は最後に受け取った sequence。
+ * 経路が違うだけで、欠番検知も再接続も task と会議で同じでよい。
+ */
+async function streamEvents(
+  http: HttpClient,
+  path: string,
+  options: StreamOptions,
+): Promise<number> {
   const backoff = options.backoffMs ?? defaultBackoff;
   const maxAttempts = options.maxAttempts ?? 8;
   let cursor = options.after ?? 0;
@@ -65,7 +92,7 @@ export async function streamTaskEvents(
   while (!options.signal?.aborted) {
     let reason = 'stream ended';
     try {
-      const done = await readOnce(http, taskId, cursor, options, (sequence) => {
+      const done = await readOnce(http, path, cursor, options, (sequence) => {
         cursor = sequence;
         // 一度でも進めたら再接続の回数をやり直す。
         // 長時間のタスクで序盤の失敗が後半の予算を食わないようにする。
@@ -88,7 +115,7 @@ export async function streamTaskEvents(
 
 async function readOnce(
   http: HttpClient,
-  taskId: string,
+  path: string,
   after: number,
   options: StreamOptions,
   advance: (sequence: number) => void,
@@ -96,7 +123,7 @@ async function readOnce(
   const headers = await http.headers({ accept: 'text/event-stream' });
   if (after > 0) headers.set('last-event-id', String(after));
 
-  const response = await fetchWith(http, `/v1/tasks/${taskId}/stream`, headers, options.signal);
+  const response = await fetchWith(http, path, headers, options.signal);
   if (!response.ok || !response.body) {
     throw new Error(`stream refused with ${response.status}`);
   }

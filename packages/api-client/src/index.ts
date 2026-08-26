@@ -6,7 +6,12 @@
  */
 export { AstraClient, type Page, type TaskView } from './client.js';
 export { HttpClient, type ClientConfig, type RequestOptions } from './http.js';
-export { streamTaskEvents, parseSseFrames, type StreamOptions } from './sse.js';
+export {
+  streamMeetingEvents,
+  streamTaskEvents,
+  parseSseFrames,
+  type StreamOptions,
+} from './sse.js';
 export { errorFrom } from './errors.js';
 export {
   PublicShareClient,

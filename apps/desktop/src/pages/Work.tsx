@@ -42,11 +42,14 @@ export function WorkPage({
   client = null,
   tasks = [],
   initialTaskId = null,
+  onStartMeeting,
 }: {
   client?: AstraClient | null;
   tasks?: readonly TaskView[];
   /** 他のタブから「この仕事を見せる」で渡ってくる（UI-3 の連続性）。 */
   initialTaskId?: string | null;
+  /** 会議を始める。会議は 5 つ目のタブにしない（正本 §2）。 */
+  onStartMeeting?: (() => void) | undefined;
 }): ReactElement {
   const [filter, setFilter] = useState<WorkFilter>('active');
   const [openTaskId, setOpenTaskId] = useState<string | null>(initialTaskId);
@@ -69,6 +72,13 @@ export function WorkPage({
 
   return (
     <section className="astra-work-list" aria-label="ワーク">
+      <div className="astra-work-actions">
+        {/* 会議はタブではなく仕事の一つ。ここから始める（UI/UX §12.1）。 */}
+        <button type="button" onClick={onStartMeeting} disabled={!onStartMeeting}>
+          会議を記録
+        </button>
+      </div>
+
       <div className="astra-work-filters" role="group" aria-label="絞り込み">
         {WORK_FILTERS.map((option) => (
           <button
