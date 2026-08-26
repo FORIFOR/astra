@@ -254,3 +254,60 @@
   font-size: var(--astra-font-size-sm, 0.875rem);
   color: var(--astra-color-muted);
 }
+
+/* Work detail（UI/UX §9.2）。5 つの tab。 */
+.astra-detail__tabs {
+  display: flex;
+  gap: var(--astra-space-xs, 4px);
+  border-bottom: 1px solid var(--astra-color-border);
+}
+
+.astra-detail__tabs [aria-selected='true'] {
+  border-bottom: 2px solid var(--astra-color-accent);
+  /* §19: 選択を色だけで表さない */
+  font-weight: 600;
+}
+
+.astra-detail__panel {
+  padding: var(--astra-space-sm, 8px) 0;
+}
+
+.astra-detail__chips {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--astra-space-xs, 4px);
+}
+
+.astra-detail__chips li {
+  border: 1px solid var(--astra-color-border);
+  border-radius: var(--astra-radius-sm, 4px);
+  padding: 0 var(--astra-space-xs, 4px);
+}
+
+.astra-detail__steps,
+.astra-detail__activity,
+.astra-detail__evidence {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--astra-space-xs, 4px);
+}
+
+.astra-detail__step,
+.astra-detail__activity li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--astra-space-xs, 4px);
+  align-items: baseline;
+}
+
+.astra-detail__step-detail,
+.astra-detail__step-time,
+.astra-detail__elapsed {
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-sm, 0.875rem);
+}

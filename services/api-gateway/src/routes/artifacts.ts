@@ -20,7 +20,11 @@ export interface ArtifactRouteDeps {
   readonly library: LibraryService;
 }
 
-const ArtifactListQuery = PageQuery.extend({ type: ArtifactType.optional() });
+const ArtifactListQuery = PageQuery.extend({
+  type: ArtifactType.optional(),
+  /** §9.2 Outputs: その仕事から生まれたものだけを引く。 */
+  source_task_id: z.uuid().optional(),
+});
 
 /** Phase 0 は JSON の直接アップロードのみ。multipart は Phase 1 で足す。 */
 const InlineUpload = CreateArtifactRequest.extend({
@@ -63,6 +67,7 @@ export function registerArtifactRoutes(app: App, deps: ArtifactRouteDeps): void 
       limit: query.limit,
       cursor: query.cursor,
       type: query.type,
+      sourceTaskId: query.source_task_id,
     });
     return { items: page.items, next_cursor: page.nextCursor };
   });

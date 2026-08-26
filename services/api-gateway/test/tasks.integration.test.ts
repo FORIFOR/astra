@@ -457,6 +457,37 @@ describe.skipIf(!url)('task and artifact http surface', () => {
       expect(body.items.every((a) => a.type === 'DOCUMENT')).toBe(true);
     });
 
+    it('lists only what a given task produced (§9.2 Outputs)', async () => {
+      const mine = (await createTask(`k-${uuidv7()}`)).json<Task>();
+      const other = (await createTask(`k-${uuidv7()}`)).json<Task>();
+
+      const make = async (taskId: string, title: string) =>
+        app.inject({
+          method: 'POST',
+          url: '/v1/artifacts',
+          headers: auth,
+          payload: {
+            type: 'REPORT',
+            title,
+            mime_type: 'text/markdown',
+            content_base64: Buffer.from('x').toString('base64'),
+            source_task_id: taskId,
+          },
+        });
+      await make(mine.id, 'この仕事のもの');
+      await make(other.id, 'よその仕事のもの');
+
+      const items = (
+        await app.inject({
+          method: 'GET',
+          url: `/v1/artifacts?source_task_id=${mine.id}`,
+          headers: auth,
+        })
+      ).json<{ items: Artifact[] }>().items;
+
+      expect(items.map((a) => a.title)).toEqual(['この仕事のもの']);
+    });
+
     it('hides another tenant behind 404', async () => {
       const created = await app.inject({
         method: 'POST',

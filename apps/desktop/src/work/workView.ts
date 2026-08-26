@@ -20,6 +20,9 @@ export interface WorkStep {
   readonly label: string;
   /** 「12 sources」のような補助表示（§6.1）。 */
   readonly detail: string | null;
+  /** §9.2 Progress は timestamps を要求する。分からなければ null。 */
+  readonly startedAt: string | null;
+  readonly endedAt: string | null;
 }
 
 export interface WorkAttention {
@@ -45,6 +48,9 @@ export interface WorkView {
   readonly resultArtifactId: string | null;
   readonly error: { code: string; recovery: string } | null;
   readonly elapsedMs: number | null;
+  /** 始まった時刻 / 終わった時刻。§9.2 Progress の timestamps。 */
+  readonly startedAt: string | null;
+  readonly endedAt: string | null;
   readonly lastSequence: number;
 }
 
@@ -57,6 +63,8 @@ export const emptyWorkView: WorkView = {
   resultArtifactId: null,
   error: null,
   elapsedMs: null,
+  startedAt: null,
+  endedAt: null,
   lastSequence: 0,
 };
 
@@ -69,6 +77,8 @@ interface Mutable {
   resultArtifactId: string | null;
   error: WorkView['error'];
   elapsedMs: number | null;
+  startedAt: string | null;
+  endedAt: string | null;
   lastSequence: number;
 }
 
@@ -82,6 +92,8 @@ function seed(view: WorkView): Mutable {
     resultArtifactId: view.resultArtifactId,
     error: view.error,
     elapsedMs: view.elapsedMs,
+    startedAt: view.startedAt,
+    endedAt: view.endedAt,
     lastSequence: view.lastSequence,
   };
 }
@@ -92,6 +104,8 @@ function upsert(draft: Mutable, index: number, patch: Partial<WorkStep>): void {
     state: 'todo' as StepState,
     label: '',
     detail: null,
+    startedAt: null,
+    endedAt: null,
   };
   draft.steps.set(index, { ...current, ...patch });
 }
@@ -108,6 +122,7 @@ export function applyEvent(view: WorkView, event: EventEnvelope): WorkView {
     case 'task.started': {
       draft.title = event.payload.title;
       draft.status = 'RUNNING';
+      draft.startedAt = event.timestamp;
       draft.stepCount = event.payload.step_count;
       if (event.payload.step_count !== null) {
         for (let i = 0; i < event.payload.step_count; i += 1) {
@@ -117,22 +132,29 @@ export function applyEvent(view: WorkView, event: EventEnvelope): WorkView {
       break;
     }
     case 'tool.started': {
-      upsert(draft, event.payload.step_index, { state: 'active' });
+      upsert(draft, event.payload.step_index, {
+        state: 'active',
+        startedAt: event.timestamp,
+      });
       break;
     }
     case 'tool.completed': {
       upsert(draft, event.payload.step_index, {
         state: event.payload.ok ? 'done' : 'failed',
+        endedAt: event.timestamp,
       });
       break;
     }
     case 'task.progress': {
       const index = event.payload.step_index ?? draft.steps.size;
+      const known = draft.steps.get(index);
       upsert(draft, index, {
         // §6.2: retry 中は失敗として固定せず「再試行中」に置き換える
         state: event.payload.retrying ? 'retrying' : 'active',
         label: event.payload.message,
         detail: event.payload.detail,
+        // 最初に動いた時刻を残す。進捗のたびに上書きすると開始時刻を失う。
+        startedAt: known?.startedAt ?? event.timestamp,
       });
       if (event.payload.step_count !== null) draft.stepCount = event.payload.step_count;
       if (event.payload.elapsed_ms !== null) draft.elapsedMs = event.payload.elapsed_ms;
@@ -158,8 +180,15 @@ export function applyEvent(view: WorkView, event: EventEnvelope): WorkView {
       draft.attention = null;
       draft.resultArtifactId = event.payload.result_artifact_id ?? draft.resultArtifactId;
       draft.elapsedMs = event.payload.duration_ms;
+      draft.endedAt = event.timestamp;
       for (const [index, step] of draft.steps) {
-        if (step.state !== 'done') draft.steps.set(index, { ...step, state: 'done' });
+        if (step.state !== 'done') {
+          draft.steps.set(index, {
+            ...step,
+            state: 'done',
+            endedAt: step.endedAt ?? event.timestamp,
+          });
+        }
       }
       break;
     }
@@ -167,9 +196,10 @@ export function applyEvent(view: WorkView, event: EventEnvelope): WorkView {
       draft.status = 'FAILED';
       draft.attention = null;
       draft.error = { code: event.payload.error.code, recovery: event.payload.error.recovery };
+      draft.endedAt = event.timestamp;
       for (const [index, step] of draft.steps) {
         if (step.state === 'active' || step.state === 'retrying') {
-          draft.steps.set(index, { ...step, state: 'failed' });
+          draft.steps.set(index, { ...step, state: 'failed', endedAt: event.timestamp });
         }
       }
       break;
@@ -177,6 +207,7 @@ export function applyEvent(view: WorkView, event: EventEnvelope): WorkView {
     case 'task.cancelled': {
       draft.status = 'CANCELLED';
       draft.attention = null;
+      draft.endedAt = event.timestamp;
       break;
     }
     default:
@@ -198,6 +229,8 @@ export function applyEvent(view: WorkView, event: EventEnvelope): WorkView {
     resultArtifactId: draft.resultArtifactId,
     error: draft.error,
     elapsedMs: draft.elapsedMs,
+    startedAt: draft.startedAt,
+    endedAt: draft.endedAt,
     lastSequence: draft.lastSequence,
   };
 }

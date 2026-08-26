@@ -39,6 +39,7 @@ function ActivePage(): ReactElement {
           tasks={tasks}
           initialTaskId={focusedTaskId}
           onStartMeeting={requestStartMeeting}
+          onOpenArtifact={openArtifact}
         />
       );
     case 'library':

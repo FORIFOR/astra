@@ -353,12 +353,23 @@ export class AstraClient {
   }
 
   async listArtifacts(
-    options: { limit?: number; cursor?: string; type?: ArtifactType } = {},
+    options: {
+      limit?: number;
+      cursor?: string;
+      type?: ArtifactType;
+      /** その仕事から生まれたものだけ（§9.2 Outputs）。 */
+      sourceTaskId?: string;
+    } = {},
   ): Promise<Page<Artifact>> {
     const parsed = await this.http.request(
       {
         path: '/v1/artifacts',
-        query: { limit: options.limit, cursor: options.cursor, type: options.type },
+        query: {
+          limit: options.limit,
+          cursor: options.cursor,
+          type: options.type,
+          source_task_id: options.sourceTaskId,
+        },
       },
       (value) => page(Artifact).parse(value),
     );

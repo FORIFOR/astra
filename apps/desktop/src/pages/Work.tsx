@@ -9,7 +9,7 @@ import type { TaskView } from '@astra/api-client';
 import type { TaskStatus } from '@astra/contracts';
 import { WorkCard } from '../work/WorkCard.js';
 import { useTaskStream } from '../work/useTaskStream.js';
-import { Receipts } from '../work/Receipts.js';
+import { WorkDetail } from '../work/WorkDetail.js';
 import type { AstraClient } from '@astra/api-client';
 import '../work/work.css';
 
@@ -44,6 +44,7 @@ export function WorkPage({
   tasks = [],
   initialTaskId = null,
   onStartMeeting,
+  onOpenArtifact,
 }: {
   client?: AstraClient | null;
   tasks?: readonly TaskView[];
@@ -51,6 +52,8 @@ export function WorkPage({
   initialTaskId?: string | null;
   /** 会議を始める。会議は 5 つ目のタブにしない（正本 §2）。 */
   onStartMeeting?: (() => void) | undefined;
+  /** 成果物を Library で開く（§9.2 Outputs → §10.2 lineage）。 */
+  onOpenArtifact?: ((artifactId: string) => void) | undefined;
 }): ReactElement {
   const [filter, setFilter] = useState<WorkFilter>('active');
   const [openTaskId, setOpenTaskId] = useState<string | null>(initialTaskId);
@@ -124,11 +127,13 @@ export function WorkPage({
             </p>
           )}
           <WorkCard view={view} onOpen={() => undefined} />
-          {/* §9.2 Outputs / §14.1: 承認した操作は、あとから本人が辿れる */}
-          <section className="astra-work-outputs" aria-label="実行した操作">
-            <h3>実行した操作</h3>
-            <Receipts client={client} taskId={openTaskId} />
-          </section>
+          {/* §9.2: Overview / Progress / Outputs / Evidence / Activity */}
+          <WorkDetail
+            view={view}
+            taskId={openTaskId}
+            client={client}
+            {...(onOpenArtifact ? { onOpenArtifact } : {})}
+          />
         </>
       )}
     </section>

@@ -414,8 +414,22 @@ describe('work surface inside the dock (§4.4 / §6)', () => {
     title: 'A社 商談準備',
     status: 'WAITING_APPROVAL' as const,
     steps: [
-      { index: 0, state: 'done' as const, label: '関連情報を確認', detail: null },
-      { index: 1, state: 'active' as const, label: '競合情報を調査中', detail: '12 sources' },
+      {
+        index: 0,
+        state: 'done' as const,
+        label: '関連情報を確認',
+        detail: null,
+        startedAt: '2026-08-27T04:00:00.000Z',
+        endedAt: '2026-08-27T04:00:05.000Z',
+      },
+      {
+        index: 1,
+        state: 'active' as const,
+        label: '競合情報を調査中',
+        detail: '12 sources',
+        startedAt: '2026-08-27T04:00:05.000Z',
+        endedAt: null,
+      },
     ],
     percent: 50,
     attention: {
@@ -428,6 +442,8 @@ describe('work surface inside the dock (§4.4 / §6)', () => {
     resultArtifactId: null,
     error: null,
     elapsedMs: 12_000,
+    startedAt: '2026-08-27T04:00:00.000Z',
+    endedAt: null,
     lastSequence: 5,
   };
 

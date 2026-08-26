@@ -39,6 +39,8 @@ export interface ListArtifactsQuery {
   readonly limit: number;
   readonly cursor?: string | undefined;
   readonly type?: ArtifactType | undefined;
+  /** ある仕事から生まれたものだけ。§9.2 Outputs / §10.2 lineage。 */
+  readonly sourceTaskId?: string | undefined;
 }
 
 export class LibraryService {
@@ -151,6 +153,9 @@ export class LibraryService {
         .limit(query.limit + 1);
 
       if (query.type) statement = statement.where('type', '=', query.type);
+      if (query.sourceTaskId) {
+        statement = statement.where('source_task_id', '=', query.sourceTaskId);
+      }
       // UUIDv7 の時系列性を使うので、カーソルは id そのもの
       if (query.cursor) statement = statement.where('id', '<', query.cursor);
 
