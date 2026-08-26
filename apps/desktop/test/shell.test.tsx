@@ -10,6 +10,7 @@ import { userEvent } from '@testing-library/user-event';
 import { TOP_LEVEL_TABS, breakpoints, layout } from '@astra/ui-kit';
 import { ThemeProvider } from '../src/state/ThemeProvider.js';
 import { ShellProvider } from '../src/state/ShellProvider.js';
+import { badgeCount } from '../src/shell/Sidebar.js';
 import { AppShell } from '../src/shell/AppShell.js';
 
 /**
@@ -205,5 +206,23 @@ describe('responsive layout (§7.2)', () => {
     render(<App />);
     // 視覚的に隠れても、読み上げには残す
     expect(screen.getByRole('button', { current: 'page' }).textContent).toContain('ホーム');
+  });
+});
+
+describe('the subtle badge (§16)', () => {
+  const at = (severity: string) => ({ severity }) as never;
+
+  it('counts only what the table gives a badge to', () => {
+    // Attention だけが控えめな印。info は Home に出るが印は付けない。
+    expect(badgeCount([at('attention'), at('attention')])).toBe(2);
+    expect(badgeCount([at('info'), at('info')])).toBe(0);
+    // action-required は OS 通知と Work の確認待ちで出る。ここで静かに済ませない。
+    expect(badgeCount([at('action-required')])).toBe(0);
+    // critical は警告で出る
+    expect(badgeCount([at('critical')])).toBe(0);
+  });
+
+  it('shows nothing when there is nothing', () => {
+    expect(badgeCount([])).toBe(0);
   });
 });

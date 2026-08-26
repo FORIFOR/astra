@@ -2,6 +2,7 @@
 
 pub mod context;
 pub mod dock;
+pub mod notify;
 pub mod permission;
 pub mod secrets;
 pub mod shortcut;
@@ -14,6 +15,7 @@ use shortcut::ShortcutRuntime;
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
+        .plugin(tauri_plugin_notification::init())
         .manage(DockRuntime::default())
         .manage(ShortcutRuntime::default())
         .invoke_handler(tauri::generate_handler![
@@ -24,6 +26,7 @@ pub fn run() {
             dock::dock_remember_position,
             context::context_snapshot,
             permission::permission_open_settings,
+            notify::notify_send,
             secrets::secret_set,
             secrets::secret_get,
             secrets::secret_delete,

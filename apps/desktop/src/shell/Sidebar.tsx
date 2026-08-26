@@ -5,7 +5,9 @@ import type { ReactElement } from 'react';
  * トップレベルは 4 つ固定。Plugin を入れても増えない（AC-12）。
  */
 import { TOP_LEVEL_TABS, type TabId } from '@astra/ui-kit';
+import { surfacesFor, type Severity } from '@astra/contracts';
 import { useShell } from '../state/ShellProvider.js';
+import { useOptionalWorkspaceData } from '../state/WorkspaceData.js';
 
 const ICONS: Record<TabId, string> = {
   home: '◉',
@@ -14,9 +16,23 @@ const ICONS: Record<TabId, string> = {
   apps: '⊞',
 };
 
+/**
+ * 控えめな印を出す件数。UI/UX §16「Attention → Home + subtle badge」。
+ *
+ * **数えるのは badge の面を持つ severity だけ。**
+ * info は Home に出るが印は付けない。critical は警告で出るので、
+ * ここで静かに数えて済ませない。
+ */
+export function badgeCount(items: readonly { severity: Severity }[]): number {
+  return items.filter((item) => surfacesFor(item.severity).includes('badge')).length;
+}
+
 export function Sidebar(): ReactElement {
   const { activeTab, goToTab, layout, toggleSidebar } = useShell();
+  // shell はデータが無くても成り立つ面。無ければ印を出さないだけ。
+  const brief = useOptionalWorkspaceData()?.brief ?? null;
   const collapsed = layout.sidebarCollapsed;
+  const badge = brief ? badgeCount([...brief.attention, ...brief.more]) : 0;
 
   return (
     <nav
@@ -51,6 +67,13 @@ export function Sidebar(): ReactElement {
                 <span className={collapsed ? 'astra-visually-hidden' : 'astra-nav-item__label'}>
                   {tab.label}
                 </span>
+                {/* §16: 控えめな印。**数を読み上げにも出す**（§19 色だけに頼らない） */}
+                {tab.id === 'home' && badge > 0 && (
+                  <span className="astra-nav-item__badge">
+                    <span aria-hidden="true">{badge}</span>
+                    <span className="astra-visually-hidden">気にすべきこと {badge} 件</span>
+                  </span>
+                )}
               </button>
             </li>
           );

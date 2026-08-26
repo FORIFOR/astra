@@ -6,6 +6,7 @@ import { WorkspaceDataProvider, useWorkspaceData } from './state/WorkspaceData.j
 import { SignIn } from './auth/SignIn.js';
 import { AppShell } from './shell/AppShell.js';
 import { HomePage } from './pages/Home.js';
+import { useProactiveNotifications } from './home/useProactive.js';
 import { WorkPage } from './pages/Work.js';
 import { LibraryPage } from './pages/Library.js';
 import { AppsPage } from './pages/Apps.js';
@@ -13,6 +14,18 @@ import { MeetingProvider, useMeeting } from './meeting/MeetingProvider.js';
 import { Onboarding } from './onboarding/Onboarding.js';
 import { MeetingLayer } from './meeting/MeetingLayer.js';
 import './shell/shell.css';
+
+/**
+ * 割り込みの層。UI/UX §16。
+ *
+ * どのタブを見ていても、approval 待ちや録音の失敗は届かなければならない。
+ * 画面の中に置くと、そのタブを開いていないときに黙る。
+ */
+function ProactiveLayer(): null {
+  const { brief } = useWorkspaceData();
+  useProactiveNotifications(brief);
+  return null;
+}
 
 function ActivePage(): ReactElement {
   const { activeTab, focusedTaskId, focusedArtifactId, openTask, openArtifact } = useShell();
@@ -110,6 +123,8 @@ function Workspace(): ReactElement {
           </AppShell>
           {/* 会議はタブではなく状態。4 タブは増やさない（正本 §2）。 */}
           <MeetingSurfaceLayer />
+          {/* §16: どのタブを見ていても、確認待ちと失敗は届く。 */}
+          <ProactiveLayer />
         </MeetingProvider>
       </ShellProvider>
     </WorkspaceDataProvider>

@@ -86,6 +86,9 @@ importers:
       '@astra/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
+      '@astra/service-notification':
+        specifier: workspace:*
+        version: link:../../services/notification
       '@astra/ui-kit':
         specifier: workspace:*
         version: link:../../packages/ui-kit
@@ -579,12 +582,6 @@ importers:
       '@astra/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
-      '@astra/db':
-        specifier: workspace:*
-        version: link:../../packages/db
-      '@astra/telemetry':
-        specifier: workspace:*
-        version: link:../../packages/telemetry
     devDependencies:
       vitest:
         specifier: 'catalog:'

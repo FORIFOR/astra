@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Desktop push, proactive heartbeat and future email/mobile delivery.",
+  "description": "Proactive heartbeat and the rules for when Astra may interrupt.",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
@@ -21,9 +21,7 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@astra/contracts": "workspace:*",
-    "@astra/db": "workspace:*",
-    "@astra/telemetry": "workspace:*"
+    "@astra/contracts": "workspace:*"
   },
   "devDependencies": {
     "vitest": "catalog:"

@@ -73,3 +73,14 @@ export function useWorkspaceData(): WorkspaceDataValue {
   if (!value) throw new Error('useWorkspaceData must be used inside <WorkspaceDataProvider>');
   return value;
 }
+
+/**
+ * 無くても動く読み方。
+ *
+ * shell（sidebar / top bar）は**データが無くても成り立つ面**なので、
+ * ここで投げると、データを持たない画面まで落ちる。
+ * 「まだ無い」と「壊れている」を分けるための入口。
+ */
+export function useOptionalWorkspaceData(): WorkspaceDataValue | null {
+  return useContext(WorkspaceDataContext);
+}

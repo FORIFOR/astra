@@ -106,6 +106,17 @@ export const permissions = {
     callStrict<void>('permission_open_settings', { permission }),
 };
 
+/**
+ * OS への通知。UI/UX §16。
+ *
+ * **出せなかったら投げる。**握り潰すと、画面は「知らせた」と思い込んだまま、
+ * 利用者には何も届かない。
+ */
+export const notifications = {
+  send: (severity: string, title: string, body: string) =>
+    callStrict<void>('notify_send', { severity, title, body }),
+};
+
 export const shortcuts = {
   status: () => call<ShortcutStatus[]>('shortcut_status'),
   // 失敗は握り潰さない。変えたつもりで効いていない状態を作らない。
