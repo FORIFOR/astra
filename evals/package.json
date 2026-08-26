@@ -20,7 +20,9 @@
     "@astra/service-share": "workspace:*",
     "@astra/service-meeting": "workspace:*",
     "@astra/service-agent-runtime": "workspace:*",
-    "@astra/service-world-model": "workspace:*"
+    "@astra/service-world-model": "workspace:*",
+    "@astra/service-conversation": "workspace:*",
+    "@astra/service-context": "workspace:*"
   },
   "devDependencies": {
     "@temporalio/testing": "^1.22.0",

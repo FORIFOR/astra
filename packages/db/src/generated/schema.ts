@@ -122,6 +122,32 @@ export interface Conversations {
   updated_at: Generated<Timestamp>;
 }
 
+export interface ConversationStates {
+  active_artifact: string | null;
+  active_meeting: string | null;
+  active_person: string | null;
+  active_project: string | null;
+  active_task: string | null;
+  active_topic: string | null;
+  conversation_id: string;
+  pending_approvals: Generated<string[]>;
+  referents: Generated<Json>;
+  response_mode: Generated<string>;
+  tenant_id: string;
+  updated_at: Generated<Timestamp>;
+}
+
+export interface ConversationSummaries {
+  conversation_id: string;
+  covers_from: string;
+  covers_to: string;
+  created_at: Generated<Timestamp>;
+  id: string;
+  summary: string;
+  tenant_id: string;
+  turn_count: number;
+}
+
 export interface Devices {
   app_version: string;
   created_at: Generated<Timestamp>;
@@ -416,6 +442,7 @@ export interface Turns {
   conversation_id: string;
   created_at: Generated<Timestamp>;
   id: string;
+  interrupted: Generated<boolean>;
   modality: Generated<string>;
   role: string;
   tenant_id: string;
@@ -480,6 +507,8 @@ export interface DB {
   artifacts: Artifacts;
   audit_events: AuditEvents;
   audit_sequences: AuditSequences;
+  conversation_states: ConversationStates;
+  conversation_summaries: ConversationSummaries;
   conversations: Conversations;
   devices: Devices;
   domain_entities: DomainEntities;

@@ -184,6 +184,12 @@ importers:
       '@astra/service-api-gateway':
         specifier: workspace:*
         version: link:../services/api-gateway
+      '@astra/service-context':
+        specifier: workspace:*
+        version: link:../services/context
+      '@astra/service-conversation':
+        specifier: workspace:*
+        version: link:../services/conversation
       '@astra/service-library':
         specifier: workspace:*
         version: link:../services/library
@@ -404,6 +410,12 @@ importers:
       '@astra/service-agent-runtime':
         specifier: workspace:*
         version: link:../agent-runtime
+      '@astra/service-context':
+        specifier: workspace:*
+        version: link:../context
+      '@astra/service-conversation':
+        specifier: workspace:*
+        version: link:../conversation
       '@astra/service-library':
         specifier: workspace:*
         version: link:../library
@@ -474,6 +486,10 @@ importers:
       '@astra/telemetry':
         specifier: workspace:*
         version: link:../../packages/telemetry
+    devDependencies:
+      vitest:
+        specifier: 'catalog:'
+        version: 3.2.7(@types/node@22.20.1)(happy-dom@20.11.6)(terser@5.50.0)(tsx@4.23.12)(yaml@2.9.0)
 
   services/conversation:
     dependencies:
@@ -486,6 +502,13 @@ importers:
       '@astra/telemetry':
         specifier: workspace:*
         version: link:../../packages/telemetry
+      kysely:
+        specifier: 'catalog:'
+        version: 0.29.5
+    devDependencies:
+      vitest:
+        specifier: 'catalog:'
+        version: 3.2.7(@types/node@22.20.1)(happy-dom@20.11.6)(terser@5.50.0)(tsx@4.23.12)(yaml@2.9.0)
 
   services/library:
     dependencies:

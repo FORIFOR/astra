@@ -139,3 +139,10 @@
   color: var(--astra-color-muted);
   font-size: var(--astra-font-size-secondary);
 }
+
+/* 聞き返し。進める代わりに出る（正本 §7.2）。 */
+.astra-dock__clarification {
+  margin: 0 0 var(--astra-space-compact);
+  color: var(--astra-color-warning);
+  font-size: var(--astra-font-size-micro);
+}

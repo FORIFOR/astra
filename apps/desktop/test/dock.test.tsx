@@ -279,3 +279,53 @@ describe('work surface inside the dock (§4.4 / §6)', () => {
     expect(screen.queryByText('A社 商談準備')).toBeNull();
   });
 });
+
+describe('the dock talking to the Conversation Engine (Phase 7)', () => {
+  const conversation = (
+    result: { needsClarification: boolean; answer: string | null } | Error,
+  ) => ({
+    send: vi.fn(async () => {
+      if (result instanceof Error) throw result;
+      return result;
+    }),
+  });
+
+  it('asks back instead of starting work it cannot pin down', async () => {
+    // 進めると、利用者が指したものとは別のものに対して動く（D-49）
+    const engine = conversation({
+      needsClarification: true,
+      answer: '「それ」がどれを指すか分かりませんでした。',
+    });
+    render(<TaskDock conversation={engine} />);
+
+    await userEvent.type(screen.getByRole('textbox'), 'それを共有して');
+    await userEvent.keyboard('{Enter}');
+
+    expect((await screen.findByRole('alert')).textContent).toContain('それ');
+    // 入力は消さない。言い直せるようにしておく。
+    expect((screen.getByRole('textbox') as HTMLTextAreaElement).value).toBe('それを共有して');
+  });
+
+  it('clears the box and gets to work once it understood', async () => {
+    const engine = conversation({ needsClarification: false, answer: null });
+    render(<TaskDock conversation={engine} />);
+
+    await userEvent.type(screen.getByRole('textbox'), '競合を調べて');
+    await userEvent.keyboard('{Enter}');
+
+    await waitFor(() =>
+      expect((screen.getByRole('textbox') as HTMLTextAreaElement).value).toBe(''),
+    );
+    expect(engine.send).toHaveBeenCalledWith('競合を調べて');
+  });
+
+  it('says what went wrong rather than going quiet', async () => {
+    const engine = conversation(new Error('接続できませんでした'));
+    render(<TaskDock conversation={engine} />);
+
+    await userEvent.type(screen.getByRole('textbox'), '何か');
+    await userEvent.keyboard('{Enter}');
+
+    expect((await screen.findByRole('alert')).textContent).toContain('接続できませんでした');
+  });
+});

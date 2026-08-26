@@ -16,16 +16,28 @@ export interface DockMachine {
   startListening(): void;
   stopListening(): void;
   submit(): void;
+  /** 聞き返しの文面。無ければ null。 */
+  readonly clarification: string | null;
   toggleContext(): void;
   /** Esc。1 回目は縮小、2 回目で dismiss。**Task は止めない**。 */
   escape(): void;
   dismiss(): void;
 }
 
-export function useDockMachine(initial: InteractionState = 'READY'): DockMachine {
+/** Conversation Engine へ渡す口。未接続なら状態遷移だけを行う。 */
+export interface DockConversation {
+  send(text: string): Promise<{ needsClarification: boolean; answer: string | null }>;
+}
+
+export function useDockMachine(
+  initial: InteractionState = 'READY',
+  conversation?: DockConversation,
+): DockMachine {
   const [state, setState] = useState<InteractionState>(initial);
   const [contextExpanded, setContextExpanded] = useState(false);
   const [intent, setIntentValue] = useState('');
+  /** 聞き返し。解決できない指示語があったときだけ入る。 */
+  const [clarification, setClarification] = useState<string | null>(null);
   // 「1 回目の Esc で何かを縮めたか」。2 回目の判定に使う。
   const shrunk = useRef(false);
 
@@ -72,16 +84,43 @@ export function useDockMachine(initial: InteractionState = 'READY'): DockMachine
     },
     stopListening: () => setState(intent.length > 0 ? 'TYPING' : 'READY'),
     submit: () => {
-      if (intent.trim().length === 0) return;
+      const text = intent.trim();
+      if (text.length === 0) return;
       shrunk.current = false;
       // §3: UNDERSTANDING は 0.3〜1.2 秒程度の短い status。
-      // 実際の遷移は Conversation Engine 接続後（UI-2）に置き換える。
       setState('UNDERSTANDING');
+
+      // 未接続なら状態だけ動かす（Conversation Engine が無い構成）
+      if (!conversation) return;
+
+      void conversation
+        .send(text)
+        .then((result) => {
+          /*
+           * 指示語が解けなかったときは、**進めずに聞き返す**。
+           * ここで THINKING へ進めると、利用者が指したものとは
+           * 別のものに対して動き出す（正本 §7.2、D-49）。
+           */
+          if (result.needsClarification) {
+            setClarification(result.answer);
+            setState('READY');
+            return;
+          }
+          setClarification(null);
+          setIntentValue('');
+          setState('WORKING');
+        })
+        .catch((error: unknown) => {
+          // 黙って READY に戻さない。何が起きたか言う（UI/UX §21）。
+          setClarification(error instanceof Error ? error.message : String(error));
+          setState('READY');
+        });
     },
     toggleContext: () => {
       shrunk.current = false;
       setContextExpanded((v) => !v);
     },
+    clarification,
     escape,
     dismiss,
   };

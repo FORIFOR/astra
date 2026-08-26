@@ -16,6 +16,7 @@ import {
   salesCrmDataSources,
 } from '@astra/service-agent-runtime';
 import { WorldModelService } from '@astra/service-world-model';
+import { ConversationService } from '@astra/service-conversation';
 import { researchDataSources } from '@astra/service-research';
 import { meetingDataSources } from '@astra/service-meeting';
 import { ShareService } from '@astra/service-share';
@@ -96,6 +97,7 @@ async function main(): Promise<void> {
   // gateway は束ねるだけ（実装仕様 §5.1）。
   const domain = new DomainService({ db });
   const world = new WorldModelService({ db });
+  const conversations = new ConversationService({ db });
   const dataSources = composeDataSources(
     researchDataSources(db),
     meetingDataSources(db),
@@ -122,6 +124,7 @@ async function main(): Promise<void> {
     dataSources,
     domain: { domain, definitions: entityDefinitions(assetReader(registry)) },
     world,
+    conversations,
   });
 
   const shutdown = async (signal: string): Promise<void> => {

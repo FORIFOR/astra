@@ -153,6 +153,23 @@ BOARD="$(curl -fsS "$BASE/v1/plugins/com.astra.research/dashboards/research-runs
 echo "$BOARD" | json 'd["schema"]["items"][0]["type"]' >/dev/null || fail "the dashboard had no schema"
 echo "  dashboards $BEFORE -> $AFTER, first item $(echo "$BOARD" | json 'd["schema"]["items"][0]["type"]')"
 
+say "the conversation engine asks back instead of guessing"
+CONV="$(curl -fsS -X POST "$BASE/v1/conversations" -H "authorization: Bearer $AT" \
+  -H 'content-type: application/json' -d '{"title":"smoke"}' | json 'd["id"]')"
+[ -n "$CONV" ] || fail "the conversation was not created"
+# 指す先が無い「それ」は、進めずに聞き返す
+ASK="$(curl -fsS -X POST "$BASE/v1/conversations/$CONV/turns" -H "authorization: Bearer $AT" \
+  -H 'content-type: application/json' -d '{"text":"それを共有して"}' | json 'd["needs_clarification"]')"
+[ "$ASK" = "True" ] || fail "an unresolved pronoun was not asked about (got $ASK)"
+# 覚えさせれば解ける
+curl -fsS -X POST "$BASE/v1/conversations/$CONV/referents" -H "authorization: Bearer $AT" \
+  -H 'content-type: application/json' \
+  -d "{\"label\":\"Q4提案\",\"target\":{\"kind\":\"artifact\",\"artifact_id\":\"$ARTIFACT\"}}" >/dev/null
+AGAIN="$(curl -fsS -X POST "$BASE/v1/conversations/$CONV/turns" -H "authorization: Bearer $AT" \
+  -H 'content-type: application/json' -d '{"text":"それを共有して"}' | json 'd["needs_clarification"]')"
+[ "$AGAIN" = "False" ] || fail "a known referent was still asked about"
+echo "  asked, then resolved"
+
 say "an installed plugin's agent can be created as a task"
 # Phase 5: core に kind を足さずに、install した宣言から計画が立つ
 curl -fsS -X POST "$BASE/v1/plugins/com.astra.sales-crm/install" -H "authorization: Bearer $AT" \

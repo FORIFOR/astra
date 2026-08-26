@@ -16,7 +16,12 @@ const root = fileURLToPath(new URL('..', import.meta.url));
 /** 実装仕様 §5.1 のテーブル所有権。所有サービス以外は直接 SQL を投げない。 */
 const TABLE_OWNERS = {
   'services/api-gateway': ['tenants', 'users', 'memberships', 'devices', 'sessions'],
-  'services/conversation': ['conversations', 'turns'],
+  'services/conversation': [
+    'conversations',
+    'turns',
+    'conversation_states',
+    'conversation_summaries',
+  ],
   'services/task': ['tasks', 'task_events', 'event_streams', 'approvals', 'action_receipts'],
   'services/library': ['artifacts', 'artifact_versions'],
   'services/share': ['shares', 'share_access_logs'],

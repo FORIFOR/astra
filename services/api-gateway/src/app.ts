@@ -29,6 +29,8 @@ import { registerPluginRoutes } from './routes/plugins.js';
 import { registerShareRoutes } from './routes/shares.js';
 import { registerDomainRoutes, type DomainRouteDeps } from './routes/domain.js';
 import { registerBriefRoutes } from './routes/brief.js';
+import { registerConversationRoutes } from './routes/conversations.js';
+import type { ConversationService } from '@astra/service-conversation';
 import type { WorldModelService } from '@astra/service-world-model';
 import type { DataSourceResolver } from '@astra/service-plugin-registry';
 import {
@@ -59,6 +61,8 @@ export interface AppDeps {
   readonly domain?: DomainRouteDeps;
   /** 「今日気にすべきこと」を組む先（Phase 6 §4）。 */
   readonly world?: WorldModelService;
+  /** Conversation Engine。Task Dock の入口（Phase 7 §3）。 */
+  readonly conversations?: ConversationService;
   readonly bridge?: HostBridge;
   /** SSE のポーリング間隔。テストは短くする。 */
   readonly ssePollIntervalMs?: number;
@@ -121,6 +125,9 @@ export function buildApp(deps: AppDeps): App {
     ...(deps.dataSources === undefined ? {} : { dataSources: deps.dataSources }),
   });
   if (deps.domain) registerDomainRoutes(app, deps.domain);
+  if (deps.conversations) {
+    registerConversationRoutes(app, { conversations: deps.conversations, tasks: deps.tasks });
+  }
   if (deps.world) {
     registerBriefRoutes(app, {
       world: deps.world,

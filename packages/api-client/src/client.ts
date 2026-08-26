@@ -6,6 +6,7 @@
  */
 import {
   Artifact,
+  ConversationState,
   CreateMeetingRequest,
   DailyBrief,
   DashboardView,
@@ -17,6 +18,8 @@ import {
   TokenResponse,
   PluginCatalogEntry,
   PluginInstall,
+  SendTurnRequest,
+  StartConversationRequest,
   Task,
   WorldFact,
   dockStateFor,
@@ -147,6 +150,62 @@ export class AstraClient {
   /** タスクの進捗を購読する。切断からの再開は clientside で面倒を見る（§7.3）。 */
   streamTask(taskId: string, options: StreamOptions): Promise<number> {
     return streamTaskEvents(this.http, taskId, options);
+  }
+
+  // --------------------------------------------------------- conversation
+
+  /** 会話を始める。voice と text は同じ会話（正本 §2）。 */
+  async startConversation(
+    request: StartConversationRequest = { response_mode: 'text' },
+  ): Promise<{ id: string; state: ConversationState }> {
+    return this.http.request(
+      { method: 'POST', path: '/v1/conversations', body: request },
+      (value) => z.object({ id: z.string(), state: ConversationState }).parse(value),
+    );
+  }
+
+  /**
+   * 発話を送る。
+   *
+   * **解決できない指示語があれば、そのまま進めずに聞き返しが返る。**
+   * 呼び出し側はそれを出すだけでよい。
+   */
+  async sendTurn(
+    conversationId: string,
+    request: SendTurnRequest,
+  ): Promise<{ needsClarification: boolean; answer: string | null; intent: string | null }> {
+    const parsed = await this.http.request(
+      {
+        method: 'POST',
+        path: `/v1/conversations/${conversationId}/turns`,
+        body: request,
+      },
+      (value) =>
+        z
+          .object({
+            needs_clarification: z.boolean(),
+            answer: z.object({ text: z.string() }).optional(),
+            intent: z.string().optional(),
+          })
+          .parse(value),
+    );
+    return {
+      needsClarification: parsed.needs_clarification,
+      answer: parsed.answer?.text ?? null,
+      intent: parsed.intent ?? null,
+    };
+  }
+
+  /** 触れたものを覚えさせる。「それ」の解決先になる。 */
+  async rememberReferent(
+    conversationId: string,
+    referent: { label: string; target: Record<string, unknown> },
+  ): Promise<void> {
+    await this.http.send({
+      method: 'POST',
+      path: `/v1/conversations/${conversationId}/referents`,
+      body: referent,
+    });
   }
 
   /**

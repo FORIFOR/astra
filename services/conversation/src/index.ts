@@ -1,11 +1,15 @@
 /**
  * @astra/service-conversation
  *
- * Conversations, turns, streaming responses and context references.
- *
- * Phase 0 scaffold only — no implementation yet.
- * Normative spec: docs/spec/phase-0-implementation-spec.md
- * Product spec:   docs/spec/new_ai_platform_design_spec_v0.1.md
+ * Conversation Engine。正本 §7。
+ * 実装仕様: docs/spec/phase-7-implementation-spec.md
  */
-
-export const SERVICE_CONVERSATION_PACKAGE = '@astra/service-conversation' as const;
+export { routeLane, type LaneDecision, type LaneInput } from './lane.js';
+export {
+  clarificationFor,
+  fullyResolved,
+  remember,
+  resolveReferences,
+  type ResolutionContext,
+} from './reference.js';
+export { ConversationService, type AppendTurnInput, type ConversationDeps } from './service.js';

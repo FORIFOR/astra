@@ -1,0 +1,7 @@
+# 実装仕様 §14.2 の eval harness 契約
+phase: 7
+tags: [acceptance, blocking]
+blocking: true
+description: >
+  Phase 7 実装仕様 §0 の AC7-1〜AC7-10。
+  正本 §6 Context Engine と §7 Conversation Engine を HTTP から検証する。

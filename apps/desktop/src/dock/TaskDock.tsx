@@ -7,7 +7,7 @@
 import { useCallback, useEffect, useMemo, useState, type ReactElement } from 'react';
 import { DOCK_MAX_INPUT_LINES, dockGeometry, dockGeometryFor } from '@astra/ui-kit';
 import type { ContextSource } from '@astra/contracts';
-import { useDockMachine } from './useDockMachine.js';
+import { useDockMachine, type DockConversation } from './useDockMachine.js';
 import { ContextLens } from './ContextLens.js';
 import { WorkCard } from '../work/WorkCard.js';
 import type { WorkView } from '../work/workView.js';
@@ -21,8 +21,11 @@ export function TaskDock({
   onReject,
   onStop,
   onOpenWorkspace,
+  conversation,
 }: {
   initialSources?: readonly ContextSource[];
+  /** Conversation Engine。未接続なら状態遷移だけ行う。 */
+  conversation?: DockConversation;
   /** 進行中の仕事。あれば working 面に出す（§6）。 */
   work?: WorkView | null;
   onApprove?(approvalId: string): void;
@@ -30,7 +33,7 @@ export function TaskDock({
   onStop?(): void;
   onOpenWorkspace?(): void;
 }): ReactElement {
-  const machine = useDockMachine();
+  const machine = useDockMachine('READY', conversation);
   const [sources, setSources] = useState<readonly ContextSource[]>(initialSources);
   const [explanation, setExplanation] = useState<string | null>(null);
 
@@ -94,6 +97,9 @@ export function TaskDock({
     [sources],
   );
 
+  // 聞き返しは、進める代わりに出る。**黙って別のものに対して動かない。**
+  const clarification = machine.clarification;
+
   const statusLabel = useMemo(() => {
     switch (machine.state) {
       case 'LISTENING':
@@ -151,6 +157,13 @@ export function TaskDock({
           <span className="astra-visually-hidden">ファイルや画面を追加する</span>
         </button>
       </div>
+
+      {/* 聞き返しは、進める代わりに出る。**黙って別のものに対して動かない。** */}
+      {clarification && (
+        <p className="astra-dock__clarification" role="alert">
+          {clarification}
+        </p>
+      )}
 
       {statusLabel && !work && (
         <p className="astra-dock__status" role="status">

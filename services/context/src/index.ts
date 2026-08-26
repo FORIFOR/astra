@@ -1,11 +1,15 @@
 /**
  * @astra/service-context
  *
- * Context Capsule assembly and world/context retrieval.
- *
- * Phase 0 scaffold only — no implementation yet.
- * Normative spec: docs/spec/phase-0-implementation-spec.md
- * Product spec:   docs/spec/new_ai_platform_design_spec_v0.1.md
+ * Context Engine。正本 §6。**raw なローカルデータをそのまま外へ出さない。**
+ * 実装仕様: docs/spec/phase-7-implementation-spec.md
  */
-
-export const SERVICE_CONTEXT_PACKAGE = '@astra/service-context' as const;
+export {
+  buildCapsule,
+  containsRawLocalData,
+  decideEgress,
+  highestSensitivity,
+  type CapsuleInput,
+  type EgressDecision,
+  type LocalSignals,
+} from './capsule.js';

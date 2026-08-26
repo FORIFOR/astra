@@ -198,6 +198,49 @@ ALTER TABLE ONLY public.audit_sequences FORCE ROW LEVEL SECURITY;
 
 
 --
+-- Name: conversation_states; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.conversation_states (
+    conversation_id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    active_topic text,
+    active_project text,
+    active_person text,
+    active_artifact uuid,
+    active_task uuid,
+    active_meeting uuid,
+    referents jsonb DEFAULT '[]'::jsonb NOT NULL,
+    pending_approvals uuid[] DEFAULT '{}'::uuid[] NOT NULL,
+    response_mode text DEFAULT 'text'::text NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT conversation_states_response_mode_check CHECK ((response_mode = ANY (ARRAY['text'::text, 'voice'::text, 'mixed'::text])))
+);
+
+ALTER TABLE ONLY public.conversation_states FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: conversation_summaries; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.conversation_summaries (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    conversation_id uuid NOT NULL,
+    covers_from uuid NOT NULL,
+    covers_to uuid NOT NULL,
+    turn_count integer NOT NULL,
+    summary text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT conversation_summaries_summary_check CHECK ((summary <> ''::text)),
+    CONSTRAINT conversation_summaries_turn_count_check CHECK ((turn_count > 0))
+);
+
+ALTER TABLE ONLY public.conversation_summaries FORCE ROW LEVEL SECURITY;
+
+
+--
 -- Name: conversations; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -721,6 +764,7 @@ CREATE TABLE public.turns (
     modality text DEFAULT 'text'::text NOT NULL,
     content jsonb DEFAULT '{}'::jsonb NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
+    interrupted boolean DEFAULT false NOT NULL,
     CONSTRAINT turns_modality_check CHECK ((modality = ANY (ARRAY['text'::text, 'voice'::text, 'mixed'::text]))),
     CONSTRAINT turns_role_check CHECK ((role = ANY (ARRAY['user'::text, 'assistant'::text, 'system'::text])))
 );
@@ -874,6 +918,22 @@ ALTER TABLE ONLY public.audit_events
 
 ALTER TABLE ONLY public.audit_sequences
     ADD CONSTRAINT audit_sequences_pkey PRIMARY KEY (tenant_id);
+
+
+--
+-- Name: conversation_states conversation_states_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.conversation_states
+    ADD CONSTRAINT conversation_states_pkey PRIMARY KEY (conversation_id);
+
+
+--
+-- Name: conversation_summaries conversation_summaries_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.conversation_summaries
+    ADD CONSTRAINT conversation_summaries_pkey PRIMARY KEY (id);
 
 
 --
@@ -1216,6 +1276,13 @@ CREATE UNIQUE INDEX audit_events_prev ON public.audit_events USING btree (tenant
 
 
 --
+-- Name: conversation_summaries_by_conversation; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX conversation_summaries_by_conversation ON public.conversation_summaries USING btree (conversation_id, id);
+
+
+--
 -- Name: conversations_recent; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1496,6 +1563,13 @@ CREATE TRIGGER audit_events_append_only BEFORE DELETE OR UPDATE OR TRUNCATE ON p
 
 
 --
+-- Name: conversation_summaries conversation_summaries_append_only; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER conversation_summaries_append_only BEFORE DELETE OR UPDATE OR TRUNCATE ON public.conversation_summaries FOR EACH STATEMENT EXECUTE FUNCTION public.astra_deny_mutation();
+
+
+--
 -- Name: evidence evidence_append_only; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -1663,6 +1737,78 @@ ALTER TABLE ONLY public.audit_events
 
 ALTER TABLE ONLY public.audit_sequences
     ADD CONSTRAINT audit_sequences_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+
+--
+-- Name: conversation_states conversation_states_active_artifact_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.conversation_states
+    ADD CONSTRAINT conversation_states_active_artifact_fkey FOREIGN KEY (active_artifact) REFERENCES public.artifacts(id);
+
+
+--
+-- Name: conversation_states conversation_states_active_meeting_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.conversation_states
+    ADD CONSTRAINT conversation_states_active_meeting_fkey FOREIGN KEY (active_meeting) REFERENCES public.meetings(id);
+
+
+--
+-- Name: conversation_states conversation_states_active_task_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.conversation_states
+    ADD CONSTRAINT conversation_states_active_task_fkey FOREIGN KEY (active_task) REFERENCES public.tasks(id);
+
+
+--
+-- Name: conversation_states conversation_states_conversation_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.conversation_states
+    ADD CONSTRAINT conversation_states_conversation_id_fkey FOREIGN KEY (conversation_id) REFERENCES public.conversations(id);
+
+
+--
+-- Name: conversation_states conversation_states_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.conversation_states
+    ADD CONSTRAINT conversation_states_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+
+--
+-- Name: conversation_summaries conversation_summaries_conversation_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.conversation_summaries
+    ADD CONSTRAINT conversation_summaries_conversation_id_fkey FOREIGN KEY (conversation_id) REFERENCES public.conversations(id);
+
+
+--
+-- Name: conversation_summaries conversation_summaries_covers_from_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.conversation_summaries
+    ADD CONSTRAINT conversation_summaries_covers_from_fkey FOREIGN KEY (covers_from) REFERENCES public.turns(id);
+
+
+--
+-- Name: conversation_summaries conversation_summaries_covers_to_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.conversation_summaries
+    ADD CONSTRAINT conversation_summaries_covers_to_fkey FOREIGN KEY (covers_to) REFERENCES public.turns(id);
+
+
+--
+-- Name: conversation_summaries conversation_summaries_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.conversation_summaries
+    ADD CONSTRAINT conversation_summaries_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
 
 
 --
@@ -2312,6 +2458,32 @@ CREATE POLICY audit_sequences_tenant_isolation ON public.audit_sequences USING (
 
 
 --
+-- Name: conversation_states; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.conversation_states ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: conversation_states conversation_states_tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY conversation_states_tenant_isolation ON public.conversation_states USING ((tenant_id = public.astra_current_tenant())) WITH CHECK ((tenant_id = public.astra_current_tenant()));
+
+
+--
+-- Name: conversation_summaries; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.conversation_summaries ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: conversation_summaries conversation_summaries_tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY conversation_summaries_tenant_isolation ON public.conversation_summaries USING ((tenant_id = public.astra_current_tenant())) WITH CHECK ((tenant_id = public.astra_current_tenant()));
+
+
+--
 -- Name: conversations; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -2674,3 +2846,4 @@ INSERT INTO schema_migrations (version) VALUES ('20260826030001');
 INSERT INTO schema_migrations (version) VALUES ('20260826040001');
 INSERT INTO schema_migrations (version) VALUES ('20260826050001');
 INSERT INTO schema_migrations (version) VALUES ('20260826060001');
+INSERT INTO schema_migrations (version) VALUES ('20260827010001');

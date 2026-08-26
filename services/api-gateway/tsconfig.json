@@ -44,6 +44,12 @@
     },
     {
       "path": "../world-model"
+    },
+    {
+      "path": "../conversation"
+    },
+    {
+      "path": "../context"
     }
   ]
 }
