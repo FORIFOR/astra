@@ -1468,6 +1468,8 @@ AC-8〜AC-16 は「後から入れられない性質」を Phase 0 で固定す�
 | D-20  | `packages/api-client` を §26 の構成に追加                                                                                        | `packages/contracts` の client 側。desktop / share-web / evals が同じ検証済みクライアントを使う。`packages/db` と同じ扱いの拡張                                            |
 | D-21  | api-gateway に CORS を追加（許可オリジンの既定は空）                                                                             | Vite と Tauri の webview は別オリジンなので、無いと UI から一切叩けない。`*` を既定にすると認証済み API が任意のサイトから叩ける。§19.8                                    |
 | D-22  | 公開 viewer 用の DB スコープ `withShare` と最小権限 BYPASSRLS ロール `astra_share` を追加                                        | 共有リンクの解決はテナント確定前に始まるため、D-14 と同じ循環が起きる。artifact は解決後に `withTenant` で読む。Phase 2 実装仕様 §4.1                                      |
+| D-46  | step の失敗を記録してから投げ直す                                                                                                | 記録しないと `tasks` の行が RUNNING のまま残り、Work タブでは永久に「進行中」に見える。**気づけない失敗**を作らない                                                        |
+| D-47  | `surface: 'local'` の step をクラウドで実行しない                                                                                | `surface` は local-first の境界そのもの（正本 §16）。素通しすると宣言だけの約束になる。Host Bridge が繋がるまでは失敗させる                                                |
 | D-23  | Temporal worker の合流点を `workers/task-worker` として独立させる                                                                | `services/task` が research を直接持つと循環になる。サービス同士を組み立てるのは worker / gateway の役目（ADR 0001）。§26 の /workers に沿った追加                         |
 
 ---

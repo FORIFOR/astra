@@ -39,6 +39,8 @@ const tools = proxyActivities<TaskActivities>({
       'TenantMismatch',
       // タスクやテナントが消えたあとに再試行し続けない
       'TaskGone',
+      // 手元でしか動かせない step。待っても状況は変わらない
+      'LocalSurfaceUnavailable',
     ],
   },
 });
@@ -171,15 +173,66 @@ export async function TaskWorkflow(input: TaskWorkflowInput): Promise<TaskResult
       status = 'RUNNING';
     }
 
-    results.push(await tools.executeStep(input, step));
+    /*
+     * step の失敗を**必ず記録してから**投げ直す。
+     *
+     * ここを素通しにしていた間、tool が失敗するとワークフローだけが落ち、
+     * `tasks` の行は RUNNING のまま残っていた。Work タブでは永久に
+     * 「進行中」に見える。**気づけない失敗**が一番まずい。
+     */
+    try {
+      results.push(await tools.executeStep(input, step));
+    } catch (error) {
+      await failWith(step.index, error);
+      throw error;
+    }
   }
 
   if (cancelRequested !== null) return finishCancelled(input, cancelRequested);
 
-  const artifactId = await tools.composeArtifact(input, plan.artifact, results);
-  await persistence.completeTask(input, artifactId);
-  status = 'COMPLETED';
-  return { artifactId, status: 'COMPLETED' };
+  try {
+    const artifactId = await tools.composeArtifact(input, plan.artifact, results);
+    await persistence.completeTask(input, artifactId);
+    status = 'COMPLETED';
+    return { artifactId, status: 'COMPLETED' };
+  } catch (error) {
+    // 成果物の組み立てで落ちても同じ。宙ぶらりんにしない。
+    await failWith(null, error);
+    throw error;
+  }
+
+  /** 失敗を記録する。記録そのものが落ちても、元の失敗を握りつぶさない。 */
+  async function failWith(stepIdx: number | null, error: unknown): Promise<void> {
+    status = 'FAILED';
+    try {
+      await persistence.failTask(input, {
+        code: 'task.step_failed',
+        message: messageOf(error),
+        step_index: stepIdx,
+        retryable: false,
+      });
+    } catch {
+      // 記録に失敗しても、元の失敗を投げ直すのは呼び出し側の責任
+    }
+  }
+
+  /**
+   * 失敗の理由を取り出す。
+   *
+   * Temporal は activity の失敗を "Activity task failed" で包む。
+   * そのまま記録すると、**何も言っていないエラー**が残る。
+   * 原因の連なりを辿って、実際の理由まで降りる。
+   */
+  function messageOf(error: unknown): string {
+    let current: unknown = error;
+    let deepest = '';
+    // 循環しても止まるよう、辿る深さに上限を置く
+    for (let depth = 0; depth < 8 && current instanceof Error; depth += 1) {
+      if (current.message) deepest = current.message;
+      current = (current as { cause?: unknown }).cause;
+    }
+    return deepest || String(error);
+  }
 
   async function finishCancelled(wf: TaskWorkflowInput, reason: string): Promise<TaskResult> {
     // 実行中の外部書き込みは中断しない。中途半端な副作用を作らない（正本 §24）

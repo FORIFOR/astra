@@ -136,6 +136,9 @@ describe.skipIf(!url)('an installed agent', () => {
     const executor = (toolId: string) => ({
       async execute(_input: unknown, step: { toolId: string; args: Record<string, unknown> }) {
         seen.push({ toolId, args: step.args });
+        // 失敗経路を試すための合図。実際の tool は落ちるものなので、
+        // 落ちたときに何が残るかを確かめておく必要がある。
+        if (step.args['request'] === 'BOOM') throw new Error('the CRM refused the request');
         return {
           result: { tool: toolId },
           detail: null,
@@ -322,6 +325,82 @@ describe.skipIf(!url)('an installed agent', () => {
 
     const running = await tasks.get(tenantId, task.id);
     expect(running.status).toBe('WAITING_APPROVAL');
+  }, 120_000);
+
+  it('will not quietly run a local tool in the cloud', async () => {
+    // `surface` は正本 §16 の local-first の境界そのもの。
+    // Host Bridge へ回す経路が繋がるまでは、実行せずに失敗させる。
+    const LOCAL_ID = 'com.agentest.local';
+    const base = {
+      id: LOCAL_ID,
+      name: 'Finder',
+      version: '1.0.0',
+      publisher: PUBLISHER,
+      verified: false,
+      min_core_version: '0.1.0',
+      category: 'connector',
+      compliance_profile: 'GENERAL',
+      execution_surfaces: ['local'],
+      permissions: [],
+      data_accessed: ['Files the user picked'],
+      tools: [{ id: 'finder.search', risk: 'READ', surface: 'local' }],
+      agents: [{ id: 'finder', skill: 'skills/analyst.md', tools: ['finder.search'] }],
+    };
+    const unsigned = await loadManifest(base, 'local-e2e');
+    const manifest = await loadManifest(
+      { ...base, signature: signManifest(unsigned.canonical, keys.privateKey) },
+      'local-e2e',
+    );
+    await registry.publish(manifest, await skillAsset());
+    await registry.install(tenantId, userId, LOCAL_ID, { version: '1.0.0', granted_scopes: [] });
+
+    seen.length = 0;
+    const { task } = await tasks.create({
+      tenantId,
+      userId,
+      request: { kind: agentKindFor(LOCAL_ID, 'finder'), input: {} },
+      idempotencyKey: `local-${uuidv7()}`,
+    });
+    // ワークフローは失敗する。失敗そのものは想定どおり。
+    await expect(
+      env.client.workflow.getHandle(workflowIdFor(tenantId, task.id)).result(),
+    ).rejects.toThrow();
+
+    // クラウドで代わりに走らせない
+    expect(seen).toEqual([]);
+    // **宙ぶらりんにしない。**RUNNING のまま残ると、誰も気づけない
+    const done = await tasks.get(tenantId, task.id);
+    expect(done.status).toBe('FAILED');
+    expect(done.error?.message ?? '').toContain('local');
+  }, 120_000);
+
+  it('does not leave a task running when a tool simply fails', async () => {
+    /*
+     * local surface に限らない一般の話。ここを素通しにしていた間、
+     * tool が失敗するとワークフローだけが落ち、`tasks` の行は RUNNING の
+     * まま残っていた。Work タブでは永久に「進行中」に見える。
+     */
+    // 前のテストが uninstall しているので、ここで入れ直す（順序に頼らない）
+    await registry.install(tenantId, userId, PLUGIN_ID, {
+      version: '1.0.0',
+      granted_scopes: ['artifacts.read', 'artifacts.write'],
+    });
+
+    const { task } = await tasks.create({
+      tenantId,
+      userId,
+      request: { kind: agentKindFor(PLUGIN_ID, 'analyst'), input: { message: 'BOOM' } },
+      idempotencyKey: `boom-${uuidv7()}`,
+    });
+    await expect(
+      env.client.workflow.getHandle(workflowIdFor(tenantId, task.id)).result(),
+    ).rejects.toThrow();
+
+    const done = await tasks.get(tenantId, task.id);
+    expect(done.status).toBe('FAILED');
+    // **何も言っていないエラーを残さない。**理由まで降りていること
+    expect(done.error?.message ?? '').toContain('the CRM refused the request');
+    expect(done.error?.step_index).toBe(0);
   }, 120_000);
 
   it('refuses an agent id the plugin never declared', async () => {

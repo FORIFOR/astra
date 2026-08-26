@@ -98,3 +98,50 @@ describe('what the policy then decides', () => {
     expect(decision.requiresAudit).toBe(false);
   });
 });
+
+describe('the local-first boundary', () => {
+  it('is a promise, so a local tool must not silently run in the cloud', () => {
+    // `surface` は正本 §16 の境界そのもの。素通しすると宣言だけの約束になる。
+    const plan = planInstalledAgent(
+      agent({
+        complianceProfile: 'GENERAL',
+        tools: [
+          { id: 'finder.search', risk: 'READ', surface: 'local', requiresConfirmation: false },
+        ],
+      }),
+      {},
+    );
+    expect(plan.steps[0]!.surface).toBe('local');
+  });
+});
+
+describe('what a failed step leaves behind', () => {
+  it('unwraps the reason instead of recording the wrapper', () => {
+    // Temporal は activity の失敗を "Activity task failed" で包む。
+    // そのまま記録すると、何も言っていないエラーが残る。
+    const cause = new Error('finder.search is declared local');
+    const wrapper = new Error('Activity task failed', { cause });
+
+    let current: unknown = wrapper;
+    let deepest = '';
+    for (let depth = 0; depth < 8 && current instanceof Error; depth += 1) {
+      if (current.message) deepest = current.message;
+      current = (current as { cause?: unknown }).cause;
+    }
+    expect(deepest).toBe('finder.search is declared local');
+  });
+
+  it('stops walking a cycle instead of hanging', () => {
+    const a = new Error('a');
+    const b = new Error('b', { cause: a });
+    (a as { cause?: unknown }).cause = b;
+
+    let current: unknown = a;
+    let steps = 0;
+    for (let depth = 0; depth < 8 && current instanceof Error; depth += 1) {
+      steps += 1;
+      current = (current as { cause?: unknown }).cause;
+    }
+    expect(steps).toBe(8);
+  });
+});

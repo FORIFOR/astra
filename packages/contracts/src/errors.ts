@@ -23,6 +23,7 @@ export const ERROR_CODES = [
   'common.unavailable',
   // task
   'task.not_found',
+  'task.step_failed',
   'task.unknown_kind',
   'task.invalid_state',
   'task.idempotency_conflict',
@@ -84,6 +85,7 @@ const STATUS: Partial<Record<ErrorCode, number>> = {
   'common.internal': 500,
   'common.unavailable': 503,
   'task.not_found': 404,
+  'task.step_failed': 500,
   'task.unknown_kind': 400,
   'task.invalid_state': 409,
   'task.idempotency_conflict': 409,

@@ -46,6 +46,11 @@ export interface ActivityDeps {
   readonly publisher: EventPublisher;
   /** tool id から引く。無ければ何もしない step として扱う。 */
   readonly executors?: Readonly<Record<string, StepExecutor>>;
+  /**
+   * `surface: 'local'` の step を手元で実行する先（Host Bridge）。
+   * **未接続なら local の step は実行しない。**クラウドで代わりに走らせない。
+   */
+  readonly hostExecutor?: StepExecutor;
   /** 監査に載せるアプリ版など、将来の付帯情報 */
   readonly now?: () => Date;
 }
@@ -302,7 +307,21 @@ export function createTaskActivities(deps: ActivityDeps): TaskActivities {
         ),
       );
 
-      const executor = deps.executors?.[step.toolId];
+      /*
+       * local と宣言された tool を、クラウドで黙って実行しない。
+       *
+       * `surface` は正本 §16 の local-first の境界そのもので、
+       * 「この操作は手元でしか動かない」という約束。ここを素通しすると、
+       * **宣言だけの約束**になる。Host Bridge へ回す経路が繋がるまでは断る。
+       */
+      if (step.surface === 'local' && !deps.hostExecutor) {
+        throw ApplicationFailure.nonRetryable(
+          `${step.toolId} is declared local, but this worker has no host to run it on`,
+          'LocalSurfaceUnavailable',
+        );
+      }
+
+      const executor = step.surface === 'local' ? deps.hostExecutor : deps.executors?.[step.toolId];
       const outcome = executor
         ? await executor.execute(input, step)
         : // 登録が無い tool は何もしない。Phase 0 の echo がこれにあたる。

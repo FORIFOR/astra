@@ -76,6 +76,20 @@ export class ShareService {
     // 他テナントの artifact を共有できないこと。RLS で見えないので 404 になる。
     const artifact = await this.#library.get(tenantId, artifactId);
 
+    /*
+     * 規制データをリンクで外へ出さない。正本 §21：REGULATED の cloud 送信可否は
+     * plugin policy が決めるが、**その規則はまだ実行していない**（OQ-25）。
+     * 判定できないまま外へ出すのは、判定して許すのとは違う。ここでは断る。
+     *
+     * 規則エンジンが入ったら、この分岐を policy の評価へ置き換える。
+     */
+    if (artifact.sensitivity === 'REGULATED') {
+      throw new AstraError(
+        'plugin.permission_denied',
+        'a REGULATED artifact cannot be shared by link until its policy can be evaluated',
+      );
+    }
+
     const shareId = uuidv7();
     const { token, secret } = mintShareToken(shareId);
     const now = this.#now();
