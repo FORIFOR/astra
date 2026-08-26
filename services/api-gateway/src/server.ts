@@ -5,6 +5,7 @@ import { createLogger } from '@astra/telemetry';
 import { FsObjectStore, LibraryService } from '@astra/service-library';
 import { TaskService, TemporalTaskRuntime } from '@astra/service-task';
 import { PluginRegistryService } from '@astra/service-plugin-registry';
+import { ShareService } from '@astra/service-share';
 import { buildApp } from './app.js';
 import { assertPathsExist, gatewayConfigFromEnv } from './config.js';
 import { keyConfigFromEnv, loadSigningKeys } from './auth/keys.js';
@@ -46,6 +47,7 @@ async function main(): Promise<void> {
     namespace: process.env['TEMPORAL_NAMESPACE'] ?? 'default',
   });
   const tasks = new TaskService(db, runtime);
+  const shares = new ShareService({ db, library, shareHost: config.shareHost });
   const registry = new PluginRegistryService({ db, coreVersion: config.version });
   // 同梱プラグインは起動のたびに読み直す。バンドルが正、DB はその写し。
   await registry.seedBuiltins(config.builtinPluginsDir);

@@ -36,6 +36,10 @@ export const AUDIT_ACTIONS = [
   'task.cancelled',
   'artifact.created',
   'artifact.downloaded',
+  // Phase 2: 共有は外部への公開なので必ず監査に残す（正本 §2.3）
+  'artifact.shared',
+  'artifact.share_revoked',
+  'artifact.share_accessed',
   'host.capability_denied',
 ] as const;
 

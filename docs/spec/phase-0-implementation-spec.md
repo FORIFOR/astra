@@ -1316,7 +1316,7 @@ hash(n) = sha256(canonicalJson({ ...row(n), prev_hash: hash(n-1) }))
 `plugin.install` `plugin.uninstall` `plugin.permission.grant` `plugin.permission.revoke`
 `approval.requested` `approval.decided` `approval.expired`
 `task.created` `task.cancelled`
-`artifact.created` `artifact.downloaded`
+`artifact.created` `artifact.downloaded` `artifact.shared` `artifact.share_revoked` `artifact.share_accessed`
 `host.capability_denied`
 
 ### 13.3 SLO 計測の下地

@@ -32,6 +32,7 @@ ADMIN_PREFIX="${ADMIN_USER:+${ADMIN_USER}:${PGPASSWORD}@}"
 ADMIN_URL="postgres://${ADMIN_PREFIX}${HOST}:${PORT}/${DB}?sslmode=disable"
 APP_URL="postgres://astra_app:${APP_PASSWORD}@${HOST}:${PORT}/${DB}?sslmode=disable"
 IDENTITY_URL="postgres://astra_identity:astra_identity@${HOST}:${PORT}/${DB}?sslmode=disable"
+SHARE_URL="postgres://astra_share:astra_share@${HOST}:${PORT}/${DB}?sslmode=disable"
 
 cleanup() {
   local rc=$?
@@ -40,6 +41,7 @@ cleanup() {
   psql "postgres://${ADMIN_PREFIX}${HOST}:${PORT}/postgres" -X -q -c 'DROP ROLE IF EXISTS astra_app' >/dev/null 2>&1 || true
   psql "postgres://${ADMIN_PREFIX}${HOST}:${PORT}/postgres" -X -q -c 'DROP ROLE IF EXISTS astra_migrate' >/dev/null 2>&1 || true
   psql "postgres://${ADMIN_PREFIX}${HOST}:${PORT}/postgres" -X -q -c 'DROP ROLE IF EXISTS astra_identity' >/dev/null 2>&1 || true
+  psql "postgres://${ADMIN_PREFIX}${HOST}:${PORT}/postgres" -X -q -c 'DROP ROLE IF EXISTS astra_share' >/dev/null 2>&1 || true
   exit $rc
 }
 trap cleanup EXIT
@@ -60,5 +62,6 @@ fi
 
 TEST_DATABASE_URL="$APP_URL" \
 TEST_IDENTITY_DATABASE_URL="$IDENTITY_URL" \
+TEST_SHARE_DATABASE_URL="$SHARE_URL" \
 TEST_ADMIN_DATABASE_URL="$ADMIN_URL" \
   "$@"

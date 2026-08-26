@@ -16,6 +16,11 @@ BEGIN
     -- マイグレーションと世界横断の保守だけがこのロールを使う
     CREATE ROLE astra_migrate LOGIN PASSWORD 'astra_migrate' BYPASSRLS;
   END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'astra_share') THEN
+    -- 公開 viewer 専用（逸脱 D-22）。共有リンクの解決はテナントが分からない状態で
+    -- 始まるため。BYPASSRLS だが GRANT を共有テーブルに限定する。
+    CREATE ROLE astra_share LOGIN PASSWORD 'astra_share' BYPASSRLS;
+  END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'astra_identity') THEN
     -- 認証専用（逸脱 D-14）。ログインとサインアップはテナント確定前に走るため、
     -- RLS 下では users を引けない。BYPASSRLS だが GRANT を identity テーブルに限定し、
@@ -33,3 +38,8 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public
 GRANT USAGE ON SCHEMA public TO astra_identity;
 GRANT SELECT, INSERT, UPDATE ON tenants, users, memberships, devices, sessions
   TO astra_identity;
+
+-- 公開 viewer 専用ロール: 共有テーブルだけ。artifact は解決後に withTenant で読む。
+GRANT USAGE ON SCHEMA public TO astra_share;
+GRANT SELECT, UPDATE ON shares TO astra_share;
+GRANT INSERT ON share_access_logs TO astra_share;

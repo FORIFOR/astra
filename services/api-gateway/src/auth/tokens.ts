@@ -10,6 +10,9 @@ import {
   AccessTokenClaims,
   AstraError,
   DEVICE_TOKEN_TTL_SECONDS,
+  SHARE_VIEW_AUDIENCE,
+  SHARE_VIEW_TOKEN_TTL_SECONDS,
+  ShareViewClaims,
   uuidv7,
 } from '@astra/contracts';
 import type { SigningKeys } from './keys.js';
@@ -70,6 +73,44 @@ export class JwtTokens implements TokenVerifier {
       .setIssuedAt(issuedAt)
       .setExpirationTime(issuedAt + ttlSeconds)
       .sign(this.#config.keys.privateKey);
+  }
+
+  /**
+   * 共有 viewer 用の短命トークン。unlock を通った相手にだけ渡す。
+   * 別 audience にしてあるので、これで REST を叩くことはできない。
+   */
+  async issueShareViewToken(
+    claims: { shareId: string; tenantId: string; artifactId: string; allowDownload: boolean },
+    now: Date = new Date(),
+  ): Promise<string> {
+    const issuedAt = Math.floor(now.getTime() / 1000);
+    return new SignJWT({ tid: claims.tenantId, art: claims.artifactId, dl: claims.allowDownload })
+      .setProtectedHeader({ alg: 'EdDSA', kid: this.#config.keys.keyId })
+      .setIssuer(this.#config.issuer)
+      .setAudience(SHARE_VIEW_AUDIENCE)
+      .setSubject(claims.shareId)
+      .setIssuedAt(issuedAt)
+      .setExpirationTime(issuedAt + SHARE_VIEW_TOKEN_TTL_SECONDS)
+      .sign(this.#config.keys.privateKey);
+  }
+
+  async verifyShareViewToken(token: string): Promise<ShareViewClaims> {
+    let payload: unknown;
+    try {
+      const result = await jwtVerify(token, this.#config.keys.publicKey, {
+        issuer: this.#config.issuer,
+        audience: SHARE_VIEW_AUDIENCE,
+        algorithms: ['EdDSA'],
+        clockTolerance: 5,
+      });
+      payload = result.payload;
+    } catch {
+      // 期限切れも不正も同じ扱い。共有相手に内部状態を教えない。
+      throw new AstraError('auth.invalid_token', 'share view token is not valid');
+    }
+    const parsed = ShareViewClaims.safeParse(payload);
+    if (!parsed.success) throw new AstraError('auth.invalid_token', 'share view claims mismatch');
+    return parsed.data;
   }
 
   verifyAccessToken(token: string): Promise<AccessTokenClaims> {

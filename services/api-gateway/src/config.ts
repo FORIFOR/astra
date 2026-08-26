@@ -23,6 +23,13 @@ export interface GatewayConfig {
    * **既定は空**。許すオリジンは必ず明示させる（`*` を既定にしない）。
    */
   readonly allowedOrigins: readonly string[];
+  /** 公開 viewer の場所。共有リンクの組み立てに使う。 */
+  readonly shareHost: string;
+  /**
+   * requester のハッシュに混ぜる値。生の IP を監査へ残さないため（正本 §21）。
+   * 変わると過去のログと突き合わせられなくなるので、環境ごとに固定する。
+   */
+  readonly requesterSalt: string;
 }
 
 const ENVIRONMENTS: readonly Environment[] = ['development', 'test', 'staging', 'production'];
@@ -49,6 +56,8 @@ export function gatewayConfigFromEnv(env: NodeJS.ProcessEnv = process.env): Gate
     builtinPluginsDir: path.resolve(env['ASTRA_BUILTIN_PLUGINS_DIR'] ?? './plugins/builtin'),
     objectStoreRoot: path.resolve(env['ASTRA_OBJECT_STORE_ROOT'] ?? './.data/objects'),
     allowedOrigins: parseOrigins(env['ASTRA_ALLOWED_ORIGINS'], parseEnvironment(env['ASTRA_ENV'])),
+    shareHost: env['ASTRA_SHARE_HOST'] ?? 'http://localhost:1430',
+    requesterSalt: env['ASTRA_REQUESTER_SALT'] ?? 'astra-development-salt',
   };
 }
 

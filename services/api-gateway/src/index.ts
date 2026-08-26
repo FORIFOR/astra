@@ -27,6 +27,7 @@ export { requirePrincipal } from './auth/middleware.js';
 export { registerTaskRoutes, type TaskRouteDeps } from './routes/tasks.js';
 export { registerArtifactRoutes, type ArtifactRouteDeps } from './routes/artifacts.js';
 export { registerPluginRoutes, type PluginRouteDeps } from './routes/plugins.js';
+export { registerShareRoutes, type ShareRouteDeps } from './routes/shares.js';
 export { HostBridge, type HostCallOptions, type HostSocket } from './host/bridge.js';
 export { registerHostRoutes, extractDeviceToken, type HostRouteDeps } from './host/routes.js';
 export {

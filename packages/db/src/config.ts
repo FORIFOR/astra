@@ -13,8 +13,16 @@ export interface DbConfig {
    * 未設定なら `withIdentity` は明示的に失敗する。黙ってアプリロールへ落とさない。
    */
   readonly identityUrl?: string | undefined;
+  /**
+   * 公開 viewer 用の接続 URL（任意）。共有リンクの解決はテナントが分からない状態で
+   * 始まるので、`shares` と `share_access_logs` にだけ GRANT された BYPASSRLS ロール
+   * `astra_share` を使う（逸脱 D-22）。未設定なら `withShare` は明示的に失敗する。
+   */
+  readonly shareUrl?: string | undefined;
   readonly maxConnections: number;
   readonly identityMaxConnections: number;
+  /** 省略可。共有 viewer は認証ほど頻繁に呼ばれない。 */
+  readonly shareMaxConnections?: number | undefined;
   readonly idleTimeoutMillis: number;
   readonly connectionTimeoutMillis: number;
   /** 1 文あたりの上限。暴走クエリに接続を占有させない。 */
@@ -36,9 +44,11 @@ export function dbConfigFromEnv(env: NodeJS.ProcessEnv = process.env): DbConfig 
   return {
     url,
     identityUrl: env['ASTRA_DB_IDENTITY_URL'],
+    shareUrl: env['ASTRA_DB_SHARE_URL'],
     maxConnections: int(env['ASTRA_DB_POOL_MAX'], 10),
     // identity は認証時にしか使わないので絞る。誤用を圧力で気づけるようにもする。
     identityMaxConnections: int(env['ASTRA_DB_IDENTITY_POOL_MAX'], 4),
+    shareMaxConnections: int(env['ASTRA_DB_SHARE_POOL_MAX'], 4),
     idleTimeoutMillis: int(env['ASTRA_DB_IDLE_TIMEOUT_MS'], 30_000),
     connectionTimeoutMillis: int(env['ASTRA_DB_CONNECT_TIMEOUT_MS'], 5_000),
     statementTimeoutMillis: int(env['ASTRA_DB_STATEMENT_TIMEOUT_MS'], 30_000),

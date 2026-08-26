@@ -9,6 +9,7 @@
  *   withTenant   テナントに属する全処理。既定。
  *   withSystem   テナントを持たない処理（プラグインカタログ）。RLS 対象は 1 行も見えない。
  *   withIdentity 認証だけ。テナント確定前に users を引く必要があるため（逸脱 D-14）。
+ *   withShare    共有リンクの解決だけ。同じ理由でテナントが分からない（逸脱 D-22）。
  */
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { sql, type Transaction } from 'kysely';
@@ -17,7 +18,7 @@ import type { Db, DbHandle } from './pool.js';
 import type { Database } from './types.js';
 
 export type ScopedDb = Transaction<Database>;
-export type ScopeKind = 'tenant' | 'system' | 'identity';
+export type ScopeKind = 'tenant' | 'system' | 'identity' | 'share';
 
 interface Scope {
   readonly tenantId: string | null;
@@ -136,6 +137,29 @@ export async function withIdentity<T>(
     );
   }
   return runScoped(handle.identity, 'identity', null, fn);
+}
+
+/**
+ * 共有リンクの解決専用スコープ（逸脱 D-22）。
+ *
+ * 公開 viewer はトークンしか持たない。テナントが分からないので RLS 下では
+ * `shares` を引けない。`withIdentity` と同じ形で、**共有テーブルにしか
+ * GRANT されていない** BYPASSRLS ロールを使う。
+ *
+ * ここで触ってよいのは `shares` と `share_access_logs` だけ。
+ * artifact の読み出しは、解決した share の `tenant_id` で `withTenant` へ移る。
+ * BYPASSRLS の影響範囲を GRANT で物理的に閉じ込めるのが要点。
+ */
+export async function withShare<T>(handle: DbHandle, fn: (tx: ScopedDb) => Promise<T>): Promise<T> {
+  const existing = scope.getStore();
+  if (existing) rejectNesting(existing, 'share');
+  if (!handle.share) {
+    throw new AstraError(
+      'common.internal',
+      'share scope requires ASTRA_DB_SHARE_URL; refusing to fall back to the app role',
+    );
+  }
+  return runScoped(handle.share, 'share', null, fn);
 }
 
 /** 現在のトランザクションで DB 側が見ているテナント。テストと診断用。 */

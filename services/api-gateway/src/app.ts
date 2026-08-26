@@ -13,6 +13,7 @@ import type { DbHandle } from '@astra/db';
 import type { TaskService } from '@astra/service-task';
 import type { LibraryService } from '@astra/service-library';
 import type { PluginRegistryService } from '@astra/service-plugin-registry';
+import type { ShareService } from '@astra/service-share';
 import type { Logger } from '@astra/telemetry';
 import { allowsDevelopmentRoutes, type GatewayConfig } from './config.js';
 import { installErrorHandlers } from './errors.js';
@@ -25,6 +26,7 @@ import type { JwtTokens } from './auth/tokens.js';
 import { registerTaskRoutes } from './routes/tasks.js';
 import { registerArtifactRoutes } from './routes/artifacts.js';
 import { registerPluginRoutes } from './routes/plugins.js';
+import { registerShareRoutes } from './routes/shares.js';
 import { HostBridge } from './host/bridge.js';
 import { registerHostRoutes } from './host/routes.js';
 import type { RateLimiter } from './rate-limit/index.js';
@@ -40,6 +42,7 @@ export interface AppDeps {
   readonly tasks: TaskService;
   readonly library: LibraryService;
   readonly registry: PluginRegistryService;
+  readonly shares?: ShareService;
   readonly bridge?: HostBridge;
   /** SSE のポーリング間隔。テストは短くする。 */
   readonly ssePollIntervalMs?: number;
@@ -98,6 +101,16 @@ export function buildApp(deps: AppDeps): App {
   });
   registerArtifactRoutes(app, { library: deps.library });
   registerPluginRoutes(app, { registry: deps.registry });
+  if (deps.shares) {
+    registerShareRoutes(app, {
+      shares: deps.shares,
+      tokens: deps.tokens,
+      db: deps.db,
+      rateLimiter: deps.rateLimiter,
+      requesterSalt: deps.config.requesterSalt,
+      shareHost: deps.config.shareHost,
+    });
+  }
 
   // WebSocket のルートは、プラグインの読み込みが終わったスコープで登録する。
   // 同じ tick で app.register(websocket) の直後に足すと、まだ `websocket: true` を

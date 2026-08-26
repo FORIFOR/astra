@@ -23,6 +23,8 @@ export type JsonPrimitive = boolean | number | string | null;
 
 export type JsonValue = JsonArray | JsonObject | JsonPrimitive;
 
+export type Numeric = ColumnType<string, number | string, number | string>;
+
 export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 
 export interface ActionReceipts {
@@ -141,6 +143,24 @@ export interface EventStreams {
   tenant_id: string;
 }
 
+export interface Evidence {
+  claim: string;
+  contradicts: Generated<string[]>;
+  created_at: Generated<Timestamp>;
+  freshness_score: Numeric;
+  id: string;
+  published_at: Timestamp | null;
+  publisher: string | null;
+  quality_score: Numeric;
+  research_run_id: string;
+  retrieved_at: Generated<Timestamp>;
+  source_type: string;
+  source_url: string;
+  support_text_ref: string | null;
+  supports: Generated<string[]>;
+  tenant_id: string;
+}
+
 export interface Memberships {
   created_at: Generated<Timestamp>;
   role: string;
@@ -201,6 +221,20 @@ export interface PluginVersions {
   yanked_at: Timestamp | null;
 }
 
+export interface ResearchRuns {
+  confidence: string | null;
+  created_at: Generated<Timestamp>;
+  id: string;
+  question: string;
+  report_artifact_id: string | null;
+  source_count: Generated<number>;
+  status: string;
+  sub_queries: Generated<Json>;
+  task_id: string;
+  tenant_id: string;
+  updated_at: Generated<Timestamp>;
+}
+
 export interface SchemaMigrations {
   version: string;
 }
@@ -216,6 +250,35 @@ export interface Sessions {
   rotated_from: string | null;
   tenant_id: string;
   user_id: string;
+}
+
+export interface ShareAccessLogs {
+  accessed_at: Generated<Timestamp>;
+  id: string;
+  outcome: string;
+  reason: string | null;
+  requester_hash: string | null;
+  share_id: string;
+  tenant_id: string;
+}
+
+export interface Shares {
+  access_count: Generated<number>;
+  allow_download: Generated<boolean>;
+  allowlist: Generated<string[]>;
+  artifact_id: string;
+  consumed_at: Timestamp | null;
+  created_at: Generated<Timestamp>;
+  created_by: string;
+  expires_at: Timestamp;
+  id: string;
+  one_time: Generated<boolean>;
+  password_hash: string | null;
+  revoked_at: Timestamp | null;
+  revoked_reason: string | null;
+  tenant_id: string;
+  token_hash: string;
+  watermark: Generated<boolean>;
 }
 
 export interface TaskEvents {
@@ -289,14 +352,18 @@ export interface DB {
   conversations: Conversations;
   devices: Devices;
   event_streams: EventStreams;
+  evidence: Evidence;
   memberships: Memberships;
   plugin_installs: PluginInstalls;
   plugin_permissions: PluginPermissions;
   plugin_publishers: PluginPublishers;
   plugin_versions: PluginVersions;
   plugins: Plugins;
+  research_runs: ResearchRuns;
   schema_migrations: SchemaMigrations;
   sessions: Sessions;
+  share_access_logs: ShareAccessLogs;
+  shares: Shares;
   task_events: TaskEvents;
   tasks: Tasks;
   tenants: Tenants;

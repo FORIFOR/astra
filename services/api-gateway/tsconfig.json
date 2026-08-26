@@ -25,6 +25,9 @@
       "path": "../../services/plugin-registry"
     },
     {
+      "path": "../../services/share"
+    },
+    {
       "path": "../../services/task"
     }
   ]

@@ -15,6 +15,7 @@ export {
   withTenant,
   withSystem,
   withIdentity,
+  withShare,
   currentTenantId,
   currentScopeKind,
   readTenantSetting,

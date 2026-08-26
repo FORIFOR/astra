@@ -15,6 +15,8 @@ export interface DbHandle {
   readonly app: Db;
   /** 認証専用。identity テーブルにしか権限が無い BYPASSRLS ロール。未設定なら null。 */
   readonly identity: Db | null;
+  /** 公開 viewer 専用。共有テーブルにしか権限が無い BYPASSRLS ロール。未設定なら null。 */
+  readonly share: Db | null;
   close(): Promise<void>;
 }
 
@@ -52,12 +54,20 @@ export function createDb(config: DbConfig): DbHandle {
     identity = new Kysely<Database>({ dialect: new PostgresDialect({ pool: identityPool }) });
   }
 
+  let share: Db | null = null;
+  if (config.shareUrl) {
+    const sharePool = makePool(config.shareUrl, config, config.shareMaxConnections ?? 4, 'share');
+    share = new Kysely<Database>({ dialect: new PostgresDialect({ pool: sharePool }) });
+  }
+
   return {
     app,
     identity,
+    share,
     async close() {
       await app.destroy();
       if (identity) await identity.destroy();
+      if (share) await share.destroy();
     },
   };
 }

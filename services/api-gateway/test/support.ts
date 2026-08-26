@@ -9,6 +9,7 @@ import { createLogger } from '@astra/telemetry';
 import { FsObjectStore, LibraryService } from '@astra/service-library';
 import { InMemoryTaskRuntime, TaskService } from '@astra/service-task';
 import { PluginRegistryService } from '@astra/service-plugin-registry';
+import { ShareService } from '@astra/service-share';
 import { buildApp } from '../src/app.js';
 import type { HostBridge } from '../src/host/bridge.js';
 import { MemoryRateLimiter } from '../src/rate-limit/memory.js';
@@ -23,10 +24,12 @@ const sink = new Writable({
   },
 });
 
-export function testDbConfig(url: string, identityUrl?: string): DbConfig {
+export function testDbConfig(url: string, identityUrl?: string, shareUrl?: string): DbConfig {
   return {
     url,
     identityUrl,
+    shareUrl,
+    shareMaxConnections: 2,
     maxConnections: 8,
     identityMaxConnections: 2,
     idleTimeoutMillis: 5_000,
@@ -50,6 +53,7 @@ export interface TestApp {
   readonly library: LibraryService;
   readonly runtime: InMemoryTaskRuntime;
   readonly registry: PluginRegistryService;
+  readonly shares: ShareService;
   close(): Promise<void>;
 }
 
@@ -74,6 +78,7 @@ export async function makeTestApp(options: MakeAppOptions): Promise<TestApp> {
   const runtime = new InMemoryTaskRuntime();
   const tasks = new TaskService(db, runtime);
   const registry = new PluginRegistryService({ db, coreVersion: '0.1.0' });
+  const shares = new ShareService({ db, library, shareHost: 'http://localhost:1430' });
   if (options.seedPlugins) {
     await registry.seedBuiltins(
       fileURLToPath(new URL('../../../plugins/builtin', import.meta.url)),
@@ -91,6 +96,8 @@ export async function makeTestApp(options: MakeAppOptions): Promise<TestApp> {
     builtinPluginsDir: fileURLToPath(new URL('../../../plugins/builtin', import.meta.url)),
     objectStoreRoot: storeRoot,
     allowedOrigins: options.allowedOrigins ?? [],
+    shareHost: 'http://localhost:1430',
+    requesterSalt: 'test-salt',
   };
 
   const app = buildApp({
@@ -103,6 +110,7 @@ export async function makeTestApp(options: MakeAppOptions): Promise<TestApp> {
     tasks,
     library,
     registry,
+    shares,
     ...(options.bridge === undefined ? {} : { bridge: options.bridge }),
     // テストは待ちたくないので短く回す
     ssePollIntervalMs: 20,
@@ -117,6 +125,7 @@ export async function makeTestApp(options: MakeAppOptions): Promise<TestApp> {
     library,
     runtime,
     registry,
+    shares,
     async close() {
       await app.close();
       if (owned) await db.close();

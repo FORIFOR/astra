@@ -253,6 +253,34 @@ ALTER TABLE ONLY public.event_streams FORCE ROW LEVEL SECURITY;
 
 
 --
+-- Name: evidence; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.evidence (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    research_run_id uuid NOT NULL,
+    source_url text NOT NULL,
+    source_type text NOT NULL,
+    publisher text,
+    published_at timestamp with time zone,
+    retrieved_at timestamp with time zone DEFAULT now() NOT NULL,
+    claim text NOT NULL,
+    support_text_ref text,
+    quality_score numeric(3,2) NOT NULL,
+    freshness_score numeric(3,2) NOT NULL,
+    supports uuid[] DEFAULT '{}'::uuid[] NOT NULL,
+    contradicts uuid[] DEFAULT '{}'::uuid[] NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT evidence_freshness_score_check CHECK (((freshness_score >= (0)::numeric) AND (freshness_score <= (1)::numeric))),
+    CONSTRAINT evidence_quality_score_check CHECK (((quality_score >= (0)::numeric) AND (quality_score <= (1)::numeric))),
+    CONSTRAINT evidence_source_type_check CHECK ((source_type = ANY (ARRAY['official'::text, 'filing'::text, 'news'::text, 'internal'::text, 'other'::text])))
+);
+
+ALTER TABLE ONLY public.evidence FORCE ROW LEVEL SECURITY;
+
+
+--
 -- Name: memberships; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -360,6 +388,30 @@ CREATE TABLE public.plugins (
 
 
 --
+-- Name: research_runs; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.research_runs (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    task_id uuid NOT NULL,
+    question text NOT NULL,
+    sub_queries jsonb DEFAULT '[]'::jsonb NOT NULL,
+    status text NOT NULL,
+    source_count integer DEFAULT 0 NOT NULL,
+    confidence text,
+    report_artifact_id uuid,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT research_runs_confidence_check CHECK ((confidence = ANY (ARRAY['low'::text, 'medium'::text, 'high'::text]))),
+    CONSTRAINT research_runs_source_count_check CHECK ((source_count >= 0)),
+    CONSTRAINT research_runs_status_check CHECK ((status = ANY (ARRAY['PLANNING'::text, 'SEARCHING'::text, 'SYNTHESIZING'::text, 'COMPLETE'::text, 'FAILED'::text])))
+);
+
+ALTER TABLE ONLY public.research_runs FORCE ROW LEVEL SECURITY;
+
+
+--
 -- Name: schema_migrations; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -386,6 +438,54 @@ CREATE TABLE public.sessions (
 );
 
 ALTER TABLE ONLY public.sessions FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: share_access_logs; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.share_access_logs (
+    id uuid NOT NULL,
+    share_id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    outcome text NOT NULL,
+    reason text,
+    requester_hash character(64),
+    accessed_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT share_access_logs_outcome_check CHECK ((outcome = ANY (ARRAY['granted'::text, 'denied'::text]))),
+    CONSTRAINT share_access_logs_requester_hash_check CHECK ((requester_hash ~ '^[0-9a-f]{64}$'::text))
+);
+
+ALTER TABLE ONLY public.share_access_logs FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: shares; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.shares (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    artifact_id uuid NOT NULL,
+    created_by uuid NOT NULL,
+    token_hash character(64) NOT NULL,
+    password_hash text,
+    allow_download boolean DEFAULT false NOT NULL,
+    one_time boolean DEFAULT false NOT NULL,
+    watermark boolean DEFAULT false NOT NULL,
+    allowlist text[] DEFAULT '{}'::text[] NOT NULL,
+    expires_at timestamp with time zone NOT NULL,
+    revoked_at timestamp with time zone,
+    revoked_reason text,
+    consumed_at timestamp with time zone,
+    access_count integer DEFAULT 0 NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT shares_access_count_check CHECK ((access_count >= 0)),
+    CONSTRAINT shares_consumed_only_when_one_time CHECK ((one_time OR (consumed_at IS NULL))),
+    CONSTRAINT shares_token_hash_check CHECK ((token_hash ~ '^[0-9a-f]{64}$'::text))
+);
+
+ALTER TABLE ONLY public.shares FORCE ROW LEVEL SECURITY;
 
 
 --
@@ -563,6 +663,14 @@ ALTER TABLE ONLY public.event_streams
 
 
 --
+-- Name: evidence evidence_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.evidence
+    ADD CONSTRAINT evidence_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: memberships memberships_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -611,6 +719,14 @@ ALTER TABLE ONLY public.plugins
 
 
 --
+-- Name: research_runs research_runs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.research_runs
+    ADD CONSTRAINT research_runs_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: schema_migrations schema_migrations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -624,6 +740,22 @@ ALTER TABLE ONLY public.schema_migrations
 
 ALTER TABLE ONLY public.sessions
     ADD CONSTRAINT sessions_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: share_access_logs share_access_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.share_access_logs
+    ADD CONSTRAINT share_access_logs_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: shares shares_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shares
+    ADD CONSTRAINT shares_pkey PRIMARY KEY (id);
 
 
 --
@@ -765,6 +897,20 @@ CREATE INDEX devices_by_user ON public.devices USING btree (tenant_id, user_id) 
 
 
 --
+-- Name: evidence_by_run; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX evidence_by_run ON public.evidence USING btree (research_run_id, quality_score DESC);
+
+
+--
+-- Name: evidence_dedupe; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX evidence_dedupe ON public.evidence USING btree (research_run_id, source_url, md5(claim));
+
+
+--
 -- Name: plugin_installs_unique; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -779,6 +925,20 @@ CREATE INDEX plugin_permissions_granted ON public.plugin_permissions USING btree
 
 
 --
+-- Name: research_runs_recent; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX research_runs_recent ON public.research_runs USING btree (tenant_id, id DESC);
+
+
+--
+-- Name: research_runs_task; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX research_runs_task ON public.research_runs USING btree (task_id);
+
+
+--
 -- Name: sessions_rotation_chain; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -790,6 +950,34 @@ CREATE UNIQUE INDEX sessions_rotation_chain ON public.sessions USING btree (rota
 --
 
 CREATE INDEX sessions_user_active ON public.sessions USING btree (tenant_id, user_id) WHERE (revoked_at IS NULL);
+
+
+--
+-- Name: share_access_logs_by_share; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX share_access_logs_by_share ON public.share_access_logs USING btree (share_id, accessed_at DESC);
+
+
+--
+-- Name: shares_by_artifact; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX shares_by_artifact ON public.shares USING btree (tenant_id, artifact_id) WHERE (revoked_at IS NULL);
+
+
+--
+-- Name: shares_expiring; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX shares_expiring ON public.shares USING btree (expires_at) WHERE (revoked_at IS NULL);
+
+
+--
+-- Name: shares_token; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX shares_token ON public.shares USING btree (token_hash);
 
 
 --
@@ -860,6 +1048,20 @@ CREATE TRIGGER action_receipts_append_only BEFORE DELETE OR UPDATE OR TRUNCATE O
 --
 
 CREATE TRIGGER audit_events_append_only BEFORE DELETE OR UPDATE OR TRUNCATE ON public.audit_events FOR EACH STATEMENT EXECUTE FUNCTION public.astra_deny_mutation();
+
+
+--
+-- Name: evidence evidence_append_only; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER evidence_append_only BEFORE DELETE OR TRUNCATE ON public.evidence FOR EACH STATEMENT EXECUTE FUNCTION public.astra_deny_mutation();
+
+
+--
+-- Name: share_access_logs share_access_logs_append_only; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER share_access_logs_append_only BEFORE DELETE OR UPDATE OR TRUNCATE ON public.share_access_logs FOR EACH STATEMENT EXECUTE FUNCTION public.astra_deny_mutation();
 
 
 --
@@ -1030,6 +1232,22 @@ ALTER TABLE ONLY public.event_streams
 
 
 --
+-- Name: evidence evidence_research_run_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.evidence
+    ADD CONSTRAINT evidence_research_run_id_fkey FOREIGN KEY (research_run_id) REFERENCES public.research_runs(id);
+
+
+--
+-- Name: evidence evidence_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.evidence
+    ADD CONSTRAINT evidence_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+
+--
 -- Name: memberships memberships_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1118,6 +1336,30 @@ ALTER TABLE ONLY public.plugins
 
 
 --
+-- Name: research_runs research_runs_report_artifact_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.research_runs
+    ADD CONSTRAINT research_runs_report_artifact_id_fkey FOREIGN KEY (report_artifact_id) REFERENCES public.artifacts(id);
+
+
+--
+-- Name: research_runs research_runs_task_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.research_runs
+    ADD CONSTRAINT research_runs_task_id_fkey FOREIGN KEY (task_id) REFERENCES public.tasks(id);
+
+
+--
+-- Name: research_runs research_runs_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.research_runs
+    ADD CONSTRAINT research_runs_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+
+--
 -- Name: sessions sessions_device_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1147,6 +1389,46 @@ ALTER TABLE ONLY public.sessions
 
 ALTER TABLE ONLY public.sessions
     ADD CONSTRAINT sessions_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
+-- Name: share_access_logs share_access_logs_share_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.share_access_logs
+    ADD CONSTRAINT share_access_logs_share_id_fkey FOREIGN KEY (share_id) REFERENCES public.shares(id);
+
+
+--
+-- Name: share_access_logs share_access_logs_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.share_access_logs
+    ADD CONSTRAINT share_access_logs_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+
+--
+-- Name: shares shares_artifact_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shares
+    ADD CONSTRAINT shares_artifact_id_fkey FOREIGN KEY (artifact_id) REFERENCES public.artifacts(id);
+
+
+--
+-- Name: shares shares_created_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shares
+    ADD CONSTRAINT shares_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.users(id);
+
+
+--
+-- Name: shares shares_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shares
+    ADD CONSTRAINT shares_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
 
 
 --
@@ -1347,6 +1629,19 @@ CREATE POLICY event_streams_tenant_isolation ON public.event_streams USING ((ten
 
 
 --
+-- Name: evidence; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.evidence ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: evidence evidence_tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY evidence_tenant_isolation ON public.evidence USING ((tenant_id = public.astra_current_tenant())) WITH CHECK ((tenant_id = public.astra_current_tenant()));
+
+
+--
 -- Name: memberships; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -1386,6 +1681,19 @@ CREATE POLICY plugin_permissions_tenant_isolation ON public.plugin_permissions U
 
 
 --
+-- Name: research_runs; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.research_runs ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: research_runs research_runs_tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY research_runs_tenant_isolation ON public.research_runs USING ((tenant_id = public.astra_current_tenant())) WITH CHECK ((tenant_id = public.astra_current_tenant()));
+
+
+--
 -- Name: sessions; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -1396,6 +1704,32 @@ ALTER TABLE public.sessions ENABLE ROW LEVEL SECURITY;
 --
 
 CREATE POLICY sessions_tenant_isolation ON public.sessions USING ((tenant_id = public.astra_current_tenant())) WITH CHECK ((tenant_id = public.astra_current_tenant()));
+
+
+--
+-- Name: share_access_logs; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.share_access_logs ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: share_access_logs share_access_logs_tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY share_access_logs_tenant_isolation ON public.share_access_logs USING ((tenant_id = public.astra_current_tenant())) WITH CHECK ((tenant_id = public.astra_current_tenant()));
+
+
+--
+-- Name: shares; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.shares ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: shares shares_tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY shares_tenant_isolation ON public.shares USING ((tenant_id = public.astra_current_tenant())) WITH CHECK ((tenant_id = public.astra_current_tenant()));
 
 
 --
@@ -1482,3 +1816,5 @@ INSERT INTO schema_migrations (version) VALUES ('20260826010005');
 INSERT INTO schema_migrations (version) VALUES ('20260826010006');
 INSERT INTO schema_migrations (version) VALUES ('20260826010007');
 INSERT INTO schema_migrations (version) VALUES ('20260826010008');
+INSERT INTO schema_migrations (version) VALUES ('20260826020001');
+INSERT INTO schema_migrations (version) VALUES ('20260826020002');

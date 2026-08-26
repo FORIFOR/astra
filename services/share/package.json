@@ -23,6 +23,12 @@
   "dependencies": {
     "@astra/contracts": "workspace:*",
     "@astra/db": "workspace:*",
-    "@astra/telemetry": "workspace:*"
+    "@astra/telemetry": "workspace:*",
+    "@node-rs/argon2": "^2.1.0",
+    "kysely": "catalog:",
+    "@astra/service-library": "workspace:*"
+  },
+  "devDependencies": {
+    "vitest": "catalog:"
   }
 }

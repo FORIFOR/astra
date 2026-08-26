@@ -36,7 +36,8 @@
     "ioredis": "^6.0.0",
     "jose": "^6.2.10",
     "kysely": "catalog:",
-    "zod": "catalog:"
+    "zod": "catalog:",
+    "@astra/service-share": "workspace:*"
   },
   "devDependencies": {
     "@types/ws": "^8.18.1",
