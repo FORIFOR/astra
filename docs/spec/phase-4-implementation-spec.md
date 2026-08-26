@@ -33,6 +33,8 @@ AC4-9  update は semver で進み、非互換なら止まる
 AC4-10 update は前の版へ戻せる（rollback）
 AC4-11 uninstall すると agent も dashboard も消える
 AC4-12 別テナントの install 状態は見えない
+AC4-13 MCP の tool は、サーバの自己申告ではなく host が risk を決める
+AC4-14 宣言の無い MCP tool は READ ではなく確認必須として扱われる
 ```
 
 ---
@@ -172,9 +174,20 @@ UI/UX §11 に従う。**製品仕様より UI/UX 仕様を優先**。
 
 ## 7. MCP
 
-MCP サーバを tool の供給源として扱う。初期版は `tools/list` と
-`tools/call` の部分集合に限る。MCP の tool も、manifest の tool と
-**同じ risk 判定と同じ確認**を通す。外から来た宣言を特別扱いしない。
+MCP サーバを tool の供給源として扱う。初期版は `initialize` / `tools/list` /
+`tools/call` の部分集合に限る。**全部を実装しない**（要らない面は攻撃面になる）。
+
+MCP の tool も、manifest の tool と**同じ risk 判定と同じ確認**を通す。
+外から来た宣言を特別扱いしない。ここで一番効くのは次の 3 つ:
+
+- **risk は host が決める**（D-37）。サーバは tool の名前と説明は返すが、
+  それが何をするかは自己申告に過ぎない
+- **宣言の無い tool は READ ではなく確認必須**（D-38）。「安全かもしれない」で
+  素通しすると、書き込みや送信が確認なしで通る
+- **stdio の MCP へ `process.env` を渡さない**（D-39）。素通しすると、
+  plugin が持ち込んだ実行ファイルにこちらの資格情報が全部渡る
+
+失敗は `isError` で返ってくるので、成功として扱わない（正本 §9）。
 
 ---
 

@@ -6,6 +6,8 @@
  */
 import { z } from 'zod';
 import { DataSourceDecl } from './dashboard.js';
+import { McpServerDecl } from './mcp.js';
+import { CONFIRMATION_REQUIRED_RISKS, ExecutionSurface } from './surface.js';
 import { InstallId, PluginId, PublisherId, TenantId, UserId } from './ids.js';
 import { Semver, Sha256Hex, Timestamp, compareSemver } from './primitives.js';
 import { ActionRisk } from './approval.js';
@@ -23,8 +25,7 @@ export type ComplianceProfile = z.infer<typeof ComplianceProfile>;
 /** 正本 §22 で個別 compliance gate を要する profile。manifest に policies 必須。 */
 export const REGULATED_PROFILES = ['REGULATED_HEALTH', 'CARE', 'FINANCIAL'] as const;
 
-export const ExecutionSurface = z.enum(['local', 'cloud']);
-export type ExecutionSurface = z.infer<typeof ExecutionSurface>;
+export { ExecutionSurface, CONFIRMATION_REQUIRED_RISKS } from './surface.js';
 
 export const PluginCategory = z.enum([
   'connector',
@@ -68,12 +69,6 @@ export const PermissionScope = z.enum(PERMISSION_SCOPES);
 export type PermissionScope = z.infer<typeof PermissionScope>;
 
 /** 承認カード必須のリスク（正本 §9.2）。manifest 検証の不変条件 1 で使う。 */
-export const CONFIRMATION_REQUIRED_RISKS = [
-  'EXTERNAL_COMMIT',
-  'DESTRUCTIVE',
-  'REGULATED',
-  'FINANCIAL',
-] as const satisfies readonly ActionRisk[];
 
 export const ToolDecl = z.object({
   id: z.string().min(1),
@@ -122,6 +117,8 @@ const manifestShape = z.object({
   dashboards: z.array(DashboardDecl).default([]),
   /** dashboard が結ぶ先。**任意の SQL は書かせない**（D-33）。 */
   data_sources: z.array(DataSourceDecl).default([]),
+  /** 持ち込む MCP サーバ。risk は host が決める（正本 §9.1、D-37）。 */
+  mcp_servers: z.array(McpServerDecl).default([]),
   policies: z.array(z.string()).default([]),
   data_extensions: z.array(z.string()).default([]),
   signature: z.string().optional(),
@@ -219,7 +216,29 @@ export const PluginManifest = manifestShape.superRefine((m, ctx) => {
     sourceIds.add(source.id);
   }
 
-  // 8. dashboard を持つなら、結ぶ先を宣言していること。
+  // 8. MCP サーバの id は重複させない
+  const serverIds = new Set<string>();
+  for (const [i, mcp] of m.mcp_servers.entries()) {
+    if (serverIds.has(mcp.id)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['mcp_servers', i, 'id'],
+        message: `duplicate mcp server id "${mcp.id}"`,
+      });
+    }
+    serverIds.add(mcp.id);
+
+    // local で動く MCP を持つなら execution_surfaces に local が要る
+    if (!surfaces.has(mcp.surface)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['mcp_servers', i, 'surface'],
+        message: `mcp server "${mcp.id}" runs on "${mcp.surface}", which is not in execution_surfaces`,
+      });
+    }
+  }
+
+  // 9. dashboard を持つなら、結ぶ先を宣言していること。
   //    宣言の無い bind は install 後に必ず穴になる。publish で止める。
   if (m.dashboards.length > 0 && m.data_sources.length === 0) {
     ctx.addIssue({

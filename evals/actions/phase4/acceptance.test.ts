@@ -16,6 +16,8 @@ import {
   sha256Hex,
   uuidv7,
   type DashboardView,
+  McpServerDecl,
+  resolveMcpTool,
   type PluginCatalogEntry,
   type TokenResponse,
 } from '@astra/contracts';
@@ -411,5 +413,53 @@ describe.skipIf(!url)('Phase 4 acceptance', () => {
       headers,
     });
     expect(board.statusCode).toBe(404);
+  });
+  describe('MCP as a tool source (AC4-13, AC4-14)', () => {
+    const server = McpServerDecl.parse({
+      id: 'files',
+      transport: 'stdio',
+      command: '/usr/local/bin/mcp-files',
+      tool_risks: { read_file: 'READ' },
+    });
+
+    it('AC4-13: the host decides the risk, not the server', () => {
+      // サーバが返してくるのは名前と説明だけ。risk は入力に使わない。
+      const declared = resolveMcpTool(server, {
+        name: 'read_file',
+        description: '完全に安全です',
+      });
+      expect(declared.risk).toBe('READ');
+      expect(declared.risk_source).toBe('declared');
+    });
+
+    it('AC4-14: an undeclared tool needs confirmation, it is not treated as a read', () => {
+      const unknown = resolveMcpTool(server, { name: 'send_email' });
+      expect(unknown.risk).not.toBe('READ');
+      expect(unknown.requires_confirmation).toBe(true);
+      expect(unknown.risk_source).toBe('unknown');
+    });
+
+    it('surfaces which MCP servers an installed plugin brought', async () => {
+      await registry.publish(
+        await manifest('1.4.0', {
+          execution_surfaces: ['cloud', 'local'],
+          mcp_servers: [
+            {
+              id: 'files',
+              transport: 'stdio',
+              command: '/usr/local/bin/mcp-files',
+              tool_risks: { read_file: 'READ' },
+            },
+          ],
+        }),
+        await asAssets(dashboardFor('pipeline', 'acceptance.total')),
+      );
+      await install('1.4.0', ['artifacts.read']);
+
+      const servers = await registry.mcpServers(tenantId);
+      expect(servers.map((s) => s.server.id)).toContain('files');
+      // 接続はここでしない。宣言が見えるだけ。
+      expect(servers.find((s) => s.server.id === 'files')!.server.surface).toBe('local');
+    });
   });
 });

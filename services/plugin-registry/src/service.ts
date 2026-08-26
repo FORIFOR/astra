@@ -20,6 +20,7 @@ import {
   type InstallPluginRequest,
   type PermissionScope,
   type PluginInstall,
+  type McpServerDecl,
   type PluginManifest,
 } from '@astra/contracts';
 import { withSystem, withTenant, type DbHandle, type ScopedDb } from '@astra/db';
@@ -526,6 +527,41 @@ export class PluginRegistryService {
     }
 
     return { plugin_id: pluginId, schema, data };
+  }
+
+  /**
+   * install 済み plugin が持ち込んだ MCP サーバ。
+   *
+   * **接続はここでしない。**接続するかどうかは、trust state と
+   * 実行時の判断（Action Engine）の仕事。ここは「何が宣言されているか」だけ返す。
+   */
+  async mcpServers(tenantId: string): Promise<{ pluginId: string; server: McpServerDecl }[]> {
+    const installs = await withTenant(this.#db, tenantId, (tx) =>
+      tx
+        .selectFrom('plugin_installs')
+        .select(['plugin_id', 'version'])
+        .where('state', '=', 'INSTALLED')
+        .execute(),
+    );
+    if (installs.length === 0) return [];
+
+    return withSystem(this.#db, async (tx) => {
+      const out: { pluginId: string; server: McpServerDecl }[] = [];
+      for (const install of installs) {
+        const row = await tx
+          .selectFrom('plugin_versions')
+          .select(['manifest'])
+          .where('plugin_id', '=', install.plugin_id)
+          .where('version', '=', install.version)
+          .executeTakeFirst();
+        if (!row) continue;
+        const manifest = row.manifest as unknown as PluginManifest;
+        for (const server of manifest.mcp_servers) {
+          out.push({ pluginId: install.plugin_id, server });
+        }
+      }
+      return out;
+    });
   }
 
   /**
