@@ -1,0 +1,211 @@
+/*
+ * Shell のレイアウト。値は必ず @astra/ui-kit のトークン（CSS 変数）から取る。
+ * ここに生の px を書かない。書くとトークンと二重管理になる。
+ */
+
+.astra-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.astra-shell {
+  display: grid;
+  grid-template-columns: var(--astra-sidebar-width) minmax(var(--astra-layout-main-min), 1fr) auto;
+  height: 100%;
+  background: var(--astra-color-canvas);
+}
+
+.astra-shell__column {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* ---------------------------------------------------------------- sidebar */
+
+.astra-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--astra-space-base);
+  padding: var(--astra-space-base);
+  border-right: var(--astra-border-hairline) solid var(--astra-color-border);
+  background: var(--astra-color-surface);
+  /* §18: 位置の連続性を保って幅だけ変える */
+  transition: width var(--astra-motion-workspace-expand-duration)
+    var(--astra-motion-workspace-expand-easing);
+}
+
+.astra-sidebar__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--astra-space-base);
+  height: var(--astra-layout-top-bar);
+  padding-inline: var(--astra-space-base);
+  font-weight: var(--astra-font-weight-section-title);
+}
+
+.astra-sidebar__mark {
+  color: var(--astra-color-accent);
+}
+
+.astra-sidebar__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--astra-space-compact);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.astra-nav-item {
+  display: flex;
+  align-items: center;
+  gap: var(--astra-space-md, var(--astra-space-base));
+  width: 100%;
+  /* §19: 44px 相当のターゲット。desktop でも小さすぎる icon-only を避ける */
+  min-height: 44px;
+  padding-inline: var(--astra-space-md, var(--astra-space-base));
+  border: 0;
+  border-radius: var(--astra-radius-small);
+  background: transparent;
+  color: var(--astra-color-muted);
+  font: inherit;
+  font-size: var(--astra-font-size-body);
+  text-align: start;
+  cursor: pointer;
+  /* §18: hover は opacity / background のみ。位置とサイズを動かさない */
+  transition:
+    background var(--astra-motion-hover-duration) var(--astra-motion-hover-easing),
+    color var(--astra-motion-hover-duration) var(--astra-motion-hover-easing);
+}
+
+.astra-nav-item:hover {
+  background: var(--astra-color-canvas);
+  color: var(--astra-color-text);
+}
+
+.astra-nav-item[data-active='true'] {
+  background: var(--astra-color-accent);
+  color: var(--astra-color-accent-on);
+  font-weight: var(--astra-font-weight-card-title);
+}
+
+.astra-nav-item__icon {
+  width: 1.25em;
+  text-align: center;
+}
+
+.astra-sidebar__toggle {
+  margin-top: auto;
+  min-height: 44px;
+  border: 0;
+  border-radius: var(--astra-radius-small);
+  background: transparent;
+  color: var(--astra-color-muted);
+  cursor: pointer;
+}
+
+.astra-sidebar__toggle:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* ---------------------------------------------------------------- top bar */
+
+.astra-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--astra-space-lg);
+  height: var(--astra-layout-top-bar);
+  padding-inline: var(--astra-padding-card);
+  border-bottom: var(--astra-border-hairline) solid var(--astra-color-border);
+  background: var(--astra-color-surface);
+}
+
+.astra-topbar__title {
+  margin: 0;
+  font-size: var(--astra-font-size-section-title);
+  font-weight: var(--astra-font-weight-section-title);
+}
+
+.astra-topbar__theme select {
+  min-height: 32px;
+  padding-inline: var(--astra-space-base);
+  border: var(--astra-border-hairline) solid var(--astra-color-border);
+  border-radius: var(--astra-radius-small);
+  background: var(--astra-color-surface);
+  color: var(--astra-color-text);
+  font: inherit;
+}
+
+/* ------------------------------------------------------------------- main */
+
+.astra-main {
+  flex: 1;
+  min-width: 0;
+  padding: var(--astra-padding-panel);
+  overflow: auto;
+}
+
+.astra-page__placeholder {
+  color: var(--astra-color-muted);
+}
+
+/* -------------------------------------------------------------- inspector */
+
+.astra-inspector {
+  display: flex;
+  flex-direction: column;
+  width: var(--astra-layout-inspector);
+  border-left: var(--astra-border-hairline) solid var(--astra-color-border);
+  background: var(--astra-color-surface);
+}
+
+/* §7.2: 3 カラムに足りない幅では重ねる */
+.astra-inspector[data-drawer='true'] {
+  position: fixed;
+  inset-block: 0;
+  inset-inline-end: 0;
+  z-index: var(--astra-z-drawer);
+  box-shadow: var(--astra-elevation-popover);
+}
+
+.astra-inspector__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--astra-layout-top-bar);
+  padding-inline: var(--astra-padding-card);
+  border-bottom: var(--astra-border-hairline) solid var(--astra-color-border);
+}
+
+.astra-inspector__title {
+  margin: 0;
+  font-size: var(--astra-font-size-card-title);
+  font-weight: var(--astra-font-weight-card-title);
+}
+
+.astra-inspector__body {
+  padding: var(--astra-padding-card);
+  overflow: auto;
+}
+
+/* --------------------------------------------------------------- too narrow */
+
+.astra-too-narrow {
+  display: grid;
+  place-content: center;
+  gap: var(--astra-space-base);
+  height: 100%;
+  padding: var(--astra-padding-panel);
+  color: var(--astra-color-muted);
+  text-align: center;
+}

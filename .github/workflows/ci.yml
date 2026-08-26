@@ -63,6 +63,9 @@ jobs:
 
       - run: pnpm build
       - run: pnpm exec tsc -p tsconfig.tests.json
+      # Vite の app は tsc -b の対象外なので個別に確かめる
+      - run: pnpm --filter @astra/desktop build
+      - run: pnpm --filter @astra/share-web build
       - run: pnpm format:check
 
       # 境界の形骸化を人のレビューに任せない（ADR 0001）

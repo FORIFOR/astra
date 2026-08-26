@@ -18,12 +18,12 @@ OS のどこからでも呼び出せる **Task Dock**。North Star は **Intent 
 
 ## 現在地
 
-**Phase 0 完了。** P0-01 〜 P0-18 まで実装済みで、受け入れテスト AC-1〜AC-16 が green。
+**Phase 0 完了 / Phase 1 進行中。**
 
-> **Exit**: `pnpm test:acceptance` が「create task → progress → result artifact」を
-> HTTP から検証する（正本 §28 Phase 0）。
-
-次は Phase 1。UI/UX 仕様 §24 の **UI-0**（design tokens + 4-tab shell）から始める。
+- Phase 0: P0-01 〜 P0-18。受け入れテスト AC-1〜AC-16 が green。
+  `pnpm test:acceptance` が「create task → progress → result artifact」を HTTP から検証する。
+- Phase 1: **UI-0 完了**（design tokens + shell + shared state / Light・Dark + 4-tab shell）。
+  次は UI-1（Task Dock + Context Lens）。
 
 実装順は正本 §28 に従う。
 

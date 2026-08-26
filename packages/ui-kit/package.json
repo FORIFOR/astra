@@ -19,5 +19,14 @@
     "build": "tsc -b",
     "clean": "tsc -b --clean",
     "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "vitest": "catalog:"
   }
 }

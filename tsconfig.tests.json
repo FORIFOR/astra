@@ -7,12 +7,17 @@
     "declaration": false,
     "declarationMap": false,
     "sourceMap": false,
-    "allowImportingTsExtensions": true
+    "allowImportingTsExtensions": true,
+    "jsx": "react-jsx",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"]
   },
   "include": [
+    "apps/*/test/**/*.ts",
+    "apps/*/test/**/*.tsx",
+    "evals/**/*.test.ts",
     "packages/*/test/**/*.ts",
+    "packages/*/test/**/*.tsx",
     "services/*/test/**/*.ts",
-    "workers/*/test/**/*.ts",
-    "evals/**/*.test.ts"
+    "workers/*/test/**/*.ts"
   ]
 }
