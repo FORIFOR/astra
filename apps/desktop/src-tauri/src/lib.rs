@@ -2,6 +2,7 @@
 
 pub mod context;
 pub mod dock;
+pub mod permission;
 pub mod secrets;
 pub mod shortcut;
 pub mod shortcut_generated;
@@ -22,6 +23,7 @@ pub fn run() {
             dock::dock_toggle,
             dock::dock_remember_position,
             context::context_snapshot,
+            permission::permission_open_settings,
             secrets::secret_set,
             secrets::secret_get,
             secrets::secret_delete,

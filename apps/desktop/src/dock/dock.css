@@ -146,3 +146,33 @@
   color: var(--astra-color-warning);
   font-size: var(--astra-font-size-micro);
 }
+
+/* 使う直前の許可のお願い（UI/UX §22）。 */
+.astra-permission {
+  display: grid;
+  gap: var(--astra-space-sm, 8px);
+  padding: var(--astra-space-sm, 8px);
+  border-top: 1px solid var(--astra-color-border);
+}
+
+.astra-permission__ask {
+  display: grid;
+  gap: var(--astra-space-xs, 4px);
+}
+
+.astra-permission__why {
+  margin: 0;
+  color: var(--astra-color-text);
+}
+
+.astra-permission__without,
+.astra-permission__opened {
+  margin: 0;
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-sm, 0.875rem);
+}
+
+.astra-permission__error {
+  margin: 0;
+  color: var(--astra-color-danger);
+}

@@ -95,6 +95,17 @@ async function onHold(handler: (id: string, pressed: boolean) => void): Promise<
   }
 }
 
+/**
+ * OS の許可。UI/UX §22。
+ *
+ * 開けたかどうかしか返らない。**許可されたことは、こちらからは分からない。**
+ * 失敗を握り潰すと「押したのに何も起きない」になるので strict で呼ぶ。
+ */
+export const permissions = {
+  openSettings: (permission: string) =>
+    callStrict<void>('permission_open_settings', { permission }),
+};
+
 export const shortcuts = {
   status: () => call<ShortcutStatus[]>('shortcut_status'),
   // 失敗は握り潰さない。変えたつもりで効いていない状態を作らない。

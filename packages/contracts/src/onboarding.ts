@@ -44,6 +44,46 @@ export const OS_PERMISSIONS = [
 export const OsPermission = z.enum(OS_PERMISSIONS);
 export type OsPermission = z.infer<typeof OsPermission>;
 
+/**
+ * 許可の呼び名と、**何のために要るか**。UI/UX §22
+ * 「permission request は利用直前に purpose-first で出す」。
+ *
+ * 初回設定と、使う直前の要求とで、文言を別々に持たない。
+ * 別々にすると、片方だけ直って「設定で見た説明と違う」が起きる。
+ */
+export const PERMISSION_LABEL: Readonly<Record<OsPermission, string>> = {
+  microphone: 'マイク',
+  accessibility: 'アクセシビリティ',
+  screen_recording: '画面収録',
+  notifications: '通知',
+  files: 'ファイル',
+  calendar_contacts: 'カレンダー・連絡先',
+};
+
+/** 目的を先に言う。**「許可が必要です」だけで求めない。** */
+export const PERMISSION_PURPOSE: Readonly<Record<OsPermission, string>> = {
+  microphone: '会議を録音し、話者ごとに文字起こしするため',
+  accessibility: '選択したテキストを読み取るため',
+  screen_recording: 'システム音声を会議に取り込むため',
+  notifications: '長い仕事が終わったときに知らせるため',
+  files: '手元のファイルを整理・検索するため',
+  calendar_contacts: '次の会議と参加者を把握するため',
+};
+
+/** 許さなかったときに、何ができなくなるか。**できなくなることを黙らない。** */
+export const PERMISSION_WITHOUT: Readonly<Record<OsPermission, string>> = {
+  microphone: '会議の記録はできません。',
+  accessibility: '画面で選んだ文章は、貼り付けて渡してください。',
+  screen_recording: '相手の声は入らず、こちらの声だけが記録されます。',
+  notifications: '終わったかどうかは、自分で見に来る必要があります。',
+  files: 'ファイルは、その都度選んで渡してください。',
+  calendar_contacts: '予定と参加者は、自分で伝える必要があります。',
+};
+
+export function isOsPermission(value: unknown): value is OsPermission {
+  return typeof value === 'string' && (OS_PERMISSIONS as readonly string[]).includes(value);
+}
+
 export const OnboardingStep = z.enum([
   'promise',
   'input_preference',

@@ -11,6 +11,9 @@ import type { AstraClient } from '@astra/api-client';
 import {
   INTEREST_AREAS,
   INTEREST_LABELS,
+  PERMISSION_LABEL,
+  PERMISSION_PURPOSE,
+  isOsPermission,
   type InputPreference,
   type InterestArea,
   type OnboardingStep,
@@ -18,25 +21,6 @@ import {
 } from '@astra/contracts';
 import { ShortcutSettings } from '../settings/ShortcutSettings.js';
 import './onboarding.css';
-
-const PERMISSION_LABELS: Record<string, string> = {
-  microphone: 'マイク',
-  accessibility: 'アクセシビリティ',
-  screen_recording: '画面収録',
-  notifications: '通知',
-  files: 'ファイル',
-  calendar_contacts: 'カレンダー・連絡先',
-};
-
-/** なぜその許可が要るのか。**求める直前に言う**（§3 Step 5）。 */
-const PERMISSION_REASONS: Record<string, string> = {
-  microphone: '会議を録音し、話者ごとに文字起こしするため',
-  accessibility: '選択したテキストを読み取るため',
-  screen_recording: 'システム音声を会議に取り込むため',
-  notifications: '長い仕事が終わったときに知らせるため',
-  files: '手元のファイルを整理・検索するため',
-  calendar_contacts: '次の会議と参加者を把握するため',
-};
 
 const PREFERENCES: { id: InputPreference; label: string }[] = [
   { id: 'voice', label: '音声中心' },
@@ -252,10 +236,12 @@ export function Onboarding({
                         })
                       }
                     />
-                    {PERMISSION_LABELS[permission] ?? permission}
+                    {isOsPermission(permission) ? PERMISSION_LABEL[permission] : permission}
                   </label>
-                  {/* 求める直前に、何のために要るかを言う */}
-                  <span className="astra-onboarding__why">{PERMISSION_REASONS[permission]}</span>
+                  {/* 求める直前に、何のために要るかを言う。文言は正本と同じもの。 */}
+                  <span className="astra-onboarding__why">
+                    {isOsPermission(permission) ? PERMISSION_PURPOSE[permission] : ''}
+                  </span>
                 </li>
               ))}
             </ul>

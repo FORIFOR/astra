@@ -17,6 +17,7 @@ import {
 import type { ContextSource } from '@astra/contracts';
 import { useDockMachine, type DockConversation, type DockDictation } from './useDockMachine.js';
 import { ContextLens } from './ContextLens.js';
+import { PermissionAsk } from './PermissionAsk.js';
 import { WorkCard } from '../work/WorkCard.js';
 import type { WorkView } from '../work/workView.js';
 import { host, shortcuts } from '../host/tauri.js';
@@ -50,12 +51,20 @@ export function TaskDock({
   const machine = useDockMachine('READY', conversation, dictation);
   const [sources, setSources] = useState<readonly ContextSource[]>(initialSources);
   const [explanation, setExplanation] = useState<string | null>(null);
+  /*
+   * 取れなかった文脈と、その理由。§22: 使う直前に purpose-first で聞く。
+   * **黙って落とさない。**落とすと、Context Lens は「見たもの」ではなく
+   * 「たまたま見えたもの」になる。
+   */
+  const [missingPermissions, setMissingPermissions] = useState<readonly string[]>([]);
 
   // 前面アプリを文脈として取り込む。取れなければ何も足さない（推測で埋めない）。
   useEffect(() => {
     let cancelled = false;
     void host.contextSnapshot().then((snapshot) => {
-      if (cancelled || !snapshot?.active_app) return;
+      if (cancelled || !snapshot) return;
+      setMissingPermissions(snapshot.requires_permission);
+      if (!snapshot.active_app) return;
       setSources((current) =>
         current.some((s) => s.id === 'current-app')
           ? current
@@ -258,6 +267,9 @@ export function TaskDock({
           {...(onOpenWorkspace ? { onOpen: onOpenWorkspace } : {})}
         />
       )}
+
+      {/* §22: まとめて求めない。使う直前に、目的を先に言って聞く。 */}
+      <PermissionAsk missing={missingPermissions} />
 
       <ContextLens
         sources={sources}
