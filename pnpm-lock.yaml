@@ -178,6 +178,9 @@ importers:
       '@astra/plugin-sdk':
         specifier: workspace:*
         version: link:../packages/plugin-sdk
+      '@astra/policy':
+        specifier: workspace:*
+        version: link:../packages/policy
       '@astra/service-agent-runtime':
         specifier: workspace:*
         version: link:../services/agent-runtime

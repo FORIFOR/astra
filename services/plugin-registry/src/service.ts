@@ -38,6 +38,8 @@ import {
   loadManifestFile,
   signatureStateFor,
   validateDashboards,
+  validatePolicies,
+  validateWorkflows,
   verifyManifestSignature,
   type LoadedManifest,
   type PluginAsset,
@@ -98,8 +100,16 @@ export class PluginRegistryService {
    */
   async publish(loaded: LoadedManifest, assets: readonly PluginAsset[] = []): Promise<void> {
     const { manifest } = loaded;
-    // 宣言と実体の食い違いは、署名を見る前に落とす
+    /*
+     * 宣言と実体の食い違いは、署名を見る前に落とす。
+     *
+     * **3 つとも呼ぶ。**`loadAssets`（同梱の読み込み）には全部入っているが、
+     * publish はここで自分で呼ぶ必要がある。片方だけ呼んでいた間、
+     * 第三者の plugin は壊れた workflow と policy を持ち込めた。
+     */
     validateDashboards(manifest, assets);
+    validateWorkflows(manifest, assets);
+    validatePolicies(assets);
     // 規制 profile なら、実際に効く規則を持っていること
     assertRegulatedPluginHasRules(manifest.compliance_profile, countRules(assets), manifest.id);
     // 呼び出し側が申告したハッシュを信用しない。中身から取り直して照合する。

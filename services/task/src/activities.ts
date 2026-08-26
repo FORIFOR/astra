@@ -8,7 +8,7 @@ import { ApplicationFailure } from '@temporalio/common';
 import { canonicalSha256, uuidv7, type ActionRisk } from '@astra/contracts';
 import { withTenant, type DbHandle, type ScopedDb } from '@astra/db';
 import { appendAuditEvent } from '@astra/telemetry';
-import { approvalTtlMs, evaluate, type ActionContext } from '@astra/policy';
+import { approvalTtlMs, evaluate, isApprovalUsable, type ActionContext } from '@astra/policy';
 import type { PolicyDocument } from '@astra/contracts';
 import type { LibraryService } from '@astra/service-library';
 import { appendEvent, type EventPublisher } from './events.js';
@@ -259,6 +259,32 @@ export function createTaskActivities(deps: ActivityDeps): TaskActivities {
 
     async acceptApproval(input, approvalId) {
       await inTenant(input, async (tx) => {
+        /*
+         * 古い承認で実行しない（正本 §25「stale approval」）。
+         *
+         * FINANCIAL の期限が 5 分なのは価格が動くから。
+         * 決めた時点では正しかった承認でも、再開が遅れれば別の話になる。
+         * **決まっていることと、いま有効であることは違う。**
+         */
+        const approval = await tx
+          .selectFrom('approvals')
+          .select(['status', 'expires_at'])
+          .where('id', '=', approvalId)
+          .executeTakeFirst();
+
+        const usable =
+          approval !== undefined &&
+          isApprovalUsable({
+            status: approval.status as 'PENDING' | 'APPROVED' | 'REJECTED' | 'EXPIRED',
+            expiresAt: approval.expires_at.toISOString(),
+          });
+        if (!usable) {
+          throw ApplicationFailure.nonRetryable(
+            `approval ${approvalId} is no longer usable`,
+            'ApprovalStale',
+          );
+        }
+
         await tx
           .updateTable('tasks')
           .set({ status: 'RUNNING', updated_at: now() })

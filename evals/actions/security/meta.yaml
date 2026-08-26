@@ -1,0 +1,8 @@
+# 実装仕様 §14.2 の eval harness 契約
+phase: security
+tags: [acceptance, blocking, adversarial]
+blocking: true
+description: >
+  正本 §25 の Action / Plugin 評価軸。
+  権限迂回・権限昇格・古い承認・二重実行・悪意ある manifest を、
+  **通ってしまわないこと**として検査する。

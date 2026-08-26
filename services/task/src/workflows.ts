@@ -43,6 +43,8 @@ const tools = proxyActivities<TaskActivities>({
       'LocalSurfaceUnavailable',
       // 規則が禁じている。承認を取っても変わらない
       'PolicyDenied',
+      // 承認が古い。待っても新しくならない
+      'ApprovalStale',
     ],
   },
 });
