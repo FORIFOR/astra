@@ -259,21 +259,62 @@ describe('when the recogniser cannot separate speakers', () => {
     ).rejects.toThrow(/has not been used/);
   });
 
-  it('does not default to a model that is no longer generally available', async () => {
+  it('falls back to long only where Chirp 3 does not exist', async () => {
     const { GoogleBatchTranscriber } = await import('../src/google.js');
-    let model = '';
+    const models: string[] = [];
+    const told: string[] = [];
     const transcriber = new GoogleBatchTranscriber({
-      recognizer: 'r',
+      recognizer: 'projects/p/locations/global/recognizers/_',
+      onModelUnavailable: (reason) => told.push(reason),
       client: {
         async recognize(request: unknown) {
-          model = (request as { config: { model: string } }).config.model;
+          const model = (request as { config: { model: string } }).config.model;
+          models.push(model);
+          if (model === 'chirp_3') {
+            throw new Error('The model "chirp_3" does not exist in the location named "global"..');
+          }
           return [{ results: [] }] as never;
         },
       },
     });
     await transcriber.transcribe(new Uint8Array([1]), { language: 'ja-JP' });
-    // chirp_3 は 403（no longer generally available）。既定にすると繋いだ瞬間に落ちる
-    expect(model).not.toBe('chirp_3');
-    expect(model).toBe('long');
+
+    // 指名は Chirp 3。無い location でだけ落ちる
+    expect(models).toEqual(['chirp_3', 'long']);
+    // **黙って落ちない**
+    expect(told[0]).toContain('does not exist in the location');
+  });
+
+  it('keeps Chirp 3 where it does exist', async () => {
+    const { GoogleBatchTranscriber } = await import('../src/google.js');
+    const models: string[] = [];
+    const transcriber = new GoogleBatchTranscriber({
+      recognizer: 'projects/p/locations/us/recognizers/_',
+      client: {
+        async recognize(request: unknown) {
+          models.push((request as { config: { model: string } }).config.model);
+          return [{ results: [] }] as never;
+        },
+      },
+    });
+    await transcriber.transcribe(new Uint8Array([1]), { language: 'ja-JP' });
+    expect(models).toEqual(['chirp_3']);
+  });
+
+  it('sends a regional recognizer to its own endpoint', async () => {
+    const { speechEndpoint } = await import('../src/google-rest.js');
+    /*
+     * V2 は location ごとに endpoint が違う。ここを間違えると
+     * 「モデルが無い」に見える（実際には endpoint 違い）。
+     */
+    expect(speechEndpoint('projects/p/locations/us/recognizers/_')).toBe(
+      'https://us-speech.googleapis.com',
+    );
+    expect(speechEndpoint('projects/p/locations/eu/recognizers/_')).toBe(
+      'https://eu-speech.googleapis.com',
+    );
+    expect(speechEndpoint('projects/p/locations/global/recognizers/_')).toBe(
+      'https://speech.googleapis.com',
+    );
   });
 });

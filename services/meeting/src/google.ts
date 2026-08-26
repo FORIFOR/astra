@@ -253,23 +253,36 @@ export interface GoogleBatchConfig {
   readonly recognizer: string;
   readonly model?: string;
   readonly sampleRateHz?: number;
+  /** 指名したモデルが無かったときに落ちる先。既定は `long`。 */
+  readonly fallbackModel?: string;
   /** 話者分離が使えなかったことを知らせる先。**黙って落とさない。** */
   readonly onDiarizationUnavailable?: (reason: string) => void;
+  /** 指名したモデルが無くて落ちたことを知らせる先。 */
+  readonly onModelUnavailable?: (reason: string) => void;
 }
 
 /**
- * その失敗が「話者分離に対応していない」か。
+ * その失敗が「この構成では使えない」か。
  *
- * 正本 §11.2 は Chirp 3 を指名しているが、**一般提供が終わっており**
- * （`no longer generally available`）、普通のプロジェクトでは使えない。
- * 使える `long` は話者分離に対応していない。
+ * 正本 §11.2 の Chirp 3 は **`us` / `eu` の multi-region 提供**で、
+ * `global` や `asia-northeast1` へ投げると
+ * 「無い」「一般提供ではない」と言われる。**モデルが廃止されたのではない。**
  *
+ * 話者分離も同じで、モデルと location の組み合わせで可否が変わる。
  * 全部を失敗にすると会議そのものが録れなくなるので、
- * **分離だけを諦めて、諦めたことを言う。**
+ * **落とせるものだけ落として、落としたことを言う。**
  */
 export function isDiarizationUnsupported(error: unknown): boolean {
   const message = error instanceof Error ? error.message : String(error);
   return /diarization|speaker_diarization|unsupported fields/i.test(message);
+}
+
+/** そのモデルがこの location に無いか。fallback の判断に使う。 */
+export function isModelUnavailable(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return /does not exist in the location|no longer generally available|not.*available/i.test(
+    message,
+  );
 }
 
 /**
@@ -341,15 +354,10 @@ export class GoogleBatchTranscriber implements BatchTranscriber {
   ): Promise<readonly TranscriptResult[]> {
     if (audio.byteLength === 0) return [];
 
-    const request = (diarize: boolean): unknown => ({
+    const request = (model: string, diarize: boolean): unknown => ({
       recognizer: this.#config.recognizer,
       config: {
-        /*
-         * 既定を `long` にしてある。正本 §11.2 は Chirp 3 を指名しているが、
-         * **一般提供が終わっていて**普通のプロジェクトでは 403 になる。
-         * 使えないものを既定にすると、繋いだ瞬間に落ちる。
-         */
-        model: this.#config.model ?? 'long',
+        model,
         languageCodes: [config.language],
         features: {
           enableAutomaticPunctuation: true,
@@ -376,22 +384,55 @@ export class GoogleBatchTranscriber implements BatchTranscriber {
       content: audio,
     });
 
-    let response: { results?: readonly V2Result[] | null };
-    try {
-      [response] = await this.#config.client.recognize(request(true));
-    } catch (error) {
-      if (!isDiarizationUnsupported(error)) throw error;
-      /*
-       * 分離だけを諦める。**会議そのものは録れる。**
-       * 諦めたことを知らせるので、画面は「話者は分かりません」と出せる
-       * （全部を Speaker 1 にしない — `fromV2Results` は null を返す）。
-       */
-      this.#config.onDiarizationUnavailable?.(
-        error instanceof Error ? error.message : String(error),
-      );
-      [response] = await this.#config.client.recognize(request(false));
-    }
+    /*
+     * 正本 §11.2 は Chirp 3 を指名している。**`us` / `eu` の
+     * multi-region では話者分離込みで動く**（実接続で確認済み）。
+     * 他の location には無いので、そのときだけ `long` へ落ちる。
+     *
+     * **黙って落ちない。**落ちたことは呼び出し側へ知らせる。
+     */
+    const preferred = this.#config.model ?? 'chirp_3';
+    const fallback = this.#config.fallbackModel ?? 'long';
 
+    const attempt = async (
+      model: string,
+      diarize: boolean,
+    ): Promise<{ results?: readonly V2Result[] | null }> => {
+      const [response] = await this.#config.client.recognize(request(model, diarize));
+      return response;
+    };
+
+    const withFallbacks = async (): Promise<{ results?: readonly V2Result[] | null }> => {
+      try {
+        return await attempt(preferred, true);
+      } catch (error) {
+        if (isModelUnavailable(error) && fallback !== preferred) {
+          // モデルが無い location。**精度は落ちるが、会議は録れる。**
+          this.#config.onModelUnavailable?.(error instanceof Error ? error.message : String(error));
+          try {
+            return await attempt(fallback, true);
+          } catch (fallbackError) {
+            if (!isDiarizationUnsupported(fallbackError)) throw fallbackError;
+            this.#config.onDiarizationUnavailable?.(
+              fallbackError instanceof Error ? fallbackError.message : String(fallbackError),
+            );
+            return attempt(fallback, false);
+          }
+        }
+        if (!isDiarizationUnsupported(error)) throw error;
+        /*
+         * 分離だけを諦める。**会議そのものは録れる。**
+         * 全部を Speaker 1 にはしない（`fromV2Results` は null を返す）。
+         * 出所（microphone / system）は残るので、そちらが一次情報になる。
+         */
+        this.#config.onDiarizationUnavailable?.(
+          error instanceof Error ? error.message : String(error),
+        );
+        return attempt(preferred, false);
+      }
+    };
+
+    const response = await withFallbacks();
     return fromV2Results(response.results ?? [], config.language);
   }
 }

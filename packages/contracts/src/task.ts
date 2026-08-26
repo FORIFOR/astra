@@ -11,6 +11,14 @@ export const TASK_STATUSES = [
   'PENDING',
   'RUNNING',
   'WAITING_APPROVAL',
+  /**
+   * 手元の実行基盤（Local Agent Host）が落ちている。正本 §4.4。
+   *
+   * **失敗ではない。**待てば戻る。失敗にすると、利用者は最初からやり直す。
+   * ここで運営側のモデルへ乗り換えないのが肝で、乗り換えると
+   * 利用者が選んだ経路と料金の外で処理が走る。
+   */
+  'PAUSED_HOST_OFFLINE',
   'CANCELLING',
   'COMPLETED',
   'FAILED',
@@ -34,9 +42,21 @@ export const isTerminal = (s: TaskStatus): boolean =>
  * （実装仕様 §6.4）。同一状態への遷移は no-op として許す（activity の再実行対策）。
  */
 export const TASK_TRANSITIONS: Readonly<Record<TaskStatus, readonly TaskStatus[]>> = {
-  PENDING: ['RUNNING', 'CANCELLING', 'FAILED', 'CANCELLED'],
-  RUNNING: ['WAITING_APPROVAL', 'CANCELLING', 'COMPLETED', 'FAILED'],
-  WAITING_APPROVAL: ['RUNNING', 'CANCELLING', 'FAILED', 'CANCELLED'],
+  PENDING: ['RUNNING', 'PAUSED_HOST_OFFLINE', 'CANCELLING', 'FAILED', 'CANCELLED'],
+  RUNNING: [
+    'WAITING_APPROVAL',
+    // 端末が落ちた。**失敗にしない。**待てば戻る。
+    'PAUSED_HOST_OFFLINE',
+    'CANCELLING',
+    'COMPLETED',
+    'FAILED',
+  ],
+  WAITING_APPROVAL: ['RUNNING', 'PAUSED_HOST_OFFLINE', 'CANCELLING', 'FAILED', 'CANCELLED'],
+  /**
+   * 戻ったら続きへ。人が諦めれば中止。
+   * **勝手に FAILED へ落とさない**（途中までの結果ごと失うため）。
+   */
+  PAUSED_HOST_OFFLINE: ['RUNNING', 'WAITING_APPROVAL', 'CANCELLING', 'CANCELLED'],
   CANCELLING: ['CANCELLED', 'FAILED'],
   COMPLETED: [],
   FAILED: [],
@@ -169,6 +189,12 @@ export function dockStateFor(
     case 'PENDING':
     case 'RUNNING':
     case 'CANCELLING':
+    /*
+     * 止まっているが、進行中として見せる。§4.4。
+     * 失敗の面へ落とすと、利用者は「やり直さないといけない」と読む。
+     * 実際には待てば戻るので、進行中のまま理由を添える。
+     */
+    case 'PAUSED_HOST_OFFLINE':
       return 'WORKING';
     case 'WAITING_APPROVAL':
       return 'WAITING_APPROVAL';

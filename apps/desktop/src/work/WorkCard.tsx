@@ -135,6 +135,9 @@ export function WorkCard({
 
 function statusLabel(status: WorkView['status']): string {
   switch (status) {
+    case 'PAUSED_HOST_OFFLINE':
+      // 失敗として見せない。待てば戻る（§4.4）。
+      return '端末の復帰待ち';
     case 'COMPLETED':
       return '完了';
     case 'FAILED':

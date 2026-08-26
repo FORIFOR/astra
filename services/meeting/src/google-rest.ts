@@ -119,12 +119,27 @@ export function translateClientFromEnv(config: GoogleRestConfig): TranslateClien
  * **live path はここではない。**live は streaming が要るので、
  * 別の口（`StreamingTranscriber`）のまま。
  */
+/**
+ * recognizer のパスから endpoint を決める。
+ *
+ * V2 は **location ごとに endpoint が違う。**`locations/us` を
+ * `speech.googleapis.com` へ投げると、そこには無いと言われる。
+ * Chirp 3 は `us` / `eu` の multi-region 提供なので、ここを間違えると
+ * 「モデルが無い」に見える（実際には endpoint 違い）。
+ */
+export function speechEndpoint(recognizer: string): string {
+  const location = /\/locations\/([^/]+)/.exec(recognizer)?.[1];
+  return !location || location === 'global'
+    ? 'https://speech.googleapis.com'
+    : `https://${location}-speech.googleapis.com`;
+}
+
 export function speechV2ClientFromEnv(config: GoogleRestConfig): V2SpeechClient {
   const getToken = tokenSource(config);
   return {
     async recognize(request: unknown) {
       const parameters = request as { recognizer: string; content?: unknown };
-      const url = `https://speech.googleapis.com/v2/${parameters.recognizer}:recognize`;
+      const url = `${speechEndpoint(parameters.recognizer)}/v2/${parameters.recognizer}:recognize`;
 
       /*
        * REST は音声を base64 で受ける。SDK はバイト列をそのまま渡せるので、

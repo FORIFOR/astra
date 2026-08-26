@@ -33,6 +33,8 @@ const STATE_LABEL: Record<WorkView['status'], string> = {
   PENDING: 'これから始まります',
   RUNNING: '進めています',
   WAITING_APPROVAL: '確認を待っています',
+  // §4.4: 失敗ではない。待てば戻る。
+  PAUSED_HOST_OFFLINE: 'お使いの端末が戻るのを待っています',
   CANCELLING: '止めています',
   COMPLETED: '終わりました',
   FAILED: '完了できませんでした',

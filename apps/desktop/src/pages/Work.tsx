@@ -27,7 +27,13 @@ export type WorkFilter = (typeof WORK_FILTERS)[number]['id'];
 export function matchesFilter(status: TaskStatus, filter: WorkFilter): boolean {
   switch (filter) {
     case 'active':
-      return status === 'PENDING' || status === 'RUNNING' || status === 'CANCELLING';
+      return (
+        status === 'PENDING' ||
+        status === 'RUNNING' ||
+        status === 'CANCELLING' ||
+        // 止まっているが、進行中の仕事。失敗の側へ寄せない（§4.4）。
+        status === 'PAUSED_HOST_OFFLINE'
+      );
     case 'waiting':
       return status === 'WAITING_APPROVAL';
     case 'done':

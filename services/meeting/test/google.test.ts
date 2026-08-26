@@ -225,38 +225,21 @@ describe('GoogleBatchTranscriber', () => {
     expect(recognize).not.toHaveBeenCalled();
   });
 
-  it('asks for a model that is actually available, with word timings', async () => {
+  it('asks for Chirp 3 with word timings', async () => {
     const recognize = vi.fn(async () => [{ results: [] }] as never);
     const batch = new GoogleBatchTranscriber({
       client: { recognize },
-      recognizer: 'projects/p/locations/global/recognizers/_',
+      recognizer: 'projects/p/locations/us/recognizers/_',
     });
     await batch.transcribe(new Uint8Array(16), { language: 'ja-JP' });
 
     const [request] = recognize.mock.calls[0] as unknown as [
       { config: { model: string; features: { enableWordTimeOffsets: boolean } } },
     ];
-    /*
-     * 正本 §11.2 は Chirp 3 を指名しているが、実接続で確かめたところ
-     * **一般提供が終わっていた**（no longer generally available）。
-     * 使えないものを既定にすると、繋いだ瞬間に 403 で落ちる。
-     * 指定したい場合は `model` で明示できる。
-     */
-    expect(request.config.model).toBe('long');
+    // 正本 §11.2 の指名どおり。`us` / `eu` の multi-region で動く（実接続で確認）
+    expect(request.config.model).toBe('chirp_3');
     // 時間が無いと live との突き合わせができない
     expect(request.config.features.enableWordTimeOffsets).toBe(true);
-  });
-
-  it('still lets the caller name a model explicitly', async () => {
-    const recognize = vi.fn(async () => [{ results: [] }] as never);
-    const batch = new GoogleBatchTranscriber({
-      client: { recognize },
-      recognizer: 'r',
-      model: 'chirp_3',
-    });
-    await batch.transcribe(new Uint8Array(16), { language: 'ja-JP' });
-    const [request] = recognize.mock.calls[0] as unknown as [{ config: { model: string } }];
-    expect(request.config.model).toBe('chirp_3');
   });
 });
 
