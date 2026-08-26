@@ -38,6 +38,11 @@ export interface TaskStep {
    * このファイルは contracts を import できない（冒頭の注意）。
    */
   readonly policies?: readonly unknown[];
+  /**
+   * 落ちたときに代わりに試す tool（正本 §24）。
+   * **同じ plugin の宣言済み tool だけ。**
+   */
+  readonly fallbacks?: readonly string[];
 }
 
 export interface TaskPlan {

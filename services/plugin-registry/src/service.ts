@@ -593,6 +593,7 @@ export class PluginRegistryService {
         risk: t.risk,
         surface: t.surface,
         requiresConfirmation: t.requires_confirmation,
+        fallbacks: t.fallbacks,
       }));
 
     const granted = await withTenant(this.#db, tenantId, (tx) =>

@@ -35,6 +35,8 @@ export interface InstalledAgent {
     readonly risk: TaskStep['risk'];
     readonly surface: 'local' | 'cloud';
     readonly requiresConfirmation: boolean;
+    /** 落ちたときの代替（正本 §24）。 */
+    readonly fallbacks?: readonly string[];
   }[];
   /** その plugin の規制区分。**運ばないと規制の意味が無くなる**（正本 §22）。 */
   readonly complianceProfile: StepComplianceProfile;
@@ -146,6 +148,9 @@ export function planInstalledAgent(
     requiresConfirmation: entry.tool.requiresConfirmation,
     complianceProfile: agent.complianceProfile,
     ...(agent.policies && agent.policies.length > 0 ? { policies: agent.policies } : {}),
+    ...(entry.tool.fallbacks && entry.tool.fallbacks.length > 0
+      ? { fallbacks: entry.tool.fallbacks }
+      : {}),
   }));
 
   return {

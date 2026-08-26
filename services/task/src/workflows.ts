@@ -212,6 +212,8 @@ export async function TaskWorkflow(input: TaskWorkflowInput): Promise<TaskResult
         message: messageOf(error),
         step_index: stepIdx,
         retryable: false,
+        // 何をすれば直るかを言う。**言わないと、利用者は何もできない**（正本 §24）
+        recovery: recoveryFor(error),
       });
     } catch {
       // 記録に失敗しても、元の失敗を投げ直すのは呼び出し側の責任
@@ -225,6 +227,21 @@ export async function TaskWorkflow(input: TaskWorkflowInput): Promise<TaskResult
    * そのまま記録すると、**何も言っていないエラー**が残る。
    * 原因の連なりを辿って、実際の理由まで降りる。
    */
+  /**
+   * 何をすれば直るか。正本 §24 の最後は「user handoff」。
+   *
+   * **分からないときに `retry` と言わない。**直らない再試行を勧めると、
+   * 利用者は同じことを繰り返すだけになる。
+   */
+  function recoveryFor(error: unknown): 'retry' | 'reconnect' | 'grant_permission' | 'handoff' {
+    const message = messageOf(error);
+    if (/not connected|expired|reconnect/i.test(message)) return 'reconnect';
+    if (/permission|denied|not allowed|scope/i.test(message)) return 'grant_permission';
+    if (/declared local|no host/i.test(message)) return 'handoff';
+    // 代替まで試した上で落ちている。もう一度やっても同じ。
+    return 'handoff';
+  }
+
   function messageOf(error: unknown): string {
     let current: unknown = error;
     let deepest = '';

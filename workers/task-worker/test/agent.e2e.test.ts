@@ -67,7 +67,8 @@ describe.skipIf(!url)('an installed agent', () => {
       permissions: ['artifacts.read', 'artifacts.write'],
       data_accessed: ['この利用者が既に見られる商談'],
       tools: [
-        { id: 'crm.search', risk: 'READ', surface: 'cloud' },
+        // 落ちたら summarize で続ける（正本 §24 の alternate connector）
+        { id: 'crm.search', risk: 'READ', surface: 'cloud', fallbacks: ['crm.summarize'] },
         { id: 'crm.summarize', risk: 'READ', surface: 'cloud' },
       ],
       agents: [
@@ -138,7 +139,13 @@ describe.skipIf(!url)('an installed agent', () => {
         seen.push({ toolId, args: step.args });
         // 失敗経路を試すための合図。実際の tool は落ちるものなので、
         // 落ちたときに何が残るかを確かめておく必要がある。
-        if (step.args['request'] === 'BOOM') throw new Error('the CRM refused the request');
+        // BOOM   … crm.search だけ落ちる（代替で続くはず）
+        // BOOM-ALL … すべて落ちる（代替も無い状態を作る）
+        const request = step.args['request'];
+        if (request === 'BOOM-ALL') throw new Error('the CRM refused the request');
+        if (request === 'BOOM' && toolId === 'crm.search') {
+          throw new Error('the CRM refused the request');
+        }
         return {
           result: { tool: toolId },
           detail: null,
@@ -401,7 +408,7 @@ describe.skipIf(!url)('an installed agent', () => {
     const { task } = await tasks.create({
       tenantId,
       userId,
-      request: { kind: agentKindFor(PLUGIN_ID, 'analyst'), input: { message: 'BOOM' } },
+      request: { kind: agentKindFor(PLUGIN_ID, 'analyst'), input: { message: 'BOOM-ALL' } },
       idempotencyKey: `boom-${uuidv7()}`,
     });
     await expect(
@@ -413,6 +420,31 @@ describe.skipIf(!url)('an installed agent', () => {
     // **何も言っていないエラーを残さない。**理由まで降りていること
     expect(done.error?.message ?? '').toContain('the CRM refused the request');
     expect(done.error?.step_index).toBe(0);
+    // 何をすれば直るかを言う（正本 §24）
+    expect(done.error?.recovery).toBe('handoff');
+  }, 120_000);
+
+  it('tries the alternate the plugin declared before giving up (正本 §24)', async () => {
+    await registry.install(tenantId, userId, PLUGIN_ID, {
+      version: '1.0.0',
+      granted_scopes: ['artifacts.read', 'artifacts.write'],
+    });
+    seen.length = 0;
+
+    // crm.search だけが落ちる。宣言された代替（crm.summarize）で続くはず。
+    const { task } = await tasks.create({
+      tenantId,
+      userId,
+      request: { kind: agentKindFor(PLUGIN_ID, 'analyst'), input: { message: 'BOOM' } },
+      idempotencyKey: `fallback-${uuidv7()}`,
+    });
+    await env.client.workflow.getHandle(workflowIdFor(tenantId, task.id)).result();
+
+    const done = await tasks.get(tenantId, task.id);
+    // 代替で続いたので、落ちずに終わる
+    expect(done.status).toBe('COMPLETED');
+    // search が落ち、summarize が代わりに呼ばれ、そのあと本来の summarize も走る
+    expect(seen.filter((s) => s.toolId === 'crm.summarize').length).toBeGreaterThanOrEqual(2);
   }, 120_000);
 
   it('refuses an agent id the plugin never declared', async () => {

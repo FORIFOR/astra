@@ -7,6 +7,12 @@ export interface TaskErrorPayload {
   readonly message: string;
   readonly step_index: number | null;
   readonly retryable: boolean;
+  /**
+   * 何をすれば直るか（正本 §24）。
+   * **言わないと、利用者は何もできない。**
+   */
+  readonly recovery?:
+    'retry' | 'reconnect' | 'grant_permission' | 'reauthenticate' | 'handoff' | 'none';
 }
 
 export interface StartTaskMeta {

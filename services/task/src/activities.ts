@@ -89,6 +89,30 @@ function policyContextFor(step: TaskStep): ActionContext {
   };
 }
 
+/**
+ * 宣言された代替を順に試す。正本 §24。
+ *
+ * **全部落ちたら null。**「代替があったのに試さなかった」も
+ * 「試して全部落ちた」も、呼び出し側からは同じに見えてはいけないので、
+ * 試したこと自体は進捗に出す。
+ */
+async function tryFallbacks(
+  input: TaskWorkflowInput,
+  step: TaskStep,
+  deps: ActivityDeps,
+): Promise<Awaited<ReturnType<StepExecutor['execute']>> | null> {
+  for (const toolId of step.fallbacks ?? []) {
+    const executor = deps.executors?.[toolId];
+    if (!executor) continue;
+    try {
+      return await executor.execute(input, { ...step, toolId });
+    } catch {
+      // 次の代替へ。最後まで落ちたら null を返す。
+    }
+  }
+  return null;
+}
+
 const stepKey = (taskId: string, index: number, name: string): string =>
   `${taskId}:${index}:${name}`;
 
@@ -354,14 +378,49 @@ export function createTaskActivities(deps: ActivityDeps): TaskActivities {
           : // 登録が無い tool は何もしない。Phase 0 の echo がこれにあたる。
             { result: { echoed: step.args['message'] ?? null, step: step.index }, detail: null };
       } catch (error) {
-        // 自分の領域の状態を片付けさせてから投げ直す。
-        // 後始末が落ちても、元の失敗を握りつぶさない。
-        try {
-          await executor?.onFailure?.(input, step, error);
-        } catch {
-          /* 後始末の失敗で、本当の理由を見失わせない */
+        /*
+         * 正本 §24: API connector fail → retry → alternate connector。
+         * 再試行は Temporal が済ませているので、ここは**代替**を試す。
+         *
+         * 代替も同じ確認と同じ規則を通る（宣言が検証済みで、
+         * 元より重い代替は publish で落としてある）。
+         */
+        const alternate = await tryFallbacks(input, step, deps);
+        if (alternate) {
+          await inTenant(input, (tx) =>
+            appendEvent(
+              tx,
+              {
+                tenantId: input.tenantId,
+                streamKind: 'task',
+                streamId: input.taskId,
+                taskId: input.taskId,
+                type: 'task.progress',
+                payload: {
+                  phase: 'acting',
+                  step_index: step.index,
+                  step_count: null,
+                  message: step.message,
+                  // どの tool でやったかは出さない（§7.2）。やり直したことだけ言う。
+                  detail: '別の方法で続けています',
+                  percent: null,
+                },
+                idempotencyKey: stepKey(input.taskId, step.index, 'fallback'),
+              },
+              deps.publisher,
+            ),
+          );
+          outcome = alternate;
+        } else {
+          // 自分の領域の状態を片付けさせてから投げ直す。
+          // 後始末が落ちても、元の失敗を握りつぶさない。
+          try {
+            await executor?.onFailure?.(input, step, error);
+          } catch {
+            /* 後始末の失敗で、本当の理由を見失わせない */
+          }
+          throw error;
         }
-        throw error;
       }
       const result = outcome.artifact
         ? { ...(outcome.result as object), artifact: outcome.artifact }

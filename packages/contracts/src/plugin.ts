@@ -10,7 +10,7 @@ import { McpServerDecl } from './mcp.js';
 import { CONFIRMATION_REQUIRED_RISKS, ExecutionSurface } from './surface.js';
 import { InstallId, PluginId, PublisherId, TenantId, UserId } from './ids.js';
 import { Semver, Sha256Hex, Timestamp, compareSemver } from './primitives.js';
-import { ActionRisk } from './approval.js';
+import { ACTION_RISKS, ActionRisk } from './approval.js';
 
 /** 正本 §22 の Profiles。manifest で必須。 */
 export const ComplianceProfile = z.enum([
@@ -75,6 +75,14 @@ export const ToolDecl = z.object({
   risk: ActionRisk,
   surface: ExecutionSurface.default('cloud'),
   requires_confirmation: z.boolean().default(false),
+  /**
+   * 落ちたときに代わりに試す tool。正本 §24 の
+   * 「API connector fail → retry → alternate connector」。
+   *
+   * **同じ plugin の宣言済み tool だけ**（publish で検証する）。
+   * よそへ逃がせるようにすると、失敗が別の権限で通ってしまう。
+   */
+  fallbacks: z.array(z.string().min(1)).max(3).default([]),
 });
 export type ToolDecl = z.infer<typeof ToolDecl>;
 
@@ -192,6 +200,35 @@ export const PluginManifest = manifestShape.superRefine((m, ctx) => {
           path: ['agents', i, 'tools', j],
           message: `agent "${agent.id}" references undeclared tool "${toolId}"`,
         });
+      }
+    }
+  }
+
+  // 5b. 代替 tool も宣言済みであること。よそへ逃がさない（正本 §24）
+  for (const [i, tool] of m.tools.entries()) {
+    for (const [j, fallback] of tool.fallbacks.entries()) {
+      if (fallback === tool.id) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['tools', i, 'fallbacks', j],
+          message: `tool "${tool.id}" lists itself as its own fallback`,
+        });
+      } else if (!declaredTools.has(fallback)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['tools', i, 'fallbacks', j],
+          message: `tool "${tool.id}" falls back to "${fallback}", which is not declared`,
+        });
+      } else {
+        // 代替が元より重いと、落ちたほうが危ないことをする
+        const target = m.tools.find((t) => t.id === fallback)!;
+        if (ACTION_RISKS.indexOf(target.risk) > ACTION_RISKS.indexOf(tool.risk)) {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['tools', i, 'fallbacks', j],
+            message: `fallback "${fallback}" is riskier than "${tool.id}"`,
+          });
+        }
       }
     }
   }
