@@ -1462,9 +1462,9 @@ AC-8〜AC-16 は「後から入れられない性質」を Phase 0 で固定す�
 | D-14  | 認証専用の DB スコープ `withIdentity` と最小権限 BYPASSRLS ロール `astra_identity` を追加                                        | 認証はテナント確定前に走るため RLS 下では users を引けず、サインアップは membership 不在で INSERT が弾かれる。RLS 緩和ではなく GRANT で BYPASSRLS の範囲を閉じ込める。§5.4 |
 | D-15  | refresh token のハッシュに Argon2id ではなく sha256 を使う                                                                       | 対象が 256bit の乱数で辞書攻撃が成立しないため。Argon2id は利用者が選ぶ低エントロピーの秘密（共有リンクのパスワード）に限定する。§4.2                                      |
 | D-16  | トップ Navigation の表示名を Home / Work / Library / Apps にする（正本 §2 は ホーム / AIエージェント / ライブラリ / プラグイン） | UI/UX §2.1 の名称方針。内部実装は Agent Runtime / Plugin Registry の名前を保持し、一般ユーザー向け表示だけ変える。タブが 4 つである点は変わらない                          |
-| D-17  | `TaskDockState` を UI/UX §3 の状態機械に合わせる                                                                                 | THINKING/RESEARCHING/ACTING を `WORKING` へ畳み、`TYPING` を追加、`ERROR` を `FAILED_RECOVERABLE` / `FAILED_BLOCKED` に分割。§20                                           |
-| D-18  | `Approval` に `impact`（主ボタン文言・対象件数・外部/内部・取り消し可否）を必須で持たせる                                        | UI/UX §14.1「Primary button は『承認』ではなく結果を書く」。サーバが影響範囲を持たないとクライアントが文言を組み立てられない。§20                                          |
-| D-19  | `task.progress` に `detail` / `elapsed_ms` / `retrying` を追加                                                                   | UI/UX §6.1「12 sources」/ §6.2「段数が決まらない処理は % を出さない」「retry 中は『再試行中』に置き換える」。§20                                                           |
+| D-17  | `TaskDockState` を UI/UX §3 の状態機械に合わせる                                                                                 | THINKING/RESEARCHING/ACTING を `WORKING` へ畳み、`TYPING` を追加、`ERROR` を `FAILED_RECOVERABLE` / `FAILED_BLOCKED` に分割。§19                                           |
+| D-18  | `Approval` に `impact`（主ボタン文言・対象件数・外部/内部・取り消し可否）を必須で持たせる                                        | UI/UX §14.1「Primary button は『承認』ではなく結果を書く」。サーバが影響範囲を持たないとクライアントが文言を組み立てられない。§19                                          |
+| D-19  | `task.progress` に `detail` / `elapsed_ms` / `retrying` を追加                                                                   | UI/UX §6.1「12 sources」/ §6.2「段数が決まらない処理は % を出さない」「retry 中は『再試行中』に置き換える」。§19                                                           |
 | D-20  | `packages/api-client` を §26 の構成に追加                                                                                        | `packages/contracts` の client 側。desktop / share-web / evals が同じ検証済みクライアントを使う。`packages/db` と同じ扱いの拡張                                            |
 
 ---
@@ -1486,12 +1486,12 @@ AC-8〜AC-16 は「後から入れられない性質」を Phase 0 で固定す�
 
 ---
 
-## 20. UI/UX 仕様との突合
+## 19. UI/UX 仕様との突合
 
 `docs/spec/astra_ui_ux_detailed_spec_v0.1.docx` を読み込み、Phase 0 の契約と突き合わせた結果。
 **UI に関しては UI/UX 仕様が製品仕様より優先**する（`docs/README.md`）。
 
-### 20.1 契約へ反映した差分
+### 19.1 契約へ反映した差分
 
 | #   | UI/UX 仕様                                                                   | Phase 0 での対応                                                                                      |
 | --- | ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
@@ -1503,7 +1503,7 @@ AC-8〜AC-16 は「後から入れられない性質」を Phase 0 で固定す�
 
 契約のメジャー版を `0.2.0` へ上げた（§3.8）。
 
-### 20.2 すでに一致していたもの
+### 19.2 すでに一致していたもの
 
 - §2.2 の 4 段階 Surface と正本 §4.4 の Progressive Surface
 - §4.4「Dismiss と Cancel を同一操作にしない」→ `task.cancelled` は明示的な取消のみ（D-03b）
@@ -1511,7 +1511,7 @@ AC-8〜AC-16 は「後から入れられない性質」を Phase 0 で固定す�
 - §23 の Telemetry 目標値 → 正本 §23 の SLO と同一
 - §22「permission は利用直前に purpose-first」→ §9.3 の install 時スコープ部分許可
 
-### 20.3 Phase 0 では扱わないが、後続で必要になるもの
+### 19.3 Phase 0 では扱わないが、後続で必要になるもの
 
 | UI/UX §  | 内容                                                                | 対応 Phase                                  |
 | -------- | ------------------------------------------------------------------- | ------------------------------------------- |
@@ -1525,7 +1525,7 @@ AC-8〜AC-16 は「後から入れられない性質」を Phase 0 で固定す�
 | §13・§15 | Research / Evidence の Progressive Disclosure（L0〜L3）             | Phase 2                                     |
 | §16      | Notifications の Severity 4 段階                                    | Phase 6                                     |
 
-### 20.4 UI 実装順（UI/UX §24）
+### 19.4 UI 実装順（UI/UX §24）
 
 Phase 0 の完了後、Phase 1 は UI-0 から始める。
 
@@ -1543,7 +1543,7 @@ UI-7  Apps / Pack install
 UI/UX 仕様 §25 の AC-01〜AC-15 は Phase 1 以降の受け入れ条件であり、
 Phase 0 の Exit（§16 の AC-1〜AC-16）とは別物。混同しない。
 
-### 20.5 UI-0 で確定したこと
+### 19.5 UI-0 で確定したこと
 
 **トークンは TypeScript のオブジェクトが唯一の正**とし、CSS カスタムプロパティは
 そこから生成する（`packages/ui-kit`）。別々に手で持つと必ずずれる。
@@ -1566,7 +1566,7 @@ Phase 0 の Exit（§16 の AC-1〜AC-16）とは別物。混同しない。
 各コンポーネントで px を比較させない。**幅が足りないときはユーザーの指定より
 main の最低幅 640px を優先**して sidebar を畳む。720px 未満は潰さず必要幅を伝える。
 
-### 20.6 UI-1 で確定したこと
+### 19.6 UI-1 で確定したこと
 
 **Dock の geometry は TypeScript を正とし、Rust の定数を生成する**
 （`scripts/gen-dock-geometry.mjs` → `src-tauri/src/dock/geometry_generated.rs`）。
@@ -1604,13 +1604,13 @@ main の最低幅 640px を優先**して sidebar を畳む。720px 未満は潰
   Lens は「Astra が実際に見たもの」を映す面なので、埋め草を入れると意味が壊れる。
   取れなかった理由（`requires_permission`）は返し、権限要求は利用直前に行う（§22）。
 
-#### global shortcut（§20）
+#### global shortcut（§19）
 
 macOS は `Option+Space`、Windows は `Ctrl+Alt+Space`。
 **登録に失敗しても起動は止めない。**OS や IME との衝突は珍しくないので、
 起動しないよりショートカットが効かない方がまし（設定から変更できる）。
 
-### 20.7 UI-2 で確定したこと
+### 19.7 UI-2 で確定したこと
 
 #### `packages/api-client`（逸脱 D-20）
 
@@ -1651,7 +1651,48 @@ macOS は `Option+Space`、Windows は `Ctrl+Alt+Space`。
 
 ---
 
-## 19. 参照
+## 20. 実プロセスでの疎通確認
+
+受け入れテスト（§16）は `buildApp` を直接叩き、Temporal は `@temporalio/testing` の
+内蔵サーバを使う。つまり **`server.ts` と `worker-main.ts` の起動経路そのものは
+一度も通らない**。ここを埋めるのが `scripts/smoke.sh`（`pnpm smoke`）。
+
+```sh
+pnpm dev:infra   # PostgreSQL 16 + Redis + Temporal
+pnpm smoke       # 使い捨て DB を作り、実プロセスを起動して HTTP で叩き、後始末する
+```
+
+見るもの: `/readyz` が全依存に届く / dev token でテナントが払い出される /
+同梱プラグイン 5 本が catalog に出る / 実 Temporal でタスクが完走し SSE が終端まで流れる /
+同じ Idempotency-Key で同一タスクが返る / artifact の sha256 が一致する / 越境が 404。
+
+### 20.1 この経路でしか出なかった不具合
+
+実際に起動して初めて分かったものが 3 件あった。**型検査もテストも通っていた。**
+
+| 症状                         | 原因                                                                                                        | 対処                                                                             |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| 起動直後に落ちる             | `pretty: true` が `pino-pretty` を要求するのに依存に無い                                                    | 依存を追加。加えて**ログの整形でアプリを落とさない**（失敗したら JSON へ落とす） |
+| worker が上がらない          | `defaultWorkflowsPath()` が `.js` 決め打ちで、tsx で src から起動すると存在しない `src/workflows.js` を指す | 自分自身の拡張子から決める                                                       |
+| プラグインが空のまま「正常」 | `./plugins/builtin` が cwd 依存で、`pnpm --filter` 起動だとパッケージ配下を見る                             | 設定を絶対パスへ解決し、起動時に実在を検査して**解決後のパスを添えて落とす**     |
+
+3 件目は「gateway と worker が別々の `.data/objects` を指す」も同時に起こしていた。
+相対パスの既定は cwd 依存で、どこから起動したかで挙動が変わる。
+サービスは**リポジトリルートから起動する**（`pnpm dev:gateway` / `pnpm dev:worker`）。
+
+### 20.2 `schema.sql` の生成
+
+`dbmate` の `--schema-file` に任せない。ホストの `pg_dump` がサーバより古いと
+**失敗しても終了コード 0 のまま**で、生成物が黙って古いまま残る（実際に踏んだ）。
+`scripts/dump-schema.sh` が版を突き合わせ、合わなければ止まるか、
+サーバと同じ版を持つコンテナの `pg_dump` を使う。
+
+出力からは実行のたびに変わる行（`\restrict` の乱数トークン、`Dumped from/by` の版）を
+落として、環境非依存にしてある。そうしないと鮮度検査が毎回落ちる。
+
+---
+
+## 21. 参照
 
 - 正本: `docs/spec/new_ai_platform_design_spec_v0.1.md`
 - UI/UX 正本: `docs/spec/astra_ui_ux_detailed_spec_v0.1.docx`（閲覧用抽出: 同名 `.md`）

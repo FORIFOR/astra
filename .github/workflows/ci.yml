@@ -1,7 +1,7 @@
-# Phase 0 の CI gate。実装仕様 §14.3・§16。
+# Phase 0 / Phase 1 の CI gate。実装仕様 §14.3・§16。
 #
-# Docker 上の PostgreSQL 16 + pgvector を使う。Temporal は
-# @temporalio/testing がローカルサーバを内蔵するので service コンテナは要らない。
+# 依存は infra/docker-compose.dev.yml をそのまま使う。
+# service containers に書き写すと定義が二重になり、開発機と CI がずれていく。
 name: ci
 
 on:
@@ -10,36 +10,18 @@ on:
   pull_request:
 
 env:
+  # compose の既定と同じ
   ASTRA_TEST_PGHOST: localhost
-  ASTRA_TEST_PGPORT: '5432'
-  PGPASSWORD: postgres
+  ASTRA_TEST_PGPORT: '5433'
+  ASTRA_TEST_PGUSER: astra
+  ASTRA_TEST_PGPASSWORD: astra
+  TEST_REDIS_URL: redis://localhost:6380
+  TEMPORAL_ADDRESS: localhost:7233
 
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-
-    services:
-      postgres:
-        image: pgvector/pgvector:pg16
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: postgres
-        ports: ['5432:5432']
-        options: >-
-          --health-cmd "pg_isready -U postgres"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 20
-      redis:
-        image: redis:7-alpine
-        ports: ['6379:6379']
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 20
+    timeout-minutes: 40
 
     steps:
       - uses: actions/checkout@v4
@@ -52,6 +34,9 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
 
       - run: pnpm install --frozen-lockfile
 
@@ -61,6 +46,21 @@ jobs:
             https://github.com/amacneil/dbmate/releases/latest/download/dbmate-linux-amd64
           sudo chmod +x /usr/local/bin/dbmate
 
+      - name: Install the PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Start the development dependencies
+        run: |
+          pnpm dev:infra
+          for _ in $(seq 1 60); do
+            pg_isready -h localhost -p 5433 -U astra && break
+            sleep 2
+          done
+
+      # ---------------------------------------------------------------- build
+
       - run: pnpm build
       - run: pnpm exec tsc -p tsconfig.tests.json
       # Vite の app は tsc -b の対象外なので個別に確かめる
@@ -68,15 +68,20 @@ jobs:
       - run: pnpm --filter @astra/share-web build
       - run: pnpm format:check
 
+      # ------------------------------------------------------------ 規約検査
+
       # 境界の形骸化を人のレビューに任せない（ADR 0001）
       - run: pnpm check:conventions
+      - name: Check the contracts version was bumped
+        if: github.event_name == 'pull_request'
+        run: node scripts/check-contracts-version.mjs origin/${{ github.base_ref }}
 
       # Tauri のビルドには Linux 側の GUI 依存が要るが、
       # ここで確かめたいのは配置計算とコマンド定義なので check / test / lint で足りる。
-      - name: Install Linux GUI dependencies for Tauri
+      - name: Install the Linux GUI dependencies Tauri needs
         run: |
-          sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev \
+            libayatana-appindicator3-dev librsvg2-dev
 
       - name: Rust (desktop local control plane)
         working-directory: apps/desktop/src-tauri
@@ -84,26 +89,33 @@ jobs:
           cargo fmt --check
           cargo clippy --all-targets -- -D warnings
           cargo test
-      - name: Check the contracts version was bumped
-        if: github.event_name == 'pull_request'
-        run: node scripts/check-contracts-version.mjs origin/${{ github.base_ref }}
+
+      # ------------------------------------------------------------------ DB
 
       - name: Migrations apply and roll back cleanly
         env:
-          DATABASE_URL: postgres://postgres:postgres@localhost:5432/astra_verify?sslmode=disable
+          DATABASE_URL: postgres://astra:astra@localhost:5433/astra_verify?sslmode=disable
         run: ./infra/db/verify.sh
 
       - name: Generated artifacts are current
         env:
-          DATABASE_URL: postgres://postgres:postgres@localhost:5432/astra_generated?sslmode=disable
+          DATABASE_URL: postgres://astra:astra@localhost:5433/astra_generated?sslmode=disable
         run: ./scripts/check-generated.sh
 
+      # --------------------------------------------------------------- tests
+
       - name: Unit and integration tests
-        env:
-          ASTRA_TEST_PGUSER: postgres
-          TEST_REDIS_URL: redis://localhost:6379
         run: pnpm test:db
 
       # Phase 0 の Exit 判定そのもの（実装仕様 §16 / evals/actions/phase0）
       - name: Phase 0 acceptance (AC-1 … AC-16)
         run: pnpm test:acceptance
+
+      # 受け入れテストは buildApp を直接叩くので、server.ts / worker-main.ts の
+      # 起動経路そのものは通らない。実プロセスでの疎通はここで見る。
+      - name: Smoke the real bootstrap path
+        run: pnpm smoke
+
+      - name: Dump the container logs on failure
+        if: failure()
+        run: docker compose -f infra/docker-compose.dev.yml logs --tail 200

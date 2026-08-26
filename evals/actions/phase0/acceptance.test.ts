@@ -206,6 +206,8 @@ describe.skipIf(!url)('Phase 0 acceptance', () => {
           statementTimeoutMillis: 20_000,
           applicationName: 'astra-acceptance',
         },
+        builtinPluginsDir: path.join(repoRoot, 'plugins/builtin'),
+        objectStoreRoot: storeRoot,
       },
       db,
       redis: null,

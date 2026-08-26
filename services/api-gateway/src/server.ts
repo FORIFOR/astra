@@ -6,13 +6,14 @@ import { FsObjectStore, LibraryService } from '@astra/service-library';
 import { TaskService, TemporalTaskRuntime } from '@astra/service-task';
 import { PluginRegistryService } from '@astra/service-plugin-registry';
 import { buildApp } from './app.js';
-import { gatewayConfigFromEnv } from './config.js';
+import { assertPathsExist, gatewayConfigFromEnv } from './config.js';
 import { keyConfigFromEnv, loadSigningKeys } from './auth/keys.js';
 import { JwtTokens } from './auth/tokens.js';
 import { MemoryRateLimiter, RedisRateLimiter, type RateLimiter } from './rate-limit/index.js';
 
 async function main(): Promise<void> {
   const config = gatewayConfigFromEnv();
+  assertPathsExist(config);
   const logger = createLogger({
     service: 'api-gateway',
     version: config.version,
@@ -39,10 +40,7 @@ async function main(): Promise<void> {
     keys,
   });
 
-  const library = new LibraryService(
-    db,
-    new FsObjectStore(process.env['ASTRA_OBJECT_STORE_ROOT'] ?? './.data/objects'),
-  );
+  const library = new LibraryService(db, new FsObjectStore(config.objectStoreRoot));
   const runtime = await TemporalTaskRuntime.connect({
     address: process.env['TEMPORAL_ADDRESS'] ?? 'localhost:7233',
     namespace: process.env['TEMPORAL_NAMESPACE'] ?? 'default',
@@ -50,7 +48,7 @@ async function main(): Promise<void> {
   const tasks = new TaskService(db, runtime);
   const registry = new PluginRegistryService({ db, coreVersion: config.version });
   // 同梱プラグインは起動のたびに読み直す。バンドルが正、DB はその写し。
-  await registry.seedBuiltins(process.env['ASTRA_BUILTIN_PLUGINS_DIR'] ?? './plugins/builtin');
+  await registry.seedBuiltins(config.builtinPluginsDir);
 
   const app = buildApp({
     config,
@@ -76,7 +74,15 @@ async function main(): Promise<void> {
   process.on('SIGINT', () => void shutdown('SIGINT'));
 
   await app.listen({ port: config.port, host: config.host });
-  logger.info({ port: config.port, env: config.env }, 'api-gateway listening');
+  logger.info(
+    {
+      port: config.port,
+      env: config.env,
+      plugins_dir: config.builtinPluginsDir,
+      object_store: config.objectStoreRoot,
+    },
+    'api-gateway listening',
+  );
 }
 
 main().catch((error: unknown) => {

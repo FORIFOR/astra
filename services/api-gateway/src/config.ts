@@ -1,4 +1,6 @@
 /** api-gateway の設定。実装仕様 §11。 */
+import { existsSync } from 'node:fs';
+import path from 'node:path';
 import { dbConfigFromEnv, type DbConfig } from '@astra/db';
 
 export type Environment = 'development' | 'test' | 'staging' | 'production';
@@ -12,6 +14,10 @@ export interface GatewayConfig {
   readonly db: DbConfig;
   /** ヘルスチェックと診断に載せるアプリ版。plugin の互換判定にも使う。 */
   readonly version: string;
+  /** 同梱プラグインの場所。**絶対パス**に解決済み。 */
+  readonly builtinPluginsDir: string;
+  /** オブジェクト保存先。**絶対パス**に解決済み。 */
+  readonly objectStoreRoot: string;
 }
 
 const ENVIRONMENTS: readonly Environment[] = ['development', 'test', 'staging', 'production'];
@@ -33,7 +39,26 @@ export function gatewayConfigFromEnv(env: NodeJS.ProcessEnv = process.env): Gate
     redisUrl: env['REDIS_URL'],
     db: dbConfigFromEnv(env),
     version: env['ASTRA_VERSION'] ?? '0.1.0',
+    // 相対パスは cwd 依存で、どのディレクトリから起動したかで挙動が変わる。
+    // ここで絶対化して、診断のときに実際に見た場所が分かるようにする。
+    builtinPluginsDir: path.resolve(env['ASTRA_BUILTIN_PLUGINS_DIR'] ?? './plugins/builtin'),
+    objectStoreRoot: path.resolve(env['ASTRA_OBJECT_STORE_ROOT'] ?? './.data/objects'),
   };
+}
+
+/**
+ * 起動前に、設定が指す場所が実在するか確かめる。
+ *
+ * 同梱プラグインが読めない状態で起動すると、カタログが空のまま「正常」に見える。
+ * 起動時に落として、解決後の絶対パスを見せる方がよい。
+ */
+export function assertPathsExist(config: GatewayConfig): void {
+  if (!existsSync(config.builtinPluginsDir)) {
+    throw new Error(
+      `bundled plugins not found at ${config.builtinPluginsDir}. ` +
+        'Set ASTRA_BUILTIN_PLUGINS_DIR, or start the service from the repository root.',
+    );
+  }
 }
 
 /**

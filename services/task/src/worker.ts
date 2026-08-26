@@ -5,6 +5,7 @@
  * ワークフローのコードはサンドボックスで別に読み込まれるため、
  * 入口をここに 1 つだけ用意して bundle の起点を固定する。
  */
+import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Worker, type NativeConnection } from '@temporalio/worker';
 import { createTaskActivities, type ActivityDeps } from './activities.js';
@@ -21,8 +22,16 @@ export interface TaskWorkerOptions {
   readonly workflowsPath?: string;
 }
 
+/**
+ * ワークフロー定義の入口。
+ *
+ * 拡張子を自分自身から取る。`.js` 決め打ちにすると、tsx で src から起動したときに
+ * 存在しない `src/workflows.js` を指して worker が上がらない（実際に踏んだ）。
+ */
 export function defaultWorkflowsPath(): string {
-  return fileURLToPath(new URL('./workflows.js', import.meta.url));
+  const here = fileURLToPath(import.meta.url);
+  const extension = path.extname(here) || '.js';
+  return path.join(path.dirname(here), `workflows${extension}`);
 }
 
 export async function createTaskWorker(

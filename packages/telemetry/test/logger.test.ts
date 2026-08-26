@@ -54,3 +54,19 @@ describe('withCorrelation', () => {
     expect(line!['task_id']).toBe('t1');
   });
 });
+
+describe('createLogger resilience', () => {
+  it('never lets log formatting stop the process', () => {
+    // pino-pretty が無い環境（本番の slim image 等）でも起動できること。
+    // 依存の入れ忘れで実際に起動不能になった。
+    expect(() => createLogger({ service: 'test', pretty: true, level: 'silent' })).not.toThrow();
+  });
+
+  it('still writes JSON when a destination is given', () => {
+    const { logger, lines } = capture();
+    logger.info({ task_id: 't1' }, 'hello');
+    const [line] = lines() as Record<string, unknown>[];
+    expect(line!['task_id']).toBe('t1');
+    expect(line!['service']).toBe('test');
+  });
+});

@@ -87,6 +87,8 @@ export async function makeTestApp(options: MakeAppOptions): Promise<TestApp> {
     redisUrl: undefined,
     version: '0.1.0',
     db: options.dbConfig,
+    builtinPluginsDir: fileURLToPath(new URL('../../../plugins/builtin', import.meta.url)),
+    objectStoreRoot: storeRoot,
   };
 
   const app = buildApp({

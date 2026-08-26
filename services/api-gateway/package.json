@@ -19,7 +19,7 @@
     "build": "tsc -b",
     "clean": "tsc -b --clean",
     "test": "vitest run --passWithNoTests",
-    "dev": "tsx watch src/server.ts",
+    "dev": "pnpm -w dev:gateway",
     "start": "node dist/server.js"
   },
   "dependencies": {

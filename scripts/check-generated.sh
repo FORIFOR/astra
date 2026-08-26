@@ -3,8 +3,8 @@
 #
 #   DATABASE_URL=... ./scripts/check-generated.sh
 #
-# schema.sql と Kysely の型は生成物なので、マイグレーションを足したのに
-# 再生成し忘れた状態をレビューで見つけるのは難しい。CI で機械的に落とす。
+# マイグレーションを足したのに再生成し忘れた状態は、レビューでは見つけにくい。
+# CI で機械的に落とす。
 set -euo pipefail
 
 : "${DATABASE_URL:?DATABASE_URL is required}"
@@ -12,13 +12,14 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
-dbmate --url "$DATABASE_URL" --migrations-dir "$ROOT/infra/db/migrations" drop >/dev/null 2>&1 || true
-dbmate --url "$DATABASE_URL" --migrations-dir "$ROOT/infra/db/migrations" \
-  --schema-file "$TMP/schema.sql" up >/dev/null
+dbmate --url "$DATABASE_URL" --migrations-dir "$ROOT/infra/db/migrations" --no-dump-schema drop >/dev/null 2>&1 || true
+dbmate --url "$DATABASE_URL" --migrations-dir "$ROOT/infra/db/migrations" --no-dump-schema up >/dev/null
 
-# pg_dump のバージョン差分（ヘッダの "Dumped by" 等）は無視して本体だけ比べる
-strip() { grep -v '^-- Dumped' "$1" | grep -v '^--$' | sed '/^$/d'; }
-if ! diff -u <(strip "$ROOT/infra/db/schema.sql") <(strip "$TMP/schema.sql") > "$TMP/schema.diff"; then
+# dump-schema.sh は版が合わなければ止まる。dbmate の --schema-file には任せない
+# （ホストの pg_dump が古いと失敗しても終了コード 0 のまま生成物が古いまま残る）。
+"$ROOT/scripts/dump-schema.sh" "$DATABASE_URL" "$TMP/schema.sql" >/dev/null
+
+if ! diff -u "$ROOT/infra/db/schema.sql" "$TMP/schema.sql" > "$TMP/schema.diff"; then
   echo "FAIL: infra/db/schema.sql is stale. Run: pnpm db:migrate" >&2
   head -40 "$TMP/schema.diff" >&2
   exit 1
@@ -36,7 +37,7 @@ if ! diff -q "$ROOT/packages/db/src/generated/schema.ts" "$TMP/schema.ts" >/dev/
 fi
 echo "generated database types are current"
 
-dbmate --url "$DATABASE_URL" --migrations-dir "$ROOT/infra/db/migrations" --no-dump-schema drop >/dev/null
-
 # Dock の geometry は TypeScript を正として Rust の定数を生成している
 node "$ROOT/scripts/gen-dock-geometry.mjs" --check
+
+dbmate --url "$DATABASE_URL" --migrations-dir "$ROOT/infra/db/migrations" --no-dump-schema drop >/dev/null

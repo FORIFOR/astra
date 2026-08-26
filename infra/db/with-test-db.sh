@@ -10,20 +10,24 @@
 #
 # 必要: dbmate, psql, ローカルクラスタで CREATE DATABASE / CREATE ROLE できる権限
 # 環境変数:
-#   ASTRA_TEST_PGHOST (既定 localhost) / ASTRA_TEST_PGPORT (既定 5432)
-#   ASTRA_TEST_PGUSER (省略時は OS ユーザー。CI では postgres 等)
+#   ASTRA_TEST_PGHOST / ASTRA_TEST_PGPORT / ASTRA_TEST_PGUSER / ASTRA_TEST_PGPASSWORD
 #   ASTRA_TEST_DB     (既定 astra_test_$$)
+#
+# 既定は infra/docker-compose.dev.yml の PostgreSQL 16（localhost:5433, astra/astra）。
+# `pnpm dev:infra` を上げてあれば設定なしで動く。別のサーバを使うときだけ上書きする。
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 HOST="${ASTRA_TEST_PGHOST:-localhost}"
-PORT="${ASTRA_TEST_PGPORT:-5432}"
+PORT="${ASTRA_TEST_PGPORT:-5433}"
 DB="${ASTRA_TEST_DB:-astra_test_$$}"
 APP_PASSWORD='astra_app'
 
-# 管理接続のユーザー。ローカルは OS ユーザー、CI はコンテナの superuser。
-ADMIN_USER="${ASTRA_TEST_PGUSER:-}"
-ADMIN_PREFIX="${ADMIN_USER:+${ADMIN_USER}@}"
+# 管理接続の資格情報。compose の既定に合わせてある。
+export PGPASSWORD="${ASTRA_TEST_PGPASSWORD:-astra}"
+ADMIN_USER="${ASTRA_TEST_PGUSER:-astra}"
+
+ADMIN_PREFIX="${ADMIN_USER:+${ADMIN_USER}:${PGPASSWORD}@}"
 
 ADMIN_URL="postgres://${ADMIN_PREFIX}${HOST}:${PORT}/${DB}?sslmode=disable"
 APP_URL="postgres://astra_app:${APP_PASSWORD}@${HOST}:${PORT}/${DB}?sslmode=disable"

@@ -8,9 +8,14 @@
  *
  *   node scripts/gen-dock-geometry.mjs [--check]
  */
-import { readFile, writeFile } from 'node:fs/promises';
+import { execFile } from 'node:child_process';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { promisify } from 'node:util';
+
+const run = promisify(execFile);
 import { dockGeometry, dockPlacement, DOCK_STATES } from '../packages/ui-kit/dist/index.js';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
@@ -57,15 +62,38 @@ pub const BOTTOM_OFFSET_DEFAULT: i32 = ${dockPlacement.bottomOffsetDefault};
 pub const EDGE_MARGIN: i32 = ${dockPlacement.edgeMargin};
 `;
 
-const check = process.argv.includes('--check');
-if (check) {
+/**
+ * 生成直後に rustfmt を通す。
+ *
+ * これをやらないと、あとで `cargo fmt` が整形した瞬間に生成物と一致しなくなり、
+ * 鮮度検査が毎回落ちる。生成側で最終形まで作るのが正しい。
+ */
+async function formatted(source) {
+  const dir = await mkdtemp(path.join(tmpdir(), 'astra-gen-'));
+  const file = path.join(dir, 'geometry_generated.rs');
+  try {
+    await writeFile(file, source);
+    await run('rustfmt', ['--edition', '2021', file]);
+    return await readFile(file, 'utf8');
+  } catch {
+    // rustfmt が無い環境では素の出力で通す。CI には入っている。
+    console.warn('rustfmt is unavailable; writing the unformatted output');
+    return source;
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+}
+
+const output = await formatted(body);
+
+if (process.argv.includes('--check')) {
   const current = await readFile(target, 'utf8').catch(() => '');
-  if (current !== body) {
+  if (current !== output) {
     console.error(`FAIL: ${path.relative(root, target)} is stale. Run: pnpm gen:dock-geometry`);
     process.exit(1);
   }
   console.log('dock geometry constants are current');
 } else {
-  await writeFile(target, body);
+  await writeFile(target, output);
   console.log(`wrote ${path.relative(root, target)}`);
 }

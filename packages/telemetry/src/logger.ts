@@ -63,7 +63,16 @@ export function createLogger(options: LoggerOptions, destination?: DestinationSt
     ...(options.pretty ? { transport: { target: 'pino-pretty' } } : {}),
   } as const;
 
-  return destination ? pino(config, destination) : pino(config);
+  try {
+    return destination ? pino(config, destination) : pino(config);
+  } catch (error) {
+    // ログの整形でアプリを落とさない。pino-pretty が無い環境（本番の slim image 等）でも
+    // 起動できる方が正しい。実際、依存の入れ忘れで起動不能になったことがある。
+    if (!options.pretty) throw error;
+    const { transport: _transport, ...plain } = config as Record<string, unknown>;
+    process.stderr.write('pino-pretty is unavailable; falling back to JSON logs\n');
+    return destination ? pino(plain as never, destination) : pino(plain as never);
+  }
 }
 
 /** 相関 ID。全ログ行に載せる（実装仕様 §13.1）。 */

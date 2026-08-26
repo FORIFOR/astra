@@ -66,18 +66,27 @@ Phase 0〜3 はサービス境界を保ったまま単一プロセスで動か�
 ```sh
 pnpm install
 cp .env.example .env
-pnpm dev:infra        # postgres(+pgvector) / redis / temporal
-pnpm db:migrate       # スキーマ適用
+pnpm dev:infra        # PostgreSQL 16(+pgvector) / Redis / Temporal
+
 pnpm build
 pnpm test             # DB 不要のテスト
 pnpm test:db          # 使い捨て DB を用意して DB 依存のテストも実行
 pnpm test:acceptance  # Phase 0 の受け入れテスト（AC-1〜AC-16）
+pnpm smoke            # 実プロセスを起動して HTTP で疎通（server.ts / worker-main.ts）
 
 pnpm check:conventions  # サービス境界とテーブル所有権の検査
 pnpm check:generated    # schema.sql / Kysely 型 / Dock geometry の鮮度
 pnpm db:verify          # マイグレーションの up / RLS / append-only / down
 
 cd apps/desktop/src-tauri && cargo test   # Dock の配置計算
+```
+
+開発中のサービスは**リポジトリルートから起動する**。相対パスの既定が cwd 依存なので、
+別の場所から起動すると gateway と worker が違う `.data/objects` を見てしまう。
+
+```sh
+pnpm dev:worker   # Temporal worker
+pnpm dev:gateway  # api-gateway（4 タブ shell からはまだ繋いでいない）
 ```
 
 Temporal UI: http://localhost:8233
