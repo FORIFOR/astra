@@ -14,12 +14,19 @@ import {
   type TaskStateSnapshot,
   type TaskWorkflowInput,
 } from '../workflows.js';
-import { TASK_QUEUE, type StartedWorkflow, type TaskRuntime } from './types.js';
+import { TASK_QUEUE, queueForKind, type StartedWorkflow, type TaskRuntime } from './types.js';
 
 export interface TemporalConfig {
   readonly address: string;
   readonly namespace: string;
   readonly taskQueue?: string;
+  /**
+   * 種類ごとに列を分けるか。既定は分けない。
+   *
+   * 分けるのは配備の判断であって、**分けなくても動く**。
+   * 分けたのに worker を用意し忘れると、仕事が誰にも拾われない。
+   */
+  readonly routeByKind?: boolean;
 }
 
 export class TemporalTaskRuntime implements TaskRuntime {
@@ -27,22 +34,30 @@ export class TemporalTaskRuntime implements TaskRuntime {
   readonly #taskQueue: string;
   readonly #ownsConnection: boolean;
 
-  constructor(client: Client, taskQueue = TASK_QUEUE, ownsConnection = false) {
+  readonly #routeByKind: boolean;
+
+  constructor(client: Client, taskQueue = TASK_QUEUE, ownsConnection = false, routeByKind = false) {
     this.#client = client;
     this.#taskQueue = taskQueue;
     this.#ownsConnection = ownsConnection;
+    this.#routeByKind = routeByKind;
   }
 
   static async connect(config: TemporalConfig): Promise<TemporalTaskRuntime> {
     const connection = await Connection.connect({ address: config.address });
     const client = new Client({ connection, namespace: config.namespace });
-    return new TemporalTaskRuntime(client, config.taskQueue ?? TASK_QUEUE, true);
+    return new TemporalTaskRuntime(
+      client,
+      config.taskQueue ?? TASK_QUEUE,
+      true,
+      config.routeByKind ?? false,
+    );
   }
 
   async start(input: TaskWorkflowInput, workflowId: string): Promise<StartedWorkflow> {
     try {
       const handle = await this.#client.workflow.start('TaskWorkflow', {
-        taskQueue: this.#taskQueue,
+        taskQueue: this.#routeByKind ? queueForKind(input.kind) : this.#taskQueue,
         workflowId,
         args: [input],
         // 実装仕様 §6.2: 同じ workflow id の二重起動を実行層でも弾く

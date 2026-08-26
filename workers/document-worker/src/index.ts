@@ -1,11 +1,15 @@
 /**
  * @astra/worker-document
  *
- * Temporal worker hosting document generation and conversion activities.
+ * 文書の生成と変換を拾う worker。正本 §26。
  *
- * Phase 0 scaffold only — no implementation yet.
- * Normative spec: docs/spec/phase-0-implementation-spec.md
- * Product spec:   docs/spec/new_ai_platform_design_spec_v0.1.md
+ * **まだ引き受ける tool が無い。**列だけ先に決めてあるのは、
+ * 足すときに配備を変えなくて済むようにするため。
+ * 空のまま worker を起動すると仕事が拾われないので、
+ * 起動する側が `DOCUMENT_TOOLS` の空を見て判断する。
  */
+import { TASK_QUEUES } from '@astra/service-task';
 
-export const WORKER_DOCUMENT_PACKAGE = '@astra/worker-document' as const;
+export const DOCUMENT_QUEUE = TASK_QUEUES.document;
+
+export const DOCUMENT_TOOLS: readonly string[] = [];

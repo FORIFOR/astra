@@ -1,11 +1,22 @@
 /**
  * @astra/worker-research
  *
- * Temporal worker hosting research activities.
+ * 調べ物だけを拾う worker。正本 §26。
  *
- * Phase 0 scaffold only — no implementation yet.
- * Normative spec: docs/spec/phase-0-implementation-spec.md
- * Product spec:   docs/spec/new_ai_platform_design_spec_v0.1.md
+ * 分けるのは、**一つの重い仕事が別の仕事を止めない**ため。
+ * 長い動画の書き出しと数秒の調べ物が同じ列に並ぶと、後者が待たされる。
+ *
+ * 起動そのものは `@astra/worker-task` の組み立てを使い、
+ * ここは「どの列を見るか」と「どの executor を持つか」だけを決める。
  */
+import { TASK_QUEUES } from '@astra/service-task';
 
-export const WORKER_RESEARCH_PACKAGE = '@astra/worker-research' as const;
+export const RESEARCH_QUEUE = TASK_QUEUES.research;
+
+/** この worker が引き受ける tool。ここに無いものは拾わない。 */
+export const RESEARCH_TOOLS = [
+  'research.plan',
+  'research.search',
+  'research.verify',
+  'research.report',
+] as const;

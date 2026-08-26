@@ -28,3 +28,36 @@ export function workflowIdFor(tenantId: string, taskId: string): string {
 }
 
 export const TASK_QUEUE = 'astra.task.v1';
+
+/**
+ * 仕事の種類ごとの queue。正本 §26 が worker を分けているのは、
+ * **一つの重い仕事が別の仕事を止めない**ようにするため。
+ *
+ * 長い動画の書き出しと、数秒で終わる調べ物が同じ列に並ぶと、
+ * 後者がいつまでも順番待ちになる。
+ *
+ * 分けるのは配備の判断なので、**同じ queue を全部の worker が
+ * 見る構成でも動く**（既定はそうなっている）。
+ */
+export const TASK_QUEUES = {
+  general: TASK_QUEUE,
+  research: 'astra.task.research.v1',
+  document: 'astra.task.document.v1',
+  media: 'astra.task.media.v1',
+  domain: 'astra.task.domain.v1',
+} as const;
+
+export type TaskQueueName = keyof typeof TASK_QUEUES;
+
+/**
+ * その kind をどの列に流すか。
+ *
+ * **決まらないものは general。**推測で振り分けると、
+ * 動かない worker の列に積まれて誰も気づかない。
+ */
+export function queueForKind(kind: string): string {
+  if (kind === 'research') return TASK_QUEUES.research;
+  if (kind === 'meeting.finalize') return TASK_QUEUES.media;
+  if (kind.startsWith('plugin:')) return TASK_QUEUES.domain;
+  return TASK_QUEUES.general;
+}

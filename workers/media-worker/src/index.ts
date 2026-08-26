@@ -1,11 +1,17 @@
 /**
  * @astra/worker-media
  *
- * Temporal worker hosting image/video/audio generation and rendering activities.
- *
- * Phase 0 scaffold only — no implementation yet.
- * Normative spec: docs/spec/phase-0-implementation-spec.md
- * Product spec:   docs/spec/new_ai_platform_design_spec_v0.1.md
+ * 会議の仕上げと、画像・動画の書き出しを拾う worker。正本 §26。
+ * 時間のかかる仕事をここに閉じ込め、短い仕事の列を空けておく。
  */
+import { TASK_QUEUES } from '@astra/service-task';
 
-export const WORKER_MEDIA_PACKAGE = '@astra/worker-media' as const;
+export const MEDIA_QUEUE = TASK_QUEUES.media;
+
+export const MEDIA_TOOLS = [
+  'meeting.seal',
+  'meeting.transcribe',
+  'meeting.reconcile',
+  'meeting.summarize',
+  'meeting.bundle',
+] as const;

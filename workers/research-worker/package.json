@@ -23,6 +23,10 @@
   "dependencies": {
     "@astra/agent-sdk": "workspace:*",
     "@astra/contracts": "workspace:*",
-    "@astra/telemetry": "workspace:*"
+    "@astra/telemetry": "workspace:*",
+    "@astra/service-task": "workspace:*"
+  },
+  "devDependencies": {
+    "vitest": "catalog:"
   }
 }

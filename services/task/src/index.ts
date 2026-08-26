@@ -22,6 +22,8 @@ export {
 } from './plan.js';
 export {
   TASK_QUEUE,
+  TASK_QUEUES,
+  queueForKind,
   workflowIdFor,
   TemporalTaskRuntime,
   type TaskRuntime,
