@@ -6,6 +6,12 @@
 export { ResearchService, composeReport, type ResearchDeps, type StepOutcome } from './service.js';
 export { researchExecutors } from './executor.js';
 export {
+  AnthropicLanguageModel,
+  isGrounded,
+  type AnthropicConfig,
+  type Fetch,
+} from './anthropic.js';
+export {
   DeterministicLanguageModel,
   StaticSearchProvider,
   type LanguageModel,
@@ -25,3 +31,9 @@ export {
   type Contradiction,
   type ScoredCandidate,
 } from './quality.js';
+export {
+  researchProvidersFromEnv,
+  standIns as researchStandIns,
+  type ResearchProviderEnv,
+  type ResearchProviders,
+} from './factory.js';

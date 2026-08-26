@@ -9,7 +9,9 @@ import { ShareService } from '@astra/service-share';
 import {
   FsRecordingStore,
   MeetingService,
-  ScriptedStreamingTranscriber,
+  assertNoStandIns,
+  meetingProvidersFromEnv,
+  standIns as meetingStandIns,
 } from '@astra/service-meeting';
 import { buildApp } from './app.js';
 import { assertPathsExist, gatewayConfigFromEnv } from './config.js';
@@ -58,14 +60,16 @@ async function main(): Promise<void> {
   const shares = new ShareService({ db, library, shareHost: config.shareHost });
   const registry = new PluginRegistryService({ db, coreVersion: config.version });
 
-  // STT のプロバイダは未決（Phase 3 §10 OQ-11）。代役で先に配線しておき、
-  // 決まったら差し替える。本番で代役のまま動かさない。
-  if (config.env === 'production') {
-    throw new Error(
-      'the meeting transcriber is still a stand-in; wire a real STT provider before production',
-    );
-  }
-  const meetings = new MeetingService({ db, publisher: { async publish() {} } });
+  // STT は設定されていれば本物、無ければ代役（Phase 3 §10 OQ-11）。
+  const meetingProviders = await meetingProvidersFromEnv(process.env);
+  const remaining = meetingStandIns(meetingProviders);
+  const { warn } = assertNoStandIns(remaining, config.env);
+  if (warn) logger.warn({ stand_ins: remaining }, warn);
+  const meetings = new MeetingService({
+    db,
+    publisher: { async publish() {} },
+    translator: meetingProviders.translation,
+  });
   // 同梱プラグインは起動のたびに読み直す。バンドルが正、DB はその写し。
   await registry.seedBuiltins(config.builtinPluginsDir);
 
@@ -84,7 +88,7 @@ async function main(): Promise<void> {
     meetings: {
       meetings,
       recordings: new FsRecordingStore(config.recordingRoot),
-      transcriber: new ScriptedStreamingTranscriber([]),
+      transcriber: meetingProviders.streaming,
     },
   });
 

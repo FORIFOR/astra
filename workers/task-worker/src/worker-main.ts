@@ -12,17 +12,18 @@ import { createDb, dbConfigFromEnv } from '@astra/db';
 import { createLogger } from '@astra/telemetry';
 import { FsObjectStore, LibraryService } from '@astra/service-library';
 import {
-  DeterministicLanguageModel,
   ResearchService,
-  StaticSearchProvider,
   researchExecutors,
+  researchProvidersFromEnv,
+  researchStandIns,
 } from '@astra/service-research';
 import {
   FsRecordingStore,
-  KeywordSummarizer,
   MeetingService,
-  ScriptedBatchTranscriber,
+  assertNoStandIns,
   meetingExecutors,
+  meetingProvidersFromEnv,
+  standIns as meetingStandIns,
 } from '@astra/service-meeting';
 import { createTaskWorker, TASK_QUEUE, NoopPublisher } from '@astra/service-task';
 
@@ -42,18 +43,28 @@ async function main(): Promise<void> {
   const namespace = process.env['TEMPORAL_NAMESPACE'] ?? 'default';
   const taskQueue = process.env['ASTRA_TASK_QUEUE'] ?? TASK_QUEUE;
 
-  // LLM・検索・STT のプロバイダは未決（OQ-3 / OQ-11）。決定的な実装で先に配線しておき、
-  // 決まったら差し替える（Phase 2 実装仕様 §1.1 / Phase 3 実装仕様 §1.1）。
-  // 本番で代役のまま動かさないよう、明示的に拒む。
-  if (process.env['ASTRA_ENV'] === 'production') {
+  // 設定されたものだけ本物になる。決まっていないものは代役のまま名乗る
+  // （Phase 2 実装仕様 §1.1 / Phase 3 実装仕様 §1.1）。
+  const researchProviders = researchProvidersFromEnv(process.env);
+  const meetingProviders = await meetingProvidersFromEnv(process.env);
+
+  // 本番で代役のまま動かさない。**何が代役なのかを名指しで言う。**
+  // 「providers are stand-ins」とだけ言われても、どれを埋めればよいか分からない。
+  const remaining = [...researchStandIns(researchProviders), ...meetingStandIns(meetingProviders)];
+  if (process.env['ASTRA_ENV'] === 'production' && remaining.length > 0) {
     throw new Error(
-      'research and meeting providers are still the deterministic stand-ins; wire real search/model/STT providers before production',
+      `these providers are still stand-ins: ${remaining.join(', ')}. ` +
+        'Configure them before running in production.',
     );
   }
+  if (remaining.length > 0) {
+    logger.warn({ stand_ins: remaining }, 'running with stand-in providers');
+  }
+
   const research = new ResearchService({
     db,
-    search: new StaticSearchProvider([]),
-    model: new DeterministicLanguageModel(),
+    search: researchProviders.search,
+    model: researchProviders.model,
   });
 
   const recordingRoot = path.resolve(process.env['ASTRA_RECORDING_ROOT'] ?? './.data/recordings');
@@ -71,8 +82,8 @@ async function main(): Promise<void> {
           meetings,
           library,
           recordings: new FsRecordingStore(recordingRoot),
-          batch: new ScriptedBatchTranscriber([]),
-          summarizer: new KeywordSummarizer(),
+          batch: meetingProviders.batch,
+          summarizer: meetingProviders.summarizer,
         }),
       },
     },

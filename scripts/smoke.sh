@@ -142,6 +142,12 @@ ACTUAL="$(curl -fsS "$BASE/v1/artifacts/$ARTIFACT/content" -H "authorization: Be
 [ "$RECORDED" = "$ACTUAL" ] || fail "checksum mismatch: $RECORDED vs $ACTUAL"
 echo "  sha256 $RECORDED"
 
+say "the real process names which providers are still stand-ins"
+# 代役のまま動いていることを黙らない。本番ではこれが起動拒否になる。
+grep -q 'stand-in' "$STORE/worker.log" || fail "the worker did not report its stand-in providers"
+# 開発ログは pretty 形式なので、名前は続く行に出る
+grep -A5 'stand-in' "$STORE/worker.log" | grep -oE '"[a-z ]+"' | tr -d '"' | paste -sd', ' - | sed 's/^/  /'
+
 say "a meeting records audio through the real websocket"
 MEETING="$(curl -fsS -X POST "$BASE/v1/meetings" -H "authorization: Bearer $AT" \
   -H 'content-type: application/json' \

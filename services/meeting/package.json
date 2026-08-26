@@ -26,7 +26,8 @@
     "@astra/telemetry": "workspace:*",
     "kysely": "catalog:",
     "@astra/service-task": "workspace:*",
-    "@astra/service-library": "workspace:*"
+    "@astra/service-library": "workspace:*",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "vitest": "catalog:"

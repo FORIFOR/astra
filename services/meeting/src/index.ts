@@ -46,3 +46,26 @@ export {
   type MeetingExecutorResult,
 } from './executor.js';
 export { FsRecordingStore, MemoryRecordingStore, type RecordingStore } from './recording.js';
+export { AnthropicSummarizer, type AnthropicSummarizerConfig } from './anthropic.js';
+export {
+  GoogleBatchTranscriber,
+  GoogleStreamingTranscriber,
+  durationToMs,
+  fromV1Response,
+  fromV2Results,
+  type GoogleBatchConfig,
+  type GoogleStreamingConfig,
+  type V1SpeechClient,
+  type V2SpeechClient,
+  GoogleTranslationProvider,
+  baseLanguage,
+  type GoogleTranslationConfig,
+  type TranslateClient,
+} from './google.js';
+export {
+  assertNoStandIns,
+  meetingProvidersFromEnv,
+  standIns,
+  type MeetingProviderEnv,
+  type MeetingProviders,
+} from './factory.js';

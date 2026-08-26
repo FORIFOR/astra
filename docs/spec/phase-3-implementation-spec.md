@@ -58,9 +58,14 @@ interface TranslationProvider {
 }
 ```
 
-- 決定的な代役（`DeterministicTranscriber` ほか）を同梱し、テストはこれで回す
-- **本番で代役のまま起動したら worker は拒否する**。research と同じ規則
-- Google 実装は認証情報が決まってから足す。差し替えだけで済む形にしておく
+- 決定的な代役（`ScriptedStreamingTranscriber` ほか）を同梱し、テストはこれで回す
+- **本番で代役のまま起動したら拒否する**。`assertNoStandIns` が
+  「何が代役なのか」を名指しで言う。埋める先が分からない拒否は役に立たない
+- Google 実装（V1 streaming / Chirp 3 batch / Translation）は**実装済み**。
+  `meetingProvidersFromEnv` が設定されたものだけ本物にする。
+  残るのは GCP プロジェクトと認証情報だけ（OQ-11）
+- 会議のまとめは Claude（`AnthropicSummarizer`）。**引用はモデルに任せない**:
+  番号だけを選ばせ、範囲外は捨てる（AC3-9 の担保）
 
 ### 1.2 live と final は競合させない
 

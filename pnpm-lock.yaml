@@ -485,6 +485,9 @@ importers:
       kysely:
         specifier: 'catalog:'
         version: 0.29.5
+      zod:
+        specifier: 'catalog:'
+        version: 4.4.3
     devDependencies:
       vitest:
         specifier: 'catalog:'
@@ -538,6 +541,9 @@ importers:
       kysely:
         specifier: 'catalog:'
         version: 0.29.5
+      zod:
+        specifier: 'catalog:'
+        version: 4.4.3
     devDependencies:
       vitest:
         specifier: 'catalog:'

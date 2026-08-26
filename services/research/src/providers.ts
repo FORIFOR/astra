@@ -22,6 +22,8 @@ export interface SearchHit {
 
 export interface SearchProvider {
   readonly name: string;
+  /** 代役か。本番で代役のまま起動していないかの判定に使う。 */
+  readonly isStandIn: boolean;
   search(query: string, limit: number): Promise<SearchHit[]>;
 }
 
@@ -33,6 +35,7 @@ export interface ExtractedClaim {
 
 export interface LanguageModel {
   readonly name: string;
+  readonly isStandIn: boolean;
   /** 質問を、独立に検索できる下位クエリへ分解する。 */
   decompose(question: string, max: number): Promise<string[]>;
   /** 抜粋から、確認できる主張を取り出す。 */
@@ -56,6 +59,7 @@ export interface LanguageModel {
  */
 export class StaticSearchProvider implements SearchProvider {
   readonly name = 'static';
+  readonly isStandIn = true;
   readonly #hits: readonly SearchHit[];
 
   constructor(hits: readonly SearchHit[]) {
@@ -81,6 +85,7 @@ export class StaticSearchProvider implements SearchProvider {
  */
 export class DeterministicLanguageModel implements LanguageModel {
   readonly name = 'deterministic';
+  readonly isStandIn = true;
 
   async decompose(question: string, max: number): Promise<string[]> {
     // 「A と B」「A、B」で割る。割れなければ質問そのもの。
