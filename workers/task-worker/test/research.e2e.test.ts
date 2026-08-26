@@ -286,4 +286,80 @@ describe.skipIf(!url)('research end to end', () => {
       ).rejects.toThrow(/unknown task kind/);
     });
   });
+  describe('when the research providers fail', () => {
+    it('does not leave the run looking like it is still in progress', async () => {
+      /*
+       * task が FAILED になっても、`research_runs` が SEARCHING のまま残ると
+       * その画面では永久に「調査中」に見える（D-46 と同じ話）。
+       */
+      const failing = new ResearchService({
+        db,
+        search: {
+          name: 'broken',
+          isStandIn: true,
+          async search() {
+            throw new Error('the search provider is unreachable');
+          },
+        },
+        model: new DeterministicLanguageModel(),
+      });
+      const executors = researchExecutors(failing);
+
+      const { task } = await service.create({
+        tenantId,
+        userId,
+        request: { kind: 'research', input: { question: '落ちる調査' } },
+        idempotencyKey: `fail-${uuidv7()}`,
+      });
+
+      // plan は通り、search で落ちる
+      await executors['research.plan']!.execute(
+        { taskId: task.id, tenantId, input: { question: '落ちる調査' } },
+        { toolId: 'research.plan', args: {} },
+      );
+      await expect(
+        executors['research.search']!.execute(
+          { taskId: task.id, tenantId, input: {} },
+          { toolId: 'research.search', args: {} },
+        ),
+      ).rejects.toThrow(/unreachable/);
+
+      // 失敗の後始末が呼ばれると、進行中ではなくなる
+      await executors['research.search']!.onFailure({
+        taskId: task.id,
+        tenantId,
+        input: {},
+      });
+
+      const run = await withTenant(db, tenantId, (tx) =>
+        tx
+          .selectFrom('research_runs')
+          .select(['status'])
+          .where('task_id', '=', task.id)
+          .executeTakeFirstOrThrow(),
+      );
+      expect(run.status).toBe('FAILED');
+    }, 120_000);
+
+    it('does not undo a run that already finished', async () => {
+      const { task } = await service.create({
+        tenantId,
+        userId,
+        request: { kind: 'research', input: { question: '終わった調査' } },
+        idempotencyKey: `done-${uuidv7()}`,
+      });
+      await env.client.workflow.getHandle(workflowIdFor(tenantId, task.id)).result();
+
+      await research.markFailed(tenantId, task.id);
+      const run = await withTenant(db, tenantId, (tx) =>
+        tx
+          .selectFrom('research_runs')
+          .select(['status'])
+          .where('task_id', '=', task.id)
+          .executeTakeFirstOrThrow(),
+      );
+      // 済んだものを後から失敗にしない
+      expect(run.status).toBe('COMPLETE');
+    }, 120_000);
+  });
 });

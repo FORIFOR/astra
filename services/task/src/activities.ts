@@ -38,6 +38,17 @@ export interface StepExecutor {
     /** 成果物を自分で組み立てた step はここに置く。 */
     artifact?: { title: string; markdown: string };
   }>;
+
+  /**
+   * step が失敗したときの後始末。
+   *
+   * **自分の領域の状態を FAILED にするのはここ。**task が FAILED になっても、
+   * `research_runs` や `meetings` が進行中のまま残ると、
+   * その画面では永久に「処理中」に見える（D-46 と同じ話）。
+   *
+   * ここが投げても、元の失敗は握りつぶさない。
+   */
+  onFailure?(input: TaskWorkflowInput, step: TaskStep, error: unknown): Promise<void>;
 }
 
 export interface ActivityDeps {
@@ -322,10 +333,22 @@ export function createTaskActivities(deps: ActivityDeps): TaskActivities {
       }
 
       const executor = step.surface === 'local' ? deps.hostExecutor : deps.executors?.[step.toolId];
-      const outcome = executor
-        ? await executor.execute(input, step)
-        : // 登録が無い tool は何もしない。Phase 0 の echo がこれにあたる。
-          { result: { echoed: step.args['message'] ?? null, step: step.index }, detail: null };
+      let outcome;
+      try {
+        outcome = executor
+          ? await executor.execute(input, step)
+          : // 登録が無い tool は何もしない。Phase 0 の echo がこれにあたる。
+            { result: { echoed: step.args['message'] ?? null, step: step.index }, detail: null };
+      } catch (error) {
+        // 自分の領域の状態を片付けさせてから投げ直す。
+        // 後始末が落ちても、元の失敗を握りつぶさない。
+        try {
+          await executor?.onFailure?.(input, step, error);
+        } catch {
+          /* 後始末の失敗で、本当の理由を見失わせない */
+        }
+        throw error;
+      }
       const result = outcome.artifact
         ? { ...(outcome.result as object), artifact: outcome.artifact }
         : outcome.result;

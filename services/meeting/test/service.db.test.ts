@@ -178,4 +178,55 @@ describe.skipIf(!url)('MeetingService', () => {
     // 403 だと「その会議はある」と教えることになる
     await expect(service.get(otherTenantId, meeting.id)).rejects.toThrow(/not found/);
   });
+  describe('when finalize fails', () => {
+    it('does not leave the meeting looking like it is still processing', async () => {
+      /*
+       * UI/UX §12.5 は「閉じても続く」と言っている。進行中のまま止まると、
+       * 利用者は永久に待つことになる。録音は Library に残るので失うものはない。
+       */
+      const meeting = await service.start({
+        tenantId,
+        userId,
+        title: '落ちる会議',
+        language: 'ja-JP',
+        targetLanguage: null,
+        audioSources: ['microphone'],
+      });
+      await service.setStatus(tenantId, meeting.id, 'FINALIZING');
+
+      const { meetingExecutors } = await import('../src/executor.js');
+      const { MemoryRecordingStore } = await import('../src/recording.js');
+      const { KeywordSummarizer } = await import('../src/summarize.js');
+
+      const executors = meetingExecutors({
+        meetings: service,
+        library: { create: async () => ({ id: uuidv7() }) } as never,
+        recordings: new MemoryRecordingStore(),
+        batch: {
+          isStandIn: true,
+          async transcribe() {
+            throw new Error('the batch transcriber is unreachable');
+          },
+        },
+        summarizer: new KeywordSummarizer(),
+      });
+
+      await expect(
+        executors['meeting.transcribe']!.execute(
+          { taskId: uuidv7(), tenantId, userId, input: { meeting_id: meeting.id } },
+          { toolId: 'meeting.transcribe', args: { meeting_id: meeting.id } },
+        ),
+      ).rejects.toThrow(/unreachable/);
+
+      await executors['meeting.transcribe']!.onFailure(
+        { taskId: uuidv7(), tenantId, userId, input: { meeting_id: meeting.id } },
+        { toolId: 'meeting.transcribe', args: { meeting_id: meeting.id } },
+      );
+
+      const after = await service.get(tenantId, meeting.id);
+      expect(after.status).toBe('FAILED');
+      // 終わった時刻も残る。いつ止まったかが分からないと追えない。
+      expect(after.ended_at).not.toBeNull();
+    });
+  });
 });

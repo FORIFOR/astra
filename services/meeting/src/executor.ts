@@ -45,14 +45,30 @@ function meetingIdOf(input: TaskLike, step: StepLike): string {
   throw new Error('meeting.finalize needs a meeting_id');
 }
 
-export function meetingExecutors(
-  deps: MeetingExecutorDeps,
-): Record<string, { execute(input: TaskLike, step: StepLike): Promise<MeetingExecutorResult> }> {
+export function meetingExecutors(deps: MeetingExecutorDeps): Record<
+  string,
+  {
+    execute(input: TaskLike, step: StepLike): Promise<MeetingExecutorResult>;
+    onFailure(input: TaskLike, step: StepLike): Promise<void>;
+  }
+> {
   const { meetings, library, recordings, batch, summarizer } = deps;
+
+  /**
+   * finalize が落ちたら会議を FAILED にする。
+   *
+   * **FINALIZING のまま残さない。**UI/UX §12.5 は「閉じても続く」と
+   * 言っているので、進行中のまま止まると利用者は待ち続けることになる。
+   * 録音そのものは Library に残っているので、失われるものはない。
+   */
+  const onFailure = async (input: TaskLike, step: StepLike): Promise<void> => {
+    await meetings.setStatus(input.tenantId, meetingIdOf(input, step), 'FAILED');
+  };
 
   return {
     /** 録音を閉じ、Library へ入れる。**まずこれ**。以降が失敗しても音は残る。 */
     'meeting.seal': {
+      onFailure,
       async execute(input, step) {
         const meetingId = meetingIdOf(input, step);
         const meeting = await meetings.get(input.tenantId, meetingId);
@@ -84,6 +100,7 @@ export function meetingExecutors(
 
     /** 録音全体を精度優先で起こす（正本 §11.2 Final Accuracy Path）。 */
     'meeting.transcribe': {
+      onFailure,
       async execute(input, step) {
         const meetingId = meetingIdOf(input, step);
         const meeting = await meetings.get(input.tenantId, meetingId);
@@ -103,6 +120,7 @@ export function meetingExecutors(
      * transcribe と分けてあるのは、突き合わせだけをやり直せるようにするため。
      */
     'meeting.reconcile': {
+      onFailure,
       async execute(input, step) {
         const meetingId = meetingIdOf(input, step);
         const meeting = await meetings.get(input.tenantId, meetingId);
@@ -120,6 +138,7 @@ export function meetingExecutors(
 
     /** 要点・決定・ToDo。**引用の付かない項目は残さない**（AC3-9）。 */
     'meeting.summarize': {
+      onFailure,
       async execute(input, step) {
         const meetingId = meetingIdOf(input, step);
         const segments = await meetings.segments(input.tenantId, meetingId);
@@ -141,6 +160,7 @@ export function meetingExecutors(
 
     /** Meeting bundle を Library へ。UI/UX §12.6 の画面はこれを読む。 */
     'meeting.bundle': {
+      onFailure,
       async execute(input, step) {
         const meetingId = meetingIdOf(input, step);
         const meeting = await meetings.get(input.tenantId, meetingId);

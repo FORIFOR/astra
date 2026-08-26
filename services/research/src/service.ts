@@ -50,6 +50,25 @@ export class ResearchService {
     this.#now = deps.now ?? (() => new Date());
   }
 
+  /**
+   * 途中で失敗したことを残す。
+   *
+   * **状態を残さないと、進行中のまま永久に見える。**
+   * `research_runs.status` には FAILED があるのに、
+   * これまで誰もそこへ遷移させていなかった。
+   */
+  async markFailed(tenantId: string, taskId: string): Promise<void> {
+    await withTenant(this.#db, tenantId, (tx) =>
+      tx
+        .updateTable('research_runs')
+        .set({ status: 'FAILED', updated_at: this.#now() })
+        .where('task_id', '=', taskId)
+        // 既に終わったものは触らない
+        .where('status', 'not in', ['COMPLETE', 'FAILED'])
+        .execute(),
+    );
+  }
+
   /** 質問を分解する。何を調べたかを後から説明できるよう、下位クエリを残す。 */
   async plan(tenantId: string, taskId: string, question: string): Promise<StepOutcome> {
     const subQueries = await this.#model.decompose(question, this.#maxSubQueries);

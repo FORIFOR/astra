@@ -17,6 +17,12 @@ interface StepLike {
   readonly args: Record<string, unknown>;
 }
 
+/** 失敗したら、この調査は進行中ではなくなる。 */
+type Executor = {
+  execute(input: TaskLike, step: StepLike): Promise<ResearchExecutorResult>;
+  onFailure(input: TaskLike): Promise<void>;
+};
+
 export interface ResearchExecutorResult {
   result: unknown;
   detail?: string | null;
@@ -31,22 +37,28 @@ function questionOf(input: TaskLike, step: StepLike): string {
 }
 
 /** tool id ごとの executor。task-service の `ActivityDeps.executors` へ渡す。 */
-export function researchExecutors(
-  research: ResearchService,
-): Record<string, { execute(input: TaskLike, step: StepLike): Promise<ResearchExecutorResult> }> {
+export function researchExecutors(research: ResearchService): Record<string, Executor> {
+  // どの step で落ちても、この調査は「進行中」ではなくなる
+  const onFailure = (input: TaskLike): Promise<void> =>
+    research.markFailed(input.tenantId, input.taskId);
+
   return {
     'research.plan': {
       execute: (input, step) =>
         research.plan(input.tenantId, input.taskId, questionOf(input, step)),
+      onFailure,
     },
     'research.search': {
       execute: (input) => research.search(input.tenantId, input.taskId),
+      onFailure,
     },
     'research.verify': {
       execute: (input) => research.verify(input.tenantId, input.taskId),
+      onFailure,
     },
     'research.report': {
       execute: (input) => research.report(input.tenantId, input.taskId),
+      onFailure,
     },
   };
 }
