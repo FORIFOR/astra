@@ -63,6 +63,7 @@ export interface MakeAppOptions {
   /** 同梱プラグインを DB へ seed するか。プラグインを見るテストだけ true。 */
   readonly seedPlugins?: boolean;
   readonly bridge?: HostBridge;
+  readonly allowedOrigins?: readonly string[];
 }
 
 export async function makeTestApp(options: MakeAppOptions): Promise<TestApp> {
@@ -89,6 +90,7 @@ export async function makeTestApp(options: MakeAppOptions): Promise<TestApp> {
     db: options.dbConfig,
     builtinPluginsDir: fileURLToPath(new URL('../../../plugins/builtin', import.meta.url)),
     objectStoreRoot: storeRoot,
+    allowedOrigins: options.allowedOrigins ?? [],
   };
 
   const app = buildApp({

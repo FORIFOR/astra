@@ -132,6 +132,64 @@ describe.skipIf(!url)('api-gateway http foundation', () => {
     });
   });
 
+  describe('cross-origin access', () => {
+    it('answers the preflight for an allowed origin', async () => {
+      const allowed = await makeTestApp({
+        dbConfig: testDbConfig(url!),
+        tokens,
+        allowedOrigins: ['http://localhost:1420'],
+      });
+      try {
+        const res = await allowed.app.inject({
+          method: 'OPTIONS',
+          url: '/v1/tasks',
+          headers: {
+            origin: 'http://localhost:1420',
+            'access-control-request-method': 'POST',
+            'access-control-request-headers': 'authorization,idempotency-key',
+          },
+        });
+        expect(res.statusCode).toBe(204);
+        expect(res.headers['access-control-allow-origin']).toBe('http://localhost:1420');
+        // SSE の再開に要るヘッダをクライアントが読めること
+        expect(res.headers['access-control-allow-headers']).toContain('last-event-id');
+        // uninstall は DELETE。明示しないと preflight に載らない。
+        expect(res.headers['access-control-allow-methods']).toContain('DELETE');
+      } finally {
+        await allowed.close();
+      }
+    });
+
+    it('refuses an origin that is not on the list', async () => {
+      const allowed = await makeTestApp({
+        dbConfig: testDbConfig(url!),
+        tokens,
+        allowedOrigins: ['http://localhost:1420'],
+      });
+      try {
+        const res = await allowed.app.inject({
+          method: 'GET',
+          url: '/healthz',
+          headers: { origin: 'https://evil.example.com' },
+        });
+        // ヘッダを返さないことで、ブラウザ側が読めなくなる
+        expect(res.headers['access-control-allow-origin']).toBeUndefined();
+      } finally {
+        await allowed.close();
+      }
+    });
+
+    it('allows nothing when no origin is configured', async () => {
+      // `*` を既定にすると、認証済みの API が任意のサイトから叩ける
+      const res = await app.inject({
+        method: 'GET',
+        url: '/healthz',
+        headers: { origin: 'http://localhost:1420' },
+      });
+      expect(res.headers['access-control-allow-origin']).toBeUndefined();
+    });
+  });
+
   describe('rate limiting', () => {
     it('refuses past the limit with the error contract and Retry-After', async () => {
       const hit = () => app.inject({ method: 'GET', url: '/__test/limited' });

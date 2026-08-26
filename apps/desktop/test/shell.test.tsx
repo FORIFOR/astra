@@ -2,12 +2,34 @@
  * 4-tab shell。UI-0 の Exit（Light/Dark + 4-tab shell）。
  * UI/UX §2.1・§7.1・§7.2・§17.1・§19。
  */
+import type { JSX } from 'react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 // 名前付き export を使う。NodeNext の型解決では default が namespace に潰れる
 import { userEvent } from '@testing-library/user-event';
 import { TOP_LEVEL_TABS, breakpoints, layout } from '@astra/ui-kit';
-import { App } from '../src/App.js';
+import { ThemeProvider } from '../src/state/ThemeProvider.js';
+import { ShellProvider } from '../src/state/ShellProvider.js';
+import { AppShell } from '../src/shell/AppShell.js';
+
+/**
+ * シェルだけを組み立てる。
+ *
+ * `<App />` はサインイン状態から始まるので、ここで使うとシェルに辿り着けない。
+ * このファイルが確かめたいのはナビゲーション・テーマ・レイアウトであって、
+ * 認証の導線ではない（それは session のテストで見る）。
+ */
+function App(): JSX.Element {
+  return (
+    <ThemeProvider>
+      <ShellProvider>
+        <AppShell>
+          <div data-testid="page" />
+        </AppShell>
+      </ShellProvider>
+    </ThemeProvider>
+  );
+}
 
 function setViewport(width: number): void {
   Object.defineProperty(window, 'innerWidth', { value: width, configurable: true });
@@ -58,7 +80,7 @@ describe('top-level navigation', () => {
     expect(home.textContent).toContain('ホーム');
   });
 
-  it('switches the page and the title when a tab is chosen', async () => {
+  it('switches the title and the current marker when a tab is chosen', async () => {
     const user = userEvent.setup();
     render(<App />);
     await user.click(screen.getByText('ライブラリ'));

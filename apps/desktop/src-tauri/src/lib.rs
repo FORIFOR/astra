@@ -2,6 +2,7 @@
 
 pub mod context;
 pub mod dock;
+pub mod secrets;
 pub mod shortcut;
 
 use dock::DockRuntime;
@@ -18,6 +19,9 @@ pub fn run() {
             dock::dock_toggle,
             dock::dock_remember_position,
             context::context_snapshot,
+            secrets::secret_set,
+            secrets::secret_get,
+            secrets::secret_delete,
         ])
         .setup(|app| {
             if cfg!(debug_assertions) {

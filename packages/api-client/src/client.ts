@@ -7,6 +7,8 @@
 import {
   Artifact,
   CreateTaskRequest,
+  MeResponse as MeResponseSchema,
+  TokenResponse,
   PluginCatalogEntry,
   PluginInstall,
   Task,
@@ -53,7 +55,38 @@ export class AstraClient {
   }
 
   me(): Promise<MeResponse> {
-    return this.http.request({ path: '/v1/me' }, (value) => value as MeResponse);
+    return this.http.request({ path: '/v1/me' }, (value) => MeResponseSchema.parse(value));
+  }
+
+  /**
+   * 開発用のサインイン。本番ではこの経路自体がサーバに登録されていない（§4.3）。
+   * 実 IdP へ差し替えるときに触るのはここだけで済むようにしてある。
+   */
+  devSignIn(email: string, displayName: string): Promise<TokenResponse> {
+    return this.http.request(
+      {
+        method: 'POST',
+        path: '/v1/auth/dev/token',
+        body: { email, display_name: displayName },
+      },
+      (value) => TokenResponse.parse(value),
+    );
+  }
+
+  /** refresh token をローテーションする。旧トークンはこの時点で失効する（§4.2）。 */
+  refresh(refreshToken: string): Promise<TokenResponse> {
+    return this.http.request(
+      { method: 'POST', path: '/v1/auth/refresh', body: { refresh_token: refreshToken } },
+      (value) => TokenResponse.parse(value),
+    );
+  }
+
+  async logout(refreshToken: string): Promise<void> {
+    await this.http.send({
+      method: 'POST',
+      path: '/v1/auth/logout',
+      body: { refresh_token: refreshToken },
+    });
   }
 
   /**

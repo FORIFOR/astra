@@ -35,6 +35,19 @@ export interface LocalContext {
   readonly requires_permission: readonly string[];
 }
 
+/**
+ * 資格情報の保管。Tauri では OS の資格情報ストア、ブラウザでは**保存しない**。
+ *
+ * ブラウザに安全な保管先が無い以上、localStorage へ置いて「保存できている」ことに
+ * するより、保存しない方が正しい（再読み込みでサインアウトになるが、
+ * refresh token をディスクに平文で残すより望ましい）。
+ */
+export const secrets = {
+  set: (key: string, value: string) => call<void>('secret_set', { key, value }),
+  get: (key: string) => call<string | null>('secret_get', { key }),
+  delete: (key: string) => call<void>('secret_delete', { key }),
+};
+
 export const host = {
   showDock: (state?: DockState, contentHeight?: number) =>
     call<void>('dock_show', { state, contentHeight }),

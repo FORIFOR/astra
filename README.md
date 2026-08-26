@@ -26,7 +26,8 @@ OS のどこからでも呼び出せる **Task Dock**。North Star は **Intent 
   UI-0 = design tokens + shell + shared state（Light・Dark + 4-tab shell）。
   UI-1 = Task Dock + Context Lens（OS 上で intent → context 確認）。
   UI-2 = Work Surface + progress + result（durable task の状態が見える）。
-  次は UI-3（Home / Work / Library の task → artifact continuity）。
+  UI-3 = Home / Work / Library（サインイン導線 + task → artifact continuity）。
+  次は UI-4（Meeting）。ただし Meeting は Phase 3 の backend が要る。
 
 実装順は正本 §28 に従う。
 

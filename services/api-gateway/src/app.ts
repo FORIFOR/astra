@@ -6,6 +6,7 @@
  */
 import Fastify from 'fastify';
 import websocket from '@fastify/websocket';
+import cors from '@fastify/cors';
 import { HEADER_REQUEST_ID } from '@astra/contracts';
 import type { Redis } from 'ioredis';
 import type { DbHandle } from '@astra/db';
@@ -53,6 +54,24 @@ export function buildApp(deps: AppDeps): App {
     // プロキシ配下で client IP を正しく取る。レート制限のキーになるので重要。
     trustProxy: true,
     bodyLimit: 1024 * 1024,
+  });
+
+  // CORS はフックより前。preflight は認証もレート制限も通さない。
+  void app.register(cors, {
+    origin: deps.config.allowedOrigins.length > 0 ? [...deps.config.allowedOrigins] : false,
+    credentials: false,
+    // 明示しないと DELETE が preflight の許可に載らず、ブラウザからの
+    // uninstall が弾かれる（実際に踏んだ）。
+    methods: ['GET', 'HEAD', 'POST', 'DELETE', 'OPTIONS'],
+    // SSE の再開に要る。露出させないとクライアントが読めない。
+    exposedHeaders: ['x-request-id', 'x-ratelimit-limit', 'x-ratelimit-remaining', 'retry-after'],
+    allowedHeaders: [
+      'authorization',
+      'content-type',
+      'idempotency-key',
+      'x-request-id',
+      'last-event-id',
+    ],
   });
 
   // フックの登録順が実行順。認証はレート制限より前でなければならない

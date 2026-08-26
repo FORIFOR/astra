@@ -1,0 +1,99 @@
+/* Home。UI/UX §8。KPI dashboard にしない。 */
+
+.astra-home {
+  display: flex;
+  flex-direction: column;
+  gap: var(--astra-space-panel);
+  max-width: 880px;
+}
+
+.astra-home__greeting {
+  margin: 0;
+  font-size: var(--astra-font-size-page-title);
+  font-weight: var(--astra-font-weight-page-title);
+}
+
+.astra-home__invite {
+  margin: 0;
+  padding: var(--astra-space-section) 0;
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-section-title);
+  text-align: center;
+}
+
+.astra-home__section {
+  margin: 0 0 var(--astra-space-base);
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-micro);
+  font-weight: var(--astra-font-weight-micro);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.astra-home__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--astra-space-base);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.astra-home__more {
+  margin-top: var(--astra-space-base);
+  border: 0;
+  background: transparent;
+  color: var(--astra-color-accent);
+  font: inherit;
+  font-size: var(--astra-font-size-secondary);
+  cursor: pointer;
+}
+
+.astra-attention {
+  display: flex;
+  align-items: center;
+  gap: var(--astra-space-md, var(--astra-space-base));
+  width: 100%;
+  min-height: 56px;
+  padding: var(--astra-padding-card);
+  border: var(--astra-border-hairline) solid var(--astra-color-border);
+  border-radius: var(--astra-radius-standard);
+  background: var(--astra-color-surface);
+  color: var(--astra-color-text);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.astra-attention[data-severity='action-required'] {
+  border-color: var(--astra-color-warning);
+}
+
+.astra-attention[data-severity='attention'] {
+  border-color: var(--astra-color-danger);
+}
+
+.astra-attention__severity {
+  padding: 2px var(--astra-space-base);
+  border-radius: var(--astra-radius-pill);
+  background: var(--astra-color-canvas);
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-micro);
+  white-space: nowrap;
+}
+
+.astra-attention__title {
+  font-weight: var(--astra-font-weight-card-title);
+}
+
+.astra-attention__detail {
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-secondary);
+}
+
+.astra-attention__action {
+  margin-inline-start: auto;
+  color: var(--astra-color-accent);
+  font-size: var(--astra-font-size-secondary);
+  white-space: nowrap;
+}

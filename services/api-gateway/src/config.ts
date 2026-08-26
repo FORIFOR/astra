@@ -18,6 +18,11 @@ export interface GatewayConfig {
   readonly builtinPluginsDir: string;
   /** オブジェクト保存先。**絶対パス**に解決済み。 */
   readonly objectStoreRoot: string;
+  /**
+   * ブラウザから叩けるオリジン。
+   * **既定は空**。許すオリジンは必ず明示させる（`*` を既定にしない）。
+   */
+  readonly allowedOrigins: readonly string[];
 }
 
 const ENVIRONMENTS: readonly Environment[] = ['development', 'test', 'staging', 'production'];
@@ -43,7 +48,35 @@ export function gatewayConfigFromEnv(env: NodeJS.ProcessEnv = process.env): Gate
     // ここで絶対化して、診断のときに実際に見た場所が分かるようにする。
     builtinPluginsDir: path.resolve(env['ASTRA_BUILTIN_PLUGINS_DIR'] ?? './plugins/builtin'),
     objectStoreRoot: path.resolve(env['ASTRA_OBJECT_STORE_ROOT'] ?? './.data/objects'),
+    allowedOrigins: parseOrigins(env['ASTRA_ALLOWED_ORIGINS'], parseEnvironment(env['ASTRA_ENV'])),
   };
+}
+
+/**
+ * CORS の許可オリジン。
+ *
+ * 開発では Vite（1420 / 1430）と Tauri の webview を通す。
+ * それ以外の環境では **明示された値だけ**。`*` を既定にすると、
+ * 認証済みの API が任意のサイトから叩けるようになる。
+ */
+function parseOrigins(raw: string | undefined, env: Environment): readonly string[] {
+  const explicit = (raw ?? '')
+    .split(',')
+    .map((o) => o.trim())
+    .filter(Boolean);
+  if (explicit.length > 0) return explicit;
+  if (env === 'development' || env === 'test') {
+    return [
+      'http://localhost:1420',
+      'http://127.0.0.1:1420',
+      'http://localhost:1430',
+      'http://127.0.0.1:1430',
+      // Tauri の webview はこのオリジンで動く
+      'tauri://localhost',
+      'http://tauri.localhost',
+    ];
+  }
+  return [];
 }
 
 /**

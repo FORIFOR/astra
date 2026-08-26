@@ -25,3 +25,5 @@ log = "0.4"
 tauri = { version = "2.10.3", features = ["macos-private-api"] }
 tauri-plugin-log = "2"
 tauri-plugin-global-shortcut = "2"
+# OS の資格情報ストア。refresh token を平文で置かないため（正本 §21）
+keyring = { version = "3", features = ["apple-native", "windows-native", "sync-secret-service"] }

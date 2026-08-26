@@ -4,7 +4,7 @@
  * 「AI エージェント」ではなく**仕事の単位**で管理する。
  * 裏の Agent は詳細/管理者向けにだけ開示する。
  */
-import { useMemo, useState, type ReactElement } from 'react';
+import { useEffect, useMemo, useState, type ReactElement } from 'react';
 import type { TaskView } from '@astra/api-client';
 import type { TaskStatus } from '@astra/contracts';
 import { WorkCard } from '../work/WorkCard.js';
@@ -41,12 +41,25 @@ export function matchesFilter(status: TaskStatus, filter: WorkFilter): boolean {
 export function WorkPage({
   client = null,
   tasks = [],
+  initialTaskId = null,
 }: {
   client?: AstraClient | null;
   tasks?: readonly TaskView[];
+  /** 他のタブから「この仕事を見せる」で渡ってくる（UI-3 の連続性）。 */
+  initialTaskId?: string | null;
 }): ReactElement {
   const [filter, setFilter] = useState<WorkFilter>('active');
-  const [openTaskId, setOpenTaskId] = useState<string | null>(null);
+  const [openTaskId, setOpenTaskId] = useState<string | null>(initialTaskId);
+
+  // 他タブから指定された仕事は、その状態に合う絞り込みへ切り替えて必ず見えるようにする
+  useEffect(() => {
+    if (!initialTaskId) return;
+    setOpenTaskId(initialTaskId);
+    const task = tasks.find((t) => t.id === initialTaskId);
+    if (task && !matchesFilter(task.status, filter)) setFilter('all');
+    // filter を依存に入れると、利用者が絞り込みを変えた直後に戻してしまう
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialTaskId, tasks]);
   const { view, reconnecting } = useTaskStream(client, openTaskId);
 
   const visible = useMemo(
