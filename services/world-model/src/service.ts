@@ -16,6 +16,7 @@ import {
 } from '@astra/contracts';
 import { withTenant, type DbHandle } from '@astra/db';
 import { shouldRemember, type MemoryCandidate } from './memory.js';
+import type { AttentionFeedback } from './brief.js';
 
 export interface WorldDeps {
   readonly db: DbHandle;
@@ -199,6 +200,54 @@ export class WorldModelService {
     );
     if (!row) throw new AstraError('common.not_found', 'no such commitment');
     return toFact(row);
+  }
+
+  /**
+   * 「これは出さないで」を覚える。UI/UX §16。
+   *
+   * **覚えない dismiss は、拒否ではなく無視。**
+   * 同じ相手への最後の意思表示を 1 行で持つ（later のあと never も言える）。
+   */
+  async dismissAttention(
+    tenantId: string,
+    userId: string,
+    itemId: string,
+    verdict: 'later' | 'never',
+  ): Promise<void> {
+    await withTenant(this.#db, tenantId, (tx) =>
+      tx
+        .insertInto('attention_feedback')
+        .values({
+          tenant_id: tenantId,
+          user_id: userId,
+          item_id: itemId,
+          verdict,
+          created_at: this.#now(),
+        })
+        .onConflict((oc) =>
+          oc.columns(['tenant_id', 'user_id', 'item_id']).doUpdateSet({
+            verdict,
+            created_at: this.#now(),
+          }),
+        )
+        .execute(),
+    );
+  }
+
+  /** いまこの人が断っているもの。brief を組む前に引く。 */
+  async attentionFeedback(tenantId: string, userId: string): Promise<AttentionFeedback[]> {
+    return withTenant(this.#db, tenantId, async (tx) => {
+      const rows = await tx
+        .selectFrom('attention_feedback')
+        .select(['item_id', 'verdict', 'created_at'])
+        .where('user_id', '=', userId)
+        .execute();
+      return rows.map((row) => ({
+        itemId: row.item_id,
+        verdict: row.verdict as 'later' | 'never',
+        createdAt: row.created_at.toISOString(),
+      }));
+    });
   }
 
   /** いつ何が起きたか。書き換えない。 */

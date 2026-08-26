@@ -30,6 +30,12 @@ function ActivePage(): ReactElement {
           displayName={me?.user.display_name ?? null}
           onOpenTask={openTask}
           onOpenArtifact={openArtifact}
+          onDismiss={(itemId, verdict) => {
+            // 覚えられなかったことを黙らない（次にまた出てくるため）
+            void client?.dismissAttention(itemId, verdict).catch((error: unknown) => {
+              console.warn('could not remember the dismissal', error);
+            });
+          }}
         />
       );
     case 'work':

@@ -97,3 +97,18 @@
   font-size: var(--astra-font-size-secondary);
   white-space: nowrap;
 }
+
+/* 「あとで」と「今後は出さない」（UI/UX §16）。 */
+.astra-attention__feedback {
+  display: flex;
+  gap: var(--astra-space-xs, 4px);
+  padding-left: var(--astra-space-sm, 8px);
+}
+
+.astra-attention__feedback button {
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-sm, 0.875rem);
+  background: none;
+  border: none;
+  cursor: pointer;
+}

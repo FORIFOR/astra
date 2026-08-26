@@ -5,7 +5,13 @@
  */
 import { describe, expect, it } from 'vitest';
 import { MAX_ATTENTION_ITEMS, uuidv7, type WorldFact } from '@astra/contracts';
-import { buildBrief, type MeetingLike, type TaskLike } from '../src/brief.js';
+import {
+  DISMISS_QUIET_MS,
+  buildBrief,
+  suppressedBy,
+  type MeetingLike,
+  type TaskLike,
+} from '../src/brief.js';
 
 const NOW = new Date('2026-08-26T09:00:00.000Z');
 
@@ -141,5 +147,70 @@ describe('buildBrief', () => {
     expect(result.attention).toEqual([]);
     expect(result.more).toEqual([]);
     expect(result.generated_at).toBe(NOW.toISOString());
+  });
+});
+
+describe('what the user said not to show (§16)', () => {
+  it('stops showing something that was refused outright', () => {
+    const waiting = task({ status: 'WAITING_APPROVAL', title: '承認待ち' });
+    expect(brief({ tasks: [waiting] }).attention).toHaveLength(1);
+
+    const after = brief({
+      tasks: [waiting],
+      feedback: [{ itemId: `task:${waiting.id}`, verdict: 'never', createdAt: NOW.toISOString() }],
+    });
+    // 「すべて見る」にも出さない。押した意味が無くなる。
+    expect(after.attention).toHaveLength(0);
+    expect(after.more).toHaveLength(0);
+  });
+
+  it('keeps honouring a refusal long after it was made', () => {
+    const waiting = task({ status: 'WAITING_APPROVAL', title: '承認待ち' });
+    const longAgo = new Date(NOW.getTime() - 365 * 86_400_000).toISOString();
+    const after = buildBrief({
+      commitments: [],
+      tasks: [waiting],
+      meetings: [],
+      now: NOW,
+      feedback: [{ itemId: `task:${waiting.id}`, verdict: 'never', createdAt: longAgo }],
+    });
+    // §16「明示拒否を長期尊重する」。こちらの都合で忘れない。
+    expect(after.attention).toHaveLength(0);
+  });
+
+  it('brings back a "later" once the day has passed, but not before', () => {
+    const waiting = task({ status: 'WAITING_APPROVAL', title: '承認待ち' });
+    const justNow = new Date(NOW.getTime() - 60_000).toISOString();
+    expect(
+      brief({
+        tasks: [waiting],
+        feedback: [{ itemId: `task:${waiting.id}`, verdict: 'later', createdAt: justNow }],
+      }).attention,
+    ).toHaveLength(0);
+
+    const yesterday = new Date(NOW.getTime() - DISMISS_QUIET_MS - 1).toISOString();
+    expect(
+      brief({
+        tasks: [waiting],
+        feedback: [{ itemId: `task:${waiting.id}`, verdict: 'later', createdAt: yesterday }],
+      }).attention,
+    ).toHaveLength(1);
+  });
+
+  it('does not silence a different item by accident', () => {
+    const refused = task({ status: 'WAITING_APPROVAL', title: '断ったほう' });
+    const other = task({ status: 'WAITING_APPROVAL', title: '断っていないほう' });
+    const after = brief({
+      tasks: [refused, other],
+      feedback: [{ itemId: `task:${refused.id}`, verdict: 'never', createdAt: NOW.toISOString() }],
+    });
+    expect(after.attention.map((i) => i.title)).toEqual(['断っていないほう']);
+  });
+
+  it('reads a malformed timestamp as "not suppressed" rather than hiding forever', () => {
+    // 壊れた記録で永久に黙るより、出してもう一度断ってもらうほうがよい
+    expect(suppressedBy({ itemId: 'x', verdict: 'later', createdAt: 'なにか' }, NOW)).toBeNull();
+    // never は時刻に依らない
+    expect(suppressedBy({ itemId: 'x', verdict: 'never', createdAt: 'なにか' }, NOW)).toBe('never');
   });
 });

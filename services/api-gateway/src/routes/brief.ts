@@ -23,6 +23,11 @@ const SettleRequest = z.object({
   status: CommitmentStatus.exclude(['OPEN']),
 });
 
+/** UI/UX §16: 「あとで」と「今後は出さない」を分ける。 */
+const DismissRequest = z.object({
+  verdict: z.enum(['later', 'never']).default('later'),
+});
+
 export function registerBriefRoutes(app: App, deps: BriefRouteDeps): void {
   const now = deps.now ?? (() => new Date());
 
@@ -30,11 +35,21 @@ export function registerBriefRoutes(app: App, deps: BriefRouteDeps): void {
     const principal = requirePrincipal();
 
     // 片方が落ちても、取れたほうは出す。全部か無かにしない。
-    const [commitments, tasks, meetings] = await Promise.all([
+    const [commitments, tasks, meetings, feedback] = await Promise.all([
       deps.world.openCommitments(principal.tenantId).catch(() => []),
       deps.tasks.list(principal.tenantId, 50).catch(() => ({ items: [] })),
       deps.meetings?.list(principal.tenantId).catch(() => []) ?? Promise.resolve([]),
+      /*
+       * 断られたものを引く。**ここが落ちても brief は出す**が、
+       * 拒否を無視して出すことになるので、そのときは何も出さない側に倒す。
+       * 「断ったのにまた出た」は、「今日は出ない」より悪い。
+       */
+      deps.world.attentionFeedback(principal.tenantId, principal.userId).catch(() => null),
     ]);
+
+    if (feedback === null) {
+      return { attention: [], more: [], generated_at: now().toISOString() };
+    }
 
     return buildBrief({
       commitments,
@@ -48,8 +63,25 @@ export function registerBriefRoutes(app: App, deps: BriefRouteDeps): void {
         .filter((m) => m.status === 'RECORDING' || m.status === 'PAUSED')
         .map((m) => ({ id: m.id, title: m.title, startsAt: m.started_at })),
       now: now(),
+      feedback,
     });
   });
+
+  app.post<{ Params: { itemId: string } }>(
+    '/v1/brief/items/:itemId/dismiss',
+    async (request, reply) => {
+      const principal = requirePrincipal();
+      const body = DismissRequest.parse(request.body ?? {});
+      // §16: 明示拒否は長期尊重する。こちらの都合で忘れない。
+      await deps.world.dismissAttention(
+        principal.tenantId,
+        principal.userId,
+        request.params.itemId,
+        body.verdict,
+      );
+      return reply.status(204).send();
+    },
+  );
 
   app.get('/v1/commitments', async () => {
     const principal = requirePrincipal();

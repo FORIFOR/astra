@@ -51,6 +51,7 @@ describe.skipIf(!url)('Phase 6 acceptance', () => {
   let storeRoot: string;
   let auth: { authorization: string };
   let tenantId: string;
+  let userId: string;
 
   const userSource = (at = new Date()): FactSource =>
     ({ kind: 'user', stated_at: at.toISOString() }) as FactSource;
@@ -113,7 +114,9 @@ describe.skipIf(!url)('Phase 6 acceptance', () => {
       payload: { email: `ac6-${uuidv7()}@example.com`, display_name: 'Acceptance 6' },
     });
     auth = { authorization: `Bearer ${issued.json<TokenResponse>().access_token}` };
-    tenantId = (await get('/v1/me')).json<{ tenant: { id: string } }>().tenant.id;
+    const me = (await get('/v1/me')).json<{ tenant: { id: string }; user: { id: string } }>();
+    tenantId = me.tenant.id;
+    userId = me.user.id;
   }, 180_000);
 
   afterAll(async () => {
@@ -236,6 +239,47 @@ describe.skipIf(!url)('Phase 6 acceptance', () => {
     const result = await brief();
     const stale = [...result.attention, ...result.more].filter((i) => i.detail === '終わりました');
     expect(stale).toEqual([]);
+  });
+
+  it('UI/UX §16: a refusal is remembered, not just acted on once', async () => {
+    // 覚えない dismiss は、拒否ではなく無視
+    const before = await brief();
+    const target = before.attention[0];
+    expect(target).toBeDefined();
+
+    const dismissed = await app.inject({
+      method: 'POST',
+      url: `/v1/brief/items/${encodeURIComponent(target!.id)}/dismiss`,
+      headers: auth,
+      payload: { verdict: 'never' },
+    });
+    expect(dismissed.statusCode).toBe(204);
+
+    const after = await brief();
+    // 「すべて見る」にも出ない。押した意味が無くなる。
+    expect([...after.attention, ...after.more].map((i) => i.id)).not.toContain(target!.id);
+
+    // もう一度引いても戻ってこない
+    const again = await brief();
+    expect([...again.attention, ...again.more].map((i) => i.id)).not.toContain(target!.id);
+  });
+
+  it('UI/UX §16: a refusal belongs to the person who made it', async () => {
+    const before = await brief();
+    const target = before.attention[0];
+    expect(target).toBeDefined();
+    await app.inject({
+      method: 'POST',
+      url: `/v1/brief/items/${encodeURIComponent(target!.id)}/dismiss`,
+      headers: auth,
+      payload: { verdict: 'never' },
+    });
+
+    // 断った本人には残っている
+    const mine = await world.attentionFeedback(tenantId, userId);
+    expect(mine.map((f) => f.itemId)).toContain(target!.id);
+    // 同じテナントの別の人には及ばない。一人の拒否で全員を黙らせない。
+    expect(await world.attentionFeedback(tenantId, uuidv7())).toEqual([]);
   });
 
   it('AC6-10: another tenant sees none of this world', async () => {

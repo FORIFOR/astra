@@ -95,6 +95,14 @@ export interface ArtifactVersions {
   version: number;
 }
 
+export interface AttentionFeedback {
+  created_at: Generated<Timestamp>;
+  item_id: string;
+  tenant_id: string;
+  user_id: string;
+  verdict: string;
+}
+
 export interface AuditEvents {
   action: string;
   actor_id: string | null;
@@ -540,6 +548,7 @@ export interface DB {
   approvals: Approvals;
   artifact_versions: ArtifactVersions;
   artifacts: Artifacts;
+  attention_feedback: AttentionFeedback;
   audit_events: AuditEvents;
   audit_sequences: AuditSequences;
   connector_connections: ConnectorConnections;

@@ -158,6 +158,23 @@ ALTER TABLE ONLY public.artifacts FORCE ROW LEVEL SECURITY;
 
 
 --
+-- Name: attention_feedback; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.attention_feedback (
+    tenant_id uuid NOT NULL,
+    user_id uuid NOT NULL,
+    item_id text NOT NULL,
+    verdict text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT attention_feedback_item_id_check CHECK ((item_id <> ''::text)),
+    CONSTRAINT attention_feedback_verdict_check CHECK ((verdict = ANY (ARRAY['later'::text, 'never'::text])))
+);
+
+ALTER TABLE ONLY public.attention_feedback FORCE ROW LEVEL SECURITY;
+
+
+--
 -- Name: audit_events; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -960,6 +977,14 @@ ALTER TABLE ONLY public.artifacts
 
 
 --
+-- Name: attention_feedback attention_feedback_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.attention_feedback
+    ADD CONSTRAINT attention_feedback_pkey PRIMARY KEY (tenant_id, user_id, item_id);
+
+
+--
 -- Name: audit_events audit_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1323,6 +1348,13 @@ CREATE INDEX artifacts_by_type ON public.artifacts USING btree (tenant_id, type,
 --
 
 CREATE INDEX artifacts_recent ON public.artifacts USING btree (tenant_id, updated_at DESC, id DESC) WHERE (deleted_at IS NULL);
+
+
+--
+-- Name: attention_feedback_lookup; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX attention_feedback_lookup ON public.attention_feedback USING btree (tenant_id, user_id, created_at DESC);
 
 
 --
@@ -1813,6 +1845,22 @@ ALTER TABLE ONLY public.artifacts
 
 ALTER TABLE ONLY public.artifacts
     ADD CONSTRAINT artifacts_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+
+--
+-- Name: attention_feedback attention_feedback_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.attention_feedback
+    ADD CONSTRAINT attention_feedback_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+
+--
+-- Name: attention_feedback attention_feedback_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.attention_feedback
+    ADD CONSTRAINT attention_feedback_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
 
 
 --
@@ -2572,6 +2620,19 @@ CREATE POLICY artifacts_tenant_isolation ON public.artifacts USING ((tenant_id =
 
 
 --
+-- Name: attention_feedback; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.attention_feedback ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: attention_feedback attention_feedback_tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY attention_feedback_tenant_isolation ON public.attention_feedback USING ((tenant_id = public.astra_current_tenant())) WITH CHECK ((tenant_id = public.astra_current_tenant()));
+
+
+--
 -- Name: audit_events; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -3017,3 +3078,4 @@ INSERT INTO schema_migrations (version) VALUES ('20260827020001');
 INSERT INTO schema_migrations (version) VALUES ('20260827030001');
 INSERT INTO schema_migrations (version) VALUES ('20260827040001');
 INSERT INTO schema_migrations (version) VALUES ('20260827050001');
+INSERT INTO schema_migrations (version) VALUES ('20260827060001');

@@ -278,6 +278,19 @@ export class AstraClient {
     return this.http.request({ path: '/v1/brief' }, (value) => DailyBrief.parse(value));
   }
 
+  /**
+   * 「これは出さないで」。UI/UX §16。
+   *
+   * `never` は明示拒否。**こちらの都合で忘れない。**
+   */
+  async dismissAttention(itemId: string, verdict: 'later' | 'never' = 'later'): Promise<void> {
+    await this.http.send({
+      method: 'POST',
+      path: `/v1/brief/items/${encodeURIComponent(itemId)}/dismiss`,
+      body: { verdict },
+    });
+  }
+
   async commitments(): Promise<WorldFact[]> {
     const parsed = await this.http.request({ path: '/v1/commitments' }, (value) =>
       z.object({ items: z.array(WorldFact) }).parse(value),

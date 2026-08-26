@@ -5,7 +5,7 @@
  * Attention は最大 3 件、Active work も短く、あとは Recent。
  * 業務 KPI は Home に常設しない（Domain dashboard は Work の専用 view へ）。
  */
-import { useMemo, type ReactElement } from 'react';
+import { useMemo, useState, type ReactElement } from 'react';
 import type { TaskView } from '@astra/api-client';
 import type { Artifact } from '@astra/contracts';
 import {
@@ -34,6 +34,7 @@ export function HomePage({
   onOpenTask,
   onOpenArtifact,
   onShowAll,
+  onDismiss,
 }: {
   tasks?: readonly TaskView[];
   artifacts?: readonly Artifact[];
@@ -47,10 +48,21 @@ export function HomePage({
   onOpenTask?(taskId: string): void;
   onOpenArtifact?(artifactId: string): void;
   onShowAll?(): void;
+  /**
+   * 「あとで」と「今後は出さない」。UI/UX §16。
+   * **覚えない dismiss は、拒否ではなく無視。**押した先で覚える。
+   */
+  onDismiss?(itemId: string, verdict: 'later' | 'never'): void;
 }): ReactElement {
-  const feed = useMemo(
+  // 押した直後に消す。返事を待って残っていると、押していないように見える。
+  const [hidden, setHidden] = useState<ReadonlySet<string>>(new Set());
+  const built = useMemo(
     () => (brief ? feedFromBrief(brief) : buildAttentionFeed(tasks, now)),
     [brief, tasks, now],
+  );
+  const feed = useMemo(
+    () => ({ ...built, items: built.items.filter((item) => !hidden.has(item.id)) }),
+    [built, hidden],
   );
   const active = useMemo(
     () => tasks.filter((t) => t.status === 'RUNNING' || t.status === 'PENDING').slice(0, 3),
@@ -95,6 +107,29 @@ export function HomePage({
                       )}
                       <span className="astra-attention__action">{item.actionLabel}</span>
                     </button>
+                    {onDismiss && (
+                      <span className="astra-attention__feedback">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setHidden((current) => new Set(current).add(item.id));
+                            onDismiss(item.id, 'later');
+                          }}
+                        >
+                          あとで
+                        </button>
+                        {/* §16: 明示拒否。長期尊重されることを、文言でも言う。 */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setHidden((current) => new Set(current).add(item.id));
+                            onDismiss(item.id, 'never');
+                          }}
+                        >
+                          今後は出さない
+                        </button>
+                      </span>
+                    )}
                   </li>
                 ))}
               </ul>

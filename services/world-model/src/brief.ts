@@ -26,14 +26,46 @@ export interface MeetingLike {
   readonly startsAt: string;
 }
 
+/** 「これは出さないで」の記録。UI/UX §16。 */
+export interface AttentionFeedback {
+  readonly itemId: string;
+  /** later: しばらく出さない / never: 二度と出さない（明示拒否）。 */
+  readonly verdict: 'later' | 'never';
+  readonly createdAt: string;
+}
+
 export interface BriefInput {
   readonly commitments: readonly WorldFact[];
   readonly tasks: readonly TaskLike[];
   readonly meetings: readonly MeetingLike[];
   readonly now: Date;
+  /**
+   * 断られたもの。**覚えない dismiss は、拒否ではなく無視。**
+   * 押した直後に消えても次の brief でまた出るなら、拒否は届いていない。
+   */
+  readonly feedback?: readonly AttentionFeedback[];
 }
 
 const DAY_MS = 86_400_000;
+
+/** 「あとで」がもう一度出てよくなるまで。 */
+export const DISMISS_QUIET_MS = DAY_MS;
+
+/**
+ * いまこの item を出してよいか。
+ *
+ * `never` は期限を設けない。§16 の「明示拒否を長期尊重する」は、
+ * **こちらの都合で忘れてよい、という意味ではない。**
+ */
+export function suppressedBy(
+  feedback: AttentionFeedback | undefined,
+  now: Date,
+): 'never' | 'later' | null {
+  if (!feedback) return null;
+  if (feedback.verdict === 'never') return 'never';
+  const since = now.getTime() - Date.parse(feedback.createdAt);
+  return Number.isFinite(since) && since < DISMISS_QUIET_MS ? 'later' : null;
+}
 
 /** 期限までの日数。無ければ null。 */
 function daysUntil(due: string | null, now: Date): number | null {
@@ -186,11 +218,16 @@ function meetingItem(meeting: MeetingLike, now: Date): Item | null {
  * 式が言っているものを、順位が足りているからといって出さない（AC6-6）。
  */
 export function buildBrief(input: BriefInput): DailyBrief {
+  const byItem = new Map((input.feedback ?? []).map((f) => [f.itemId, f]));
+
   const items = [
     ...input.commitments.map((c) => commitmentItem(c, input.now)),
     ...input.tasks.map((t) => taskItem(t, input.now)),
     ...input.meetings.map((m) => meetingItem(m, input.now)),
-  ].filter((item): item is Item => item !== null && item.score > 0);
+  ]
+    .filter((item): item is Item => item !== null && item.score > 0)
+    // 断られたものは出さない。「すべて見る」にも出さない（§16）。
+    .filter((item) => suppressedBy(byItem.get(item.id), input.now) === null);
 
   // 同点のときの並びを決めておく。実行ごとに順番が変わらないように。
   items.sort((a, b) => b.score - a.score || a.id.localeCompare(b.id));

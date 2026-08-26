@@ -287,6 +287,23 @@ describe('Library (§10)', () => {
     expect(screen.queryByText('共有: オフ')).toBeNull();
   });
 
+  it('offers both "later" and a lasting refusal (§16)', async () => {
+    const onDismiss = vi.fn();
+    const waiting = task({ status: 'WAITING_APPROVAL', title: '承認待ち' });
+    render(<HomePage tasks={[waiting]} onDismiss={onDismiss} />);
+
+    await userEvent.click(screen.getByRole('button', { name: '今後は出さない' }));
+    expect(onDismiss).toHaveBeenCalledWith(expect.stringContaining(waiting.id), 'never');
+    // 押した直後に消える。返事を待って残っていると、押していないように見える。
+    expect(screen.queryByText('承認待ち')).toBeNull();
+  });
+
+  it('does not offer a refusal it cannot remember', () => {
+    // onDismiss が無いなら、押せる口を出さない
+    render(<HomePage tasks={[task({ status: 'WAITING_APPROVAL', title: '承認待ち' })]} />);
+    expect(screen.queryByRole('button', { name: '今後は出さない' })).toBeNull();
+  });
+
   it('labels sensitive artifacts in text, not colour alone', () => {
     const doc = artifact({ sensitivity: 'CONFIDENTIAL' });
     render(<LibraryPage artifacts={[doc]} />);
