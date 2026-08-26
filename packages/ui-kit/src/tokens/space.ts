@@ -50,3 +50,14 @@ export const elevation = {
 export const dockGlass = {
   backdropFilter: 'saturate(140%) blur(20px)',
 } as const;
+
+/**
+ * 押せるものの最小の大きさ。UI/UX §19。
+ *
+ * 「44px 相当の click/touch target を推奨。desktop でも
+ *   小さすぎる icon-only button を避ける。」
+ *
+ * **見た目の大きさではなく、当たりの大きさ。**
+ * icon が 16px でも、押せる範囲は 44px 取る。
+ */
+export const MIN_TOUCH_TARGET_PX = 44;

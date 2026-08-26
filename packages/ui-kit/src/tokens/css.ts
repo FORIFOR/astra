@@ -6,7 +6,7 @@
  */
 import { darkColors, lightColors, type ColorTokens } from './color.js';
 import { fontStacks, typography } from './typography.js';
-import { border, elevation, padding, radius, space } from './space.js';
+import { MIN_TOUCH_TARGET_PX, border, elevation, padding, radius, space } from './space.js';
 import { motion, REDUCED_MOTION_DURATION_MS } from './motion.js';
 import { breakpoints, layout, zIndex } from './layout.js';
 
@@ -97,6 +97,25 @@ body {
   outline: 2px solid var(--astra-color-focus-ring);
   outline-offset: 2px;
   border-radius: var(--astra-radius-small);
+}
+
+/*
+ * §19: 44px 相当の当たりを取る。**見た目ではなく当たりの大きさ。**
+ * icon が 16px でも、押せる範囲はここまで広げる。
+ * 中の並びは各コンポーネントが決めるので、大きさだけを与える。
+ */
+button,
+[role='button'],
+summary,
+a[href] {
+  min-height: ${MIN_TOUCH_TARGET_PX}px;
+}
+
+/* 文中のリンクまで 44px にすると、行が壊れる。文字の中は対象外。 */
+p a[href],
+li a[href],
+span a[href] {
+  min-height: 0;
 }
 
 /* §18: prefers-reduced-motion では morph を簡略化する */

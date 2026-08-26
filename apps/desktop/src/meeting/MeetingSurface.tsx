@@ -7,6 +7,7 @@
 import { useMemo, useState, type ReactElement } from 'react';
 import { RecordingIndicator, type RecordingState } from './RecordingIndicator.js';
 import { TranscriptPanel } from './TranscriptPanel.js';
+import { LiveAnnouncer } from './LiveAnnouncer.js';
 import { speakersSoFar, type MeetingView } from './meetingView.js';
 
 export type MarkerKind = 'important' | 'decision' | 'todo';
@@ -29,6 +30,7 @@ export function MeetingSurface({
   onNameSpeaker,
   onPause,
   onStop,
+  announceTranscript = false,
 }: {
   title: string;
   view: MeetingView;
@@ -41,6 +43,11 @@ export function MeetingSurface({
   onNameSpeaker(speakerTag: number): void;
   onPause(): void;
   onStop(): void;
+  /**
+   * 確定した発言を読み上げへ渡すか。UI/UX §19。
+   * 既定は off（「通知**可能**にする」であって、常に通知するではない）。
+   */
+  announceTranscript?: boolean;
 }): ReactElement {
   // 既定で閉じている（§12.3）
   const [transcriptOpen, setTranscriptOpen] = useState(false);
@@ -56,6 +63,9 @@ export function MeetingSurface({
         onPause={onPause}
         onStop={onStop}
       />
+
+      {/* §19: 確定した発言だけを、間隔を空けて読み上げへ渡す */}
+      <LiveAnnouncer lines={view.lines} enabled={announceTranscript} />
 
       <div className="astra-meeting__body" data-transcript={transcriptOpen ? 'open' : 'closed'}>
         <div className="astra-meeting__notes">
