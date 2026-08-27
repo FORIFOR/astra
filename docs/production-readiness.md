@@ -17,8 +17,19 @@
 | ManualSmoke            | NOT_RUN_BY_ASSISTANT（GUI 操作は実施していない） |
 
 必須の能力のうち、**外部サービスへの接続（OAuth）だけ**が残っている。
-Google OAuth Client を作れば埋まる。作らないまま本番へ出すと
-**起動が拒否される**（そう作ってある）。
+
+**実装は実測済み**（`docs/evidence/oauth.md`）。仕様どおりに振る舞う
+認可サーバを立てて、loopback・PKCE・コードの使い捨て・state 照合・
+保管庫への格納・更新・取り消しまで実 HTTP で通してある。
+macOS Keychain の往復もこの端末で確認した。
+
+残っているのは**設定だけ** — Google OAuth Client（デスクトップ用）は
+Cloud Console でしか作れず、API も無いので人の操作になる。
+作らないまま本番へ出すと**起動が拒否される**（そう作ってある）。
+
+なぜこれを必須から外さないか: 正本 §29 が MVP の最小完成形に
+「at least Gmail/Calendar/Drive/Finder connectors」を挙げている。
+**通したい試験のために必須の定義を動かさない。**
 
 文字起こし・翻訳・読み上げは `GOOGLE_CLOUD_PROJECT` を設定した状態で
 **実際に繋いで通した**（`docs/evidence/final-e2e.md`）。
@@ -98,6 +109,7 @@ Google OAuth Client を作れば埋まる。作らないまま本番へ出すと
 - **Claude Code の `not_signed_in` / `rate_limited`。**本物の出力を
   落とさずに再現できないため、分類器は単体試験のみ
 - **GUI の手動確認。**assistant は画面を操作していない
+- **実アカウントでの OAuth 疎通。**Client が無い（実装は実測済み）
 - **長時間・大量の負荷。**同時実行や長い調査での挙動は測っていない
 
 ---

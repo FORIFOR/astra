@@ -181,6 +181,9 @@ importers:
       '@astra/db':
         specifier: workspace:*
         version: link:../packages/db
+      '@astra/oauth':
+        specifier: workspace:*
+        version: link:../packages/oauth
       '@astra/plugin-sdk':
         specifier: workspace:*
         version: link:../packages/plugin-sdk
