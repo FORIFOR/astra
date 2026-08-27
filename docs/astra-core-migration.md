@@ -673,3 +673,10 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
 - **未検証（Windows 実機のみ, 捏造しない）**: 実際の取り込み（mmdevapi COM の実行）・mix format が float でない場合の変換・
   loopback の実挙動は Windows でのみ検証できる。float[] 抽出は float mix format 前提（一般的だが要実機確認）。
 - **意味（§4 Mic/System Audio）**: Windows の音声取り込みが code-complete＋コンパイル検証済み。実取り込みは Windows。
+
+## 追記: Windows 録音ウィンドウを WASAPI→core に配線（Phase 1.60）
+- `RecordingWorkspaceWindow.Begin` が `WasapiCapture`（マイク）を開き、フレームを `RecordingSession.Push`（core）へ流す
+  ように配線（macOS の `RecordingRuntime.begin` と同じ流れ）。`End` で mic 停止＋session 確定。経過は DispatcherQueue で更新。
+- WinUI の Window コードなので**ビルドは Windows のみ**（compile 検証はできない）。ただし配線先の `WasapiCapture`・
+  `RecordingSession`(core bridge) は compile／runtime 検証済み。実取り込み・描画は Windows 実機/CI。
+- **意味（§4 Recording）**: Windows の録音音声経路（マイク→core→断片保存）が code-complete。

@@ -8,6 +8,7 @@ namespace Astra;
 public sealed partial class RecordingWorkspaceWindow : Window
 {
     private RecordingSession? _session;
+    private WasapiCapture? _mic;
 
     public RecordingWorkspaceWindow()
     {
@@ -29,11 +30,26 @@ public sealed partial class RecordingWorkspaceWindow : Window
         TaskDock.Height = Metrics.DockHeight;
     }
 
-    /// 録音開始（WASAPI から Push する。実配線は Phase 4 の Audio 実装で）。
+    /// 録音開始: core の session を作り、WASAPI マイクから 16kHz へ落として Push する。
+    /// （実取り込みは Windows のみ。macOS の RecordingRuntime.begin と同じ流れ。）
     public void Begin(string root, string meetingId)
     {
         _session = RecordingSession.Start(root, meetingId);
+        try
+        {
+            _mic = new WasapiCapture(loopback: false);
+            _mic.Start(frame =>
+            {
+                // WASAPI の mix format(通常 44.1/48kHz float) をそのまま core に渡し、core 側で 16kHz にリサンプルする。
+                _session?.Push(frame, 48000);
+                DispatchQueue(() => Elapsed.Text = AstraCore.FormatElapsed(_session?.RecordedMs ?? 0));
+            });
+        }
+        catch { /* マイクが開けなくても session は成り立つ（外から Push も可） */ }
     }
+
+    // UI スレッドへ戻す（DispatcherQueue の薄いラッパ）。
+    private void DispatchQueue(Action a) => DispatcherQueue.TryEnqueue(() => a());
 
     public void PushSamples(float[] samples, uint rate)
     {
@@ -42,5 +58,9 @@ public sealed partial class RecordingWorkspaceWindow : Window
         Elapsed.Text = AstraCore.FormatElapsed(_session?.RecordedMs ?? 0);
     }
 
-    public void End() { _session?.Finish(); _session?.Dispose(); _session = null; }
+    public void End()
+    {
+        _mic?.Stop(); _mic?.Dispose(); _mic = null;
+        _session?.Finish(); _session?.Dispose(); _session = null;
+    }
 }
