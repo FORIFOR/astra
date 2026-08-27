@@ -37,7 +37,12 @@ final class MainData: ObservableObject {
                 let tokens = try AstraCoreBridge.devSignIn(base, email: "main-\(getpid())@astra.local", displayName: "Astra")
                 let apps = (try? AstraCoreBridge.pluginCatalog(base, accessToken: tokens.accessToken)) ?? []
                 let library = (try? AstraCoreBridge.library(base, accessToken: tokens.accessToken)) ?? []
-                await MainActor.run { self.apps = apps; self.library = library; self.connected = true }
+                await MainActor.run {
+                    self.apps = apps; self.library = library; self.connected = true
+                    // サインインを録音側にも渡す（AI 操作/翻訳/実会議が使えるようになる）。
+                    RecordingWorkspaceState.shared.configureBackend(base: base, token: tokens.accessToken)
+                    RecordingRuntime.shared.configureBackend(base: base, accessToken: tokens.accessToken)
+                }
             } catch {
                 NSLog("main data load failed: \(error)")
             }

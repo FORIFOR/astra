@@ -485,3 +485,13 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
 - 検証: `--selftest waveform`（実マイクでレベルコールバックが発火）。**実測 PASS**: `実マイクレベルで更新 callbacks=11`。
   verify に組み込み（未許可 CI では SKIP）。全 selftest 24 件 OK/SKIP・0 FAIL、回帰なし。
 - **意味**: 録音 Hero の波形と Home の成果物が実データに（Done#2/#7、UI mock 排除）。
+
+## 追記: サインインを録音ワークスペースへ配線（Phase 1.41, Done#7 統合）
+- **実ギャップの修正**: `MainData.load()` は dev サインインして Apps/Library を取るが、**そのトークンを
+  `RecordingWorkspaceState`/`RecordingRuntime` に渡していなかった**。そのため実アプリでは録音中の AI 操作・翻訳が
+  常に「サインインすると使えます」になり、実会議（gateway 側の meeting 作成）も動かなかった。
+- 修正: `MainData.load()` 成功時に `RecordingWorkspaceState.configureBackend` と `RecordingRuntime.configureBackend`
+  を呼び、サインインを録音側にも渡す。→ Main Window でサインインすれば、録音の AI 操作/翻訳/実会議連携が有効になる。
+- 検証: 既存 `--selftest aiaction`/`translate`（明示的に configureBackend する経路）は PASS のまま。全 selftest 24 件
+  OK/SKIP・0 FAIL、回帰なし。実アプリ経路（MainData 起点）の配線はコードで担保。
+- **意味**: Main Window・Recording Workspace・Apps/Agents・RAG/Agent が一つのサインインで繋がった（Done#7 統合）。
