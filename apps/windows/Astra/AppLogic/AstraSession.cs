@@ -24,6 +24,10 @@ public sealed class AstraSession
         var root = doc.RootElement;
         AccessToken = root.TryGetProperty("access_token", out var at) ? at.GetString() ?? "" : "";
         RefreshToken = root.TryGetProperty("refresh_token", out var rt) ? rt.GetString() ?? "" : "";
+        string deviceToken = root.TryGetProperty("device_token", out var dt) ? dt.GetString() ?? "" : "";
+        // refresh/device token は Credential Manager のみ（Windows）。access token はメモリ。§21。
+        if (OperatingSystem.IsWindows() && RefreshToken.Length > 0)
+            WindowsSessionStore.Persist(RefreshToken, deviceToken);
         return AccessToken.Length > 0;
     }
 

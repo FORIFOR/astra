@@ -688,3 +688,13 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
 - **Windows の到達点**: 共通ロジック（bridge/session/geometry/shortcut/WASAPI）は compile／runtime 検証済み、
   Main/Recording Window はそれらに配線済み（code-complete）。**残るは WinUI の実描画（Page/XAML の render）と
   Windows.Graphics.Capture（画面）＝ Windows 実機/CI でのみ**。
+
+## 追記: Windows Credential Manager（資格情報保管）を実装・コンパイル検証（Phase 1.62, §21）
+- `apps/windows/Astra/AppLogic/WindowsCredentialStore.cs` を新設。macOS の KeychainStore/SessionStore に対応する
+  Windows 実装: advapi32 の `CredWrite`/`CredRead`/`CredDelete` で **refresh/device token を Credential Manager のみ**に
+  保管（upsert / 未登録は null / 冪等 delete）。`WindowsSessionStore` で refresh/device をまとめて管理。
+- `AstraSession.SignIn` が Windows のとき refresh/device token を Credential Manager に保存（`OperatingSystem.IsWindows()`
+  ガードで非 Windows では skip → macOS の runtime 検証は維持）。access token はメモリのみ。
+- 検証: `verify-csharp-bridge` にコンパイル対象として取り込み **ビルド PASS**。非 Windows では保存 skip のため
+  gateway 往復テストも従来どおり PASS。
+- **意味（§21）**: Windows の資格情報保管が code-complete＋コンパイル検証済み。実保存/読取は Windows（advapi32）。

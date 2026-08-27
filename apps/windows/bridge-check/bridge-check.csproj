@@ -17,6 +17,7 @@
     <Compile Include="../Astra/AppLogic/AstraSession.cs" />
     <Compile Include="../Astra/AppLogic/WindowsGlobalShortcut.cs" />
     <Compile Include="../Astra/AppLogic/WasapiCapture.cs" />
+    <Compile Include="../Astra/AppLogic/WindowsCredentialStore.cs" />
     <!-- 共有 golden を出力先へ持っていく（geometry 照合用）。 -->
     <None Include="../../../shared/design/fixtures/recording-workspace.path" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
