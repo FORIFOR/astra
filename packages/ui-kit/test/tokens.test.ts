@@ -184,11 +184,13 @@ describe('layout', () => {
     expect(resolveLayout(800, false).inspectorAsDrawer).toBe(true);
   });
 
-  it('overrides the user and collapses the sidebar when the main column would be squeezed', () => {
-    // main の最低幅 640px を守る方を優先する
+  it('lets the user switch the sidebar in the medium band, and forces it only when squeezed', () => {
+    // §7.2: 960–1279 は「sidebar 64–208 切替」。利用者が選べる。
     expect(resolveLayout(1440, false).sidebarWidth).toBe(208);
     expect(resolveLayout(1440, true).sidebarWidth).toBe(64);
-    expect(resolveLayout(1100, false).sidebarCollapsed).toBe(true);
+    expect(resolveLayout(1100, false).sidebarCollapsed).toBe(false);
+    expect(resolveLayout(1100, true).sidebarCollapsed).toBe(true);
+    // 720–959 だけは常に畳む。main の最低幅 640px を守るため。
     expect(resolveLayout(800, false).sidebarCollapsed).toBe(true);
   });
 

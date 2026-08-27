@@ -67,7 +67,9 @@
 
 .astra-dashboard__metric {
   margin: 0;
-  font-size: 32px;
+  /* §17.2 の最大は page title（26px）。生の 32px を書いていた */
+  font-size: var(--astra-font-size-page-title);
+  font-weight: var(--astra-font-weight-page-title);
   font-variant-numeric: tabular-nums;
 }
 

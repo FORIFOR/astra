@@ -42,8 +42,12 @@ export interface LayoutDecision {
 
 export function resolveLayout(width: number, userCollapsedSidebar: boolean): LayoutDecision {
   const mode = layoutModeFor(width);
-  // compact 以下では常に畳む。ユーザーの意向より、main の最低幅 640px を優先する。
-  const collapsed = mode === 'wide' ? userCollapsedSidebar : true;
+  /*
+   * §7.2: 960–1279 は「sidebar 64–208 切替」— 利用者が選べる。
+   * compact（720–959）だけは常に畳む。main の最低幅 640px を守るため。
+   * medium まで畳み込んでいた間、切替 button は灰色のまま押せなかった。
+   */
+  const collapsed = mode === 'compact' ? true : userCollapsedSidebar;
   return {
     mode,
     sidebarCollapsed: collapsed,

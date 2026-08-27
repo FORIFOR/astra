@@ -85,7 +85,7 @@ export function Sidebar(): ReactElement {
         className="astra-sidebar__toggle"
         onClick={toggleSidebar}
         // 幅が足りないときは畳んだまま固定されるので、操作させない
-        disabled={layout.mode !== 'wide'}
+        disabled={layout.mode === 'compact'}
         aria-expanded={!collapsed}
       >
         <span aria-hidden="true">{collapsed ? '›' : '‹'}</span>

@@ -32,6 +32,17 @@ function staticVars(): string[] {
     lines.push(`  --astra-font-weight-${kebab(role)}: ${scale.weight};`);
     lines.push(`  --astra-line-height-${kebab(role)}: ${scale.lineHeight};`);
   }
+  /*
+   * 画面側が使っていた短い名前。**出していなかった。**
+   * `var(--astra-font-size-sm, 0.875rem)` は黙って 14px に落ち、
+   * §17.2 が 11–12px と定める micro の文字が body の大きさで出ていた。
+   * 見た目は壊れないので、目で見ても気づけない。ここで実値に結ぶ。
+   */
+  lines.push(`  --astra-space-xs: ${space.compact}px;`);
+  lines.push(`  --astra-space-sm: ${space.base}px;`);
+  lines.push(`  --astra-space-md: ${space.lg}px;`);
+  lines.push(`  --astra-radius-sm: ${radius.small}px;`);
+  lines.push(`  --astra-font-size-sm: ${typography.micro.size}px;`);
   lines.push(`  --astra-font-sans: ${fontStacks.sans};`);
   lines.push(`  --astra-font-mono: ${fontStacks.mono};`);
   for (const [role, spec] of Object.entries(motion)) {

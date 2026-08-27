@@ -8,14 +8,18 @@
 export const TOP_LEVEL_TABS = [
   {
     id: 'home',
-    label: 'ホーム',
+    /*
+     * §2.1 の表そのままの名前。内部で「AI Agent」「Plugin」を持っていても、
+     * 上の 4 つは Home / Work / Library / Apps。片仮名に写していたのをやめた。
+     */
+    label: 'Home',
     path: '/home',
     /** 通常ユーザーが期待する答え（§2.1） */
     answers: '今、何をすべき？',
   },
-  { id: 'work', label: 'ワーク', path: '/work', answers: '仕事はどこまで進んだ？' },
-  { id: 'library', label: 'ライブラリ', path: '/library', answers: '結果はどこ？' },
-  { id: 'apps', label: 'アプリ', path: '/apps', answers: '何を追加できる？' },
+  { id: 'work', label: 'Work', path: '/work', answers: '仕事はどこまで進んだ？' },
+  { id: 'library', label: 'Library', path: '/library', answers: '結果はどこ？' },
+  { id: 'apps', label: 'Apps', path: '/apps', answers: '何を追加できる？' },
 ] as const;
 
 export type TabId = (typeof TOP_LEVEL_TABS)[number]['id'];

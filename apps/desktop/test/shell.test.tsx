@@ -78,16 +78,16 @@ describe('top-level navigation', () => {
     // §19: 状態を色だけで表さない
     render(<App />);
     const home = screen.getByRole('button', { current: 'page' });
-    expect(home.textContent).toContain('ホーム');
+    expect(home.textContent).toContain('Home');
   });
 
   it('switches the title and the current marker when a tab is chosen', async () => {
     const user = userEvent.setup();
     render(<App />);
-    await user.click(screen.getByText('ライブラリ'));
+    await user.click(screen.getByText('Library'));
 
-    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('ライブラリ');
-    expect(screen.getByRole('button', { current: 'page' }).textContent).toContain('ライブラリ');
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Library');
+    expect(screen.getByRole('button', { current: 'page' }).textContent).toContain('Library');
   });
 
   it('is reachable by keyboard alone', async () => {
@@ -97,12 +97,12 @@ describe('top-level navigation', () => {
     await user.tab();
     for (let i = 0; i < 10; i += 1) {
       const active = document.activeElement;
-      if (active?.textContent?.includes('ワーク')) break;
+      if (active?.textContent?.includes('Work')) break;
       await user.tab();
     }
-    expect(document.activeElement?.textContent).toContain('ワーク');
+    expect(document.activeElement?.textContent).toContain('Work');
     await user.keyboard('{Enter}');
-    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('ワーク');
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Work');
   });
 });
 
@@ -162,11 +162,24 @@ describe('responsive layout (§7.2)', () => {
     expect(document.querySelector('.astra-shell')?.getAttribute('data-layout')).toBe('wide');
   });
 
-  it('collapses the sidebar below 1280px regardless of the user preference', () => {
+  it('keeps the sidebar switchable in the medium band (§7.2)', () => {
+    // 960–1279 は「sidebar 64–208 切替」。畳み込んで button を灰色にしていた。
     setViewport(1100);
     render(<App />);
     const shell = document.querySelector('.astra-shell') as HTMLElement;
     expect(shell.getAttribute('data-layout')).toBe('medium');
+    expect(shell.style.getPropertyValue('--astra-sidebar-width')).toBe(
+      `${layout.sidebar.expanded}px`,
+    );
+    expect((screen.getByRole('button', { name: /サイドバー/ }) as HTMLButtonElement).disabled).toBe(
+      false,
+    );
+  });
+
+  it('forces the sidebar closed only when the main column would be squeezed', () => {
+    setViewport(800);
+    render(<App />);
+    const shell = document.querySelector('.astra-shell') as HTMLElement;
     expect(shell.style.getPropertyValue('--astra-sidebar-width')).toBe(
       `${layout.sidebar.collapsed}px`,
     );
@@ -205,7 +218,7 @@ describe('responsive layout (§7.2)', () => {
     setViewport(1100);
     render(<App />);
     // 視覚的に隠れても、読み上げには残す
-    expect(screen.getByRole('button', { current: 'page' }).textContent).toContain('ホーム');
+    expect(screen.getByRole('button', { current: 'page' }).textContent).toContain('Home');
   });
 });
 
