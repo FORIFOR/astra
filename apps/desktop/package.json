@@ -10,7 +10,9 @@
     "typecheck": "tsc --noEmit",
     "preview": "vite preview",
     "tauri": "tauri",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run --passWithNoTests",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build"
   },
   "dependencies": {
     "@astra/contracts": "workspace:*",
@@ -30,6 +32,7 @@
     "@vitejs/plugin-react": "catalog:",
     "happy-dom": "^20.11.6",
     "vite": "catalog:",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "@tauri-apps/cli": "^2.10.3"
   }
 }
