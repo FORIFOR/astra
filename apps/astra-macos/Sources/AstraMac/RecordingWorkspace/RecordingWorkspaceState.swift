@@ -136,7 +136,19 @@ final class RecordingWorkspaceState: ObservableObject {
 
     func start() {
         isRecording = true
-        // 実ランタイム: マイク → astra-core → ディスク断片（許可があればライブ取り込み）
+        // オンデバイス STT の途中経過/確定を transcript に反映する。
+        RecordingRuntime.shared.onTranscript = { [weak self] text, isFinal in
+            guard let self else { return }
+            // 直近の interim を置き換え、確定したら確定行にする（重なりは core の merge に委ねる設計）。
+            if let last = self.transcript.last, last.interim {
+                self.transcript[self.transcript.count - 1] =
+                    TranscriptSegment(speaker: "あなた", text: text, interim: !isFinal)
+            } else {
+                self.transcript.append(TranscriptSegment(speaker: "あなた", text: text, interim: !isFinal))
+            }
+            self.refreshRag()
+        }
+        // 実ランタイム: マイク → astra-core → ディスク断片（許可があればライブ取り込み + 手元 STT）
         RecordingRuntime.shared.begin(meetingId: "meeting-\(Int(Date().timeIntervalSince1970))")
         WindowCoordinator.shared.enterRecordingMode()
     }

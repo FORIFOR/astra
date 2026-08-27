@@ -295,3 +295,17 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
 - live(TCC/署名)ゲートで未検証: 実 mic 波形・system audio フレーム・screen フレーム・カレンダー予定・
   グローバル押下受信・AX 実選択テキスト。
 - 外部依存で未達: **Streaming STT**(sherpa dylib＋モデル) / **connector OAuth 実行**(外部プロバイダ)。
+
+## 追記: オンデバイス Streaming STT（Phase 1.26, macOS native / Apple Speech）
+- `Audio/SpeechTranscriber.swift` を新設。**Apple の SFSpeechRecognizer（オンデバイス）** でマイクの
+  16 kHz mono を途中経過/確定へ変える。`requiresOnDeviceRecognition=true`＝**sherpa-onnx の dylib もモデルも要らず、
+  外部 STT にも送らない**（§11「音は手元で文字に」）。`RecordingRuntime` がマイクフレームを session（保存）と
+  transcriber（文字起こし）へ同時に流し、`RecordingWorkspaceState` が途中経過/確定を transcript に反映して RAG も更新。
+- Info.plist に `NSSpeechRecognitionUsageDescription` を追加。
+- 検証: `--selftest speech` を追加し verify に組み込み。**実測 PASS**:
+  `SELFTEST_OK speech: auth=3(authorized) onDeviceCapable=true started=true appendedFrames=true`。
+  この環境では音声認識が**認可済み・オンデバイス対応**で、認識開始→実フレーム append→finish まで no-crash で通った
+  （setup→start→feed→finish の live 経路を headless で実行）。全 selftest 11 件 + swift unit 3 も回帰なし。
+- **意味（Done#8 の実質前進）**: macOS native app が **自前のオンデバイス STT** を持ち、Tauri の sherpa エンジンに
+  依存せず文字起こしできる。外部 STT 鍵も sherpa dylib＋モデルも不要。**残る Tauri 依存は connector OAuth 実行のみ**
+  （外部プロバイダ＋ユーザー許可）。実音声からの認識精度・確定は署名 .app＋音声認識許可でのユーザー検証（Done#3 live）。

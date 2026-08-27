@@ -10,6 +10,9 @@ final class RecordingRuntime {
     private var session: RecordingSession?
     private var mic: MicCapture?
     private var sysAudio: AnyObject?
+    private var speech: SpeechTranscriber?
+    /// 途中経過/確定の文字起こしを UI へ渡す（オンデバイス STT）。
+    var onTranscript: ((String, Bool) -> Void)?
     /// 実 gateway に作った会議（サインイン時のみ）。無ければローカル録音だけ。
     private var meetingId: String?
     private var apiBase: String?
@@ -31,7 +34,7 @@ final class RecordingRuntime {
     /// core にセッションを作り、（可能なら）マイクを開く。live 取り込みは .app + 許可が要る。
     @discardableResult
     func begin(meetingId localId: String, captureMic: Bool = true,
-               captureSystemAudio: Bool = false) -> Bool {
+               captureSystemAudio: Bool = false, transcribe: Bool = true) -> Bool {
         try? FileManager.default.createDirectory(
             atPath: root, withIntermediateDirectories: true)
         // サインイン済みなら実 gateway に会議を作り、その id で録音する（Tauri を介さない）
@@ -45,11 +48,23 @@ final class RecordingRuntime {
             return false
         }
         self.session = session
+        if transcribe, SpeechTranscriber.authorization == .authorized {
+            let st = SpeechTranscriber()
+            do {
+                try st.start { [weak self] live in
+                    DispatchQueue.main.async { self?.onTranscript?(live.text, live.isFinal) }
+                }
+                self.speech = st
+            } catch {
+                NSLog("on-device STT unavailable: \(error)")   // 許可が無ければ録音だけ続ける
+            }
+        }
         if captureMic {
             let mic = MicCapture()
             do {
-                try mic.start { [weak session] frame in
+                try mic.start { [weak self, weak session] frame in
                     _ = session?.pushSamples(samples: frame, sampleRate: 16_000)
+                    self?.speech?.append(frame, sampleRate: 16_000)   // 手元で文字起こし
                 }
                 self.mic = mic
             } catch {
@@ -86,6 +101,7 @@ final class RecordingRuntime {
     /// 停止して確定。書けた断片は残り、回復候補になる。
     func end() {
         mic?.stop(); mic = nil
+        speech?.finish(); speech = nil
         if #available(macOS 13.0, *), let sys = sysAudio as? SystemAudioCapture {
             Task { await sys.stop() }
         }

@@ -20,6 +20,7 @@ enum SelfTest {
         case "keychain": keychain(); return true
         case "files": files(); return true
         case "ax": ax(); return true
+        case "speech": speech(); return true
         default: return false
         }
     }
@@ -225,6 +226,30 @@ enum SelfTest {
         let consistent = trusted || (selection == nil && candidates.isEmpty)
         guard consistent else { print("SELFTEST_FAIL ax trusted=\(trusted) selection=\(selection ?? "nil") cands=\(candidates.count)"); exit(2) }
         print("SELFTEST_OK ax: trusted=\(trusted) selection=\(selection == nil ? "nil" : "present") candidates=\(candidates.count)")
+        exit(0)
+    }
+
+    /// `--selftest speech`: オンデバイス STT(Apple Speech)の可用性・認可・ロケールを検証する。
+    /// live 認識は音声認識許可(TCC)が要るが、認識器の用意と認可状態の読み取りは prompt 無しで確かめられる。
+    @MainActor
+    private static func speech() {
+        let st = SpeechTranscriber(localeId: "ja-JP")
+        let auth = SpeechTranscriber.authorization
+        let onDevice = st.canRunOnDevice
+        var startThrew = false
+        var appended = false
+        do {
+            try st.start { _ in }
+            // 認可済みなら実フレームを流して音声パイプラインが受け付けることを確かめる（no-crash）。
+            let oneSec = [Float](repeating: 0.0, count: 16_000)
+            for _ in 0..<3 { st.append(oneSec, sampleRate: 16_000) }
+            appended = true
+        } catch { startThrew = true }
+        st.finish()
+        // 未認可なら start は throw（実データを捏造しない）。認可済みなら append まで到達。
+        let consistent = (auth == .authorized) ? appended : startThrew
+        guard consistent else { print("SELFTEST_FAIL speech auth=\(auth.rawValue) started=\(!startThrew) appended=\(appended)"); exit(2) }
+        print("SELFTEST_OK speech: auth=\(auth.rawValue) onDeviceCapable=\(onDevice) started=\(!startThrew) appendedFrames=\(appended)")
         exit(0)
     }
 
