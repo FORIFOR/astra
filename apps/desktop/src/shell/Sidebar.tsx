@@ -7,6 +7,8 @@ import type { ReactElement } from 'react';
 import { TOP_LEVEL_TABS, type TabId } from '@astra/ui-kit';
 import { surfacesFor, type Severity } from '@astra/contracts';
 import { useShell } from '../state/ShellProvider.js';
+import { useOptionalSession } from '../state/SessionProvider.js';
+import { initialOf } from './ProfileMenu.js';
 import { useOptionalWorkspaceData } from '../state/WorkspaceData.js';
 
 const ICONS: Record<TabId, string> = {
@@ -31,6 +33,7 @@ export function Sidebar(): ReactElement {
   const { activeTab, goToTab, layout, toggleSidebar } = useShell();
   // shell はデータが無くても成り立つ面。無ければ印を出さないだけ。
   const brief = useOptionalWorkspaceData()?.brief ?? null;
+  const me = useOptionalSession()?.me ?? null;
   const collapsed = layout.sidebarCollapsed;
   const badge = brief ? badgeCount([...brief.attention, ...brief.more]) : 0;
 
@@ -80,6 +83,20 @@ export function Sidebar(): ReactElement {
         })}
       </ul>
 
+      {/* §7.1: 下部に account。誰として動いているかを、畳んでいても印で残す。 */}
+      {me && (
+        <div className="astra-sidebar__account" title={` · `}>
+          <span className="astra-avatar" aria-hidden="true">
+            {initialOf(me.user.display_name)}
+          </span>
+          {!collapsed && (
+            <span className="astra-sidebar__account-names">
+              <span className="astra-sidebar__account-name">{me.user.display_name}</span>
+              <span className="astra-sidebar__account-tenant">{me.tenant.name}</span>
+            </span>
+          )}
+        </div>
+      )}
       <button
         type="button"
         className="astra-sidebar__toggle"

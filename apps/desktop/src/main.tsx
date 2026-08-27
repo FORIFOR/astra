@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App.js';
 import { DockApp } from './dock/DockApp.js';
+import { VoiceHudApp } from './voice/VoiceHudApp.js';
 
 const container = document.getElementById('root');
 if (!container) throw new Error('#root not found');
@@ -11,5 +12,8 @@ if (!container) throw new Error('#root not found');
  * window ごとに bundle を分けると、共有 state と token の重複読み込みが増える。
  */
 const isDock = globalThis.location?.hash.startsWith('#/dock') ?? false;
+const isVoiceHud = globalThis.location?.hash.startsWith('#/voice-hud') ?? false;
 
-createRoot(container).render(<StrictMode>{isDock ? <DockApp /> : <App />}</StrictMode>);
+createRoot(container).render(
+  <StrictMode>{isVoiceHud ? <VoiceHudApp /> : isDock ? <DockApp /> : <App />}</StrictMode>,
+);

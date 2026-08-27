@@ -36,7 +36,12 @@ export interface DockConversation {
   send(
     text: string,
     referents: readonly ContextReferent[],
-  ): Promise<{ needsClarification: boolean; answer: string | null }>;
+  ): Promise<{
+    needsClarification: boolean;
+    answer: string | null;
+    taskId?: string | null;
+    notice?: string | null;
+  }>;
 }
 
 /**
@@ -150,6 +155,11 @@ export function useDockMachine(
            */
           if (result.needsClarification) {
             setClarification(result.answer);
+            setState('READY');
+            return;
+          }
+          if (!result.taskId && result.notice) {
+            setClarification(result.notice);
             setState('READY');
             return;
           }

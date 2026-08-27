@@ -250,6 +250,62 @@
   font-size: var(--astra-font-size-body);
 }
 
+.astra-dock__cloud-stt {
+  display: inline-flex;
+  gap: var(--astra-space-compact);
+  align-items: center;
+  color: #aeb6c4;
+  font-size: var(--astra-font-size-micro);
+  cursor: pointer;
+}
+
+.astra-dock__cloud-stt input {
+  accent-color: var(--astra-color-accent);
+}
+
+.astra-dock__voice-error {
+  margin: 0;
+  color: var(--astra-color-warning);
+  font-size: var(--astra-font-size-micro);
+}
+
+/* -------------------------------------------------------------- result */
+
+.astra-dock-result {
+  display: grid;
+  gap: var(--astra-space-base);
+  min-height: 0;
+  padding: var(--astra-padding-card);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--astra-radius-standard);
+  background: #222228;
+}
+
+.astra-dock-result__head {
+  display: flex;
+  gap: var(--astra-space-base);
+  align-items: center;
+}
+
+.astra-dock-result__head span {
+  color: var(--astra-color-accent);
+}
+
+.astra-dock-result__head h2 {
+  margin: 0;
+  font-size: var(--astra-font-size-card-title);
+}
+
+.astra-dock-result__body {
+  max-height: 220px;
+  overflow: auto;
+  color: #eef0f4;
+  font-size: var(--astra-font-size-secondary);
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
 /* 状態は data 属性で公開する。Deepgram の VoiceButton と同じ考え方（CSS だけで差し替えられる） */
 [data-astra-voice-state='listening'] {
   opacity: 1;

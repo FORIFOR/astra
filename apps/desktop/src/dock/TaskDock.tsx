@@ -18,6 +18,7 @@ import type { ContextSource } from '@astra/contracts';
 import { useDockMachine, type DockConversation, type DockDictation } from './useDockMachine.js';
 import { ContextLens } from './ContextLens.js';
 import { PermissionAsk } from './PermissionAsk.js';
+import { ResultPreview } from './ResultPreview.js';
 import { WorkCard } from '../work/WorkCard.js';
 import { AstraOrb } from '../voice/AstraOrb.js';
 import { LiveWaveform } from '../vendor/deepgram-ui/LiveWaveform.js';
@@ -35,6 +36,11 @@ export function TaskDock({
   conversation,
   dictation,
   voiceLevels,
+  voiceUnavailable,
+  cloudCorrectionAllowed = false,
+  onCloudCorrectionAllowedChange,
+  onRequestSubmitted,
+  resultText,
   shortcutOverrides = {},
 }: {
   initialSources?: readonly ContextSource[];
@@ -46,6 +52,15 @@ export function TaskDock({
   dictation?: DockDictation;
   /** Orb と波形が読む音量。frame ごとに読むので getter で渡す。 */
   voiceLevels?: { input: () => number; output: () => number };
+  /** 端末内 STT / Google 確定が使えない理由。 */
+  voiceUnavailable?: string | null;
+  /** true の発話だけ、停止後の PCM を Google Chirp 3 へ送る。 */
+  cloudCorrectionAllowed?: boolean;
+  onCloudCorrectionAllowedChange?(allowed: boolean): void;
+  /** voice turn なら Voice HUD を thinking へ進める。 */
+  onRequestSubmitted?(): void;
+  /** 完了した成果物の本文。Dock 内の result sheet に出す。 */
+  resultText?: string | null;
   /** 進行中の仕事。あれば working 面に出す（§6）。 */
   work?: WorkView | null;
   onApprove?(approvalId: string): void;
@@ -166,13 +181,14 @@ export function TaskDock({
       const hit = resolveShortcut(event, platform, shortcutOverrides, 'surface');
       if (hit === 'dock.send') {
         event.preventDefault();
+        if (machine.intent.trim().length > 0) onRequestSubmitted?.();
         // Context Lens に出しているものを一緒に送る（正本 §6）
         machine.submit(referents);
       }
       // Esc と Context Lens は面の全体で受ける（下の window listener）。
       // 入力欄にいるときだけ効く操作にしない。
     },
-    [machine, platform, shortcutOverrides],
+    [machine, onRequestSubmitted, platform, referents, shortcutOverrides],
   );
 
   /*
@@ -375,9 +391,25 @@ export function TaskDock({
                 getVolume={voiceLevels ? voiceLevels.input : () => 0}
               />
             </div>
+            <label className="astra-dock__cloud-stt">
+              <input
+                type="checkbox"
+                checked={cloudCorrectionAllowed}
+                onChange={(event) => onCloudCorrectionAllowedChange?.(event.target.checked)}
+              />
+              Google で発話を高精度に確定する
+            </label>
           </div>
         </div>
       )}
+
+      {voiceUnavailable && machine.state !== 'LISTENING' && (
+        <p className="astra-dock__voice-error" role="alert">
+          {voiceUnavailable}
+        </p>
+      )}
+
+      {resultText && <ResultPreview text={resultText} />}
 
       {/* §4.4: 簡単な返事のために full app へ遷移しない。進行は Dock の中で見せる。 */}
       {work && geometry === 'working' && (

@@ -158,6 +158,11 @@ export function SessionProvider({
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }
 
+/** shell の部品用。session が無い場で描いても落ちない（shell のテストは SessionProvider を張らない）。 */
+export function useOptionalSession(): SessionContextValue | null {
+  return useContext(SessionContext);
+}
+
 export function useSession(): SessionContextValue {
   const value = useContext(SessionContext);
   if (!value) throw new Error('useSession must be used inside <SessionProvider>');

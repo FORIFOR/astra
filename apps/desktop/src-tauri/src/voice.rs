@@ -37,7 +37,7 @@ const VOICE_HUD_WINDOW_LABEL: &str = "voice-hud";
 pub struct AudioLevel {
     /// マイク。0〜1。
     pub input: f32,
-    /// 読み上げ。いまは端末で再生していないので常に 0。**あるふりをしない。**
+    /// Web Audio が実際の Google TTS 再生から測った読み上げ音量。0〜1。
     pub output: f32,
 }
 

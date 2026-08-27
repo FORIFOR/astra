@@ -1,24 +1,19 @@
-import type { ReactElement } from 'react';
 /**
  * Top bar。UI/UX §7.1（56px: page title / global search / notifications / profile）。
- * UI-0 では title と theme 切替のみ。search と notifications は UI-3 で埋める。
+ *
+ * 外観の切替と設定は profile の中。top bar に生の select を並べない。
  */
-import { useState } from 'react';
-import { TOP_LEVEL_TABS, THEME_MODES, type ThemeMode } from '@astra/ui-kit';
+import { useState, type ReactElement } from 'react';
+import { TOP_LEVEL_TABS } from '@astra/ui-kit';
 import { useShell } from '../state/ShellProvider.js';
-import { useTheme } from '../state/ThemeProvider.js';
 import { DeviceCapabilities } from '../settings/DeviceCapabilities.js';
 import { ShortcutSettings } from '../settings/ShortcutSettings.js';
-
-const THEME_LABELS: Record<ThemeMode, string> = {
-  system: 'システム',
-  light: 'ライト',
-  dark: 'ダーク',
-};
+import { GlobalSearch } from './GlobalSearch.js';
+import { Notifications } from './Notifications.js';
+import { ProfileMenu } from './ProfileMenu.js';
 
 export function TopBar(): ReactElement {
   const { activeTab } = useShell();
-  const { mode, setMode } = useTheme();
   const tab = TOP_LEVEL_TABS.find((t) => t.id === activeTab)!;
   // §2.1: 設定でタブを増やさない（AC-12）。top bar から開く面にする。
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -26,32 +21,26 @@ export function TopBar(): ReactElement {
   return (
     <header className="astra-topbar">
       <h1 className="astra-topbar__title">{tab.label}</h1>
+      <GlobalSearch />
       <div className="astra-topbar__actions">
-        <label className="astra-topbar__theme">
-          <span className="astra-visually-hidden">外観</span>
-          <select
-            value={mode}
-            onChange={(event) => setMode(event.target.value as ThemeMode)}
-            aria-label="外観"
-          >
-            {THEME_MODES.map((option) => (
-              <option key={option} value={option}>
-                {THEME_LABELS[option]}
-              </option>
-            ))}
-          </select>
-        </label>
-        <button
-          type="button"
-          className="astra-topbar__settings"
-          aria-expanded={settingsOpen}
-          onClick={() => setSettingsOpen((open) => !open)}
-        >
-          設定
-        </button>
+        <Notifications />
+        <ProfileMenu
+          settingsOpen={settingsOpen}
+          onToggleSettings={() => setSettingsOpen((open) => !open)}
+        />
       </div>
       {settingsOpen && (
         <div className="astra-topbar__panel" role="group" aria-label="設定">
+          <div className="astra-topbar__panel-head">
+            <h2 className="astra-menu__title">設定</h2>
+            <button
+              type="button"
+              className="astra-menu__item--quiet astra-topbar__panel-close"
+              onClick={() => setSettingsOpen(false)}
+            >
+              閉じる
+            </button>
+          </div>
           <ShortcutSettings />
           {/* §25: できないことを、黙って落とさない */}
           <DeviceCapabilities />

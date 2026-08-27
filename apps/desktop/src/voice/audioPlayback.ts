@@ -2,7 +2,7 @@
 import type { VoiceSynthesisResponse } from '@astra/contracts';
 
 interface Pcm16 {
-  readonly samples: Float32Array;
+  readonly samples: Float32Array<ArrayBuffer>;
   readonly sampleRate: number;
 }
 
@@ -25,7 +25,7 @@ function ascii(view: DataView, offset: number, length: number): string {
 export function decodePcm16(payload: VoiceSynthesisResponse): Pcm16 {
   const bytes = bytesFromBase64(payload.audio_base64);
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-  let sampleRate = payload.sample_rate_hz;
+  let sampleRate: number = payload.sample_rate_hz;
   let pcmOffset = 0;
   let pcmLength = bytes.byteLength;
 
@@ -75,6 +75,7 @@ export async function playVoiceAudio(
   onLevel: (level: number) => void,
   signal: AbortSignal,
 ): Promise<void> {
+  if (signal.aborted) throw new DOMException('読み上げを止めました', 'AbortError');
   const pcm = decodePcm16(payload);
   const context = new AudioContext({ sampleRate: pcm.sampleRate });
   const buffer = context.createBuffer(1, pcm.samples.length, pcm.sampleRate);

@@ -57,10 +57,9 @@ export function registerVoiceRoutes(app: App, deps: VoiceRouteDeps): void {
           provider: deps.transcriber.name,
           fallback_used: results.some((result) => result.fallbackUsed === true),
         });
-      } catch (error) {
+      } catch {
         throw new AstraError('common.unavailable', 'speech recognition failed', {
           retryable: true,
-          details: error instanceof Error ? { cause: error.message } : undefined,
         });
       }
     },

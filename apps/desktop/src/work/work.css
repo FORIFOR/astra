@@ -368,3 +368,42 @@
   color: var(--astra-color-muted);
   font-size: var(--astra-font-size-sm, 0.875rem);
 }
+
+/* Appendix B の行: 時刻 / 題 + ひとこと / 状態 */
+.astra-work-row__time {
+  flex: 0 0 5.5em;
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-micro);
+  font-variant-numeric: tabular-nums;
+}
+
+.astra-work-row__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.astra-work-row__title {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-weight: var(--astra-font-weight-card-title);
+}
+
+.astra-work-row__detail {
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-micro);
+}
+
+/* 動いている印。色だけに頼らず文字も出す（§19）。 */
+.astra-work-row__meta[data-live='true']::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-inline-end: 6px;
+  border-radius: 50%;
+  background: var(--astra-color-accent);
+  vertical-align: middle;
+}

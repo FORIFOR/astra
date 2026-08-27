@@ -123,6 +123,8 @@ describe('theme', () => {
   it('applies an explicit choice and remembers it', async () => {
     const user = userEvent.setup();
     render(<App />);
+    // §7.1: 外観は profile の中（top bar に生の select を並べない）
+    await user.click(screen.getByRole('button', { name: /アカウント/ }));
     await user.selectOptions(screen.getByLabelText('外観'), 'dark');
 
     expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
@@ -132,6 +134,7 @@ describe('theme', () => {
   it('returns to the OS setting by removing the attribute', async () => {
     const user = userEvent.setup();
     render(<App />);
+    await user.click(screen.getByRole('button', { name: /アカウント/ }));
     const select = screen.getByLabelText('外観');
     await user.selectOptions(select, 'dark');
     await user.selectOptions(select, 'system');

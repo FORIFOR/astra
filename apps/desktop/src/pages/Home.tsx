@@ -9,6 +9,8 @@ import { useMemo, useState, type ReactElement } from 'react';
 import type { TaskView } from '@astra/api-client';
 import type { Artifact } from '@astra/contracts';
 import { typeLabel } from './Library.js';
+import { relativeTime } from '../home/time.js';
+import { kindLabel } from '../work/kind.js';
 import {
   buildAttentionFeed,
   feedFromBrief,
@@ -193,10 +195,17 @@ export function HomePage({
                       className="astra-work-row"
                       onClick={() => onOpenTask?.(task.id)}
                     >
-                      <span aria-hidden="true">●</span>
-                      <span>{task.title ?? '名前のない仕事'}</span>
+                      <span className="astra-work-row__time">
+                        {relativeTime(task.updated_at, now)}
+                      </span>
+                      <span className="astra-work-row__body">
+                        <span className="astra-work-row__title">
+                          {task.title ?? '名前のない仕事'}
+                        </span>
+                        <span className="astra-work-row__detail">{kindLabel(task.kind)}</span>
+                      </span>
                       {/* §8 の「12 sources  進行中」。状態を人の言葉で添える */}
-                      <span className="astra-work-row__meta">
+                      <span className="astra-work-row__meta" data-live="true">
                         {task.status === 'WAITING_APPROVAL'
                           ? '確認待ち'
                           : task.status === 'PAUSED_HOST_OFFLINE'
@@ -223,7 +232,12 @@ export function HomePage({
                       className="astra-work-row"
                       onClick={() => onOpenArtifact?.(artifact.id)}
                     >
-                      <span>{artifact.title}</span>
+                      <span className="astra-work-row__time">
+                        {relativeTime(artifact.created_at, now)}
+                      </span>
+                      <span className="astra-work-row__body">
+                        <span className="astra-work-row__title">{artifact.title}</span>
+                      </span>
                       {/* Library と同じ表で。Home だけ `DOCUMENT` のまま出ていた */}
                       <span className="astra-work-row__meta">{typeLabel(artifact.type)}</span>
                     </button>

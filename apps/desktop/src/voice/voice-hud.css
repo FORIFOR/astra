@@ -1,0 +1,85 @@
+.astra-voice-hud-page {
+  margin: 0;
+  overflow: hidden;
+  background: transparent;
+}
+
+.astra-voice-hud-page #root {
+  width: 360px;
+  height: 220px;
+}
+
+.astra-voice-hud {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-rows: 132px auto minmax(0, auto) 18px;
+  justify-items: center;
+  width: 100%;
+  height: 100%;
+  padding: 8px 24px 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 28px;
+  background: rgba(24, 24, 28, 0.94);
+  color: #fff;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  backdrop-filter: saturate(140%) blur(22px);
+}
+
+.astra-voice-hud .astra-orb {
+  width: 132px;
+  height: 132px;
+}
+
+.astra-voice-hud__status,
+.astra-voice-hud__transcript,
+.astra-voice-hud__error {
+  margin: 0;
+  text-align: center;
+}
+
+.astra-voice-hud__status {
+  font-size: var(--astra-font-size-body);
+  font-weight: var(--astra-font-weight-card-title);
+}
+
+.astra-voice-hud__transcript,
+.astra-voice-hud__error {
+  max-width: 300px;
+  overflow: hidden;
+  font-size: var(--astra-font-size-micro);
+  line-height: var(--astra-line-height-micro);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.astra-voice-hud__transcript {
+  color: #cbd1dc;
+}
+
+.astra-voice-hud__error {
+  color: var(--astra-color-warning);
+}
+
+.astra-voice-hud__wave {
+  align-self: end;
+  width: 180px;
+  height: 18px;
+  color: var(--astra-color-accent);
+}
+
+.astra-voice-hud[data-astra-voice-state='speaking'] {
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.5),
+    0 0 34px color-mix(in srgb, var(--astra-color-accent) 28%, transparent);
+}
+
+.astra-voice-hud[data-astra-voice-state='thinking'] .astra-voice-hud__wave {
+  opacity: 0.35;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .astra-voice-hud {
+    backdrop-filter: none;
+  }
+}
