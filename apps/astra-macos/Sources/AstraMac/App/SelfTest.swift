@@ -38,6 +38,7 @@ enum SelfTest {
         case "recovery": recovery(args); return true
         case "timer": timer(); return true
         case "connectorflow": connectorflow(); return true
+        case "connectorstate": connectorstate(); return true
         default: return false
         }
     }
@@ -720,6 +721,30 @@ enum SelfTest {
             print("SELFTEST_FAIL connectorflow code=\(got?.code ?? "nil") state=\(got?.state ?? "nil")"); exit(4)
         }
         print("SELFTEST_OK connectorflow: loopback 受理 code=\(params.code ?? "") state=\(params.state ?? "") port=\(port)")
+        exit(0)
+    }
+
+    /// `--selftest connectorstate`: 接続可否の判定（設定済みプロバイダ・アプリ→プロバイダ対応）を検証する。
+    /// 未設定では繋げないこと（推測で埋めない）を確かめる。実 OAuth は不要。
+    @MainActor
+    private static func connectorstate() {
+        let cs = ConnectorState.shared
+        // アプリ→プロバイダの対応。
+        guard ConnectorState.provider(for: "Gmail") == "google",
+              ConnectorState.provider(for: "Google Calendar") == "google",
+              ConnectorState.provider(for: "Microsoft Teams") == "microsoft",
+              ConnectorState.provider(for: "Finder") == nil else {
+            print("SELFTEST_FAIL connectorstate: provider mapping"); exit(2)
+        }
+        // client_id が env に無ければ、対応プロバイダがあっても繋げない（推測で埋めない）。
+        let hasGoogleEnv = ProcessInfo.processInfo.environment["ASTRA_OAUTH_GOOGLE_CLIENT_ID"] != nil
+        let canGmail = cs.canConnect("Gmail")
+        guard canGmail == hasGoogleEnv else {
+            print("SELFTEST_FAIL connectorstate: canConnect(Gmail)=\(canGmail) but env=\(hasGoogleEnv)"); exit(3)
+        }
+        // Finder は OAuth プロバイダが無いので常に繋げない。
+        guard !cs.canConnect("Finder") else { print("SELFTEST_FAIL connectorstate: Finder connectable"); exit(4) }
+        print("SELFTEST_OK connectorstate: mapping ok, canConnect gated by client_id (google env=\(hasGoogleEnv))")
         exit(0)
     }
 

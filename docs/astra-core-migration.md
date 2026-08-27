@@ -552,3 +552,13 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
   swift-bindings `--check` current。
 - **意味**: connector の契約層（authorize URL / PKCE / callback 解析 / トークン交換）が macOS(UniFFI)・Windows(C ABI)
   の両方に揃い、C から実行検証＋三者一致 contract で担保。残る外部依存は実 OAuth 提供者との live 交換のみ。
+
+## 追記: Apps/Connectors のトグルを honest に配線（Phase 1.48）
+- **最後の connector UI mock の解消**: AppsPane の接続トグルは `.constant(false)`（常に off・非機能）だった。
+  `Context/ConnectorState.swift` を新設: アプリ名→OAuth プロバイダの対応、`configuredProviders()`（core に client_id
+  一覧を渡して判定）、`canConnect(app)`（対応プロバイダがあり client_id が設定済みか）、`connect(app)`（ConnectorFlow で OAuth 開始）。
+- AppsPane: トグルは**設定済みのものだけ有効**、未設定のプロバイダには「接続には client_id の設定が必要」と注記
+  （**繋げないものを繋いだつもりにさせない**、§21）。タップで OAuth をブラウザで開始。接続済み状態を反映。
+- 検証: `--selftest connectorstate`。アプリ→プロバイダ対応・`canConnect` が client_id env に連動・Finder は不可 を確認。
+  **実測 PASS**: `mapping ok, canConnect gated by client_id (google env=false)`。verify に組み込み、全 selftest 0 FAIL。
+- **意味**: Apps/Connectors のトグルが実状態に（Done#2/#7、UI mock 排除）。実接続は client_id＋consent が要る（外部）。

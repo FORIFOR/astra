@@ -141,18 +141,29 @@ private struct LibraryPane: View {
 
 private struct AppsPane: View {
     let apps: [String]
+    @ObservedObject private var connectors = ConnectorState.shared
     var body: some View {
         let apps = self.apps.isEmpty ? ["Gmail", "Google Calendar", "Finder"] : self.apps
-        ScrollView {
+        return ScrollView {
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 240), spacing: 12)], spacing: 12) {
                 ForEach(apps, id: \.self) { a in
+                    let connectable = connectors.canConnect(a)
                     HStack(spacing: 10) {
                         RoundedRectangle(cornerRadius: 7).fill(Color.astraAccent.opacity(0.85))
                             .frame(width: 27, height: 27)
                             .overlay(Text(String(a.prefix(1))).font(.system(size: 12, weight: .bold)).foregroundStyle(.white))
-                        Text(a).font(.system(size: 12, weight: .semibold))
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text(a).font(.system(size: 12, weight: .semibold))
+                            if ConnectorState.provider(for: a) != nil && !connectable {
+                                Text("接続には client_id の設定が必要").font(.system(size: 9)).foregroundStyle(.secondary)
+                            }
+                        }
                         Spacer()
-                        Toggle("", isOn: .constant(false)).labelsHidden().controlSize(.small)
+                        // 設定済みのものだけ接続開始できる（繋げないものを繋いだつもりにさせない）。
+                        Toggle("", isOn: Binding(
+                            get: { connectors.connected.contains(a) },
+                            set: { on in if on { _ = connectors.connect(a) } else { connectors.connected.remove(a) } }
+                        )).labelsHidden().controlSize(.small).disabled(!connectable)
                     }
                     .padding(12)
                     .background(RoundedRectangle(cornerRadius: 10).stroke(Color.black.opacity(0.08)))
