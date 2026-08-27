@@ -400,6 +400,22 @@ fileprivate final class UniffiHandleMap<T>: @unchecked Sendable {
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterUInt16: FfiConverterPrimitive {
+    typealias FfiType = UInt16
+    typealias SwiftType = UInt16
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> UInt16 {
+        return try lift(readInt(&buf))
+    }
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        writeInt(&buf, lower(value))
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterUInt32: FfiConverterPrimitive {
     typealias FfiType = UInt32
     typealias SwiftType = UInt32
@@ -425,6 +441,22 @@ fileprivate struct FfiConverterUInt64: FfiConverterPrimitive {
     }
 
     public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        writeInt(&buf, lower(value))
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterInt64: FfiConverterPrimitive {
+    typealias FfiType = Int64
+    typealias SwiftType = Int64
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> Int64 {
+        return try lift(readInt(&buf))
+    }
+
+    public static func write(_ value: Int64, into buf: inout [UInt8]) {
         writeInt(&buf, lower(value))
     }
 }
@@ -1049,6 +1081,111 @@ public func FfiConverterTypeContextResult_lower(_ value: ContextResult) -> RustB
 
 
 /**
+ * /v1/me の要点（UI が出す分だけ）。
+ */
+public struct Me {
+    public var userId: String
+    public var email: String
+    public var displayName: String
+    public var tenantId: String
+    public var tenantName: String
+    public var role: String
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(userId: String, email: String, displayName: String, tenantId: String, tenantName: String, role: String) {
+        self.userId = userId
+        self.email = email
+        self.displayName = displayName
+        self.tenantId = tenantId
+        self.tenantName = tenantName
+        self.role = role
+    }
+}
+
+#if compiler(>=6)
+extension Me: Sendable {}
+#endif
+
+
+extension Me: Equatable, Hashable {
+    public static func ==(lhs: Me, rhs: Me) -> Bool {
+        if lhs.userId != rhs.userId {
+            return false
+        }
+        if lhs.email != rhs.email {
+            return false
+        }
+        if lhs.displayName != rhs.displayName {
+            return false
+        }
+        if lhs.tenantId != rhs.tenantId {
+            return false
+        }
+        if lhs.tenantName != rhs.tenantName {
+            return false
+        }
+        if lhs.role != rhs.role {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(userId)
+        hasher.combine(email)
+        hasher.combine(displayName)
+        hasher.combine(tenantId)
+        hasher.combine(tenantName)
+        hasher.combine(role)
+    }
+}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeMe: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> Me {
+        return
+            try Me(
+                userId: FfiConverterString.read(from: &buf), 
+                email: FfiConverterString.read(from: &buf), 
+                displayName: FfiConverterString.read(from: &buf), 
+                tenantId: FfiConverterString.read(from: &buf), 
+                tenantName: FfiConverterString.read(from: &buf), 
+                role: FfiConverterString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: Me, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.userId, into: &buf)
+        FfiConverterString.write(value.email, into: &buf)
+        FfiConverterString.write(value.displayName, into: &buf)
+        FfiConverterString.write(value.tenantId, into: &buf)
+        FfiConverterString.write(value.tenantName, into: &buf)
+        FfiConverterString.write(value.role, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeMe_lift(_ buf: RustBuffer) throws -> Me {
+    return try FfiConverterTypeMe.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeMe_lower(_ value: Me) -> RustBuffer {
+    return FfiConverterTypeMe.lower(value)
+}
+
+
+/**
  * 録音の生の状態（UI から core へ渡す入力）。
  */
 public struct RecordingInput {
@@ -1365,6 +1502,193 @@ public func FfiConverterTypeRecoverableMeeting_lift(_ buf: RustBuffer) throws ->
 public func FfiConverterTypeRecoverableMeeting_lower(_ value: RecoverableMeeting) -> RustBuffer {
     return FfiConverterTypeRecoverableMeeting.lower(value)
 }
+
+
+/**
+ * dev サインインで得るトークン一式。
+ */
+public struct Tokens {
+    public var accessToken: String
+    public var refreshToken: String
+    public var deviceToken: String
+    public var expiresIn: Int64
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(accessToken: String, refreshToken: String, deviceToken: String, expiresIn: Int64) {
+        self.accessToken = accessToken
+        self.refreshToken = refreshToken
+        self.deviceToken = deviceToken
+        self.expiresIn = expiresIn
+    }
+}
+
+#if compiler(>=6)
+extension Tokens: Sendable {}
+#endif
+
+
+extension Tokens: Equatable, Hashable {
+    public static func ==(lhs: Tokens, rhs: Tokens) -> Bool {
+        if lhs.accessToken != rhs.accessToken {
+            return false
+        }
+        if lhs.refreshToken != rhs.refreshToken {
+            return false
+        }
+        if lhs.deviceToken != rhs.deviceToken {
+            return false
+        }
+        if lhs.expiresIn != rhs.expiresIn {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(accessToken)
+        hasher.combine(refreshToken)
+        hasher.combine(deviceToken)
+        hasher.combine(expiresIn)
+    }
+}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeTokens: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> Tokens {
+        return
+            try Tokens(
+                accessToken: FfiConverterString.read(from: &buf), 
+                refreshToken: FfiConverterString.read(from: &buf), 
+                deviceToken: FfiConverterString.read(from: &buf), 
+                expiresIn: FfiConverterInt64.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: Tokens, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.accessToken, into: &buf)
+        FfiConverterString.write(value.refreshToken, into: &buf)
+        FfiConverterString.write(value.deviceToken, into: &buf)
+        FfiConverterInt64.write(value.expiresIn, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTokens_lift(_ buf: RustBuffer) throws -> Tokens {
+    return try FfiConverterTypeTokens.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTokens_lower(_ value: Tokens) -> RustBuffer {
+    return FfiConverterTypeTokens.lower(value)
+}
+
+
+public enum ApiError: Swift.Error {
+
+    
+    
+    case Network(message: String
+    )
+    case Server(status: UInt16, message: String
+    )
+    case Decode(message: String
+    )
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeApiError: FfiConverterRustBuffer {
+    typealias SwiftType = ApiError
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> ApiError {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+
+        
+
+        
+        case 1: return .Network(
+            message: try FfiConverterString.read(from: &buf)
+            )
+        case 2: return .Server(
+            status: try FfiConverterUInt16.read(from: &buf), 
+            message: try FfiConverterString.read(from: &buf)
+            )
+        case 3: return .Decode(
+            message: try FfiConverterString.read(from: &buf)
+            )
+
+         default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: ApiError, into buf: inout [UInt8]) {
+        switch value {
+
+        
+
+        
+        
+        case let .Network(message):
+            writeInt(&buf, Int32(1))
+            FfiConverterString.write(message, into: &buf)
+            
+        
+        case let .Server(status,message):
+            writeInt(&buf, Int32(2))
+            FfiConverterUInt16.write(status, into: &buf)
+            FfiConverterString.write(message, into: &buf)
+            
+        
+        case let .Decode(message):
+            writeInt(&buf, Int32(3))
+            FfiConverterString.write(message, into: &buf)
+            
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeApiError_lift(_ buf: RustBuffer) throws -> ApiError {
+    return try FfiConverterTypeApiError.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeApiError_lower(_ value: ApiError) -> RustBuffer {
+    return FfiConverterTypeApiError.lower(value)
+}
+
+
+extension ApiError: Equatable, Hashable {}
+
+
+
+
+extension ApiError: Foundation.LocalizedError {
+    public var errorDescription: String? {
+        String(reflecting: self)
+    }
+}
+
+
+
 
 // Note that we don't yet support `indirect` for enums.
 // See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
@@ -1884,6 +2208,39 @@ fileprivate struct FfiConverterSequenceTypeRecoverableMeeting: FfiConverterRustB
     }
 }
 /**
+ * 開発用サインイン（POST /v1/auth/dev/token）。gateway が dev token を許すときだけ。
+ */
+public func apiDevSignIn(baseUrl: String, email: String, displayName: String)throws  -> Tokens  {
+    return try  FfiConverterTypeTokens_lift(try rustCallWithError(FfiConverterTypeApiError_lift) {
+    uniffi_astra_core_fn_func_api_dev_sign_in(
+        FfiConverterString.lower(baseUrl),
+        FfiConverterString.lower(email),
+        FfiConverterString.lower(displayName),$0
+    )
+})
+}
+/**
+ * 自分の情報（GET /v1/me）。access token が要る。
+ */
+public func apiMe(baseUrl: String, accessToken: String)throws  -> Me  {
+    return try  FfiConverterTypeMe_lift(try rustCallWithError(FfiConverterTypeApiError_lift) {
+    uniffi_astra_core_fn_func_api_me(
+        FfiConverterString.lower(baseUrl),
+        FfiConverterString.lower(accessToken),$0
+    )
+})
+}
+/**
+ * gateway に届くか（GET /v1/auth/providers, 認証不要）。オフライン判定に。
+ */
+public func apiReachable(baseUrl: String) -> Bool  {
+    return try!  FfiConverterBool.lift(try! rustCall() {
+    uniffi_astra_core_fn_func_api_reachable(
+        FfiConverterString.lower(baseUrl),$0
+    )
+})
+}
+/**
  * バージョン。Swift ↔ Rust の疎通確認（round trip）の入口にも使う。
  */
 public func astraCoreVersion() -> String  {
@@ -1960,6 +2317,15 @@ private let initializationResult: InitializationResult = {
     let scaffolding_contract_version = ffi_astra_core_uniffi_contract_version()
     if bindings_contract_version != scaffolding_contract_version {
         return InitializationResult.contractVersionMismatch
+    }
+    if (uniffi_astra_core_checksum_func_api_dev_sign_in() != 60660) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_astra_core_checksum_func_api_me() != 37978) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_astra_core_checksum_func_api_reachable() != 45391) {
+        return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_astra_core_checksum_func_astra_core_version() != 51046) {
         return InitializationResult.apiChecksumMismatch

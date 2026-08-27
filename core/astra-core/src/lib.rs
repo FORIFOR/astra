@@ -10,11 +10,13 @@
 uniffi::setup_scaffolding!();
 
 pub mod mode;
+pub mod api;
 pub mod capi;
 pub mod context;
 pub mod recording;
 pub mod session;
 
+pub use api::{api_dev_sign_in, api_me, api_reachable, ApiError, Me, Tokens};
 pub use context::{rank_context, ContextCandidate, ContextQuery, ContextResult, ContextSource};
 pub use mode::AstraMode;
 pub use session::{RecordingSession, SessionError};

@@ -101,3 +101,12 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
 - **正直な線引き**: ライブの mic/画面/グローバル操作は**ユーザーが TCC ダイアログで許可したときだけ**動く。
   許可付与は自動化できないため、live 取り込みの実 E2E は user-gated（headless では未検証）。
   正式配布は Developer ID 署名 + notarize が別途必要（ad-hoc は開発用）。
+
+## 追記: gateway API を core 経由で（Done#8 の実質前進, Phase 1.9）
+- core に `api` モジュール（`ureq`）: `api_dev_sign_in` / `api_me` / `api_reachable`。
+  **Tauri の TS client と同じ gateway** を native アプリも同じ core から叩く（二重実装しない）。
+- **実バックエンド往復を検証**: `pnpm verify:api-roundtrip`（gateway 未起動なら skip）で
+  (1) core の Rust 結合テスト、(2) **Swift → core → gateway → DB**（dev サインイン→/v1/me、新規テナント作成、role=owner）。
+  実測 PASS。これで **native の認証経路は Tauri を介さず実バックエンドに繋がる**。
+- 残る #8: STT streaming / Agent(Temporal) / RAG 取得 / connector / meeting 送信 の native 経路化はまだ。
+  現状 Tauri は無傷（機能パリティ未達のため retire しない）。

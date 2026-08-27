@@ -301,6 +301,21 @@ void uniffi_astra_core_fn_method_recordingsession_set_paused(void*_Nonnull ptr, 
 RustBuffer uniffi_astra_core_fn_method_recordingsession_snapshot(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_DEV_SIGN_IN
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_DEV_SIGN_IN
+RustBuffer uniffi_astra_core_fn_func_api_dev_sign_in(RustBuffer base_url, RustBuffer email, RustBuffer display_name, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_ME
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_ME
+RustBuffer uniffi_astra_core_fn_func_api_me(RustBuffer base_url, RustBuffer access_token, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_REACHABLE
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_REACHABLE
+int8_t uniffi_astra_core_fn_func_api_reachable(RustBuffer base_url, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_ASTRA_CORE_VERSION
 #define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_ASTRA_CORE_VERSION
 RustBuffer uniffi_astra_core_fn_func_astra_core_version(RustCallStatus *_Nonnull out_status
@@ -610,6 +625,24 @@ void ffi_astra_core_rust_future_free_void(uint64_t handle
 #ifndef UNIFFI_FFIDEF_FFI_ASTRA_CORE_RUST_FUTURE_COMPLETE_VOID
 #define UNIFFI_FFIDEF_FFI_ASTRA_CORE_RUST_FUTURE_COMPLETE_VOID
 void ffi_astra_core_rust_future_complete_void(uint64_t handle, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_DEV_SIGN_IN
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_DEV_SIGN_IN
+uint16_t uniffi_astra_core_checksum_func_api_dev_sign_in(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_ME
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_ME
+uint16_t uniffi_astra_core_checksum_func_api_me(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_REACHABLE
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_REACHABLE
+uint16_t uniffi_astra_core_checksum_func_api_reachable(void
+    
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_ASTRA_CORE_VERSION

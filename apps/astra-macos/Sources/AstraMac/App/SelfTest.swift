@@ -10,6 +10,7 @@ enum SelfTest {
         switch args[i + 1] {
         case "record": recordToDisk(); return true
         case "lifecycle": lifecycle(); return true
+        case "api": api(args); return true
         default: return false
         }
     }
@@ -32,6 +33,25 @@ enum SelfTest {
         guard elapsed == "00:05", ok else { print("SELFTEST_FAIL lifecycle elapsed=\(elapsed) recovered=\(ok)"); exit(3) }
         print("SELFTEST_OK lifecycle: elapsed=\(elapsed) recovered=\(ok)")
         exit(0)
+    }
+
+    /// `--selftest api <base_url>`: Swift → core → gateway → DB の実往復。
+    private static func api(_ args: [String]) {
+        let base = args.count > (args.firstIndex(of: "--selftest")! + 2)
+            ? args[args.firstIndex(of: "--selftest")! + 2] : "http://127.0.0.1:3000"
+        guard AstraCoreBridge.reachable(base) else { print("SELFTEST_FAIL api unreachable \(base)"); exit(2) }
+        let email = "selftest-api-\(getpid())@astra.local"
+        do {
+            let tokens = try AstraCoreBridge.devSignIn(base, email: email, displayName: "SelfTest API")
+            let me = try AstraCoreBridge.me(base, accessToken: tokens.accessToken)
+            guard me.email == email, me.role == "owner" else {
+                print("SELFTEST_FAIL api email=\(me.email) role=\(me.role)"); exit(3)
+            }
+            print("SELFTEST_OK api: email=\(me.email) tenant=\(me.tenantName) role=\(me.role)")
+            exit(0)
+        } catch {
+            print("SELFTEST_FAIL api error=\(error)"); exit(4)
+        }
     }
 
     private static func recordToDisk() {

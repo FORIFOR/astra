@@ -19,4 +19,13 @@ enum AstraCoreBridge {
     static func recoverable(root: String, active: String?) -> [RecoverableMeeting] {
         scanRecoverable(root: root, active: active)
     }
+
+    // gateway（実バックエンド）を core 経由で叩く。Tauri を介さない。
+    static func reachable(_ baseUrl: String) -> Bool { apiReachable(baseUrl: baseUrl) }
+    static func devSignIn(_ baseUrl: String, email: String, displayName: String) throws -> Tokens {
+        try apiDevSignIn(baseUrl: baseUrl, email: email, displayName: displayName)
+    }
+    static func me(_ baseUrl: String, accessToken: String) throws -> Me {
+        try apiMe(baseUrl: baseUrl, accessToken: accessToken)
+    }
 }
