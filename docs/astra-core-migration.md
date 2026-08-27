@@ -506,3 +506,11 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
   スキャンで検出→復旧（送信＋finalize）。**実測 PASS**: `クラッシュ録音を検出→復旧 uploadedBytes=192000`。
   verify に SKIP 許容で組み込み。全 selftest 25 件 OK/SKIP・0 FAIL。
 - **意味**: 録音がクラッシュしても次回サインイン時に自動で拾って送る、が実機能に（Done#3 meeting recovery）。
+
+## 追記: 会議 id の不一致バグ修正（Phase 1.43）
+- **バグ発見・修正**: `begin()` はサインイン時に **gateway id** で journal を作るのに、`state.currentMeetingId`
+  （スクリーンショットの保存先）は**ローカルの `meeting-<timestamp>` のまま**だった。結果、録音断片は
+  `root/<gateway-id>/` に、スクショは `root/<local-id>/screens/` に散り、同じ会議に紐づかなかった。
+- 修正: `RecordingRuntime.activeMeetingId`（実際に journal を作った id）を公開し、`state.start()` が begin 後に
+  `currentMeetingId = RecordingRuntime.shared.activeMeetingId` を設定。→ スクショと録音が同じ会議フォルダに入る。
+- 検証: record/livemeeting 回帰 PASS。全 selftest 25 件 OK/SKIP・0 FAIL。

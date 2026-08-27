@@ -170,8 +170,10 @@ final class RecordingWorkspaceState: ObservableObject {
             self.audioLevels.append(CGFloat(level))
         }
         // 実ランタイム: マイク → astra-core → ディスク断片（許可があればライブ取り込み + 手元 STT）
-        currentMeetingId = "meeting-\(Int(Date().timeIntervalSince1970))"
-        RecordingRuntime.shared.begin(meetingId: currentMeetingId)
+        let localId = "meeting-\(Int(Date().timeIntervalSince1970))"
+        RecordingRuntime.shared.begin(meetingId: localId)
+        // スクショ等は実際に journal を作った id に合わせる（サインイン時は gateway id）。
+        currentMeetingId = RecordingRuntime.shared.activeMeetingId
         WindowCoordinator.shared.enterRecordingMode()
     }
     func stop() {

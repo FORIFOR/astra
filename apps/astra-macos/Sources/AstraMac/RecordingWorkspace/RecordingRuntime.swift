@@ -18,6 +18,8 @@ final class RecordingRuntime {
     var onLevel: ((Float) -> Void)?
     /// 実 gateway に作った会議（サインイン時のみ）。無ければローカル録音だけ。
     private var meetingId: String?
+    /// 実際に journal を作った id（サインイン時は gateway id、そうでなければローカル id）。
+    private(set) var activeMeetingId: String = "adhoc"
     private var apiBase: String?
     private var accessToken: String?
 
@@ -51,6 +53,7 @@ final class RecordingRuntime {
             return false
         }
         self.session = session
+        self.activeMeetingId = id
         if transcribe, SpeechTranscriber.authorization == .authorized {
             let st = SpeechTranscriber()
             do {
