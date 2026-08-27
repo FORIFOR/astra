@@ -7,6 +7,9 @@ import SwiftUI
 final class WindowCoordinator {
     static let shared = WindowCoordinator()
 
+    /// テスト用: window を実際に出さずに状態遷移だけ回す（本番は false のまま）。
+    static var headless = false
+
     private var hudPanel: AstraPanel<VoiceHUDView>?
     private var recordingPanel: AstraPanel<RecordingWorkspaceView>?
     /// グローバルショートカットが録音を出し入れするための状態。
@@ -36,8 +39,9 @@ final class WindowCoordinator {
         }
     }
 
+    /// window 専用: Recording Workspace を出して HUD を退ける。録音ランタイムの開始は
+    /// RecordingWorkspaceState.start() が持つ（ここから start を呼ぶと相互再帰になるので呼ばない）。
     func enterRecordingMode() {
-        RecordingWorkspaceState.shared.start()
         isRecording = true
         hideVoiceHUD()
         showRecordingWorkspace()
@@ -52,10 +56,16 @@ final class WindowCoordinator {
     /// グローバル音声ショートカットの入口。押すたびに録音を出し入れする。
     /// 正本 §2「通常時 Top HUD → 録音開始で Recording Workspace → 終了で HUD 復帰」。
     func toggleRecording() {
-        if isRecording { leaveRecordingMode() } else { enterRecordingMode() }
+        // 録音の単一エントリは RecordingWorkspaceState。start/stop がランタイムと window の両方を回す。
+        if RecordingWorkspaceState.shared.isRecording {
+            RecordingWorkspaceState.shared.stop()
+        } else {
+            RecordingWorkspaceState.shared.start()
+        }
     }
 
     func showVoiceHUD() {
+        if Self.headless { return }
         if hudPanel == nil {
             hudPanel = AstraPanel(
                 size: NSSize(width: Metrics.hudWidth, height: Metrics.hudHeight),
@@ -70,11 +80,13 @@ final class WindowCoordinator {
     }
 
     func hideVoiceHUD() {
+        if Self.headless { return }
         guard let panel = hudPanel else { return }
         fadeOut(panel)
     }
 
     func showRecordingWorkspace() {
+        if Self.headless { return }
         if recordingPanel == nil {
             recordingPanel = AstraPanel(
                 size: NSSize(width: Metrics.workspaceWidth, height: Metrics.workspaceHeight),
@@ -89,6 +101,7 @@ final class WindowCoordinator {
     }
 
     func hideRecordingWorkspace() {
+        if Self.headless { return }
         guard let panel = recordingPanel else { return }
         fadeOut(panel)
     }

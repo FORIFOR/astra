@@ -29,6 +29,7 @@ enum SelfTest {
         case "livemeeting": livemeeting(); return true
         case "sttrecognize": sttrecognize(); return true
         case "shape": shape(); return true
+        case "hudlifecycle": hudlifecycle(); return true
         default: return false
         }
     }
@@ -466,6 +467,32 @@ enum SelfTest {
             print("SELFTEST_FAIL shape mismatch\n got=\(got)\n want=\(goldenStr)"); exit(2)
         }
         print("SELFTEST_OK shape: path matches shared fixture (\(d.count) segments)")
+        exit(0)
+    }
+
+    /// `--selftest hudlifecycle`: 通常(HUD) → 録音開始(Recording Workspace) → 停止(保存) → HUD 復帰 の
+    /// 状態遷移を検証する（§6「Voice HUD→Recording→保存→HUD復帰」/ Done#7）。window の描画ではなく
+    /// WindowCoordinator の状態機械を確かめる（isRecording の遷移）。
+    @MainActor
+    private static func hudlifecycle() {
+        WindowCoordinator.headless = true   // window を出さず状態遷移だけ検証
+        let wc = WindowCoordinator.shared
+        // 初期は非録音（Voice HUD 側）。
+        guard wc.isRecording == false else { print("SELFTEST_FAIL hudlifecycle: starts recording"); exit(2) }
+        // 録音開始 → Recording Workspace 側へ。
+        wc.enterRecordingMode()
+        guard wc.isRecording == true else { print("SELFTEST_FAIL hudlifecycle: enter did not set recording"); exit(3) }
+        // 状態も RecordingWorkspaceState.start と整合（録音セッションは別途 record/livemeeting で検証済み）。
+        // 停止 → 保存 → HUD 復帰。
+        wc.leaveRecordingMode()
+        guard wc.isRecording == false else { print("SELFTEST_FAIL hudlifecycle: leave did not clear recording"); exit(4) }
+        // もう一巡（window 専用経路。録音ランタイム=保存は record/livemeeting で別途検証済み）。
+        wc.enterRecordingMode(); let on2 = wc.isRecording
+        wc.leaveRecordingMode(); let off2 = wc.isRecording
+        guard on2 == true, off2 == false else {
+            print("SELFTEST_FAIL hudlifecycle: second cycle \(on2)->\(off2)"); exit(5)
+        }
+        print("SELFTEST_OK hudlifecycle: HUD→Recording→保存→HUD 復帰 の window 状態遷移 OK")
         exit(0)
     }
 

@@ -47,6 +47,8 @@ echo "$OUT12"
 echo "$("$BIN" --selftest permissions)"
 OUTS="$("$BIN" --selftest shape)"; echo "$OUTS"
 [[ "$OUTS" == SELFTEST_OK* ]] || { echo "FAIL: macOS workspace shape != shared fixture" >&2; exit 1; }
+OUTH="$("$BIN" --selftest hudlifecycle)"; echo "$OUTH"
+[[ "$OUTH" == SELFTEST_OK* ]] || { echo "FAIL: macOS HUD lifecycle" >&2; exit 1; }
 for t in livemic livemeeting livescreen sttrecognize; do
   OUT="$("$BIN" --selftest "$t")"
   echo "$OUT"

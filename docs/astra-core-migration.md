@@ -418,3 +418,16 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
   - `pnpm check:workspace-fixture`（鮮度）を `ci.yml` と `windows.yml` に追加。
 - **意味（§5/§6 の充足）**: UI 寸法を各 OS へ直書きせず tokens から生成し、共通 fixture で両 OS の形の一致を
   機械検査できる。macOS 側は Swift Shape が golden と一致することを実測、Windows 側は同一構築＋CI で fixture 鮮度を担保。
+
+## 追記: 録音エントリの無限再帰バグ修正 + HUD ライフサイクルテスト（Phase 1.35）
+- **バグ発見・修正**: `WindowCoordinator.enterRecordingMode()` が `RecordingWorkspaceState.start()` を呼び、
+  `start()` が `enterRecordingMode()` を呼び返す**相互再帰**だった。グローバルショートカット/HUD ボタンで
+  録音を開始すると `toggleRecording → enterRecordingMode → start → enterRecordingMode → …` で
+  stack overflow クラッシュする。所有権を整理して解消:
+  - `enterRecordingMode`/`leaveRecordingMode` を **window 専用**（panel の出し入れ＋`isRecording`）にし、`start()` を呼ばない。
+  - `toggleRecording` は録音の単一エントリ `RecordingWorkspaceState.start()/stop()` を呼ぶ。
+  - `start()/stop()` は window 専用の enter/leave を呼ぶ（呼び返さない）。
+- テスト用に `WindowCoordinator.headless`（既定 false、本番挙動不変）を追加し、window を出さず状態遷移だけ検証可能に。
+- `--selftest hudlifecycle`（§6「Voice HUD→Recording→保存→HUD復帰」/ Done#7）を追加。
+  **実測 PASS**: `HUD→Recording→保存→HUD 復帰 の window 状態遷移 OK`。verify に組み込み。全 selftest 回帰なし。
+- **意味**: 実際にクラッシュする経路（ショートカット/ボタンでの録音開始）を修正。Done#2/#7 の正しさが上がった。
