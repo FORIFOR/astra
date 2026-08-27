@@ -23,7 +23,22 @@ export const LLM_TOOLS = [
   'llm.extract_claims',
   'llm.synthesize',
   'llm.contradictions',
+  'search.web',
 ] as const;
+
+/**
+ * 呼び出しごとに、使ってよい道具。
+ *
+ * **既定は何も使わせない。**言葉をこねるだけの呼び出しに
+ * ファイルや通信の道具を渡す理由が無い。web を引く 1 つだけが例外。
+ */
+const TOOLS_FOR: Readonly<Record<LlmTool, readonly string[]>> = {
+  'llm.decompose': [],
+  'llm.extract_claims': [],
+  'llm.synthesize': [],
+  'llm.contradictions': [],
+  'search.web': ['WebSearch'],
+};
 export type LlmTool = (typeof LLM_TOOLS)[number];
 
 /**
@@ -67,10 +82,32 @@ export function promptFor(tool: LlmTool, args: Record<string, unknown>): string 
       return [
         '次の主張から、問いへの答えをまとめてください。',
         '主張に無いことを足さないでください。分からない部分は書かないでください。',
-        json('{"findings": ["…", "…"]}'),
+        /*
+         * **どの主張に立っているかを言わせる。**言わせないと、
+         * 出来上がった結論を後から根拠へ辿れない。
+         * 辿れない結論は、台帳があっても「根拠つき」ではない。
+         */
+        'supports には、その結論が立っている主張の番号を入れてください。番号は 0 から始まります。',
+        '根拠を挙げられない結論は書かないでください。',
+        json('{"findings": [{"text": "…", "supports": [0, 2]}]}'),
         '',
         `問い: ${String(args['question'] ?? '')}`,
         `主張:\n${listOf(args['claims'])}`,
+      ].join('\n');
+
+    case 'search.web':
+      return [
+        `WebSearch で次を検索してください: ${String(args['query'] ?? '')}`,
+        `結果は最大 ${String(args['limit'] ?? 5)} 件。`,
+        /*
+         * **実在した URL だけ。**作られた URL が混じると、
+         * 台帳の「出典」が辿れないものになる。それは根拠が無いのと同じ。
+         */
+        'url は、検索結果に実際に現れたものだけを入れてください。',
+        '要約や意見は書かないでください。検索結果をそのまま写してください。',
+        json(
+          '{"results": [{"url": "https://…", "title": "…", "snippet": "…", "published": "YYYY-MM-DD または null"}]}',
+        ),
       ].join('\n');
 
     case 'llm.contradictions':
@@ -95,7 +132,9 @@ export interface LlmRuntimeDeps {
   /** ほかの持ち込み（API キー）。無ければ Claude Code だけ。 */
   readonly others?: readonly LanguageModelOption[];
   /** 実際に呼ぶもの。種類ごとに 1 つ。 */
-  readonly askWith?: Partial<Record<LanguageModelKind, (prompt: string) => Promise<unknown>>>;
+  readonly askWith?: Partial<
+    Record<LanguageModelKind, (prompt: string, allowedTools: readonly string[]) => Promise<unknown>>
+  >;
 }
 
 export class LlmRuntime {
@@ -170,7 +209,8 @@ export class LlmRuntime {
     }
 
     try {
-      return { ok: true, result: await ask(promptFor(step.toolId as LlmTool, step.args)) };
+      const tool = step.toolId as LlmTool;
+      return { ok: true, result: await ask(promptFor(tool, step.args), TOOLS_FOR[tool]) };
     } catch (error) {
       if (error instanceof ClaudeCodeError) {
         if (error.reason === 'not_installed' || error.reason === 'not_signed_in') {
@@ -192,12 +232,14 @@ export class LlmRuntime {
     }
   }
 
-  #askFor(kind: LanguageModelKind): ((prompt: string) => Promise<unknown>) | null {
+  #askFor(
+    kind: LanguageModelKind,
+  ): ((prompt: string, allowedTools: readonly string[]) => Promise<unknown>) | null {
     const provided = this.#deps.askWith?.[kind];
     if (provided) return provided;
     if (kind === 'claude_code' && this.#deps.claudeCode) {
       const cli = this.#deps.claudeCode;
-      return (prompt) => cli.ask(prompt);
+      return (prompt, allowedTools) => cli.ask(prompt, { allowedTools });
     }
     return null;
   }

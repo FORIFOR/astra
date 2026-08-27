@@ -97,8 +97,44 @@ describe('synthesize', () => {
   });
 
   it('trims and drops empties', async () => {
-    const fetch = respond('record_conclusions', { conclusions: ['  売上は横ばい ', ''] });
-    expect(await model(fetch).synthesize('売上は', ['a'])).toEqual(['売上は横ばい']);
+    const fetch = respond('record_conclusions', {
+      conclusions: [
+        { text: '  売上は横ばい ', supports: [0] },
+        { text: '', supports: [0] },
+      ],
+    });
+    expect(await model(fetch).synthesize('売上は', ['a'])).toEqual([
+      { text: '売上は横ばい', supports: [0] },
+    ]);
+  });
+
+  it('drops a conclusion that stands on nothing', async () => {
+    /*
+     * 根拠を挙げられない結論を載せると、「根拠つき」という
+     * 約束そのものが嘘になる。台帳から辿れないものは出さない。
+     */
+    const fetch = respond('record_conclusions', {
+      conclusions: [
+        { text: '売上は伸びる見込み', supports: [] },
+        { text: '売上は横ばい', supports: [0] },
+      ],
+    });
+    expect(await model(fetch).synthesize('売上は', ['a'])).toEqual([
+      { text: '売上は横ばい', supports: [0] },
+    ]);
+  });
+
+  it('drops a conclusion that points at evidence which does not exist', async () => {
+    const fetch = respond('record_conclusions', {
+      conclusions: [
+        { text: '作り話', supports: [7] },
+        { text: '本当', supports: [0, 1, 1, -1] },
+      ],
+    });
+    // 存在しない根拠を指す結論は、根拠が無いのと同じ
+    expect(await model(fetch).synthesize('売上は', ['a', 'b'])).toEqual([
+      { text: '本当', supports: [0, 1] },
+    ]);
   });
 });
 

@@ -42,3 +42,5 @@ export {
 export { researchDataSources } from './data-sources.js';
 export * from './ledger.js';
 export * from './host-model.js';
+export * from './search.js';
+export * from './host-search.js';

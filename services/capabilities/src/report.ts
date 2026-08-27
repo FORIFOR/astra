@@ -17,7 +17,7 @@ import {
 } from '@astra/service-agent-runtime';
 import { configuredProviders, unconfiguredProviders, type OauthEnv } from '@astra/oauth';
 import type { MeetingProviders } from '@astra/service-meeting';
-import type { ResearchProviders } from '@astra/service-research';
+import { SEARCH_SETTINGS, type ResearchProviders } from '@astra/service-research';
 
 /** 名前を持たない提供者もある。無ければ既定の呼び名を使う。 */
 function fromProvider(
@@ -66,7 +66,8 @@ export function capabilityReport(input: {
   env: OauthEnv;
 }): CapabilityReport {
   const inputs: Record<ExternalCapability, CapabilityInput> = {
-    search: fromProvider(input.research.search, 'search', 'ASTRA_SEARCH_PROVIDER（OQ-3 未決）'),
+    // どの検索を使うかは利用者が選ぶ。**設定名まで言う。**
+    search: fromProvider(input.research.search, 'search', SEARCH_SETTINGS),
     /*
      * 言語モデル。正本 §21、UI/UX §22。
      *

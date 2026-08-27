@@ -27,6 +27,17 @@ export interface SearchProvider {
   search(query: string, limit: number): Promise<SearchHit[]>;
 }
 
+/**
+ * 結論 1 つ。**立っている根拠の番号を持つ。**
+ *
+ * 番号は `synthesize` に渡した `claims` の位置。
+ * 空の `supports` は「根拠が無い結論」なので、呼び出し側が落とす。
+ */
+export interface Finding {
+  readonly text: string;
+  readonly supports: readonly number[];
+}
+
 export interface ExtractedClaim {
   readonly claim: string;
   /** 抜粋のどこを根拠にしたか。原文全体は object store 側に置く。 */
@@ -40,8 +51,15 @@ export interface LanguageModel {
   decompose(question: string, max: number): Promise<string[]>;
   /** 抜粋から、確認できる主張を取り出す。 */
   extractClaims(question: string, hit: SearchHit): Promise<ExtractedClaim[]>;
-  /** 根拠から結論をまとめる。 */
-  synthesize(question: string, claims: readonly string[]): Promise<string[]>;
+  /**
+   * 根拠から結論をまとめる。
+   *
+   * **どの根拠に立っているかを一緒に返す。**返さないと、
+   * 出来上がった結論を後から根拠へ辿れない。§8 の Evidence Ledger は
+   * 「根拠がある」ことではなく「**この結論はこの根拠に立つ**」ことを
+   * 見せるためのもので、対応が無ければ台帳は飾りになる。
+   */
+  synthesize(question: string, claims: readonly string[]): Promise<Finding[]>;
   /**
    * 意味の矛盾を見つける。
    *
@@ -106,8 +124,8 @@ export class DeterministicLanguageModel implements LanguageModel {
       .map((sentence) => ({ claim: sentence, supportText: sentence }));
   }
 
-  async synthesize(_question: string, claims: readonly string[]): Promise<string[]> {
+  async synthesize(_question: string, claims: readonly string[]): Promise<Finding[]> {
     // 上位の主張をそのまま結論にする。要約はしない（できないので、するふりをしない）
-    return claims.slice(0, 3);
+    return claims.slice(0, 3).map((text, index) => ({ text, supports: [index] }));
   }
 }

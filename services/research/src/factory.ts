@@ -9,6 +9,8 @@ import { DeterministicLanguageModel, StaticSearchProvider } from './providers.js
 import type { LanguageModel, SearchProvider } from './providers.js';
 import { AnthropicLanguageModel } from './anthropic.js';
 import { HostLanguageModel, type HostCall, type HostModelContext } from './host-model.js';
+import { searchProviderFromEnv, type SearchEnv } from './search.js';
+import { HostSearchProvider } from './host-search.js';
 
 export interface ResearchProviders {
   readonly search: SearchProvider;
@@ -23,7 +25,7 @@ export function standIns(providers: ResearchProviders): string[] {
   ].filter((name): name is string => name !== null);
 }
 
-export interface ResearchProviderEnv {
+export interface ResearchProviderEnv extends SearchEnv {
   readonly ANTHROPIC_API_KEY?: string | undefined;
   readonly ASTRA_RESEARCH_MODEL?: string | undefined;
   /** 端末で呼ぶのをやめるとき。既定は端末（正本 §21、UI/UX §22）。 */
@@ -62,8 +64,18 @@ export function researchProvidersFromEnv(
   const onDevice = env.ASTRA_MODEL_ON_DEVICE !== 'false';
 
   return {
-    // OQ-3 の未決部分。決まったらここへ実装を渡す。
-    search: options.search ?? new StaticSearchProvider([]),
+    /*
+     * どの検索を使うかは**利用者が選ぶ**（正本 §8、OQ-3）。
+     * 既定を決めないのは、調べたい内容そのものが問い合わせ先へ渡るから。
+     * 選ばれていなければ代役のまま名乗り、本番では起動を拒む。
+     */
+    search:
+      options.search ??
+      searchProviderFromEnv(env) ??
+      // 選ばれていなければ端末で引く。利用者が既に持っている利用権で足りる。
+      (onDevice && options.host
+        ? new HostSearchProvider({ host: options.host, context: currentContext })
+        : new StaticSearchProvider([])),
     model: pickModel(env, onDevice, options.host),
   };
 }

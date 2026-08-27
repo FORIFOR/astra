@@ -143,11 +143,24 @@ export class ClaudeCodeCli {
    * `--output-format json` を使うのは、囲みの外に説明文が混ざっても
    * 拾えるようにするため。**読めない返事を、空の答えとして通さない。**
    */
-  async ask(prompt: string, signal?: AbortSignal): Promise<unknown> {
-    if (signal?.aborted) throw new ClaudeCodeError('timed_out', '始まる前に取り消されました。');
+  async ask(
+    prompt: string,
+    options: { signal?: AbortSignal; allowedTools?: readonly string[] } = {},
+  ): Promise<unknown> {
+    if (options.signal?.aborted) {
+      throw new ClaudeCodeError('timed_out', '始まる前に取り消されました。');
+    }
 
     const args = ['-p', '--output-format', 'json'];
     if (this.#config.model) args.push('--model', this.#config.model);
+    /*
+     * 使ってよい道具を**名指しで渡す。**渡さなければ何も使えない。
+     * 「全部許す」を既定にすると、問いに答えるだけのつもりの呼び出しが
+     * 端末のファイルを読み書きできることになる。
+     */
+    if (options.allowedTools?.length) {
+      args.push('--allowedTools', options.allowedTools.join(','));
+    }
 
     const result = await this.#run(this.command, args, {
       input: prompt,
@@ -187,6 +200,63 @@ export function parseReply(stdout: string): unknown {
   try {
     return JSON.parse(body);
   } catch {
+    /*
+     * 全体としては読めない。**先頭の JSON だけ拾う。**
+     *
+     * web を引かせると、Claude Code は答えのあとに
+     * 「Sources: [example.com](https://…)」を足す。これは CLI の親切で、
+     * 消せない。全体を捨てると、正しく引けた検索結果まで捨てることになる。
+     *
+     * ただし**拾えるのは先頭にある本物の JSON だけ**で、
+     * 散文しか無ければ下で失敗する（散文を答えにしない）。
+     */
+    const leading = leadingJsonObject(body);
+    if (leading !== null) {
+      try {
+        return JSON.parse(leading);
+      } catch {
+        throw new ClaudeCodeError('unreadable_output');
+      }
+    }
     throw new ClaudeCodeError('unreadable_output');
   }
+}
+
+/**
+ * 先頭の `{ … }` を、対応が取れるところまで切り出す。
+ *
+ * 文字列の中の `{` `}` を数えないよう、引用符と逃がし文字を見る。
+ * **見つからなければ null。**あてずっぽうに切らない。
+ */
+export function leadingJsonObject(text: string): string | null {
+  const start = text.indexOf('{');
+  if (start === -1) return null;
+
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+
+  for (let i = start; i < text.length; i += 1) {
+    const ch = text[i]!;
+    if (escaped) {
+      escaped = false;
+      continue;
+    }
+    if (ch === '\\' && inString) {
+      escaped = true;
+      continue;
+    }
+    if (ch === '"') {
+      inString = !inString;
+      continue;
+    }
+    if (inString) continue;
+    if (ch === '{') depth += 1;
+    if (ch === '}') {
+      depth -= 1;
+      if (depth === 0) return text.slice(start, i + 1);
+    }
+  }
+  // 閉じていない。途中で切れたものを、完全な答えとして扱わない。
+  return null;
 }

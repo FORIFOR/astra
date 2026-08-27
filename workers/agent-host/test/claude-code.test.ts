@@ -114,6 +114,36 @@ describe('reading the reply', () => {
     expect(parseReply(fenced)).toEqual({ queries: ['a'] });
   });
 
+  it('reads JSON that has the web-search citations tacked on after it', () => {
+    /*
+     * web を引かせると、CLI は答えのあとに
+     * 「Sources: [example.com](https://…)」を足す。これは消せない。
+     * 全体を捨てていた間、**正しく引けた検索結果まで捨てていた。**
+     */
+    const withCitations = JSON.stringify({
+      type: 'result',
+      result:
+        '{"results": [{"url": "https://example.com/a", "title": "A"}]}\n\nSources: [example.com](https://example.com/a)',
+    });
+    expect(parseReply(withCitations)).toEqual({
+      results: [{ url: 'https://example.com/a', title: 'A' }],
+    });
+  });
+
+  it('is not confused by braces inside strings', () => {
+    const tricky = JSON.stringify({
+      type: 'result',
+      result: '{"snippet": "見出し {ここ} と \\"引用\\""}\n\nSources: none',
+    });
+    expect(parseReply(tricky)).toEqual({ snippet: '見出し {ここ} と "引用"' });
+  });
+
+  it('does not accept a reply that was cut off mid-way', () => {
+    // 途中で切れたものを、完全な答えとして扱わない
+    const truncated = JSON.stringify({ type: 'result', result: '{"results": [{"url": "https:/' });
+    expect(() => parseReply(truncated)).toThrow(ClaudeCodeError);
+  });
+
   it('refuses a reply it cannot read, rather than returning nothing', () => {
     // 空を返すと「調べたが何も無かった」になる。読めなかったのとは違う。
     expect(() => parseReply('not json at all')).toThrow(ClaudeCodeError);
@@ -155,9 +185,9 @@ describe('probing the device', () => {
     const { calls, run } = runs({ stdout: reply({}) });
     const controller = new AbortController();
     controller.abort();
-    await expect(new ClaudeCodeCli({ run }).ask('x', controller.signal)).rejects.toMatchObject({
-      reason: 'timed_out',
-    });
+    await expect(
+      new ClaudeCodeCli({ run }).ask('x', { signal: controller.signal }),
+    ).rejects.toMatchObject({ reason: 'timed_out' });
     expect(calls).toEqual([]);
   });
 });

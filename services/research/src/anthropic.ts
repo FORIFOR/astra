@@ -11,7 +11,7 @@
  *   HTTP は差し替え口にしてある。テストは実際の API を叩かない。
  */
 import { z } from 'zod';
-import type { ExtractedClaim, LanguageModel, SearchHit } from './providers.js';
+import type { ExtractedClaim, Finding, LanguageModel, SearchHit } from './providers.js';
 
 /** `fetch` と同じ形。テストは偽物を渡す。 */
 export type Fetch = (url: string, init: RequestInit) => Promise<Response>;
@@ -86,8 +86,28 @@ const TOOLS = {
   },
   synthesize: {
     name: 'record_conclusions',
-    description: '根拠から導ける結論だけを記録する。',
-    input_schema: stringList('conclusions', '根拠から確認できる結論'),
+    description: '根拠から導ける結論と、それぞれが立っている根拠の番号を記録する。',
+    input_schema: {
+      type: 'object',
+      properties: {
+        conclusions: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              text: { type: 'string', description: '根拠から確認できる結論' },
+              supports: {
+                type: 'array',
+                items: { type: 'integer' },
+                description: 'この結論が立っている根拠の番号（0 始まり）。**必ず 1 つ以上。**',
+              },
+            },
+            required: ['text', 'supports'],
+          },
+        },
+      },
+      required: ['conclusions'],
+    },
   },
   contradictions: {
     name: 'record_contradictions',
@@ -180,21 +200,25 @@ export class AnthropicLanguageModel implements LanguageModel {
       });
   }
 
-  async synthesize(question: string, claims: readonly string[]): Promise<string[]> {
+  async synthesize(question: string, claims: readonly string[]): Promise<Finding[]> {
     if (claims.length === 0) return [];
     const out = await this.#call(
       TOOLS.synthesize,
       [
         '次の根拠だけから導ける結論を、重要な順に最大 5 つ書いてください。',
         '根拠に無いことは書かないでください。断定できないものは断定しないでください。',
+        'それぞれの結論について、立っている根拠の番号を supports に入れてください。',
+        '番号は 0 から始まります。根拠を挙げられない結論は書かないでください。',
         '',
         `問い: ${question}`,
         '根拠:',
-        ...claims.map((c, i) => `${i + 1}. ${c}`),
+        ...claims.map((c, i) => `${i}. ${c}`),
       ].join('\n'),
-      z.object({ conclusions: z.array(z.string()) }),
+      z.object({
+        conclusions: z.array(z.object({ text: z.string(), supports: z.array(z.number()) })),
+      }),
     );
-    return out.conclusions.map((c) => c.trim()).filter((c) => c.length > 0);
+    return groundedFindings(out.conclusions, claims.length);
   }
 
   async detectContradictions(
@@ -279,4 +303,29 @@ export function isGrounded(supportText: string, snippet: string): boolean {
   const needle = strip(supportText);
   if (needle.length === 0) return false;
   return strip(snippet).includes(needle);
+}
+
+/**
+ * 根拠に立っていない結論を落とす。
+ *
+ * **番号が範囲の外なら捨てる。**存在しない根拠を指す結論は、
+ * 根拠が無いのと同じ。空になった結論も落とす — 台帳から辿れない結論を
+ * 報告に載せると、「根拠つき」という約束そのものが嘘になる。
+ */
+export function groundedFindings(
+  raw: readonly { text: string; supports: readonly number[] }[],
+  claimCount: number,
+): Finding[] {
+  return raw
+    .map((item) => ({
+      text: item.text.trim(),
+      supports: [
+        ...new Set(
+          item.supports.filter(
+            (index) => Number.isInteger(index) && index >= 0 && index < claimCount,
+          ),
+        ),
+      ].sort((a, b) => a - b),
+    }))
+    .filter((item) => item.text.length > 0 && item.supports.length > 0);
 }

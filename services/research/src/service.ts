@@ -20,7 +20,7 @@ import {
   score,
   type ScoredCandidate,
 } from './quality.js';
-import type { LanguageModel, SearchProvider } from './providers.js';
+import type { Finding, LanguageModel, SearchProvider } from './providers.js';
 import { ResearchLedgerService } from './ledger.js';
 
 export interface ResearchDeps {
@@ -326,7 +326,7 @@ interface EvidenceRow {
  */
 export function composeReport(
   run: Pick<RunRow, 'question' | 'confidence'>,
-  summary: readonly string[],
+  summary: readonly Finding[],
   evidence: readonly EvidenceRow[],
 ): string {
   const distinct = [...new Set(evidence.map((row) => row.source_url))];
@@ -341,8 +341,22 @@ export function composeReport(
     '',
     '## 結論',
     '',
+    /*
+     * 結論には、立っている根拠を並べる。UI/UX §15。
+     *
+     * **番号だけでは辿れない。**報告を単体で読む人には、
+     * どの出典を見ればよいかが分からない。だから URL まで書く。
+     * 根拠を挙げられない結論は、そもそもここへ来ない（落としてある）。
+     */
     ...(summary.length > 0
-      ? summary.map((point, index) => `${index + 1}. ${point}`)
+      ? summary.map(
+          (point, index) =>
+            `${index + 1}. ${point.text}\n   根拠: ${point.supports
+              .map((position) => evidence[position]?.source_url)
+              .filter((url): url is string => typeof url === 'string')
+              .map((url) => `[${url}](${url})`)
+              .join(' / ')}`,
+        )
       : ['確かなことは分かりませんでした。']),
     '',
     `${distinct.length} sources · confidence: ${run.confidence ?? 'low'} · contradictions: ${contradictionCount}`,

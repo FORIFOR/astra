@@ -14,7 +14,8 @@
  *   - モデルの出力を信用しない。**形が違えば捨てる**
  */
 import { canonicalSha256 } from '@astra/contracts';
-import type { ExtractedClaim, LanguageModel, SearchHit } from './providers.js';
+import { groundedFindings } from './anthropic.js';
+import type { ExtractedClaim, Finding, LanguageModel, SearchHit } from './providers.js';
 
 /** 端末への受け渡し口。`@astra/service-agent-host` の `HostStepExecutor` が満たす。 */
 export interface HostCall {
@@ -91,9 +92,23 @@ export class HostLanguageModel implements LanguageModel {
       );
   }
 
-  async synthesize(question: string, claims: readonly string[]): Promise<string[]> {
+  async synthesize(question: string, claims: readonly string[]): Promise<Finding[]> {
     const result = await this.#ask('llm.synthesize', { question, claims: [...claims] });
-    return stringsOf(result, 'findings');
+    const raw = Array.isArray((result as { findings?: unknown })?.findings)
+      ? (result as { findings: unknown[] }).findings
+      : [];
+
+    return groundedFindings(
+      raw.map((item) => ({
+        text: stringOf(item, 'text'),
+        supports: Array.isArray((item as { supports?: unknown })?.supports)
+          ? (item as { supports: unknown[] }).supports.filter(
+              (n): n is number => typeof n === 'number',
+            )
+          : [],
+      })),
+      claims.length,
+    );
   }
 
   async detectContradictions(
