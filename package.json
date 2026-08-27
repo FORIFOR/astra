@@ -14,6 +14,8 @@
     "check:contracts-version": "node scripts/check-contracts-version.mjs",
     "check:conventions": "node scripts/check-conventions.mjs",
     "check:cabi-csharp": "node scripts/check-cabi-csharp.mjs",
+    "gen:workspace-fixture": "node scripts/gen-workspace-fixture.mjs",
+    "check:workspace-fixture": "node scripts/gen-workspace-fixture.mjs --check",
     "check:generated": "./scripts/check-generated.sh",
     "clean": "tsc -b tsconfig.build.json --clean",
     "db:codegen": "./infra/db/with-test-db.sh sh -c 'cd packages/db && npx kysely-codegen --url \"$TEST_ADMIN_DATABASE_URL\" --dialect postgres --out-file src/generated/schema.ts'",

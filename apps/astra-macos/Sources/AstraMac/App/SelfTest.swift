@@ -1,5 +1,6 @@
 import Foundation
 import CoreVideo
+import SwiftUI
 import AstraCore
 
 /// `--selftest record`: Swift → astra-core → 実ディスク の E2E。UI を出さずに検証する。
@@ -27,6 +28,7 @@ enum SelfTest {
         case "livescreen": livescreen(); return true
         case "livemeeting": livemeeting(); return true
         case "sttrecognize": sttrecognize(); return true
+        case "shape": shape(); return true
         default: return false
         }
     }
@@ -426,6 +428,44 @@ enum SelfTest {
         let hit = ["test", "astra", "meeting", "transcription", "transcri"].contains { lower.contains($0) }
         guard hit else { print("SELFTEST_FAIL sttrecognize: unexpected text=\(text)"); exit(4) }
         print("SELFTEST_OK sttrecognize: 実音声→STT 認識=\"\(text)\"")
+        exit(0)
+    }
+
+    /// `--selftest shape`: RecordingWorkspaceShape のパスが共有 fixture（tokens 由来の golden）と
+    /// 一致するか検証する。macOS/Windows が同じ形を描くことの visual regression（macOS 側で実証）。
+    @MainActor
+    private static func shape() {
+        let rect = CGRect(x: 0, y: 0, width: CGFloat(Metrics.workspaceWidth), height: CGFloat(Metrics.workspaceHeight))
+        let path = RecordingWorkspaceShape().path(in: rect)
+        func fmt(_ v: CGFloat) -> String {
+            let r = (v).rounded()
+            return abs(v - r) < 0.005 ? String(Int(r)) : String(format: "%.2f", v)
+        }
+        func pt(_ p: CGPoint) -> String { "\(fmt(p.x)),\(fmt(p.y))" }
+        var d: [String] = []
+        path.forEach { el in
+            switch el {
+            case .move(let to): d.append("M \(pt(to))")
+            case .line(let to): d.append("L \(pt(to))")
+            case .quadCurve(let to, let c): d.append("Q \(pt(c)) \(pt(to))")
+            case .curve(let to, let c1, let c2): d.append("C \(pt(c1)) \(pt(c2)) \(pt(to))")
+            case .closeSubpath: d.append("Z")
+            @unknown default: break
+            }
+        }
+        let got = d.joined(separator: " ")
+        // 共有 golden を読む（リポジトリの fixtures）。
+        let goldenPath = FileManager.default.currentDirectoryPath + "/../../shared/design/fixtures/recording-workspace.path"
+        let alt = FileManager.default.currentDirectoryPath + "/shared/design/fixtures/recording-workspace.path"
+        let golden = (try? String(contentsOfFile: goldenPath, encoding: .utf8))
+            ?? (try? String(contentsOfFile: alt, encoding: .utf8))
+        guard let goldenStr = golden?.trimmingCharacters(in: .whitespacesAndNewlines) else {
+            print("SELFTEST_SKIP shape: golden fixture not found"); exit(0)
+        }
+        guard got == goldenStr else {
+            print("SELFTEST_FAIL shape mismatch\n got=\(got)\n want=\(goldenStr)"); exit(2)
+        }
+        print("SELFTEST_OK shape: path matches shared fixture (\(d.count) segments)")
         exit(0)
     }
 

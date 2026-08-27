@@ -26,6 +26,8 @@ jobs:
           dotnet-version: "8.0.x"
       - name: C ABI contract (Rust <-> header <-> C# P/Invoke)
         run: node scripts/check-cabi-csharp.mjs
+      - name: Recording Workspace shape fixture freshness
+        run: node scripts/gen-workspace-fixture.mjs --check
       - name: Restore + build WinUI 3 solution
         run: dotnet build apps/windows/Astra.sln -c Release -p:Platform=x64
       - name: Note

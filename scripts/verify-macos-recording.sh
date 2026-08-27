@@ -45,6 +45,8 @@ echo "$OUT12"
 
 # ---- live 実機経路（この環境は mic/screen/ax/speech が許可済み）。CI 等で未許可なら SELFTEST_SKIP。----
 echo "$("$BIN" --selftest permissions)"
+OUTS="$("$BIN" --selftest shape)"; echo "$OUTS"
+[[ "$OUTS" == SELFTEST_OK* ]] || { echo "FAIL: macOS workspace shape != shared fixture" >&2; exit 1; }
 for t in livemic livemeeting livescreen sttrecognize; do
   OUT="$("$BIN" --selftest "$t")"
   echo "$OUT"

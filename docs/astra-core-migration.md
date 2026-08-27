@@ -404,3 +404,17 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
 - STT の**パイプライン**は別途検証済み（`--selftest speech` の start/append/finish、`--selftest livemeeting` で
   実マイク取り込み中に on-device STT が稼働）。**残るは認識テキストの出力**で、これは署名 .app を前面で
   動かす実運用（実音声・前面セッション）でユーザーが確認する live 項目。
+
+## 追記: Recording Workspace の visual regression fixture（Phase 1.34, §5/§6）
+- `scripts/gen-workspace-fixture.mjs` を新設。`shared/design/tokens.json` から Recording Workspace の外枠
+  （上辺中央の凹み Bezier）を**正準の SVG パス**として生成し `shared/design/fixtures/recording-workspace.{svg,path}`
+  に golden 出力。`--check` で鮮度検査（design token と同じ扱い）。
+- macOS(`RecordingWorkspaceShape`) と Windows(`RecordingWorkspaceGeometry`) は**同一の制御点**（固定オフセット 14/15 ＋
+  token 由来の cornerRadius/notchWidth/notchDepth/notchShoulder）でこの形を描く。両 OS がこの golden と一致することを
+  visual regression fixture として担保する。
+- 検証:
+  - `--selftest shape`（Swift）: `RecordingWorkspaceShape` のパスを再構築し golden と**完全一致**を確認。
+    **実測 PASS**: `path matches shared fixture (14 segments)`。verify に組み込み。
+  - `pnpm check:workspace-fixture`（鮮度）を `ci.yml` と `windows.yml` に追加。
+- **意味（§5/§6 の充足）**: UI 寸法を各 OS へ直書きせず tokens から生成し、共通 fixture で両 OS の形の一致を
+  機械検査できる。macOS 側は Swift Shape が golden と一致することを実測、Windows 側は同一構築＋CI で fixture 鮮度を担保。

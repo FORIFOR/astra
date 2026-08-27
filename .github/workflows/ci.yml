@@ -74,6 +74,8 @@ jobs:
       - run: pnpm check:conventions
       # C ABI の三者一致（Rust 実体 ↔ C ヘッダ ↔ C# P/Invoke）。Windows 実機なしで境界ズレを止める。
       - run: pnpm check:cabi-csharp
+      # Recording Workspace の形（凹み Bezier）を tokens 由来の golden と照合（visual regression fixture）。
+      - run: pnpm check:workspace-fixture
       - name: Check the contracts version was bumped
         if: github.event_name == 'pull_request'
         run: node scripts/check-contracts-version.mjs origin/${{ github.base_ref }}
