@@ -1,0 +1,11 @@
+# 受信箱を見て、返事が要るものの下書きまで。正本 §15・§14。
+# **送信は含めない。**送るのは人の操作で、workflow が決めることではない。
+id: triage
+name: 受信箱を見て、下書きまで
+steps:
+  - tool: mail.search
+    message: 受信箱を見ています
+    applies: true
+  - tool: mail.draft.create
+    message: 返事の下書きを作っています
+    applies: true

@@ -134,8 +134,35 @@ const LOOKS_LIKE_A_SECRET = [
 export const MAX_CREDENTIAL_REF_LENGTH = 200;
 
 export function looksLikeCredential(value: string): boolean {
-  if (LOOKS_LIKE_A_SECRET.some((p) => p.test(value))) return true;
+  if (looksLikeSecretValue(value)) return true;
   return value.length > MAX_CREDENTIAL_REF_LENGTH;
+}
+
+/**
+ * **値そのものが資格情報の形をしているか。**長さは見ない。
+ *
+ * `looksLikeCredential` は「参照として渡された文字列」を見るためのもので、
+ * 長い＝値そのもの、という前提が置いてある。参照は短いので、それでよい。
+ *
+ * だが**任意の引数**を見るときに同じ規則を当てると壊れる。
+ * メール本文も、agent の指示書も、検索の抜粋も 200 文字を超える。
+ * 実際、長い本文のメールは端末へ渡せなくなっていた（送れなかった）。
+ */
+export function looksLikeSecretValue(value: string): boolean {
+  return LOOKS_LIKE_A_SECRET.some((p) => p.test(value));
+}
+
+/**
+ * 資格情報が入っていそうな**名前**か。
+ *
+ * 形で見分けられない秘密（提供者独自のキー）もあるので、
+ * 名前の側からも見る。中身が何であれ、`token` という名前の欄に
+ * 何かを入れて端末へ渡す理由が無い。
+ */
+export function looksLikeSecretName(key: string): boolean {
+  return /(^|_)(token|secret|password|passwd|api_?key|credential|authorization|bearer)($|_)/i.test(
+    key,
+  );
 }
 
 export const ConnectorDecl = z.object({

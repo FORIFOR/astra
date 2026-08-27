@@ -229,6 +229,9 @@ importers:
       '@astra/telemetry':
         specifier: workspace:*
         version: link:../packages/telemetry
+      '@astra/worker-agent-host':
+        specifier: workspace:*
+        version: link:../workers/agent-host
       yaml:
         specifier: ^2.9.0
         version: 2.9.0

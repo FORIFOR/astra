@@ -15,7 +15,13 @@
  *   - 取りに来ないまま古くなったものは、成功にも失敗にもせず期限切れにする
  *   - **失敗を成功として返さない**
  */
-import { AstraError, looksLikeCredential, stateFromHeartbeat, uuidv7 } from '@astra/contracts';
+import {
+  AstraError,
+  looksLikeSecretName,
+  looksLikeSecretValue,
+  stateFromHeartbeat,
+  uuidv7,
+} from '@astra/contracts';
 import { withTenant, type DbHandle } from '@astra/db';
 
 /**
@@ -310,15 +316,40 @@ export class HostBridge {
  *
  * 端末は自分の Keychain から取る。cloud が渡す必要はない。
  * 渡せる形にしておくと、いつか誰かが渡す。
+ *
+ * **長さでは弾かない。**参照の検査（`looksLikeCredential`）をそのまま
+ * 当てていた間、200 文字を超える引数がすべて資格情報扱いになっていた。
+ * メール本文も、agent の指示書も、検索の抜粋も超える。
+ * 結果、**長い本文のメールは端末へ渡せず、送れなかった。**
+ *
+ * 見るのは 2 つ:
+ *   - 値が資格情報の形をしているか（`ya29.` / `ghp_` / JWT など）
+ *   - 欄の名前が資格情報を指しているか（`token` / `api_key` など）
  */
 function assertNoCredentials(args: Record<string, unknown>, depth = 0): void {
   if (depth > 6) return;
-  for (const value of Object.values(args)) {
-    if (typeof value === 'string' && looksLikeCredential(value)) {
+
+  for (const [key, value] of Object.entries(args)) {
+    const named = looksLikeSecretName(key);
+    if (typeof value === 'string' && (named || looksLikeSecretValue(value))) {
       throw new AstraError(
         'common.validation_failed',
         'a step handed to the device must not carry a credential; the device holds its own',
       );
+    }
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        if (typeof item === 'string' && (named || looksLikeSecretValue(item))) {
+          throw new AstraError(
+            'common.validation_failed',
+            'a step handed to the device must not carry a credential; the device holds its own',
+          );
+        }
+        if (item && typeof item === 'object') {
+          assertNoCredentials(item as Record<string, unknown>, depth + 1);
+        }
+      }
+      continue;
     }
     if (value && typeof value === 'object') {
       assertNoCredentials(value as Record<string, unknown>, depth + 1);

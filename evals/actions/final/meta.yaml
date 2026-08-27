@@ -1,0 +1,8 @@
+# 実装仕様 §14.2 の eval harness 契約
+phase: final
+tags: [acceptance, blocking, e2e, chaos]
+blocking: true
+description: >
+  受け入れの通し。正本 §4.4・§9・§16.1・§21。
+  端末でしか動かない仕事が、端末が居ないと止まり、戻ると進むこと。
+  送信は承認の跡が無ければ実行されないこと。故障注入を含む。

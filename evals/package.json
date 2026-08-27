@@ -26,7 +26,8 @@
     "@astra/policy": "workspace:*",
     "yaml": "^2.9.0",
     "@astra/service-agent-host": "workspace:*",
-    "@astra/service-connectors": "workspace:*"
+    "@astra/service-connectors": "workspace:*",
+    "@astra/worker-agent-host": "workspace:*"
   },
   "devDependencies": {
     "@temporalio/testing": "^1.22.0",

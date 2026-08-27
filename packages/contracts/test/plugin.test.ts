@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { PluginManifest, isCompatible } from '../src/plugin.js';
+import {
+  MAX_CREDENTIAL_REF_LENGTH,
+  PluginManifest,
+  isCompatible,
+  looksLikeCredential,
+  looksLikeSecretName,
+  looksLikeSecretValue,
+} from '../src/plugin.js';
 
 const gmail = {
   id: 'com.astra.gmail',
@@ -114,5 +121,44 @@ describe('core compatibility', () => {
     expect(isCompatible('0.1.0', '0.1.0')).toBe(true);
     expect(isCompatible('0.1.0', '0.2.0')).toBe(true);
     expect(isCompatible('2.0.0', '1.9.9')).toBe(false);
+  });
+});
+
+describe('telling a credential from ordinary text', () => {
+  it('flags the shapes we know', () => {
+    expect(looksLikeSecretValue('ya29.abc')).toBe(true);
+    expect(looksLikeSecretValue('ghp_0123456789abcdefghij')).toBe(true);
+    expect(looksLikeSecretValue('xoxb-1-2-3')).toBe(true);
+    expect(looksLikeSecretValue('eyJhbGciOiJIUzI1NiJ9.payload')).toBe(true);
+  });
+
+  it('does not flag ordinary text for being long', () => {
+    /*
+     * 長さで弾いていた間、**長い本文のメールが資格情報扱いになっていた。**
+     * 参照の検査（`looksLikeCredential`）は参照だけに使う。
+     */
+    const body = 'お世話になっております。'.repeat(50);
+    expect(body.length).toBeGreaterThan(MAX_CREDENTIAL_REF_LENGTH);
+    expect(looksLikeSecretValue(body)).toBe(false);
+    expect(looksLikeCredential(body)).toBe(true);
+  });
+
+  it('flags a field whose name says it holds a secret', () => {
+    for (const name of [
+      'token',
+      'access_token',
+      'api_key',
+      'apiKey',
+      'password',
+      'authorization',
+    ]) {
+      expect(looksLikeSecretName(name), name).toBe(true);
+    }
+  });
+
+  it('does not flag ordinary field names', () => {
+    for (const name of ['subject', 'body', 'to', 'message', 'tokenizer_note']) {
+      expect(looksLikeSecretName(name), name).toBe(false);
+    }
   });
 });

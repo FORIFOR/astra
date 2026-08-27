@@ -162,6 +162,51 @@ describe.skipIf(!url)('the host bridge', () => {
     ).rejects.toMatchObject({ code: 'common.validation_failed' });
   });
 
+  it('lets a long email body through', async () => {
+    /*
+     * 参照の検査（200 文字超は値そのもの）を任意の引数へ当てていた間、
+     * **長い本文のメールは端末へ渡せず、送れなかった。**
+     * メール本文も、agent の指示書も、検索の抜粋も 200 文字を超える。
+     */
+    const taskId = await makeTask();
+    const placed = await bridge.request({
+      tenantId,
+      taskId,
+      stepIndex: 0,
+      toolId: 'mail.draft.create',
+      args: { to: ['a@example.com'], subject: '週次報告', body: 'あ'.repeat(3000) },
+    });
+    expect(placed.status).toBe('PENDING');
+  });
+
+  it('refuses anything in a field named like a secret, however short', async () => {
+    // 形で見分けられない秘密もある。名前の側からも見る。
+    const taskId = await makeTask();
+    for (const args of [
+      { api_key: 'short' },
+      { password: 'x' },
+      { authorization: 'Basic abc' },
+      { nested: { access_token: 'x' } },
+    ]) {
+      await expect(
+        bridge.request({ tenantId, taskId, stepIndex: 1, toolId: 'mail.send', args }),
+      ).rejects.toMatchObject({ code: 'common.validation_failed' });
+    }
+  });
+
+  it('finds a credential hiding inside a list', async () => {
+    const taskId = await makeTask();
+    await expect(
+      bridge.request({
+        tenantId,
+        taskId,
+        stepIndex: 2,
+        toolId: 'mail.send',
+        args: { notes: ['ふつうの文', 'ghp_0123456789abcdefghijklmnopqrstuvwxyz'] },
+      }),
+    ).rejects.toMatchObject({ code: 'common.validation_failed' });
+  });
+
   it('refuses a credential buried inside a nested argument', async () => {
     const taskId = await makeTask();
     await expect(

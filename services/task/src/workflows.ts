@@ -101,18 +101,37 @@ export interface TaskStateSnapshot {
 
 export const getStateQuery = defineQuery<TaskStateSnapshot>('getState');
 
-/** 承認待ちの上限。`approvals.expires_at` と揃える（実装仕様 §6.5）。 */
-const APPROVAL_TIMEOUT = '24 hours';
+/**
+ * 承認待ちの上限。`approvals.expires_at` と揃える（実装仕様 §6.5）。
+ *
+ * **ミリ秒で書く。**文字列（`'24 hours'`）で書いていた間、
+ * `condition` の待ち時間が効かず、**承認待ちが永久に切れなかった。**
+ * 期限切れの処理は書いてあるのに、そこへ辿り着けない状態だった。
+ */
+const APPROVAL_TIMEOUT_MS = 24 * 60 * 60 * 1000;
 
 /**
- * 端末の復帰を待つ間隔と回数。正本 §4.4。
+ * 端末の復帰を待つ間隔。正本 §4.4。
  *
- * 1 回の停止で最大 1 時間、それを 24 回まで＝丸一日待つ。
+ * **短く始めて、伸ばす。**
+ *
+ * 一定の 1 分にしていた間、蓋を閉じて開けただけの不在でも
+ * まるまる 1 分止まっていた。逆に一定の 5 秒にすると、
+ * 出社まで閉じたままの PC を一晩じゅう問い合わせ続ける。
+ *
+ * ミリ秒で書く。文字列（`'1 minute'`）は読みやすいが、
+ * どこで解釈されるかが増える分だけ間違いが入りやすい。
+ */
+const HOST_POLL_START_MS = 5_000;
+const HOST_POLL_MAX_MS = 60_000;
+/** 1 回の停止で見に行く回数。上の伸び方と合わせて、およそ 1 時間。 */
+const HOST_WAIT_ROUND_CHECKS = 60;
+/**
+ * 停止と再開を繰り返してよい回数。
+ *
  * **無限に待たない。**永久に PAUSED のまま残るなら、
  * それは結局、誰も気づかない失敗と同じことになる。
  */
-const HOST_POLL_INTERVAL = '1 minute';
-const HOST_WAIT_ROUND_CHECKS = 60;
 const MAX_HOST_WAIT_ROUNDS = 24;
 
 /** 端末が落ちているだけか。**失敗と混ぜない。** */
@@ -184,7 +203,7 @@ export async function TaskWorkflow(input: TaskWorkflowInput): Promise<TaskResult
 
       const decided = await condition(
         () => decisions.has(approval.approvalId) || cancelRequested !== null,
-        APPROVAL_TIMEOUT,
+        APPROVAL_TIMEOUT_MS,
       );
 
       if (cancelRequested !== null) return finishCancelled(input, cancelRequested);
@@ -275,11 +294,21 @@ export async function TaskWorkflow(input: TaskWorkflowInput): Promise<TaskResult
 
   /** 端末が戻るのを待つ。戻らないまま上限に達したら false。 */
   async function waitForHost(): Promise<boolean> {
+    let interval = HOST_POLL_START_MS;
+
     for (let waited = 0; waited < HOST_WAIT_ROUND_CHECKS; waited += 1) {
-      // 取り消しは待たせない。止めたい人を待たせるのは、止められないのと同じ。
-      await condition(() => cancelRequested !== null, HOST_POLL_INTERVAL);
-      if (cancelRequested !== null) return false;
+      /*
+       * **先に見る。**待ってから見ていた間、端末が既に戻っていても
+       * 次の周期まで止まったままだった。
+       */
       if (await persistence.hostAvailable(input)) return true;
+      if (cancelRequested !== null) return false;
+
+      // 取り消しは待たせない。止めたい人を待たせるのは、止められないのと同じ。
+      await condition(() => cancelRequested !== null, interval);
+      if (cancelRequested !== null) return false;
+
+      interval = Math.min(interval * 2, HOST_POLL_MAX_MS);
     }
     return false;
   }

@@ -11,6 +11,44 @@ import { HostOfflineError, isHostOfflineError } from '@astra/contracts';
 
 const src = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../src');
 
+describe('the waits actually fire', () => {
+  it('gives every condition() a numeric timeout', async () => {
+    /*
+     * `condition(fn, '1 minute')` は待たずに固まっていた。文字列を
+     * どこで解釈するかが増えるほど、こういう黙った故障が入りやすい。
+     *
+     * 効かなかったのは 2 箇所で、どちらも**待つことが仕事**だった:
+     *   - 端末の復帰待ち  → 止まった仕事が永久に戻らない
+     *   - 承認待ちの期限  → 承認待ちが永久に切れない
+     */
+    const workflow = await readFile(path.join(src, 'workflows.ts'), 'utf8');
+    const timeouts = [...workflow.matchAll(/await condition\(\s*[^,]+,\s*([^)]+)\)/g)].map((m) =>
+      m[1]!.trim(),
+    );
+    expect(timeouts.length).toBeGreaterThan(0);
+    for (const timeout of timeouts) {
+      expect(timeout, `condition() の待ち時間が文字列: ${timeout}`).not.toMatch(/^['"]/);
+    }
+  });
+
+  it('starts checking again quickly, then backs off', async () => {
+    // 蓋を閉じて開けただけの不在で、まるまる 1 分止めない
+    const workflow = await readFile(path.join(src, 'workflows.ts'), 'utf8');
+    expect(workflow).toMatch(/HOST_POLL_START_MS = \d/);
+    expect(workflow).toMatch(/HOST_POLL_MAX_MS = \d/);
+    expect(workflow).toContain('Math.min(interval * 2, HOST_POLL_MAX_MS)');
+  });
+
+  it('looks for the device before sleeping', async () => {
+    const workflow = await readFile(path.join(src, 'workflows.ts'), 'utf8');
+    const body = workflow.slice(workflow.indexOf('async function waitForHost'));
+    const check = body.indexOf('persistence.hostAvailable');
+    const sleep = body.indexOf('await condition(');
+    expect(check).toBeGreaterThan(-1);
+    expect(check).toBeLessThan(sleep);
+  });
+});
+
 describe('a tool nobody implements', () => {
   it('refuses instead of reporting success', async () => {
     /*

@@ -43,6 +43,13 @@ tools:
     surface: local
     risk: DESTRUCTIVE
     requires_confirmation: true
-agents: []
+agents:
+  # 読んで、下書きまで。**送信は tools に入れない** —
+  # 入れると、承認は通るにせよ「agent が送れる」形になる。
+  # 送るかどうかは人が決めることなので、そもそも持たせない。
+  - id: mail-assistant
+    skill: skills/mail.md
+    tools: [mail.search, mail.read, mail.draft.create]
+    workflow: workflows/triage.yaml
 dashboards: []
 policies: []
