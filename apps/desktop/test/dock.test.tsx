@@ -441,6 +441,7 @@ describe('work surface inside the dock (§4.4 / §6)', () => {
     percent: 50,
     attention: {
       kind: 'approval' as const,
+      risk: 'EXTERNAL_COMMIT' as const,
       approvalId: 'ap-1',
       summary: '3人にメールを送信します',
       primaryActionLabel: '3件送信する',
