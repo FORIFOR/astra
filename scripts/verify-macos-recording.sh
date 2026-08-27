@@ -18,3 +18,6 @@ echo "$OUT3"
 OUT4="$("$BIN" --selftest sysaudio)"
 echo "$OUT4"
 [[ "$OUT4" == SELFTEST_OK* ]] || { echo "FAIL: macOS system-audio config" >&2; exit 1; }
+OUT5="$("$BIN" --selftest calendar)"
+echo "$OUT5"
+[[ "$OUT5" == SELFTEST_OK* ]] || { echo "FAIL: macOS calendar status" >&2; exit 1; }

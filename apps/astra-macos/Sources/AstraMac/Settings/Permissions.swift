@@ -37,4 +37,18 @@ enum Permissions {
     static func requestScreenRecording() {
         _ = CGRequestScreenCaptureAccess()
     }
+
+    static var calendar: State {
+        switch CalendarAccess.status() {
+        case .granted: return .granted
+        case .denied: return .denied
+        case .restricted: return .restricted
+        case .writeOnly: return .granted
+        case .notDetermined: return .notDetermined
+        }
+    }
+
+    static func requestCalendar(_ done: @escaping (Bool) -> Void) {
+        CalendarAccess.requestAccess(done)
+    }
 }

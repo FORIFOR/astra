@@ -13,6 +13,7 @@ enum SelfTest {
         case "api": api(args); return true
         case "shortcut": shortcut(); return true
         case "sysaudio": sysaudio(); return true
+        case "calendar": calendar(); return true
         default: return false
         }
     }
@@ -104,6 +105,19 @@ enum SelfTest {
             print("SELFTEST_FAIL sysaudio config audio=\(c.capturesAudio) rate=\(c.sampleRate) ch=\(c.channelCount) excl=\(c.excludesCurrentProcessAudio)"); exit(3)
         }
         print("SELFTEST_OK sysaudio: capturesAudio=\(c.capturesAudio) sampleRate=\(c.sampleRate) channels=\(c.channelCount) excludesSelf=\(c.excludesCurrentProcessAudio)")
+        exit(0)
+    }
+
+    /// `--selftest calendar`: EventKit の認可状態がプロンプト無しで読めることを検証する。
+    /// 実データ取得はカレンダー許可(TCC)が要るが、状態の読み取りは TCC 無しで確かめられる。
+    @MainActor
+    private static func calendar() {
+        let status = CalendarAccess.status()
+        // 許可が無い環境では upcoming は空（推測で埋めない）ことも確かめる。
+        let events = CalendarAccess.upcoming(hours: 12)
+        let consistent = (status == .granted) || events.isEmpty
+        guard consistent else { print("SELFTEST_FAIL calendar status=\(status.rawValue) events=\(events.count)"); exit(2) }
+        print("SELFTEST_OK calendar: status=\(status.rawValue) upcoming=\(events.count)")
         exit(0)
     }
 

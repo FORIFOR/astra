@@ -201,3 +201,21 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
   live E2E は Done#3(live) に含まれ、この環境では未検証。CMSampleBuffer 変換経路は MicCapture と同じ実績ある算法。
 - §3 の native 実機能の進捗: Mic(済) / **System Audio(実装・構成検証済)** / Global shortcut(済)。
   残り: Screen Context(ScreenCaptureKit 映像) / Calendar・Reminders(EventKit) / live STT streaming。
+
+## 追記: カレンダー取り込み（Phase 1.19, macOS native / EventKit）
+- `Audio/CalendarAccess.swift` を新設。**EventKit** で認可状態の読み取り・許可要求・直近予定の取得。
+  会議の文脈（今どの予定か）を RAG/context に渡すための実機能。`status()` はプロンプトを出さず
+  常に有効な列挙を返す。許可が無ければ `upcoming()` は空（**推測で埋めない**）。
+- `Settings/Permissions` に `calendar` 状態、`SettingsView` に「カレンダー」許可行を追加（実 UI 面で消費）。
+- `scripts/build-macos-app.sh` の Info.plist に **`NSCalendarsFullAccessUsageDescription`** を追加
+  （macOS 14 の `requestFullAccessToEvents` はこのキーが無いとクラッシュする）。
+- 検証: `--selftest calendar` を追加し verify-macos-recording.sh に組み込み。
+  **実測 PASS**（TCC 不要の状態読み取り）: `SELFTEST_OK calendar: status=未確認 upcoming=0`。
+  加えて **release .app をパッケージし ad-hoc 署名**、その .app バイナリで sysaudio/shortcut selftest も PASS。
+- **live 境界（正直に）**: 実予定の取得はカレンダー許可(TCC)が要り、署名済み .app 上でユーザーが許可して
+  確かめる live 動作。状態読み取りと .app パッケージングは検証済みだが、実データ取得は Done#3(live) に含まれ未検証。
+
+### §3 native 実機能の到達点
+- 実装・headless 検証済み: Mic / **System Audio** / **Global shortcut** / **Calendar(状態)** / meeting recording & recovery / RAG(core) / Agent(core)。
+- **live(TCC/署名)ゲートで未検証**: 実 mic 波形・実 system audio フレーム・実カレンダー予定・グローバル押下受信。
+- **未実装で継続対象**: Screen Context(ScreenCaptureKit 映像フレーム)、live STT streaming(外部 STT 鍵)、connector OAuth。

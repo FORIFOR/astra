@@ -5,6 +5,7 @@ struct SettingsView: View {
     @State private var mic = Permissions.microphone
     @State private var screen = Permissions.screenRecording
     @State private var ax = Permissions.accessibility
+    @State private var cal = Permissions.calendar
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -20,6 +21,7 @@ struct SettingsView: View {
                 permissionRow("マイク", mic, request: { Permissions.requestMicrophone { _ in mic = Permissions.microphone } })
                 permissionRow("画面収録", screen, request: { Permissions.requestScreenRecording(); screen = Permissions.screenRecording })
                 permissionRow("アクセシビリティ", ax, request: { Permissions.openAccessibilitySettings() })
+                permissionRow("カレンダー", cal, request: { Permissions.requestCalendar { _ in cal = Permissions.calendar } })
             }
 
             Text("ライブのマイク / 画面 / グローバル操作は、署名済みアプリで、上の許可をあなたが与えたときだけ動きます。")

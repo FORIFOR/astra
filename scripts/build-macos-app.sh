@@ -34,6 +34,7 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>NSMicrophoneUsageDescription</key><string>会議を録音し、手元で文字にするためにマイクを使います。</string>
   <key>NSAppleEventsUsageDescription</key><string>他アプリの文脈を読むために使います。</string>
   <key>NSCalendarsUsageDescription</key><string>会議の予定を取り込むために使います。</string>
+  <key>NSCalendarsFullAccessUsageDescription</key><string>会議の予定を取り込むために使います。</string>
 </dict>
 </plist>
 PLIST
