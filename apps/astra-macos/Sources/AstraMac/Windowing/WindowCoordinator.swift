@@ -29,6 +29,8 @@ final class WindowCoordinator {
             showRecordingWorkspace()
         case .main:
             MainWindowController.shared.show()
+        case .settings:
+            SettingsWindowController.shared.show()
         }
     }
 

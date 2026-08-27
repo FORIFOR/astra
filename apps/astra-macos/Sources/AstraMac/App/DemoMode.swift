@@ -8,6 +8,7 @@ enum DemoMode: Equatable {
     case recording
     case recordingRAG
     case main
+    case settings
 
     static func fromArguments(_ args: [String]) -> DemoMode {
         guard let index = args.firstIndex(of: "--demo"), index + 1 < args.count else {
@@ -19,6 +20,7 @@ enum DemoMode: Equatable {
         case "recording": return .recording
         case "recording-rag": return .recordingRAG
         case "main": return .main
+        case "settings": return .settings
         default: return .none
         }
     }

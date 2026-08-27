@@ -90,3 +90,14 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
   - 寸法は `GeneratedMetrics.cs`（tokens 由来）。
 - **CI**: `.github/workflows/windows.yml` が windows-latest で cargo build → dll 配置 → `dotnet build Astra.sln`。
   **この macOS ホストでは dotnet/WinUI をビルドできない（未検証）。Windows PASS は主張しない。**
+
+## 追記: macOS Settings/Permissions + .app パッケージング（Phase 1.8）
+- **Settings/Permissions**（SwiftUI）: ショートカット一覧と、マイク/画面収録/アクセシビリティの
+  **実 OS 許可状態**（AVCaptureDevice / CGPreflightScreenCaptureAccess / AXIsProcessTrusted）を表示し、
+  要求導線を出す。`--demo settings` で実機描画確認。
+- **.app パッケージング**: `pnpm build:macos-app`（`scripts/build-macos-app.sh`）で
+  `Astra.app`（`com.astra.mac`、`LSUIElement`、NSMicrophone/AppleEvents/Calendars UsageDescription、ad-hoc 署名）を生成。
+  `open Astra.app` で起動確認済み。**これで live 許可のダイアログを出せる形になる。**
+- **正直な線引き**: ライブの mic/画面/グローバル操作は**ユーザーが TCC ダイアログで許可したときだけ**動く。
+  許可付与は自動化できないため、live 取り込みの実 E2E は user-gated（headless では未検証）。
+  正式配布は Developer ID 署名 + notarize が別途必要（ad-hoc は開発用）。
