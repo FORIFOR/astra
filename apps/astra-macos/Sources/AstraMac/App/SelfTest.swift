@@ -17,6 +17,7 @@ enum SelfTest {
         case "calendar": calendar(); return true
         case "screen": screen(); return true
         case "rag": rag(); return true
+        case "keychain": keychain(); return true
         default: return false
         }
     }
@@ -74,11 +75,16 @@ enum SelfTest {
             let done = try AstraCoreBridge.waitTask(base, accessToken: tokens.accessToken, taskId: atask, timeoutMs: 15_000)
             let content = try AstraCoreBridge.artifactContent(base, accessToken: tokens.accessToken, artifactId: done.resultArtifactId)
             let library = try AstraCoreBridge.library(base, accessToken: tokens.accessToken)
+            // 実サインインの refresh/device token を Keychain に保管し読み戻す（access token は保管しない）。
+            try SessionStore.persist(tokens)
+            let keptRefresh = (try? SessionStore.refreshToken()) ?? nil
+            let refreshKept = keptRefresh == tokens.refreshToken && !tokens.refreshToken.isEmpty
+            try? SessionStore.clear()
             guard !mid.isEmpty, sent > 0, !task.isEmpty, !conv.isEmpty, convOk, !apps.isEmpty,
-                  done.status == "COMPLETED", !done.resultArtifactId.isEmpty, !content.isEmpty, !library.isEmpty else {
-                print("SELFTEST_FAIL api meeting=\(mid) sent=\(sent) conv=\(conv) apps=\(apps.count) agent=\(done.status) content=\(content.count) lib=\(library.count)"); exit(5)
+                  done.status == "COMPLETED", !done.resultArtifactId.isEmpty, !content.isEmpty, !library.isEmpty, refreshKept else {
+                print("SELFTEST_FAIL api meeting=\(mid) sent=\(sent) conv=\(conv) apps=\(apps.count) agent=\(done.status) content=\(content.count) lib=\(library.count) refreshKept=\(refreshKept)"); exit(5)
             }
-            print("SELFTEST_OK api: meeting=\(mid) uploadedBytes=\(sent) apps=\(apps.count) agent=\(done.status) contentBytes=\(content.count) library=\(library.count)")
+            print("SELFTEST_OK api: meeting=\(mid) uploadedBytes=\(sent) apps=\(apps.count) agent=\(done.status) contentBytes=\(content.count) library=\(library.count) refreshInKeychain=\(refreshKept)")
             exit(0)
         } catch {
             print("SELFTEST_FAIL api error=\(error)"); exit(4)
@@ -155,6 +161,30 @@ enum SelfTest {
         guard ranked.last?.id == "b" else { print("SELFTEST_FAIL rag last=\(ranked.last?.id ?? "nil")"); exit(3) }
         print("SELFTEST_OK rag: order=\(ranked.map { $0.id }.joined(separator: ",")) topScore=\(String(format: "%.2f", top.score)) reason=\(top.reason)")
         exit(0)
+    }
+
+    /// `--selftest keychain`: Keychain の set→get→delete→get(absent) 往復を検証する。
+    /// 自プロセスの generic-password なので prompt は出ない（TCC/GUI 不要）。
+    @MainActor
+    private static func keychain() {
+        let key = "astra.selftest.\(getpid())"
+        let secret = "refresh-\(getpid())-秘密"
+        do {
+            try KeychainStore.set(key, secret)
+            let read = try KeychainStore.get(key)
+            try KeychainStore.set(key, secret + "-updated")   // upsert 上書き
+            let read2 = try KeychainStore.get(key)
+            try KeychainStore.delete(key)
+            let afterDelete = try KeychainStore.get(key)
+            try KeychainStore.delete(key)                     // 冪等（無くても成功）
+            guard read == secret, read2 == secret + "-updated", afterDelete == nil else {
+                print("SELFTEST_FAIL keychain read=\(read ?? "nil") read2=\(read2 ?? "nil") afterDelete=\(afterDelete ?? "nil")"); exit(2)
+            }
+            print("SELFTEST_OK keychain: roundtrip ok, absent=nil, delete idempotent, service=\(KeychainStore.service)")
+            exit(0)
+        } catch {
+            print("SELFTEST_FAIL keychain error=\(error)"); exit(3)
+        }
     }
 
     private static func recordToDisk() {

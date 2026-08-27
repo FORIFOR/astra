@@ -252,3 +252,15 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
   （語彙一致する 2 件が非一致より上、新しく projectMatch な方が最上位）。全 selftest 7 件 + swift unit 3 も回帰なし。
 - **意味**: core の `rank_context` が **macOS native の実 UI 経路**で使われる（① 実運用経路 / ⑦ RAG 統合の前進）。
   ランキングは core・候補は実 transcript（捏造なし）。live コネクタからの候補供給は外部依存で継続対象。
+
+## 追記: Keychain 資格情報ストア（Phase 1.23, macOS native / Security.framework）
+- native app に Keychain が無かった。`Settings/KeychainStore.swift`（Security.framework SecItem, generic-password,
+  service=`com.astra.mac`, upsert/get(None)/idempotent delete, `kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly`＝
+  iCloud 非同期）と `Settings/SessionStore.swift`（**refresh/device token は Keychain のみ**、access token は保管しない）を追加。
+  Tauri 側 `secrets.rs`（keyring）と同じ契約を native に用意。正本 §21 / device-boundary。
+- 検証:
+  - `--selftest keychain`（set→get→delete→get(absent) 往復、TCC/GUI 不要）**PASS**: `roundtrip ok, absent=nil, delete idempotent, service=com.astra.mac`。verify に組み込み。
+  - `--selftest api`（実 gateway）を拡張し、**実サインインで得た refresh token を Keychain に保管して読み戻す**。
+    **実測 PASS**: `SELFTEST_OK api: … refreshInKeychain=true`（core sign-in → 実 refresh token → Keychain 往復）。
+- **意味**: §3「Keychain」を実機能として実装＋検証（mock ではない）。資格情報の境界（refresh/device は Keychain、
+  access はメモリ）を native 側で担保。全 selftest 8 件 + swift unit 3 も回帰なし。

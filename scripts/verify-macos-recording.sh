@@ -27,3 +27,6 @@ echo "$OUT6"
 OUT7="$("$BIN" --selftest rag)"
 echo "$OUT7"
 [[ "$OUT7" == SELFTEST_OK* ]] || { echo "FAIL: macOS RAG rank_context via core" >&2; exit 1; }
+OUT8="$("$BIN" --selftest keychain)"
+echo "$OUT8"
+[[ "$OUT8" == SELFTEST_OK* ]] || { echo "FAIL: macOS keychain round-trip" >&2; exit 1; }
