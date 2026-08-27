@@ -4,7 +4,6 @@ pub mod audio;
 pub mod capability;
 pub mod context;
 pub mod dock;
-mod workspace;
 pub mod notify;
 pub mod oauth;
 pub mod permission;
@@ -12,6 +11,8 @@ pub mod secrets;
 pub mod shortcut;
 pub mod shortcut_generated;
 pub mod stt;
+mod voice;
+mod workspace;
 
 use dock::DockRuntime;
 use oauth::OauthRuntime;
@@ -25,6 +26,9 @@ pub fn run() {
         .manage(DockRuntime::default())
         .manage(ShortcutRuntime::default())
         .manage(OauthRuntime::default())
+        .manage(voice::VoiceRuntime::with_window(
+            crate::stt::recognizer::LiveWindow::default(),
+        ))
         .invoke_handler(tauri::generate_handler![
             dock::dock_show,
             dock::dock_hide,
@@ -44,6 +48,8 @@ pub fn run() {
             shortcut::shortcut_status,
             shortcut::shortcut_rebind,
             workspace::workspace_open,
+            voice::voice_start,
+            voice::voice_stop,
         ])
         .setup(|app| {
             if cfg!(debug_assertions) {

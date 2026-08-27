@@ -188,6 +188,42 @@ export const workspace = {
   },
 };
 
+/**
+ * 声。UI/UX §4.1・§23。
+ *
+ * 取り込みは Rust（`voice.rs`）。ここは「始めて」「止めて」と、
+ * 音量と途中経過を受け取る口だけ。
+ * ブラウザには mic の取り込みが無いので、**購読できないことを返す**
+ * （聞いているふりをしない）。
+ */
+export const voice = {
+  start: () => callStrict<void>('voice_start'),
+  stop: () => call<void>('voice_stop'),
+  onLevel: async (handler: (level: { input: number; output: number }) => void) => {
+    if (!isTauri()) return () => undefined;
+    const { listen } = await import('@tauri-apps/api/event');
+    return listen<{ input: number; output: number }>('voice:audio-level', (e) =>
+      handler(e.payload),
+    );
+  },
+  onTranscript: async (
+    handler: (event: { type: 'partial' | 'final'; text: string }) => void,
+  ): Promise<() => void> => {
+    if (!isTauri()) return () => undefined;
+    const { listen } = await import('@tauri-apps/api/event');
+    return listen<{ type: 'partial' | 'final'; text: string }>('voice:transcript', (e) =>
+      handler(e.payload),
+    );
+  },
+  onUnavailable: async (handler: (reason: string) => void): Promise<() => void> => {
+    if (!isTauri()) return () => undefined;
+    const { listen } = await import('@tauri-apps/api/event');
+    return listen<{ reason: string }>('voice:transcript-unavailable', (e) =>
+      handler(e.payload.reason),
+    );
+  },
+};
+
 export const host = {
   showDock: (state?: DockState, contentHeight?: number) =>
     call<void>('dock_show', { state, contentHeight }),

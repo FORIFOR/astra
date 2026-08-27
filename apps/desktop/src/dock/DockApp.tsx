@@ -21,6 +21,7 @@ import type { ContextReferent, DockConversation } from './useDockMachine.js';
 import type { ApprovalId } from '@astra/contracts';
 import { useTaskStream } from '../work/useTaskStream.js';
 import { workspace } from '../host/tauri.js';
+import { useVoiceRuntime } from '../voice/voiceRuntime.js';
 import './dock.css';
 
 function useConversation(
@@ -122,10 +123,14 @@ function DockSurface(): ReactElement {
 
   const taskId = started.taskId;
   const work = taskId && view.status !== 'UNKNOWN' ? view : null;
+  // 声。Tauri が居なければ dictation は undefined で、mic は「使えない」と言う
+  const voiceRuntime = useVoiceRuntime();
 
   return (
     <TaskDock
       {...(watched ? { conversation: watched } : {})}
+      {...(voiceRuntime.dictation ? { dictation: voiceRuntime.dictation } : {})}
+      voiceLevels={{ input: voiceRuntime.inputLevel, output: voiceRuntime.outputLevel }}
       {...(work ? { work } : {})}
       {...(live && taskId
         ? {

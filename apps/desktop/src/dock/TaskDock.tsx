@@ -19,6 +19,8 @@ import { useDockMachine, type DockConversation, type DockDictation } from './use
 import { ContextLens } from './ContextLens.js';
 import { PermissionAsk } from './PermissionAsk.js';
 import { WorkCard } from '../work/WorkCard.js';
+import { AstraOrb } from '../voice/AstraOrb.js';
+import { LiveWaveform } from '../vendor/deepgram-ui/LiveWaveform.js';
 import type { WorkView } from '../work/workView.js';
 import { host, shortcuts } from '../host/tauri.js';
 import '../work/work.css';
@@ -32,6 +34,7 @@ export function TaskDock({
   onOpenWorkspace,
   conversation,
   dictation,
+  voiceLevels,
   shortcutOverrides = {},
 }: {
   initialSources?: readonly ContextSource[];
@@ -39,8 +42,10 @@ export function TaskDock({
   shortcutOverrides?: BindingOverrides;
   /** Conversation Engine。未接続なら状態遷移だけ行う。 */
   conversation?: DockConversation;
-  /** 音声入力。未接続なら LISTENING に入るだけ（正本 §11.1）。 */
+  /** 音声入力。未接続なら mic は「使えない」と言う（正本 §11.1、UI/UX §21）。 */
   dictation?: DockDictation;
+  /** Orb と波形が読む音量。frame ごとに読むので getter で渡す。 */
+  voiceLevels?: { input: () => number; output: () => number };
   /** 進行中の仕事。あれば working 面に出す（§6）。 */
   work?: WorkView | null;
   onApprove?(approvalId: string): void;
@@ -346,19 +351,31 @@ export function TaskDock({
         </p>
       )}
 
-      {/* §4.1 Listening: live transcript 2 行 + minimal waveform。聞こえていることが見える */}
+      {/*
+        §4.1 Listening: live transcript 2 行 + minimal waveform。
+        描画は Deepgram 公式の Orb / LiveWaveform（`vendor/deepgram-ui`）。
+        音量は Rust の取り込みから来る。**音量が来なければ Orb は動かない** —
+        動いていないのは、聞こえていない印。
+      */}
       {machine.state === 'LISTENING' && (
         <div className="astra-dock__listening" aria-live="polite">
-          <span className="astra-dock__wave" aria-hidden="true">
-            <i />
-            <i />
-            <i />
-            <i />
-            <i />
-          </span>
-          <p className="astra-dock__transcript">
-            {machine.intent.length > 0 ? machine.intent : '…'}
-          </p>
+          <AstraOrb
+            mode="listening"
+            size={40}
+            {...(voiceLevels ? { getInputVolume: voiceLevels.input } : {})}
+          />
+          <div className="astra-dock__listening-body">
+            <p className="astra-dock__transcript">
+              {machine.intent.length > 0 ? machine.intent : '…'}
+            </p>
+            <div className="astra-dock__wave">
+              <LiveWaveform
+                active
+                color="currentColor"
+                getVolume={voiceLevels ? voiceLevels.input : () => 0}
+              />
+            </div>
+          </div>
         </div>
       )}
 
