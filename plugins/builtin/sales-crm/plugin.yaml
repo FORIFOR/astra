@@ -14,6 +14,9 @@ execution_surfaces: [cloud]
 permissions:
   - artifacts.read
   - artifacts.write
+jobs:
+  - 商談の状況を見る
+  - 次の一手を出す
 data_accessed:
   - Accounts, contacts, opportunities and activities this user already has access to
 connectors: []

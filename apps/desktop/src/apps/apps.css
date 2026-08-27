@@ -327,3 +327,43 @@
   color: var(--astra-color-success);
   font-size: var(--astra-font-size-secondary);
 }
+
+/* §11.1: できる仕事を先に */
+.astra-app-card__jobs {
+  color: var(--astra-color-text);
+  font-size: var(--astra-font-size-secondary);
+}
+
+.astra-app-detail__jobs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--astra-space-compact);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.astra-app-detail__jobs li {
+  padding: 2px var(--astra-space-base);
+  border: var(--astra-border-hairline) solid var(--astra-color-border);
+  border-radius: var(--astra-radius-pill);
+  background: var(--astra-color-canvas);
+  font-size: var(--astra-font-size-secondary);
+}
+
+.astra-app-detail__uses,
+.astra-app-detail__empty,
+.astra-app-detail__impact {
+  margin: 0;
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-secondary);
+}
+
+.astra-app-detail__uses span {
+  color: var(--astra-color-text);
+}
+
+.astra-consent__actions {
+  gap: var(--astra-space-compact);
+  justify-content: flex-end;
+}

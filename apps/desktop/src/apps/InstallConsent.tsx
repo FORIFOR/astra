@@ -5,7 +5,12 @@
  * 先に見せ、scope ごとに選ばせる。全部まとめて要求しない（正本 §3 Step 5）。
  */
 import { useState, type ReactElement } from 'react';
-import type { PluginCatalogEntry } from '@astra/contracts';
+import {
+  EXTERNAL_SEND_SCOPES,
+  PERMISSION_SCOPE_LABEL,
+  type PermissionScope,
+  type PluginCatalogEntry,
+} from '@astra/contracts';
 
 export function InstallConsent({
   plugin,
@@ -55,13 +60,17 @@ export function InstallConsent({
           <ul className="astra-consent__scopes">
             {plugin.permissions.map((scope) => (
               <li key={scope}>
-                <label>
+                <label className="astra-consent__scope">
                   <input
                     type="checkbox"
                     checked={granted.has(scope)}
                     onChange={() => toggle(scope)}
                   />
-                  {scope}
+                  {/* 生の scope id を出さない（§11.1 / §22） */}
+                  <span>{PERMISSION_SCOPE_LABEL[scope as PermissionScope] ?? scope}</span>
+                  {(EXTERNAL_SEND_SCOPES as readonly string[]).includes(scope) && (
+                    <span className="astra-consent__external">確認が要る操作</span>
+                  )}
                 </label>
               </li>
             ))}
@@ -74,14 +83,20 @@ export function InstallConsent({
 
       <section>
         <h4>実行される場所</h4>
-        <p>{plugin.execution_surfaces.join(' / ')}</p>
+        <p>
+          {plugin.execution_surfaces
+            .map((x) => (x === 'local' ? 'この端末' : x === 'cloud' ? 'クラウド' : x))
+            .join(' / ')}
+        </p>
       </section>
 
       <div className="astra-consent__actions">
-        <button type="button" onClick={onCancel}>
+        <button type="button" className="astra-button astra-button--quiet" onClick={onCancel}>
           キャンセル
         </button>
-        <button type="submit">追加する</button>
+        <button type="submit" className="astra-button astra-button--primary">
+          追加する
+        </button>
       </div>
     </form>
   );

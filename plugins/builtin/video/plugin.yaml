@@ -18,6 +18,10 @@ execution_surfaces: [cloud]
 permissions:
   - artifacts.read
   - artifacts.write
+jobs:
+  - 絵コンテを作る
+  - 字幕を付ける
+  - 書き出す
 data_accessed:
   - Video projects, clips and renders this user already has access to
 connectors: []

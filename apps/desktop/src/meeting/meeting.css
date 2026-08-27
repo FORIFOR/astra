@@ -82,45 +82,122 @@
 
 .astra-rec {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--astra-space-base);
-  /* §12.2 の標準幅・高さ */
+  /* §12.2 の標準幅・高さ。暗い floating surface（透過し過ぎない） */
   min-width: 360px;
   max-width: 420px;
   min-height: 48px;
-  padding: 0 var(--astra-space-base);
-  border: var(--astra-border-hairline) solid var(--astra-color-border);
+  padding: 0 var(--astra-space-base) 0 var(--astra-space-lg);
+  border: 1px solid var(--astra-float-border);
   border-radius: var(--astra-radius-standard);
-  background: var(--astra-color-surface-raised);
+  background: var(--astra-float-background);
+  color: var(--astra-float-foreground);
+  box-shadow: var(--astra-float-shadow);
   font-size: var(--astra-font-size-micro);
 }
 
-/* 録音中か分からない状態を作らない。透過させ過ぎない。 */
 .astra-rec__dot {
+  flex: none;
   width: 8px;
   height: 8px;
   border-radius: 50%;
   background: var(--astra-color-danger);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--astra-color-danger) 25%, transparent);
+  animation: astra-rec-blink 1.6s ease-in-out infinite;
+}
+
+@keyframes astra-rec-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
 }
 
 .astra-rec[data-state='paused'] .astra-rec__dot {
-  background: var(--astra-color-muted);
+  background: var(--astra-float-muted);
+  box-shadow: none;
+  animation: none;
 }
 
 .astra-rec[data-state='degraded'] .astra-rec__dot {
   background: var(--astra-color-warning);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--astra-color-warning) 25%, transparent);
+}
+
+.astra-rec__state {
+  font-weight: var(--astra-font-weight-card-title);
+  letter-spacing: 0.06em;
+}
+
+.astra-rec__time {
+  font-variant-numeric: tabular-nums;
 }
 
 .astra-rec__title {
   flex: 1;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-size: var(--astra-font-size-secondary);
 }
 
-.astra-rec__speakers,
+.astra-rec__speakers {
+  color: var(--astra-float-muted);
+  white-space: nowrap;
+}
+
+/* 細い meter。voice active の間だけ光る（§17.3 の Glow の例外） */
+.astra-rec__meter {
+  flex: none;
+  width: 36px;
+  height: 3px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--astra-color-accent) 45%, transparent);
+}
+
+.astra-rec[data-state='paused'] .astra-rec__meter {
+  background: var(--astra-float-border);
+}
+
+.astra-rec__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  min-height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--astra-float-card);
+  color: var(--astra-float-foreground);
+  cursor: pointer;
+}
+
+.astra-rec__button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.astra-rec__button:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.astra-rec__button--stop {
+  color: var(--astra-color-danger);
+}
+
 .astra-rec__degraded {
-  color: var(--astra-color-muted);
+  flex-basis: 100%;
+  padding-bottom: var(--astra-space-compact);
+  color: var(--astra-color-warning);
 }
 
 /* --- Notes first（§12.3）--------------------------------------------- */
@@ -346,4 +423,266 @@
   align-items: center;
   justify-content: center;
   background: var(--astra-color-overlay);
+}
+
+/* --- Meeting Surface: notes first（§12.3）。Notes が主、Transcript は右 320–360。 --- */
+
+.astra-meeting__notes-label {
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-micro);
+  font-weight: var(--astra-font-weight-micro);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.astra-meeting__notes textarea {
+  min-height: 200px;
+  padding: var(--astra-space-base);
+  border: var(--astra-border-hairline) solid var(--astra-color-border);
+  border-radius: var(--astra-radius-standard);
+  background: var(--astra-color-surface);
+  color: var(--astra-color-text);
+  font: inherit;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+.astra-meeting__markers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--astra-space-compact);
+  align-items: center;
+}
+
+.astra-meeting__marker {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding-inline: var(--astra-space-base);
+  border: var(--astra-border-hairline) solid var(--astra-color-border);
+  border-radius: var(--astra-radius-pill);
+  background: var(--astra-color-surface);
+  color: var(--astra-color-text);
+  font: inherit;
+  font-size: var(--astra-font-size-secondary);
+  cursor: pointer;
+}
+
+.astra-meeting__marker:hover {
+  background: var(--astra-color-canvas);
+}
+
+.astra-meeting__marker-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--astra-color-muted);
+}
+
+.astra-meeting__marker[data-kind='important'] .astra-meeting__marker-dot {
+  background: var(--astra-color-warning);
+}
+
+.astra-meeting__marker[data-kind='decision'] .astra-meeting__marker-dot {
+  background: var(--astra-color-accent);
+}
+
+.astra-meeting__marker[data-kind='todo'] .astra-meeting__marker-dot {
+  background: var(--astra-color-success);
+}
+
+.astra-meeting__transcript-toggle {
+  margin-inline-start: auto;
+  min-height: 32px;
+  padding-inline: var(--astra-space-base);
+  border: var(--astra-border-hairline) solid var(--astra-color-border);
+  border-radius: var(--astra-radius-small);
+  background: var(--astra-color-surface);
+  color: var(--astra-color-text);
+  font: inherit;
+  font-size: var(--astra-font-size-secondary);
+  cursor: pointer;
+}
+
+.astra-meeting__transcript-toggle[aria-expanded='true'] {
+  border-color: var(--astra-color-accent);
+  color: var(--astra-color-accent);
+}
+
+/* --- Meeting Artifact（§12.6）--- */
+
+.astra-bundle {
+  display: flex;
+  flex-direction: column;
+  gap: var(--astra-space-lg);
+  padding: var(--astra-padding-card);
+  border: var(--astra-border-hairline) solid var(--astra-color-border);
+  border-radius: var(--astra-radius-standard);
+  background: var(--astra-color-surface);
+}
+
+.astra-bundle__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--astra-space-base);
+}
+
+.astra-bundle__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--astra-space-lg);
+  align-items: start;
+}
+
+.astra-bundle__main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--astra-space-lg);
+  min-width: 0;
+}
+
+.astra-bundle__section h3 {
+  display: flex;
+  align-items: center;
+  gap: var(--astra-space-compact);
+  margin: 0 0 var(--astra-space-compact);
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-micro);
+  font-weight: var(--astra-font-weight-micro);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.astra-bundle__count {
+  min-width: 18px;
+  padding-inline: 5px;
+  border-radius: var(--astra-radius-pill);
+  background: var(--astra-color-canvas);
+  color: var(--astra-color-text);
+  font-size: 11px;
+  letter-spacing: 0;
+  text-align: center;
+}
+
+.astra-bundle__section ul {
+  display: flex;
+  flex-direction: column;
+  gap: var(--astra-space-compact);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.astra-bundle__section li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--astra-space-compact) var(--astra-space-base);
+  padding: var(--astra-space-compact) 0;
+  border-bottom: var(--astra-border-hairline) solid var(--astra-color-border);
+}
+
+.astra-bundle__owner {
+  min-width: 3em;
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-secondary);
+}
+
+.astra-bundle__text {
+  flex: 1;
+  min-width: 12em;
+}
+
+.astra-bundle__due {
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-secondary);
+}
+
+.astra-bundle__cites {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.astra-bundle__panes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--astra-space-compact);
+  min-width: 160px;
+}
+
+.astra-bundle__pane {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--astra-space-base);
+  min-height: 36px;
+  padding-inline: var(--astra-space-base);
+  border: var(--astra-border-hairline) solid var(--astra-color-border);
+  border-radius: var(--astra-radius-small);
+  background: var(--astra-color-surface);
+  color: var(--astra-color-text);
+  font: inherit;
+  font-size: var(--astra-font-size-secondary);
+  text-align: start;
+  cursor: pointer;
+}
+
+.astra-bundle__pane[aria-pressed='true'] {
+  border-color: var(--astra-color-accent);
+  color: var(--astra-color-accent);
+}
+
+.astra-bundle__pane-count {
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-micro);
+}
+
+.astra-bundle__panel {
+  padding: var(--astra-space-base);
+  border: var(--astra-border-hairline) solid var(--astra-color-border);
+  border-radius: var(--astra-radius-standard);
+  background: var(--astra-color-canvas);
+}
+
+.astra-bundle__panel-note {
+  margin: 0;
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-secondary);
+}
+
+.astra-bundle__evidence-num {
+  margin-inline-start: var(--astra-space-compact);
+  color: var(--astra-color-accent);
+}
+
+/* --- install consent（§22 purpose-first）--- */
+
+.astra-consent__scopes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--astra-space-compact);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.astra-consent__scope {
+  display: flex;
+  align-items: center;
+  gap: var(--astra-space-base);
+  min-height: 36px;
+  padding-inline: var(--astra-space-base);
+  border: var(--astra-border-hairline) solid var(--astra-color-border);
+  border-radius: var(--astra-radius-small);
+  background: var(--astra-color-surface);
+  font-size: var(--astra-font-size-secondary);
+  cursor: pointer;
+}
+
+.astra-consent__external {
+  margin-inline-start: auto;
+  color: var(--astra-color-warning);
+  font-size: var(--astra-font-size-micro);
 }

@@ -234,6 +234,15 @@ const manifestShape = z.object({
   permissions: z.array(PermissionScope).default([]),
   /** 正本 §2.4 Plugin detail page の「data accessed」。人間可読で必須（逸脱 D-10）。 */
   data_accessed: z.array(z.string().min(1)).default([]),
+  /**
+   * 「できる仕事」。UI/UX §11.1 は tool 数より先にこれを出す。
+   * tool 名ではなく、利用者の言葉で（例: 「商談準備」「会議記録」）。
+   */
+  jobs: z.array(z.string().min(1).max(60)).max(12).default([]),
+  /** 料金・利用量の説明。無ければ null（「無料」と勝手に書かない）。 */
+  pricing: z.string().max(200).nullable().default(null),
+  /** この版の変更点。無ければ null。 */
+  changelog: z.string().max(2000).nullable().default(null),
   connectors: z.array(ConnectorDecl).default([]),
   tools: z.array(ToolDecl).default([]),
   agents: z.array(AgentDecl).default([]),
@@ -427,6 +436,17 @@ export const PluginCatalogEntry = z.object({
   signature_state: SignatureState,
   installed: z.boolean(),
   installed_version: Semver.nullable(),
+  // ---- UI/UX §11.1 「App detail must show」
+  /** 最新版が登録された時刻。 */
+  updated_at: Timestamp.nullable().default(null),
+  /** できる仕事。tool 数より先に出す。 */
+  jobs: z.array(z.string()).default([]),
+  /** 追加される画面（dashboard の id）。 */
+  dashboards: z.array(z.string()).default([]),
+  /** 使う接続先（provider）。「Uses: Gmail · Calendar」の元。 */
+  connectors: z.array(z.string()).default([]),
+  pricing: z.string().nullable().default(null),
+  changelog: z.string().nullable().default(null),
 });
 export type PluginCatalogEntry = z.infer<typeof PluginCatalogEntry>;
 

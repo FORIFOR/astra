@@ -80,7 +80,14 @@ export function MeetingSurface({
           />
           <div className="astra-meeting__markers">
             {MARKERS.map((m) => (
-              <button key={m.id} type="button" onClick={() => onMark(m.id)}>
+              <button
+                key={m.id}
+                type="button"
+                className="astra-meeting__marker"
+                data-kind={m.id}
+                onClick={() => onMark(m.id)}
+              >
+                <span className="astra-meeting__marker-dot" aria-hidden="true" />
                 {m.label}
               </button>
             ))}

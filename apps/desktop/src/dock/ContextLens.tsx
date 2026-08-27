@@ -7,6 +7,12 @@
 import type { ReactElement } from 'react';
 import { chipsFor, type ContextSource } from '@astra/contracts';
 
+/** §5.2: REGULATED / CONFIDENTIAL は短い言葉で。enum をそのまま出さない。 */
+const SENSITIVITY_LABEL: Record<string, string> = {
+  CONFIDENTIAL: '社外秘',
+  REGULATED: '規制対象',
+};
+
 const CATEGORY_LABEL: Record<ContextSource['category'], string> = {
   current: '今の画面',
   entity: '相手',
@@ -35,10 +41,15 @@ function Chip({
       <span className="astra-chip__category">{CATEGORY_LABEL[source.category]}</span>
       <span className="astra-chip__label">{source.label}</span>
       {/* §5.2: REGULATED / CONFIDENTIAL は色だけでなくラベルでも示す */}
-      {sensitive && <span className="astra-chip__flag">{source.sensitivity}</span>}
+      {sensitive && (
+        <span className="astra-chip__flag">
+          <span aria-hidden="true">🔒</span>{' '}
+          {SENSITIVITY_LABEL[source.sensitivity] ?? source.sensitivity}
+        </span>
+      )}
       {source.reason && onWhy && (
         <button type="button" className="astra-chip__why" onClick={() => onWhy(source.id)}>
-          <span aria-hidden="true">?</span>
+          <span aria-hidden="true">なぜ</span>
           <span className="astra-visually-hidden">{source.label} を使う理由</span>
         </button>
       )}

@@ -11,7 +11,7 @@ import {
   type DashboardView,
   type PluginCatalogEntry,
 } from '@astra/contracts';
-import { AppDetail } from '../apps/AppDetail.js';
+import { AppDetail, providerLabel } from '../apps/AppDetail.js';
 import { DashboardRenderer } from '../apps/DashboardRenderer.js';
 import { InstallConsent } from '../apps/InstallConsent.js';
 import '../apps/apps.css';

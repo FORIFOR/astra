@@ -12,6 +12,9 @@ permissions:
   - files.read
   - files.write
   - files.index
+jobs:
+  - 端末のファイルを探す
+  - ファイルを読む・書く
 data_accessed:
   - User-selected folders on this device only
   - Local file index metadata (never raw contents unless attached)

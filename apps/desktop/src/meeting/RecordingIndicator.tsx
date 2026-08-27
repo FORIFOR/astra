@@ -43,17 +43,42 @@ export function RecordingIndicator({
       <span className="astra-rec__time">{elapsedLabel(elapsedMs)}</span>
       <span className="astra-rec__title">{title}</span>
       <span className="astra-rec__speakers">{speakers} speakers</span>
+      {/* §12.2: 音声レベルは細い meter だけ。装飾的な大波形を主役にしない */}
+      <span className="astra-rec__meter" aria-hidden="true" />
+      <button
+        type="button"
+        className="astra-rec__button"
+        aria-label={state === 'paused' ? '再開' : '一時停止'}
+        title={state === 'paused' ? '再開' : '一時停止'}
+        onClick={onPause}
+      >
+        {state === 'paused' ? (
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M5 3.5v9l7-4.5z" fill="currentColor" />
+          </svg>
+        ) : (
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <rect x="4" y="3.5" width="3" height="9" rx="0.8" fill="currentColor" />
+            <rect x="9" y="3.5" width="3" height="9" rx="0.8" fill="currentColor" />
+          </svg>
+        )}
+      </button>
+      <button
+        type="button"
+        className="astra-rec__button astra-rec__button--stop"
+        aria-label="終了"
+        title="終了"
+        onClick={onStop}
+      >
+        <svg viewBox="0 0 16 16" aria-hidden="true">
+          <rect x="4" y="4" width="8" height="8" rx="1.5" fill="currentColor" />
+        </svg>
+      </button>
       {state === 'degraded' ? (
         <span className="astra-rec__degraded">
           文字起こしの精度が低下しています。録音は継続中。
         </span>
       ) : null}
-      <button type="button" onClick={onPause}>
-        {state === 'paused' ? '再開' : '一時停止'}
-      </button>
-      <button type="button" onClick={onStop}>
-        終了
-      </button>
     </div>
   );
 }

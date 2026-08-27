@@ -26,6 +26,10 @@ permissions:
   - artifacts.read
   - artifacts.write
   - web.search
+jobs:
+  - ウォッチリストを見る
+  - 保有のリスクを見る
+  - 注文の下書き（確認あり）
 data_accessed:
   - Watchlists, positions and research notes this user already has access to
 connectors: []

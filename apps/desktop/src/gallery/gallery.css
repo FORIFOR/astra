@@ -1,0 +1,30 @@
+.astra-gallery {
+  display: flex;
+  flex-direction: column;
+  gap: var(--astra-space-section);
+  padding: var(--astra-space-panel);
+  min-height: 100%;
+  background: var(--astra-color-canvas);
+}
+
+.astra-gallery__title {
+  margin: 0 0 var(--astra-space-base);
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-micro);
+  font-weight: var(--astra-font-weight-micro);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.astra-gallery__stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--astra-space-base);
+}
+
+/* Dock の面（暗い floating surface）の上で見る部品 */
+.astra-gallery__dock {
+  width: 100%;
+  min-height: 0;
+  max-height: none;
+}

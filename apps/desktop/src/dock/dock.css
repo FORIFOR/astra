@@ -167,25 +167,36 @@
   display: inline-flex;
   align-items: center;
   gap: var(--astra-space-compact);
+  min-height: 28px;
   padding: 2px var(--astra-space-base);
-  border: var(--astra-border-hairline) solid var(--astra-color-border);
+  border: var(--astra-border-hairline) solid var(--astra-float-border);
   border-radius: var(--astra-radius-pill);
-  background: var(--astra-color-canvas);
+  background: var(--astra-float-card);
+  color: var(--astra-float-foreground);
   font-size: var(--astra-font-size-micro);
   line-height: var(--astra-line-height-micro);
 }
 
 .astra-chip__category {
-  color: var(--astra-color-muted);
+  color: var(--astra-float-muted);
 }
 
+.astra-chip__label {
+  font-weight: var(--astra-font-weight-card-title);
+}
+
+/* 今回使ったもの。使っていない候補は薄く（§5.2: 使う / 使った情報だけを出す） */
 .astra-chip[data-used='true'] {
-  border-color: var(--astra-color-accent);
+  border-color: color-mix(in srgb, var(--astra-color-accent) 55%, transparent);
+}
+
+.astra-chip[data-used='false'] {
+  opacity: 0.7;
 }
 
 /* §5.2: 機密は色だけでなくラベルでも示す */
 .astra-chip[data-sensitive='true'] {
-  border-color: var(--astra-color-warning);
+  border-color: color-mix(in srgb, var(--astra-color-warning) 70%, transparent);
 }
 
 .astra-chip__flag {
@@ -198,19 +209,26 @@
 .astra-context__more {
   min-width: 24px;
   min-height: 24px;
-  padding: 0;
+  padding: 0 var(--astra-space-compact);
   border: 0;
   border-radius: var(--astra-radius-pill);
   background: transparent;
-  color: var(--astra-color-muted);
+  color: var(--astra-float-muted);
   font: inherit;
   font-size: var(--astra-font-size-micro);
   cursor: pointer;
 }
 
+.astra-chip__why:hover,
+.astra-chip__remove:hover,
+.astra-context__more:hover {
+  color: var(--astra-float-foreground);
+  background: rgba(255, 255, 255, 0.08);
+}
+
 .astra-context__why {
   margin: 0;
-  color: var(--astra-color-muted);
+  color: var(--astra-float-muted);
   font-size: var(--astra-font-size-secondary);
 }
 
@@ -225,8 +243,42 @@
 .astra-permission {
   display: grid;
   gap: var(--astra-space-sm, 8px);
-  padding: var(--astra-space-sm, 8px);
-  border-top: 1px solid var(--astra-color-border);
+  padding: var(--astra-space-base) 0 0;
+  border-top: 1px solid var(--astra-float-border);
+}
+
+.astra-permission__ask {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: var(--astra-space-compact) var(--astra-space-base);
+  align-items: center;
+}
+
+.astra-permission__ask > p {
+  grid-column: 1 / -1;
+}
+
+.astra-permission__ask > button {
+  min-height: 32px;
+  padding-inline: var(--astra-space-base);
+  border: 1px solid var(--astra-float-border);
+  border-radius: var(--astra-radius-small);
+  background: var(--astra-float-card);
+  color: var(--astra-float-foreground);
+  font: inherit;
+  font-size: var(--astra-font-size-secondary);
+  cursor: pointer;
+}
+
+.astra-permission__ask > button:first-of-type {
+  grid-column: 2;
+  border-color: var(--astra-color-accent);
+  background: var(--astra-color-accent);
+  color: var(--astra-color-accent-on);
+}
+
+.astra-permission__ask > button:last-of-type {
+  grid-column: 3;
 }
 
 .astra-permission__ask {
@@ -236,13 +288,13 @@
 
 .astra-permission__why {
   margin: 0;
-  color: var(--astra-color-text);
+  color: var(--astra-float-foreground);
 }
 
 .astra-permission__without,
 .astra-permission__opened {
   margin: 0;
-  color: var(--astra-color-muted);
+  color: var(--astra-float-muted);
   font-size: var(--astra-font-size-sm, 0.875rem);
 }
 

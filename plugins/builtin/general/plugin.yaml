@@ -14,6 +14,9 @@ execution_surfaces: [cloud]
 permissions:
   - artifacts.read
   - artifacts.write
+jobs:
+  - 質問に答える
+  - 文章を作る
 data_accessed:
   - Only what the user put in front of it for this request
 connectors: []

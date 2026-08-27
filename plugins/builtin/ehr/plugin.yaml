@@ -20,6 +20,9 @@ execution_surfaces: [cloud]
 permissions:
   - artifacts.read
   - artifacts.write
+jobs:
+  - 診療記録を探す・要約する
+  - 記録の下書き
 data_accessed:
   - Encounters and clinical notes this user already has access to
 connectors: []

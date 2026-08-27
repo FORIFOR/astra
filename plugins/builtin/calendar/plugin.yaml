@@ -13,6 +13,9 @@ execution_surfaces: [local]
 permissions:
   - calendar.read
   - calendar.write
+jobs:
+  - 予定を読む
+  - 予定を作る（確認あり）
 data_accessed:
   - Calendar events, attendees, locations and conferencing links
 connectors:

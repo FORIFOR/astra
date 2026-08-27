@@ -21,6 +21,10 @@ execution_surfaces: [cloud]
 permissions:
   - artifacts.read
   - artifacts.write
+jobs:
+  - 引き継ぎをまとめる
+  - ケアプランを確認する
+  - インシデントの下書き
 data_accessed:
   - Resident profiles, shift notes and care plans this user already has access to
 connectors: []

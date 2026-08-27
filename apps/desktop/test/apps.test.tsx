@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import type { DashboardView, PluginCatalogEntry } from '@astra/contracts';
+import { PERMISSION_SCOPE_LABEL } from '@astra/contracts';
 import type { ReactElement } from 'react';
 import { DashboardRenderer } from '../src/apps/DashboardRenderer.js';
 import { InstallConsent } from '../src/apps/InstallConsent.js';
@@ -31,6 +32,12 @@ const plugin = (over: Partial<PluginCatalogEntry> = {}): PluginCatalogEntry =>
     signature_state: 'VERIFIED',
     installed: false,
     installed_version: null,
+    updated_at: null,
+    jobs: [],
+    dashboards: [],
+    connectors: [],
+    pricing: null,
+    changelog: null,
     ...over,
   }) as PluginCatalogEntry;
 
@@ -123,7 +130,7 @@ describe('InstallConsent (§11.1)', () => {
     // 押しただけで権限が付かない
     expect(onInstall).toHaveBeenCalledWith([]);
 
-    await userEvent.click(screen.getByLabelText('crm.read'));
+    await userEvent.click(screen.getByLabelText(PERMISSION_SCOPE_LABEL['crm.read']));
     await userEvent.click(screen.getByRole('button', { name: '追加する' }));
     expect(onInstall).toHaveBeenLastCalledWith(['crm.read']);
   });

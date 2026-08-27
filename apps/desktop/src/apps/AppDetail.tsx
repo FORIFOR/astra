@@ -35,6 +35,14 @@ function handlingOf(plugin: PluginCatalogEntry): DataHandling {
 
 /** 生の enum を画面に出さない（§6.1）。 */
 const SURFACE_LABEL: Record<string, string> = { local: 'この端末', cloud: 'クラウド' };
+const PROVIDER_LABEL: Record<string, string> = {
+  google: 'Google',
+  host: 'この端末',
+  salesforce: 'Salesforce',
+};
+export function providerLabel(provider: string): string {
+  return PROVIDER_LABEL[provider] ?? provider;
+}
 const SIGNATURE_LABEL: Record<PluginCatalogEntry['signature_state'], string> = {
   VERIFIED: '署名を確認済み',
   BUILTIN_TRUSTED: 'Astra 同梱',
@@ -69,6 +77,26 @@ export function AppDetail({
           </button>
         )}
       </header>
+
+      {/* §11.1: 「できる仕事」を先に。tool 数は secondary */}
+      <section>
+        <h4>できる仕事</h4>
+        {plugin.jobs.length === 0 ? (
+          <p className="astra-app-detail__empty">提供元が書いていません。</p>
+        ) : (
+          <ul className="astra-app-detail__jobs">
+            {plugin.jobs.map((job) => (
+              <li key={job}>{job}</li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      {plugin.connectors.length > 0 && (
+        <p className="astra-app-detail__uses">
+          <span>Uses:</span> {plugin.connectors.map(providerLabel).join(' · ')}
+        </p>
+      )}
 
       <section>
         <h4>触るデータ</h4>
@@ -109,6 +137,14 @@ export function AppDetail({
         <dd>{plugin.execution_surfaces.map((s) => SURFACE_LABEL[s] ?? s).join(' / ')}</dd>
         <dt>署名</dt>
         <dd>{SIGNATURE_LABEL[plugin.signature_state]}</dd>
+        <dt>更新日</dt>
+        <dd>{plugin.updated_at ? new Date(plugin.updated_at).toLocaleDateString('ja-JP') : '—'}</dd>
+        <dt>追加される画面</dt>
+        <dd>{plugin.dashboards.length === 0 ? 'なし' : plugin.dashboards.join(' / ')}</dd>
+        <dt>料金</dt>
+        <dd>{plugin.pricing ?? '提供元が公開していません'}</dd>
+        <dt>変更点</dt>
+        <dd>{plugin.changelog ?? '提供元が公開していません'}</dd>
         {/* tool 数は secondary metadata（UI/UX §11.1） */}
         <dt>道具の数</dt>
         <dd>{plugin.tool_count}</dd>
@@ -117,6 +153,17 @@ export function AppDetail({
       {plugin.installed ? (
         <>
           <p className="astra-app-detail__installed">追加済み（v{plugin.installed_version}）</p>
+          {/* §11.1 uninstall impact: 消えるものを、消す前に言う */}
+          {plugin.removable && (
+            <p className="astra-app-detail__impact">
+              削除すると
+              {plugin.dashboards.length > 0 ? `、画面「${plugin.dashboards.join('」「')}」と` : ''}
+              {plugin.connectors.length > 0
+                ? `、${plugin.connectors.map(providerLabel).join(' / ')} への接続と`
+                : ''}
+              この pack が使う許可が外れます。作った成果物は Library に残ります。
+            </p>
+          )}
           {plugin.removable ? (
             <button
               type="button"

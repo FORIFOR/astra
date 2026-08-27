@@ -399,7 +399,7 @@ describe('context lens (§5)', () => {
         initialSources={[source({ id: 's', label: '患者記録', sensitivity: 'REGULATED' })]}
       />,
     );
-    expect(screen.getByText('REGULATED')).toBeTruthy();
+    expect(screen.getByText('規制対象')).toBeTruthy();
   });
 
   it('shows nothing at all when there is no context', () => {

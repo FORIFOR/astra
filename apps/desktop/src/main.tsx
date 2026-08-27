@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { App } from './App.js';
 import { DockApp } from './dock/DockApp.js';
 import { VoiceHudApp } from './voice/VoiceHudApp.js';
+import { GalleryApp } from './gallery/Gallery.js';
 
 const container = document.getElementById('root');
 if (!container) throw new Error('#root not found');
@@ -13,7 +14,12 @@ if (!container) throw new Error('#root not found');
  */
 const isDock = globalThis.location?.hash.startsWith('#/dock') ?? false;
 const isVoiceHud = globalThis.location?.hash.startsWith('#/voice-hud') ?? false;
+// 部品の見本帳。開発ビルドだけ。本番の bundle には hash を打っても入らない。
+const isGallery =
+  import.meta.env.DEV && (globalThis.location?.hash.startsWith('#/gallery') ?? false);
 
 createRoot(container).render(
-  <StrictMode>{isVoiceHud ? <VoiceHudApp /> : isDock ? <DockApp /> : <App />}</StrictMode>,
+  <StrictMode>
+    {isGallery ? <GalleryApp /> : isVoiceHud ? <VoiceHudApp /> : isDock ? <DockApp /> : <App />}
+  </StrictMode>,
 );

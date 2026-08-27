@@ -16,6 +16,10 @@ execution_surfaces: [cloud]
 permissions:
   - artifacts.read
   - artifacts.write
+jobs:
+  - 図面の版を追う
+  - 未解決の課題を出す
+  - RFI の下書き
 data_accessed:
   - Projects, drawings, revisions and RFIs this user already has access to
 connectors: []

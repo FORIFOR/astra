@@ -182,6 +182,7 @@ export class PluginRegistryService {
           'plugin_versions.compliance_profile as compliance_profile',
           'plugin_versions.manifest as manifest',
           'plugin_versions.signature_state as signature_state',
+          'plugin_versions.published_at as updated_at',
         ])
         .where('plugin_versions.yanked_at', 'is', null)
         .orderBy('plugins.id')
@@ -208,6 +209,14 @@ export class PluginRegistryService {
         signature_state: row.signature_state,
         installed: installed.has(row.id),
         installed_version: installed.get(row.id) ?? null,
+        // UI/UX §11.1: 「できる仕事」を先に、更新日・画面・接続先・料金・変更点も
+        updated_at:
+          row.updated_at instanceof Date ? row.updated_at.toISOString() : (row.updated_at ?? null),
+        jobs: manifest.jobs ?? [],
+        dashboards: manifest.dashboards.map((d) => d.id),
+        connectors: manifest.connectors.map((c) => c.provider),
+        pricing: manifest.pricing ?? null,
+        changelog: manifest.changelog ?? null,
       });
     });
   }
