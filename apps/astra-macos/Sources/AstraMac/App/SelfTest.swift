@@ -48,9 +48,18 @@ enum SelfTest {
                 print("SELFTEST_FAIL api email=\(me.email) role=\(me.role)"); exit(3)
             }
             let mid = try AstraCoreBridge.createMeeting(base, accessToken: tokens.accessToken, title: "SelfTest 会議", language: "ja-JP")
+            // 実録音 → 送信 → 終了（すべて core 経由、Tauri なし）
+            let root = NSTemporaryDirectory() + "astra-api-rec-\(getpid())"
+            try? FileManager.default.createDirectory(atPath: root, withIntermediateDirectories: true)
+            let session = try RecordingSession.start(root: root, meetingId: mid)
+            let oneSec = [Float](repeating: 0.1, count: 16_000)
+            for _ in 0..<6 { _ = session.pushSamples(samples: oneSec, sampleRate: 16_000) }
+            try session.finish()
+            let sent = try AstraCoreBridge.uploadMeetingAudio(base, accessToken: tokens.accessToken, meetingId: mid, journalRoot: root)
+            try? FileManager.default.removeItem(atPath: root)
             let task = try AstraCoreBridge.finishMeeting(base, accessToken: tokens.accessToken, meetingId: mid)
-            guard !mid.isEmpty, !task.isEmpty else { print("SELFTEST_FAIL api meeting=\(mid) task=\(task)"); exit(5) }
-            print("SELFTEST_OK api: email=\(me.email) meeting=\(mid) finalizeTask=\(task)")
+            guard !mid.isEmpty, sent > 0, !task.isEmpty else { print("SELFTEST_FAIL api meeting=\(mid) sent=\(sent) task=\(task)"); exit(5) }
+            print("SELFTEST_OK api: email=\(me.email) meeting=\(mid) uploadedBytes=\(sent) finalizeTask=\(task)")
             exit(0)
         } catch {
             print("SELFTEST_FAIL api error=\(error)"); exit(4)

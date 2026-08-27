@@ -21,6 +21,8 @@ serde_json = "1"
 thiserror = "2"
 # gateway API（実バックエンド）を叩く軽量 HTTP。OS 非依存の API/domain 処理を core に置く
 ureq = { version = "2", features = ["json"] }
+# 会議音声の WS 送信（gateway /audio）。native から Tauri を介さず送るため
+tungstenite = { version = "0.24", features = ["native-tls"] }
 uniffi = { version = "0.29", features = ["cli"] }
 
 [dev-dependencies]

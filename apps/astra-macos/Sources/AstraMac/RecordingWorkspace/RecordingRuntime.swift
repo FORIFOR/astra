@@ -72,8 +72,9 @@ final class RecordingRuntime {
         mic?.stop(); mic = nil
         try? session?.finish()
         session = nil
-        // 実 gateway の会議なら finalize を投げる（成果物生成へ）
+        // 実 gateway の会議なら、録音を送ってから finalize を投げる（作成→録音→送信→終了）
         if let base = apiBase, let token = accessToken, let id = meetingId {
+            _ = try? AstraCoreBridge.uploadMeetingAudio(base, accessToken: token, meetingId: id, journalRoot: root)
             _ = try? AstraCoreBridge.finishMeeting(base, accessToken: token, meetingId: id)
         }
         meetingId = nil

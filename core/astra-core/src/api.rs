@@ -171,12 +171,78 @@ mod tests {
         assert_eq!(me.email, email);
         assert_eq!(me.role, "owner");
 
-        // 会議の作成 → 終了（control plane が Tauri を介さず動く）
+        // 会議の作成 → 録音（実断片）→ 送信 → 終了。すべて core 経由、Tauri を介さない。
         let meeting_id = api_create_meeting(url.clone(), tokens.access_token.clone(), "core E2E".into(), "ja-JP".into())
             .expect("create meeting should succeed");
         assert!(!meeting_id.is_empty());
+
+        let root = std::env::temp_dir().join(format!("astra-api-{}", std::process::id()));
+        let _ = std::fs::create_dir_all(&root);
+        let session = crate::session::RecordingSession::start(
+            root.to_string_lossy().to_string(), meeting_id.clone()).unwrap();
+        let one_sec = vec![0.1f32; crate::recording::WIRE_SAMPLE_RATE as usize];
+        for _ in 0..6 { session.push_samples(one_sec.clone(), crate::recording::WIRE_SAMPLE_RATE); }
+        session.finish().unwrap();
+        let sent = api_upload_meeting_audio(
+            url.clone(), tokens.access_token.clone(), meeting_id.clone(),
+            root.to_string_lossy().to_string()).expect("audio upload should succeed");
+        assert!(sent > 0, "should have uploaded fragment bytes");
+        let _ = std::fs::remove_dir_all(&root);
+
         let task_id = api_finish_meeting(url, tokens.access_token, meeting_id)
             .expect("finish meeting should return a finalize task id");
         assert!(!task_id.is_empty());
     }
+}
+
+/// 録音済み断片を gateway の音声 WS へ送る（POST 相当の upgrade + binary frames）。
+/// `journal_root/<meeting_id>/mic/NNNNNN.pcm` を順に送る。送ったバイト数を返す。
+///
+/// これで native は Tauri を介さず、作成→録音→**送信**→終了を実バックエンドで通せる。
+#[uniffi::export]
+pub fn api_upload_meeting_audio(
+    base_url: String,
+    access_token: String,
+    meeting_id: String,
+    journal_root: String,
+) -> Result<u64, ApiError> {
+    use tungstenite::client::IntoClientRequest;
+    use tungstenite::Message;
+
+    let ws_base = base(&base_url)
+        .replacen("https://", "wss://", 1)
+        .replacen("http://", "ws://", 1);
+    let url = format!("{ws_base}/v1/meetings/{meeting_id}/audio");
+    let mut request = url
+        .into_client_request()
+        .map_err(|e| ApiError::Network { message: format!("bad audio url: {e}") })?;
+    request.headers_mut().insert(
+        "Authorization",
+        format!("Bearer {access_token}")
+            .parse()
+            .map_err(|_| ApiError::Network { message: "token is not a valid header".into() })?,
+    );
+    let (mut socket, _) =
+        tungstenite::connect(request).map_err(|e| ApiError::Network { message: e.to_string() })?;
+
+    let mic_dir = std::path::Path::new(&journal_root).join(&meeting_id).join("mic");
+    let mut entries: Vec<_> = std::fs::read_dir(&mic_dir)
+        .map_err(|e| ApiError::Network { message: format!("no fragments: {e}") })?
+        .flatten()
+        .map(|e| e.path())
+        .filter(|p| p.extension().map(|x| x == "pcm").unwrap_or(false))
+        .collect();
+    entries.sort();
+
+    let mut sent = 0u64;
+    for path in entries {
+        let bytes = std::fs::read(&path)
+            .map_err(|e| ApiError::Network { message: e.to_string() })?;
+        sent += bytes.len() as u64;
+        socket
+            .send(Message::Binary(bytes))
+            .map_err(|e| ApiError::Network { message: e.to_string() })?;
+    }
+    let _ = socket.close(None);
+    Ok(sent)
 }

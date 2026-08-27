@@ -326,6 +326,11 @@ RustBuffer uniffi_astra_core_fn_func_api_me(RustBuffer base_url, RustBuffer acce
 int8_t uniffi_astra_core_fn_func_api_reachable(RustBuffer base_url, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_UPLOAD_MEETING_AUDIO
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_UPLOAD_MEETING_AUDIO
+uint64_t uniffi_astra_core_fn_func_api_upload_meeting_audio(RustBuffer base_url, RustBuffer access_token, RustBuffer meeting_id, RustBuffer journal_root, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_ASTRA_CORE_VERSION
 #define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_ASTRA_CORE_VERSION
 RustBuffer uniffi_astra_core_fn_func_astra_core_version(RustCallStatus *_Nonnull out_status
@@ -664,6 +669,12 @@ uint16_t uniffi_astra_core_checksum_func_api_me(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_REACHABLE
 #define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_REACHABLE
 uint16_t uniffi_astra_core_checksum_func_api_reachable(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_UPLOAD_MEETING_AUDIO
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_UPLOAD_MEETING_AUDIO
+uint16_t uniffi_astra_core_checksum_func_api_upload_meeting_audio(void
     
 );
 #endif

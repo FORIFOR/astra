@@ -2266,6 +2266,22 @@ public func apiReachable(baseUrl: String) -> Bool  {
 })
 }
 /**
+ * 録音済み断片を gateway の音声 WS へ送る（POST 相当の upgrade + binary frames）。
+ * `journal_root/<meeting_id>/mic/NNNNNN.pcm` を順に送る。送ったバイト数を返す。
+ *
+ * これで native は Tauri を介さず、作成→録音→**送信**→終了を実バックエンドで通せる。
+ */
+public func apiUploadMeetingAudio(baseUrl: String, accessToken: String, meetingId: String, journalRoot: String)throws  -> UInt64  {
+    return try  FfiConverterUInt64.lift(try rustCallWithError(FfiConverterTypeApiError_lift) {
+    uniffi_astra_core_fn_func_api_upload_meeting_audio(
+        FfiConverterString.lower(baseUrl),
+        FfiConverterString.lower(accessToken),
+        FfiConverterString.lower(meetingId),
+        FfiConverterString.lower(journalRoot),$0
+    )
+})
+}
+/**
  * バージョン。Swift ↔ Rust の疎通確認（round trip）の入口にも使う。
  */
 public func astraCoreVersion() -> String  {
@@ -2356,6 +2372,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_astra_core_checksum_func_api_reachable() != 45391) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_astra_core_checksum_func_api_upload_meeting_audio() != 61525) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_astra_core_checksum_func_astra_core_version() != 51046) {
