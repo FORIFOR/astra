@@ -251,6 +251,56 @@ typedef void (*UniffiForeignFutureCompleteVoid)(uint64_t, UniffiForeignFutureStr
     );
 
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_CLONE_RECORDINGSESSION
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_CLONE_RECORDINGSESSION
+void*_Nonnull uniffi_astra_core_fn_clone_recordingsession(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FREE_RECORDINGSESSION
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FREE_RECORDINGSESSION
+void uniffi_astra_core_fn_free_recordingsession(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_CONSTRUCTOR_RECORDINGSESSION_START
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_CONSTRUCTOR_RECORDINGSESSION_START
+void*_Nonnull uniffi_astra_core_fn_constructor_recordingsession_start(RustBuffer root, RustBuffer meeting_id, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_METHOD_RECORDINGSESSION_FINISH
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_METHOD_RECORDINGSESSION_FINISH
+void uniffi_astra_core_fn_method_recordingsession_finish(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_METHOD_RECORDINGSESSION_MEETING_ID
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_METHOD_RECORDINGSESSION_MEETING_ID
+RustBuffer uniffi_astra_core_fn_method_recordingsession_meeting_id(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_METHOD_RECORDINGSESSION_PUSH_SAMPLES
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_METHOD_RECORDINGSESSION_PUSH_SAMPLES
+uint32_t uniffi_astra_core_fn_method_recordingsession_push_samples(void*_Nonnull ptr, RustBuffer samples, uint32_t sample_rate, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_METHOD_RECORDINGSESSION_RECORDED_MS
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_METHOD_RECORDINGSESSION_RECORDED_MS
+uint64_t uniffi_astra_core_fn_method_recordingsession_recorded_ms(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_METHOD_RECORDINGSESSION_SET_LINK
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_METHOD_RECORDINGSESSION_SET_LINK
+void uniffi_astra_core_fn_method_recordingsession_set_link(void*_Nonnull ptr, RustBuffer link, uint64_t pending_ms, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_METHOD_RECORDINGSESSION_SET_PAUSED
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_METHOD_RECORDINGSESSION_SET_PAUSED
+void uniffi_astra_core_fn_method_recordingsession_set_paused(void*_Nonnull ptr, int8_t paused, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_METHOD_RECORDINGSESSION_SNAPSHOT
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_METHOD_RECORDINGSESSION_SNAPSHOT
+RustBuffer uniffi_astra_core_fn_method_recordingsession_snapshot(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_ASTRA_CORE_VERSION
 #define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_ASTRA_CORE_VERSION
 RustBuffer uniffi_astra_core_fn_func_astra_core_version(RustCallStatus *_Nonnull out_status
@@ -584,6 +634,54 @@ uint16_t uniffi_astra_core_checksum_func_scan_recoverable(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_TO_WIRE
 #define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_TO_WIRE
 uint16_t uniffi_astra_core_checksum_func_to_wire(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_METHOD_RECORDINGSESSION_FINISH
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_METHOD_RECORDINGSESSION_FINISH
+uint16_t uniffi_astra_core_checksum_method_recordingsession_finish(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_METHOD_RECORDINGSESSION_MEETING_ID
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_METHOD_RECORDINGSESSION_MEETING_ID
+uint16_t uniffi_astra_core_checksum_method_recordingsession_meeting_id(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_METHOD_RECORDINGSESSION_PUSH_SAMPLES
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_METHOD_RECORDINGSESSION_PUSH_SAMPLES
+uint16_t uniffi_astra_core_checksum_method_recordingsession_push_samples(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_METHOD_RECORDINGSESSION_RECORDED_MS
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_METHOD_RECORDINGSESSION_RECORDED_MS
+uint16_t uniffi_astra_core_checksum_method_recordingsession_recorded_ms(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_METHOD_RECORDINGSESSION_SET_LINK
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_METHOD_RECORDINGSESSION_SET_LINK
+uint16_t uniffi_astra_core_checksum_method_recordingsession_set_link(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_METHOD_RECORDINGSESSION_SET_PAUSED
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_METHOD_RECORDINGSESSION_SET_PAUSED
+uint16_t uniffi_astra_core_checksum_method_recordingsession_set_paused(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_METHOD_RECORDINGSESSION_SNAPSHOT
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_METHOD_RECORDINGSESSION_SNAPSHOT
+uint16_t uniffi_astra_core_checksum_method_recordingsession_snapshot(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_CONSTRUCTOR_RECORDINGSESSION_START
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_CONSTRUCTOR_RECORDINGSESSION_START
+uint16_t uniffi_astra_core_checksum_constructor_recordingsession_start(void
     
 );
 #endif

@@ -52,3 +52,18 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
 4. RAG / agent planning の pure model を次の slice として core へ。
 5. SwiftPM の Rust ライブラリ参照は今 `-L ../../core/astra-core/target/debug` の相対 unsafeFlags。
    配布時は xcframework 化を検討（今回は開発ビルド用）。
+
+## 追記: 実録音ランタイム（Phase 1.5）
+- core に `RecordingSession`（UniFFI object）を追加。マイクの f32 サンプルを受け取り、16 kHz へ寄せて
+  **実断片ファイル**（`meetings/<id>/mic/NNNNNN.pcm`）へ書き、manifest を進め、回復候補にする。送信は OS 側。
+- macOS: `MicCapture`(AVAudioEngine) → `RecordingRuntime` → `RecordingSession`。
+  **shared core が実運用経路で使われる**（Done#1 の実証）。
+- 検証: `pnpm verify:macos-recording`（`AstraMac --selftest record`）で Swift→core→ディスクを headless E2E。
+  合成音源で断片(160000B=5s×16k×2)・経過(00:05)・回復候補を assert。`swift test` に XCTest 3 件。
+
+## 未検証の境界（正直な線引き）
+- **ライブ mic/システム音声/画面/グローバル shortcut/Calendar** は署名済み **.app バンドル + TCC 許可**が要る。
+  現在は SwiftPM 実行アプリのため、これらの**実許可・ライブ取り込みは headless で未検証**（`MicCapture` は実装済みだが
+  裸実行では許可プロンプトが出ない）。実検証は Xcode .app 化 + 署名 + 手動許可が前提。
+- **Windows (WinUI3/C#)**: この macOS ホストでは**ビルド不可**。`apps/windows` は雛形+生成 Metrics のみ。
+  `.github/workflows/windows.yml` に core+C# binding のビルド枠を用意（.sln は Phase 4 で追加）。**Windows PASS は主張しない。**

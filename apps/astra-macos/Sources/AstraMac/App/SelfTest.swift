@@ -1,0 +1,49 @@
+import Foundation
+import AstraCore
+
+/// `--selftest record`: Swift → astra-core → 実ディスク の E2E。UI を出さずに検証する。
+/// マイク許可の要らない合成サンプルを流し、断片ファイルが実際に書かれることを確かめる。
+enum SelfTest {
+    static func run(_ args: [String]) -> Bool {
+        guard let i = args.firstIndex(of: "--selftest"), i + 1 < args.count else { return false }
+        switch args[i + 1] {
+        case "record": recordToDisk(); return true
+        default: return false
+        }
+    }
+
+    private static func recordToDisk() {
+        let root = NSTemporaryDirectory() + "astra-selftest-\(getpid())"
+        try? FileManager.default.createDirectory(atPath: root, withIntermediateDirectories: true)
+        guard let session = try? RecordingSession.start(root: root, meetingId: "selftest") else {
+            print("SELFTEST_FAIL could not start session"); exit(2)
+        }
+        // 6 秒相当の合成正弦を 16 kHz で流す（5 秒断片が 1 つ閉じる）。
+        let rate: UInt32 = 16_000
+        var closed: UInt32 = 0
+        for sec in 0..<6 {
+            var frame = [Float](repeating: 0, count: Int(rate))
+            for n in 0..<frame.count {
+                frame[n] = 0.3 * sinf(2.0 * .pi * 440.0 * Float(n) / Float(rate) + Float(sec))
+            }
+            closed += session.pushSamples(samples: frame, sampleRate: rate)
+        }
+        let snap = session.snapshot()
+        try? session.finish()
+
+        let fragment = root + "/selftest/mic/000001.pcm"
+        let exists = FileManager.default.fileExists(atPath: fragment)
+        let size = (try? FileManager.default.attributesOfItem(atPath: fragment)[.size] as? Int) ?? 0
+        let recoverable = scanRecoverable(root: root, active: nil)
+
+        guard closed == 1, exists, (size ?? 0) > 0, snap.elapsedLabel == "00:05",
+              recoverable.count == 1, recoverable[0].meetingId == "selftest"
+        else {
+            print("SELFTEST_FAIL closed=\(closed) exists=\(exists) size=\(size ?? 0) elapsed=\(snap.elapsedLabel) recoverable=\(recoverable.count)")
+            exit(3)
+        }
+        try? FileManager.default.removeItem(atPath: root)
+        print("SELFTEST_OK record: closed=\(closed) fragmentBytes=\(size ?? 0) elapsed=\(snap.elapsedLabel) recoverable=\(recoverable.count)")
+        exit(0)
+    }
+}

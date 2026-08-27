@@ -1,0 +1,27 @@
+# Windows Native (WinUI 3 + C#) のビルド設定。macOS ホストでは実行不可のため CI で検証する。
+# 現状 apps/windows は雛形 + GeneratedMetrics.cs のみ（実 .sln/.csproj は Phase 4 で追加）。
+# この workflow は「core の C# binding 生成 → WinUI ビルド」の枠を先に固定する。
+name: windows
+on:
+  push:
+    paths: ["apps/windows/**", "core/astra-core/**", "shared/design/**", ".github/workflows/windows.yml"]
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Design token freshness
+        run: node scripts/gen-design-tokens.mjs --check
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build astra-core (staticlib + cdylib)
+        working-directory: core/astra-core
+        run: cargo build --release
+      - name: Generate C# bindings (uniffi)
+        working-directory: core/astra-core
+        run: cargo run --release --bin uniffi-bindgen -- generate --library target/release/astra_core.dll --language csharp --out-dir ../../apps/windows/Astra/Generated
+      # 以下は apps/windows に .sln/.csproj が入った時点で有効化する（Phase 4）。
+      # - uses: microsoft/setup-msbuild@v2
+      # - run: msbuild apps/windows/Astra.sln /p:Configuration=Release /p:Platform=x64
+      - name: Note
+        run: echo "WinUI .sln build is added in Phase 4; core+bindings build is validated here."

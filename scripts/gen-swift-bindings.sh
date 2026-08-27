@@ -40,6 +40,6 @@ else
   mkdir -p "$SWIFT_DEST" "$HDR_DEST"
   cp "$TMP/swift/astra_core.swift" "$SWIFT_DEST/astra_core.swift"
   rm -f "$HDR_DEST"/*.h "$HDR_DEST"/module.modulemap
-  cp "$TMP/inc/." "$HDR_DEST/" -R
+  cp -R "$TMP/inc/." "$HDR_DEST/"
   echo "wrote $SWIFT_DEST and $HDR_DEST"
 fi

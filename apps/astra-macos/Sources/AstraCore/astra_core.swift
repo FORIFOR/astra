@@ -400,6 +400,22 @@ fileprivate final class UniffiHandleMap<T>: @unchecked Sendable {
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterUInt32: FfiConverterPrimitive {
+    typealias FfiType = UInt32
+    typealias SwiftType = UInt32
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> UInt32 {
+        return try lift(readInt(&buf))
+    }
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        writeInt(&buf, lower(value))
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterUInt64: FfiConverterPrimitive {
     typealias FfiType = UInt64
     typealias SwiftType = UInt64
@@ -511,6 +527,228 @@ fileprivate struct FfiConverterData: FfiConverterRustBuffer {
         writeBytes(&buf, value)
     }
 }
+
+
+
+
+/**
+ * 実行時セッション（UniFFI object）。Swift/C# は Arc として持つ。
+ */
+public protocol RecordingSessionProtocol: AnyObject, Sendable {
+    
+    /**
+     * 取り込みを終える。端数も断片にして、状態を completed に。
+     */
+    func finish() throws 
+    
+    func meetingId()  -> String
+    
+    /**
+     * マイクの f32 mono を渡す。sample_rate が 16 kHz でなければ core が寄せる。
+     * 一時停止中は捨てる。書けた断片数（この呼び出しで閉じた数）を返す。
+     */
+    func pushSamples(samples: [Float], sampleRate: UInt32)  -> UInt32
+    
+    func recordedMs()  -> UInt64
+    
+    /**
+     * OS 側の送信状態を反映（表示用）。
+     */
+    func setLink(link: LinkState, pendingMs: UInt64) 
+    
+    func setPaused(paused: Bool) 
+    
+    /**
+     * 今の表示。経過は書けた断片から数える（壁時計に依存しない）。
+     */
+    func snapshot()  -> RecordingSnapshot
+    
+}
+/**
+ * 実行時セッション（UniFFI object）。Swift/C# は Arc として持つ。
+ */
+open class RecordingSession: RecordingSessionProtocol, @unchecked Sendable {
+    fileprivate let pointer: UnsafeMutableRawPointer!
+
+    /// Used to instantiate a [FFIObject] without an actual pointer, for fakes in tests, mostly.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public struct NoPointer {
+        public init() {}
+    }
+
+    // TODO: We'd like this to be `private` but for Swifty reasons,
+    // we can't implement `FfiConverter` without making this `required` and we can't
+    // make it `required` without making it `public`.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    required public init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
+        self.pointer = pointer
+    }
+
+    // This constructor can be used to instantiate a fake object.
+    // - Parameter noPointer: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    //
+    // - Warning:
+    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing [Pointer] the FFI lower functions will crash.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public init(noPointer: NoPointer) {
+        self.pointer = nil
+    }
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public func uniffiClonePointer() -> UnsafeMutableRawPointer {
+        return try! rustCall { uniffi_astra_core_fn_clone_recordingsession(self.pointer, $0) }
+    }
+    // No primary constructor declared for this class.
+
+    deinit {
+        guard let pointer = pointer else {
+            return
+        }
+
+        try! rustCall { uniffi_astra_core_fn_free_recordingsession(pointer, $0) }
+    }
+
+    
+    /**
+     * 保存先 root と会議 id を渡して開始。断片は root/<id>/mic/NNNNNN.pcm に貯まる。
+     */
+public static func start(root: String, meetingId: String)throws  -> RecordingSession  {
+    return try  FfiConverterTypeRecordingSession_lift(try rustCallWithError(FfiConverterTypeSessionError_lift) {
+    uniffi_astra_core_fn_constructor_recordingsession_start(
+        FfiConverterString.lower(root),
+        FfiConverterString.lower(meetingId),$0
+    )
+})
+}
+    
+
+    
+    /**
+     * 取り込みを終える。端数も断片にして、状態を completed に。
+     */
+open func finish()throws   {try rustCallWithError(FfiConverterTypeSessionError_lift) {
+    uniffi_astra_core_fn_method_recordingsession_finish(self.uniffiClonePointer(),$0
+    )
+}
+}
+    
+open func meetingId() -> String  {
+    return try!  FfiConverterString.lift(try! rustCall() {
+    uniffi_astra_core_fn_method_recordingsession_meeting_id(self.uniffiClonePointer(),$0
+    )
+})
+}
+    
+    /**
+     * マイクの f32 mono を渡す。sample_rate が 16 kHz でなければ core が寄せる。
+     * 一時停止中は捨てる。書けた断片数（この呼び出しで閉じた数）を返す。
+     */
+open func pushSamples(samples: [Float], sampleRate: UInt32) -> UInt32  {
+    return try!  FfiConverterUInt32.lift(try! rustCall() {
+    uniffi_astra_core_fn_method_recordingsession_push_samples(self.uniffiClonePointer(),
+        FfiConverterSequenceFloat.lower(samples),
+        FfiConverterUInt32.lower(sampleRate),$0
+    )
+})
+}
+    
+open func recordedMs() -> UInt64  {
+    return try!  FfiConverterUInt64.lift(try! rustCall() {
+    uniffi_astra_core_fn_method_recordingsession_recorded_ms(self.uniffiClonePointer(),$0
+    )
+})
+}
+    
+    /**
+     * OS 側の送信状態を反映（表示用）。
+     */
+open func setLink(link: LinkState, pendingMs: UInt64)  {try! rustCall() {
+    uniffi_astra_core_fn_method_recordingsession_set_link(self.uniffiClonePointer(),
+        FfiConverterTypeLinkState_lower(link),
+        FfiConverterUInt64.lower(pendingMs),$0
+    )
+}
+}
+    
+open func setPaused(paused: Bool)  {try! rustCall() {
+    uniffi_astra_core_fn_method_recordingsession_set_paused(self.uniffiClonePointer(),
+        FfiConverterBool.lower(paused),$0
+    )
+}
+}
+    
+    /**
+     * 今の表示。経過は書けた断片から数える（壁時計に依存しない）。
+     */
+open func snapshot() -> RecordingSnapshot  {
+    return try!  FfiConverterTypeRecordingSnapshot_lift(try! rustCall() {
+    uniffi_astra_core_fn_method_recordingsession_snapshot(self.uniffiClonePointer(),$0
+    )
+})
+}
+    
+
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeRecordingSession: FfiConverter {
+
+    typealias FfiType = UnsafeMutableRawPointer
+    typealias SwiftType = RecordingSession
+
+    public static func lift(_ pointer: UnsafeMutableRawPointer) throws -> RecordingSession {
+        return RecordingSession(unsafeFromRawPointer: pointer)
+    }
+
+    public static func lower(_ value: RecordingSession) -> UnsafeMutableRawPointer {
+        return value.uniffiClonePointer()
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> RecordingSession {
+        let v: UInt64 = try readInt(&buf)
+        // The Rust code won't compile if a pointer won't fit in a UInt64.
+        // We have to go via `UInt` because that's the thing that's the size of a pointer.
+        let ptr = UnsafeMutableRawPointer(bitPattern: UInt(truncatingIfNeeded: v))
+        if (ptr == nil) {
+            throw UniffiInternalError.unexpectedNullPointer
+        }
+        return try lift(ptr!)
+    }
+
+    public static func write(_ value: RecordingSession, into buf: inout [UInt8]) {
+        // This fiddling is because `Int` is the thing that's the same size as a pointer.
+        // The Rust code won't compile if a pointer won't fit in a `UInt64`.
+        writeInt(&buf, UInt64(bitPattern: Int64(Int(bitPattern: lower(value)))))
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeRecordingSession_lift(_ pointer: UnsafeMutableRawPointer) throws -> RecordingSession {
+    return try FfiConverterTypeRecordingSession.lift(pointer)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeRecordingSession_lower(_ value: RecordingSession) -> UnsafeMutableRawPointer {
+    return FfiConverterTypeRecordingSession.lower(value)
+}
+
+
 
 
 /**
@@ -1037,6 +1275,82 @@ extension LinkState: Equatable, Hashable {}
 
 
 
+
+public enum SessionError: Swift.Error {
+
+    
+    
+    case Journal(message: String
+    )
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeSessionError: FfiConverterRustBuffer {
+    typealias SwiftType = SessionError
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SessionError {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+
+        
+
+        
+        case 1: return .Journal(
+            message: try FfiConverterString.read(from: &buf)
+            )
+
+         default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: SessionError, into buf: inout [UInt8]) {
+        switch value {
+
+        
+
+        
+        
+        case let .Journal(message):
+            writeInt(&buf, Int32(1))
+            FfiConverterString.write(message, into: &buf)
+            
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeSessionError_lift(_ buf: RustBuffer) throws -> SessionError {
+    return try FfiConverterTypeSessionError.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeSessionError_lower(_ value: SessionError) -> RustBuffer {
+    return FfiConverterTypeSessionError.lower(value)
+}
+
+
+extension SessionError: Equatable, Hashable {}
+
+
+
+
+extension SessionError: Foundation.LocalizedError {
+    public var errorDescription: String? {
+        String(reflecting: self)
+    }
+}
+
+
+
+
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
@@ -1190,6 +1504,30 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_astra_core_checksum_func_to_wire() != 2896) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_astra_core_checksum_method_recordingsession_finish() != 59752) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_astra_core_checksum_method_recordingsession_meeting_id() != 18378) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_astra_core_checksum_method_recordingsession_push_samples() != 44844) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_astra_core_checksum_method_recordingsession_recorded_ms() != 55190) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_astra_core_checksum_method_recordingsession_set_link() != 65077) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_astra_core_checksum_method_recordingsession_set_paused() != 37569) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_astra_core_checksum_method_recordingsession_snapshot() != 27166) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_astra_core_checksum_constructor_recordingsession_start() != 60701) {
         return InitializationResult.apiChecksumMismatch
     }
 

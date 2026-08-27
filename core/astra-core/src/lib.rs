@@ -11,8 +11,10 @@ uniffi::setup_scaffolding!();
 
 pub mod mode;
 pub mod recording;
+pub mod session;
 
 pub use mode::AstraMode;
+pub use session::{RecordingSession, SessionError};
 pub use recording::{
     format_elapsed, meetings_root_default, recording_snapshot, scan_recoverable,
     scan_recoverable_path, to_wire, Journal,

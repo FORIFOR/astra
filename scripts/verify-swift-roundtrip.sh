@@ -4,7 +4,8 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 CORE="$ROOT/core/astra-core"
-FFI="$ROOT/apps/astra-macos/Sources/AstraCoreFFI"
+SWIFT="$ROOT/apps/astra-macos/Sources/AstraCore"
+INC="$ROOT/apps/astra-macos/Sources/AstraCoreFFI/include"
 
 cd "$CORE"; cargo build --quiet
 LIBDIR="$CORE/target/debug"
@@ -36,8 +37,8 @@ print("ROUNDTRIP_OK version=\(version) elapsed=\(snap.elapsedLabel) hero=\(snap.
 SWIFT
 
 swiftc \
-  "$FFI/astra_core.swift" "$TMP/main.swift" \
-  -I "$FFI/include" \
+  "$SWIFT/astra_core.swift" "$TMP/main.swift" \
+  -I "$INC" \
   -L "$LIBDIR" -lastra_core \
   -o "$TMP/roundtrip"
 
