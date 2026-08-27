@@ -8,6 +8,8 @@ import { ApplicationFailure } from '@temporalio/common';
 import {
   canonicalSha256,
   handoffExplanation,
+  isHostOfflineError,
+  HostOfflineError,
   uuidv7,
   type ActionRisk,
   type EscalationStep,
@@ -70,6 +72,11 @@ export interface ActivityDeps {
    * **未接続なら local の step は実行しない。**クラウドで代わりに走らせない。
    */
   readonly hostExecutor?: StepExecutor;
+  /**
+   * 端末が居るかを答えるもの（Host Bridge）。
+   * **未接続なら「居ない」と答える。**居ると仮定して進めない。
+   */
+  readonly hosts?: { hasOnlineHost(tenantId: string, userId: string): Promise<boolean> };
   /**
    * 正本 §24 の下から 2 段。**繋いでいなければ「使えない」と言う。**
    *
@@ -512,6 +519,18 @@ export function createTaskActivities(deps: ActivityDeps): TaskActivities {
             { result: { echoed: step.args['message'] ?? null, step: step.index }, detail: null };
       } catch (error) {
         /*
+         * 端末が居ないだけなら、**梯子を降りない**（正本 §4.4・§24）。
+         *
+         * ここを素通しにすると、PC を閉じただけで browser automation や
+         * 運営側の経路へ落ちる。利用者が選んでいない手段で外部操作が起き、
+         * しかも画面には「別の方法で続けています」としか出ない。
+         * 端末が落ちたのは失敗ではないので、待てるように投げ直す。
+         */
+        if (isHostOfflineError(error)) {
+          throw ApplicationFailure.nonRetryable(messageOfCause(error), HostOfflineError.TYPE);
+        }
+
+        /*
          * 正本 §24: API connector fail → retry → alternate connector。
          * 再試行は Temporal が済ませているので、ここは**代替**を試す。
          *
@@ -788,6 +807,82 @@ export function createTaskActivities(deps: ActivityDeps): TaskActivities {
           deps.publisher,
         );
       });
+    },
+
+    /**
+     * 端末が落ちたので止める。正本 §4.4。
+     *
+     * **FAILED にしない。**待てば戻るものを失敗として畳むと、
+     * 途中までの結果も、承認済みの判断も捨てることになる。
+     * 終わっている仕事は動かさない（遅れて届いた停止で完了を覆さない）。
+     */
+    async pauseForHost(input, stepIndex) {
+      await inTenant(input, async (tx) => {
+        await tx
+          .updateTable('tasks')
+          .set({ status: 'PAUSED_HOST_OFFLINE', updated_at: now() })
+          .where('id', '=', input.taskId)
+          .where('status', 'not in', ['COMPLETED', 'FAILED', 'CANCELLED'])
+          .execute();
+
+        await appendEvent(
+          tx,
+          {
+            tenantId: input.tenantId,
+            streamKind: 'task',
+            streamId: input.taskId,
+            taskId: input.taskId,
+            type: 'task.paused',
+            payload: {
+              reason: 'host_offline',
+              step_index: stepIndex,
+              // §21: 失敗と読める言葉を使わない。待てば進むことを言う。
+              message: 'この操作は端末で行います。端末が戻るまで待っています。',
+            },
+            idempotencyKey: stepKey(input.taskId, stepIndex, 'paused'),
+          },
+          deps.publisher,
+        );
+      });
+    },
+
+    /** 端末が戻ったので進める。止まっていた理由が消えたときだけ呼ぶ。 */
+    async resumeFromHost(input, stepIndex) {
+      await inTenant(input, async (tx) => {
+        const updated = await tx
+          .updateTable('tasks')
+          .set({ status: 'RUNNING', updated_at: now() })
+          .where('id', '=', input.taskId)
+          // 止まっていたものだけ動かす。取り消し済みを勝手に再開しない。
+          .where('status', '=', 'PAUSED_HOST_OFFLINE')
+          .returning('id')
+          .executeTakeFirst();
+        if (!updated) return;
+
+        await appendEvent(
+          tx,
+          {
+            tenantId: input.tenantId,
+            streamKind: 'task',
+            streamId: input.taskId,
+            taskId: input.taskId,
+            type: 'task.resumed',
+            payload: { step_index: stepIndex, paused_ms: null },
+            idempotencyKey: stepKey(input.taskId, stepIndex, 'resumed'),
+          },
+          deps.publisher,
+        );
+      });
+    },
+
+    /**
+     * いま仕事を渡せる端末があるか。
+     *
+     * **繋いでいなければ「無い」と答える。**「たぶん居る」で進めると、
+     * 置いた step を誰も取りに来ず、待ち時間だけが延びる。
+     */
+    async hostAvailable(input) {
+      return (await deps.hosts?.hasOnlineHost(input.tenantId, input.userId)) ?? false;
     },
 
     async cancelTask(input, reason) {

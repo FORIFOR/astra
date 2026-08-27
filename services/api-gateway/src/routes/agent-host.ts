@@ -6,7 +6,7 @@
  */
 import { z } from 'zod';
 import { AstraError } from '@astra/contracts';
-import type { AgentHostService } from '@astra/service-agent-host';
+import type { AgentHostService, HostBridge } from '@astra/service-agent-host';
 import type { TaskService } from '@astra/service-task';
 import type { App } from '../fastify.js';
 import { requirePrincipal } from '../auth/middleware.js';
@@ -14,6 +14,11 @@ import { requirePrincipal } from '../auth/middleware.js';
 export interface AgentHostRouteDeps {
   readonly hosts: AgentHostService;
   readonly tasks: TaskService;
+  /**
+   * 手元でしか動かせない step の受け渡し。**繋がっていなければ口を開けない。**
+   * 空の口を用意して 200 を返すと、端末は「やることが無い」と思い込む。
+   */
+  readonly bridge?: HostBridge;
 }
 
 const HeartbeatRequest = z.object({
@@ -25,6 +30,21 @@ const HeartbeatRequest = z.object({
 
 const ClaimRequest = z.object({ host_id: z.uuid() });
 const LeaseRequest = z.object({ lease_id: z.uuid() });
+const ClaimStepRequest = z.object({ host_id: z.uuid() });
+const CompleteStepRequest = z.object({
+  host_id: z.uuid(),
+  /** 端末が得た結果。**資格情報は入れない。** */
+  result: z.unknown().optional(),
+});
+const FailStepRequest = z.object({
+  host_id: z.uuid(),
+  error: z.object({
+    code: z.string().min(1).max(80),
+    /** 画面に出せる言葉で。tool 側の文言をそのまま流さない（§7.2）。 */
+    message: z.string().min(1).max(400),
+  }),
+});
+
 const CheckpointRequest = z.object({
   lease_id: z.uuid(),
   step_index: z.number().int().min(0),
@@ -107,6 +127,61 @@ export function registerAgentHostRoutes(app: App, deps: AgentHostRouteDeps): voi
     if (!checkpoint) throw new AstraError('common.not_found', 'no checkpoint yet');
     return checkpoint;
   });
+
+  /*
+   * 端末が次の 1 件を取りに来る。
+   *
+   * **押し付けない。**サーバから端末へ繋ぎに行く道を作ると、
+   * 端末を外から叩ける口になる。取りに来る側だけにしておく。
+   */
+  app.post('/v1/host-steps/claim', async (request, reply) => {
+    const principal = requirePrincipal();
+    const body = ClaimStepRequest.parse(request.body ?? {});
+    if (!deps.bridge) throw new AstraError('common.not_found', 'the host bridge is not connected');
+
+    const next = await deps.bridge.claimNext({
+      tenantId: principal.tenantId,
+      hostId: body.host_id,
+    });
+    // 無いことを 404 にしない。「今は無い」は正常な答え。
+    return next ? reply.send(next) : reply.status(204).send();
+  });
+
+  app.post<{ Params: { requestId: string } }>(
+    '/v1/host-steps/:requestId/complete',
+    async (request, reply) => {
+      const principal = requirePrincipal();
+      const body = CompleteStepRequest.parse(request.body ?? {});
+      if (!deps.bridge)
+        throw new AstraError('common.not_found', 'the host bridge is not connected');
+
+      await deps.bridge.complete({
+        tenantId: principal.tenantId,
+        requestId: request.params.requestId,
+        hostId: body.host_id,
+        result: body.result ?? null,
+      });
+      return reply.status(204).send();
+    },
+  );
+
+  app.post<{ Params: { requestId: string } }>(
+    '/v1/host-steps/:requestId/fail',
+    async (request, reply) => {
+      const principal = requirePrincipal();
+      const body = FailStepRequest.parse(request.body ?? {});
+      if (!deps.bridge)
+        throw new AstraError('common.not_found', 'the host bridge is not connected');
+
+      await deps.bridge.fail({
+        tenantId: principal.tenantId,
+        requestId: request.params.requestId,
+        hostId: body.host_id,
+        error: body.error,
+      });
+      return reply.status(204).send();
+    },
+  );
 
   app.post<{ Params: { taskId: string } }>('/v1/tasks/:taskId/resume', async (request) => {
     const principal = requirePrincipal();

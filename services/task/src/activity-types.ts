@@ -51,6 +51,17 @@ export interface TaskActivities {
   rejectApproval(input: TaskWorkflowInput, approvalId: string, stepIndex: number): Promise<void>;
   expireApproval(input: TaskWorkflowInput, approvalId: string): Promise<void>;
   executeStep(input: TaskWorkflowInput, step: TaskStep): Promise<unknown>;
+  /**
+   * 端末が落ちた仕事を止める。正本 §4.4。
+   *
+   * **FAILED にしない。**待てば戻るものを失敗として畳むと、
+   * 途中までの結果も、承認済みの判断も捨てることになる。
+   */
+  pauseForHost(input: TaskWorkflowInput, stepIndex: number): Promise<void>;
+  /** 端末が戻ったので進める。止まっていた理由が消えたときだけ呼ぶ。 */
+  resumeFromHost(input: TaskWorkflowInput, stepIndex: number): Promise<void>;
+  /** いま仕事を渡せる端末があるか。**無ければ待つ。** */
+  hostAvailable(input: TaskWorkflowInput): Promise<boolean>;
   composeArtifact(
     input: TaskWorkflowInput,
     spec: ArtifactSpec,

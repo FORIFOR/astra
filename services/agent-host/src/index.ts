@@ -5,3 +5,5 @@
  * **サーバは実行しない。**保持して、貸し出して、戻りを待つ。
  */
 export * from './service.js';
+export * from './bridge.js';
+export * from './step-executor.js';

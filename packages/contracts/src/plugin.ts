@@ -43,6 +43,12 @@ export type PluginCategory = z.infer<typeof PluginCategory>;
 export const PERMISSION_SCOPES = [
   'email.read',
   'email.draft',
+  /*
+   * 既にあるメールを動かす（ゴミ箱へ移す、ラベルを変える）。
+   * **下書きから分ける。**下書きを許した人は、
+   * 受信箱の中身を動かしてよいとは言っていない。
+   */
+  'email.modify',
   'email.send',
   'contacts.read',
   'calendar.read',

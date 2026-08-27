@@ -53,6 +53,9 @@
       "path": "./services/capabilities"
     },
     {
+      "path": "./services/connectors"
+    },
+    {
       "path": "./services/context"
     },
     {

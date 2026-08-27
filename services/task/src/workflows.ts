@@ -14,6 +14,16 @@ import {
   workflowInfo,
 } from '@temporalio/workflow';
 import { planTask, type TaskPlan } from './plan.js';
+
+/**
+ * 端末が落ちたときの失敗種別。
+ *
+ * **文字列で持つ。**このファイルは Temporal のサンドボックスで動くので、
+ * `@astra/contracts` を import できない（決定性の制約）。
+ * 値そのものは `HostOfflineError.TYPE` と一致していなければならず、
+ * ずれていないことは試験で見張る。
+ */
+const HOST_OFFLINE_TYPE = 'HostOffline';
 import type { TaskActivities } from './activity-types.js';
 
 const persistence = proxyActivities<TaskActivities>({
@@ -41,6 +51,8 @@ const tools = proxyActivities<TaskActivities>({
       'TaskGone',
       // 手元でしか動かせない step。待っても状況は変わらない
       'LocalSurfaceUnavailable',
+      // 端末が落ちている。**再試行では戻らない。**workflow 側で待つ
+      HOST_OFFLINE_TYPE,
       // 規則が禁じている。承認を取っても変わらない
       'PolicyDenied',
       // 承認が古い。待っても新しくならない
@@ -89,6 +101,27 @@ export const getStateQuery = defineQuery<TaskStateSnapshot>('getState');
 
 /** 承認待ちの上限。`approvals.expires_at` と揃える（実装仕様 §6.5）。 */
 const APPROVAL_TIMEOUT = '24 hours';
+
+/**
+ * 端末の復帰を待つ間隔と回数。正本 §4.4。
+ *
+ * 1 回の停止で最大 1 時間、それを 24 回まで＝丸一日待つ。
+ * **無限に待たない。**永久に PAUSED のまま残るなら、
+ * それは結局、誰も気づかない失敗と同じことになる。
+ */
+const HOST_POLL_INTERVAL = '1 minute';
+const HOST_WAIT_ROUND_CHECKS = 60;
+const MAX_HOST_WAIT_ROUNDS = 24;
+
+/** 端末が落ちているだけか。**失敗と混ぜない。** */
+function isHostOffline(error: unknown): boolean {
+  let current: unknown = error;
+  for (let depth = 0; depth < 8 && current !== null && current !== undefined; depth += 1) {
+    if ((current as { type?: string }).type === HOST_OFFLINE_TYPE) return true;
+    current = (current as { cause?: unknown }).cause;
+  }
+  return false;
+}
 
 export async function TaskWorkflow(input: TaskWorkflowInput): Promise<TaskResult> {
   const decisions = new Map<string, 'APPROVED' | 'REJECTED'>();
@@ -185,11 +218,13 @@ export async function TaskWorkflow(input: TaskWorkflowInput): Promise<TaskResult
      * 「進行中」に見える。**気づけない失敗**が一番まずい。
      */
     try {
-      results.push(await tools.executeStep(input, step));
+      results.push(await runStepWaitingForHost(step));
     } catch (error) {
       await failWith(step.index, error);
       throw error;
     }
+
+    if (cancelRequested !== null) return finishCancelled(input, cancelRequested);
   }
 
   if (cancelRequested !== null) return finishCancelled(input, cancelRequested);
@@ -203,6 +238,48 @@ export async function TaskWorkflow(input: TaskWorkflowInput): Promise<TaskResult
     // 成果物の組み立てで落ちても同じ。宙ぶらりんにしない。
     await failWith(null, error);
     throw error;
+  }
+
+  /**
+   * step を走らせる。端末が落ちていたら、**失敗にせず待つ**（正本 §4.4）。
+   *
+   * 待ち方に 3 つの決まりがある:
+   *
+   *   - 待っている間の状態は `PAUSED_HOST_OFFLINE`。RUNNING のままにすると
+   *     画面では動いているように見え、いつまでも終わらない仕事になる
+   *   - **運営側の経路へ乗り換えない。**乗り換えは利用者の選択の外
+   *   - 待ちには終わりを置く。永久に PAUSED のまま残すと、
+   *     結局それは気づかれない失敗になる
+   */
+  async function runStepWaitingForHost(step: TaskPlan['steps'][number]): Promise<unknown> {
+    for (let round = 0; ; round += 1) {
+      try {
+        return await tools.executeStep(input, step);
+      } catch (error) {
+        if (!isHostOffline(error) || round >= MAX_HOST_WAIT_ROUNDS) throw error;
+
+        status = 'PAUSED_HOST_OFFLINE';
+        await persistence.pauseForHost(input, step.index);
+
+        const back = await waitForHost();
+        if (cancelRequested !== null) throw error;
+        if (!back) throw error;
+
+        await persistence.resumeFromHost(input, step.index);
+        status = 'RUNNING';
+      }
+    }
+  }
+
+  /** 端末が戻るのを待つ。戻らないまま上限に達したら false。 */
+  async function waitForHost(): Promise<boolean> {
+    for (let waited = 0; waited < HOST_WAIT_ROUND_CHECKS; waited += 1) {
+      // 取り消しは待たせない。止めたい人を待たせるのは、止められないのと同じ。
+      await condition(() => cancelRequested !== null, HOST_POLL_INTERVAL);
+      if (cancelRequested !== null) return false;
+      if (await persistence.hostAvailable(input)) return true;
+    }
+    return false;
   }
 
   /** 失敗を記録する。記録そのものが落ちても、元の失敗を握りつぶさない。 */

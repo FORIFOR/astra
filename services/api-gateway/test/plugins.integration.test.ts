@@ -126,7 +126,7 @@ describe.skipIf(!url)('plugin catalog', () => {
       const install = res.json<PluginInstall>();
       expect(install.granted_scopes).toEqual(['email.read']);
       expect(install.denied_scopes).toEqual(
-        expect.arrayContaining(['email.send', 'email.draft', 'contacts.read']),
+        expect.arrayContaining(['email.send', 'email.draft', 'email.modify']),
       );
 
       const entry = (await catalog()).find((p) => p.id === 'com.astra.gmail')!;

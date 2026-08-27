@@ -52,6 +52,11 @@ export interface WorkView {
    */
   readonly error: { code: string; recovery: string; explanation: string | null } | null;
   readonly elapsedMs: number | null;
+  /**
+   * 止まっている理由。§4.4。**失敗欄とは別に持つ。**
+   * 同じ欄に入れると、待てば戻るものが「失敗しました」として出る。
+   */
+  readonly pausedReason: string | null;
   /** 始まった時刻 / 終わった時刻。§9.2 Progress の timestamps。 */
   readonly startedAt: string | null;
   readonly endedAt: string | null;
@@ -67,6 +72,7 @@ export const emptyWorkView: WorkView = {
   resultArtifactId: null,
   error: null,
   elapsedMs: null,
+  pausedReason: null,
   startedAt: null,
   endedAt: null,
   lastSequence: 0,
@@ -81,6 +87,7 @@ interface Mutable {
   resultArtifactId: string | null;
   error: WorkView['error'];
   elapsedMs: number | null;
+  pausedReason: string | null;
   startedAt: string | null;
   endedAt: string | null;
   lastSequence: number;
@@ -96,6 +103,7 @@ function seed(view: WorkView): Mutable {
     resultArtifactId: view.resultArtifactId,
     error: view.error,
     elapsedMs: view.elapsedMs,
+    pausedReason: view.pausedReason,
     startedAt: view.startedAt,
     endedAt: view.endedAt,
     lastSequence: view.lastSequence,
@@ -182,6 +190,7 @@ export function applyEvent(view: WorkView, event: EventEnvelope): WorkView {
     case 'task.completed': {
       draft.status = 'COMPLETED';
       draft.attention = null;
+      draft.pausedReason = null;
       draft.resultArtifactId = event.payload.result_artifact_id ?? draft.resultArtifactId;
       draft.elapsedMs = event.payload.duration_ms;
       draft.endedAt = event.timestamp;
@@ -199,6 +208,7 @@ export function applyEvent(view: WorkView, event: EventEnvelope): WorkView {
     case 'task.failed': {
       draft.status = 'FAILED';
       draft.attention = null;
+      draft.pausedReason = null;
       draft.error = {
         code: event.payload.error.code,
         recovery: event.payload.error.recovery,
@@ -215,7 +225,22 @@ export function applyEvent(view: WorkView, event: EventEnvelope): WorkView {
     case 'task.cancelled': {
       draft.status = 'CANCELLED';
       draft.attention = null;
+      draft.pausedReason = null;
       draft.endedAt = event.timestamp;
+      break;
+    }
+    case 'task.paused': {
+      /*
+       * 端末が落ちた。**失敗として見せない**（§4.4）。
+       * 進行中の段はそのまま残す — 途中まで進んだ事実は消えていない。
+       */
+      draft.status = 'PAUSED_HOST_OFFLINE';
+      draft.pausedReason = event.payload.message;
+      break;
+    }
+    case 'task.resumed': {
+      draft.status = 'RUNNING';
+      draft.pausedReason = null;
       break;
     }
     default:
@@ -237,6 +262,7 @@ export function applyEvent(view: WorkView, event: EventEnvelope): WorkView {
     resultArtifactId: draft.resultArtifactId,
     error: draft.error,
     elapsedMs: draft.elapsedMs,
+    pausedReason: draft.pausedReason,
     startedAt: draft.startedAt,
     endedAt: draft.endedAt,
     lastSequence: draft.lastSequence,

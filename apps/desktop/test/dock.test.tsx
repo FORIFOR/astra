@@ -444,6 +444,7 @@ describe('work surface inside the dock (§4.4 / §6)', () => {
     elapsedMs: 12_000,
     startedAt: '2026-08-27T04:00:00.000Z',
     endedAt: null,
+    pausedReason: null,
     lastSequence: 5,
   };
 

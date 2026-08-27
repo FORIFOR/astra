@@ -32,6 +32,14 @@ export const EVENT_TYPES = [
   'task.completed',
   'task.failed',
   'task.cancelled',
+  /*
+   * 端末が落ちて止まった / 戻って動き出した。正本 §4.4。
+   *
+   * **失敗と別に持つ。**待てば戻るものを task.failed で伝えると、
+   * 画面は「失敗しました」と出し、利用者は終わったものとして扱う。
+   */
+  'task.paused',
+  'task.resumed',
   'tool.started',
   'tool.completed',
   'artifact.created',
@@ -113,6 +121,23 @@ export const TaskCompletedPayload = z.object({
 export const TaskFailedPayload = z.object({ error: TaskError });
 
 export const TaskCancelledPayload = z.object({ reason: z.string().max(500) });
+
+/** なぜ止まっているか。**今は端末の不在だけ。**増やすときはここに足す。 */
+export const PauseReasonCode = z.enum(['host_offline']);
+export type PauseReasonCode = z.infer<typeof PauseReasonCode>;
+
+export const TaskPausedPayload = z.object({
+  reason: PauseReasonCode,
+  step_index: z.number().int().nonnegative().nullable(),
+  /** 画面に出す一言。**「失敗」と読める言葉を入れない。** */
+  message: z.string().max(200),
+});
+
+export const TaskResumedPayload = z.object({
+  step_index: z.number().int().nonnegative().nullable(),
+  /** 止まっていた時間。どれだけ待たせたかを隠さない。 */
+  paused_ms: z.number().int().nonnegative().nullable().default(null),
+});
 
 export const ToolStartedPayload = z.object({
   step_index: z.number().int().nonnegative(),
@@ -207,6 +232,8 @@ export const TaskWaitingApprovalEvent = evt('task.waiting_approval', TaskWaiting
 export const TaskCompletedEvent = evt('task.completed', TaskCompletedPayload);
 export const TaskFailedEvent = evt('task.failed', TaskFailedPayload);
 export const TaskCancelledEvent = evt('task.cancelled', TaskCancelledPayload);
+export const TaskPausedEvent = evt('task.paused', TaskPausedPayload);
+export const TaskResumedEvent = evt('task.resumed', TaskResumedPayload);
 export const ToolStartedEvent = evt('tool.started', ToolStartedPayload);
 export const ToolCompletedEvent = evt('tool.completed', ToolCompletedPayload);
 export const ArtifactCreatedEvent = evt('artifact.created', ArtifactCreatedPayload);
@@ -241,6 +268,8 @@ export const EventEnvelope = z.discriminatedUnion('type', [
   TaskCompletedEvent,
   TaskFailedEvent,
   TaskCancelledEvent,
+  TaskPausedEvent,
+  TaskResumedEvent,
   ToolStartedEvent,
   ToolCompletedEvent,
   ArtifactCreatedEvent,

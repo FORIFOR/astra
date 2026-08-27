@@ -144,6 +144,18 @@
   color: var(--astra-color-accent-on) !important;
 }
 
+/*
+ * 端末の復帰待ち。§4.4。
+ *
+ * **danger 色を使わない。**赤で出すと、待てば戻るものが
+ * 「壊れた」に見え、利用者はやり直しか放置を選んでしまう。
+ */
+.astra-work__paused {
+  margin: 0;
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-secondary);
+}
+
 .astra-work__error {
   margin: 0;
   color: var(--astra-color-danger);

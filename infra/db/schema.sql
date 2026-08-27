@@ -433,6 +433,36 @@ ALTER TABLE ONLY public.evidence FORCE ROW LEVEL SECURITY;
 
 
 --
+-- Name: host_step_requests; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.host_step_requests (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    task_id uuid NOT NULL,
+    step_index integer NOT NULL,
+    tool_id text NOT NULL,
+    args jsonb DEFAULT '{}'::jsonb NOT NULL,
+    approval jsonb,
+    status text NOT NULL,
+    host_id uuid,
+    result jsonb,
+    error jsonb,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    claimed_at timestamp with time zone,
+    completed_at timestamp with time zone,
+    expires_at timestamp with time zone NOT NULL,
+    CONSTRAINT host_step_requests_claimed CHECK (((status = 'PENDING'::text) OR ((host_id IS NOT NULL) AND (claimed_at IS NOT NULL)))),
+    CONSTRAINT host_step_requests_settled CHECK ((((status = 'DONE'::text) AND (result IS NOT NULL) AND (completed_at IS NOT NULL)) OR ((status = 'FAILED'::text) AND (error IS NOT NULL) AND (completed_at IS NOT NULL)) OR ((status = ANY (ARRAY['PENDING'::text, 'CLAIMED'::text])) AND (completed_at IS NULL)))),
+    CONSTRAINT host_step_requests_status_check CHECK ((status = ANY (ARRAY['PENDING'::text, 'CLAIMED'::text, 'DONE'::text, 'FAILED'::text]))),
+    CONSTRAINT host_step_requests_step_index_check CHECK ((step_index >= 0)),
+    CONSTRAINT host_step_requests_tool_id_check CHECK ((tool_id <> ''::text))
+);
+
+ALTER TABLE ONLY public.host_step_requests FORCE ROW LEVEL SECURITY;
+
+
+--
 -- Name: job_checkpoints; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1136,6 +1166,14 @@ ALTER TABLE ONLY public.evidence
 
 
 --
+-- Name: host_step_requests host_step_requests_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.host_step_requests
+    ADD CONSTRAINT host_step_requests_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: job_checkpoints job_checkpoints_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1546,6 +1584,20 @@ CREATE INDEX evidence_by_run ON public.evidence USING btree (research_run_id, qu
 --
 
 CREATE UNIQUE INDEX evidence_dedupe ON public.evidence USING btree (research_run_id, source_url, md5(claim));
+
+
+--
+-- Name: host_step_requests_queue; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX host_step_requests_queue ON public.host_step_requests USING btree (tenant_id, status, created_at) WHERE (status = 'PENDING'::text);
+
+
+--
+-- Name: host_step_requests_step; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX host_step_requests_step ON public.host_step_requests USING btree (task_id, step_index);
 
 
 --
@@ -2216,6 +2268,30 @@ ALTER TABLE ONLY public.evidence
 
 ALTER TABLE ONLY public.evidence
     ADD CONSTRAINT evidence_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+
+--
+-- Name: host_step_requests host_step_requests_host_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.host_step_requests
+    ADD CONSTRAINT host_step_requests_host_id_fkey FOREIGN KEY (host_id) REFERENCES public.agent_hosts(id) ON DELETE SET NULL;
+
+
+--
+-- Name: host_step_requests host_step_requests_task_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.host_step_requests
+    ADD CONSTRAINT host_step_requests_task_id_fkey FOREIGN KEY (task_id) REFERENCES public.tasks(id) ON DELETE CASCADE;
+
+
+--
+-- Name: host_step_requests host_step_requests_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.host_step_requests
+    ADD CONSTRAINT host_step_requests_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
 
 
 --
@@ -2952,6 +3028,19 @@ CREATE POLICY evidence_tenant_isolation ON public.evidence USING ((tenant_id = p
 
 
 --
+-- Name: host_step_requests; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.host_step_requests ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: host_step_requests host_step_requests_tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY host_step_requests_tenant_isolation ON public.host_step_requests USING ((tenant_id = public.astra_current_tenant())) WITH CHECK ((tenant_id = public.astra_current_tenant()));
+
+
+--
 -- Name: job_checkpoints; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -3282,3 +3371,4 @@ INSERT INTO schema_migrations (version) VALUES ('20260827040001');
 INSERT INTO schema_migrations (version) VALUES ('20260827050001');
 INSERT INTO schema_migrations (version) VALUES ('20260827060001');
 INSERT INTO schema_migrations (version) VALUES ('20260827070001');
+INSERT INTO schema_migrations (version) VALUES ('20260827090000');

@@ -1,0 +1,8 @@
+# 実装仕様 §14.2 の eval harness 契約
+phase: connectors
+tags: [acceptance, blocking, security]
+blocking: true
+description: >
+  正本 §2.4・§21、UI/UX §22。Calendar / Gmail の接続。
+  読む・下書きは自動、送信と削除は人の承認。トークンは端末から出ず、
+  manifest の宣言と実装の守りが一致していること。

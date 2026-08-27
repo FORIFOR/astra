@@ -6,8 +6,13 @@
  * **Dock とは別プロセス。**Dock を閉じても、これは動き続ける。
  */
 import { createLogger } from '@astra/telemetry';
+import { credentialRef, providerConfig, type OauthProvider } from '@astra/oauth';
 import { LocalAgentHost } from './host.js';
 import { httpTransport } from './transport.js';
+import { keychainFor } from './keychain.js';
+import { ConnectorRuntime } from './connector-steps.js';
+import { HostStepLoop } from './step-loop.js';
+import { httpStepTransport } from './step-transport.js';
 
 async function main(): Promise<void> {
   const logger = createLogger({
@@ -34,6 +39,14 @@ async function main(): Promise<void> {
     .map((m) => m.trim())
     .filter((m) => m.length > 0);
 
+  /*
+   * 同意の結果。**この端末が保持する。**
+   * `ASTRA_GRANTED_SCOPES` は `plugin=scope,scope;plugin=...` の形。
+   * 空なら何も許されていないものとして扱う（既定で通さない）。
+   */
+  const grantedScopes = parseGrants(process.env['ASTRA_GRANTED_SCOPES'] ?? '');
+  const redirectUri = process.env['ASTRA_OAUTH_REDIRECT_URI'] ?? 'http://127.0.0.1:0/callback';
+
   const host = new LocalAgentHost({
     deviceLabel,
     models,
@@ -50,12 +63,56 @@ async function main(): Promise<void> {
   const id = await host.start();
   logger.info({ host_id: id, device_label: deviceLabel, models }, 'local agent host started');
 
+  /*
+   * connector の step を取りに来る側。正本 §2.4・§21。
+   *
+   * **鍵はこの端末から出ない。**cloud から来るのは「何をしてほしいか」だけで、
+   * トークンは OS の資格情報ストアから、呼ぶ直前にだけ読む。
+   */
+  const secrets = keychainFor(process.platform, process.env['USER'] ?? 'astra');
+  const runtime = new ConnectorRuntime({
+    secrets,
+    credentialRefFor: credentialRef,
+    /*
+     * 実際に許された scope。**要求した scope ではない。**
+     * 同意画面で外された分をここに含めると、
+     * 「許したはずが無い操作」が端末側の検査を通ってしまう。
+     */
+    grantedScopes: (pluginId) => grantedScopes[pluginId] ?? [],
+    // 設定されていない提供者は更新しない。切れたら繋ぎ直しを促す。
+    refreshConfig: (provider) => {
+      const config = providerConfig(provider as OauthProvider, [], process.env);
+      return config ? { ...config, redirectUri: redirectUri } : null;
+    },
+  });
+
+  const steps = new HostStepLoop({
+    transport: httpStepTransport({ baseUrl, token }),
+    runner: runtime,
+    onError: (error) => logger.warn({ err: error.message }, 'a step could not be handled'),
+  });
+  void steps.start(id);
+
   const shutdown = (signal: string): void => {
     logger.info({ signal }, 'shutting down the local agent host');
     void host.stop().finally(() => process.exit(0));
   };
   process.on('SIGINT', () => shutdown('SIGINT'));
   process.on('SIGTERM', () => shutdown('SIGTERM'));
+}
+
+/** `plugin=scope,scope;plugin=...` を読む。読めない部分は捨てる（推測しない）。 */
+export function parseGrants(value: string): Record<string, string[]> {
+  const out: Record<string, string[]> = {};
+  for (const entry of value.split(';')) {
+    const [pluginId, scopes] = entry.split('=');
+    if (!pluginId?.trim() || !scopes) continue;
+    out[pluginId.trim()] = scopes
+      .split(',')
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+  }
+  return out;
 }
 
 main().catch((error: unknown) => {

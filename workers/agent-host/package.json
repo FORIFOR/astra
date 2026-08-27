@@ -13,7 +13,9 @@
   },
   "dependencies": {
     "@astra/contracts": "workspace:*",
-    "@astra/telemetry": "workspace:*"
+    "@astra/telemetry": "workspace:*",
+    "@astra/service-connectors": "workspace:*",
+    "@astra/oauth": "workspace:*"
   },
   "devDependencies": {
     "vitest": "catalog:"

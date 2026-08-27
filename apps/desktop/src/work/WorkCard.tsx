@@ -104,6 +104,13 @@ export function WorkCard({
         </div>
       )}
 
+      {/* §4.4: 端末待ちは失敗ではない。別の面で、待てば戻ることを言う。 */}
+      {view.pausedReason && (
+        <p className="astra-work__paused" role="status">
+          {view.pausedReason}
+        </p>
+      )}
+
       {view.error && (
         <p className="astra-work__error" role="alert">
           {/* §21: 仕事への影響と次の選択肢を書く。抽象的な失敗表現にしない。 */}

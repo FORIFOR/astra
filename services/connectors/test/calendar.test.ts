@@ -1,0 +1,194 @@
+import { describe, expect, it } from 'vitest';
+import { GoogleCalendarConnector } from '../src/calendar.js';
+import { ApprovalRequired, type ApprovalProof } from '../src/approval.js';
+
+const NOW = (): Date => new Date('2026-08-27T00:00:00.000Z');
+const READ_WRITE = ['calendar.read', 'calendar.write'];
+
+const proof: ApprovalProof = {
+  approvalId: 'ap-1',
+  operationId: 'calendar.create',
+  decision: 'APPROVED',
+  decidedBy: 'user-1',
+  decidedAt: '2026-08-26T23:59:00.000Z',
+  expiresAt: '2026-08-27T00:05:00.000Z',
+};
+
+function fakeFetch(
+  body: unknown,
+  status = 200,
+): {
+  fetch: typeof globalThis.fetch;
+  calls: { url: string; method: string; body: unknown }[];
+} {
+  const calls: { url: string; method: string; body: unknown }[] = [];
+  const fetch = (async (url: string, init: RequestInit) => {
+    calls.push({
+      url,
+      method: init.method ?? 'GET',
+      body: init.body ? JSON.parse(init.body as string) : undefined,
+    });
+    return new Response(JSON.stringify(body), { status });
+  }) as unknown as typeof globalThis.fetch;
+  return { fetch, calls };
+}
+
+describe('GoogleCalendarConnector', () => {
+  it('expands recurring events so a weekly meeting shows up this week', async () => {
+    const { fetch, calls } = fakeFetch({ items: [] });
+    const calendar = new GoogleCalendarConnector({
+      token: async () => 't',
+      fetch,
+      grantedScopes: READ_WRITE,
+      now: NOW,
+    });
+
+    await calendar.list({ timeMin: '2026-08-27T00:00:00Z', timeMax: '2026-08-28T00:00:00Z' });
+
+    expect(calls[0]!.url).toContain('singleEvents=true');
+    expect(calls[0]!.url).toContain('orderBy=startTime');
+  });
+
+  it('keeps an all-day event as a date, without inventing a time', async () => {
+    const { fetch } = fakeFetch({
+      items: [
+        {
+          id: 'e1',
+          summary: '夏季休暇',
+          start: { date: '2026-08-27' },
+          end: { date: '2026-08-28' },
+          status: 'confirmed',
+        },
+      ],
+    });
+    const calendar = new GoogleCalendarConnector({
+      token: async () => 't',
+      fetch,
+      grantedScopes: READ_WRITE,
+    });
+
+    const [event] = await calendar.list({ timeMin: 'a', timeMax: 'b' });
+
+    expect(event!.start).toEqual({ dateTime: null, date: '2026-08-27', timeZone: null });
+    expect(event!.end.dateTime).toBeNull();
+  });
+
+  it('reads attendees, the organiser and a video link', async () => {
+    const { fetch } = fakeFetch({
+      id: 'e1',
+      summary: '定例',
+      start: { dateTime: '2026-08-27T01:00:00Z', timeZone: 'Asia/Tokyo' },
+      end: { dateTime: '2026-08-27T02:00:00Z', timeZone: 'Asia/Tokyo' },
+      attendees: [
+        { email: 'a@example.com', responseStatus: 'accepted', organizer: true },
+        { email: 'b@example.com' },
+      ],
+      organizer: { email: 'a@example.com' },
+      status: 'confirmed',
+      conferenceData: {
+        entryPoints: [
+          { entryPointType: 'phone', uri: 'tel:+81' },
+          { entryPointType: 'video', uri: 'https://meet.example/abc' },
+        ],
+      },
+    });
+    const calendar = new GoogleCalendarConnector({
+      token: async () => 't',
+      fetch,
+      grantedScopes: READ_WRITE,
+    });
+
+    const event = await calendar.get({ eventId: 'e1' });
+
+    expect(event.attendees).toEqual([
+      { email: 'a@example.com', responseStatus: 'accepted', organizer: true },
+      // 返事のない人を「承諾」にしない
+      { email: 'b@example.com', responseStatus: 'needsAction', organizer: false },
+    ]);
+    expect(event.organizerEmail).toBe('a@example.com');
+    expect(event.conferenceUri).toBe('https://meet.example/abc');
+  });
+
+  it('leaves an untitled event untitled', async () => {
+    const { fetch } = fakeFetch({ id: 'e1', status: 'confirmed' });
+    const calendar = new GoogleCalendarConnector({
+      token: async () => 't',
+      fetch,
+      grantedScopes: READ_WRITE,
+    });
+    expect((await calendar.get({ eventId: 'e1' })).title).toBe('');
+  });
+
+  it('will not create an event without approval, and issues no request', async () => {
+    const { fetch, calls } = fakeFetch({});
+    const calendar = new GoogleCalendarConnector({
+      token: async () => 't',
+      fetch,
+      grantedScopes: READ_WRITE,
+      now: NOW,
+    });
+
+    await expect(
+      calendar.create(
+        { title: '打ち合わせ', start: { date: '2026-09-01' }, end: { date: '2026-09-02' } },
+        undefined,
+      ),
+    ).rejects.toBeInstanceOf(ApprovalRequired);
+    expect(calls).toHaveLength(0);
+  });
+
+  it('does not send invitations on its own when it creates an event', async () => {
+    const { fetch, calls } = fakeFetch({ id: 'e9', status: 'confirmed' });
+    const calendar = new GoogleCalendarConnector({
+      token: async () => 't',
+      fetch,
+      grantedScopes: READ_WRITE,
+      now: NOW,
+    });
+
+    await calendar.create(
+      {
+        title: '打ち合わせ',
+        start: { dateTime: '2026-09-01T01:00:00Z' },
+        end: { dateTime: '2026-09-01T02:00:00Z' },
+        attendeeEmails: ['b@example.com'],
+      },
+      proof,
+    );
+
+    expect(calls[0]!.url).toContain('sendUpdates=none');
+    expect(calls[0]!.body).toMatchObject({
+      summary: '打ち合わせ',
+      attendees: [{ email: 'b@example.com' }],
+    });
+  });
+
+  it('refuses to write when only the read scope was granted', async () => {
+    const { fetch, calls } = fakeFetch({});
+    const calendar = new GoogleCalendarConnector({
+      token: async () => 't',
+      fetch,
+      grantedScopes: ['calendar.read'],
+      now: NOW,
+    });
+
+    await expect(
+      calendar.create(
+        { title: 'x', start: { date: '2026-09-01' }, end: { date: '2026-09-02' } },
+        proof,
+      ),
+    ).rejects.toMatchObject({ reason: 'insufficient_scope' });
+    expect(calls).toHaveLength(0);
+  });
+
+  it('caps how many events one call can pull back', async () => {
+    const { fetch, calls } = fakeFetch({ items: [] });
+    const calendar = new GoogleCalendarConnector({
+      token: async () => 't',
+      fetch,
+      grantedScopes: READ_WRITE,
+    });
+    await calendar.list({ timeMin: 'a', timeMax: 'b', maxResults: 10_000 });
+    expect(calls[0]!.url).toContain('maxResults=250');
+  });
+});

@@ -339,6 +339,7 @@ describe('what a failure tells the person (§24)', () => {
       elapsedMs: 1_000,
       startedAt: null,
       endedAt: null,
+      pausedReason: null,
       lastSequence: 1,
     }) as WorkView;
 

@@ -11,8 +11,8 @@ execution_surfaces: [cloud]
 permissions:
   - email.read
   - email.draft
+  - email.modify
   - email.send
-  - contacts.read
 data_accessed:
   - Gmail messages, threads, labels and drafts
   - Contact names and addresses appearing in those messages

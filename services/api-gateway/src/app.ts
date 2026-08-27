@@ -60,6 +60,8 @@ export interface AppDeps {
   readonly evidence?: EvidenceReader;
   /** 手元の実行基盤の調整役。無ければその経路は生えない（§4.4）。 */
   readonly agentHosts?: import('@astra/service-agent-host').AgentHostService;
+  /** 手元でしか動かせない step の受け渡し。§4.4。 */
+  readonly hostBridge?: import('@astra/service-agent-host').HostBridge;
   readonly meetings?: MeetingRuntime;
   /** dashboard の bind を解決する先。gateway が各サービスの束を合成して渡す。 */
   readonly dataSources?: DataSourceResolver;
@@ -129,7 +131,11 @@ export function buildApp(deps: AppDeps): App {
     ...(deps.ssePollIntervalMs === undefined ? {} : { ssePollIntervalMs: deps.ssePollIntervalMs }),
   });
   if (deps.agentHosts) {
-    registerAgentHostRoutes(app, { hosts: deps.agentHosts, tasks: deps.tasks });
+    registerAgentHostRoutes(app, {
+      hosts: deps.agentHosts,
+      tasks: deps.tasks,
+      ...(deps.hostBridge === undefined ? {} : { bridge: deps.hostBridge }),
+    });
   }
   registerArtifactRoutes(app, { library: deps.library });
   // §3 の初期セットアップ。catalog を見るので registry の後。

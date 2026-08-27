@@ -12,7 +12,8 @@ import { PluginRegistryService } from '@astra/service-plugin-registry';
 import type { DataSourceResolver } from '@astra/service-plugin-registry';
 import { ShareService } from '@astra/service-share';
 import { ResearchLedgerService } from '@astra/service-research';
-import { AgentHostService } from '@astra/service-agent-host';
+// 名前がぶつかる: こちらは手元 step の受け渡し、下の HostBridge は desktop 側の口
+import { AgentHostService, HostBridge as HostStepBridge } from '@astra/service-agent-host';
 import {
   MeetingService,
   MemoryRecordingStore,
@@ -133,6 +134,8 @@ export async function makeTestApp(options: MakeAppOptions): Promise<TestApp> {
     evidence: new ResearchLedgerService(db),
     // 正本 §4.4: Dock を閉じても仕事が続くための調整役
     agentHosts: new AgentHostService({ db }),
+    // 受け渡しも繋ぐ。繋がない harness だと、経路の欠落を試験が見逃す。
+    hostBridge: new HostStepBridge({ db }),
     ...(options.dataSources === undefined ? {} : { dataSources: options.dataSources }),
     meetings: {
       meetings,

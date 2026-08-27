@@ -87,3 +87,31 @@ export function shouldPauseInsteadOfFallback(runsOnHost: boolean, hostState: Hos
 export function canAutoResume(_pausedFor: PauseReason, wasWaitingApproval: boolean): boolean {
   return !wasWaitingApproval;
 }
+
+/**
+ * 端末が居ない / 返さない。**失敗ではない。**
+ *
+ * 契約側に置いてあるのは、cloud の worker がこれを
+ * 「待てば進むもの」として見分けられるようにするため。
+ * 名前の一致で見分けると、片方を改名した瞬間に静かに壊れ、
+ * **端末が落ちただけの仕事が FAILED になる。**
+ */
+export class HostOfflineError extends Error {
+  /** Temporal の失敗種別に使う名前。workflow 側と 1 箇所で合わせる。 */
+  static readonly TYPE = 'HostOffline';
+
+  constructor(message: string) {
+    super(message);
+    this.name = HostOfflineError.TYPE;
+  }
+}
+
+/**
+ * これは「待てば進む」か。
+ *
+ * **代替手段へ落とす前に見る。**端末が落ちているだけのときに
+ * §24 の梯子を降りると、利用者が選んでいない経路で外部操作が起きる。
+ */
+export function isHostOfflineError(error: unknown): boolean {
+  return error instanceof HostOfflineError;
+}

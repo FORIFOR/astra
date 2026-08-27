@@ -69,6 +69,16 @@ describe('connectors', () => {
     });
     const oauth = configured.items.find((i) => i.capability === 'oauth_providers')!;
     expect(oauth.isStandIn).toBe(false);
+    expect(oauth.implementation).not.toContain('unavailable');
+  });
+
+  it('is real with one provider, and still names the one that is not reachable', () => {
+    // 全部揃うまで「接続できません」と答えるのは嘘。Google だけの構成は普通にある。
+    const configured = report({ ASTRA_OAUTH_GOOGLE_CLIENT_ID: 'g' });
+    const oauth = configured.items.find((i) => i.capability === 'oauth_providers')!;
+    expect(oauth.isStandIn).toBe(false);
+    expect(oauth.implementation).toContain('google');
+    expect(oauth.implementation).toContain('unavailable: microsoft');
   });
 });
 

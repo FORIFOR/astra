@@ -251,6 +251,24 @@ export interface Evidence {
   tenant_id: string;
 }
 
+export interface HostStepRequests {
+  approval: Json | null;
+  args: Generated<Json>;
+  claimed_at: Timestamp | null;
+  completed_at: Timestamp | null;
+  created_at: Generated<Timestamp>;
+  error: Json | null;
+  expires_at: Timestamp;
+  host_id: string | null;
+  id: string;
+  result: Json | null;
+  status: string;
+  step_index: number;
+  task_id: string;
+  tenant_id: string;
+  tool_id: string;
+}
+
 export interface JobCheckpoints {
   state: Generated<Json>;
   step_index: Generated<number>;
@@ -592,6 +610,7 @@ export interface DB {
   domain_links: DomainLinks;
   event_streams: EventStreams;
   evidence: Evidence;
+  host_step_requests: HostStepRequests;
   job_checkpoints: JobCheckpoints;
   job_leases: JobLeases;
   meeting_segments: MeetingSegments;

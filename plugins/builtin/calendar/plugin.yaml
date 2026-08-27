@@ -22,12 +22,11 @@ connectors:
 tools:
   - id: calendar.list_events
     risk: READ
+  - id: calendar.get_event
+    risk: READ
+  # 招待が同席者へ届く。取り消しても「取り消し通知」が届く。
   - id: calendar.create_event
-    risk: REVERSIBLE_WRITE
-  - id: calendar.update_event
-    risk: REVERSIBLE_WRITE
-  - id: calendar.delete_event
-    risk: DESTRUCTIVE
+    risk: EXTERNAL_COMMIT
     requires_confirmation: true
 agents: []
 dashboards: []

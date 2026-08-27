@@ -24,7 +24,8 @@
     "@astra/service-meeting": "workspace:*",
     "@astra/service-plugin-registry": "workspace:*",
     "@astra/service-capabilities": "workspace:*",
-    "@astra/service-agent-runtime": "workspace:*"
+    "@astra/service-agent-runtime": "workspace:*",
+    "@astra/service-agent-host": "workspace:*"
   },
   "devDependencies": {
     "@temporalio/testing": "^1.22.0",

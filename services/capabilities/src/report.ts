@@ -15,7 +15,7 @@ import {
   imageCapability,
   videoCapability,
 } from '@astra/service-agent-runtime';
-import { unconfiguredProviders, type OauthEnv } from '@astra/oauth';
+import { configuredProviders, unconfiguredProviders, type OauthEnv } from '@astra/oauth';
 import type { MeetingProviders } from '@astra/service-meeting';
 import type { ResearchProviders } from '@astra/service-research';
 
@@ -32,16 +32,31 @@ function fromProvider(
   };
 }
 
-/** 繋げる提供者が 1 つも無ければ、connector は使えない。 */
+/**
+ * 繋げる提供者が 1 つも無ければ、connector は使えない。
+ *
+ * **全部揃うことを求めない。**Google だけ設定してある構成は普通にあり、
+ * そこで「接続できません」と答えるのは嘘になる。ただし
+ * **繋げない提供者の名前は残す** — 「Microsoft も繋がるはず」と
+ * 思ったまま使われないように。
+ */
 function oauthCapability(env: OauthEnv): CapabilityInput {
+  const ready = configuredProviders(env);
   const missing = unconfiguredProviders(env);
-  if (missing.length === 0) {
-    return { implementation: 'configured', isStandIn: false, configureWith: null };
+  if (ready.length === 0) {
+    return {
+      implementation: 'none configured',
+      isStandIn: true,
+      configureWith: missing.map((m) => m.setting).join(', '),
+    };
   }
   return {
-    implementation: `unconfigured: ${missing.map((m) => m.provider).join(', ')}`,
-    isStandIn: true,
-    configureWith: missing.map((m) => m.setting).join(', '),
+    implementation:
+      missing.length === 0
+        ? `configured: ${ready.join(', ')}`
+        : `configured: ${ready.join(', ')} / unavailable: ${missing.map((m) => m.provider).join(', ')}`,
+    isStandIn: false,
+    configureWith: null,
   };
 }
 
