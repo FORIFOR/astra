@@ -7,6 +7,35 @@
 
 ---
 
+## 0. 何が残っているか、一行で
+
+**Client ID を 1 つ入れれば、本番として起動します。**コードは揃っています。
+
+Client ID を入れた状態で能力の名乗りを取ると、こうなります（実際に取った）:
+
+```
+✓ search             verified        device (web search)
+✓ language_model     verified        device (bring your own)
+✓ speech_to_text     verified        google-stt-v2
+✓ translation        verified        google-translate-v3
+✓ oauth_providers    unverified      configured: google / unavailable: microsoft
+✓ text_to_speech     verified        google-tts
+… image_generation   not_configured  deterministic   ← 任意
+… video_generation   not_configured  none            ← 任意
+
+本番として起動できます
+```
+
+`oauth_providers` が `unverified` なのは、**その Client でまだ一度も
+Google へサインインしていない**ため。実装そのものは実 HTTP で確かめてある
+（`docs/evidence/oauth.md`）。一度サインインすれば埋まる。
+
+起動を止めるのは「偽物かどうか」（`isStandIn`）で、
+「まだ試していない」は止めない。**動かないものは止め、
+試していないものは知らせる** — 別のことなので別に扱う。
+
+---
+
 ## 1. 判定
 
 |                        |                                                  |
@@ -40,16 +69,19 @@ Cloud Console でしか作れず、API も無いので人の操作になる。
 
 すべてこのリポジトリで実行した結果。
 
-| ゲート                                         | 結果                           |
-| ---------------------------------------------- | ------------------------------ |
-| `pnpm typecheck`                               | PASS                           |
-| `pnpm format:check`                            | PASS                           |
-| `pnpm check:conventions`                       | PASS                           |
-| `pnpm check:generated`                         | PASS（schema / 生成型 / 定数） |
-| migration の巻き戻し                           | PASS（up → down → up）         |
-| `pnpm test:db`（実 PostgreSQL）                | PASS                           |
-| `pnpm build:apps`                              | PASS                           |
-| `pnpm smoke`（実 Temporal・実 Redis・実 HTTP） | PASS                           |
+| ゲート                                         | 結果                                    |
+| ---------------------------------------------- | --------------------------------------- |
+| `pnpm typecheck`                               | PASS                                    |
+| `pnpm format:check`                            | PASS                                    |
+| `pnpm check:conventions`                       | PASS                                    |
+| `pnpm check:generated`                         | PASS（schema / 生成型 / 定数）          |
+| migration の巻き戻し                           | PASS（up → down → up）                  |
+| `pnpm test:db`（実 PostgreSQL）                | PASS                                    |
+| `pnpm build:apps`                              | PASS                                    |
+| `cargo fmt --check`（desktop / Rust）          | PASS                                    |
+| `cargo clippy --all-targets -- -D warnings`    | PASS                                    |
+| `cargo test`（desktop / Rust）                 | PASS（66 件、3 件は模型が要るため除外） |
+| `pnpm smoke`（実 Temporal・実 Redis・実 HTTP） | PASS                                    |
 
 ---
 
@@ -77,6 +109,9 @@ Cloud Console でしか作れず、API も無いので人の操作になる。
 ## 4. 本番に出す前に、人がやること
 
 **assistant が代わりにできないもの**だけを並べる。
+
+**`./scripts/finish-oauth.sh` を実行すると、何が足りないかを順に出します。**
+埋まれば、そのまま能力の名乗りと本番起動の可否まで確かめます。
 
 1. **Google OAuth Client を作る**（デスクトップ用）。
    `ASTRA_OAUTH_GOOGLE_CLIENT_ID` に入れる。
@@ -139,6 +174,8 @@ Calendar/Gmail の鎖で見ているのは提供者の挙動ではなく**こち
 - **GUI の手動確認。**assistant は画面を操作していない
 - **実アカウントでの OAuth 疎通。**Client が無い（実装は実測済み）
 - **長時間・大量の負荷。**同時実行や長い調査での挙動は測っていない
+- **手元 STT の実模型。**`cargo test -- --ignored` の 3 件は sherpa-onnx の
+  模型が要る。前回の実測（1,543ms）は残してあるが、**今回は走らせていない**
 
 ---
 
