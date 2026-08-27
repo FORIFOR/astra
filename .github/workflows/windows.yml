@@ -1,6 +1,6 @@
-# Windows Native (WinUI 3 + C#) のビルド設定。macOS ホストでは実行不可のため CI で検証する。
-# 現状 apps/windows は雛形 + GeneratedMetrics.cs のみ（実 .sln/.csproj は Phase 4 で追加）。
-# この workflow は「core の C# binding 生成 → WinUI ビルド」の枠を先に固定する。
+# Windows Native (WinUI 3 + C#) の CI。共有ロジック（C# CoreBridge / session / geometry）は
+# どのホストでも実測済み（verify-csharp-bridge）。ここでは Windows でしかできない WinUI UI レイヤの
+# 実ビルドを検証する（macOS ホストではビルド不可のため）。
 name: windows
 on:
   push:
