@@ -11,6 +11,7 @@ final class RecordingRuntime {
     private var mic: MicCapture?
     private var sysAudio: AnyObject?
     private var speech: SpeechTranscriber?
+    private var paused = false
     /// 途中経過/確定の文字起こしを UI へ渡す（オンデバイス STT）。
     var onTranscript: ((String, Bool) -> Void)?
     /// 実 gateway に作った会議（サインイン時のみ）。無ければローカル録音だけ。
@@ -64,7 +65,8 @@ final class RecordingRuntime {
             do {
                 try mic.start { [weak self, weak session] frame in
                     _ = session?.pushSamples(samples: frame, sampleRate: 16_000)
-                    self?.speech?.append(frame, sampleRate: 16_000)   // 手元で文字起こし
+                    // 一時停止中は文字起こしもしない（session 側は core が sample を捨てる）。
+                    if self?.paused != true { self?.speech?.append(frame, sampleRate: 16_000) }
                 }
                 self.mic = mic
             } catch {
@@ -96,7 +98,10 @@ final class RecordingRuntime {
 
     func snapshot() -> RecordingSnapshot? { session?.snapshot() }
     func recordedMs() -> UInt64 { session?.recordedMs() ?? 0 }
-    func setPaused(_ paused: Bool) { session?.setPaused(paused: paused) }
+    func setPaused(_ paused: Bool) {
+        self.paused = paused
+        session?.setPaused(paused: paused)
+    }
 
     /// 停止して確定。書けた断片は残り、回復候補になる。
     func end() {

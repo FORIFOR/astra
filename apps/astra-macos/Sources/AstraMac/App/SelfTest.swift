@@ -30,6 +30,7 @@ enum SelfTest {
         case "sttrecognize": sttrecognize(); return true
         case "shape": shape(); return true
         case "hudlifecycle": hudlifecycle(); return true
+        case "pause": pauseWorks(); return true
         default: return false
         }
     }
@@ -493,6 +494,35 @@ enum SelfTest {
             print("SELFTEST_FAIL hudlifecycle: second cycle \(on2)->\(off2)"); exit(5)
         }
         print("SELFTEST_OK hudlifecycle: HUD→Recording→保存→HUD 復帰 の window 状態遷移 OK")
+        exit(0)
+    }
+
+    /// `--selftest pause`: 一時停止が実際に録音を止めるか（UI フラグだけでない）を検証する。
+    /// pause 中に push しても recordedMs が進まないこと・解除後に進むことを確かめる。
+    @MainActor
+    private static func pauseWorks() {
+        let runtime = RecordingRuntime.shared
+        guard runtime.begin(meetingId: "pause-selftest", captureMic: false, captureSystemAudio: false, transcribe: false) else {
+            print("SELFTEST_FAIL pause begin"); exit(2)
+        }
+        let oneSec = [Float](repeating: 0.1, count: 16_000)
+        // recordedMs は閉じた断片(5秒毎)を数えるので、各フェーズ 6 秒ずつ流す。
+        for _ in 0..<6 { runtime.push(oneSec, sampleRate: 16_000) }
+        let before = runtime.recordedMs()
+        runtime.setPaused(true)
+        for _ in 0..<6 { runtime.push(oneSec, sampleRate: 16_000) }   // 一時停止中は捨てられるはず
+        let duringPause = runtime.recordedMs()
+        runtime.setPaused(false)
+        for _ in 0..<6 { runtime.push(oneSec, sampleRate: 16_000) }
+        let afterResume = runtime.recordedMs()
+        runtime.end()
+        let root = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+            .appendingPathComponent("Astra/meetings").path
+        try? FileManager.default.removeItem(atPath: root + "/pause-selftest")
+        guard before > 0, duringPause == before, afterResume > duringPause else {
+            print("SELFTEST_FAIL pause before=\(before) duringPause=\(duringPause) afterResume=\(afterResume)"); exit(3)
+        }
+        print("SELFTEST_OK pause: 停止中は録音が進まない before=\(before) pause=\(duringPause) resume=\(afterResume)")
         exit(0)
     }
 

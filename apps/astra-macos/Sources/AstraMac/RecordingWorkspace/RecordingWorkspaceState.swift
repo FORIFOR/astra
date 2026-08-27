@@ -157,6 +157,9 @@ final class RecordingWorkspaceState: ObservableObject {
         RecordingRuntime.shared.end()   // 断片を確定（回復候補として残る）
         WindowCoordinator.shared.leaveRecordingMode()
     }
-    func togglePause() { isPaused.toggle() }
+    func togglePause() {
+        isPaused.toggle()
+        RecordingRuntime.shared.setPaused(isPaused)   // 実際に録音を止める（core が sample を捨てる）
+    }
     func captureScreenshot() {}
 }

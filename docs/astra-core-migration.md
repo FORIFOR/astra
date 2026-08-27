@@ -431,3 +431,14 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
 - `--selftest hudlifecycle`（§6「Voice HUD→Recording→保存→HUD復帰」/ Done#7）を追加。
   **実測 PASS**: `HUD→Recording→保存→HUD 復帰 の window 状態遷移 OK`。verify に組み込み。全 selftest 回帰なし。
 - **意味**: 実際にクラッシュする経路（ショートカット/ボタンでの録音開始）を修正。Done#2/#7 の正しさが上がった。
+
+## 追記: 一時停止が実際に録音を止めていなかったバグ修正（Phase 1.36）
+- **バグ発見・修正**: `RecordingWorkspaceState.togglePause()` は UI フラグ `isPaused` を切り替えるだけで、
+  `RecordingRuntime.setPaused()`（core の `RecordingSession.set_paused`）を呼んでいなかった。core は pause 中に
+  sample を捨てる実装なのに、その口が UI から繋がっておらず、**一時停止ボタンは見た目だけ**で録音は進み続けていた
+  （§2「UIだけのmockで完成扱いにしない」違反）。
+- 修正: `togglePause()` が `RecordingRuntime.shared.setPaused(isPaused)` を呼ぶ。RecordingRuntime は `paused` を持ち、
+  一時停止中はマイクフレームを STT にも渡さない（session 側は core が捨てる）。
+- 検証: `--selftest pause` を追加。begin → 6s push（before=5000）→ pause + 6s push（**進まず 5000**）→ resume + 6s push
+  （10000）。**実測 PASS**: `停止中は録音が進まない before=5000 pause=5000 resume=10000`。verify に組み込み、回帰なし。
+- **意味**: 一時停止が実機能になった（UI mock ではない）。Done#2/#7 の正しさが向上。
