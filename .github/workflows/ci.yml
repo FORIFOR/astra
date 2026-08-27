@@ -78,6 +78,12 @@ jobs:
       - run: pnpm check:workspace-fixture
       # 最終製品経路（macOS native + astra-core）が Tauri 非依存であることを担保（Done#8）。
       - run: pnpm check:native-tauri-free
+      # Windows の C# CoreBridge を P/Invoke で実 core に繋ぎ動作検証（Windows 実機なしで, dotnet）。
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - uses: dtolnay/rust-toolchain@stable
+      - run: pnpm verify:csharp-bridge
       - name: Check the contracts version was bumped
         if: github.event_name == 'pull_request'
         run: node scripts/check-contracts-version.mjs origin/${{ github.base_ref }}

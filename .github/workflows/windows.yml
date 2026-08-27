@@ -28,6 +28,8 @@ jobs:
         run: node scripts/check-cabi-csharp.mjs
       - name: Recording Workspace shape fixture freshness
         run: node scripts/gen-workspace-fixture.mjs --check
+      - name: C# CoreBridge -> core P/Invoke smoke
+        run: bash scripts/verify-csharp-bridge.sh
       - name: Restore + build WinUI 3 solution
         run: dotnet build apps/windows/Astra.sln -c Release -p:Platform=x64
       - name: Note

@@ -622,3 +622,15 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
 - **意味（Done#8）**: 最終製品経路（native）から旧 Tauri 依存が**外れていることを機械で担保**。既存 Tauri アプリ
   (`apps/desktop`) は §7 に従い残置（参照側であって製品経路ではない）。残る外部依存は実 OAuth 提供者との live 交換のみ
   （Tauri とは無関係）。
+
+## 追記: Windows C# CoreBridge を実 core で動作検証（Phase 1.55, Done#4/#5 強化）
+- **dotnet 8 がこの macOS で使えると判明**。WinUI の UI レイヤ（Windows App SDK）は Windows でしか組めないが、
+  **純 C# の CoreBridge（P/Invoke）は net8.0 で macOS 上でビルド・実行できる**。
+- `apps/windows/bridge-check`（Program.cs + csproj）と `scripts/verify-csharp-bridge.sh` を新設。
+  Windows アプリと**同一の `AstraCore.cs`** を取り込み、**P/Invoke で実 `libastra_core` に繋いで**
+  version / **PKCE(RFC7636 ベクタ)** / authorize URL / callback 解析 / elapsed を検証。
+- 検証: **実測 PASS** `CS_OK bridge->core: version=0.1.0 pkce=S256 authorizeUrl parseCallback elapsed=01:05`。
+  `ci.yml`（ubuntu, dotnet）と `windows.yml` に `verify:csharp-bridge` を追加。
+- **意味（Done#4/#5 の強化）**: Windows の C# ブリッジが、契約一致（三者 contract）だけでなく **実際にコンパイルでき、
+  実 core を P/Invoke で呼んで正しい結果を返す**ことを、**Windows 実機なしで**実測担保。残るは WinUI の UI レイヤの
+  実ビルド/描画のみ（Windows App SDK が要り windows-latest CI で検証）。

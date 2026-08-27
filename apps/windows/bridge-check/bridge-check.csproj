@@ -1,0 +1,16 @@
+<!-- Windows C# CoreBridge の動作検証（P/Invoke → 実 core）。WinUI に依存しないので macOS/Linux でも走る。 -->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <OutputType>Exe</OutputType>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Program.cs" />
+    <!-- Windows アプリと同一の CoreBridge を取り込む（二重実装しない）。 -->
+    <Compile Include="../Astra/CoreBridge/AstraCore.cs" />
+  </ItemGroup>
+</Project>
