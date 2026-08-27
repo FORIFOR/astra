@@ -227,3 +227,17 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
   **実測 PASS**: `SELFTEST_OK screen: width=1280 height=800 pixelFormat=BGRA audio=false`。
 - **live 境界**: 実フレーム取得は画面収録許可(TCC)が要り Done#3(live) に含まれ未検証。
 - これで §3 の capture 三点（Mic / System Audio / Screen Context）が実装＋構成検証済みに揃った。
+
+## 追記: サインイン折り返しの契約を core へ（Phase 1.21）
+- `astra-core::oauth` を新設: `CallbackParams`（折り返しで戻る値の型）・`parse_callback`（クエリ解析）・
+  `percent_decode`（form-urlencoded）・`is_allowed_auth_url`（https と loopback だけ許す URL 判定）。
+  RFC 8252 の native app サインインで、macOS/Windows native が**自前の loopback listener から同じ関数**を使う。
+  §1 の「connector contracts / API・domain 処理」を core へ寄せる一歩。
+- Tauri の `oauth.rs` はローカル定義（型・parse・decode・URL 判定）を削除し `pub use astra_core::{…}` と
+  `astra_core::is_allowed_auth_url(&url)` へ差し替え。**待ち受け（TcpListener）とブラウザ起動（`open`）は OS 統合として残す**
+  （AppHandle/Tauri command は core に入れない原則を維持）。serde 表現・コマンド署名は不変。
+- **実測**: core **26 tests**（oauth 7 件を含む、parse/decode/URL 判定）/ Tauri Rust **67 tests・0 失敗**
+  （73→67 は移動した 6 パーステストの差、回帰なし）/ swift-bindings・design-tokens `--check` current / conventions PASS。
+- **意味**: サインイン折り返しの**セキュリティ判定と契約処理**が Tauri から core へ移り、両 OS native が共有する
+  （①/⑧ の前進）。**残る connector の外部依存**（各プロバイダの OAuth 実行フロー・トークン交換）は
+  外部サービス + ユーザー許可を伴い、この環境で完了・検証不可。Done#8「完全 retire」は依然未達。

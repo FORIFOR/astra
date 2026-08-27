@@ -32,18 +32,8 @@ pub struct Listening {
     pub port: u16,
 }
 
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub struct CallbackParams {
-    pub code: Option<String>,
-    pub state: Option<String>,
-    pub error: Option<String>,
-    pub error_description: Option<String>,
-    /// サインインの relay（LINE / Apple web）は code ではなく ID トークンを返す。
-    pub id_token: Option<String>,
-    /// Apple は初回だけ名前を返す。relay がここに載せる。
-    pub display_name: Option<String>,
-}
+// 折り返しで戻る値の型は astra-core が正本（macOS/Windows native も同じ型を使う）。
+pub use astra_core::CallbackParams;
 
 /// 待ち受けを開く。**port は OS に選ばせる。**
 ///
@@ -127,47 +117,8 @@ fn read_request_target(stream: &mut TcpStream) -> Result<String, String> {
         .ok_or_else(|| "the callback was not a request we understand".to_string())
 }
 
-/// クエリを読む。**分からないものは持ち込まない。**
-pub fn parse_callback(target: &str) -> CallbackParams {
-    let query = target.split_once('?').map(|(_, q)| q).unwrap_or("");
-    let mut params = CallbackParams::default();
-    for pair in query.split('&') {
-        let Some((key, value)) = pair.split_once('=') else {
-            continue;
-        };
-        let decoded = percent_decode(value);
-        match key {
-            "code" => params.code = Some(decoded),
-            "state" => params.state = Some(decoded),
-            "error" => params.error = Some(decoded),
-            "id_token" => params.id_token = Some(decoded),
-            "display_name" => params.display_name = Some(decoded),
-            "error_description" => params.error_description = Some(decoded),
-            // 提供者が足す余計なものは無視する
-            _ => {}
-        }
-    }
-    params
-}
-
-fn percent_decode(value: &str) -> String {
-    let bytes = value.replace('+', " ").into_bytes();
-    let mut out: Vec<u8> = Vec::with_capacity(bytes.len());
-    let mut i = 0;
-    while i < bytes.len() {
-        if bytes[i] == b'%' && i + 2 < bytes.len() {
-            let hex = std::str::from_utf8(&bytes[i + 1..i + 3]).ok();
-            if let Some(byte) = hex.and_then(|h| u8::from_str_radix(h, 16).ok()) {
-                out.push(byte);
-                i += 3;
-                continue;
-            }
-        }
-        out.push(bytes[i]);
-        i += 1;
-    }
-    String::from_utf8_lossy(&out).into_owned()
-}
+// クエリの読み取り・percent decode は astra-core が正本。ここは待ち受けだけ持つ。
+pub use astra_core::parse_callback;
 
 fn respond(stream: &mut TcpStream, params: &CallbackParams) {
     let message = if params.error.is_some() {
@@ -190,50 +141,8 @@ fn respond(stream: &mut TcpStream, params: &CallbackParams) {
 mod tests {
     use super::*;
 
-    #[test]
-    fn reads_the_code_and_the_state() {
-        let params = parse_callback("/callback?code=abc&state=xyz");
-        assert_eq!(params.code.as_deref(), Some("abc"));
-        assert_eq!(params.state.as_deref(), Some("xyz"));
-        assert!(params.error.is_none());
-    }
-
-    #[test]
-    fn reads_a_refusal() {
-        let params =
-            parse_callback("/callback?error=access_denied&error_description=%E6%8B%92%E5%90%A6");
-        assert_eq!(params.error.as_deref(), Some("access_denied"));
-        // 理由を握り潰さない
-        assert_eq!(params.error_description.as_deref(), Some("拒否"));
-    }
-
-    #[test]
-    fn ignores_anything_it_does_not_know() {
-        let params = parse_callback("/callback?code=a&scope=mail.read&authuser=0");
-        assert_eq!(params.code.as_deref(), Some("a"));
-    }
-
-    #[test]
-    fn survives_a_callback_with_no_query() {
-        let params = parse_callback("/callback");
-        assert!(params.code.is_none());
-        assert!(params.state.is_none());
-    }
-
-    #[test]
-    fn decodes_a_code_that_was_escaped() {
-        // %2B は `+` であって空白ではない。取り違えるとコードが壊れる。
-        let params = parse_callback("/callback?code=4%2F0Ab%2Bc");
-        assert_eq!(params.code.as_deref(), Some("4/0Ab+c"));
-    }
-
-    #[test]
-    fn reads_a_literal_plus_as_a_space() {
-        // form-encoded の `+` は空白（説明文に現れる）
-        let params = parse_callback("/callback?error_description=too+long");
-        assert_eq!(params.error_description.as_deref(), Some("too long"));
-    }
-
+    // クエリ解析・percent decode・URL 許可判定のテストは astra-core 側に移動。
+    // ここに残すのは待ち受け（OS 統合）のテストだけ。
     #[test]
     fn opens_on_a_port_the_os_chose() {
         let runtime = OauthRuntime::default();
@@ -252,10 +161,7 @@ mod tests {
 /// ここで絞らないと「開く」が何でも実行する口になる。
 #[tauri::command]
 pub fn oauth_open_browser(url: String) -> Result<(), String> {
-    let allowed = url.starts_with("https://")
-        || url.starts_with("http://localhost")
-        || url.starts_with("http://127.0.0.1");
-    if !allowed {
+    if !astra_core::is_allowed_auth_url(&url) {
         return Err(format!("refusing to open a non-https url: {}", url.chars().take(32).collect::<String>()));
     }
     #[cfg(target_os = "macos")]

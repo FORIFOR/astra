@@ -11,6 +11,7 @@ uniffi::setup_scaffolding!();
 
 pub mod mode;
 pub mod api;
+pub mod oauth;
 pub mod capi;
 pub mod context;
 pub mod recording;
@@ -24,6 +25,7 @@ pub use api::{
 };
 pub use context::{rank_context, ContextCandidate, ContextQuery, ContextResult, ContextSource};
 pub use mode::AstraMode;
+pub use oauth::{is_allowed_auth_url, parse_callback, percent_decode, CallbackParams};
 pub use transcript::{merge_overlap, LiveWindow, TranscriptEvent};
 pub use session::{RecordingSession, SessionError};
 pub use recording::{
