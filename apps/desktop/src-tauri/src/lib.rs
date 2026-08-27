@@ -4,6 +4,7 @@ pub mod audio;
 pub mod capability;
 pub mod context;
 pub mod dock;
+mod workspace;
 pub mod notify;
 pub mod oauth;
 pub mod permission;
@@ -42,6 +43,7 @@ pub fn run() {
             secrets::secret_delete,
             shortcut::shortcut_status,
             shortcut::shortcut_rebind,
+            workspace::workspace_open,
         ])
         .setup(|app| {
             if cfg!(debug_assertions) {

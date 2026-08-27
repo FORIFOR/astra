@@ -3,6 +3,7 @@ import { ShellProvider, useShell } from './state/ShellProvider.js';
 import { ThemeProvider } from './state/ThemeProvider.js';
 import { SessionProvider, useSession } from './state/SessionProvider.js';
 import type { AstraClient } from '@astra/api-client';
+import { workspace } from './host/tauri.js';
 import { WorkspaceDataProvider, useWorkspaceData } from './state/WorkspaceData.js';
 import { SignIn } from './auth/SignIn.js';
 import { AppShell } from './shell/AppShell.js';
@@ -60,12 +61,65 @@ function useWorkspaceConversation(client: AstraClient | null): ComposerConversat
   return useMemo(() => (client ? { send } : undefined), [client, send]);
 }
 
-function ActivePage(): ReactElement {
+/**
+ * Dock からの「この仕事を開いて」。UI/UX §2.2・§4.4。
+ * Tauri が居なければ何も購読しない（ブラウザには Dock が無い）。
+ */
+function OpenTaskListener(): null {
+  const { openTask, goToTab } = useShell();
+  useEffect(() => {
+    let dispose: (() => void) | null = null;
+    void workspace
+      .onOpenTask((taskId) => {
+        if (taskId) openTask(taskId);
+        else goToTab('work');
+      })
+      .then((off) => {
+        dispose = off;
+      });
+    return () => dispose?.();
+  }, [openTask, goToTab]);
+  return null;
+}
+
+function ActivePage({
+  conversation,
+}: {
+  conversation?: ComposerConversation | undefined;
+}): ReactElement {
   const { activeTab, focusedTaskId, focusedArtifactId, openTask, openArtifact, goToTab } =
     useShell();
-  const { tasks, artifacts, brief } = useWorkspaceData();
+  const { tasks, artifacts, brief, reload } = useWorkspaceData();
   const { client, me } = useSession();
   const { requestStart: requestStartMeeting } = useMeeting();
+  const [homeNotice, setHomeNotice] = useState<string | null>(null);
+
+  /*
+   * Home の「何を終わらせますか？」。§8 の universal entry。
+   * 聞き返しが返ったら **進めずに** その言葉を出す（正本 §7.2）。
+   * 頼めたら Work へ移る。頼んだものはそこに現れる。
+   */
+  const askFromHome = useCallback(
+    async (text: string) => {
+      if (!conversation) {
+        setHomeNotice('まだ接続していません。サインインし直してください。');
+        return;
+      }
+      try {
+        const result = await conversation.send(text);
+        if (result.needsClarification) {
+          setHomeNotice(result.answer);
+          return;
+        }
+        setHomeNotice(null);
+        await reload();
+        goToTab('work');
+      } catch (cause) {
+        setHomeNotice(cause instanceof Error ? cause.message : '送れませんでした');
+      }
+    },
+    [conversation, goToTab, reload],
+  );
 
   switch (activeTab) {
     case 'home':
@@ -79,6 +133,8 @@ function ActivePage(): ReactElement {
           onOpenArtifact={openArtifact}
           // §8.1「4件目以降は『すべて見る』」。繋がっていない button が残っていた。
           onShowAll={() => goToTab('work')}
+          onAsk={(text) => void askFromHome(text)}
+          notice={homeNotice}
           onDismiss={(itemId, verdict) => {
             // 覚えられなかったことを黙らない（次にまた出てくるため）
             void client?.dismissAttention(itemId, verdict).catch((error: unknown) => {
@@ -161,8 +217,10 @@ function Workspace(): ReactElement {
       <ShellProvider>
         <MeetingProvider client={client}>
           <AppShell {...(conversation ? { conversation } : {})}>
-            <ActivePage />
+            <ActivePage {...(conversation ? { conversation } : {})} />
           </AppShell>
+          {/* Dock の「詳しく見る」を受ける。本体が前に出て、その仕事へ移る。 */}
+          <OpenTaskListener />
           {/* 会議はタブではなく状態。4 タブは増やさない（正本 §2）。 */}
           <MeetingSurfaceLayer />
           {/* §16: どのタブを見ていても、確認待ちと失敗は届く。 */}

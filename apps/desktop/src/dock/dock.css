@@ -176,3 +176,95 @@
   margin: 0;
   color: var(--astra-color-danger);
 }
+
+/* ------------------------------------------------------------- attach */
+
+/* §4.3: File / Screen / Selection の明示追加。tool 名は出さない。 */
+.astra-dock__attach-menu {
+  display: flex;
+  gap: var(--astra-space-compact);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.astra-dock__attach-menu button {
+  min-height: 28px;
+  padding-inline: var(--astra-space-base);
+  border: var(--astra-border-hairline) solid var(--astra-color-border);
+  border-radius: var(--astra-radius-pill);
+  background: transparent;
+  color: var(--astra-color-text);
+  font-size: var(--astra-font-size-secondary);
+  cursor: pointer;
+}
+
+/* ---------------------------------------------------------- listening */
+
+/*
+ * §4.1 Listening: live transcript 2 行 + minimal waveform。
+ * 波は「聞こえている」の印で、飾りではない。§17.3 の Glow は
+ * voice active に限って許されている。
+ */
+.astra-dock__listening {
+  display: flex;
+  gap: var(--astra-space-base);
+  align-items: center;
+}
+
+.astra-dock__wave {
+  display: inline-flex;
+  gap: 2px;
+  align-items: center;
+  height: 20px;
+}
+
+.astra-dock__wave i {
+  display: block;
+  width: 3px;
+  height: 6px;
+  border-radius: 2px;
+  background: var(--astra-color-accent);
+  animation: astra-wave 900ms ease-in-out infinite;
+}
+
+.astra-dock__wave i:nth-child(2) {
+  animation-delay: 120ms;
+}
+.astra-dock__wave i:nth-child(3) {
+  animation-delay: 240ms;
+}
+.astra-dock__wave i:nth-child(4) {
+  animation-delay: 360ms;
+}
+.astra-dock__wave i:nth-child(5) {
+  animation-delay: 480ms;
+}
+
+@keyframes astra-wave {
+  0%,
+  100% {
+    height: 6px;
+  }
+  50% {
+    height: 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .astra-dock__wave i {
+    animation: none;
+    height: 12px;
+  }
+}
+
+.astra-dock__transcript {
+  margin: 0;
+  /* 2 行まで。それ以上は入力欄で読む */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  color: var(--astra-color-text);
+  font-size: var(--astra-font-size-body);
+}

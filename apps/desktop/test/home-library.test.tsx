@@ -364,3 +364,36 @@ describe('Home with the server brief (Phase 6)', () => {
     expect(screen.getByText('今、面倒なことを1つ頼んでください。')).toBeTruthy();
   });
 });
+
+describe('Home is an entry, not just a list (§8)', () => {
+  it('offers the universal entry on the first line', () => {
+    render(<HomePage now={NOW} />);
+    // §8 の 1 行目「何を終わらせますか？」
+    expect(screen.getByRole('textbox', { name: '何を終わらせますか' })).toBeTruthy();
+  });
+
+  it('hands what was typed to the caller, and clears the field', async () => {
+    const user = userEvent.setup();
+    const onAsk = vi.fn();
+    render(<HomePage now={NOW} onAsk={onAsk} />);
+    const field = screen.getByRole('textbox', { name: '何を終わらせますか' });
+    await user.type(field, 'A社の提案を直して{Enter}');
+    expect(onAsk).toHaveBeenCalledWith('A社の提案を直して');
+    expect((field as HTMLInputElement).value).toBe('');
+  });
+
+  it('does not send an empty request', async () => {
+    const user = userEvent.setup();
+    const onAsk = vi.fn();
+    render(<HomePage now={NOW} onAsk={onAsk} />);
+    await user.type(screen.getByRole('textbox', { name: '何を終わらせますか' }), '   {Enter}');
+    expect(onAsk).not.toHaveBeenCalled();
+  });
+
+  it('shows the state of each active job in words', () => {
+    render(<HomePage now={NOW} tasks={[task({ status: 'RUNNING', title: '競合20社調査' })]} />);
+    // 見出しの「進行中」とは別に、行そのものに状態が書いてある
+    const row = screen.getByRole('button', { name: /競合20社調査/ });
+    expect(row.textContent).toContain('進行中');
+  });
+});

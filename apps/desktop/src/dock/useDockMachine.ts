@@ -103,8 +103,16 @@ export function useDockMachine(
     setIntent,
     startListening: () => {
       shrunk.current = false;
+      if (!dictation) {
+        /*
+         * 音声入力が繋がっていない。**聞いているふりをしない。**
+         * LISTENING に入って何も起きないと、利用者は喋り続けて待つことになる。
+         * できないことは、できないと言う（UI/UX §21・§25）。
+         */
+        setClarification('音声入力はこの端末ではまだ使えません。文字で頼んでください。');
+        return;
+      }
       setState('LISTENING');
-      if (!dictation) return;
 
       void dictation
         .start({

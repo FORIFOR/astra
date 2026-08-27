@@ -52,6 +52,12 @@ export function ShellProvider({
   const openTask = useCallback((taskId: string) => {
     setFocusedTaskId(taskId);
     setActiveTab('work');
+    /*
+     * §7.1: 仕事を開いたら Inspector に Context / Evidence / Activity を出す。
+     * 閉じる button しか無く、**開く経路が一つも無かった。**
+     * 3 カラム目は在るのに、誰も見たことが無い状態だった。
+     */
+    setInspectorOpen(true);
   }, []);
 
   const openArtifact = useCallback((artifactId: string) => {

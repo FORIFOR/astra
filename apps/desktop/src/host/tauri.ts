@@ -165,6 +165,29 @@ export const shortcuts = {
   onHold,
 };
 
+/**
+ * Dock から本体へ。UI/UX §2.2 の「深く扱う必要がある時だけ開く」。
+ *
+ * Dock の「詳しく見る」はこれを呼ぶ。**押せるのに何も起きない button を残さない。**
+ * ブラウザでは本体の窓が無いので、何もしないことを返す。
+ */
+export const workspace = {
+  open: (taskId?: string) => call<void>('workspace_open', { taskId: taskId ?? null }),
+  /** 本体側が「この仕事を開いて」を受ける。Tauri が居なければ何も購読しない。 */
+  onOpenTask: async (handler: (taskId: string | null) => void): Promise<() => void> => {
+    if (!isTauri()) return () => undefined;
+    try {
+      const { listen } = await import('@tauri-apps/api/event');
+      return await listen<{ taskId: string | null }>('astra://open-task', (event) => {
+        handler(event.payload.taskId);
+      });
+    } catch (error) {
+      console.warn('could not subscribe to open-task', error);
+      return () => undefined;
+    }
+  },
+};
+
 export const host = {
   showDock: (state?: DockState, contentHeight?: number) =>
     call<void>('dock_show', { state, contentHeight }),

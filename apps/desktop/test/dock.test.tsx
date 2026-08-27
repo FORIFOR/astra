@@ -3,7 +3,7 @@
  * UI/UX §3・§4.3・§4.4・§5。
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import type { ContextSource } from '@astra/contracts';
 import { TaskDock } from '../src/dock/TaskDock.js';
@@ -35,6 +35,12 @@ afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
 });
+
+/** 音声入力の代役。聞けないのに LISTENING に入らないので、試験では繋いで渡す。 */
+const voice = {
+  async start() {},
+  async stop() {},
+};
 
 describe('intent bar (§4.3)', () => {
   it('offers text, voice and attach without naming any tool', () => {
@@ -100,7 +106,7 @@ describe('intent bar (§4.3)', () => {
 describe('voice (§4.3)', () => {
   it('toggles listening and shows it in an accessible way', async () => {
     const user = userEvent.setup();
-    render(<TaskDock />);
+    render(<TaskDock dictation={voice} />);
     const mic = screen.getByRole('button', { name: '音声で入力する' });
     expect(mic.getAttribute('aria-pressed')).toBe('false');
 
@@ -115,7 +121,7 @@ describe('voice (§4.3)', () => {
 
   it('keeps typed text while listening rather than switching modes (§1.2 No Mode)', async () => {
     const user = userEvent.setup();
-    render(<TaskDock />);
+    render(<TaskDock dictation={voice} />);
     const field = screen.getByLabelText('依頼を入力') as HTMLTextAreaElement;
     await user.type(field, '途中まで');
     await user.click(screen.getByRole('button', { name: '音声で入力する' }));
@@ -569,5 +575,35 @@ describe('the dock taking voice (正本 §11.1)', () => {
     render(<TaskDock dictation={broken} />);
     await userEvent.click(screen.getByRole('button', { name: '音声で入力する' }));
     expect((await screen.findByRole('alert')).textContent).toContain('マイクを使えません');
+  });
+});
+
+describe('honesty about what the dock can do (§21・§25)', () => {
+  it('does not pretend to listen when no voice input is wired', async () => {
+    /*
+     * LISTENING に入って何も起きないと、利用者は喋り続けて待つことになる。
+     * できないことは、できないと言う。
+     */
+    const user = userEvent.setup();
+    render(<TaskDock />);
+    await user.click(screen.getByRole('button', { name: '音声で入力する' }));
+    expect(screen.getByRole('alert').textContent).toContain('音声入力はこの端末ではまだ使えません');
+    // 聞いているふりの状態には入っていない
+    expect(screen.queryByText('聞いています')).toBeNull();
+  });
+
+  it('opens a menu of things to attach, instead of doing nothing', async () => {
+    // §4.3: Attach + = File / Screen / Selection。押しても何も起きない + が残っていた
+    const user = userEvent.setup();
+    render(<TaskDock />);
+    await user.click(screen.getByRole('button', { name: 'ファイルや画面を追加する' }));
+    const menu = screen.getByRole('menu', { name: '何を添えるか' });
+    expect(
+      within(menu)
+        .getAllByRole('menuitem')
+        .map((m) => m.textContent),
+    ).toEqual(['ファイル', 'いまの画面', '選択しているもの']);
+    // 技術的な tool 名は出さない
+    expect(document.body.textContent).not.toMatch(/MCP|connector|tool/i);
   });
 });

@@ -35,6 +35,8 @@ export function HomePage({
   onOpenArtifact,
   onShowAll,
   onDismiss,
+  onAsk,
+  notice = null,
 }: {
   tasks?: readonly TaskView[];
   artifacts?: readonly Artifact[];
@@ -53,7 +55,15 @@ export function HomePage({
    * **覚えない dismiss は、拒否ではなく無視。**押した先で覚える。
    */
   onDismiss?(itemId: string, verdict: 'later' | 'never'): void;
+  /**
+   * §8 の 1 行目「何を終わらせますか？」。Home は「今必要なこと + universal entry」。
+   * **入口が無い Home は、ただの一覧。**
+   */
+  onAsk?(text: string): void;
+  /** 頼んだ結果の一言（聞き返し・送れなかった理由）。無ければ出さない。 */
+  notice?: string | null;
 }): ReactElement {
+  const [ask, setAsk] = useState('');
   // 押した直後に消す。返事を待って残っていると、押していないように見える。
   const [hidden, setHidden] = useState<ReadonlySet<string>>(new Set());
   const built = useMemo(
@@ -77,6 +87,34 @@ export function HomePage({
         {greeting(new Date(now).getHours())}
         {displayName ? `、${displayName}さん` : ''}
       </h2>
+
+      {/* §8: universal entry。Dock と同じ口で、Home からも頼める */}
+      <form
+        className="astra-home__ask"
+        onSubmit={(event) => {
+          event.preventDefault();
+          const text = ask.trim();
+          if (text.length === 0) return;
+          onAsk?.(text);
+          setAsk('');
+        }}
+      >
+        <input
+          className="astra-home__ask-input"
+          value={ask}
+          placeholder="何を終わらせますか？"
+          aria-label="何を終わらせますか"
+          onChange={(event) => setAsk(event.target.value)}
+        />
+        <button type="submit" className="astra-home__ask-send" disabled={ask.trim().length === 0}>
+          頼む
+        </button>
+      </form>
+      {notice && (
+        <p className="astra-home__notice" role="status">
+          {notice}
+        </p>
+      )}
 
       {empty ? (
         // §8.1: 空状態では機能説明ではなく、1 つ頼んでもらう
@@ -156,6 +194,14 @@ export function HomePage({
                     >
                       <span aria-hidden="true">●</span>
                       <span>{task.title ?? '名前のない仕事'}</span>
+                      {/* §8 の「12 sources  進行中」。状態を人の言葉で添える */}
+                      <span className="astra-work-row__meta">
+                        {task.status === 'WAITING_APPROVAL'
+                          ? '確認待ち'
+                          : task.status === 'PAUSED_HOST_OFFLINE'
+                            ? '端末の復帰待ち'
+                            : '進行中'}
+                      </span>
                     </button>
                   </li>
                 ))}

@@ -14,10 +14,13 @@ import { Composer, type ComposerConversation } from './Composer.js';
 export function AppShell({
   children,
   conversation,
+  inspector,
 }: {
   children: ReactNode;
   /** 下端の composer が話す先。未接続なら composer が「繋がっていない」と言う。 */
   conversation?: ComposerConversation | undefined;
+  /** §7.1 の Inspector に出す中身（Context / Evidence / Activity）。 */
+  inspector?: ReactNode;
 }): ReactElement {
   const { layout } = useShell();
 
@@ -50,7 +53,7 @@ export function AppShell({
         */}
         <Composer {...(conversation ? { conversation } : {})} />
       </div>
-      <Inspector />
+      <Inspector>{inspector}</Inspector>
     </div>
   );
 }

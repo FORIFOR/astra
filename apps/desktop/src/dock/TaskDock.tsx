@@ -4,7 +4,7 @@
  * Chat 画面ではなく Intent Bar。Voice / Text / 画面 / 選択範囲 / ファイルを
  * 同一 Conversation へ入れる入口。
  */
-import { useCallback, useEffect, useMemo, useState, type ReactElement } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import {
   DOCK_MAX_INPUT_LINES,
   currentPlatform,
@@ -86,6 +86,52 @@ export function TaskDock({
       cancelled = true;
     };
   }, []);
+
+  const [attachOpen, setAttachOpen] = useState(false);
+  const filePicker = useRef<HTMLInputElement>(null);
+
+  /** 文脈を 1 つ足す。同じものは二度足さない。 */
+  const addSource = useCallback((id: string, label: string, reason: string) => {
+    setSources((current) =>
+      current.some((s) => s.id === id)
+        ? current
+        : [
+            {
+              id,
+              category: 'current',
+              label,
+              reason,
+              sensitivity: 'PRIVATE',
+              removable: true,
+              used: false,
+            },
+            ...current,
+          ],
+    );
+    setAttachOpen(false);
+  }, []);
+
+  /**
+   * 画面 / 選択を添える。取れるのは前面の app と窓の題名まで。
+   * **取れなかったら足さない**（推測で埋めない）。足せなかったことは言う。
+   */
+  const attachFromScreen = useCallback(
+    async (what: 'screen' | 'selection') => {
+      const snapshot = await host.contextSnapshot();
+      const label = snapshot?.window_title ?? snapshot?.active_app ?? null;
+      if (!label) {
+        setExplanation('いまの画面を読み取れませんでした。');
+        setAttachOpen(false);
+        return;
+      }
+      addSource(
+        `${what}:${label}`,
+        label,
+        what === 'screen' ? 'いまの画面として添えたため' : '選択しているものとして添えたため',
+      );
+    },
+    [addSource],
+  );
 
   const geometry = dockGeometryFor(machine.state, machine.contextExpanded);
   const size = dockGeometry[geometry];
@@ -237,12 +283,55 @@ export function TaskDock({
             {machine.state === 'LISTENING' ? '音声入力を止める' : '音声で入力する'}
           </span>
         </button>
-        <button type="button" className="astra-dock__attach">
+        <button
+          type="button"
+          className="astra-dock__attach"
+          aria-expanded={attachOpen}
+          aria-haspopup="menu"
+          onClick={() => setAttachOpen((open) => !open)}
+        >
           <span aria-hidden="true">＋</span>
           {/* §4.3: 技術的な tool 一覧は出さない */}
           <span className="astra-visually-hidden">ファイルや画面を追加する</span>
         </button>
+        <input
+          ref={filePicker}
+          type="file"
+          className="astra-visually-hidden"
+          tabIndex={-1}
+          aria-hidden="true"
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            if (file) addSource(`file:${file.name}`, file.name, '手で添えたファイルのため');
+            event.target.value = '';
+          }}
+        />
       </div>
+
+      {/* §4.3: Attach + = File / Screen / Selection の明示追加。押しても何も起きない + を残さない */}
+      {attachOpen && (
+        <ul className="astra-dock__attach-menu" role="menu" aria-label="何を添えるか">
+          <li role="none">
+            <button type="button" role="menuitem" onClick={() => filePicker.current?.click()}>
+              ファイル
+            </button>
+          </li>
+          <li role="none">
+            <button type="button" role="menuitem" onClick={() => void attachFromScreen('screen')}>
+              いまの画面
+            </button>
+          </li>
+          <li role="none">
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => void attachFromScreen('selection')}
+            >
+              選択しているもの
+            </button>
+          </li>
+        </ul>
+      )}
 
       {/* 聞き返しは、進める代わりに出る。**黙って別のものに対して動かない。** */}
       {clarification && (
@@ -255,6 +344,22 @@ export function TaskDock({
         <p className="astra-dock__status" role="status">
           {statusLabel}
         </p>
+      )}
+
+      {/* §4.1 Listening: live transcript 2 行 + minimal waveform。聞こえていることが見える */}
+      {machine.state === 'LISTENING' && (
+        <div className="astra-dock__listening" aria-live="polite">
+          <span className="astra-dock__wave" aria-hidden="true">
+            <i />
+            <i />
+            <i />
+            <i />
+            <i />
+          </span>
+          <p className="astra-dock__transcript">
+            {machine.intent.length > 0 ? machine.intent : '…'}
+          </p>
+        </div>
       )}
 
       {/* §4.4: 簡単な返事のために full app へ遷移しない。進行は Dock の中で見せる。 */}
