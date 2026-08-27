@@ -33,6 +33,15 @@ else { fatalError("snapshot round-trip failed: \(snap)") }
 let wire = toWire(samples: [0.0, 1.0, -1.0])
 guard wire.count == 6 else { fatalError("wire round-trip failed") }
 
+// RAG/context の決定的ランキングも core 側で
+let ranked = rankContext(
+    query: ContextQuery(terms: ["oauth", "審査"], limit: 0),
+    candidates: [
+        ContextCandidate(id: "a", text: "天気の話", source: .web, ageSeconds: 0, projectMatch: false),
+        ContextCandidate(id: "b", text: "OAuth 審査がまだ", source: .meeting, ageSeconds: 0, projectMatch: true),
+    ])
+guard ranked.first?.id == "b" else { fatalError("context ranking round-trip failed") }
+
 print("ROUNDTRIP_OK version=\(version) elapsed=\(snap.elapsedLabel) hero=\(snap.heroText)")
 SWIFT
 

@@ -17,9 +17,12 @@ jobs:
       - name: Build astra-core (staticlib + cdylib)
         working-directory: core/astra-core
         run: cargo build --release
-      - name: Generate C# bindings (uniffi)
+      # uniffi 本体は C# を同梱しないため、外部の uniffi-bindgen-cs を使う（macOS では未検証）。
+      - name: Install uniffi-bindgen-cs
+        run: cargo install uniffi-bindgen-cs --version 0.9.1 || cargo install uniffi-bindgen-cs
+      - name: Generate C# bindings
         working-directory: core/astra-core
-        run: cargo run --release --bin uniffi-bindgen -- generate --library target/release/astra_core.dll --language csharp --out-dir ../../apps/windows/Astra/Generated
+        run: uniffi-bindgen-cs --library target/release/astra_core.dll --out-dir ../../apps/windows/Astra/Generated
       # 以下は apps/windows に .sln/.csproj が入った時点で有効化する（Phase 4）。
       # - uses: microsoft/setup-msbuild@v2
       # - run: msbuild apps/windows/Astra.sln /p:Configuration=Release /p:Platform=x64

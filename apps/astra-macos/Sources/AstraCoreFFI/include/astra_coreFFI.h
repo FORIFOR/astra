@@ -312,6 +312,11 @@ RustBuffer uniffi_astra_core_fn_func_astra_core_version(RustCallStatus *_Nonnull
 RustBuffer uniffi_astra_core_fn_func_format_elapsed(uint64_t ms, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_RANK_CONTEXT
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_RANK_CONTEXT
+RustBuffer uniffi_astra_core_fn_func_rank_context(RustBuffer query, RustBuffer candidates, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_RECORDING_SNAPSHOT
 #define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_RECORDING_SNAPSHOT
 RustBuffer uniffi_astra_core_fn_func_recording_snapshot(RustBuffer input, RustCallStatus *_Nonnull out_status
@@ -616,6 +621,12 @@ uint16_t uniffi_astra_core_checksum_func_astra_core_version(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_FORMAT_ELAPSED
 #define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_FORMAT_ELAPSED
 uint16_t uniffi_astra_core_checksum_func_format_elapsed(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_RANK_CONTEXT
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_RANK_CONTEXT
+uint16_t uniffi_astra_core_checksum_func_rank_context(void
     
 );
 #endif

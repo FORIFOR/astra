@@ -448,6 +448,22 @@ fileprivate struct FfiConverterFloat: FfiConverterPrimitive {
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterDouble: FfiConverterPrimitive {
+    typealias FfiType = Double
+    typealias SwiftType = Double
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> Double {
+        return try lift(readDouble(&buf))
+    }
+
+    public static func write(_ value: Double, into buf: inout [UInt8]) {
+        writeDouble(&buf, lower(value))
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterBool : FfiConverter {
     typealias FfiType = Int8
     typealias SwiftType = Bool
@@ -749,6 +765,287 @@ public func FfiConverterTypeRecordingSession_lower(_ value: RecordingSession) ->
 }
 
 
+
+
+/**
+ * ランク対象の 1 件。
+ */
+public struct ContextCandidate {
+    public var id: String
+    public var text: String
+    public var source: ContextSource
+    /**
+     * 取得/作成からの経過秒。新しいほど強い。
+     */
+    public var ageSeconds: UInt64
+    /**
+     * いま見ているプロジェクトに属するか。
+     */
+    public var projectMatch: Bool
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(id: String, text: String, source: ContextSource, 
+        /**
+         * 取得/作成からの経過秒。新しいほど強い。
+         */ageSeconds: UInt64, 
+        /**
+         * いま見ているプロジェクトに属するか。
+         */projectMatch: Bool) {
+        self.id = id
+        self.text = text
+        self.source = source
+        self.ageSeconds = ageSeconds
+        self.projectMatch = projectMatch
+    }
+}
+
+#if compiler(>=6)
+extension ContextCandidate: Sendable {}
+#endif
+
+
+extension ContextCandidate: Equatable, Hashable {
+    public static func ==(lhs: ContextCandidate, rhs: ContextCandidate) -> Bool {
+        if lhs.id != rhs.id {
+            return false
+        }
+        if lhs.text != rhs.text {
+            return false
+        }
+        if lhs.source != rhs.source {
+            return false
+        }
+        if lhs.ageSeconds != rhs.ageSeconds {
+            return false
+        }
+        if lhs.projectMatch != rhs.projectMatch {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+        hasher.combine(text)
+        hasher.combine(source)
+        hasher.combine(ageSeconds)
+        hasher.combine(projectMatch)
+    }
+}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeContextCandidate: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> ContextCandidate {
+        return
+            try ContextCandidate(
+                id: FfiConverterString.read(from: &buf), 
+                text: FfiConverterString.read(from: &buf), 
+                source: FfiConverterTypeContextSource.read(from: &buf), 
+                ageSeconds: FfiConverterUInt64.read(from: &buf), 
+                projectMatch: FfiConverterBool.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: ContextCandidate, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.id, into: &buf)
+        FfiConverterString.write(value.text, into: &buf)
+        FfiConverterTypeContextSource.write(value.source, into: &buf)
+        FfiConverterUInt64.write(value.ageSeconds, into: &buf)
+        FfiConverterBool.write(value.projectMatch, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeContextCandidate_lift(_ buf: RustBuffer) throws -> ContextCandidate {
+    return try FfiConverterTypeContextCandidate.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeContextCandidate_lower(_ value: ContextCandidate) -> RustBuffer {
+    return FfiConverterTypeContextCandidate.lower(value)
+}
+
+
+/**
+ * 問い合わせ。
+ */
+public struct ContextQuery {
+    /**
+     * 小文字化済みの語（呼び出し側で分割）。空なら語彙一致は 0。
+     */
+    public var terms: [String]
+    /**
+     * 上位いくつ返すか（0 は全件）。
+     */
+    public var limit: UInt32
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * 小文字化済みの語（呼び出し側で分割）。空なら語彙一致は 0。
+         */terms: [String], 
+        /**
+         * 上位いくつ返すか（0 は全件）。
+         */limit: UInt32) {
+        self.terms = terms
+        self.limit = limit
+    }
+}
+
+#if compiler(>=6)
+extension ContextQuery: Sendable {}
+#endif
+
+
+extension ContextQuery: Equatable, Hashable {
+    public static func ==(lhs: ContextQuery, rhs: ContextQuery) -> Bool {
+        if lhs.terms != rhs.terms {
+            return false
+        }
+        if lhs.limit != rhs.limit {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(terms)
+        hasher.combine(limit)
+    }
+}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeContextQuery: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> ContextQuery {
+        return
+            try ContextQuery(
+                terms: FfiConverterSequenceString.read(from: &buf), 
+                limit: FfiConverterUInt32.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: ContextQuery, into buf: inout [UInt8]) {
+        FfiConverterSequenceString.write(value.terms, into: &buf)
+        FfiConverterUInt32.write(value.limit, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeContextQuery_lift(_ buf: RustBuffer) throws -> ContextQuery {
+    return try FfiConverterTypeContextQuery.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeContextQuery_lower(_ value: ContextQuery) -> RustBuffer {
+    return FfiConverterTypeContextQuery.lower(value)
+}
+
+
+/**
+ * ランク結果。UI は score 順に見せる。
+ */
+public struct ContextResult {
+    public var id: String
+    public var score: Double
+    /**
+     * なぜ上位か（人が読める短い理由。§8 の「根拠を出す」）。
+     */
+    public var reason: String
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(id: String, score: Double, 
+        /**
+         * なぜ上位か（人が読める短い理由。§8 の「根拠を出す」）。
+         */reason: String) {
+        self.id = id
+        self.score = score
+        self.reason = reason
+    }
+}
+
+#if compiler(>=6)
+extension ContextResult: Sendable {}
+#endif
+
+
+extension ContextResult: Equatable, Hashable {
+    public static func ==(lhs: ContextResult, rhs: ContextResult) -> Bool {
+        if lhs.id != rhs.id {
+            return false
+        }
+        if lhs.score != rhs.score {
+            return false
+        }
+        if lhs.reason != rhs.reason {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+        hasher.combine(score)
+        hasher.combine(reason)
+    }
+}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeContextResult: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> ContextResult {
+        return
+            try ContextResult(
+                id: FfiConverterString.read(from: &buf), 
+                score: FfiConverterDouble.read(from: &buf), 
+                reason: FfiConverterString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: ContextResult, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.id, into: &buf)
+        FfiConverterDouble.write(value.score, into: &buf)
+        FfiConverterString.write(value.reason, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeContextResult_lift(_ buf: RustBuffer) throws -> ContextResult {
+    return try FfiConverterTypeContextResult.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeContextResult_lower(_ value: ContextResult) -> RustBuffer {
+    return FfiConverterTypeContextResult.lower(value)
+}
 
 
 /**
@@ -1191,6 +1488,93 @@ extension AstraMode: Equatable, Hashable {}
 // Note that we don't yet support `indirect` for enums.
 // See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
 /**
+ * 候補の出典。重み付けに使う。
+ */
+
+public enum ContextSource {
+    
+    case meeting
+    case library
+    case message
+    case web
+}
+
+
+#if compiler(>=6)
+extension ContextSource: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeContextSource: FfiConverterRustBuffer {
+    typealias SwiftType = ContextSource
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> ContextSource {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .meeting
+        
+        case 2: return .library
+        
+        case 3: return .message
+        
+        case 4: return .web
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: ContextSource, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case .meeting:
+            writeInt(&buf, Int32(1))
+        
+        
+        case .library:
+            writeInt(&buf, Int32(2))
+        
+        
+        case .message:
+            writeInt(&buf, Int32(3))
+        
+        
+        case .web:
+            writeInt(&buf, Int32(4))
+        
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeContextSource_lift(_ buf: RustBuffer) throws -> ContextSource {
+    return try FfiConverterTypeContextSource.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeContextSource_lower(_ value: ContextSource) -> RustBuffer {
+    return FfiConverterTypeContextSource.lower(value)
+}
+
+
+extension ContextSource: Equatable, Hashable {}
+
+
+
+
+
+
+// Note that we don't yet support `indirect` for enums.
+// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+/**
  * 端末 → gateway の音声の接続。offline の間も手元の断片には残っている。
  */
 
@@ -1403,6 +1787,81 @@ fileprivate struct FfiConverterSequenceFloat: FfiConverterRustBuffer {
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterSequenceString: FfiConverterRustBuffer {
+    typealias SwiftType = [String]
+
+    public static func write(_ value: [String], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterString.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [String] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [String]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterString.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterSequenceTypeContextCandidate: FfiConverterRustBuffer {
+    typealias SwiftType = [ContextCandidate]
+
+    public static func write(_ value: [ContextCandidate], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeContextCandidate.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [ContextCandidate] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [ContextCandidate]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeContextCandidate.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterSequenceTypeContextResult: FfiConverterRustBuffer {
+    typealias SwiftType = [ContextResult]
+
+    public static func write(_ value: [ContextResult], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeContextResult.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [ContextResult] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [ContextResult]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeContextResult.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterSequenceTypeRecoverableMeeting: FfiConverterRustBuffer {
     typealias SwiftType = [RecoverableMeeting]
 
@@ -1440,6 +1899,17 @@ public func formatElapsed(ms: UInt64) -> String  {
     return try!  FfiConverterString.lift(try! rustCall() {
     uniffi_astra_core_fn_func_format_elapsed(
         FfiConverterUInt64.lower(ms),$0
+    )
+})
+}
+/**
+ * 候補を決定的にランク付けする。両 OS・Tauri が同じ順序を得る単一実装。
+ */
+public func rankContext(query: ContextQuery, candidates: [ContextCandidate]) -> [ContextResult]  {
+    return try!  FfiConverterSequenceTypeContextResult.lift(try! rustCall() {
+    uniffi_astra_core_fn_func_rank_context(
+        FfiConverterTypeContextQuery_lower(query),
+        FfiConverterSequenceTypeContextCandidate.lower(candidates),$0
     )
 })
 }
@@ -1495,6 +1965,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_astra_core_checksum_func_format_elapsed() != 55286) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_astra_core_checksum_func_rank_context() != 39717) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_astra_core_checksum_func_recording_snapshot() != 58987) {

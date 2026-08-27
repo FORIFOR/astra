@@ -67,3 +67,12 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
   裸実行では許可プロンプトが出ない）。実検証は Xcode .app 化 + 署名 + 手動許可が前提。
 - **Windows (WinUI3/C#)**: この macOS ホストでは**ビルド不可**。`apps/windows` は雛形+生成 Metrics のみ。
   `.github/workflows/windows.yml` に core+C# binding のビルド枠を用意（.sln は Phase 4 で追加）。**Windows PASS は主張しない。**
+
+## 追記: context/RAG スライス + C# の実態（Phase 1.6）
+- core に `rank_context(ContextQuery, [ContextCandidate]) -> [ContextResult]` を追加。語彙一致 + 新しさ
+  （12h 半減）+ プロジェクト一致 + 出典重みの**決定的**合成。両 OS・Tauri が同じ順序を得る単一実装。
+  Swift round-trip で `oauth/審査` の候補が正しく先頭に来ることを検証済み。core 13 tests。
+- **C# バインディングの実態（捏造しない）**: uniffi 0.29 本体の言語は kotlin/swift/python/ruby のみで
+  **C# は同梱されていない**（実測: `--language csharp` は invalid value）。Windows 側は外部ツール
+  `uniffi-bindgen-cs`（`cargo install`）で `.cs` を生成する設計にした（`.github/workflows/windows.yml`）。
+  この macOS ホストでは未検証。C ABI + P/Invoke の手書き shim に切り替える選択肢も残す。
