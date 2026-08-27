@@ -13,6 +13,7 @@ internal static class AstraCoreNative
     [DllImport(Dll)] internal static extern IntPtr astra_core_version();
     [DllImport(Dll)] internal static extern IntPtr astra_core_format_elapsed(ulong ms);
     [DllImport(Dll)] internal static extern void astra_core_string_free(IntPtr p);
+    [DllImport(Dll, CharSet = CharSet.Ansi)] internal static extern int astra_core_mark_meeting_uploaded(string root, string meetingId);
 
     [DllImport(Dll, CharSet = CharSet.Ansi)]
     internal static extern IntPtr astra_core_pkce_challenge(string verifier);
@@ -53,6 +54,7 @@ public static class AstraCore
 
     public static string Version => Consume(AstraCoreNative.astra_core_version());
     public static string FormatElapsed(ulong ms) => Consume(AstraCoreNative.astra_core_format_elapsed(ms));
+    public static bool MarkMeetingUploaded(string root, string meetingId) => AstraCoreNative.astra_core_mark_meeting_uploaded(root, meetingId) == 1;
 
     // connector 契約層（RFC 6749/7636）。live なトークン交換はここには無い（提供者ごとの外部処理）。
     public static string PkceChallenge(string verifier) =>

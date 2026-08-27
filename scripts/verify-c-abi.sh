@@ -81,7 +81,9 @@ int main(int argc, char** argv) {
         printf("CABI_FAIL closed=%u ms=%llu size=%lld\n", closed, ms, (long long)(stat(path,&st)==0?st.st_size:-1));
         return 5;
     }
-    printf("CABI_OK closed=%u ms=%llu fragmentBytes=%lld\n", closed, ms, (long long)st.st_size);
+    int marked = astra_core_mark_meeting_uploaded(root, "cabi");
+    if (marked != 1) { printf("CABI_FAIL mark_uploaded=%d\n", marked); return 6; }
+    printf("CABI_OK closed=%u ms=%llu fragmentBytes=%lld markedUploaded=%d\n", closed, ms, (long long)st.st_size, marked);
     return 0;
 }
 C

@@ -12,7 +12,7 @@ use crate::api::{
 };
 use crate::connector::{build_authorize_url, pkce_challenge, OauthProvider, ProviderConfig};
 use crate::oauth::parse_callback;
-use crate::recording::{format_elapsed, resample_linear, wire_bytes, Journal, JournalState, WIRE_SAMPLE_RATE};
+use crate::recording::{format_elapsed, mark_meeting_uploaded, resample_linear, wire_bytes, Journal, JournalState, WIRE_SAMPLE_RATE};
 
 fn cstr(value: &str) -> *mut c_char {
     CString::new(value).map(CString::into_raw).unwrap_or(std::ptr::null_mut())
@@ -35,6 +35,21 @@ pub extern "C" fn astra_core_version() -> *mut c_char {
 #[no_mangle]
 pub extern "C" fn astra_core_format_elapsed(ms: u64) -> *mut c_char {
     cstr(&format_elapsed(ms))
+}
+
+/// 会議を「アップロード済み」に印す（二重回復を防ぐ）。1=成功 / 0=失敗。
+///
+/// # Safety
+/// `root` / `meeting_id` は有効な NUL 終端 UTF-8。
+#[no_mangle]
+pub unsafe extern "C" fn astra_core_mark_meeting_uploaded(
+    root: *const c_char,
+    meeting_id: *const c_char,
+) -> i32 {
+    match (rstr(root), rstr(meeting_id)) {
+        (Some(root), Some(id)) if mark_meeting_uploaded(root.to_string(), id.to_string()) => 1,
+        _ => 0,
+    }
 }
 
 /// C 文字列を解放する。

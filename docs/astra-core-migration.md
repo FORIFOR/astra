@@ -582,3 +582,9 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
   **実測 PASS**: `検出→復旧 uploadedBytes=192000 復旧後は候補から消える(stillThere=false)`。
   core 35 tests / swift-bindings `--check` current / Tauri ビルド回帰なし。
 - **意味**: 送信済みの録音を二重に送らない（データ整合・帯域・課金の実害を防ぐ実バグ修正）。
+
+## 追記: mark_meeting_uploaded を C ABI にも公開（Phase 1.51, Windows パリティ）
+- Windows の回復フローも二重アップロードを防げるよう、C ABI に `astra_core_mark_meeting_uploaded(root, meeting_id)`
+  を追加（header・`AstraCore.cs` の `MarkMeetingUploaded`）。
+- 検証: `verify-c-abi.sh` を拡張し、録音往復の後に mark → **実測 PASS**: `CABI_OK … markedUploaded=1`。
+  **FFI contract**: `Rust 21 = header 21 = C# 21` 一致。swift-bindings `--check` current / Tauri ビルド回帰なし。
