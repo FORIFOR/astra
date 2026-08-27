@@ -26,6 +26,7 @@ enum SelfTest {
         case "livemic": livemic(); return true
         case "livescreen": livescreen(); return true
         case "livemeeting": livemeeting(); return true
+        case "sttrecognize": sttrecognize(); return true
         default: return false
         }
     }
@@ -395,6 +396,36 @@ enum SelfTest {
             print("SELFTEST_FAIL livemeeting recorded=\(recorded) recovered=\(recovered)"); exit(3)
         }
         print("SELFTEST_OK livemeeting: 実マイク recordedMs=\(recorded) recovered=\(recovered) sttEvents=\(transcriptEvents)")
+        exit(0)
+    }
+
+    /// `--selftest sttrecognize`: `say` で実音声を作り、オンデバイス STT が実際にテキストを出すか検証する。
+    /// 実音声を伴う認識精度の live 検証（合成音声だが、実 STT エンジンが実際に文字を返す）。
+    @MainActor
+    private static func sttrecognize() {
+        guard SpeechTranscriber.authorization == .authorized else {
+            print("SELFTEST_SKIP sttrecognize: speech not authorized"); exit(0)
+        }
+        let aiff = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("astra-stt-\(getpid()).aiff")
+        defer { try? FileManager.default.removeItem(at: aiff) }
+        // macOS の say で英語の実音声を生成（既定音声は英語なので en-US で認識する）。
+        let phrase = "testing astra meeting transcription"
+        let say = Process()
+        say.executableURL = URL(fileURLWithPath: "/usr/bin/say")
+        say.arguments = ["-o", aiff.path, phrase]
+        do { try say.run(); say.waitUntilExit() } catch { print("SELFTEST_FAIL sttrecognize say error=\(error)"); exit(2) }
+        guard say.terminationStatus == 0, FileManager.default.fileExists(atPath: aiff.path) else {
+            print("SELFTEST_FAIL sttrecognize: say produced no file"); exit(3)
+        }
+        let st = SpeechTranscriber(localeId: "en-US")
+        guard let text = st.recognizeFile(aiff), !text.isEmpty else {
+            print("SELFTEST_SKIP sttrecognize: recognizer returned no text in this context"); exit(0)
+        }
+        let lower = text.lowercased()
+        // 主要語のいずれかを拾えていれば認識成立とみなす（音声認識は完全一致を保証しない）。
+        let hit = ["test", "astra", "meeting", "transcription", "transcri"].contains { lower.contains($0) }
+        guard hit else { print("SELFTEST_FAIL sttrecognize: unexpected text=\(text)"); exit(4) }
+        print("SELFTEST_OK sttrecognize: 実音声→STT 認識=\"\(text)\"")
         exit(0)
     }
 

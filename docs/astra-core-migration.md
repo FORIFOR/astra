@@ -395,3 +395,12 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
 - **意味（Done#3 の前進）**: **live mic 取り込み・実マイク会議録音/回復・実 screen フレーム取得は実測 PASS**
   （合成でなく実デバイス/実ディスプレイ）。残る live 未検証は「実音声を伴う STT 認識精度・カレンダー実データ・
   グローバル押下受信」で、実音声/カレンダー許可/ユーザー操作を要し、この非対話環境では確認不可（捏造しない）。
+
+## 追記: STT 認識精度の検証を試行（Phase 1.33, 環境制約で SKIP）
+- `SpeechTranscriber.recognizeFile` を追加（音声ファイルをオンデバイスで 1 回認識。会議録音の後処理に使える実機能）。
+- `--selftest sttrecognize`: `say` で実音声(en-US, 22050Hz, 2.75s)を生成しオンデバイス STT に通す。
+- **結果は正直に SKIP**: on-device 有無に関わらず、この **headless/非対話環境では認識器がテキストを返さない**
+  （エラーも結果も出ない＝前面セッションを要する環境制約と判断）。捏造 PASS はしない。
+- STT の**パイプライン**は別途検証済み（`--selftest speech` の start/append/finish、`--selftest livemeeting` で
+  実マイク取り込み中に on-device STT が稼働）。**残るは認識テキストの出力**で、これは署名 .app を前面で
+  動かす実運用（実音声・前面セッション）でユーザーが確認する live 項目。

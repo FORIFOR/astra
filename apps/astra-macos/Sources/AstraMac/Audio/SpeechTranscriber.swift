@@ -80,4 +80,27 @@ final class SpeechTranscriber {
         request = nil
         task = nil
     }
+
+    /// 音声ファイルを 1 回で認識する（オンデバイス）。会議録音の後処理や検証に使う。
+    /// 許可が無い / 使えなければ nil。認識結果の確定文字列を返す。
+    func recognizeFile(_ url: URL, timeout: TimeInterval = 20) -> String? {
+        guard Self.authorization == .authorized, let recognizer, recognizer.isAvailable else { return nil }
+        let req = SFSpeechURLRecognitionRequest(url: url)
+        req.requiresOnDeviceRecognition = recognizer.supportsOnDeviceRecognition
+        let sem = DispatchSemaphore(value: 0)
+        let lock = NSLock()
+        var latest = ""            // partial も貯める（isFinal が遅いことがある）
+        var finished = false
+        let t = recognizer.recognitionTask(with: req) { result, error in
+            if let result {
+                lock.lock(); latest = result.bestTranscription.formattedString; lock.unlock()
+                if result.isFinal { finished = true; sem.signal() }
+            }
+            if error != nil { sem.signal() }
+        }
+        _ = finished
+        if sem.wait(timeout: .now() + timeout) == .timedOut { t.cancel() }
+        lock.lock(); let out = latest; lock.unlock()
+        return out.isEmpty ? nil : out
+    }
 }
