@@ -171,3 +171,18 @@
   color: var(--astra-color-muted);
   font-size: var(--astra-font-size-secondary);
 }
+
+/* 共通の素ボタン様式（shell.css）より強く。ここは枠の無い静かな文字（§16）。 */
+.astra-shell .astra-attention__feedback button {
+  min-height: 28px;
+  padding-inline: var(--astra-space-compact);
+  border: 0;
+  background: none;
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-micro);
+}
+
+.astra-shell .astra-attention__feedback button:hover {
+  color: var(--astra-color-text);
+  background: none;
+}
