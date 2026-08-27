@@ -50,7 +50,8 @@
     "test": "pnpm -r --no-bail run test",
     "test:acceptance": "./infra/db/with-test-db.sh pnpm --filter @astra/evals test",
     "test:db": "./infra/db/with-test-db.sh pnpm -r --no-bail run test",
-    "typecheck": "tsc -b tsconfig.build.json && tsc -p tsconfig.tests.json"
+    "typecheck": "tsc -b tsconfig.build.json && tsc -p tsconfig.tests.json",
+    "verify:all": "./scripts/verify-all.sh"
   },
   "devDependencies": {
     "@types/node": "catalog:",

@@ -732,3 +732,12 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
   非 main で構成済み（§2「Window/Spaces/fullscreen挙動」＝全 Space・フルスクリーンアプリ上に出る overlay）。
 - 検証: `--selftest panel`（パネルを生成し表示せず属性だけ確認、headless で hang しない）。
   **実測 PASS**: `全Space=true fullscreen補助=true borderless=true 透過=true notMain=true`。verify に組み込み。
+
+## 追記: 最終アクセプタンス `verify:all`（Phase 1.67, Done#9 集約）
+- `scripts/verify-all.sh`（`pnpm verify:all`）を新設。**この環境で検証できる全ゲートを 1 コマンドで**通す:
+  astra-core 35 / Tauri Rust 67 / Tauri desktop JS 352 / design-tokens・swift-bindings・workspace-fixture の鮮度 /
+  conventions / C ABI 三者一致 / native-tauri-free / WinUI XAML 整形式 / C# bridge→実 core＋実 gateway /
+  C ABI 実 gateway 縦断（auth/meeting/agent/apps/library/connector/録音） / macOS 録音＋**live 実機**（mic/screen/meeting）/ swift unit。
+- 実行時前提が要るもの（TCC／Windows 実機／実 OAuth 提供者）は各スクリプトが SKIP で正直に飛ばす。
+- 検証: **実測 PASS** `VERIFY_ALL_OK: この環境で検証できる全ゲートが緑`。
+- **意味（Done#9）**: 「実装＋この環境で検証可能な範囲」の健全性を 1 コマンドで担保。CI（ci.yml）も同じ個別ゲートを走らせる。
