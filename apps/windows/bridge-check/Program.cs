@@ -58,6 +58,10 @@ if (session.Reachable()) {
     Console.WriteLine("CS_SKIP gateway: not reachable");
 }
 
+// Windows Global shortcut のラベル（純ロジック、P/Invoke なしなので macOS でも実行できる）。
+string shortcutLabel = WindowsGlobalShortcut.Label();
+if (shortcutLabel != "Alt+Space") { Console.WriteLine($"CS_FAIL shortcut label={shortcutLabel}"); Environment.Exit(8); }
+
 string goldenPath = Path.Combine(AppContext.BaseDirectory, "recording-workspace.path");
 if (!File.Exists(goldenPath)) {
     // ソースツリーからも探す（CI/ローカル両対応）。

@@ -15,6 +15,7 @@
     <!-- tokens 由来の C# Metrics（純定数）。 -->
     <Compile Include="../Astra/GeneratedMetrics.cs" />
     <Compile Include="../Astra/AppLogic/AstraSession.cs" />
+    <Compile Include="../Astra/AppLogic/WindowsGlobalShortcut.cs" />
     <!-- 共有 golden を出力先へ持っていく（geometry 照合用）。 -->
     <None Include="../../../shared/design/fixtures/recording-workspace.path" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>

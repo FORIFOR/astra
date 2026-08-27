@@ -654,3 +654,12 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
   （C#→P/Invoke→core→gateway→**Agent echo=COMPLETED＋成果物本文**）。未到達なら CS_SKIP。
 - **意味（Done#1/#4 の強化）**: **Windows の session/data 層が実バックエンドに対して実際に動く**ことを、
   **Windows 実機なしで**実測担保（サインイン・Apps・Library・Agent 実行）。残るは WinUI の UI 描画のみ。
+
+## 追記: Windows Global shortcut（RegisterHotKey）を実装・コンパイル検証（Phase 1.58）
+- `apps/windows/Astra/AppLogic/WindowsGlobalShortcut.cs` を新設。macOS の `GlobalShortcut`（Carbon）に対応する
+  Windows 実装: user32 の `RegisterHotKey` で Alt+Space をシステム登録し、`WM_HOTKEY` を WndProc で拾う。
+  DllImport 宣言はどのホストでもコンパイルできるので、**macOS/CI で型検査**（実登録・受信は Windows 実機/CI）。
+- 検証: `verify-csharp-bridge` にコンパイル対象として取り込み**ビルド PASS**。さらに純ロジックの
+  `Label()` を実行して `Alt+Space` を確認（**実測 PASS**）。
+- **意味（§4 Global shortcut）**: Windows のグローバルショートカット実装が code-complete＋コンパイル検証済み。
+  実際の登録/押下受信は Windows でのみ（user32.dll）。
