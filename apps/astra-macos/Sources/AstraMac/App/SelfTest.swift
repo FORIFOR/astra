@@ -35,6 +35,7 @@ enum SelfTest {
         case "aiaction": aiaction(args); return true
         case "translate": translateTest(args); return true
         case "waveform": waveform(); return true
+        case "recovery": recovery(args); return true
         default: return false
         }
     }
@@ -635,6 +636,37 @@ enum SelfTest {
         guard levelCallbacks > 0 else { print("SELFTEST_FAIL waveform: no level callbacks"); exit(3) }
         print("SELFTEST_OK waveform: 実マイクレベルで更新 callbacks=\(levelCallbacks)")
         exit(0)
+    }
+
+    /// `--selftest recovery <base>`: クラッシュした録音（未アップロード断片）を検出して gateway に復旧できるか検証する。
+    @MainActor
+    private static func recovery(_ args: [String]) {
+        let base = args.count > (args.firstIndex(of: "--selftest")! + 2)
+            ? args[args.firstIndex(of: "--selftest")! + 2] : "http://127.0.0.1:3000"
+        guard AstraCoreBridge.reachable(base) else { print("SELFTEST_SKIP recovery: gateway unreachable"); exit(0) }
+        do {
+            let tokens = try AstraCoreBridge.devSignIn(base, email: "recovery-\(getpid())@astra.local", displayName: "R")
+            // gateway に会議を作り、その id で「クラッシュした録音」を作る（アップロードしない）。
+            let mid = try AstraCoreBridge.createMeeting(base, accessToken: tokens.accessToken, title: "Recovery 会議", language: "ja-JP")
+            let root = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+                .appendingPathComponent("Astra/meetings").path
+            let session = try RecordingSession.start(root: root, meetingId: mid)
+            let oneSec = [Float](repeating: 0.1, count: 16_000)
+            for _ in 0..<6 { _ = session.pushSamples(samples: oneSec, sampleRate: 16_000) }
+            try session.finish()   // 断片は書けたがアップロードしていない = クラッシュ相当
+            // 起動時スキャンで回復候補に出る。
+            let runtime = RecordingRuntime.shared
+            runtime.configureBackend(base: base, accessToken: tokens.accessToken)
+            let found = runtime.recoverableMeetings().contains { $0.meetingId == mid }
+            // 復旧: gateway に送って finalize。
+            let sent = runtime.recover(meetingId: mid)
+            try? FileManager.default.removeItem(atPath: root + "/" + mid)
+            guard found, sent > 0 else {
+                print("SELFTEST_FAIL recovery found=\(found) sent=\(sent)"); exit(2)
+            }
+            print("SELFTEST_OK recovery: クラッシュ録音を検出→復旧 uploadedBytes=\(sent)")
+            exit(0)
+        } catch { print("SELFTEST_FAIL recovery error=\(error)"); exit(3) }
     }
 
     private static func recordToDisk() {

@@ -42,6 +42,9 @@ final class MainData: ObservableObject {
                     // サインインを録音側にも渡す（AI 操作/翻訳/実会議が使えるようになる）。
                     RecordingWorkspaceState.shared.configureBackend(base: base, token: tokens.accessToken)
                     RecordingRuntime.shared.configureBackend(base: base, accessToken: tokens.accessToken)
+                    // サインインしたので、前回落ちた録音があれば gateway へ送って片付ける（§3 recovery）。
+                    let recovered = RecoveryState.shared.recoverAll()
+                    if recovered > 0 { NSLog("astra: recovered %llu bytes of crashed recordings", recovered) }
                 }
             } catch {
                 NSLog("main data load failed: \(error)")

@@ -127,4 +127,19 @@ final class RecordingRuntime {
         }
         meetingId = nil
     }
+
+    /// 前回落ちたまま残っている録音（未アップロードの断片）。起動時に surface する。
+    func recoverableMeetings() -> [RecoverableMeeting] {
+        AstraCoreBridge.recoverable(root: root, active: nil)
+    }
+
+    /// クラッシュした録音を復旧する: その会議の断片を gateway に送って finalize する。
+    /// サインイン済みでなければ 0（送れない）。送ったバイト数を返す。
+    @discardableResult
+    func recover(meetingId id: String) -> UInt64 {
+        guard let base = apiBase, let token = accessToken else { return 0 }
+        let sent = (try? AstraCoreBridge.uploadMeetingAudio(base, accessToken: token, meetingId: id, journalRoot: root)) ?? 0
+        _ = try? AstraCoreBridge.finishMeeting(base, accessToken: token, meetingId: id)
+        return sent
+    }
 }

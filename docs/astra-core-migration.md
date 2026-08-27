@@ -495,3 +495,14 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
 - 検証: 既存 `--selftest aiaction`/`translate`（明示的に configureBackend する経路）は PASS のまま。全 selftest 24 件
   OK/SKIP・0 FAIL、回帰なし。実アプリ経路（MainData 起点）の配線はコードで担保。
 - **意味**: Main Window・Recording Workspace・Apps/Agents・RAG/Agent が一つのサインインで繋がった（Done#7 統合）。
+
+## 追記: クラッシュ録音の回復フローを実装（Phase 1.42, §3 meeting recovery）
+- **未実装機能の追加**: `scan_recoverable`（core）はテストのみで、アプリは回復候補を**一切 surface していなかった**。
+  §3「meeting recording/recovery」の実機能を追加:
+  - `RecordingRuntime.recoverableMeetings()`（スキャン）/ `recover(meetingId:)`（断片を gateway に送って finalize）。
+  - 起動時に `AstraAppDelegate` がスキャンし、あれば `RecoveryState.shared.pending` に積む（NSLog で通知）。
+  - `MainData.load()` のサインイン成功時に `RecoveryState.recoverAll()` を呼び、**前回落ちた録音を自動で gateway へ送って片付ける**。
+- 検証: `--selftest recovery <base>`（実 gateway）。会議作成→断片を書いて**アップロードせず**（クラッシュ相当）→
+  スキャンで検出→復旧（送信＋finalize）。**実測 PASS**: `クラッシュ録音を検出→復旧 uploadedBytes=192000`。
+  verify に SKIP 許容で組み込み。全 selftest 25 件 OK/SKIP・0 FAIL。
+- **意味**: 録音がクラッシュしても次回サインイン時に自動で拾って送る、が実機能に（Done#3 meeting recovery）。

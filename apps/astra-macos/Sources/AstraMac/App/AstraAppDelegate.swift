@@ -9,6 +9,12 @@ final class AstraAppDelegate: NSObject, NSApplicationDelegate {
         // グローバル音声ショートカット（⌥Space）で録音を出し入れする。
         // Carbon の RegisterEventHotKey は Accessibility 権限を要さない。
         GlobalShortcut.shared.register { WindowCoordinator.shared.toggleRecording() }
+        // 前回落ちたまま残っている録音があれば知らせる（§3 meeting recovery）。
+        let recoverable = RecordingRuntime.shared.recoverableMeetings()
+        if !recoverable.isEmpty {
+            NSLog("astra: %d recoverable recording(s) found; will offer recovery once signed in", recoverable.count)
+            RecoveryState.shared.pending = recoverable
+        }
         NSApp.activate(ignoringOtherApps: true)
     }
 }
