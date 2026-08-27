@@ -123,3 +123,11 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
   RecordingSession で実録音 → **音声 WS 送信(192000B)** → 終了(finalize task)。実測 PASS。
 - macOS `RecordingRuntime.end` は停止時に「送信 → finalize」を実行。**会議の全経路が Tauri を介さず実バックエンドで動く。**
 - 残る #8: STT streaming の native購読 / Agent(Temporal) / RAG 取得 / connector OAuth。Tauri は無傷（他機能のパリティ未達）。
+
+## 追記: 会話/Agent + Apps も core 経由（Phase 1.12）
+- core api: `api_start_conversation` / `api_send_turn`（Agent 依頼 → task_id / notice）/ `api_plugin_catalog`（Apps）。
+- **Swift → core → gateway の統合 E2E**（`--selftest api`）が サインイン → /v1/me → 会議作成 → 録音 → WS送信 →
+  終了 → **会話/Agent turn** → **Apps catalog(12件)** まで実測 PASS。dev の会話エンジンは仕事を起こさず notice を返す（経路は正常）。
+- 最終製品経路のうち **auth / meeting全経路 / conversation・Agent入口 / Apps一覧** が Tauri を介さず実バックエンドで動く。
+- **#8 の残（正直に）**: STT streaming の native 購読、Agent の実行結果(task)ストリーム購読、RAG 取得 API、connector OAuth。
+  これらは外部サービス/OAuth を伴い、Tauri 側に残置（パリティ未達のため retire しない）。

@@ -189,9 +189,22 @@ mod tests {
         assert!(sent > 0, "should have uploaded fragment bytes");
         let _ = std::fs::remove_dir_all(&root);
 
-        let task_id = api_finish_meeting(url, tokens.access_token, meeting_id)
+        let task_id = api_finish_meeting(url.clone(), tokens.access_token.clone(), meeting_id)
             .expect("finish meeting should return a finalize task id");
         assert!(!task_id.is_empty());
+
+        // 会話/Agent: 依頼 → 仕事 id（Agent 経路が Tauri を介さず動く）
+        let conv = api_start_conversation(url.clone(), tokens.access_token.clone())
+            .expect("start conversation");
+        assert!(!conv.is_empty());
+        let outcome = api_send_turn(url.clone(), tokens.access_token.clone(), conv, "テスト依頼を実行して".into())
+            .expect("send turn");
+        // 経路が通れば、task_id / 聞き返し / 即答 / notice のいずれかが返る（dev は notice）
+        assert!(!outcome.task_id.is_empty() || outcome.needs_clarification || !outcome.answer.is_empty() || !outcome.notice.is_empty());
+
+        // Apps: plugin catalog（同梱が並ぶ）
+        let apps = api_plugin_catalog(url, tokens.access_token).expect("plugin catalog");
+        assert!(!apps.is_empty(), "builtin plugins should be listed");
     }
 }
 
@@ -245,4 +258,81 @@ pub fn api_upload_meeting_audio(
     }
     let _ = socket.close(None);
     Ok(sent)
+}
+
+/// 会話を始める（POST /v1/conversations）。会話 id を返す。
+#[uniffi::export]
+pub fn api_start_conversation(base_url: String, access_token: String) -> Result<String, ApiError> {
+    #[derive(Deserialize)]
+    struct Resp { id: String }
+    let resp: Resp = ureq::post(&format!("{}/v1/conversations", base(&base_url)))
+        .set("Authorization", &format!("Bearer {access_token}"))
+        .send_json(ureq::json!({ "response_mode": "text" }))
+        .map_err(map_transport)?
+        .into_json()
+        .map_err(|e| ApiError::Decode { message: e.to_string() })?;
+    Ok(resp.id)
+}
+
+/// 依頼を送る（POST /v1/conversations/:id/turns）。Agent が仕事を起こしたら task_id。
+#[derive(uniffi::Record, Clone, Debug)]
+pub struct TurnOutcome {
+    pub needs_clarification: bool,
+    /// 聞き返し or 即答（無ければ空）。
+    pub answer: String,
+    /// 仕事が起きたらその id（無ければ空）。
+    pub task_id: String,
+    /// 仕事を起こさなかった理由・一言（無ければ空）。
+    pub notice: String,
+}
+
+#[uniffi::export]
+pub fn api_send_turn(
+    base_url: String,
+    access_token: String,
+    conversation_id: String,
+    text: String,
+) -> Result<TurnOutcome, ApiError> {
+    #[derive(Deserialize)]
+    struct Resp {
+        needs_clarification: bool,
+        #[serde(default)]
+        answer: Option<String>,
+        #[serde(default)]
+        task_id: Option<String>,
+        #[serde(default)]
+        notice: Option<String>,
+    }
+    let resp: Resp = ureq::post(&format!(
+        "{}/v1/conversations/{}/turns",
+        base(&base_url),
+        conversation_id
+    ))
+    .set("Authorization", &format!("Bearer {access_token}"))
+    .send_json(ureq::json!({ "text": text, "modality": "text", "interrupt": true }))
+    .map_err(map_transport)?
+    .into_json()
+    .map_err(|e| ApiError::Decode { message: e.to_string() })?;
+    Ok(TurnOutcome {
+        needs_clarification: resp.needs_clarification,
+        answer: resp.answer.unwrap_or_default(),
+        task_id: resp.task_id.unwrap_or_default(),
+        notice: resp.notice.unwrap_or_default(),
+    })
+}
+
+/// Apps（GET /v1/plugins/catalog）。name の一覧だけ（UI が並べる分）。
+#[uniffi::export]
+pub fn api_plugin_catalog(base_url: String, access_token: String) -> Result<Vec<String>, ApiError> {
+    #[derive(Deserialize)]
+    struct Item { name: String }
+    #[derive(Deserialize)]
+    struct Resp { items: Vec<Item> }
+    let resp: Resp = ureq::get(&format!("{}/v1/plugins/catalog", base(&base_url)))
+        .set("Authorization", &format!("Bearer {access_token}"))
+        .call()
+        .map_err(map_transport)?
+        .into_json()
+        .map_err(|e| ApiError::Decode { message: e.to_string() })?;
+    Ok(resp.items.into_iter().map(|i| i.name).collect())
 }

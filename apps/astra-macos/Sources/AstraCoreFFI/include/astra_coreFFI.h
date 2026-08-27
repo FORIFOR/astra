@@ -321,9 +321,24 @@ RustBuffer uniffi_astra_core_fn_func_api_finish_meeting(RustBuffer base_url, Rus
 RustBuffer uniffi_astra_core_fn_func_api_me(RustBuffer base_url, RustBuffer access_token, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_PLUGIN_CATALOG
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_PLUGIN_CATALOG
+RustBuffer uniffi_astra_core_fn_func_api_plugin_catalog(RustBuffer base_url, RustBuffer access_token, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_REACHABLE
 #define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_REACHABLE
 int8_t uniffi_astra_core_fn_func_api_reachable(RustBuffer base_url, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_SEND_TURN
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_SEND_TURN
+RustBuffer uniffi_astra_core_fn_func_api_send_turn(RustBuffer base_url, RustBuffer access_token, RustBuffer conversation_id, RustBuffer text, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_START_CONVERSATION
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_START_CONVERSATION
+RustBuffer uniffi_astra_core_fn_func_api_start_conversation(RustBuffer base_url, RustBuffer access_token, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_UPLOAD_MEETING_AUDIO
@@ -666,9 +681,27 @@ uint16_t uniffi_astra_core_checksum_func_api_me(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_PLUGIN_CATALOG
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_PLUGIN_CATALOG
+uint16_t uniffi_astra_core_checksum_func_api_plugin_catalog(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_REACHABLE
 #define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_REACHABLE
 uint16_t uniffi_astra_core_checksum_func_api_reachable(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_SEND_TURN
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_SEND_TURN
+uint16_t uniffi_astra_core_checksum_func_api_send_turn(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_START_CONVERSATION
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_START_CONVERSATION
+uint16_t uniffi_astra_core_checksum_func_api_start_conversation(void
     
 );
 #endif

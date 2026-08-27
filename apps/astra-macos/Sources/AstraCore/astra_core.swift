@@ -1593,6 +1593,113 @@ public func FfiConverterTypeTokens_lower(_ value: Tokens) -> RustBuffer {
 }
 
 
+/**
+ * 依頼を送る（POST /v1/conversations/:id/turns）。Agent が仕事を起こしたら task_id。
+ */
+public struct TurnOutcome {
+    public var needsClarification: Bool
+    /**
+     * 聞き返し or 即答（無ければ空）。
+     */
+    public var answer: String
+    /**
+     * 仕事が起きたらその id（無ければ空）。
+     */
+    public var taskId: String
+    /**
+     * 仕事を起こさなかった理由・一言（無ければ空）。
+     */
+    public var notice: String
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(needsClarification: Bool, 
+        /**
+         * 聞き返し or 即答（無ければ空）。
+         */answer: String, 
+        /**
+         * 仕事が起きたらその id（無ければ空）。
+         */taskId: String, 
+        /**
+         * 仕事を起こさなかった理由・一言（無ければ空）。
+         */notice: String) {
+        self.needsClarification = needsClarification
+        self.answer = answer
+        self.taskId = taskId
+        self.notice = notice
+    }
+}
+
+#if compiler(>=6)
+extension TurnOutcome: Sendable {}
+#endif
+
+
+extension TurnOutcome: Equatable, Hashable {
+    public static func ==(lhs: TurnOutcome, rhs: TurnOutcome) -> Bool {
+        if lhs.needsClarification != rhs.needsClarification {
+            return false
+        }
+        if lhs.answer != rhs.answer {
+            return false
+        }
+        if lhs.taskId != rhs.taskId {
+            return false
+        }
+        if lhs.notice != rhs.notice {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(needsClarification)
+        hasher.combine(answer)
+        hasher.combine(taskId)
+        hasher.combine(notice)
+    }
+}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeTurnOutcome: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TurnOutcome {
+        return
+            try TurnOutcome(
+                needsClarification: FfiConverterBool.read(from: &buf), 
+                answer: FfiConverterString.read(from: &buf), 
+                taskId: FfiConverterString.read(from: &buf), 
+                notice: FfiConverterString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: TurnOutcome, into buf: inout [UInt8]) {
+        FfiConverterBool.write(value.needsClarification, into: &buf)
+        FfiConverterString.write(value.answer, into: &buf)
+        FfiConverterString.write(value.taskId, into: &buf)
+        FfiConverterString.write(value.notice, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTurnOutcome_lift(_ buf: RustBuffer) throws -> TurnOutcome {
+    return try FfiConverterTypeTurnOutcome.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTurnOutcome_lower(_ value: TurnOutcome) -> RustBuffer {
+    return FfiConverterTypeTurnOutcome.lower(value)
+}
+
+
 public enum ApiError: Swift.Error {
 
     
@@ -2256,12 +2363,44 @@ public func apiMe(baseUrl: String, accessToken: String)throws  -> Me  {
 })
 }
 /**
+ * Apps（GET /v1/plugins/catalog）。name の一覧だけ（UI が並べる分）。
+ */
+public func apiPluginCatalog(baseUrl: String, accessToken: String)throws  -> [String]  {
+    return try  FfiConverterSequenceString.lift(try rustCallWithError(FfiConverterTypeApiError_lift) {
+    uniffi_astra_core_fn_func_api_plugin_catalog(
+        FfiConverterString.lower(baseUrl),
+        FfiConverterString.lower(accessToken),$0
+    )
+})
+}
+/**
  * gateway に届くか（GET /v1/auth/providers, 認証不要）。オフライン判定に。
  */
 public func apiReachable(baseUrl: String) -> Bool  {
     return try!  FfiConverterBool.lift(try! rustCall() {
     uniffi_astra_core_fn_func_api_reachable(
         FfiConverterString.lower(baseUrl),$0
+    )
+})
+}
+public func apiSendTurn(baseUrl: String, accessToken: String, conversationId: String, text: String)throws  -> TurnOutcome  {
+    return try  FfiConverterTypeTurnOutcome_lift(try rustCallWithError(FfiConverterTypeApiError_lift) {
+    uniffi_astra_core_fn_func_api_send_turn(
+        FfiConverterString.lower(baseUrl),
+        FfiConverterString.lower(accessToken),
+        FfiConverterString.lower(conversationId),
+        FfiConverterString.lower(text),$0
+    )
+})
+}
+/**
+ * 会話を始める（POST /v1/conversations）。会話 id を返す。
+ */
+public func apiStartConversation(baseUrl: String, accessToken: String)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeApiError_lift) {
+    uniffi_astra_core_fn_func_api_start_conversation(
+        FfiConverterString.lower(baseUrl),
+        FfiConverterString.lower(accessToken),$0
     )
 })
 }
@@ -2371,7 +2510,16 @@ private let initializationResult: InitializationResult = {
     if (uniffi_astra_core_checksum_func_api_me() != 37978) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_astra_core_checksum_func_api_plugin_catalog() != 40736) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_astra_core_checksum_func_api_reachable() != 45391) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_astra_core_checksum_func_api_send_turn() != 50231) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_astra_core_checksum_func_api_start_conversation() != 27882) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_astra_core_checksum_func_api_upload_meeting_audio() != 61525) {

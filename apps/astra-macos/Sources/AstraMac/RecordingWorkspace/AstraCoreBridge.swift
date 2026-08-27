@@ -37,4 +37,13 @@ enum AstraCoreBridge {
     static func uploadMeetingAudio(_ baseUrl: String, accessToken: String, meetingId: String, journalRoot: String) throws -> UInt64 {
         try apiUploadMeetingAudio(baseUrl: baseUrl, accessToken: accessToken, meetingId: meetingId, journalRoot: journalRoot)
     }
+    static func startConversation(_ baseUrl: String, accessToken: String) throws -> String {
+        try apiStartConversation(baseUrl: baseUrl, accessToken: accessToken)
+    }
+    static func sendTurn(_ baseUrl: String, accessToken: String, conversationId: String, text: String) throws -> TurnOutcome {
+        try apiSendTurn(baseUrl: baseUrl, accessToken: accessToken, conversationId: conversationId, text: text)
+    }
+    static func pluginCatalog(_ baseUrl: String, accessToken: String) throws -> [String] {
+        try apiPluginCatalog(baseUrl: baseUrl, accessToken: accessToken)
+    }
 }

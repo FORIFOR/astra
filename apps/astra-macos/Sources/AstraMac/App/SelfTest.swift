@@ -58,8 +58,15 @@ enum SelfTest {
             let sent = try AstraCoreBridge.uploadMeetingAudio(base, accessToken: tokens.accessToken, meetingId: mid, journalRoot: root)
             try? FileManager.default.removeItem(atPath: root)
             let task = try AstraCoreBridge.finishMeeting(base, accessToken: tokens.accessToken, meetingId: mid)
-            guard !mid.isEmpty, sent > 0, !task.isEmpty else { print("SELFTEST_FAIL api meeting=\(mid) sent=\(sent) task=\(task)"); exit(5) }
-            print("SELFTEST_OK api: email=\(me.email) meeting=\(mid) uploadedBytes=\(sent) finalizeTask=\(task)")
+            // 会話/Agent と Apps も core 経由で実 gateway に繋がることを確認
+            let conv = try AstraCoreBridge.startConversation(base, accessToken: tokens.accessToken)
+            let outcome = try AstraCoreBridge.sendTurn(base, accessToken: tokens.accessToken, conversationId: conv, text: "テスト依頼")
+            let apps = try AstraCoreBridge.pluginCatalog(base, accessToken: tokens.accessToken)
+            let convOk = outcome.needsClarification || !outcome.answer.isEmpty || !outcome.taskId.isEmpty || !outcome.notice.isEmpty
+            guard !mid.isEmpty, sent > 0, !task.isEmpty, !conv.isEmpty, convOk, !apps.isEmpty else {
+                print("SELFTEST_FAIL api meeting=\(mid) sent=\(sent) task=\(task) conv=\(conv) apps=\(apps.count)"); exit(5)
+            }
+            print("SELFTEST_OK api: email=\(me.email) meeting=\(mid) uploadedBytes=\(sent) finalizeTask=\(task) apps=\(apps.count)")
             exit(0)
         } catch {
             print("SELFTEST_FAIL api error=\(error)"); exit(4)
