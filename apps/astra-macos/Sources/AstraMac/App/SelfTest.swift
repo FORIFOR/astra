@@ -66,11 +66,13 @@ enum SelfTest {
             // Agent round-trip: echo タスク → COMPLETED + 成果物
             let atask = try AstraCoreBridge.createTask(base, accessToken: tokens.accessToken, kind: "echo", inputJson: "{\"message\":\"selftest\",\"steps\":1}")
             let done = try AstraCoreBridge.waitTask(base, accessToken: tokens.accessToken, taskId: atask, timeoutMs: 15_000)
+            let content = try AstraCoreBridge.artifactContent(base, accessToken: tokens.accessToken, artifactId: done.resultArtifactId)
+            let library = try AstraCoreBridge.library(base, accessToken: tokens.accessToken)
             guard !mid.isEmpty, sent > 0, !task.isEmpty, !conv.isEmpty, convOk, !apps.isEmpty,
-                  done.status == "COMPLETED", !done.resultArtifactId.isEmpty else {
-                print("SELFTEST_FAIL api meeting=\(mid) sent=\(sent) conv=\(conv) apps=\(apps.count) agent=\(done.status)"); exit(5)
+                  done.status == "COMPLETED", !done.resultArtifactId.isEmpty, !content.isEmpty, !library.isEmpty else {
+                print("SELFTEST_FAIL api meeting=\(mid) sent=\(sent) conv=\(conv) apps=\(apps.count) agent=\(done.status) content=\(content.count) lib=\(library.count)"); exit(5)
             }
-            print("SELFTEST_OK api: email=\(me.email) meeting=\(mid) uploadedBytes=\(sent) apps=\(apps.count) agent=\(done.status)/\(done.resultArtifactId.prefix(8))")
+            print("SELFTEST_OK api: meeting=\(mid) uploadedBytes=\(sent) apps=\(apps.count) agent=\(done.status) contentBytes=\(content.count) library=\(library.count)")
             exit(0)
         } catch {
             print("SELFTEST_FAIL api error=\(error)"); exit(4)

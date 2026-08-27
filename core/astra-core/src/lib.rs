@@ -18,7 +18,7 @@ pub mod session;
 
 pub use api::{
     api_create_meeting, api_dev_sign_in, api_finish_meeting, api_me, api_reachable,
-    api_create_task, api_plugin_catalog, api_send_turn, api_start_conversation, api_task_status,
+    api_artifact_content, api_create_task, api_library, api_plugin_catalog, api_send_turn, api_start_conversation, api_task_status,
     api_upload_meeting_audio, api_wait_task, ApiError, Me, TaskStatus, TurnOutcome, Tokens,
 };
 pub use context::{rank_context, ContextCandidate, ContextQuery, ContextResult, ContextSource};

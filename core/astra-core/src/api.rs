@@ -220,9 +220,18 @@ mod tests {
             url.clone(), tokens.access_token.clone(), "echo".into(),
             "{\"message\":\"core e2e\",\"steps\":1}".into()).expect("create task");
         assert!(!task.is_empty());
-        let done = api_wait_task(url, tokens.access_token, task, 15_000).expect("wait task");
+        let done = api_wait_task(url.clone(), tokens.access_token.clone(), task, 15_000).expect("wait task");
         assert_eq!(done.status, "COMPLETED", "echo task should complete");
         assert!(!done.result_artifact_id.is_empty(), "echo should produce an artifact");
+
+        // 成果物の本文まで読める（Agent → 成果物 → 内容の完全ループ）
+        let content = api_artifact_content(url.clone(), tokens.access_token.clone(), done.result_artifact_id)
+            .expect("artifact content");
+        assert!(!content.is_empty(), "artifact content should not be empty");
+
+        // Library に成果物が並ぶ
+        let library = api_library(url, tokens.access_token).expect("library");
+        assert!(!library.is_empty(), "library should list the produced artifact");
     }
 }
 
@@ -432,4 +441,36 @@ pub fn api_wait_task(
         }
         std::thread::sleep(std::time::Duration::from_millis(200));
     }
+}
+
+/// 成果物の本文（GET /v1/artifacts/:id/content）。テキスト成果物を UI に出す。
+#[uniffi::export]
+pub fn api_artifact_content(
+    base_url: String,
+    access_token: String,
+    artifact_id: String,
+) -> Result<String, ApiError> {
+    let body = ureq::get(&format!("{}/v1/artifacts/{}/content", base(&base_url), artifact_id))
+        .set("Authorization", &format!("Bearer {access_token}"))
+        .call()
+        .map_err(map_transport)?
+        .into_string()
+        .map_err(|e| ApiError::Decode { message: e.to_string() })?;
+    Ok(body)
+}
+
+/// Library（GET /v1/artifacts）。title の一覧（UI が並べる分）。
+#[uniffi::export]
+pub fn api_library(base_url: String, access_token: String) -> Result<Vec<String>, ApiError> {
+    #[derive(Deserialize)]
+    struct Item { title: String }
+    #[derive(Deserialize)]
+    struct Resp { items: Vec<Item> }
+    let resp: Resp = ureq::get(&format!("{}/v1/artifacts", base(&base_url)))
+        .set("Authorization", &format!("Bearer {access_token}"))
+        .call()
+        .map_err(map_transport)?
+        .into_json()
+        .map_err(|e| ApiError::Decode { message: e.to_string() })?;
+    Ok(resp.items.into_iter().map(|i| i.title).collect())
 }

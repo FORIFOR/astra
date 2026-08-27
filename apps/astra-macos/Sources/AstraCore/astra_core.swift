@@ -2402,6 +2402,18 @@ fileprivate struct FfiConverterSequenceTypeRecoverableMeeting: FfiConverterRustB
     }
 }
 /**
+ * 成果物の本文（GET /v1/artifacts/:id/content）。テキスト成果物を UI に出す。
+ */
+public func apiArtifactContent(baseUrl: String, accessToken: String, artifactId: String)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeApiError_lift) {
+    uniffi_astra_core_fn_func_api_artifact_content(
+        FfiConverterString.lower(baseUrl),
+        FfiConverterString.lower(accessToken),
+        FfiConverterString.lower(artifactId),$0
+    )
+})
+}
+/**
  * 会議（POST /v1/meetings）。同意確認済みでのみ開始する。
  */
 public func apiCreateMeeting(baseUrl: String, accessToken: String, title: String, language: String)throws  -> String  {
@@ -2448,6 +2460,17 @@ public func apiFinishMeeting(baseUrl: String, accessToken: String, meetingId: St
         FfiConverterString.lower(baseUrl),
         FfiConverterString.lower(accessToken),
         FfiConverterString.lower(meetingId),$0
+    )
+})
+}
+/**
+ * Library（GET /v1/artifacts）。title の一覧（UI が並べる分）。
+ */
+public func apiLibrary(baseUrl: String, accessToken: String)throws  -> [String]  {
+    return try  FfiConverterSequenceString.lift(try rustCallWithError(FfiConverterTypeApiError_lift) {
+    uniffi_astra_core_fn_func_api_library(
+        FfiConverterString.lower(baseUrl),
+        FfiConverterString.lower(accessToken),$0
     )
 })
 }
@@ -2623,6 +2646,9 @@ private let initializationResult: InitializationResult = {
     if bindings_contract_version != scaffolding_contract_version {
         return InitializationResult.contractVersionMismatch
     }
+    if (uniffi_astra_core_checksum_func_api_artifact_content() != 39811) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_astra_core_checksum_func_api_create_meeting() != 28887) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -2633,6 +2659,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_astra_core_checksum_func_api_finish_meeting() != 33249) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_astra_core_checksum_func_api_library() != 21570) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_astra_core_checksum_func_api_me() != 37978) {

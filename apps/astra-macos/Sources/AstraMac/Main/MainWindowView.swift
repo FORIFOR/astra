@@ -1,4 +1,5 @@
 import SwiftUI
+import AstraCore
 
 enum MainSection: String, CaseIterable, Identifiable {
     case home, agents, library, apps
@@ -21,9 +22,33 @@ enum MainSection: String, CaseIterable, Identifiable {
     }
 }
 
+/// 実バックエンドから Apps/Library を core 経由で取る（Tauri を介さない）。dev サインインで検証可能。
+@MainActor
+final class MainData: ObservableObject {
+    @Published var apps: [String] = []
+    @Published var library: [String] = []
+    @Published var connected = false
+    private let base = ProcessInfo.processInfo.environment["ASTRA_GATEWAY_URL"] ?? "http://127.0.0.1:3000"
+
+    func load() {
+        guard AstraCoreBridge.reachable(base) else { return }
+        Task.detached { [base] in
+            do {
+                let tokens = try AstraCoreBridge.devSignIn(base, email: "main-\(getpid())@astra.local", displayName: "Astra")
+                let apps = (try? AstraCoreBridge.pluginCatalog(base, accessToken: tokens.accessToken)) ?? []
+                let library = (try? AstraCoreBridge.library(base, accessToken: tokens.accessToken)) ?? []
+                await MainActor.run { self.apps = apps; self.library = library; self.connected = true }
+            } catch {
+                NSLog("main data load failed: \(error)")
+            }
+        }
+    }
+}
+
 /// 4 タブの native シェル。Windows 版は同じ構成を NavigationView + Mica で作る（設計共通・実装別）。
 struct MainWindowView: View {
     @State private var section: MainSection = .home
+    @StateObject private var data = MainData()
 
     var body: some View {
         NavigationSplitView {
@@ -42,12 +67,13 @@ struct MainWindowView: View {
         } detail: {
             switch section {
             case .home: HomePane()
-            case .agents: AgentsPane()
-            case .library: LibraryPane()
-            case .apps: AppsPane()
+            case .agents: AgentsPane(apps: data.apps)
+            case .library: LibraryPane(titles: data.library)
+            case .apps: AppsPane(apps: data.apps)
             }
         }
         .frame(minWidth: 900, minHeight: 560)
+        .onAppear { data.load() }
     }
 }
 
@@ -72,27 +98,28 @@ private struct HomePane: View {
 }
 
 private struct AgentsPane: View {
-    private let agents = ["Research Agent", "Meeting Agent", "Sales CRM", "Stock Research"]
+    let apps: [String]
     var body: some View {
-        List(agents, id: \.self) { a in
-            Label(a, systemImage: "sparkles")
-        }.navigationTitle("AI Agents")
+        let agents = apps.isEmpty ? ["Research Agent", "Meeting Agent", "Sales CRM"] : apps
+        return List(agents, id: \.self) { a in Label(a, systemImage: "sparkles") }
+            .navigationTitle("AI Agents")
     }
 }
 
 private struct LibraryPane: View {
+    let titles: [String]
     var body: some View {
-        ScrollView {
+        let items = titles.isEmpty ? ["（まだありません）"] : titles
+        return ScrollView {
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 200), spacing: 12)], spacing: 12) {
-                ForEach(0..<6) { i in
+                ForEach(Array(items.enumerated()), id: \.offset) { _, t in
                     VStack(alignment: .leading, spacing: 6) {
-                        Text("Echo result").font(.system(size: 13, weight: .semibold))
-                        Text("資料 · 2026/8/27").font(.system(size: 11)).foregroundStyle(.secondary)
+                        Text(t).font(.system(size: 13, weight: .semibold))
+                        Text("資料").font(.system(size: 11)).foregroundStyle(.secondary)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(14)
                     .background(RoundedRectangle(cornerRadius: 10).stroke(Color.black.opacity(0.08)))
-                    .tag(i)
                 }
             }.padding(20)
         }.navigationTitle("Library")
@@ -100,8 +127,9 @@ private struct LibraryPane: View {
 }
 
 private struct AppsPane: View {
-    private let apps = ["Gmail", "Google Calendar", "Finder", "Slack", "Notion", "Linear"]
+    let apps: [String]
     var body: some View {
+        let apps = self.apps.isEmpty ? ["Gmail", "Google Calendar", "Finder"] : self.apps
         ScrollView {
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 240), spacing: 12)], spacing: 12) {
                 ForEach(apps, id: \.self) { a in

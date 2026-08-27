@@ -140,3 +140,12 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
   conversation・Agent入口 / **Agent タスク実行(完了・成果物)** / Apps一覧。
 - **#8 残（正直に）**: STT streaming の native 購読（音声 partial/final の受信）、RAG 取得 API、connector OAuth。
   これらは外部 STT/OAuth を伴い Tauri 側に残置。Done#8「完全 retire」は未達（機能パリティ未達のため Tauri 無傷で残す）。
+
+## 追記: 成果物内容 + Library、Main Window 実データ購読（Phase 1.14）
+- core api: `api_artifact_content`（成果物本文）/ `api_library`（Library 一覧）。
+- **完全ループを検証**: Agent(echo) → 成果物 → **本文取得(55B)** → Library(3件)。Rust 結合 + Swift `--selftest api` 両方 PASS。
+- macOS Main Window の Apps/Agents/Library ペインは **core 経由で実 gateway から**取得（dev サインイン、`MainData.load`）。
+- 最終製品経路で Tauri を介さず実測できたもの: auth / 会議全経路 / conversation・Agent入口 /
+  Agent実行(完了・成果物・本文) / Apps一覧 / Library。
+- **#8 の真の残**: STT streaming の native 購読（音声 partial/final）、connector OAuth（外部プロバイダ・ユーザー許可）。
+  外部サービスと OAuth を伴い、この環境で完了・検証不可。Done#8「完全 retire」は未達。

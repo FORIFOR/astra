@@ -301,6 +301,11 @@ void uniffi_astra_core_fn_method_recordingsession_set_paused(void*_Nonnull ptr, 
 RustBuffer uniffi_astra_core_fn_method_recordingsession_snapshot(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_ARTIFACT_CONTENT
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_ARTIFACT_CONTENT
+RustBuffer uniffi_astra_core_fn_func_api_artifact_content(RustBuffer base_url, RustBuffer access_token, RustBuffer artifact_id, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_CREATE_MEETING
 #define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_CREATE_MEETING
 RustBuffer uniffi_astra_core_fn_func_api_create_meeting(RustBuffer base_url, RustBuffer access_token, RustBuffer title, RustBuffer language, RustCallStatus *_Nonnull out_status
@@ -319,6 +324,11 @@ RustBuffer uniffi_astra_core_fn_func_api_dev_sign_in(RustBuffer base_url, RustBu
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_FINISH_MEETING
 #define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_FINISH_MEETING
 RustBuffer uniffi_astra_core_fn_func_api_finish_meeting(RustBuffer base_url, RustBuffer access_token, RustBuffer meeting_id, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_LIBRARY
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_LIBRARY
+RustBuffer uniffi_astra_core_fn_func_api_library(RustBuffer base_url, RustBuffer access_token, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_ME
@@ -672,6 +682,12 @@ void ffi_astra_core_rust_future_free_void(uint64_t handle
 void ffi_astra_core_rust_future_complete_void(uint64_t handle, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_ARTIFACT_CONTENT
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_ARTIFACT_CONTENT
+uint16_t uniffi_astra_core_checksum_func_api_artifact_content(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_CREATE_MEETING
 #define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_CREATE_MEETING
 uint16_t uniffi_astra_core_checksum_func_api_create_meeting(void
@@ -693,6 +709,12 @@ uint16_t uniffi_astra_core_checksum_func_api_dev_sign_in(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_FINISH_MEETING
 #define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_FINISH_MEETING
 uint16_t uniffi_astra_core_checksum_func_api_finish_meeting(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_LIBRARY
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_LIBRARY
+uint16_t uniffi_astra_core_checksum_func_api_library(void
     
 );
 #endif

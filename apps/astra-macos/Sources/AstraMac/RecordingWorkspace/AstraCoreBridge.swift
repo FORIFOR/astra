@@ -52,4 +52,10 @@ enum AstraCoreBridge {
     static func waitTask(_ baseUrl: String, accessToken: String, taskId: String, timeoutMs: UInt64) throws -> TaskStatus {
         try apiWaitTask(baseUrl: baseUrl, accessToken: accessToken, taskId: taskId, timeoutMs: timeoutMs)
     }
+    static func artifactContent(_ baseUrl: String, accessToken: String, artifactId: String) throws -> String {
+        try apiArtifactContent(baseUrl: baseUrl, accessToken: accessToken, artifactId: artifactId)
+    }
+    static func library(_ baseUrl: String, accessToken: String) throws -> [String] {
+        try apiLibrary(baseUrl: baseUrl, accessToken: accessToken)
+    }
 }
