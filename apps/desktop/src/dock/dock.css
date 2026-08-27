@@ -957,3 +957,9 @@
   font-size: 10px;
   cursor: pointer;
 }
+
+.astra-recording__link {
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 10px;
+  white-space: nowrap;
+}

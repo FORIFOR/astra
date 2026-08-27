@@ -32,4 +32,6 @@ cpal = "0.15"
 rubato = "0.15"
 libloading = "0.8"
 dirs = "5"
+# 会議の音声を gateway へ送る WebSocket（Authorization ヘッダ付きの upgrade は webview からは張れない）
+tungstenite = { version = "0.24", features = ["native-tls"] }
 base64 = "0.22"

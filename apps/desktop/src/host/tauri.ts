@@ -294,3 +294,49 @@ export const audio = {
     return callStrict<InputDevice[]>('audio_input_devices');
   },
 };
+
+// ---------------------------------------------------------------- meeting audio
+
+export type MeetingLinkState = 'connecting' | 'online' | 'offline' | 'reconnecting';
+
+export interface MeetingLinkEvent {
+  readonly meetingId: string;
+  readonly state: MeetingLinkState;
+  /** まだ送れていない音の長さ。オフラインの間に増える。 */
+  readonly pendingMs: number;
+}
+
+export interface RecoverableMeeting {
+  readonly meetingId: string;
+  readonly startedAt: string;
+  readonly recordedMs: number;
+  readonly uploadedMs: number;
+}
+
+/**
+ * 会議の音声は Rust が取り込み、手元に残しながら gateway へ送る（正本 §25）。
+ * webview は音を持たない。ここは指示と状態の受け渡しだけ。
+ */
+export const meetingCapture = {
+  start: (meetingId: string, baseUrl: string, token: string) =>
+    callStrict<void>('meeting_capture_start', { meetingId, baseUrl, token }),
+  /** access token が回ったら渡す（長い会議で切れないように）。 */
+  updateToken: (token: string) => call<void>('meeting_capture_token', { token }),
+  setPaused: (paused: boolean) => call<void>('meeting_capture_pause', { paused }),
+  stop: () => call<void>('meeting_capture_stop'),
+  recoverable: async (): Promise<RecoverableMeeting[]> =>
+    (await call<RecoverableMeeting[]>('meeting_recoverable')) ?? [],
+  reupload: (meetingId: string, baseUrl: string, token: string) =>
+    callStrict<number>('meeting_reupload', { meetingId, baseUrl, token }),
+  discard: (meetingId: string) => call<void>('meeting_discard', { meetingId }),
+  onLink: async (handler: (event: MeetingLinkEvent) => void): Promise<() => void> => {
+    if (!isTauri()) return () => undefined;
+    try {
+      const { listen } = await import('@tauri-apps/api/event');
+      return await listen<MeetingLinkEvent>('meeting:link', (event) => handler(event.payload));
+    } catch (error) {
+      console.warn('could not subscribe to the meeting link', error);
+      return () => undefined;
+    }
+  },
+};

@@ -37,6 +37,11 @@ export class HttpClient {
     return this.#config.baseUrl.replace(/\/$/, '');
   }
 
+  /** いまの access token。端末側（Rust）が WebSocket を張るときに渡す。 */
+  async currentAccessToken(): Promise<string | null> {
+    return this.#config.accessToken();
+  }
+
   /** 設定された fetch。SSE も同じものを使う（テストで差し替えられるように）。 */
   get fetcher(): typeof globalThis.fetch {
     return this.#config.fetch ?? globalThis.fetch;

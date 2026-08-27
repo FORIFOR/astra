@@ -49,6 +49,12 @@ export function RecordingDock({
           <span className="astra-recording__dot" data-state={meeting.state} aria-hidden="true" />
           <time>{formatElapsed(meeting.elapsedMs)}</time>
         </span>
+        {/* 回線が切れても録音は続く。切れていることと、手元に溜まっていることを言う */}
+        {(meeting.link === 'offline' || meeting.link === 'reconnecting') && (
+          <span className="astra-recording__link" role="status">
+            オフライン保存中…
+          </span>
+        )}
         <button
           type="button"
           className="astra-recording__button"

@@ -26,6 +26,7 @@ import { applyMeetingEvent, emptyMeetingView, type MeetingView } from './meeting
 import type { RecordingState } from './RecordingIndicator.js';
 import type { MeetingStartValues } from './StartConfirmation.js';
 import { SNAPSHOT_LINES, onMeetingCommand, publishMeeting } from './meetingBridge.js';
+import { meetingCapture, type MeetingLinkState, type RecoverableMeeting } from '../host/tauri.js';
 
 export type MeetingPhase = 'idle' | 'starting' | 'live' | 'finalizing';
 
@@ -39,6 +40,15 @@ interface MeetingContextValue {
   readonly speakerNames: ReadonlyMap<number, string>;
   readonly finalizeTaskId: string | null;
   readonly error: string | null;
+  /** 端末 → gateway の音声の接続。offline でも手元の断片には残っている。 */
+  readonly link: MeetingLinkState | null;
+  readonly pendingMs: number;
+  /** 端末で音を取り込めない理由（ブラウザ、マイク無し等）。録音は成り立たない。 */
+  readonly captureError: string | null;
+  /** 前回落ちたまま残っている録音。送り直すか捨てるかを聞く。 */
+  readonly recoverable: readonly RecoverableMeeting[];
+  reupload(meetingId: string): Promise<void>;
+  discardRecovery(meetingId: string): Promise<void>;
   /** 「会議を記録」から呼ぶ。まず確認を出す。いきなり録り始めない。 */
   requestStart(): void;
   cancelStart(): void;
@@ -68,7 +78,49 @@ export function MeetingProvider({
   const [speakerNames, setSpeakerNames] = useState<ReadonlyMap<number, string>>(new Map());
   const [finalizeTaskId, setFinalizeTaskId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [link, setLink] = useState<MeetingLinkState | null>(null);
+  const [pendingMs, setPendingMs] = useState(0);
+  const [captureError, setCaptureError] = useState<string | null>(null);
+  const [recoverable, setRecoverable] = useState<readonly RecoverableMeeting[]>([]);
   const abort = useRef<AbortController | null>(null);
+
+  // 端末側の接続状態（Rust の uploader から）
+  useEffect(() => {
+    let off: (() => void) | null = null;
+    let cancelled = false;
+    void meetingCapture
+      .onLink((event) => {
+        setLink(event.state);
+        setPendingMs(event.pendingMs);
+      })
+      .then((unlisten) => {
+        if (cancelled) unlisten();
+        else off = unlisten;
+      });
+    return () => {
+      cancelled = true;
+      off?.();
+    };
+  }, []);
+
+  // 起動時: 落ちたまま残っている録音があるか
+  const refreshRecoverable = useCallback(async () => {
+    setRecoverable(await meetingCapture.recoverable());
+  }, []);
+  useEffect(() => {
+    void refreshRecoverable();
+  }, [refreshRecoverable]);
+
+  // access token は 15 分で切れる。長い会議のために 5 分ごとに渡し直す
+  useEffect(() => {
+    if (phase !== 'live' || !client) return;
+    const timer = setInterval(() => {
+      void client.currentAccessToken().then((token) => {
+        if (token) void meetingCapture.updateToken(token);
+      });
+    }, 5 * 60_000);
+    return () => clearInterval(timer);
+  }, [phase, client]);
 
   // 経過時間は開始時刻から数える。tick を数えると、
   // タブが背面に回った間にずれる。
@@ -108,12 +160,21 @@ export function MeetingProvider({
         setElapsedMs(0);
         setPhase('live');
 
-        const controller = new AbortController();
-        abort.current = controller;
-        void client.streamMeeting(created.id, {
-          signal: controller.signal,
-          onEvent: (event) => setView((current) => applyMeetingEvent(current, event)),
-        });
+        // 端末で音を取り込み、手元に残しながら送る。取り込めない環境ではそう言う。
+        // **ここで失敗しても会議は成り立たせる**（理由は画面に出す）
+        setCaptureError(null);
+        try {
+          const token = await client.currentAccessToken();
+          if (!token) {
+            setCaptureError('サインインの状態が確認できず、音声を取り込めません。');
+          } else {
+            await meetingCapture.start(created.id, client.baseUrl, token);
+          }
+        } catch (cause) {
+          setCaptureError(
+            `この環境では音声を取り込めません（${cause instanceof Error ? cause.message : String(cause)}）。`,
+          );
+        }
       } catch (cause) {
         // 何が起きたかを黙って飲み込まない
         setError(cause instanceof Error ? cause.message : String(cause));
@@ -142,6 +203,8 @@ export function MeetingProvider({
   const stop = useCallback(async (): Promise<void> => {
     if (!client || !meeting) return;
     try {
+      // 取り込みを先に止め、未送信分を送り切ってから finish へ
+      await meetingCapture.stop();
       const { taskId } = await client.finishMeeting(meeting.id);
       setFinalizeTaskId(taskId);
       setPhase('finalizing');
@@ -184,8 +247,10 @@ export function MeetingProvider({
         text: line.text,
         interim: line.interim,
       })),
+      link,
+      pendingMs,
     });
-  }, [phase, recordingState, meeting?.title, elapsedMs, view.lines]);
+  }, [phase, recordingState, meeting?.title, elapsedMs, view.lines, link, pendingMs]);
 
   // Dock の ■ / ⏸ を受ける
   useEffect(() => {
@@ -220,7 +285,31 @@ export function MeetingProvider({
       cancelStart,
       start,
       setNotes,
-      togglePause: () => setPaused((p) => !p),
+      togglePause: () => {
+        setPaused((p) => {
+          void meetingCapture.setPaused(!p);
+          return !p;
+        });
+      },
+      link,
+      pendingMs,
+      captureError,
+      recoverable,
+      reupload: async (meetingId: string) => {
+        if (!client) return;
+        const token = await client.currentAccessToken();
+        if (!token) return;
+        try {
+          await meetingCapture.reupload(meetingId, client.baseUrl, token);
+        } catch (cause) {
+          setError(cause instanceof Error ? cause.message : String(cause));
+        }
+        await refreshRecoverable();
+      },
+      discardRecovery: async (meetingId: string) => {
+        await meetingCapture.discard(meetingId);
+        await refreshRecoverable();
+      },
       nameSpeaker,
       stop,
       dismiss,
@@ -235,6 +324,11 @@ export function MeetingProvider({
       speakerNames,
       finalizeTaskId,
       error,
+      link,
+      pendingMs,
+      captureError,
+      recoverable,
+      refreshRecoverable,
       requestStart,
       cancelStart,
       start,

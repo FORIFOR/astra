@@ -122,6 +122,8 @@ describe('recording (SuperIntern style, bottom)', () => {
     title: 'A社 商談',
     elapsedMs: 222_000,
     lines: [{ id: 'l1', speakerTag: 1, text: '来月までに', interim: false }],
+    link: 'online' as const,
+    pendingMs: 0,
   };
 
   it('drops to the recording dock while the meeting is live and sends stop as a command', async () => {
@@ -201,5 +203,26 @@ describe('quick menu on the pill', () => {
     fireEvent.click(document.querySelector('[role="menuitem"]')!);
     expect(dock().dataset['state']).toBe('READY');
     expect(dock().dataset['surface']).toBe('card');
+  });
+});
+
+describe('recording keeps going offline', () => {
+  it('says the audio is being kept locally while the link is down', async () => {
+    render(
+      <TaskDock
+        initialState="IDLE"
+        meeting={{
+          phase: 'live',
+          state: 'recording',
+          title: 'x',
+          elapsedMs: 1000,
+          lines: [],
+          link: 'reconnecting',
+          pendingMs: 12_000,
+        }}
+      />,
+    );
+    await act(async () => {});
+    expect(dock().textContent).toContain('オフライン保存中');
   });
 });

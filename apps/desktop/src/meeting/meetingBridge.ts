@@ -21,6 +21,9 @@ export interface MeetingSnapshot {
   readonly elapsedMs: number;
   /** 直近の数行だけ。全文は main 側にある */
   readonly lines: readonly MeetingSnapshotLine[];
+  /** 音声の送り先との接続。offline の間も手元には残っている。 */
+  readonly link: 'connecting' | 'online' | 'offline' | 'reconnecting' | null;
+  readonly pendingMs: number;
 }
 
 /** start は Dock のクイックメニューから。main が確認ダイアログを出す（いきなり録らない） */

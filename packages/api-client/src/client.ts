@@ -385,6 +385,15 @@ export class AstraClient {
    * 会議を始める。**同意の確認は呼び出し側の責任**で、
    * `consent_confirmed: true` が無いと契約側で落ちる（UI/UX §12.1）。
    */
+  /** gateway の場所と、いまの access token。端末側の音声送信が使う。 */
+  get baseUrl(): string {
+    return this.http.baseUrl;
+  }
+
+  currentAccessToken(): Promise<string | null> {
+    return this.http.currentAccessToken();
+  }
+
   async startMeeting(request: CreateMeetingRequest): Promise<Meeting> {
     return this.http.request({ method: 'POST', path: '/v1/meetings', body: request }, (value) =>
       Meeting.parse(value),

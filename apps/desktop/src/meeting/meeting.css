@@ -710,3 +710,26 @@
   color: var(--astra-color-warning);
   font-size: var(--astra-font-size-micro);
 }
+
+/* 回復の案内と、取り込み・回線の注意 */
+.astra-meeting-recovery {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--astra-space-compact) var(--astra-space-base);
+  margin: 0;
+  padding: var(--astra-space-base);
+  border: var(--astra-border-hairline) solid var(--astra-color-border);
+  border-radius: var(--astra-radius-standard);
+  background: var(--astra-color-surface);
+  font-size: var(--astra-font-size-secondary);
+}
+
+.astra-meeting-layer__notice {
+  margin: 0;
+  padding: var(--astra-space-compact) var(--astra-space-base);
+  border-radius: var(--astra-radius-small);
+  background: color-mix(in srgb, var(--astra-color-warning) 12%, var(--astra-color-surface));
+  color: var(--astra-color-text);
+  font-size: var(--astra-font-size-micro);
+}

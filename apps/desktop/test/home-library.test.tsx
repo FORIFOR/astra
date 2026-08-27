@@ -291,7 +291,8 @@ describe('Library (§10)', () => {
   it('offers both "later" and a lasting refusal (§16)', async () => {
     const onDismiss = vi.fn();
     const waiting = task({ status: 'WAITING_APPROVAL', title: '承認待ち' });
-    render(<HomePage tasks={[waiting]} onDismiss={onDismiss} />);
+    // fixture は固定日時。now を渡さないと、実時間が 1 日進んだ時点で「古い出来事」として消える
+    render(<HomePage tasks={[waiting]} onDismiss={onDismiss} now={NOW} />);
 
     await userEvent.click(screen.getByRole('button', { name: '今後は出さない' }));
     expect(onDismiss).toHaveBeenCalledWith(expect.stringContaining(waiting.id), 'never');
@@ -301,7 +302,9 @@ describe('Library (§10)', () => {
 
   it('does not offer a refusal it cannot remember', () => {
     // onDismiss が無いなら、押せる口を出さない
-    render(<HomePage tasks={[task({ status: 'WAITING_APPROVAL', title: '承認待ち' })]} />);
+    render(
+      <HomePage tasks={[task({ status: 'WAITING_APPROVAL', title: '承認待ち' })]} now={NOW} />,
+    );
     expect(screen.queryByRole('button', { name: '今後は出さない' })).toBeNull();
   });
 

@@ -30,6 +30,8 @@ const MEETING_SAMPLE: MeetingSnapshot = {
     { id: 'l2', speakerTag: 2, text: 'API 側はどうしますか？', interim: false },
     { id: 'l3', speakerTag: 1, text: '既存の口をそのまま', interim: true },
   ],
+  link: 'online',
+  pendingMs: 0,
 };
 
 const STATE_FOR: Record<string, InteractionState> = {

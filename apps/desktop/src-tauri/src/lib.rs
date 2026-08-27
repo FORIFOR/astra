@@ -4,6 +4,7 @@ pub mod audio;
 pub mod capability;
 pub mod context;
 pub mod dock;
+pub mod meeting;
 pub mod notify;
 pub mod oauth;
 pub mod permission;
@@ -26,6 +27,7 @@ pub fn run() {
         .manage(DockRuntime::default())
         .manage(ShortcutRuntime::default())
         .manage(OauthRuntime::default())
+        .manage(meeting::MeetingRuntime::default())
         .manage(voice::VoiceRuntime::with_window(
             crate::stt::recognizer::LiveWindow::default(),
         ))
@@ -55,6 +57,13 @@ pub fn run() {
             voice::voice_set_mode,
             voice::voice_set_output_level,
             voice::audio_input_devices,
+            meeting::meeting_capture_start,
+            meeting::meeting_capture_token,
+            meeting::meeting_capture_pause,
+            meeting::meeting_capture_stop,
+            meeting::meeting_recoverable,
+            meeting::meeting_reupload,
+            meeting::meeting_discard,
         ])
         .setup(|app| {
             if cfg!(debug_assertions) {
