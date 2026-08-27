@@ -177,6 +177,31 @@ describe('GoogleStreamingTranscriber', () => {
   });
 });
 
+describe('provenance survives the refinement pass', () => {
+  const results = [
+    { alternatives: [{ transcript: 'こんにちは', words: [] }], resultEndOffset: { seconds: 1 } },
+  ];
+
+  it('keeps which source the audio came from', () => {
+    /*
+     * 出所は一次情報（正本 §11.3）。**起こし直しても変わらない事実。**
+     * 落としていた間、精度優先で起こし直すたびに
+     * 話者の手掛かりが分離の番号だけになっていた。分離は二次情報なので、
+     * これは格下げにあたる。
+     */
+    const refined = fromV2Results(results, 'ja-JP', {
+      source: 'system',
+      provider: 'google-stt-batch',
+    });
+    expect(refined[0]).toMatchObject({ source: 'system', provider: 'google-stt-batch' });
+  });
+
+  it('does not invent a source when none was given', () => {
+    const refined = fromV2Results(results, 'ja-JP');
+    expect(refined[0]!.source).toBeUndefined();
+  });
+});
+
 describe('fromV2Results', () => {
   it('renumbers speaker labels in the order they appear', () => {
     // 番号そのものに意味を持たせない。突き合わせは時間で行う。

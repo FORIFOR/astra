@@ -70,11 +70,25 @@ export type CreateMeetingRequest = z.infer<typeof CreateMeetingRequest>;
 
 // ------------------------------------------------------------------ segment
 
+/** 音の出所。正本 §11.3。 */
+export const AUDIO_PROVENANCE = ['microphone', 'system', 'mixed'] as const;
+export const AudioProvenance = z.enum(AUDIO_PROVENANCE);
+export type AudioProvenance = z.infer<typeof AudioProvenance>;
+
 export const MeetingSegment = z.object({
   id: MeetingSegmentId,
   meeting_id: MeetingId,
   pass: TranscriptPass,
-  /** provider が付けた話者番号。名前は meeting_speakers 側。 */
+  /**
+   * どの音源から来たか。**一次情報**（正本 §11.3・§12.2）。
+   *
+   * `microphone` = 自分 / `system` = 相手。
+   * **話者分離より先に、これを見る。**分離が落ちても、
+   * どちらの音から来たかは録音そのものの事実なので変わらない。
+   * 分けられないときは `mixed`、分からないときは null（推測で埋めない）。
+   */
+  source: AudioProvenance.nullable().default(null),
+  /** provider が付けた話者番号。**二次情報。**名前は meeting_speakers 側。 */
   speaker_tag: z.number().int().positive().nullable(),
   text: z.string(),
   start_ms: z.number().int().nonnegative(),

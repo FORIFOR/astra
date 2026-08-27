@@ -77,3 +77,4 @@ export {
 } from './google-rest.js';
 export * from './google-streaming.js';
 export { GoogleTtsProvider, type GoogleTtsConfig } from './google-tts.js';
+export * from './host-summarizer.js';

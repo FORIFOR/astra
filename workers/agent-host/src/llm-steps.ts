@@ -25,6 +25,7 @@ export const LLM_TOOLS = [
   'llm.contradictions',
   'llm.answer',
   'llm.compose',
+  'llm.summarize_meeting',
   'search.web',
 ] as const;
 
@@ -41,6 +42,7 @@ const TOOLS_FOR: Readonly<Record<LlmTool, readonly string[]>> = {
   'llm.contradictions': [],
   'llm.answer': [],
   'llm.compose': [],
+  'llm.summarize_meeting': [],
   'search.web': ['WebSearch'],
 };
 export type LlmTool = (typeof LLM_TOOLS)[number];
@@ -120,6 +122,23 @@ export function promptFor(tool: LlmTool, args: Record<string, unknown>): string 
         `指示: ${String(args['instruction'] ?? '')}`,
       ].join('\n');
 
+    case 'llm.summarize_meeting':
+      return [
+        '次の会議の記録から、要点・決まったこと・やること・未決を取り出してください。',
+        /*
+         * **引用は id で受ける。**本文を書き直させると、
+         * 「言っていないこと」が引用として残る。
+         */
+        'それぞれに、もとになった segment の id を segment_ids に入れてください。',
+        '記録に無いことを足さないでください。担当や期日が決まっていなければ null にしてください。',
+        json(
+          '{"summary": [{"text": "…", "segment_ids": ["…"]}], "decisions": [], "action_items": [{"text": "…", "segment_ids": ["…"], "assignee": null, "due": null}], "open_questions": []}',
+        ),
+        '',
+        '記録:',
+        ...meetingLines(args['segments']),
+      ].join('\n');
+
     case 'search.web':
       return [
         `WebSearch で次を検索してください: ${String(args['query'] ?? '')}`,
@@ -145,6 +164,16 @@ export function promptFor(tool: LlmTool, args: Record<string, unknown>): string 
         `主張:\n${listOf(args['claims'])}`,
       ].join('\n');
   }
+}
+
+/** 会議の記録を、id つきで並べる。id を落とすと引用が作れない。 */
+function meetingLines(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.map((item) => {
+    const row = item as Record<string, unknown>;
+    const speaker = typeof row['speaker'] === 'string' ? row['speaker'] : '不明';
+    return `- [${String(row['id'] ?? '')}] ${speaker}: ${String(row['text'] ?? '')}`;
+  });
 }
 
 function listOf(value: unknown): string {

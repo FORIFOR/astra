@@ -163,6 +163,12 @@ export async function meetingProvidersFromEnv(
         })
       : new EchoTranslationProvider();
 
+  /*
+   * 会議の要約。**既定は端末**（正本 §21、UI/UX §22）。
+   *
+   * 会議の中身は、その会議に出た人のもの。Astra が預かる利用権で
+   * 処理してよいものではない。持ち込んだ利用権で、手元で処理する。
+   */
   const summarizer: MeetingSummarizer = env.ANTHROPIC_API_KEY
     ? new AnthropicSummarizer({
         apiKey: env.ANTHROPIC_API_KEY,

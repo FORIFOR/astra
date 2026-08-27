@@ -371,6 +371,8 @@ export class MeetingService {
           tenant_id: tenantId,
           meeting_id: meetingId,
           pass,
+          // 出所は一次情報。**保存の時点で落とさない**（正本 §11.3）。
+          source: segment.source ?? null,
           speaker_tag: segment.speakerTag,
           text: segment.text,
           start_ms: segment.startMs,

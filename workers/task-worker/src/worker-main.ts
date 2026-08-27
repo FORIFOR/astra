@@ -23,9 +23,10 @@ import {
   MeetingService,
   meetingExecutors,
   meetingProvidersFromEnv,
+  HostMeetingSummarizer,
 } from '@astra/service-meeting';
 // 数え方は gateway と同じものを使う。別々に数えると片方だけ見落とす。
-import { assertNoStandIns } from '@astra/contracts';
+import { assertNoStandIns, canonicalSha256 } from '@astra/contracts';
 import { capabilityReport, capabilitySummary } from '@astra/service-capabilities';
 import { createTaskWorker, TASK_QUEUE, NoopPublisher } from '@astra/service-task';
 import { HostBridge, HostStepExecutor, type ApprovalProof } from '@astra/service-agent-host';
@@ -63,6 +64,15 @@ async function main(): Promise<void> {
    * 端末が居なければ `PAUSED_HOST_OFFLINE` で止まる（失敗にしない）。
    */
   const hostBridge = new HostBridge({ db });
+
+  /**
+   * いまどの step の中に居るか。
+   *
+   * 会議の要約は step の中で起きるので、受け渡しに載せる先が要る。
+   * 調査の側は `setModelContext` が同じものを持つ。
+   */
+  let here: { taskId: string; tenantId: string; userId: string; stepIndex: number } | null = null;
+  const modelContext = (): typeof here => here;
 
   const hostExecutor = new HostStepExecutor({
     bridge: hostBridge,
@@ -120,7 +130,10 @@ async function main(): Promise<void> {
       hostExecutor,
       hosts: hostBridge,
       // step ごとに「いまここ」を置く。言語モデルはこの中から呼ばれる。
-      onStep: setModelContext,
+      onStep: (where) => {
+        here = where;
+        setModelContext(where);
+      },
       executors: {
         ...researchExecutors(research),
         /*
@@ -152,7 +165,20 @@ async function main(): Promise<void> {
           library,
           recordings: new FsRecordingStore(recordingRoot),
           batch: meetingProviders.batch,
-          summarizer: meetingProviders.summarizer,
+          /*
+           * 要約も端末で。正本 §21、UI/UX §22。
+           *
+           * **会議の中身は、その会議に出た人のもの。**
+           * Astra が預かる利用権で処理してよいものではない。
+           * 自分の鍵が設定してあるならそちらを使う。
+           */
+          summarizer: meetingProviders.summarizer.isStandIn
+            ? new HostMeetingSummarizer({
+                host: hostExecutor,
+                context: () => modelContext(),
+                keyOf: canonicalSha256,
+              })
+            : meetingProviders.summarizer,
         }),
       },
     },

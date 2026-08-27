@@ -515,10 +515,12 @@ CREATE TABLE public.meeting_segments (
     confidence numeric(3,2),
     supersedes uuid[] DEFAULT '{}'::uuid[] NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
+    source text,
     CONSTRAINT meeting_segments_check CHECK ((end_ms >= start_ms)),
     CONSTRAINT meeting_segments_confidence_check CHECK (((confidence >= (0)::numeric) AND (confidence <= (1)::numeric))),
     CONSTRAINT meeting_segments_only_final_supersedes CHECK (((pass = 'final'::text) OR (cardinality(supersedes) = 0))),
     CONSTRAINT meeting_segments_pass_check CHECK ((pass = ANY (ARRAY['live'::text, 'final'::text]))),
+    CONSTRAINT meeting_segments_source_check CHECK (((source IS NULL) OR (source = ANY (ARRAY['microphone'::text, 'system'::text, 'mixed'::text])))),
     CONSTRAINT meeting_segments_speaker_tag_check CHECK ((speaker_tag > 0)),
     CONSTRAINT meeting_segments_start_ms_check CHECK ((start_ms >= 0))
 );
@@ -1613,6 +1615,13 @@ CREATE INDEX job_leases_expiry ON public.job_leases USING btree (tenant_id, expi
 --
 
 CREATE INDEX job_leases_host ON public.job_leases USING btree (host_id);
+
+
+--
+-- Name: meeting_segments_by_source; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX meeting_segments_by_source ON public.meeting_segments USING btree (tenant_id, meeting_id, source) WHERE (source IS NOT NULL);
 
 
 --
@@ -3374,3 +3383,4 @@ INSERT INTO schema_migrations (version) VALUES ('20260827060001');
 INSERT INTO schema_migrations (version) VALUES ('20260827070001');
 INSERT INTO schema_migrations (version) VALUES ('20260827090000');
 INSERT INTO schema_migrations (version) VALUES ('20260827093000');
+INSERT INTO schema_migrations (version) VALUES ('20260827103000');

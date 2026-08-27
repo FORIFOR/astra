@@ -109,3 +109,49 @@ describe('reconciliation', () => {
     expect(map.has(9)).toBe(false);
   });
 });
+
+describe('provenance decides who is speaking', () => {
+  const result = (over: Record<string, unknown>) => ({
+    isFinal: true,
+    speakerTag: 1,
+    text: 'はい',
+    startMs: 0,
+    endMs: 1000,
+    language: 'ja-JP',
+    confidence: 0.9,
+    ...over,
+  });
+
+  it('keeps the source on the segment it produces', () => {
+    const [segment] = stabilize([result({ source: 'system' })]);
+    expect(segment!.source).toBe('system');
+  });
+
+  it('does not join two sources into one segment', () => {
+    /*
+     * 出所は一次情報。話者番号が同じでも、音源が違えば別の人。
+     * 繋ぐと、自分の発言と相手の発言が 1 つの塊になり、
+     * その塊はもうどちらのものとも言えなくなる。
+     */
+    const segments = stabilize([
+      result({ source: 'microphone', text: 'お願いします', startMs: 0, endMs: 1000 }),
+      result({ source: 'system', text: '承知しました', startMs: 1000, endMs: 2000 }),
+    ]);
+    expect(segments).toHaveLength(2);
+    expect(segments.map((s) => s.source)).toEqual(['microphone', 'system']);
+  });
+
+  it('still joins the same source and speaker', () => {
+    const segments = stabilize([
+      result({ source: 'microphone', text: 'まず', startMs: 0, endMs: 1000 }),
+      result({ source: 'microphone', text: '次に', startMs: 1000, endMs: 2000 }),
+    ]);
+    expect(segments).toHaveLength(1);
+    expect(segments[0]!.text).toBe('まず 次に');
+  });
+
+  it('does not invent a source when the provider gave none', () => {
+    const [segment] = stabilize([result({})]);
+    expect(segment!.source).toBeUndefined();
+  });
+});

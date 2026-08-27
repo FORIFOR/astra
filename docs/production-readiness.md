@@ -16,9 +16,12 @@
 | 実接続で確認済みの能力 | 4 / 8                                            |
 | ManualSmoke            | NOT_RUN_BY_ASSISTANT（GUI 操作は実施していない） |
 
-必須の能力のうち、**文字起こし・翻訳・外部サービスへの接続**が
-この端末の環境では未設定のまま。設定すれば起動する状態で、
-設定しないまま本番へ出すと**起動が拒否される**（そう作ってある）。
+必須の能力のうち、**外部サービスへの接続（OAuth）だけ**が残っている。
+Google OAuth Client を作れば埋まる。作らないまま本番へ出すと
+**起動が拒否される**（そう作ってある）。
+
+文字起こし・翻訳・読み上げは `GOOGLE_CLOUD_PROJECT` を設定した状態で
+**実際に繋いで通した**（`docs/evidence/final-e2e.md`）。
 
 ---
 
@@ -54,9 +57,9 @@
 | 画像の生成       |      | Vertex Imagen         | **not_configured** | 未検証                              |
 | 動画の生成       |      | —                     | **not_configured** | 実装なし（OQ-19）                   |
 
-「別環境で実測済み」は、`GOOGLE_CLOUD_PROJECT` を設定した状態で
-実際に Google へ繋いで測った記録があるという意味。
-いまの既定の環境変数では設定されていないので `not_configured` と答える。
+`GOOGLE_CLOUD_PROJECT` が設定されていない起動では、この 3 つは
+`not_configured` と答える。**設定の有無で答えを変える**のが正しい —
+「前に動いたから今も動く」と答えるのは嘘になる。
 
 ---
 
@@ -71,8 +74,11 @@
    - `gmail.googleapis.com`
    - `calendar-json.googleapis.com`
    - `aiplatform.googleapis.com`（画像生成を使う場合）
+
+   Speech / Translation / Text-to-Speech は**既に有効**で、実測済み。
+
 3. **`GOOGLE_CLOUD_PROJECT` を設定**して ADC を通す
-   （`gcloud auth application-default login`）
+   （ADC はこの端末で通ることを確認済み）
 4. 端末で **Claude Code にサインイン**しておく（言語モデルと検索に使う）
 
 これらを終えてから `ASTRA_ENV=production` で起動すると、
@@ -85,7 +91,8 @@
 **ここが、この文書でいちばん大事な節。**
 
 - **実アカウントでの Gmail / Calendar の読み書き。**OAuth Client が無いため
-  未実施。契約と経路は自動試験で通してあるが、**実物では動かしていない**
+  未実施。契約と経路は自動試験で通してあるが、**実物では動かしていない**。
+  会議 →予定提案 →承認 →Calendar 作成 →Gmail 下書き の鎖も、ここで止まっている
 - **Vertex Imagen の実応答。**API が未有効
 - **Brave / Tavily / Google Programmable Search の実応答。**鍵が無い
 - **Claude Code の `not_signed_in` / `rate_limited`。**本物の出力を

@@ -9,6 +9,8 @@ import type { TranscriptResult } from './providers.js';
 
 /** 確定として積む用意ができた 1 かたまり。 */
 export interface StableSegment {
+  /** どの音源から来たか。**一次情報**（正本 §11.3）。 */
+  readonly source?: 'microphone' | 'system' | 'mixed' | undefined;
   readonly speakerTag: number | null;
   readonly text: string;
   readonly startMs: number;
@@ -30,13 +32,22 @@ export function stabilize(results: readonly TranscriptResult[]): readonly Stable
     if (!r.isFinal) continue; // interim は保存しない（D-24）
 
     const last = out[out.length - 1];
+    /*
+     * **出所が違うものは繋がない**（正本 §11.3）。
+     *
+     * 出所は一次情報なので、話者番号が同じでも音源が違えば別の人。
+     * 繋ぐと、自分の発言と相手の発言が 1 つの塊になり、
+     * その塊はもうどちらのものとも言えなくなる。
+     */
     const joinable =
       last !== undefined &&
+      last.source === r.source &&
       last.speakerTag === r.speakerTag &&
       r.endMs - last.startMs <= MAX_SEGMENT_MS;
 
     if (joinable) {
       out[out.length - 1] = {
+        ...(last.source === undefined ? {} : { source: last.source }),
         speakerTag: last.speakerTag,
         // 連結は素直に空白で。原文の区切りを消さない。
         text: `${last.text} ${r.text}`.trim(),
@@ -48,6 +59,7 @@ export function stabilize(results: readonly TranscriptResult[]): readonly Stable
       continue;
     }
     out.push({
+      ...(r.source === undefined ? {} : { source: r.source }),
       speakerTag: r.speakerTag,
       text: r.text,
       startMs: r.startMs,

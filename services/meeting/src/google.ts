@@ -291,7 +291,19 @@ export function isModelUnavailable(error: unknown): boolean {
  * 数字でないラベルも来るので、出現順に 1 から振り直す。
  * **番号そのものに意味を持たせない**（突き合わせは時間で行う）。
  */
-export function fromV2Results(results: readonly V2Result[], language: string): TranscriptResult[] {
+/**
+ * V2 の結果を、扱える形へ写す。
+ *
+ * `provenance` を受け取るのは、**出所が一次情報**だから（正本 §11.3）。
+ * 渡していなかった間、精度優先の起こし直しを通すたびに
+ * 「どちらの音源か」が落ち、話者の手掛かりが分離の番号だけになっていた。
+ * 分離は二次情報なので、これは格下げにあたる。
+ */
+export function fromV2Results(
+  results: readonly V2Result[],
+  language: string,
+  provenance?: { source?: TranscriptResult['source']; provider?: string },
+): TranscriptResult[] {
   const tags = new Map<string, number>();
   const tagOf = (label: string | null | undefined): number | null => {
     if (!label) return null;
@@ -335,6 +347,9 @@ export function fromV2Results(results: readonly V2Result[], language: string): T
       endMs: Math.max(startMs, endMs),
       language,
       confidence: typeof alternative.confidence === 'number' ? alternative.confidence : null,
+      // 出所は一次情報。**起こし直しても変わらない事実**なので持ち越す。
+      ...(provenance?.source === undefined ? {} : { source: provenance.source }),
+      ...(provenance?.provider === undefined ? {} : { provider: provenance.provider }),
     });
   }
   return out;
@@ -435,7 +450,14 @@ export class GoogleBatchTranscriber implements BatchTranscriber {
     };
 
     const response = await withFallbacks();
-    return fromV2Results(response.results ?? [], config.language);
+    /*
+     * **出所を落とさない。**録音そのものは変わっていないので、
+     * どちらの音源から来たかは起こし直しても同じ事実。
+     */
+    return fromV2Results(response.results ?? [], config.language, {
+      ...(config.source === undefined ? {} : { source: config.source }),
+      provider: this.name,
+    });
   }
 }
 

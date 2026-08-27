@@ -317,6 +317,10 @@ export interface MeetingSegments {
   language: string | null;
   meeting_id: string;
   pass: string;
+  /**
+   * 一次情報。microphone=自分 / system=相手 / mixed=分けられない。不明なら NULL（推測で埋めない）
+   */
+  source: string | null;
   speaker_tag: number | null;
   start_ms: number;
   supersedes: Generated<string[]>;
