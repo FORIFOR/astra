@@ -33,24 +33,41 @@ function handlingOf(plugin: PluginCatalogEntry): DataHandling {
   return staysLocal ? 'local_only' : 'cloud_used';
 }
 
+/** 生の enum を画面に出さない（§6.1）。 */
+const SURFACE_LABEL: Record<string, string> = { local: 'この端末', cloud: 'クラウド' };
+const SIGNATURE_LABEL: Record<PluginCatalogEntry['signature_state'], string> = {
+  VERIFIED: '署名を確認済み',
+  BUILTIN_TRUSTED: 'Astra 同梱',
+  UNSIGNED: '署名なし',
+};
+
 export function AppDetail({
   plugin,
   onInstall,
   onUninstall,
+  onClose,
 }: {
   plugin: PluginCatalogEntry;
   onInstall(): void;
   onUninstall(): void;
+  onClose?(): void;
 }): ReactElement {
   return (
     <article className="astra-app-detail" aria-label={plugin.name}>
-      <header>
-        <h3>{plugin.name}</h3>
-        <p className="astra-app-detail__publisher">
-          {plugin.publisher}
-          {plugin.verified ? <span className="astra-app-detail__verified"> 確認済み</span> : null}
-          <span className="astra-app-detail__version"> v{plugin.latest_version}</span>
-        </p>
+      <header className="astra-app-detail__head">
+        <div>
+          <h3>{plugin.name}</h3>
+          <p className="astra-app-detail__publisher">
+            {plugin.publisher}
+            {plugin.verified ? <span className="astra-app-detail__verified"> 確認済み</span> : null}
+            <span className="astra-app-detail__version"> v{plugin.latest_version}</span>
+          </p>
+        </div>
+        {onClose && (
+          <button type="button" className="astra-button astra-button--quiet" onClick={onClose}>
+            閉じる
+          </button>
+        )}
       </header>
 
       <section>
@@ -89,11 +106,11 @@ export function AppDetail({
           </span>
         </dd>
         <dt>実行される場所</dt>
-        <dd>{plugin.execution_surfaces.join(' / ')}</dd>
+        <dd>{plugin.execution_surfaces.map((s) => SURFACE_LABEL[s] ?? s).join(' / ')}</dd>
         <dt>署名</dt>
-        <dd>{plugin.signature_state}</dd>
+        <dd>{SIGNATURE_LABEL[plugin.signature_state]}</dd>
         {/* tool 数は secondary metadata（UI/UX §11.1） */}
-        <dt>tool</dt>
+        <dt>道具の数</dt>
         <dd>{plugin.tool_count}</dd>
       </dl>
 
@@ -101,7 +118,11 @@ export function AppDetail({
         <>
           <p className="astra-app-detail__installed">追加済み（v{plugin.installed_version}）</p>
           {plugin.removable ? (
-            <button type="button" onClick={onUninstall}>
+            <button
+              type="button"
+              className="astra-button astra-button--danger"
+              onClick={onUninstall}
+            >
               削除する
             </button>
           ) : (
@@ -109,7 +130,7 @@ export function AppDetail({
           )}
         </>
       ) : (
-        <button type="button" onClick={onInstall}>
+        <button type="button" className="astra-button astra-button--primary" onClick={onInstall}>
           追加する
         </button>
       )}

@@ -23,6 +23,7 @@ import {
   PluginCatalogEntry,
   PluginInstall,
   Share,
+  type CreateShareRequest,
   SendTurnRequest,
   StartConversationRequest,
   Task,
@@ -149,6 +150,24 @@ export class AstraClient {
   }
 
   /** この成果物に出ている共有。UI/UX §10.2「共有状態は header に常時可視化」。 */
+  /** 共有リンクを作る。平文の URL が返るのはこの一度だけ。 */
+  async createShare(
+    artifactId: string,
+    body: CreateShareRequest,
+  ): Promise<{ share: Share; url: string }> {
+    return this.http.request(
+      { method: 'POST', path: `/v1/artifacts/${encodeURIComponent(artifactId)}/share`, body },
+      (value) => z.object({ share: Share, url: z.string() }).parse(value),
+    );
+  }
+
+  async revokeShare(shareId: string): Promise<void> {
+    await this.http.request(
+      { method: 'DELETE', path: `/v1/shares/${encodeURIComponent(shareId)}` },
+      () => undefined,
+    );
+  }
+
   async artifactShares(artifactId: string): Promise<Share[]> {
     return this.http.request(
       { method: 'GET', path: `/v1/artifacts/${artifactId}/shares` },
@@ -285,9 +304,8 @@ export class AstraClient {
   synthesizeVoice(
     request: z.input<typeof VoiceSynthesisRequest>,
   ): Promise<z.infer<typeof VoiceSynthesisResponse>> {
-    return this.http.request(
-      { method: 'POST', path: '/v1/voice/speech', body: request },
-      (value) => VoiceSynthesisResponse.parse(value),
+    return this.http.request({ method: 'POST', path: '/v1/voice/speech', body: request }, (value) =>
+      VoiceSynthesisResponse.parse(value),
     );
   }
 

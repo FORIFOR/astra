@@ -239,3 +239,86 @@
   color: var(--astra-color-warning);
   margin: 0;
 }
+
+/* --- preview からの操作（§10.1）------------------------------------- */
+
+.astra-artifact-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--astra-space-base);
+}
+
+.astra-artifact-actions__row {
+  display: flex;
+  gap: var(--astra-space-compact);
+}
+
+.astra-artifact-actions__error {
+  margin: 0;
+  color: var(--astra-color-danger);
+  font-size: var(--astra-font-size-secondary);
+}
+
+.astra-share-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: var(--astra-space-base);
+  padding: var(--astra-padding-card);
+  border: var(--astra-border-hairline) solid var(--astra-color-border);
+  border-radius: var(--astra-radius-standard);
+  background: var(--astra-color-canvas);
+}
+
+.astra-share-sheet__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--astra-space-compact);
+  font-size: var(--astra-font-size-secondary);
+}
+
+.astra-share-sheet__field > span {
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-micro);
+}
+
+.astra-share-sheet__check {
+  display: flex;
+  align-items: center;
+  gap: var(--astra-space-compact);
+  font-size: var(--astra-font-size-secondary);
+}
+
+.astra-share-sheet__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--astra-space-compact);
+}
+
+.astra-share-sheet__done {
+  margin: 0;
+  font-size: var(--astra-font-size-secondary);
+}
+
+.astra-share-sheet__link {
+  display: flex;
+  gap: var(--astra-space-compact);
+}
+
+.astra-share-sheet__link input {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--astra-font-mono);
+  font-size: var(--astra-font-size-micro);
+}
+
+.astra-library__share ul li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--astra-space-compact) var(--astra-space-base);
+}
+
+.astra-library__revoke {
+  min-height: 28px;
+  padding-inline: var(--astra-space-compact);
+}

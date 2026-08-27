@@ -19,6 +19,8 @@
   display: grid;
   grid-template-columns: var(--astra-sidebar-width) minmax(var(--astra-layout-main-min), 1fr) auto;
   height: 100%;
+  /* 長い page でも window を伸ばさない。伸びると sidebar の下端（account）が切れる。 */
+  overflow: hidden;
   background: var(--astra-color-canvas);
 }
 
@@ -26,6 +28,12 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
+  min-height: 0;
+}
+
+.astra-sidebar {
+  min-height: 0;
+  overflow: hidden;
 }
 
 /* ---------------------------------------------------------------- sidebar */

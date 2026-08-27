@@ -234,3 +234,96 @@
   color: var(--astra-color-warning);
   font-size: var(--astra-font-size-micro);
 }
+
+/* --- 一覧 + 詳細。詳細を一覧の下に積むと、押しても画面外に出て見えない。 --- */
+
+.astra-apps__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--astra-space-lg);
+  align-items: start;
+}
+
+.astra-apps[data-open='true'] .astra-apps__body {
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
+}
+
+.astra-apps[data-open='true'] .astra-app-detail {
+  position: sticky;
+  top: 0;
+}
+
+.astra-apps__catalog h3,
+.astra-apps__dashboards h3 {
+  margin: 0 0 var(--astra-space-base);
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-micro);
+  font-weight: var(--astra-font-weight-micro);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.astra-apps__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--astra-space-base);
+}
+
+.astra-app-card {
+  height: 100%;
+}
+
+.astra-app-card:hover {
+  background: var(--astra-color-canvas);
+}
+
+.astra-app-card[aria-current='true'] {
+  border-color: var(--astra-color-accent);
+  background: color-mix(in srgb, var(--astra-color-accent) 6%, var(--astra-color-surface));
+}
+
+.astra-app-card__kind {
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-micro);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.astra-app-detail__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--astra-space-base);
+}
+
+.astra-app-detail__head h3,
+.astra-app-detail h4 {
+  margin: 0;
+}
+
+.astra-app-detail h4 {
+  margin-bottom: var(--astra-space-compact);
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-micro);
+  font-weight: var(--astra-font-weight-micro);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.astra-app-detail ul {
+  margin: 0;
+  padding-left: var(--astra-space-lg);
+  font-size: var(--astra-font-size-secondary);
+}
+
+.astra-app-detail__publisher {
+  margin: 0;
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-secondary);
+}
+
+.astra-app-detail__installed {
+  margin: 0;
+  color: var(--astra-color-success);
+  font-size: var(--astra-font-size-secondary);
+}

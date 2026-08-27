@@ -32,9 +32,12 @@ function when(iso: string): string {
 export function ShareState({
   shares,
   now = new Date(),
+  onRevoke,
 }: {
   shares: readonly Share[] | null;
   now?: Date;
+  /** 取り消し。無ければ状態だけ出す。 */
+  onRevoke?(shareId: string): void;
 }): ReactElement {
   // まだ分からない状態を「オフ」と言わない
   if (shares === null) {
@@ -60,6 +63,15 @@ export function ShareState({
             <span>{share.policy.allow_download ? 'ダウンロード可' : 'ダウンロード不可'}</span>
             {share.policy.one_time && <span>一度きり</span>}
             {share.access_count > 0 && <span>{share.access_count} 回開かれました</span>}
+            {onRevoke && (
+              <button
+                type="button"
+                className="astra-button astra-button--quiet astra-library__revoke"
+                onClick={() => onRevoke(share.id)}
+              >
+                取り消す
+              </button>
+            )}
           </li>
         ))}
       </ul>
@@ -71,10 +83,14 @@ export function ShareState({
 export function ArtifactShareState({
   client,
   artifactId,
+  refreshKey = 0,
 }: {
   client: AstraClient | null;
   artifactId: string;
+  /** 共有を作った / 取り消したあとに増やす。引き直しの合図。 */
+  refreshKey?: number;
 }): ReactElement {
+  const [revision, setRevision] = useState(0);
   const [shares, setShares] = useState<readonly Share[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -98,7 +114,17 @@ export function ArtifactShareState({
     return () => {
       cancelled = true;
     };
-  }, [client, artifactId]);
+  }, [client, artifactId, refreshKey, revision]);
+
+  const revoke = async (shareId: string): Promise<void> => {
+    if (!client) return;
+    try {
+      await client.revokeShare(shareId);
+      setRevision((r) => r + 1);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : String(cause));
+    }
+  };
 
   if (error !== null) {
     return (
@@ -107,5 +133,10 @@ export function ArtifactShareState({
       </p>
     );
   }
-  return <ShareState shares={shares} />;
+  return (
+    <ShareState
+      shares={shares}
+      {...(client ? { onRevoke: (id: string) => void revoke(id) } : {})}
+    />
+  );
 }

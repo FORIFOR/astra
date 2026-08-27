@@ -9,6 +9,7 @@ import { useMemo, useState, type ReactElement } from 'react';
 import { ArtifactType, type Artifact } from '@astra/contracts';
 import type { AstraClient } from '@astra/api-client';
 import { ArtifactShareState } from '../library/ShareState.js';
+import { ArtifactActions } from '../library/ArtifactActions.js';
 import '../library/library.css';
 
 /** §10.1 の Type chips。 */
@@ -63,6 +64,8 @@ export function LibraryPage({
   onOpenTask?(taskId: string): void;
 }): ReactElement {
   const [chip, setChip] = useState<LibraryChip>('ALL');
+  // 共有を作ったら header の状態を引き直す（§10.2 常時可視化）
+  const [shareRevision, setShareRevision] = useState(0);
   const [query, setQuery] = useState('');
 
   const visible = useMemo(() => {
@@ -165,8 +168,19 @@ export function LibraryPage({
               )}
             </section>
 
+            {/* §10.1: download / share は preview から */}
+            <ArtifactActions
+              client={client}
+              artifact={selected}
+              onShared={() => setShareRevision((r) => r + 1)}
+            />
+
             {/* §10.2: Share は既定 OFF。**実際の状態**を header に常時可視化する */}
-            <ArtifactShareState client={client} artifactId={selected.id} />
+            <ArtifactShareState
+              client={client}
+              artifactId={selected.id}
+              refreshKey={shareRevision}
+            />
           </aside>
         )}
       </div>

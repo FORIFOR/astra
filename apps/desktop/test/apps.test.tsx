@@ -135,7 +135,7 @@ describe('AppDetail (§11.1)', () => {
     expect(screen.getByText(/acme/)).toBeTruthy();
     expect(screen.getByText(/v1\.0\.0/)).toBeTruthy();
     expect(screen.getByText('商談の一覧')).toBeTruthy();
-    expect(screen.getByText('cloud')).toBeTruthy();
+    expect(screen.getByText('クラウド')).toBeTruthy();
   });
 
   it('says how far the data goes, in one short phrase (§22)', () => {

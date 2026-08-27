@@ -23,6 +23,15 @@ export function packsFirst(items: readonly PluginCatalogEntry[]): PluginCatalogE
   return [...items].sort((a, b) => weight(a) - weight(b) || a.name.localeCompare(b.name));
 }
 
+/** §11: Connector 単体より Pack。card の肩に「何の種類か」を短く。 */
+export const CATEGORY_LABEL: Record<PluginCatalogEntry['category'], string> = {
+  'domain-agent': 'パック',
+  capability: '機能',
+  connector: '接続',
+  'skill-pack': 'スキル',
+  'dashboard-extension': 'ダッシュボード',
+};
+
 export interface DashboardRef {
   readonly plugin_id: string;
   readonly plugin_name: string;
@@ -81,7 +90,11 @@ export function AppsPage({ client = null }: { client?: AstraClient | null }): Re
   };
 
   return (
-    <section className="astra-page astra-apps" aria-labelledby="astra-page-title">
+    <section
+      className="astra-page astra-apps"
+      aria-labelledby="astra-page-title"
+      data-open={open ? 'true' : 'false'}
+    >
       <h2 id="astra-page-title" className="astra-visually-hidden">
         アプリ
       </h2>
@@ -112,62 +125,67 @@ export function AppsPage({ client = null }: { client?: AstraClient | null }): Re
         </section>
       ) : null}
 
-      <section className="astra-apps__catalog" aria-label="追加できるもの">
-        <h3>できることを増やす</h3>
-        {ordered.length === 0 ? (
-          <p className="astra-page__placeholder">追加できるものがありません。</p>
-        ) : (
-          <ul className="astra-apps__list">
-            {ordered.map((plugin) => (
-              <li key={plugin.id}>
-                <button
-                  type="button"
-                  className="astra-app-card"
-                  onClick={() => setOpenId(plugin.id)}
-                >
-                  <span className="astra-app-card__name">
-                    {plugin.name}
-                    {plugin.installed ? (
-                      <span className="astra-app-card__state"> 追加済み</span>
-                    ) : null}
-                  </span>
-                  {/* §11: 触るデータを card で先に見せる。開かないと分からない状態にしない */}
-                  {plugin.data_accessed.length > 0 && (
-                    <span className="astra-app-card__meta">
-                      触るもの: {plugin.data_accessed.slice(0, 2).join(' · ')}
-                      {plugin.data_accessed.length > 2
-                        ? ` 他${plugin.data_accessed.length - 2}`
-                        : ''}
+      <div className="astra-apps__body">
+        <section className="astra-apps__catalog" aria-label="追加できるもの">
+          <h3>できることを増やす</h3>
+          {ordered.length === 0 ? (
+            <p className="astra-page__placeholder">追加できるものがありません。</p>
+          ) : (
+            <ul className="astra-apps__list">
+              {ordered.map((plugin) => (
+                <li key={plugin.id}>
+                  <button
+                    type="button"
+                    className="astra-app-card"
+                    aria-current={plugin.id === openId ? 'true' : undefined}
+                    onClick={() => setOpenId(plugin.id)}
+                  >
+                    <span className="astra-app-card__kind">{CATEGORY_LABEL[plugin.category]}</span>
+                    <span className="astra-app-card__name">
+                      {plugin.name}
+                      {plugin.installed ? (
+                        <span className="astra-app-card__state"> 追加済み</span>
+                      ) : null}
                     </span>
-                  )}
-                  {/* §11: 確認が要る操作があるなら、それも先に */}
-                  {plugin.permissions.some((p) =>
-                    (EXTERNAL_SEND_SCOPES as readonly string[]).includes(p),
-                  ) && <span className="astra-app-card__meta">確認が要る操作を含みます</span>}
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+                    {/* §11: 触るデータを card で先に見せる。開かないと分からない状態にしない */}
+                    {plugin.data_accessed.length > 0 && (
+                      <span className="astra-app-card__meta">
+                        触るもの: {plugin.data_accessed.slice(0, 2).join(' · ')}
+                        {plugin.data_accessed.length > 2
+                          ? ` 他${plugin.data_accessed.length - 2}`
+                          : ''}
+                      </span>
+                    )}
+                    {/* §11: 確認が要る操作があるなら、それも先に */}
+                    {plugin.permissions.some((p) =>
+                      (EXTERNAL_SEND_SCOPES as readonly string[]).includes(p),
+                    ) && <span className="astra-app-card__meta">確認が要る操作を含みます</span>}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
 
-      {open ? (
-        <AppDetail
-          plugin={open}
-          onInstall={() => setConsenting(open)}
-          onUninstall={() => {
-            void (async () => {
-              if (!client) return;
-              try {
-                await client.uninstallPlugin(open.id);
-                await reload();
-              } catch (cause) {
-                setError(cause instanceof Error ? cause.message : String(cause));
-              }
-            })();
-          }}
-        />
-      ) : null}
+        {open ? (
+          <AppDetail
+            plugin={open}
+            onInstall={() => setConsenting(open)}
+            onUninstall={() => {
+              void (async () => {
+                if (!client) return;
+                try {
+                  await client.uninstallPlugin(open.id);
+                  await reload();
+                } catch (cause) {
+                  setError(cause instanceof Error ? cause.message : String(cause));
+                }
+              })();
+            }}
+            onClose={() => setOpenId(null)}
+          />
+        ) : null}
+      </div>
     </section>
   );
 }
