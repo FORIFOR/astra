@@ -35,3 +35,5 @@ dirs = "5"
 # 会議の音声を gateway へ送る WebSocket（Authorization ヘッダ付きの upgrade は webview からは張れない）
 tungstenite = { version = "0.24", features = ["native-tls"] }
 base64 = "0.22"
+# OS 非依存の共通ロジック（会議の断片モデル・wire 変換・回復）。二重実装を避ける（§8）
+astra-core = { path = "../../../core/astra-core" }

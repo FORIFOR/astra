@@ -32,6 +32,8 @@
     "format:check": "prettier --check .",
     "gen:crm-entities": "node scripts/gen-crm-entities.mjs",
     "gen:design-tokens": "node scripts/gen-design-tokens.mjs",
+    "gen:swift-bindings": "./scripts/gen-swift-bindings.sh",
+    "verify:swift-roundtrip": "./scripts/verify-swift-roundtrip.sh",
     "gen:dock-geometry": "node scripts/gen-dock-geometry.mjs",
     "gen:shortcuts": "node scripts/gen-shortcuts.mjs",
     "smoke": "./scripts/smoke.sh",

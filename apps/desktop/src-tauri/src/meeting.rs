@@ -14,15 +14,13 @@
 
 use std::collections::VecDeque;
 use std::fs;
-use std::io::Write;
 use std::net::TcpStream;
-use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::{self, Receiver, Sender};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use tauri::{AppHandle, Emitter};
 use tungstenite::client::IntoClientRequest;
 use tungstenite::stream::MaybeTlsStream;
@@ -32,11 +30,6 @@ use crate::audio::capture::{CaptureConfig, MicrophoneCapture};
 use crate::audio::frame::PcmFrame;
 use crate::audio::resample::Resampler;
 
-/// gateway が期待する形（contracts の AUDIO_SAMPLE_RATE_HZ）。
-pub const WIRE_SAMPLE_RATE: u32 = 16_000;
-/// 断片 1 つの長さ。短いほど落ちたときの欠けが小さく、長いほどファイル数が少ない。
-pub const FRAGMENT_MS: u64 = 5_000;
-const FRAGMENT_BYTES: usize = (WIRE_SAMPLE_RATE as usize * 2 * FRAGMENT_MS as usize) / 1000;
 /// 再接続の待ち。1s → 2s → … → 10s。
 const RECONNECT_MIN: Duration = Duration::from_secs(1);
 const RECONNECT_MAX: Duration = Duration::from_secs(10);
@@ -45,234 +38,24 @@ const DRAIN_TIMEOUT: Duration = Duration::from_secs(15);
 
 // ---------------------------------------------------------------- manifest
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "snake_case")]
-pub enum JournalState {
-    Recording,
-    Completed,
-    Uploaded,
+// OS 非依存の断片モデル・wire 変換・回復は astra-core に一本化した（§8: 二重実装を避ける）。
+use astra_core::{
+    scan_recoverable_path, to_wire, Journal, JournalState, LinkState, RecoverableMeeting,
+    FRAGMENT_MS, WIRE_SAMPLE_RATE,
+};
+
+/// 会議の保存先。ASTRA_MEETINGS_DIR も含め astra-core の既定に委ねる。
+fn meetings_root() -> std::path::PathBuf {
+    astra_core::meetings_root_default()
 }
 
-/// `meetings/<id>/manifest.json`。**これが残っていれば回復できる。**
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Manifest {
-    pub meeting_id: String,
-    pub state: JournalState,
-    pub sample_rate: u32,
-    pub started_at: String,
-    /// 書いた断片の最後の番号（1 始まり、0 は未書き込み）。
-    pub last_audio_seq: u64,
-    /// 送り終えた断片の最後の番号。
-    pub last_uploaded_seq: u64,
-}
-
-pub fn meetings_root() -> PathBuf {
-    if let Ok(explicit) = std::env::var("ASTRA_MEETINGS_DIR") {
-        if !explicit.trim().is_empty() {
-            return PathBuf::from(explicit);
-        }
-    }
-    dirs::data_local_dir()
-        .or_else(dirs::home_dir)
-        .unwrap_or_else(|| PathBuf::from("."))
-        .join("Astra")
-        .join("meetings")
-}
-
-fn now_iso() -> String {
-    let secs = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map(|d| d.as_secs())
-        .unwrap_or(0);
-    // RFC 3339 風（秒精度）。時刻の見せ方は画面側が決める
-    format!("{secs}")
-}
-
-/// ローカルの断片書き込み。5 秒ごとに `mic/NNNNNN.pcm` を閉じ、manifest を進める。
-pub struct Journal {
-    dir: PathBuf,
-    manifest: Manifest,
-    buffer: Vec<u8>,
-}
-
-impl Journal {
-    pub fn create(root: &Path, meeting_id: &str, sample_rate: u32) -> std::io::Result<Self> {
-        let dir = root.join(meeting_id);
-        fs::create_dir_all(dir.join("mic"))?;
-        let manifest = Manifest {
-            meeting_id: meeting_id.to_string(),
-            state: JournalState::Recording,
-            sample_rate,
-            started_at: now_iso(),
-            last_audio_seq: 0,
-            last_uploaded_seq: 0,
-        };
-        let journal = Self {
-            dir,
-            manifest,
-            buffer: Vec::with_capacity(FRAGMENT_BYTES),
-        };
-        journal.write_manifest()?;
-        Ok(journal)
-    }
-
-    pub fn open(root: &Path, meeting_id: &str) -> std::io::Result<Self> {
-        let dir = root.join(meeting_id);
-        let manifest: Manifest =
-            serde_json::from_slice(&fs::read(dir.join("manifest.json"))?).map_err(|e| {
-                std::io::Error::new(std::io::ErrorKind::InvalidData, e.to_string())
-            })?;
-        Ok(Self {
-            dir,
-            manifest,
-            buffer: Vec::new(),
-        })
-    }
-
-    pub fn manifest(&self) -> &Manifest {
-        &self.manifest
-    }
-
-    pub fn dir(&self) -> &Path {
-        &self.dir
-    }
-
-    fn fragment_path(&self, seq: u64) -> PathBuf {
-        self.dir.join("mic").join(format!("{seq:06}.pcm"))
-    }
-
-    /// manifest は一時ファイルに書いてから置き換える。途中で落ちても壊れた JSON を残さない。
-    fn write_manifest(&self) -> std::io::Result<()> {
-        let path = self.dir.join("manifest.json");
-        let tmp = self.dir.join("manifest.json.tmp");
-        fs::write(&tmp, serde_json::to_vec_pretty(&self.manifest)?)?;
-        fs::rename(tmp, path)
-    }
-
-    /// 音を足す。断片が満ちたら閉じて番号を進める。閉じた断片の番号を返す。
-    pub fn append(&mut self, bytes: &[u8]) -> std::io::Result<Vec<u64>> {
-        let mut closed = Vec::new();
-        let mut rest = bytes;
-        while !rest.is_empty() {
-            let room = FRAGMENT_BYTES - self.buffer.len();
-            let take = room.min(rest.len());
-            self.buffer.extend_from_slice(&rest[..take]);
-            rest = &rest[take..];
-            if self.buffer.len() >= FRAGMENT_BYTES {
-                closed.push(self.flush()?);
-            }
-        }
-        Ok(closed)
-    }
-
-    /// 溜まっている分を断片として閉じる。
-    fn flush(&mut self) -> std::io::Result<u64> {
-        let seq = self.manifest.last_audio_seq + 1;
-        let mut file = fs::File::create(self.fragment_path(seq))?;
-        file.write_all(&self.buffer)?;
-        file.sync_all()?;
-        self.buffer.clear();
-        self.manifest.last_audio_seq = seq;
-        self.write_manifest()?;
-        Ok(seq)
-    }
-
-    pub fn mark_uploaded(&mut self, seq: u64) -> std::io::Result<()> {
-        if seq > self.manifest.last_uploaded_seq {
-            self.manifest.last_uploaded_seq = seq;
-            self.write_manifest()?;
-        }
-        Ok(())
-    }
-
-    /// 取り込みを終える。端数も断片にして、状態を進める。
-    pub fn finish(&mut self, state: JournalState) -> std::io::Result<()> {
-        if !self.buffer.is_empty() {
-            self.flush()?;
-        }
-        self.manifest.state = state;
-        self.write_manifest()
-    }
-
-    pub fn read_fragment(&self, seq: u64) -> std::io::Result<Vec<u8>> {
-        fs::read(self.fragment_path(seq))
-    }
-
-    /// 残っている音の長さ（ミリ秒）。
-    pub fn recorded_ms(&self) -> u64 {
-        self.manifest.last_audio_seq * FRAGMENT_MS
-    }
-}
-
-/// 前回落ちたまま残っている会議。
-#[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Recoverable {
-    pub meeting_id: String,
-    pub started_at: String,
-    pub recorded_ms: u64,
-    pub uploaded_ms: u64,
-}
-
-pub fn scan_recoverable(root: &Path, active: Option<&str>) -> Vec<Recoverable> {
-    let Ok(entries) = fs::read_dir(root) else {
-        return Vec::new();
-    };
-    let mut found = Vec::new();
-    for entry in entries.flatten() {
-        let id = entry.file_name().to_string_lossy().to_string();
-        if active == Some(id.as_str()) {
-            continue;
-        }
-        let Ok(journal) = Journal::open(root, &id) else {
-            continue;
-        };
-        let m = journal.manifest();
-        // 完了している（state が進んでいる）ものは回復の対象ではない
-        if m.state == JournalState::Uploaded {
-            continue;
-        }
-        if m.last_audio_seq == 0 {
-            continue;
-        }
-        found.push(Recoverable {
-            meeting_id: id,
-            started_at: m.started_at.clone(),
-            recorded_ms: m.last_audio_seq * FRAGMENT_MS,
-            uploaded_ms: m.last_uploaded_seq * FRAGMENT_MS,
-        });
-    }
-    found.sort_by(|a, b| b.started_at.cmp(&a.started_at));
-    found
-}
-
-// ---------------------------------------------------------------- wire
-
-/// f32 mono → 16-bit LE。gateway は `byteLength / 2 / 16000` で時刻を数える。
-pub fn to_wire(samples: &[f32]) -> Vec<u8> {
-    let mut out = Vec::with_capacity(samples.len() * 2);
-    for s in samples {
-        let v = (s.clamp(-1.0, 1.0) * i16::MAX as f32).round() as i16;
-        out.extend_from_slice(&v.to_le_bytes());
-    }
-    out
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
-#[serde(rename_all = "snake_case")]
-pub enum LinkState {
-    Connecting,
-    Online,
-    Offline,
-    Reconnecting,
-}
-
+/// frontend へ配る接続状態イベント（Tauri 固有のシリアライズ。core の LinkState を包む）。
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct LinkEvent {
     meeting_id: String,
     state: LinkState,
-    /// まだ送れていない音の長さ。オフラインの間に増える
+    /// まだ送れていない音の長さ。オフラインの間に増える。
     pending_ms: u64,
 }
 
@@ -509,7 +292,7 @@ pub fn meeting_capture_start(
         if samples.is_empty() {
             return;
         }
-        let bytes = to_wire(&samples);
+        let bytes = to_wire(samples);
         // ローカルが先。書けなかったことは黙らない（送るのは続ける）
         if let Ok(mut j) = frame_journal.lock() {
             if let Err(error) = j.append(&bytes) {
@@ -589,13 +372,13 @@ pub fn meeting_capture_stop(runtime: tauri::State<'_, MeetingRuntime>) -> Result
 }
 
 #[tauri::command]
-pub fn meeting_recoverable(runtime: tauri::State<'_, MeetingRuntime>) -> Vec<Recoverable> {
+pub fn meeting_recoverable(runtime: tauri::State<'_, MeetingRuntime>) -> Vec<RecoverableMeeting> {
     let active = runtime
         .session
         .lock()
         .ok()
         .and_then(|s| s.as_ref().map(|x| x.meeting_id.clone()));
-    scan_recoverable(&meetings_root(), active.as_deref())
+    scan_recoverable_path(&meetings_root(), active.as_deref())
 }
 
 /// 手元に残った断片を、続きから送り直す。
@@ -641,72 +424,4 @@ pub fn meeting_discard(meeting_id: String) -> Result<(), String> {
         fs::remove_dir_all(dir).map_err(|e| e.to_string())?;
     }
     Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn temp_root(name: &str) -> PathBuf {
-        let dir = std::env::temp_dir().join(format!("astra-meeting-{name}-{}", std::process::id()));
-        let _ = fs::remove_dir_all(&dir);
-        fs::create_dir_all(&dir).unwrap();
-        dir
-    }
-
-    #[test]
-    fn wire_is_16bit_little_endian_mono() {
-        let bytes = to_wire(&[0.0, 1.0, -1.0]);
-        assert_eq!(bytes.len(), 6);
-        assert_eq!(&bytes[2..4], &i16::MAX.to_le_bytes());
-        assert_eq!(&bytes[4..6], &(-i16::MAX).to_le_bytes());
-    }
-
-    #[test]
-    fn journal_closes_a_fragment_every_five_seconds_and_keeps_the_rest_on_finish() {
-        let root = temp_root("fragments");
-        let mut j = Journal::create(&root, "m1", WIRE_SAMPLE_RATE).unwrap();
-        // 5 秒 + 1 秒
-        let closed = j.append(&vec![0u8; FRAGMENT_BYTES + FRAGMENT_BYTES / 5]).unwrap();
-        assert_eq!(closed, vec![1]);
-        assert_eq!(j.manifest().last_audio_seq, 1);
-        assert!(root.join("m1/mic/000001.pcm").exists());
-
-        j.finish(JournalState::Completed).unwrap();
-        assert_eq!(j.manifest().last_audio_seq, 2);
-        assert_eq!(j.read_fragment(2).unwrap().len(), FRAGMENT_BYTES / 5);
-        let reopened = Journal::open(&root, "m1").unwrap();
-        assert_eq!(reopened.manifest().state, JournalState::Completed);
-    }
-
-    #[test]
-    fn a_crashed_recording_is_recoverable_until_it_is_uploaded() {
-        let root = temp_root("recover");
-        let mut j = Journal::create(&root, "crashed", WIRE_SAMPLE_RATE).unwrap();
-        j.append(&vec![0u8; FRAGMENT_BYTES * 2]).unwrap();
-        // finish を呼ばずに落ちた想定（state は recording のまま）
-        drop(j);
-        let found = scan_recoverable(&root, None);
-        assert_eq!(found.len(), 1);
-        assert_eq!(found[0].meeting_id, "crashed");
-        assert_eq!(found[0].recorded_ms, 2 * FRAGMENT_MS);
-        assert_eq!(found[0].uploaded_ms, 0);
-
-        // 今まさに録っている会議は回復の対象にしない
-        assert!(scan_recoverable(&root, Some("crashed")).is_empty());
-
-        let mut again = Journal::open(&root, "crashed").unwrap();
-        again.mark_uploaded(2).unwrap();
-        again.finish(JournalState::Uploaded).unwrap();
-        assert!(scan_recoverable(&root, None).is_empty());
-    }
-
-    #[test]
-    fn manifest_survives_a_partial_write() {
-        let root = temp_root("atomic");
-        let j = Journal::create(&root, "m", WIRE_SAMPLE_RATE).unwrap();
-        // 途中で落ちた一時ファイルが残っていても manifest.json は前の版のまま読める
-        fs::write(j.dir().join("manifest.json.tmp"), b"{ broken").unwrap();
-        assert!(Journal::open(&root, "m").is_ok());
-    }
 }

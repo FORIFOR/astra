@@ -1,0 +1,4 @@
+module astra_coreFFI {
+    header "astra_coreFFI.h"
+    export *
+}

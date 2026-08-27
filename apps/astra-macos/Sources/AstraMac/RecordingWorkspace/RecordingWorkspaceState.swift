@@ -1,4 +1,5 @@
 import SwiftUI
+import AstraCore
 
 enum RecordingTool: String, CaseIterable, Identifiable {
     case transcript, translation, captions
@@ -40,9 +41,16 @@ final class RecordingWorkspaceState: ObservableObject {
     @Published var audioLevels: [CGFloat] =
         [0.3, 0.5, 0.8, 0.4, 0.9, 0.6, 0.35, 0.7, 0.5, 0.85, 0.45, 0.6]
 
-    var elapsedText: String {
-        String(format: "%02d:%02d", elapsedSeconds / 60, elapsedSeconds % 60)
+    /// 経過・状態の表示は astra-core（Rust）に一本化する（Swift 側で書き直さない）。
+    var snapshot: RecordingSnapshot {
+        AstraCoreBridge.snapshot(
+            elapsedMs: UInt64(elapsedSeconds) * 1000,
+            isPaused: isPaused,
+            link: .online,
+            pendingMs: 0)
     }
+    var elapsedText: String { snapshot.elapsedLabel }
+    var heroText: String { snapshot.heroText }
 
     /// §17: 決定的な固定画面。
     func loadDemo(ragOpen: Bool) {

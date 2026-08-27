@@ -19,3 +19,7 @@ coverage/
 
 # Swift (astra-macos)
 apps/astra-macos/.build/
+
+# Rust shared core build output
+core/astra-core/target/
+core/astra-core/generated/

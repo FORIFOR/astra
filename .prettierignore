@@ -11,3 +11,4 @@ plugins/builtin/sales-crm/schemas/
 apps/desktop/src-tauri/
 apps/astra-macos/
 apps/windows/
+apps/astra-macos/Sources/AstraCore/
