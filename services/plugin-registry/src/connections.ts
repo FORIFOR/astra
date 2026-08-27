@@ -109,6 +109,28 @@ export class ConnectionService {
     return toConnection(row);
   }
 
+  /**
+   * どこかに、生きている接続が 1 つでもあるか。
+   *
+   * 起動時の能力の名乗りに使う。**設定を見ても、設定が正しいかは
+   * 分からない。**繋がった実績があるかどうかだけが確かめられる事実で、
+   * 繋がっているなら同意画面もコードの交換も保管も通っている。
+   *
+   * テナントを跨いで数えるので `withSystem`。**中身は読まない** —
+   * 見るのは「有無」だけで、誰の何かは要らない。
+   */
+  async anyConnected(): Promise<boolean> {
+    const row = await withSystem(this.#db, (tx) =>
+      tx
+        .selectFrom('connector_connections')
+        .select('id')
+        .where('state', '=', 'CONNECTED')
+        .limit(1)
+        .executeTakeFirst(),
+    );
+    return row !== undefined;
+  }
+
   async list(tenantId: string, pluginId?: string): Promise<Connection[]> {
     const rows = await withTenant(this.#db, tenantId, (tx) => {
       let query = tx

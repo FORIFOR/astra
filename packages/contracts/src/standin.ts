@@ -119,6 +119,53 @@ export function unverifiedCapabilities(report: CapabilityReport): CapabilityStat
 }
 
 /**
+ * 本番へ出してよいか。**代役でないことだけでは足りない。**
+ *
+ * 止める理由は 2 つあり、意味が違う:
+ *
+ *   代役     … 動かない。偽物が本物のふりをしている
+ *   未確認   … 動くはずだが、**誰もこの環境で確かめていない**
+ *
+ * 長らく代役だけで止めていた。だが「一度も確かめていないもので
+ * 本番を始める」のは、代役で始めるのと同じくらい危うい。
+ * 設定を書き間違えていても、鍵が失効していても、起動は通ってしまい、
+ * **最初の利用者が最初の失敗を踏む。**
+ *
+ * 必須のものだけで止めるのは変えない。任意のものまで止めると、
+ * 1 つ欠けただけで本番が上がらなくなり、
+ * やがて「とりあえず必須から外す」が始まる。
+ */
+export function assertReadyForProduction(
+  report: CapabilityReport,
+  env: string,
+): { warn: string | null; blocked: readonly CapabilityStatus[] } {
+  const { warn } = assertNoStandIns(report, env);
+
+  const unconfirmed = unverifiedCapabilities(report).filter((item) =>
+    isRequiredCapability(item.capability),
+  );
+  if (env === 'production' && unconfirmed.length > 0) {
+    const names = unconfirmed
+      .map((item) => `${CAPABILITY_LABEL[item.capability]} (${item.implementation})`)
+      .join(', ');
+    throw new Error(
+      `these required capabilities have never been confirmed in this environment: ${names}. ` +
+        'Exercise each one once before starting production.',
+    );
+  }
+
+  const notice =
+    unconfirmed.length === 0
+      ? null
+      : `never confirmed here: ${unconfirmed.map((i) => CAPABILITY_LABEL[i.capability]).join(', ')}`;
+
+  return {
+    warn: [warn, notice].filter((v): v is string => v !== null).join(' / ') || null,
+    blocked: unconfirmed,
+  };
+}
+
+/**
  * 代役のまま本番へ出さない。
  *
  * 本番では止める。それ以外では警告を返す。

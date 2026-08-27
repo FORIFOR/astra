@@ -33,7 +33,7 @@ import { meetingDataSources } from '@astra/service-meeting';
 import { ShareService } from '@astra/service-share';
 import { FsRecordingStore, MeetingService, meetingProvidersFromEnv } from '@astra/service-meeting';
 // 代役の判定は contracts が正。service ごとに数えると、片方だけ見落とす。
-import { assertNoStandIns } from '@astra/contracts';
+import { assertReadyForProduction } from '@astra/contracts';
 import { capabilityReport, capabilitySummary } from '@astra/service-capabilities';
 import { buildApp } from './app.js';
 import { assertPathsExist, gatewayConfigFromEnv } from './config.js';
@@ -105,12 +105,18 @@ async function main(): Promise<void> {
   const researchProviders = researchProvidersFromEnv(process.env, {
     host: new HostStepExecutor({ bridge: hostStepBridge }),
   });
+  /*
+   * 接続の有無だけは、設定ではなく**実際に起きたこと**で見る。
+   * 繋がった実績が 1 つも無いなら、繋げるかどうかは分からない。
+   */
+  const connections = new ConnectionService({ db });
   const report = capabilityReport({
     research: researchProviders,
     meeting: meetingProviders,
     env: process.env,
+    observed: { oauthConnected: await connections.anyConnected() },
   });
-  const { warn, remaining } = assertNoStandIns(report, config.env);
+  const { warn, blocked } = assertReadyForProduction(report, config.env);
   /*
    * **全部を数え上げて出す。**代役だけを出していた間、
    * 本物になった能力はどこにも現れなかった。片方の面だけが
@@ -118,7 +124,7 @@ async function main(): Promise<void> {
    * 違うことを言っている状態が生まれていた。
    */
   logger.info({ capabilities: capabilitySummary(report) }, 'external capabilities');
-  if (warn) logger.warn({ stand_ins: remaining.map((r) => r.capability) }, warn);
+  if (warn) logger.warn({ not_ready: blocked.map((r) => r.capability) }, warn);
   const meetings = new MeetingService({
     db,
     publisher: { async publish() {} },
@@ -132,7 +138,6 @@ async function main(): Promise<void> {
   const domain = new DomainService({ db });
   const world = new WorldModelService({ db });
   const conversations = new ConversationService({ db });
-  const connections = new ConnectionService({ db });
   const dataSources = composeDataSources(
     researchDataSources(db),
     meetingDataSources(db),

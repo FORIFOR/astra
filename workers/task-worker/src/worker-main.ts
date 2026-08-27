@@ -26,8 +26,9 @@ import {
   HostMeetingSummarizer,
 } from '@astra/service-meeting';
 // 数え方は gateway と同じものを使う。別々に数えると片方だけ見落とす。
-import { assertNoStandIns, canonicalSha256 } from '@astra/contracts';
+import { assertReadyForProduction, canonicalSha256 } from '@astra/contracts';
 import { capabilityReport, capabilitySummary } from '@astra/service-capabilities';
+import { ConnectionService } from '@astra/service-plugin-registry';
 import { createTaskWorker, TASK_QUEUE, NoopPublisher } from '@astra/service-task';
 import { HostBridge, HostStepExecutor, type ApprovalProof } from '@astra/service-agent-host';
 import {
@@ -97,12 +98,20 @@ async function main(): Promise<void> {
    * 数え方は gateway と同じものを使う。別々に数えると、
    * 片方だけ新しい能力を見落とす（実際、gateway は言語モデルを見ていなかった）。
    */
+  /*
+   * gateway と同じものを見る。片方だけ観測すると、
+   * 同じ構成で二つの面が違うことを言う（前に実際に起きた）。
+   */
   const report = capabilityReport({
     research: researchProviders,
     meeting: meetingProviders,
     env: process.env,
+    observed: { oauthConnected: await new ConnectionService({ db }).anyConnected() },
   });
-  const { warn, remaining } = assertNoStandIns(report, process.env['ASTRA_ENV'] ?? 'development');
+  const { warn, blocked } = assertReadyForProduction(
+    report,
+    process.env['ASTRA_ENV'] ?? 'development',
+  );
   /*
    * **全部を数え上げて出す。**代役だけを出していた間、
    * 本物になった能力はどこにも現れなかった。片方の面だけが
@@ -110,7 +119,7 @@ async function main(): Promise<void> {
    * 違うことを言っている状態が生まれていた。
    */
   logger.info({ capabilities: capabilitySummary(report) }, 'external capabilities');
-  if (warn) logger.warn({ stand_ins: remaining.map((r) => r.capability) }, warn);
+  if (warn) logger.warn({ not_ready: blocked.map((r) => r.capability) }, warn);
 
   const research = new ResearchService({
     db,

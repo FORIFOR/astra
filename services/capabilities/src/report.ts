@@ -48,8 +48,13 @@ function fromProvider(
  * `docs/evidence/` の測定に対応する。ここに名前を足すのは、
  * 「動くはず」ではなく「動いた」を書き足すことなので、
  * 実測の記録を伴わない追加はしない。
+ *
+ * **書き足しただけで verified になる。**それが危ういので、
+ * 「この一覧の全ての名前が evidence に現れること」を試験で見張る
+ * （`services/capabilities/test/report.test.ts`）。
+ * 見張らないと、この一覧はいずれ願望の置き場になる。
  */
-const VERIFIED_IMPLEMENTATIONS = new Set([
+export const VERIFIED_IMPLEMENTATIONS = new Set([
   // docs/evidence/stt-google.md
   'google-stt-v2',
   'google-stt-batch',
@@ -70,7 +75,7 @@ const VERIFIED_IMPLEMENTATIONS = new Set([
  * **繋げない提供者の名前は残す** — 「Microsoft も繋がるはず」と
  * 思ったまま使われないように。
  */
-function oauthCapability(env: OauthEnv): CapabilityInput {
+function oauthCapability(env: OauthEnv, connected: boolean): CapabilityInput {
   const ready = configuredProviders(env);
   const missing = unconfiguredProviders(env);
   if (ready.length === 0) {
@@ -87,6 +92,16 @@ function oauthCapability(env: OauthEnv): CapabilityInput {
         : `configured: ${ready.join(', ')} / unavailable: ${missing.map((m) => m.provider).join(', ')}`,
     isStandIn: false,
     configureWith: null,
+    /*
+     * **一覧に名前を書いて verified にはできない。**
+     *
+     * 接続は利用者ごとに違うので、実装の名前で「確かめた」とは言えない。
+     * 言えるのは「実際に繋がっている接続が 1 つでもあるか」だけ。
+     * 繋がっていれば、同意画面も、コードの交換も、保管も通っている。
+     *
+     * ここを一覧に入れると、**誰も繋いでいない環境でも verified になる。**
+     */
+    verification: connected ? 'verified' : 'unverified',
   };
 }
 
@@ -94,6 +109,13 @@ export function capabilityReport(input: {
   research: ResearchProviders;
   meeting: MeetingProviders;
   env: OauthEnv;
+  /**
+   * 見て分かること。**設定ではなく、実際に起きたこと。**
+   *
+   * いまは接続の有無だけ。設定が正しいかは設定を見ても分からないので、
+   * 「繋がった実績があるか」を見る。
+   */
+  observed?: { readonly oauthConnected?: boolean };
 }): CapabilityReport {
   const inputs: Record<ExternalCapability, CapabilityInput> = {
     // どの検索を使うかは利用者が選ぶ。**設定名まで言う。**
@@ -116,7 +138,7 @@ export function capabilityReport(input: {
     // 画像は代役の実装がある。動画は段取りだけがあり、生成の先が無い。
     image_generation: imageCapability(new DeterministicImageGenerator()),
     video_generation: videoCapability(),
-    oauth_providers: oauthCapability(input.env),
+    oauth_providers: oauthCapability(input.env, input.observed?.oauthConnected === true),
     // 任意。無くても本番は起動する（§27 の再利用候補で、製品の必須ではない）
     text_to_speech: input.env['GOOGLE_CLOUD_PROJECT']
       ? {
