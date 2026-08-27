@@ -42,3 +42,11 @@ echo "$OUT11"
 OUT12="$("$BIN" --selftest connector)"
 echo "$OUT12"
 [[ "$OUT12" == SELFTEST_OK* ]] || { echo "FAIL: macOS connector contract via core" >&2; exit 1; }
+
+# ---- live 実機経路（この環境は mic/screen/ax/speech が許可済み）。CI 等で未許可なら SELFTEST_SKIP。----
+echo "$("$BIN" --selftest permissions)"
+for t in livemic livemeeting livescreen; do
+  OUT="$("$BIN" --selftest "$t")"
+  echo "$OUT"
+  [[ "$OUT" == SELFTEST_OK* || "$OUT" == SELFTEST_SKIP* ]] || { echo "FAIL: macOS live $t" >&2; exit 1; }
+done

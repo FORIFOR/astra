@@ -380,3 +380,18 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
   **負テスト**: C# に余分な引数を注入すると `C# 引数 3 個 ≠ header 2 個` を検出して fail（ドリフトを実際に止める）。
 - **意味（Done#4/#6 の前進）**: Windows 実機が無くても、C# bridge が Rust の C ABI 実体と一致していることを
   CI で継続的に担保できる。C# の実ビルド/実行のみ windows-latest CI 待ち（そこも同じ contract を通す）。
+
+## 追記: live 実機 E2E（Phase 1.32, Done#3 の一部を実測 PASS に）
+- この開発環境の TCC を調べたところ **mic=許可済み / screen=許可済み / ax=許可済み / speech=authorized**
+  （親プロセスから継承）。これまで「TCC ゲートで未検証」としてきた live 経路の一部を**実機で検証できる**と判明。
+- 追加した self-test（`verify-macos-recording.sh` に統合、未許可環境=CI では SELFTEST_SKIP）:
+  - `--selftest permissions`: TCC 状態を正直に列挙（prompt 無し）。**実測**: `mic=許可済み screen=許可済み ax=許可済み speech=3`。
+  - `--selftest livemic`: **実マイクデバイスから取り込み**。**実測 PASS**: `frames=9 samples=14168`（peak=0 は無音環境だが
+    AVAudioEngine タップ→変換→コールバックの実経路が動作）。
+  - `--selftest livemeeting`: **実マイク → RecordingRuntime(session + オンデバイス STT) → 保存 → 回復** の実機 E2E。
+    **実測 PASS**: `実マイク recordedMs=5000 recovered=true`（5 秒断片が実際に書かれ回復候補になった。sttEvents=0 は無音のため）。
+  - `--selftest livescreen`: 画面収録は許可済みだが、**headless/accessory 文脈では SCK が前面セッションを要して
+    実フレームを返さない** → 捏造せず `SELFTEST_SKIP`（署名 .app を前面で動かす実運用でのみ確認可）。
+- **意味（Done#3 の前進）**: **live mic 取り込み・実マイク会議録音/回復は実測 PASS**（合成でなく実デバイス）。
+  残る live 未検証は「実音声を伴う STT 認識精度・実 screen フレーム・カレンダー実データ・グローバル押下受信」で、
+  これらは前面セッション/実音声/カレンダー許可/ユーザー操作を要し、この非対話環境では確認不可（捏造しない）。

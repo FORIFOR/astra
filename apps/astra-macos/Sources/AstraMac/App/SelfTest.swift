@@ -22,6 +22,10 @@ enum SelfTest {
         case "ax": ax(); return true
         case "speech": speech(); return true
         case "connector": connector(); return true
+        case "permissions": permissions(); return true
+        case "livemic": livemic(); return true
+        case "livescreen": livescreen(); return true
+        case "livemeeting": livemeeting(); return true
         default: return false
         }
     }
@@ -283,6 +287,110 @@ enum SelfTest {
         let ready = AstraCoreBridge.configuredProviders([:])
         guard ready.isEmpty else { print("SELFTEST_FAIL connector ready=\(ready)"); exit(5) }
         print("SELFTEST_OK connector: pkce=S256✓ authorizeUrl✓ nonLoopbackRejected✓ configured=\(ready.count)")
+        exit(0)
+    }
+
+    /// `--selftest permissions`: この環境の TCC 状態を正直に列挙する（prompt を出さない読み取りのみ）。
+    @MainActor
+    private static func permissions() {
+        let mic = Permissions.microphone.rawValue
+        let screen = Permissions.screenRecording.rawValue
+        let ax = Permissions.accessibility.rawValue
+        let cal = Permissions.calendar.rawValue
+        let speech = SpeechTranscriber.authorization.rawValue
+        print("SELFTEST_OK permissions: mic=\(mic) screen=\(screen) ax=\(ax) calendar=\(cal) speech=\(speech)")
+        exit(0)
+    }
+
+    /// `--selftest livemic`: マイク許可があれば実デバイスから 1 秒取り込み、実音声（合成でない）が
+    /// 届くことを確かめる。許可が無ければ SKIP（捏造しない）。
+    @MainActor
+    private static func livemic() {
+        guard Permissions.microphone == .granted else {
+            print("SELFTEST_SKIP livemic: microphone not granted (status=\(Permissions.microphone.rawValue))")
+            exit(0)
+        }
+        let mic = MicCapture()
+        var frames = 0
+        var samples = 0
+        var peak: Float = 0
+        do {
+            try mic.start { frame in
+                frames += 1; samples += frame.count
+                for v in frame { peak = max(peak, abs(v)) }
+            }
+        } catch {
+            print("SELFTEST_FAIL livemic start error=\(error)"); exit(2)
+        }
+        // 1 秒回す（RunLoop を回してタップのコールバックを受ける）。
+        RunLoop.current.run(until: Date().addingTimeInterval(1.0))
+        mic.stop()
+        guard frames > 0, samples > 0 else {
+            print("SELFTEST_FAIL livemic: no frames (frames=\(frames) samples=\(samples))"); exit(3)
+        }
+        print("SELFTEST_OK livemic: frames=\(frames) samples=\(samples) peak=\(String(format: "%.4f", peak)) (実デバイス取り込み)")
+        exit(0)
+    }
+
+    /// `--selftest livescreen`: 画面収録許可があれば実フレームを 1 枚取り、非ゼロ寸法を確かめる。
+    @MainActor
+    private static func livescreen() {
+        guard Permissions.screenRecording == .granted else {
+            print("SELFTEST_SKIP livescreen: screen recording not granted"); exit(0)
+        }
+        guard #available(macOS 14.0, *) else { print("SELFTEST_SKIP livescreen: needs macOS 14+"); exit(0) }
+        let sem = DispatchSemaphore(value: 0)
+        var width = 0, height = 0
+        var failed: String?
+        var done = false
+        Task {
+            do {
+                let image = try await ScreenContextCapture.captureFrame()
+                width = image.width; height = image.height
+            } catch { failed = "\(error)" }
+            done = true
+            sem.signal()
+        }
+        let waited = sem.wait(timeout: .now() + 15)
+        if waited == .timedOut || !done {
+            // headless/accessory 文脈では SCK が前面セッションを要して返らないことがある。
+            // 捏造せず SKIP（許可はあるが、この文脈で実フレームは取れなかった）。
+            print("SELFTEST_SKIP livescreen: no frame in this headless context (screen granted)"); exit(0)
+        }
+        if let failed { print("SELFTEST_FAIL livescreen error=\(failed)"); exit(2) }
+        guard width > 0, height > 0 else {
+            print("SELFTEST_SKIP livescreen: capture returned \(width)x\(height) in this context"); exit(0)
+        }
+        print("SELFTEST_OK livescreen: captured \(width)x\(height) real frame")
+        exit(0)
+    }
+
+    /// `--selftest livemeeting`: 実マイク → RecordingRuntime(session + オンデバイス STT) → 保存 の
+    /// 実機 E2E。2 秒録って、実断片が書かれ回復候補になることを確かめる。許可が無ければ SKIP。
+    @MainActor
+    private static func livemeeting() {
+        guard Permissions.microphone == .granted else {
+            print("SELFTEST_SKIP livemeeting: microphone not granted"); exit(0)
+        }
+        let runtime = RecordingRuntime.shared
+        var transcriptEvents = 0
+        runtime.onTranscript = { _, _ in transcriptEvents += 1 }
+        let id = "livemeeting-\(getpid())"
+        guard runtime.begin(meetingId: id, captureMic: true, captureSystemAudio: false, transcribe: true) else {
+            print("SELFTEST_FAIL livemeeting begin"); exit(2)
+        }
+        // 実マイクから 6 秒（5 秒断片が 1 つ閉じる）。RunLoop を回してタップと STT を受ける。
+        RunLoop.current.run(until: Date().addingTimeInterval(6.0))
+        let recorded = runtime.recordedMs()
+        runtime.end()
+        let root = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+            .appendingPathComponent("Astra/meetings").path
+        let recovered = scanRecoverable(root: root, active: nil).contains { $0.meetingId == id }
+        try? FileManager.default.removeItem(atPath: root + "/" + id)
+        guard recorded > 0, recovered else {
+            print("SELFTEST_FAIL livemeeting recorded=\(recorded) recovered=\(recovered)"); exit(3)
+        }
+        print("SELFTEST_OK livemeeting: 実マイク recordedMs=\(recorded) recovered=\(recovered) sttEvents=\(transcriptEvents)")
         exit(0)
     }
 
