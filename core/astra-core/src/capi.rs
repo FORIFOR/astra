@@ -6,6 +6,10 @@
 use std::ffi::{c_char, CStr, CString};
 use std::path::PathBuf;
 
+use crate::api::{
+    api_artifact_content, api_create_meeting, api_create_task, api_dev_sign_in, api_library,
+    api_me, api_plugin_catalog, api_reachable, api_wait_task,
+};
 use crate::connector::{build_authorize_url, pkce_challenge, OauthProvider, ProviderConfig};
 use crate::recording::{format_elapsed, resample_linear, wire_bytes, Journal, JournalState, WIRE_SAMPLE_RATE};
 
@@ -94,6 +98,180 @@ pub unsafe extern "C" fn astra_core_authorize_url(
     };
     match build_authorize_url(&config, state, challenge) {
         Ok(url) => cstr(&url),
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+// ---- gateway API（実バックエンド）を C ABI で。Windows(C#) が macOS(Swift) と同じ実経路を使う。----
+// 文字列を返すものは JSON（複合型）または生値。失敗は NULL。すべて astra_core_string_free で解放。
+
+/// gateway に届くか。1=届く / 0=届かない。
+///
+/// # Safety
+/// `base_url` は有効な NUL 終端 UTF-8。
+#[no_mangle]
+pub unsafe extern "C" fn astra_core_api_reachable(base_url: *const c_char) -> i32 {
+    match rstr(base_url) {
+        Some(base) if api_reachable(base.to_string()) => 1,
+        _ => 0,
+    }
+}
+
+/// 開発サインイン。成功で Tokens の JSON、失敗で NULL。
+///
+/// # Safety
+/// 引数はすべて有効な NUL 終端 UTF-8。
+#[no_mangle]
+pub unsafe extern "C" fn astra_core_api_dev_sign_in(
+    base_url: *const c_char,
+    email: *const c_char,
+    display_name: *const c_char,
+) -> *mut c_char {
+    let (Some(base), Some(email), Some(name)) = (rstr(base_url), rstr(email), rstr(display_name))
+    else {
+        return std::ptr::null_mut();
+    };
+    match api_dev_sign_in(base.to_string(), email.to_string(), name.to_string()) {
+        Ok(tokens) => serde_json::to_string(&tokens).map(|j| cstr(&j)).unwrap_or(std::ptr::null_mut()),
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+/// /v1/me。成功で Me の JSON、失敗で NULL。
+///
+/// # Safety
+/// 引数は有効な NUL 終端 UTF-8。
+#[no_mangle]
+pub unsafe extern "C" fn astra_core_api_me(
+    base_url: *const c_char,
+    access_token: *const c_char,
+) -> *mut c_char {
+    let (Some(base), Some(token)) = (rstr(base_url), rstr(access_token)) else {
+        return std::ptr::null_mut();
+    };
+    match api_me(base.to_string(), token.to_string()) {
+        Ok(me) => serde_json::to_string(&me).map(|j| cstr(&j)).unwrap_or(std::ptr::null_mut()),
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+/// 会議を作る。成功で meeting id 文字列、失敗で NULL。
+///
+/// # Safety
+/// 引数は有効な NUL 終端 UTF-8。
+#[no_mangle]
+pub unsafe extern "C" fn astra_core_api_create_meeting(
+    base_url: *const c_char,
+    access_token: *const c_char,
+    title: *const c_char,
+    language: *const c_char,
+) -> *mut c_char {
+    let (Some(base), Some(token), Some(title), Some(lang)) =
+        (rstr(base_url), rstr(access_token), rstr(title), rstr(language))
+    else {
+        return std::ptr::null_mut();
+    };
+    match api_create_meeting(base.to_string(), token.to_string(), title.to_string(), lang.to_string()) {
+        Ok(id) => cstr(&id),
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+/// Agent タスクを作る。成功で task id、失敗で NULL。`input_json` はそのまま送る。
+///
+/// # Safety
+/// 引数は有効な NUL 終端 UTF-8。
+#[no_mangle]
+pub unsafe extern "C" fn astra_core_api_create_task(
+    base_url: *const c_char,
+    access_token: *const c_char,
+    kind: *const c_char,
+    input_json: *const c_char,
+) -> *mut c_char {
+    let (Some(base), Some(token), Some(kind), Some(input)) =
+        (rstr(base_url), rstr(access_token), rstr(kind), rstr(input_json))
+    else {
+        return std::ptr::null_mut();
+    };
+    match api_create_task(base.to_string(), token.to_string(), kind.to_string(), input.to_string()) {
+        Ok(id) => cstr(&id),
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+/// タスクの完了を待つ。成功で TaskStatus の JSON、失敗で NULL。
+///
+/// # Safety
+/// 引数は有効な NUL 終端 UTF-8。
+#[no_mangle]
+pub unsafe extern "C" fn astra_core_api_wait_task(
+    base_url: *const c_char,
+    access_token: *const c_char,
+    task_id: *const c_char,
+    timeout_ms: u64,
+) -> *mut c_char {
+    let (Some(base), Some(token), Some(id)) = (rstr(base_url), rstr(access_token), rstr(task_id))
+    else {
+        return std::ptr::null_mut();
+    };
+    match api_wait_task(base.to_string(), token.to_string(), id.to_string(), timeout_ms) {
+        Ok(status) => serde_json::to_string(&status).map(|j| cstr(&j)).unwrap_or(std::ptr::null_mut()),
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+/// 成果物の本文。成功で文字列、失敗で NULL。
+///
+/// # Safety
+/// 引数は有効な NUL 終端 UTF-8。
+#[no_mangle]
+pub unsafe extern "C" fn astra_core_api_artifact_content(
+    base_url: *const c_char,
+    access_token: *const c_char,
+    artifact_id: *const c_char,
+) -> *mut c_char {
+    let (Some(base), Some(token), Some(id)) = (rstr(base_url), rstr(access_token), rstr(artifact_id))
+    else {
+        return std::ptr::null_mut();
+    };
+    match api_artifact_content(base.to_string(), token.to_string(), id.to_string()) {
+        Ok(content) => cstr(&content),
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+/// Apps カタログ。成功で JSON 配列文字列、失敗で NULL。
+///
+/// # Safety
+/// 引数は有効な NUL 終端 UTF-8。
+#[no_mangle]
+pub unsafe extern "C" fn astra_core_api_plugin_catalog(
+    base_url: *const c_char,
+    access_token: *const c_char,
+) -> *mut c_char {
+    let (Some(base), Some(token)) = (rstr(base_url), rstr(access_token)) else {
+        return std::ptr::null_mut();
+    };
+    match api_plugin_catalog(base.to_string(), token.to_string()) {
+        Ok(list) => serde_json::to_string(&list).map(|j| cstr(&j)).unwrap_or(std::ptr::null_mut()),
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+/// Library 一覧。成功で JSON 配列文字列、失敗で NULL。
+///
+/// # Safety
+/// 引数は有効な NUL 終端 UTF-8。
+#[no_mangle]
+pub unsafe extern "C" fn astra_core_api_library(
+    base_url: *const c_char,
+    access_token: *const c_char,
+) -> *mut c_char {
+    let (Some(base), Some(token)) = (rstr(base_url), rstr(access_token)) else {
+        return std::ptr::null_mut();
+    };
+    match api_library(base.to_string(), token.to_string()) {
+        Ok(list) => serde_json::to_string(&list).map(|j| cstr(&j)).unwrap_or(std::ptr::null_mut()),
         Err(_) => std::ptr::null_mut(),
     }
 }

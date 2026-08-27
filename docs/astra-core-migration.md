@@ -354,3 +354,18 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
   macOS(Swift/UniFFI)・Windows(C#/C ABI) が同じ実装を使う。**残る外部依存は「実 OAuth 提供者への live な HTTP 交換
   （＋ユーザーの consent 操作）」のみ**——これは提供者のサーバとユーザー許可が要り、この環境で完了・検証不可。
   Done#8 の「connector の live 実行」を除く契約・ドメインは core に集約完了。
+
+## 追記: gateway API を C ABI + C# へ（Phase 1.30, Windows パリティ）
+- `capi.rs` に gateway API の C ABI を追加: `astra_core_api_reachable` / `_dev_sign_in`(Tokens JSON) / `_me`(Me JSON) /
+  `_create_meeting` / `_create_task` / `_wait_task`(TaskStatus JSON) / `_artifact_content` / `_plugin_catalog`(JSON配列) /
+  `_library`(JSON配列)。複合型は JSON、失敗は NULL。api の record に `serde::Serialize` を足した（uniffi binding は不変）。
+- `include/astra_core.h` に宣言、`AstraCore.cs` に P/Invoke + `ApiReachable/ApiDevSignIn/ApiMe/ApiCreateMeeting/
+  ApiCreateTask/ApiWaitTask/ApiArtifactContent/ApiPluginCatalog/ApiLibrary`。**Windows C# が macOS(Swift/UniFFI) と同じ
+  実バックエンド経路を使える**ようになった（それまで C ABI は録音と connector だけだった）。
+- 検証: `verify-c-abi.sh` を拡張し、**C(clang) から live gateway に縦断**。**実測 PASS**:
+  `CABI_OK api: me=owner meeting=ok agent=COMPLETED apps=[... library=[...`
+  （サインイン→/v1/me=owner→会議作成→echo タスク→**COMPLETED**→Apps→Library）。gateway 未到達なら CABI_SKIP。
+  core 35 tests / swift-bindings・design-tokens `--check` current / conventions PASS / Tauri ビルド回帰なし /
+  macOS `--selftest api`(UniFFI 経路)も PASS。
+- **意味（Done#4 の前進）**: Windows の core bridge が macOS と**同じ gateway 実経路の全体**（auth/meeting/agent/apps/library）を
+  持ち、**C# が P/Invoke する C ABI 境界を live gateway に対して C から検証済み**。C# の実ビルド/実行のみ Windows CI 待ち。

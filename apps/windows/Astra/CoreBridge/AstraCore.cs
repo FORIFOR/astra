@@ -20,6 +20,16 @@ internal static class AstraCoreNative
     internal static extern IntPtr astra_core_authorize_url(string provider, string clientId,
         string redirectUri, string scopesSpaceJoined, string state, string codeChallenge);
 
+    [DllImport(Dll, CharSet = CharSet.Ansi)] internal static extern int astra_core_api_reachable(string baseUrl);
+    [DllImport(Dll, CharSet = CharSet.Ansi)] internal static extern IntPtr astra_core_api_dev_sign_in(string baseUrl, string email, string displayName);
+    [DllImport(Dll, CharSet = CharSet.Ansi)] internal static extern IntPtr astra_core_api_me(string baseUrl, string accessToken);
+    [DllImport(Dll, CharSet = CharSet.Ansi)] internal static extern IntPtr astra_core_api_create_meeting(string baseUrl, string accessToken, string title, string language);
+    [DllImport(Dll, CharSet = CharSet.Ansi)] internal static extern IntPtr astra_core_api_create_task(string baseUrl, string accessToken, string kind, string inputJson);
+    [DllImport(Dll, CharSet = CharSet.Ansi)] internal static extern IntPtr astra_core_api_wait_task(string baseUrl, string accessToken, string taskId, ulong timeoutMs);
+    [DllImport(Dll, CharSet = CharSet.Ansi)] internal static extern IntPtr astra_core_api_artifact_content(string baseUrl, string accessToken, string artifactId);
+    [DllImport(Dll, CharSet = CharSet.Ansi)] internal static extern IntPtr astra_core_api_plugin_catalog(string baseUrl, string accessToken);
+    [DllImport(Dll, CharSet = CharSet.Ansi)] internal static extern IntPtr astra_core_api_library(string baseUrl, string accessToken);
+
     [DllImport(Dll, CharSet = CharSet.Ansi)]
     internal static extern IntPtr astra_core_session_start(string root, string meetingId);
     [DllImport(Dll)] internal static extern uint astra_core_session_push(IntPtr s, float[] samples, nuint len, uint sampleRate);
@@ -51,6 +61,25 @@ public static class AstraCore
         string[] scopes, string state, string codeChallenge) =>
         Consume(AstraCoreNative.astra_core_authorize_url(provider, clientId, redirectUri,
             string.Join(" ", scopes), state, codeChallenge));
+
+    // gateway API（実バックエンド）。macOS(Swift/UniFFI) と同じ core を Windows から。JSON か生値、失敗は空文字。
+    public static bool ApiReachable(string baseUrl) => AstraCoreNative.astra_core_api_reachable(baseUrl) == 1;
+    public static string ApiDevSignIn(string baseUrl, string email, string displayName) =>
+        Consume(AstraCoreNative.astra_core_api_dev_sign_in(baseUrl, email, displayName));
+    public static string ApiMe(string baseUrl, string accessToken) =>
+        Consume(AstraCoreNative.astra_core_api_me(baseUrl, accessToken));
+    public static string ApiCreateMeeting(string baseUrl, string accessToken, string title, string language) =>
+        Consume(AstraCoreNative.astra_core_api_create_meeting(baseUrl, accessToken, title, language));
+    public static string ApiCreateTask(string baseUrl, string accessToken, string kind, string inputJson) =>
+        Consume(AstraCoreNative.astra_core_api_create_task(baseUrl, accessToken, kind, inputJson));
+    public static string ApiWaitTask(string baseUrl, string accessToken, string taskId, ulong timeoutMs) =>
+        Consume(AstraCoreNative.astra_core_api_wait_task(baseUrl, accessToken, taskId, timeoutMs));
+    public static string ApiArtifactContent(string baseUrl, string accessToken, string artifactId) =>
+        Consume(AstraCoreNative.astra_core_api_artifact_content(baseUrl, accessToken, artifactId));
+    public static string ApiPluginCatalog(string baseUrl, string accessToken) =>
+        Consume(AstraCoreNative.astra_core_api_plugin_catalog(baseUrl, accessToken));
+    public static string ApiLibrary(string baseUrl, string accessToken) =>
+        Consume(AstraCoreNative.astra_core_api_library(baseUrl, accessToken));
 }
 
 /// <summary>録音セッション（WASAPI から push）。macOS RecordingRuntime と同じ core を叩く。</summary>

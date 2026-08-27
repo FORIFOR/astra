@@ -16,7 +16,7 @@ pub enum ApiError {
 }
 
 /// dev サインインで得るトークン一式。
-#[derive(uniffi::Record, Clone, Debug)]
+#[derive(uniffi::Record, Clone, Debug, serde::Serialize)]
 pub struct Tokens {
     pub access_token: String,
     pub refresh_token: String,
@@ -25,7 +25,7 @@ pub struct Tokens {
 }
 
 /// /v1/me の要点（UI が出す分だけ）。
-#[derive(uniffi::Record, Clone, Debug)]
+#[derive(uniffi::Record, Clone, Debug, serde::Serialize)]
 pub struct Me {
     pub user_id: String,
     pub email: String,
@@ -307,7 +307,7 @@ pub fn api_start_conversation(base_url: String, access_token: String) -> Result<
 }
 
 /// 依頼を送る（POST /v1/conversations/:id/turns）。Agent が仕事を起こしたら task_id。
-#[derive(uniffi::Record, Clone, Debug)]
+#[derive(uniffi::Record, Clone, Debug, serde::Serialize)]
 pub struct TurnOutcome {
     pub needs_clarification: bool,
     /// 聞き返し or 即答（無ければ空）。
@@ -370,7 +370,7 @@ pub fn api_plugin_catalog(base_url: String, access_token: String) -> Result<Vec<
 }
 
 /// 仕事の状態（GET /v1/tasks/:id）。
-#[derive(uniffi::Record, Clone, Debug)]
+#[derive(uniffi::Record, Clone, Debug, serde::Serialize)]
 pub struct TaskStatus {
     pub id: String,
     pub status: String,

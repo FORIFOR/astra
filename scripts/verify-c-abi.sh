@@ -29,6 +29,37 @@ int main(int argc, char** argv) {
     astra_core_string_free(chal);
     astra_core_string_free(url);
 
+    /* gateway API 縦断（実バックエンド）。届かなければ skip（CI 等）。 */
+    const char* base = "http://127.0.0.1:3000";
+    if (astra_core_api_reachable(base) == 1) {
+        char* toks = astra_core_api_dev_sign_in(base, "cabi-selftest@astra.local", "CABI");
+        if (!toks || strstr(toks, "access_token") == NULL) { printf("CABI_FAIL api sign_in\n"); return 30; }
+        /* access_token を JSON から素朴に取り出す。 */
+        char at[2048]; at[0] = 0;
+        const char* k = strstr(toks, "\"access_token\":\"");
+        if (k) { k += strlen("\"access_token\":\""); const char* e = strchr(k, '\"');
+                 if (e && (size_t)(e-k) < sizeof(at)) { memcpy(at, k, e-k); at[e-k] = 0; } }
+        if (at[0] == 0) { printf("CABI_FAIL api access_token\n"); return 31; }
+        char* me = astra_core_api_me(base, at);
+        if (!me || strstr(me, "owner") == NULL) { printf("CABI_FAIL api me=%s\n", me?me:"NULL"); return 32; }
+        char* mid = astra_core_api_create_meeting(base, at, "CABI 会議", "ja-JP");
+        if (!mid || strlen(mid) == 0) { printf("CABI_FAIL api create_meeting\n"); return 33; }
+        char* task = astra_core_api_create_task(base, at, "echo", "{\"message\":\"cabi\",\"steps\":1}");
+        if (!task || strlen(task) == 0) { printf("CABI_FAIL api create_task\n"); return 34; }
+        char* st = astra_core_api_wait_task(base, at, task, 15000);
+        if (!st || strstr(st, "COMPLETED") == NULL) { printf("CABI_FAIL api wait_task=%s\n", st?st:"NULL"); return 35; }
+        char* apps = astra_core_api_plugin_catalog(base, at);
+        char* lib = astra_core_api_library(base, at);
+        if (!apps || !lib) { printf("CABI_FAIL api apps/library\n"); return 36; }
+        printf("CABI_OK api: me=owner meeting=ok agent=COMPLETED apps=%s... library=%s...\n",
+               apps[0]=='['?"[":"?", lib[0]=='['?"[":"?");
+        astra_core_string_free(toks); astra_core_string_free(me); astra_core_string_free(mid);
+        astra_core_string_free(task); astra_core_string_free(st);
+        astra_core_string_free(apps); astra_core_string_free(lib);
+    } else {
+        printf("CABI_SKIP api: gateway not reachable (%s)\n", base);
+    }
+
     const char* root = argv[1];
     CApiSession* s = astra_core_session_start(root, "cabi");
     if (!s) { printf("CABI_FAIL start\n"); return 3; }
