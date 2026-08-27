@@ -11,6 +11,7 @@ enum SelfTest {
         case "record": recordToDisk(); return true
         case "lifecycle": lifecycle(); return true
         case "api": api(args); return true
+        case "shortcut": shortcut(); return true
         default: return false
         }
     }
@@ -77,6 +78,19 @@ enum SelfTest {
         } catch {
             print("SELFTEST_FAIL api error=\(error)"); exit(4)
         }
+    }
+
+    /// `--selftest shortcut`: グローバルホットキーが OS に登録できることを検証する。
+    /// TCC も GUI も要らない（押下の live 受信はユーザーが署名済み .app で確かめる）。
+    @MainActor
+    private static func shortcut() {
+        var fired = false
+        let ok = GlobalShortcut.shared.register { fired = true }
+        let label = GlobalShortcut.label()
+        GlobalShortcut.shared.unregister()
+        guard ok else { print("SELFTEST_FAIL shortcut register"); exit(2) }
+        print("SELFTEST_OK shortcut: registered=\(ok) combo=\(label) firedAtRegister=\(fired)")
+        exit(0)
     }
 
     private static func recordToDisk() {

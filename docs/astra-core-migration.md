@@ -173,3 +173,17 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
   ただし Done#8「完全 retire」は依然**未達**: 残るのは (a) 実 STT エンジンの native 実行と live 音声の
   partial/final（外部 STT 鍵が必要）、(b) connector OAuth（外部プロバイダ + ユーザー許可）。純ドメインは core 化したが、
   エンジン統合と外部サービス経路が残るため Tauri を無傷で残す。
+
+## 追記: グローバル音声ショートカット（Phase 1.17, macOS native）
+- `Windowing/GlobalShortcut.swift` を新設。**Carbon `RegisterEventHotKey`** で ⌥Space を OS へ登録し、
+  押下で `WindowCoordinator.toggleRecording()`（通常 HUD ↔ Recording Workspace の出し入れ）を呼ぶ。
+  CGEventTap と違い**単一ホットキーの登録は Accessibility(TCC) を要さない**ので、この環境で登録まで実検証できる。
+- 配線: `WindowCoordinator` に `isRecording` と `toggleRecording()` を追加、`AstraAppDelegate` が起動時に登録。
+- 検証: `AstraMac --selftest shortcut` を追加し `scripts/verify-macos-recording.sh` に組み込み。
+  **実測 PASS**: `SELFTEST_OK shortcut: registered=true combo=⌥Space`（headless、TCC/GUI 不要、exit 0）。
+  既存 selftest（record/lifecycle）と swift unit 3 件も回帰なし。
+- **live 境界（正直に）**: 押下の**受信**（別アプリ前面での ⌥Space で実際に録音が始まる）は、署名済み .app 上で
+  ユーザーが実際に押して確かめる live 動作。登録の成立は検証済みだが、押下受信の live E2E は Done#3(live) の
+  TCC/署名ゲートに含まれ、この環境では未検証。
+- Done#2「Global voice shortcut」の**実装完了**（mock ではなく実 Carbon 登録）。§3 の残る native 実機能
+  （System Audio=ScreenCaptureKit / Screen Context / Calendar=EventKit）は未実装で継続対象。

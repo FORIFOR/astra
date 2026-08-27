@@ -6,6 +6,9 @@ final class AstraAppDelegate: NSObject, NSApplicationDelegate {
         if SelfTest.run(CommandLine.arguments) { return }
         let demo = DemoMode.fromArguments(CommandLine.arguments)
         WindowCoordinator.shared.start(demo: demo)
+        // グローバル音声ショートカット（⌥Space）で録音を出し入れする。
+        // Carbon の RegisterEventHotKey は Accessibility 権限を要さない。
+        GlobalShortcut.shared.register { WindowCoordinator.shared.toggleRecording() }
         NSApp.activate(ignoringOtherApps: true)
     }
 }

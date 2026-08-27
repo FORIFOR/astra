@@ -12,3 +12,6 @@ echo "$OUT"
 OUT2="$("$BIN" --selftest lifecycle)"
 echo "$OUT2"
 [[ "$OUT2" == SELFTEST_OK* ]] || { echo "FAIL: macOS lifecycle E2E" >&2; exit 1; }
+OUT3="$("$BIN" --selftest shortcut)"
+echo "$OUT3"
+[[ "$OUT3" == SELFTEST_OK* ]] || { echo "FAIL: macOS global shortcut register" >&2; exit 1; }

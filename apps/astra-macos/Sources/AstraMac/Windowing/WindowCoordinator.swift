@@ -9,6 +9,8 @@ final class WindowCoordinator {
 
     private var hudPanel: AstraPanel<VoiceHUDView>?
     private var recordingPanel: AstraPanel<RecordingWorkspaceView>?
+    /// グローバルショートカットが録音を出し入れするための状態。
+    private(set) var isRecording = false
 
     func start(demo: DemoMode) {
         switch demo {
@@ -36,13 +38,21 @@ final class WindowCoordinator {
 
     func enterRecordingMode() {
         RecordingWorkspaceState.shared.start()
+        isRecording = true
         hideVoiceHUD()
         showRecordingWorkspace()
     }
 
     func leaveRecordingMode() {
+        isRecording = false
         hideRecordingWorkspace()
         showVoiceHUD()
+    }
+
+    /// グローバル音声ショートカットの入口。押すたびに録音を出し入れする。
+    /// 正本 §2「通常時 Top HUD → 録音開始で Recording Workspace → 終了で HUD 復帰」。
+    func toggleRecording() {
+        if isRecording { leaveRecordingMode() } else { enterRecordingMode() }
     }
 
     func showVoiceHUD() {
