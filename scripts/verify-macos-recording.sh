@@ -59,6 +59,8 @@ OUTT="$("$BIN" --selftest translate http://127.0.0.1:3000)"; echo "$OUTT"
 [[ "$OUTT" == SELFTEST_OK* || "$OUTT" == SELFTEST_SKIP* ]] || { echo "FAIL: macOS translate via Agent" >&2; exit 1; }
 OUTR="$("$BIN" --selftest recovery http://127.0.0.1:3000)"; echo "$OUTR"
 [[ "$OUTR" == SELFTEST_OK* || "$OUTR" == SELFTEST_SKIP* ]] || { echo "FAIL: macOS crash recovery" >&2; exit 1; }
+OUTCF="$("$BIN" --selftest connectorflow)"; echo "$OUTCF"
+[[ "$OUTCF" == SELFTEST_OK* ]] || { echo "FAIL: macOS OAuth loopback flow" >&2; exit 1; }
 for t in screenshot waveform livemic livemeeting livescreen sttrecognize; do
   OUT="$("$BIN" --selftest "$t")"
   echo "$OUT"

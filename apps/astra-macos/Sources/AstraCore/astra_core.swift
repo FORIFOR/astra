@@ -1186,6 +1186,111 @@ public func FfiConverterTypeMe_lower(_ value: Me) -> RustBuffer {
 
 
 /**
+ * 折り返しの解析結果（UniFFI 用のフラット Record）。crate::oauth::CallbackParams と同じ中身。
+ */
+public struct OauthCallback {
+    public var code: String?
+    public var state: String?
+    public var error: String?
+    public var errorDescription: String?
+    public var idToken: String?
+    public var displayName: String?
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(code: String?, state: String?, error: String?, errorDescription: String?, idToken: String?, displayName: String?) {
+        self.code = code
+        self.state = state
+        self.error = error
+        self.errorDescription = errorDescription
+        self.idToken = idToken
+        self.displayName = displayName
+    }
+}
+
+#if compiler(>=6)
+extension OauthCallback: Sendable {}
+#endif
+
+
+extension OauthCallback: Equatable, Hashable {
+    public static func ==(lhs: OauthCallback, rhs: OauthCallback) -> Bool {
+        if lhs.code != rhs.code {
+            return false
+        }
+        if lhs.state != rhs.state {
+            return false
+        }
+        if lhs.error != rhs.error {
+            return false
+        }
+        if lhs.errorDescription != rhs.errorDescription {
+            return false
+        }
+        if lhs.idToken != rhs.idToken {
+            return false
+        }
+        if lhs.displayName != rhs.displayName {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(code)
+        hasher.combine(state)
+        hasher.combine(error)
+        hasher.combine(errorDescription)
+        hasher.combine(idToken)
+        hasher.combine(displayName)
+    }
+}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeOauthCallback: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> OauthCallback {
+        return
+            try OauthCallback(
+                code: FfiConverterOptionString.read(from: &buf), 
+                state: FfiConverterOptionString.read(from: &buf), 
+                error: FfiConverterOptionString.read(from: &buf), 
+                errorDescription: FfiConverterOptionString.read(from: &buf), 
+                idToken: FfiConverterOptionString.read(from: &buf), 
+                displayName: FfiConverterOptionString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: OauthCallback, into buf: inout [UInt8]) {
+        FfiConverterOptionString.write(value.code, into: &buf)
+        FfiConverterOptionString.write(value.state, into: &buf)
+        FfiConverterOptionString.write(value.error, into: &buf)
+        FfiConverterOptionString.write(value.errorDescription, into: &buf)
+        FfiConverterOptionString.write(value.idToken, into: &buf)
+        FfiConverterOptionString.write(value.displayName, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeOauthCallback_lift(_ buf: RustBuffer) throws -> OauthCallback {
+    return try FfiConverterTypeOauthCallback.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeOauthCallback_lower(_ value: OauthCallback) -> RustBuffer {
+    return FfiConverterTypeOauthCallback.lower(value)
+}
+
+
+/**
  * 録音の生の状態（UI から core へ渡す入力）。
  */
 public struct RecordingInput {
@@ -2642,6 +2747,16 @@ public func connectorConfiguredProviderIds(clientIds: [String: String]) -> [Stri
 })
 }
 /**
+ * 折り返し URL（`/callback?code=...`）を解析する。解析は core の parse_callback に一本化。
+ */
+public func connectorParseCallback(target: String) -> OauthCallback  {
+    return try!  FfiConverterTypeOauthCallback_lift(try! rustCall() {
+    uniffi_astra_core_fn_func_connector_parse_callback(
+        FfiConverterString.lower(target),$0
+    )
+})
+}
+/**
  * UniFFI 用のフラットなラッパー（macOS Swift / Windows が呼ぶ実経路の入口）。
  * PKCE の code_challenge（S256）を作る。
  */
@@ -2773,6 +2888,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_astra_core_checksum_func_connector_configured_provider_ids() != 48177) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_astra_core_checksum_func_connector_parse_callback() != 11016) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_astra_core_checksum_func_connector_pkce_challenge() != 40473) {

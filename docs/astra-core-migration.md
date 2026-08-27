@@ -529,3 +529,16 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
   経過ラベル自体は core（`recording_snapshot`）が整形する（既存）。
 - 検証: `--selftest timer`。録音→2.4s（進む=2）→一時停止 1.6s（**止まる=2**）→再開 1.6s（進む=3）。
   **実測 PASS**: `経過が進む running=2 停止で止まる paused=2 再開で進む resumed=3`。verify に組み込み、回帰なし。
+
+## 追記: connector OAuth フロー（Swift loopback）を実装（Phase 1.46）
+- **未実装の追加**: connector の認可コードフローの Swift 側（loopback listener + ブラウザ起動）が無かった。
+  `Context/ConnectorFlow.swift` を新設: `NWListener` で loopback を開いて折り返しを 1 回待ち、core の
+  `connector_parse_callback`（新設 uniffi Record `OauthCallback` を返す）で解析。authorize URL・PKCE・
+  トークン交換は core（既存）。**トークンは Keychain のみ、外のブラウザで開く（RFC 8252 §8.12）**。
+- core に uniffi `OauthCallback` + `connector_parse_callback` を追加（解析は core に一本化、Swift へ公開）。
+- 検証: `--selftest connectorflow`。loopback を開き（OS 選択 port）、疑似的な折り返し
+  `/callback?code=abc123&state=xyz789` を自分で送り、core が解析することを確認。
+  **実測 PASS**: `loopback 受理 code=abc123 state=xyz789 port=59898`。verify に組み込み。
+  core 35 tests / swift-bindings `--check` current / FFI contract / Tauri ビルド回帰なし。
+- **意味**: connector OAuth フローが Swift 側で **code-complete**（authorize URL/PKCE/loopback/交換すべて core・検証済み）。
+  残る外部依存は **実 OAuth 提供者（client_id）＋ユーザー consent＋実 HTTP 交換**のみ（この環境に無い）。

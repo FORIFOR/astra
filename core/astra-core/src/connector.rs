@@ -354,6 +354,31 @@ pub fn exchange_code(
     parse_token_response(&text, now_ms)
 }
 
+/// 折り返しの解析結果（UniFFI 用のフラット Record）。crate::oauth::CallbackParams と同じ中身。
+#[derive(uniffi::Record, Clone, Debug, Default)]
+pub struct OauthCallback {
+    pub code: Option<String>,
+    pub state: Option<String>,
+    pub error: Option<String>,
+    pub error_description: Option<String>,
+    pub id_token: Option<String>,
+    pub display_name: Option<String>,
+}
+
+/// 折り返し URL（`/callback?code=...`）を解析する。解析は core の parse_callback に一本化。
+#[uniffi::export]
+pub fn connector_parse_callback(target: String) -> OauthCallback {
+    let p = crate::oauth::parse_callback(&target);
+    OauthCallback {
+        code: p.code,
+        state: p.state,
+        error: p.error,
+        error_description: p.error_description,
+        id_token: p.id_token,
+        display_name: p.display_name,
+    }
+}
+
 /// UniFFI 用のフラットなラッパー（macOS Swift / Windows が呼ぶ実経路の入口）。
 /// PKCE の code_challenge（S256）を作る。
 #[uniffi::export]
