@@ -1,4 +1,5 @@
 import Foundation
+import CoreVideo
 import AstraCore
 
 /// `--selftest record`: Swift → astra-core → 実ディスク の E2E。UI を出さずに検証する。
@@ -14,6 +15,7 @@ enum SelfTest {
         case "shortcut": shortcut(); return true
         case "sysaudio": sysaudio(); return true
         case "calendar": calendar(); return true
+        case "screen": screen(); return true
         default: return false
         }
     }
@@ -118,6 +120,19 @@ enum SelfTest {
         let consistent = (status == .granted) || events.isEmpty
         guard consistent else { print("SELFTEST_FAIL calendar status=\(status.rawValue) events=\(events.count)"); exit(2) }
         print("SELFTEST_OK calendar: status=\(status.rawValue) upcoming=\(events.count)")
+        exit(0)
+    }
+
+    /// `--selftest screen`: ScreenCaptureKit の静止フレーム構成を検証する。
+    /// 実フレーム取得は画面収録許可(TCC)が要るが、構成の組み立ては TCC 無しで確かめられる。
+    @MainActor
+    private static func screen() {
+        guard #available(macOS 14.0, *) else { print("SELFTEST_FAIL screen needs macOS 14+"); exit(2) }
+        let c = ScreenContextCapture.configuration(width: 1280, height: 800)
+        guard c.width == 1280, c.height == 800, !c.capturesAudio, c.pixelFormat == kCVPixelFormatType_32BGRA else {
+            print("SELFTEST_FAIL screen config w=\(c.width) h=\(c.height) audio=\(c.capturesAudio)"); exit(3)
+        }
+        print("SELFTEST_OK screen: width=\(c.width) height=\(c.height) pixelFormat=BGRA audio=\(c.capturesAudio)")
         exit(0)
     }
 

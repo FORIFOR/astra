@@ -21,3 +21,6 @@ echo "$OUT4"
 OUT5="$("$BIN" --selftest calendar)"
 echo "$OUT5"
 [[ "$OUT5" == SELFTEST_OK* ]] || { echo "FAIL: macOS calendar status" >&2; exit 1; }
+OUT6="$("$BIN" --selftest screen)"
+echo "$OUT6"
+[[ "$OUT6" == SELFTEST_OK* ]] || { echo "FAIL: macOS screen-context config" >&2; exit 1; }

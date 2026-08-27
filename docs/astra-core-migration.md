@@ -219,3 +219,11 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
 - 実装・headless 検証済み: Mic / **System Audio** / **Global shortcut** / **Calendar(状態)** / meeting recording & recovery / RAG(core) / Agent(core)。
 - **live(TCC/署名)ゲートで未検証**: 実 mic 波形・実 system audio フレーム・実カレンダー予定・グローバル押下受信。
 - **未実装で継続対象**: Screen Context(ScreenCaptureKit 映像フレーム)、live STT streaming(外部 STT 鍵)、connector OAuth。
+
+## 追記: 画面文脈の取り込み（Phase 1.20, macOS native / ScreenCaptureKit 映像）
+- `Audio/ScreenContextCapture.swift` を新設。**ScreenCaptureKit** の `SCScreenshotManager.captureImage` で
+  前面ディスプレイの静止フレーム（BGRA CGImage）を 1 枚取る。Context Lens / RAG に「今見ているもの」を渡すため。
+- 検証: `--selftest screen`（構成の検証、TCC 不要）を追加し verify に組み込み。
+  **実測 PASS**: `SELFTEST_OK screen: width=1280 height=800 pixelFormat=BGRA audio=false`。
+- **live 境界**: 実フレーム取得は画面収録許可(TCC)が要り Done#3(live) に含まれ未検証。
+- これで §3 の capture 三点（Mic / System Audio / Screen Context）が実装＋構成検証済みに揃った。
