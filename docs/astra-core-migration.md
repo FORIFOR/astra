@@ -680,3 +680,11 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
 - WinUI の Window コードなので**ビルドは Windows のみ**（compile 検証はできない）。ただし配線先の `WasapiCapture`・
   `RecordingSession`(core bridge) は compile／runtime 検証済み。実取り込み・描画は Windows 実機/CI。
 - **意味（§4 Recording）**: Windows の録音音声経路（マイク→core→断片保存）が code-complete。
+
+## 追記: Windows Main Window を AstraSession に配線（Phase 1.61, §4 Main Window）
+- `MainWindow` が起動時に `AstraSession`（core→gateway、runtime 検証済み）でサインインし Apps/Library を取得、
+  NavigationView の選択でセクション切替（macOS の MainData/MainWindowView と対）。Page への描画は WinUI 側（Windows）。
+- WinUI Window コードのためビルドは Windows のみだが、**データ層 `AstraSession` は実 gateway で runtime 検証済み**。
+- **Windows の到達点**: 共通ロジック（bridge/session/geometry/shortcut/WASAPI）は compile／runtime 検証済み、
+  Main/Recording Window はそれらに配線済み（code-complete）。**残るは WinUI の実描画（Page/XAML の render）と
+  Windows.Graphics.Capture（画面）＝ Windows 実機/CI でのみ**。
