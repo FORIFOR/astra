@@ -40,6 +40,7 @@ enum SelfTest {
         case "connectorflow": connectorflow(); return true
         case "connectorstate": connectorstate(); return true
         case "voiceask": voiceask(args); return true
+        case "recoveryoffline": recoveryOffline(args); return true
         default: return false
         }
     }
@@ -773,6 +774,40 @@ enum SelfTest {
             print("SELFTEST_OK voiceask: thinking=\(wasThinking)→idle Agent 応答=\"\(preview)…\"")
             exit(0)
         } catch { print("SELFTEST_FAIL voiceask error=\(error)"); exit(3) }
+    }
+
+    /// `--selftest recoveryoffline <base>`: サインイン前に録ったオフライン録音（local id）を、後から
+    /// サインインして復旧できるか検証する（新規会議作成→リネーム→送信→候補から消える）。
+    @MainActor
+    private static func recoveryOffline(_ args: [String]) {
+        let base = args.count > (args.firstIndex(of: "--selftest")! + 2)
+            ? args[args.firstIndex(of: "--selftest")! + 2] : "http://127.0.0.1:3000"
+        guard AstraCoreBridge.reachable(base) else { print("SELFTEST_SKIP recoveryoffline: gateway unreachable"); exit(0) }
+        do {
+            // オフライン録音: gateway 会議を作らず、local id で断片を書く。
+            let localId = "meeting-\(getpid())"
+            let root = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+                .appendingPathComponent("Astra/meetings").path
+            let session = try RecordingSession.start(root: root, meetingId: localId)
+            let oneSec = [Float](repeating: 0.1, count: 16_000)
+            for _ in 0..<6 { _ = session.pushSamples(samples: oneSec, sampleRate: 16_000) }
+            try session.finish()
+            // 後からサインインして復旧。
+            let tokens = try AstraCoreBridge.devSignIn(base, email: "recoff-\(getpid())@astra.local", displayName: "RO")
+            let runtime = RecordingRuntime.shared
+            runtime.configureBackend(base: base, accessToken: tokens.accessToken)
+            let foundBefore = runtime.recoverableMeetings().contains { $0.meetingId == localId }
+            let sent = runtime.recover(meetingId: localId)
+            let stillLocal = runtime.recoverableMeetings().contains { $0.meetingId == localId }
+            // 後片付け（リネーム先も含めて掃除）。
+            for m in runtime.recoverableMeetings() { try? FileManager.default.removeItem(atPath: root + "/" + m.meetingId) }
+            try? FileManager.default.removeItem(atPath: root + "/" + localId)
+            guard foundBefore, sent > 0, !stillLocal else {
+                print("SELFTEST_FAIL recoveryoffline found=\(foundBefore) sent=\(sent) stillLocal=\(stillLocal)"); exit(2)
+            }
+            print("SELFTEST_OK recoveryoffline: オフライン録音を新規会議に紐付けて復旧 sent=\(sent) local消滅=\(!stillLocal)")
+            exit(0)
+        } catch { print("SELFTEST_FAIL recoveryoffline error=\(error)"); exit(3) }
     }
 
     private static func recordToDisk() {

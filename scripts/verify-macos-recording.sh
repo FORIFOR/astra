@@ -65,6 +65,8 @@ OUTCS="$("$BIN" --selftest connectorstate)"; echo "$OUTCS"
 [[ "$OUTCS" == SELFTEST_OK* ]] || { echo "FAIL: macOS connector state" >&2; exit 1; }
 OUTVA="$("$BIN" --selftest voiceask http://127.0.0.1:3000)"; echo "$OUTVA"
 [[ "$OUTVA" == SELFTEST_OK* || "$OUTVA" == SELFTEST_SKIP* ]] || { echo "FAIL: macOS voice ask via Agent" >&2; exit 1; }
+OUTRO="$("$BIN" --selftest recoveryoffline http://127.0.0.1:3000)"; echo "$OUTRO"
+[[ "$OUTRO" == SELFTEST_OK* || "$OUTRO" == SELFTEST_SKIP* ]] || { echo "FAIL: macOS offline recovery" >&2; exit 1; }
 for t in screenshot waveform livemic livemeeting livescreen sttrecognize; do
   OUT="$("$BIN" --selftest "$t")"
   echo "$OUT"

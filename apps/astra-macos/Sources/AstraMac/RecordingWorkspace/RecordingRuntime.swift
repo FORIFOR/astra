@@ -140,12 +140,22 @@ final class RecordingRuntime {
 
     /// クラッシュした録音を復旧する: その会議の断片を gateway に送って finalize する。
     /// サインイン済みでなければ 0（送れない）。送ったバイト数を返す。
+    ///
+    /// **オフライン録音**（サインイン前に録った local id, `meeting-…`）は gateway 会議が無いので、
+    /// 新しく会議を作り、journal ディレクトリをその id にリネームしてから送る（でないと永久に候補に残る）。
     @discardableResult
     func recover(meetingId id: String) -> UInt64 {
         guard let base = apiBase, let token = accessToken else { return 0 }
-        let sent = (try? AstraCoreBridge.uploadMeetingAudio(base, accessToken: token, meetingId: id, journalRoot: root)) ?? 0
-        _ = try? AstraCoreBridge.finishMeeting(base, accessToken: token, meetingId: id)
-        if sent > 0 { AstraCoreBridge.markUploaded(root: root, meetingId: id) }  // 二重回復を防ぐ
+        var uploadId = id
+        if id.hasPrefix("meeting-") {   // オフライン録音 → 新しい gateway 会議を作って紐付ける
+            guard let created = try? AstraCoreBridge.createMeeting(base, accessToken: token, title: "会議（復旧）", language: "ja-JP") else { return 0 }
+            let from = root + "/" + id, to = root + "/" + created
+            do { try FileManager.default.moveItem(atPath: from, toPath: to) } catch { return 0 }
+            uploadId = created
+        }
+        let sent = (try? AstraCoreBridge.uploadMeetingAudio(base, accessToken: token, meetingId: uploadId, journalRoot: root)) ?? 0
+        _ = try? AstraCoreBridge.finishMeeting(base, accessToken: token, meetingId: uploadId)
+        if sent > 0 { AstraCoreBridge.markUploaded(root: root, meetingId: uploadId) }  // 二重回復を防ぐ
         return sent
     }
 }

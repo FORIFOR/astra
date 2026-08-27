@@ -588,3 +588,13 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
   を追加（header・`AstraCore.cs` の `MarkMeetingUploaded`）。
 - 検証: `verify-c-abi.sh` を拡張し、録音往復の後に mark → **実測 PASS**: `CABI_OK … markedUploaded=1`。
   **FFI contract**: `Rust 21 = header 21 = C# 21` 一致。swift-bindings `--check` current / Tauri ビルド回帰なし。
+
+## 追記: オフライン録音が復旧できず候補に残り続けるバグ修正（Phase 1.52）
+- **バグ発見・修正**: サインイン前に録った録音は local id（`meeting-…`）で、対応する gateway 会議が無い。
+  `recover()` は `uploadMeetingAudio(local id)` を叩くが gateway に会議が無く失敗 → `mark_uploaded` されず、
+  **毎回の回復候補に残り続け、サインインのたびに無駄なリトライ**をしていた。
+- 修正: `recover()` が local id（`meeting-` 接頭辞）を検出したら、**新しい gateway 会議を作り、journal ディレクトリを
+  その id にリネームしてから**送る → finalize → mark。以後は候補から消える。
+- 検証: `--selftest recoveryoffline`。オフライン録音（local id）を作り、後からサインインして復旧、候補から消えることを確認。
+  **実測 PASS**: `オフライン録音を新規会議に紐付けて復旧 sent=192000 local消滅=true`。verify に SKIP 許容で組み込み。
+- **意味**: サインイン前に録った会議も後から確実に保存され、回復キューに溜まらない（Done#3 recovery の完成度向上）。
