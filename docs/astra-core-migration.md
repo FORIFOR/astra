@@ -634,3 +634,13 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
 - **意味（Done#4/#5 の強化）**: Windows の C# ブリッジが、契約一致（三者 contract）だけでなく **実際にコンパイルでき、
   実 core を P/Invoke で呼んで正しい結果を返す**ことを、**Windows 実機なしで**実測担保。残るは WinUI の UI レイヤの
   実ビルド/描画のみ（Windows App SDK が要り windows-latest CI で検証）。
+
+## 追記: Windows ジオメトリも共有 fixture と一致することを検証（Phase 1.56, cross-OS visual）
+- `verify-csharp-bridge` を拡張し、Windows の Recording Workspace 形状（凹み Bezier）を**純 C# で SVG パス化**
+  （WinUI の `RecordingWorkspaceGeometry` と同じ制御点＝固定オフセット 14/15 ＋ `GeneratedMetrics`）して、
+  共有 golden `shared/design/fixtures/recording-workspace.path` と照合。
+- 検証: **実測 PASS** `CS_OK …; geometry matches shared fixture`。
+  これで **macOS(Swift Shape) と Windows(C#) の両方が同じ golden に一致**＝tokens から同一の Bezier を描くことを、
+  **Windows 実機なしで**担保（Swift 側は `--selftest shape` で既に一致確認済み）。
+- **意味（Done#4/#5/#6 の強化）**: 両 OS の visual regression が揃った。Windows は C# ブリッジの実動作＋
+  ジオメトリ一致まで実測。残るは WinUI の実描画（Windows App SDK, windows-latest CI）のみ。

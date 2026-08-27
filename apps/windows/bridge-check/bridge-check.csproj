@@ -12,5 +12,9 @@
     <Compile Include="Program.cs" />
     <!-- Windows アプリと同一の CoreBridge を取り込む（二重実装しない）。 -->
     <Compile Include="../Astra/CoreBridge/AstraCore.cs" />
+    <!-- tokens 由来の C# Metrics（純定数）。 -->
+    <Compile Include="../Astra/GeneratedMetrics.cs" />
+    <!-- 共有 golden を出力先へ持っていく（geometry 照合用）。 -->
+    <None Include="../../../shared/design/fixtures/recording-workspace.path" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>
