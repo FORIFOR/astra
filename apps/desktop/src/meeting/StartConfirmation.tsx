@@ -4,7 +4,8 @@
  * **同意の確認を飛ばせない。**録音は参加者の権利に関わるので、
  * 「押したら始まる」ボタンの前に、何を録るかと同意の確認を必ず出す。
  */
-import { useState, type ReactElement } from 'react';
+import { useEffect, useState, type ReactElement } from 'react';
+import { audio, type InputDevice } from '../host/tauri.js';
 import type { AudioSource } from '@astra/contracts';
 
 export interface MeetingStartValues {
@@ -35,6 +36,24 @@ export function StartConfirmation({
   const [translate, setTranslate] = useState(false);
   const [targetLanguage, setTargetLanguage] = useState('en-US');
   const [consent, setConsent] = useState(false);
+  // §12.1: どのマイクが使われるかを、始める前に見せる。取れなければその理由を
+  const [devices, setDevices] = useState<readonly InputDevice[] | null>(null);
+  const [deviceError, setDeviceError] = useState<string | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    void audio
+      .inputDevices()
+      .then((list) => {
+        if (!cancelled) setDevices(list);
+      })
+      .catch((cause: unknown) => {
+        if (!cancelled) setDeviceError(cause instanceof Error ? cause.message : String(cause));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  const defaultDevice = devices?.find((d) => d.is_default) ?? devices?.[0] ?? null;
 
   const sources: AudioSource[] = [
     ...(microphone ? (['microphone'] as const) : []),
@@ -72,12 +91,21 @@ export function StartConfirmation({
             onChange={(e) => setMicrophone(e.target.checked)}
           />
           マイク
+          {defaultDevice && (
+            <span className="astra-meeting-start__device">{defaultDevice.name}</span>
+          )}
         </label>
         <label>
           <input type="checkbox" checked={system} onChange={(e) => setSystem(e.target.checked)} />
           システム音声
         </label>
       </fieldset>
+
+      {deviceError && (
+        <p className="astra-meeting-start__device-error" role="alert">
+          マイクの一覧を取れませんでした。{deviceError}
+        </p>
+      )}
 
       <label className="astra-meeting-start__language">
         <span>話される言語</span>

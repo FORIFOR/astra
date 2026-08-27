@@ -258,3 +258,17 @@ export const dockMetrics = {
     return listen<{ elapsed_ms: number }>('dock:summoned', (e) => handler(e.payload.elapsed_ms));
   },
 };
+
+/** 入力装置。UI/UX §12.1 の Audio sources（Deepgram の MicSelector 相当）。ブラウザでは空。 */
+export interface InputDevice {
+  readonly id: string;
+  readonly name: string;
+  readonly is_default: boolean;
+}
+
+export const audio = {
+  async inputDevices(): Promise<readonly InputDevice[]> {
+    if (!isTauri()) return [];
+    return callStrict<InputDevice[]>('audio_input_devices');
+  },
+};

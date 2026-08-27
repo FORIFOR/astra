@@ -52,6 +52,7 @@ pub fn run() {
             voice::voice_stop,
             voice::voice_set_mode,
             voice::voice_set_output_level,
+            voice::audio_input_devices,
         ])
         .setup(|app| {
             if cfg!(debug_assertions) {

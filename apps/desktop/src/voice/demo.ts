@@ -11,6 +11,8 @@ export interface VoiceDemo {
   readonly mode: VoiceMode;
   readonly state: InteractionState;
   readonly levels: { input: () => number; output: () => number };
+  /** result: Dock の中で完結する短い答え（markdown）。 */
+  readonly resultText: string | null;
 }
 
 const STATE_FOR: Record<string, InteractionState> = {
@@ -21,6 +23,7 @@ const STATE_FOR: Record<string, InteractionState> = {
   speaking: 'READY',
   connecting: 'READY',
   error: 'READY',
+  result: 'RESULT',
 };
 
 const MODE_FOR: Record<string, VoiceMode> = {
@@ -31,7 +34,18 @@ const MODE_FOR: Record<string, VoiceMode> = {
   speaking: 'speaking',
   connecting: 'connecting',
   error: 'error',
+  result: 'idle',
 };
+
+const RESULT_SAMPLE = [
+  '**明日 10:00 の A社 商談**は会議室 B です。',
+  '',
+  '- 参加: 田中様、伊藤様、山田',
+  '- 前回からの変更: 価格条件（`初期費用` の分割）',
+  '',
+  '1. 提案書 v5 を開く',
+  '2. 競合比較レポートを添える',
+].join('\n');
 
 /** 合成音量。0.15〜0.85 の間を 1.3 秒でうねる。 */
 export function syntheticLevel(now: number = Date.now()): number {
@@ -53,6 +67,6 @@ export function voiceDemoFrom(hash: string, dev: boolean): VoiceDemo | null {
       input: () => (mode === 'listening' ? syntheticLevel() : 0),
       output: () => (mode === 'speaking' ? syntheticLevel() : 0),
     },
-    ...(live ? {} : {}),
+    resultText: which === 'result' ? RESULT_SAMPLE : null,
   };
 }

@@ -202,7 +202,12 @@ function DemoDock(): ReactElement | null {
   if (!demo) return null;
   return (
     <ThemeProvider>
-      <TaskDock initialState={demo.state} voiceMode={demo.mode} voiceLevels={demo.levels} />
+      <TaskDock
+        initialState={demo.state}
+        voiceMode={demo.mode}
+        voiceLevels={demo.levels}
+        resultText={demo.resultText}
+      />
     </ThemeProvider>
   );
 }

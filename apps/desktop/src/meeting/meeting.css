@@ -692,3 +692,15 @@
   color: var(--astra-color-muted);
   font-size: var(--astra-font-size-micro);
 }
+
+.astra-meeting-start__device {
+  margin-inline-start: var(--astra-space-compact);
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-micro);
+}
+
+.astra-meeting-start__device-error {
+  margin: 0;
+  color: var(--astra-color-warning);
+  font-size: var(--astra-font-size-micro);
+}

@@ -343,3 +343,10 @@ mod tests {
         assert_eq!(&captured[MAX_CAPTURE_SAMPLES - 2..], &[0.1, 0.2]);
     }
 }
+
+/// 使える入力装置。UI/UX §12.1「Audio sources」の選択肢（Deepgram の MicSelector 相当）。
+/// **取れないものを取れると言わない** — 列挙が拒まれたら、その理由を返す。
+#[tauri::command]
+pub fn audio_input_devices() -> Result<Vec<crate::audio::capture::InputDevice>, String> {
+    crate::audio::capture::MicrophoneCapture::devices().map_err(|e| e.to_string())
+}
