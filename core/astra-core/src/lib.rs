@@ -27,7 +27,7 @@ pub use api::{
 pub use context::{rank_context, ContextCandidate, ContextQuery, ContextResult, ContextSource};
 pub use mode::AstraMode;
 pub use oauth::{is_allowed_auth_url, parse_callback, percent_decode, CallbackParams};
-pub use connector::{accept_callback, build_authorize_url, configured_providers, is_loopback_redirect, pkce_challenge, unconfigured_providers, ConnectorError, OauthProvider, ProviderConfig};
+pub use connector::{accept_callback, build_authorize_url, configured_providers, exchange_code, is_loopback_redirect, parse_token_response, pkce_challenge, token_exchange_body, unconfigured_providers, ConnectorError, OauthProvider, ProviderConfig, TokenSet};
 pub use transcript::{merge_overlap, LiveWindow, TranscriptEvent};
 pub use session::{RecordingSession, SessionError};
 pub use recording::{

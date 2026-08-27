@@ -341,3 +341,16 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
   swift-bindings・design-tokens `--check` current / conventions PASS。
 - **Windows 未検証（捏造しない）**: C# の実ビルド/実行は Windows 実機（CI）でのみ。ただし **C# が P/Invoke する C ABI 境界は
   このホストの C から検証済み**。connector 契約層は macOS(Swift/UniFFI)・Windows(C#/C ABI) の両方から同じ core を使う形が揃った。
+
+## 追記: トークン交換も core へ（Phase 1.29, connector フロー完成）
+- `astra-core::connector` に `TokenSet` / `token_exchange_body`(RFC 6749 §4.1.3, **code_verifier を省かない**) /
+  `parse_token_response`(error を握り潰さない・**期限/scope を推測しない**) / `exchange_code`(token endpoint へ POST) を追加。
+  TS `@astra/oauth` の flow.ts を Rust 契約へ写した。
+- **body 構築と応答 parse は純ドメインで単体検証**。`exchange_code` は ureq で POST するが、**実 HTTP 呼び出し
+  （提供者サーバへの接続）だけが外部依存**で、それ以外は core・検証済み。
+- 検証: connector **9 tests**（body に code_verifier / expires_in→expires_at / scope 無しは空 / error 伝播 / access_token 無しは
+  NoAccessToken）。core 計 **35 tests**。Tauri Rust ビルド OK（回帰なし）/ C ABI verify・swift-bindings `--check`・conventions PASS。
+- **意味**: connector フロー全体（**authorize URL → PKCE → callback 受理 → トークン交換**）が core 化され、
+  macOS(Swift/UniFFI)・Windows(C#/C ABI) が同じ実装を使う。**残る外部依存は「実 OAuth 提供者への live な HTTP 交換
+  （＋ユーザーの consent 操作）」のみ**——これは提供者のサーバとユーザー許可が要り、この環境で完了・検証不可。
+  Done#8 の「connector の live 実行」を除く契約・ドメインは core に集約完了。

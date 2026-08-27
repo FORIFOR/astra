@@ -200,6 +200,7 @@ pub enum ConnectorError {
     StateMismatch,
     TimedOut,
     NoCode,
+    NoAccessToken,
     ProviderRefused(String),
 }
 
@@ -211,6 +212,7 @@ impl std::fmt::Display for ConnectorError {
             ConnectorError::StateMismatch => write!(f, "the callback did not match the request"),
             ConnectorError::TimedOut => write!(f, "this sign-in took too long; start it again"),
             ConnectorError::NoCode => write!(f, "the callback carried no authorization code"),
+            ConnectorError::NoAccessToken => write!(f, "the provider returned no access token"),
             ConnectorError::ProviderRefused(d) => write!(f, "{d}"),
         }
     }
@@ -252,6 +254,104 @@ fn form_encode(value: &str) -> String {
         }
     }
     out
+}
+
+/// トークン交換の結果。**期限や scope を推測で埋めない**（返らなければ None / 空）。
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TokenSet {
+    pub access_token: String,
+    pub refresh_token: Option<String>,
+    /// 提供者が expires_in を返したときだけ、now + expires_in（ms epoch）。無ければ None。
+    pub expires_at_ms: Option<u64>,
+    /// 実際に許された scope。**要求した分を許されたことにしない。**返らなければ空。
+    pub granted_scopes: Vec<String>,
+    pub token_type: String,
+    /// OpenID の id_token。scope に openid が無ければ None。サインインはこれだけ使う。
+    pub id_token: Option<String>,
+}
+
+/// token endpoint に送る form パラメータ（RFC 6749 §4.1.3 + PKCE）。**code_verifier を省かない。**
+pub fn token_exchange_body(
+    client_id: &str,
+    redirect_uri: &str,
+    code: &str,
+    code_verifier: &str,
+) -> Vec<(&'static str, String)> {
+    vec![
+        ("grant_type", "authorization_code".to_string()),
+        ("code", code.to_string()),
+        ("redirect_uri", redirect_uri.to_string()),
+        ("client_id", client_id.to_string()),
+        // PKCE。ここを省くと、盗まれたコードがそのまま使える。
+        ("code_verifier", code_verifier.to_string()),
+    ]
+}
+
+/// token endpoint の応答(JSON)を TokenSet へ。error を握り潰さない・期限/ scope を推測しない。
+pub fn parse_token_response(json: &str, now_ms: u64) -> Result<TokenSet, ConnectorError> {
+    let body: serde_json::Value =
+        serde_json::from_str(json).map_err(|_| ConnectorError::ProviderRefused(
+            "the provider replied with no readable body".to_string()))?;
+    if let Some(error) = body.get("error").and_then(|v| v.as_str()) {
+        let detail = body
+            .get("error_description")
+            .and_then(|v| v.as_str())
+            .unwrap_or(error);
+        return Err(ConnectorError::ProviderRefused(detail.to_string()));
+    }
+    let access_token = body
+        .get("access_token")
+        .and_then(|v| v.as_str())
+        .filter(|s| !s.is_empty())
+        .ok_or(ConnectorError::NoAccessToken)?
+        .to_string();
+    let expires_at_ms = body
+        .get("expires_in")
+        .and_then(|v| v.as_u64())
+        .map(|secs| now_ms + secs * 1000);
+    let granted_scopes = body
+        .get("scope")
+        .and_then(|v| v.as_str())
+        .map(|s| s.split_whitespace().map(str::to_string).collect())
+        .unwrap_or_default();
+    Ok(TokenSet {
+        access_token,
+        refresh_token: body.get("refresh_token").and_then(|v| v.as_str()).map(str::to_string),
+        expires_at_ms,
+        granted_scopes,
+        token_type: body
+            .get("token_type")
+            .and_then(|v| v.as_str())
+            .unwrap_or("Bearer")
+            .to_string(),
+        id_token: body.get("id_token").and_then(|v| v.as_str()).map(str::to_string),
+    })
+}
+
+/// 認可コードをトークンに交換する（token endpoint へ POST）。**この HTTP 呼び出しだけが外部依存**
+/// （提供者のサーバ）。body 構築と応答 parse は純ドメインで別途テスト済み。
+pub fn exchange_code(
+    config: &ProviderConfig,
+    code: &str,
+    code_verifier: &str,
+    now_ms: u64,
+) -> Result<TokenSet, ConnectorError> {
+    let form = token_exchange_body(&config.client_id, &config.redirect_uri, code, code_verifier);
+    let form_ref: Vec<(&str, &str)> = form.iter().map(|(k, v)| (*k, v.as_str())).collect();
+    let response = ureq::post(config.provider.token_url())
+        .set("accept", "application/json")
+        .send_form(&form_ref);
+    let text = match response {
+        Ok(resp) => resp.into_string().map_err(|_| ConnectorError::ProviderRefused(
+            "could not read the provider response".to_string()))?,
+        // 4xx/5xx でも本文に error があることが多いので読む。
+        Err(ureq::Error::Status(_, resp)) => resp.into_string().map_err(|_| {
+            ConnectorError::ProviderRefused("the provider replied with no readable body".to_string())
+        })?,
+        Err(_) => return Err(ConnectorError::ProviderRefused(
+            "could not reach the provider".to_string())),
+    };
+    parse_token_response(&text, now_ms)
 }
 
 /// UniFFI 用のフラットなラッパー（macOS Swift / Windows が呼ぶ実経路の入口）。
@@ -353,6 +453,39 @@ mod tests {
 
         let refused = CallbackParams { error: Some("access_denied".into()), ..Default::default() };
         assert!(matches!(accept_callback("s", 0, 1, &refused), Err(ConnectorError::ProviderRefused(_))));
+    }
+
+    #[test]
+    fn token_exchange_body_carries_code_and_pkce_verifier() {
+        let body = token_exchange_body("cid", "http://127.0.0.1:1/cb", "auth-code", "verifier-xyz");
+        assert!(body.contains(&("grant_type", "authorization_code".to_string())));
+        assert!(body.contains(&("code", "auth-code".to_string())));
+        assert!(body.contains(&("code_verifier", "verifier-xyz".to_string())));
+    }
+
+    #[test]
+    fn parses_a_token_response_without_guessing_scope_or_expiry() {
+        let json = r#"{"access_token":"at-1","refresh_token":"rt-1","expires_in":3600,"scope":"openid email","token_type":"Bearer","id_token":"idt-1"}"#;
+        let set = parse_token_response(json, 1_000).unwrap();
+        assert_eq!(set.access_token, "at-1");
+        assert_eq!(set.refresh_token.as_deref(), Some("rt-1"));
+        assert_eq!(set.expires_at_ms, Some(1_000 + 3_600_000));
+        assert_eq!(set.granted_scopes, vec!["openid".to_string(), "email".to_string()]);
+        assert_eq!(set.id_token.as_deref(), Some("idt-1"));
+
+        // scope/expiry が無ければ推測しない
+        let minimal = parse_token_response(r#"{"access_token":"at-2"}"#, 5).unwrap();
+        assert_eq!(minimal.expires_at_ms, None);
+        assert!(minimal.granted_scopes.is_empty());
+        assert_eq!(minimal.token_type, "Bearer");
+    }
+
+    #[test]
+    fn a_token_error_is_surfaced_not_swallowed() {
+        let json = r#"{"error":"invalid_grant","error_description":"code expired"}"#;
+        assert!(matches!(parse_token_response(json, 0), Err(ConnectorError::ProviderRefused(d)) if d == "code expired"));
+        // access_token が無ければ NoAccessToken
+        assert_eq!(parse_token_response("{}", 0), Err(ConnectorError::NoAccessToken));
     }
 
     #[test]
