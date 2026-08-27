@@ -698,3 +698,12 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
 - 検証: `verify-csharp-bridge` にコンパイル対象として取り込み **ビルド PASS**。非 Windows では保存 skip のため
   gateway 往復テストも従来どおり PASS。
 - **意味（§21）**: Windows の資格情報保管が code-complete＋コンパイル検証済み。実保存/読取は Windows（advapi32）。
+
+## 追記: Windows 画面取り込み（GDI BitBlt）を実装・コンパイル検証（Phase 1.63, §4 Screen）
+- `apps/windows/Astra/AppLogic/WindowsScreenCapture.cs` を新設。macOS の ScreenContextCapture(CGDisplayCreateImage)
+  に対応: GDI(gdi32/user32)の BitBlt でプライマリ画面を 1 枚取り BGRA バイト列にして返す。
+  アプリ本体は WinRT の Windows.Graphics.Capture を使ってもよいが、GDI は**どのホストでもコンパイルできる**共通ロジック。
+- 検証: `verify-csharp-bridge` にコンパイル対象として取り込み **ビルド PASS**。
+  （途中、`BI_RGB` short→uint の型不一致を compile 検証が**検出**＝コンパイル検証の実効性を確認して修正。）
+- **未検証（Windows 実機のみ）**: 実際の画面取り込み（gdi32/user32 の実行）。
+- **意味（§4 Screen）**: Windows の画面取り込みが code-complete＋コンパイル検証済み。
