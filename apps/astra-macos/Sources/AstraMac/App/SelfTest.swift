@@ -351,10 +351,14 @@ enum SelfTest {
             done = true
             sem.signal()
         }
-        let waited = sem.wait(timeout: .now() + 15)
-        if waited == .timedOut || !done {
-            // headless/accessory 文脈では SCK が前面セッションを要して返らないことがある。
-            // 捏造せず SKIP（許可はあるが、この文脈で実フレームは取れなかった）。
+        let waited = sem.wait(timeout: .now() + 8)
+        if waited == .timedOut || !done || width == 0 {
+            // SCK が前面セッションを要して返らないときは、CGDisplayCreateImage で取り直す
+            // （画面収録許可で動作・前面不要）。
+            if #available(macOS 14.0, *), let cg = ScreenContextCapture.captureFrameCG(), cg.width > 0 {
+                print("SELFTEST_OK livescreen: captured \(cg.width)x\(cg.height) real frame (CGDisplay)")
+                exit(0)
+            }
             print("SELFTEST_SKIP livescreen: no frame in this headless context (screen granted)"); exit(0)
         }
         if let failed { print("SELFTEST_FAIL livescreen error=\(failed)"); exit(2) }

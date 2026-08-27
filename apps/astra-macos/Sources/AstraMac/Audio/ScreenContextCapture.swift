@@ -1,6 +1,7 @@
 import CoreMedia
 import Foundation
 import ScreenCaptureKit
+import CoreGraphics
 
 /// 画面文脈の取り込み（ScreenCaptureKit 映像）。「今ユーザーが何を見ているか」を Context Lens /
 /// RAG に渡すため、前面ディスプレイの静止フレームを 1 枚取る。
@@ -22,6 +23,12 @@ enum ScreenContextCapture {
         // 静止 1 枚が目的なので最小フレームレートで十分。
         config.minimumFrameInterval = CMTime(value: 1, timescale: 1)
         return config
+    }
+
+    /// メインディスプレイの静止フレームを CGDisplayCreateImage で取る（画面収録許可で動作、
+    /// 前面セッションを要さないので headless でも取れる）。取れなければ nil。
+    static func captureFrameCG() -> CGImage? {
+        CGDisplayCreateImage(CGMainDisplayID())
     }
 
     /// 前面ディスプレイの静止フレームを 1 枚取る。許可が無ければ throw（.app 側でユーザーが許可）。

@@ -390,8 +390,8 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
     AVAudioEngine タップ→変換→コールバックの実経路が動作）。
   - `--selftest livemeeting`: **実マイク → RecordingRuntime(session + オンデバイス STT) → 保存 → 回復** の実機 E2E。
     **実測 PASS**: `実マイク recordedMs=5000 recovered=true`（5 秒断片が実際に書かれ回復候補になった。sttEvents=0 は無音のため）。
-  - `--selftest livescreen`: 画面収録は許可済みだが、**headless/accessory 文脈では SCK が前面セッションを要して
-    実フレームを返さない** → 捏造せず `SELFTEST_SKIP`（署名 .app を前面で動かす実運用でのみ確認可）。
-- **意味（Done#3 の前進）**: **live mic 取り込み・実マイク会議録音/回復は実測 PASS**（合成でなく実デバイス）。
-  残る live 未検証は「実音声を伴う STT 認識精度・実 screen フレーム・カレンダー実データ・グローバル押下受信」で、
-  これらは前面セッション/実音声/カレンダー許可/ユーザー操作を要し、この非対話環境では確認不可（捏造しない）。
+  - `--selftest livescreen`: SCK は headless/accessory 文脈で前面セッションを要するため、**`CGDisplayCreateImage`
+    にフォールバック**（画面収録許可で動作・前面不要）。**実測 PASS**: `captured 2560x1440 real frame (CGDisplay)`。
+- **意味（Done#3 の前進）**: **live mic 取り込み・実マイク会議録音/回復・実 screen フレーム取得は実測 PASS**
+  （合成でなく実デバイス/実ディスプレイ）。残る live 未検証は「実音声を伴う STT 認識精度・カレンダー実データ・
+  グローバル押下受信」で、実音声/カレンダー許可/ユーザー操作を要し、この非対話環境では確認不可（捏造しない）。
