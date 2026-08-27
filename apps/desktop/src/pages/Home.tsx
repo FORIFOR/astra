@@ -8,6 +8,7 @@
 import { useMemo, useState, type ReactElement } from 'react';
 import type { TaskView } from '@astra/api-client';
 import type { Artifact } from '@astra/contracts';
+import { typeLabel } from './Library.js';
 import {
   buildAttentionFeed,
   feedFromBrief,
@@ -223,7 +224,8 @@ export function HomePage({
                       onClick={() => onOpenArtifact?.(artifact.id)}
                     >
                       <span>{artifact.title}</span>
-                      <span className="astra-work-row__meta">{artifact.type}</span>
+                      {/* Library と同じ表で。Home だけ `DOCUMENT` のまま出ていた */}
+                      <span className="astra-work-row__meta">{typeLabel(artifact.type)}</span>
                     </button>
                   </li>
                 ))}

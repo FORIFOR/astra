@@ -12,7 +12,7 @@ import {
   resolveReferences,
   routeLane,
 } from '@astra/service-conversation';
-import type { TaskService } from '@astra/service-task';
+import { agentKindFor, type TaskService } from '@astra/service-task';
 import type { App } from '../fastify.js';
 import { requirePrincipal } from '../auth/middleware.js';
 
@@ -104,12 +104,24 @@ export function registerConversationRoutes(app: App, deps: ConversationRouteDeps
         return reply.status(200).send({ turn, answer, needs_clarification: true });
       }
 
+      /*
+       * ここで**仕事を始める。**
+       *
+       * 長らく lane を決めて `intent` を返すだけで、**何も始めていなかった。**
+       * Home で頼んでも、Composer で頼んでも、Dock で頼んでも、
+       * 会話に行が増えるだけで仕事は現れず、Dock は 10 秒待って諦めていた。
+       */
+      const started = await startWork(deps, principal, id, body.text, decision.lane, turn.id);
+
       // Lane は返さない。利用者に見せないものを API で配らない。
       return reply.status(202).send({
         turn,
         needs_clarification: false,
         // 何をする話かは、次に作られる task の kind として現れる
         intent: laneToIntent(decision.lane),
+        task_id: started.taskId,
+        // 始められなかった理由。**黙って intent だけ返さない。**
+        notice: started.notice,
       });
     },
   );
@@ -153,5 +165,61 @@ function laneToIntent(lane: string): string {
       return 'delegating';
     default:
       return 'talking';
+  }
+}
+
+/**
+ * Lane に応じて仕事を作る。
+ *
+ *   chat     → General Assistant（正本 §2.2）。答えは成果物として残る
+ *   research → Research Agent（§8）
+ *   meeting  → 仕事にしない。録音は画面側の操作（§12）
+ *   action / edit / dictate / specialist-agent → まだ自動では受けられない。**そう言う**
+ *
+ * 作れなかった理由（plugin が入っていない等）は `notice` で返す。
+ * 例外で 500 にすると、利用者には「送れなかった」としか見えない。
+ */
+async function startWork(
+  deps: ConversationRouteDeps,
+  principal: { tenantId: string; userId: string },
+  conversationId: string,
+  text: string,
+  lane: string,
+  turnId: string,
+): Promise<{ taskId: string | null; notice: string | null }> {
+  const request =
+    lane === 'chat'
+      ? {
+          kind: agentKindFor('com.astra.general', 'assistant'),
+          input: { question: text, message: text },
+        }
+      : lane === 'research'
+        ? { kind: 'research', input: { question: text } }
+        : null;
+
+  if (!request) {
+    return {
+      taskId: null,
+      notice: lane === 'meeting' ? null : 'この頼みごとは、まだ自動では進められません。',
+    };
+  }
+
+  try {
+    const { task } = await deps.tasks.create({
+      tenantId: principal.tenantId,
+      userId: principal.userId,
+      request: { ...request, conversation_id: conversationId as never },
+      // 同じ発話を二度仕事にしない
+      idempotencyKey: `turn:${turnId}`,
+    });
+    return { taskId: task.id, notice: null };
+  } catch (error) {
+    return {
+      taskId: null,
+      notice:
+        error instanceof Error && /install|not installed|permission|scope/i.test(error.message)
+          ? 'General Assistant が追加されていません。Apps から追加してください。'
+          : '仕事を始められませんでした。',
+    };
   }
 }

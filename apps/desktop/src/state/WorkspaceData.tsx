@@ -58,6 +58,20 @@ export function WorkspaceDataProvider({
 
   useEffect(() => {
     void reload();
+    /*
+     * 一度読んで終わりだった。仕事が始まって終わっても Home は古いまま —
+     * 「名前のない仕事 進行中」が、とうに終わった仕事のまま残っていた。
+     * 見えている間だけ、静かに読み直す。
+     */
+    const every = setInterval(() => {
+      if (document.visibilityState === 'visible') void reload();
+    }, 8_000);
+    const onFocus = (): void => void reload();
+    window.addEventListener('focus', onFocus);
+    return () => {
+      clearInterval(every);
+      window.removeEventListener('focus', onFocus);
+    };
   }, [reload]);
 
   const value = useMemo<WorkspaceDataValue>(

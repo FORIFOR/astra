@@ -233,7 +233,14 @@ export class AstraClient {
     conversationId: string,
     // 既定のある項目まで呼び出し側に書かせない（context_referents 等）
     request: z.input<typeof SendTurnRequest>,
-  ): Promise<{ needsClarification: boolean; answer: string | null; intent: string | null }> {
+  ): Promise<{
+    needsClarification: boolean;
+    answer: string | null;
+    intent: string | null;
+    /** 始まった仕事。始められなければ null で、理由は notice。 */
+    taskId: string | null;
+    notice: string | null;
+  }> {
     const parsed = await this.http.request(
       {
         method: 'POST',
@@ -246,6 +253,8 @@ export class AstraClient {
             needs_clarification: z.boolean(),
             answer: z.object({ text: z.string() }).optional(),
             intent: z.string().optional(),
+            task_id: z.string().nullable().optional(),
+            notice: z.string().nullable().optional(),
           })
           .parse(value),
     );
@@ -253,6 +262,8 @@ export class AstraClient {
       needsClarification: parsed.needs_clarification,
       answer: parsed.answer?.text ?? null,
       intent: parsed.intent ?? null,
+      taskId: parsed.task_id ?? null,
+      notice: parsed.notice ?? null,
     };
   }
 

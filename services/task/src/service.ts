@@ -85,7 +85,8 @@ export class TaskService {
           created_by: params.userId,
           conversation_id: params.request.conversation_id ?? null,
           kind: params.request.kind,
-          title: params.request.title ?? null,
+          // 名前の無い仕事を作らない。頼んだ言葉から付ける（workflow が後で上書きしてよい）
+          title: params.request.title ?? titleFrom(params.request.input),
           status: 'PENDING',
           input: JSON.stringify(params.request.input),
           plan: plan === null ? null : JSON.stringify(plan),
@@ -374,4 +375,22 @@ function toTask(row: TaskRow): Task {
     completed_at: row.completed_at?.toISOString() ?? null,
     updated_at: row.updated_at.toISOString(),
   });
+}
+
+/**
+ * 頼んだ言葉から題名を作る。UI/UX §8・§9。
+ *
+ * title 無しで作った仕事は、workflow が始まるまで `null` のままで、
+ * Home に「名前のない仕事」と出ていた。**最初から名前を持たせる。**
+ * 何も無ければ null のまま（作り話の題名を付けない）。
+ */
+export function titleFrom(input: Record<string, unknown>): string | null {
+  for (const key of ['title', 'question', 'message', 'instruction']) {
+    const value = input[key];
+    if (typeof value === 'string' && value.trim().length > 0) {
+      const line = value.trim().split('\n')[0]!.trim();
+      return line.length <= 40 ? line : `${line.slice(0, 39)}…`;
+    }
+  }
+  return null;
 }

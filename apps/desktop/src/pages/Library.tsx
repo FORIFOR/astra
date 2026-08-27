@@ -25,7 +25,7 @@ export const LIBRARY_TYPE_CHIPS = [
 export type LibraryChip = (typeof LIBRARY_TYPE_CHIPS)[number]['id'];
 
 /** 種類の名前。chip と同じ表を使い、`MEETING_BUNDLE` を画面に出さない。 */
-function typeLabel(type: string): string {
+export function typeLabel(type: string): string {
   return LIBRARY_TYPE_CHIPS.find((chip) => chip.id === type)?.label ?? 'その他';
 }
 
