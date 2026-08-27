@@ -562,3 +562,12 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
 - 検証: `--selftest connectorstate`。アプリ→プロバイダ対応・`canConnect` が client_id env に連動・Finder は不可 を確認。
   **実測 PASS**: `mapping ok, canConnect gated by client_id (google env=false)`。verify に組み込み、全 selftest 0 FAIL。
 - **意味**: Apps/Connectors のトグルが実状態に（Done#2/#7、UI mock 排除）。実接続は client_id＋consent が要る（外部）。
+
+## 追記: Voice HUD を実 Agent 問い合わせに配線（Phase 1.49）
+- **mock の解消**: `VoiceHUDState` は `mode`（idle/listening/thinking）を持つだけで、listening/thinking は demo でしか
+  設定されず実フローで駆動されていなかった。`ask(text)` を実装: `thinking` に入れて core 経由で会話 Agent に投げ、
+  応答を `answer` に入れて `idle` に戻す。サインインは `MainData` から `configureBackend` で渡す。
+- 検証: `--selftest voiceask <base>`（実 gateway）。依頼→thinking→Agent 応答→idle を確認。
+  **実測 PASS**: `thinking=true→idle Agent 応答="…"`（dev エンジンは notice を返すが、HUD→core→gateway→Agent→HUD の
+  経路は実物）。verify に SKIP 許容で組み込み。
+- **意味**: Voice HUD の thinking/idle が実 Agent 問い合わせで駆動される（Done#2/#7、mock 排除）。

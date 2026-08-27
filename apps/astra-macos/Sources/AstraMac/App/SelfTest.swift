@@ -39,6 +39,7 @@ enum SelfTest {
         case "timer": timer(); return true
         case "connectorflow": connectorflow(); return true
         case "connectorstate": connectorstate(); return true
+        case "voiceask": voiceask(args); return true
         default: return false
         }
     }
@@ -746,6 +747,30 @@ enum SelfTest {
         guard !cs.canConnect("Finder") else { print("SELFTEST_FAIL connectorstate: Finder connectable"); exit(4) }
         print("SELFTEST_OK connectorstate: mapping ok, canConnect gated by client_id (google env=\(hasGoogleEnv))")
         exit(0)
+    }
+
+    /// `--selftest voiceask <base>`: Voice HUD の依頼が Agent に届き、thinking→応答→idle と進むか検証する。
+    @MainActor
+    private static func voiceask(_ args: [String]) {
+        let base = args.count > (args.firstIndex(of: "--selftest")! + 2)
+            ? args[args.firstIndex(of: "--selftest")! + 2] : "http://127.0.0.1:3000"
+        guard AstraCoreBridge.reachable(base) else { print("SELFTEST_SKIP voiceask: gateway unreachable"); exit(0) }
+        do {
+            let tokens = try AstraCoreBridge.devSignIn(base, email: "voiceask-\(getpid())@astra.local", displayName: "V")
+            let hud = VoiceHUDState.shared
+            hud.configureBackend(base: base, token: tokens.accessToken)
+            hud.ask("今日の予定を教えて")
+            // thinking に入るはず。
+            let wasThinking = hud.mode == .thinking
+            let deadline = Date().addingTimeInterval(20)
+            while hud.answer.isEmpty && Date() < deadline { RunLoop.current.run(until: Date().addingTimeInterval(0.2)) }
+            guard !hud.answer.isEmpty, !hud.answer.contains("失敗"), hud.mode == .idle else {
+                print("SELFTEST_FAIL voiceask answer=\(hud.answer) mode=\(hud.mode)"); exit(2)
+            }
+            let preview = String(hud.answer.prefix(36)).replacingOccurrences(of: "\n", with: " ")
+            print("SELFTEST_OK voiceask: thinking=\(wasThinking)→idle Agent 応答=\"\(preview)…\"")
+            exit(0)
+        } catch { print("SELFTEST_FAIL voiceask error=\(error)"); exit(3) }
     }
 
     private static func recordToDisk() {
