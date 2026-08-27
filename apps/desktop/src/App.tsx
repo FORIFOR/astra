@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactElement,
+  type ReactNode,
+} from 'react';
 import { ShellProvider, useShell } from './state/ShellProvider.js';
 import { ThemeProvider } from './state/ThemeProvider.js';
 import { SessionProvider, useSession } from './state/SessionProvider.js';
@@ -8,6 +16,7 @@ import { WorkspaceDataProvider, useWorkspaceData } from './state/WorkspaceData.j
 import { SignIn } from './auth/SignIn.js';
 import { AppShell } from './shell/AppShell.js';
 import type { ComposerConversation } from './shell/Composer.js';
+import { TaskInspector } from './shell/TaskInspector.js';
 import { HomePage } from './pages/Home.js';
 import { useProactiveNotifications } from './home/useProactive.js';
 import { WorkPage } from './pages/Work.js';
@@ -59,6 +68,31 @@ function useWorkspaceConversation(client: AstraClient | null): ComposerConversat
   );
 
   return useMemo(() => (client ? { send } : undefined), [client, send]);
+}
+
+/**
+ * §7.1 の Inspector に、開いている仕事の周辺を出す。
+ * AppShell は ShellProvider の中に居るので、ここで focus を読める。
+ */
+function ShellWithInspector({
+  children,
+  conversation,
+}: {
+  children: ReactNode;
+  conversation?: ComposerConversation | undefined;
+}): ReactElement {
+  const { focusedTaskId } = useShell();
+  const { tasks } = useWorkspaceData();
+  const { client } = useSession();
+  const task = tasks.find((t) => t.id === focusedTaskId) ?? null;
+  return (
+    <AppShell
+      {...(conversation ? { conversation } : {})}
+      inspector={<TaskInspector client={client} task={task} />}
+    >
+      {children}
+    </AppShell>
+  );
 }
 
 /**
@@ -216,9 +250,9 @@ function Workspace(): ReactElement {
     <WorkspaceDataProvider client={client}>
       <ShellProvider>
         <MeetingProvider client={client}>
-          <AppShell {...(conversation ? { conversation } : {})}>
+          <ShellWithInspector {...(conversation ? { conversation } : {})}>
             <ActivePage {...(conversation ? { conversation } : {})} />
-          </AppShell>
+          </ShellWithInspector>
           {/* Dock の「詳しく見る」を受ける。本体が前に出て、その仕事へ移る。 */}
           <OpenTaskListener />
           {/* 会議はタブではなく状態。4 タブは増やさない（正本 §2）。 */}
