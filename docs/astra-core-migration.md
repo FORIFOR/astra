@@ -157,3 +157,19 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
   外部 STT プロバイダ（Google STT 等）の鍵が要り、この環境では未接続。connector OAuth も外部プロバイダ + ユーザー許可。
   よって Done#8「旧 Tauri を最終製品経路から完全に外す」は**未達**（会議/Agent/Apps/Library の経路は core 化済み、
   STT実データと connector OAuth が残るため Tauri を無傷で残す）。
+
+## 追記: 文字起こしドメインを core へ（Phase 1.16）
+- `astra-core::transcript` を新設: `LiveWindow`（窓/ホップのセグメント化と検証）・`TranscriptEvent`
+  （途中経過/確定、TS 契約 `{type:"partial"|"final"}` と同一表現）・`merge_overlap`（重なりの畳み込み）。
+  これらは録音エンジンにも OS にも依存しない**純ドメイン**。sherpa-onnx の C 束縛（ffi/library/model と
+  `LocalRecognizer` エンジン本体）は**プラットフォーム統合**として `apps/desktop/src-tauri/src/stt` に残す。
+- Tauri の `stt/recognizer.rs` はローカル定義を削除し `pub use astra_core::{LiveWindow, TranscriptEvent, merge_overlap}`
+  で再エクスポート。`voice.rs`/`lib.rs` の import 経路（`crate::stt::recognizer::…`）は**無改修**（最小差分）。
+- serde 表現は完全維持（enum の `rename_all` はタグ値のみに効き、フィールドは snake_case のまま＝元と同一挙動）。
+- **実測**: core 19 tests PASS（transcript 5 件を含む）/ Tauri Rust 73 tests PASS・0 失敗（`stt` 13 + voice 等、
+  回帰なし。sherpa 実モデルが要る `real` 3 件は ignored＝**live STT は未検証境界のまま**）/ 
+  swift-bindings・design-tokens ともに `--check` current（FFI 表面は不変、TranscriptEvent は uniffi 非公開）/ conventions PASS。
+- **意味**: 文字起こしの**ドメインロジック**が Tauri から core へ移り、共有 core が担う範囲が広がった（①/⑧ の前進）。
+  ただし Done#8「完全 retire」は依然**未達**: 残るのは (a) 実 STT エンジンの native 実行と live 音声の
+  partial/final（外部 STT 鍵が必要）、(b) connector OAuth（外部プロバイダ + ユーザー許可）。純ドメインは core 化したが、
+  エンジン統合と外部サービス経路が残るため Tauri を無傷で残す。

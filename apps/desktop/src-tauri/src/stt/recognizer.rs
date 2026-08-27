@@ -25,6 +25,10 @@ use super::ffi;
 use super::library::{LibraryProblem, SherpaLibrary};
 use super::model::{self, ModelHealth};
 
+/// 文字起こしのドメイン型は astra-core が正本。ここは録音エンジン（sherpa-onnx）
+/// だけを持ち、窓・重なり・途中経過/確定の純ロジックは core から使う。
+pub use astra_core::{merge_overlap, LiveWindow, TranscriptEvent};
+
 /// 認識できない理由。**「失敗しました」で済ませない。**
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case", tag = "reason", content = "detail")]
@@ -48,70 +52,6 @@ impl std::fmt::Display for RecognizerError {
             Self::NotLoaded => write!(f, "the recogniser has not been loaded"),
         }
     }
-}
-
-/// 疑似ライブの窓。
-///
-/// **既定を DeepNote の 6 秒より短くしてある。**
-/// 6 秒だと最初の 1 文字まで 6 秒かかり、§23 の 350ms とは桁が 1 つ違う。
-/// 縮めると認識が落ちるので、値は測って決める。
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub struct LiveWindow {
-    pub window_ms: u32,
-    /// 窓をずらす幅。窓より小さくして重なりを作る（境目の語を落とさないため）。
-    pub hop_ms: u32,
-}
-
-impl Default for LiveWindow {
-    fn default() -> Self {
-        // 1.5 秒 / 1.2 秒。§23 には届かないが、6 秒よりは 4 倍速い。
-        Self {
-            window_ms: 1_500,
-            hop_ms: 1_200,
-        }
-    }
-}
-
-impl LiveWindow {
-    pub fn problems(&self) -> Vec<String> {
-        let mut problems = Vec::new();
-        if self.window_ms == 0 {
-            problems.push("窓の長さが 0 です".to_string());
-        }
-        if self.hop_ms == 0 {
-            problems.push("ずらす幅が 0 です".to_string());
-        }
-        if self.hop_ms > self.window_ms {
-            // 重なりが無いと、境目の語が落ちる
-            problems.push("ずらす幅が窓より長く、重なりがありません".to_string());
-        }
-        problems
-    }
-
-    fn window_samples(&self, sample_rate: u32) -> usize {
-        (self.window_ms as usize * sample_rate as usize) / 1000
-    }
-
-    fn hop_samples(&self, sample_rate: u32) -> usize {
-        (self.hop_ms as usize * sample_rate as usize) / 1000
-    }
-}
-
-/// 途中経過と確定。TypeScript 側の `TranscriptEvent` と揃える。
-#[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase", tag = "type")]
-pub enum TranscriptEvent {
-    Partial {
-        text: String,
-        /// 取り込み開始からの位置。
-        started_at_ms: u64,
-        emitted_at_ms: u64,
-    },
-    Final {
-        text: String,
-        started_at_ms: u64,
-        ended_at_ms: u64,
-    },
 }
 
 struct Loaded {
@@ -480,83 +420,9 @@ impl Drop for LocalRecognizer {
     }
 }
 
-/// 重なりを畳んで繋ぐ。窓をずらして decode するので、境目が二重になる。
-///
-/// DeepNote / iOS と同じ算法。**変えない**（同じ音で同じ文になる必要がある）。
-pub fn merge_overlap(previous: &str, next: &str, max_overlap_chars: usize) -> String {
-    if previous.is_empty() {
-        return next.to_string();
-    }
-    if next.is_empty() {
-        return previous.to_string();
-    }
-
-    let previous_chars: Vec<char> = previous.chars().collect();
-    let next_chars: Vec<char> = next.chars().collect();
-    let max = max_overlap_chars
-        .min(previous_chars.len())
-        .min(next_chars.len());
-
-    for length in (1..=max).rev() {
-        let suffix: String = previous_chars[previous_chars.len() - length..]
-            .iter()
-            .collect();
-        let prefix: String = next_chars[..length].iter().collect();
-        if suffix == prefix {
-            let remainder: String = next_chars[length..].iter().collect();
-            return format!("{previous}{remainder}");
-        }
-    }
-
-    format!("{previous}{next}")
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn folds_the_overlap_between_windows() {
-        assert_eq!(
-            merge_overlap("こんにちは", "にちは世界", 12),
-            "こんにちは世界"
-        );
-        assert_eq!(merge_overlap("abc", "cde", 12), "abcde");
-        // 重なりが無ければ、そのまま繋ぐ
-        assert_eq!(merge_overlap("abc", "def", 12), "abcdef");
-        assert_eq!(merge_overlap("", "hello", 12), "hello");
-        assert_eq!(merge_overlap("hello", "", 12), "hello");
-    }
-
-    #[test]
-    fn refuses_a_window_with_no_overlap() {
-        let window = LiveWindow {
-            window_ms: 1_000,
-            hop_ms: 1_200,
-        };
-        // 重なりが無いと、境目の語が落ちる
-        assert!(window
-            .problems()
-            .iter()
-            .any(|p| p.contains("重なりがありません")));
-    }
-
-    #[test]
-    fn refuses_a_zero_window() {
-        let window = LiveWindow {
-            window_ms: 0,
-            hop_ms: 0,
-        };
-        assert_eq!(window.problems().len(), 2);
-    }
-
-    #[test]
-    fn the_default_window_is_shorter_than_deepnote() {
-        // DeepNote は 6000ms 固定。§23 の 350ms とは桁が 1 つ違う。
-        let window = LiveWindow::default();
-        assert!(window.window_ms < 6_000);
-        assert!(window.problems().is_empty());
-    }
 
     #[test]
     fn refuses_to_work_before_it_is_loaded() {

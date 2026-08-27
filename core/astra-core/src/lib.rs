@@ -15,6 +15,7 @@ pub mod capi;
 pub mod context;
 pub mod recording;
 pub mod session;
+pub mod transcript;
 
 pub use api::{
     api_create_meeting, api_dev_sign_in, api_finish_meeting, api_me, api_reachable,
@@ -23,6 +24,7 @@ pub use api::{
 };
 pub use context::{rank_context, ContextCandidate, ContextQuery, ContextResult, ContextSource};
 pub use mode::AstraMode;
+pub use transcript::{merge_overlap, LiveWindow, TranscriptEvent};
 pub use session::{RecordingSession, SessionError};
 pub use recording::{
     format_elapsed, meetings_root_default, recording_snapshot, scan_recoverable,
