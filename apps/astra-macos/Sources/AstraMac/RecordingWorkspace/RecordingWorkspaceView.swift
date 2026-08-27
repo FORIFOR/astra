@@ -24,7 +24,7 @@ struct RecordingWorkspaceView: View {
             }
         }
         .frame(width: Metrics.workspaceWidth, height: Metrics.workspaceHeight)
-        .animation(.easeOut(duration: 0.18), value: state.ragOpen)
+        .animation(.easeOut(duration: Motion.drawerMs), value: state.ragOpen)
         .accessibilityIdentifier("recordingWorkspace")
     }
 

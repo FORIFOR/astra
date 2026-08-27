@@ -32,8 +32,8 @@ struct VoiceHUDView: View {
 struct VoiceHUDBackground: View {
     private var shape: UnevenRoundedRectangle {
         UnevenRoundedRectangle(
-            topLeadingRadius: 0, bottomLeadingRadius: 17,
-            bottomTrailingRadius: 17, topTrailingRadius: 0
+            topLeadingRadius: 0, bottomLeadingRadius: Metrics.hudBottomRadius,
+            bottomTrailingRadius: Metrics.hudBottomRadius, topTrailingRadius: 0
         )
     }
     var body: some View {

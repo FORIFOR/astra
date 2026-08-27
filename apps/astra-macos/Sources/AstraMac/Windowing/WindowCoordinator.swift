@@ -87,14 +87,14 @@ final class WindowCoordinator {
             panel.orderFrontRegardless()
         }
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.12
+            context.duration = Motion.showMs
             panel.animator().alphaValue = 1
         }
     }
 
     private func fadeOut(_ panel: NSPanel) {
         NSAnimationContext.runAnimationGroup({ context in
-            context.duration = 0.10
+            context.duration = Motion.hideMs
             panel.animator().alphaValue = 0
         }, completionHandler: {
             panel.orderOut(nil)

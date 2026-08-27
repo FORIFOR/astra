@@ -31,6 +31,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "gen:crm-entities": "node scripts/gen-crm-entities.mjs",
+    "gen:design-tokens": "node scripts/gen-design-tokens.mjs",
     "gen:dock-geometry": "node scripts/gen-dock-geometry.mjs",
     "gen:shortcuts": "node scripts/gen-shortcuts.mjs",
     "smoke": "./scripts/smoke.sh",

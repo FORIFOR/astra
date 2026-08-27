@@ -10,3 +10,4 @@ packages/db/src/generated/
 plugins/builtin/sales-crm/schemas/
 apps/desktop/src-tauri/
 apps/astra-macos/
+apps/windows/
