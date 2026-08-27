@@ -11,10 +11,17 @@
   min-height: var(--astra-dock-min-height);
   max-height: var(--astra-dock-max-height);
   padding: var(--astra-padding-card);
-  border: var(--astra-border-hairline) solid var(--astra-color-border);
+  /*
+   * floating card の見た目は Deepgram 公式の Floating Orb に合わせる
+   * （background #18181c / border rgba(255,255,255,.08) / shadow 0 8px 32px）。
+   * 寸法（560）と角丸（16）は §4.1・§17.3 のまま。**動きと面は Deepgram、幾何は仕様。**
+   * 本体は不透明 surface のままで、すりガラスと暗い面は floating surface だけ（§17.3）。
+   */
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--astra-radius-dock);
-  background: var(--astra-color-surface);
-  box-shadow: var(--astra-elevation-dock);
+  background: rgba(24, 24, 28, 0.92);
+  color: #ffffff;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
   backdrop-filter: saturate(140%) blur(20px);
   overflow: hidden;
   /* §18: 位置の連続性を保って変形する */
@@ -38,6 +45,7 @@
   min-width: 0;
   border: 0;
   background: transparent;
+  color: #ffffff;
   color: var(--astra-color-text);
   font: inherit;
   font-size: var(--astra-font-size-body);
@@ -255,4 +263,12 @@
   .astra-orb {
     filter: none;
   }
+}
+
+/* 暗い面の上の二次的な文字。§17.1 の Muted（dark）に合わせる */
+.astra-dock .astra-dock__status,
+.astra-dock .astra-dock__intent::placeholder,
+.astra-dock .astra-dock__mic,
+.astra-dock .astra-dock__attach {
+  color: #98a2b3;
 }

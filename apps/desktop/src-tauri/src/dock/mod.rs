@@ -11,7 +11,7 @@ pub use geometry::{DockState, Position, Rect};
 pub use state::DockPlacementMemory;
 
 use std::sync::Mutex;
-use tauri::{AppHandle, Manager, PhysicalPosition, PhysicalSize, WebviewWindow};
+use tauri::{AppHandle, LogicalPosition, LogicalSize, Manager, WebviewWindow};
 
 pub const DOCK_WINDOW_LABEL: &str = "dock";
 
@@ -28,20 +28,31 @@ fn dock_window(app: &AppHandle) -> Result<WebviewWindow, String> {
 }
 
 /// window が今いる display の作業領域。取れなければ None。
-fn work_area_of(window: &WebviewWindow) -> Option<(u32, Rect)> {
+/// display の**使える領域**を、論理 px で。
+///
+/// 長らく `monitor.size()`（画面全体）を「work area」と呼んでいた。
+/// それでは macOS の Dock とメニューバーを避けられず、
+/// **Astra の Dock が macOS の Dock の下に潜っていた**（§4.2「タスクバーと重ならない」に反する）。
+/// `work_area()` はその 2 つを除いた矩形を返す。
+///
+/// 論理 px に直すのは、§4.1 の寸法（560 × 56）が論理 px だから。
+/// 物理 px のまま使うと、Retina では半分の大きさの Dock になる。
+fn work_area_of(window: &WebviewWindow) -> Option<(u32, f64, Rect)> {
     let monitor = window.current_monitor().ok().flatten()?;
-    let position = monitor.position();
-    let size = monitor.size();
+    let scale = monitor.scale_factor();
+    let area = monitor.work_area();
+    let origin = monitor.position();
     // Tauri は monitor に安定 id を出さないので、原点をキーにする。
     // 同じ配置なら同じ display とみなせる。
-    let id = ((position.x as i64) << 20 ^ (position.y as i64)) as u32;
+    let id = ((origin.x as i64) << 20 ^ (origin.y as i64)) as u32;
     Some((
         id,
+        scale,
         Rect {
-            x: position.x,
-            y: position.y,
-            width: size.width as i32,
-            height: size.height as i32,
+            x: (area.position.x as f64 / scale).round() as i32,
+            y: (area.position.y as f64 / scale).round() as i32,
+            width: (area.size.width as f64 / scale).round() as i32,
+            height: (area.size.height as f64 / scale).round() as i32,
         },
     ))
 }
@@ -55,11 +66,12 @@ fn apply_geometry(
     let size = state.size();
     let height = geometry::height_for(state, content_height.unwrap_or(size.min_height));
 
+    // §4.1 の寸法は論理 px。物理で渡すと Retina で半分になる。
     window
-        .set_size(PhysicalSize::new(size.width, height))
+        .set_size(LogicalSize::new(size.width, height))
         .map_err(|e| e.to_string())?;
 
-    if let Some((display_id, work_area)) = work_area_of(window) {
+    if let Some((display_id, _scale, work_area)) = work_area_of(window) {
         let memory = runtime
             .placement
             .lock()
@@ -77,7 +89,7 @@ fn apply_geometry(
             ),
         };
         window
-            .set_position(PhysicalPosition::new(position.x, position.y))
+            .set_position(LogicalPosition::new(position.x, position.y))
             .map_err(|e| e.to_string())?;
     }
 
@@ -146,7 +158,8 @@ pub fn dock_remember_position(
 ) -> Result<(), String> {
     let window = dock_window(&app)?;
     let position = window.outer_position().map_err(|e| e.to_string())?;
-    if let Some((display_id, _)) = work_area_of(&window) {
+    if let Some((display_id, scale, _)) = work_area_of(&window) {
+        // 覚えるのも論理 px で。物理のまま覚えると、display を跨いだときにずれる。
         runtime
             .placement
             .lock()
@@ -154,8 +167,8 @@ pub fn dock_remember_position(
             .remember(
                 display_id,
                 Position {
-                    x: position.x,
-                    y: position.y,
+                    x: (position.x as f64 / scale).round() as i32,
+                    y: (position.y as f64 / scale).round() as i32,
                 },
             );
     }
