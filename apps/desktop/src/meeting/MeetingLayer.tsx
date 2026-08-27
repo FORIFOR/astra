@@ -31,7 +31,8 @@ export function MeetingLayer({
 
   if (meeting.phase === 'starting') {
     return (
-      <div className="astra-meeting-layer" data-phase="starting">
+      <div className="astra-meeting-layer astra-meeting-layer--sheet" data-phase="starting">
+        {/* 開始確認は 1 つの判断。画面の真ん中で、他を薄くして聞く。 */}
         <StartConfirmation
           onCancel={meeting.cancelStart}
           onStart={(values) => void meeting.start(values)}

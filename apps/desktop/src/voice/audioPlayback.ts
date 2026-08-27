@@ -29,11 +29,7 @@ export function decodePcm16(payload: VoiceSynthesisResponse): Pcm16 {
   let pcmOffset = 0;
   let pcmLength = bytes.byteLength;
 
-  if (
-    bytes.byteLength >= 12 &&
-    ascii(view, 0, 4) === 'RIFF' &&
-    ascii(view, 8, 4) === 'WAVE'
-  ) {
+  if (bytes.byteLength >= 12 && ascii(view, 0, 4) === 'RIFF' && ascii(view, 8, 4) === 'WAVE') {
     let cursor = 12;
     let format = 1;
     let channels = 1;

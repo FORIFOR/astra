@@ -120,10 +120,10 @@ export function StartConfirmation({
       </label>
 
       <div className="astra-meeting-start__actions">
-        <button type="button" onClick={onCancel}>
+        <button type="button" className="astra-button astra-button--quiet" onClick={onCancel}>
           キャンセル
         </button>
-        <button type="submit" disabled={!ready}>
+        <button type="submit" className="astra-button astra-button--primary" disabled={!ready}>
           記録を開始
         </button>
       </div>

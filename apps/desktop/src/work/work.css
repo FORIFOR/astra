@@ -407,3 +407,136 @@
   background: var(--astra-color-accent);
   vertical-align: middle;
 }
+
+/* --- Work: 一覧 + 詳細（UI/UX Appendix B.3）--------------------------- */
+
+.astra-work-list__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--astra-space-base);
+  flex-wrap: wrap;
+}
+
+.astra-work-list__rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--astra-space-compact);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* 開いている仕事は、一覧を細くして横に並べる。下に積むと詳細が画面外に落ちる。 */
+.astra-work-list[data-open='true'] {
+  display: grid;
+  grid-template-columns: minmax(240px, 320px) minmax(0, 1fr);
+  grid-template-areas:
+    'head head'
+    'pane detail';
+  align-items: start;
+  column-gap: var(--astra-space-lg);
+}
+
+.astra-work-list[data-open='true'] .astra-work-list__head {
+  grid-area: head;
+}
+
+.astra-work-list[data-open='true'] .astra-work-list__pane {
+  grid-area: pane;
+  min-width: 0;
+}
+
+.astra-work-list__detail {
+  grid-area: detail;
+  display: flex;
+  flex-direction: column;
+  gap: var(--astra-space-base);
+  min-width: 0;
+}
+
+/* 開いている仕事だけ細い一覧では、行も細く */
+.astra-work-list[data-open='true'] .astra-work-row {
+  flex-wrap: wrap;
+  padding-block: var(--astra-space-compact);
+}
+
+.astra-work-list[data-open='true'] .astra-work-row__time {
+  flex-basis: 100%;
+}
+
+.astra-work-row[aria-current='true'] {
+  border-color: var(--astra-color-accent);
+  background: color-mix(in srgb, var(--astra-color-accent) 6%, var(--astra-color-surface));
+}
+
+.astra-work-row:hover {
+  background: var(--astra-color-canvas);
+}
+
+.astra-work-row[data-status='WAITING_APPROVAL'] .astra-work-row__meta {
+  color: var(--astra-color-warning);
+}
+
+.astra-work-row[data-status='FAILED'] .astra-work-row__meta {
+  color: var(--astra-color-danger);
+}
+
+@media (max-width: 1100px) {
+  .astra-work-list[data-open='true'] {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'head'
+      'detail'
+      'pane';
+  }
+}
+
+/* tab はボタンの見た目を持たない。下線だけで現在地を示す（§9.2）。 */
+.astra-detail__tabs [role='tab'] {
+  min-height: 36px;
+  padding: 0 var(--astra-space-md, var(--astra-space-base));
+  margin-bottom: -1px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--astra-color-muted);
+  font: inherit;
+  font-size: var(--astra-font-size-secondary);
+  cursor: pointer;
+}
+
+.astra-detail__tabs [role='tab']:hover {
+  color: var(--astra-color-text);
+}
+
+.astra-detail__tabs [role='tab'][aria-selected='true'] {
+  color: var(--astra-color-text);
+}
+
+/* Overview の見出しと値。ブラウザ既定の字下げを使わない。 */
+.astra-detail__overview dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--astra-space-compact) var(--astra-space-lg);
+  margin: 0;
+}
+
+.astra-detail__overview dt {
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-secondary);
+}
+
+.astra-detail__overview dd {
+  margin: 0;
+}
+
+.astra-detail__overview h3,
+.astra-detail__outputs h3 {
+  margin: var(--astra-space-lg) 0 var(--astra-space-compact);
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-micro);
+  font-weight: var(--astra-font-weight-micro);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}

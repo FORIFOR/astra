@@ -10,6 +10,8 @@ import type { TaskStatus } from '@astra/contracts';
 import { WorkCard, statusLabel } from '../work/WorkCard.js';
 import { useTaskStream } from '../work/useTaskStream.js';
 import { WorkDetail } from '../work/WorkDetail.js';
+import { relativeTime } from '../home/time.js';
+import { kindLabel } from '../work/kind.js';
 import type { AstraClient } from '@astra/api-client';
 import '../work/work.css';
 
@@ -73,7 +75,11 @@ export function WorkPage({
     // filter を依存に入れると、利用者が絞り込みを変えた直後に戻してしまう
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialTaskId, tasks]);
-  const { view, reconnecting } = useTaskStream(client, openTaskId);
+  const { view, reconnecting } = useTaskStream(
+    client,
+    openTaskId,
+    tasks.find((t) => t.id === openTaskId) ?? null,
+  );
 
   const visible = useMemo(
     () => tasks.filter((task) => matchesFilter(task.status, filter)),
@@ -81,62 +87,87 @@ export function WorkPage({
   );
 
   return (
-    <section className="astra-work-list" aria-label="ワーク">
-      <div className="astra-work-actions">
-        {/* 会議はタブではなく仕事の一つ。ここから始める（UI/UX §12.1）。 */}
-        <button type="button" onClick={onStartMeeting} disabled={!onStartMeeting}>
-          会議を記録
-        </button>
-      </div>
-
-      <div className="astra-work-filters" role="group" aria-label="絞り込み">
-        {WORK_FILTERS.map((option) => (
-          <button
-            key={option.id}
-            type="button"
-            aria-pressed={filter === option.id}
-            onClick={() => setFilter(option.id)}
-          >
-            {option.label}
-          </button>
-        ))}
-      </div>
-
-      {visible.length === 0 ? (
-        <p className="astra-empty">
-          {filter === 'active' ? '進行中の仕事はありません。' : '該当する仕事はありません。'}
-        </p>
-      ) : (
-        <ul className="astra-work-list__rows">
-          {visible.map((task) => (
-            <li key={task.id}>
-              <button
-                type="button"
-                className="astra-work-row"
-                onClick={() => setOpenTaskId(task.id)}
-              >
-                <span aria-hidden="true">{task.status === 'WAITING_APPROVAL' ? '!' : '●'}</span>
-                <span>{task.title ?? '名前のない仕事'}</span>
-                {/* §9.1: 状態は人の言葉で。`RUNNING` をそのまま出していた。 */}
-                <span className="astra-work-row__meta">
-                  {task.status === 'WAITING_APPROVAL' ? '確認待ち' : statusLabel(task.status)}
-                  {task.started_at && ` · ${startedLabel(task.started_at)}`}
-                </span>
-              </button>
-            </li>
+    <section
+      className="astra-work-list"
+      aria-label="ワーク"
+      data-open={openTaskId ? 'true' : 'false'}
+    >
+      {/* 絞り込みと「会議を記録」は 1 行に。縦に積むと一覧が下がる。 */}
+      <div className="astra-work-list__head">
+        <div className="astra-work-filters" role="group" aria-label="絞り込み">
+          {WORK_FILTERS.map((option) => (
+            <button
+              key={option.id}
+              type="button"
+              aria-pressed={filter === option.id}
+              onClick={() => setFilter(option.id)}
+            >
+              {option.label}
+            </button>
           ))}
-        </ul>
-      )}
+        </div>
+        <div className="astra-work-actions">
+          {/* 会議はタブではなく仕事の一つ。ここから始める（UI/UX §12.1）。 */}
+          <button
+            type="button"
+            className="astra-button"
+            onClick={onStartMeeting}
+            disabled={!onStartMeeting}
+          >
+            会議を記録
+          </button>
+        </div>
+      </div>
+
+      <div className="astra-work-list__pane">
+        {visible.length === 0 ? (
+          <p className="astra-empty">
+            {filter === 'active' ? '進行中の仕事はありません。' : '該当する仕事はありません。'}
+          </p>
+        ) : (
+          <ul className="astra-work-list__rows">
+            {visible.map((task) => (
+              <li key={task.id}>
+                <button
+                  type="button"
+                  className="astra-work-row"
+                  aria-current={task.id === openTaskId ? 'true' : undefined}
+                  data-status={task.status}
+                  onClick={() => setOpenTaskId(task.id)}
+                >
+                  <span className="astra-work-row__time">{relativeTime(task.updated_at)}</span>
+                  <span className="astra-work-row__body">
+                    <span className="astra-work-row__title">{task.title ?? '名前のない仕事'}</span>
+                    <span className="astra-work-row__detail">
+                      {kindLabel(task.kind)}
+                      {task.started_at && ` · ${startedLabel(task.started_at)}`}
+                    </span>
+                  </span>
+                  {/* §9.1: 状態は人の言葉で。`RUNNING` をそのまま出していた。 */}
+                  <span
+                    className="astra-work-row__meta"
+                    data-live={
+                      task.status === 'RUNNING' || task.status === 'PENDING' ? 'true' : undefined
+                    }
+                  >
+                    {task.status === 'WAITING_APPROVAL' ? '確認待ち' : statusLabel(task.status)}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
 
       {openTaskId && (
-        <>
+        <div className="astra-work-list__detail">
           {/* §21: 接続が切れてもローカルの作業は続いていることを伝える */}
           {reconnecting && (
             <p className="astra-empty" role="status">
               接続が切れました。再接続しています。処理は続いています。
             </p>
           )}
-          <WorkCard view={view} onOpen={() => undefined} />
+          <WorkCard view={view} />
           {/* §9.2: Overview / Progress / Outputs / Evidence / Activity */}
           <WorkDetail
             view={view}
@@ -144,7 +175,7 @@ export function WorkPage({
             client={client}
             {...(onOpenArtifact ? { onOpenArtifact } : {})}
           />
-        </>
+        </div>
       )}
     </section>
   );

@@ -13,13 +13,7 @@ import type { DockDictation } from '../dock/useDockMachine.js';
 import { playVoiceAudio } from './audioPlayback.js';
 
 export type VoiceMode =
-  | 'idle'
-  | 'connecting'
-  | 'listening'
-  | 'thinking'
-  | 'speaking'
-  | 'interrupted'
-  | 'error';
+  'idle' | 'connecting' | 'listening' | 'thinking' | 'speaking' | 'interrupted' | 'error';
 
 export interface VoiceLevels {
   input: number;
@@ -187,12 +181,7 @@ export function useVoiceRuntime(client: AstraClient | null = null): VoiceRuntime
     const captured = await voice.stop();
     levels.set({ input: 0, output: 0 });
 
-    if (
-      cloudCorrectionAllowed &&
-      client &&
-      captured &&
-      captured.audioBase64.length > 0
-    ) {
+    if (cloudCorrectionAllowed && client && captured && captured.audioBase64.length > 0) {
       transition('connecting');
       try {
         const corrected = await client.transcribeVoice({

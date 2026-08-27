@@ -26,44 +26,40 @@ export interface VoiceRouteDeps {
 const VOICE_BODY_LIMIT = 4 * 1024 * 1024;
 
 export function registerVoiceRoutes(app: App, deps: VoiceRouteDeps): void {
-  app.post(
-    '/v1/voice/transcriptions',
-    { bodyLimit: VOICE_BODY_LIMIT },
-    async (request) => {
-      requirePrincipal();
-      if (!deps.transcriber) {
-        throw new AstraError('common.unavailable', 'Google speech recognition is not configured');
-      }
+  app.post('/v1/voice/transcriptions', { bodyLimit: VOICE_BODY_LIMIT }, async (request) => {
+    requirePrincipal();
+    if (!deps.transcriber) {
+      throw new AstraError('common.unavailable', 'Google speech recognition is not configured');
+    }
 
-      const body = VoiceTranscriptionRequest.parse(request.body ?? {});
-      const audio = Buffer.from(body.audio_base64, 'base64');
-      if (audio.byteLength === 0 || audio.byteLength % 2 !== 0) {
-        throw new AstraError('common.validation_failed', 'audio must be non-empty PCM16');
-      }
+    const body = VoiceTranscriptionRequest.parse(request.body ?? {});
+    const audio = Buffer.from(body.audio_base64, 'base64');
+    if (audio.byteLength === 0 || audio.byteLength % 2 !== 0) {
+      throw new AstraError('common.validation_failed', 'audio must be non-empty PCM16');
+    }
 
-      try {
-        const results = await deps.transcriber.transcribe(audio, {
-          language: body.language,
-          source: 'microphone',
-          // Dock は一人の声。会議用の話者分離は求めない。
-          minSpeakers: 1,
-          maxSpeakers: 1,
-        });
-        return VoiceTranscriptionResponse.parse({
-          text: results
-            .filter((result) => result.isFinal)
-            .map((result) => result.text)
-            .join(''),
-          provider: deps.transcriber.name,
-          fallback_used: results.some((result) => result.fallbackUsed === true),
-        });
-      } catch {
-        throw new AstraError('common.unavailable', 'speech recognition failed', {
-          retryable: true,
-        });
-      }
-    },
-  );
+    try {
+      const results = await deps.transcriber.transcribe(audio, {
+        language: body.language,
+        source: 'microphone',
+        // Dock は一人の声。会議用の話者分離は求めない。
+        minSpeakers: 1,
+        maxSpeakers: 1,
+      });
+      return VoiceTranscriptionResponse.parse({
+        text: results
+          .filter((result) => result.isFinal)
+          .map((result) => result.text)
+          .join(''),
+        provider: deps.transcriber.name,
+        fallback_used: results.some((result) => result.fallbackUsed === true),
+      });
+    } catch {
+      throw new AstraError('common.unavailable', 'speech recognition failed', {
+        retryable: true,
+      });
+    }
+  });
 
   app.post('/v1/voice/speech', async (request) => {
     requirePrincipal();

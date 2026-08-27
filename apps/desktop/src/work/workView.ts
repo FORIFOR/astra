@@ -9,7 +9,7 @@
  *   「12 sources」        ← crawler worker count       ではなく
  *   「確認待ち」          ← workflow waiting activity  ではなく
  */
-import type { EventEnvelope, TaskStatus } from '@astra/contracts';
+import type { EventEnvelope, TaskStatus, Task } from '@astra/contracts';
 
 export type StepState = 'todo' | 'active' | 'done' | 'retrying' | 'failed';
 
@@ -280,4 +280,44 @@ export function formatElapsed(ms: number | null): string | null {
   if (seconds < 60) return `${seconds}秒`;
   const minutes = Math.floor(seconds / 60);
   return seconds % 60 === 0 ? `${minutes}分` : `${minutes}分${seconds % 60}秒`;
+}
+
+/**
+ * 一覧が持っている task 行から、最初の view を組む。
+ *
+ * stream は「これから起きること」しか流さない。終わった仕事を開いたとき、
+ * 何も受け取らずに `準備しています` / `状態が分かりません` と出ていた（実機で確認）。
+ * 行にある題・状態・成果物・失敗をそのまま種にし、event はその上に重ねる。
+ */
+export function seedWorkView(
+  task: Pick<
+    Task,
+    'title' | 'status' | 'result_artifact_id' | 'error' | 'started_at' | 'completed_at'
+  >,
+): WorkView {
+  const started = task.started_at ? Date.parse(task.started_at) : null;
+  const ended = task.completed_at ? Date.parse(task.completed_at) : null;
+  return {
+    ...emptyWorkView,
+    title: task.title,
+    status: task.status,
+    resultArtifactId: task.result_artifact_id,
+    error: task.error
+      ? {
+          code: task.error.code,
+          recovery: task.error.recovery,
+          explanation: task.error.handoff_explanation ?? null,
+        }
+      : null,
+    elapsedMs: started !== null && ended !== null ? Math.max(0, ended - started) : null,
+    startedAt: task.started_at,
+    endedAt: task.completed_at,
+  };
+}
+
+const TERMINAL: ReadonlySet<WorkView['status']> = new Set(['COMPLETED', 'FAILED', 'CANCELLED']);
+
+/** 終わった仕事に「再接続しています」は出さない。続く処理が無い。 */
+export function isTerminal(status: WorkView['status']): boolean {
+  return TERMINAL.has(status);
 }

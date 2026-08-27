@@ -755,3 +755,146 @@
   color: var(--astra-color-muted);
   font-size: var(--astra-font-size-micro);
 }
+
+/* ------------------------------------------------------------ buttons */
+
+/*
+ * 共通のボタン。§17 の「静か」を守るため、既定は surface + hairline。
+ * 主ボタンは 1 画面に 1 つ（§19 の焦点を散らさない）。
+ */
+.astra-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--astra-space-compact);
+  min-height: 36px;
+  padding-inline: var(--astra-space-lg);
+  border: var(--astra-border-hairline) solid var(--astra-color-border);
+  border-radius: var(--astra-radius-small);
+  background: var(--astra-color-surface);
+  color: var(--astra-color-text);
+  font: inherit;
+  font-size: var(--astra-font-size-secondary);
+  cursor: pointer;
+  transition:
+    background var(--astra-motion-hover-duration) var(--astra-motion-hover-easing),
+    border-color var(--astra-motion-hover-duration) var(--astra-motion-hover-easing);
+}
+
+.astra-button:hover {
+  background: var(--astra-color-canvas);
+}
+
+.astra-button:focus-visible {
+  outline: 2px solid var(--astra-color-focus-ring);
+  outline-offset: 2px;
+}
+
+.astra-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.astra-button--primary {
+  border-color: var(--astra-color-accent);
+  background: var(--astra-color-accent);
+  color: var(--astra-color-accent-on);
+  font-weight: var(--astra-font-weight-card-title);
+}
+
+.astra-button--primary:hover {
+  background: color-mix(in srgb, var(--astra-color-accent) 88%, var(--astra-color-text));
+}
+
+.astra-button--quiet {
+  border-color: transparent;
+  background: transparent;
+  color: var(--astra-color-muted);
+}
+
+.astra-button--quiet:hover {
+  background: var(--astra-color-canvas);
+  color: var(--astra-color-text);
+}
+
+.astra-button--danger {
+  border-color: var(--astra-color-danger);
+  color: var(--astra-color-danger);
+}
+
+/*
+ * class の無い素の部品にも同じ様式を。
+ * 画面ごとに `<button>` を裸で置いた箇所が 60 を超えていて、
+ * ブラウザ既定の灰色が「未完成」に見える主因だった。
+ * class を持つ部品には触らない（それぞれの CSS が責任を持つ）。
+ */
+.astra-shell button:not([class]):not([aria-pressed]):not([role='tab']),
+.astra-meeting-layer button:not([class]):not([aria-pressed]),
+.astra-topbar__panel button:not([class]) {
+  min-height: 32px;
+  padding-inline: var(--astra-space-md, var(--astra-space-base));
+  border: var(--astra-border-hairline) solid var(--astra-color-border);
+  border-radius: var(--astra-radius-small);
+  background: var(--astra-color-surface);
+  color: var(--astra-color-text);
+  font: inherit;
+  font-size: var(--astra-font-size-secondary);
+  cursor: pointer;
+}
+
+.astra-shell button:not([class]):not([aria-pressed]):not([role='tab']):hover,
+.astra-meeting-layer button:not([class]):not([aria-pressed]):hover {
+  background: var(--astra-color-canvas);
+}
+
+.astra-shell button:not([class]):disabled,
+.astra-meeting-layer button:not([class]):disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.astra-shell button[type='submit']:not([class]),
+.astra-meeting-layer button[type='submit']:not([class]) {
+  border-color: var(--astra-color-accent);
+  background: var(--astra-color-accent);
+  color: var(--astra-color-accent-on);
+}
+
+.astra-shell input:not([type='checkbox']):not([type='radio']):not([type='range']):not([class]),
+.astra-meeting-layer input:not([type='checkbox']):not([type='radio']):not([class]),
+.astra-shell select:not([class]),
+.astra-meeting-layer select:not([class]),
+.astra-shell textarea:not([class]),
+.astra-meeting-layer textarea:not([class]) {
+  min-height: 36px;
+  padding-inline: var(--astra-space-base);
+  border: var(--astra-border-hairline) solid var(--astra-color-border);
+  border-radius: var(--astra-radius-small);
+  background: var(--astra-color-surface);
+  color: var(--astra-color-text);
+  font: inherit;
+  font-size: var(--astra-font-size-secondary);
+}
+
+.astra-shell textarea:not([class]),
+.astra-meeting-layer textarea:not([class]) {
+  padding-block: var(--astra-space-compact);
+}
+
+.astra-shell input:focus-visible,
+.astra-shell select:focus-visible,
+.astra-shell textarea:focus-visible,
+.astra-meeting-layer input:focus-visible,
+.astra-meeting-layer select:focus-visible,
+.astra-meeting-layer textarea:focus-visible {
+  outline: 2px solid var(--astra-color-focus-ring);
+  outline-offset: 1px;
+}
+
+.astra-shell input[type='checkbox'],
+.astra-shell input[type='radio'],
+.astra-meeting-layer input[type='checkbox'] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--astra-color-accent);
+}

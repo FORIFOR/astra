@@ -5,8 +5,10 @@
 .astra-meeting-start {
   display: flex;
   flex-direction: column;
-  gap: var(--astra-space-base);
-  padding: var(--astra-padding-card);
+  gap: var(--astra-space-lg);
+  width: min(480px, calc(100vw - 2 * var(--astra-space-lg)));
+  padding: var(--astra-padding-panel);
+  box-shadow: var(--astra-elevation-dock);
   border: var(--astra-border-hairline) solid var(--astra-color-border);
   border-radius: var(--astra-radius-standard);
   background: var(--astra-color-surface);
@@ -16,20 +18,52 @@
   display: flex;
   align-items: center;
   gap: var(--astra-space-compact);
+  font-size: var(--astra-font-size-secondary);
 }
 
-.astra-meeting-start__title {
+.astra-meeting-start legend,
+.astra-meeting-start__title > span,
+.astra-meeting-start__language > span {
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-micro);
+}
+
+.astra-meeting-start__title input {
+  min-height: 40px;
+  font-size: var(--astra-font-size-body);
+}
+
+.astra-meeting-start label.astra-meeting-start__language {
   flex-direction: column;
   align-items: stretch;
+  gap: var(--astra-space-compact);
+}
+
+.astra-meeting-start__translation {
+  display: flex;
+  align-items: center;
+  gap: var(--astra-space-base);
+}
+
+.astra-meeting-start label.astra-meeting-start__title {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--astra-space-compact);
 }
 
 .astra-meeting-start__sources {
   display: flex;
-  gap: var(--astra-space-base);
+  flex-wrap: wrap;
+  gap: var(--astra-space-compact) var(--astra-space-lg);
   align-items: center;
   border: 0;
   padding: 0;
   margin: 0;
+}
+
+.astra-meeting-start__sources legend {
+  padding: 0;
+  margin-bottom: var(--astra-space-compact);
 }
 
 .astra-meeting-start__consent {
@@ -39,8 +73,9 @@
 
 .astra-meeting-start__actions {
   display: flex;
-  justify-content: space-between;
-  gap: var(--astra-space-base);
+  justify-content: flex-end;
+  gap: var(--astra-space-compact);
+  padding-top: var(--astra-space-compact);
 }
 
 /* --- 録音中の最小表示（§12.2）----------------------------------------- */
@@ -298,4 +333,17 @@
   border: 0;
   background: none;
   cursor: pointer;
+}
+
+/* 開始確認は画面の真ん中に。他を薄くして、1 つの判断に集中させる。 */
+.astra-meeting-layer--sheet {
+  inset: 0;
+  right: auto;
+  bottom: auto;
+  width: 100vw;
+  height: 100vh;
+  max-width: none;
+  align-items: center;
+  justify-content: center;
+  background: var(--astra-color-overlay);
 }
