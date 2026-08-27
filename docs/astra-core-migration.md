@@ -778,3 +778,15 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
   windows-latest CI / Windows 実機を要する**確定的な根本理由**。
 - 一方 **Windows C# の実ロジック（Window code-behind 含む）は kernel32 非依存で型検査 PASS 済み**（`verify:csharp-logic`）。
   したがって Windows 側の未検証は「XAML markup codegen（kernel32 依存）＋WinUI 実描画＋COM/Win32 実行時」に厳密確定。
+
+## 追記: トークン交換の HTTP 経路をローカル mock で end-to-end 検証（Phase 1.71, #1/#8）
+- `exchange_code` を `exchange_code_at(token_url, …)` に分離（token endpoint を差し替え可能に）。本番は提供者の
+  `token_url` を渡す。
+- テスト `exchange_code_posts_and_parses_against_a_local_token_endpoint`: **ローカルの mock token endpoint**
+  （`TcpListener`）を立て、`exchange_code_at` が **実 HTTP POST**（form body に `grant_type`・`code`・PKCE の
+  `code_verifier`）を送ることをサーバ側で確認し、canned な token 応答を `parse_token_response` が TokenSet に
+  復元することを検証。**実測 PASS**（connector 10 tests, core 計 36）。
+- **意味（#1/#8）**: connector の**トークン交換 HTTP 機構（body 構築→POST→応答 parse）が end-to-end で実測 PASS**。
+  authorize URL/PKCE/loopback/callback 解析も既に検証済み。**残る外部依存は「実 OAuth 提供者サーバの実挙動＋
+  ユーザーの consent」のみ**——mock ではなく本物の Google/Microsoft に対する live 交換だけが未検証で、これは
+  client_id とユーザー操作を要する。

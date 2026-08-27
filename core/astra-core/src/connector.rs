@@ -336,9 +336,21 @@ pub fn exchange_code(
     code_verifier: &str,
     now_ms: u64,
 ) -> Result<TokenSet, ConnectorError> {
+    exchange_code_at(config.provider.token_url(), config, code, code_verifier, now_ms)
+}
+
+/// `exchange_code` の実体（token endpoint URL を差し替え可能にして、ローカル mock で HTTP 経路を検証できる）。
+/// 本番は `exchange_code` が提供者の token_url を渡す。
+pub fn exchange_code_at(
+    token_url: &str,
+    config: &ProviderConfig,
+    code: &str,
+    code_verifier: &str,
+    now_ms: u64,
+) -> Result<TokenSet, ConnectorError> {
     let form = token_exchange_body(&config.client_id, &config.redirect_uri, code, code_verifier);
     let form_ref: Vec<(&str, &str)> = form.iter().map(|(k, v)| (*k, v.as_str())).collect();
-    let response = ureq::post(config.provider.token_url())
+    let response = ureq::post(token_url)
         .set("accept", "application/json")
         .send_form(&form_ref);
     let text = match response {
@@ -503,6 +515,48 @@ mod tests {
         assert_eq!(minimal.expires_at_ms, None);
         assert!(minimal.granted_scopes.is_empty());
         assert_eq!(minimal.token_type, "Bearer");
+    }
+
+    #[test]
+    fn exchange_code_posts_and_parses_against_a_local_token_endpoint() {
+        use std::io::{Read, Write};
+        use std::net::TcpListener;
+        // ローカルの mock token endpoint。実提供者の代わりに canned な token 応答を返す。
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        let port = listener.local_addr().unwrap().port();
+        let handle = std::thread::spawn(move || {
+            let (mut stream, _) = listener.accept().unwrap();
+            let mut buf = [0u8; 4096];
+            let n = stream.read(&mut buf).unwrap();
+            let req = String::from_utf8_lossy(&buf[..n]).to_string();
+            // POST body に PKCE の code_verifier と code が乗っていることを確認。
+            let ok = req.contains("grant_type=authorization_code")
+                && req.contains("code=auth-code")
+                && req.contains("code_verifier=verifier-xyz");
+            let body = if ok {
+                r#"{"access_token":"at-real","refresh_token":"rt-real","expires_in":3600,"scope":"openid email","token_type":"Bearer","id_token":"idt-real"}"#
+            } else {
+                r#"{"error":"invalid_request"}"#
+            };
+            let resp = format!(
+                "HTTP/1.1 200 OK\r\ncontent-type: application/json\r\ncontent-length: {}\r\nconnection: close\r\n\r\n{}",
+                body.len(), body);
+            stream.write_all(resp.as_bytes()).unwrap();
+            stream.flush().unwrap();
+        });
+        let config = ProviderConfig {
+            provider: OauthProvider::Google,
+            client_id: "cid".into(),
+            redirect_uri: "http://127.0.0.1:1/cb".into(),
+            scopes: vec!["openid".into(), "email".into()],
+        };
+        let url = format!("http://127.0.0.1:{port}/token");
+        let tokens = exchange_code_at(&url, &config, "auth-code", "verifier-xyz", 1_000).unwrap();
+        handle.join().unwrap();
+        assert_eq!(tokens.access_token, "at-real");
+        assert_eq!(tokens.refresh_token.as_deref(), Some("rt-real"));
+        assert_eq!(tokens.expires_at_ms, Some(1_000 + 3_600_000));
+        assert_eq!(tokens.id_token.as_deref(), Some("idt-real"));
     }
 
     #[test]
