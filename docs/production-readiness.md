@@ -221,9 +221,11 @@ Calendar/Gmail の鎖で見ているのは提供者の挙動ではなく**こち
   代わりに、同じ frontend を headless Chrome（CDP）で開き、**全画面の screenshot を
   自分で見て直した**（サインイン → 初期セットアップ 7 段 → Home / Work / Library / Apps、
   検索・通知・プロフィール、会議開始、共有）。実機 Astra.app は窓 ID 指定で撮り、
-  メイン窓は確認した。**Task Dock / Voice HUD の見た目は実機では未確認**（隠れた窓は撮れない）。
-  位置は CG の窓座標で macOS Dock の上にあることを確認。見た目は開発ビルドの
-  `#/dock?demo=…` / `#/voice-hud?demo=…`（合成音量）で idle / listening / thinking / speaking を撮って確認
+  **実機でも確認した**（検証用アカウント ui-check で AX / CGEvent から操作）:
+  ⌥Space で Dock、Orb 押下で LISTENING（手元 STT が「うん」を書き起こした）、
+  window が 56 → 86 → 96px と下端固定で morph、Voice HUD が出現、Esc で 56px へ戻る。
+  開発ビルドの `#/dock?demo=…` / `#/voice-hud?demo=…`（合成音量）でも各状態を撮った。
+  **未確認**: 読み上げ（speaking）の実機の姿、Dock の drag/位置記憶
 - **実アカウントでの OAuth 疎通。**Client が無い（実装は実測済み）
 - **長時間・大量の負荷。**同時実行や長い調査での挙動は測っていない
 - ~~手元 STT の実模型~~ → **この端末で実測した**（`scripts/install-local-stt.sh` で
@@ -267,6 +269,7 @@ goal が挙げた 7 項目に、対応する試験を並べる。
 | Astra の Task Dock が **macOS の Dock の下に潜っていた**。`monitor.size()` を work area と呼んでいた                                                     | 座標の単体試験は「画面の中」しか見ていなかった。実機の画像で気づいた                        |
 | 終わった仕事を開くと **「準備しています」「状態が分かりません」**。stream は過去を流さず、一覧の行を種にしていなかった                                   | 進行中の仕事の試験しか無かった                                                              |
 | 裸の `<button>` が 60 を超え、ブラウザ既定の灰色のまま。仕様の「静かな」面に見えず、**未完成に見える主因**だった                                         | 試験は文言と役割しか見ない。見た目は screenshot でしか分からない                            |
+| LISTENING 中に Esc で Dock を畳むと **マイクが開いたまま**。HUD が「聞いています」のまま残った                                                           | Esc の試験は「畳む」ことしか見ていなかった。実機で HUD を撮って気づいた                     |
 | Task Dock の既定 ⌥Space を **別アプリ（ChatGPT desktop）が先に取っていた**。押すと相手の窓が出る                                                         | 登録失敗時は代替へ落ちる設計だが、**どれに落ちたかを利用者に見せる導線が弱い**              |
 
 いずれも**「宣言はあるが、通っていない」**という同じ形をしている。
