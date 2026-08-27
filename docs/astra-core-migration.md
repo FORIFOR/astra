@@ -514,3 +514,10 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
 - 修正: `RecordingRuntime.activeMeetingId`（実際に journal を作った id）を公開し、`state.start()` が begin 後に
   `currentMeetingId = RecordingRuntime.shared.activeMeetingId` を設定。→ スクショと録音が同じ会議フォルダに入る。
 - 検証: record/livemeeting 回帰 PASS。全 selftest 25 件 OK/SKIP・0 FAIL。
+
+## 追記: Settings のショートカット表記が実登録と不一致だったのを修正（Phase 1.44）
+- **バグ発見・修正**: Settings は「⌥Space=Task Dock」「⌥⌘R=録音開始/停止」等と表示していたが、実際に登録されている
+  グローバルショートカットは **⌥Space=録音開始/停止のみ**（GlobalShortcut）。表記が実装と食い違い、ユーザーが誤ったキーを
+  押す状態だった（未登録の ⌥⌘R/⌥D を「ある」と見せていた＝推測で埋めていた）。
+- 修正: Settings のショートカット節を `GlobalShortcut.label()`（実登録の combo）1 本に絞り、実装と一致させた。
+- **意味**: 表示が実挙動と一致（Done#2 の正しさ、推測表示の排除）。

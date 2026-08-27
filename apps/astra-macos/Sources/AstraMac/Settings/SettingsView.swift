@@ -12,9 +12,8 @@ struct SettingsView: View {
             Text("設定").font(.system(size: 20, weight: .semibold))
 
             section("ショートカット") {
-                row("Task Dock を開く / 閉じる", "Option + Space")
-                row("押している間だけ話す", "Option + D")
-                row("録音を開始 / 停止", "Option + Command + R")
+                // 実際に登録しているグローバルショートカットを正として出す（GlobalShortcut）。
+                row("録音を開始 / 停止", GlobalShortcut.label())
             }
 
             section("許可（OS）") {
