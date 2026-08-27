@@ -25,6 +25,7 @@ import type { AudioSource, Meeting } from '@astra/contracts';
 import { applyMeetingEvent, emptyMeetingView, type MeetingView } from './meetingView.js';
 import type { RecordingState } from './RecordingIndicator.js';
 import type { MeetingStartValues } from './StartConfirmation.js';
+import { SNAPSHOT_LINES, onMeetingCommand, publishMeeting } from './meetingBridge.js';
 
 export type MeetingPhase = 'idle' | 'starting' | 'live' | 'finalizing';
 
@@ -136,6 +137,8 @@ export function MeetingProvider({
     [client, meeting],
   );
 
+  // Dock からの ■ は購読が 1 回なので、最新の stop を参照で持つ
+  const stopRef = useRef<() => Promise<void>>(async () => undefined);
   const stop = useCallback(async (): Promise<void> => {
     if (!client || !meeting) return;
     try {
@@ -150,6 +153,8 @@ export function MeetingProvider({
     }
   }, [client, meeting]);
 
+  stopRef.current = stop;
+
   const dismiss = useCallback(() => {
     // finalize は Task Runtime 側で続く。閉じてよい（UI/UX §12.5）。
     setPhase('idle');
@@ -161,12 +166,50 @@ export function MeetingProvider({
 
   useEffect(() => () => abort.current?.abort(), []);
 
+  // Dock（別 window）へ写しを流す。録音の正はここ。Dock は見せるだけ
+  const recordingState: RecordingState = paused
+    ? 'paused'
+    : meeting?.degraded_at
+      ? 'degraded'
+      : 'recording';
+  useEffect(() => {
+    void publishMeeting({
+      phase,
+      state: recordingState,
+      title: meeting?.title ?? '会議',
+      elapsedMs,
+      lines: view.lines.slice(-SNAPSHOT_LINES).map((line) => ({
+        id: line.id,
+        speakerTag: line.speakerTag,
+        text: line.text,
+        interim: line.interim,
+      })),
+    });
+  }, [phase, recordingState, meeting?.title, elapsedMs, view.lines]);
+
+  // Dock の ■ / ⏸ を受ける
+  useEffect(() => {
+    let off: (() => void) | null = null;
+    let cancelled = false;
+    void onMeetingCommand((command) => {
+      if (command === 'stop') void stopRef.current();
+      if (command === 'pause') setPaused((p) => !p);
+    }).then((unlisten) => {
+      if (cancelled) unlisten();
+      else off = unlisten;
+    });
+    return () => {
+      cancelled = true;
+      off?.();
+    };
+  }, []);
+
   const value = useMemo<MeetingContextValue>(
     () => ({
       phase,
       meeting,
       view,
-      state: paused ? 'paused' : meeting?.degraded_at ? 'degraded' : 'recording',
+      state: recordingState,
       elapsedMs,
       notes,
       speakerNames,
@@ -185,7 +228,7 @@ export function MeetingProvider({
       phase,
       meeting,
       view,
-      paused,
+      recordingState,
       elapsedMs,
       notes,
       speakerNames,

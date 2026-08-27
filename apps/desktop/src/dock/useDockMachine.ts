@@ -19,6 +19,8 @@ import { host } from '../host/tauri.js';
 /** 上↔下の切替にかける時間。位置移動を全部見せない（黒い帯が画面を横切る）。 */
 export const DOCK_FADE_OUT_MS = 80;
 export const DOCK_FADE_IN_MS = 120;
+/** 「会議を保存しました」を見せる時間。 */
+export const PROCESSING_MS = 900;
 
 export interface DockMachine {
   readonly state: InteractionState;
@@ -30,6 +32,10 @@ export interface DockMachine {
   readonly intent: string;
   /** ピル → 入力カード（Option+Space / クリック）。 */
   expand(): void;
+  /** 会議が始まった。下部の Recording Dock へ。 */
+  enterRecording(): void;
+  /** 会議が止まった。「保存しました」を見せてからピルへ戻る。 */
+  leaveRecording(): void;
   /** 入力カード → ピル。**仕事は止めない。** */
   collapse(): void;
   setIntent(value: string): void;
@@ -122,6 +128,23 @@ export function useDockMachine(
     shrunk.current = false;
   }, []);
 
+  const enterRecording = useCallback(() => {
+    setState('RECORDING');
+    setSurface('pill');
+    setContextExpanded(false);
+  }, []);
+
+  const leaveRecording = useCallback(() => {
+    setState((current) => (current === 'RECORDING' ? 'PROCESSING' : current));
+    setTimeout(() => {
+      setState((current) => {
+        if (current !== 'PROCESSING') return current;
+        setSurface('pill');
+        return 'IDLE';
+      });
+    }, PROCESSING_MS);
+  }, []);
+
   const expand = useCallback(() => {
     setSurface('card');
     setState((current) => (current === 'IDLE' ? 'READY' : current));
@@ -210,6 +233,8 @@ export function useDockMachine(
     setIntent,
     expand,
     collapse,
+    enterRecording,
+    leaveRecording,
     startListening: () => {
       shrunk.current = false;
       if (!dictation) {

@@ -25,6 +25,8 @@ import { MicIcon } from '../voice/MicIcon.js';
 import type { VoiceMode } from '../voice/voiceRuntime.js';
 import type { DockSurface, InteractionState } from '@astra/ui-kit';
 import { DockPill } from './DockPill.js';
+import { ProcessingDock, RecordingDock } from './RecordingDock.js';
+import type { MeetingCommand, MeetingSnapshot } from '../meeting/meetingBridge.js';
 import { dockVoiceMode, voiceModeLabel } from './dockVoiceMode.js';
 import { LiveWaveform } from '../vendor/deepgram-ui/LiveWaveform.js';
 import type { WorkView } from '../work/workView.js';
@@ -49,7 +51,12 @@ export function TaskDock({
   resultText,
   notice = null,
   shortcutOverrides = {},
+  meeting = null,
+  onMeetingCommand,
 }: {
+  /** main window の録音の写し。live なら Dock は下へ降りて Recording Dock になる。 */
+  meeting?: MeetingSnapshot | null;
+  onMeetingCommand?(command: MeetingCommand): void;
   initialSources?: readonly ContextSource[];
   /** Settings で変更されたショートカット（§20）。 */
   shortcutOverrides?: BindingOverrides;
@@ -174,6 +181,27 @@ export function TaskDock({
   const geometry = dockGeometryFor(machine.state, machine.contextExpanded, machine.surface);
   const size = dockGeometry[geometry];
 
+  // 録音は main の状態に従う。live で降り、止まったら「保存しました」を経てピルへ
+  const phase = meeting?.phase ?? 'idle';
+  useEffect(() => {
+    if (phase === 'live') machine.enterRecording();
+    else if (phase === 'finalizing' || phase === 'idle') machine.leaveRecording();
+    // machine の関数は安定している。phase が変わったときだけ
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase]);
+
+  // 中身の高さで window を伸ばす（min..max の範囲を持つ面だけ）
+  const root = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (size.minHeight === size.maxHeight || !root.current) return;
+    const el = root.current;
+    const observer = new ResizeObserver(() => {
+      void host.setDockState(geometry, Math.ceil(el.getBoundingClientRect().height));
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [geometry, size.minHeight, size.maxHeight]);
+
   const platform = useMemo(() => currentPlatform(), []);
 
   /*
@@ -290,8 +318,34 @@ export function TaskDock({
     ['--astra-dock-max-height' as string]: `${size.maxHeight}px`,
   };
 
-  // ピル: 上部の細い入口。入力欄は持たない。押すか Option+Space でカードに広がる
-  if (machine.surface === 'pill') {
+  // 録音中: 下部の Recording Dock。停止直後は「保存しました」
+  if (machine.state === 'RECORDING' || machine.state === 'PROCESSING') {
+    return (
+      <div
+        ref={root}
+        className="astra-dock astra-dock--recording"
+        data-state={machine.state}
+        data-surface="pill"
+        data-geometry={geometry}
+        data-transition={machine.transition ?? undefined}
+        style={frameStyle}
+      >
+        {machine.state === 'RECORDING' && meeting ? (
+          <RecordingDock
+            meeting={meeting}
+            onStop={() => onMeetingCommand?.('stop')}
+            onPause={() => onMeetingCommand?.('pause')}
+          />
+        ) : (
+          <ProcessingDock />
+        )}
+      </div>
+    );
+  }
+
+  // ピル: 上部の細い入口。入力欄は持たない。押すか Option+Space でカードに広がる。
+  // IDLE は面の値に関わらずピル（32px の枠にカードを押し込まない）
+  if (machine.surface === 'pill' || machine.state === 'IDLE') {
     return (
       <div
         className="astra-dock astra-dock--pill"
@@ -314,6 +368,7 @@ export function TaskDock({
 
   return (
     <div
+      ref={root}
       className="astra-dock"
       data-state={machine.state}
       data-surface="card"

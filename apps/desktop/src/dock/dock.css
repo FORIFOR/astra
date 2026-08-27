@@ -691,3 +691,192 @@
     animation: none;
   }
 }
+
+/* ------------------------------------------------------- 下部の Recording Dock */
+
+.astra-dock--recording {
+  align-items: stretch;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  overflow: visible;
+}
+
+.astra-recording {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ● 03:42  CC  ⏸ │ ■ */
+.astra-recording__bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 42px;
+  padding: 0 8px 0 14px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 999px;
+  background: rgba(16, 16, 18, 0.91);
+  color: #fff;
+  box-shadow: 0 7px 18px rgba(0, 0, 0, 0.24);
+  backdrop-filter: saturate(140%) blur(24px);
+}
+
+.astra-recording__timer {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+}
+
+.astra-recording__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ff453a;
+  animation: astra-pulse-slow 1.6s ease-in-out infinite;
+}
+
+.astra-recording__dot[data-state='paused'] {
+  background: rgba(255, 255, 255, 0.4);
+  animation: none;
+}
+
+.astra-recording__dot[data-state='degraded'] {
+  background: var(--astra-color-warning);
+}
+
+.astra-recording__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  height: 28px;
+  min-height: 28px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.8);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.astra-recording__button:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.astra-recording__button[aria-pressed='true'] {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+}
+
+.astra-recording__divider {
+  width: 1px;
+  height: 18px;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.astra-recording__stop {
+  display: grid;
+  place-items: center;
+  width: 29px;
+  height: 29px;
+  min-height: 29px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #ff453a;
+  cursor: pointer;
+}
+
+.astra-recording__stop > span {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  background: #fff;
+}
+
+/* CC: capsule の真上に直近の文字起こし */
+.astra-recording__transcript {
+  width: 100%;
+  max-height: 240px;
+  overflow: auto;
+  padding: 10px 14px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 14px;
+  background: rgba(16, 16, 18, 0.91);
+  color: #fff;
+  box-shadow: 0 7px 18px rgba(0, 0, 0, 0.24);
+  backdrop-filter: saturate(140%) blur(24px);
+  font-size: 12px;
+}
+
+.astra-recording__transcript header {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 10px;
+}
+
+.astra-recording__transcript ul {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.astra-recording__transcript li {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.astra-recording__transcript li[data-interim='true'] {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.astra-recording__speaker,
+.astra-recording__empty {
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 10px;
+}
+
+.astra-recording__empty {
+  margin: 0;
+}
+
+.astra-processing {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: rgba(16, 16, 18, 0.9);
+  color: #fff;
+  font-size: 11px;
+  box-shadow: 0 7px 18px rgba(0, 0, 0, 0.24);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .astra-recording__dot {
+    animation: none;
+  }
+}

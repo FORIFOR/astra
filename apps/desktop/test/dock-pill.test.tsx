@@ -8,7 +8,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render } from '@testing-library/react';
 
 const host = {
-  setDockState: vi.fn(async () => undefined),
+  setDockState: vi.fn<(state: string, contentHeight?: number, jump?: boolean) => Promise<void>>(
+    async () => undefined,
+  ),
   focusDock: vi.fn(async () => undefined),
   hideDock: vi.fn(async () => undefined),
   showDock: vi.fn(async () => undefined),
@@ -110,5 +112,58 @@ describe('the pill (Voice OS entrance)', () => {
     expect(dock().dataset['state']).toBe('IDLE');
     await act(async () => hold!('dock.pushToTalk', true));
     expect(dock().dataset['geometry']).toBe('pill');
+  });
+});
+
+describe('recording (SuperIntern style, bottom)', () => {
+  const live = {
+    phase: 'live' as const,
+    state: 'recording' as const,
+    title: 'A社 商談',
+    elapsedMs: 222_000,
+    lines: [{ id: 'l1', speakerTag: 1, text: '来月までに', interim: false }],
+  };
+
+  it('drops to the recording dock while the meeting is live and sends stop as a command', async () => {
+    const onMeetingCommand = vi.fn();
+    const { rerender } = render(
+      <TaskDock initialState="IDLE" meeting={live} onMeetingCommand={onMeetingCommand} />,
+    );
+    await act(async () => {});
+    expect(dock().dataset['state']).toBe('RECORDING');
+    expect(dock().dataset['geometry']).toBe('recording');
+    expect(dock().textContent).toContain('03:42');
+
+    // Esc では止めない。止めるのは ■ から
+    await act(async () => {
+      fireEvent.keyDown(window, { key: 'Escape', code: 'Escape' });
+    });
+    expect(dock().dataset['state']).toBe('RECORDING');
+
+    fireEvent.click(document.querySelector('[aria-label="録音を止める"]')!);
+    expect(onMeetingCommand).toHaveBeenCalledWith('stop');
+
+    // main が finalizing に入ったら「保存しました」を見せ、少ししてピルへ
+    rerender(
+      <TaskDock
+        initialState="IDLE"
+        meeting={{ ...live, phase: 'finalizing' }}
+        onMeetingCommand={onMeetingCommand}
+      />,
+    );
+    await act(async () => {});
+    expect(dock().dataset['state']).toBe('PROCESSING');
+    expect(dock().textContent).toContain('会議を保存しました');
+    await act(async () => {
+      vi.advanceTimersByTime(1000);
+    });
+    expect(dock().dataset['state']).toBe('IDLE');
+  });
+
+  it('CC shows the latest lines above the bar', async () => {
+    render(<TaskDock initialState="IDLE" meeting={live} />);
+    await act(async () => {});
+    fireEvent.click(document.querySelector('[aria-label="文字起こしを見る"]')!);
+    expect(dock().textContent).toContain('来月までに');
   });
 });

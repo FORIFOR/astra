@@ -6,6 +6,7 @@
  */
 import type { DockSurface, InteractionState } from '@astra/ui-kit';
 import type { VoiceMode } from './voiceRuntime.js';
+import type { MeetingSnapshot } from '../meeting/meetingBridge.js';
 
 export interface VoiceDemo {
   readonly mode: VoiceMode;
@@ -15,12 +16,28 @@ export interface VoiceDemo {
   readonly levels: { input: () => number; output: () => number };
   /** result: Dock の中で完結する短い答え（markdown）。 */
   readonly resultText: string | null;
+  /** recording: 下部の Recording Dock に見せる写し。 */
+  readonly meeting: MeetingSnapshot | null;
 }
+
+const MEETING_SAMPLE: MeetingSnapshot = {
+  phase: 'live',
+  state: 'recording',
+  title: 'A社 商談',
+  elapsedMs: 222_000,
+  lines: [
+    { id: 'l1', speakerTag: 1, text: '来月までに実装します', interim: false },
+    { id: 'l2', speakerTag: 2, text: 'API 側はどうしますか？', interim: false },
+    { id: 'l3', speakerTag: 1, text: '既存の口をそのまま', interim: true },
+  ],
+};
 
 const STATE_FOR: Record<string, InteractionState> = {
   idle: 'IDLE',
   'pill-listening': 'LISTENING',
   'pill-thinking': 'UNDERSTANDING',
+  recording: 'RECORDING',
+  processing: 'PROCESSING',
   ready: 'READY',
   typing: 'TYPING',
   listening: 'LISTENING',
@@ -35,6 +52,8 @@ const MODE_FOR: Record<string, VoiceMode> = {
   idle: 'idle',
   'pill-listening': 'listening',
   'pill-thinking': 'thinking',
+  recording: 'idle',
+  processing: 'idle',
   ready: 'idle',
   typing: 'idle',
   listening: 'listening',
@@ -77,5 +96,11 @@ export function voiceDemoFrom(hash: string, dev: boolean): VoiceDemo | null {
       output: () => (mode === 'speaking' ? syntheticLevel() : 0),
     },
     resultText: which === 'result' ? RESULT_SAMPLE : null,
+    meeting:
+      which === 'recording'
+        ? MEETING_SAMPLE
+        : which === 'processing'
+          ? { ...MEETING_SAMPLE, phase: 'finalizing' }
+          : null,
   };
 }

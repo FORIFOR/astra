@@ -23,6 +23,7 @@ import { approvalFailureMessage } from '../work/approvalOutcome.js';
 import { dockMetrics } from '../host/tauri.js';
 import { recordUxMetric } from '../ux/metrics.js';
 import { TaskDock } from './TaskDock.js';
+import { onMeeting, sendMeetingCommand, type MeetingSnapshot } from '../meeting/meetingBridge.js';
 import type { ContextReferent, DockConversation } from './useDockMachine.js';
 import './dock.css';
 
@@ -118,6 +119,21 @@ function DockSurface(): ReactElement {
   const { view } = useTaskStream(live, taskId);
   const work = taskId && view.status !== 'UNKNOWN' ? view : null;
 
+  // 録音の写し（main window から）。live なら Dock は下へ降りる
+  const [meeting, setMeeting] = useState<MeetingSnapshot | null>(null);
+  useEffect(() => {
+    let off: (() => void) | null = null;
+    let cancelled = false;
+    void onMeeting(setMeeting).then((unlisten) => {
+      if (cancelled) unlisten();
+      else off = unlisten;
+    });
+    return () => {
+      cancelled = true;
+      off?.();
+    };
+  }, []);
+
   useEffect(() => {
     const artifactId = view.resultArtifactId;
     if (!live || view.status !== 'COMPLETED' || !artifactId) return;
@@ -169,6 +185,8 @@ function DockSurface(): ReactElement {
       }}
       resultText={resultText}
       notice={notice}
+      meeting={meeting}
+      onMeetingCommand={(command) => void sendMeetingCommand(command)}
       {...(work ? { work } : {})}
       {...(live && taskId
         ? {
@@ -208,6 +226,7 @@ function DemoDock(): ReactElement | null {
         voiceMode={demo.mode}
         voiceLevels={demo.levels}
         resultText={demo.resultText}
+        meeting={demo.meeting}
       />
     </ThemeProvider>
   );
