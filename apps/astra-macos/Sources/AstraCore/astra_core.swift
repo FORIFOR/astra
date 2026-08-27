@@ -2401,6 +2401,32 @@ fileprivate struct FfiConverterSequenceTypeRecoverableMeeting: FfiConverterRustB
         return seq
     }
 }
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterDictionaryStringString: FfiConverterRustBuffer {
+    public static func write(_ value: [String: String], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for (key, value) in value {
+            FfiConverterString.write(key, into: &buf)
+            FfiConverterString.write(value, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [String: String] {
+        let len: Int32 = try readInt(&buf)
+        var dict = [String: String]()
+        dict.reserveCapacity(Int(len))
+        for _ in 0..<len {
+            let key = try FfiConverterString.read(from: &buf)
+            let value = try FfiConverterString.read(from: &buf)
+            dict[key] = value
+        }
+        return dict
+    }
+}
 /**
  * 成果物の本文（GET /v1/artifacts/:id/content）。テキスト成果物を UI に出す。
  */
@@ -2590,6 +2616,43 @@ public func astraCoreVersion() -> String  {
 })
 }
 /**
+ * authorize URL を組む。エラー（非 loopback / client_id 空）は None で返す
+ * （UniFFI の Error 型を増やさず、呼び出し側が「繋げない」を扱えるように）。
+ */
+public func connectorAuthorizeUrl(providerId: String, clientId: String, redirectUri: String, scopes: [String], state: String, codeChallenge: String) -> String?  {
+    return try!  FfiConverterOptionString.lift(try! rustCall() {
+    uniffi_astra_core_fn_func_connector_authorize_url(
+        FfiConverterString.lower(providerId),
+        FfiConverterString.lower(clientId),
+        FfiConverterString.lower(redirectUri),
+        FfiConverterSequenceString.lower(scopes),
+        FfiConverterString.lower(state),
+        FfiConverterString.lower(codeChallenge),$0
+    )
+})
+}
+/**
+ * 繋げる提供者の id 一覧（client_id が env にあるものだけ）。
+ */
+public func connectorConfiguredProviderIds(clientIds: [String: String]) -> [String]  {
+    return try!  FfiConverterSequenceString.lift(try! rustCall() {
+    uniffi_astra_core_fn_func_connector_configured_provider_ids(
+        FfiConverterDictionaryStringString.lower(clientIds),$0
+    )
+})
+}
+/**
+ * UniFFI 用のフラットなラッパー（macOS Swift / Windows が呼ぶ実経路の入口）。
+ * PKCE の code_challenge（S256）を作る。
+ */
+public func connectorPkceChallenge(verifier: String) -> String  {
+    return try!  FfiConverterString.lift(try! rustCall() {
+    uniffi_astra_core_fn_func_connector_pkce_challenge(
+        FfiConverterString.lower(verifier),$0
+    )
+})
+}
+/**
  * 00:00 / 1:02:03 の形。UI はこれを使い、各言語で書き直さない。
  */
 public func formatElapsed(ms: UInt64) -> String  {
@@ -2704,6 +2767,15 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_astra_core_checksum_func_astra_core_version() != 51046) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_astra_core_checksum_func_connector_authorize_url() != 60762) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_astra_core_checksum_func_connector_configured_provider_ids() != 48177) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_astra_core_checksum_func_connector_pkce_challenge() != 40473) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_astra_core_checksum_func_format_elapsed() != 55286) {

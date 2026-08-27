@@ -21,6 +21,7 @@ enum SelfTest {
         case "files": files(); return true
         case "ax": ax(); return true
         case "speech": speech(); return true
+        case "connector": connector(); return true
         default: return false
         }
     }
@@ -250,6 +251,38 @@ enum SelfTest {
         let consistent = (auth == .authorized) ? appended : startThrew
         guard consistent else { print("SELFTEST_FAIL speech auth=\(auth.rawValue) started=\(!startThrew) appended=\(appended)"); exit(2) }
         print("SELFTEST_OK speech: auth=\(auth.rawValue) onDeviceCapable=\(onDevice) started=\(!startThrew) appendedFrames=\(appended)")
+        exit(0)
+    }
+
+    /// `--selftest connector`: connector 契約層（PKCE・authorize URL 組み立て）が core 経由で効くか検証する。
+    /// live なトークン交換は外部依存なので here では検証しない（契約層のみ）。
+    @MainActor
+    private static func connector() {
+        // RFC 7636 の PKCE テストベクタ（core と一致するはず）。
+        let verifier = "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+        let challenge = AstraCoreBridge.pkceChallenge(verifier)
+        guard challenge == "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM" else {
+            print("SELFTEST_FAIL connector pkce=\(challenge)"); exit(2)
+        }
+        // 実 authorize URL を core で組む（loopback + PKCE + state + Google 追加）。
+        let url = AstraCoreBridge.authorizeUrl(
+            provider: "google", clientId: "cid-123.apps.googleusercontent.com",
+            redirectUri: "http://127.0.0.1:8123/callback",
+            scopes: ["openid", "email"], state: "state-xyz", codeChallenge: challenge)
+        guard let url, url.hasPrefix("https://accounts.google.com/o/oauth2/v2/auth?"),
+              url.contains("code_challenge_method=S256"), url.contains("state=state-xyz"),
+              url.contains("access_type=offline") else {
+            print("SELFTEST_FAIL connector url=\(url ?? "nil")"); exit(3)
+        }
+        // 非 loopback は繋がない（None）。
+        let bad = AstraCoreBridge.authorizeUrl(
+            provider: "google", clientId: "cid", redirectUri: "https://evil.example.com/cb",
+            scopes: [], state: "s", codeChallenge: "c")
+        guard bad == nil else { print("SELFTEST_FAIL connector accepted non-loopback"); exit(4) }
+        // 未設定なら繋げる提供者は空。
+        let ready = AstraCoreBridge.configuredProviders([:])
+        guard ready.isEmpty else { print("SELFTEST_FAIL connector ready=\(ready)"); exit(5) }
+        print("SELFTEST_OK connector: pkce=S256✓ authorizeUrl✓ nonLoopbackRejected✓ configured=\(ready.count)")
         exit(0)
     }
 

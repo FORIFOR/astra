@@ -24,6 +24,8 @@ ureq = { version = "2", features = ["json"] }
 # 会議音声の WS 送信（gateway /audio）。native から Tauri を介さず送るため
 tungstenite = { version = "0.24", features = ["native-tls"] }
 uniffi = { version = "0.29", features = ["cli"] }
+# PKCE(RFC 7636)の S256 challenge を core で作る（connector 契約層）
+sha2 = "0.11"
 
 [dev-dependencies]
 uniffi = { version = "0.29", features = ["bindgen-tests"] }

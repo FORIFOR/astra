@@ -382,6 +382,21 @@ RustBuffer uniffi_astra_core_fn_func_astra_core_version(RustCallStatus *_Nonnull
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_CONNECTOR_AUTHORIZE_URL
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_CONNECTOR_AUTHORIZE_URL
+RustBuffer uniffi_astra_core_fn_func_connector_authorize_url(RustBuffer provider_id, RustBuffer client_id, RustBuffer redirect_uri, RustBuffer scopes, RustBuffer state, RustBuffer code_challenge, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_CONNECTOR_CONFIGURED_PROVIDER_IDS
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_CONNECTOR_CONFIGURED_PROVIDER_IDS
+RustBuffer uniffi_astra_core_fn_func_connector_configured_provider_ids(RustBuffer client_ids, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_CONNECTOR_PKCE_CHALLENGE
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_CONNECTOR_PKCE_CHALLENGE
+RustBuffer uniffi_astra_core_fn_func_connector_pkce_challenge(RustBuffer verifier, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_FORMAT_ELAPSED
 #define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_FORMAT_ELAPSED
 RustBuffer uniffi_astra_core_fn_func_format_elapsed(uint64_t ms, RustCallStatus *_Nonnull out_status
@@ -780,6 +795,24 @@ uint16_t uniffi_astra_core_checksum_func_api_wait_task(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_ASTRA_CORE_VERSION
 #define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_ASTRA_CORE_VERSION
 uint16_t uniffi_astra_core_checksum_func_astra_core_version(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_CONNECTOR_AUTHORIZE_URL
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_CONNECTOR_AUTHORIZE_URL
+uint16_t uniffi_astra_core_checksum_func_connector_authorize_url(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_CONNECTOR_CONFIGURED_PROVIDER_IDS
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_CONNECTOR_CONFIGURED_PROVIDER_IDS
+uint16_t uniffi_astra_core_checksum_func_connector_configured_provider_ids(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_CONNECTOR_PKCE_CHALLENGE
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_CONNECTOR_PKCE_CHALLENGE
+uint16_t uniffi_astra_core_checksum_func_connector_pkce_challenge(void
     
 );
 #endif

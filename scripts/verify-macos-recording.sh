@@ -39,3 +39,6 @@ echo "$OUT10"
 OUT11="$("$BIN" --selftest speech)"
 echo "$OUT11"
 [[ "$OUT11" == SELFTEST_OK* ]] || { echo "FAIL: macOS on-device STT (Apple Speech)" >&2; exit 1; }
+OUT12="$("$BIN" --selftest connector)"
+echo "$OUT12"
+[[ "$OUT12" == SELFTEST_OK* ]] || { echo "FAIL: macOS connector contract via core" >&2; exit 1; }

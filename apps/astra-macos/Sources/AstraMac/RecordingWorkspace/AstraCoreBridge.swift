@@ -55,6 +55,18 @@ enum AstraCoreBridge {
     static func artifactContent(_ baseUrl: String, accessToken: String, artifactId: String) throws -> String {
         try apiArtifactContent(baseUrl: baseUrl, accessToken: accessToken, artifactId: artifactId)
     }
+    // connector（外部サービス連携）の契約層。authorize URL 組み立て・PKCE は core が正本。
+    // live なトークン交換は提供者ごとの外部処理で、ここには持たない。
+    static func pkceChallenge(_ verifier: String) -> String { connectorPkceChallenge(verifier: verifier) }
+    static func authorizeUrl(provider: String, clientId: String, redirectUri: String,
+                             scopes: [String], state: String, codeChallenge: String) -> String? {
+        connectorAuthorizeUrl(providerId: provider, clientId: clientId, redirectUri: redirectUri,
+                              scopes: scopes, state: state, codeChallenge: codeChallenge)
+    }
+    static func configuredProviders(_ clientIds: [String: String]) -> [String] {
+        connectorConfiguredProviderIds(clientIds: clientIds)
+    }
+
     /// RAG コンテキストの並べ替え（決定的）。ランキングは core に一本化する。
     /// 語彙一致・新しさ・プロジェクト一致 × source 重みで採点し、上位を返す。
     static func rankContext(terms: [String], limit: UInt32, candidates: [ContextCandidate]) -> [ContextResult] {

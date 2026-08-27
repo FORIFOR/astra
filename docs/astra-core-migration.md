@@ -309,3 +309,23 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
 - **意味（Done#8 の実質前進）**: macOS native app が **自前のオンデバイス STT** を持ち、Tauri の sherpa エンジンに
   依存せず文字起こしできる。外部 STT 鍵も sherpa dylib＋モデルも不要。**残る Tauri 依存は connector OAuth 実行のみ**
   （外部プロバイダ＋ユーザー許可）。実音声からの認識精度・確定は署名 .app＋音声認識許可でのユーザー検証（Done#3 live）。
+
+## 追記: connector 契約層を core へ（Phase 1.27）
+- `astra-core::connector` を新設（§1「connector contracts」）。**live なトークン交換は持たない**（提供者ごとの
+  外部処理は各アプリ/gateway に残す）。持つのは OS 非依存の契約層だけ:
+  - `OauthProvider`（google/microsoft の端点・追加パラメータ・`client_id` env 名）
+  - `pkce_challenge`（**RFC 7636 S256**、base64url(sha256)。plain に落とさない）
+  - `build_authorize_url`（**RFC 6749 §4.1**、loopback 以外の redirect と空 client_id を拒否）
+  - `accept_callback`（**CSRF state 照合・期限切れ・エラー**の受理判定）
+  - `configured_providers` / `unconfigured_providers`（client_id がある提供者だけ、無いものを埋めない）
+  - TypeScript `@astra/oauth`（flow/pkce/providers）を Rust 契約へ写したもの。`client_secret` は持たない（RFC 8252 §8.5）。
+- 依存に `sha2` を追加（PKCE 用、オフライン解決可）。UniFFI にフラットな入口
+  （`connector_pkce_challenge` / `connector_authorize_url` / `connector_configured_provider_ids`）を出し、Swift から使える。
+- 検証:
+  - core **connector 6 tests**（**RFC 7636 PKCE テストベクタ一致**を含む＝自前 base64url+sha2 が spec 準拠）。core 計 **32 tests**。
+  - **Swift 実経路**: `--selftest connector` が bridge→core で PKCE・authorize URL 組み立て・loopback 拒否を検証。
+    **実測 PASS**: `SELFTEST_OK connector: pkce=S256✓ authorizeUrl✓ nonLoopbackRejected✓ configured=0`。
+  - Tauri Rust **67 tests・0 失敗**（sha2＋connector 追加後も回帰なし）/ swift-bindings・design-tokens `--check` current / conventions PASS。
+- **意味**: connector の**契約・オブジェクトモデル**が core に入り、macOS native の実経路で使われる（①/⑧ 前進）。
+  **残る Tauri/外部依存は「live なトークン交換の実行」のみ**（token endpoint への POST ＝提供者ごとのネットワーク処理・ユーザー許可）。
+  Windows は同じ core を C ABI 経由で使える（C ABI ラッパー追加は後続、Windows 実機検証は CI のみ）。
