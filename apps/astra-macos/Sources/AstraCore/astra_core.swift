@@ -2208,6 +2208,19 @@ fileprivate struct FfiConverterSequenceTypeRecoverableMeeting: FfiConverterRustB
     }
 }
 /**
+ * 会議（POST /v1/meetings）。同意確認済みでのみ開始する。
+ */
+public func apiCreateMeeting(baseUrl: String, accessToken: String, title: String, language: String)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeApiError_lift) {
+    uniffi_astra_core_fn_func_api_create_meeting(
+        FfiConverterString.lower(baseUrl),
+        FfiConverterString.lower(accessToken),
+        FfiConverterString.lower(title),
+        FfiConverterString.lower(language),$0
+    )
+})
+}
+/**
  * 開発用サインイン（POST /v1/auth/dev/token）。gateway が dev token を許すときだけ。
  */
 public func apiDevSignIn(baseUrl: String, email: String, displayName: String)throws  -> Tokens  {
@@ -2216,6 +2229,18 @@ public func apiDevSignIn(baseUrl: String, email: String, displayName: String)thr
         FfiConverterString.lower(baseUrl),
         FfiConverterString.lower(email),
         FfiConverterString.lower(displayName),$0
+    )
+})
+}
+/**
+ * 会議を終える（POST /v1/meetings/:id/finish）。finalize task の id を返す。
+ */
+public func apiFinishMeeting(baseUrl: String, accessToken: String, meetingId: String)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeApiError_lift) {
+    uniffi_astra_core_fn_func_api_finish_meeting(
+        FfiConverterString.lower(baseUrl),
+        FfiConverterString.lower(accessToken),
+        FfiConverterString.lower(meetingId),$0
     )
 })
 }
@@ -2318,7 +2343,13 @@ private let initializationResult: InitializationResult = {
     if bindings_contract_version != scaffolding_contract_version {
         return InitializationResult.contractVersionMismatch
     }
+    if (uniffi_astra_core_checksum_func_api_create_meeting() != 28887) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_astra_core_checksum_func_api_dev_sign_in() != 60660) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_astra_core_checksum_func_api_finish_meeting() != 33249) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_astra_core_checksum_func_api_me() != 37978) {

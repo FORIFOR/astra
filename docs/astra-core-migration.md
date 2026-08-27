@@ -110,3 +110,9 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
   実測 PASS。これで **native の認証経路は Tauri を介さず実バックエンドに繋がる**。
 - 残る #8: STT streaming / Agent(Temporal) / RAG 取得 / connector / meeting 送信 の native 経路化はまだ。
   現状 Tauri は無傷（機能パリティ未達のため retire しない）。
+
+## 追記: 会議 control-plane も core 経由（Phase 1.10）
+- core api に `api_create_meeting` / `api_finish_meeting`。録音ライフサイクルが**実 gateway に会議を作り**、
+  停止で **finalize task を投げる**（成果物生成へ）。`RecordingRuntime.configureBackend(base, token)` でサインイン時に有効化。
+- 検証: `--selftest api` が **Swift → core → gateway** でサインイン→/v1/me→会議作成→終了（finalize task id 取得）を実測 PASS。
+  会議の control-plane（作成・終了）は Tauri を介さず実バックエンドで動く。**録音音声の WS 送信の native 経路化は残**。

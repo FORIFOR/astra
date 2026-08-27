@@ -97,6 +97,48 @@ pub fn api_me(base_url: String, access_token: String) -> Result<Me, ApiError> {
     })
 }
 
+/// 会議（POST /v1/meetings）。同意確認済みでのみ開始する。
+#[uniffi::export]
+pub fn api_create_meeting(
+    base_url: String,
+    access_token: String,
+    title: String,
+    language: String,
+) -> Result<String, ApiError> {
+    #[derive(Deserialize)]
+    struct Resp { id: String }
+    let resp: Resp = ureq::post(&format!("{}/v1/meetings", base(&base_url)))
+        .set("Authorization", &format!("Bearer {access_token}"))
+        .send_json(ureq::json!({
+            "title": title,
+            "language": language,
+            "audio_sources": ["microphone"],
+            "consent_confirmed": true,
+        }))
+        .map_err(map_transport)?
+        .into_json()
+        .map_err(|e| ApiError::Decode { message: e.to_string() })?;
+    Ok(resp.id)
+}
+
+/// 会議を終える（POST /v1/meetings/:id/finish）。finalize task の id を返す。
+#[uniffi::export]
+pub fn api_finish_meeting(
+    base_url: String,
+    access_token: String,
+    meeting_id: String,
+) -> Result<String, ApiError> {
+    #[derive(Deserialize)]
+    struct Resp { task_id: String }
+    let resp: Resp = ureq::post(&format!("{}/v1/meetings/{}/finish", base(&base_url), meeting_id))
+        .set("Authorization", &format!("Bearer {access_token}"))
+        .send_json(ureq::json!({}))
+        .map_err(map_transport)?
+        .into_json()
+        .map_err(|e| ApiError::Decode { message: e.to_string() })?;
+    Ok(resp.task_id)
+}
+
 /// gateway に届くか（GET /v1/auth/providers, 認証不要）。オフライン判定に。
 #[uniffi::export]
 pub fn api_reachable(base_url: String) -> bool {
@@ -125,8 +167,16 @@ mod tests {
         let tokens = api_dev_sign_in(url.clone(), email.clone(), "Core API".into())
             .expect("dev sign-in should succeed against a live gateway");
         assert!(!tokens.access_token.is_empty());
-        let me = api_me(url, tokens.access_token).expect("/v1/me should succeed");
+        let me = api_me(url.clone(), tokens.access_token.clone()).expect("/v1/me should succeed");
         assert_eq!(me.email, email);
         assert_eq!(me.role, "owner");
+
+        // 会議の作成 → 終了（control plane が Tauri を介さず動く）
+        let meeting_id = api_create_meeting(url.clone(), tokens.access_token.clone(), "core E2E".into(), "ja-JP".into())
+            .expect("create meeting should succeed");
+        assert!(!meeting_id.is_empty());
+        let task_id = api_finish_meeting(url, tokens.access_token, meeting_id)
+            .expect("finish meeting should return a finalize task id");
+        assert!(!task_id.is_empty());
     }
 }

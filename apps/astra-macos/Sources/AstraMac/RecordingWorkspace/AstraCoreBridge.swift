@@ -28,4 +28,10 @@ enum AstraCoreBridge {
     static func me(_ baseUrl: String, accessToken: String) throws -> Me {
         try apiMe(baseUrl: baseUrl, accessToken: accessToken)
     }
+    static func createMeeting(_ baseUrl: String, accessToken: String, title: String, language: String) throws -> String {
+        try apiCreateMeeting(baseUrl: baseUrl, accessToken: accessToken, title: title, language: language)
+    }
+    static func finishMeeting(_ baseUrl: String, accessToken: String, meetingId: String) throws -> String {
+        try apiFinishMeeting(baseUrl: baseUrl, accessToken: accessToken, meetingId: meetingId)
+    }
 }

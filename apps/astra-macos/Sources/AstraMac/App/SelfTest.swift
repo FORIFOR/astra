@@ -47,7 +47,10 @@ enum SelfTest {
             guard me.email == email, me.role == "owner" else {
                 print("SELFTEST_FAIL api email=\(me.email) role=\(me.role)"); exit(3)
             }
-            print("SELFTEST_OK api: email=\(me.email) tenant=\(me.tenantName) role=\(me.role)")
+            let mid = try AstraCoreBridge.createMeeting(base, accessToken: tokens.accessToken, title: "SelfTest 会議", language: "ja-JP")
+            let task = try AstraCoreBridge.finishMeeting(base, accessToken: tokens.accessToken, meetingId: mid)
+            guard !mid.isEmpty, !task.isEmpty else { print("SELFTEST_FAIL api meeting=\(mid) task=\(task)"); exit(5) }
+            print("SELFTEST_OK api: email=\(me.email) meeting=\(mid) finalizeTask=\(task)")
             exit(0)
         } catch {
             print("SELFTEST_FAIL api error=\(error)"); exit(4)

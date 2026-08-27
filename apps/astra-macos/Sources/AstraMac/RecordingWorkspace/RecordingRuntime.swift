@@ -9,6 +9,16 @@ final class RecordingRuntime {
 
     private var session: RecordingSession?
     private var mic: MicCapture?
+    /// 実 gateway に作った会議（サインイン時のみ）。無ければローカル録音だけ。
+    private var meetingId: String?
+    private var apiBase: String?
+    private var accessToken: String?
+
+    /// サインイン済みなら、実バックエンドの会議 id を使って録音する。
+    func configureBackend(base: String, accessToken: String) {
+        self.apiBase = base
+        self.accessToken = accessToken
+    }
 
     /// 保存先（Application Support/Astra/meetings）。core の既定と同じ。
     private var root: String {
@@ -19,10 +29,17 @@ final class RecordingRuntime {
 
     /// core にセッションを作り、（可能なら）マイクを開く。live 取り込みは .app + 許可が要る。
     @discardableResult
-    func begin(meetingId: String, captureMic: Bool = true) -> Bool {
+    func begin(meetingId localId: String, captureMic: Bool = true) -> Bool {
         try? FileManager.default.createDirectory(
             atPath: root, withIntermediateDirectories: true)
-        guard let session = try? RecordingSession.start(root: root, meetingId: meetingId) else {
+        // サインイン済みなら実 gateway に会議を作り、その id で録音する（Tauri を介さない）
+        var id = localId
+        if let base = apiBase, let token = accessToken,
+           let created = try? AstraCoreBridge.createMeeting(base, accessToken: token, title: "会議", language: "ja-JP") {
+            id = created
+            self.meetingId = created
+        }
+        guard let session = try? RecordingSession.start(root: root, meetingId: id) else {
             return false
         }
         self.session = session
@@ -55,5 +72,10 @@ final class RecordingRuntime {
         mic?.stop(); mic = nil
         try? session?.finish()
         session = nil
+        // 実 gateway の会議なら finalize を投げる（成果物生成へ）
+        if let base = apiBase, let token = accessToken, let id = meetingId {
+            _ = try? AstraCoreBridge.finishMeeting(base, accessToken: token, meetingId: id)
+        }
+        meetingId = nil
     }
 }
