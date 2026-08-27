@@ -461,3 +461,16 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
   **実測 PASS**: `Agent 応答="…"`（dev の会話エンジンは notice を返すが、**ボタン→core→gateway→Agent→UI の経路は実物**）。
   verify に SKIP 許容で組み込み。
 - **意味**: AI 操作 4 ボタンが実 Agent に繋がった（Done#2/#7、UI mock ではない）。
+
+## 追記: 文字起こしの表示 + ツール切替 + 翻訳を実装（Phase 1.39）
+- **大きな欠落の修正**: `state.transcript` は STT が埋めるのに **Recording Workspace に一切表示されていなかった**
+  （文字起こしタブの中身が無い）。さらに `selectedTool`（文字起こし/翻訳/字幕）は**表示を切り替えていなかった**
+  （§2/§3「Transcript / Translation」が UI mock）。
+- 実装: `TranscriptPanel.swift` を新設し、道具箱の選択に応じて中身を出す:
+  - **文字起こし**: `state.transcript` の実データを話者付きリストで表示（interim は淡色）。
+  - **翻訳**: `state.translate()`（Agent 経由）の訳文。翻訳タブに切り替えると自動で走る（`onChange`）。
+  - **字幕**: 直近の 1 行を大きく。
+  ワークスペース右側に配置。
+- 検証: `--selftest translate <base>`（transcript → Agent 会話 → 訳文の経路）。**実測 PASS**（サインイン→送信→応答。
+  dev の会話エンジンは訳を返さないが**ボタン/タブ→core→gateway→Agent→UI の経路は実物**）。verify に SKIP 許容で組み込み。
+- **意味**: 録音中に文字起こしが**実際に見える**ようになり、ツールタブが機能した（Done#2/#7、UI mock 排除）。

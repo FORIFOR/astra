@@ -25,6 +25,9 @@ struct RecordingWorkspaceView: View {
         }
         .frame(width: Metrics.workspaceWidth, height: Metrics.workspaceHeight)
         .animation(.easeOut(duration: Motion.drawerMs), value: state.ragOpen)
+        .onChange(of: state.selectedTool) { _, tool in
+            if tool == .translation, state.translatedText.isEmpty { state.translate() }
+        }
         .accessibilityIdentifier("recordingWorkspace")
     }
 
@@ -36,6 +39,9 @@ struct RecordingWorkspaceView: View {
 
                 RecordingToolPalette(selection: $state.selectedTool)
                     .position(x: 120, y: 300)
+
+                TranscriptPanel(state: state)
+                    .position(x: geo.size.width - 170, y: 300)
 
                 AIActionsPalette(state: state)
                     .position(x: geo.size.width * 0.5, y: 380)

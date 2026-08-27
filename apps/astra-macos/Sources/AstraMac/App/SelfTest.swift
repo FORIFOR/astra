@@ -33,6 +33,7 @@ enum SelfTest {
         case "pause": pauseWorks(); return true
         case "screenshot": screenshot(); return true
         case "aiaction": aiaction(args); return true
+        case "translate": translateTest(args); return true
         default: return false
         }
     }
@@ -584,6 +585,32 @@ enum SelfTest {
         } catch {
             print("SELFTEST_FAIL aiaction error=\(error)"); exit(3)
         }
+    }
+
+    /// `--selftest translate <base>`: 翻訳タブが transcript を Agent 経由で訳し、結果が返るか検証する。
+    @MainActor
+    private static func translateTest(_ args: [String]) {
+        let base = args.count > (args.firstIndex(of: "--selftest")! + 2)
+            ? args[args.firstIndex(of: "--selftest")! + 2] : "http://127.0.0.1:3000"
+        guard AstraCoreBridge.reachable(base) else { print("SELFTEST_SKIP translate: gateway unreachable"); exit(0) }
+        do {
+            let tokens = try AstraCoreBridge.devSignIn(base, email: "translate-\(getpid())@astra.local", displayName: "T")
+            let state = RecordingWorkspaceState.shared
+            state.configureBackend(base: base, token: tokens.accessToken)
+            state.transcript = [TranscriptSegment(speaker: "田中", text: "会議を始めましょう。", interim: false)]
+            state.translatedText = ""
+            state.translate(to: "英語")
+            let deadline = Date().addingTimeInterval(20)
+            while state.translatedText.isEmpty && Date() < deadline {
+                RunLoop.current.run(until: Date().addingTimeInterval(0.2))
+            }
+            guard !state.translatedText.isEmpty, !state.translatedText.contains("失敗") else {
+                print("SELFTEST_FAIL translate result=\(state.translatedText)"); exit(2)
+            }
+            let preview = String(state.translatedText.prefix(40)).replacingOccurrences(of: "\n", with: " ")
+            print("SELFTEST_OK translate: Agent 訳=\"\(preview)…\"")
+            exit(0)
+        } catch { print("SELFTEST_FAIL translate error=\(error)"); exit(3) }
     }
 
     private static func recordToDisk() {

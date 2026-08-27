@@ -57,6 +57,9 @@ final class RecordingWorkspaceState: ObservableObject {
     /// AI 操作（要約/質問/決定事項/アクション）の結果。
     @Published var aiResult = ""
     @Published var aiRunning = false
+    /// 翻訳タブの結果（Agent 経由）。
+    @Published var translatedText = ""
+    @Published var translating = false
     /// 実バックエンド（サインイン済みのときだけ AI 操作が動く）。
     private var apiBase: String?
     private var apiToken: String?
@@ -206,6 +209,33 @@ final class RecordingWorkspaceState: ObservableObject {
                 await MainActor.run { self?.aiResult = text; self?.aiRunning = false }
             } catch {
                 await MainActor.run { self?.aiResult = "AI 操作に失敗しました: \(error)"; self?.aiRunning = false }
+            }
+        }
+    }
+
+    /// 文字起こしを翻訳する（Agent 経由）。翻訳タブに切り替えたときに呼ぶ。
+    func translate(to language: String = "英語") {
+        guard let base = apiBase, let token = apiToken else {
+            translatedText = "サインインすると翻訳できます。"; return
+        }
+        let source = transcript.map { $0.text }.joined(separator: "\n")
+        guard !source.isEmpty else { translatedText = ""; return }
+        translating = true; translatedText = ""
+        let prompt = "次の文を\(language)に翻訳して。訳文だけ返して。\n---\n" + source
+        Task.detached { [weak self] in
+            do {
+                let conv: String
+                if let existing = await self?.conversationId { conv = existing }
+                else {
+                    conv = try AstraCoreBridge.startConversation(base, accessToken: token)
+                    await MainActor.run { self?.conversationId = conv }
+                }
+                let outcome = try AstraCoreBridge.sendTurn(base, accessToken: token, conversationId: conv, text: prompt)
+                let text = !outcome.answer.isEmpty ? outcome.answer
+                    : !outcome.notice.isEmpty ? outcome.notice : "(訳を取得できませんでした)"
+                await MainActor.run { self?.translatedText = text; self?.translating = false }
+            } catch {
+                await MainActor.run { self?.translatedText = "翻訳に失敗しました: \(error)"; self?.translating = false }
             }
         }
     }
