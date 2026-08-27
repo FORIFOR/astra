@@ -33,3 +33,6 @@ echo "$OUT8"
 OUT9="$("$BIN" --selftest files)"
 echo "$OUT9"
 [[ "$OUT9" == SELFTEST_OK* ]] || { echo "FAIL: macOS file context via core rank" >&2; exit 1; }
+OUT10="$("$BIN" --selftest ax)"
+echo "$OUT10"
+[[ "$OUT10" == SELFTEST_OK* ]] || { echo "FAIL: macOS accessibility context" >&2; exit 1; }

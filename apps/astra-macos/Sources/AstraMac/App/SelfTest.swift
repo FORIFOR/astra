@@ -19,6 +19,7 @@ enum SelfTest {
         case "rag": rag(); return true
         case "keychain": keychain(); return true
         case "files": files(); return true
+        case "ax": ax(); return true
         default: return false
         }
     }
@@ -210,6 +211,20 @@ enum SelfTest {
             print("SELFTEST_FAIL files candidates=\(candidates.count) top=\(ranked.first?.id ?? "nil")"); exit(3)
         }
         print("SELFTEST_OK files: candidates=\(candidates.count)(binary除外) top=oauth.txt score=\(String(format: "%.2f", top.score))")
+        exit(0)
+    }
+
+    /// `--selftest ax`: アクセシビリティ許可が無いとき、選択テキストが nil で返り
+    /// クラッシュしないこと（推測で埋めない）を検証する。isTrusted は prompt 無しで読める。
+    @MainActor
+    private static func ax() {
+        let trusted = AccessibilityContext.isTrusted
+        let selection = AccessibilityContext.selectedText()
+        let candidates = AccessibilityContext.candidate()
+        // 許可が無ければ選択は nil・候補は空。許可があれば選択の有無は環境依存だが整合していること。
+        let consistent = trusted || (selection == nil && candidates.isEmpty)
+        guard consistent else { print("SELFTEST_FAIL ax trusted=\(trusted) selection=\(selection ?? "nil") cands=\(candidates.count)"); exit(2) }
+        print("SELFTEST_OK ax: trusted=\(trusted) selection=\(selection == nil ? "nil" : "present") candidates=\(candidates.count)")
         exit(0)
     }
 

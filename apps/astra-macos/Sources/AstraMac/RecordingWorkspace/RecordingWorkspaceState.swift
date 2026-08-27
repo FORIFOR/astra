@@ -102,6 +102,11 @@ final class RecordingWorkspaceState: ObservableObject {
         }
         // ローカルファイル（Finder access）由来の候補も同じ土俵で並べ替える。
         candidates.append(contentsOf: fileCandidates)
+        // 前面アプリで選択中のテキスト（AX）があれば、外から来た文脈として足す。
+        for lite in AccessibilityContext.candidate() {
+            candidates.append(ContextCandidate(
+                id: lite.id, text: lite.text, source: .message, ageSeconds: 0, projectMatch: true))
+        }
         let byId = Dictionary(uniqueKeysWithValues: candidates.map { ($0.id, $0) })
         let ranked = AstraCoreBridge.rankContext(terms: terms, limit: 5, candidates: candidates)
         ragResults = ranked.compactMap { r in

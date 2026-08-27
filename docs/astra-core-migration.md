@@ -276,3 +276,22 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
   （語彙一致する oauth.txt が最上位、バイナリは候補から除外）。全 selftest 9 件 + swift unit 3 も回帰なし。
 - **意味**: §3「Finder access」を実機能として実装（外部 OAuth 不要のローカル RAG ソース、mock ではない）。
   RAG のソースが transcript に加えローカルファイルへ広がった（#2/#7 の前進）。Gmail/Drive は外部 OAuth のため継続対象。
+
+## 追記: アクセシビリティ文脈（Phase 1.25, macOS native / AX 選択テキスト → RAG）
+- `Context/AccessibilityContext.swift` を新設。前面アプリで**選択中のテキスト**を AX
+  (`AXUIElementCopyAttributeValue` の focused → selectedText)で読み、RAG 候補(source=.message)にする。
+  `AXIsProcessTrusted()` は prompt を出さず読め、**許可が無ければ nil**（推測で埋めない・クラッシュしない）。
+- `refreshRag` が transcript / ファイル / **AX 選択** を同じ土俵で core の `rank_context` に載せる。
+- 検証: `--selftest ax`（許可なし→nil の正直な経路、no-crash）を追加し verify に組み込み。
+  **実測 PASS**: `SELFTEST_OK ax: trusted=true selection=nil candidates=0`（AX 経路が実行され、選択なしを nil で処理）。
+  全 selftest 10 件 + swift unit 3 も回帰なし。
+- **意味**: §3「Accessibility integration」を実機能として実装。実選択テキストの取得は AX 許可(TCC)ゲートで
+  Done#3(live) に含まれるが、経路・許可判定・no-crash は検証済み。
+
+### §3 native 実機能の到達（このセッション終了時点）
+- 実装＋headless 検証済み: Mic / System Audio / Screen Context / Global shortcut / Calendar(状態) /
+  **Keychain**(実トークン往復) / **Finder access**(ローカル RAG) / **Accessibility**(経路) / transcript保存 /
+  meeting recording & recovery / RAG(core rank_context) / Agent(core, 実 gateway)。
+- live(TCC/署名)ゲートで未検証: 実 mic 波形・system audio フレーム・screen フレーム・カレンダー予定・
+  グローバル押下受信・AX 実選択テキスト。
+- 外部依存で未達: **Streaming STT**(sherpa dylib＋モデル) / **connector OAuth 実行**(外部プロバイダ)。
