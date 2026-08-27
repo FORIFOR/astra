@@ -369,3 +369,14 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
   macOS `--selftest api`(UniFFI 経路)も PASS。
 - **意味（Done#4 の前進）**: Windows の core bridge が macOS と**同じ gateway 実経路の全体**（auth/meeting/agent/apps/library）を
   持ち、**C# が P/Invoke する C ABI 境界を live gateway に対して C から検証済み**。C# の実ビルド/実行のみ Windows CI 待ち。
+
+## 追記: C ABI 三者一致の contract テスト（Phase 1.31, Windows 境界の担保）
+- `scripts/check-cabi-csharp.mjs` を新設。**Rust の `#[no_mangle] extern "C"`（実体）↔ C ヘッダ（宣言）↔
+  C# の P/Invoke（呼び出し）** の関数名・引数個数を機械照合する。Windows 実機でビルドできないぶん、
+  C# が呼ぶ C ABI 境界が実体とズレていないことをここで止める（§6「FFI contract」）。
+- CI に組み込み: `pnpm check:cabi-csharp` を `ci.yml`（conventions の直後、ubuntu で host 非依存）と
+  `windows.yml`（WinUI ビルド前）に追加。
+- 検証: **実測 PASS** `C ABI contract ok: Rust 19 = header 19, C# が呼ぶ 19 個すべて一致`。
+  **負テスト**: C# に余分な引数を注入すると `C# 引数 3 個 ≠ header 2 個` を検出して fail（ドリフトを実際に止める）。
+- **意味（Done#4/#6 の前進）**: Windows 実機が無くても、C# bridge が Rust の C ABI 実体と一致していることを
+  CI で継続的に担保できる。C# の実ビルド/実行のみ windows-latest CI 待ち（そこも同じ contract を通す）。

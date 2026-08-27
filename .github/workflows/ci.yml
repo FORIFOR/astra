@@ -72,6 +72,8 @@ jobs:
 
       # 境界の形骸化を人のレビューに任せない（ADR 0001）
       - run: pnpm check:conventions
+      # C ABI の三者一致（Rust 実体 ↔ C ヘッダ ↔ C# P/Invoke）。Windows 実機なしで境界ズレを止める。
+      - run: pnpm check:cabi-csharp
       - name: Check the contracts version was bumped
         if: github.event_name == 'pull_request'
         run: node scripts/check-contracts-version.mjs origin/${{ github.base_ref }}

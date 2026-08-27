@@ -13,6 +13,7 @@
     "build:desktop": "pnpm --filter @astra/desktop tauri:build",
     "check:contracts-version": "node scripts/check-contracts-version.mjs",
     "check:conventions": "node scripts/check-conventions.mjs",
+    "check:cabi-csharp": "node scripts/check-cabi-csharp.mjs",
     "check:generated": "./scripts/check-generated.sh",
     "clean": "tsc -b tsconfig.build.json --clean",
     "db:codegen": "./infra/db/with-test-db.sh sh -c 'cd packages/db && npx kysely-codegen --url \"$TEST_ADMIN_DATABASE_URL\" --dialect postgres --out-file src/generated/schema.ts'",
