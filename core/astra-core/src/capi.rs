@@ -6,6 +6,7 @@
 use std::ffi::{c_char, CStr, CString};
 use std::path::PathBuf;
 
+use crate::connector::{build_authorize_url, pkce_challenge, OauthProvider, ProviderConfig};
 use crate::recording::{format_elapsed, resample_linear, wire_bytes, Journal, JournalState, WIRE_SAMPLE_RATE};
 
 fn cstr(value: &str) -> *mut c_char {
@@ -39,6 +40,61 @@ pub extern "C" fn astra_core_format_elapsed(ms: u64) -> *mut c_char {
 pub unsafe extern "C" fn astra_core_string_free(p: *mut c_char) {
     if !p.is_null() {
         drop(CString::from_raw(p));
+    }
+}
+
+/// PKCE の code_challenge（RFC 7636 S256）。戻り値は astra_core_string_free で解放。
+///
+/// # Safety
+/// `verifier` は有効な NUL 終端 UTF-8。
+#[no_mangle]
+pub unsafe extern "C" fn astra_core_pkce_challenge(verifier: *const c_char) -> *mut c_char {
+    match rstr(verifier) {
+        Some(v) => cstr(&pkce_challenge(v)),
+        None => std::ptr::null_mut(),
+    }
+}
+
+/// authorize URL を組む（RFC 6749 + PKCE）。非 loopback / 空 client_id / 未知 provider は null。
+/// `scopes` は空白区切り（"openid email"）。戻り値は解放が必要。
+///
+/// # Safety
+/// すべて有効な NUL 終端 UTF-8（または null）。
+#[no_mangle]
+pub unsafe extern "C" fn astra_core_authorize_url(
+    provider: *const c_char,
+    client_id: *const c_char,
+    redirect_uri: *const c_char,
+    scopes_space_joined: *const c_char,
+    state: *const c_char,
+    code_challenge: *const c_char,
+) -> *mut c_char {
+    let (Some(provider), Some(client_id), Some(redirect_uri), Some(state), Some(challenge)) = (
+        rstr(provider),
+        rstr(client_id),
+        rstr(redirect_uri),
+        rstr(state),
+        rstr(code_challenge),
+    ) else {
+        return std::ptr::null_mut();
+    };
+    let Some(provider) = OauthProvider::from_id(provider) else {
+        return std::ptr::null_mut();
+    };
+    let scopes = rstr(scopes_space_joined)
+        .unwrap_or("")
+        .split_whitespace()
+        .map(str::to_string)
+        .collect();
+    let config = ProviderConfig {
+        provider,
+        client_id: client_id.to_string(),
+        redirect_uri: redirect_uri.to_string(),
+        scopes,
+    };
+    match build_authorize_url(&config, state, challenge) {
+        Ok(url) => cstr(&url),
+        Err(_) => std::ptr::null_mut(),
     }
 }
 

@@ -18,6 +18,17 @@ int main(int argc, char** argv) {
     if (strcmp(v, "0.1.0") != 0) { printf("CABI_FAIL version=%s\n", v); return 2; }
     astra_core_string_free(v);
 
+    /* connector: PKCE (RFC 7636 test vector) + authorize URL */
+    char* chal = astra_core_pkce_challenge("dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk");
+    if (strcmp(chal, "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM") != 0) { printf("CABI_FAIL pkce=%s\n", chal); return 20; }
+    char* url = astra_core_authorize_url("google", "cid-1", "http://127.0.0.1:8123/cb", "openid email", "st-1", chal);
+    if (!url || strstr(url, "code_challenge_method=S256") == NULL || strstr(url, "state=st-1") == NULL) { printf("CABI_FAIL authorize_url=%s\n", url ? url : "NULL"); return 21; }
+    char* bad = astra_core_authorize_url("google", "cid", "https://evil.example/cb", "", "s", "c");
+    if (bad != NULL) { printf("CABI_FAIL non-loopback accepted\n"); return 22; }
+    printf("CABI_OK connector: pkce=S256 authorizeUrl ok nonLoopbackRejected\n");
+    astra_core_string_free(chal);
+    astra_core_string_free(url);
+
     const char* root = argv[1];
     CApiSession* s = astra_core_session_start(root, "cabi");
     if (!s) { printf("CABI_FAIL start\n"); return 3; }

@@ -329,3 +329,15 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
 - **意味**: connector の**契約・オブジェクトモデル**が core に入り、macOS native の実経路で使われる（①/⑧ 前進）。
   **残る Tauri/外部依存は「live なトークン交換の実行」のみ**（token endpoint への POST ＝提供者ごとのネットワーク処理・ユーザー許可）。
   Windows は同じ core を C ABI 経由で使える（C ABI ラッパー追加は後続、Windows 実機検証は CI のみ）。
+
+## 追記: connector を C ABI + Windows C# bridge へ（Phase 1.28）
+- `capi.rs` に `astra_core_pkce_challenge` / `astra_core_authorize_url`（文字列 in/out、非 loopback・空 client_id・
+  未知 provider は NULL）を追加し、`include/astra_core.h` に宣言。**Windows(C#/P-Invoke) が Swift と同じ core の
+  connector 契約層を使える**ようにした（uniffi は C# 非対応のため安定 C ABI 経由）。
+- `apps/windows/Astra/CoreBridge/AstraCore.cs` に P/Invoke 宣言と `AstraCore.PkceChallenge` / `AstraCore.AuthorizeUrl`
+  を追加（macOS の bridge と対の薄い層）。
+- 検証: `verify-c-abi.sh` を拡張し、**C(clang) から** PKCE(RFC 7636 ベクタ)・authorize URL 組み立て・非 loopback 拒否を実証。
+  **実測 PASS**: `CABI_OK connector: pkce=S256 authorizeUrl ok nonLoopbackRejected`。core 32 tests / 既存 C ABI 録音往復も PASS。
+  swift-bindings・design-tokens `--check` current / conventions PASS。
+- **Windows 未検証（捏造しない）**: C# の実ビルド/実行は Windows 実機（CI）でのみ。ただし **C# が P/Invoke する C ABI 境界は
+  このホストの C から検証済み**。connector 契約層は macOS(Swift/UniFFI)・Windows(C#/C ABI) の両方から同じ core を使う形が揃った。
