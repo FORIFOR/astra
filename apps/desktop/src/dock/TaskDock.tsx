@@ -23,7 +23,8 @@ import { WorkCard } from '../work/WorkCard.js';
 import { AstraOrb, useAccentHex } from '../voice/AstraOrb.js';
 import { MicIcon } from '../voice/MicIcon.js';
 import type { VoiceMode } from '../voice/voiceRuntime.js';
-import type { InteractionState } from '@astra/ui-kit';
+import type { DockSurface, InteractionState } from '@astra/ui-kit';
+import { DockPill } from './DockPill.js';
 import { dockVoiceMode, voiceModeLabel } from './dockVoiceMode.js';
 import { LiveWaveform } from '../vendor/deepgram-ui/LiveWaveform.js';
 import type { WorkView } from '../work/workView.js';
@@ -42,6 +43,7 @@ export function TaskDock({
   voiceLevels,
   voiceMode = 'idle',
   initialState = 'READY',
+  initialSurface,
   voiceUnavailable,
   onRequestSubmitted,
   resultText,
@@ -61,6 +63,8 @@ export function TaskDock({
   voiceMode?: VoiceMode;
   /** 最初の状態。見た目の確認用（demo）にだけ使う。 */
   initialState?: InteractionState;
+  /** 最初の面。demo で「ピルのまま聞いている」を出すため。 */
+  initialSurface?: DockSurface;
   /** 端末内 STT / Google 確定が使えない理由。 */
   voiceUnavailable?: string | null;
   /** true の発話だけ、停止後の PCM を Google Chirp 3 へ送る。 */
@@ -77,7 +81,12 @@ export function TaskDock({
   onStop?(): void;
   onOpenWorkspace?(): void;
 }): ReactElement {
-  const machine = useDockMachine(initialState, conversation, dictation);
+  const machine = useDockMachine(
+    initialState,
+    conversation,
+    dictation,
+    initialSurface ?? (initialState === 'IDLE' ? 'pill' : 'card'),
+  );
   const [sources, setSources] = useState<readonly ContextSource[]>(initialSources);
   const [explanation, setExplanation] = useState<string | null>(null);
   /*
@@ -162,7 +171,7 @@ export function TaskDock({
     [addSource],
   );
 
-  const geometry = dockGeometryFor(machine.state, machine.contextExpanded);
+  const geometry = dockGeometryFor(machine.state, machine.contextExpanded, machine.surface);
   const size = dockGeometry[geometry];
 
   const platform = useMemo(() => currentPlatform(), []);
@@ -275,16 +284,42 @@ export function TaskDock({
     [machine.state, orbMode],
   );
 
+  const frameStyle = {
+    ['--astra-dock-width' as string]: `${size.width}px`,
+    ['--astra-dock-min-height' as string]: `${size.minHeight}px`,
+    ['--astra-dock-max-height' as string]: `${size.maxHeight}px`,
+  };
+
+  // ピル: 上部の細い入口。入力欄は持たない。押すか Option+Space でカードに広がる
+  if (machine.surface === 'pill') {
+    return (
+      <div
+        className="astra-dock astra-dock--pill"
+        data-state={machine.state}
+        data-surface="pill"
+        data-geometry={geometry}
+        data-transition={machine.transition ?? undefined}
+        style={frameStyle}
+      >
+        <DockPill
+          state={machine.state}
+          orbMode={orbMode}
+          intent={machine.intent}
+          {...(voiceLevels ? { voiceLevels } : {})}
+          onOpen={machine.expand}
+        />
+      </div>
+    );
+  }
+
   return (
     <div
       className="astra-dock"
       data-state={machine.state}
+      data-surface="card"
       data-geometry={geometry}
-      style={{
-        ['--astra-dock-width' as string]: `${size.width}px`,
-        ['--astra-dock-min-height' as string]: `${size.minHeight}px`,
-        ['--astra-dock-max-height' as string]: `${size.maxHeight}px`,
-      }}
+      data-transition={machine.transition ?? undefined}
+      style={frameStyle}
     >
       <div className="astra-dock__row">
         {/*

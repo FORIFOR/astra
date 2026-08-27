@@ -4,7 +4,8 @@
 //! GUI 無しでは一切検証できなくなるため。
 
 pub use super::geometry_generated::{
-    DockSize, DockState, BOTTOM_OFFSET_DEFAULT, BOTTOM_OFFSET_MAX, BOTTOM_OFFSET_MIN, EDGE_MARGIN,
+    DockSize, DockState, Placement, BOTTOM_OFFSET_DEFAULT, BOTTOM_OFFSET_MAX, BOTTOM_OFFSET_MIN,
+    EDGE_MARGIN, RECORDING_BOTTOM_OFFSET, TOP_OFFSET,
 };
 
 /// 作業領域。メニューバーやタスクバーを除いた、実際に置ける範囲。
@@ -43,6 +44,28 @@ pub fn default_position(work_area: Rect, width: i32, height: i32, bottom_offset:
     let y = clamp(desired_y, work_area.y, work_area.y.max(max_y));
 
     Position { x, y }
+}
+
+/// 上部ピルの位置。作業領域の上端（= メニューバーの直下）中央に接する。
+///
+/// `visibleFrame` 相当の作業領域を使うので、メニューバーは隠さない。
+/// 横は端に寄せすぎない。
+pub fn top_position(work_area: Rect, width: i32) -> Position {
+    let centered = work_area.x + (work_area.width - width) / 2;
+    let min_x = work_area.x + EDGE_MARGIN;
+    let max_x = work_area.x + work_area.width - width - EDGE_MARGIN;
+    Position {
+        x: clamp(centered, min_x.min(max_x), min_x.max(max_x)),
+        y: work_area.y + TOP_OFFSET,
+    }
+}
+
+/// 状態から位置を決める。録音は下、それ以外は上。
+pub fn position_for(state: DockState, work_area: Rect, width: i32, height: i32) -> Position {
+    match state.placement() {
+        Placement::Top => top_position(work_area, width),
+        Placement::Bottom => default_position(work_area, width, height, RECORDING_BOTTOM_OFFSET),
+    }
 }
 
 /// ユーザーが動かした位置を、その display の作業領域内へ収める（§4.2）。
@@ -175,6 +198,29 @@ mod tests {
         assert_eq!(height_for(DockState::Typing, 40), 96);
         assert_eq!(height_for(DockState::Typing, 120), 120);
         assert_eq!(height_for(DockState::Typing, 400), 140);
+    }
+
+    #[test]
+    fn the_idle_pill_touches_the_top_of_the_work_area() {
+        let work = Rect {
+            x: 0,
+            y: 25,
+            width: 1920,
+            height: 1055,
+        };
+        let p = top_position(work, 320);
+        assert_eq!(p.y, 25);
+        assert_eq!(p.x, (1920 - 320) / 2);
+    }
+
+    #[test]
+    fn only_recording_states_go_to_the_bottom() {
+        let p = position_for(DockState::Idle, FHD, 320, 32);
+        assert_eq!(p.y, 0);
+        let r = position_for(DockState::Recording, FHD, 320, 44);
+        assert_eq!(FHD.height - (r.y + 44), RECORDING_BOTTOM_OFFSET);
+        let c = position_for(DockState::Ready, FHD, 560, 56);
+        assert_eq!(c.y, 0);
     }
 
     #[test]

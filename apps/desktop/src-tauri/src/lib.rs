@@ -34,6 +34,7 @@ pub fn run() {
             dock::dock_hide,
             dock::dock_set_state,
             dock::dock_toggle,
+            dock::dock_focus,
             dock::dock_remember_position,
             context::context_snapshot,
             permission::permission_open_settings,
@@ -64,6 +65,10 @@ pub fn run() {
                 )?;
             }
             shortcut::register(app.handle());
+            // 常に居る入口。起動したら上部にピルを出す（焦点は奪わない）
+            if let Err(error) = dock::show_idle(app.handle()) {
+                log::warn!("could not show the dock pill ({error})");
+            }
             Ok(())
         })
         .run(tauri::generate_context!())

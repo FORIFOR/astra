@@ -249,8 +249,25 @@ export const host = {
   showDock: (state?: DockState, contentHeight?: number) =>
     call<void>('dock_show', { state, contentHeight }),
   hideDock: () => call<void>('dock_hide'),
-  setDockState: (state: DockState, contentHeight?: number) =>
-    call<void>('dock_set_state', { state, contentHeight }),
+  /** 形を合わせる。`jump` は上↔下の切替（morph せず一気に置く。画面側がフェードする）。 */
+  setDockState: (state: DockState, contentHeight?: number, jump = false) =>
+    call<void>('dock_set_state', { state, contentHeight, jump }),
+  /** 入力カードに広げたとき、打てるように焦点を移す。ピルのままでは呼ばない。 */
+  focusDock: () => call<void>('dock_focus'),
+  /**
+   * Option+Space。Rust は「押された」と伝えるだけで、ピル ↔ カードのどちらへ行くかは
+   * 画面側の状態機械が決める（録音中なら何もしない等）。
+   */
+  onDockToggle: async (handler: () => void): Promise<() => void> => {
+    if (!isTauri()) return () => undefined;
+    try {
+      const { listen } = await import('@tauri-apps/api/event');
+      return await listen('dock:toggle', () => handler());
+    } catch (error) {
+      console.warn('could not subscribe to the dock toggle', error);
+      return () => undefined;
+    }
+  },
   rememberDockPosition: () => call<void>('dock_remember_position'),
   contextSnapshot: () => call<LocalContext>('context_snapshot'),
 };

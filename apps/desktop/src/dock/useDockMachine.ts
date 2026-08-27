@@ -6,13 +6,32 @@
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { startUxTimer } from '../ux/metrics.js';
-import { dockGeometryFor, escapeOutcome, type InteractionState } from '@astra/ui-kit';
+import {
+  UNDERSTANDING_MAX_MS,
+  dockGeometryFor,
+  dockPlacementFor,
+  escapeOutcome,
+  type DockSurface,
+  type InteractionState,
+} from '@astra/ui-kit';
 import { host } from '../host/tauri.js';
+
+/** 上↔下の切替にかける時間。位置移動を全部見せない（黒い帯が画面を横切る）。 */
+export const DOCK_FADE_OUT_MS = 80;
+export const DOCK_FADE_IN_MS = 120;
 
 export interface DockMachine {
   readonly state: InteractionState;
+  /** ピル（上部の細い入口）か、入力カードか。 */
+  readonly surface: DockSurface;
+  /** 上↔下の切替中。`out` は消えかけ、`in` は現れかけ。 */
+  readonly transition: 'out' | 'in' | null;
   readonly contextExpanded: boolean;
   readonly intent: string;
+  /** ピル → 入力カード（Option+Space / クリック）。 */
+  expand(): void;
+  /** 入力カード → ピル。**仕事は止めない。** */
+  collapse(): void;
   setIntent(value: string): void;
   startListening(): void;
   stopListening(): void;
@@ -61,8 +80,12 @@ export function useDockMachine(
   initial: InteractionState = 'READY',
   conversation?: DockConversation,
   dictation?: DockDictation,
+  initialSurface: DockSurface = initial === 'IDLE' ? 'pill' : 'card',
 ): DockMachine {
   const [state, setState] = useState<InteractionState>(initial);
+  const [surface, setSurface] = useState<DockSurface>(initialSurface);
+  const [transition, setTransition] = useState<'out' | 'in' | null>(null);
+  const lastPlacement = useRef(dockPlacementFor(dockGeometryFor(initial, false, initialSurface)));
   const [contextExpanded, setContextExpanded] = useState(false);
   const [intent, setIntentValue] = useState('');
   /** 聞き返し。解決できない指示語があったときだけ入る。 */
@@ -71,9 +94,68 @@ export function useDockMachine(
   const shrunk = useRef(false);
 
   // window の形は状態に従う。ここを忘れると中身と枠がずれる。
+  // 上↔下は、消してから置いて、出す（画面の真ん中を横切らせない）。
   useEffect(() => {
-    void host.setDockState(dockGeometryFor(state, contextExpanded));
-  }, [state, contextExpanded]);
+    const geometry = dockGeometryFor(state, contextExpanded, surface);
+    const placement = dockPlacementFor(geometry);
+    if (placement === lastPlacement.current) {
+      void host.setDockState(geometry);
+      return;
+    }
+    lastPlacement.current = placement;
+    setTransition('out');
+    const out = setTimeout(() => {
+      void host.setDockState(geometry, undefined, true);
+      setTransition('in');
+    }, DOCK_FADE_OUT_MS);
+    const settle = setTimeout(() => setTransition(null), DOCK_FADE_OUT_MS + DOCK_FADE_IN_MS);
+    return () => {
+      clearTimeout(out);
+      clearTimeout(settle);
+    };
+  }, [state, contextExpanded, surface]);
+
+  const collapse = useCallback(() => {
+    setState('IDLE');
+    setSurface('pill');
+    setContextExpanded(false);
+    shrunk.current = false;
+  }, []);
+
+  const expand = useCallback(() => {
+    setSurface('card');
+    setState((current) => (current === 'IDLE' ? 'READY' : current));
+    shrunk.current = false;
+    void host.focusDock();
+  }, []);
+
+  // Option+Space: ピル ↔ カード。録音中は何もしない（■ で止める）
+  useEffect(() => {
+    let off: (() => void) | null = null;
+    let cancelled = false;
+    void host
+      .onDockToggle(() => {
+        setState((current) => {
+          if (current === 'RECORDING' || current === 'PROCESSING') return current;
+          if (current === 'IDLE') {
+            setSurface('card');
+            void host.focusDock();
+            return 'READY';
+          }
+          setSurface('pill');
+          setContextExpanded(false);
+          return 'IDLE';
+        });
+      })
+      .then((unlisten) => {
+        if (cancelled) unlisten();
+        else off = unlisten;
+      });
+    return () => {
+      cancelled = true;
+      off?.();
+    };
+  }, []);
 
   const setIntent = useCallback((value: string) => {
     setIntentValue(value);
@@ -84,12 +166,10 @@ export function useDockMachine(
   }, []);
 
   const dismiss = useCallback(() => {
-    // 実行中の Task はそのまま。Dismiss と Cancel を同じ操作にしない（§4.4）
-    setState('HIDDEN');
-    setContextExpanded(false);
-    shrunk.current = false;
-    void host.hideDock();
-  }, []);
+    // 実行中の Task はそのまま。Dismiss と Cancel を同じ操作にしない（§4.4）。
+    // 消えるのではなく、いちばん静かな姿（上部のピル）に戻る
+    collapse();
+  }, [collapse]);
 
   const escape = useCallback(() => {
     /*
@@ -99,11 +179,16 @@ export function useDockMachine(
      */
     if (state === 'LISTENING') {
       void dictation?.stop().catch(() => undefined);
+      if (surface === 'pill') {
+        collapse();
+        return;
+      }
       setState(intent.length > 0 ? 'TYPING' : 'READY');
       shrunk.current = true;
       return;
     }
-    const outcome = escapeOutcome(dockGeometryFor(state, contextExpanded), shrunk.current);
+    const outcome = escapeOutcome(dockGeometryFor(state, contextExpanded, surface), shrunk.current);
+    if (outcome === 'ignored') return;
     if (outcome === 'shrink') {
       shrunk.current = true;
       if (contextExpanded) setContextExpanded(false);
@@ -111,13 +196,20 @@ export function useDockMachine(
       return;
     }
     dismiss();
-  }, [state, contextExpanded, dismiss, dictation, intent]);
+  }, [state, contextExpanded, dismiss, dictation, intent, surface, collapse]);
+
+  /** ピルで聞き終えたら、そのまま送る（声の依頼は Enter を待たない）。 */
+  const submitRef = useRef<(referents?: readonly ContextReferent[]) => void>(() => undefined);
 
   return {
     state,
+    surface,
+    transition,
     contextExpanded,
     intent,
     setIntent,
+    expand,
+    collapse,
     startListening: () => {
       shrunk.current = false;
       if (!dictation) {
@@ -145,17 +237,34 @@ export function useDockMachine(
     },
     stopListening: () => {
       void dictation?.stop().catch(() => undefined);
+      if (surface === 'pill') {
+        // ピルで聞いた声は、そのまま依頼になる。何も聞き取れなければ静かに戻る
+        if (intent.trim().length > 0) submitRef.current([]);
+        else setState('IDLE');
+        return;
+      }
       setState(intent.length > 0 ? 'TYPING' : 'READY');
     },
-    submit: (referents = []) => {
+    submit: (submitRef.current = (referents = []) => {
       const text = intent.trim();
       if (text.length === 0) return;
       shrunk.current = false;
       // §3: UNDERSTANDING は 0.3〜1.2 秒程度の短い status。
       setState('UNDERSTANDING');
 
-      // 未接続なら状態だけ動かす（Conversation Engine が無い構成）
-      if (!conversation) return;
+      // 未接続なら状態だけ動かす（Conversation Engine が無い構成）。
+      // ただし「考えています」のまま置き去りにしない。§3 の上限で戻して、理由を言う
+      if (!conversation) {
+        setTimeout(() => {
+          setState((current) => {
+            if (current !== 'UNDERSTANDING') return current;
+            setSurface('card');
+            setClarification('まだ接続していません。サインインすると頼めます。');
+            return 'READY';
+          });
+        }, UNDERSTANDING_MAX_MS);
+        return;
+      }
 
       // §23: 長い仕事の受け付け（< 1 s）。返事が来た時点で止める
       const acknowledged = startUxTimer('long_task_ack');
@@ -168,6 +277,8 @@ export function useDockMachine(
            * ここで THINKING へ進めると、利用者が指したものとは
            * 別のものに対して動き出す（正本 §7.2、D-49）。
            */
+          // 返事はピルには収まらない。ここでカードに広がる（Esc でピルへ戻る）
+          setSurface('card');
           if (result.needsClarification) {
             setClarification(result.answer);
             setState('READY');
@@ -184,10 +295,11 @@ export function useDockMachine(
         })
         .catch((error: unknown) => {
           // 黙って READY に戻さない。何が起きたか言う（UI/UX §21）。
+          setSurface('card');
           setClarification(error instanceof Error ? error.message : String(error));
           setState('READY');
         });
-    },
+    }),
     toggleContext: () => {
       shrunk.current = false;
       setContextExpanded((v) => !v);

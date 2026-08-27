@@ -142,7 +142,8 @@ describe('escape (§4.4)', () => {
     expect(dock.dataset['state']).toBe('MINIMIZED');
 
     await user.type(field, '{Escape}');
-    expect(dock.dataset['state']).toBe('HIDDEN');
+    // 消えるのではなく、上部のピル（いちばん静かな姿）に戻る
+    expect((document.querySelector('.astra-dock') as HTMLElement).dataset['state']).toBe('IDLE');
   });
 
   it('collapses an open context lens before dismissing anything', async () => {
@@ -201,7 +202,7 @@ describe('keyboard (§20)', () => {
     (screen.getByRole('button', { name: '音声で入力する' }) as HTMLElement).focus();
 
     fireEvent.keyDown(window, { key: 'Escape', code: 'Escape' });
-    expect(dock.dataset['state']).toBe('HIDDEN');
+    expect((document.querySelector('.astra-dock') as HTMLElement).dataset['state']).toBe('IDLE');
   });
 
   it('opens the Context Lens with the shortcut the spec names', async () => {

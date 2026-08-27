@@ -6,9 +6,33 @@
  * 手で二重に持つと必ずずれる。
  */
 
-/** Global Interaction State Machine のうち、Dock が形を変える状態（§3・§4.1）。 */
-export const DOCK_STATES = ['ready', 'typing', 'listening', 'contextPeek', 'working'] as const;
+/**
+ * Global Interaction State Machine のうち、Dock が形を変える状態（§3・§4.1）。
+ *
+ * `idle` / `pill` は上部の Voice OS 型ピル（何もしていないときは徹底して静か）、
+ * `recording` / `processing` は下部の Recording Dock。残りは上部にぶら下がる入力カード。
+ */
+export const DOCK_STATES = [
+  'idle',
+  'pill',
+  'ready',
+  'typing',
+  'listening',
+  'contextPeek',
+  'working',
+  'recording',
+  'processing',
+] as const;
 export type DockState = (typeof DOCK_STATES)[number];
+
+/** 配置。上（メニューバー直下）か下（macOS Dock の少し上）か。 */
+export const DOCK_PLACEMENTS = ['top', 'bottom'] as const;
+export type DockPlacement = (typeof DOCK_PLACEMENTS)[number];
+
+/** 録音のときだけ下へ降りる。それ以外は「常に居る入口」として上に留まる。 */
+export function dockPlacementFor(state: DockState): DockPlacement {
+  return state === 'recording' || state === 'processing' ? 'bottom' : 'top';
+}
 
 export interface DockSize {
   readonly width: number;
@@ -17,6 +41,10 @@ export interface DockSize {
 }
 
 export const dockGeometry = {
+  /** 上部ピル（通常）: option ⌥ D 長押しで音声入力。メニューバーに接する */
+  idle: { width: 320, minHeight: 32, maxHeight: 32 },
+  /** 上部ピル（聞いています / 考えています）: 波形と一言 */
+  pill: { width: 360, minHeight: 40, maxHeight: 40 },
   /** §4.1 Ready: 560 × 56 */
   ready: { width: 560, minHeight: 56, maxHeight: 56 },
   /** §4.1 Typing expanded: 640 × 96–140（multi-line 最大 4 行） */
@@ -27,6 +55,10 @@ export const dockGeometry = {
   contextPeek: { width: 640, minHeight: 140, maxHeight: 220 },
   /** §4.1 Work card detached: 520–620 × 最大 520 */
   working: { width: 620, minHeight: 160, maxHeight: 520 },
+  /** 下部 Recording Dock: ● 03:42 CC ⏸ ■。CC で Transcript が上に足される */
+  recording: { width: 320, minHeight: 44, maxHeight: 320 },
+  /** 停止直後の「✓ 会議を保存しました」 */
+  processing: { width: 260, minHeight: 36, maxHeight: 36 },
 } as const satisfies Record<DockState, DockSize>;
 
 /** §4.1 Typing: multi-line は最大 4 行。 */
@@ -42,6 +74,10 @@ export const dockPlacement = {
   bottomOffsetMin: 48,
   bottomOffsetMax: 72,
   bottomOffsetDefault: 56,
+  /** 録音中の Recording Dock は macOS Dock とぶつからないよう少し上 */
+  recordingBottomOffset: 68,
+  /** 上部ピルはメニューバー直下に接する（作業領域の上端） */
+  topOffset: 0,
   /** 画面端に寄せすぎない余白 */
   edgeMargin: 16,
 } as const;
@@ -111,7 +147,9 @@ function clamp(value: number, min: number, max: number): number {
 export type EscapeOutcome = 'shrink' | 'dismiss' | 'ignored';
 
 export function escapeOutcome(state: DockState, alreadyShrunk: boolean): EscapeOutcome {
-  if (state === 'ready') return 'dismiss';
+  // ピルは既に一番静かな姿。録音は Esc で止めない（止めるのは明示的な ■ から）
+  if (state === 'idle' || state === 'recording' || state === 'processing') return 'ignored';
+  if (state === 'ready' || state === 'pill') return 'dismiss';
   return alreadyShrunk ? 'dismiss' : 'shrink';
 }
 
@@ -123,6 +161,8 @@ export function escapeOutcome(state: DockState, alreadyShrunk: boolean): EscapeO
  */
 export type InteractionState =
   | 'HIDDEN'
+  /** 上部ピル。何もしていない。入口だけが見えている */
+  | 'IDLE'
   | 'READY'
   | 'LISTENING'
   | 'TYPING'
@@ -132,9 +172,27 @@ export type InteractionState =
   | 'RESULT'
   | 'FAILED_RECOVERABLE'
   | 'FAILED_BLOCKED'
-  | 'MINIMIZED';
+  | 'MINIMIZED'
+  /** 会議を録っている。下部の Recording Dock */
+  | 'RECORDING'
+  /** 停止直後。保存を伝えて上へ戻る */
+  | 'PROCESSING';
 
-export function dockGeometryFor(state: InteractionState, contextExpanded = false): DockState {
+/**
+ * 面の種類。`pill` は上部の細いピル（入力欄を持たない）、`card` は入力カード。
+ * 押している間だけ話す（push-to-talk）はピルのまま聞き、結果が要るときだけカードに広がる。
+ */
+export type DockSurface = 'pill' | 'card';
+
+export function dockGeometryFor(
+  state: InteractionState,
+  contextExpanded = false,
+  surface: DockSurface = 'card',
+): DockState {
+  if (state === 'IDLE') return 'idle';
+  if (state === 'RECORDING') return 'recording';
+  if (state === 'PROCESSING') return 'processing';
+  if (surface === 'pill' && (state === 'LISTENING' || state === 'UNDERSTANDING')) return 'pill';
   if (contextExpanded) return 'contextPeek';
   switch (state) {
     case 'LISTENING':

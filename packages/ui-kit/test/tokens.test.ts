@@ -36,6 +36,7 @@ import {
   space,
   tabForPath,
   typography,
+  dockPlacementFor,
 } from '../src/index.js';
 
 describe('colour tokens', () => {
@@ -295,6 +296,7 @@ describe('task dock geometry (§4.1)', () => {
   it('maps every interaction state to a geometry', () => {
     const states = [
       'HIDDEN',
+      'IDLE',
       'READY',
       'LISTENING',
       'TYPING',
@@ -305,10 +307,28 @@ describe('task dock geometry (§4.1)', () => {
       'FAILED_RECOVERABLE',
       'FAILED_BLOCKED',
       'MINIMIZED',
+      'RECORDING',
+      'PROCESSING',
     ] as const;
     for (const state of states) {
       expect(DOCK_STATES, state).toContain(dockGeometryFor(state));
     }
+  });
+
+  it('keeps the pill for listening and thinking until an answer needs the card', () => {
+    expect(dockGeometryFor('IDLE')).toBe('idle');
+    expect(dockGeometryFor('LISTENING', false, 'pill')).toBe('pill');
+    expect(dockGeometryFor('UNDERSTANDING', false, 'pill')).toBe('pill');
+    expect(dockGeometryFor('LISTENING', false, 'card')).toBe('listening');
+    expect(dockGeometryFor('RECORDING')).toBe('recording');
+  });
+
+  it('only the recording surfaces sit at the bottom; the entrance stays at the top', () => {
+    expect(dockPlacementFor('idle')).toBe('top');
+    expect(dockPlacementFor('ready')).toBe('top');
+    expect(dockPlacementFor('working')).toBe('top');
+    expect(dockPlacementFor('recording')).toBe('bottom');
+    expect(dockPlacementFor('processing')).toBe('bottom');
   });
 
   it('shows progress, approval and result on the same card surface', () => {
@@ -367,6 +387,12 @@ describe('escape behaviour (§4.4)', () => {
 
   it('dismisses straight away when there is nothing to shrink', () => {
     expect(escapeOutcome('ready', false)).toBe('dismiss');
+    expect(escapeOutcome('pill', false)).toBe('dismiss');
+  });
+
+  it('never stops a recording or moves the idle pill with Esc', () => {
+    expect(escapeOutcome('idle', false)).toBe('ignored');
+    expect(escapeOutcome('recording', true)).toBe('ignored');
   });
 });
 

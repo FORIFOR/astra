@@ -7,11 +7,15 @@
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum DockState {
+    Idle,
+    Pill,
     Ready,
     Typing,
     Listening,
     ContextPeek,
     Working,
+    Recording,
+    Processing,
 }
 
 /// window のサイズ。高さは内容に応じて min..=max の範囲で決める。
@@ -22,9 +26,26 @@ pub struct DockSize {
     pub max_height: u32,
 }
 
+/// 配置。上（メニューバー直下）か下（macOS Dock の少し上）か。
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Placement {
+    Top,
+    Bottom,
+}
+
 impl DockState {
     pub fn size(self) -> DockSize {
         match self {
+            DockState::Idle => DockSize {
+                width: 320,
+                min_height: 32,
+                max_height: 32,
+            },
+            DockState::Pill => DockSize {
+                width: 360,
+                min_height: 40,
+                max_height: 40,
+            },
             DockState::Ready => DockSize {
                 width: 560,
                 min_height: 56,
@@ -50,6 +71,31 @@ impl DockState {
                 min_height: 160,
                 max_height: 520,
             },
+            DockState::Recording => DockSize {
+                width: 320,
+                min_height: 44,
+                max_height: 320,
+            },
+            DockState::Processing => DockSize {
+                width: 260,
+                min_height: 36,
+                max_height: 36,
+            },
+        }
+    }
+
+    /// 録音のときだけ下へ降りる。それ以外は上に留まる。
+    pub fn placement(self) -> Placement {
+        match self {
+            DockState::Idle => Placement::Top,
+            DockState::Pill => Placement::Top,
+            DockState::Ready => Placement::Top,
+            DockState::Typing => Placement::Top,
+            DockState::Listening => Placement::Top,
+            DockState::ContextPeek => Placement::Top,
+            DockState::Working => Placement::Top,
+            DockState::Recording => Placement::Bottom,
+            DockState::Processing => Placement::Bottom,
         }
     }
 }
@@ -58,5 +104,9 @@ impl DockState {
 pub const BOTTOM_OFFSET_MIN: i32 = 48;
 pub const BOTTOM_OFFSET_MAX: i32 = 72;
 pub const BOTTOM_OFFSET_DEFAULT: i32 = 56;
+/// 録音中の Recording Dock の、画面下端からの距離。
+pub const RECORDING_BOTTOM_OFFSET: i32 = 68;
+/// 上部ピルの、作業領域上端からの距離。
+pub const TOP_OFFSET: i32 = 0;
 /// 画面端に寄せすぎないための余白。
 pub const EDGE_MARGIN: i32 = 16;

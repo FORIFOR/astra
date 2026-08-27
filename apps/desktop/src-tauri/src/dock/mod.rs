@@ -7,7 +7,7 @@ pub mod geometry;
 mod geometry_generated;
 mod state;
 
-pub use geometry::{DockState, Position, Rect};
+pub use geometry::{DockState, Placement, Position, Rect};
 pub use state::DockPlacementMemory;
 
 use std::sync::Mutex;
@@ -62,29 +62,27 @@ fn apply_geometry(
     runtime: &DockRuntime,
     state: DockState,
     content_height: Option<u32>,
+    jump: bool,
 ) -> Result<(), String> {
     let size = state.size();
     let height = geometry::height_for(state, content_height.unwrap_or(size.min_height));
 
     // 今の大きさ・位置。morph の出発点（§18: 位置の連続性を保って変形する）。
     let from = current_logical(window);
+    let previous = *runtime.state.lock().map_err(|_| "state lock poisoned")?;
 
     if let Some((display_id, _scale, work_area)) = work_area_of(window) {
         let memory = runtime
             .placement
             .lock()
             .map_err(|_| "placement lock poisoned")?;
-        let position = match memory.remembered(display_id) {
-            // ユーザーが動かした位置は、その display の中に収めて再利用する
-            Some(saved) => {
+        let position = match (state.placement(), memory.remembered(display_id)) {
+            // 下（録音）だけ、ユーザーが動かした位置をその display の中に収めて再利用する。
+            // 上のピルはメニューバーに接する場所と決まっているので記憶を使わない
+            (Placement::Bottom, Some(saved)) => {
                 geometry::clamp_to_work_area(saved, work_area, size.width as i32, height as i32)
             }
-            None => geometry::default_position(
-                work_area,
-                size.width as i32,
-                height as i32,
-                geometry::BOTTOM_OFFSET_DEFAULT,
-            ),
+            _ => geometry::position_for(state, work_area, size.width as i32, height as i32),
         };
         let to = Frame {
             x: position.x as f64,
@@ -92,7 +90,10 @@ fn apply_geometry(
             width: size.width as f64,
             height: height as f64,
         };
-        morph(window.clone(), from, to);
+        // 上↔下は画面を横切らせない（黒い帯が真ん中を通ると安く見える）。
+        // 画面側がフェードしてから呼ぶので、ここは一気に置く
+        let crossing = previous.is_some_and(|p| p.placement() != state.placement());
+        morph(window.clone(), from.filter(|_| !(jump || crossing)), to);
     } else {
         // 表示領域が分からなくても、大きさだけは合わせる
         window
@@ -179,11 +180,29 @@ pub fn dock_show(
         &runtime,
         state.unwrap_or(DockState::Ready),
         content_height,
+        false,
     )?;
     window.show().map_err(|e| e.to_string())?;
     window.set_focus().map_err(|e| e.to_string())?;
     emit_summoned(&app, started);
     Ok(())
+}
+
+/// 起動時。上部の idle ピルを出しておく（常に居る入口）。焦点は奪わない。
+///
+/// すべての Space に出す。Space を移っても同じ場所に居るのが「OS の一部」の感覚。
+pub fn show_idle(app: &AppHandle) -> Result<(), String> {
+    let window = dock_window(app)?;
+    let runtime = app.state::<DockRuntime>();
+    let _ = window.set_visible_on_all_workspaces(true);
+    apply_geometry(&window, &runtime, DockState::Idle, None, true)?;
+    window.show().map_err(|e| e.to_string())
+}
+
+/// 入力カードに広げたとき、文字を打てるように焦点を移す。ピルのままでは呼ばない。
+#[tauri::command]
+pub fn dock_focus(app: AppHandle) -> Result<(), String> {
+    dock_window(&app)?.set_focus().map_err(|e| e.to_string())
 }
 
 /// Dock を引っ込める。**実行中の Task はキャンセルしない**（§4.4）。
@@ -199,26 +218,40 @@ pub fn dock_set_state(
     runtime: tauri::State<'_, DockRuntime>,
     state: DockState,
     content_height: Option<u32>,
+    jump: Option<bool>,
 ) -> Result<(), String> {
     let window = dock_window(&app)?;
-    apply_geometry(&window, &runtime, state, content_height)
+    log::info!("dock state -> {state:?} (content {content_height:?}, jump {jump:?})");
+    apply_geometry(
+        &window,
+        &runtime,
+        state,
+        content_height,
+        jump.unwrap_or(false),
+    )?;
+    // ピルに戻ったら焦点を返す。焦点が Dock に残ると、前のアプリのキー入力が死ぬ
+    if !window.is_visible().unwrap_or(false) {
+        window.show().map_err(|e| e.to_string())?;
+    }
+    Ok(())
 }
 
-/// ショートカットでの開閉。押すたびに反転する。
+/// ショートカット（Option+Space）。**隠す / 出すではなく、ピル ↔ 入力カード。**
+///
+/// どちらへ行くかは画面側の状態機械が知っている（録音中なら何もしない等）ので、
+/// ここは「押された」と伝えて、窓が消えていれば出し直すだけ。
 #[tauri::command]
 pub fn dock_toggle(app: AppHandle, runtime: tauri::State<'_, DockRuntime>) -> Result<bool, String> {
     let started = std::time::Instant::now();
     let window = dock_window(&app)?;
-    if window.is_visible().map_err(|e| e.to_string())? {
-        window.hide().map_err(|e| e.to_string())?;
-        Ok(false)
-    } else {
-        apply_geometry(&window, &runtime, DockState::Ready, None)?;
+    if !window.is_visible().map_err(|e| e.to_string())? {
+        apply_geometry(&window, &runtime, DockState::Idle, None, true)?;
         window.show().map_err(|e| e.to_string())?;
-        window.set_focus().map_err(|e| e.to_string())?;
-        emit_summoned(&app, started);
-        Ok(true)
     }
+    app.emit("dock:toggle", serde_json::json!({}))
+        .map_err(|e| e.to_string())?;
+    emit_summoned(&app, started);
+    Ok(true)
 }
 
 /// ユーザーが動かした位置を覚える（§4.2）。display ごとに別々に持つ。

@@ -156,6 +156,8 @@ function DockSurface(): ReactElement {
 
   return (
     <TaskDock
+      // 常に居る入口。起動直後は上部のピル
+      initialState="IDLE"
       {...(conversation ? { conversation } : {})}
       {...(voiceRuntime.dictation ? { dictation: voiceRuntime.dictation } : {})}
       voiceLevels={{ input: voiceRuntime.inputLevel, output: voiceRuntime.outputLevel }}
@@ -202,6 +204,7 @@ function DemoDock(): ReactElement | null {
     <ThemeProvider>
       <TaskDock
         initialState={demo.state}
+        initialSurface={demo.surface}
         voiceMode={demo.mode}
         voiceLevels={demo.levels}
         resultText={demo.resultText}

@@ -16,7 +16,12 @@ import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 
 const run = promisify(execFile);
-import { dockGeometry, dockPlacement, DOCK_STATES } from '../packages/ui-kit/dist/index.js';
+import {
+  dockGeometry,
+  dockPlacement,
+  dockPlacementFor,
+  DOCK_STATES,
+} from '../packages/ui-kit/dist/index.js';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const target = path.join(root, 'apps/desktop/src-tauri/src/dock/geometry_generated.rs');
@@ -43,6 +48,13 @@ pub struct DockSize {
     pub max_height: u32,
 }
 
+/// 配置。上（メニューバー直下）か下（macOS Dock の少し上）か。
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Placement {
+    Top,
+    Bottom,
+}
+
 impl DockState {
     pub fn size(self) -> DockSize {
         match self {
@@ -52,12 +64,23 @@ ${DOCK_STATES.map((s) => {
 }).join('\n')}
         }
     }
+
+    /// 録音のときだけ下へ降りる。それ以外は上に留まる。
+    pub fn placement(self) -> Placement {
+        match self {
+${DOCK_STATES.map((s) => `            DockState::${variant(s)} => Placement::${dockPlacementFor(s) === 'top' ? 'Top' : 'Bottom'},`).join('\n')}
+        }
+    }
 }
 
 /// 画面下端からの距離（UI/UX §4.2）。
 pub const BOTTOM_OFFSET_MIN: i32 = ${dockPlacement.bottomOffsetMin};
 pub const BOTTOM_OFFSET_MAX: i32 = ${dockPlacement.bottomOffsetMax};
 pub const BOTTOM_OFFSET_DEFAULT: i32 = ${dockPlacement.bottomOffsetDefault};
+/// 録音中の Recording Dock の、画面下端からの距離。
+pub const RECORDING_BOTTOM_OFFSET: i32 = ${dockPlacement.recordingBottomOffset};
+/// 上部ピルの、作業領域上端からの距離。
+pub const TOP_OFFSET: i32 = ${dockPlacement.topOffset};
 /// 画面端に寄せすぎないための余白。
 pub const EDGE_MARGIN: i32 = ${dockPlacement.edgeMargin};
 `;

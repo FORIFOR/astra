@@ -17,7 +17,7 @@ use std::sync::{Arc, Mutex};
 use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine as _;
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Emitter, LogicalPosition, Manager};
+use tauri::{AppHandle, Emitter, Manager};
 
 use crate::audio::capture::{CaptureConfig, MicrophoneCapture};
 use crate::audio::frame::{rms, to_pcm16, PcmFrame, SAMPLE_RATE_HZ};
@@ -253,30 +253,22 @@ fn append_until_limit(target: &mut Vec<f32>, samples: &[f32]) {
     target.extend_from_slice(&samples[..samples.len().min(room)]);
 }
 
-/** Voice HUD と Dock の両方へ、UI が表示すべき状態を一度に配る。 */
+/// UI が表示すべき音声の状態を配る。
+///
+/// 以前はここで別 window の Voice HUD（大きな Orb）を出していた。
+/// 今は上部の Dock ピルが「聞いています / 考えています」を担うので、
+/// **別の浮いた面は出さない**（同じことを 2 か所で言わない）。
+/// HUD window 自体は残してあるが、出すのは明示的に呼ばれたときだけ。
 #[tauri::command]
 pub fn voice_set_mode(app: AppHandle, mode: VoiceMode) -> Result<(), String> {
     app.emit("voice:mode", VoiceModeEvent { mode })
         .map_err(|error| error.to_string())?;
-
-    let Some(window) = app.get_webview_window(VOICE_HUD_WINDOW_LABEL) else {
-        return Err(format!("no window labelled {VOICE_HUD_WINDOW_LABEL}"));
-    };
-    if mode == VoiceMode::Idle {
-        return window.hide().map_err(|error| error.to_string());
+    if let Some(window) = app.get_webview_window(VOICE_HUD_WINDOW_LABEL) {
+        if window.is_visible().unwrap_or(false) {
+            let _ = window.hide();
+        }
     }
-
-    // Dock と重ねず、その少し上へ。全画面ではなく作業領域を使う。
-    if let Ok(Some(monitor)) = window.current_monitor() {
-        let scale = monitor.scale_factor();
-        let area = monitor.work_area();
-        let x = area.position.x as f64 / scale + (area.size.width as f64 / scale - 360.0) / 2.0;
-        let y = area.position.y as f64 / scale + area.size.height as f64 / scale - 220.0 - 176.0;
-        window
-            .set_position(LogicalPosition::new(x.round() as i32, y.round() as i32))
-            .map_err(|error| error.to_string())?;
-    }
-    window.show().map_err(|error| error.to_string())
+    Ok(())
 }
 
 /** Web Audio が測った読み上げ音量を独立 HUD にも流す。 */
