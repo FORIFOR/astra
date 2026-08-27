@@ -726,3 +726,9 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
 - **意味**: Windows の未検証境界がさらに狭まった。now 検証済み: C# ロジック（compile＋runtime）／geometry／
   **XAML の整形式性**。**残る唯一の Windows 専用検証**: XAML→C# codegen（`XamlCompiler.exe`）＋WinUI の実描画＋
   COM/Win32 の実行時動作 ＝ windows-latest CI / 実機のみ。
+
+## 追記: overlay パネルの Spaces/fullscreen 挙動を検証（Phase 1.66, §2 Window/Spaces/fullscreen）
+- `AstraPanel` は `collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary]`・borderless・透過・
+  非 main で構成済み（§2「Window/Spaces/fullscreen挙動」＝全 Space・フルスクリーンアプリ上に出る overlay）。
+- 検証: `--selftest panel`（パネルを生成し表示せず属性だけ確認、headless で hang しない）。
+  **実測 PASS**: `全Space=true fullscreen補助=true borderless=true 透過=true notMain=true`。verify に組み込み。

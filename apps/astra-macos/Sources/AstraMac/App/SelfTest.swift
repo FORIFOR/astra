@@ -42,6 +42,7 @@ enum SelfTest {
         case "voiceask": voiceask(args); return true
         case "recoveryoffline": recoveryOffline(args); return true
         case "fulllifecycle": fullLifecycle(args); return true
+        case "panel": panelBehavior(); return true
         default: return false
         }
     }
@@ -847,6 +848,26 @@ enum SelfTest {
             print("SELFTEST_OK fulllifecycle: HUD→録音(実gateway会議 \(meetingId.prefix(8))…)→実マイク→保存送信→HUD復帰、候補に残らない")
             exit(0)
         } catch { print("SELFTEST_FAIL fulllifecycle error=\(error)"); exit(3) }
+    }
+
+    /// `--selftest panel`: overlay パネルが全 Space・fullscreen 補助・装飾なし・透過に設定されているか
+    /// を検証する（§2「Window/Spaces/fullscreen挙動」）。表示はしない（属性だけ確認）。
+    @MainActor
+    private static func panelBehavior() {
+        let panel = AstraPanel(size: NSSize(width: 100, height: 30), level: .statusBar, canKey: false,
+                               content: EmptyView())
+        let cb = panel.collectionBehavior
+        let allSpaces = cb.contains(.canJoinAllSpaces)
+        let fsAux = cb.contains(.fullScreenAuxiliary)
+        let borderless = panel.styleMask.contains(.borderless)
+        let clear = !panel.isOpaque && panel.hasShadow == false
+        let notMain = panel.canBecomeMain == false
+        panel.close()
+        guard allSpaces, fsAux, borderless, clear, notMain else {
+            print("SELFTEST_FAIL panel allSpaces=\(allSpaces) fsAux=\(fsAux) borderless=\(borderless) clear=\(clear) notMain=\(notMain)"); exit(2)
+        }
+        print("SELFTEST_OK panel: 全Space=\(allSpaces) fullscreen補助=\(fsAux) borderless=\(borderless) 透過=\(clear) notMain=\(notMain)")
+        exit(0)
     }
 
     private static func recordToDisk() {

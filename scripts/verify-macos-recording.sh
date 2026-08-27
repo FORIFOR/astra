@@ -49,6 +49,8 @@ OUTS="$("$BIN" --selftest shape)"; echo "$OUTS"
 [[ "$OUTS" == SELFTEST_OK* ]] || { echo "FAIL: macOS workspace shape != shared fixture" >&2; exit 1; }
 OUTH="$("$BIN" --selftest hudlifecycle)"; echo "$OUTH"
 [[ "$OUTH" == SELFTEST_OK* ]] || { echo "FAIL: macOS HUD lifecycle" >&2; exit 1; }
+OUTPB="$("$BIN" --selftest panel)"; echo "$OUTPB"
+[[ "$OUTPB" == SELFTEST_OK* ]] || { echo "FAIL: macOS panel Spaces/fullscreen behavior" >&2; exit 1; }
 OUTP="$("$BIN" --selftest pause)"; echo "$OUTP"
 [[ "$OUTP" == SELFTEST_OK* ]] || { echo "FAIL: macOS pause actually stops recording" >&2; exit 1; }
 OUTTM="$("$BIN" --selftest timer)"; echo "$OUTTM"
