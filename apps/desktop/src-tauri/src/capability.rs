@@ -86,6 +86,7 @@ fn local_stt() -> DeviceCapability {
         Ok(_) => DeviceCapability::available("stt.local", "sherpa-onnx"),
         Err(problem) => {
             let reason = match problem {
+                crate::stt::library::LibraryProblem::Incompatible { .. } => "library_incompatible",
                 crate::stt::library::LibraryProblem::NotInstalled { .. } => "library_not_installed",
                 crate::stt::library::LibraryProblem::NotLoadable { .. } => "library_not_loadable",
                 crate::stt::library::LibraryProblem::MissingSymbol { .. } => {

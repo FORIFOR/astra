@@ -25,10 +25,12 @@ say()  { printf '\n\033[1m%s\033[0m\n' "$1"; }
 say "1. sherpa-onnx の C API"
 mkdir -p "$LIB_DIR"
 if [ -f "$LIB_DIR/libsherpa-onnx-c-api.dylib" ]; then
-  ok "入っています: $LIB_DIR/libsherpa-onnx-c-api.dylib"
+  ok "入っています: ${LIB_DIR}/libsherpa-onnx-c-api.dylib"
 else
-  # 最新版の名前を GitHub から引く。決め打ちにすると、版が上がった日に壊れる。
-  TAG="$(curl -fsSL https://api.github.com/repos/k2-fsa/sherpa-onnx/releases/latest | python3 -c 'import json,sys; print(json.load(sys.stdin)["tag_name"])')"
+  # **版は固定。**Rust の FFI（stt/ffi.rs）が struct の並びをこの版に
+  # 合わせてある。別の版を入れると SIGBUS で落ちる（実際に落ちた）。
+  # 上げるときは ffi.rs / library.rs の SHERPA_VERSION と一緒に上げる。
+  TAG="v1.13.6"
   VER="${TAG#v}"
   ARCH="$(uname -m)"
   case "$ARCH" in
@@ -47,20 +49,20 @@ else
   # 同じ場所にある依存（onnxruntime）も一緒に置く。無いと dylib が読めない。
   find "$(dirname "$FOUND")" -name '*.dylib' -exec cp {} "$LIB_DIR/" \;
   rm -rf "$TMP"
-  ok "置きました: $LIB_DIR（$VER）"
+  ok "置きました: ${LIB_DIR}（${VER}）"
 fi
 
 say "2. 日本語の模型"
 mkdir -p "$MODEL_DIR"
 if [ -d "$MODEL_DIR/$MODEL" ]; then
-  ok "入っています: $MODEL_DIR/$MODEL"
+  ok "入っています: ${MODEL_DIR}/${MODEL}"
 else
-  todo "取得: $MODEL（約 680MB）"
+  todo "取得: ${MODEL}（約 680MB）"
   curl -fL --retry 3 -o "$MODEL_DIR/model.tar.bz2" \
     "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/${MODEL}.tar.bz2"
   tar xjf "$MODEL_DIR/model.tar.bz2" -C "$MODEL_DIR"
   rm "$MODEL_DIR/model.tar.bz2"
-  ok "置きました: $MODEL_DIR/$MODEL"
+  ok "置きました: ${MODEL_DIR}/${MODEL}"
 fi
 
 say "3. 確認"

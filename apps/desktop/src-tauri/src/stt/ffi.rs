@@ -8,7 +8,12 @@
 //! 持ち込まなかったもの: online（streaming）、translation、LID。
 //! 使わない構造体を並べておくと、更新のたびに全部を追うことになる。
 //!
-//! sherpa-onnx v1.12.25 の c-api.h に対応。
+//! sherpa-onnx **v1.13.6** の c-api.h に対応。
+//!
+//! 版は `library.rs` の `SHERPA_VERSION` と、`scripts/install-local-stt.sh` と
+//! 三つで揃える。**ずれると SIGBUS で落ちる**（実際に落ちた）:
+//! `SherpaOnnxOfflineModelConfig` は版ごとに末尾へ field が増え、
+//! こちらの struct が短いと C 側が `decoding_method` を別の場所から読む。
 
 #![allow(non_camel_case_types, non_snake_case, dead_code)]
 
@@ -80,6 +85,39 @@ pub struct SherpaOnnxOfflineMoonshineModelConfig {
     pub encoder: *const c_char,
     pub uncached_decoder: *const c_char,
     pub cached_decoder: *const c_char,
+    /// v1.13 で増えた。無いと、これ以降の field が全部ずれる。
+    pub merged_decoder: *const c_char,
+}
+
+#[repr(C)]
+#[derive(Debug, Clone, Copy)]
+pub struct SherpaOnnxOfflineFireRedAsrCtcModelConfig {
+    pub model: *const c_char,
+}
+
+#[repr(C)]
+#[derive(Debug, Clone, Copy)]
+pub struct SherpaOnnxOfflineQwen3ASRModelConfig {
+    pub conv_frontend: *const c_char,
+    pub encoder: *const c_char,
+    pub decoder: *const c_char,
+    pub tokenizer: *const c_char,
+    pub max_total_len: i32,
+    pub max_new_tokens: i32,
+    pub temperature: f32,
+    pub top_p: f32,
+    pub seed: i32,
+    pub hotwords: *const c_char,
+}
+
+#[repr(C)]
+#[derive(Debug, Clone, Copy)]
+pub struct SherpaOnnxOfflineCohereTranscribeModelConfig {
+    pub encoder: *const c_char,
+    pub decoder: *const c_char,
+    pub language: *const c_char,
+    pub use_punct: i32,
+    pub use_itn: i32,
 }
 
 #[repr(C)]
@@ -169,6 +207,10 @@ pub struct SherpaOnnxOfflineModelConfig {
     pub omnilingual: SherpaOnnxOfflineOmnilingualAsrCtcModelConfig,
     pub medasr: SherpaOnnxOfflineMedAsrCtcModelConfig,
     pub funasr_nano: SherpaOnnxOfflineFunASRNanoModelConfig,
+    // v1.13.6 で増えた 3 つ。**末尾に足す。**順序は c-api.h のまま。
+    pub fire_red_asr_ctc: SherpaOnnxOfflineFireRedAsrCtcModelConfig,
+    pub qwen3_asr: SherpaOnnxOfflineQwen3ASRModelConfig,
+    pub cohere_transcribe: SherpaOnnxOfflineCohereTranscribeModelConfig,
 }
 
 // ─── Offline recognizer config ───
@@ -276,3 +318,6 @@ pub struct SherpaOnnxOfflineRecognizerResult {
     pub segment_texts_arr: *const *const c_char,
     pub segment_count: i32,
 }
+
+/// `SherpaOnnxGetVersionStr`。読み込んだ dylib が何の版かを聞く。
+pub type GetVersionStrFn = unsafe extern "C" fn() -> *const c_char;

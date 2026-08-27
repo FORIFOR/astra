@@ -261,6 +261,7 @@ impl LocalRecognizer {
                     encoder: n,
                     uncached_decoder: n,
                     cached_decoder: n,
+                    merged_decoder: n,
                 },
                 fire_red_asr: ffi::SherpaOnnxOfflineFireRedAsrModelConfig {
                     encoder: n,
@@ -292,6 +293,26 @@ impl LocalRecognizer {
                     language: n,
                     itn: 0,
                     hotwords: n,
+                },
+                fire_red_asr_ctc: ffi::SherpaOnnxOfflineFireRedAsrCtcModelConfig { model: n },
+                qwen3_asr: ffi::SherpaOnnxOfflineQwen3ASRModelConfig {
+                    conv_frontend: n,
+                    encoder: n,
+                    decoder: n,
+                    tokenizer: n,
+                    max_total_len: 0,
+                    max_new_tokens: 0,
+                    temperature: 0.0,
+                    top_p: 0.0,
+                    seed: 0,
+                    hotwords: n,
+                },
+                cohere_transcribe: ffi::SherpaOnnxOfflineCohereTranscribeModelConfig {
+                    encoder: n,
+                    decoder: n,
+                    language: n,
+                    use_punct: 0,
+                    use_itn: 0,
                 },
             },
             lm_config: ffi::SherpaOnnxOfflineLMConfig {
@@ -606,7 +627,10 @@ mod real {
     #[test]
     #[ignore = "requires the sherpa-onnx library and the Japanese model"]
     fn transcribes_a_real_recording() {
-        let Some((dir, wavs)) = ready() else { return };
+        let Some((dir, wavs)) = ready() else {
+            // `--ignored` で明示的に走らせたのに何も無い。**通ったことにしない。**
+            panic!("real STT is not installed here — run scripts/install-local-stt.sh (and put test wavs in place)");
+        };
         let mut recognizer = LocalRecognizer::new(LiveWindow::default());
         recognizer.load(&dir).expect("load");
 
@@ -637,7 +661,10 @@ mod real {
     #[test]
     #[ignore = "requires the sherpa-onnx library and the Japanese model"]
     fn measures_the_first_partial() {
-        let Some((dir, wavs)) = ready() else { return };
+        let Some((dir, wavs)) = ready() else {
+            // `--ignored` で明示的に走らせたのに何も無い。**通ったことにしない。**
+            panic!("real STT is not installed here — run scripts/install-local-stt.sh (and put test wavs in place)");
+        };
         let mut recognizer = LocalRecognizer::new(LiveWindow::default());
         recognizer.load(&dir).expect("load");
 
@@ -692,7 +719,10 @@ mod real {
     #[test]
     #[ignore = "requires the sherpa-onnx library and the Japanese model"]
     fn shows_what_a_shorter_window_costs() {
-        let Some((dir, wavs)) = ready() else { return };
+        let Some((dir, wavs)) = ready() else {
+            // `--ignored` で明示的に走らせたのに何も無い。**通ったことにしない。**
+            panic!("real STT is not installed here — run scripts/install-local-stt.sh (and put test wavs in place)");
+        };
         let samples = wav_samples(&wavs[0]);
 
         for window_ms in [6_000u32, 1_500, 700] {

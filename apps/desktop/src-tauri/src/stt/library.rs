@@ -20,6 +20,8 @@ use super::ffi;
 /// 読めない理由。**「使えない」で一括りにしない。**
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum LibraryProblem {
+    /// 読めたが、struct の並びが合わない版。読み進めると落ちる。
+    Incompatible { found: String, expected: String },
     /// 置き場所に無い。まだ入れていない。
     NotInstalled { looked_in: Vec<String> },
     /// あるが開けない。壊れているか、別の CPU 向け。
@@ -31,6 +33,12 @@ pub enum LibraryProblem {
 impl std::fmt::Display for LibraryProblem {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            Self::Incompatible { found, expected } => {
+                write!(
+                    f,
+                    "sherpa-onnx {found} is installed, but this build was written for {expected}; run scripts/install-local-stt.sh to get the matching library"
+                )
+            }
             Self::NotInstalled { looked_in } => {
                 write!(
                     f,
@@ -63,6 +71,25 @@ fn library_file_name() -> &'static str {
 
 /// 探す場所。**上から順に。**環境変数を最優先にするのは、
 /// 開発中に別の版を差し替えられるようにするため。
+/// struct の並びを合わせてある版。`ffi.rs` と `scripts/install-local-stt.sh` と揃える。
+///
+/// **違う版を黙って読まない。**`SherpaOnnxOfflineModelConfig` は版ごとに
+/// 末尾へ field が増える。短い struct を渡すと C 側が別の場所から読み、
+/// SIGBUS で**プロセスごと落ちる**。落ちる前に、版で断る。
+pub const SHERPA_VERSION: &str = "1.13.6";
+
+/// major.minor が同じなら struct の並びは同じ、と見なす。
+pub fn is_compatible(found: &str, expected: &str) -> bool {
+    let key = |v: &str| {
+        let mut it = v.trim().trim_start_matches('v').split('.');
+        (
+            it.next().unwrap_or("").to_string(),
+            it.next().unwrap_or("").to_string(),
+        )
+    };
+    key(found) == key(expected)
+}
+
 pub fn search_paths() -> Vec<PathBuf> {
     let mut paths = Vec::new();
     if let Ok(explicit) = std::env::var("ASTRA_SHERPA_LIB_DIR") {
@@ -102,7 +129,11 @@ unsafe impl Sync for SherpaLibrary {}
 impl SherpaLibrary {
     /// 探して開く。**見つからないことは失敗ではなく、状態。**
     pub fn open() -> Result<Arc<Self>, LibraryProblem> {
-        let candidates = search_paths();
+        Self::open_from(&search_paths())
+    }
+
+    /// 候補を順に見て、最初に在るものを開く。**見た場所を全部言う。**
+    pub fn open_from(candidates: &[PathBuf]) -> Result<Arc<Self>, LibraryProblem> {
         let found = candidates.iter().find(|path| path.exists());
 
         let Some(path) = found else {
@@ -167,6 +198,30 @@ impl SherpaLibrary {
 
         log::info!("sherpa-onnx loaded from {}", path.display());
 
+        // 版を聞く。古い dylib には無い関数なので、無ければ「分からない」として通さない。
+        let version = unsafe { library.get::<ffi::GetVersionStrFn>(b"SherpaOnnxGetVersionStr\0") }
+            .ok()
+            .map(|f| {
+                unsafe { std::ffi::CStr::from_ptr(f()) }
+                    .to_string_lossy()
+                    .into_owned()
+            });
+        match version {
+            Some(v) if is_compatible(&v, SHERPA_VERSION) => {}
+            Some(v) => {
+                return Err(LibraryProblem::Incompatible {
+                    found: v,
+                    expected: SHERPA_VERSION.to_string(),
+                })
+            }
+            None => {
+                return Err(LibraryProblem::Incompatible {
+                    found: "unknown (no SherpaOnnxGetVersionStr)".to_string(),
+                    expected: SHERPA_VERSION.to_string(),
+                })
+            }
+        }
+
         Ok(Arc::new(Self {
             _library: library,
             create_recognizer,
@@ -200,9 +255,13 @@ mod tests {
 
     #[test]
     fn says_where_it_looked_when_nothing_is_there() {
-        std::env::set_var("ASTRA_SHERPA_LIB_DIR", "/nonexistent-astra-sherpa");
-        let problem = SherpaLibrary::open().err();
-        std::env::remove_var("ASTRA_SHERPA_LIB_DIR");
+        /*
+         * `open()` は端末の Application Support も見に行く。
+         * そこに dylib が入っている端末（いまのこの端末）では
+         * 「無い」を再現できないので、候補を直接渡して試す。
+         */
+        let bogus = PathBuf::from("/nonexistent-astra-sherpa").join(library_file_name());
+        let problem = SherpaLibrary::open_from(&[bogus]).err();
         match problem {
             Some(LibraryProblem::NotInstalled { looked_in }) => {
                 // どこを見たかを言わないと、どこへ置けばよいか分からない
@@ -221,5 +280,24 @@ mod tests {
         let problem = SherpaLibrary::open_at(&path).err();
         let _ = std::fs::remove_file(&path);
         assert!(matches!(problem, Some(LibraryProblem::NotLoadable { .. })));
+    }
+}
+
+#[cfg(test)]
+mod version_tests {
+    use super::is_compatible;
+
+    #[test]
+    fn same_major_minor_is_fine() {
+        assert!(is_compatible("1.13.6", "1.13.6"));
+        assert!(is_compatible("v1.13.9", "1.13.6"));
+    }
+
+    #[test]
+    fn a_different_minor_is_refused_before_it_can_crash() {
+        // 1.12 と 1.13 で struct の並びが違い、実際に SIGBUS で落ちた
+        assert!(!is_compatible("1.12.25", "1.13.6"));
+        assert!(!is_compatible("1.14.0", "1.13.6"));
+        assert!(!is_compatible("", "1.13.6"));
     }
 }
