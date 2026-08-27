@@ -179,6 +179,11 @@ describe('quick menu on the pill', () => {
     expect(items).toEqual(['⌨文字で頼む', '🎤声で頼む', '●会議を記録']);
 
     fireEvent.click(document.querySelectorAll('[role="menuitem"]')[2]!);
+    // 本体を前に出してから頼む（タブ移動で確認が閉じないように少し待つ）
+    await act(async () => {});
+    await act(async () => {
+      vi.advanceTimersByTime(200);
+    });
     expect(onMeetingCommand).toHaveBeenCalledWith('start');
     expect(dock().dataset['state']).toBe('IDLE');
     expect(dock().dataset['geometry']).toBe('idle');

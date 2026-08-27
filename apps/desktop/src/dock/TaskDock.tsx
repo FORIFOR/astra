@@ -362,8 +362,11 @@ export function TaskDock({
           }}
           onRecord={() => {
             machine.collapse();
-            onMeetingCommand?.('start');
-            void workspace.open();
+            // 先に本体を前に出す（Work タブへ移る）。その後で開始確認を頼む。
+            // 逆にすると、タブ移動が「開始確認を閉じる」扱いになって消える
+            void workspace.open().then(() => {
+              setTimeout(() => onMeetingCommand?.('start'), 150);
+            });
           }}
           onClose={machine.collapse}
         />
