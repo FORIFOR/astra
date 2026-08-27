@@ -19,6 +19,8 @@ internal static class AstraCoreNative
     [DllImport(Dll, CharSet = CharSet.Ansi)]
     internal static extern IntPtr astra_core_authorize_url(string provider, string clientId,
         string redirectUri, string scopesSpaceJoined, string state, string codeChallenge);
+    [DllImport(Dll, CharSet = CharSet.Ansi)]
+    internal static extern IntPtr astra_core_parse_callback(string target);
 
     [DllImport(Dll, CharSet = CharSet.Ansi)] internal static extern int astra_core_api_reachable(string baseUrl);
     [DllImport(Dll, CharSet = CharSet.Ansi)] internal static extern IntPtr astra_core_api_dev_sign_in(string baseUrl, string email, string displayName);
@@ -61,6 +63,10 @@ public static class AstraCore
         string[] scopes, string state, string codeChallenge) =>
         Consume(AstraCoreNative.astra_core_authorize_url(provider, clientId, redirectUri,
             string.Join(" ", scopes), state, codeChallenge));
+
+    /// <summary>折り返し URL を解析して JSON（code/state/error…）を返す。</summary>
+    public static string ParseCallback(string target) =>
+        Consume(AstraCoreNative.astra_core_parse_callback(target));
 
     // gateway API（実バックエンド）。macOS(Swift/UniFFI) と同じ core を Windows から。JSON か生値、失敗は空文字。
     public static bool ApiReachable(string baseUrl) => AstraCoreNative.astra_core_api_reachable(baseUrl) == 1;

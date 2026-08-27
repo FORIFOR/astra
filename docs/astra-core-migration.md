@@ -542,3 +542,13 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
   core 35 tests / swift-bindings `--check` current / FFI contract / Tauri ビルド回帰なし。
 - **意味**: connector OAuth フローが Swift 側で **code-complete**（authorize URL/PKCE/loopback/交換すべて core・検証済み）。
   残る外部依存は **実 OAuth 提供者（client_id）＋ユーザー consent＋実 HTTP 交換**のみ（この環境に無い）。
+
+## 追記: connector callback 解析を C ABI にも公開（Phase 1.47, Windows パリティ）
+- `connector_parse_callback` は uniffi(Swift)にだけ公開していたので、**C ABI に `astra_core_parse_callback`
+  （折り返し URL → JSON）を追加**し、Windows C# も同じ解析を使えるようにした。header・`AstraCore.cs`
+  （`ParseCallback`）・`verify-c-abi.sh` を更新。
+- 検証: **C(clang) から** `astra_core_parse_callback("/callback?code=abc&state=xyz")` → JSON に code/state を確認。
+  **実測 PASS**: `CABI_OK connector: … parseCallback ok`。**FFI contract**: `Rust 20 = header 20 = C# 20` 一致。
+  swift-bindings `--check` current。
+- **意味**: connector の契約層（authorize URL / PKCE / callback 解析 / トークン交換）が macOS(UniFFI)・Windows(C ABI)
+  の両方に揃い、C から実行検証＋三者一致 contract で担保。残る外部依存は実 OAuth 提供者との live 交換のみ。

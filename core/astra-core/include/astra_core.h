@@ -16,6 +16,7 @@ char *astra_core_pkce_challenge(const char *verifier);
 char *astra_core_authorize_url(const char *provider, const char *client_id,
                                const char *redirect_uri, const char *scopes_space_joined,
                                const char *state, const char *code_challenge);
+char *astra_core_parse_callback(const char *target);
 
 /* gateway API（実バックエンド）。JSON か生値を返す。失敗は NULL。要 astra_core_string_free。 */
 int32_t astra_core_api_reachable(const char *base_url);

@@ -25,7 +25,10 @@ int main(int argc, char** argv) {
     if (!url || strstr(url, "code_challenge_method=S256") == NULL || strstr(url, "state=st-1") == NULL) { printf("CABI_FAIL authorize_url=%s\n", url ? url : "NULL"); return 21; }
     char* bad = astra_core_authorize_url("google", "cid", "https://evil.example/cb", "", "s", "c");
     if (bad != NULL) { printf("CABI_FAIL non-loopback accepted\n"); return 22; }
-    printf("CABI_OK connector: pkce=S256 authorizeUrl ok nonLoopbackRejected\n");
+    char* cb = astra_core_parse_callback("/callback?code=abc&state=xyz");
+    if (!cb || strstr(cb, "\"code\":\"abc\"") == NULL || strstr(cb, "\"state\":\"xyz\"") == NULL) { printf("CABI_FAIL parse_callback=%s\n", cb ? cb : "NULL"); return 23; }
+    astra_core_string_free(cb);
+    printf("CABI_OK connector: pkce=S256 authorizeUrl ok nonLoopbackRejected parseCallback ok\n");
     astra_core_string_free(chal);
     astra_core_string_free(url);
 

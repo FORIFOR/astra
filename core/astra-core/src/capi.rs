@@ -11,6 +11,7 @@ use crate::api::{
     api_me, api_plugin_catalog, api_reachable, api_wait_task,
 };
 use crate::connector::{build_authorize_url, pkce_challenge, OauthProvider, ProviderConfig};
+use crate::oauth::parse_callback;
 use crate::recording::{format_elapsed, resample_linear, wire_bytes, Journal, JournalState, WIRE_SAMPLE_RATE};
 
 fn cstr(value: &str) -> *mut c_char {
@@ -98,6 +99,21 @@ pub unsafe extern "C" fn astra_core_authorize_url(
     };
     match build_authorize_url(&config, state, challenge) {
         Ok(url) => cstr(&url),
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+/// 折り返し URL（`/callback?code=...`）を解析して JSON で返す（Windows C# 用）。
+/// 例: {"code":"...","state":"...","error":null,...}。戻り値は astra_core_string_free で解放。
+///
+/// # Safety
+/// `target` は有効な NUL 終端 UTF-8。
+#[no_mangle]
+pub unsafe extern "C" fn astra_core_parse_callback(target: *const c_char) -> *mut c_char {
+    let Some(target) = rstr(target) else { return std::ptr::null_mut() };
+    let p = parse_callback(target);
+    match serde_json::to_string(&p) {
+        Ok(json) => cstr(&json),
         Err(_) => std::ptr::null_mut(),
     }
 }
