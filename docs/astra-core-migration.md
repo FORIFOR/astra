@@ -790,3 +790,12 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
   authorize URL/PKCE/loopback/callback 解析も既に検証済み。**残る外部依存は「実 OAuth 提供者サーバの実挙動＋
   ユーザーの consent」のみ**——mock ではなく本物の Google/Microsoft に対する live 交換だけが未検証で、これは
   client_id とユーザー操作を要する。
+
+## 追記: STT テキスト無応答は bundle 文脈でなく環境限界と確定（Phase 1.72）
+- 「Speech 認可は bundle id 紐づけなので、裸実行でなく署名済み `.app` から実行すれば STT が出るのでは」という仮説を検証。
+  署名済み `Astra.app/Contents/MacOS/Astra --selftest sttrecognize`（NSSpeechRecognitionUsageDescription 入り Info.plist・
+  bundle id `com.astra.mac`）でも結果は同じ **`SELFTEST_SKIP … recognizer returned no text`**。
+- 認可は `auth=3(authorized)`・`onDeviceCapable=true`・`start/append` は動くのに、`say` 生成音声から認識テキストが
+  返らない。→ **bundle 文脈の問題ではなく、この非対話環境（前面セッション無し）で Speech 認識サービスが実結果を
+  返さない環境限界**と確定。STT の**パイプライン**（setup/start/append/live capture 中の稼働）は実測 PASS 済み、
+  **実発話→テキストだけ**が署名 .app を前面でユーザーが実操作したときにのみ確認可能（Done#3 live）。
