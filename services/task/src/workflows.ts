@@ -57,6 +57,8 @@ const tools = proxyActivities<TaskActivities>({
       'PolicyDenied',
       // 承認が古い。待っても新しくならない
       'ApprovalStale',
+      // 実装が無い。**再試行しても現れない**
+      'ToolNotImplemented',
     ],
   },
 });
@@ -319,6 +321,8 @@ export async function TaskWorkflow(input: TaskWorkflowInput): Promise<TaskResult
     if (/not connected|expired|reconnect/i.test(message)) return 'reconnect';
     if (/permission|denied|not allowed|scope/i.test(message)) return 'grant_permission';
     if (/declared local|no host/i.test(message)) return 'handoff';
+    // 実装が無い。利用者にできることは無い。
+    if (/nothing implements it/i.test(message)) return 'handoff';
     // 代替まで試した上で落ちている。もう一度やっても同じ。
     return 'handoff';
   }

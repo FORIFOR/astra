@@ -7,7 +7,9 @@ verified: true
 min_core_version: 0.1.0
 category: connector
 compliance_profile: GENERAL
-execution_surfaces: [cloud]
+# 端末で走る。**資格情報は端末の Keychain にしかない**ので、
+# cloud で呼べる道は作らない（正本 §16.1・§21）。
+execution_surfaces: [local]
 permissions:
   - email.read
   - email.draft
@@ -25,15 +27,20 @@ connectors:
       - https://www.googleapis.com/auth/gmail.send
 tools:
   - id: mail.search
+    surface: local
     risk: READ
   - id: mail.read
+    surface: local
     risk: READ
   - id: mail.draft.create
+    surface: local
     risk: REVERSIBLE_WRITE
   - id: mail.send
+    surface: local
     risk: EXTERNAL_COMMIT
     requires_confirmation: true
   - id: mail.trash
+    surface: local
     risk: DESTRUCTIVE
     requires_confirmation: true
 agents: []

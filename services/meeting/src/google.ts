@@ -154,6 +154,7 @@ export function fromV1Response(
  * **結果を待って push を止めない**（止めると音が遅れ、会議が破綻する）。
  */
 export class GoogleStreamingTranscriber implements StreamingTranscriber {
+  readonly name = 'google-stt-v1';
   readonly isStandIn = false;
   readonly #config: GoogleStreamingConfig;
 
@@ -340,6 +341,7 @@ export function fromV2Results(results: readonly V2Result[], language: string): T
 }
 
 export class GoogleBatchTranscriber implements BatchTranscriber {
+  readonly name = 'google-stt-batch';
   readonly isStandIn = false;
   readonly #config: GoogleBatchConfig;
 
@@ -459,6 +461,7 @@ export interface GoogleTranslationConfig {
  * （speech translation を使うと speaker tag の連続性が保てないため）。
  */
 export class GoogleTranslationProvider implements TranslationProvider {
+  readonly name = 'google-translate-v3';
   readonly isStandIn = false;
   readonly #config: GoogleTranslationConfig;
 

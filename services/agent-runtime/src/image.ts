@@ -51,14 +51,20 @@ export class DeterministicImageGenerator implements ImageGenerator {
   readonly isStandIn = true;
 
   async generate(request: GenerateImageRequest): Promise<GeneratedImage> {
-    const width = request.width ?? 512;
-    const height = request.height ?? 512;
     const seed = request.seed ?? hash(request.prompt);
 
     // 1x1 の PNG を、prompt から決まる色で作る。
     // 本物の絵ではないことが見て分かるほうがよい。
     const bytes = onePixelPng(seed);
-    return { bytes, mimeType: 'image/png', width, height, seed };
+
+    /*
+     * **頼まれた寸法を、作った寸法として返さない。**
+     *
+     * 返していた間、1x1 の PNG が「1024x1024」と名乗っていた。
+     * 中身と食い違う寸法を台帳に残すと、あとから本物と見分けられなくなる。
+     * 作ったのは 1 ピクセルなので、1 ピクセルと言う。
+     */
+    return { bytes, mimeType: 'image/png', width: 1, height: 1, seed };
   }
 }
 
@@ -192,7 +198,19 @@ export class ImageService {
       sourceTaskId: input.taskId ?? null,
       parentArtifactId: input.request.parentArtifactId ?? null,
       // 何を頼んだかを残す。ここが lineage の一次情報。
-      tags: [`prompt:${prompt}`, `seed:${image.seed}`, `generator:${this.#generator.name}`],
+      tags: [
+        `prompt:${prompt}`,
+        `seed:${image.seed}`,
+        `generator:${this.#generator.name}`,
+        /*
+         * **代役で作ったものに、印を残す。**
+         *
+         * 生成器の名前だけでは、あとで名前を変えたときに読み解けない。
+         * 印が付いていれば、Library を見る側が「これは絵ではない」と
+         * 分かる。付けないと、中身の無い画像が本物に紛れる。
+         */
+        ...(this.#generator.isStandIn ? ['stand-in:true'] : []),
+      ],
     });
 
     return { artifact, seed: image.seed };

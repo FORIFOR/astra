@@ -7,27 +7,29 @@
  */
 import { NOT_IMPLEMENTED, type CapabilityInput } from '@astra/contracts';
 import { DeterministicImageGenerator, type ImageGenerator } from './image.js';
+import { IMAGE_SETTINGS, vertexImageGeneratorFromEnv, type ImagenEnv } from './imagen.js';
 
-export interface MediaProviderEnv {
-  /** 画像生成の提供者。決まったらここへ実装を渡す（OQ-19）。 */
-  readonly ASTRA_IMAGE_PROVIDER?: string | undefined;
-}
+export type MediaProviderEnv = ImagenEnv;
 
+/**
+ * 画像の生成をどこへ頼むか。**1 箇所で決める。**
+ *
+ * 選ばれていなければ代役。**名前だけで本物になったことにしない** —
+ * `ASTRA_IMAGE_PROVIDER` が置いてあっても、鍵や project が無ければ
+ * 呼べないので、代役のまま名乗る。
+ */
 export function imageGeneratorFromEnv(
   env: MediaProviderEnv,
   provided?: ImageGenerator,
 ): ImageGenerator {
-  // 設定名だけあって実装が無いなら、代役のまま。**名前で本物になったことにしない。**
-  if (provided) return provided;
-  void env;
-  return new DeterministicImageGenerator();
+  return provided ?? vertexImageGeneratorFromEnv(env) ?? new DeterministicImageGenerator();
 }
 
 export function imageCapability(generator: ImageGenerator): CapabilityInput {
   return {
     implementation: generator.name,
     isStandIn: generator.isStandIn,
-    configureWith: generator.isStandIn ? 'ASTRA_IMAGE_PROVIDER（OQ-19 未決）' : null,
+    configureWith: generator.isStandIn ? IMAGE_SETTINGS : null,
   };
 }
 

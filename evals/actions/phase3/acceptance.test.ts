@@ -281,6 +281,7 @@ describe.skipIf(!url)('Phase 3 acceptance', () => {
       db,
       publisher: { async publish() {} },
       translator: {
+        name: 'test',
         isStandIn: true,
         async translate(text) {
           return `EN: ${text}`;

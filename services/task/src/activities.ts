@@ -532,11 +532,29 @@ export function createTaskActivities(deps: ActivityDeps): TaskActivities {
       });
 
       const executor = step.surface === 'local' ? deps.hostExecutor : deps.executors?.[step.toolId];
+      /*
+       * 実装の無い tool を、**成功として通さない。**
+       *
+       * ここは長らく「登録が無ければ何もしない」だった。Phase 0 の echo の
+       * ための逃がし口だったが、**manifest が宣言した tool にも効いていた。**
+       * 実際、Sales CRM の `crm.pipeline` / `crm.next_action` は宣言だけで
+       * 実装が無く、走らせると `{ echoed: null }` を返して**完了**していた。
+       * 画面には「完了」と出て、成果物は無い。
+       *
+       * 逃がし口は `noop.*` にだけ残す。それ以外は繋がっていないと言う。
+       */
+      if (!executor && !step.toolId.startsWith('noop.')) {
+        throw ApplicationFailure.nonRetryable(
+          `${step.toolId} is declared but nothing implements it`,
+          'ToolNotImplemented',
+        );
+      }
+
       let outcome;
       try {
         outcome = executor
           ? await executor.execute(input, step)
-          : // 登録が無い tool は何もしない。Phase 0 の echo がこれにあたる。
+          : // Phase 0 の echo。**ここに来られるのは `noop.*` だけ。**
             { result: { echoed: step.args['message'] ?? null, step: step.index }, detail: null };
       } catch (error) {
         /*

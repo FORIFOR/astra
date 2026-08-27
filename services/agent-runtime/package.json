@@ -27,7 +27,8 @@
     "@astra/policy": "workspace:*",
     "@astra/telemetry": "workspace:*",
     "kysely": "catalog:",
-    "@astra/service-library": "workspace:*"
+    "@astra/service-library": "workspace:*",
+    "google-auth-library": "^11.0.2"
   },
   "devDependencies": {
     "vitest": "catalog:"

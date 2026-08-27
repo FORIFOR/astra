@@ -111,6 +111,22 @@ export class HostLanguageModel implements LanguageModel {
     );
   }
 
+  async answer(question: string, context?: string): Promise<string> {
+    const result = await this.#ask('llm.answer', {
+      question,
+      ...(context ? { context } : {}),
+    });
+    return textOf(result, 'answer');
+  }
+
+  async compose(instruction: string, context?: string): Promise<string> {
+    const result = await this.#ask('llm.compose', {
+      instruction,
+      ...(context ? { context } : {}),
+    });
+    return textOf(result, 'text');
+  }
+
   async detectContradictions(
     claims: readonly string[],
   ): Promise<{ left: number; right: number }[]> {
@@ -164,6 +180,20 @@ function stringsOf(result: unknown, key: string): string[] {
   const value = (result as Record<string, unknown> | null)?.[key];
   if (!Array.isArray(value)) return [];
   return value.filter((v): v is string => typeof v === 'string' && v.trim().length > 0);
+}
+
+/**
+ * 文章を取り出す。**形が違えば空ではなく失敗にする。**
+ *
+ * 空文字を返すと、画面には「答えはありません」と出る。
+ * 読み取れなかったのと、答えが無いのは別のこと。
+ */
+function textOf(result: unknown, key: string): string {
+  const value = (result as Record<string, unknown> | null)?.[key];
+  if (typeof value !== 'string' || value.trim().length === 0) {
+    throw new Error('the model did not answer in a form we could read');
+  }
+  return value.trim();
 }
 
 function stringOf(item: unknown, key: string): string {

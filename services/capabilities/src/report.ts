@@ -19,18 +19,48 @@ import { configuredProviders, unconfiguredProviders, type OauthEnv } from '@astr
 import type { MeetingProviders } from '@astra/service-meeting';
 import { SEARCH_SETTINGS, type ResearchProviders } from '@astra/service-research';
 
-/** 名前を持たない提供者もある。無ければ既定の呼び名を使う。 */
+/**
+ * 名前を持たない提供者もある。無ければ既定の呼び名を使う。
+ *
+ * `verified` は**実測の記録がある実装だけ**が名乗る（`docs/evidence/`）。
+ * 名乗らせる根拠を `VERIFIED_IMPLEMENTATIONS` に置いてあるので、
+ * 実装を差し替えたら、確かめ直すまで `unverified` に戻る。
+ */
 function fromProvider(
   provider: { name?: string; isStandIn: boolean },
   fallbackName: string,
   configureWith: string,
 ): CapabilityInput {
+  const implementation = provider.name ?? fallbackName;
   return {
-    implementation: provider.name ?? fallbackName,
+    implementation,
     isStandIn: provider.isStandIn,
     configureWith: provider.isStandIn ? configureWith : null,
+    ...(provider.isStandIn
+      ? {}
+      : { verification: VERIFIED_IMPLEMENTATIONS.has(implementation) ? 'verified' : 'unverified' }),
   };
 }
+
+/**
+ * 実際に繋いで結果を見た実装。**記録があるものだけ。**
+ *
+ * `docs/evidence/` の測定に対応する。ここに名前を足すのは、
+ * 「動くはず」ではなく「動いた」を書き足すことなので、
+ * 実測の記録を伴わない追加はしない。
+ */
+const VERIFIED_IMPLEMENTATIONS = new Set([
+  // docs/evidence/stt-google.md
+  'google-stt-v2',
+  'google-stt-batch',
+  'google-translate-v3',
+  // docs/evidence/language-model-byok.md
+  'device (bring your own)',
+  // docs/evidence/research-search.md
+  'device (web search)',
+  // docs/evidence/stt-google.md（TTS の節）
+  'google-tts',
+]);
 
 /**
  * 繋げる提供者が 1 つも無ければ、connector は使えない。
@@ -81,11 +111,7 @@ export function capabilityReport(input: {
       'language model',
       'Claude Code を繋ぐか、お使いの API キーを登録してください',
     ),
-    speech_to_text: fromProvider(
-      input.meeting.streaming,
-      'streaming transcriber',
-      'GOOGLE_STT_RECOGNIZER',
-    ),
+    speech_to_text: fromProvider(input.meeting.streaming, 'streaming', 'GOOGLE_STT_RECOGNIZER'),
     translation: fromProvider(input.meeting.translation, 'translation', 'GOOGLE_TRANSLATE_PARENT'),
     // 画像は代役の実装がある。動画は段取りだけがあり、生成の先が無い。
     image_generation: imageCapability(new DeterministicImageGenerator()),
@@ -93,11 +119,18 @@ export function capabilityReport(input: {
     oauth_providers: oauthCapability(input.env),
     // 任意。無くても本番は起動する（§27 の再利用候補で、製品の必須ではない）
     text_to_speech: input.env['GOOGLE_CLOUD_PROJECT']
-      ? { implementation: 'google-tts', isStandIn: false, configureWith: null }
+      ? {
+          implementation: 'google-tts',
+          isStandIn: false,
+          configureWith: null,
+          // docs/evidence/stt-google.md で実測してある
+          verification: 'verified',
+        }
       : {
           implementation: 'none',
           isStandIn: true,
           configureWith: 'GOOGLE_CLOUD_PROJECT',
+          verification: 'not_configured',
         },
   };
   return buildCapabilityReport(inputs);
@@ -115,7 +148,8 @@ export function capabilityReport(input: {
 export function capabilitySummary(report: CapabilityReport): string {
   return report.items
     .map(
-      (item) => `${item.capability}=${item.isStandIn ? 'stand-in' : 'real'}:${item.implementation}`,
+      (item) =>
+        `${item.capability}=${item.isStandIn ? 'stand-in' : 'real'}:${item.verification}:${item.implementation}`,
     )
     .join(' ');
 }

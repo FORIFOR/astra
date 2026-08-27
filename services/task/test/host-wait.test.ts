@@ -11,6 +11,37 @@ import { HostOfflineError, isHostOfflineError } from '@astra/contracts';
 
 const src = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../src');
 
+describe('a tool nobody implements', () => {
+  it('refuses instead of reporting success', async () => {
+    /*
+     * ここは長らく「登録が無ければ何もしない」だった。Phase 0 の echo の
+     * ための逃がし口だったが、**manifest が宣言した tool にも効いていた。**
+     * Sales CRM の 2 つは宣言だけで実装が無く、走らせると
+     * `{ echoed: null }` を返して**完了**していた。
+     * 画面には「完了」と出て、成果物は無い。
+     */
+    const activities = await readFile(path.join(src, 'activities.ts'), 'utf8');
+    expect(activities).toContain("!step.toolId.startsWith('noop.')");
+    expect(activities).toContain('ToolNotImplemented');
+  });
+
+  it('does not retry a tool that does not exist', async () => {
+    const workflow = await readFile(path.join(src, 'workflows.ts'), 'utf8');
+    const list = workflow.slice(
+      workflow.indexOf('nonRetryableErrorTypes'),
+      workflow.indexOf('nonRetryableErrorTypes') + 1000,
+    );
+    // 再試行しても実装は現れない
+    expect(list).toContain('ToolNotImplemented');
+  });
+
+  it('still lets the built-in echo through', async () => {
+    // Phase 0 の受け入れは noop.echo を通す。ここを塞ぐと通らなくなる。
+    const plan = await readFile(path.join(src, 'plan.ts'), 'utf8');
+    expect(plan).toContain("toolId: 'noop.echo'");
+  });
+});
+
 describe('host offline', () => {
   it('uses the same failure name on both sides of the sandbox', async () => {
     /*

@@ -7,7 +7,9 @@ verified: true
 min_core_version: 0.1.0
 category: connector
 compliance_profile: GENERAL
-execution_surfaces: [cloud]
+# 端末で走る。**資格情報は端末の Keychain にしかない**ので、
+# cloud で呼べる道は作らない（正本 §16.1・§21）。
+execution_surfaces: [local]
 permissions:
   - calendar.read
   - calendar.write
@@ -21,11 +23,14 @@ connectors:
       - https://www.googleapis.com/auth/calendar.events
 tools:
   - id: calendar.list_events
+    surface: local
     risk: READ
   - id: calendar.get_event
+    surface: local
     risk: READ
   # 招待が同席者へ届く。取り消しても「取り消し通知」が届く。
   - id: calendar.create_event
+    surface: local
     risk: EXTERNAL_COMMIT
     requires_confirmation: true
 agents: []

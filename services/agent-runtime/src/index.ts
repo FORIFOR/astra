@@ -42,3 +42,5 @@ export * from './architecture.js';
 export * from './architecture-executor.js';
 export * from './stock.js';
 export * from './stock-executor.js';
+export * from './imagen.js';
+export * from './sales-crm-executor.js';

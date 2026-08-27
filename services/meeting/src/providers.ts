@@ -58,6 +58,12 @@ export interface StreamingSession {
 export interface StreamingTranscriber {
   /** V1 Streaming + diarization に相当。 */
   start(config: StreamingConfig): Promise<StreamingSession>;
+  /**
+   * どの実装か。**代役と本物を同じ名前で報告しないため。**
+   * 名乗らないと、能力の報告に「streaming transcriber」としか出ず、
+   * Google に繋がっているのか代役なのかが読めない。
+   */
+  readonly name: string;
   /** 本番で代役のまま起動していないかの判定に使う。 */
   readonly isStandIn: boolean;
 }
@@ -65,11 +71,13 @@ export interface StreamingTranscriber {
 export interface BatchTranscriber {
   /** V2 Chirp 3 BatchRecognize に相当。録音全体を精度優先で起こす。 */
   transcribe(audio: Uint8Array, config: StreamingConfig): Promise<readonly TranscriptResult[]>;
+  readonly name: string;
   readonly isStandIn: boolean;
 }
 
 export interface TranslationProvider {
   translate(text: string, from: string, to: string): Promise<string>;
+  readonly name: string;
   readonly isStandIn: boolean;
 }
 
@@ -94,6 +102,7 @@ export interface ScriptLine {
  *   - **話者タグを後から付け直す**ことがある。UI が跳ねないかを試せる
  */
 export class ScriptedStreamingTranscriber implements StreamingTranscriber {
+  readonly name = 'scripted';
   readonly isStandIn = true;
   readonly #script: readonly ScriptLine[];
 
@@ -151,6 +160,7 @@ export class ScriptedStreamingTranscriber implements StreamingTranscriber {
  * **話者番号を 1 つずらす**。突き合わせが番号一致に頼っていないことを試せる。
  */
 export class ScriptedBatchTranscriber implements BatchTranscriber {
+  readonly name = 'scripted';
   readonly isStandIn = true;
   readonly #script: readonly ScriptLine[];
   readonly #speakerShift: number;
@@ -178,6 +188,7 @@ export class ScriptedBatchTranscriber implements BatchTranscriber {
 
 /** 訳したことが分かるだけの代役。訳文の質はここでは問わない。 */
 export class EchoTranslationProvider implements TranslationProvider {
+  readonly name = 'echo';
   readonly isStandIn = true;
 
   async translate(text: string, from: string, to: string): Promise<string> {
@@ -187,6 +198,7 @@ export class EchoTranslationProvider implements TranslationProvider {
 
 /** STT が落ちた状況を作るための代役。録音が続くことを試すのに使う。 */
 export class FailingStreamingTranscriber implements StreamingTranscriber {
+  readonly name = 'failing';
   readonly isStandIn = true;
   readonly #afterFrames: number;
 

@@ -162,6 +162,7 @@ function isModelUnavailable(error: unknown): boolean {
 }
 
 export class GoogleStreamingV2Transcriber implements StreamingTranscriber {
+  readonly name = 'google-stt-v2';
   readonly isStandIn = false;
   readonly #config: GoogleStreamingV2Config;
 

@@ -200,7 +200,7 @@ done
 # 1 行の名乗りから、能力ごとの判定だけを取り出す。
 # 実装名は落とす（版が違えば違って当然で、比べたいのは本物か代役かだけ）。
 capability_verdicts() {
-  grep -o '[a-z_]*=\(real\|stand-in\):' "$1" | sort -u
+  grep -oE '[a-z_]*=(real|stand-in):(verified|unverified|not_configured):' "$1" | sort -u
 }
 if ! diff <(capability_verdicts "$STORE/worker.log") <(capability_verdicts "$STORE/gateway.log") >/dev/null; then
   diff <(capability_verdicts "$STORE/worker.log") <(capability_verdicts "$STORE/gateway.log") | head -20

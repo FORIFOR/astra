@@ -117,6 +117,7 @@ describe.skipIf(!url)('Case B — record it, and get minutes you can read', () =
       db,
       publisher: { async publish() {} },
       translator: {
+        name: 'test',
         isStandIn: true,
         async translate(text) {
           return `EN: ${text}`;

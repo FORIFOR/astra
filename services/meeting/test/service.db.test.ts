@@ -203,6 +203,7 @@ describe.skipIf(!url)('MeetingService', () => {
         library: { create: async () => ({ id: uuidv7() }) } as never,
         recordings: new MemoryRecordingStore(),
         batch: {
+          name: 'test',
           isStandIn: true,
           async transcribe() {
             throw new Error('the batch transcriber is unreachable');

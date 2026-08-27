@@ -84,6 +84,21 @@ const TOOLS = {
       required: ['claims'],
     },
   },
+  /**
+   * 自由な文章。**tool で受ける。**
+   *
+   * ほかと同じく tool 経由にするのは、返り値の形を 1 つに揃えるため。
+   * 自由文で受けると、前置きや囲みの有無で毎回パースが割れる。
+   */
+  text: {
+    name: 'record_text',
+    description: '書いた文章を記録する。',
+    input_schema: {
+      type: 'object',
+      properties: { text: { type: 'string', description: '書いた文章そのもの' } },
+      required: ['text'],
+    },
+  },
   synthesize: {
     name: 'record_conclusions',
     description: '根拠から導ける結論と、それぞれが立っている根拠の番号を記録する。',
@@ -221,6 +236,27 @@ export class AnthropicLanguageModel implements LanguageModel {
     return groundedFindings(out.conclusions, claims.length);
   }
 
+  async answer(question: string, context?: string): Promise<string> {
+    return this.#text([
+      '次の問いに答えてください。',
+      // 根拠を集めていないので、断定できないことは断定させない
+      '確かでないことは「分かりません」と書いてください。作り話をしないでください。',
+      '',
+      ...(context ? ['前提:', context, ''] : []),
+      `問い: ${question}`,
+    ]);
+  }
+
+  async compose(instruction: string, context?: string): Promise<string> {
+    return this.#text([
+      '次の指示に沿って文章を書いてください。**下書きまで**で、送信はしません。',
+      '前提に無いことを、事実として書かないでください。',
+      '',
+      ...(context ? ['前提:', context, ''] : []),
+      `指示: ${instruction}`,
+    ]);
+  }
+
   async detectContradictions(
     claims: readonly string[],
   ): Promise<{ left: number; right: number }[]> {
@@ -250,6 +286,15 @@ export class AnthropicLanguageModel implements LanguageModel {
   }
 
   // ------------------------------------------------------------- internals
+
+  /** 文章を 1 つ返してもらう。**空なら失敗にする。** */
+  async #text(lines: readonly string[]): Promise<string> {
+    const out = await this.#call(TOOLS.text, lines.join('\n'), z.object({ text: z.string() }));
+    const text = out.text.trim();
+    // 空を返すと「答えはありません」に見える。読めなかったのとは別のこと。
+    if (text.length === 0) throw new Error('the model returned nothing');
+    return text;
+  }
 
   async #call<T>(tool: ToolSpec, prompt: string, schema: z.ZodType<T>): Promise<T> {
     let lastError: unknown;

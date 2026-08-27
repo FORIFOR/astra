@@ -61,6 +61,17 @@ export interface LanguageModel {
    */
   synthesize(question: string, claims: readonly string[]): Promise<Finding[]>;
   /**
+   * 自由な問いに答える。正本 §2.2 General Assistant。
+   *
+   * 調査と違い、根拠を集めない。**知らないことは知らないと言う**のは
+   * 呼び出し側では強制できないので、指示の側で頼む。
+   */
+  answer(question: string, context?: string): Promise<string>;
+
+  /** 文章を書く。下書きまでで、送りはしない。 */
+  compose(instruction: string, context?: string): Promise<string>;
+
+  /**
    * 意味の矛盾を見つける。
    *
    * 数値の食い違いは `quality.findContradictions` が規則で拾う。
@@ -127,5 +138,19 @@ export class DeterministicLanguageModel implements LanguageModel {
   async synthesize(_question: string, claims: readonly string[]): Promise<Finding[]> {
     // 上位の主張をそのまま結論にする。要約はしない（できないので、するふりをしない）
     return claims.slice(0, 3).map((text, index) => ({ text, supports: [index] }));
+  }
+
+  /**
+   * 答えられない。**答えたふりをしない。**
+   *
+   * 代役がもっともらしい文を返すと、モデルを繋いでいないことに
+   * 誰も気づかないまま使われる。空文字を返すのも同じことなので、断る。
+   */
+  async answer(): Promise<string> {
+    throw new Error('no language model is connected; this stand-in cannot answer');
+  }
+
+  async compose(): Promise<string> {
+    throw new Error('no language model is connected; this stand-in cannot write');
   }
 }

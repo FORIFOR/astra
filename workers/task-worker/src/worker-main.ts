@@ -14,6 +14,7 @@ import { FsObjectStore, LibraryService } from '@astra/service-library';
 import {
   ResearchService,
   researchExecutors,
+  generalExecutors,
   researchProvidersFromEnv,
   setModelContext,
 } from '@astra/service-research';
@@ -33,6 +34,7 @@ import {
   architectureExecutors,
   careExecutors,
   ehrExecutors,
+  salesCrmExecutors,
   stockExecutors,
   videoExecutors,
 } from '@astra/service-agent-runtime';
@@ -122,6 +124,11 @@ async function main(): Promise<void> {
       executors: {
         ...researchExecutors(research),
         /*
+         * 正本 §2.2・§29。何をする話か決まらないときの受け皿。
+         * **モデルは同じもの**を使う（利用者が持ち込んだ利用権）。
+         */
+        ...generalExecutors(researchProviders.model),
+        /*
          * 正本 §15.2。**renderer は渡していない。**
          * 生成モデルが未決（OQ-19）なので、書き出しは
          * 「繋がっていない」と言って止まる。構成と字幕はそれでも作れる。
@@ -135,6 +142,11 @@ async function main(): Promise<void> {
         ...architectureExecutors(new DomainService({ db })),
         // 正本 §15.7。既定は下書きまで。証券会社へは繋がっていない。
         ...stockExecutors(new DomainService({ db })),
+        /*
+         * 正本 §15.3。**手元の記録だけ。**外部 CRM への接続は未決（OQ-20）。
+         * 繋いでいないので、外から取ってきたふりはしない。
+         */
+        ...salesCrmExecutors(new DomainService({ db })),
         ...meetingExecutors({
           meetings,
           library,

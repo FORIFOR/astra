@@ -23,6 +23,8 @@ export const LLM_TOOLS = [
   'llm.extract_claims',
   'llm.synthesize',
   'llm.contradictions',
+  'llm.answer',
+  'llm.compose',
   'search.web',
 ] as const;
 
@@ -37,6 +39,8 @@ const TOOLS_FOR: Readonly<Record<LlmTool, readonly string[]>> = {
   'llm.extract_claims': [],
   'llm.synthesize': [],
   'llm.contradictions': [],
+  'llm.answer': [],
+  'llm.compose': [],
   'search.web': ['WebSearch'],
 };
 export type LlmTool = (typeof LLM_TOOLS)[number];
@@ -93,6 +97,27 @@ export function promptFor(tool: LlmTool, args: Record<string, unknown>): string 
         '',
         `問い: ${String(args['question'] ?? '')}`,
         `主張:\n${listOf(args['claims'])}`,
+      ].join('\n');
+
+    case 'llm.answer':
+      return [
+        '次の問いに答えてください。',
+        // 根拠を集めていないので、断定できないことは断定させない
+        '確かでないことは「分かりません」と書いてください。作り話をしないでください。',
+        json('{"answer": "…"}'),
+        '',
+        ...(args['context'] ? [`前提: ${String(args['context'])}`, ''] : []),
+        `問い: ${String(args['question'] ?? '')}`,
+      ].join('\n');
+
+    case 'llm.compose':
+      return [
+        '次の指示に沿って文章を書いてください。**下書きまで**で、送信はしません。',
+        '前提に無いことを、事実として書かないでください。',
+        json('{"text": "…"}'),
+        '',
+        ...(args['context'] ? [`前提: ${String(args['context'])}`, ''] : []),
+        `指示: ${String(args['instruction'] ?? '')}`,
       ].join('\n');
 
     case 'search.web':

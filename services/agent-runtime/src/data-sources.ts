@@ -99,8 +99,11 @@ export function videoDataSources(
           .map((job) => [
             String(job.fields['name'] ?? '無題'),
             String(job.fields['status'] ?? '不明'),
-            // **失敗の理由を空欄にしない。**空欄だと、なぜ止まったか分からない
-            String(job.fields['reason'] ?? ''),
+            /*
+             * **失敗の理由を空欄にしない。**空欄だと、なぜ止まったか分からない。
+             * 「理由が記録されていない」ことも、それ自体が伝えるべきこと。
+             */
+            reasonFor(job.fields['reason'], String(job.fields['status'] ?? '')),
           ]),
       };
     },
@@ -331,4 +334,15 @@ export function stockDataSources(
       };
     },
   };
+}
+
+/**
+ * 書き出しの理由欄。
+ *
+ * 失敗しているのに理由が無いのと、まだ動いているので理由が無いのは違う。
+ * **同じ空欄で見せない。**
+ */
+function reasonFor(value: unknown, status: string): string {
+  if (typeof value === 'string' && value.length > 0) return value;
+  return status === 'FAILED' ? '理由が記録されていません' : '—';
 }

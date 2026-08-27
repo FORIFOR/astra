@@ -64,6 +64,20 @@ export function isRequiredCapability(capability: ExternalCapability): boolean {
   return REQUIRED_CAPABILITIES.includes(capability);
 }
 
+/**
+ * どこまで確かめたか。**「動くはず」と「動いた」を分ける。**
+ *
+ *   `verified`       … 実際の提供者に繋いで、この目で結果を見た
+ *   `unverified`     … 実装はある。設定もある。**まだ実物で確かめていない**
+ *   `not_configured` … 設定されていない。呼べば「繋がっていない」と答える
+ *
+ * 分けるのは、`unverified` を `verified` として報告しないため。
+ * 混ぜると、受け入れの記録が「たぶん動く」の集まりになる。
+ */
+export const VERIFICATION_STATES = ['verified', 'unverified', 'not_configured'] as const;
+export const VerificationState = z.enum(VERIFICATION_STATES);
+export type VerificationState = z.infer<typeof VerificationState>;
+
 export const CapabilityStatus = z.object({
   capability: ExternalCapability,
   /** いま使っている実装の名前。 */
@@ -72,6 +86,14 @@ export const CapabilityStatus = z.object({
   isStandIn: z.boolean(),
   /** 何を設定すれば本物になるか。代役のときは必ず書く。 */
   configureWith: z.string().nullable().default(null),
+  /**
+   * どこまで確かめたか。
+   *
+   * **既定は `unverified`。**確かめた記録がある能力だけが `verified` を名乗る。
+   * 既定を `verified` にすると、書いた人が忘れただけのものが
+   * 「確認済み」として報告に載る。
+   */
+  verification: VerificationState.default('unverified'),
 });
 export type CapabilityStatus = z.infer<typeof CapabilityStatus>;
 
@@ -83,6 +105,17 @@ export type CapabilityReport = z.infer<typeof CapabilityReport>;
 /** 代役のまま残っているもの。空なら全部本物。 */
 export function remainingStandIns(report: CapabilityReport): CapabilityStatus[] {
   return report.items.filter((item) => item.isStandIn);
+}
+
+/**
+ * 本物だが、まだ実物で確かめていないもの。
+ *
+ * **代役とは別に数える。**代役は「動かない」、これは「動くはずだが
+ * 見ていない」。受け入れの報告で両者を混ぜると、
+ * どちらの意味でも読めてしまう。
+ */
+export function unverifiedCapabilities(report: CapabilityReport): CapabilityStatus[] {
+  return report.items.filter((item) => !item.isStandIn && item.verification === 'unverified');
 }
 
 /**
@@ -143,6 +176,13 @@ export interface CapabilityInput {
   readonly isStandIn: boolean;
   /** 何を設定すれば本物になるか。 */
   readonly configureWith: string | null;
+  /**
+   * 実物で確かめたか。**省略すると `unverified`。**
+   *
+   * 既定を「確認済み」にしない。書いた人が忘れただけのものが
+   * 「確認済み」として報告に載るのを避ける。
+   */
+  readonly verification?: VerificationState;
 }
 
 /**
@@ -160,6 +200,10 @@ export function buildCapabilityReport(
       implementation: inputs[capability].implementation,
       isStandIn: inputs[capability].isStandIn,
       configureWith: inputs[capability].configureWith,
+      verification:
+        inputs[capability].verification ??
+        // 代役は確かめようが無い。設定されていない、と答える。
+        (inputs[capability].isStandIn ? 'not_configured' : 'unverified'),
     })),
   };
 }
@@ -170,4 +214,5 @@ export const NOT_IMPLEMENTED = (configureWith: string): CapabilityInput => ({
   // 無いものを「本物」にしない
   isStandIn: true,
   configureWith,
+  verification: 'not_configured',
 });

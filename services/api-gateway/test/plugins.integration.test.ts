@@ -81,7 +81,8 @@ describe.skipIf(!url)('plugin catalog', () => {
       expect(gmail.data_accessed.length).toBeGreaterThan(0);
       expect(gmail.permissions).toContain('email.send');
       expect(gmail.tool_count).toBe(5);
-      expect(gmail.execution_surfaces).toEqual(['cloud']);
+      // 端末で走る。資格情報が端末の Keychain にしかないので（§16.1・§21）
+      expect(gmail.execution_surfaces).toEqual(['local']);
       expect(gmail.signature_state).toBe('BUILTIN_TRUSTED');
       expect(gmail.installed).toBe(false);
     });
