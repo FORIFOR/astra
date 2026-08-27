@@ -741,3 +741,10 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
 - 実行時前提が要るもの（TCC／Windows 実機／実 OAuth 提供者）は各スクリプトが SKIP で正直に飛ばす。
 - 検証: **実測 PASS** `VERIFY_ALL_OK: この環境で検証できる全ゲートが緑`。
 - **意味（Done#9）**: 「実装＋この環境で検証可能な範囲」の健全性を 1 コマンドで担保。CI（ci.yml）も同じ個別ゲートを走らせる。
+
+## 追記: 主要 SwiftUI ビューのオフスクリーン render 検証（Phase 1.68, §6 UI）
+- `--selftest render` を新設。VoiceHUD / RecordingWorkspace / MainWindow / Settings を **NSHostingView で
+  オフスクリーンにレンダリング**（`bitmapImageRepForCachingDisplay`＋`cacheDisplay`）し、クラッシュせず非ゼロの
+  描画になることを確認（**画面には何も出さない**＝安全、XCUITest のような GUI 自動操作の代替として render を担保）。
+- 検証: **実測 PASS** `VoiceHUD/RecordingWorkspace/MainWindow/Settings 全てオフスクリーン描画 OK`。verify に組み込み。
+- **意味（§6 UI）**: 主要画面が実際に描画されること（mock でなく View が body を生成しレイアウトされる）を headless で担保。

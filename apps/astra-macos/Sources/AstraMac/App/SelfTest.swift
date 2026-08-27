@@ -43,6 +43,7 @@ enum SelfTest {
         case "recoveryoffline": recoveryOffline(args); return true
         case "fulllifecycle": fullLifecycle(args); return true
         case "panel": panelBehavior(); return true
+        case "render": render(); return true
         default: return false
         }
     }
@@ -867,6 +868,31 @@ enum SelfTest {
             print("SELFTEST_FAIL panel allSpaces=\(allSpaces) fsAux=\(fsAux) borderless=\(borderless) clear=\(clear) notMain=\(notMain)"); exit(2)
         }
         print("SELFTEST_OK panel: 全Space=\(allSpaces) fullscreen補助=\(fsAux) borderless=\(borderless) 透過=\(clear) notMain=\(notMain)")
+        exit(0)
+    }
+
+    /// `--selftest render`: 主要な SwiftUI ビューを**オフスクリーンで**レンダリングし、クラッシュせず
+    /// 非ゼロの描画になることを確かめる（§6 UI 検証・画面には何も出さない）。
+    @MainActor
+    private static func render() {
+        func renders<V: View>(_ view: V, _ size: NSSize) -> Bool {
+            let host = NSHostingView(rootView: view)
+            host.frame = NSRect(origin: .zero, size: size)
+            host.layoutSubtreeIfNeeded()
+            guard let rep = host.bitmapImageRepForCachingDisplay(in: host.bounds) else { return false }
+            host.cacheDisplay(in: host.bounds, to: rep)
+            return rep.pixelsWide > 0 && rep.pixelsHigh > 0
+        }
+        RecordingWorkspaceState.shared.loadDemo(ragOpen: true)
+        let checks: [(String, Bool)] = [
+            ("VoiceHUD", renders(VoiceHUDView(), NSSize(width: Metrics.hudWidth, height: Metrics.hudHeight))),
+            ("RecordingWorkspace", renders(RecordingWorkspaceView(), NSSize(width: Metrics.workspaceWidth, height: Metrics.workspaceHeight))),
+            ("MainWindow", renders(MainWindowView(), NSSize(width: 900, height: 600))),
+            ("Settings", renders(SettingsView(), NSSize(width: 460, height: 420))),
+        ]
+        let failed = checks.filter { !$0.1 }.map { $0.0 }
+        guard failed.isEmpty else { print("SELFTEST_FAIL render: \(failed.joined(separator: ","))"); exit(2) }
+        print("SELFTEST_OK render: \(checks.map { $0.0 }.joined(separator: "/")) 全てオフスクリーン描画 OK")
         exit(0)
     }
 
