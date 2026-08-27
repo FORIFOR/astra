@@ -707,3 +707,13 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
   （途中、`BI_RGB` short→uint の型不一致を compile 検証が**検出**＝コンパイル検証の実効性を確認して修正。）
 - **未検証（Windows 実機のみ）**: 実際の画面取り込み（gdi32/user32 の実行）。
 - **意味（§4 Screen）**: Windows の画面取り込みが code-complete＋コンパイル検証済み。
+
+## 追記: WinUI が macOS でビルド不可な「正確な境界」を実測（Phase 1.64, Done#10）
+- `dotnet build apps/windows/Astra.sln` を試すと `NETSDK1100`（Windows 対象は `EnableWindowsTargeting=true` が要る）。
+- `-p:EnableWindowsTargeting=true` を付けると **NuGet 復元（Microsoft.WindowsAppSDK 1.6）とフレームワーク解決は成功**し、
+  ビルドは XAML コンパイル段まで進む。そこで **`XamlCompiler.exe`（Windows 専用の実行ファイル）が exit 126 で失敗**
+  （macOS では実行できない）。→ **WinUI が macOS でビルドできない正確な理由は「XAML→C# codegen を行う Windows 専用
+  ツールが動かない」こと**。C# の managed コードと Windows App SDK 参照自体は macOS 上で解決できる。
+- **含意**: 純 C#（`AppLogic/` の bridge/session/audio/shortcut/credential/screen）は `verify-csharp-bridge` で
+  コンパイル＋ロジック検証できるが、**`.xaml` を伴う Window クラスの型検査は XAML compiler を要するため windows-latest CI のみ**。
+  これが Windows 側の唯一残る未検証境界（Done#4/#5 の core は検証済み、UI 描画層のみ）。
