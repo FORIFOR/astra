@@ -761,3 +761,11 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
 - **意味（Done#4/#5）**: これまで「WinUI 全部が Windows 専用」としていたが、**実ロジック（Window 配線含む）は macOS/CI で
   型検査でき、実測 PASS**。**残る唯一の Windows 専用**は XAML markup の codegen（`.xaml`→`.g.cs`）＋実描画＋
   COM/Win32 の実行時のみ。捏造ではなく、境界がさらに狭まったことを実測で確定。
+
+## 追記: XAML codegen の正確な境界（Phase 1.69 補足）
+- `-p:UseXamlCompilerExecutable=false` にすると、XAML markup コンパイラは net472 の `XamlCompiler.exe`（exit 126）から
+  **net6.0 の in-process タスク `Microsoft.UI.Xaml.Markup.Compiler.dll` へ切り替わり macOS で読み込まれる**ところまで到達する。
+  ただしそのタスクは `System.Security.Permissions 6.0.0.0`（macOS 実行可能版）を要し、**オフライン cache に無い**ため
+  `.g.cs` 生成に至らない（cache に有るのは net8 ref のみ）。→ **XAML→`.g.cs` 生成は、Windows CI（通常の XamlCompiler）
+  または当該依存を含むオンライン restore が要る**、という正確な境界。C# 実ロジックの型検査（Window code-behind 含む）は
+  この依存無しで PASS 済み（`verify:csharp-logic`）。捏造ではなく、境界を依存レベルまで実測特定した。
