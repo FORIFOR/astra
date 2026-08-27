@@ -521,3 +521,11 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
   押す状態だった（未登録の ⌥⌘R/⌥D を「ある」と見せていた＝推測で埋めていた）。
 - 修正: Settings のショートカット節を `GlobalShortcut.label()`（実登録の combo）1 本に絞り、実装と一致させた。
 - **意味**: 表示が実挙動と一致（Done#2 の正しさ、推測表示の排除）。
+
+## 追記: 録音中の経過時間が進まないバグ修正（Phase 1.45）
+- **バグ発見・修正**: `elapsedSeconds` は録音中に**一度も加算されていなかった**（初期 0、demo で固定 4:21 のみ）。
+  実録音では Hero/Task Dock の経過表示が "00:00" のまま止まっていた。
+- 修正: `start()` で 1Hz の `Timer` を張り、録音中かつ非一時停止のとき `elapsedSeconds` を加算。`stop()` で止める。
+  経過ラベル自体は core（`recording_snapshot`）が整形する（既存）。
+- 検証: `--selftest timer`。録音→2.4s（進む=2）→一時停止 1.6s（**止まる=2**）→再開 1.6s（進む=3）。
+  **実測 PASS**: `経過が進む running=2 停止で止まる paused=2 再開で進む resumed=3`。verify に組み込み、回帰なし。

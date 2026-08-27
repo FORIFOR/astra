@@ -45,6 +45,7 @@ final class RecordingWorkspaceState: ObservableObject {
     static let shared = RecordingWorkspaceState()
 
     @Published var isRecording = false
+    private var tickTimer: Timer?
     @Published var isPaused = false
     @Published var elapsedSeconds = 0
     @Published var selectedTool: RecordingTool = .transcript
@@ -150,6 +151,13 @@ final class RecordingWorkspaceState: ObservableObject {
 
     func start() {
         isRecording = true
+        // 経過時間を実際に進める（一時停止中は止める）。以前は 0 のままだった。
+        elapsedSeconds = 0
+        tickTimer?.invalidate()
+        tickTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+            guard let self, self.isRecording, !self.isPaused else { return }
+            self.elapsedSeconds += 1
+        }
         // オンデバイス STT の途中経過/確定を transcript に反映する。
         RecordingRuntime.shared.onTranscript = { [weak self] text, isFinal in
             guard let self else { return }
@@ -178,6 +186,7 @@ final class RecordingWorkspaceState: ObservableObject {
     }
     func stop() {
         isRecording = false
+        tickTimer?.invalidate(); tickTimer = nil
         RecordingRuntime.shared.end()   // 断片を確定（回復候補として残る）
         WindowCoordinator.shared.leaveRecordingMode()
     }

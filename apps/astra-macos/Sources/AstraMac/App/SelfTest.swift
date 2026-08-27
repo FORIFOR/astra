@@ -36,6 +36,7 @@ enum SelfTest {
         case "translate": translateTest(args); return true
         case "waveform": waveform(); return true
         case "recovery": recovery(args); return true
+        case "timer": timer(); return true
         default: return false
         }
     }
@@ -667,6 +668,32 @@ enum SelfTest {
             print("SELFTEST_OK recovery: クラッシュ録音を検出→復旧 uploadedBytes=\(sent)")
             exit(0)
         } catch { print("SELFTEST_FAIL recovery error=\(error)"); exit(3) }
+    }
+
+    /// `--selftest timer`: 録音中に経過時間が実際に進み、一時停止で止まるか検証する（以前は 0 のままだった）。
+    @MainActor
+    private static func timer() {
+        WindowCoordinator.headless = true   // window を出さない
+        let state = RecordingWorkspaceState.shared
+        state.start()
+        RunLoop.current.run(until: Date().addingTimeInterval(2.4))
+        let running = state.elapsedSeconds
+        state.togglePause()                 // 一時停止
+        RunLoop.current.run(until: Date().addingTimeInterval(1.6))
+        let paused = state.elapsedSeconds
+        state.togglePause()                 // 再開
+        RunLoop.current.run(until: Date().addingTimeInterval(1.6))
+        let resumed = state.elapsedSeconds
+        state.stop()
+        // 片付け
+        let root = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+            .appendingPathComponent("Astra/meetings/\(state.currentMeetingId)").path
+        try? FileManager.default.removeItem(atPath: root)
+        guard running >= 2, paused == running, resumed > paused else {
+            print("SELFTEST_FAIL timer running=\(running) paused=\(paused) resumed=\(resumed)"); exit(2)
+        }
+        print("SELFTEST_OK timer: 経過が進む running=\(running) 停止で止まる paused=\(paused) 再開で進む resumed=\(resumed)")
+        exit(0)
     }
 
     private static func recordToDisk() {

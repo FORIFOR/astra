@@ -51,6 +51,8 @@ OUTH="$("$BIN" --selftest hudlifecycle)"; echo "$OUTH"
 [[ "$OUTH" == SELFTEST_OK* ]] || { echo "FAIL: macOS HUD lifecycle" >&2; exit 1; }
 OUTP="$("$BIN" --selftest pause)"; echo "$OUTP"
 [[ "$OUTP" == SELFTEST_OK* ]] || { echo "FAIL: macOS pause actually stops recording" >&2; exit 1; }
+OUTTM="$("$BIN" --selftest timer)"; echo "$OUTTM"
+[[ "$OUTTM" == SELFTEST_OK* ]] || { echo "FAIL: macOS elapsed timer" >&2; exit 1; }
 OUTA="$("$BIN" --selftest aiaction http://127.0.0.1:3000)"; echo "$OUTA"
 [[ "$OUTA" == SELFTEST_OK* || "$OUTA" == SELFTEST_SKIP* ]] || { echo "FAIL: macOS AI action via Agent" >&2; exit 1; }
 OUTT="$("$BIN" --selftest translate http://127.0.0.1:3000)"; echo "$OUTT"
