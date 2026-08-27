@@ -190,3 +190,45 @@
   color: var(--astra-color-muted);
   font-size: var(--astra-font-size-sm, 0.875rem);
 }
+
+/* ------------------------------------------------------------- pack card */
+
+/*
+ * §11 の card。名前だけの button だったのを、
+ * 触るデータと確認の有無が**開かずに分かる**ようにする。
+ */
+.astra-app-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--astra-space-compact);
+  width: 100%;
+  padding: var(--astra-padding-card, var(--astra-space-lg));
+  border: var(--astra-border-hairline) solid var(--astra-color-border);
+  border-radius: var(--astra-radius-standard);
+  background: var(--astra-color-surface);
+  color: var(--astra-color-text);
+  text-align: start;
+  cursor: pointer;
+}
+
+.astra-app-card__name {
+  font-size: var(--astra-font-size-card-title);
+  font-weight: var(--astra-font-weight-card-title);
+}
+
+.astra-app-card__state {
+  margin-inline-start: var(--astra-space-compact);
+  color: var(--astra-color-success);
+  font-size: var(--astra-font-size-micro);
+  font-weight: var(--astra-font-weight-micro);
+}
+
+.astra-app-card__meta {
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-secondary);
+}
+
+.astra-app-detail__external {
+  color: var(--astra-color-warning);
+  font-size: var(--astra-font-size-micro);
+}

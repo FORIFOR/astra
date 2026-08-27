@@ -1,7 +1,7 @@
 /**
  * Workspace shell。UI/UX §7.1。
  *
- * 3 カラム（sidebar / main / inspector）+ top bar。
+ * 3 カラム（sidebar / main / inspector）+ top bar + 下端の composer。
  * 幅による振る舞いの判定は ui-kit の `resolveLayout` に閉じ込めてある。
  */
 import type { ReactNode, ReactElement } from 'react';
@@ -9,8 +9,16 @@ import { useShell } from '../state/ShellProvider.js';
 import { Sidebar } from './Sidebar.js';
 import { TopBar } from './TopBar.js';
 import { Inspector } from './Inspector.js';
+import { Composer, type ComposerConversation } from './Composer.js';
 
-export function AppShell({ children }: { children: ReactNode }): ReactElement {
+export function AppShell({
+  children,
+  conversation,
+}: {
+  children: ReactNode;
+  /** 下端の composer が話す先。未接続なら composer が「繋がっていない」と言う。 */
+  conversation?: ComposerConversation | undefined;
+}): ReactElement {
   const { layout } = useShell();
 
   if (layout.mode === 'unsupported') {
@@ -35,6 +43,12 @@ export function AppShell({ children }: { children: ReactNode }): ReactElement {
         <main className="astra-main" tabIndex={-1}>
           {children}
         </main>
+        {/*
+          §7.1 の Composer。**Main の下に置く。**
+          Task Dock は別 window なので、本体を開いている人には見えない。
+          ここが無いと、Workspace から Astra へ話しかける口が一つも無くなる。
+        */}
+        <Composer {...(conversation ? { conversation } : {})} />
       </div>
       <Inspector />
     </div>

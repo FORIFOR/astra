@@ -307,7 +307,7 @@ describe('Library (§10)', () => {
   it('labels sensitive artifacts in text, not colour alone', () => {
     const doc = artifact({ sensitivity: 'CONFIDENTIAL' });
     render(<LibraryPage artifacts={[doc]} />);
-    expect(screen.getByText('CONFIDENTIAL')).toBeTruthy();
+    expect(screen.getByText('社外秘')).toBeTruthy();
   });
 });
 

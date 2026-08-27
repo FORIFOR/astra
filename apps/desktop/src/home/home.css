@@ -65,12 +65,24 @@
   cursor: pointer;
 }
 
-.astra-attention[data-severity='action-required'] {
+/*
+ * 重さと色の対応。§17.1: Warning = attention / Danger = destructive・failure。
+ *
+ * 逆に付けていた。軽い「注意」が赤で、重い「対応が要る」が橙だった。
+ * critical には色が無く、既定の灰色のままだった。
+ */
+.astra-attention[data-severity='attention'] {
   border-color: var(--astra-color-warning);
 }
 
-.astra-attention[data-severity='attention'] {
+.astra-attention[data-severity='action-required'] {
+  border-color: var(--astra-color-warning);
+  border-width: 2px;
+}
+
+.astra-attention[data-severity='critical'] {
   border-color: var(--astra-color-danger);
+  border-width: 2px;
 }
 
 .astra-attention__severity {

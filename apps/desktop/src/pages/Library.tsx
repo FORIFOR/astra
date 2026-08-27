@@ -24,6 +24,18 @@ export const LIBRARY_TYPE_CHIPS = [
 
 export type LibraryChip = (typeof LIBRARY_TYPE_CHIPS)[number]['id'];
 
+/** 種類の名前。chip と同じ表を使い、`MEETING_BUNDLE` を画面に出さない。 */
+function typeLabel(type: string): string {
+  return LIBRARY_TYPE_CHIPS.find((chip) => chip.id === type)?.label ?? 'その他';
+}
+
+/** §10.1 / §22: 機密は色だけでなく文字で。**内部の識別子ではなく、意味を書く。** */
+const SENSITIVITY_LABEL: Readonly<Record<string, string>> = {
+  CONFIDENTIAL: '社外秘',
+  REGULATED: '規制対象',
+  PRIVATE: '',
+};
+
 /** chip に載っていない type は「その他」へ寄せる。取りこぼしを作らない。 */
 export function matchesChip(type: Artifact['type'], chip: LibraryChip): boolean {
   if (chip === 'ALL') return true;
@@ -110,11 +122,14 @@ export function LibraryPage({
                 >
                   <span className="astra-artifact__title">{artifact.title}</span>
                   <span className="astra-artifact__meta">
-                    {artifact.type} · {new Date(artifact.created_at).toLocaleDateString('ja-JP')}
+                    {typeLabel(artifact.type)} ·{' '}
+                    {new Date(artifact.created_at).toLocaleDateString('ja-JP')}
                   </span>
                   {/* §5.2 と同じ考え方: 機密は色だけでなく文字でも示す */}
                   {artifact.sensitivity !== 'PRIVATE' && (
-                    <span className="astra-artifact__flag">{artifact.sensitivity}</span>
+                    <span className="astra-artifact__flag">
+                      {SENSITIVITY_LABEL[artifact.sensitivity] ?? artifact.sensitivity}
+                    </span>
                   )}
                 </button>
               </li>
@@ -127,7 +142,7 @@ export function LibraryPage({
             <h3 className="astra-library__preview-title">{selected.title}</h3>
             <dl className="astra-library__facts">
               <dt>種類</dt>
-              <dd>{selected.type}</dd>
+              <dd>{typeLabel(selected.type)}</dd>
               <dt>作成</dt>
               <dd>{new Date(selected.created_at).toLocaleString('ja-JP')}</dd>
               <dt>版</dt>

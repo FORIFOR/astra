@@ -7,7 +7,7 @@
 import { useEffect, useMemo, useState, type ReactElement } from 'react';
 import type { TaskView } from '@astra/api-client';
 import type { TaskStatus } from '@astra/contracts';
-import { WorkCard } from '../work/WorkCard.js';
+import { WorkCard, statusLabel } from '../work/WorkCard.js';
 import { useTaskStream } from '../work/useTaskStream.js';
 import { WorkDetail } from '../work/WorkDetail.js';
 import type { AstraClient } from '@astra/api-client';
@@ -117,7 +117,11 @@ export function WorkPage({
               >
                 <span aria-hidden="true">{task.status === 'WAITING_APPROVAL' ? '!' : '●'}</span>
                 <span>{task.title ?? '名前のない仕事'}</span>
-                <span className="astra-work-row__meta">{task.status}</span>
+                {/* §9.1: 状態は人の言葉で。`RUNNING` をそのまま出していた。 */}
+                <span className="astra-work-row__meta">
+                  {task.status === 'WAITING_APPROVAL' ? '確認待ち' : statusLabel(task.status)}
+                  {task.started_at && ` · ${startedLabel(task.started_at)}`}
+                </span>
               </button>
             </li>
           ))}
@@ -144,4 +148,13 @@ export function WorkPage({
       )}
     </section>
   );
+}
+
+/** §9.1 の「Started 14:02」。日付は今日なら出さない。 */
+function startedLabel(iso: string): string {
+  const at = new Date(iso);
+  const time = at.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+  return at.toDateString() === new Date().toDateString()
+    ? `${time} 開始`
+    : `${at.toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' })} ${time} 開始`;
 }

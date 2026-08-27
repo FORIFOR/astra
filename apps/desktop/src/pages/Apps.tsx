@@ -6,7 +6,11 @@
  */
 import { useCallback, useEffect, useMemo, useState, type ReactElement } from 'react';
 import type { AstraClient } from '@astra/api-client';
-import type { DashboardView, PluginCatalogEntry } from '@astra/contracts';
+import {
+  EXTERNAL_SEND_SCOPES,
+  type DashboardView,
+  type PluginCatalogEntry,
+} from '@astra/contracts';
 import { AppDetail } from '../apps/AppDetail.js';
 import { DashboardRenderer } from '../apps/DashboardRenderer.js';
 import { InstallConsent } from '../apps/InstallConsent.js';
@@ -116,9 +120,30 @@ export function AppsPage({ client = null }: { client?: AstraClient | null }): Re
           <ul className="astra-apps__list">
             {ordered.map((plugin) => (
               <li key={plugin.id}>
-                <button type="button" onClick={() => setOpenId(plugin.id)}>
-                  {plugin.name}
-                  {plugin.installed ? <span> · 追加済み</span> : null}
+                <button
+                  type="button"
+                  className="astra-app-card"
+                  onClick={() => setOpenId(plugin.id)}
+                >
+                  <span className="astra-app-card__name">
+                    {plugin.name}
+                    {plugin.installed ? (
+                      <span className="astra-app-card__state"> 追加済み</span>
+                    ) : null}
+                  </span>
+                  {/* §11: 触るデータを card で先に見せる。開かないと分からない状態にしない */}
+                  {plugin.data_accessed.length > 0 && (
+                    <span className="astra-app-card__meta">
+                      触るもの: {plugin.data_accessed.slice(0, 2).join(' · ')}
+                      {plugin.data_accessed.length > 2
+                        ? ` 他${plugin.data_accessed.length - 2}`
+                        : ''}
+                    </span>
+                  )}
+                  {/* §11: 確認が要る操作があるなら、それも先に */}
+                  {plugin.permissions.some((p) =>
+                    (EXTERNAL_SEND_SCOPES as readonly string[]).includes(p),
+                  ) && <span className="astra-app-card__meta">確認が要る操作を含みます</span>}
                 </button>
               </li>
             ))}

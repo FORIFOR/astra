@@ -140,7 +140,12 @@ export function WorkCard({
   );
 }
 
-function statusLabel(status: WorkView['status']): string {
+/**
+ * 状態を人の言葉にする。**生の enum を画面に出さない**（§6.1）。
+ * 一覧（Work.tsx）と card の両方がこれを使う。別々に持つと、
+ * 片方が `RUNNING` のまま残る（実際そうなっていた）。
+ */
+export function statusLabel(status: WorkView['status']): string {
   switch (status) {
     case 'PAUSED_HOST_OFFLINE':
       // 失敗として見せない。待てば戻る（§4.4）。

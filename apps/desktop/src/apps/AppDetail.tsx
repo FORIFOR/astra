@@ -10,6 +10,7 @@ import {
   DATA_HANDLING_LABEL,
   EXTERNAL_SEND_SCOPES,
   LOCAL_ONLY_SCOPES,
+  PERMISSION_SCOPE_LABEL,
   type DataHandling,
   type PermissionScope,
   type PluginCatalogEntry,
@@ -65,7 +66,13 @@ export function AppDetail({
         <h4>許可</h4>
         <ul>
           {plugin.permissions.map((scope) => (
-            <li key={scope}>{scope}</li>
+            <li key={scope}>
+              {PERMISSION_SCOPE_LABEL[scope] ?? scope}
+              {/* §22: 外へ出るものは、外へ出ると言う */}
+              {(EXTERNAL_SEND_SCOPES as readonly string[]).includes(scope) && (
+                <span className="astra-app-detail__external"> — 外部へ送ります</span>
+              )}
+            </li>
           ))}
         </ul>
       </section>

@@ -96,6 +96,40 @@ export const LOCAL_ONLY_SCOPES = [
   'files.index',
 ] as const satisfies readonly (typeof PERMISSION_SCOPES)[number][];
 
+/**
+ * 許可を、人の言葉で。UI/UX §11.1・§22。
+ *
+ * **識別子を画面に出さない。**`email.send` と書かれても、
+ * 何を許すことになるのかは読んだ人に分からない。
+ * 「何ができるようになるか」で書く。
+ */
+export const PERMISSION_SCOPE_LABEL: Readonly<Record<(typeof PERMISSION_SCOPES)[number], string>> =
+  {
+    'email.read': 'メールを読む',
+    'email.draft': 'メールの下書きを作る',
+    'email.modify': 'メールを整理する（ゴミ箱へ移す・ラベルを付ける）',
+    'email.send': 'メールを送る',
+    'contacts.read': '連絡先を読む',
+    'calendar.read': '予定を読む',
+    'calendar.write': '予定を作る・変える',
+    'files.read': 'この端末のファイルを読む',
+    'files.write': 'この端末にファイルを書く',
+    'files.index': 'この端末のファイルを索引する',
+    'drive.read': 'Drive のファイルを読む',
+    'drive.write': 'Drive にファイルを書く',
+    'microphone.capture': 'マイクの音を取る',
+    'system_audio.capture': 'この端末の音（相手の声）を取る',
+    'screen.capture': '画面を取る',
+    'clipboard.read': 'クリップボードを読む',
+    'artifacts.read': '成果物を読む',
+    'artifacts.write': '成果物を保存する',
+    'web.search': 'web を検索する',
+    'web.fetch': 'web ページを読む',
+    'code.execute': 'コードを実行する',
+    'crm.read': 'CRM を読む',
+    'crm.write': 'CRM に書く',
+  };
+
 export const PermissionScope = z.enum(PERMISSION_SCOPES);
 export type PermissionScope = z.infer<typeof PermissionScope>;
 

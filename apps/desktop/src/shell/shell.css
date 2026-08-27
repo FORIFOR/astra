@@ -132,8 +132,9 @@
 
 .astra-topbar__title {
   margin: 0;
-  font-size: var(--astra-font-size-section-title);
-  font-weight: var(--astra-font-weight-section-title);
+  /* §17.2: これは page title。section title の大きさで出していた */
+  font-size: var(--astra-font-size-page-title);
+  font-weight: var(--astra-font-weight-page-title);
 }
 
 .astra-topbar__theme select {
@@ -220,4 +221,81 @@
   color: var(--astra-color-text);
   font-size: var(--astra-font-size-sm, 0.875rem);
   text-align: center;
+}
+
+/* ------------------------------------------------------------- composer */
+
+/*
+ * 下端の「Ask Astra…」。UI/UX §7.1（48–72px）。
+ *
+ * **Task Dock と違って、閉じない。**Dock は呼び出して消える口で、
+ * こちらは開いている仕事の続きを話す口。
+ * floating surface ではないので、**すりガラスにしない**（§17.3）。
+ */
+.astra-composer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--astra-space-compact);
+  padding: var(--astra-space-compact) var(--astra-space-base);
+  border-top: var(--astra-border-hairline) solid var(--astra-color-border);
+  background: var(--astra-color-surface);
+}
+
+.astra-composer__row {
+  display: flex;
+  gap: var(--astra-space-compact);
+  align-items: flex-end;
+  /* §7.1 の 48–72px。中身が増えても、この帯より高くしない */
+  min-height: 48px;
+}
+
+.astra-composer__input {
+  flex: 1;
+  /* 1 行から始めて、書いた分だけ伸ばす。最初から広く取らない */
+  min-height: 32px;
+  max-height: 72px;
+  padding: var(--astra-space-compact);
+  border: var(--astra-border-hairline) solid var(--astra-color-border);
+  border-radius: var(--astra-radius-small);
+  background: var(--astra-color-canvas);
+  color: var(--astra-color-text);
+  font: inherit;
+  font-size: var(--astra-font-size-body);
+  resize: none;
+}
+
+.astra-composer__input:focus-visible {
+  outline: 2px solid var(--astra-color-focus-ring);
+  outline-offset: 1px;
+}
+
+.astra-composer__send {
+  min-height: 32px;
+  padding-inline: var(--astra-space-base);
+  border: var(--astra-border-hairline) solid var(--astra-color-accent);
+  border-radius: var(--astra-radius-small);
+  background: var(--astra-color-accent);
+  color: var(--astra-color-accent-on);
+  font-size: var(--astra-font-size-secondary);
+}
+
+.astra-composer__send:disabled {
+  /* 押せないことを色だけで表さない（§19）。文言も「送る」のまま変えない */
+  border-color: var(--astra-color-border);
+  background: var(--astra-color-canvas);
+  color: var(--astra-color-muted);
+}
+
+.astra-composer__answer,
+.astra-composer__error {
+  margin: 0;
+  font-size: var(--astra-font-size-secondary);
+}
+
+.astra-composer__answer {
+  color: var(--astra-color-text);
+}
+
+.astra-composer__error {
+  color: var(--astra-color-danger);
 }
