@@ -14,11 +14,13 @@
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 
-use serde::Serialize;
-use tauri::{AppHandle, Emitter};
+use base64::engine::general_purpose::STANDARD as BASE64;
+use base64::Engine as _;
+use serde::{Deserialize, Serialize};
+use tauri::{AppHandle, Emitter, LogicalPosition, Manager};
 
 use crate::audio::capture::{CaptureConfig, MicrophoneCapture};
-use crate::audio::frame::{rms, PcmFrame};
+use crate::audio::frame::{rms, to_pcm16, PcmFrame, SAMPLE_RATE_HZ};
 use crate::stt::model;
 use crate::stt::recognizer::{LiveWindow, LocalRecognizer, TranscriptEvent};
 
@@ -26,6 +28,9 @@ use crate::stt::recognizer::{LiveWindow, LocalRecognizer, TranscriptEvent};
 const LEVEL_INTERVAL_MS: u64 = 33;
 /// 手元の認識が受け取る rate。違えば認識へは回さない（音量は出す）。
 const RECOGNIZER_RATE: u32 = 16_000;
+/// 一度の発話。長い録音は Meeting の責務で、Dock に無制限に保持しない。
+const MAX_CAPTURE_SAMPLES: usize = SAMPLE_RATE_HZ as usize * 60;
+const VOICE_HUD_WINDOW_LABEL: &str = "voice-hud";
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -42,9 +47,36 @@ pub struct TranscriptUnavailable {
     pub reason: String,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum VoiceMode {
+    Idle,
+    Connecting,
+    Listening,
+    Thinking,
+    Speaking,
+    Interrupted,
+    Error,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct VoiceModeEvent {
+    pub mode: VoiceMode,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RecordedVoice {
+    /// 16kHz / mono / little-endian PCM16。空なら音は取れていない。
+    pub audio_base64: String,
+    pub sample_rate_hz: u32,
+    pub duration_ms: u64,
+}
+
 pub struct VoiceRuntime {
     capture: Mutex<Option<MicrophoneCapture>>,
     recognizer: Arc<Mutex<LocalRecognizer>>,
+    captured: Arc<Mutex<Vec<f32>>>,
 }
 
 impl Default for VoiceRuntime {
@@ -74,6 +106,12 @@ pub fn voice_start(app: AppHandle, runtime: tauri::State<'_, VoiceRuntime>) -> R
     if slot.is_some() {
         // 二重に取り込まない。2 本目を作ると、片方が止められなくなる。
         return Ok(());
+    }
+
+    // 前の発話を次へ混ぜない。
+    match runtime.captured.lock() {
+        Ok(mut samples) => samples.clear(),
+        Err(poisoned) => poisoned.into_inner().clear(),
     }
 
     // 模型があれば読む。無ければ**音量だけ**流し、無いことを言う。
@@ -108,8 +146,15 @@ pub fn voice_start(app: AppHandle, runtime: tauri::State<'_, VoiceRuntime>) -> R
 
     let last_level_at = Arc::new(AtomicU64::new(0));
     let handle = app.clone();
+    let captured = Arc::clone(&runtime.captured);
 
     let capture = MicrophoneCapture::start(CaptureConfig::default(), move |frame: PcmFrame| {
+        // 明示的なクラウド精度補正に使う可能性があるため、最大 60 秒だけ保持する。
+        match captured.lock() {
+            Ok(mut samples) => append_until_limit(&mut samples, &frame.samples),
+            Err(poisoned) => append_until_limit(&mut poisoned.into_inner(), &frame.samples),
+        }
+
         // 音量は間引いて出す。frame ごとに出すと 100Hz を超える。
         let now = frame.offset_ms;
         let last = last_level_at.load(Ordering::Relaxed);
@@ -152,14 +197,21 @@ pub fn voice_start(app: AppHandle, runtime: tauri::State<'_, VoiceRuntime>) -> R
 }
 
 #[tauri::command]
-pub fn voice_stop(app: AppHandle, runtime: tauri::State<'_, VoiceRuntime>) -> Result<(), String> {
+pub fn voice_stop(
+    app: AppHandle,
+    runtime: tauri::State<'_, VoiceRuntime>,
+) -> Result<RecordedVoice, String> {
     let mut slot = runtime
         .capture
         .lock()
         .map_err(|_| "the voice runtime is in a bad state".to_string())?;
     let Some(mut capture) = slot.take() else {
         // 動いていないものを止めるのは、何もしないのと同じ
-        return Ok(());
+        return Ok(RecordedVoice {
+            audio_base64: String::new(),
+            sample_rate_hz: SAMPLE_RATE_HZ,
+            duration_ms: 0,
+        });
     };
     capture.stop();
 
@@ -184,7 +236,60 @@ pub fn voice_stop(app: AppHandle, runtime: tauri::State<'_, VoiceRuntime>) -> Re
             output: 0.0,
         },
     );
-    Ok(())
+    let samples = match runtime.captured.lock() {
+        Ok(mut captured) => std::mem::take(&mut *captured),
+        Err(poisoned) => std::mem::take(&mut *poisoned.into_inner()),
+    };
+    let duration_ms = (samples.len() as u64 * 1000) / SAMPLE_RATE_HZ as u64;
+    Ok(RecordedVoice {
+        audio_base64: BASE64.encode(to_pcm16(&samples)),
+        sample_rate_hz: SAMPLE_RATE_HZ,
+        duration_ms,
+    })
+}
+
+fn append_until_limit(target: &mut Vec<f32>, samples: &[f32]) {
+    let room = MAX_CAPTURE_SAMPLES.saturating_sub(target.len());
+    target.extend_from_slice(&samples[..samples.len().min(room)]);
+}
+
+/** Voice HUD と Dock の両方へ、UI が表示すべき状態を一度に配る。 */
+#[tauri::command]
+pub fn voice_set_mode(app: AppHandle, mode: VoiceMode) -> Result<(), String> {
+    app.emit("voice:mode", VoiceModeEvent { mode })
+        .map_err(|error| error.to_string())?;
+
+    let Some(window) = app.get_webview_window(VOICE_HUD_WINDOW_LABEL) else {
+        return Err(format!("no window labelled {VOICE_HUD_WINDOW_LABEL}"));
+    };
+    if mode == VoiceMode::Idle {
+        return window.hide().map_err(|error| error.to_string());
+    }
+
+    // Dock と重ねず、その少し上へ。全画面ではなく作業領域を使う。
+    if let Ok(Some(monitor)) = window.current_monitor() {
+        let scale = monitor.scale_factor();
+        let area = monitor.work_area();
+        let x = area.position.x as f64 / scale + (area.size.width as f64 / scale - 360.0) / 2.0;
+        let y = area.position.y as f64 / scale + area.size.height as f64 / scale - 220.0 - 176.0;
+        window
+            .set_position(LogicalPosition::new(x.round() as i32, y.round() as i32))
+            .map_err(|error| error.to_string())?;
+    }
+    window.show().map_err(|error| error.to_string())
+}
+
+/** Web Audio が測った読み上げ音量を独立 HUD にも流す。 */
+#[tauri::command]
+pub fn voice_set_output_level(app: AppHandle, output: f32) -> Result<(), String> {
+    app.emit(
+        "voice:audio-level",
+        AudioLevel {
+            input: 0.0,
+            output: output.clamp(0.0, 1.0),
+        },
+    )
+    .map_err(|error| error.to_string())
 }
 
 impl VoiceRuntime {
@@ -192,6 +297,7 @@ impl VoiceRuntime {
         Self {
             capture: Mutex::new(None),
             recognizer: Arc::new(Mutex::new(LocalRecognizer::new(window))),
+            captured: Arc::new(Mutex::new(Vec::new())),
         }
     }
 }
@@ -227,5 +333,13 @@ mod tests {
         let runtime = VoiceRuntime::default();
         let slot = runtime.capture.lock().unwrap();
         assert!(slot.is_none());
+    }
+
+    #[test]
+    fn a_dock_utterance_is_bounded_to_one_minute() {
+        let mut captured = vec![0.0; MAX_CAPTURE_SAMPLES - 2];
+        append_until_limit(&mut captured, &[0.1, 0.2, 0.3, 0.4]);
+        assert_eq!(captured.len(), MAX_CAPTURE_SAMPLES);
+        assert_eq!(&captured[MAX_CAPTURE_SAMPLES - 2..], &[0.1, 0.2]);
     }
 }

@@ -1,19 +1,100 @@
-/* 初期セットアップ。正本 §3。**説明を並べない。** */
+/*
+ * 初期セットアップ。正本 §3。**説明を並べない。**
+ *
+ * 画面の真ん中に、その段で決めることを 1 つだけ置く。
+ * SignIn（library.css の .astra-signin）と同じ骨格にして、
+ * 「始める」を押した瞬間に別の製品に見えないようにする。
+ */
 
 .astra-onboarding {
   display: flex;
   flex-direction: column;
-  gap: var(--astra-space-lg);
-  max-width: 640px;
-  margin: 0 auto;
-  padding: var(--astra-space-lg);
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: var(--astra-space-section);
 }
 
+.astra-onboarding > section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--astra-space-lg);
+  width: 100%;
+  max-width: 560px;
+}
+
+.astra-onboarding > [role='alert'] {
+  margin: 0 0 var(--astra-space-base);
+  color: var(--astra-color-danger);
+  font-size: var(--astra-font-size-secondary);
+  text-align: center;
+}
+
+/* Step 1 は 1 文だけ。SignIn の約束文と同じ大きさ・同じ位置。 */
 .astra-onboarding__promise {
   margin: 0;
-  font-size: var(--astra-font-size-card-title);
-  line-height: var(--astra-line-height-body);
+  max-width: 30ch;
+  font-size: var(--astra-font-size-page-title);
+  font-weight: var(--astra-font-weight-page-title);
+  line-height: 1.4;
+  text-align: center;
 }
+
+.astra-onboarding h2 {
+  margin: 0;
+  font-size: var(--astra-font-size-section-title);
+  font-weight: var(--astra-font-weight-section-title);
+}
+
+/* ------------------------------------------------------------- buttons */
+
+.astra-onboarding button {
+  min-height: 44px;
+  padding-inline: var(--astra-space-lg);
+  border: var(--astra-border-hairline) solid var(--astra-color-border);
+  border-radius: var(--astra-radius-small);
+  background: var(--astra-color-surface);
+  color: var(--astra-color-text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.astra-onboarding button:focus-visible {
+  outline: 2px solid var(--astra-color-focus-ring);
+  outline-offset: 2px;
+}
+
+.astra-onboarding button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* `.astra-onboarding button` より強くしておく（class + 要素 に負ける） */
+.astra-onboarding .astra-onboarding__primary {
+  border-color: var(--astra-color-accent);
+  background: var(--astra-color-accent);
+  color: var(--astra-color-accent-on);
+  font-weight: var(--astra-font-weight-card-title);
+}
+
+/* Step 1 の「始める」は文の真下に、文と同じ幅で */
+.astra-onboarding__promise + .astra-onboarding__primary {
+  align-self: center;
+  min-width: 240px;
+}
+
+.astra-onboarding .astra-onboarding__secondary {
+  border-color: transparent;
+  background: transparent;
+  color: var(--astra-color-muted);
+}
+
+/* 主 / 副の並び。主を右に置かず、押す順に上から並べる。 */
+.astra-onboarding__primary + .astra-onboarding__secondary {
+  margin-top: calc(var(--astra-space-lg) * -1 + var(--astra-space-compact));
+}
+
+/* ------------------------------------------------------------- choices */
 
 .astra-onboarding__choices {
   display: flex;
@@ -21,11 +102,17 @@
   gap: var(--astra-space-compact);
 }
 
+.astra-onboarding__choices button {
+  border-radius: var(--astra-radius-pill);
+}
+
 .astra-onboarding__choices button[aria-pressed='true'] {
   border-color: var(--astra-color-accent);
   background: var(--astra-color-accent);
   color: var(--astra-color-accent-on);
 }
+
+/* ----------------------------------------------------- packs / permissions */
 
 .astra-onboarding__packs,
 .astra-onboarding__permissions {
@@ -48,14 +135,26 @@
   background: var(--astra-color-surface);
 }
 
+.astra-onboarding__permissions label {
+  display: flex;
+  align-items: center;
+  gap: var(--astra-space-compact);
+  font-weight: var(--astra-font-weight-card-title);
+}
+
 .astra-onboarding__pack-name {
-  font-weight: 600;
+  font-weight: var(--astra-font-weight-card-title);
 }
 
 .astra-onboarding__pack-why,
 .astra-onboarding__pack-perms,
 .astra-onboarding__why,
 .astra-onboarding__note {
+  margin: 0;
   color: var(--astra-color-muted);
-  font-size: var(--astra-font-size-micro);
+  font-size: var(--astra-font-size-secondary);
+}
+
+.astra-onboarding > section > p {
+  margin: 0;
 }

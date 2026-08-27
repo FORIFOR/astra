@@ -4,7 +4,8 @@
   "description": "enables the default permissions",
   "windows": [
     "main",
-    "dock"
+    "dock",
+    "voice-hud"
   ],
   "permissions": [
     "core:default",

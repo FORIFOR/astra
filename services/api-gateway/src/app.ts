@@ -32,6 +32,7 @@ import { registerDomainRoutes, type DomainRouteDeps } from './routes/domain.js';
 import { registerBriefRoutes } from './routes/brief.js';
 import { registerConversationRoutes } from './routes/conversations.js';
 import { registerOnboardingRoutes } from './routes/onboarding.js';
+import { registerVoiceRoutes, type VoiceRouteDeps } from './routes/voice.js';
 import type { ConversationService } from '@astra/service-conversation';
 import type { WorldModelService } from '@astra/service-world-model';
 import type { ConnectionService, DataSourceResolver } from '@astra/service-plugin-registry';
@@ -73,6 +74,8 @@ export interface AppDeps {
   readonly conversations?: ConversationService;
   /** connector の接続状態（正本 §2.4・§21）。 */
   readonly connections?: ConnectionService;
+  /** Voice OS の Google STT / TTS。未設定でも route は明示的に 503 を返す。 */
+  readonly voice?: VoiceRouteDeps;
   readonly bridge?: HostBridge;
   /** SSE のポーリング間隔。テストは短くする。 */
   readonly ssePollIntervalMs?: number;
@@ -95,7 +98,9 @@ export function buildApp(deps: AppDeps): App {
     credentials: false,
     // 明示しないと DELETE が preflight の許可に載らず、ブラウザからの
     // uninstall が弾かれる（実際に踏んだ）。
-    methods: ['GET', 'HEAD', 'POST', 'DELETE', 'OPTIONS'],
+    // PATCH も同じ。載せていなかったので、onboarding の保存（PATCH /v1/onboarding）が
+    // preflight で落ち、**初期セットアップが毎回最初からになっていた**（実機で踏んだ）。
+    methods: ['GET', 'HEAD', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
     // SSE の再開に要る。露出させないとクライアントが読めない。
     exposedHeaders: ['x-request-id', 'x-ratelimit-limit', 'x-ratelimit-remaining', 'retry-after'],
     allowedHeaders: [
@@ -138,6 +143,7 @@ export function buildApp(deps: AppDeps): App {
     });
   }
   registerArtifactRoutes(app, { library: deps.library });
+  registerVoiceRoutes(app, deps.voice ?? {});
   // §3 の初期セットアップ。catalog を見るので registry の後。
   registerOnboardingRoutes(app, { db: deps.db, registry: deps.registry, tasks: deps.tasks });
   registerPluginRoutes(app, {

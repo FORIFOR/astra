@@ -27,6 +27,10 @@ import {
   StartConversationRequest,
   Task,
   WorldFact,
+  VoiceSynthesisRequest,
+  VoiceSynthesisResponse,
+  VoiceTranscriptionRequest,
+  VoiceTranscriptionResponse,
   dockStateFor,
   uuidv7,
   type ApprovalDecision,
@@ -265,6 +269,26 @@ export class AstraClient {
       taskId: parsed.task_id ?? null,
       notice: parsed.notice ?? null,
     };
+  }
+
+  /** 利用者が許したときだけ、確定用の音声を Google STT へ送る。 */
+  transcribeVoice(
+    request: z.input<typeof VoiceTranscriptionRequest>,
+  ): Promise<z.infer<typeof VoiceTranscriptionResponse>> {
+    return this.http.request(
+      { method: 'POST', path: '/v1/voice/transcriptions', body: request },
+      (value) => VoiceTranscriptionResponse.parse(value),
+    );
+  }
+
+  /** Agent の文字応答を Google TTS で音へ変える。 */
+  synthesizeVoice(
+    request: z.input<typeof VoiceSynthesisRequest>,
+  ): Promise<z.infer<typeof VoiceSynthesisResponse>> {
+    return this.http.request(
+      { method: 'POST', path: '/v1/voice/speech', body: request },
+      (value) => VoiceSynthesisResponse.parse(value),
+    );
   }
 
   /** 触れたものを覚えさせる。「それ」の解決先になる。 */

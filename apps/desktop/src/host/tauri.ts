@@ -8,6 +8,21 @@
  */
 import type { DockState } from '@astra/ui-kit';
 
+export type HostVoiceMode =
+  | 'idle'
+  | 'connecting'
+  | 'listening'
+  | 'thinking'
+  | 'speaking'
+  | 'interrupted'
+  | 'error';
+
+export interface CapturedVoice {
+  readonly audioBase64: string;
+  readonly sampleRateHz: 16000;
+  readonly durationMs: number;
+}
+
 interface TauriInternals {
   invoke?: unknown;
 }
@@ -198,7 +213,9 @@ export const workspace = {
  */
 export const voice = {
   start: () => callStrict<void>('voice_start'),
-  stop: () => call<void>('voice_stop'),
+  stop: () => call<CapturedVoice>('voice_stop'),
+  setMode: (mode: HostVoiceMode) => call<void>('voice_set_mode', { mode }),
+  setOutputLevel: (output: number) => call<void>('voice_set_output_level', { output }),
   onLevel: async (handler: (level: { input: number; output: number }) => void) => {
     if (!isTauri()) return () => undefined;
     const { listen } = await import('@tauri-apps/api/event');
@@ -221,6 +238,11 @@ export const voice = {
     return listen<{ reason: string }>('voice:transcript-unavailable', (e) =>
       handler(e.payload.reason),
     );
+  },
+  onMode: async (handler: (mode: HostVoiceMode) => void): Promise<() => void> => {
+    if (!isTauri()) return () => undefined;
+    const { listen } = await import('@tauri-apps/api/event');
+    return listen<{ mode: HostVoiceMode }>('voice:mode', (event) => handler(event.payload.mode));
   },
 };
 

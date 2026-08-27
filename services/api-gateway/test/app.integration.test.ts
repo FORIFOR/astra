@@ -155,6 +155,8 @@ describe.skipIf(!url)('api-gateway http foundation', () => {
         expect(res.headers['access-control-allow-headers']).toContain('last-event-id');
         // uninstall は DELETE。明示しないと preflight に載らない。
         expect(res.headers['access-control-allow-methods']).toContain('DELETE');
+        // onboarding の保存は PATCH。落ちると初期セットアップが毎回最初からになる。
+        expect(res.headers['access-control-allow-methods']).toContain('PATCH');
       } finally {
         await allowed.close();
       }

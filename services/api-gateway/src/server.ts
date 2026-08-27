@@ -31,7 +31,12 @@ import {
 } from '@astra/service-research';
 import { meetingDataSources } from '@astra/service-meeting';
 import { ShareService } from '@astra/service-share';
-import { FsRecordingStore, MeetingService, meetingProvidersFromEnv } from '@astra/service-meeting';
+import {
+  FsRecordingStore,
+  GoogleTtsProvider,
+  MeetingService,
+  meetingProvidersFromEnv,
+} from '@astra/service-meeting';
 // 代役の判定は contracts が正。service ごとに数えると、片方だけ見落とす。
 import { assertReadyForProduction } from '@astra/contracts';
 import { capabilityReport, capabilitySummary } from '@astra/service-capabilities';
@@ -181,6 +186,12 @@ async function main(): Promise<void> {
     world,
     conversations,
     connections,
+    voice: {
+      ...(meetingProviders.batch.isStandIn ? {} : { transcriber: meetingProviders.batch }),
+      ...(process.env['GOOGLE_CLOUD_PROJECT']
+        ? { tts: new GoogleTtsProvider({ projectId: process.env['GOOGLE_CLOUD_PROJECT'] }) }
+        : {}),
+    },
   });
 
   const shutdown = async (signal: string): Promise<void> => {

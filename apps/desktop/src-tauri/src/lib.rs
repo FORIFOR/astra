@@ -50,6 +50,8 @@ pub fn run() {
             workspace::workspace_open,
             voice::voice_start,
             voice::voice_stop,
+            voice::voice_set_mode,
+            voice::voice_set_output_level,
         ])
         .setup(|app| {
             if cfg!(debug_assertions) {

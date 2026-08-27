@@ -125,7 +125,7 @@ export function Onboarding({
           <h1 id="astra-onboarding-promise" className="astra-onboarding__promise">
             話すか、打つだけ。調べる・作る・動かすまでやります。
           </h1>
-          <button type="button" onClick={() => setStep('input_preference')}>
+          <button className="astra-onboarding__primary" type="button" onClick={() => setStep('input_preference')}>
             始める
           </button>
         </section>
@@ -170,7 +170,7 @@ export function Onboarding({
               </button>
             ))}
           </div>
-          <button
+          <button className="astra-onboarding__primary"
             type="button"
             disabled={interests.length === 0}
             onClick={() => {
@@ -205,10 +205,10 @@ export function Onboarding({
               ))}
             </ul>
           )}
-          <button type="button" disabled={busy} onClick={() => void installAll()}>
+          <button className="astra-onboarding__primary" type="button" disabled={busy} onClick={() => void installAll()}>
             まとめて追加
           </button>
-          <button type="button" onClick={() => setStep('permissions')}>
+          <button className="astra-onboarding__secondary" type="button" onClick={() => setStep('permissions')}>
             あとで
           </button>
         </section>
@@ -249,7 +249,7 @@ export function Onboarding({
           <p className="astra-onboarding__note">
             いま許さなくても構いません。必要になったときに改めて聞きます。
           </p>
-          <button
+          <button className="astra-onboarding__primary"
             type="button"
             onClick={() => {
               void save({ granted_permissions: [...granted], step: 'shortcut' });
@@ -271,7 +271,7 @@ export function Onboarding({
            */}
           <ShortcutSettings />
           <p className="astra-onboarding__note">押すと入力、長押しで話しかけられます。</p>
-          <button
+          <button className="astra-onboarding__primary"
             type="button"
             onClick={() => {
               void save({ step: 'first_task' });
@@ -287,7 +287,7 @@ export function Onboarding({
         <section aria-label={title}>
           {/* §3 Step 7: チュートリアル動画より、1 回の成功体験 */}
           <h2>今、面倒なことを1つ頼んでください。</h2>
-          <button type="button" disabled={busy} onClick={() => void runFirstTask()}>
+          <button className="astra-onboarding__primary" type="button" disabled={busy} onClick={() => void runFirstTask()}>
             試してみる
           </button>
         </section>

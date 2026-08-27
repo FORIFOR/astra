@@ -41,3 +41,4 @@ export * from './standin.js';
 export * from './identity.js';
 export * from './host.js';
 export * from './api.js';
+export * from './voice.js';

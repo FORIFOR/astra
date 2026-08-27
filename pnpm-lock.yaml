@@ -536,6 +536,9 @@ importers:
       '@astra/telemetry':
         specifier: workspace:*
         version: link:../../packages/telemetry
+      '@astra/tts':
+        specifier: workspace:*
+        version: link:../../packages/tts
       '@fastify/cors':
         specifier: ^11.3.0
         version: 11.3.0
