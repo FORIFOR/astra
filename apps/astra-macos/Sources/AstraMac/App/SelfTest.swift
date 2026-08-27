@@ -18,6 +18,7 @@ enum SelfTest {
         case "screen": screen(); return true
         case "rag": rag(); return true
         case "keychain": keychain(); return true
+        case "files": files(); return true
         default: return false
         }
     }
@@ -185,6 +186,31 @@ enum SelfTest {
         } catch {
             print("SELFTEST_FAIL keychain error=\(error)"); exit(3)
         }
+    }
+
+    /// `--selftest files`: ローカルファイル(Finder access)を core の rank_context で並べ替える。
+    /// 一時ファイルを作り、語彙一致するファイルが上に来ること・バイナリが落ちることを確かめる。
+    @MainActor
+    private static func files() {
+        let dir = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("astra-files-\(getpid())")
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        do {
+            try "OAuth のトークン交換の設計メモ".write(to: dir.appendingPathComponent("oauth.txt"), atomically: true, encoding: .utf8)
+            try "昼食のお店のリスト".write(to: dir.appendingPathComponent("lunch.txt"), atomically: true, encoding: .utf8)
+            // バイナリ（UTF-8 で読めない）は候補にしない
+            try Data([0xFF, 0xFE, 0x00, 0x01]).write(to: dir.appendingPathComponent("blob.bin"))
+        } catch { print("SELFTEST_FAIL files write error=\(error)"); exit(2) }
+
+        let candidates = FileContext.candidates(inDirectory: dir)
+        let ranked = AstraCoreBridge.rankContext(terms: ["oauth"], limit: 5, candidates: candidates)
+        // テキスト 2 件のみ候補（バイナリは落ちる）、oauth.txt が最上位
+        guard candidates.count == 2, let top = ranked.first,
+              top.id.hasSuffix("oauth.txt"), !top.reason.isEmpty else {
+            print("SELFTEST_FAIL files candidates=\(candidates.count) top=\(ranked.first?.id ?? "nil")"); exit(3)
+        }
+        print("SELFTEST_OK files: candidates=\(candidates.count)(binary除外) top=oauth.txt score=\(String(format: "%.2f", top.score))")
+        exit(0)
     }
 
     private static func recordToDisk() {

@@ -30,3 +30,6 @@ echo "$OUT7"
 OUT8="$("$BIN" --selftest keychain)"
 echo "$OUT8"
 [[ "$OUT8" == SELFTEST_OK* ]] || { echo "FAIL: macOS keychain round-trip" >&2; exit 1; }
+OUT9="$("$BIN" --selftest files)"
+echo "$OUT9"
+[[ "$OUT9" == SELFTEST_OK* ]] || { echo "FAIL: macOS file context via core rank" >&2; exit 1; }

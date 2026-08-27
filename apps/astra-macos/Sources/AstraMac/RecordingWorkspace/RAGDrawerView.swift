@@ -18,7 +18,7 @@ struct RAGDrawerView: View {
             .frame(height: 38)
             Divider()
             HStack(spacing: 8) {
-                ragSource("ファイル", "doc")
+                ragSource("ファイル", "doc") { state.pickFileContext() }
                 ragSource("Gmail", "envelope")
                 ragSource("Drive", "externaldrive")
                 Spacer()
@@ -72,8 +72,8 @@ struct RAGDrawerView: View {
         }
     }
 
-    private func ragSource(_ title: String, _ icon: String) -> some View {
-        Button {} label: {
+    private func ragSource(_ title: String, _ icon: String, action: @escaping () -> Void = {}) -> some View {
+        Button(action: action) {
             HStack(spacing: 6) {
                 Image(systemName: icon)
                 Text(title)

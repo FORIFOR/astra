@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 import AstraCore
 
 enum RecordingTool: String, CaseIterable, Identifiable {
@@ -49,6 +50,8 @@ final class RecordingWorkspaceState: ObservableObject {
     @Published var transcript: [TranscriptSegment] = []
     /// RAG コンテキストの並べ替え結果（core の rank_context 由来）。
     @Published var ragResults: [RankedContext] = []
+    /// ユーザーが選んだローカルファイル由来の候補（Finder access）。transcript と混ぜて並べ替える。
+    var fileCandidates: [ContextCandidate] = []
     @Published var audioLevels: [CGFloat] =
         [0.3, 0.5, 0.8, 0.4, 0.9, 0.6, 0.35, 0.7, 0.5, 0.85, 0.45, 0.6]
 
@@ -89,7 +92,7 @@ final class RecordingWorkspaceState: ObservableObject {
         let terms = latest.lowercased()
             .components(separatedBy: CharacterSet.alphanumerics.inverted)
             .filter { $0.count >= 2 }
-        let candidates: [ContextCandidate] = segments.enumerated().map { i, seg in
+        var candidates: [ContextCandidate] = segments.enumerated().map { i, seg in
             ContextCandidate(
                 id: seg.id.uuidString,
                 text: seg.text,
@@ -97,11 +100,32 @@ final class RecordingWorkspaceState: ObservableObject {
                 ageSeconds: UInt64((segments.count - i) * 30),
                 projectMatch: true)
         }
+        // ローカルファイル（Finder access）由来の候補も同じ土俵で並べ替える。
+        candidates.append(contentsOf: fileCandidates)
         let byId = Dictionary(uniqueKeysWithValues: candidates.map { ($0.id, $0) })
         let ranked = AstraCoreBridge.rankContext(terms: terms, limit: 5, candidates: candidates)
         ragResults = ranked.compactMap { r in
             guard let c = byId[r.id] else { return nil }
             return RankedContext(id: r.id, title: c.text, source: c.source, score: r.score, reason: r.reason)
+        }
+    }
+
+    /// フォルダを選んで RAG のローカルファイル候補にする（Finder access）。
+    func addFileContext(directory: URL) {
+        fileCandidates = FileContext.candidates(inDirectory: directory)
+        refreshRag()
+    }
+
+    /// ユーザーにフォルダを選ばせて RAG のローカルファイル候補にする（Finder access）。
+    /// **選んだフォルダだけを読む**（全ディスクを漁らない）。
+    func pickFileContext() {
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.allowsMultipleSelection = false
+        panel.prompt = "このフォルダを文脈に使う"
+        if panel.runModal() == .OK, let dir = panel.url {
+            addFileContext(directory: dir)
         }
     }
 

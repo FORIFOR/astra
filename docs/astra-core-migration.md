@@ -264,3 +264,15 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
     **実測 PASS**: `SELFTEST_OK api: … refreshInKeychain=true`（core sign-in → 実 refresh token → Keychain 往復）。
 - **意味**: §3「Keychain」を実機能として実装＋検証（mock ではない）。資格情報の境界（refresh/device は Keychain、
   access はメモリ）を native 側で担保。全 selftest 8 件 + swift unit 3 も回帰なし。
+
+## 追記: ローカルファイル文脈（Phase 1.24, macOS native / Finder access → RAG）
+- `Context/FileContext.swift` を新設。ユーザーが選んだフォルダ/URL のファイルを読み、抜粋を
+  `ContextCandidate`(source=.library) にして core の `rank_context` で並べ替える。**全ディスクは漁らない**
+  （選んだフォルダだけ）。テキストとして読めないバイナリは候補にしない（§5「見たものだけ」）。
+- `RecordingWorkspaceState.refreshRag` が transcript 候補とファイル候補を同じ土俵で並べ替え。
+  RAG ドロワーの「ファイル」チップを `NSOpenPanel`（フォルダ選択）に接続し、実ユーザー動作にした。
+- 検証: `--selftest files`（一時ファイルを作り core で並べ替え）を追加し verify に組み込み。
+  **実測 PASS**: `SELFTEST_OK files: candidates=2(binary除外) top=oauth.txt score=0.72`
+  （語彙一致する oauth.txt が最上位、バイナリは候補から除外）。全 selftest 9 件 + swift unit 3 も回帰なし。
+- **意味**: §3「Finder access」を実機能として実装（外部 OAuth 不要のローカル RAG ソース、mock ではない）。
+  RAG のソースが transcript に加えローカルファイルへ広がった（#2/#7 の前進）。Gmail/Drive は外部 OAuth のため継続対象。
