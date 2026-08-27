@@ -114,6 +114,11 @@ export function StartConfirmation({
         ) : null}
       </div>
 
+      {/* §12.1 Calendar context: 予定表が繋がっていれば会議名・参加者をここに出す。無いなら、そう言う */}
+      <p className="astra-meeting-start__calendar">
+        予定表と繋ぐと、会議名と参加者をここから選べます（Apps → Google Calendar）。
+      </p>
+
       <label className="astra-meeting-start__consent">
         <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
         参加者への録音・文字起こしの同意を確認しました

@@ -908,3 +908,28 @@
   height: 16px;
   accent-color: var(--astra-color-accent);
 }
+
+/* --- 設定 → 計測（§23）--- */
+.astra-ux-metrics__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--astra-font-size-secondary);
+}
+
+.astra-ux-metrics__table th,
+.astra-ux-metrics__table td {
+  padding: var(--astra-space-compact) var(--astra-space-base);
+  border-bottom: var(--astra-border-hairline) solid var(--astra-color-border);
+  text-align: start;
+  font-variant-numeric: tabular-nums;
+}
+
+.astra-ux-metrics__table th {
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-micro);
+  font-weight: var(--astra-font-weight-micro);
+}
+
+.astra-ux-metrics__over {
+  color: var(--astra-color-warning);
+}

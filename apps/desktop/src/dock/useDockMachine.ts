@@ -5,6 +5,7 @@
  * Dock を閉じても走り続ける（§4.4）。
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { startUxTimer } from '../ux/metrics.js';
 import { dockGeometryFor, escapeOutcome, type InteractionState } from '@astra/ui-kit';
 import { host } from '../host/tauri.js';
 
@@ -156,9 +157,12 @@ export function useDockMachine(
       // 未接続なら状態だけ動かす（Conversation Engine が無い構成）
       if (!conversation) return;
 
+      // §23: 長い仕事の受け付け（< 1 s）。返事が来た時点で止める
+      const acknowledged = startUxTimer('long_task_ack');
       void conversation
         .send(text, referents)
         .then((result) => {
+          acknowledged();
           /*
            * 指示語が解けなかったときは、**進めずに聞き返す**。
            * ここで THINKING へ進めると、利用者が指したものとは

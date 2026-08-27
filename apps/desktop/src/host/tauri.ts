@@ -249,3 +249,12 @@ export const host = {
   rememberDockPosition: () => call<void>('dock_remember_position'),
   contextSnapshot: () => call<LocalContext>('context_snapshot'),
 };
+
+/** Rust 側が Dock を出すのにかかった時間（§23 Dock summon）。 */
+export const dockMetrics = {
+  async onSummoned(handler: (elapsedMs: number) => void): Promise<() => void> {
+    if (!isTauri()) return () => undefined;
+    const { listen } = await import('@tauri-apps/api/event');
+    return listen<{ elapsed_ms: number }>('dock:summoned', (e) => handler(e.payload.elapsed_ms));
+  },
+};

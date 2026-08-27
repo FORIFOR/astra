@@ -11,7 +11,7 @@ pub use geometry::{DockState, Position, Rect};
 pub use state::DockPlacementMemory;
 
 use std::sync::Mutex;
-use tauri::{AppHandle, LogicalPosition, LogicalSize, Manager, WebviewWindow};
+use tauri::{AppHandle, Emitter, LogicalPosition, LogicalSize, Manager, WebviewWindow};
 
 pub const DOCK_WINDOW_LABEL: &str = "dock";
 
@@ -172,6 +172,7 @@ pub fn dock_show(
     state: Option<DockState>,
     content_height: Option<u32>,
 ) -> Result<(), String> {
+    let started = std::time::Instant::now();
     let window = dock_window(&app)?;
     apply_geometry(
         &window,
@@ -181,6 +182,7 @@ pub fn dock_show(
     )?;
     window.show().map_err(|e| e.to_string())?;
     window.set_focus().map_err(|e| e.to_string())?;
+    emit_summoned(&app, started);
     Ok(())
 }
 
@@ -205,6 +207,7 @@ pub fn dock_set_state(
 /// ショートカットでの開閉。押すたびに反転する。
 #[tauri::command]
 pub fn dock_toggle(app: AppHandle, runtime: tauri::State<'_, DockRuntime>) -> Result<bool, String> {
+    let started = std::time::Instant::now();
     let window = dock_window(&app)?;
     if window.is_visible().map_err(|e| e.to_string())? {
         window.hide().map_err(|e| e.to_string())?;
@@ -213,6 +216,7 @@ pub fn dock_toggle(app: AppHandle, runtime: tauri::State<'_, DockRuntime>) -> Re
         apply_geometry(&window, &runtime, DockState::Ready, None)?;
         window.show().map_err(|e| e.to_string())?;
         window.set_focus().map_err(|e| e.to_string())?;
+        emit_summoned(&app, started);
         Ok(true)
     }
 }
@@ -240,6 +244,16 @@ pub fn dock_remember_position(
             );
     }
     Ok(())
+}
+
+/// UI/UX §23「Dock summon p95 < 120 ms」。出すのにかかった時間を画面へ渡す。
+/// 画面はこれを設定の「計測」に出す。送る先はまだ無い。
+fn emit_summoned(app: &AppHandle, started: std::time::Instant) {
+    let elapsed_ms = started.elapsed().as_secs_f64() * 1000.0;
+    let _ = app.emit(
+        "dock:summoned",
+        serde_json::json!({ "elapsed_ms": elapsed_ms }),
+    );
 }
 
 #[cfg(test)]

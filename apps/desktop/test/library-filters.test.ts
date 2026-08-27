@@ -11,7 +11,7 @@ import {
 } from '../src/library/filters.js';
 
 const now = Date.parse('2026-08-27T12:00:00+09:00');
-const art = (over: Partial<Artifact>): Artifact =>
+const art = (over: Record<string, unknown>): Artifact =>
   ({
     id: 'a',
     tags: [],

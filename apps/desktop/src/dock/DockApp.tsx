@@ -20,6 +20,8 @@ import { workspace } from '../host/tauri.js';
 import { useVoiceRuntime } from '../voice/voiceRuntime.js';
 import { voiceDemoFrom } from '../voice/demo.js';
 import { approvalFailureMessage } from '../work/approvalOutcome.js';
+import { dockMetrics } from '../host/tauri.js';
+import { recordUxMetric } from '../ux/metrics.js';
 import { TaskDock } from './TaskDock.js';
 import type { ContextReferent, DockConversation } from './useDockMachine.js';
 import './dock.css';
@@ -76,6 +78,16 @@ function textCanBeRead(mimeType: string): boolean {
 }
 
 function DockSurface(): ReactElement {
+  // §23 Dock summon: Rust が測った値を受け取って記録する
+  useEffect(() => {
+    let off: (() => void) | null = null;
+    void dockMetrics
+      .onSummoned((ms) => recordUxMetric('dock_summon', ms))
+      .then((o) => {
+        off = o;
+      });
+    return () => off?.();
+  }, []);
   const { client, status } = useSession();
   const live = status === 'signed-in' ? client : null;
   const conversationRef = useRef<string | null>(null);

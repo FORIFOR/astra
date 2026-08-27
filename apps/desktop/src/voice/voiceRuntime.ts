@@ -9,6 +9,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { AstraClient } from '@astra/api-client';
 import type { VoiceSynthesisResponse } from '@astra/contracts';
 import { isTauri, voice } from '../host/tauri.js';
+import { startUxTimer } from '../ux/metrics.js';
 import type { DockDictation } from '../dock/useDockMachine.js';
 import { playVoiceAudio } from './audioPlayback.js';
 
@@ -111,6 +112,9 @@ export function useVoiceRuntime(client: AstraClient | null = null): VoiceRuntime
   const responseShouldSpeak = useRef(false);
   const turnGeneration = useRef(0);
   const playback = useRef<AbortController | null>(null);
+  // §23: マイクが拾い始めるまで / 最初の文字が出るまで。start() で仕掛け、最初の event で止める
+  const firstLevel = useRef<(() => void) | null>(null);
+  const firstPartial = useRef<(() => void) | null>(null);
   const available = useMemo(isTauri, []);
 
   const transition = useCallback(
@@ -130,9 +134,21 @@ export function useVoiceRuntime(client: AstraClient | null = null): VoiceRuntime
       if (cancelled) off();
       else offs.push(off);
     };
-    void voice.onLevel((level) => levels.set(level)).then(keep);
+    void voice
+      .onLevel((level) => {
+        levels.set(level);
+        if (level.input > 0 && firstLevel.current) {
+          firstLevel.current();
+          firstLevel.current = null;
+        }
+      })
+      .then(keep);
     void voice
       .onTranscript((event) => {
+        if (firstPartial.current) {
+          firstPartial.current();
+          firstPartial.current = null;
+        }
         transcript.current = foldTranscript(transcript.current, event);
         const text = displayedText(transcript.current);
         setTranscriptText(text);
@@ -166,6 +182,8 @@ export function useVoiceRuntime(client: AstraClient | null = null): VoiceRuntime
       setTranscriptText('');
       setUnavailable(null);
       transition('connecting');
+      firstLevel.current = startUxTimer('mic_capture_start');
+      firstPartial.current = startUxTimer('stt_first_partial');
       try {
         await voice.start();
         transition('listening');

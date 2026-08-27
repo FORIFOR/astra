@@ -686,3 +686,9 @@
   color: var(--astra-color-warning);
   font-size: var(--astra-font-size-micro);
 }
+
+.astra-meeting-start__calendar {
+  margin: 0;
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-micro);
+}

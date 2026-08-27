@@ -8,6 +8,7 @@ import { TOP_LEVEL_TABS } from '@astra/ui-kit';
 import { useShell } from '../state/ShellProvider.js';
 import { DeviceCapabilities } from '../settings/DeviceCapabilities.js';
 import { ShortcutSettings } from '../settings/ShortcutSettings.js';
+import { UxMetrics } from '../settings/UxMetrics.js';
 import { GlobalSearch } from './GlobalSearch.js';
 import { Notifications } from './Notifications.js';
 import { ProfileMenu } from './ProfileMenu.js';
@@ -44,6 +45,8 @@ export function TopBar(): ReactElement {
           <ShortcutSettings />
           {/* §25: できないことを、黙って落とさない */}
           <DeviceCapabilities />
+          {/* §23: 目標と実測。測っていないものを達成と言わない */}
+          <UxMetrics />
         </div>
       )}
     </header>
