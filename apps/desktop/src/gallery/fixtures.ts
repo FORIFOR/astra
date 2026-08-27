@@ -12,6 +12,8 @@ import type {
   DailyBrief,
 } from '@astra/contracts';
 import type { WorkView } from '../work/workView.js';
+import type { TaskView } from '@astra/api-client';
+import type { Artifact } from '@astra/contracts';
 import type { TranscriptLine } from '../meeting/meetingView.js';
 
 const now = Date.now();
@@ -440,3 +442,113 @@ export const brief: DailyBrief = {
   more: [],
   generated_at: iso(0),
 } as unknown as DailyBrief;
+
+export const tasks: readonly TaskView[] = [
+  {
+    id: 't1',
+    title: 'A社 商談準備',
+    kind: 'research',
+    status: 'COMPLETED',
+    updated_at: iso(-3_600_000),
+    created_at: iso(-7_200_000),
+    started_at: iso(-7_000_000),
+    completed_at: iso(-3_600_000),
+    error: null,
+    result_artifact_id: 'art-v5',
+    dockState: 'result',
+  },
+  {
+    id: 't2',
+    title: 'A社 新規提案（会議）',
+    kind: 'meeting',
+    status: 'COMPLETED',
+    updated_at: iso(-86_400_000),
+    created_at: iso(-90_000_000),
+    started_at: iso(-90_000_000),
+    completed_at: iso(-86_400_000),
+    error: null,
+    result_artifact_id: 'art-meeting',
+    dockState: 'result',
+  },
+] as unknown as readonly TaskView[];
+
+const artifactBase = {
+  tenant_id: 'tn',
+  owner_id: 'u1',
+  mime_type: 'application/pdf',
+  source_agent_id: 'com.astra.research',
+  source_meeting_id: null,
+  object_key: 'k',
+  size: 1200,
+  sha256: 'a'.repeat(64),
+  entities: [],
+  lineage: [],
+  searchable_text_ref: null,
+  sensitivity: 'PRIVATE',
+};
+export const artifacts: readonly Artifact[] = [
+  {
+    ...artifactBase,
+    id: 'art-v5',
+    type: 'DOCUMENT',
+    title: 'A社 提案書',
+    version: 5,
+    source_task_id: 't1',
+    parent_artifact_id: 'art-v4',
+    tags: ['project:A社', 'person:田中'],
+    created_at: iso(-3_600_000),
+    updated_at: iso(-3_600_000),
+  },
+  {
+    ...artifactBase,
+    id: 'art-v4',
+    type: 'DOCUMENT',
+    title: 'A社 提案書',
+    version: 4,
+    source_task_id: 't1',
+    parent_artifact_id: 'art-meeting',
+    tags: ['project:A社'],
+    created_at: iso(-80_000_000),
+    updated_at: iso(-80_000_000),
+  },
+  {
+    ...artifactBase,
+    id: 'art-meeting',
+    type: 'MEETING_BUNDLE',
+    title: 'A社 新規提案 議事録',
+    version: 1,
+    source_task_id: 't2',
+    source_agent_id: 'com.astra.meeting',
+    source_meeting_id: 'm1',
+    parent_artifact_id: null,
+    tags: ['project:A社', 'person:伊藤'],
+    created_at: iso(-86_400_000),
+    updated_at: iso(-86_400_000),
+    sensitivity: 'CONFIDENTIAL',
+  },
+  {
+    ...artifactBase,
+    id: 'art-report',
+    type: 'REPORT',
+    title: '半導体市場調査',
+    version: 1,
+    source_task_id: null,
+    parent_artifact_id: null,
+    tags: [],
+    created_at: iso(-86_400_000 * 12),
+    updated_at: iso(-86_400_000 * 12),
+  },
+  {
+    ...artifactBase,
+    id: 'art-manual',
+    type: 'IMAGE',
+    title: '価格表（手動）',
+    version: 1,
+    source_task_id: null,
+    source_agent_id: null,
+    parent_artifact_id: null,
+    tags: ['project:B社'],
+    created_at: iso(-86_400_000 * 40),
+    updated_at: iso(-86_400_000 * 40),
+  },
+] as unknown as readonly Artifact[];

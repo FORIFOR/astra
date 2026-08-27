@@ -262,14 +262,15 @@ describe('Library (§10)', () => {
     render(<LibraryPage artifacts={[doc]} selectedId={doc.id} onOpenTask={onOpenTask} />);
 
     const preview = screen.getByLabelText('プレビュー');
-    await user.click(within(preview).getByText('この仕事から作られました'));
+    await user.click(within(preview).getByRole('button', { name: 'この仕事' }));
     expect(onOpenTask).toHaveBeenCalledWith(sourceTask);
   });
 
   it('says plainly when an artifact has no source task', () => {
     const doc = artifact({ source_task_id: null });
     render(<LibraryPage artifacts={[doc]} selectedId={doc.id} />);
-    expect(screen.getByText('手動で追加されました。')).toBeTruthy();
+    // §10.2 Produced by: 手で入れたものは「手で追加」
+    expect(screen.getAllByText('手で追加').length).toBeGreaterThan(0);
   });
 
   it('reports the real sharing state, not a hard-coded "off" (§10.2)', async () => {
@@ -307,7 +308,8 @@ describe('Library (§10)', () => {
   it('labels sensitive artifacts in text, not colour alone', () => {
     const doc = artifact({ sensitivity: 'CONFIDENTIAL' });
     render(<LibraryPage artifacts={[doc]} />);
-    expect(screen.getByText('社外秘')).toBeTruthy();
+    // 絞り込みの選択肢にも同じ言葉が出る（§10.1 Sensitivity）ので、複数を許す
+    expect(screen.getAllByText('社外秘').length).toBeGreaterThan(0);
   });
 });
 

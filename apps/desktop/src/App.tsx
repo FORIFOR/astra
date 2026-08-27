@@ -192,6 +192,7 @@ function ActivePage({
         <LibraryPage
           client={client}
           artifacts={artifacts}
+          tasks={tasks}
           selectedId={focusedArtifactId}
           onSelect={openArtifact}
           onOpenTask={openTask}

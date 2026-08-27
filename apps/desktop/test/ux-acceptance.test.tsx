@@ -416,7 +416,7 @@ describe('AC-11: a library artifact can be traced back', () => {
     const onOpenTask = vi.fn();
     render(<LibraryPage artifacts={[artifact]} selectedId={artifact.id} onOpenTask={onOpenTask} />);
 
-    const link = screen.getByRole('button', { name: 'この仕事から作られました' });
+    const link = screen.getByRole('button', { name: 'この仕事' });
     await userEvent.click(link);
     expect(onOpenTask).toHaveBeenCalledWith(artifact.source_task_id);
   });

@@ -23,6 +23,7 @@ import { StartConfirmation } from '../meeting/StartConfirmation.js';
 import { InstallConsent } from '../apps/InstallConsent.js';
 import { AppDetail } from '../apps/AppDetail.js';
 import { HomePage } from '../pages/Home.js';
+import { LibraryPage } from '../pages/Library.js';
 import * as fx from './fixtures.js';
 import '../shell/shell.css';
 import '../work/work.css';
@@ -41,6 +42,7 @@ const SECTIONS = [
   'artifact',
   'apps',
   'home',
+  'library',
 ] as const;
 type Section = (typeof SECTIONS)[number];
 
@@ -237,6 +239,11 @@ export function GalleryApp(): ReactElement {
                 <InstallConsent plugin={fx.pack} onCancel={noop} onInstall={noop} />
               </Block>
             </>
+          )}
+          {(section === null || section === 'library') && (
+            <Block title="Library — filters / card metadata / lineage（§10）" width={1200}>
+              <LibraryPage artifacts={fx.artifacts} tasks={fx.tasks} selectedId="art-v5" />
+            </Block>
           )}
           {(section === null || section === 'home') && (
             <Block title="Home — Attention 3 / Active / Recent（§8）" width={880}>
