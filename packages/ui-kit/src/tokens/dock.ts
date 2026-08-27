@@ -15,6 +15,7 @@
 export const DOCK_STATES = [
   'idle',
   'pill',
+  'menu',
   'ready',
   'typing',
   'listening',
@@ -45,6 +46,8 @@ export const dockGeometry = {
   idle: { width: 320, minHeight: 32, maxHeight: 32 },
   /** 上部ピル（聞いています / 考えています）: 波形と一言 */
   pill: { width: 360, minHeight: 40, maxHeight: 40 },
+  /** ピルを押したときのクイックメニュー（文字で頼む / 声で頼む / 会議を記録） */
+  menu: { width: 320, minHeight: 156, maxHeight: 156 },
   /** §4.1 Ready: 560 × 56 */
   ready: { width: 560, minHeight: 56, maxHeight: 56 },
   /** §4.1 Typing expanded: 640 × 96–140（multi-line 最大 4 行） */
@@ -149,7 +152,7 @@ export type EscapeOutcome = 'shrink' | 'dismiss' | 'ignored';
 export function escapeOutcome(state: DockState, alreadyShrunk: boolean): EscapeOutcome {
   // ピルは既に一番静かな姿。録音は Esc で止めない（止めるのは明示的な ■ から）
   if (state === 'idle' || state === 'recording' || state === 'processing') return 'ignored';
-  if (state === 'ready' || state === 'pill') return 'dismiss';
+  if (state === 'ready' || state === 'pill' || state === 'menu') return 'dismiss';
   return alreadyShrunk ? 'dismiss' : 'shrink';
 }
 
@@ -182,14 +185,14 @@ export type InteractionState =
  * 面の種類。`pill` は上部の細いピル（入力欄を持たない）、`card` は入力カード。
  * 押している間だけ話す（push-to-talk）はピルのまま聞き、結果が要るときだけカードに広がる。
  */
-export type DockSurface = 'pill' | 'card';
+export type DockSurface = 'pill' | 'card' | 'menu';
 
 export function dockGeometryFor(
   state: InteractionState,
   contextExpanded = false,
   surface: DockSurface = 'card',
 ): DockState {
-  if (state === 'IDLE') return 'idle';
+  if (state === 'IDLE') return surface === 'menu' ? 'menu' : 'idle';
   if (state === 'RECORDING') return 'recording';
   if (state === 'PROCESSING') return 'processing';
   if (surface === 'pill' && (state === 'LISTENING' || state === 'UNDERSTANDING')) return 'pill';

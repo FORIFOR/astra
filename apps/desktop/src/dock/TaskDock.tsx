@@ -25,12 +25,13 @@ import { MicIcon } from '../voice/MicIcon.js';
 import type { VoiceMode } from '../voice/voiceRuntime.js';
 import type { DockSurface, InteractionState } from '@astra/ui-kit';
 import { DockPill } from './DockPill.js';
+import { QuickMenu } from './QuickMenu.js';
 import { ProcessingDock, RecordingDock } from './RecordingDock.js';
 import type { MeetingCommand, MeetingSnapshot } from '../meeting/meetingBridge.js';
 import { dockVoiceMode, voiceModeLabel } from './dockVoiceMode.js';
 import { LiveWaveform } from '../vendor/deepgram-ui/LiveWaveform.js';
 import type { WorkView } from '../work/workView.js';
-import { host, shortcuts } from '../host/tauri.js';
+import { host, shortcuts, workspace } from '../host/tauri.js';
 import '../work/work.css';
 
 export function TaskDock({
@@ -343,6 +344,33 @@ export function TaskDock({
     );
   }
 
+  // ピルを押したときのクイックメニュー。通常は閉じている
+  if (machine.state === 'IDLE' && machine.surface === 'menu') {
+    return (
+      <div
+        className="astra-dock astra-dock--menu"
+        data-state={machine.state}
+        data-surface="menu"
+        data-geometry={geometry}
+        style={frameStyle}
+      >
+        <QuickMenu
+          onAsk={machine.expand}
+          onListen={() => {
+            machine.collapse();
+            machine.startListening();
+          }}
+          onRecord={() => {
+            machine.collapse();
+            onMeetingCommand?.('start');
+            void workspace.open();
+          }}
+          onClose={machine.collapse}
+        />
+      </div>
+    );
+  }
+
   // ピル: 上部の細い入口。入力欄は持たない。押すか Option+Space でカードに広がる。
   // IDLE は面の値に関わらずピル（32px の枠にカードを押し込まない）
   if (machine.surface === 'pill' || machine.state === 'IDLE') {
@@ -360,7 +388,7 @@ export function TaskDock({
           orbMode={orbMode}
           intent={machine.intent}
           {...(voiceLevels ? { voiceLevels } : {})}
-          onOpen={machine.expand}
+          onOpen={machine.state === 'IDLE' ? machine.openMenu : machine.expand}
         />
       </div>
     );

@@ -192,6 +192,7 @@ export function MeetingProvider({
     let off: (() => void) | null = null;
     let cancelled = false;
     void onMeetingCommand((command) => {
+      if (command === 'start') requestStart();
       if (command === 'stop') void stopRef.current();
       if (command === 'pause') setPaused((p) => !p);
     }).then((unlisten) => {

@@ -167,3 +167,34 @@ describe('recording (SuperIntern style, bottom)', () => {
     expect(dock().textContent).toContain('来月までに');
   });
 });
+
+describe('quick menu on the pill', () => {
+  it('opens on click with the three real actions and hands 会議を記録 to the main window', async () => {
+    const onMeetingCommand = vi.fn();
+    render(<TaskDock initialState="IDLE" onMeetingCommand={onMeetingCommand} />);
+    await act(async () => {});
+    fireEvent.click(document.querySelector('.astra-pill--idle')!);
+    expect(dock().dataset['geometry']).toBe('menu');
+    const items = [...document.querySelectorAll('[role="menuitem"]')].map((b) => b.textContent);
+    expect(items).toEqual(['⌨文字で頼む', '🎤声で頼む', '●会議を記録']);
+
+    fireEvent.click(document.querySelectorAll('[role="menuitem"]')[2]!);
+    expect(onMeetingCommand).toHaveBeenCalledWith('start');
+    expect(dock().dataset['state']).toBe('IDLE');
+    expect(dock().dataset['geometry']).toBe('idle');
+  });
+
+  it('文字で頼む opens the card; Esc closes the menu', async () => {
+    render(<TaskDock initialState="IDLE" />);
+    await act(async () => {});
+    fireEvent.click(document.querySelector('.astra-pill--idle')!);
+    await act(async () => {
+      fireEvent.keyDown(window, { key: 'Escape', code: 'Escape' });
+    });
+    expect(dock().dataset['geometry']).toBe('idle');
+    fireEvent.click(document.querySelector('.astra-pill--idle')!);
+    fireEvent.click(document.querySelector('[role="menuitem"]')!);
+    expect(dock().dataset['state']).toBe('READY');
+    expect(dock().dataset['surface']).toBe('card');
+  });
+});

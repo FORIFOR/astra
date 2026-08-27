@@ -23,7 +23,8 @@ export interface MeetingSnapshot {
   readonly lines: readonly MeetingSnapshotLine[];
 }
 
-export type MeetingCommand = 'stop' | 'pause';
+/** start は Dock のクイックメニューから。main が確認ダイアログを出す（いきなり録らない） */
+export type MeetingCommand = 'start' | 'stop' | 'pause';
 
 const SNAPSHOT_EVENT = 'astra://meeting';
 const COMMAND_EVENT = 'astra://meeting-command';

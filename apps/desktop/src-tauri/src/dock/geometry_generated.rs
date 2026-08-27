@@ -9,6 +9,7 @@
 pub enum DockState {
     Idle,
     Pill,
+    Menu,
     Ready,
     Typing,
     Listening,
@@ -45,6 +46,11 @@ impl DockState {
                 width: 360,
                 min_height: 40,
                 max_height: 40,
+            },
+            DockState::Menu => DockSize {
+                width: 320,
+                min_height: 156,
+                max_height: 156,
             },
             DockState::Ready => DockSize {
                 width: 560,
@@ -89,6 +95,7 @@ impl DockState {
         match self {
             DockState::Idle => Placement::Top,
             DockState::Pill => Placement::Top,
+            DockState::Menu => Placement::Top,
             DockState::Ready => Placement::Top,
             DockState::Typing => Placement::Top,
             DockState::Listening => Placement::Top,

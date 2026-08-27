@@ -19,11 +19,22 @@ import {
 } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { AstraClient } from '@astra/api-client';
-import type { MeResponse } from '@astra/contracts';
+import { AstraError, type MeResponse } from '@astra/contracts';
 import { oauthCallback, secrets } from '../host/tauri.js';
 import { SignInAbortedError, signInWithProvider, type ProviderEntry } from '../auth/providers.js';
 
 const REFRESH_KEY = 'astra.refresh_token';
+
+/**
+ * 保存済みの refresh token を捨ててよい失敗か。
+ *
+ * 捨てるのは **サーバが「このトークンは無効」と言ったとき**だけ（期限切れ・再利用検知・失効）。
+ * 429（認証経路のレート制限）や 5xx、ネットワーク断で捨てると、
+ * サーバが一時的に返事できないだけで利用者がサインアウトされる。
+ */
+export function refreshTokenIsDead(error: unknown): boolean {
+  return error instanceof AstraError && error.code.startsWith('auth.');
+}
 
 export type SessionStatus = 'loading' | 'signed-out' | 'signed-in';
 
@@ -79,7 +90,9 @@ export function SessionProvider({
             refreshToken.current = next.refresh_token;
             await secrets.set(REFRESH_KEY, next.refresh_token);
             return true;
-          } catch {
+          } catch (error) {
+            // 一時的な失敗（レート制限・落ちている）なら、トークンは残して次に賭ける
+            if (!refreshTokenIsDead(error)) return false;
             // 再利用検知などで失効している。黙って握らずサインアウトさせる。
             accessToken.current = null;
             refreshToken.current = null;
@@ -121,9 +134,11 @@ export function SessionProvider({
       }
       try {
         await adopt(await client.refresh(stored));
-      } catch {
-        // 期限切れや再利用検知。保存済みの値を残さない。
-        await secrets.delete(REFRESH_KEY);
+      } catch (error) {
+        // 期限切れや再利用検知なら、保存済みの値を残さない。
+        // サーバが一時的に返せないだけ（429 / 5xx / 断）なら残す。次の起動で戻れる
+        if (refreshTokenIsDead(error)) await secrets.delete(REFRESH_KEY);
+        else setError('接続先に届きませんでした。しばらくしてからもう一度開いてください。');
         if (!cancelled) setStatus('signed-out');
       }
     })();

@@ -32,6 +32,8 @@ export interface DockMachine {
   readonly intent: string;
   /** ピル → 入力カード（Option+Space / クリック）。 */
   expand(): void;
+  /** ピルを押した。クイックメニュー（文字で頼む / 声で頼む / 会議を記録）。 */
+  openMenu(): void;
   /** 会議が始まった。下部の Recording Dock へ。 */
   enterRecording(): void;
   /** 会議が止まった。「保存しました」を見せてからピルへ戻る。 */
@@ -145,6 +147,11 @@ export function useDockMachine(
     }, PROCESSING_MS);
   }, []);
 
+  const openMenu = useCallback(() => {
+    setState('IDLE');
+    setSurface('menu');
+  }, []);
+
   const expand = useCallback(() => {
     setSurface('card');
     setState((current) => (current === 'IDLE' ? 'READY' : current));
@@ -232,6 +239,7 @@ export function useDockMachine(
     intent,
     setIntent,
     expand,
+    openMenu,
     collapse,
     enterRecording,
     leaveRecording,
