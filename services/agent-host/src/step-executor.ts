@@ -42,6 +42,8 @@ interface StepLike {
   readonly index: number;
   readonly toolId: string;
   readonly args: Record<string, unknown>;
+  /** 同じ step で何度も頼むときの区別。connector は使わない。 */
+  readonly requestKey?: string;
 }
 
 export interface HostStepExecutorDeps {
@@ -110,6 +112,7 @@ export class HostStepExecutor {
       toolId: step.toolId,
       args: step.args,
       approval,
+      ...(step.requestKey === undefined ? {} : { requestKey: step.requestKey }),
     });
 
     const settled = await this.#waitFor(input, request);

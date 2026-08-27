@@ -452,6 +452,7 @@ CREATE TABLE public.host_step_requests (
     claimed_at timestamp with time zone,
     completed_at timestamp with time zone,
     expires_at timestamp with time zone NOT NULL,
+    request_key text DEFAULT ''::text NOT NULL,
     CONSTRAINT host_step_requests_claimed CHECK (((status = 'PENDING'::text) OR ((host_id IS NOT NULL) AND (claimed_at IS NOT NULL)))),
     CONSTRAINT host_step_requests_settled CHECK ((((status = 'DONE'::text) AND (result IS NOT NULL) AND (completed_at IS NOT NULL)) OR ((status = 'FAILED'::text) AND (error IS NOT NULL) AND (completed_at IS NOT NULL)) OR ((status = ANY (ARRAY['PENDING'::text, 'CLAIMED'::text])) AND (completed_at IS NULL)))),
     CONSTRAINT host_step_requests_status_check CHECK ((status = ANY (ARRAY['PENDING'::text, 'CLAIMED'::text, 'DONE'::text, 'FAILED'::text]))),
@@ -1597,7 +1598,7 @@ CREATE INDEX host_step_requests_queue ON public.host_step_requests USING btree (
 -- Name: host_step_requests_step; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX host_step_requests_step ON public.host_step_requests USING btree (task_id, step_index);
+CREATE UNIQUE INDEX host_step_requests_step ON public.host_step_requests USING btree (task_id, step_index, request_key);
 
 
 --
@@ -3372,3 +3373,4 @@ INSERT INTO schema_migrations (version) VALUES ('20260827050001');
 INSERT INTO schema_migrations (version) VALUES ('20260827060001');
 INSERT INTO schema_migrations (version) VALUES ('20260827070001');
 INSERT INTO schema_migrations (version) VALUES ('20260827090000');
+INSERT INTO schema_migrations (version) VALUES ('20260827093000');

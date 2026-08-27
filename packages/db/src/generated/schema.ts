@@ -261,6 +261,7 @@ export interface HostStepRequests {
   expires_at: Timestamp;
   host_id: string | null;
   id: string;
+  request_key: Generated<string>;
   result: Json | null;
   status: string;
   step_index: number;

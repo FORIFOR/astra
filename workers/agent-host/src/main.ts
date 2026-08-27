@@ -13,6 +13,9 @@ import { keychainFor } from './keychain.js';
 import { ConnectorRuntime } from './connector-steps.js';
 import { HostStepLoop } from './step-loop.js';
 import { httpStepTransport } from './step-transport.js';
+import { ClaudeCodeCli } from './claude-code.js';
+import { LlmRuntime } from './llm-steps.js';
+import { CompositeRunner } from './runner.js';
 
 async function main(): Promise<void> {
   const logger = createLogger({
@@ -30,14 +33,39 @@ async function main(): Promise<void> {
   }
 
   const deviceLabel = process.env['ASTRA_DEVICE_LABEL'] ?? `${process.env['USER'] ?? 'device'}`;
+
+  /*
+   * 言葉を扱う仕事も端末で。正本 §21、UI/UX §22。
+   *
+   * **Astra は共通の API キーを持たない。**利用者が持ち込んだ利用権は
+   * 端末の側にあるので、呼ぶのも端末になる。
+   * Claude Code のログインは Claude Code のもので、Astra は読まない。
+   */
+  const llm = new LlmRuntime({
+    claudeCode: new ClaudeCodeCli({
+      ...(process.env['ASTRA_CLAUDE_CODE_PATH']
+        ? { command: process.env['ASTRA_CLAUDE_CODE_PATH'] }
+        : {}),
+      ...(process.env['ASTRA_CLAUDE_CODE_MODEL']
+        ? { model: process.env['ASTRA_CLAUDE_CODE_MODEL'] }
+        : {}),
+    }),
+  });
+
   /*
    * この端末で使えるモデル。**空なら仕事を受けない。**
    * 受けてから失敗するより、受けないほうがよい。
+   *
+   * **名乗る前に確かめる。**環境変数から読んでいた間、
+   * Claude Code が入っていない端末が「claude_code が使えます」と名乗り、
+   * 仕事を受けてから失敗していた。名乗りは調べた結果でなければ意味が無い。
    */
-  const models = (process.env['ASTRA_HOST_MODELS'] ?? '')
-    .split(',')
-    .map((m) => m.trim())
-    .filter((m) => m.length > 0);
+  const probed = await llm.options();
+  const models = probed.filter((option) => option.available).map((option) => option.kind);
+  logger.info(
+    { models: probed.map((o) => ({ kind: o.kind, available: o.available, reason: o.reason })) },
+    'language models on this device',
+  );
 
   /*
    * 同意の結果。**この端末が保持する。**
@@ -88,7 +116,7 @@ async function main(): Promise<void> {
 
   const steps = new HostStepLoop({
     transport: httpStepTransport({ baseUrl, token }),
-    runner: runtime,
+    runner: new CompositeRunner([runtime, llm]),
     onError: (error) => logger.warn({ err: error.message }, 'a step could not be handled'),
   });
   void steps.start(id);

@@ -33,9 +33,12 @@ export {
 } from './quality.js';
 export {
   researchProvidersFromEnv,
+  setModelContext,
   standIns as researchStandIns,
   type ResearchProviderEnv,
+  type ResearchProviderParts,
   type ResearchProviders,
 } from './factory.js';
 export { researchDataSources } from './data-sources.js';
 export * from './ledger.js';
+export * from './host-model.js';

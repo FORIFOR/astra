@@ -39,6 +39,7 @@ export interface HostStepRequest {
   readonly stepIndex: number;
   readonly toolId: string;
   readonly args: Record<string, unknown>;
+  readonly requestKey: string;
   /** 人が承認した跡。承認の要らない操作では null。 */
   readonly approval: ApprovalProof | null;
   readonly status: 'PENDING' | 'CLAIMED' | 'DONE' | 'FAILED';
@@ -70,6 +71,7 @@ interface Row {
   step_index: number;
   tool_id: string;
   args: unknown;
+  request_key: string;
   approval: unknown;
   status: string;
   host_id: string | null;
@@ -86,6 +88,7 @@ function toRequest(row: Row): HostStepRequest {
     stepIndex: row.step_index,
     toolId: row.tool_id,
     args: (row.args ?? {}) as Record<string, unknown>,
+    requestKey: row.request_key,
     approval: (row.approval ?? null) as ApprovalProof | null,
     status: row.status as HostStepRequest['status'],
     hostId: row.host_id,
@@ -139,6 +142,14 @@ export class HostBridge {
     toolId: string;
     args: Record<string, unknown>;
     approval?: ApprovalProof | null;
+    /**
+     * 同じ step の中で何度も頼むときの区別。
+     *
+     * connector は空のまま（1 step = 1 操作）。言語モデルは呼び出しの
+     * 内容から作る。空のままにすると、**2 回目が 1 回目の結果を受け取る** —
+     * 分解の答えが統合の答えとして返る。
+     */
+    requestKey?: string;
   }): Promise<HostStepRequest> {
     assertNoCredentials(input.args);
     const at = this.#now();
@@ -149,6 +160,7 @@ export class HostBridge {
         .selectAll()
         .where('task_id', '=', input.taskId)
         .where('step_index', '=', input.stepIndex)
+        .where('request_key', '=', input.requestKey ?? '')
         .executeTakeFirst();
       if (existing) return existing;
 
@@ -161,6 +173,7 @@ export class HostBridge {
           step_index: input.stepIndex,
           tool_id: input.toolId,
           args: JSON.stringify(input.args),
+          request_key: input.requestKey ?? '',
           approval: input.approval ? JSON.stringify(input.approval) : null,
           status: 'PENDING',
           created_at: at,

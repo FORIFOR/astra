@@ -21,7 +21,7 @@ import {
   stockDataSources,
   videoDataSources,
 } from '@astra/service-agent-runtime';
-import { AgentHostService, HostBridge } from '@astra/service-agent-host';
+import { AgentHostService, HostBridge, HostStepExecutor } from '@astra/service-agent-host';
 import { WorldModelService } from '@astra/service-world-model';
 import { ConversationService } from '@astra/service-conversation';
 import {
@@ -34,7 +34,7 @@ import { ShareService } from '@astra/service-share';
 import { FsRecordingStore, MeetingService, meetingProvidersFromEnv } from '@astra/service-meeting';
 // 代役の判定は contracts が正。service ごとに数えると、片方だけ見落とす。
 import { assertNoStandIns } from '@astra/contracts';
-import { capabilityReport } from '@astra/service-capabilities';
+import { capabilityReport, capabilitySummary } from '@astra/service-capabilities';
 import { buildApp } from './app.js';
 import { assertPathsExist, gatewayConfigFromEnv } from './config.js';
 import { keyConfigFromEnv, loadSigningKeys } from './auth/keys.js';
@@ -95,14 +95,29 @@ async function main(): Promise<void> {
    * 代役の言語モデルのまま本番が起動できた。
    * いまは能力の一覧（contracts）が過不足を型で塞ぐ。
    */
+  const hostStepBridge = new HostBridge({ db });
   const meetingProviders = await meetingProvidersFromEnv(process.env);
-  const researchProviders = researchProvidersFromEnv(process.env);
+  /*
+   * worker と**同じ関数を通す。**片方だけ端末の口を渡していた間、
+   * 同じ構成で worker は「言語モデルは本物」、gateway は「代役」と言っていた。
+   * gateway はモデルを呼ばないが、**何が使える構成かは同じでなければならない。**
+   */
+  const researchProviders = researchProvidersFromEnv(process.env, {
+    host: new HostStepExecutor({ bridge: hostStepBridge }),
+  });
   const report = capabilityReport({
     research: researchProviders,
     meeting: meetingProviders,
     env: process.env,
   });
   const { warn, remaining } = assertNoStandIns(report, config.env);
+  /*
+   * **全部を数え上げて出す。**代役だけを出していた間、
+   * 本物になった能力はどこにも現れなかった。片方の面だけが
+   * 本物になっても気づけない — 実際、worker と gateway が
+   * 違うことを言っている状態が生まれていた。
+   */
+  logger.info({ capabilities: capabilitySummary(report) }, 'external capabilities');
   if (warn) logger.warn({ stand_ins: remaining.map((r) => r.capability) }, warn);
   const meetings = new MeetingService({
     db,
@@ -150,7 +165,7 @@ async function main(): Promise<void> {
     evidence: new ResearchLedgerService(db),
     // 正本 §4.4: Dock を閉じても仕事が続くための調整役
     agentHosts: new AgentHostService({ db }),
-    hostBridge: new HostBridge({ db }),
+    hostBridge: hostStepBridge,
     meetings: {
       meetings,
       recordings: new FsRecordingStore(config.recordingRoot),

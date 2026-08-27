@@ -67,7 +67,19 @@ export function capabilityReport(input: {
 }): CapabilityReport {
   const inputs: Record<ExternalCapability, CapabilityInput> = {
     search: fromProvider(input.research.search, 'search', 'ASTRA_SEARCH_PROVIDER（OQ-3 未決）'),
-    language_model: fromProvider(input.research.model, 'language model', 'ANTHROPIC_API_KEY'),
+    /*
+     * 言語モデル。正本 §21、UI/UX §22。
+     *
+     * **Astra が共通のキーを持っていないことは、欠落ではない。**
+     * 端末で呼ぶ構成（BYOK / Claude Code）は本物であって、代役ではない。
+     * `isStandIn` は提供者自身が答える — ここで環境変数の有無から
+     * 推し量ると、端末で動いている構成を「未設定」と呼ぶことになる。
+     */
+    language_model: fromProvider(
+      input.research.model,
+      'language model',
+      'Claude Code を繋ぐか、お使いの API キーを登録してください',
+    ),
     speech_to_text: fromProvider(
       input.meeting.streaming,
       'streaming transcriber',
@@ -88,4 +100,21 @@ export function capabilityReport(input: {
         },
   };
   return buildCapabilityReport(inputs);
+}
+
+/**
+ * 名乗りを 1 行にする。正本 §25。
+ *
+ * **1 行にするのは、読めるようにするため。**入れ子の構造で出すと、
+ * ログの整形設定によって形が変わり、二つのプロセスの名乗りを
+ * 突き合わせられなくなる（実際、突き合わせに失敗した）。
+ *
+ * 形: `search=stand-in:static language_model=real:device`
+ */
+export function capabilitySummary(report: CapabilityReport): string {
+  return report.items
+    .map(
+      (item) => `${item.capability}=${item.isStandIn ? 'stand-in' : 'real'}:${item.implementation}`,
+    )
+    .join(' ');
 }

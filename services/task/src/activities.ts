@@ -78,6 +78,19 @@ export interface ActivityDeps {
    */
   readonly hosts?: { hasOnlineHost(tenantId: string, userId: string): Promise<boolean> };
   /**
+   * いまどの step を走らせているかを知らせる先。
+   *
+   * 言語モデルの呼び出しは step の**中**で起きるので、
+   * 受け渡しに載せるには「どの task の何段目か」が要る。
+   * ここで置かないと、モデルは自分がどの仕事の一部か分からない。
+   */
+  readonly onStep?: (where: {
+    taskId: string;
+    tenantId: string;
+    userId: string;
+    stepIndex: number;
+  }) => void;
+  /**
    * 正本 §24 の下から 2 段。**繋いでいなければ「使えない」と言う。**
    *
    *   API connector fail → retry → alternate connector
@@ -509,6 +522,14 @@ export function createTaskActivities(deps: ActivityDeps): TaskActivities {
           'LocalExecutionRequired',
         );
       }
+
+      // step の中から呼ばれるもの（言語モデル）に、居場所を伝える
+      deps.onStep?.({
+        taskId: input.taskId,
+        tenantId: input.tenantId,
+        userId: input.userId,
+        stepIndex: step.index,
+      });
 
       const executor = step.surface === 'local' ? deps.hostExecutor : deps.executors?.[step.toolId];
       let outcome;

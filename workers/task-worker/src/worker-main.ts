@@ -15,6 +15,7 @@ import {
   ResearchService,
   researchExecutors,
   researchProvidersFromEnv,
+  setModelContext,
 } from '@astra/service-research';
 import {
   FsRecordingStore,
@@ -24,7 +25,7 @@ import {
 } from '@astra/service-meeting';
 // 数え方は gateway と同じものを使う。別々に数えると片方だけ見落とす。
 import { assertNoStandIns } from '@astra/contracts';
-import { capabilityReport } from '@astra/service-capabilities';
+import { capabilityReport, capabilitySummary } from '@astra/service-capabilities';
 import { createTaskWorker, TASK_QUEUE, NoopPublisher } from '@astra/service-task';
 import { HostBridge, HostStepExecutor, type ApprovalProof } from '@astra/service-agent-host';
 import {
@@ -52,9 +53,30 @@ async function main(): Promise<void> {
   const namespace = process.env['TEMPORAL_NAMESPACE'] ?? 'default';
   const taskQueue = process.env['ASTRA_TASK_QUEUE'] ?? TASK_QUEUE;
 
-  // 設定されたものだけ本物になる。決まっていないものは代役のまま名乗る
-  // （Phase 2 実装仕様 §1.1 / Phase 3 実装仕様 §1.1）。
-  const researchProviders = researchProvidersFromEnv(process.env);
+  /*
+   * 手元でしか動かせない step の受け渡し。正本 §4.4・§16.1・§21。
+   *
+   * **cloud はここで実行しない。**connector のトークンも、利用者が
+   * 持ち込んだモデルの利用権も、端末の側にある。cloud は置いて待つだけ。
+   * 端末が居なければ `PAUSED_HOST_OFFLINE` で止まる（失敗にしない）。
+   */
+  const hostBridge = new HostBridge({ db });
+
+  const hostExecutor = new HostStepExecutor({
+    bridge: hostBridge,
+    // 承認の跡を持たせて、端末側にももう一度確かめさせる
+    approvalFor: (where) => approvalProof(db, where),
+  });
+
+  /*
+   * 設定されたものだけ本物になる。決まっていないものは代役のまま名乗る
+   * （Phase 2 実装仕様 §1.1 / Phase 3 実装仕様 §1.1）。
+   *
+   * 言語モデルの行き先は factory が決める。**gateway と同じ関数を通す** —
+   * ここで独自に決めていた間、worker は「本物」、gateway は「代役」と
+   * 報告していた。同じ構成で二つの答えが出るなら、報告の意味が無い。
+   */
+  const researchProviders = researchProvidersFromEnv(process.env, { host: hostExecutor });
   const meetingProviders = await meetingProvidersFromEnv(process.env);
 
   /*
@@ -69,6 +91,13 @@ async function main(): Promise<void> {
     env: process.env,
   });
   const { warn, remaining } = assertNoStandIns(report, process.env['ASTRA_ENV'] ?? 'development');
+  /*
+   * **全部を数え上げて出す。**代役だけを出していた間、
+   * 本物になった能力はどこにも現れなかった。片方の面だけが
+   * 本物になっても気づけない — 実際、worker と gateway が
+   * 違うことを言っている状態が生まれていた。
+   */
+  logger.info({ capabilities: capabilitySummary(report) }, 'external capabilities');
   if (warn) logger.warn({ stand_ins: remaining.map((r) => r.capability) }, warn);
 
   const research = new ResearchService({
@@ -80,20 +109,6 @@ async function main(): Promise<void> {
   const recordingRoot = path.resolve(process.env['ASTRA_RECORDING_ROOT'] ?? './.data/recordings');
   const meetings = new MeetingService({ db, publisher: NoopPublisher });
 
-  /*
-   * 手元でしか動かせない step の受け渡し。正本 §4.4・§16.1・§21。
-   *
-   * **cloud はここで実行しない。**connector のトークンは端末の
-   * 資格情報ストアにしかないので、置いて、端末が取りに来るのを待つ。
-   * 端末が居なければ `PAUSED_HOST_OFFLINE` で止まる（失敗にしない）。
-   */
-  const hostBridge = new HostBridge({ db });
-  const hostExecutor = new HostStepExecutor({
-    bridge: hostBridge,
-    // 承認の跡を持たせて、端末側にももう一度確かめさせる
-    approvalFor: (where) => approvalProof(db, where),
-  });
-
   const connection = await NativeConnection.connect({ address });
   const worker = await createTaskWorker(
     {
@@ -102,6 +117,8 @@ async function main(): Promise<void> {
       publisher: NoopPublisher,
       hostExecutor,
       hosts: hostBridge,
+      // step ごとに「いまここ」を置く。言語モデルはこの中から呼ばれる。
+      onStep: setModelContext,
       executors: {
         ...researchExecutors(research),
         /*

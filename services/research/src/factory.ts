@@ -8,6 +8,7 @@
 import { DeterministicLanguageModel, StaticSearchProvider } from './providers.js';
 import type { LanguageModel, SearchProvider } from './providers.js';
 import { AnthropicLanguageModel } from './anthropic.js';
+import { HostLanguageModel, type HostCall, type HostModelContext } from './host-model.js';
 
 export interface ResearchProviders {
   readonly search: SearchProvider;
@@ -25,20 +26,83 @@ export function standIns(providers: ResearchProviders): string[] {
 export interface ResearchProviderEnv {
   readonly ANTHROPIC_API_KEY?: string | undefined;
   readonly ASTRA_RESEARCH_MODEL?: string | undefined;
+  /** 端末で呼ぶのをやめるとき。既定は端末（正本 §21、UI/UX §22）。 */
+  readonly ASTRA_MODEL_ON_DEVICE?: string | undefined;
 }
 
+export interface ResearchProviderParts {
+  readonly search?: SearchProvider;
+  /**
+   * 端末へ頼む口。`HostStepExecutor` がこれを満たす。
+   *
+   * **gateway と worker の両方が同じものを渡す。**片方だけ渡すと、
+   * 同じ構成なのに二つの面が違うことを言う。実際に起きた:
+   * worker は「言語モデルは本物」、gateway は「代役」と報告していた。
+   */
+  readonly host?: HostCall;
+}
+
+/**
+ * どこで言語モデルを呼ぶか。**1 箇所で決める。**
+ *
+ *   端末で呼ぶ  … 利用者が持ち込んだ利用権（Claude Code / 自分のキー）
+ *   ここで呼ぶ  … `ANTHROPIC_API_KEY` が置かれている自己ホスト構成
+ *   どちらも無い … 代役。**本番では起動を拒む**
+ */
 export function researchProvidersFromEnv(
   env: ResearchProviderEnv,
-  search?: SearchProvider,
+  parts: SearchProvider | ResearchProviderParts = {},
 ): ResearchProviders {
+  // 以前の呼び出し（第 2 引数が SearchProvider）も通す
+  const options: ResearchProviderParts =
+    parts && 'search' in parts && typeof (parts as SearchProvider).search === 'function'
+      ? { search: parts as SearchProvider }
+      : (parts as ResearchProviderParts);
+
+  const onDevice = env.ASTRA_MODEL_ON_DEVICE !== 'false';
+
   return {
     // OQ-3 の未決部分。決まったらここへ実装を渡す。
-    search: search ?? new StaticSearchProvider([]),
-    model: env.ANTHROPIC_API_KEY
-      ? new AnthropicLanguageModel({
-          apiKey: env.ANTHROPIC_API_KEY,
-          ...(env.ASTRA_RESEARCH_MODEL ? { model: env.ASTRA_RESEARCH_MODEL } : {}),
-        })
-      : new DeterministicLanguageModel(),
+    search: options.search ?? new StaticSearchProvider([]),
+    model: pickModel(env, onDevice, options.host),
   };
+}
+
+function pickModel(
+  env: ResearchProviderEnv,
+  onDevice: boolean,
+  host: HostCall | undefined,
+): LanguageModel {
+  if (env.ANTHROPIC_API_KEY) {
+    return new AnthropicLanguageModel({
+      apiKey: env.ANTHROPIC_API_KEY,
+      ...(env.ASTRA_RESEARCH_MODEL ? { model: env.ASTRA_RESEARCH_MODEL } : {}),
+    });
+  }
+  if (onDevice && host) {
+    return new HostLanguageModel({
+      host,
+      // 仕事の中から呼ばれたときだけ。外から呼ばれたら断る。
+      context: () => currentContext(),
+      implementation: 'device (bring your own)',
+    });
+  }
+  return new DeterministicLanguageModel();
+}
+
+/**
+ * いまどの step の中に居るか。
+ *
+ * module に置いてあるのは、`LanguageModel` の口に task を持ち込まないため。
+ * 調査の実装は「どの仕事の一部か」を知らないし、知る必要もない。
+ * 置くのは activity で、**置かれていなければ端末には頼めない**。
+ */
+let context: HostModelContext | null = null;
+
+export function setModelContext(where: HostModelContext | null): void {
+  context = where;
+}
+
+function currentContext(): HostModelContext | null {
+  return context;
 }

@@ -58,6 +58,14 @@ const TASK_QUEUE = 'astra.task.slo';
 /** 標本数。1 回の測定で判断しない。 */
 const SAMPLES = 5;
 
+/**
+ * 予算を見るときの標本数。
+ *
+ * **外れ値 1 つで結論を変えない**ために多めに取る。
+ * 20 標本の p95 は 19 番目なので、いちばん遅い 1 回が落ちる。
+ */
+const BUDGET_SAMPLES = 20;
+
 const sink = new Writable({
   write(_c, _e, cb) {
     cb();
@@ -251,18 +259,25 @@ describe.skipIf(!url)('what we do measure, through the real process', () => {
     const warmUp = await app.inject({ method: 'GET', url: '/v1/brief', headers: auth });
     expect(warmUp.statusCode).toBe(200);
 
+    /*
+     * 標本を多めに取り、p95 で見る。
+     *
+     * 5 標本の最悪値で見ていた間、**実質「1 回の測定で判断」していた。**
+     * 他のスイートと DB を共有していると外れ値が 1 つ混じり、
+     * 予算とは無関係に落ちる。落ちる試験は、いずれ無視される。
+     */
     const samples: number[] = [];
-    for (let i = 0; i < SAMPLES; i += 1) {
+    for (let i = 0; i < BUDGET_SAMPLES; i += 1) {
       const started = performance.now();
       const res = await app.inject({ method: 'GET', url: '/v1/brief', headers: auth });
       samples.push(performance.now() - started);
       expect(res.statusCode).toBe(200);
     }
 
-    const worst = Math.max(...samples);
+    const measured = p95(samples)!;
     expect(
-      worst,
-      `温めたあとの brief の最悪値 ${worst.toFixed(0)}ms が、サーバの取り分 ${serverShare}ms を超えた`,
+      measured,
+      `温めたあとの brief の p95 ${measured.toFixed(0)}ms が、サーバの取り分 ${serverShare}ms を超えた（最悪値 ${Math.max(...samples).toFixed(0)}ms）`,
     ).toBeLessThanOrEqual(serverShare);
     // それでも SLO を守れているとは言わない
     expect(MEASURED).not.toContain('homeCachedLoad');

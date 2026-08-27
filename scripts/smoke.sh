@@ -41,6 +41,8 @@ cleanup() {
   if [ $rc -ne 0 ] && [ -f "$STORE/worker.log" ]; then
     echo "--- worker log ---" >&2
     tail -30 "$STORE/worker.log" >&2
+    echo "--- worker capabilities ---" >&2
+    grep -A3 'external capabilities' "$STORE/worker.log" >&2 || true
   fi
   # この実行が起こしたワークフローを残さない。
   # 使い捨て DB は消えるので、残すと永久に再試行し続ける。
@@ -72,7 +74,10 @@ psql "$ADMIN_URL" -X -q -v ON_ERROR_STOP=1 -f "$ROOT/infra/db/bootstrap.sql" >/d
 
 export ASTRA_ENV=development
 export ASTRA_API_PORT="$PORT"
-export ASTRA_LOG_LEVEL=warn
+# info まで残す。**起動時の能力の名乗りは info** で、
+# warn に落とすと「何が本物か」がログから消える（それを見たいので）。
+# 出力はファイルへ送っているので、量は問題にならない。
+export ASTRA_LOG_LEVEL=info
 export DATABASE_URL="postgres://astra_app:astra_app@${PGHOST}:${PGPORT}/${DB}?sslmode=disable"
 export ASTRA_DB_IDENTITY_URL="postgres://astra_identity:astra_identity@${PGHOST}:${PGPORT}/${DB}?sslmode=disable"
 export REDIS_URL="${REDIS_URL:-redis://localhost:6380}"
@@ -182,16 +187,26 @@ AGENT_TASK="$(curl -fsS -X POST "$BASE/v1/tasks" -H "authorization: Bearer $AT" 
 [ -n "$AGENT_TASK" ] || fail "the installed agent could not be started"
 echo "  agent task $AGENT_TASK"
 
-say "the real process names which capabilities are still stand-ins"
+say "both faces account for every external capability, and agree"
 # 代役のまま動いていることを黙らない。本番ではこれが起動拒否になる。
-grep -q 'stand-in' "$STORE/worker.log" || fail "the worker did not report its stand-in capabilities"
-grep -q 'stand-in' "$STORE/gateway.log" || fail "the gateway did not report its stand-in capabilities"
+grep -q 'external capabilities' "$STORE/worker.log" || fail "the worker did not account for its capabilities"
+grep -q 'external capabilities' "$STORE/gateway.log" || fail "the gateway did not account for its capabilities"
 # **どちらの面も同じものを数えていること。**片方だけ見落とすのが、いちばん起きやすい壊れ方。
-for capability in search language_model speech_to_text image_generation video_generation oauth_providers; do
+for capability in search language_model speech_to_text translation image_generation video_generation oauth_providers text_to_speech; do
   grep -q "$capability" "$STORE/worker.log" || fail "the worker did not account for $capability"
   grep -q "$capability" "$STORE/gateway.log" || fail "the gateway did not account for $capability"
 done
-grep -A14 'stand-in' "$STORE/worker.log" | grep -oE '[a-z_]+' | grep -E '^(search|language_model|speech_to_text|translation|image_generation|video_generation|oauth_providers)$' | sort -u | paste -sd', ' - | sed 's/^/  /'
+# 同じ構成なのに違うことを言っていないか。実際に一度そうなった。
+# 1 行の名乗りから、能力ごとの判定だけを取り出す。
+# 実装名は落とす（版が違えば違って当然で、比べたいのは本物か代役かだけ）。
+capability_verdicts() {
+  grep -o '[a-z_]*=\(real\|stand-in\):' "$1" | sort -u
+}
+if ! diff <(capability_verdicts "$STORE/worker.log") <(capability_verdicts "$STORE/gateway.log") >/dev/null; then
+  diff <(capability_verdicts "$STORE/worker.log") <(capability_verdicts "$STORE/gateway.log") | head -20
+  fail "the worker and the gateway disagree about which capabilities are real"
+fi
+capability_verdicts "$STORE/worker.log" | sed 's/^/  /'
 
 say "a meeting records audio through the real websocket"
 MEETING="$(curl -fsS -X POST "$BASE/v1/meetings" -H "authorization: Bearer $AT" \
