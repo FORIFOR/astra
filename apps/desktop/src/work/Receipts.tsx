@@ -6,23 +6,10 @@
  * 文面が無い。**無いものを、それらしい文で埋めない。**
  */
 import { useEffect, useState, type ReactElement } from 'react';
-import {
-  DATA_HANDLING_LABEL,
-  isReversible,
-  type ActionReceiptView,
-  type ActionRisk,
-} from '@astra/contracts';
+import { DATA_HANDLING_LABEL, isReversible, type ActionReceiptView } from '@astra/contracts';
 import type { AstraClient } from '@astra/api-client';
 
-/** §14 の Risk を、利用者の言葉にする。tool 名も内部の enum も出さない。 */
-const RISK_LABEL: Record<ActionRisk, string> = {
-  READ: '参照',
-  REVERSIBLE_WRITE: '下書き・変更（取り消せます）',
-  EXTERNAL_COMMIT: '外部への送信',
-  DESTRUCTIVE: '削除',
-  REGULATED: '規制対象の記録',
-  FINANCIAL: '金銭の処理',
-};
+import { RISK_LABEL } from './risk.js';
 
 function when(iso: string): string {
   return new Date(iso).toLocaleString('ja-JP', {

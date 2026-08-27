@@ -633,3 +633,53 @@
   font-size: var(--astra-font-size-secondary);
   cursor: pointer;
 }
+
+/* --- §14.1 consequence card --- */
+
+.astra-work__consequence[data-expanded='false'] {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.astra-work__consequence-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--astra-space-compact);
+  margin: 0;
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-micro);
+}
+
+.astra-work__preview-toggle {
+  min-height: 24px;
+  padding: 0 var(--astra-space-compact);
+  border: 0;
+  background: transparent;
+  color: var(--astra-color-accent);
+  font: inherit;
+  font-size: var(--astra-font-size-micro);
+  cursor: pointer;
+}
+
+/* §18: success acknowledgement — checkmark 1 回。loop しない */
+.astra-work[data-status='COMPLETED'] .astra-work__status::before {
+  content: '✓';
+  display: inline-block;
+  margin-inline-end: 4px;
+  color: var(--astra-color-success);
+  animation: astra-work-done 400ms var(--astra-motion-hover-easing) 1;
+}
+
+@keyframes astra-work-done {
+  from {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}

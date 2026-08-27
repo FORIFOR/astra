@@ -3,7 +3,8 @@
  *
  * 進捗・承認・結果を同じ card 面で見せる。Agent orchestration は隠す。
  */
-import type { ReactElement } from 'react';
+import { useState, type ReactElement } from 'react';
+import { RISK_LABEL, reversibilityLabel } from './risk.js';
 import { formatElapsed, type StepState, type WorkView } from './workView.js';
 
 const STEP_MARK: Record<StepState, string> = {
@@ -42,6 +43,9 @@ function Steps({ steps }: { steps: WorkView['steps'] }): ReactElement | null {
   );
 }
 
+/** これより長い文面は畳み、「内容を確認」で開く（§14.1: card 自体を巨大化しない）。 */
+const PREVIEW_LIMIT = 120;
+
 export function WorkCard({
   view,
   onApprove,
@@ -57,6 +61,7 @@ export function WorkCard({
 }): ReactElement {
   const elapsed = formatElapsed(view.elapsedMs);
   const running = view.status === 'RUNNING' || view.status === 'PENDING';
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   return (
     <section className="astra-work" data-status={view.status} aria-label="仕事の進行">
@@ -87,7 +92,25 @@ export function WorkCard({
       {/* §6.2: 承認待ちは進捗と混ぜず、別の attention state にする */}
       {view.attention && (
         <div className="astra-work__attention" role="group" aria-label="確認が必要です">
-          <p className="astra-work__consequence">{view.attention.summary}</p>
+          {/* §14.1: 対象件数・外部/内部・取り消し可否。長い本文は preview へ */}
+          <p className="astra-work__consequence" data-expanded={previewOpen ? 'true' : 'false'}>
+            {view.attention.summary}
+          </p>
+          <p className="astra-work__consequence-meta">
+            <span>{RISK_LABEL[view.attention.risk]}</span>
+            <span aria-hidden="true"> · </span>
+            <span>{reversibilityLabel(view.attention.risk)}</span>
+            {view.attention.summary.length > PREVIEW_LIMIT && (
+              <button
+                type="button"
+                className="astra-work__preview-toggle"
+                aria-expanded={previewOpen}
+                onClick={() => setPreviewOpen((open) => !open)}
+              >
+                {previewOpen ? '閉じる' : '内容を確認'}
+              </button>
+            )}
+          </p>
           <div className="astra-work__actions">
             <button type="button" onClick={() => onReject?.(view.attention!.approvalId)}>
               やめる
@@ -172,7 +195,8 @@ function recoveryLabel(recovery: string): string {
     case 'reconnect':
       return '接続を確認してください。';
     case 'grant_permission':
-      return '権限が必要です。';
+      // §21: 「Calendar へのアクセスが必要です」— 理由と、繋ぐ先を言う
+      return 'アクセスの許可が必要です。Apps から接続できます。';
     case 'reauthenticate':
       return 'サインインし直してください。';
     case 'handoff':

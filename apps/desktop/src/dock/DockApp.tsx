@@ -19,6 +19,7 @@ import { useTaskStream } from '../work/useTaskStream.js';
 import { workspace } from '../host/tauri.js';
 import { useVoiceRuntime } from '../voice/voiceRuntime.js';
 import { voiceDemoFrom } from '../voice/demo.js';
+import { approvalFailureMessage } from '../work/approvalOutcome.js';
 import { TaskDock } from './TaskDock.js';
 import type { ContextReferent, DockConversation } from './useDockMachine.js';
 import './dock.css';
@@ -80,6 +81,7 @@ function DockSurface(): ReactElement {
   const conversationRef = useRef<string | null>(null);
   const [taskId, setTaskId] = useState<string | null>(null);
   const [resultText, setResultText] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const spokenArtifact = useRef<string | null>(null);
   const voiceRuntime = useVoiceRuntime(live);
 
@@ -154,19 +156,26 @@ function DockSurface(): ReactElement {
         voiceRuntime.beginThinking();
       }}
       resultText={resultText}
+      notice={notice}
       {...(work ? { work } : {})}
       {...(live && taskId
         ? {
             onApprove: (approvalId: string) =>
-              void live.decideApproval(taskId, {
-                approval_id: approvalId as ApprovalId,
-                decision: 'APPROVED',
-              }),
+              void live
+                .decideApproval(taskId, {
+                  approval_id: approvalId as ApprovalId,
+                  decision: 'APPROVED',
+                })
+                .then(() => setNotice(null))
+                .catch((error: unknown) => setNotice(approvalFailureMessage(error))),
             onReject: (approvalId: string) =>
-              void live.decideApproval(taskId, {
-                approval_id: approvalId as ApprovalId,
-                decision: 'REJECTED',
-              }),
+              void live
+                .decideApproval(taskId, {
+                  approval_id: approvalId as ApprovalId,
+                  decision: 'REJECTED',
+                })
+                .then(() => setNotice(null))
+                .catch((error: unknown) => setNotice(approvalFailureMessage(error))),
             onStop: () => void live.cancelTask(taskId),
             onOpenWorkspace: () => void workspace.open(taskId),
           }

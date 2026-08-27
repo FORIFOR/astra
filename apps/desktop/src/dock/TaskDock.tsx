@@ -47,6 +47,7 @@ export function TaskDock({
   onCloudCorrectionAllowedChange,
   onRequestSubmitted,
   resultText,
+  notice = null,
   shortcutOverrides = {},
 }: {
   initialSources?: readonly ContextSource[];
@@ -71,6 +72,8 @@ export function TaskDock({
   onRequestSubmitted?(): void;
   /** 完了した成果物の本文。Dock 内の result sheet に出す。 */
   resultText?: string | null;
+  /** 承認の返事が通らなかった等、その場で伝える一言（§21）。 */
+  notice?: string | null;
   /** 進行中の仕事。あれば working 面に出す（§6）。 */
   work?: WorkView | null;
   onApprove?(approvalId: string): void;
@@ -432,6 +435,11 @@ export function TaskDock({
         </p>
       )}
 
+      {notice && (
+        <p className="astra-dock__voice-error" role="alert">
+          {notice}
+        </p>
+      )}
       {resultText && <ResultPreview text={resultText} />}
 
       {/* §4.4: 簡単な返事のために full app へ遷移しない。進行は Dock の中で見せる。 */}

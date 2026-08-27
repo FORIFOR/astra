@@ -12,6 +12,8 @@ import { useTaskStream } from '../work/useTaskStream.js';
 import { WorkDetail } from '../work/WorkDetail.js';
 import { relativeTime } from '../home/time.js';
 import { kindLabel } from '../work/kind.js';
+import { approvalFailureMessage } from '../work/approvalOutcome.js';
+import type { ApprovalId } from '@astra/contracts';
 import type { AstraClient } from '@astra/api-client';
 import '../work/work.css';
 
@@ -65,6 +67,8 @@ export function WorkPage({
 }): ReactElement {
   const [filter, setFilter] = useState<WorkFilter>('active');
   const [openTaskId, setOpenTaskId] = useState<string | null>(initialTaskId);
+  // 承認の返事が通らなかったときの一言（§21 Approval stale）
+  const [notice, setNotice] = useState<string | null>(null);
 
   // 他タブから指定された仕事は、その状態に合う絞り込みへ切り替えて必ず見えるようにする
   useEffect(() => {
@@ -170,7 +174,38 @@ export function WorkPage({
               接続が切れました。再接続しています。処理は続いています。
             </p>
           )}
-          <WorkCard view={view} />
+          {notice && (
+            <p className="astra-empty" role="alert">
+              {notice}
+            </p>
+          )}
+          <WorkCard
+            view={view}
+            {...(client
+              ? {
+                  onApprove: (approvalId: string) =>
+                    void client
+                      .decideApproval(openTaskId, {
+                        approval_id: approvalId as ApprovalId,
+                        decision: 'APPROVED',
+                      })
+                      .then(() => setNotice(null))
+                      .catch((error: unknown) => setNotice(approvalFailureMessage(error))),
+                  onReject: (approvalId: string) =>
+                    void client
+                      .decideApproval(openTaskId, {
+                        approval_id: approvalId as ApprovalId,
+                        decision: 'REJECTED',
+                      })
+                      .then(() => setNotice(null))
+                      .catch((error: unknown) => setNotice(approvalFailureMessage(error))),
+                  onStop: () =>
+                    void client
+                      .cancelTask(openTaskId)
+                      .catch(() => setNotice('止められませんでした。もう一度お試しください。')),
+                }
+              : {})}
+          />
           {/* §9.2: Overview / Progress / Outputs / Evidence / Activity */}
           <WorkDetail
             view={view}

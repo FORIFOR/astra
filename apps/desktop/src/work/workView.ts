@@ -9,7 +9,7 @@
  *   「12 sources」        ← crawler worker count       ではなく
  *   「確認待ち」          ← workflow waiting activity  ではなく
  */
-import type { EventEnvelope, TaskStatus, Task } from '@astra/contracts';
+import type { ActionRisk, EventEnvelope, TaskStatus, Task } from '@astra/contracts';
 
 export type StepState = 'todo' | 'active' | 'done' | 'retrying' | 'failed';
 
@@ -28,6 +28,8 @@ export interface WorkStep {
 export interface WorkAttention {
   readonly kind: 'approval';
   readonly approvalId: string;
+  /** §14.1: 外部 / 内部、取り消し可否はここから言う。 */
+  readonly risk: ActionRisk;
   readonly summary: string;
   /** §14.1: 主ボタンは「承認」ではなく結果を書く。 */
   readonly primaryActionLabel: string;
@@ -177,6 +179,7 @@ export function applyEvent(view: WorkView, event: EventEnvelope): WorkView {
       draft.attention = {
         kind: 'approval',
         approvalId: event.payload.approval_id,
+        risk: event.payload.risk,
         summary: event.payload.summary,
         primaryActionLabel: event.payload.primary_action_label,
         expiresAt: event.payload.expires_at,

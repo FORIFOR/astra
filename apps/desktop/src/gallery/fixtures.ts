@@ -81,6 +81,7 @@ export const workWaiting: WorkView = {
   attention: {
     kind: 'approval',
     approvalId: 'apr-1',
+    risk: 'EXTERNAL_COMMIT',
     summary:
       '3人にメールを送信します（山田 / 田中 / 鈴木）。件名: A社商談の事前確認。外部送信 · 3 通',
     primaryActionLabel: '3件送信する',
