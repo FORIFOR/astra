@@ -162,6 +162,13 @@ final class RecordingWorkspaceState: ObservableObject {
             }
             self.refreshRag()
         }
+        // 波形を実マイクレベルで更新する（デモの固定値をやめてフラットから始める）。
+        audioLevels = Array(repeating: 0.06, count: 12)
+        RecordingRuntime.shared.onLevel = { [weak self] level in
+            guard let self else { return }
+            self.audioLevels.removeFirst()
+            self.audioLevels.append(CGFloat(level))
+        }
         // 実ランタイム: マイク → astra-core → ディスク断片（許可があればライブ取り込み + 手元 STT）
         currentMeetingId = "meeting-\(Int(Date().timeIntervalSince1970))"
         RecordingRuntime.shared.begin(meetingId: currentMeetingId)

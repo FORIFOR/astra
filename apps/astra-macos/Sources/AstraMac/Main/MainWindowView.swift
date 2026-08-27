@@ -66,7 +66,7 @@ struct MainWindowView: View {
             }
         } detail: {
             switch section {
-            case .home: HomePane()
+            case .home: HomePane(recent: data.library)
             case .agents: AgentsPane(apps: data.apps)
             case .library: LibraryPane(titles: data.library)
             case .apps: AppsPane(apps: data.apps)
@@ -78,18 +78,23 @@ struct MainWindowView: View {
 }
 
 private struct HomePane: View {
+    let recent: [String]
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                Text("こんにちは、ui-check さん").font(.system(size: 22, weight: .semibold))
+                Text("こんにちは").font(.system(size: 22, weight: .semibold))
                 RoundedRectangle(cornerRadius: 10).fill(Color(nsColor: .textBackgroundColor))
                     .frame(height: 44)
                     .overlay(HStack { Text("何を終わらせますか？").foregroundStyle(.secondary); Spacer() }.padding(.horizontal, 12))
                 Text("最近の成果物").font(.system(size: 13, weight: .semibold)).foregroundStyle(.secondary)
-                ForEach(["Echo result", "A社 商談 議事録"], id: \.self) { t in
-                    HStack { Text(t); Spacer(); Text("資料").foregroundStyle(.secondary) }
-                        .padding(12)
-                        .background(RoundedRectangle(cornerRadius: 10).fill(Color(nsColor: .controlBackgroundColor)))
+                if recent.isEmpty {
+                    Text("まだ成果物はありません。").font(.system(size: 12)).foregroundStyle(.secondary)
+                } else {
+                    ForEach(recent, id: \.self) { t in
+                        HStack { Text(t); Spacer(); Text("資料").foregroundStyle(.secondary) }
+                            .padding(12)
+                            .background(RoundedRectangle(cornerRadius: 10).fill(Color(nsColor: .controlBackgroundColor)))
+                    }
                 }
                 Spacer()
             }.padding(24)

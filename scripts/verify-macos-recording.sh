@@ -55,7 +55,7 @@ OUTA="$("$BIN" --selftest aiaction http://127.0.0.1:3000)"; echo "$OUTA"
 [[ "$OUTA" == SELFTEST_OK* || "$OUTA" == SELFTEST_SKIP* ]] || { echo "FAIL: macOS AI action via Agent" >&2; exit 1; }
 OUTT="$("$BIN" --selftest translate http://127.0.0.1:3000)"; echo "$OUTT"
 [[ "$OUTT" == SELFTEST_OK* || "$OUTT" == SELFTEST_SKIP* ]] || { echo "FAIL: macOS translate via Agent" >&2; exit 1; }
-for t in screenshot livemic livemeeting livescreen sttrecognize; do
+for t in screenshot waveform livemic livemeeting livescreen sttrecognize; do
   OUT="$("$BIN" --selftest "$t")"
   echo "$OUT"
   [[ "$OUT" == SELFTEST_OK* || "$OUT" == SELFTEST_SKIP* ]] || { echo "FAIL: macOS live $t" >&2; exit 1; }

@@ -34,6 +34,7 @@ enum SelfTest {
         case "screenshot": screenshot(); return true
         case "aiaction": aiaction(args); return true
         case "translate": translateTest(args); return true
+        case "waveform": waveform(); return true
         default: return false
         }
     }
@@ -611,6 +612,29 @@ enum SelfTest {
             print("SELFTEST_OK translate: Agent 訳=\"\(preview)…\"")
             exit(0)
         } catch { print("SELFTEST_FAIL translate error=\(error)"); exit(3) }
+    }
+
+    /// `--selftest waveform`: 録音中に波形が実マイクレベルで更新されるか（固定デモでない）を検証する。
+    /// マイク許可が無ければ SKIP。
+    @MainActor
+    private static func waveform() {
+        guard Permissions.microphone == .granted else {
+            print("SELFTEST_SKIP waveform: microphone not granted"); exit(0)
+        }
+        let runtime = RecordingRuntime.shared
+        var levelCallbacks = 0
+        runtime.onLevel = { _ in levelCallbacks += 1 }
+        guard runtime.begin(meetingId: "waveform-selftest", captureMic: true, captureSystemAudio: false, transcribe: false) else {
+            print("SELFTEST_FAIL waveform begin"); exit(2)
+        }
+        RunLoop.current.run(until: Date().addingTimeInterval(1.2))
+        runtime.end()
+        let root = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+            .appendingPathComponent("Astra/meetings").path
+        try? FileManager.default.removeItem(atPath: root + "/waveform-selftest")
+        guard levelCallbacks > 0 else { print("SELFTEST_FAIL waveform: no level callbacks"); exit(3) }
+        print("SELFTEST_OK waveform: 実マイクレベルで更新 callbacks=\(levelCallbacks)")
+        exit(0)
     }
 
     private static func recordToDisk() {

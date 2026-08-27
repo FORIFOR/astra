@@ -14,6 +14,8 @@ final class RecordingRuntime {
     private var paused = false
     /// 途中経過/確定の文字起こしを UI へ渡す（オンデバイス STT）。
     var onTranscript: ((String, Bool) -> Void)?
+    /// マイクの音量（0..1）を UI（波形）へ渡す。
+    var onLevel: ((Float) -> Void)?
     /// 実 gateway に作った会議（サインイン時のみ）。無ければローカル録音だけ。
     private var meetingId: String?
     private var apiBase: String?
@@ -67,6 +69,11 @@ final class RecordingRuntime {
                     _ = session?.pushSamples(samples: frame, sampleRate: 16_000)
                     // 一時停止中は文字起こしもしない（session 側は core が sample を捨てる）。
                     if self?.paused != true { self?.speech?.append(frame, sampleRate: 16_000) }
+                    // 波形用の音量（peak）を出す。
+                    var peak: Float = 0
+                    for v in frame { let a = abs(v); if a > peak { peak = a } }
+                    let level = min(1, peak * 1.6)   // 見やすさのため少し持ち上げる
+                    DispatchQueue.main.async { self?.onLevel?(level) }
                 }
                 self.mic = mic
             } catch {

@@ -474,3 +474,14 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
 - 検証: `--selftest translate <base>`（transcript → Agent 会話 → 訳文の経路）。**実測 PASS**（サインイン→送信→応答。
   dev の会話エンジンは訳を返さないが**ボタン/タブ→core→gateway→Agent→UI の経路は実物**）。verify に SKIP 許容で組み込み。
 - **意味**: 録音中に文字起こしが**実際に見える**ようになり、ツールタブが機能した（Done#2/#7、UI mock 排除）。
+
+## 追記: 波形を実マイクレベルに + Home の成果物を実データに（Phase 1.40）
+- **mock の修正 2 件**:
+  1. `audioLevels` が固定デモ配列のままで、**録音中も波形が実マイク音量を反映していなかった**。RecordingRuntime に
+     `onLevel` を足し、マイクフレームの peak（0..1）を main で `audioLevels`（末尾追加のローリング）へ流す。録音開始時に
+     デモ値をフラット baseline にリセット。→ 波形が実マイクレベルで動く。
+  2. `HomePane` の「最近の成果物」がハードコード（`["Echo result", "A社 商談 議事録"]`）だった。`MainData.library`
+     （core 経由の実データ）を渡す形にし、空なら「まだ成果物はありません」。挨拶の固定氏名も外した。
+- 検証: `--selftest waveform`（実マイクでレベルコールバックが発火）。**実測 PASS**: `実マイクレベルで更新 callbacks=11`。
+  verify に組み込み（未許可 CI では SKIP）。全 selftest 24 件 OK/SKIP・0 FAIL、回帰なし。
+- **意味**: 録音 Hero の波形と Home の成果物が実データに（Done#2/#7、UI mock 排除）。
