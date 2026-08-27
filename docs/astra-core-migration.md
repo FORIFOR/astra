@@ -769,3 +769,12 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
   `.g.cs` 生成に至らない（cache に有るのは net8 ref のみ）。→ **XAML→`.g.cs` 生成は、Windows CI（通常の XamlCompiler）
   または当該依存を含むオンライン restore が要る**、という正確な境界。C# 実ロジックの型検査（Window code-behind 含む）は
   この依存無しで PASS 済み（`verify:csharp-logic`）。捏造ではなく、境界を依存レベルまで実測特定した。
+
+## 追記: XAML codegen が Windows を要する「根本理由」を確定（Phase 1.70）
+- 依存 `System.Security.Permissions 6.0.0`（net6.0 実装）を用意して net6.0 の in-process XAML markup コンパイラを
+  **実行まで到達させた**ところ、`WMC9999: Unable to load shared library 'kernel32.dll'` で停止。
+  → **XAML markup コンパイラ自体が Windows カーネル API（`kernel32.dll`）を P/Invoke する**ため、macOS/Linux では
+  原理的に `.g.cs` を生成できない（.NET 依存の問題ではなく OS ネイティブ依存）。これが XAML→C# codegen が
+  windows-latest CI / Windows 実機を要する**確定的な根本理由**。
+- 一方 **Windows C# の実ロジック（Window code-behind 含む）は kernel32 非依存で型検査 PASS 済み**（`verify:csharp-logic`）。
+  したがって Windows 側の未検証は「XAML markup codegen（kernel32 依存）＋WinUI 実描画＋COM/Win32 実行時」に厳密確定。
