@@ -31,6 +31,21 @@ export const EvidenceItem = z.object({
   source_url: z.string(),
   source_type: SourceType,
   publisher: z.string().nullable(),
+  /**
+   * L3: 見つけたときの見出しと抜粋。
+   *
+   * **URL だけでは、リンクが切れた時点で確かめられなくなる。**
+   * 台帳を見る人が、開き直さずに文脈を掴めるようにする。
+   */
+  title: z.string().nullable().default(null),
+  snippet: z.string().nullable().default(null),
+  /**
+   * どの検索が見つけたか。
+   *
+   * 提供者を替えたとき、**どれが古い提供者のものか**を見分ける。
+   * 質の比較も、片方だけの取り消しも、これが無いとできない。
+   */
+  provider: z.string().nullable().default(null),
   /** L3: いつ書かれたか / いつ取ってきたか。**片方だけでは古さを判断できない。** */
   published_at: Timestamp.nullable(),
   retrieved_at: Timestamp,

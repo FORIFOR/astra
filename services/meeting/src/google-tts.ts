@@ -17,6 +17,14 @@ const SCOPES = ['https://www.googleapis.com/auth/cloud-platform'];
 
 export interface GoogleTtsConfig {
   readonly projectId: string;
+  /**
+   * 節目を知らせる先。正本 §23。
+   *
+   * **最初の音が届くまで**と**全部揃うまで**は別の数字で、
+   * 体感を決めるのは前者。合計だけを測っていた間、
+   * 「待たされた」という感覚がどこから来るのかが見えなかった。
+   */
+  readonly onMark?: (mark: 'requested' | 'firstAudioByte' | 'audioComplete') => void;
   readonly fetch?: typeof globalThis.fetch;
   readonly token?: () => Promise<string>;
   /** 返らないときに諦めるまで。**待ち続けない。** */
@@ -77,6 +85,8 @@ export class GoogleTtsProvider implements TtsProvider {
     // 呼び出し側の中止と、時間切れの両方を効かせる
     const combined = signal ? AbortSignal.any([signal, timeout]) : timeout;
 
+    this.#config.onMark?.('requested');
+
     let response: Response;
     try {
       response = await doFetch('https://texttospeech.googleapis.com/v1/text:synthesize', {
@@ -106,6 +116,16 @@ export class GoogleTtsProvider implements TtsProvider {
       throw new SpeakError('timed_out', error instanceof Error ? error.message : String(error));
     }
 
+    /*
+     * 応答の頭が返った時点。**ここが「最初の音が届くまで」に相当する。**
+     *
+     * この endpoint は音をまとめて返すので、厳密な first-byte は
+     * 取れない。取れるのは「提供者が答え始めた時刻」で、
+     * それが体感に一番近い。**取れないものを取れたことにしない**ので、
+     * 何を測っているかをここに書いておく。
+     */
+    this.#config.onMark?.('firstAudioByte');
+
     const text = await response.text();
     let body: { audioContent?: string; error?: { message?: string } };
     try {
@@ -124,8 +144,12 @@ export class GoogleTtsProvider implements TtsProvider {
       throw new SpeakError('provider_error', 'Google returned no audio');
     }
 
+    const bytes = new Uint8Array(Buffer.from(body.audioContent, 'base64'));
+    // 音が揃った時点。**最初の音が届くまでとは別の数字。**
+    this.#config.onMark?.('audioComplete');
+
     return {
-      bytes: new Uint8Array(Buffer.from(body.audioContent, 'base64')),
+      bytes,
       mimeType: 'audio/l16; rate=16000',
       voice: request.voice ?? `${request.language}-default`,
     };

@@ -239,16 +239,25 @@ export interface Evidence {
   created_at: Generated<Timestamp>;
   freshness_score: Numeric;
   id: string;
+  /**
+   * この根拠を見つけた検索の名前。提供者を替えたとき、どれが古いかを見分ける
+   */
+  provider: string | null;
   published_at: Timestamp | null;
   publisher: string | null;
   quality_score: Numeric;
   research_run_id: string;
   retrieved_at: Generated<Timestamp>;
+  /**
+   * 見つけた時点の抜粋。support_text の一致検査はこれに対して行う
+   */
+  snippet: string | null;
   source_type: string;
   source_url: string;
   support_text_ref: string | null;
   supports: Generated<string[]>;
   tenant_id: string;
+  title: string | null;
 }
 
 export interface HostStepRequests {

@@ -23,6 +23,9 @@ const candidate = (over: Partial<Candidate> & Pick<Candidate, 'url' | 'claim'>):
   publisher: null,
   publishedAt: null,
   supportText: over.claim,
+  title: '',
+  snippet: '',
+  provider: null,
   ...over,
 });
 

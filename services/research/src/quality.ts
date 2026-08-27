@@ -68,6 +68,19 @@ export interface Candidate {
   readonly publisher: string | null;
   readonly publishedAt: string | null;
   readonly supportText: string;
+  /**
+   * 見つけたときの見出しと抜粋。**あとから取り直さなくても読める**ように。
+   * URL だけを残すと、リンクが切れた時点で確かめられなくなる。
+   */
+  readonly title: string;
+  readonly snippet: string;
+  /**
+   * どの検索が見つけたか。
+   *
+   * 提供者を替えたとき、**どの根拠が古い提供者のものか**を見分ける。
+   * 分からなければ null。空文字で埋めない。
+   */
+  readonly provider: string | null;
 }
 
 export interface ScoredCandidate extends Candidate {
@@ -196,7 +209,12 @@ export function confidenceOf(
 }
 
 /** 検索結果を candidate へ。抜粋から主張を切り出すのはモデルの役目。 */
-export function candidateFrom(hit: SearchHit, claim: string, supportText: string): Candidate {
+export function candidateFrom(
+  hit: SearchHit,
+  claim: string,
+  supportText: string,
+  provider: string | null = null,
+): Candidate {
   return {
     url: hit.url,
     claim,
@@ -204,5 +222,9 @@ export function candidateFrom(hit: SearchHit, claim: string, supportText: string
     publisher: hit.publisher,
     publishedAt: hit.publishedAt,
     supportText,
+    title: hit.title,
+    snippet: hit.snippet,
+    // 名前を持たない提供者を、空文字で「あることにしない」
+    provider: provider && provider.length > 0 ? provider : null,
   };
 }

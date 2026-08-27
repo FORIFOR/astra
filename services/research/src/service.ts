@@ -131,7 +131,12 @@ export class ResearchService {
     for (const hits of results) {
       for (const hit of hits) {
         for (const extracted of await this.#model.extractClaims(run.question, hit)) {
-          candidates.push(score(candidateFrom(hit, extracted.claim, extracted.supportText), now));
+          candidates.push(
+            score(
+              candidateFrom(hit, extracted.claim, extracted.supportText, this.#search.name),
+              now,
+            ),
+          );
         }
       }
     }
@@ -149,6 +154,10 @@ export class ResearchService {
             source_url: candidate.url,
             source_type: candidate.sourceType,
             publisher: candidate.publisher,
+            // 見つけたときの姿を残す。URL だけだと、切れたら確かめられない。
+            title: candidate.title,
+            snippet: candidate.snippet,
+            provider: candidate.provider,
             published_at: candidate.publishedAt ? new Date(candidate.publishedAt) : null,
             retrieved_at: now,
             claim: candidate.claim,
@@ -188,6 +197,9 @@ export class ResearchService {
             publisher: row.publisher,
             publishedAt: row.published_at?.toISOString() ?? null,
             supportText: row.claim,
+            title: row.title ?? '',
+            snippet: row.snippet ?? '',
+            provider: row.provider,
           },
           this.#now(),
         ),
@@ -312,6 +324,11 @@ interface EvidenceRow {
   published_at: Date | null;
   retrieved_at: Date;
   claim: string;
+  /** 見つけたときの姿。URL が切れても、ここは残る。 */
+  title: string | null;
+  snippet: string | null;
+  /** どの検索が見つけたか。 */
+  provider: string | null;
   quality_score: string;
   freshness_score: string;
   supports: string[];

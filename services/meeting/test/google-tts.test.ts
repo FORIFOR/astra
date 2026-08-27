@@ -108,3 +108,43 @@ describe('stopping', () => {
     await expect(tts.speak(speak)).rejects.toMatchObject({ reason: 'timed_out' });
   });
 });
+
+describe('measuring the wait', () => {
+  it('marks when it asked, when the answer started, and when the audio was whole', async () => {
+    /*
+     * 合計だけを測っていた間、「待たされた」という感覚が
+     * **どこから来るのか**が見えなかった。体感を決めるのは
+     * 最初の音が届くまでで、そこから揃うまでは別の数字。
+     */
+    const marks: string[] = [];
+    const provider = new GoogleTtsProvider({
+      projectId: 'p',
+      token: async () => 't',
+      onMark: (mark) => marks.push(mark),
+      fetch: (async () =>
+        new Response(JSON.stringify({ audioContent: Buffer.from([1, 2, 3]).toString('base64') }), {
+          status: 200,
+        })) as unknown as typeof globalThis.fetch,
+    });
+
+    await provider.speak({ text: 'こんにちは', language: 'ja-JP' });
+    expect(marks).toEqual(['requested', 'firstAudioByte', 'audioComplete']);
+  });
+
+  it('does not mark the audio whole when nothing came back', async () => {
+    // 失敗したものを、揃ったことにしない
+    const marks: string[] = [];
+    const provider = new GoogleTtsProvider({
+      projectId: 'p',
+      token: async () => 't',
+      onMark: (mark) => marks.push(mark),
+      fetch: (async () =>
+        new Response(JSON.stringify({ audioContent: '' }), {
+          status: 200,
+        })) as unknown as typeof globalThis.fetch,
+    });
+
+    await expect(provider.speak({ text: 'x', language: 'ja-JP' })).rejects.toThrow();
+    expect(marks).not.toContain('audioComplete');
+  });
+});

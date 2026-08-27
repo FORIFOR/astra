@@ -41,6 +41,10 @@ const candidateFrom = (source: SearchHit, claim: string) => ({
   publisher: source.publisher,
   publishedAt: source.publishedAt,
   supportText: source.snippet,
+  // 見つけたときの姿。URL が切れても、ここは残る。
+  title: source.title,
+  snippet: source.snippet,
+  provider: 'test',
 });
 
 /**

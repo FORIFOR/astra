@@ -424,7 +424,11 @@ CREATE TABLE public.evidence (
     supports uuid[] DEFAULT '{}'::uuid[] NOT NULL,
     contradicts uuid[] DEFAULT '{}'::uuid[] NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
+    title text,
+    snippet text,
+    provider text,
     CONSTRAINT evidence_freshness_score_check CHECK (((freshness_score >= (0)::numeric) AND (freshness_score <= (1)::numeric))),
+    CONSTRAINT evidence_provider_check CHECK (((provider IS NULL) OR (provider <> ''::text))),
     CONSTRAINT evidence_quality_score_check CHECK (((quality_score >= (0)::numeric) AND (quality_score <= (1)::numeric))),
     CONSTRAINT evidence_source_type_check CHECK ((source_type = ANY (ARRAY['official'::text, 'filing'::text, 'news'::text, 'internal'::text, 'other'::text])))
 );
@@ -1573,6 +1577,13 @@ CREATE INDEX domain_entities_fields ON public.domain_entities USING gin (fields)
 --
 
 CREATE INDEX domain_links_reverse ON public.domain_links USING btree (to_id, relation);
+
+
+--
+-- Name: evidence_by_provider; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX evidence_by_provider ON public.evidence USING btree (tenant_id, provider) WHERE (provider IS NOT NULL);
 
 
 --
@@ -3384,3 +3395,4 @@ INSERT INTO schema_migrations (version) VALUES ('20260827070001');
 INSERT INTO schema_migrations (version) VALUES ('20260827090000');
 INSERT INTO schema_migrations (version) VALUES ('20260827093000');
 INSERT INTO schema_migrations (version) VALUES ('20260827103000');
+INSERT INTO schema_migrations (version) VALUES ('20260827120000');
