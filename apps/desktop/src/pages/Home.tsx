@@ -202,7 +202,11 @@ export function HomePage({
                         <span className="astra-work-row__title">
                           {task.title ?? '名前のない仕事'}
                         </span>
-                        <span className="astra-work-row__detail">{kindLabel(task.kind)}</span>
+                        <span className="astra-work-row__detail">
+                          {task.current_step
+                            ? `${task.current_step.message}${task.current_step.detail ? ` · ${task.current_step.detail}` : ''}`
+                            : kindLabel(task.kind)}
+                        </span>
                       </span>
                       {/* §8 の「12 sources  進行中」。状態を人の言葉で添える */}
                       <span className="astra-work-row__meta" data-live="true">

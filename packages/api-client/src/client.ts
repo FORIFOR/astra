@@ -27,6 +27,8 @@ import {
   SendTurnRequest,
   StartConversationRequest,
   Task,
+  TaskListItem,
+  type TaskCurrentStep,
   WorldFact,
   VoiceSynthesisRequest,
   VoiceSynthesisResponse,
@@ -57,9 +59,11 @@ export interface Page<T> {
 export const TaskWithDockState = Task.extend({ dock_state: z.string().optional() });
 export interface TaskView extends Task {
   readonly dockState: TaskDockState;
+  /** 一覧のときだけ入る（§9.1）。単体取得では undefined。 */
+  readonly current_step?: TaskCurrentStep | null;
 }
 
-function toView(task: Task, dockState?: string): TaskView {
+function toView(task: Task | TaskListItem, dockState?: string): TaskView {
   return {
     ...task,
     // サーバが付けてくれるならそれを使う。無ければ同じ規則で導く。
@@ -136,7 +140,7 @@ export class AstraClient {
   async listTasks(options: { limit?: number; cursor?: string } = {}): Promise<Page<TaskView>> {
     const parsed = await this.http.request(
       { path: '/v1/tasks', query: { limit: options.limit, cursor: options.cursor } },
-      (value) => page(Task).parse(value),
+      (value) => page(TaskListItem).parse(value),
     );
     return { items: parsed.items.map((t) => toView(t)), nextCursor: parsed.next_cursor };
   }

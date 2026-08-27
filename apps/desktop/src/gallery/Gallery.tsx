@@ -216,9 +216,14 @@ export function GalleryApp(): ReactElement {
             </Block>
           )}
           {(section === null || section === 'evidence') && (
-            <Block title="EvidenceSummary / Inspector — L0 → L3（§15）" width={640}>
-              <EvidenceLedgerView ledger={fx.ledger} />
-            </Block>
+            <>
+              <Block title="EvidenceSummary — L0（§15 / §13.2）" width={640}>
+                <EvidenceLedgerView ledger={fx.ledger} />
+              </Block>
+              <Block title="EvidenceInspector — L1 / L2 / L3 opened" width={640}>
+                <EvidenceLedgerView ledger={fx.ledger} initialLevel="L3" />
+              </Block>
+            </>
           )}
           {(section === null || section === 'meeting') && <MeetingDemo />}
           {(section === null || section === 'artifact') && (

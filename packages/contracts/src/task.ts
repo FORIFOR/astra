@@ -118,6 +118,23 @@ export const Task = z.object({
 });
 export type Task = z.infer<typeof Task>;
 
+/**
+ * 一覧の行。UI/UX §9.1「● A社 商談準備  最新競合情報を調査中 · 12 sources  Started 14:02」。
+ * 行ごとに stream を引かなくて済むよう、いま進めている段だけを添える。
+ * 無い（まだ始まっていない / 終わった）なら null。作文しない。
+ */
+export const TaskCurrentStep = z.object({
+  message: z.string().max(200),
+  detail: z.string().max(60).nullable().default(null),
+  retrying: z.boolean().default(false),
+});
+export type TaskCurrentStep = z.infer<typeof TaskCurrentStep>;
+
+export const TaskListItem = Task.extend({
+  current_step: TaskCurrentStep.nullable().default(null),
+});
+export type TaskListItem = z.infer<typeof TaskListItem>;
+
 export const CreateTaskRequest = z.object({
   kind: z.string().min(1).max(64),
   title: z.string().max(200).optional(),

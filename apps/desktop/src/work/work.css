@@ -540,3 +540,96 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
+
+/* --- Evidence（§15 progressive disclosure / §13.2）--- */
+
+.astra-evidence {
+  display: flex;
+  flex-direction: column;
+  gap: var(--astra-space-base);
+  padding: var(--astra-padding-card);
+  border: var(--astra-border-hairline) solid var(--astra-color-border);
+  border-radius: var(--astra-radius-standard);
+  background: var(--astra-color-surface);
+}
+
+/* L0: 「12 sources · High confidence · 1 contradiction」だけが最初から見えている */
+.astra-evidence__headline {
+  margin: 0;
+  font-weight: var(--astra-font-weight-card-title);
+}
+
+.astra-evidence__more {
+  align-self: flex-start;
+}
+
+.astra-evidence h4 {
+  margin: var(--astra-space-base) 0 var(--astra-space-compact);
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-micro);
+  font-weight: var(--astra-font-weight-micro);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.astra-evidence ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.astra-evidence__groups {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--astra-space-compact);
+}
+
+.astra-evidence__groups li {
+  padding: 2px var(--astra-space-base);
+  border: var(--astra-border-hairline) solid var(--astra-color-border);
+  border-radius: var(--astra-radius-pill);
+  background: var(--astra-color-canvas);
+  font-size: var(--astra-font-size-micro);
+}
+
+.astra-evidence__claims li,
+.astra-evidence__pairs li,
+.astra-evidence__items > li {
+  padding: var(--astra-space-compact) 0;
+  border-bottom: var(--astra-border-hairline) solid var(--astra-color-border);
+  font-size: var(--astra-font-size-secondary);
+}
+
+.astra-evidence__type {
+  display: inline-block;
+  margin-inline-end: var(--astra-space-compact);
+  padding: 0 var(--astra-space-compact);
+  border-radius: var(--astra-radius-sm, 4px);
+  background: var(--astra-color-canvas);
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-micro);
+}
+
+.astra-evidence__publisher,
+.astra-evidence__date {
+  margin-inline-end: var(--astra-space-compact);
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-micro);
+}
+
+.astra-evidence a {
+  color: var(--astra-color-accent);
+}
+
+.astra-evidence > button:last-child {
+  align-self: flex-start;
+  min-height: 32px;
+  padding-inline: var(--astra-space-base);
+  border: var(--astra-border-hairline) solid var(--astra-color-border);
+  border-radius: var(--astra-radius-small);
+  background: var(--astra-color-surface);
+  color: var(--astra-color-muted);
+  font: inherit;
+  font-size: var(--astra-font-size-secondary);
+  cursor: pointer;
+}

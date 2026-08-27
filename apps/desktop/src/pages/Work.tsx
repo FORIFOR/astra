@@ -138,8 +138,11 @@ export function WorkPage({
                   <span className="astra-work-row__time">{relativeTime(task.updated_at)}</span>
                   <span className="astra-work-row__body">
                     <span className="astra-work-row__title">{task.title ?? '名前のない仕事'}</span>
+                    {/* §9.1: 「最新競合情報を調査中 · 12 sources · Started 14:02」 */}
                     <span className="astra-work-row__detail">
-                      {kindLabel(task.kind)}
+                      {task.current_step
+                        ? `${task.current_step.retrying ? '再試行中: ' : ''}${task.current_step.message}${task.current_step.detail ? ` · ${task.current_step.detail}` : ''}`
+                        : kindLabel(task.kind)}
                       {task.started_at && ` · ${startedLabel(task.started_at)}`}
                     </span>
                   </span>

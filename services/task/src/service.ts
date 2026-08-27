@@ -12,7 +12,9 @@ import {
   type CreateTaskRequest,
   type TaskStatus,
 } from '@astra/contracts';
+import { sql } from 'kysely';
 import { withTenant, type DbHandle, type ScopedDb } from '@astra/db';
+import { TaskProgressPayload, type TaskCurrentStep, type TaskListItem } from '@astra/contracts';
 import { appendAuditEvent } from '@astra/telemetry';
 import { ensureStream, readEventsAfter } from './events.js';
 import { isKnownTaskKind, type TaskPlan } from './plan.js';
@@ -191,7 +193,7 @@ export class TaskService {
     tenantId: string,
     limit: number,
     cursor?: string,
-  ): Promise<{ items: Task[]; nextCursor: string | null }> {
+  ): Promise<{ items: TaskListItem[]; nextCursor: string | null }> {
     return withTenant(this.#db, tenantId, async (tx) => {
       let statement = tx
         .selectFrom('tasks')
@@ -202,8 +204,12 @@ export class TaskService {
 
       const rows = await statement.execute();
       const page = rows.slice(0, limit);
+      const steps = await currentSteps(
+        tx,
+        page.map((row) => row.id),
+      );
       return {
-        items: page.map(toTask),
+        items: page.map((row) => ({ ...toTask(row), current_step: steps.get(row.id) ?? null })),
         nextCursor: rows.length > limit ? (page.at(-1)?.id ?? null) : null,
       };
     });
@@ -393,4 +399,39 @@ export function titleFrom(input: Record<string, unknown>): string | null {
     }
   }
   return null;
+}
+
+/**
+ * 一覧の各行に添える「いま進めている段」。UI/UX §9.1。
+ *
+ * 行ごとに stream を読むと N+1 になるので、進行中の仕事の
+ * **最新の task.progress だけ**を 1 回で引く。終わった仕事には付けない
+ * （終わったのに「調査中」と出るのが、いちばん信用を失う）。
+ */
+export async function currentSteps(
+  tx: ScopedDb,
+  taskIds: readonly string[],
+): Promise<Map<string, TaskCurrentStep>> {
+  const out = new Map<string, TaskCurrentStep>();
+  if (taskIds.length === 0) return out;
+  const rows = await sql<{ stream_id: string; payload: unknown; status: string }>`
+    select distinct on (e.stream_id) e.stream_id, e.payload, t.status
+      from task_events e
+      join tasks t on t.id = e.stream_id
+     where e.stream_kind = 'task'
+       and e.type = 'task.progress'
+       and e.stream_id in (${sql.join(taskIds)})
+     order by e.stream_id, e.sequence desc
+  `.execute(tx);
+  for (const row of rows.rows) {
+    if (row.status !== 'RUNNING' && row.status !== 'PAUSED_HOST_OFFLINE') continue;
+    const parsed = TaskProgressPayload.safeParse(row.payload);
+    if (!parsed.success) continue;
+    out.set(row.stream_id, {
+      message: parsed.data.message,
+      detail: parsed.data.detail,
+      retrying: parsed.data.retrying,
+    });
+  }
+  return out;
 }

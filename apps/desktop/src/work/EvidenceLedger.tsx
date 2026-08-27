@@ -61,8 +61,15 @@ function SourceLine({ item }: { item: EvidenceItem }): ReactElement {
   );
 }
 
-export function EvidenceLedgerView({ ledger }: { ledger: Ledger }): ReactElement {
-  const [level, setLevel] = useState<EvidenceLevel>('L0');
+export function EvidenceLedgerView({
+  ledger,
+  initialLevel = 'L0',
+}: {
+  ledger: Ledger;
+  /** 見本帳など、開いた状態から描きたいとき。通常は L0 から。 */
+  initialLevel?: EvidenceLevel;
+}): ReactElement {
+  const [level, setLevel] = useState<EvidenceLevel>(initialLevel);
   const pairs = contradictionPairs(ledger);
 
   return (
@@ -71,7 +78,11 @@ export function EvidenceLedgerView({ ledger }: { ledger: Ledger }): ReactElement
       <p className="astra-evidence__headline">{ledgerHeadline(ledger)}</p>
 
       {level === 'L0' && (
-        <button type="button" onClick={() => setLevel('L1')}>
+        <button
+          type="button"
+          className="astra-button astra-button--quiet astra-evidence__more"
+          onClick={() => setLevel('L1')}
+        >
           根拠を見る
         </button>
       )}

@@ -259,7 +259,7 @@ export const ledger: EvidenceLedger = {
     },
     {
       id: '4c1d2b1e-8b7f-4b1a-9c1e-1a2b3c4d5e02',
-      claim: 'B社は 10 月に法人向け価格を平均 8% 引き上げた',
+      claim: 'B社の法人向け値上げは平均 5% にとどまる',
       source_url: 'https://example.com/news/b',
       source_type: 'news',
       publisher: '日刊テック',
