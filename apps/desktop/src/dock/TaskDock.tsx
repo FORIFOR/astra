@@ -43,8 +43,6 @@ export function TaskDock({
   voiceMode = 'idle',
   initialState = 'READY',
   voiceUnavailable,
-  cloudCorrectionAllowed = false,
-  onCloudCorrectionAllowedChange,
   onRequestSubmitted,
   resultText,
   notice = null,
@@ -66,8 +64,6 @@ export function TaskDock({
   /** 端末内 STT / Google 確定が使えない理由。 */
   voiceUnavailable?: string | null;
   /** true の発話だけ、停止後の PCM を Google Chirp 3 へ送る。 */
-  cloudCorrectionAllowed?: boolean;
-  onCloudCorrectionAllowedChange?(allowed: boolean): void;
   /** voice turn なら Voice HUD を thinking へ進める。 */
   onRequestSubmitted?(): void;
   /** 完了した成果物の本文。Dock 内の result sheet に出す。 */
@@ -417,14 +413,6 @@ export function TaskDock({
                 getVolume={voiceLevels ? voiceLevels.input : () => 0}
               />
             </div>
-            <label className="astra-dock__cloud-stt">
-              <input
-                type="checkbox"
-                checked={cloudCorrectionAllowed}
-                onChange={(event) => onCloudCorrectionAllowedChange?.(event.target.checked)}
-              />
-              Google で発話を高精度に確定する
-            </label>
           </div>
         </div>
       )}

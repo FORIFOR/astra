@@ -121,6 +121,35 @@
   cursor: pointer;
 }
 
+.astra-sidebar__toggle-glyph {
+  font-size: var(--astra-font-size-body);
+}
+
+.astra-sidebar__toggle-label {
+  margin-inline-start: var(--astra-space-compact);
+  font-size: var(--astra-font-size-micro);
+}
+
+.astra-sidebar__toggle:hover:not(:disabled) {
+  background: var(--astra-color-canvas);
+  color: var(--astra-color-text);
+}
+
+.astra-voice-settings__row {
+  display: flex;
+  gap: var(--astra-space-compact);
+  align-items: flex-start;
+  font-size: var(--astra-font-size-secondary);
+}
+
+.astra-voice-settings__hint,
+.astra-ux-metrics__empty {
+  display: block;
+  margin: var(--astra-space-compact) 0 0;
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-micro);
+}
+
 .astra-sidebar__toggle:disabled {
   opacity: 0.4;
   cursor: default;
@@ -347,6 +376,7 @@
 }
 
 .astra-topbar__actions {
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--astra-space-compact);
@@ -497,9 +527,13 @@
 
 /* --- menus (notifications / profile) --- */
 
-.astra-notify,
 .astra-profile {
   position: relative;
+}
+
+/* 通知の面は actions の右端に揃える。ベルの真下に出すと、ページ右上のボタンに半分だけ被る */
+.astra-notify {
+  position: static;
 }
 
 .astra-menu {

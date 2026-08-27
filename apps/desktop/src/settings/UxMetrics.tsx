@@ -5,42 +5,53 @@ import { resetUxMetrics, subscribeUxMetrics, summarizeUxMetrics } from '../ux/me
 export function UxMetrics(): ReactElement {
   const [rows, setRows] = useState(summarizeUxMetrics);
   useEffect(() => subscribeUxMetrics(() => setRows(summarizeUxMetrics())), []);
+  const measured = rows.some((row) => row.count > 0);
   return (
     <section className="astra-ux-metrics" aria-label="計測">
       <h3 className="astra-menu__title">計測（§23 の目標と、この起動で測った値）</h3>
-      <table className="astra-ux-metrics__table">
-        <thead>
-          <tr>
-            <th>項目</th>
-            <th>目標 p95</th>
-            <th>測定 p95</th>
-            <th>直近</th>
-            <th>回数</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => (
-            <tr
-              key={row.name}
-              data-within={row.withinTarget === null ? 'unknown' : String(row.withinTarget)}
-            >
-              <td>{row.label}</td>
-              <td>&lt; {row.targetMs} ms</td>
-              <td>
-                {row.p95 === null ? '未計測' : `${row.p95} ms`}
-                {row.withinTarget === false && (
-                  <span className="astra-ux-metrics__over"> 超過</span>
-                )}
-              </td>
-              <td>{row.last === null ? '—' : `${row.last} ms`}</td>
-              <td>{row.count}</td>
+      {/* 何も測っていないのに「未計測」を 5 行並べない。1 行で言う */}
+      {!measured && (
+        <p className="astra-ux-metrics__empty">
+          この起動ではまだ計測していません。Dock を開いたり声で頼んだりすると、ここに貯まります。
+        </p>
+      )}
+      {measured && (
+        <table className="astra-ux-metrics__table">
+          <thead>
+            <tr>
+              <th>項目</th>
+              <th>目標 p95</th>
+              <th>測定 p95</th>
+              <th>直近</th>
+              <th>回数</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-      <button type="button" className="astra-button astra-button--quiet" onClick={resetUxMetrics}>
-        値を消す
-      </button>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr
+                key={row.name}
+                data-within={row.withinTarget === null ? 'unknown' : String(row.withinTarget)}
+              >
+                <td>{row.label}</td>
+                <td>&lt; {row.targetMs} ms</td>
+                <td>
+                  {row.p95 === null ? '未計測' : `${row.p95} ms`}
+                  {row.withinTarget === false && (
+                    <span className="astra-ux-metrics__over"> 超過</span>
+                  )}
+                </td>
+                <td>{row.last === null ? '—' : `${row.last} ms`}</td>
+                <td>{row.count}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+      {measured && (
+        <button type="button" className="astra-button astra-button--quiet" onClick={resetUxMetrics}>
+          値を消す
+        </button>
+      )}
     </section>
   );
 }

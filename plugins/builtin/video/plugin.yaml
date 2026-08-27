@@ -23,7 +23,7 @@ jobs:
   - 字幕を付ける
   - 書き出す
 data_accessed:
-  - Video projects, clips and renders this user already has access to
+  - この利用者が既に見られる動画プロジェクト・クリップ・書き出し
 connectors: []
 tools:
   - id: video.storyboard

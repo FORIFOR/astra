@@ -197,7 +197,7 @@ describe('responsive layout (§7.2)', () => {
       `${layout.sidebar.expanded}px`,
     );
 
-    await user.click(screen.getByRole('button', { name: 'サイドバーを閉じる' }));
+    await user.click(screen.getByRole('button', { name: 'サイドバーをたたむ' }));
     expect(shell.style.getPropertyValue('--astra-sidebar-width')).toBe(
       `${layout.sidebar.collapsed}px`,
     );

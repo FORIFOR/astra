@@ -105,9 +105,12 @@ export function Sidebar(): ReactElement {
         disabled={layout.mode === 'compact'}
         aria-expanded={!collapsed}
       >
-        <span aria-hidden="true">{collapsed ? '›' : '‹'}</span>
-        <span className="astra-visually-hidden">
-          {collapsed ? 'サイドバーを開く' : 'サイドバーを閉じる'}
+        <span aria-hidden="true" className="astra-sidebar__toggle-glyph">
+          {collapsed ? '›' : '‹'}
+        </span>
+        {/* 畳んだときは幅が無いので、文字は読み上げだけ */}
+        <span className={collapsed ? 'astra-visually-hidden' : 'astra-sidebar__toggle-label'}>
+          {collapsed ? 'サイドバーを開く' : 'サイドバーをたたむ'}
         </span>
       </button>
     </nav>

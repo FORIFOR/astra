@@ -17,7 +17,7 @@ jobs:
   - 予定を読む
   - 予定を作る（確認あり）
 data_accessed:
-  - Calendar events, attendees, locations and conferencing links
+  - 予定の内容・参加者・場所・会議リンク
 connectors:
   - id: google-calendar
     auth: oauth2

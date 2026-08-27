@@ -98,3 +98,8 @@ export function useShell(): ShellContextValue {
   if (!value) throw new Error('useShell must be used inside <ShellProvider>');
   return value;
 }
+
+/** shell の外（テスト・見本帳）で描いても落ちない版。 */
+export function useOptionalShell(): ShellContextValue | null {
+  return useContext(ShellContext);
+}

@@ -55,6 +55,15 @@ export function StartConfirmation({
   }, []);
   const defaultDevice = devices?.find((d) => d.is_default) ?? devices?.[0] ?? null;
 
+  // Esc は「今の面を閉じる」（設定に書いてある約束）。ダイアログも例外にしない
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent): void => {
+      if (event.key === 'Escape') onCancel();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onCancel]);
+
   const sources: AudioSource[] = [
     ...(microphone ? (['microphone'] as const) : []),
     ...(system ? (['system'] as const) : []),
@@ -65,6 +74,9 @@ export function StartConfirmation({
   return (
     <form
       className="astra-meeting-start"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="astra-meeting-start-title"
       aria-label="録音の開始確認"
       onSubmit={(e) => {
         e.preventDefault();
@@ -77,6 +89,11 @@ export function StartConfirmation({
         });
       }}
     >
+      {/* 何のダイアログかを見出しで言う。aria-label だけでは目に見えない */}
+      <h2 id="astra-meeting-start-title" className="astra-meeting-start__heading">
+        会議を記録
+      </h2>
+
       <label className="astra-meeting-start__title">
         <span>会議名</span>
         <input value={title} onChange={(e) => setTitle(e.target.value)} autoFocus />

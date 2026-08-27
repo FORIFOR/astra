@@ -26,7 +26,7 @@ jobs:
   - ケアプランを確認する
   - インシデントの下書き
 data_accessed:
-  - Resident profiles, shift notes and care plans this user already has access to
+  - この利用者が既に見られる入居者情報・申し送り・ケアプラン
 connectors: []
 tools:
   - id: care.handoff

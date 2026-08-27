@@ -31,7 +31,7 @@ jobs:
   - 保有のリスクを見る
   - 注文の下書き（確認あり）
 data_accessed:
-  - Watchlists, positions and research notes this user already has access to
+  - この利用者が既に見られるウォッチリスト・保有・調査メモ
 connectors: []
 tools:
   - id: stock.watchlist

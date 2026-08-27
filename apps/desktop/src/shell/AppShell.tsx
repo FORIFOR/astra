@@ -22,7 +22,7 @@ export function AppShell({
   /** §7.1 の Inspector に出す中身（Context / Evidence / Activity）。 */
   inspector?: ReactNode;
 }): ReactElement {
-  const { layout } = useShell();
+  const { layout, activeTab } = useShell();
 
   if (layout.mode === 'unsupported') {
     // §7.2: desktop MVP の最低幅は 720px。無理に潰さず、必要な幅を伝える。
@@ -51,7 +51,8 @@ export function AppShell({
           Task Dock は別 window なので、本体を開いている人には見えない。
           ここが無いと、Workspace から Astra へ話しかける口が一つも無くなる。
         */}
-        <Composer {...(conversation ? { conversation } : {})} />
+        {/* Home には §8 の「何を終わらせますか？」がある。同じ口を 2 つ並べない */}
+        {activeTab !== 'home' && <Composer {...(conversation ? { conversation } : {})} />}
       </div>
       <Inspector>{inspector}</Inspector>
     </div>

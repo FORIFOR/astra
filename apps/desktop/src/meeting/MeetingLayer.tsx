@@ -4,13 +4,14 @@
  * live の間は最小の indicator だけを常に出し、押されたときに surface を開く。
  * 巨大な録音画面を常駐させない（§12）。
  */
-import { useState, type ReactElement } from 'react';
+import { useEffect, useState, type ReactElement } from 'react';
 import { Finalizing } from './Finalizing.js';
 import { MeetingSurface } from './MeetingSurface.js';
 import { RecordingIndicator } from './RecordingIndicator.js';
 import { StartConfirmation } from './StartConfirmation.js';
 import { speakersSoFar } from './meetingView.js';
 import { useMeeting } from './MeetingProvider.js';
+import { useOptionalShell } from '../state/ShellProvider.js';
 import './meeting.css';
 
 export function MeetingLayer({
@@ -20,6 +21,16 @@ export function MeetingLayer({
 }): ReactElement | null {
   const meeting = useMeeting();
   const [expanded, setExpanded] = useState(false);
+  const activeTab = useOptionalShell()?.activeTab ?? null;
+
+  // 開始確認は「今の判断」。タブを移ったら、その判断は流れたものとして閉じる。
+  // 残しておくと Library や Apps の上に居座り、閉じ方が分からなくなる。
+  const { phase, cancelStart } = meeting;
+  useEffect(() => {
+    if (phase === 'starting') cancelStart();
+    // activeTab が変わったときだけ。phase の変化では閉じない
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
 
   if (meeting.phase === 'idle') {
     return meeting.error ? (

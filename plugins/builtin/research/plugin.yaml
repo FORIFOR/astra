@@ -18,8 +18,8 @@ jobs:
   - 調べて報告する
   - 根拠を残す
 data_accessed:
-  - Public web pages retrieved for the current research run
-  - Library artifacts explicitly referenced by the user
+  - この調査で取りに行く公開の Web ページ
+  - 利用者が明示的に指した Library の成果物
 connectors: []
 agents:
   - id: research

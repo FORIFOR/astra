@@ -18,7 +18,7 @@ jobs:
   - 商談の状況を見る
   - 次の一手を出す
 data_accessed:
-  - Accounts, contacts, opportunities and activities this user already has access to
+  - この利用者が既に見られる取引先・連絡先・商談・活動
 connectors: []
 tools:
   - id: crm.pipeline

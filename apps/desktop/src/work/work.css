@@ -224,6 +224,15 @@
   color: var(--astra-color-muted);
 }
 
+.astra-empty p {
+  margin: 0;
+}
+
+.astra-empty__hint {
+  margin-top: var(--astra-space-compact) !important;
+  font-size: var(--astra-font-size-secondary);
+}
+
 .astra-work-actions {
   display: flex;
   justify-content: flex-end;

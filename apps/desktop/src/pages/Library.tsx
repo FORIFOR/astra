@@ -283,7 +283,7 @@ export function LibraryPage({
             <section className="astra-lineage" aria-label="来歴">
               <h4>来歴</h4>
               <dl className="astra-lineage__facts">
-                <dt>Derived from</dt>
+                <dt>元にしたもの</dt>
                 <dd>
                   {lineage.length === 0
                     ? selected.source_meeting_id
@@ -291,7 +291,7 @@ export function LibraryPage({
                       : '—'
                     : lineage.map((a) => `${a.title} v${a.version}`).join(' · ')}
                 </dd>
-                <dt>Produced by</dt>
+                <dt>作った仕事</dt>
                 <dd>
                   {selected.source_task_id ? (
                     <button

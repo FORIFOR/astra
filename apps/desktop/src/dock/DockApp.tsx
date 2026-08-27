@@ -161,8 +161,6 @@ function DockSurface(): ReactElement {
       voiceLevels={{ input: voiceRuntime.inputLevel, output: voiceRuntime.outputLevel }}
       voiceMode={voiceRuntime.mode}
       voiceUnavailable={voiceRuntime.unavailable}
-      cloudCorrectionAllowed={voiceRuntime.cloudCorrectionAllowed}
-      onCloudCorrectionAllowedChange={voiceRuntime.setCloudCorrectionAllowed}
       onRequestSubmitted={() => {
         setResultText(null);
         voiceRuntime.beginThinking();

@@ -16,8 +16,8 @@ jobs:
   - 端末のファイルを探す
   - ファイルを読む・書く
 data_accessed:
-  - User-selected folders on this device only
-  - Local file index metadata (never raw contents unless attached)
+  - この端末で利用者が選んだフォルダだけ
+  - 手元のファイル索引の情報（中身は添付したときだけ）
 connectors:
   - id: local-fs
     auth: os-permission

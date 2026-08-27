@@ -14,6 +14,12 @@
   background: var(--astra-color-surface);
 }
 
+.astra-meeting-start__heading {
+  margin: 0;
+  font-size: var(--astra-font-size-section-title);
+  font-weight: var(--astra-font-weight-section-title);
+}
+
 .astra-meeting-start label {
   display: flex;
   align-items: center;

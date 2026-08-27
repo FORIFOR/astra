@@ -94,7 +94,7 @@ export function AppDetail({
 
       {plugin.connectors.length > 0 && (
         <p className="astra-app-detail__uses">
-          <span>Uses:</span> {plugin.connectors.map(providerLabel).join(' · ')}
+          <span>使う接続:</span> {plugin.connectors.map(providerLabel).join(' · ')}
         </p>
       )}
 

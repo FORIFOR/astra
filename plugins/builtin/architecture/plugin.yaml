@@ -21,7 +21,7 @@ jobs:
   - 未解決の課題を出す
   - RFI の下書き
 data_accessed:
-  - Projects, drawings, revisions and RFIs this user already has access to
+  - この利用者が既に見られるプロジェクト・図面・改訂・RFI
 connectors: []
 tools:
   - id: arch.revisions

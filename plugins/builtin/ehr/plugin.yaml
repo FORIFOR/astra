@@ -24,7 +24,7 @@ jobs:
   - 診療記録を探す・要約する
   - 記録の下書き
 data_accessed:
-  - Encounters and clinical notes this user already has access to
+  - この利用者が既に見られる診療記録と臨床ノート
 connectors: []
 tools:
   - id: ehr.search

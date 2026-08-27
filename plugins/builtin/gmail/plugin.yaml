@@ -19,8 +19,8 @@ jobs:
   - メールを探して読む
   - 返信の下書きを作る
 data_accessed:
-  - Gmail messages, threads, labels and drafts
-  - Contact names and addresses appearing in those messages
+  - Gmail のメール・スレッド・ラベル・下書き
+  - そのメールに出てくる相手の名前とアドレス
 connectors:
   - id: gmail
     auth: oauth2

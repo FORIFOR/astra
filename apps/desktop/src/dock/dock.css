@@ -416,19 +416,6 @@
   font-size: var(--astra-font-size-body);
 }
 
-.astra-dock__cloud-stt {
-  display: inline-flex;
-  gap: var(--astra-space-compact);
-  align-items: center;
-  color: var(--astra-float-muted);
-  font-size: var(--astra-font-size-micro);
-  cursor: pointer;
-}
-
-.astra-dock__cloud-stt input {
-  accent-color: var(--astra-color-accent);
-}
-
 .astra-dock__voice-error {
   margin: 0;
   color: var(--astra-color-warning);
@@ -472,11 +459,12 @@
 }
 
 /* 状態は data 属性で公開する。Deepgram の VoiceButton と同じ考え方（CSS だけで差し替えられる） */
-[data-astra-voice-state='listening'] {
+.astra-dock__orb[data-astra-voice-state='listening'] {
   opacity: 1;
 }
 
-[data-astra-voice-state='thinking'] {
+/* 薄くするのは Orb だけ。面ごと薄くすると、明るい机の上で灰色に見える */
+.astra-dock__orb[data-astra-voice-state='thinking'] {
   opacity: 0.78;
 }
 
@@ -521,11 +509,6 @@
 .astra-dock[data-state='LISTENING'] .astra-dock__wave {
   flex: 1;
   height: 16px;
-}
-
-.astra-dock[data-state='LISTENING'] .astra-dock__cloud-stt {
-  flex: none;
-  white-space: nowrap;
 }
 
 /* --- markdown の答え（vendor/deepgram-ui/Response）--- */

@@ -125,9 +125,18 @@ export function WorkPage({
 
       <div className="astra-work-list__pane">
         {visible.length === 0 ? (
-          <p className="astra-empty">
-            {filter === 'active' ? '進行中の仕事はありません。' : '該当する仕事はありません。'}
-          </p>
+          <div className="astra-empty">
+            <p>
+              {filter === 'active' ? '進行中の仕事はありません。' : '該当する仕事はありません。'}
+            </p>
+            {/* §21: 次の行動を添える。一覧が空なだけで、頼む口が無いわけではない */}
+            {filter === 'active' && (
+              <p className="astra-empty__hint">
+                Task Dock（Option +
+                Space）か、下の入力欄から頼めます。会議を記録することもできます。
+              </p>
+            )}
+          </div>
         ) : (
           <ul className="astra-work-list__rows">
             {visible.map((task) => (

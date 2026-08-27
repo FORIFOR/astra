@@ -18,7 +18,7 @@ jobs:
   - 質問に答える
   - 文章を作る
 data_accessed:
-  - Only what the user put in front of it for this request
+  - この依頼で利用者が差し出したものだけ
 connectors: []
 tools:
   - id: general.answer

@@ -12,6 +12,7 @@ import { isTauri, voice } from '../host/tauri.js';
 import { startUxTimer } from '../ux/metrics.js';
 import type { DockDictation } from '../dock/useDockMachine.js';
 import { playVoiceAudio } from './audioPlayback.js';
+import { onCloudCorrectionChange, readCloudCorrection } from './cloudCorrection.js';
 
 export type VoiceMode =
   'idle' | 'connecting' | 'listening' | 'thinking' | 'speaking' | 'interrupted' | 'error';
@@ -102,7 +103,9 @@ export function useVoiceRuntime(client: AstraClient | null = null): VoiceRuntime
   const [mode, setMode] = useState<VoiceMode>('idle');
   const [unavailable, setUnavailable] = useState<string | null>(null);
   const [transcriptText, setTranscriptText] = useState('');
-  const [cloudCorrectionAllowed, setCloudCorrectionAllowed] = useState(false);
+  // 設定（本体ウィンドウ）で決めた値を読む。Dock の行に設定を置かない
+  const [cloudCorrectionAllowed, setCloudCorrectionAllowed] = useState(readCloudCorrection);
+  useEffect(() => onCloudCorrectionChange(setCloudCorrectionAllowed), []);
   const levels = useMemo(createLevelStore, []);
   const transcript = useRef({ committed: '', partial: '' });
   const handlers = useRef<{ onPartial(text: string): void; onFinal(text: string): void } | null>(

@@ -19,8 +19,8 @@ jobs:
   - 会議を記録する
   - 決定と ToDo を残す
 data_accessed:
-  - Meeting audio captured on this device
-  - Live and final transcripts, translations and derived minutes
+  - この端末で録った会議の音声
+  - 文字起こし（途中と確定）・翻訳・そこから作る議事録
 connectors: []
 agents:
   - id: meeting
