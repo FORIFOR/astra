@@ -16,3 +16,6 @@ coverage/
 /tmp/
 /apps/desktop/src-tauri/target/
 /apps/desktop/src-tauri/gen/
+
+# Swift (astra-macos)
+apps/astra-macos/.build/

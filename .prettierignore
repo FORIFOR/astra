@@ -9,3 +9,4 @@ packages/db/src/generated/
 # TypeScript 側から生成している。整形すると生成器の出力とずれる。
 plugins/builtin/sales-crm/schemas/
 apps/desktop/src-tauri/
+apps/astra-macos/
