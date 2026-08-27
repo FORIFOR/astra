@@ -1,0 +1,18 @@
+<Window
+    x:Class="Astra.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls">
+    <Window.SystemBackdrop>
+        <MicaBackdrop/>
+    </Window.SystemBackdrop>
+    <muxc:NavigationView x:Name="Nav" PaneDisplayMode="Left" IsBackButtonVisible="Collapsed">
+        <muxc:NavigationView.MenuItems>
+            <muxc:NavigationViewItem Content="Home" Icon="Home" Tag="home"/>
+            <muxc:NavigationViewItem Content="AI Agents" Icon="Emoji" Tag="agents"/>
+            <muxc:NavigationViewItem Content="Library" Icon="Library" Tag="library"/>
+            <muxc:NavigationViewItem Content="Apps" Icon="AllApps" Tag="apps"/>
+        </muxc:NavigationView.MenuItems>
+        <Frame x:Name="ContentFrame"/>
+    </muxc:NavigationView>
+</Window>

@@ -1,0 +1,21 @@
+<Window
+    x:Class="Astra.VoiceHudWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Background="Transparent">
+        <Border CornerRadius="0,0,17,17" Background="#EA18191B"
+                BorderBrush="#20FFFFFF" BorderThickness="1"
+                HorizontalAlignment="Center" VerticalAlignment="Top">
+            <StackPanel Orientation="Horizontal" Spacing="6" Margin="14,6">
+                <Border CornerRadius="7" Background="#12FFFFFF" Padding="6,2">
+                    <TextBlock Text="option" FontSize="8" Foreground="#88FFFFFF"/>
+                </Border>
+                <Border CornerRadius="7" Background="#12FFFFFF" Padding="6,2">
+                    <TextBlock Text="command" FontSize="8" Foreground="#88FFFFFF"/>
+                </Border>
+                <TextBlock Text="長押しで音声入力" FontSize="9" Foreground="#A0FFFFFF"
+                           VerticalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>

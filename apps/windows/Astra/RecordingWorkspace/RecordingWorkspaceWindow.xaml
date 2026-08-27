@@ -1,0 +1,32 @@
+<Window
+    x:Class="Astra.RecordingWorkspaceWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Window.SystemBackdrop>
+        <DesktopAcrylicBackdrop/>
+    </Window.SystemBackdrop>
+    <Grid>
+        <!-- 外枠（凹み）は RecordingWorkspaceGeometry.Build を code-behind で流し込む -->
+        <Path x:Name="ShapePath" Fill="#F6FAFAFB" Stroke="#14000000" StrokeThickness="0.7"/>
+        <!-- Task Dock（上辺の凹みに重ねる） -->
+        <Border x:Name="TaskDock" CornerRadius="21" Background="#EA000000"
+                HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,3,0,0">
+            <StackPanel Orientation="Horizontal" Spacing="10" Margin="11,0" VerticalAlignment="Center">
+                <Ellipse Width="7" Height="7" Fill="#FF453A"/>
+                <TextBlock x:Name="Elapsed" Text="00:00" Foreground="White"
+                           FontFamily="Consolas" FontSize="10" VerticalAlignment="Center"/>
+                <TextBlock Text="CC" Foreground="#D8FFFFFF" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                <TextBlock Text="⏸" Foreground="#D8FFFFFF" FontSize="12" VerticalAlignment="Center"/>
+                <Ellipse Width="25" Height="25" Fill="#FF453A"/>
+            </StackPanel>
+        </Border>
+        <!-- Recording Hero -->
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,120,0,0" Spacing="10">
+            <Grid Width="72" Height="72">
+                <Ellipse Fill="#1FFF453A"/>
+                <Ellipse Width="18" Height="18" Fill="#FF453A"/>
+            </Grid>
+            <TextBlock x:Name="Hero" Text="録音中" HorizontalAlignment="Center" FontSize="18" FontWeight="SemiBold"/>
+        </StackPanel>
+    </Grid>
+</Window>

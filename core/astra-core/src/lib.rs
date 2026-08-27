@@ -10,6 +10,7 @@
 uniffi::setup_scaffolding!();
 
 pub mod mode;
+pub mod capi;
 pub mod context;
 pub mod recording;
 pub mod session;

@@ -9,38 +9,9 @@ use std::sync::Mutex;
 
 use crate::mode::AstraMode;
 use crate::recording::{
-    format_elapsed, Journal, JournalState, LinkState, RecordingSnapshot, WIRE_SAMPLE_RATE,
+    format_elapsed, resample_linear, wire_bytes, Journal, JournalState, LinkState,
+    RecordingSnapshot, WIRE_SAMPLE_RATE,
 };
-
-/// 依存を増やさない線形リサンプラ（16 kHz 以外の入力を wire レートへ）。
-/// 会議音声には十分。high-fidelity が要るなら OS 側で変換して 16 kHz を渡す。
-fn resample_linear(input: &[f32], from: u32, to: u32) -> Vec<f32> {
-    if from == to || input.is_empty() {
-        return input.to_vec();
-    }
-    let ratio = to as f64 / from as f64;
-    let out_len = ((input.len() as f64) * ratio).round() as usize;
-    let mut out = Vec::with_capacity(out_len);
-    for i in 0..out_len {
-        let src = i as f64 / ratio;
-        let j = src.floor() as usize;
-        let frac = (src - j as f64) as f32;
-        let a = input.get(j).copied().unwrap_or(0.0);
-        let b = input.get(j + 1).copied().unwrap_or(a);
-        out.push(a + (b - a) * frac);
-    }
-    out
-}
-
-/// f32 mono → 16-bit LE。
-fn wire(samples: &[f32]) -> Vec<u8> {
-    let mut out = Vec::with_capacity(samples.len() * 2);
-    for s in samples {
-        let v = (s.clamp(-1.0, 1.0) * i16::MAX as f32).round() as i16;
-        out.extend_from_slice(&v.to_le_bytes());
-    }
-    out
-}
 
 #[derive(Debug, thiserror::Error, uniffi::Error)]
 pub enum SessionError {
@@ -93,7 +64,7 @@ impl RecordingSession {
             return 0;
         }
         let resampled = resample_linear(&samples, sample_rate, WIRE_SAMPLE_RATE);
-        let bytes = wire(&resampled);
+        let bytes = wire_bytes(&resampled);
         match inner.journal.append(&bytes) {
             Ok(closed) => closed.len() as u32,
             Err(_) => 0,
@@ -163,6 +134,7 @@ mod tests {
 
     #[test]
     fn resamples_toward_the_wire_rate() {
+        use crate::recording::resample_linear;
         let up = resample_linear(&[0.0, 1.0], 8_000, 16_000);
         assert_eq!(up.len(), 4);
         assert_eq!(resample_linear(&[0.2, 0.4], 16_000, 16_000), vec![0.2, 0.4]);

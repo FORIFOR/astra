@@ -35,6 +35,7 @@
     "gen:swift-bindings": "./scripts/gen-swift-bindings.sh",
     "verify:swift-roundtrip": "./scripts/verify-swift-roundtrip.sh",
     "verify:macos-recording": "./scripts/verify-macos-recording.sh",
+    "verify:c-abi": "./scripts/verify-c-abi.sh",
     "gen:dock-geometry": "node scripts/gen-dock-geometry.mjs",
     "gen:shortcuts": "node scripts/gen-shortcuts.mjs",
     "smoke": "./scripts/smoke.sh",

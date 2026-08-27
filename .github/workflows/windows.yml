@@ -14,17 +14,17 @@ jobs:
       - name: Design token freshness
         run: node scripts/gen-design-tokens.mjs --check
       - uses: dtolnay/rust-toolchain@stable
-      - name: Build astra-core (staticlib + cdylib)
+      - name: Build astra-core (cdylib astra_core.dll)
         working-directory: core/astra-core
         run: cargo build --release
-      # uniffi 本体は C# を同梱しないため、外部の uniffi-bindgen-cs を使う（macOS では未検証）。
-      - name: Install uniffi-bindgen-cs
-        run: cargo install uniffi-bindgen-cs --version 0.9.1 || cargo install uniffi-bindgen-cs
-      - name: Generate C# bindings
-        working-directory: core/astra-core
-        run: uniffi-bindgen-cs --library target/release/astra_core.dll --out-dir ../../apps/windows/Astra/Generated
-      # 以下は apps/windows に .sln/.csproj が入った時点で有効化する（Phase 4）。
-      # - uses: microsoft/setup-msbuild@v2
-      # - run: msbuild apps/windows/Astra.sln /p:Configuration=Release /p:Platform=x64
+      - name: Stage astra_core.dll for the app
+        run: copy core\astra-core\target\release\astra_core.dll apps\windows\Astra\astra_core.dll
+      # Windows は安定 C ABI + P/Invoke（core/astra-core/include/astra_core.h）で同じ core を使う。
+      # C ABI 契約は macOS 側で `pnpm verify:c-abi` により実証済み（Windows build 自体はここで検証）。
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - name: Restore + build WinUI 3 solution
+        run: dotnet build apps/windows/Astra.sln -c Release -p:Platform=x64
       - name: Note
-        run: echo "WinUI .sln build is added in Phase 4; core+bindings build is validated here."
+        run: echo "WinUI build runs on windows-latest; macOS host cannot build this (unverified there)."

@@ -76,3 +76,17 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
   **C# は同梱されていない**（実測: `--language csharp` は invalid value）。Windows 側は外部ツール
   `uniffi-bindgen-cs`（`cargo install`）で `.cs` を生成する設計にした（`.github/workflows/windows.yml`）。
   この macOS ホストでは未検証。C ABI + P/Invoke の手書き shim に切り替える選択肢も残す。
+
+## 追記: Windows Native の実 solution + C ABI ブリッジ（Phase 1.7）
+- **C ABI**: `core/astra-core/src/capi.rs` + 手書きヘッダ `core/astra-core/include/astra_core.h`。
+  version / format_elapsed / session(start/push/recorded_ms/finish/free)。uniffi(Swift) と併存。
+- **C ABI をこのホストで実証**: `pnpm verify:c-abi` が clang で C→core→ディスクを叩き、断片(160000B)・5000ms を assert。
+  **Windows の P/Invoke が使う境界そのものを macOS 上で検証**（WinUI build とは別）。
+- **WinUI 3 solution 完成（build 未検証）**: `apps/windows/Astra.sln` + `Astra/Astra.csproj`（WindowsAppSDK）。
+  - `App`（通常 Voice HUD）/ `VoiceHudWindow`（borderless・always-on-top・上部中央）/
+    `RecordingWorkspaceWindow`（1 枚・DesktopAcrylic・**macOS と同じ凹み Bezier** RecordingWorkspaceGeometry・Task Dock・Hero）/
+    `MainWindow`（NavigationView + Mica、4 セクション）。
+  - `CoreBridge/AstraCore.cs`: C ABI を P/Invoke（`RecordingSession` は macOS RecordingRuntime と同じ core を叩く）。
+  - 寸法は `GeneratedMetrics.cs`（tokens 由来）。
+- **CI**: `.github/workflows/windows.yml` が windows-latest で cargo build → dll 配置 → `dotnet build Astra.sln`。
+  **この macOS ホストでは dotnet/WinUI をビルドできない（未検証）。Windows PASS は主張しない。**

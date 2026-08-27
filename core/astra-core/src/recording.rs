@@ -23,10 +23,34 @@ const FRAGMENT_BYTES: usize = (WIRE_SAMPLE_RATE as usize * 2 * FRAGMENT_MS as us
 /// macOS(AVAudioEngine) / Windows(WASAPI) のどちらの PCM もここで同じ形にする。
 #[uniffi::export]
 pub fn to_wire(samples: Vec<f32>) -> Vec<u8> {
+    wire_bytes(&samples)
+}
+
+/// slice 版（内部・C ABI 用）。
+pub(crate) fn wire_bytes(samples: &[f32]) -> Vec<u8> {
     let mut out = Vec::with_capacity(samples.len() * 2);
     for s in samples {
         let v = (s.clamp(-1.0, 1.0) * i16::MAX as f32).round() as i16;
         out.extend_from_slice(&v.to_le_bytes());
+    }
+    out
+}
+
+/// 依存を増やさない線形リサンプラ（16 kHz 以外の入力を wire レートへ）。
+pub(crate) fn resample_linear(input: &[f32], from: u32, to: u32) -> Vec<f32> {
+    if from == to || input.is_empty() {
+        return input.to_vec();
+    }
+    let ratio = to as f64 / from as f64;
+    let out_len = ((input.len() as f64) * ratio).round() as usize;
+    let mut out = Vec::with_capacity(out_len);
+    for i in 0..out_len {
+        let src = i as f64 / ratio;
+        let j = src.floor() as usize;
+        let frac = (src - j as f64) as f32;
+        let a = input.get(j).copied().unwrap_or(0.0);
+        let b = input.get(j + 1).copied().unwrap_or(a);
+        out.push(a + (b - a) * frac);
     }
     out
 }
