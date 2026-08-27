@@ -1,8 +1,8 @@
 /** Workspace のレイアウト。UI/UX §7.1・§7.2。 */
 
 export const layout = {
-  sidebar: { expanded: 208, collapsed: 64 },
-  topBar: 56,
+  sidebar: { expanded: 176, collapsed: 64 },
+  topBar: 44,
   /** これ以下に潰さない。潰すくらいなら inspector を畳む。 */
   mainMin: 640,
   inspector: 320,

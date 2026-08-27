@@ -5,18 +5,12 @@ import type { ReactElement } from 'react';
  * トップレベルは 4 つ固定。Plugin を入れても増えない（AC-12）。
  */
 import { TOP_LEVEL_TABS, type TabId } from '@astra/ui-kit';
+import { NavIcon } from './NavIcons.js';
 import { surfacesFor, type Severity } from '@astra/contracts';
 import { useShell } from '../state/ShellProvider.js';
 import { useOptionalSession } from '../state/SessionProvider.js';
 import { initialOf } from './ProfileMenu.js';
 import { useOptionalWorkspaceData } from '../state/WorkspaceData.js';
-
-const ICONS: Record<TabId, string> = {
-  home: '◉',
-  work: '▤',
-  library: '▦',
-  apps: '⊞',
-};
 
 /**
  * 控えめな印を出す件数。UI/UX §16「Attention → Home + subtle badge」。
@@ -65,7 +59,7 @@ export function Sidebar(): ReactElement {
                 onClick={() => goToTab(tab.id)}
               >
                 <span className="astra-nav-item__icon" aria-hidden="true">
-                  {ICONS[tab.id]}
+                  <NavIcon id={tab.id} />
                 </span>
                 <span className={collapsed ? 'astra-visually-hidden' : 'astra-nav-item__label'}>
                   {tab.label}

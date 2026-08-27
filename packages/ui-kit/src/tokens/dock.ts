@@ -43,7 +43,7 @@ export interface DockSize {
 
 export const dockGeometry = {
   /** 上部ピル（通常）: option ⌥ D 長押しで音声入力。メニューバーに接する */
-  idle: { width: 320, minHeight: 32, maxHeight: 32 },
+  idle: { width: 310, minHeight: 31, maxHeight: 31 },
   /** 上部ピル（聞いています / 考えています）: 波形と一言 */
   pill: { width: 360, minHeight: 40, maxHeight: 40 },
   /** ピルを押したときのクイックメニュー（文字で頼む / 声で頼む / 会議を記録） */

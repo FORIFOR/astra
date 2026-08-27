@@ -71,6 +71,9 @@ export function DockPill({
       onClick={onOpen}
       aria-label="Astra に頼む"
     >
+      <span className="astra-pill__mark" aria-hidden="true">
+        <AstraOrb mode="idle" size={12} />
+      </span>
       {keys.map((key) => (
         <kbd key={key} className="astra-pill__key">
           {key.toLowerCase()}

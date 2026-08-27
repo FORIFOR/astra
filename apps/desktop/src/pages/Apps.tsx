@@ -135,12 +135,9 @@ export function AppsPage({ client = null }: { client?: AstraClient | null }): Re
         <span className="astra-store-row__copy">
           <span className="astra-store-row__name">
             {plugin.name}
-            <span className="astra-store-row__kind">{CATEGORY_LABEL[plugin.category]}</span>
             {plugin.permissions.some((p) =>
               (EXTERNAL_SEND_SCOPES as readonly string[]).includes(p),
-            ) && (
-              <span className="astra-store-row__kind astra-store-row__kind--warn">確認あり</span>
-            )}
+            ) && <span className="astra-store-row__badge">確認あり</span>}
           </span>
           <span className="astra-store-row__summary">{appSummary(plugin)}</span>
         </span>

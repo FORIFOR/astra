@@ -160,9 +160,9 @@ describe('motion', () => {
 
 describe('layout', () => {
   it('uses the dimensions the spec fixes', () => {
-    expect(layout.sidebar.expanded).toBe(208);
+    expect(layout.sidebar.expanded).toBe(176);
     expect(layout.sidebar.collapsed).toBe(64);
-    expect(layout.topBar).toBe(56);
+    expect(layout.topBar).toBe(44);
     expect(layout.mainMin).toBe(640);
     expect(layout.inspector).toBe(320);
   });
@@ -187,7 +187,7 @@ describe('layout', () => {
 
   it('lets the user switch the sidebar in the medium band, and forces it only when squeezed', () => {
     // §7.2: 960–1279 は「sidebar 64–208 切替」。利用者が選べる。
-    expect(resolveLayout(1440, false).sidebarWidth).toBe(208);
+    expect(resolveLayout(1440, false).sidebarWidth).toBe(176);
     expect(resolveLayout(1440, true).sidebarWidth).toBe(64);
     expect(resolveLayout(1100, false).sidebarCollapsed).toBe(false);
     expect(resolveLayout(1100, true).sidebarCollapsed).toBe(true);
@@ -268,8 +268,8 @@ describe('generated css', () => {
   });
 
   it('exposes layout and motion values so CSS never hardcodes them', () => {
-    expect(TOKENS_CSS).toContain('--astra-layout-sidebar-expanded: 208px');
-    expect(TOKENS_CSS).toContain('--astra-layout-top-bar: 56px');
+    expect(TOKENS_CSS).toContain('--astra-layout-sidebar-expanded: 176px');
+    expect(TOKENS_CSS).toContain('--astra-layout-top-bar: 44px');
     expect(TOKENS_CSS).toContain('--astra-motion-dock-morph-duration: 200ms');
   });
 });

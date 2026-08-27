@@ -16,12 +16,27 @@
 }
 
 .astra-shell {
+  /* 参照デザインの外枠: 薄いグレー地に同色の sidebar、本文は白い面で左角が丸い */
+  --chrome-bg: #ededf0;
+  --chrome-line: #dedee2;
   display: grid;
   grid-template-columns: var(--astra-sidebar-width) minmax(var(--astra-layout-main-min), 1fr) auto;
   height: 100%;
   /* 長い page でも window を伸ばさない。伸びると sidebar の下端（account）が切れる。 */
   overflow: hidden;
-  background: var(--astra-color-canvas);
+  background: var(--chrome-bg);
+}
+
+[data-theme='dark'] .astra-shell {
+  --chrome-bg: #0f0f11;
+  --chrome-line: #26262b;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .astra-shell {
+    --chrome-bg: #0f0f11;
+    --chrome-line: #26262b;
+  }
 }
 
 .astra-shell__column {
@@ -29,6 +44,11 @@
   flex-direction: column;
   min-width: 0;
   min-height: 0;
+  /* 白い面。左上・左下を大きく丸める */
+  border-radius: 18px 0 0 18px;
+  background: var(--astra-color-surface);
+  box-shadow: -1px 0 0 rgba(0, 0, 0, 0.025);
+  overflow: hidden;
 }
 
 .astra-sidebar {
@@ -41,10 +61,9 @@
 .astra-sidebar {
   display: flex;
   flex-direction: column;
-  gap: var(--astra-space-base);
-  padding: var(--astra-space-base);
-  border-right: var(--astra-border-hairline) solid var(--astra-color-border);
-  background: var(--astra-color-surface);
+  gap: 4px;
+  padding: 14px 14px 13px;
+  background: var(--chrome-bg);
   /* §18: 位置の連続性を保って幅だけ変える */
   transition: width var(--astra-motion-workspace-expand-duration)
     var(--astra-motion-workspace-expand-easing);
@@ -53,10 +72,13 @@
 .astra-sidebar__brand {
   display: flex;
   align-items: center;
-  gap: var(--astra-space-base);
-  height: var(--astra-layout-top-bar);
-  padding-inline: var(--astra-space-base);
-  font-weight: var(--astra-font-weight-section-title);
+  gap: 6px;
+  height: 36px;
+  margin-bottom: 14px;
+  padding-inline: 6px;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -1px;
 }
 
 .astra-sidebar__mark {
@@ -66,7 +88,7 @@
 .astra-sidebar__list {
   display: flex;
   flex-direction: column;
-  gap: var(--astra-space-compact);
+  gap: 4px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -75,17 +97,17 @@
 .astra-nav-item {
   display: flex;
   align-items: center;
-  gap: var(--astra-space-md, var(--astra-space-base));
+  gap: 12px;
   width: 100%;
-  /* §19: 44px 相当のターゲット。desktop でも小さすぎる icon-only を避ける */
-  min-height: 44px;
-  padding-inline: var(--astra-space-md, var(--astra-space-base));
+  height: 37px;
+  min-height: 37px;
+  padding-inline: 12px;
   border: 0;
-  border-radius: var(--astra-radius-small);
+  border-radius: 9px;
   background: transparent;
-  color: var(--astra-color-muted);
+  color: #727276;
   font: inherit;
-  font-size: var(--astra-font-size-body);
+  font-size: 12px;
   text-align: start;
   cursor: pointer;
   /* §18: hover は opacity / background のみ。位置とサイズを動かさない */
@@ -95,20 +117,23 @@
 }
 
 .astra-nav-item:hover {
-  background: var(--astra-color-canvas);
+  background: rgba(255, 255, 255, 0.45);
   color: var(--astra-color-text);
 }
 
-/* §17: 現在地は静かに。塗りつぶしの塊は、Notion / Linear の作法から外れる */
+/* 現在地: 白い面と薄い影（参照デザイン） */
 .astra-nav-item[data-active='true'] {
-  background: color-mix(in srgb, var(--astra-color-accent) 10%, transparent);
-  color: var(--astra-color-accent);
-  font-weight: var(--astra-font-weight-card-title);
+  background: var(--astra-color-surface);
+  color: var(--astra-color-text);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.06),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.03);
 }
 
 .astra-nav-item__icon {
-  width: 1.25em;
-  text-align: center;
+  display: inline-flex;
+  width: 15px;
+  height: 15px;
 }
 
 .astra-sidebar__toggle {
@@ -163,16 +188,16 @@
   justify-content: space-between;
   gap: var(--astra-space-lg);
   height: var(--astra-layout-top-bar);
-  padding-inline: var(--astra-padding-card);
-  border-bottom: var(--astra-border-hairline) solid var(--astra-color-border);
+  padding: 0 18px 0 28px;
   background: var(--astra-color-surface);
 }
 
 .astra-topbar__title {
   margin: 0;
-  /* §17.2: これは page title。section title の大きさで出していた */
-  font-size: var(--astra-font-size-page-title);
-  font-weight: var(--astra-font-weight-page-title);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  line-height: 1;
 }
 
 /* ------------------------------------------------------------------- main */
@@ -762,12 +787,11 @@
 .astra-sidebar__account {
   display: flex;
   align-items: center;
-  gap: var(--astra-space-md, var(--astra-space-base));
+  gap: 9px;
   margin-top: auto;
-  min-height: 44px;
-  padding-inline: var(--astra-space-md, var(--astra-space-base));
-  border-top: var(--astra-border-hairline) solid var(--astra-color-border);
-  padding-top: var(--astra-space-base);
+  min-height: 40px;
+  padding: 6px 4px 0;
+  border-top: 1px solid var(--chrome-line);
 }
 
 .astra-sidebar__account + .astra-sidebar__toggle {
@@ -789,13 +813,13 @@
 }
 
 .astra-sidebar__account-name {
-  font-size: var(--astra-font-size-secondary);
-  font-weight: var(--astra-font-weight-card-title);
+  font-size: 11px;
+  font-weight: 600;
 }
 
 .astra-sidebar__account-tenant {
   color: var(--astra-color-muted);
-  font-size: var(--astra-font-size-micro);
+  font-size: 10px;
 }
 
 /* ------------------------------------------------------------ buttons */
@@ -966,4 +990,20 @@
 
 .astra-ux-metrics__over {
   color: var(--astra-color-warning);
+}
+
+/* 参照デザインの密度: 検索は控えめに、sidebar のアバターは小さく */
+.astra-topbar .astra-search {
+  max-width: 260px;
+}
+
+.astra-topbar .astra-search__input {
+  min-height: 28px;
+  font-size: 11px;
+}
+
+.astra-sidebar .astra-avatar {
+  width: 20px;
+  height: 20px;
+  font-size: 9px;
 }

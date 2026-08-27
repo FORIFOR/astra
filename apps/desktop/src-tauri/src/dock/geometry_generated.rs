@@ -38,9 +38,9 @@ impl DockState {
     pub fn size(self) -> DockSize {
         match self {
             DockState::Idle => DockSize {
-                width: 320,
-                min_height: 32,
-                max_height: 32,
+                width: 310,
+                min_height: 31,
+                max_height: 31,
             },
             DockState::Pill => DockSize {
                 width: 360,

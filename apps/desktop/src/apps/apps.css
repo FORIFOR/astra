@@ -578,3 +578,180 @@
   overflow: auto;
   box-shadow: var(--astra-elevation-dock);
 }
+
+/* ------------------------------------------------- App Store（参照デザインの数値） */
+
+.astra-apps__heading {
+  width: min(604px, 100%);
+  margin: 4px auto 17px;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  line-height: 1;
+}
+
+.astra-apps[data-open='true'] .astra-apps__heading {
+  margin-inline: 0;
+}
+
+.astra-apps .astra-store,
+.astra-apps[data-open='false'] .astra-store {
+  max-width: 604px;
+  padding: 17px 18px 20px;
+  border: 1px solid #eeeeef;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--astra-color-surface) 92%, transparent);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.018);
+}
+
+.astra-apps .astra-store__head {
+  gap: 13px;
+}
+
+.astra-apps .astra-store__title h3 {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.astra-apps .astra-store__title p {
+  margin-top: 3px;
+  color: #85858a;
+  font-size: 9px;
+}
+
+.astra-apps .astra-store__glyph {
+  width: 17px;
+  height: 17px;
+  margin-top: 0;
+}
+
+.astra-apps .astra-store__tabs {
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.astra-apps .astra-store__tab {
+  height: 23px;
+  min-height: 23px;
+  padding: 0 11px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: #74747a;
+  font-size: 9px;
+}
+
+.astra-apps .astra-store__tab[aria-selected='true'] {
+  border-color: #e7e7e9;
+  color: #2a2a2d;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.astra-apps .astra-store__section {
+  margin-top: 17px;
+}
+
+.astra-apps .astra-store__section + .astra-store__section {
+  margin-top: 18px;
+}
+
+.astra-apps .astra-store__section h4 {
+  margin: 0 0 4px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.astra-apps .astra-store__grid {
+  column-gap: 32px;
+}
+
+.astra-apps .astra-store-row {
+  grid-template-columns: minmax(0, 1fr) 35px;
+  gap: 0;
+  height: 51px;
+  min-height: 51px;
+  border-bottom: 1px solid #eeeeef;
+}
+
+.astra-apps .astra-store-row__main {
+  grid-template-columns: 31px minmax(0, 1fr);
+  gap: 8px;
+  padding: 0;
+}
+
+.astra-apps .astra-store-row__copy {
+  gap: 2px;
+}
+
+.astra-apps .astra-store-row__name {
+  gap: 6px;
+  font-size: 9.5px;
+  font-weight: 650;
+}
+
+.astra-apps .astra-store-row__summary {
+  color: #8c8c91;
+  font-size: 8px;
+  line-height: 1.25;
+}
+
+/* BETA と同じ形の小さな札 */
+.astra-store-row__badge {
+  display: inline-flex;
+  align-items: center;
+  height: 13px;
+  padding: 0 5px;
+  border-radius: 5px;
+  background: #efeff1;
+  color: #8a8a90;
+  font-size: 6px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.astra-apps .astra-app-icon {
+  width: 27px;
+  height: 27px;
+  border-radius: 6px;
+}
+
+.astra-apps .astra-app-icon--mono {
+  font-size: 11px;
+}
+
+.astra-apps .astra-switch,
+.astra-shell .astra-apps .astra-switch {
+  width: 31px;
+  height: 18px;
+  min-height: 18px;
+  justify-self: end;
+  background: #dedee0;
+}
+
+.astra-apps .astra-switch__knob {
+  width: 14px;
+  height: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.14);
+}
+
+.astra-apps .astra-switch[data-on='true'] {
+  background: #262629;
+}
+
+.astra-apps .astra-switch[data-on='true'] .astra-switch__knob {
+  transform: translateX(13px);
+}
+
+.astra-apps .astra-store__empty {
+  display: grid;
+  place-items: center;
+  min-height: 180px;
+  margin-top: 20px;
+  padding: 0 24px;
+  border: 1px dashed #dfdfe2;
+  border-radius: 12px;
+  color: #96969b;
+  font-size: 11px;
+}
