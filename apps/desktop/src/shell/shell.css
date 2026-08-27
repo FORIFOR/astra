@@ -836,9 +836,10 @@
  * ブラウザ既定の灰色が「未完成」に見える主因だった。
  * class を持つ部品には触らない（それぞれの CSS が責任を持つ）。
  */
-.astra-shell button:not([class]):not([aria-pressed]):not([role='tab']),
-.astra-meeting-layer button:not([class]):not([aria-pressed]),
-.astra-topbar__panel button:not([class]) {
+/* :where で詳細度を (0,1,1) に抑える。:not([class]) を素で書くと (0,4,1) になり、部品側の CSS が勝てない */
+.astra-shell button:where(:not([class]):not([aria-pressed]):not([role='tab'])),
+.astra-meeting-layer button:where(:not([class]):not([aria-pressed])),
+.astra-topbar__panel button:where(:not([class])) {
   min-height: 32px;
   padding-inline: var(--astra-space-md, var(--astra-space-base));
   border: var(--astra-border-hairline) solid var(--astra-color-border);
@@ -850,30 +851,31 @@
   cursor: pointer;
 }
 
-.astra-shell button:not([class]):not([aria-pressed]):not([role='tab']):hover,
-.astra-meeting-layer button:not([class]):not([aria-pressed]):hover {
+.astra-shell button:where(:not([class]):not([aria-pressed]):not([role='tab'])):hover,
+.astra-meeting-layer button:where(:not([class]):not([aria-pressed])):hover {
   background: var(--astra-color-canvas);
 }
 
-.astra-shell button:not([class]):disabled,
-.astra-meeting-layer button:not([class]):disabled {
+.astra-shell button:where(:not([class])):disabled,
+.astra-meeting-layer button:where(:not([class])):disabled {
   opacity: 0.5;
   cursor: default;
 }
 
-.astra-shell button[type='submit']:not([class]),
-.astra-meeting-layer button[type='submit']:not([class]) {
+.astra-shell button[type='submit']:where(:not([class])),
+.astra-meeting-layer button[type='submit']:where(:not([class])) {
   border-color: var(--astra-color-accent);
   background: var(--astra-color-accent);
   color: var(--astra-color-accent-on);
 }
 
-.astra-shell input:not([type='checkbox']):not([type='radio']):not([type='range']):not([class]),
-.astra-meeting-layer input:not([type='checkbox']):not([type='radio']):not([class]),
-.astra-shell select:not([class]),
-.astra-meeting-layer select:not([class]),
-.astra-shell textarea:not([class]),
-.astra-meeting-layer textarea:not([class]) {
+.astra-shell
+  input:where(:not([type='checkbox']):not([type='radio']):not([type='range']):not([class])),
+.astra-meeting-layer input:where(:not([type='checkbox']):not([type='radio']):not([class])),
+.astra-shell select:where(:not([class])),
+.astra-meeting-layer select:where(:not([class])),
+.astra-shell textarea:where(:not([class])),
+.astra-meeting-layer textarea:where(:not([class])) {
   min-height: 36px;
   padding-inline: var(--astra-space-base);
   border: var(--astra-border-hairline) solid var(--astra-color-border);
@@ -884,8 +886,8 @@
   font-size: var(--astra-font-size-secondary);
 }
 
-.astra-shell textarea:not([class]),
-.astra-meeting-layer textarea:not([class]) {
+.astra-shell textarea:where(:not([class])),
+.astra-meeting-layer textarea:where(:not([class])) {
   padding-block: var(--astra-space-compact);
 }
 
