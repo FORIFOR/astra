@@ -149,3 +149,11 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
   Agent実行(完了・成果物・本文) / Apps一覧 / Library。
 - **#8 の真の残**: STT streaming の native 購読（音声 partial/final）、connector OAuth（外部プロバイダ・ユーザー許可）。
   外部サービスと OAuth を伴い、この環境で完了・検証不可。Done#8「完全 retire」は未達。
+
+## 追記: transcript 取得経路（Phase 1.15）
+- core api: `api_meeting_segment_count`（GET /v1/meetings/:id/segments）。native が文字起こしを引く口。
+  dev の STT は未接続のことがあるため件数 0 も許容（**経路が通ることを検証**）。
+- **#8 の最終的な残（正直に）**: STT streaming の**実データ**（音声 partial/final の native 購読）は
+  外部 STT プロバイダ（Google STT 等）の鍵が要り、この環境では未接続。connector OAuth も外部プロバイダ + ユーザー許可。
+  よって Done#8「旧 Tauri を最終製品経路から完全に外す」は**未達**（会議/Agent/Apps/Library の経路は core 化済み、
+  STT実データと connector OAuth が残るため Tauri を無傷で残す）。

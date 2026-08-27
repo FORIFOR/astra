@@ -336,6 +336,11 @@ RustBuffer uniffi_astra_core_fn_func_api_library(RustBuffer base_url, RustBuffer
 RustBuffer uniffi_astra_core_fn_func_api_me(RustBuffer base_url, RustBuffer access_token, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_MEETING_SEGMENT_COUNT
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_MEETING_SEGMENT_COUNT
+uint32_t uniffi_astra_core_fn_func_api_meeting_segment_count(RustBuffer base_url, RustBuffer access_token, RustBuffer meeting_id, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_PLUGIN_CATALOG
 #define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_PLUGIN_CATALOG
 RustBuffer uniffi_astra_core_fn_func_api_plugin_catalog(RustBuffer base_url, RustBuffer access_token, RustCallStatus *_Nonnull out_status
@@ -721,6 +726,12 @@ uint16_t uniffi_astra_core_checksum_func_api_library(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_ME
 #define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_ME
 uint16_t uniffi_astra_core_checksum_func_api_me(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_MEETING_SEGMENT_COUNT
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_MEETING_SEGMENT_COUNT
+uint16_t uniffi_astra_core_checksum_func_api_meeting_segment_count(void
     
 );
 #endif

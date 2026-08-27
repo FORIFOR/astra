@@ -198,6 +198,7 @@ mod tests {
         assert!(sent > 0, "should have uploaded fragment bytes");
         let _ = std::fs::remove_dir_all(&root);
 
+        let meeting_id_for_segments = meeting_id.clone();
         let task_id = api_finish_meeting(url.clone(), tokens.access_token.clone(), meeting_id)
             .expect("finish meeting should return a finalize task id");
         assert!(!task_id.is_empty());
@@ -230,8 +231,12 @@ mod tests {
         assert!(!content.is_empty(), "artifact content should not be empty");
 
         // Library に成果物が並ぶ
-        let library = api_library(url, tokens.access_token).expect("library");
+        let library = api_library(url.clone(), tokens.access_token.clone()).expect("library");
         assert!(!library.is_empty(), "library should list the produced artifact");
+
+        // transcript の取得経路（dev の STT は未接続のことがあるので件数は 0 以上でよい）
+        let _segs = api_meeting_segment_count(url, tokens.access_token, meeting_id_for_segments)
+            .expect("segments endpoint should respond");
     }
 }
 
@@ -473,4 +478,22 @@ pub fn api_library(base_url: String, access_token: String) -> Result<Vec<String>
         .into_json()
         .map_err(|e| ApiError::Decode { message: e.to_string() })?;
     Ok(resp.items.into_iter().map(|i| i.title).collect())
+}
+
+/// 会議の文字起こし（GET /v1/meetings/:id/segments）。行数を返す（STT 未接続の dev では 0 もある）。
+#[uniffi::export]
+pub fn api_meeting_segment_count(
+    base_url: String,
+    access_token: String,
+    meeting_id: String,
+) -> Result<u32, ApiError> {
+    #[derive(Deserialize)]
+    struct Resp { #[serde(default)] items: Vec<serde_json::Value> }
+    let resp: Resp = ureq::get(&format!("{}/v1/meetings/{}/segments", base(&base_url), meeting_id))
+        .set("Authorization", &format!("Bearer {access_token}"))
+        .call()
+        .map_err(map_transport)?
+        .into_json()
+        .map_err(|e| ApiError::Decode { message: e.to_string() })?;
+    Ok(resp.items.len() as u32)
 }

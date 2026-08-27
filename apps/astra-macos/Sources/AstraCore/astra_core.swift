@@ -2486,6 +2486,18 @@ public func apiMe(baseUrl: String, accessToken: String)throws  -> Me  {
 })
 }
 /**
+ * 会議の文字起こし（GET /v1/meetings/:id/segments）。行数を返す（STT 未接続の dev では 0 もある）。
+ */
+public func apiMeetingSegmentCount(baseUrl: String, accessToken: String, meetingId: String)throws  -> UInt32  {
+    return try  FfiConverterUInt32.lift(try rustCallWithError(FfiConverterTypeApiError_lift) {
+    uniffi_astra_core_fn_func_api_meeting_segment_count(
+        FfiConverterString.lower(baseUrl),
+        FfiConverterString.lower(accessToken),
+        FfiConverterString.lower(meetingId),$0
+    )
+})
+}
+/**
  * Apps（GET /v1/plugins/catalog）。name の一覧だけ（UI が並べる分）。
  */
 public func apiPluginCatalog(baseUrl: String, accessToken: String)throws  -> [String]  {
@@ -2665,6 +2677,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_astra_core_checksum_func_api_me() != 37978) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_astra_core_checksum_func_api_meeting_segment_count() != 49591) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_astra_core_checksum_func_api_plugin_catalog() != 40736) {
