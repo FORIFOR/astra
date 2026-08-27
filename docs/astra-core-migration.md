@@ -598,3 +598,14 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
 - 検証: `--selftest recoveryoffline`。オフライン録音（local id）を作り、後からサインインして復旧、候補から消えることを確認。
   **実測 PASS**: `オフライン録音を新規会議に紐付けて復旧 sent=192000 local消滅=true`。verify に SKIP 許容で組み込み。
 - **意味**: サインイン前に録った会議も後から確実に保存され、回復キューに溜まらない（Done#3 recovery の完成度向上）。
+
+## 追記: 実経路の包括 E2E（Voice HUD→Recording→保存→HUD復帰, Phase 1.53）
+- **§6「Voice HUD→Recording→保存→HUD復帰」の実 E2E** を追加。UI mock ではなく、実際に
+  `WindowCoordinator.toggleRecording()`（＝グローバルショートカットが呼ぶ実経路）を叩いて全体を通す:
+  サインイン → 録音開始（**実 gateway 会議を作成**・**実マイク取り込み**）→ 実録音6秒 → 停止（保存・送信・
+  アップロード印）→ HUD 復帰 → **回復候補に残らない**（送信済み）。
+- 検証: `--selftest fulllifecycle <base>`。**実測 PASS**:
+  `HUD→録音(実gateway会議 …)→実マイク→保存送信→HUD復帰、候補に残らない`。
+  この 1 本で、今セッションで直した「再帰修正・gateway 会議作成・実マイク・アップロード・mark・window 復帰」が
+  実際の製品エントリ経由で一緒に動くことを確認。verify に SKIP 許容で組み込み、全 selftest 0 FAIL。
+- **意味**: Done#3(live capture の核)・#7(統合)・§6 の主要 E2E が実バックエンド＋実ハードウェアで通ることを実証。

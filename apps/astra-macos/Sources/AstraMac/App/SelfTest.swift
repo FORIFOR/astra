@@ -41,6 +41,7 @@ enum SelfTest {
         case "connectorstate": connectorstate(); return true
         case "voiceask": voiceask(args); return true
         case "recoveryoffline": recoveryOffline(args); return true
+        case "fulllifecycle": fullLifecycle(args); return true
         default: return false
         }
     }
@@ -808,6 +809,44 @@ enum SelfTest {
             print("SELFTEST_OK recoveryoffline: オフライン録音を新規会議に紐付けて復旧 sent=\(sent) local消滅=\(!stillLocal)")
             exit(0)
         } catch { print("SELFTEST_FAIL recoveryoffline error=\(error)"); exit(3) }
+    }
+
+    /// `--selftest fulllifecycle <base>`: 実経路の全体を通す。サインイン → toggleRecording（=グローバル
+    /// ショートカットが呼ぶ）で録音開始（実 gateway 会議作成＋実マイク） → 実録音 → toggleRecording で停止
+    /// → 保存・送信・アップロード印 → HUD 復帰。§6「Voice HUD→Recording→保存→HUD復帰」の実 E2E。
+    @MainActor
+    private static func fullLifecycle(_ args: [String]) {
+        let base = args.count > (args.firstIndex(of: "--selftest")! + 2)
+            ? args[args.firstIndex(of: "--selftest")! + 2] : "http://127.0.0.1:3000"
+        guard AstraCoreBridge.reachable(base) else { print("SELFTEST_SKIP fulllifecycle: gateway unreachable"); exit(0) }
+        guard Permissions.microphone == .granted else { print("SELFTEST_SKIP fulllifecycle: mic not granted"); exit(0) }
+        do {
+            WindowCoordinator.headless = true
+            let tokens = try AstraCoreBridge.devSignIn(base, email: "full-\(getpid())@astra.local", displayName: "F")
+            RecordingWorkspaceState.shared.configureBackend(base: base, token: tokens.accessToken)
+            RecordingRuntime.shared.configureBackend(base: base, accessToken: tokens.accessToken)
+            let state = RecordingWorkspaceState.shared
+            // 通常時 → 録音開始（グローバルショートカット相当）。
+            WindowCoordinator.shared.toggleRecording()
+            let recording = state.isRecording
+            let meetingId = RecordingRuntime.shared.activeMeetingId
+            let isGatewayMeeting = !meetingId.hasPrefix("meeting-") && !meetingId.isEmpty  // gateway UUID
+            // 実マイクで 6 秒録る（5 秒断片が閉じる）。
+            RunLoop.current.run(until: Date().addingTimeInterval(6.0))
+            // 停止 → 保存・送信・アップロード印 → HUD 復帰。
+            WindowCoordinator.shared.toggleRecording()
+            let stopped = !state.isRecording
+            // 送信済みなので回復候補に出ない。
+            let root = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+                .appendingPathComponent("Astra/meetings").path
+            let recoverable = scanRecoverable(root: root, active: nil).contains { $0.meetingId == meetingId }
+            try? FileManager.default.removeItem(atPath: root + "/" + meetingId)
+            guard recording, isGatewayMeeting, stopped, !recoverable else {
+                print("SELFTEST_FAIL fulllifecycle recording=\(recording) gatewayMeeting=\(isGatewayMeeting) stopped=\(stopped) recoverable=\(recoverable)"); exit(2)
+            }
+            print("SELFTEST_OK fulllifecycle: HUD→録音(実gateway会議 \(meetingId.prefix(8))…)→実マイク→保存送信→HUD復帰、候補に残らない")
+            exit(0)
+        } catch { print("SELFTEST_FAIL fulllifecycle error=\(error)"); exit(3) }
     }
 
     private static func recordToDisk() {
