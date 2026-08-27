@@ -644,3 +644,13 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
   **Windows 実機なしで**担保（Swift 側は `--selftest shape` で既に一致確認済み）。
 - **意味（Done#4/#5/#6 の強化）**: 両 OS の visual regression が揃った。Windows は C# ブリッジの実動作＋
   ジオメトリ一致まで実測。残るは WinUI の実描画（Windows App SDK, windows-latest CI）のみ。
+
+## 追記: Windows の session/data ロジックを実 gateway で検証（Phase 1.57, Done#1/#4 強化）
+- `apps/windows/Astra/AppLogic/AstraSession.cs` を新設（WinUI 非依存の純 C#、macOS の `MainData` 相当）:
+  `SignIn`（tokens 取り出し、refresh は Keychain 相当へ）/ `Apps` / `Library` / `RunEchoTask`（Agent 往復）を
+  C# ブリッジ経由で実 gateway に繋ぐ。UI(Window)からはこれを使う設計。
+- `verify-csharp-bridge` を拡張し、gateway 到達時に **AstraSession を C# から往復検証**。
+  **実測 PASS**: `CS_OK gateway(AstraSession): signedIn apps=12 library=0 echoArtifact=52bytes`
+  （C#→P/Invoke→core→gateway→**Agent echo=COMPLETED＋成果物本文**）。未到達なら CS_SKIP。
+- **意味（Done#1/#4 の強化）**: **Windows の session/data 層が実バックエンドに対して実際に動く**ことを、
+  **Windows 実機なしで**実測担保（サインイン・Apps・Library・Agent 実行）。残るは WinUI の UI 描画のみ。

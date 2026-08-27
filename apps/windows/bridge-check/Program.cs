@@ -43,6 +43,21 @@ string d = string.Join(" ", new[] {
     $"Q 0,0 {N(rad)},0",
     "Z",
 });
+// 実 gateway に届くなら、Windows の session/data ロジック(AstraSession)を C# から往復検証する。
+string apiBase = Environment.GetEnvironmentVariable("ASTRA_GATEWAY_URL") ?? "http://127.0.0.1:3000";
+var session = new AstraSession(apiBase);
+if (session.Reachable()) {
+    if (!session.SignIn($"cswin-{Environment.ProcessId}@astra.local", "CSWin")) { Console.WriteLine("CS_FAIL session sign-in"); Environment.Exit(10); }
+    if (session.RefreshToken.Length == 0) { Console.WriteLine("CS_FAIL no refresh token"); Environment.Exit(11); }
+    var apps = session.Apps();
+    var lib = session.Library();
+    string echo = session.RunEchoTask("cswin");
+    if (apps.Length == 0 || echo.Length == 0) { Console.WriteLine($"CS_FAIL gateway apps={apps.Length} echo={echo.Length}"); Environment.Exit(12); }
+    Console.WriteLine($"CS_OK gateway(AstraSession): signedIn apps={apps.Length} library={lib.Length} echoArtifact={echo.Length}bytes");
+} else {
+    Console.WriteLine("CS_SKIP gateway: not reachable");
+}
+
 string goldenPath = Path.Combine(AppContext.BaseDirectory, "recording-workspace.path");
 if (!File.Exists(goldenPath)) {
     // ソースツリーからも探す（CI/ローカル両対応）。
