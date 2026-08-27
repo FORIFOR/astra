@@ -663,3 +663,13 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
   `Label()` を実行して `Alt+Space` を確認（**実測 PASS**）。
 - **意味（§4 Global shortcut）**: Windows のグローバルショートカット実装が code-complete＋コンパイル検証済み。
   実際の登録/押下受信は Windows でのみ（user32.dll）。
+
+## 追記: Windows WASAPI マイク/loopback 取り込みを実装・コンパイル検証（Phase 1.59）
+- `apps/windows/Astra/AppLogic/WasapiCapture.cs` を新設。macOS の MicCapture(AVAudioEngine)/SystemAudioCapture
+  (ScreenCaptureKit) に対応する Windows 実装: WASAPI の canonical 手順（GetDefaultAudioEndpoint → Activate(IAudioClient)
+  → Initialize → GetService(IAudioCaptureClient) → GetBuffer ループ）でフレームを float[] にして callback へ。
+  `loopback: true` で既定再生デバイスの loopback（システム音声, §4 System Audio）。最小限の COM インターフェース宣言を同梱。
+- 検証: `verify-csharp-bridge` にコンパイル対象として取り込み **ビルド PASS**（COM 宣言・呼び出しの型検査）。
+- **未検証（Windows 実機のみ, 捏造しない）**: 実際の取り込み（mmdevapi COM の実行）・mix format が float でない場合の変換・
+  loopback の実挙動は Windows でのみ検証できる。float[] 抽出は float mix format 前提（一般的だが要実機確認）。
+- **意味（§4 Mic/System Audio）**: Windows の音声取り込みが code-complete＋コンパイル検証済み。実取り込みは Windows。
