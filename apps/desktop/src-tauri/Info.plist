@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <!--
+    マイクを使う理由。UI/UX §22（purpose-first）。
+    **これが無いと、macOS は mic に触れた瞬間にアプリを落とす**（TCC）。
+    許可の画面も出ない。「押したら消えた」にしかならない。
+    Tauri は src-tauri/Info.plist を bundle の Info.plist に混ぜる。
+  -->
+  <key>NSMicrophoneUsageDescription</key>
+  <string>頼みごとを声で受け取るため、また会議を記録するために、マイクを使います。音は手元で文字にし、送るのは設定した提供者にだけです。</string>
+  <!-- 画面の内容を文脈として添えるとき（§4.3 Attach）。使う直前に、目的を出して聞く。 -->
+  <key>NSScreenCaptureUsageDescription</key>
+  <string>いまの画面を頼みごとの文脈として添えるために、画面を読みます。</string>
+</dict>
+</plist>

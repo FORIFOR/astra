@@ -57,3 +57,20 @@ describe('the desktop app can actually be launched', () => {
     expect(dist).toBe('../dist');
   });
 });
+
+describe('the app can ask for the microphone without being killed', () => {
+  it('declares why it uses the microphone', async () => {
+    /*
+     * macOS は理由（NSMicrophoneUsageDescription）の無いアプリが mic に
+     * 触れた瞬間、**許可の画面も出さずに落とす**。「押したら消えた」にしかならない。
+     * Dock の mic は本物の取り込みを呼ぶようになったので、ここは必須。
+     */
+    const plist = await readFile(path.join(here, '../src-tauri/Info.plist'), 'utf8');
+    expect(plist).toContain('NSMicrophoneUsageDescription');
+    // 理由は目的から書く（§22）。空の string で通さない
+    const reason = /<key>NSMicrophoneUsageDescription<\/key>\s*<string>([^<]+)<\/string>/.exec(
+      plist,
+    )?.[1];
+    expect(reason?.trim().length ?? 0).toBeGreaterThan(10);
+  });
+});
