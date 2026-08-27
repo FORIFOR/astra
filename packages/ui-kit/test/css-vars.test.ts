@@ -81,6 +81,9 @@ describe('design tokens', () => {
   });
 
   it('emits the tokens the components rely on', () => {
+    // floating surface（Dock / HUD）。値は Deepgram の dark scheme
+    expect(TOKENS_CSS).toContain('--astra-float-background: rgba(24, 24, 28, 0.92);');
+    expect(TOKENS_CSS).toContain('--astra-float-padding: 16px;');
     const tokens = TOKENS_CSS;
     for (const name of [
       '--astra-color-canvas',

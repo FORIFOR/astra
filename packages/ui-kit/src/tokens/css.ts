@@ -9,6 +9,7 @@ import { fontStacks, typography } from './typography.js';
 import { MIN_TOUCH_TARGET_PX, border, elevation, padding, radius, space } from './space.js';
 import { motion, REDUCED_MOTION_DURATION_MS } from './motion.js';
 import { breakpoints, layout, zIndex } from './layout.js';
+import { floatingSurface } from './dock.js';
 
 const kebab = (s: string): string => s.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
 
@@ -57,6 +58,12 @@ function staticVars(): string[] {
   for (const [name, value] of Object.entries(zIndex)) lines.push(`  --astra-z-${name}: ${value};`);
   for (const [name, value] of Object.entries(breakpoints)) {
     lines.push(`  --astra-breakpoint-${name}: ${value}px;`);
+  }
+  // floating surface（Dock / HUD）。Deepgram の dark scheme を値の正として持つ
+  for (const [name, value] of Object.entries(floatingSurface)) {
+    lines.push(
+      `  --astra-float-${kebab(name)}: ${typeof value === 'number' ? `${value}px` : value};`,
+    );
   }
   return lines;
 }

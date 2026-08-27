@@ -2,8 +2,9 @@
 import { useEffect, type ReactElement } from 'react';
 import { ThemeProvider } from '../state/ThemeProvider.js';
 import { LiveWaveform } from '../vendor/deepgram-ui/LiveWaveform.js';
-import { AstraOrb } from './AstraOrb.js';
+import { AstraOrb, useAccentHex } from './AstraOrb.js';
 import { useVoiceRuntime, type VoiceMode } from './voiceRuntime.js';
+import { voiceDemoFrom } from './demo.js';
 import './voice-hud.css';
 
 function labelFor(mode: VoiceMode): string {
@@ -27,7 +28,19 @@ function labelFor(mode: VoiceMode): string {
 
 function VoiceHud(): ReactElement {
   // この window は表示専用。実行は Dock window の同じ runtime が担う。
-  const runtime = useVoiceRuntime();
+  const live = useVoiceRuntime();
+  // 見た目の確認用（開発ビルドのみ）。`#/voice-hud?demo=speaking` で姿を固定する。
+  const demo = voiceDemoFrom(globalThis.location?.hash ?? '', import.meta.env.DEV);
+  const runtime = demo
+    ? {
+        ...live,
+        mode: demo.mode,
+        inputLevel: demo.levels.input,
+        outputLevel: demo.levels.output,
+        transcript: demo.mode === 'listening' ? 'A社向けにこの提案を直して' : '',
+      }
+    : live;
+  const accent = useAccentHex();
   const volume = runtime.mode === 'speaking' ? runtime.outputLevel : runtime.inputLevel;
   const active = runtime.mode === 'listening' || runtime.mode === 'speaking';
 
@@ -56,7 +69,7 @@ function VoiceHud(): ReactElement {
         </p>
       )}
       <div className="astra-voice-hud__wave">
-        <LiveWaveform active={active} color="currentColor" getVolume={volume} />
+        <LiveWaveform active={active} color={accent} getVolume={volume} />
       </div>
     </main>
   );

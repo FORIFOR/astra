@@ -221,8 +221,9 @@ Calendar/Gmail の鎖で見ているのは提供者の挙動ではなく**こち
   代わりに、同じ frontend を headless Chrome（CDP）で開き、**全画面の screenshot を
   自分で見て直した**（サインイン → 初期セットアップ 7 段 → Home / Work / Library / Apps、
   検索・通知・プロフィール、会議開始、共有）。実機 Astra.app は窓 ID 指定で撮り、
-  メイン窓は確認した。**Task Dock の見た目は実機では未確認**（隠れた窓は撮れない。
-  位置は CG の窓座標で macOS Dock の上にあることを確認、見た目はブラウザ描画で確認）
+  メイン窓は確認した。**Task Dock / Voice HUD の見た目は実機では未確認**（隠れた窓は撮れない）。
+  位置は CG の窓座標で macOS Dock の上にあることを確認。見た目は開発ビルドの
+  `#/dock?demo=…` / `#/voice-hud?demo=…`（合成音量）で idle / listening / thinking / speaking を撮って確認
 - **実アカウントでの OAuth 疎通。**Client が無い（実装は実測済み）
 - **長時間・大量の負荷。**同時実行や長い調査での挙動は測っていない
 - ~~手元 STT の実模型~~ → **この端末で実測した**（`scripts/install-local-stt.sh` で

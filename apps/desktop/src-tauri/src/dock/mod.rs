@@ -66,10 +66,8 @@ fn apply_geometry(
     let size = state.size();
     let height = geometry::height_for(state, content_height.unwrap_or(size.min_height));
 
-    // §4.1 の寸法は論理 px。物理で渡すと Retina で半分になる。
-    window
-        .set_size(LogicalSize::new(size.width, height))
-        .map_err(|e| e.to_string())?;
+    // 今の大きさ・位置。morph の出発点（§18: 位置の連続性を保って変形する）。
+    let from = current_logical(window);
 
     if let Some((display_id, _scale, work_area)) = work_area_of(window) {
         let memory = runtime
@@ -88,13 +86,82 @@ fn apply_geometry(
                 geometry::BOTTOM_OFFSET_DEFAULT,
             ),
         };
+        let to = Frame {
+            x: position.x as f64,
+            y: position.y as f64,
+            width: size.width as f64,
+            height: height as f64,
+        };
+        morph(window.clone(), from, to);
+    } else {
+        // 表示領域が分からなくても、大きさだけは合わせる
         window
-            .set_position(LogicalPosition::new(position.x, position.y))
+            .set_size(LogicalSize::new(size.width, height))
             .map_err(|e| e.to_string())?;
     }
 
     *runtime.state.lock().map_err(|_| "state lock poisoned")? = Some(state);
     Ok(())
+}
+
+/// 論理 px の枠。
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Frame {
+    pub x: f64,
+    pub y: f64,
+    pub width: f64,
+    pub height: f64,
+}
+
+fn current_logical(window: &WebviewWindow) -> Option<Frame> {
+    let scale = window.scale_factor().ok()?;
+    let size = window.inner_size().ok()?.to_logical::<f64>(scale);
+    let pos = window.outer_position().ok()?.to_logical::<f64>(scale);
+    Some(Frame {
+        x: pos.x,
+        y: pos.y,
+        width: size.width,
+        height: size.height,
+    })
+}
+
+/// morph の刻み。Deepgram の floating card は CSS で高さが繋がる。
+/// window は CSS で動かせないので、ここで数段に分けて寄せる。
+pub const MORPH_STEPS: u32 = 6;
+pub const MORPH_STEP_MS: u64 = 24;
+
+/// 途中の枠。ease-out（終わり際をゆっくり）。
+pub fn morph_frame(from: Frame, to: Frame, step: u32) -> Frame {
+    let t = (step.min(MORPH_STEPS) as f64) / MORPH_STEPS as f64;
+    let eased = 1.0 - (1.0 - t) * (1.0 - t);
+    let lerp = |a: f64, b: f64| a + (b - a) * eased;
+    Frame {
+        x: lerp(from.x, to.x),
+        y: lerp(from.y, to.y),
+        width: lerp(from.width, to.width),
+        height: lerp(from.height, to.height),
+    }
+}
+
+/// 出発点が分からない、または隠れている間は一気に置く（見えていない動きに意味はない）。
+fn morph(window: WebviewWindow, from: Option<Frame>, to: Frame) {
+    let visible = window.is_visible().unwrap_or(false);
+    let Some(from) = from.filter(|_| visible) else {
+        let _ = window.set_size(LogicalSize::new(to.width, to.height));
+        let _ = window.set_position(LogicalPosition::new(to.x, to.y));
+        return;
+    };
+    if from == to {
+        return;
+    }
+    std::thread::spawn(move || {
+        for step in 1..=MORPH_STEPS {
+            let f = morph_frame(from, to, step);
+            let _ = window.set_size(LogicalSize::new(f.width, f.height));
+            let _ = window.set_position(LogicalPosition::new(f.x, f.y));
+            std::thread::sleep(std::time::Duration::from_millis(MORPH_STEP_MS));
+        }
+    });
 }
 
 /// Dock を出す。§4.4「簡単な質問は Dock 内で答え、full app へ遷移しない」。
@@ -173,4 +240,46 @@ pub fn dock_remember_position(
             );
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod morph_tests {
+    use super::*;
+
+    #[test]
+    fn ends_exactly_on_the_target() {
+        let from = Frame {
+            x: 0.0,
+            y: 0.0,
+            width: 560.0,
+            height: 56.0,
+        };
+        let to = Frame {
+            x: 20.0,
+            y: -40.0,
+            width: 560.0,
+            height: 96.0,
+        };
+        assert_eq!(morph_frame(from, to, MORPH_STEPS), to);
+        assert_eq!(morph_frame(from, to, 0), from);
+    }
+
+    #[test]
+    fn eases_out_so_the_first_step_moves_the_most() {
+        let from = Frame {
+            x: 0.0,
+            y: 0.0,
+            width: 0.0,
+            height: 0.0,
+        };
+        let to = Frame {
+            x: 0.0,
+            y: 0.0,
+            width: 0.0,
+            height: 60.0,
+        };
+        let first = morph_frame(from, to, 1).height;
+        let last = to.height - morph_frame(from, to, MORPH_STEPS - 1).height;
+        assert!(first > last, "first {first} should exceed last {last}");
+    }
 }

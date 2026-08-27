@@ -68,3 +68,15 @@ export function AstraOrb({
     </span>
   );
 }
+
+/**
+ * accent の実値。canvas（LiveWaveform）は `currentColor` を解決できず黒で描く。
+ * Orb と同じ読み方で hex を渡す。
+ */
+export function useAccentHex(): string {
+  const [hex, setHex] = useState(ACCENT_LIGHT);
+  useEffect(() => {
+    setHex(readHex('--astra-color-accent', ACCENT_LIGHT));
+  }, []);
+  return hex;
+}

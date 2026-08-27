@@ -18,11 +18,11 @@
   height: 100%;
   padding: 8px 24px 12px;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--astra-float-border);
   border-radius: 28px;
-  background: rgba(24, 24, 28, 0.94);
-  color: #fff;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  background: var(--astra-float-background);
+  color: var(--astra-float-foreground);
+  box-shadow: var(--astra-float-shadow);
   backdrop-filter: saturate(140%) blur(22px);
 }
 
@@ -54,7 +54,7 @@
 }
 
 .astra-voice-hud__transcript {
-  color: #cbd1dc;
+  color: var(--astra-float-muted);
 }
 
 .astra-voice-hud__error {

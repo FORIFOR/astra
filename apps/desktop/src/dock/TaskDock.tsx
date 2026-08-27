@@ -20,7 +20,11 @@ import { ContextLens } from './ContextLens.js';
 import { PermissionAsk } from './PermissionAsk.js';
 import { ResultPreview } from './ResultPreview.js';
 import { WorkCard } from '../work/WorkCard.js';
-import { AstraOrb } from '../voice/AstraOrb.js';
+import { AstraOrb, useAccentHex } from '../voice/AstraOrb.js';
+import { MicIcon } from '../voice/MicIcon.js';
+import type { VoiceMode } from '../voice/voiceRuntime.js';
+import type { InteractionState } from '@astra/ui-kit';
+import { dockVoiceMode, voiceModeLabel } from './dockVoiceMode.js';
 import { LiveWaveform } from '../vendor/deepgram-ui/LiveWaveform.js';
 import type { WorkView } from '../work/workView.js';
 import { host, shortcuts } from '../host/tauri.js';
@@ -36,6 +40,8 @@ export function TaskDock({
   conversation,
   dictation,
   voiceLevels,
+  voiceMode = 'idle',
+  initialState = 'READY',
   voiceUnavailable,
   cloudCorrectionAllowed = false,
   onCloudCorrectionAllowedChange,
@@ -52,6 +58,10 @@ export function TaskDock({
   dictation?: DockDictation;
   /** Orb と波形が読む音量。frame ごとに読むので getter で渡す。 */
   voiceLevels?: { input: () => number; output: () => number };
+  /** 音声 runtime の姿（読み上げ中など）。Orb はこれと対話状態を畳んだ姿になる。 */
+  voiceMode?: VoiceMode;
+  /** 最初の状態。見た目の確認用（demo）にだけ使う。 */
+  initialState?: InteractionState;
   /** 端末内 STT / Google 確定が使えない理由。 */
   voiceUnavailable?: string | null;
   /** true の発話だけ、停止後の PCM を Google Chirp 3 へ送る。 */
@@ -68,7 +78,7 @@ export function TaskDock({
   onStop?(): void;
   onOpenWorkspace?(): void;
 }): ReactElement {
-  const machine = useDockMachine('READY', conversation, dictation);
+  const machine = useDockMachine(initialState, conversation, dictation);
   const [sources, setSources] = useState<readonly ContextSource[]>(initialSources);
   const [explanation, setExplanation] = useState<string | null>(null);
   /*
@@ -253,18 +263,18 @@ export function TaskDock({
   // 聞き返しは、進める代わりに出る。**黙って別のものに対して動かない。**
   const clarification = machine.clarification;
 
-  const statusLabel = useMemo(() => {
-    switch (machine.state) {
-      case 'LISTENING':
-        return '聞いています';
-      case 'UNDERSTANDING':
-        return '文脈を確認しています';
-      case 'WORKING':
-        return '進めています';
-      default:
-        return null;
-    }
-  }, [machine.state]);
+  // Orb の姿。Deepgram の floating-orb と同じ語彙（idle / connecting / listening / thinking / speaking）。
+  const orbMode = dockVoiceMode(machine.state, voiceMode);
+  const accent = useAccentHex();
+  const listening = machine.state === 'LISTENING';
+  const toggleListening = (): void =>
+    listening ? machine.stopListening() : machine.startListening();
+
+  // 一言は HUD と同じ語彙。WORKING だけは音声ではなく仕事の言葉。
+  const statusLabel = useMemo(
+    () => (machine.state === 'WORKING' ? '進めています' : voiceModeLabel(orbMode)),
+    [machine.state, orbMode],
+  );
 
   return (
     <div
@@ -278,9 +288,26 @@ export function TaskDock({
       }}
     >
       <div className="astra-dock__row">
-        <span className="astra-dock__mark" aria-hidden="true">
-          ✦
-        </span>
+        {/*
+          Orb そのものが入口（Deepgram の floating-orb）。idle でも見え、押すと聞き始める。
+          姿は data-astra-voice-state で公開し、CSS だけで差し替えられるようにしておく。
+        */}
+        <button
+          type="button"
+          className="astra-dock__orb"
+          data-astra-voice-state={orbMode}
+          aria-pressed={listening}
+          aria-label={listening ? '聞くのをやめる' : 'Astra に話しかける'}
+          onClick={toggleListening}
+        >
+          <AstraOrb
+            mode={orbMode}
+            size={28}
+            {...(voiceLevels
+              ? { getInputVolume: voiceLevels.input, getOutputVolume: voiceLevels.output }
+              : {})}
+          />
+        </button>
         <textarea
           className="astra-dock__intent"
           // §4.3: 機能例を常時ローテーションしない
@@ -291,15 +318,19 @@ export function TaskDock({
           onChange={(event) => machine.setIntent(event.target.value)}
           onKeyDown={onKeyDown}
         />
+        {listening && (
+          <p className="astra-dock__transcript" aria-live="polite">
+            {machine.intent.length > 0 ? machine.intent : '聞いています…'}
+          </p>
+        )}
         <button
           type="button"
           className="astra-dock__mic"
-          aria-pressed={machine.state === 'LISTENING'}
-          onClick={() =>
-            machine.state === 'LISTENING' ? machine.stopListening() : machine.startListening()
-          }
+          data-astra-voice-state={orbMode}
+          aria-pressed={listening}
+          onClick={toggleListening}
         >
-          <span aria-hidden="true">🎙</span>
+          <MicIcon muted={orbMode === 'error'} />
           <span className="astra-visually-hidden">
             {machine.state === 'LISTENING' ? '音声入力を止める' : '音声で入力する'}
           </span>
@@ -374,20 +405,12 @@ export function TaskDock({
         動いていないのは、聞こえていない印。
       */}
       {machine.state === 'LISTENING' && (
-        <div className="astra-dock__listening" aria-live="polite">
-          <AstraOrb
-            mode="listening"
-            size={40}
-            {...(voiceLevels ? { getInputVolume: voiceLevels.input } : {})}
-          />
+        <div className="astra-dock__listening">
           <div className="astra-dock__listening-body">
-            <p className="astra-dock__transcript">
-              {machine.intent.length > 0 ? machine.intent : '…'}
-            </p>
             <div className="astra-dock__wave">
               <LiveWaveform
                 active
-                color="currentColor"
+                color={accent}
                 getVolume={voiceLevels ? voiceLevels.input : () => 0}
               />
             </div>

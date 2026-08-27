@@ -99,7 +99,8 @@ describe('intent bar (§4.3)', () => {
     const user = userEvent.setup();
     render(<TaskDock />);
     await user.type(screen.getByLabelText('依頼を入力'), '調べて{Enter}');
-    expect(screen.getByRole('status').textContent).toBe('文脈を確認しています');
+    // HUD と同じ語彙（Deepgram の thinking）。「文脈を確認しています」は内部の段の名前だった。
+    expect(screen.getByRole('status').textContent).toBe('考えています');
   });
 });
 
@@ -605,5 +606,25 @@ describe('honesty about what the dock can do (§21・§25)', () => {
     ).toEqual(['ファイル', 'いまの画面', '選択しているもの']);
     // 技術的な tool 名は出さない
     expect(document.body.textContent).not.toMatch(/MCP|connector|tool/i);
+  });
+});
+
+describe('the Orb is the entry (Deepgram floating-orb)', () => {
+  it('shows the Orb while idle and starts listening when pressed', async () => {
+    const user = userEvent.setup();
+    render(<TaskDock dictation={voice} />);
+    const orb = screen.getByRole('button', { name: 'Astra に話しかける' });
+    expect(orb.getAttribute('data-astra-voice-state')).toBe('idle');
+    await user.click(orb);
+    expect(
+      screen.getByRole('button', { name: '聞くのをやめる' }).getAttribute('aria-pressed'),
+    ).toBe('true');
+  });
+
+  it('draws the microphone as an icon, not an emoji', () => {
+    render(<TaskDock />);
+    const mic = screen.getByRole('button', { name: '音声で入力する' });
+    expect(mic.querySelector('svg.astra-mic-icon')).not.toBeNull();
+    expect(mic.textContent).not.toContain('🎙');
   });
 });

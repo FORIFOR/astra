@@ -7,9 +7,9 @@ export interface TypeScale {
 }
 
 export const typography = {
-  pageTitle: { size: 26, weight: 600, lineHeight: 1.25 },
-  sectionTitle: { size: 17, weight: 600, lineHeight: 1.35 },
-  cardTitle: { size: 15, weight: 600, lineHeight: 1.4 },
+  pageTitle: { size: 24, weight: 600, lineHeight: 1.25 },
+  sectionTitle: { size: 16, weight: 600, lineHeight: 1.35 },
+  cardTitle: { size: 14, weight: 600, lineHeight: 1.4 },
   body: { size: 14, weight: 400, lineHeight: 1.55 },
   secondary: { size: 13, weight: 400, lineHeight: 1.5 },
   micro: { size: 12, weight: 500, lineHeight: 1.4 },

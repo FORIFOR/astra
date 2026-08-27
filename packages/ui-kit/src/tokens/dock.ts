@@ -162,3 +162,23 @@ export function dockGeometryFor(state: InteractionState, contextExpanded = false
  */
 export const UNDERSTANDING_MIN_MS = 300;
 export const UNDERSTANDING_MAX_MS = 1200;
+
+/**
+ * floating surface（Task Dock / Voice HUD）の面。§17.3 が Glassmorphism を許す唯一の場所。
+ *
+ * 値は Deepgram 公式 `@deepgram/ui` の dark scheme（styles.css）そのまま。
+ * **動きと面は Deepgram、幾何と accent は Astra。** brand の緑（#13ef93）は取らない。
+ * 本体の Workspace はこれを使わない（不透明 surface のまま）。
+ */
+export const floatingSurface = {
+  background: 'rgba(24, 24, 28, 0.92)',
+  card: '#222228',
+  input: '#1e1e24',
+  foreground: '#ffffff',
+  muted: '#8b8b9a',
+  border: 'rgba(255, 255, 255, 0.08)',
+  shadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
+  /** Deepgram の --dg-va-padding / --dg-va-fab-size */
+  padding: 16,
+  fab: 56,
+} as const;

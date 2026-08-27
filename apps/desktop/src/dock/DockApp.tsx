@@ -18,6 +18,7 @@ import { SessionProvider, useSession } from '../state/SessionProvider.js';
 import { useTaskStream } from '../work/useTaskStream.js';
 import { workspace } from '../host/tauri.js';
 import { useVoiceRuntime } from '../voice/voiceRuntime.js';
+import { voiceDemoFrom } from '../voice/demo.js';
 import { TaskDock } from './TaskDock.js';
 import type { ContextReferent, DockConversation } from './useDockMachine.js';
 import './dock.css';
@@ -144,6 +145,7 @@ function DockSurface(): ReactElement {
       {...(conversation ? { conversation } : {})}
       {...(voiceRuntime.dictation ? { dictation: voiceRuntime.dictation } : {})}
       voiceLevels={{ input: voiceRuntime.inputLevel, output: voiceRuntime.outputLevel }}
+      voiceMode={voiceRuntime.mode}
       voiceUnavailable={voiceRuntime.unavailable}
       cloudCorrectionAllowed={voiceRuntime.cloudCorrectionAllowed}
       onCloudCorrectionAllowedChange={voiceRuntime.setCloudCorrectionAllowed}
@@ -173,7 +175,20 @@ function DockSurface(): ReactElement {
   );
 }
 
+/** 見た目の確認用（開発ビルドのみ）。`#/dock?demo=listening` などで姿を固定する。 */
+function DemoDock(): ReactElement | null {
+  const demo = voiceDemoFrom(globalThis.location?.hash ?? '', import.meta.env.DEV);
+  if (!demo) return null;
+  return (
+    <ThemeProvider>
+      <TaskDock initialState={demo.state} voiceMode={demo.mode} voiceLevels={demo.levels} />
+    </ThemeProvider>
+  );
+}
+
 export function DockApp(): ReactElement {
+  const demo = voiceDemoFrom(globalThis.location?.hash ?? '', import.meta.env.DEV);
+  if (demo) return <DemoDock />;
   return (
     <ThemeProvider>
       <SessionProvider>
