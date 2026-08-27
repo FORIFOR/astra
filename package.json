@@ -41,6 +41,7 @@
     "verify:macos-recording": "./scripts/verify-macos-recording.sh",
     "verify:c-abi": "./scripts/verify-c-abi.sh",
     "verify:csharp-bridge": "./scripts/verify-csharp-bridge.sh",
+    "check:xaml": "./scripts/check-xaml-wellformed.sh",
     "verify:api-roundtrip": "./scripts/verify-api-roundtrip.sh",
     "build:macos-app": "./scripts/build-macos-app.sh",
     "gen:dock-geometry": "node scripts/gen-dock-geometry.mjs",

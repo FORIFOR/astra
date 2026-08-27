@@ -30,6 +30,8 @@ jobs:
         run: node scripts/gen-workspace-fixture.mjs --check
       - name: C# CoreBridge -> core P/Invoke smoke
         run: bash scripts/verify-csharp-bridge.sh
+      - name: WinUI XAML well-formed
+        run: bash scripts/check-xaml-wellformed.sh
       - name: Restore + build WinUI 3 solution
         run: dotnet build apps/windows/Astra.sln -c Release -p:Platform=x64
       - name: Note

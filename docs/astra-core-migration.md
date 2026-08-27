@@ -717,3 +717,12 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
 - **含意**: 純 C#（`AppLogic/` の bridge/session/audio/shortcut/credential/screen）は `verify-csharp-bridge` で
   コンパイル＋ロジック検証できるが、**`.xaml` を伴う Window クラスの型検査は XAML compiler を要するため windows-latest CI のみ**。
   これが Windows 側の唯一残る未検証境界（Done#4/#5 の core は検証済み、UI 描画層のみ）。
+
+## 追記: Windows XAML の整形式性を検証（Phase 1.65, §6 Windows CI/build）
+- `scripts/check-xaml-wellformed.sh` を新設。apps/windows の全 `.xaml`（App/Main/VoiceHud/RecordingWorkspace）を
+  `xmllint` で整形式 XML かチェック（閉じ忘れ・属性崩れを止める）。**どのホストでも走る**（macOS/CI ubuntu）。
+  `ci.yml` と `windows.yml` に `check:xaml` を追加。
+- 検証: **実測 PASS** `xaml well-formed: 4 WinUI .xaml files OK`。
+- **意味**: Windows の未検証境界がさらに狭まった。now 検証済み: C# ロジック（compile＋runtime）／geometry／
+  **XAML の整形式性**。**残る唯一の Windows 専用検証**: XAML→C# codegen（`XamlCompiler.exe`）＋WinUI の実描画＋
+  COM/Win32 の実行時動作 ＝ windows-latest CI / 実機のみ。
