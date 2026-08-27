@@ -220,6 +220,8 @@ describe('AppsPage (§11)', () => {
     const client = fakeClient();
     render(page(client));
 
+    // acme の plugin は同梱ではないので「カスタム」に並ぶ
+    await userEvent.click(await screen.findByRole('tab', { name: 'カスタム' }));
     await waitFor(() => expect(screen.getByRole('button', { name: /Pipeline/ })).toBeTruthy());
     await userEvent.click(screen.getByRole('button', { name: /Pipeline/ }));
     await userEvent.click(screen.getByRole('button', { name: '追加する' }));
@@ -229,6 +231,38 @@ describe('AppsPage (§11)', () => {
       (client as unknown as { installPlugin: ReturnType<typeof vi.fn> }).installPlugin,
     ).not.toHaveBeenCalled();
     expect(screen.getByLabelText('Pipeline の追加')).toBeTruthy();
+  });
+
+  it('the row switch opens the same consent instead of installing on its own', async () => {
+    const client = fakeClient();
+    render(page(client));
+    await userEvent.click(await screen.findByRole('tab', { name: 'カスタム' }));
+    const toggle = await screen.findByRole('switch', { name: 'Pipeline を追加' });
+    expect(toggle.getAttribute('aria-checked')).toBe('false');
+    await userEvent.click(toggle);
+    expect(screen.getByLabelText('Pipeline の追加')).toBeTruthy();
+    expect(
+      (client as unknown as { installPlugin: ReturnType<typeof vi.fn> }).installPlugin,
+    ).not.toHaveBeenCalled();
+  });
+
+  it('keeps builtin plugins under 公式, split into おすすめ (connectors) and 利用可能', async () => {
+    const client = fakeClient({
+      pluginCatalog: vi.fn().mockResolvedValue([
+        plugin({
+          id: 'com.astra.gmail' as never,
+          name: 'Gmail',
+          category: 'connector',
+          builtin: true,
+        }),
+        plugin({ id: 'b' as never, name: 'Sales Pack', category: 'domain-agent', builtin: true }),
+      ]),
+    });
+    render(page(client));
+    const recommended = await screen.findByRole('region', { name: 'おすすめ' });
+    expect(recommended.textContent).toContain('Gmail');
+    expect(screen.getByRole('region', { name: '利用可能' }).textContent).toContain('Sales Pack');
+    expect(screen.queryByText('Pipeline')).toBeNull();
   });
 
   it('shows a dashboard that a plugin brought, with no code change', async () => {

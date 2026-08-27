@@ -6,15 +6,6 @@
   gap: var(--astra-space-lg);
 }
 
-.astra-apps__list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--astra-space-compact);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
 .astra-apps__dashboards ul {
   display: flex;
   flex-wrap: wrap;
@@ -199,36 +190,6 @@
  * §11 の card。名前だけの button だったのを、
  * 触るデータと確認の有無が**開かずに分かる**ようにする。
  */
-.astra-app-card {
-  display: flex;
-  flex-direction: column;
-  gap: var(--astra-space-compact);
-  width: 100%;
-  padding: var(--astra-padding-card, var(--astra-space-lg));
-  border: var(--astra-border-hairline) solid var(--astra-color-border);
-  border-radius: var(--astra-radius-standard);
-  background: var(--astra-color-surface);
-  color: var(--astra-color-text);
-  text-align: start;
-  cursor: pointer;
-}
-
-.astra-app-card__name {
-  font-size: var(--astra-font-size-card-title);
-  font-weight: var(--astra-font-weight-card-title);
-}
-
-.astra-app-card__state {
-  margin-inline-start: var(--astra-space-compact);
-  color: var(--astra-color-success);
-  font-size: var(--astra-font-size-micro);
-  font-weight: var(--astra-font-weight-micro);
-}
-
-.astra-app-card__meta {
-  color: var(--astra-color-muted);
-  font-size: var(--astra-font-size-secondary);
-}
 
 .astra-app-detail__external {
   color: var(--astra-color-warning);
@@ -253,39 +214,12 @@
   top: 0;
 }
 
-.astra-apps__catalog h3,
 .astra-apps__dashboards h3 {
   margin: 0 0 var(--astra-space-base);
   color: var(--astra-color-muted);
   font-size: var(--astra-font-size-micro);
   font-weight: var(--astra-font-weight-micro);
   letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.astra-apps__list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: var(--astra-space-base);
-}
-
-.astra-app-card {
-  height: 100%;
-}
-
-.astra-app-card:hover {
-  background: var(--astra-color-canvas);
-}
-
-.astra-app-card[aria-current='true'] {
-  border-color: var(--astra-color-accent);
-  background: color-mix(in srgb, var(--astra-color-accent) 6%, var(--astra-color-surface));
-}
-
-.astra-app-card__kind {
-  color: var(--astra-color-muted);
-  font-size: var(--astra-font-size-micro);
-  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
@@ -366,4 +300,281 @@
 .astra-consent__actions {
   gap: var(--astra-space-compact);
   justify-content: flex-end;
+}
+
+/* ------------------------------------------------------------ App Store */
+
+/*
+ * 中央のカード。接続先（おすすめ）と Pack（利用可能）を 2 列の行で並べ、
+ * 行の右端のスイッチで追加 / 外す。押した先は同意シート（§11.1）。
+ */
+.astra-store {
+  width: 100%;
+  padding: var(--astra-space-lg) var(--astra-space-lg) var(--astra-space-xl, 32px);
+  border: var(--astra-border-hairline) solid var(--astra-color-border);
+  border-radius: var(--astra-radius-standard);
+  background: var(--astra-color-surface);
+}
+
+.astra-apps[data-open='false'] .astra-store {
+  max-width: 720px;
+  margin-inline: auto;
+}
+
+.astra-store__head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--astra-space-base);
+}
+
+.astra-store__title {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--astra-space-compact);
+}
+
+.astra-store__title h3 {
+  margin: 0;
+  font-size: var(--astra-font-size-card-title);
+  font-weight: var(--astra-font-weight-card-title);
+}
+
+.astra-store__title p {
+  margin: 2px 0 0;
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-micro);
+}
+
+.astra-store__glyph {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  color: var(--astra-color-text);
+  flex: none;
+}
+
+/* 公式 / カスタム。segmented control */
+.astra-store__tabs {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border: var(--astra-border-hairline) solid var(--astra-color-border);
+  border-radius: 999px;
+  background: var(--astra-color-canvas);
+  align-self: flex-start;
+}
+
+.astra-store__tab {
+  min-height: 26px;
+  padding: 0 var(--astra-space-base);
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--astra-color-muted);
+  font: inherit;
+  font-size: var(--astra-font-size-micro);
+  cursor: pointer;
+}
+
+.astra-store__tab[aria-selected='true'] {
+  background: var(--astra-color-surface);
+  color: var(--astra-color-text);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.astra-store__section {
+  margin-top: var(--astra-space-lg);
+}
+
+.astra-store__section h4 {
+  margin: 0 0 var(--astra-space-compact);
+  font-size: var(--astra-font-size-secondary);
+  font-weight: var(--astra-font-weight-card-title);
+}
+
+.astra-store__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: var(--astra-space-xl, 32px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@container (max-width: 560px) {
+  .astra-store__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.astra-store-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--astra-space-base);
+  min-height: 56px;
+  border-bottom: var(--astra-border-hairline) solid var(--astra-color-border);
+}
+
+.astra-store-row__main {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  align-items: center;
+  gap: var(--astra-space-base);
+  min-width: 0;
+  padding: var(--astra-space-compact) 0;
+  border: 0;
+  background: transparent;
+  color: var(--astra-color-text);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.astra-store-row[aria-current='true'] .astra-store-row__name {
+  color: var(--astra-color-accent);
+}
+
+.astra-store-row__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.astra-store-row__name {
+  display: flex;
+  align-items: center;
+  gap: var(--astra-space-compact);
+  font-size: var(--astra-font-size-secondary);
+  font-weight: var(--astra-font-weight-card-title);
+  white-space: nowrap;
+}
+
+.astra-store-row__kind {
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--astra-color-canvas);
+  color: var(--astra-color-muted);
+  font-size: 10px;
+  font-weight: var(--astra-font-weight-micro);
+  letter-spacing: 0.04em;
+}
+
+.astra-store-row__kind--warn {
+  color: var(--astra-color-warning);
+}
+
+.astra-store-row__summary {
+  overflow: hidden;
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-micro);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.astra-app-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  overflow: hidden;
+  flex: none;
+}
+
+.astra-app-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.astra-app-icon--mono {
+  color: #fff;
+  font-size: var(--astra-font-size-secondary);
+  font-weight: var(--astra-font-weight-card-title);
+}
+
+/* スイッチ。shell の button 既定（min-height 44px）より小さいので、明示して上書きする */
+.astra-switch,
+.astra-shell .astra-switch {
+  position: relative;
+  width: 34px;
+  height: 20px;
+  min-height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: var(--astra-color-border);
+  cursor: pointer;
+  transition: background-color var(--astra-motion-hover-duration) var(--astra-motion-hover-easing);
+}
+
+.astra-switch__knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+  transition: transform var(--astra-motion-hover-duration) var(--astra-motion-hover-easing);
+}
+
+.astra-switch[data-on='true'] {
+  background: var(--astra-color-accent);
+}
+
+.astra-switch[data-on='true'] .astra-switch__knob {
+  transform: translateX(14px);
+}
+
+.astra-switch:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.astra-switch:focus-visible {
+  outline: 2px solid var(--astra-color-focus-ring);
+  outline-offset: 2px;
+}
+
+.astra-store__empty {
+  margin-top: var(--astra-space-lg);
+  padding: var(--astra-space-xl, 32px);
+  border: 1px dashed var(--astra-color-border);
+  border-radius: var(--astra-radius-standard);
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-secondary);
+  text-align: center;
+}
+
+.astra-store__empty p {
+  margin: 0 0 var(--astra-space-compact);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .astra-switch,
+  .astra-switch__knob {
+    transition: none;
+  }
+}
+
+/* 同意シート。画面の真ん中に重ね、後ろを薄くする */
+.astra-apps__sheet {
+  position: fixed;
+  inset: 0;
+  z-index: var(--astra-z-drawer, 30);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--astra-space-lg);
+  background: var(--astra-color-overlay);
+}
+
+.astra-apps__sheet .astra-consent {
+  width: min(560px, 100%);
+  max-height: calc(100vh - 2 * var(--astra-space-lg));
+  overflow: auto;
+  box-shadow: var(--astra-elevation-dock);
 }
