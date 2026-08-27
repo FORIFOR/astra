@@ -171,8 +171,7 @@ export function SignIn({ providers: preset, devEmail: presetDev }: SignInProps =
       )}
 
       <p className="astra-signin__terms">
-        続けることで、利用規約とプライバシーポリシーに同意したことになります。 サインインの鍵はこの
-        Mac の外へ出ません。
+        サインインの鍵はこの Mac の外へ出ません。連携先には、確認した操作だけを送ります。
       </p>
     </main>
   );
