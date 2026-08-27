@@ -55,7 +55,10 @@ describe('ArtifactActions', () => {
 
   it('never sends a password shorter than four characters', async () => {
     const user = userEvent.setup();
-    const createShare = vi.fn(async () => ({ share: {} as never, url: 'u' }));
+    const createShare = vi.fn(async (_id: string, _body: unknown) => ({
+      share: {} as never,
+      url: 'u',
+    }));
     const client = { createShare } as unknown as AstraClient;
     render(<ArtifactActions client={client} artifact={artifact} />);
     await user.click(screen.getByRole('button', { name: '共有…' }));

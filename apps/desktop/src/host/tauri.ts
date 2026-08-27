@@ -9,13 +9,7 @@
 import type { DockState } from '@astra/ui-kit';
 
 export type HostVoiceMode =
-  | 'idle'
-  | 'connecting'
-  | 'listening'
-  | 'thinking'
-  | 'speaking'
-  | 'interrupted'
-  | 'error';
+  'idle' | 'connecting' | 'listening' | 'thinking' | 'speaking' | 'interrupted' | 'error';
 
 export interface CapturedVoice {
   readonly audioBase64: string;
