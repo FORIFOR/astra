@@ -442,3 +442,11 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
 - 検証: `--selftest pause` を追加。begin → 6s push（before=5000）→ pause + 6s push（**進まず 5000**）→ resume + 6s push
   （10000）。**実測 PASS**: `停止中は録音が進まない before=5000 pause=5000 resume=10000`。verify に組み込み、回帰なし。
 - **意味**: 一時停止が実機能になった（UI mock ではない）。Done#2/#7 の正しさが向上。
+
+## 追記: 画面文脈スクショ（viewfinder ボタン）を実装（Phase 1.37）
+- **空実装の修正**: `RecordingWorkspaceState.captureScreenshot()` は `{}`（空）だったが、TaskDock の viewfinder
+  ボタンに繋がっていた（§2 UI mock 違反）。実装: `ScreenContextCapture.captureFrameCG()` で実フレームを取り、
+  会議フォルダ `Astra/meetings/<id>/screens/screen-*.png` に PNG 保存（ImageIO）。
+- 検証: `--selftest screenshot`（画面収録許可があれば実 PNG を保存、PNG マジックナンバー確認）。
+  **実測 PASS**: `実 PNG 保存 bytes=563842 isPng=true`。verify に組み込み（未許可 CI では SKIP）。
+- viewfinder ボタンが実機能に（Done#2）。

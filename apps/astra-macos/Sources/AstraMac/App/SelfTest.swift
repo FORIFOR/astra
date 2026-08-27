@@ -31,6 +31,7 @@ enum SelfTest {
         case "shape": shape(); return true
         case "hudlifecycle": hudlifecycle(); return true
         case "pause": pauseWorks(); return true
+        case "screenshot": screenshot(); return true
         default: return false
         }
     }
@@ -523,6 +524,32 @@ enum SelfTest {
             print("SELFTEST_FAIL pause before=\(before) duringPause=\(duringPause) afterResume=\(afterResume)"); exit(3)
         }
         print("SELFTEST_OK pause: 停止中は録音が進まない before=\(before) pause=\(duringPause) resume=\(afterResume)")
+        exit(0)
+    }
+
+    /// `--selftest screenshot`: 画面文脈のスクショが実ファイルとして保存されるか検証する
+    /// （viewfinder ボタンの実機能）。画面収録許可が無ければ SKIP。
+    @MainActor
+    private static func screenshot() {
+        guard Permissions.screenRecording == .granted else {
+            print("SELFTEST_SKIP screenshot: screen recording not granted"); exit(0)
+        }
+        let state = RecordingWorkspaceState.shared
+        state.currentMeetingId = "screenshot-selftest"
+        guard let path = state.captureScreenshot() else {
+            print("SELFTEST_SKIP screenshot: no frame in this context"); exit(0)
+        }
+        let size = (try? FileManager.default.attributesOfItem(atPath: path)[.size] as? Int) ?? 0
+        // PNG マジックナンバーを確認（実画像であること）。
+        let data = FileManager.default.contents(atPath: path) ?? Data()
+        let isPng = data.count > 8 && data[0] == 0x89 && data[1] == 0x50 && data[2] == 0x4E && data[3] == 0x47
+        let root = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+            .appendingPathComponent("Astra/meetings/screenshot-selftest").path
+        try? FileManager.default.removeItem(atPath: root)
+        guard (size ?? 0) > 1000, isPng else {
+            print("SELFTEST_FAIL screenshot size=\(size ?? 0) isPng=\(isPng)"); exit(2)
+        }
+        print("SELFTEST_OK screenshot: 実 PNG 保存 bytes=\(size ?? 0) isPng=\(isPng)")
         exit(0)
     }
 

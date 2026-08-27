@@ -51,7 +51,7 @@ OUTH="$("$BIN" --selftest hudlifecycle)"; echo "$OUTH"
 [[ "$OUTH" == SELFTEST_OK* ]] || { echo "FAIL: macOS HUD lifecycle" >&2; exit 1; }
 OUTP="$("$BIN" --selftest pause)"; echo "$OUTP"
 [[ "$OUTP" == SELFTEST_OK* ]] || { echo "FAIL: macOS pause actually stops recording" >&2; exit 1; }
-for t in livemic livemeeting livescreen sttrecognize; do
+for t in screenshot livemic livemeeting livescreen sttrecognize; do
   OUT="$("$BIN" --selftest "$t")"
   echo "$OUT"
   [[ "$OUT" == SELFTEST_OK* || "$OUT" == SELFTEST_SKIP* ]] || { echo "FAIL: macOS live $t" >&2; exit 1; }

@@ -1,5 +1,7 @@
 import SwiftUI
 import AppKit
+import ImageIO
+import UniformTypeIdentifiers
 import AstraCore
 
 enum RecordingTool: String, CaseIterable, Identifiable {
@@ -50,6 +52,8 @@ final class RecordingWorkspaceState: ObservableObject {
     @Published var transcript: [TranscriptSegment] = []
     /// RAG コンテキストの並べ替え結果（core の rank_context 由来）。
     @Published var ragResults: [RankedContext] = []
+    /// いまの会議 id（スクリーンショット等の保存先に使う）。
+    var currentMeetingId = "adhoc"
     /// ユーザーが選んだローカルファイル由来の候補（Finder access）。transcript と混ぜて並べ替える。
     var fileCandidates: [ContextCandidate] = []
     @Published var audioLevels: [CGFloat] =
@@ -149,7 +153,8 @@ final class RecordingWorkspaceState: ObservableObject {
             self.refreshRag()
         }
         // 実ランタイム: マイク → astra-core → ディスク断片（許可があればライブ取り込み + 手元 STT）
-        RecordingRuntime.shared.begin(meetingId: "meeting-\(Int(Date().timeIntervalSince1970))")
+        currentMeetingId = "meeting-\(Int(Date().timeIntervalSince1970))"
+        RecordingRuntime.shared.begin(meetingId: currentMeetingId)
         WindowCoordinator.shared.enterRecordingMode()
     }
     func stop() {
@@ -161,5 +166,19 @@ final class RecordingWorkspaceState: ObservableObject {
         isPaused.toggle()
         RecordingRuntime.shared.setPaused(isPaused)   // 実際に録音を止める（core が sample を捨てる）
     }
-    func captureScreenshot() {}
+    /// 画面文脈を 1 枚取り、会議フォルダに保存する（Context Lens / 後追いの手掛かり）。
+    /// 保存先パスを返す（失敗時 nil）。実フレーム取得は ScreenContextCapture（画面収録許可が要る）。
+    @discardableResult
+    func captureScreenshot() -> String? {
+        guard #available(macOS 14.0, *), let image = ScreenContextCapture.captureFrameCG() else { return nil }
+        let dir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+            .appendingPathComponent("Astra/meetings/\(currentMeetingId)/screens", isDirectory: true)
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let url = dir.appendingPathComponent("screen-\(Int(Date().timeIntervalSince1970)).png")
+        guard let dest = CGImageDestinationCreateWithURL(url as CFURL, UTType.png.identifier as CFString, 1, nil)
+        else { return nil }
+        CGImageDestinationAddImage(dest, image, nil)
+        guard CGImageDestinationFinalize(dest) else { return nil }
+        return url.path
+    }
 }
