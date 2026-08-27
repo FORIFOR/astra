@@ -628,3 +628,17 @@ describe('the Orb is the entry (Deepgram floating-orb)', () => {
     expect(mic.textContent).not.toContain('🎙');
   });
 });
+
+describe('Esc while listening (§4.4, privacy)', () => {
+  it('stops the microphone before it folds the Dock', async () => {
+    const user = userEvent.setup();
+    const stop = vi.fn(async () => {});
+    render(<TaskDock dictation={{ async start() {}, stop }} />);
+    await user.click(screen.getByRole('button', { name: 'Astra に話しかける' }));
+    const dock = screen.getByLabelText('依頼を入力').closest('.astra-dock') as HTMLElement;
+    expect(dock.dataset['state']).toBe('LISTENING');
+    await user.keyboard('{Escape}');
+    expect(stop).toHaveBeenCalledTimes(1);
+    expect(dock.dataset['state']).not.toBe('LISTENING');
+  });
+});

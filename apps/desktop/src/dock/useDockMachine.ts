@@ -91,6 +91,17 @@ export function useDockMachine(
   }, []);
 
   const escape = useCallback(() => {
+    /*
+     * 聞いている最中の Esc は、まず聞くのをやめる。
+     * 畳んだ Dock の裏でマイクが開いたままだと、利用者には止まったように見えて
+     * 録り続ける（実機で確認: HUD が「聞いています」のまま残った）。
+     */
+    if (state === 'LISTENING') {
+      void dictation?.stop().catch(() => undefined);
+      setState(intent.length > 0 ? 'TYPING' : 'READY');
+      shrunk.current = true;
+      return;
+    }
     const outcome = escapeOutcome(dockGeometryFor(state, contextExpanded), shrunk.current);
     if (outcome === 'shrink') {
       shrunk.current = true;
@@ -99,7 +110,7 @@ export function useDockMachine(
       return;
     }
     dismiss();
-  }, [state, contextExpanded, dismiss]);
+  }, [state, contextExpanded, dismiss, dictation, intent]);
 
   return {
     state,
