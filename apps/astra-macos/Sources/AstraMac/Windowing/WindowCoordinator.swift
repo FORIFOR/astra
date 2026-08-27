@@ -27,6 +27,8 @@ final class WindowCoordinator {
         case .recordingRAG:
             RecordingWorkspaceState.shared.loadDemo(ragOpen: true)
             showRecordingWorkspace()
+        case .main:
+            MainWindowController.shared.show()
         }
     }
 

@@ -9,3 +9,6 @@ BIN="$(swift build --show-bin-path)/AstraMac"
 OUT="$("$BIN" --selftest record)"
 echo "$OUT"
 [[ "$OUT" == SELFTEST_OK* ]] || { echo "FAIL: macOS recording E2E" >&2; exit 1; }
+OUT2="$("$BIN" --selftest lifecycle)"
+echo "$OUT2"
+[[ "$OUT2" == SELFTEST_OK* ]] || { echo "FAIL: macOS lifecycle E2E" >&2; exit 1; }

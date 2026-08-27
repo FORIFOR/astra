@@ -66,8 +66,17 @@ final class RecordingWorkspaceState: ObservableObject {
         ]
     }
 
-    func start() { isRecording = true; WindowCoordinator.shared.enterRecordingMode() }
-    func stop() { isRecording = false; WindowCoordinator.shared.leaveRecordingMode() }
+    func start() {
+        isRecording = true
+        // 実ランタイム: マイク → astra-core → ディスク断片（許可があればライブ取り込み）
+        RecordingRuntime.shared.begin(meetingId: "meeting-\(Int(Date().timeIntervalSince1970))")
+        WindowCoordinator.shared.enterRecordingMode()
+    }
+    func stop() {
+        isRecording = false
+        RecordingRuntime.shared.end()   // 断片を確定（回復候補として残る）
+        WindowCoordinator.shared.leaveRecordingMode()
+    }
     func togglePause() { isPaused.toggle() }
     func captureScreenshot() {}
 }

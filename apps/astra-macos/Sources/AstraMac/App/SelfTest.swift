@@ -4,12 +4,34 @@ import AstraCore
 /// `--selftest record`: Swift → astra-core → 実ディスク の E2E。UI を出さずに検証する。
 /// マイク許可の要らない合成サンプルを流し、断片ファイルが実際に書かれることを確かめる。
 enum SelfTest {
+    @MainActor
     static func run(_ args: [String]) -> Bool {
         guard let i = args.firstIndex(of: "--selftest"), i + 1 < args.count else { return false }
         switch args[i + 1] {
         case "record": recordToDisk(); return true
+        case "lifecycle": lifecycle(); return true
         default: return false
         }
+    }
+
+    /// begin → push → end の実ランタイム経路（I/O のみ、window は触らない）。
+    @MainActor
+    private static func lifecycle() {
+        let runtime = RecordingRuntime.shared
+        guard runtime.begin(meetingId: "lifecycle-selftest", captureMic: false) else {
+            print("SELFTEST_FAIL lifecycle begin"); exit(2)
+        }
+        let oneSec = [Float](repeating: 0.1, count: 16_000)
+        for _ in 0..<6 { runtime.push(oneSec, sampleRate: 16_000) }
+        let elapsed = runtime.snapshot()?.elapsedLabel ?? "?"
+        runtime.end()
+        let root = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+            .appendingPathComponent("Astra/meetings").path
+        let ok = scanRecoverable(root: root, active: nil).contains { $0.meetingId == "lifecycle-selftest" }
+        try? FileManager.default.removeItem(atPath: root + "/lifecycle-selftest")
+        guard elapsed == "00:05", ok else { print("SELFTEST_FAIL lifecycle elapsed=\(elapsed) recovered=\(ok)"); exit(3) }
+        print("SELFTEST_OK lifecycle: elapsed=\(elapsed) recovered=\(ok)")
+        exit(0)
     }
 
     private static func recordToDisk() {
