@@ -24,6 +24,9 @@ import { InstallConsent } from '../apps/InstallConsent.js';
 import { AppDetail } from '../apps/AppDetail.js';
 import { HomePage } from '../pages/Home.js';
 import { LibraryPage } from '../pages/Library.js';
+import { SignIn } from '../auth/SignIn.js';
+import { SessionProvider } from '../state/SessionProvider.js';
+import '../library/library.css';
 import * as fx from './fixtures.js';
 import '../shell/shell.css';
 import '../work/work.css';
@@ -32,6 +35,9 @@ import '../meeting/meeting.css';
 import '../apps/apps.css';
 import '../home/home.css';
 import './gallery.css';
+
+/** 見本帳の SessionProvider はサーバへ行かない。 */
+const neverFetch: typeof fetch = async () => new Response('{}', { status: 503 });
 
 const SECTIONS = [
   'work',
@@ -43,6 +49,7 @@ const SECTIONS = [
   'apps',
   'home',
   'library',
+  'signin',
 ] as const;
 type Section = (typeof SECTIONS)[number];
 
@@ -249,6 +256,24 @@ export function GalleryApp(): ReactElement {
             <Block title="Library — filters / card metadata / lineage（§10）" width={1200}>
               <LibraryPage artifacts={fx.artifacts} tasks={fx.tasks} selectedId="art-v5" />
             </Block>
+          )}
+          {(section === null || section === 'signin') && (
+            <>
+              <Block title="SignIn — Google / Apple / LINE（§3 Step 1・§4.3）" width={560}>
+                <SessionProvider baseUrl="https://gallery.invalid" fetchImpl={neverFetch}>
+                  <div style={{ height: 520 }}>
+                    <SignIn providers={fx.providersAll} devEmail={false} />
+                  </div>
+                </SessionProvider>
+              </Block>
+              <Block title="SignIn — Google だけ設定済み + 開発用メール" width={560}>
+                <SessionProvider baseUrl="https://gallery.invalid" fetchImpl={neverFetch}>
+                  <div style={{ height: 620 }}>
+                    <SignIn providers={fx.providersGoogleOnly} devEmail />
+                  </div>
+                </SessionProvider>
+              </Block>
+            </>
           )}
           {(section === null || section === 'home') && (
             <Block title="Home — Attention 3 / Active / Recent（§8）" width={880}>

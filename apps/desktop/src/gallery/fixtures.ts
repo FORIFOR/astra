@@ -15,6 +15,7 @@ import type { WorkView } from '../work/workView.js';
 import type { TaskView } from '@astra/api-client';
 import type { Artifact } from '@astra/contracts';
 import type { TranscriptLine } from '../meeting/meetingView.js';
+import type { AuthProvidersResponse } from '@astra/contracts';
 
 const now = Date.now();
 const iso = (offsetMs: number): string => new Date(now + offsetMs).toISOString();
@@ -553,3 +554,32 @@ export const artifacts: readonly Artifact[] = [
     updated_at: iso(-86_400_000 * 40),
   },
 ] as unknown as readonly Artifact[];
+
+// ---------------------------------------------------------------- sign-in（§4.3）
+
+export const providersAll: AuthProvidersResponse['providers'] = [
+  {
+    id: 'google',
+    configured: true,
+    client_id: 'demo.apps.googleusercontent.com',
+    relay_path: null,
+  },
+  {
+    id: 'apple',
+    configured: true,
+    client_id: 'com.astra.web',
+    relay_path: '/v1/auth/apple/desktop',
+  },
+  { id: 'line', configured: true, client_id: '1234567890', relay_path: '/v1/auth/line/desktop' },
+];
+
+export const providersGoogleOnly: AuthProvidersResponse['providers'] = [
+  {
+    id: 'google',
+    configured: true,
+    client_id: 'demo.apps.googleusercontent.com',
+    relay_path: null,
+  },
+  { id: 'apple', configured: false, client_id: null, relay_path: null },
+  { id: 'line', configured: false, client_id: null, relay_path: null },
+];

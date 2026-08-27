@@ -20,6 +20,8 @@ import {
   MeetingSpeaker,
   MeResponse as MeResponseSchema,
   TokenResponse,
+  AuthProvidersResponse,
+  IdpSignInRequest,
   PluginCatalogEntry,
   PluginInstall,
   Share,
@@ -86,6 +88,20 @@ export class AstraClient {
    * 開発用のサインイン。本番ではこの経路自体がサーバに登録されていない（§4.3）。
    * 実 IdP へ差し替えるときに触るのはここだけで済むようにしてある。
    */
+  /** どの提供者でサインインできるか。設定されていないものは configured=false で返る。 */
+  authProviders(): Promise<AuthProvidersResponse> {
+    return this.http.request({ method: 'GET', path: '/v1/auth/providers' }, (value) =>
+      AuthProvidersResponse.parse(value),
+    );
+  }
+
+  /** 提供者の ID トークンで Astra のトークンを得る。access / refresh token は渡さない。 */
+  signInWithIdp(body: IdpSignInRequest): Promise<TokenResponse> {
+    return this.http.request({ method: 'POST', path: '/v1/auth/idp/token', body }, (value) =>
+      TokenResponse.parse(value),
+    );
+  }
+
   devSignIn(email: string, displayName: string): Promise<TokenResponse> {
     return this.http.request(
       {

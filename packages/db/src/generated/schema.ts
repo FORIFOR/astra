@@ -554,6 +554,15 @@ export interface Turns {
   tenant_id: string;
 }
 
+export interface UserIdentities {
+  created_at: Generated<Timestamp>;
+  email: string | null;
+  last_seen_at: Timestamp | null;
+  provider: string;
+  subject: string;
+  user_id: string;
+}
+
 export interface Users {
   created_at: Generated<Timestamp>;
   deleted_at: Timestamp | null;
@@ -648,6 +657,7 @@ export interface DB {
   tenants: Tenants;
   translations: Translations;
   turns: Turns;
+  user_identities: UserIdentities;
   users: Users;
   world_edges: WorldEdges;
   world_entities: WorldEntities;

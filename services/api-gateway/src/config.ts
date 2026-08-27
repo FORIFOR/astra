@@ -2,6 +2,7 @@
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { dbConfigFromEnv, type DbConfig } from '@astra/db';
+import { idpConfigFromEnv, type IdpConfig } from './auth/idp.js';
 
 export type Environment = 'development' | 'test' | 'staging' | 'production';
 
@@ -35,6 +36,8 @@ export interface GatewayConfig {
    * 変わると過去のログと突き合わせられなくなるので、環境ごとに固定する。
    */
   readonly requesterSalt: string;
+  /** 外部の身元提供者。設定されていないものは「使えない」と返す（§4.3）。 */
+  readonly idp: IdpConfig;
 }
 
 const ENVIRONMENTS: readonly Environment[] = ['development', 'test', 'staging', 'production'];
@@ -64,6 +67,7 @@ export function gatewayConfigFromEnv(env: NodeJS.ProcessEnv = process.env): Gate
     allowedOrigins: parseOrigins(env['ASTRA_ALLOWED_ORIGINS'], parseEnvironment(env['ASTRA_ENV'])),
     shareHost: env['ASTRA_SHARE_HOST'] ?? 'http://localhost:1430',
     requesterSalt: env['ASTRA_REQUESTER_SALT'] ?? 'astra-development-salt',
+    idp: idpConfigFromEnv(env),
   };
 }
 

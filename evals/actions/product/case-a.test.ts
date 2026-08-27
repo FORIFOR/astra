@@ -164,6 +164,7 @@ describe.skipIf(!url || !shareUrl)('Case A — ask, and get something you can ha
         allowedOrigins: [],
         shareHost: 'http://localhost:1430',
         requesterSalt: 'case-a-salt',
+        idp: { google: null, apple: null, line: null, publicUrl: null },
       },
       db,
       redis: null,

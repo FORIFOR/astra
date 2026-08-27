@@ -80,6 +80,8 @@ export interface MakeAppOptions {
   readonly seedPlugins?: boolean;
   readonly bridge?: HostBridge;
   readonly allowedOrigins?: readonly string[];
+  /** 外部 IdP の検証を差し替える（実物の鍵を持たないテストのため）。 */
+  readonly identityVerifier?: import('../src/auth/idp.js').IdentityVerifier;
   /** live STT の代役に読ませる台本。省略すると録音だけになる。 */
   readonly script?: readonly ScriptLine[];
   /** dashboard の bind を解決する先。 */
@@ -117,6 +119,7 @@ export async function makeTestApp(options: MakeAppOptions): Promise<TestApp> {
     allowedOrigins: options.allowedOrigins ?? [],
     shareHost: 'http://localhost:1430',
     requesterSalt: 'test-salt',
+    idp: { google: null, apple: null, line: null, publicUrl: null },
   };
 
   const app = buildApp({
@@ -130,6 +133,7 @@ export async function makeTestApp(options: MakeAppOptions): Promise<TestApp> {
     library,
     registry,
     shares,
+    ...(options.identityVerifier ? { identityVerifier: options.identityVerifier } : {}),
     // UI/UX §15 の Evidence。本番と同じく db だけで読む。
     evidence: new ResearchLedgerService(db),
     // 正本 §4.4: Dock を閉じても仕事が続くための調整役

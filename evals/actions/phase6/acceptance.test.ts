@@ -91,6 +91,7 @@ describe.skipIf(!url)('Phase 6 acceptance', () => {
         allowedOrigins: [],
         shareHost: 'http://localhost:1430',
         requesterSalt: 'acceptance6-salt',
+        idp: { google: null, apple: null, line: null, publicUrl: null },
       },
       db,
       redis: null,

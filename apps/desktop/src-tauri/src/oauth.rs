@@ -39,6 +39,10 @@ pub struct CallbackParams {
     pub state: Option<String>,
     pub error: Option<String>,
     pub error_description: Option<String>,
+    /// サインインの relay（LINE / Apple web）は code ではなく ID トークンを返す。
+    pub id_token: Option<String>,
+    /// Apple は初回だけ名前を返す。relay がここに載せる。
+    pub display_name: Option<String>,
 }
 
 /// 待ち受けを開く。**port は OS に選ばせる。**
@@ -136,6 +140,8 @@ pub fn parse_callback(target: &str) -> CallbackParams {
             "code" => params.code = Some(decoded),
             "state" => params.state = Some(decoded),
             "error" => params.error = Some(decoded),
+            "id_token" => params.id_token = Some(decoded),
+            "display_name" => params.display_name = Some(decoded),
             "error_description" => params.error_description = Some(decoded),
             // 提供者が足す余計なものは無視する
             _ => {}
@@ -236,5 +242,32 @@ mod tests {
         *runtime.listener.lock().unwrap() = Some(listener);
         // 固定 port を使わない。埋まっているときに黙って失敗する。
         assert!(port > 0);
+    }
+}
+
+/// 外のブラウザで開く。**アプリ内の webview では開かない**（RFC 8252 §8.12）。
+///
+/// https と、gateway の開発用 http://localhost / 127.0.0.1 だけ。
+/// それ以外（file:, javascript:, 任意の scheme）は開かない。URL は画面側から来るので、
+/// ここで絞らないと「開く」が何でも実行する口になる。
+#[tauri::command]
+pub fn oauth_open_browser(url: String) -> Result<(), String> {
+    let allowed = url.starts_with("https://")
+        || url.starts_with("http://localhost")
+        || url.starts_with("http://127.0.0.1");
+    if !allowed {
+        return Err(format!("refusing to open a non-https url: {}", url.chars().take(32).collect::<String>()));
+    }
+    #[cfg(target_os = "macos")]
+    {
+        std::process::Command::new("open")
+            .arg(&url)
+            .spawn()
+            .map_err(|e| format!("open failed: {e}"))?;
+        Ok(())
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        Err("opening a browser is only wired on macOS".to_string())
     }
 }

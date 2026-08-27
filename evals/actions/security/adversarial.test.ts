@@ -113,6 +113,7 @@ describe.skipIf(!url)('what must not get through', () => {
         allowedOrigins: [],
         shareHost: 'http://localhost:1430',
         requesterSalt: 'adversarial-salt',
+        idp: { google: null, apple: null, line: null, publicUrl: null },
       },
       db,
       redis: null,

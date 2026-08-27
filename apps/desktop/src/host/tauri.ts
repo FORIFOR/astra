@@ -142,8 +142,13 @@ export const oauthCallback = {
       state?: string;
       error?: string;
       error_description?: string;
+      /** サインインの relay（LINE / Apple web）は code ではなく ID トークンを返す。 */
+      id_token?: string;
+      display_name?: string;
     }>('oauth_await_callback'),
   cancel: () => call<void>('oauth_cancel'),
+  /** 外のブラウザで開く。アプリ内 webview では開かない（RFC 8252 §8.12）。 */
+  openBrowser: (url: string) => callStrict<void>('oauth_open_browser', { url }),
 };
 
 /**

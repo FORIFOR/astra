@@ -30,7 +30,7 @@ export interface AuthRouteDeps {
 
 const DEFAULT_SCOPES = ['tasks:write', 'tasks:read', 'artifacts:read', 'artifacts:write'];
 
-async function issueTokens(
+export async function issueTokens(
   tokens: JwtTokens,
   principal: { userId: string; tenantId: string; deviceId: string },
   refreshToken: string,

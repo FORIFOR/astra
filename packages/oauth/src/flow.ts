@@ -125,6 +125,8 @@ export interface TokenSet {
   /** 実際に許された scope。要求した scope ではない。 */
   readonly grantedScopes: readonly string[];
   readonly tokenType: string;
+  /** OpenID の ID トークン。scope に openid が無ければ null。サインインはこれだけを使う。 */
+  readonly idToken: string | null;
 }
 
 interface TokenResponseBody {
@@ -133,6 +135,7 @@ interface TokenResponseBody {
   expires_in?: unknown;
   scope?: unknown;
   token_type?: unknown;
+  id_token?: unknown;
   error?: unknown;
   error_description?: unknown;
 }
@@ -163,6 +166,7 @@ function parseTokenResponse(
      */
     grantedScopes: typeof body.scope === 'string' ? body.scope.split(/\s+/).filter(Boolean) : [],
     tokenType: typeof body.token_type === 'string' ? body.token_type : 'Bearer',
+    idToken: typeof body.id_token === 'string' ? body.id_token : null,
   };
 }
 

@@ -20,7 +20,8 @@ import {
 import type { ReactElement, ReactNode } from 'react';
 import { AstraClient } from '@astra/api-client';
 import type { MeResponse } from '@astra/contracts';
-import { secrets } from '../host/tauri.js';
+import { oauthCallback, secrets } from '../host/tauri.js';
+import { SignInAbortedError, signInWithProvider, type ProviderEntry } from '../auth/providers.js';
 
 const REFRESH_KEY = 'astra.refresh_token';
 
@@ -32,6 +33,8 @@ interface SessionContextValue {
   readonly me: MeResponse | null;
   readonly error: string | null;
   signIn(email: string, displayName: string): Promise<void>;
+  /** Google / Apple / LINE で入る。ブラウザで続け、ID トークンだけをサーバへ渡す（§4.3）。 */
+  signInWith(provider: ProviderEntry): Promise<void>;
   signOut(): Promise<void>;
 }
 
@@ -42,12 +45,15 @@ export interface SessionProviderProps {
   readonly baseUrl?: string;
   /** テストで差し替える。既定はグローバルの fetch。 */
   readonly fetchImpl?: typeof globalThis.fetch;
+  /** ブラウザを開く。テストで差し替える。既定は Tauri 側で `open`。 */
+  readonly openExternal?: (url: string) => Promise<void>;
 }
 
 export function SessionProvider({
   children,
   baseUrl = import.meta.env.VITE_ASTRA_API_URL ?? 'http://127.0.0.1:3000',
   fetchImpl,
+  openExternal = oauthCallback.openBrowser,
 }: SessionProviderProps): ReactElement {
   const [status, setStatus] = useState<SessionStatus>('loading');
   const [me, setMe] = useState<MeResponse | null>(null);
@@ -139,6 +145,29 @@ export function SessionProvider({
     [client, adopt],
   );
 
+  const signInWith = useCallback(
+    async (provider: ProviderEntry): Promise<void> => {
+      setError(null);
+      try {
+        await adopt(
+          await signInWithProvider(provider, {
+            client,
+            baseUrl,
+            openExternal,
+            ...(fetchImpl ? { fetchImpl } : {}),
+          }),
+        );
+      } catch (cause) {
+        // 利用者が途中でやめたのは失敗ではない。赤い文を出さない
+        if (!(cause instanceof SignInAbortedError)) {
+          setError(cause instanceof Error ? cause.message : 'サインインできませんでした');
+        }
+        setStatus('signed-out');
+      }
+    },
+    [client, adopt, baseUrl, openExternal, fetchImpl],
+  );
+
   const signOut = useCallback(async (): Promise<void> => {
     const current = refreshToken.current;
     accessToken.current = null;
@@ -151,8 +180,8 @@ export function SessionProvider({
   }, [client]);
 
   const value = useMemo<SessionContextValue>(
-    () => ({ status, client, me, error, signIn, signOut }),
-    [status, client, me, error, signIn, signOut],
+    () => ({ status, client, me, error, signIn, signInWith, signOut }),
+    [status, client, me, error, signIn, signInWith, signOut],
   );
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;

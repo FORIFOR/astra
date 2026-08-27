@@ -36,7 +36,7 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public
 
 -- 認証専用ロール: identity テーブルだけ。DELETE も与えない（identity は論理削除）。
 GRANT USAGE ON SCHEMA public TO astra_identity;
-GRANT SELECT, INSERT, UPDATE ON tenants, users, memberships, devices, sessions
+GRANT SELECT, INSERT, UPDATE ON tenants, users, memberships, devices, sessions, user_identities
   TO astra_identity;
 
 -- 公開 viewer 専用ロール: 共有テーブルだけ。artifact は解決後に withTenant で読む。

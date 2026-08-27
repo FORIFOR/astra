@@ -937,6 +937,21 @@ ALTER TABLE ONLY public.turns FORCE ROW LEVEL SECURITY;
 
 
 --
+-- Name: user_identities; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.user_identities (
+    provider text NOT NULL,
+    subject text NOT NULL,
+    user_id uuid NOT NULL,
+    email public.citext,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    last_seen_at timestamp with time zone,
+    CONSTRAINT user_identities_provider_check CHECK ((provider = ANY (ARRAY['google'::text, 'apple'::text, 'line'::text])))
+);
+
+
+--
 -- Name: users; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1362,6 +1377,14 @@ ALTER TABLE ONLY public.translations
 
 ALTER TABLE ONLY public.turns
     ADD CONSTRAINT turns_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: user_identities user_identities_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.user_identities
+    ADD CONSTRAINT user_identities_pkey PRIMARY KEY (provider, subject);
 
 
 --
@@ -1794,6 +1817,13 @@ CREATE INDEX translations_by_meeting ON public.translations USING btree (meeting
 --
 
 CREATE INDEX turns_by_conversation ON public.turns USING btree (conversation_id, id);
+
+
+--
+-- Name: user_identities_by_user; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX user_identities_by_user ON public.user_identities USING btree (user_id);
 
 
 --
@@ -2764,6 +2794,14 @@ ALTER TABLE ONLY public.turns
 
 
 --
+-- Name: user_identities user_identities_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.user_identities
+    ADD CONSTRAINT user_identities_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
 -- Name: world_edges world_edges_from_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3396,3 +3434,4 @@ INSERT INTO schema_migrations (version) VALUES ('20260827090000');
 INSERT INTO schema_migrations (version) VALUES ('20260827093000');
 INSERT INTO schema_migrations (version) VALUES ('20260827103000');
 INSERT INTO schema_migrations (version) VALUES ('20260827120000');
+INSERT INTO schema_migrations (version) VALUES ('20260827150000');

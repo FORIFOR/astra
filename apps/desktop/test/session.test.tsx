@@ -43,6 +43,16 @@ const meBody = {
   role: 'owner',
 };
 
+/** 開発用のメールサインインだけが開いている gateway。 */
+const devProviders = {
+  providers: [
+    { id: 'google', configured: false, client_id: null, relay_path: null },
+    { id: 'apple', configured: false, client_id: null, relay_path: null },
+    { id: 'line', configured: false, client_id: null, relay_path: null },
+  ],
+  dev_email: true,
+};
+
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
@@ -81,14 +91,16 @@ describe('sign-in', () => {
       </SessionProvider>,
     );
     await waitFor(() => expect(screen.getByTestId('status').textContent).toBe('signed-out'));
-    // 保存された refresh token が無いなら、サーバへ問い合わせにも行かない
-    expect(fetchImpl).not.toHaveBeenCalled();
+    // 保存された refresh token が無いなら、復帰の問い合わせには行かない（提供者の一覧は聞く）
+    const urls = fetchImpl.mock.calls.map((call) => String((call as unknown[])[0]));
+    expect(urls.some((u) => u.endsWith('/v1/auth/refresh'))).toBe(false);
   });
 
   it('signs in and loads the profile', async () => {
     const user = userEvent.setup();
     const fetchImpl = vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
+      if (url.endsWith('/v1/auth/providers')) return json(devProviders);
       if (url.endsWith('/v1/auth/dev/token')) return json(tokens('1'));
       if (url.endsWith('/v1/me')) return json(meBody);
       return json({}, 404);
@@ -101,7 +113,7 @@ describe('sign-in', () => {
     );
     await waitFor(() => expect(screen.getByTestId('status').textContent).toBe('signed-out'));
 
-    await user.type(screen.getByLabelText('メールアドレス'), 'a@example.com');
+    await user.type(await screen.findByLabelText('メールアドレス'), 'a@example.com');
     await user.click(screen.getByRole('button', { name: '始める' }));
 
     await waitFor(() => expect(screen.getByTestId('status').textContent).toBe('signed-in'));
@@ -113,6 +125,7 @@ describe('sign-in', () => {
     const user = userEvent.setup();
     const fetchImpl = vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
+      if (url.endsWith('/v1/auth/providers')) return json(devProviders);
       if (url.endsWith('/v1/auth/dev/token')) return json(tokens('1'));
       if (url.endsWith('/v1/me')) return json(meBody);
       return json({}, 404);
@@ -124,7 +137,7 @@ describe('sign-in', () => {
       </SessionProvider>,
     );
     await waitFor(() => expect(screen.getByTestId('status').textContent).toBe('signed-out'));
-    await user.type(screen.getByLabelText('メールアドレス'), 'a@example.com');
+    await user.type(await screen.findByLabelText('メールアドレス'), 'a@example.com');
     await user.click(screen.getByRole('button', { name: '始める' }));
     await waitFor(() => expect(screen.getByTestId('status').textContent).toBe('signed-in'));
 
@@ -152,7 +165,7 @@ describe('sign-in', () => {
       </SessionProvider>,
     );
     await waitFor(() => expect(screen.getByTestId('status').textContent).toBe('signed-out'));
-    await user.type(screen.getByLabelText('メールアドレス'), 'a@example.com');
+    await user.type(await screen.findByLabelText('メールアドレス'), 'a@example.com');
     await user.click(screen.getByRole('button', { name: '始める' }));
 
     // §21: 影響と次の行動を書く
@@ -171,7 +184,8 @@ describe('sign-in', () => {
       </SessionProvider>,
     );
     await waitFor(() => expect(screen.getByTestId('status').textContent).toBe('signed-out'));
-    await user.click(screen.getByRole('button', { name: '始める' }));
-    expect(fetchImpl).not.toHaveBeenCalled();
+    await user.click(await screen.findByRole('button', { name: '始める' }));
+    const urls = fetchImpl.mock.calls.map((call) => String((call as unknown[])[0]));
+    expect(urls.some((u) => u.endsWith('/v1/auth/dev/token'))).toBe(false);
   });
 });

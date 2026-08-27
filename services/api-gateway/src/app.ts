@@ -22,6 +22,8 @@ import { registerRateLimit } from './plugins/rate-limit.js';
 import { registerHealthRoutes } from './routes/health.js';
 import { registerAuth } from './auth/middleware.js';
 import { registerAuthRoutes } from './auth/routes.js';
+import { registerIdpRoutes } from './auth/idp-routes.js';
+import { IdpVerifiers, type IdentityVerifier } from './auth/idp.js';
 import type { JwtTokens } from './auth/tokens.js';
 import { registerTaskRoutes, type EvidenceReader } from './routes/tasks.js';
 import { registerAgentHostRoutes } from './routes/agent-host.js';
@@ -77,6 +79,8 @@ export interface AppDeps {
   /** Voice OS の Google STT / TTS。未設定でも route は明示的に 503 を返す。 */
   readonly voice?: VoiceRouteDeps;
   readonly bridge?: HostBridge;
+  /** 外部の身元提供者の検証。テストでは差し替える。無ければ config から組む。 */
+  readonly identityVerifier?: IdentityVerifier;
   /** SSE のポーリング間隔。テストは短くする。 */
   readonly ssePollIntervalMs?: number;
 }
@@ -127,6 +131,12 @@ export function buildApp(deps: AppDeps): App {
   registerAuthRoutes(app, {
     db: deps.db,
     tokens: deps.tokens,
+    enableDevTokens: allowsDevelopmentRoutes(deps.config),
+  });
+  registerIdpRoutes(app, {
+    db: deps.db,
+    tokens: deps.tokens,
+    verifier: deps.identityVerifier ?? new IdpVerifiers(deps.config.idp),
     enableDevTokens: allowsDevelopmentRoutes(deps.config),
   });
   registerTaskRoutes(app, {

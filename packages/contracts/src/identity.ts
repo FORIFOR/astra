@@ -101,3 +101,46 @@ export const Session = z.object({
   created_at: Timestamp,
 });
 export type Session = z.infer<typeof Session>;
+
+// ------------------------------------------------------------ external IdP
+
+/**
+ * 外部の身元提供者でのサインイン。deepnote-desktop の Google / Apple / LINE を、
+ * Firebase を挟まずに Astra 自身の identity へ繋ぐ。
+ *
+ * 端末は提供者の **ID トークン**だけをサーバへ渡す。access / refresh token は渡さない
+ * （Google の refresh token は connector 用で、Keychain の外へ出さない — 正本 §21）。
+ */
+export const IdentityProvider = z.enum(['google', 'apple', 'line']);
+export type IdentityProvider = z.infer<typeof IdentityProvider>;
+
+export const IdpSignInRequest = z.object({
+  provider: IdentityProvider,
+  /** 提供者が発行した ID トークン（JWT）。サーバが提供者の鍵で検証する。 */
+  id_token: z.string().min(20).max(8192),
+  /** Apple の native flow で使った生の nonce。無ければ null。 */
+  nonce: z.string().max(200).nullable().default(null),
+  /** Apple は初回しか名前を返さないので、端末が受け取ったものを添える。 */
+  display_name: z.string().max(200).nullable().default(null),
+  device_name: z.string().max(200).default('device'),
+  platform: Platform.default('macos'),
+  app_version: Semver.default('0.1.0'),
+});
+export type IdpSignInRequest = z.infer<typeof IdpSignInRequest>;
+
+/** どの提供者で入れるか。**設定されていないものを「使える」と言わない。** */
+export const AuthProvidersResponse = z.object({
+  providers: z.array(
+    z.object({
+      id: IdentityProvider,
+      configured: z.boolean(),
+      /** 端末側が authorize URL を組むのに要る公開の client id（native client）。 */
+      client_id: z.string().nullable().default(null),
+      /** ブラウザ経由の relay（Apple web / LINE）。無ければ null。 */
+      relay_path: z.string().nullable().default(null),
+    }),
+  ),
+  /** 開発用の email サインインが開いているか。本番では false。 */
+  dev_email: z.boolean(),
+});
+export type AuthProvidersResponse = z.infer<typeof AuthProvidersResponse>;

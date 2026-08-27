@@ -1,0 +1,140 @@
+/*
+ * サインイン。UI/UX §3 Step 1、deepnote-desktop LoginPage の並び。
+ * 提供者ボタンは「提供者の色」を尊重する（Google 白 / Apple 黒 / LINE 緑）。
+ * それ以外の色は Astra のトークン。
+ */
+.astra-signin__providers {
+  display: flex;
+  flex-direction: column;
+  gap: var(--astra-space-base);
+  width: min(100%, 320px);
+  margin-inline: auto;
+  text-align: start;
+}
+
+.astra-signin__provider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--astra-space-base);
+  min-height: 44px;
+  padding-inline: var(--astra-space-panel);
+  border: var(--astra-border-hairline) solid var(--astra-color-border);
+  border-radius: var(--astra-radius-small);
+  background: var(--astra-color-surface);
+  color: var(--astra-color-text);
+  font: inherit;
+  font-weight: var(--astra-font-weight-card-title);
+  cursor: pointer;
+  transition:
+    background-color var(--astra-motion-hover-duration) var(--astra-motion-hover-easing),
+    opacity var(--astra-motion-hover-duration) var(--astra-motion-hover-easing);
+}
+
+.astra-signin__provider:hover:not(:disabled) {
+  background: var(--astra-color-canvas);
+}
+
+.astra-signin__provider:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.astra-signin__provider--apple {
+  background: #000;
+  border-color: #000;
+  color: #fff;
+}
+
+.astra-signin__provider--apple:hover:not(:disabled) {
+  background: #1a1a1a;
+}
+
+.astra-signin__provider--line {
+  background: #06c755;
+  border-color: #06c755;
+  color: #fff;
+}
+
+.astra-signin__provider--line:hover:not(:disabled) {
+  background: #05b34c;
+}
+
+.astra-signin__provider-icon {
+  width: 20px;
+  height: 20px;
+  flex: none;
+}
+
+/* 未設定の提供者は、押せない理由をボタンの下に 1 行で */
+.astra-signin__unavailable {
+  margin: 0;
+  font-size: var(--astra-font-size-micro);
+  color: var(--astra-color-muted);
+  text-align: center;
+}
+
+.astra-signin__divider {
+  display: flex;
+  align-items: center;
+  gap: var(--astra-space-base);
+  width: min(100%, 320px);
+  margin-inline: auto;
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-micro);
+}
+
+.astra-signin__divider::before,
+.astra-signin__divider::after {
+  content: '';
+  flex: 1;
+  height: var(--astra-border-hairline);
+  background: var(--astra-color-border);
+}
+
+/* ブラウザで続けている間。§21: 何が起きているかを 1 文で */
+.astra-signin__waiting {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--astra-space-base);
+  margin: 0;
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-secondary);
+}
+
+.astra-signin__spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--astra-color-border);
+  border-top-color: var(--astra-color-accent);
+  border-radius: 50%;
+  animation: astra-signin-spin 800ms linear infinite;
+}
+
+@keyframes astra-signin-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.astra-signin__terms {
+  margin: 0;
+  max-width: 36ch;
+  margin-inline: auto;
+  color: var(--astra-color-muted);
+  font-size: var(--astra-font-size-micro);
+  line-height: 1.6;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .astra-signin__spinner {
+    animation: none;
+  }
+}
+
+/* 開発用メールの列は、提供者ボタンと同じ幅に揃える */
+.astra-signin .astra-signin__form {
+  width: min(100%, 320px);
+  margin-inline: auto;
+}

@@ -42,6 +42,7 @@ pub fn run() {
             oauth::oauth_listen,
             oauth::oauth_await_callback,
             oauth::oauth_cancel,
+            oauth::oauth_open_browser,
             secrets::secret_set,
             secrets::secret_get,
             secrets::secret_delete,

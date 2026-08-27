@@ -88,6 +88,7 @@ describe.skipIf(!url)('a conversation that goes on for a while', () => {
         allowedOrigins: [],
         shareHost: 'http://localhost:1430',
         requesterSalt: 'conv-eval-salt',
+        idp: { google: null, apple: null, line: null, publicUrl: null },
       },
       db,
       redis: null,

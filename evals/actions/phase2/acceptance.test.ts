@@ -188,6 +188,7 @@ describe.skipIf(!url || !shareUrl)('Phase 2 acceptance', () => {
         allowedOrigins: [],
         shareHost: SHARE_HOST,
         requesterSalt: 'acceptance2-salt',
+        idp: { google: null, apple: null, line: null, publicUrl: null },
       },
       db,
       redis: null,

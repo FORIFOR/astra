@@ -169,6 +169,7 @@ describe.skipIf(!url)('what we do measure, through the real process', () => {
         allowedOrigins: [],
         shareHost: 'http://localhost:1430',
         requesterSalt: 'slo-salt',
+        idp: { google: null, apple: null, line: null, publicUrl: null },
       },
       db,
       redis: null,

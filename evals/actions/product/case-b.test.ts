@@ -164,6 +164,7 @@ describe.skipIf(!url)('Case B — record it, and get minutes you can read', () =
         allowedOrigins: [],
         shareHost: 'http://localhost:1430',
         requesterSalt: 'case-b-salt',
+        idp: { google: null, apple: null, line: null, publicUrl: null },
       },
       db,
       redis: null,

@@ -14,6 +14,10 @@ export const ERROR_CODES = [
   'auth.refresh_reuse_detected',
   'auth.forbidden',
   'auth.device_revoked',
+  /** 提供者の ID トークンが検証を通らなかった（署名 / aud / 期限 / nonce）。 */
+  'auth.idp_rejected',
+  /** その提供者は、この環境では設定されていない。 */
+  'auth.provider_not_configured',
   // 汎用
   'common.validation_failed',
   'common.not_found',
@@ -78,6 +82,8 @@ const STATUS: Partial<Record<ErrorCode, number>> = {
   'auth.refresh_reuse_detected': 401,
   'auth.device_revoked': 401,
   'auth.forbidden': 403,
+  'auth.idp_rejected': 401,
+  'auth.provider_not_configured': 503,
   'common.validation_failed': 400,
   'common.not_found': 404,
   'common.conflict': 409,

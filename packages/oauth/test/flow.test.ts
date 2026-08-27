@@ -263,6 +263,7 @@ describe('refreshing', () => {
     expiresAt: new Date(NOW + 3600_000).toISOString(),
     grantedScopes: ['mail.read'],
     tokenType: 'Bearer',
+    idToken: null,
     ...over,
   });
 
@@ -328,6 +329,7 @@ describe('where the tokens live', () => {
       expiresAt: null,
       grantedScopes: [],
       tokenType: 'Bearer',
+      idToken: null,
     });
     expect(ref).toBe(credentialRef('com.acme.mail', 'gmail'));
     // 参照から値を推測できない
@@ -353,6 +355,7 @@ describe('where the tokens live', () => {
       expiresAt: null,
       grantedScopes: [],
       tokenType: 'Bearer',
+      idToken: null,
     });
     await tokenStore.forget(ref);
     expect(map.size).toBe(0);
