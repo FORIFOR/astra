@@ -306,6 +306,11 @@ RustBuffer uniffi_astra_core_fn_method_recordingsession_snapshot(void*_Nonnull p
 RustBuffer uniffi_astra_core_fn_func_api_create_meeting(RustBuffer base_url, RustBuffer access_token, RustBuffer title, RustBuffer language, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_CREATE_TASK
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_CREATE_TASK
+RustBuffer uniffi_astra_core_fn_func_api_create_task(RustBuffer base_url, RustBuffer access_token, RustBuffer kind, RustBuffer input_json, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_DEV_SIGN_IN
 #define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_DEV_SIGN_IN
 RustBuffer uniffi_astra_core_fn_func_api_dev_sign_in(RustBuffer base_url, RustBuffer email, RustBuffer display_name, RustCallStatus *_Nonnull out_status
@@ -341,9 +346,19 @@ RustBuffer uniffi_astra_core_fn_func_api_send_turn(RustBuffer base_url, RustBuff
 RustBuffer uniffi_astra_core_fn_func_api_start_conversation(RustBuffer base_url, RustBuffer access_token, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_TASK_STATUS
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_TASK_STATUS
+RustBuffer uniffi_astra_core_fn_func_api_task_status(RustBuffer base_url, RustBuffer access_token, RustBuffer task_id, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_UPLOAD_MEETING_AUDIO
 #define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_UPLOAD_MEETING_AUDIO
 uint64_t uniffi_astra_core_fn_func_api_upload_meeting_audio(RustBuffer base_url, RustBuffer access_token, RustBuffer meeting_id, RustBuffer journal_root, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_WAIT_TASK
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_WAIT_TASK
+RustBuffer uniffi_astra_core_fn_func_api_wait_task(RustBuffer base_url, RustBuffer access_token, RustBuffer task_id, uint64_t timeout_ms, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_ASTRA_CORE_VERSION
@@ -663,6 +678,12 @@ uint16_t uniffi_astra_core_checksum_func_api_create_meeting(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_CREATE_TASK
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_CREATE_TASK
+uint16_t uniffi_astra_core_checksum_func_api_create_task(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_DEV_SIGN_IN
 #define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_DEV_SIGN_IN
 uint16_t uniffi_astra_core_checksum_func_api_dev_sign_in(void
@@ -705,9 +726,21 @@ uint16_t uniffi_astra_core_checksum_func_api_start_conversation(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_TASK_STATUS
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_TASK_STATUS
+uint16_t uniffi_astra_core_checksum_func_api_task_status(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_UPLOAD_MEETING_AUDIO
 #define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_UPLOAD_MEETING_AUDIO
 uint16_t uniffi_astra_core_checksum_func_api_upload_meeting_audio(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_WAIT_TASK
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_WAIT_TASK
+uint16_t uniffi_astra_core_checksum_func_api_wait_task(void
     
 );
 #endif

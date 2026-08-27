@@ -131,3 +131,12 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
 - 最終製品経路のうち **auth / meeting全経路 / conversation・Agent入口 / Apps一覧** が Tauri を介さず実バックエンドで動く。
 - **#8 の残（正直に）**: STT streaming の native 購読、Agent の実行結果(task)ストリーム購読、RAG 取得 API、connector OAuth。
   これらは外部サービス/OAuth を伴い、Tauri 側に残置（パリティ未達のため retire しない）。
+
+## 追記: Agent round-trip も core 経由（Phase 1.13）
+- core api: `api_create_task`（Idempotency-Key 付与）/ `api_task_status` / `api_wait_task`。
+- **Agent 実往復を検証**: echo タスク作成 → Temporal worker 実行 → **COMPLETED + 成果物 id**。
+  Rust 結合テストと Swift `--selftest api` の両方で実測 PASS（agent=COMPLETED）。
+- **最終製品経路で Tauri を介さず動くもの（実測）**: auth / 会議全経路(作成〜録音〜送信〜終了) /
+  conversation・Agent入口 / **Agent タスク実行(完了・成果物)** / Apps一覧。
+- **#8 残（正直に）**: STT streaming の native 購読（音声 partial/final の受信）、RAG 取得 API、connector OAuth。
+  これらは外部 STT/OAuth を伴い Tauri 側に残置。Done#8「完全 retire」は未達（機能パリティ未達のため Tauri 無傷で残す）。

@@ -46,4 +46,10 @@ enum AstraCoreBridge {
     static func pluginCatalog(_ baseUrl: String, accessToken: String) throws -> [String] {
         try apiPluginCatalog(baseUrl: baseUrl, accessToken: accessToken)
     }
+    static func createTask(_ baseUrl: String, accessToken: String, kind: String, inputJson: String) throws -> String {
+        try apiCreateTask(baseUrl: baseUrl, accessToken: accessToken, kind: kind, inputJson: inputJson)
+    }
+    static func waitTask(_ baseUrl: String, accessToken: String, taskId: String, timeoutMs: UInt64) throws -> TaskStatus {
+        try apiWaitTask(baseUrl: baseUrl, accessToken: accessToken, taskId: taskId, timeoutMs: timeoutMs)
+    }
 }

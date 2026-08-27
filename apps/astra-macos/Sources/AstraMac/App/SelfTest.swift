@@ -63,10 +63,14 @@ enum SelfTest {
             let outcome = try AstraCoreBridge.sendTurn(base, accessToken: tokens.accessToken, conversationId: conv, text: "テスト依頼")
             let apps = try AstraCoreBridge.pluginCatalog(base, accessToken: tokens.accessToken)
             let convOk = outcome.needsClarification || !outcome.answer.isEmpty || !outcome.taskId.isEmpty || !outcome.notice.isEmpty
-            guard !mid.isEmpty, sent > 0, !task.isEmpty, !conv.isEmpty, convOk, !apps.isEmpty else {
-                print("SELFTEST_FAIL api meeting=\(mid) sent=\(sent) task=\(task) conv=\(conv) apps=\(apps.count)"); exit(5)
+            // Agent round-trip: echo タスク → COMPLETED + 成果物
+            let atask = try AstraCoreBridge.createTask(base, accessToken: tokens.accessToken, kind: "echo", inputJson: "{\"message\":\"selftest\",\"steps\":1}")
+            let done = try AstraCoreBridge.waitTask(base, accessToken: tokens.accessToken, taskId: atask, timeoutMs: 15_000)
+            guard !mid.isEmpty, sent > 0, !task.isEmpty, !conv.isEmpty, convOk, !apps.isEmpty,
+                  done.status == "COMPLETED", !done.resultArtifactId.isEmpty else {
+                print("SELFTEST_FAIL api meeting=\(mid) sent=\(sent) conv=\(conv) apps=\(apps.count) agent=\(done.status)"); exit(5)
             }
-            print("SELFTEST_OK api: email=\(me.email) meeting=\(mid) uploadedBytes=\(sent) finalizeTask=\(task) apps=\(apps.count)")
+            print("SELFTEST_OK api: email=\(me.email) meeting=\(mid) uploadedBytes=\(sent) apps=\(apps.count) agent=\(done.status)/\(done.resultArtifactId.prefix(8))")
             exit(0)
         } catch {
             print("SELFTEST_FAIL api error=\(error)"); exit(4)

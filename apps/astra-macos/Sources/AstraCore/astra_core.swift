@@ -1505,6 +1505,93 @@ public func FfiConverterTypeRecoverableMeeting_lower(_ value: RecoverableMeeting
 
 
 /**
+ * 仕事の状態（GET /v1/tasks/:id）。
+ */
+public struct TaskStatus {
+    public var id: String
+    public var status: String
+    /**
+     * 完成した成果物 id（無ければ空）。
+     */
+    public var resultArtifactId: String
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(id: String, status: String, 
+        /**
+         * 完成した成果物 id（無ければ空）。
+         */resultArtifactId: String) {
+        self.id = id
+        self.status = status
+        self.resultArtifactId = resultArtifactId
+    }
+}
+
+#if compiler(>=6)
+extension TaskStatus: Sendable {}
+#endif
+
+
+extension TaskStatus: Equatable, Hashable {
+    public static func ==(lhs: TaskStatus, rhs: TaskStatus) -> Bool {
+        if lhs.id != rhs.id {
+            return false
+        }
+        if lhs.status != rhs.status {
+            return false
+        }
+        if lhs.resultArtifactId != rhs.resultArtifactId {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+        hasher.combine(status)
+        hasher.combine(resultArtifactId)
+    }
+}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeTaskStatus: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TaskStatus {
+        return
+            try TaskStatus(
+                id: FfiConverterString.read(from: &buf), 
+                status: FfiConverterString.read(from: &buf), 
+                resultArtifactId: FfiConverterString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: TaskStatus, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.id, into: &buf)
+        FfiConverterString.write(value.status, into: &buf)
+        FfiConverterString.write(value.resultArtifactId, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTaskStatus_lift(_ buf: RustBuffer) throws -> TaskStatus {
+    return try FfiConverterTypeTaskStatus.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTaskStatus_lower(_ value: TaskStatus) -> RustBuffer {
+    return FfiConverterTypeTaskStatus.lower(value)
+}
+
+
+/**
  * dev サインインで得るトークン一式。
  */
 public struct Tokens {
@@ -2328,6 +2415,19 @@ public func apiCreateMeeting(baseUrl: String, accessToken: String, title: String
 })
 }
 /**
+ * 仕事を起こす（POST /v1/tasks）。Agent 実行の入口。task id を返す。
+ */
+public func apiCreateTask(baseUrl: String, accessToken: String, kind: String, inputJson: String)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeApiError_lift) {
+    uniffi_astra_core_fn_func_api_create_task(
+        FfiConverterString.lower(baseUrl),
+        FfiConverterString.lower(accessToken),
+        FfiConverterString.lower(kind),
+        FfiConverterString.lower(inputJson),$0
+    )
+})
+}
+/**
  * 開発用サインイン（POST /v1/auth/dev/token）。gateway が dev token を許すときだけ。
  */
 public func apiDevSignIn(baseUrl: String, email: String, displayName: String)throws  -> Tokens  {
@@ -2405,6 +2505,18 @@ public func apiStartConversation(baseUrl: String, accessToken: String)throws  ->
 })
 }
 /**
+ * 仕事の状態を引く。
+ */
+public func apiTaskStatus(baseUrl: String, accessToken: String, taskId: String)throws  -> TaskStatus  {
+    return try  FfiConverterTypeTaskStatus_lift(try rustCallWithError(FfiConverterTypeApiError_lift) {
+    uniffi_astra_core_fn_func_api_task_status(
+        FfiConverterString.lower(baseUrl),
+        FfiConverterString.lower(accessToken),
+        FfiConverterString.lower(taskId),$0
+    )
+})
+}
+/**
  * 録音済み断片を gateway の音声 WS へ送る（POST 相当の upgrade + binary frames）。
  * `journal_root/<meeting_id>/mic/NNNNNN.pcm` を順に送る。送ったバイト数を返す。
  *
@@ -2417,6 +2529,19 @@ public func apiUploadMeetingAudio(baseUrl: String, accessToken: String, meetingI
         FfiConverterString.lower(accessToken),
         FfiConverterString.lower(meetingId),
         FfiConverterString.lower(journalRoot),$0
+    )
+})
+}
+/**
+ * 完了まで待つ（poll）。timeout_ms を超えたら最後の状態を返す。UI は進捗表示に使う。
+ */
+public func apiWaitTask(baseUrl: String, accessToken: String, taskId: String, timeoutMs: UInt64)throws  -> TaskStatus  {
+    return try  FfiConverterTypeTaskStatus_lift(try rustCallWithError(FfiConverterTypeApiError_lift) {
+    uniffi_astra_core_fn_func_api_wait_task(
+        FfiConverterString.lower(baseUrl),
+        FfiConverterString.lower(accessToken),
+        FfiConverterString.lower(taskId),
+        FfiConverterUInt64.lower(timeoutMs),$0
     )
 })
 }
@@ -2501,6 +2626,9 @@ private let initializationResult: InitializationResult = {
     if (uniffi_astra_core_checksum_func_api_create_meeting() != 28887) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_astra_core_checksum_func_api_create_task() != 4113) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_astra_core_checksum_func_api_dev_sign_in() != 60660) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -2522,7 +2650,13 @@ private let initializationResult: InitializationResult = {
     if (uniffi_astra_core_checksum_func_api_start_conversation() != 27882) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_astra_core_checksum_func_api_task_status() != 37298) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_astra_core_checksum_func_api_upload_meeting_audio() != 61525) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_astra_core_checksum_func_api_wait_task() != 17601) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_astra_core_checksum_func_astra_core_version() != 51046) {

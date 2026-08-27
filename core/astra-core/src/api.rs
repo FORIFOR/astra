@@ -35,6 +35,15 @@ pub struct Me {
     pub role: String,
 }
 
+/// 冪等キー（8–128 文字）。外部乱数を足さず、pid + 単調時刻で一意にする。
+fn idem_key() -> String {
+    let nanos = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_nanos())
+        .unwrap_or(0);
+    format!("astra-core-{}-{}", std::process::id(), nanos)
+}
+
 fn base(url: &str) -> String {
     url.trim_end_matches('/').to_string()
 }
@@ -203,8 +212,17 @@ mod tests {
         assert!(!outcome.task_id.is_empty() || outcome.needs_clarification || !outcome.answer.is_empty() || !outcome.notice.is_empty());
 
         // Apps: plugin catalog（同梱が並ぶ）
-        let apps = api_plugin_catalog(url, tokens.access_token).expect("plugin catalog");
+        let apps = api_plugin_catalog(url.clone(), tokens.access_token.clone()).expect("plugin catalog");
         assert!(!apps.is_empty(), "builtin plugins should be listed");
+
+        // Agent round-trip: echo タスク → 完了まで待つ → COMPLETED + 成果物
+        let task = api_create_task(
+            url.clone(), tokens.access_token.clone(), "echo".into(),
+            "{\"message\":\"core e2e\",\"steps\":1}".into()).expect("create task");
+        assert!(!task.is_empty());
+        let done = api_wait_task(url, tokens.access_token, task, 15_000).expect("wait task");
+        assert_eq!(done.status, "COMPLETED", "echo task should complete");
+        assert!(!done.result_artifact_id.is_empty(), "echo should produce an artifact");
     }
 }
 
@@ -335,4 +353,83 @@ pub fn api_plugin_catalog(base_url: String, access_token: String) -> Result<Vec<
         .into_json()
         .map_err(|e| ApiError::Decode { message: e.to_string() })?;
     Ok(resp.items.into_iter().map(|i| i.name).collect())
+}
+
+/// 仕事の状態（GET /v1/tasks/:id）。
+#[derive(uniffi::Record, Clone, Debug)]
+pub struct TaskStatus {
+    pub id: String,
+    pub status: String,
+    /// 完成した成果物 id（無ければ空）。
+    pub result_artifact_id: String,
+}
+
+/// 仕事を起こす（POST /v1/tasks）。Agent 実行の入口。task id を返す。
+#[uniffi::export]
+pub fn api_create_task(
+    base_url: String,
+    access_token: String,
+    kind: String,
+    input_json: String,
+) -> Result<String, ApiError> {
+    let input: serde_json::Value =
+        serde_json::from_str(&input_json).unwrap_or(serde_json::json!({}));
+    #[derive(Deserialize)]
+    struct Resp { id: String }
+    let resp: Resp = ureq::post(&format!("{}/v1/tasks", base(&base_url)))
+        .set("Authorization", &format!("Bearer {access_token}"))
+        .set("Idempotency-Key", &idem_key())
+        .send_json(ureq::json!({ "kind": kind, "input": input }))
+        .map_err(map_transport)?
+        .into_json()
+        .map_err(|e| ApiError::Decode { message: e.to_string() })?;
+    Ok(resp.id)
+}
+
+/// 仕事の状態を引く。
+#[uniffi::export]
+pub fn api_task_status(
+    base_url: String,
+    access_token: String,
+    task_id: String,
+) -> Result<TaskStatus, ApiError> {
+    #[derive(Deserialize)]
+    struct Resp {
+        id: String,
+        status: String,
+        #[serde(default)]
+        result_artifact_id: Option<String>,
+    }
+    let resp: Resp = ureq::get(&format!("{}/v1/tasks/{}", base(&base_url), task_id))
+        .set("Authorization", &format!("Bearer {access_token}"))
+        .call()
+        .map_err(map_transport)?
+        .into_json()
+        .map_err(|e| ApiError::Decode { message: e.to_string() })?;
+    Ok(TaskStatus {
+        id: resp.id,
+        status: resp.status,
+        result_artifact_id: resp.result_artifact_id.unwrap_or_default(),
+    })
+}
+
+/// 完了まで待つ（poll）。timeout_ms を超えたら最後の状態を返す。UI は進捗表示に使う。
+#[uniffi::export]
+pub fn api_wait_task(
+    base_url: String,
+    access_token: String,
+    task_id: String,
+    timeout_ms: u64,
+) -> Result<TaskStatus, ApiError> {
+    let start = std::time::Instant::now();
+    loop {
+        let st = api_task_status(base_url.clone(), access_token.clone(), task_id.clone())?;
+        if matches!(st.status.as_str(), "COMPLETED" | "FAILED" | "CANCELLED") {
+            return Ok(st);
+        }
+        if start.elapsed().as_millis() as u64 >= timeout_ms {
+            return Ok(st);
+        }
+        std::thread::sleep(std::time::Duration::from_millis(200));
+    }
 }
