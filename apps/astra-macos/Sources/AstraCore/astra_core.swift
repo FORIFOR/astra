@@ -2778,6 +2778,18 @@ public func formatElapsed(ms: UInt64) -> String  {
 })
 }
 /**
+ * 会議の journal を「アップロード済み」に印す。gateway へ送り終えたら呼ぶ。
+ * これをしないと scan_recoverable が毎回その会議を回復候補に出し、二重アップロードになる。
+ */
+public func markMeetingUploaded(root: String, meetingId: String) -> Bool  {
+    return try!  FfiConverterBool.lift(try! rustCall() {
+    uniffi_astra_core_fn_func_mark_meeting_uploaded(
+        FfiConverterString.lower(root),
+        FfiConverterString.lower(meetingId),$0
+    )
+})
+}
+/**
  * 候補を決定的にランク付けする。両 OS・Tauri が同じ順序を得る単一実装。
  */
 public func rankContext(query: ContextQuery, candidates: [ContextCandidate]) -> [ContextResult]  {
@@ -2897,6 +2909,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_astra_core_checksum_func_format_elapsed() != 55286) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_astra_core_checksum_func_mark_meeting_uploaded() != 29088) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_astra_core_checksum_func_rank_context() != 39717) {

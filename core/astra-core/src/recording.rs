@@ -332,6 +332,16 @@ pub fn scan_recoverable_path(root: &Path, active: Option<&str>) -> Vec<Recoverab
     found
 }
 
+/// 会議の journal を「アップロード済み」に印す。gateway へ送り終えたら呼ぶ。
+/// これをしないと scan_recoverable が毎回その会議を回復候補に出し、二重アップロードになる。
+#[uniffi::export]
+pub fn mark_meeting_uploaded(root: String, meeting_id: String) -> bool {
+    match Journal::open(&std::path::PathBuf::from(root), &meeting_id) {
+        Ok(mut journal) => journal.finish(JournalState::Uploaded).is_ok(),
+        Err(_) => false,
+    }
+}
+
 /// UniFFI 向け（String path）。Swift/C# から回復候補を引く。
 #[uniffi::export]
 pub fn scan_recoverable(root: String, active: Option<String>) -> Vec<RecoverableMeeting> {

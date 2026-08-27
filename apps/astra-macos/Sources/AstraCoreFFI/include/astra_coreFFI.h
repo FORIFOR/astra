@@ -407,6 +407,11 @@ RustBuffer uniffi_astra_core_fn_func_connector_pkce_challenge(RustBuffer verifie
 RustBuffer uniffi_astra_core_fn_func_format_elapsed(uint64_t ms, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_MARK_MEETING_UPLOADED
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_MARK_MEETING_UPLOADED
+int8_t uniffi_astra_core_fn_func_mark_meeting_uploaded(RustBuffer root, RustBuffer meeting_id, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_RANK_CONTEXT
 #define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_RANK_CONTEXT
 RustBuffer uniffi_astra_core_fn_func_rank_context(RustBuffer query, RustBuffer candidates, RustCallStatus *_Nonnull out_status
@@ -830,6 +835,12 @@ uint16_t uniffi_astra_core_checksum_func_connector_pkce_challenge(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_FORMAT_ELAPSED
 #define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_FORMAT_ELAPSED
 uint16_t uniffi_astra_core_checksum_func_format_elapsed(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_MARK_MEETING_UPLOADED
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_MARK_MEETING_UPLOADED
+uint16_t uniffi_astra_core_checksum_func_mark_meeting_uploaded(void
     
 );
 #endif

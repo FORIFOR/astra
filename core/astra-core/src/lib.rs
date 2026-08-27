@@ -31,7 +31,7 @@ pub use connector::{accept_callback, build_authorize_url, configured_providers, 
 pub use transcript::{merge_overlap, LiveWindow, TranscriptEvent};
 pub use session::{RecordingSession, SessionError};
 pub use recording::{
-    format_elapsed, meetings_root_default, recording_snapshot, scan_recoverable,
+    format_elapsed, meetings_root_default, recording_snapshot, mark_meeting_uploaded, scan_recoverable,
     scan_recoverable_path, to_wire, Journal,
     JournalState, LinkState, Manifest, RecordingInput, RecordingSnapshot, RecoverableMeeting,
     FRAGMENT_MS, WIRE_SAMPLE_RATE,

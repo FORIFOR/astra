@@ -571,3 +571,14 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
   **実測 PASS**: `thinking=true→idle Agent 応答="…"`（dev エンジンは notice を返すが、HUD→core→gateway→Agent→HUD の
   経路は実物）。verify に SKIP 許容で組み込み。
 - **意味**: Voice HUD の thinking/idle が実 Agent 問い合わせで駆動される（Done#2/#7、mock 排除）。
+
+## 追記: アップロード済みの録音が毎回再アップロードされる重大バグを修正（Phase 1.50）
+- **バグ発見・修正**: `end()`/`recover()` は gateway にアップロードするが journal を **Uploaded に印していなかった**。
+  `scan_recoverable` は `state==Uploaded` のみ除外するため、**正常終了・復旧済みの録音まで毎回「回復候補」に出て、
+  サインインのたびに再アップロード**されていた（二重・多重送信）。
+- 修正: core に `mark_meeting_uploaded(root, meeting_id)`（journal を Uploaded に）を追加（uniffi 公開）。
+  Swift の `end()`/`recover()` がアップロード成功後に `AstraCoreBridge.markUploaded` を呼ぶ。
+- 検証: `--selftest recovery` を強化。復旧後に `recoverableMeetings()` から**消える**ことを確認。
+  **実測 PASS**: `検出→復旧 uploadedBytes=192000 復旧後は候補から消える(stillThere=false)`。
+  core 35 tests / swift-bindings `--check` current / Tauri ビルド回帰なし。
+- **意味**: 送信済みの録音を二重に送らない（データ整合・帯域・課金の実害を防ぐ実バグ修正）。

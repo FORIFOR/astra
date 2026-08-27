@@ -19,6 +19,11 @@ enum AstraCoreBridge {
     static func recoverable(root: String, active: String?) -> [RecoverableMeeting] {
         scanRecoverable(root: root, active: active)
     }
+    /// gateway へ送り終えた会議を「アップロード済み」に印す（二重回復を防ぐ）。
+    @discardableResult
+    static func markUploaded(root: String, meetingId: String) -> Bool {
+        markMeetingUploaded(root: root, meetingId: meetingId)
+    }
 
     // gateway（実バックエンド）を core 経由で叩く。Tauri を介さない。
     static func reachable(_ baseUrl: String) -> Bool { apiReachable(baseUrl: baseUrl) }

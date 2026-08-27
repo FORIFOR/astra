@@ -125,8 +125,10 @@ final class RecordingRuntime {
         session = nil
         // 実 gateway の会議なら、録音を送ってから finalize を投げる（作成→録音→送信→終了）
         if let base = apiBase, let token = accessToken, let id = meetingId {
-            _ = try? AstraCoreBridge.uploadMeetingAudio(base, accessToken: token, meetingId: id, journalRoot: root)
-            _ = try? AstraCoreBridge.finishMeeting(base, accessToken: token, meetingId: id)
+            if let _ = try? AstraCoreBridge.uploadMeetingAudio(base, accessToken: token, meetingId: id, journalRoot: root) {
+                _ = try? AstraCoreBridge.finishMeeting(base, accessToken: token, meetingId: id)
+                AstraCoreBridge.markUploaded(root: root, meetingId: id)  // 二重回復を防ぐ
+            }
         }
         meetingId = nil
     }
@@ -143,6 +145,7 @@ final class RecordingRuntime {
         guard let base = apiBase, let token = accessToken else { return 0 }
         let sent = (try? AstraCoreBridge.uploadMeetingAudio(base, accessToken: token, meetingId: id, journalRoot: root)) ?? 0
         _ = try? AstraCoreBridge.finishMeeting(base, accessToken: token, meetingId: id)
+        if sent > 0 { AstraCoreBridge.markUploaded(root: root, meetingId: id) }  // 二重回復を防ぐ
         return sent
     }
 }

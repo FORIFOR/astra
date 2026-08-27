@@ -662,13 +662,15 @@ enum SelfTest {
             let runtime = RecordingRuntime.shared
             runtime.configureBackend(base: base, accessToken: tokens.accessToken)
             let found = runtime.recoverableMeetings().contains { $0.meetingId == mid }
-            // 復旧: gateway に送って finalize。
+            // 復旧: gateway に送って finalize（アップロード済みに印す）。
             let sent = runtime.recover(meetingId: mid)
+            // 復旧後は回復候補から消えるはず（二重アップロードしない）。
+            let stillThere = runtime.recoverableMeetings().contains { $0.meetingId == mid }
             try? FileManager.default.removeItem(atPath: root + "/" + mid)
-            guard found, sent > 0 else {
-                print("SELFTEST_FAIL recovery found=\(found) sent=\(sent)"); exit(2)
+            guard found, sent > 0, !stillThere else {
+                print("SELFTEST_FAIL recovery found=\(found) sent=\(sent) stillRecoverable=\(stillThere)"); exit(2)
             }
-            print("SELFTEST_OK recovery: クラッシュ録音を検出→復旧 uploadedBytes=\(sent)")
+            print("SELFTEST_OK recovery: 検出→復旧 uploadedBytes=\(sent) 復旧後は候補から消える(stillThere=\(stillThere))")
             exit(0)
         } catch { print("SELFTEST_FAIL recovery error=\(error)"); exit(3) }
     }
