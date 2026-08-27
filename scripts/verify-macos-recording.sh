@@ -15,3 +15,6 @@ echo "$OUT2"
 OUT3="$("$BIN" --selftest shortcut)"
 echo "$OUT3"
 [[ "$OUT3" == SELFTEST_OK* ]] || { echo "FAIL: macOS global shortcut register" >&2; exit 1; }
+OUT4="$("$BIN" --selftest sysaudio)"
+echo "$OUT4"
+[[ "$OUT4" == SELFTEST_OK* ]] || { echo "FAIL: macOS system-audio config" >&2; exit 1; }

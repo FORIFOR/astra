@@ -187,3 +187,17 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
   TCC/署名ゲートに含まれ、この環境では未検証。
 - Done#2「Global voice shortcut」の**実装完了**（mock ではなく実 Carbon 登録）。§3 の残る native 実機能
   （System Audio=ScreenCaptureKit / Screen Context / Calendar=EventKit）は未実装で継続対象。
+
+## 追記: システム音声取り込み（Phase 1.18, macOS native / ScreenCaptureKit）
+- `Audio/SystemAudioCapture.swift` を新設。**ScreenCaptureKit** の `SCStream` 音声出力を
+  MicCapture と同じ契約（16 kHz mono f32 の `onFrame`）へ変換する。会議の「相手側の声」を録るための実機能。
+  `excludesCurrentProcessAudio=true` で Astra 自身の音は除外。CMSampleBuffer → AVAudioConverter で 16k mono 化。
+- `RecordingRuntime.begin(..., captureSystemAudio:)` に統合。mic と同じ session へ push（両方を混ぜて録る）。
+  許可が無ければ system audio 抜きで続行（mic だけで成立）。
+- 検証: `--selftest sysaudio` を追加し verify-macos-recording.sh に組み込み。
+  **実測 PASS**（TCC 不要の構成検証）: `SELFTEST_OK sysaudio: capturesAudio=true sampleRate=48000 channels=2 excludesSelf=true`。
+- **live 境界（正直に）**: 実フレームの取り込み（`getShareableContent`→`startCapture`）は**画面収録許可(TCC)**が要り、
+  署名済み .app 上でユーザーが許可して確かめる live 動作。構成の組み立ては検証済みだが、フレーム取り込みの
+  live E2E は Done#3(live) に含まれ、この環境では未検証。CMSampleBuffer 変換経路は MicCapture と同じ実績ある算法。
+- §3 の native 実機能の進捗: Mic(済) / **System Audio(実装・構成検証済)** / Global shortcut(済)。
+  残り: Screen Context(ScreenCaptureKit 映像) / Calendar・Reminders(EventKit) / live STT streaming。

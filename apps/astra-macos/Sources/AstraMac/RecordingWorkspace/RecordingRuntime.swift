@@ -9,6 +9,7 @@ final class RecordingRuntime {
 
     private var session: RecordingSession?
     private var mic: MicCapture?
+    private var sysAudio: AnyObject?
     /// 実 gateway に作った会議（サインイン時のみ）。無ければローカル録音だけ。
     private var meetingId: String?
     private var apiBase: String?
@@ -29,7 +30,8 @@ final class RecordingRuntime {
 
     /// core にセッションを作り、（可能なら）マイクを開く。live 取り込みは .app + 許可が要る。
     @discardableResult
-    func begin(meetingId localId: String, captureMic: Bool = true) -> Bool {
+    func begin(meetingId localId: String, captureMic: Bool = true,
+               captureSystemAudio: Bool = false) -> Bool {
         try? FileManager.default.createDirectory(
             atPath: root, withIntermediateDirectories: true)
         // サインイン済みなら実 gateway に会議を作り、その id で録音する（Tauri を介さない）
@@ -55,6 +57,20 @@ final class RecordingRuntime {
                 NSLog("mic capture unavailable: \(error)")
             }
         }
+        if captureSystemAudio, #available(macOS 13.0, *) {
+            let sys = SystemAudioCapture()
+            self.sysAudio = sys
+            Task { [weak session] in
+                do {
+                    try await sys.start { frame in
+                        _ = session?.pushSamples(samples: frame, sampleRate: 16_000)
+                    }
+                } catch {
+                    // 画面収録許可が無ければ system audio 無しで続ける（mic だけで成り立つ）
+                    NSLog("system audio capture unavailable: \(error)")
+                }
+            }
+        }
         return true
     }
 
@@ -70,6 +86,10 @@ final class RecordingRuntime {
     /// 停止して確定。書けた断片は残り、回復候補になる。
     func end() {
         mic?.stop(); mic = nil
+        if #available(macOS 13.0, *), let sys = sysAudio as? SystemAudioCapture {
+            Task { await sys.stop() }
+        }
+        sysAudio = nil
         try? session?.finish()
         session = nil
         // 実 gateway の会議なら、録音を送ってから finalize を投げる（作成→録音→送信→終了）

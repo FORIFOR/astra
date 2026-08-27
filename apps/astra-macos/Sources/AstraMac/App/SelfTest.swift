@@ -12,6 +12,7 @@ enum SelfTest {
         case "lifecycle": lifecycle(); return true
         case "api": api(args); return true
         case "shortcut": shortcut(); return true
+        case "sysaudio": sysaudio(); return true
         default: return false
         }
     }
@@ -90,6 +91,19 @@ enum SelfTest {
         GlobalShortcut.shared.unregister()
         guard ok else { print("SELFTEST_FAIL shortcut register"); exit(2) }
         print("SELFTEST_OK shortcut: registered=\(ok) combo=\(label) firedAtRegister=\(fired)")
+        exit(0)
+    }
+
+    /// `--selftest sysaudio`: ScreenCaptureKit の音声取り込み構成を検証する。
+    /// live capture は画面収録許可(TCC)が要るが、**構成の組み立ては TCC 無しで確かめられる**。
+    @MainActor
+    private static func sysaudio() {
+        guard #available(macOS 13.0, *) else { print("SELFTEST_FAIL sysaudio needs macOS 13+"); exit(2) }
+        let c = SystemAudioCapture.configuration()
+        guard c.capturesAudio, c.sampleRate == 48_000, c.channelCount == 2, c.excludesCurrentProcessAudio else {
+            print("SELFTEST_FAIL sysaudio config audio=\(c.capturesAudio) rate=\(c.sampleRate) ch=\(c.channelCount) excl=\(c.excludesCurrentProcessAudio)"); exit(3)
+        }
+        print("SELFTEST_OK sysaudio: capturesAudio=\(c.capturesAudio) sampleRate=\(c.sampleRate) channels=\(c.channelCount) excludesSelf=\(c.excludesCurrentProcessAudio)")
         exit(0)
     }
 
