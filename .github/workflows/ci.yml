@@ -76,6 +76,8 @@ jobs:
       - run: pnpm check:cabi-csharp
       # Recording Workspace の形（凹み Bezier）を tokens 由来の golden と照合（visual regression fixture）。
       - run: pnpm check:workspace-fixture
+      # 最終製品経路（macOS native + astra-core）が Tauri 非依存であることを担保（Done#8）。
+      - run: pnpm check:native-tauri-free
       - name: Check the contracts version was bumped
         if: github.event_name == 'pull_request'
         run: node scripts/check-contracts-version.mjs origin/${{ github.base_ref }}

@@ -609,3 +609,16 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
   この 1 本で、今セッションで直した「再帰修正・gateway 会議作成・実マイク・アップロード・mark・window 復帰」が
   実際の製品エントリ経由で一緒に動くことを確認。verify に SKIP 許容で組み込み、全 selftest 0 FAIL。
 - **意味**: Done#3(live capture の核)・#7(統合)・§6 の主要 E2E が実バックエンド＋実ハードウェアで通ることを実証。
+
+## 追記: 最終製品経路の Tauri 非依存を機械検証（Phase 1.54, Done#8）
+- **Done#8 の正確な確認**: 最終製品＝**macOS native app は core を直接使い Tauri に一切依存していない**
+  （`apps/astra-macos` に `import Tauri`/`WebviewWindow`/`AppHandle`/`apps/desktop`/`src-tauri` の実コード参照ゼロ、
+  `astra-core` も tauri crate 非依存）。これまで「live トークン交換が残る」と書いたが、それは **Tauri 依存ではなく
+  外部 OAuth 提供者依存**であり、native の交換経路は core の `exchange_code` を通る（Tauri を介さない）。
+- `scripts/check-native-tauri-free.mjs` を新設: native app の Swift（コメント除去後の実コード）と astra-core の Cargo を
+  走査し、Tauri 参照があれば fail。`ci.yml` に `pnpm check:native-tauri-free` を追加。
+- 検証: **実測 PASS** `native product path is Tauri-free: 45 Swift files + astra-core に Tauri 依存なし`。
+  **負テスト**: `import Tauri` を注入すると検出して fail（ドリフトを止める）。
+- **意味（Done#8）**: 最終製品経路（native）から旧 Tauri 依存が**外れていることを機械で担保**。既存 Tauri アプリ
+  (`apps/desktop`) は §7 に従い残置（参照側であって製品経路ではない）。残る外部依存は実 OAuth 提供者との live 交換のみ
+  （Tauri とは無関係）。
