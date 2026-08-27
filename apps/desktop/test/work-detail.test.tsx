@@ -118,6 +118,7 @@ describe('Overview', () => {
       status: 'WAITING_APPROVAL',
       attention: {
         kind: 'approval',
+        risk: 'EXTERNAL_COMMIT',
         approvalId: uuidv7(),
         summary: '3人にメールを送信します',
         primaryActionLabel: '3件送信する',
