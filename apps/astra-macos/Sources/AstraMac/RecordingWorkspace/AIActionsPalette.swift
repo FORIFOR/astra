@@ -19,7 +19,7 @@ struct AIActionsPalette: View {
     var body: some View {
         VStack(spacing: 4) {
             ForEach(actions) { action in
-                Button {} label: {
+                Button { state.runAIAction(action.title) } label: {
                     HStack(spacing: 9) {
                         Image(systemName: action.icon).frame(width: 15).foregroundStyle(Color.astraAccent)
                         Text(action.title)

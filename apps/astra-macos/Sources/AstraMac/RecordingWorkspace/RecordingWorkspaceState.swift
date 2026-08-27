@@ -54,6 +54,13 @@ final class RecordingWorkspaceState: ObservableObject {
     @Published var ragResults: [RankedContext] = []
     /// いまの会議 id（スクリーンショット等の保存先に使う）。
     var currentMeetingId = "adhoc"
+    /// AI 操作（要約/質問/決定事項/アクション）の結果。
+    @Published var aiResult = ""
+    @Published var aiRunning = false
+    /// 実バックエンド（サインイン済みのときだけ AI 操作が動く）。
+    private var apiBase: String?
+    private var apiToken: String?
+    private var conversationId: String?
     /// ユーザーが選んだローカルファイル由来の候補（Finder access）。transcript と混ぜて並べ替える。
     var fileCandidates: [ContextCandidate] = []
     @Published var audioLevels: [CGFloat] =
@@ -162,6 +169,47 @@ final class RecordingWorkspaceState: ObservableObject {
         RecordingRuntime.shared.end()   // 断片を確定（回復候補として残る）
         WindowCoordinator.shared.leaveRecordingMode()
     }
+    /// サインイン済みセッションを渡す（Main Window のサインインから）。
+    func configureBackend(base: String, token: String) {
+        apiBase = base; apiToken = token; conversationId = nil
+    }
+
+    /// AI 操作。transcript を Agent（会話）に渡して結果を得る。要約/質問/決定事項/アクション。
+    /// 同期 I/O なのでバックグラウンドで回し、結果を main で反映する。
+    func runAIAction(_ title: String) {
+        guard let base = apiBase, let token = apiToken else {
+            aiResult = "サインインすると AI 操作が使えます。"; return
+        }
+        let transcriptText = transcript.map { "\($0.speaker): \($0.text)" }.joined(separator: "\n")
+        let instruction: String
+        switch title {
+        case "リアルタイム要約": instruction = "次の会議の文字起こしを日本語で3行以内に要約して。"
+        case "決定事項": instruction = "次の会議の文字起こしから決定事項だけを箇条書きで出して。"
+        case "アクション": instruction = "次の会議の文字起こしから ToDo（担当と期限があれば付けて）を箇条書きで出して。"
+        default: instruction = "次の会議の文字起こしについて答えて。"
+        }
+        aiRunning = true; aiResult = ""
+        let prompt = instruction + "\n---\n" + (transcriptText.isEmpty ? "(まだ発話がありません)" : transcriptText)
+        Task.detached { [weak self] in
+            do {
+                let conv: String
+                if let existing = await self?.conversationId { conv = existing }
+                else {
+                    conv = try AstraCoreBridge.startConversation(base, accessToken: token)
+                    await MainActor.run { self?.conversationId = conv }
+                }
+                let outcome = try AstraCoreBridge.sendTurn(base, accessToken: token, conversationId: conv, text: prompt)
+                let text = !outcome.answer.isEmpty ? outcome.answer
+                    : !outcome.notice.isEmpty ? outcome.notice
+                    : outcome.needsClarification ? "詳しく教えてください。"
+                    : "(応答なし)"
+                await MainActor.run { self?.aiResult = text; self?.aiRunning = false }
+            } catch {
+                await MainActor.run { self?.aiResult = "AI 操作に失敗しました: \(error)"; self?.aiRunning = false }
+            }
+        }
+    }
+
     func togglePause() {
         isPaused.toggle()
         RecordingRuntime.shared.setPaused(isPaused)   // 実際に録音を止める（core が sample を捨てる）

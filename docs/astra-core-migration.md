@@ -450,3 +450,14 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
 - 検証: `--selftest screenshot`（画面収録許可があれば実 PNG を保存、PNG マジックナンバー確認）。
   **実測 PASS**: `実 PNG 保存 bytes=563842 isPng=true`。verify に組み込み（未許可 CI では SKIP）。
 - viewfinder ボタンが実機能に（Done#2）。
+
+## 追記: AI 操作（要約/質問/決定事項/アクション）を実 Agent に配線（Phase 1.38）
+- **空アクションの修正**: `AIActionsPalette` の 4 ボタンは `Button {}`（空）だった（§2「AI Summary/Ask/Decisions/Actions」が stub）。
+  `RecordingWorkspaceState.runAIAction(title)` を実装し、**transcript を指示文付きで core 経由の会話 Agent に送り**
+  （`startConversation`→`sendTurn`）、結果を `aiResult` に反映。要約/決定事項/アクションで指示文を変える。
+- サインイン済みセッションを `configureBackend(base:token:)` で受け取り、未サインインなら「サインインすると使えます」を返す
+  （**推測で埋めない**）。同期 I/O は `Task.detached` で回し main で反映。
+- 検証: `--selftest aiaction <base>`（実 gateway）。サインイン→transcript 設定→要約実行→Agent 応答を待つ。
+  **実測 PASS**: `Agent 応答="…"`（dev の会話エンジンは notice を返すが、**ボタン→core→gateway→Agent→UI の経路は実物**）。
+  verify に SKIP 許容で組み込み。
+- **意味**: AI 操作 4 ボタンが実 Agent に繋がった（Done#2/#7、UI mock ではない）。

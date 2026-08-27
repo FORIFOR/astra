@@ -32,6 +32,7 @@ enum SelfTest {
         case "hudlifecycle": hudlifecycle(); return true
         case "pause": pauseWorks(); return true
         case "screenshot": screenshot(); return true
+        case "aiaction": aiaction(args); return true
         default: return false
         }
     }
@@ -551,6 +552,38 @@ enum SelfTest {
         }
         print("SELFTEST_OK screenshot: 実 PNG 保存 bytes=\(size ?? 0) isPng=\(isPng)")
         exit(0)
+    }
+
+    /// `--selftest aiaction <base>`: AI 操作（要約）が core 経由で実 Agent に届き、結果が返るか検証する。
+    /// gateway 未到達なら SKIP。
+    @MainActor
+    private static func aiaction(_ args: [String]) {
+        let base = args.count > (args.firstIndex(of: "--selftest")! + 2)
+            ? args[args.firstIndex(of: "--selftest")! + 2] : "http://127.0.0.1:3000"
+        guard AstraCoreBridge.reachable(base) else { print("SELFTEST_SKIP aiaction: gateway unreachable"); exit(0) }
+        do {
+            let tokens = try AstraCoreBridge.devSignIn(base, email: "aiaction-\(getpid())@astra.local", displayName: "AI")
+            let state = RecordingWorkspaceState.shared
+            state.configureBackend(base: base, token: tokens.accessToken)
+            state.transcript = [
+                TranscriptSegment(speaker: "田中", text: "リリースは 9 月 12 日にしましょう。", interim: false),
+                TranscriptSegment(speaker: "鈴木", text: "OAuth の確認を私がやります。", interim: false),
+            ]
+            state.runAIAction("リアルタイム要約")
+            // 非同期の結果を待つ（最大 20 秒）。
+            let deadline = Date().addingTimeInterval(20)
+            while state.aiResult.isEmpty && Date() < deadline {
+                RunLoop.current.run(until: Date().addingTimeInterval(0.2))
+            }
+            guard !state.aiResult.isEmpty, !state.aiResult.contains("失敗") else {
+                print("SELFTEST_FAIL aiaction result=\(state.aiResult)"); exit(2)
+            }
+            let preview = String(state.aiResult.prefix(40)).replacingOccurrences(of: "\n", with: " ")
+            print("SELFTEST_OK aiaction: Agent 応答=\"\(preview)…\"")
+            exit(0)
+        } catch {
+            print("SELFTEST_FAIL aiaction error=\(error)"); exit(3)
+        }
     }
 
     private static func recordToDisk() {
