@@ -748,3 +748,16 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
   描画になることを確認（**画面には何も出さない**＝安全、XCUITest のような GUI 自動操作の代替として render を担保）。
 - 検証: **実測 PASS** `VoiceHUD/RecordingWorkspace/MainWindow/Settings 全てオフスクリーン描画 OK`。verify に組み込み。
 - **意味（§6 UI）**: 主要画面が実際に描画されること（mock でなく View が body を生成しレイアウトされる）を headless で担保。
+
+## 追記: Windows C# 実ロジック全体を macOS で型検査（Phase 1.69, Done#4/#5 大幅前進）
+- **突破**: `EnableWindowsTargeting=true` ＋ `net8.0-windows10` で **Windows App SDK の型が macOS で解決**でき、
+  XAML→C# codegen（`XamlCompiler.exe`＝Windows 専用）を**手書きスタブ**（`x:Name` 要素＋`InitializeComponent`）で
+  代替すれば、`dotnet build -t:CoreCompile` で **WinUI の Window code-behind を含む Windows C# 全体を型検査できる**。
+- `apps/windows/logic-check/`（csproj＋xaml-stubs.g.cs、実アプリのソースを参照＝コピーしない）と
+  `scripts/verify-csharp-logic.sh` を新設。実 gateway 不要・どのホストでも走る。`ci.yml`／`windows.yml`／`verify:all` に追加。
+- 検証: **実測 PASS** `CSLOGIC_OK: Windows C# 実ロジック全体(Window code-behind 含む)が型検査を通過`。
+  対象: AstraCore(bridge)／AstraSession／WASAPI／GlobalShortcut／CredentialStore／ScreenCapture／geometry ＋
+  **MainWindow・RecordingWorkspaceWindow(WASAPI 配線含む)・VoiceHudWindow の code-behind**。
+- **意味（Done#4/#5）**: これまで「WinUI 全部が Windows 専用」としていたが、**実ロジック（Window 配線含む）は macOS/CI で
+  型検査でき、実測 PASS**。**残る唯一の Windows 専用**は XAML markup の codegen（`.xaml`→`.g.cs`）＋実描画＋
+  COM/Win32 の実行時のみ。捏造ではなく、境界がさらに狭まったことを実測で確定。

@@ -32,6 +32,8 @@ jobs:
         run: bash scripts/verify-csharp-bridge.sh
       - name: WinUI XAML well-formed
         run: bash scripts/check-xaml-wellformed.sh
+      - name: Windows C# logic type-check (Window code-behind)
+        run: bash scripts/verify-csharp-logic.sh
       - name: Restore + build WinUI 3 solution
         run: dotnet build apps/windows/Astra.sln -c Release -p:Platform=x64
       - name: Note

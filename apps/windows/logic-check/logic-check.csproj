@@ -1,0 +1,36 @@
+<!-- Windows C# の「実ロジック全体」を macOS/CI で型検査する（WinUI の Window code-behind 含む）。
+     XAML→C# codegen(XamlCompiler.exe, Windows 専用)の代わりに手書きスタブで生成メンバーを補い、
+     `dotnet build -t:CoreCompile` で C# コンパイル(型検査)だけを走らせる。実描画/実行時は Windows。 -->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <OutputType>Library</OutputType>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <UseWinUI>true</UseWinUI>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.6.240923002" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.1742" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- 実アプリのソース（コピーせず参照）。 -->
+    <Compile Include="../Astra/CoreBridge/AstraCore.cs" />
+    <Compile Include="../Astra/GeneratedMetrics.cs" />
+    <Compile Include="../Astra/AppLogic/AstraSession.cs" />
+    <Compile Include="../Astra/AppLogic/WasapiCapture.cs" />
+    <Compile Include="../Astra/AppLogic/WindowsGlobalShortcut.cs" />
+    <Compile Include="../Astra/AppLogic/WindowsCredentialStore.cs" />
+    <Compile Include="../Astra/AppLogic/WindowsScreenCapture.cs" />
+    <Compile Include="../Astra/Main/MainWindow.xaml.cs" />
+    <Compile Include="../Astra/RecordingWorkspace/RecordingWorkspaceWindow.xaml.cs" />
+    <Compile Include="../Astra/RecordingWorkspace/RecordingWorkspaceGeometry.cs" />
+    <Compile Include="../Astra/VoiceHUD/VoiceHudWindow.xaml.cs" />
+    <!-- XAML が生成する部分メンバーの手書きスタブ（型検査用）。 -->
+    <Compile Include="xaml-stubs.g.cs" />
+  </ItemGroup>
+</Project>

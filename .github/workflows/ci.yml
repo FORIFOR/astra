@@ -84,6 +84,8 @@ jobs:
           dotnet-version: "8.0.x"
       - uses: dtolnay/rust-toolchain@stable
       - run: pnpm verify:csharp-bridge
+      # Windows C# の実ロジック全体(WinUI Window code-behind 含む)を型検査(XAML codegen はスタブで代替, dotnet)。
+      - run: pnpm verify:csharp-logic
       # Windows の .xaml が整形式 XML か（構文レベル、どのホストでも）。完全な WinUI 検証は windows.yml。
       - run: pnpm check:xaml
       - name: Check the contracts version was bumped
