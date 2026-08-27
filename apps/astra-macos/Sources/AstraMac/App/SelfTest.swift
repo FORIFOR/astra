@@ -16,6 +16,7 @@ enum SelfTest {
         case "sysaudio": sysaudio(); return true
         case "calendar": calendar(); return true
         case "screen": screen(); return true
+        case "rag": rag(); return true
         default: return false
         }
     }
@@ -133,6 +134,26 @@ enum SelfTest {
             print("SELFTEST_FAIL screen config w=\(c.width) h=\(c.height) audio=\(c.capturesAudio)"); exit(3)
         }
         print("SELFTEST_OK screen: width=\(c.width) height=\(c.height) pixelFormat=BGRA audio=\(c.capturesAudio)")
+        exit(0)
+    }
+
+    /// `--selftest rag`: RAG の並べ替えが core(rank_context) を通って決定的に効くか検証する。
+    /// 語彙一致するものが上に来ること・根拠(reason)が付くことを確かめる（外部依存なし）。
+    @MainActor
+    private static func rag() {
+        let candidates = [
+            ContextCandidate(id: "a", text: "OAuth の確認をお願いします", source: .meeting, ageSeconds: 30, projectMatch: true),
+            ContextCandidate(id: "b", text: "昼食はどこにしましょうか", source: .meeting, ageSeconds: 30, projectMatch: false),
+            ContextCandidate(id: "c", text: "OAuth のトークン交換の話", source: .library, ageSeconds: 6000, projectMatch: false),
+        ]
+        let ranked = AstraCoreBridge.rankContext(terms: ["oauth"], limit: 5, candidates: candidates)
+        guard let top = ranked.first, top.id == "a", ranked.count == 3, !top.reason.isEmpty,
+              ranked.contains(where: { $0.id == "c" }) else {
+            print("SELFTEST_FAIL rag top=\(ranked.first?.id ?? "nil") count=\(ranked.count)"); exit(2)
+        }
+        // 語彙一致しない b は最下位
+        guard ranked.last?.id == "b" else { print("SELFTEST_FAIL rag last=\(ranked.last?.id ?? "nil")"); exit(3) }
+        print("SELFTEST_OK rag: order=\(ranked.map { $0.id }.joined(separator: ",")) topScore=\(String(format: "%.2f", top.score)) reason=\(top.reason)")
         exit(0)
     }
 

@@ -55,6 +55,12 @@ enum AstraCoreBridge {
     static func artifactContent(_ baseUrl: String, accessToken: String, artifactId: String) throws -> String {
         try apiArtifactContent(baseUrl: baseUrl, accessToken: accessToken, artifactId: artifactId)
     }
+    /// RAG コンテキストの並べ替え（決定的）。ランキングは core に一本化する。
+    /// 語彙一致・新しさ・プロジェクト一致 × source 重みで採点し、上位を返す。
+    static func rankContext(terms: [String], limit: UInt32, candidates: [ContextCandidate]) -> [ContextResult] {
+        AstraCore.rankContext(query: ContextQuery(terms: terms, limit: limit), candidates: candidates)
+    }
+
     static func library(_ baseUrl: String, accessToken: String) throws -> [String] {
         try apiLibrary(baseUrl: baseUrl, accessToken: accessToken)
     }

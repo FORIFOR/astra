@@ -241,3 +241,14 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
 - **意味**: サインイン折り返しの**セキュリティ判定と契約処理**が Tauri から core へ移り、両 OS native が共有する
   （①/⑧ の前進）。**残る connector の外部依存**（各プロバイダの OAuth 実行フロー・トークン交換）は
   外部サービス + ユーザー許可を伴い、この環境で完了・検証不可。Done#8「完全 retire」は依然未達。
+
+## 追記: RAG ドロワーを core の rank_context に接続（Phase 1.22, macOS native）
+- macOS の RAG ドロワーは静的チップだけで core を呼んでいなかった。`AstraCoreBridge.rankContext` を追加し、
+  `RecordingWorkspaceState.refreshRag()` が**この会議の transcript から実候補**を作って core の `rank_context`
+  （語彙一致・新しさ・プロジェクト一致 × source 重み、決定的）で並べ替え、`RAGDrawerView` が score と
+  **根拠(reason)** 付きで上位を描く（§8「根拠を出す」）。外部コネクタ（Gmail/Drive）の候補は接続後に足す。
+- 検証: `--selftest rag`（bridge→core の決定的ランキング）を追加し verify に組み込み。
+  **実測 PASS**: `SELFTEST_OK rag: order=a,c,b topScore=1.00 reason=語が 1 件一致 · 新しい · このプロジェクト`
+  （語彙一致する 2 件が非一致より上、新しく projectMatch な方が最上位）。全 selftest 7 件 + swift unit 3 も回帰なし。
+- **意味**: core の `rank_context` が **macOS native の実 UI 経路**で使われる（① 実運用経路 / ⑦ RAG 統合の前進）。
+  ランキングは core・候補は実 transcript（捏造なし）。live コネクタからの候補供給は外部依存で継続対象。

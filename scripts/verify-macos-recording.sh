@@ -24,3 +24,6 @@ echo "$OUT5"
 OUT6="$("$BIN" --selftest screen)"
 echo "$OUT6"
 [[ "$OUT6" == SELFTEST_OK* ]] || { echo "FAIL: macOS screen-context config" >&2; exit 1; }
+OUT7="$("$BIN" --selftest rag)"
+echo "$OUT7"
+[[ "$OUT7" == SELFTEST_OK* ]] || { echo "FAIL: macOS RAG rank_context via core" >&2; exit 1; }

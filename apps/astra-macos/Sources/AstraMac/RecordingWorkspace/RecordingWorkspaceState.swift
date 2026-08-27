@@ -27,6 +27,15 @@ struct TranscriptSegment: Identifiable {
     let interim: Bool
 }
 
+/// RAG ドロワーの 1 行。並べ替え（score/reason）は core が決める。
+struct RankedContext: Identifiable {
+    let id: String
+    let title: String
+    let source: ContextSource
+    let score: Double
+    let reason: String
+}
+
 /// 録音 UI の状態を一か所に。UI から STT/Core を直接呼ばない（後段で bridge 経由にする）。
 @MainActor
 final class RecordingWorkspaceState: ObservableObject {
@@ -38,6 +47,8 @@ final class RecordingWorkspaceState: ObservableObject {
     @Published var selectedTool: RecordingTool = .transcript
     @Published var ragOpen = false
     @Published var transcript: [TranscriptSegment] = []
+    /// RAG コンテキストの並べ替え結果（core の rank_context 由来）。
+    @Published var ragResults: [RankedContext] = []
     @Published var audioLevels: [CGFloat] =
         [0.3, 0.5, 0.8, 0.4, 0.9, 0.6, 0.35, 0.7, 0.5, 0.85, 0.45, 0.6]
 
@@ -64,6 +75,34 @@ final class RecordingWorkspaceState: ObservableObject {
             TranscriptSegment(speaker: "あなた", text: "了解しました。", interim: false),
             TranscriptSegment(speaker: "鈴木", text: "OAuth だけ確認お願いします。", interim: true),
         ]
+        refreshRag()
+    }
+
+    /// いま話していることに近い文脈を、この会議の中身から core で並べ替える。
+    /// 候補は transcript から作る実データ。ランキングは core（Swift 側で書き直さない）。
+    /// 外部コネクタ（Gmail/Drive 等）の候補は接続後にここへ足す。
+    func refreshRag() {
+        let segments = transcript
+        guard !segments.isEmpty else { ragResults = []; return }
+        // 直近の発話から検索語を作る（小文字化・記号除去）。
+        let latest = segments.last?.text ?? ""
+        let terms = latest.lowercased()
+            .components(separatedBy: CharacterSet.alphanumerics.inverted)
+            .filter { $0.count >= 2 }
+        let candidates: [ContextCandidate] = segments.enumerated().map { i, seg in
+            ContextCandidate(
+                id: seg.id.uuidString,
+                text: seg.text,
+                source: .meeting,
+                ageSeconds: UInt64((segments.count - i) * 30),
+                projectMatch: true)
+        }
+        let byId = Dictionary(uniqueKeysWithValues: candidates.map { ($0.id, $0) })
+        let ranked = AstraCoreBridge.rankContext(terms: terms, limit: 5, candidates: candidates)
+        ragResults = ranked.compactMap { r in
+            guard let c = byId[r.id] else { return nil }
+            return RankedContext(id: r.id, title: c.text, source: c.source, score: r.score, reason: r.reason)
+        }
     }
 
     func start() {
