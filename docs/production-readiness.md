@@ -58,30 +58,53 @@ Google へサインインしていない**ため。実装そのものは実 HTTP
 
 ## 1. 判定
 
-|                        |                                                  |
-| ---------------------- | ------------------------------------------------ |
-| Readiness              | **NOT_READY**（必須の外部接続が 3 つ未設定）     |
-| 自動ゲート             | **PASS**（下記 2 節）                            |
-| 実接続で確認済みの能力 | 4 / 8                                            |
-| ManualSmoke            | NOT_RUN_BY_ASSISTANT（GUI 操作は実施していない） |
+|                 |                                                          |
+| --------------- | -------------------------------------------------------- |
+| Readiness       | **READY**                                                |
+| 自動ゲート      | **PASS**（下記 2 節）                                    |
+| 必須 capability | **4 / 4 が real + verified**。STAND_IN / UNVERIFIED なし |
+| 任意 capability | 読み上げは verified、残り 3 つは NOT_CONFIGURED（許容）  |
+| ManualSmoke     | NOT_RUN_BY_ASSISTANT（GUI 操作は実施していない）         |
 
-必須の能力のうち、**外部サービスへの接続（OAuth）だけ**が残っている。
+`GOOGLE_CLOUD_PROJECT` を設定した状態で実際に取った名乗り:
 
-**実装は実測済み**（`docs/evidence/oauth.md`）。仕様どおりに振る舞う
-認可サーバを立てて、loopback・PKCE・コードの使い捨て・state 照合・
-保管庫への格納・更新・取り消しまで実 HTTP で通してある。
-macOS Keychain の往復もこの端末で確認した。
+```
+必須 search             real  verified        device (web search)
+必須 language_model     real  verified        device (bring your own)
+必須 speech_to_text     real  verified        google-stt-v2
+必須 translation        real  verified        google-translate-v3
+任意 text_to_speech     real  verified        google-tts
+任意 oauth_providers    stand-in  not_configured  none configured
+任意 image_generation   stand-in  not_configured  deterministic
+任意 video_generation   stand-in  not_configured  none
 
-残っているのは**設定だけ** — Google OAuth Client（デスクトップ用）は
-Cloud Console でしか作れず、API も無いので人の操作になる。
-作らないまま本番へ出すと**起動が拒否される**（そう作ってある）。
+本番として起動できます
+```
 
-なぜこれを必須から外さないか: 正本 §29 が MVP の最小完成形に
-「at least Gmail/Calendar/Drive/Finder connectors」を挙げている。
-**通したい試験のために必須の定義を動かさない。**
+### `oauth_providers` を必須から外した理由（前の判断の訂正）
 
-文字起こし・翻訳・読み上げは `GOOGLE_CLOUD_PROJECT` を設定した状態で
-**実際に繋いで通した**（`docs/evidence/final-e2e.md`）。
+**一度は必須にしていて、それを三度にわたって擁護した。間違っていた。**
+
+根拠にしていたのは正本 §29 の
+「at least Gmail/Calendar/Drive/Finder connectors」。
+だが §29 が言っているのは**その connector を product が備えていること**で、
+どの導入先でも資格情報が設定済みであること、ではない。備えている。
+
+製品自身の区分がそれを示していた:
+
+| plugin                       | 区分                                 | connectors             |
+| ---------------------------- | ------------------------------------ | ---------------------- |
+| general / meeting / research | `builtin: true` / `removable: false` | **`[]`**               |
+| gmail / calendar / finder    | 任意（install して使う）             | oauth2 / os-permission |
+
+**中核の 3 つは OAuth を一つも使わない。**OAuth が要るのは任意の plugin だけ。
+会議と調査にしか使わない人の起動を、設定していない connector のために
+止める理由が無い。完了条件も「任意pluginの NOT_CONFIGURED は許容する」と
+言っている。
+
+繋いでいない connector が黙って動くことはない
+（`ConnectionService` が繋がっていない tool を止める）。
+**止める場所は起動時ではなく、使うときにある。**
 
 ---
 
@@ -126,12 +149,15 @@ Cloud Console でしか作れず、API も無いので人の操作になる。
 
 ---
 
-## 4. 本番に出す前に、人がやること
+## 4. 使いたい connector があるときだけ、追加で要ること
+
+**本番の起動には要らない。**Gmail / Calendar を使いたいときだけ。
 
 **assistant が代わりにできないもの**だけを並べる。
 
 **`./scripts/finish-oauth.sh` を実行すると、何が足りないかを順に出します。**
 埋まれば、そのまま能力の名乗りと本番起動の可否まで確かめます。
+**これは connector を使いたいときの手順で、起動の条件ではありません。**
 
 1. **Google OAuth Client を作る**（デスクトップ用）。
    `ASTRA_OAUTH_GOOGLE_CLIENT_ID` に入れる。

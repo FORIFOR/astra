@@ -56,7 +56,28 @@ export const REQUIRED_CAPABILITIES: readonly ExternalCapability[] = [
   'language_model',
   'speech_to_text',
   'translation',
-  'oauth_providers',
+  /*
+   * `oauth_providers` はここに**入れない。**
+   *
+   * 一度は必須にしていた。正本 §29 が MVP の最小完成形に
+   * 「at least Gmail/Calendar/Drive/Finder connectors」を挙げているからで、
+   * それ自体は正しい。だが §29 が言っているのは
+   * **その connector を product が備えていること**であって、
+   * どの導入先でも資格情報が設定済みであること、ではない。
+   *
+   * 製品自身の区分がそれをはっきり示している:
+   *
+   *   builtin: true / removable: false … general・meeting・research
+   *   任意（install して使う）        … gmail・calendar・finder
+   *
+   * 中核の 3 つは `connectors: []` で、**OAuth を一つも使わない。**
+   * OAuth を要るのは任意の plugin だけなので、
+   * 「会議と調査にしか使わない人」の起動を止める理由が無い。
+   *
+   * 繋いでいない connector が黙って動くことは無い
+   * （`ConnectionService` が繋がっていない tool を止める）。
+   * 止める場所は起動時ではなく、使うときにある。
+   */
 ];
 
 /** 任意。欠けていても本番は起動する（できないことは申告する）。 */

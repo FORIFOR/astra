@@ -161,3 +161,47 @@ describe('required and optional', () => {
     );
   });
 });
+
+describe('which capabilities the core actually needs', () => {
+  it('does not require what only optional plugins use', async () => {
+    /*
+     * `oauth_providers` を必須にしていた。正本 §29 の
+     * 「at least Gmail/Calendar/Drive/Finder connectors」が根拠だったが、
+     * §29 が言っているのは **product が備えていること**であって、
+     * どの導入先でも設定済みであること、ではない。
+     *
+     * 製品自身の区分で、gmail / calendar / finder は任意の plugin。
+     * 中核（general / meeting / research）は `connectors: []` で、
+     * **OAuth を一つも使わない。**会議と調査にしか使わない人の
+     * 起動を止める理由が無い。
+     */
+    const { readFile } = await import('node:fs/promises');
+    const path = await import('node:path');
+    const { fileURLToPath } = await import('node:url');
+    const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
+
+    for (const name of ['general', 'meeting', 'research']) {
+      const manifest = await readFile(
+        path.join(root, 'plugins/builtin', name, 'plugin.yaml'),
+        'utf8',
+      );
+      // 中核は非削除。ここが変わったら、必須の線引きも見直す
+      expect(manifest, name).toContain('removable: false');
+      expect(manifest, `${name} が connector を持ち始めた`).toContain('connectors: []');
+    }
+
+    expect(REQUIRED_CAPABILITIES).not.toContain('oauth_providers');
+  });
+
+  it('still requires what the core cannot work without', () => {
+    // 言語モデルが無ければ、中核の agent は一つも動かない
+    for (const capability of [
+      'search',
+      'language_model',
+      'speech_to_text',
+      'translation',
+    ] as const) {
+      expect(REQUIRED_CAPABILITIES).toContain(capability);
+    }
+  });
+});
