@@ -29,6 +29,9 @@ enum Metrics {
     static let intentContextPeekHeightMax: CGFloat = 220
     static let intentBottomInset: CGFloat = 60
     static let intentRadius: CGFloat = 16
+    static let recordingIndicatorWidth: CGFloat = 390
+    static let recordingIndicatorHeight: CGFloat = 52
+    static let recordingIndicatorRadius: CGFloat = 12
 }
 
 /// 遷移の時間（秒）。

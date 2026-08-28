@@ -29,6 +29,9 @@ public static class Metrics
     public const double IntentContextPeekHeightMax = 220;
     public const double IntentBottomInset = 60;
     public const double IntentRadius = 16;
+    public const double RecordingIndicatorWidth = 390;
+    public const double RecordingIndicatorHeight = 52;
+    public const double RecordingIndicatorRadius = 12;
 }
 
 /// <summary>遷移の時間（ミリ秒）。</summary>

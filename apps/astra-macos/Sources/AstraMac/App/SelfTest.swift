@@ -1274,6 +1274,7 @@ enum SelfTest {
         let views: [(String, (opaqueFrac: Double, colors: Int))] = [
             ("VoiceHUD", contentScore(VoiceHUDView(), NSSize(width: Metrics.hudWidth, height: Metrics.hudHeight))),
             ("IntentBar", contentScore(IntentBarView(contextChips: ["Q4提案.pptx", "A社", "明日10:00", "+X"]), NSSize(width: Metrics.intentReadyWidth, height: Metrics.intentListeningHeight))),
+            ("RecordingIndicator", contentScore(RecordingIndicatorView(), NSSize(width: Metrics.recordingIndicatorWidth, height: Metrics.recordingIndicatorHeight))),
             ("RecordingWorkspace", contentScore(RecordingWorkspaceView(), NSSize(width: Metrics.workspaceWidth, height: Metrics.workspaceHeight))),
             ("MainWindow", contentScore(MainWindowView(), NSSize(width: 900, height: 600))),
             ("Settings", contentScore(SettingsView(), NSSize(width: 460, height: 420))),
@@ -1283,7 +1284,7 @@ enum SelfTest {
         // 強い内容（>=4 色 かつ >=10% 不透明）を要求する。Main/Settings は NavigationSplitView /
         // Form が offscreen NSHostingView では描画を実ウィンドウへ遅延するため、liveness
         // （>=2 色 = 単一の平面色でない）だけを課す。実ウィンドウ描画は panel/hudlifecycle で担保。
-        let strong: Set<String> = ["VoiceHUD", "RecordingWorkspace", "IntentBar"]
+        let strong: Set<String> = ["VoiceHUD", "RecordingWorkspace", "IntentBar", "RecordingIndicator"]
         var failed: [String] = []
         for (name, sc) in views {
             let ok = strong.contains(name) ? (sc.colors >= 4 && sc.opaqueFrac >= 0.10) : (sc.colors >= 2)

@@ -21,6 +21,7 @@ const h = tokens.voiceHud;
 const p = tokens.palette;
 const a = tokens.animation;
 const ib = tokens.intentBar;
+const ri = tokens.recordingIndicator;
 
 /** Swift/C# が使う名前 → 値。名前は両 OS で共通にして、生成物の差を値だけにする。 */
 const FIELDS = [
@@ -48,6 +49,9 @@ const FIELDS = [
   ['intentContextPeekHeightMax', ib.contextPeekHeightMax],
   ['intentBottomInset', ib.bottomInset],
   ['intentRadius', ib.radius],
+  ['recordingIndicatorWidth', ri.width],
+  ['recordingIndicatorHeight', ri.height],
+  ['recordingIndicatorRadius', ri.radius],
 ];
 const DURATIONS = [
   ['showMs', a.showMs],
