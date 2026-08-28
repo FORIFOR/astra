@@ -816,3 +816,12 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
 - → **グローバルショートカットの登録は検証済み**（`--selftest shortcut`=Alt/⌥Space 登録 OK）だが、**受信は署名 .app を
   前面で動かし、ユーザーが実際に ⌥Space を押したときにのみ確認可能**（Done#3 live）。システム全体へのキー注入は
   ユーザーの生セッションに干渉するため実施しない（安全方針）。
+
+## 追記: Windows csproj を unpackaged build 用に整備（Phase 1.75, Done#5）
+- `apps/windows/Astra/Astra.csproj` に **`<WindowsPackageType>None</WindowsPackageType>`**（＋`EnableMsixTooling`）を追加。
+  WinUI 3 は既定で MSIX packaging を要し、CI の素の `dotnet build apps/windows/Astra.sln -c Release -p:Platform=x64` が
+  packaging 設定不足で失敗しやすい。**unpackaged desktop app** 指定で MSIX 無しにビルドが通る（WinUI 3 の標準構成）。
+- 検証: `dotnet restore -p:EnableWindowsTargeting=true` が **エラーなく完了**（csproj は well-formed・パッケージ解決 OK）。
+  C# 実ロジックの型検査（`verify:csharp-logic`）も引き続き PASS。
+- **意味（Done#5）**: Windows CI（windows-latest）の build 設定が unpackaged で通る形に整備。実ビルド/描画は
+  Windows でのみ（XAML codegen が kernel32 依存のため）。

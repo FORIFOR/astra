@@ -8,6 +8,9 @@
     <UseWinUI>true</UseWinUI>
     <Platforms>x64</Platforms>
     <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+    <!-- unpackaged desktop app: CI の素の dotnet build を MSIX packaging 無しで通す（WinUI 3 標準）。 -->
+    <WindowsPackageType>None</WindowsPackageType>
+    <EnableMsixTooling>true</EnableMsixTooling>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
