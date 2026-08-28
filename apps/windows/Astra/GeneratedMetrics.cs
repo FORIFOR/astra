@@ -28,3 +28,55 @@ public static class Motion
     public const int HideMs = 100;
     public const int DrawerMs = 180;
 }
+
+/// <summary>§17.1 カラートークン（Light/Dark, #AARRGGBB は不要な #RRGGBB 文字列）。</summary>
+public static class Palette
+{
+    public const string CanvasLight = "#F7F8FA";
+    public const string CanvasDark = "#0F1115";
+    public const string SurfaceLight = "#FFFFFF";
+    public const string SurfaceDark = "#171A20";
+    public const string TextLight = "#17191D";
+    public const string TextDark = "#F2F4F7";
+    public const string MutedLight = "#667085";
+    public const string MutedDark = "#98A2B3";
+    public const string BorderLight = "#E6E8EC";
+    public const string BorderDark = "#2B3038";
+    public const string AccentLight = "#5B4CF0";
+    public const string AccentDark = "#8A7DFF";
+    public const string SuccessLight = "#18794E";
+    public const string SuccessDark = "#3CCB7F";
+    public const string WarningLight = "#B54708";
+    public const string WarningDark = "#F4B860";
+    public const string DangerLight = "#B42318";
+    public const string DangerDark = "#FF746C";
+}
+
+/// <summary>§17.2 タイポグラフィ（pt / weight）。</summary>
+public static class TypeScale
+{
+    public const double PageTitleSize = 26;
+    public const int PageTitleWeight = 600;
+    public const double SectionTitleSize = 17;
+    public const int SectionTitleWeight = 600;
+    public const double CardTitleSize = 15;
+    public const int CardTitleWeight = 600;
+    public const double BodySize = 14;
+    public const int BodyWeight = 400;
+    public const double SecondarySize = 13;
+    public const int SecondaryWeight = 400;
+    public const double MicroSize = 12;
+    public const int MicroWeight = 500;
+}
+
+/// <summary>§17.3 余白・角丸（pt）。</summary>
+public static class Space
+{
+    public const double Base = 8;
+    public const double Compact = 4;
+    public const double CardPadding = 18;
+    public const double LargePadding = 24;
+    public const double RadiusSmall = 8;
+    public const double RadiusStandard = 12;
+    public const double RadiusTaskDock = 16;
+}
