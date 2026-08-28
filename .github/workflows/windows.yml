@@ -59,10 +59,19 @@ jobs:
           $modes = @(@{ name = "hud"; arg = "" }, @{ name = "workspace"; arg = "--smoke-workspace" }, @{ name = "main"; arg = "--smoke-main" })
           $failed = @()
           foreach ($m in $modes) {
+            $t0 = Get-Date
             $p = if ($m.arg) { Start-Process -FilePath $exe -ArgumentList $m.arg -PassThru } else { Start-Process -FilePath $exe -PassThru }
             Start-Sleep -Seconds 10
             Shot $m.name
-            if ($p.HasExited) { $failed += "$($m.name)(exit=$($p.ExitCode))" } else { Stop-Process -Id $p.Id -Force }
+            if ($p.HasExited) {
+              $failed += "$($m.name)(exit=$($p.ExitCode))"
+              # クラッシュ理由を Application イベントログから拾って表示する。
+              try {
+                Get-WinEvent -FilterHashtable @{ LogName = 'Application'; StartTime = $t0 } -ErrorAction SilentlyContinue |
+                  Where-Object { $_.ProviderName -match 'Application Error|\.NET Runtime|Windows Error' } |
+                  Select-Object -First 3 | ForEach-Object { Write-Host "EVT[$($m.name)] $($_.Message.Substring(0,[Math]::Min(600,$_.Message.Length)))" }
+              } catch { Write-Host "evtlog read failed: $_" }
+            } else { Stop-Process -Id $p.Id -Force }
             Start-Sleep -Seconds 2
           }
           if ($failed.Count -gt 0) { throw "surfaces crashed: $($failed -join ', ')" }
