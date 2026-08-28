@@ -20,15 +20,25 @@ mock と real を分け、未検証は「未検証」と書く。
    既存の task/meeting stream と同じ機構（`event_streams` + `readEventsAfter` + `redisWaker`）を使い、
    `StreamKind` に既にあった `'conversation'` を活かす。統合テスト 3 本（全リプレイ / Last-Event-ID 再開 /
    未知会話は開く前に 404）を追加。**型検査・ビルド緑**。
-2. **§10.2 `world_embeddings` + pgvector**: 仕様が挙げる 5 表のうち唯一欠けていた表を追加
+2. **§10.2 `world_embeddings` + pgvector**: SQL は用意したが **`infra/db/migrations/` にはまだ置いていない**。
+   `docs/pending-migrations/20260829010000_world_embeddings.sql` に保留中。理由は下記「未検証」。
+   （元の記述）仕様が挙げる 5 表のうち唯一欠けていた表を追加
    （entity×model 一意、RLS、`CREATE EXTENSION vector`）。
 
 ## 未検証（この環境の制約）
 
-- 上記 2 件の **DB 適用と統合テスト実行は未実施**。Docker Engine が停止しており
-  `with-test-db.sh`（Postgres :5433）が起動できないため。Docker 起動後に
-  `./infra/db/with-test-db.sh pnpm --filter @astra/service-api-gateway test` で確認できる。
-- pgvector 拡張は Postgres イメージに含まれている必要がある（compose の image 要確認）。
+- **DB 適用と統合テスト実行は未実施**。Docker Engine が起動できず（`Docker Desktop is unable to start`、
+  `docker info` が無応答）、`with-test-db.sh` が使う Postgres :5433 を立てられないため。
+- pgvector は **プロジェクトの compose イメージ `pgvector/pgvector:pg16` に同梱**されているので
+  migration 自体は CI/dev で動く。ただし **ローカルの Homebrew PostgreSQL 14 には pgvector が無く**、
+  かつ `schema.sql` は PG16 からダンプされた正本なので、**PG14 で再生成すると差分が混ざる**。
+  そのため `world_embeddings` の migration は `docs/pending-migrations/` に置き、
+  `infra/db/migrations/` へは入れていない（入れると `check-generated.sh` の鮮度ゲートが落ちる）。
+- **復帰手順**: Docker 復旧後に
+  `mv docs/pending-migrations/20260829010000_world_embeddings.sql infra/db/migrations/` →
+  `pnpm dev:infra` → `pnpm db:migrate`（schema.sql を再ダンプ）→
+  `./infra/db/with-test-db.sh pnpm --filter @astra/service-api-gateway test` で
+  SSE 統合テストと合わせて実測できる。
 
 ## 未達（実装方針の相違・要判断）
 
