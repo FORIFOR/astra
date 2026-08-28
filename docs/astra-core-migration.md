@@ -825,3 +825,21 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
   C# 実ロジックの型検査（`verify:csharp-logic`）も引き続き PASS。
 - **意味（Done#5）**: Windows CI（windows-latest）の build 設定が unpackaged で通る形に整備。実ビルド/描画は
   Windows でのみ（XAML codegen が kernel32 依存のため）。
+
+## Phase 1.76 — Windows unpackaged app.manifest（Done#5 / Done#6 補強）
+
+unpackaged WinUI 3 は既定で system-DPI 認識になり、高 DPI ディスプレイでウィンドウ内容が
+bitmap 拡大される。これでは `shared/design/tokens.json` から生成した geometry が実寸で描かれず、
+macOS と寸法が一致しない（Done#6 の単一正が崩れる）。
+
+対応:
+- `apps/windows/Astra/app.manifest` を追加し `PerMonitorV2`（+ `dpiAware=true/pm` 後方互換、
+  `longPathAware`、Windows 10/11 `supportedOS`）を宣言。
+- `Astra.csproj` に `<ApplicationManifest>app.manifest</ApplicationManifest>` を配線。
+- `scripts/check-xaml-wellformed.sh` を拡張し `.manifest` も整形式検査（cross-platform CI で緑）。
+
+検証（macOS ホスト）:
+- `xmllint` で manifest 整形式 OK。
+- `dotnet restore -p:EnableWindowsTargeting=true` clean。
+- `verify:csharp-logic` = CSLOGIC_OK 維持。`verify:all` = VERIFY_ALL_OK。
+- 実 DPI スケーリング挙動は windows-latest / 実機でのみ観測可能（未検証）。

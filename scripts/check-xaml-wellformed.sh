@@ -13,5 +13,12 @@ while IFS= read -r f; do
     echo "FAIL: $f is not well-formed XML" >&2; cat /tmp/xaml-err >&2; fail=1
   fi
 done < <(find "$ROOT/apps/windows" -name "*.xaml")
+# app.manifest（unpackaged WinUI 3 の DPI/supportedOS 宣言）も整形式であること。
+while IFS= read -r f; do
+  count=$((count+1))
+  if ! xmllint --noout "$f" 2>/tmp/xaml-err; then
+    echo "FAIL: $f is not well-formed XML" >&2; cat /tmp/xaml-err >&2; fail=1
+  fi
+done < <(find "$ROOT/apps/windows" -name "*.manifest")
 if [[ $fail -ne 0 ]]; then exit 1; fi
 echo "xaml well-formed: $count WinUI .xaml files OK"
