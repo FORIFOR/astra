@@ -1275,6 +1275,7 @@ enum SelfTest {
             ("VoiceHUD", contentScore(VoiceHUDView(), NSSize(width: Metrics.hudWidth, height: Metrics.hudHeight))),
             ("IntentBar", contentScore(IntentBarView(contextChips: ["Q4提案.pptx", "A社", "明日10:00", "+X"]), NSSize(width: Metrics.intentReadyWidth, height: Metrics.intentListeningHeight))),
             ("RecordingIndicator", contentScore(RecordingIndicatorView(), NSSize(width: Metrics.recordingIndicatorWidth, height: Metrics.recordingIndicatorHeight))),
+            ("ContextLens", contentScore(ContextLensView(items: [ContextItem(category: "Current", text: "Current screen / Q4提案.pptx"), ContextItem(category: "Entity", text: "A社 / 田中様"), ContextItem(category: "Schedule", text: "明日 10:00 商談"), ContextItem(category: "Internal", text: "関連メール8件 / 資料4件"), ContextItem(category: "Policy", text: "Confidential / Local-only", sensitive: true)]), NSSize(width: 320, height: 420))),
             ("HomeView", contentScore(HomeView(attention: [HomeAttention(kind: "10:00 A社 商談", title: "前回から価格条件が変更", action: "準備する"), HomeAttention(kind: "Research complete", title: "半導体市場調査", action: "見る")], active: [HomeWork(title: "競合20社調査", meta: "12 sources · 進行中")]), NSSize(width: 820, height: 600))),
             ("RecordingWorkspace", contentScore(RecordingWorkspaceView(), NSSize(width: Metrics.workspaceWidth, height: Metrics.workspaceHeight))),
             ("MainWindow", contentScore(MainWindowView(), NSSize(width: 900, height: 600))),
