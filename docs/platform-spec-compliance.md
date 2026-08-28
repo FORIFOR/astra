@@ -19,7 +19,11 @@ mock と real を分け、未検証は「未検証」と書く。
 1. **§19 `GET /v1/conversations/{id}/stream`**: `ConversationService.eventsAfter` と SSE ルートを追加。
    既存の task/meeting stream と同じ機構（`event_streams` + `readEventsAfter` + `redisWaker`）を使い、
    `StreamKind` に既にあった `'conversation'` を活かす。統合テスト 3 本（全リプレイ / Last-Event-ID 再開 /
-   未知会話は開く前に 404）を追加。**型検査・ビルド緑**。
+   未知会話は開く前に 404）を追加。**CI（実 Postgres）で 3/3 実測 PASS**（commit 920ec73）。
+   実装過程で 2 件の実バグを検出・修正: ①テストハーネス `makeTestApp` が任意依存の
+   `conversations` を積んでおらず会話経路が未登録だった（本番同様に積むよう修正）、
+   ②`TERMINAL_TYPES` に `conversation.completed` が無く会話ストリームが閉じなかった（§20 の
+   終端として追加。Task Dock の購読が開きっぱなしになる実害）。
 2. **§10.2 `world_embeddings` + pgvector**: SQL は用意したが **`infra/db/migrations/` にはまだ置いていない**。
    `docs/pending-migrations/20260829010000_world_embeddings.sql` に保留中。理由は下記「未検証」。
    （元の記述）仕様が挙げる 5 表のうち唯一欠けていた表を追加
