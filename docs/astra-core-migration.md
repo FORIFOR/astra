@@ -864,3 +864,23 @@ CGEventTap（session tap, active）へ置き換え:
 - `verify:all` = VERIFY_ALL_OK。
 - 物理キーボードでの実押下は同一経路（署名 .app + ユーザーの Accessibility 許可）で、
   合成注入が同じ tap→matcher→handler を通ることで裏付け済み。
+
+## Phase 1.78 — On-device STT を実測 PASS（Done#3）／過去の「環境制限」判定は誤りだった
+
+以前「STT はこの環境ではテキストを返さない＝環境制限」と記録したが、**これは誤り**で、
+原因は検証ハーネス側のバグだった。`SpeechTranscriber.recognizeFile` が `DispatchSemaphore`
+でメインスレッドを塞いでおり、`SFSpeechRecognitionTask` の完了 callback（run loop 経由で届く）
+が永遠に配送されず、空文字になっていた。
+
+修正と検証:
+- `recognizeFile` を run loop を回して待つ方式へ変更（塞がない）。→ 実音声で確定テキストを取得。
+- `--selftest sttrecognize`（file API）: `say -v Samantha` の実音声 → on-device STT
+  `"Testing Astro meeting transcription"` を認識（外部送信なし・人手なし）。
+- `--selftest sttstream`（**会議で使う streaming 経路** start/append/finish）を追加:
+  say 音声を 16kHz mono f32 へ AVAudioConverter で変換し append → on-device 確定
+  `"Testing Astro meeting transcription"`。
+- 両者を verify-macos-recording.sh のライブ経路へ追加。`verify:all` = VERIFY_ALL_OK。
+
+これで Done#3 の「Streaming STT / transcript」は**実測 PASS**（合成音声だが実 STT エンジンが
+実際に文字を返す。人間の発話でも同一経路）。残る #3 は署名 .app 越しのカレンダー実データと
+物理キーボード実押下のみ（後者も CGEventTap 経路を Phase 1.77 で合成押下により実測済み）。

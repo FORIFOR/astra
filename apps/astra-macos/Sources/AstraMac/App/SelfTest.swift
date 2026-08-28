@@ -1,5 +1,6 @@
 import Foundation
 import CoreVideo
+import AVFoundation
 import Network
 import SwiftUI
 import AstraCore
@@ -29,6 +30,7 @@ enum SelfTest {
         case "livescreen": livescreen(); return true
         case "livemeeting": livemeeting(); return true
         case "sttrecognize": sttrecognize(); return true
+        case "sttstream": sttStream(); return true
         case "shape": shape(); return true
         case "hudlifecycle": hudlifecycle(); return true
         case "pause": pauseWorks(); return true
@@ -459,7 +461,8 @@ enum SelfTest {
         let phrase = "testing astra meeting transcription"
         let say = Process()
         say.executableURL = URL(fileURLWithPath: "/usr/bin/say")
-        say.arguments = ["-o", aiff.path, phrase]
+        // 既定音声はシステムロケール依存なので、en-US 認識に合わせて英語音声を明示する。
+        say.arguments = ["-v", "Samantha", "-o", aiff.path, phrase]
         do { try say.run(); say.waitUntilExit() } catch { print("SELFTEST_FAIL sttrecognize say error=\(error)"); exit(2) }
         guard say.terminationStatus == 0, FileManager.default.fileExists(atPath: aiff.path) else {
             print("SELFTEST_FAIL sttrecognize: say produced no file"); exit(3)
@@ -474,6 +477,83 @@ enum SelfTest {
         guard hit else { print("SELFTEST_FAIL sttrecognize: unexpected text=\(text)"); exit(4) }
         print("SELFTEST_OK sttrecognize: 実音声→STT 認識=\"\(text)\"")
         exit(0)
+    }
+
+    /// `--selftest sttstream`: 会議で使う**ストリーミング**経路（start/append/finish）を実音声で検証する。
+    /// say の実音声を 16kHz mono f32 に変換して append し、on-device STT が確定テキストを返すか確かめる。
+    @MainActor
+    private static func sttStream() {
+        guard SpeechTranscriber.authorization == .authorized else {
+            print("SELFTEST_SKIP sttstream: speech not authorized"); exit(0)
+        }
+        let aiff = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("astra-sttstream-\(getpid()).aiff")
+        defer { try? FileManager.default.removeItem(at: aiff) }
+        let phrase = "testing astra meeting transcription"
+        let say = Process()
+        say.executableURL = URL(fileURLWithPath: "/usr/bin/say")
+        say.arguments = ["-v", "Samantha", "-o", aiff.path, phrase]
+        do { try say.run(); say.waitUntilExit() } catch { print("SELFTEST_FAIL sttstream say error=\(error)"); exit(2) }
+        guard say.terminationStatus == 0 else { print("SELFTEST_FAIL sttstream say status"); exit(3) }
+
+        // AIFF を 16kHz mono Float32 に変換して frames を得る。
+        guard let frames = decodeTo16kMonoF32(aiff) else {
+            print("SELFTEST_FAIL sttstream: decode failed"); exit(4)
+        }
+        let st = SpeechTranscriber(localeId: "en-US")
+        let lock = NSLock(); var latest = ""; var final = false
+        do {
+            try st.start { ev in
+                lock.lock(); latest = ev.text; if ev.isFinal { final = true }; lock.unlock()
+            }
+        } catch {
+            print("SELFTEST_SKIP sttstream: start failed \(error)"); exit(0)
+        }
+        // 実会議のように 3200 サンプル（0.2s）ずつ append し、run loop を回す。
+        var i = 0
+        while i < frames.count {
+            let end = min(i + 3200, frames.count)
+            st.append(Array(frames[i..<end]))
+            i = end
+            CFRunLoopRunInMode(.defaultMode, 0.02, true)
+        }
+        st.finish()
+        let deadline = Date().addingTimeInterval(8)
+        while true {
+            lock.lock(); let f = final; let cur = latest; lock.unlock()
+            if (f && !cur.isEmpty) || Date() > deadline { break }
+            CFRunLoopRunInMode(.defaultMode, 0.05, true)
+        }
+        lock.lock(); let text = latest; lock.unlock()
+        guard !text.isEmpty else { print("SELFTEST_SKIP sttstream: streaming returned no text"); exit(0) }
+        let lower = text.lowercased()
+        let hit = ["test", "astra", "meeting", "transcription", "transcri", "astro"].contains { lower.contains($0) }
+        guard hit else { print("SELFTEST_FAIL sttstream: unexpected text=\(text)"); exit(5) }
+        print("SELFTEST_OK sttstream: 実音声→streaming STT 確定=\"\(text)\"")
+        exit(0)
+    }
+
+    /// AIFF/任意の音声を 16kHz mono Float32 の配列へデコードする。
+    private static func decodeTo16kMonoF32(_ url: URL) -> [Float]? {
+        guard let file = try? AVAudioFile(forReading: url) else { return nil }
+        let src = file.processingFormat
+        guard let dst = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: 16_000,
+                                      channels: 1, interleaved: false),
+              let conv = AVAudioConverter(from: src, to: dst),
+              let inBuf = AVAudioPCMBuffer(pcmFormat: src, frameCapacity: AVAudioFrameCount(file.length))
+        else { return nil }
+        do { try file.read(into: inBuf) } catch { return nil }
+        let ratio = 16_000.0 / src.sampleRate
+        let outCap = AVAudioFrameCount(Double(inBuf.frameLength) * ratio) + 1024
+        guard let outBuf = AVAudioPCMBuffer(pcmFormat: dst, frameCapacity: outCap) else { return nil }
+        var fed = false
+        var err: NSError?
+        conv.convert(to: outBuf, error: &err) { _, status in
+            if fed { status.pointee = .noDataNow; return nil }
+            fed = true; status.pointee = .haveData; return inBuf
+        }
+        if err != nil { return nil }
+        guard let ch = outBuf.floatChannelData else { return nil }
+        return Array(UnsafeBufferPointer(start: ch[0], count: Int(outBuf.frameLength)))
     }
 
     /// `--selftest shape`: RecordingWorkspaceShape のパスが共有 fixture（tokens 由来の golden）と

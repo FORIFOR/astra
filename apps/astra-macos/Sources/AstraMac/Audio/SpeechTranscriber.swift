@@ -83,23 +83,32 @@ final class SpeechTranscriber {
 
     /// 音声ファイルを 1 回で認識する（オンデバイス）。会議録音の後処理や検証に使う。
     /// 許可が無い / 使えなければ nil。認識結果の確定文字列を返す。
+    ///
+    /// **重要**: `SFSpeechRecognitiontask` の完了は現在の run loop 経由で届くため、
+    /// セマフォで待つとメインスレッドを塞いで callback が永遠に来ない（空文字になる）。
+    /// ここでは run loop を回して待つ（メイン/バックグラウンドどちらから呼んでも成立する）。
     func recognizeFile(_ url: URL, timeout: TimeInterval = 20) -> String? {
         guard Self.authorization == .authorized, let recognizer, recognizer.isAvailable else { return nil }
         let req = SFSpeechURLRecognitionRequest(url: url)
         req.requiresOnDeviceRecognition = recognizer.supportsOnDeviceRecognition
-        let sem = DispatchSemaphore(value: 0)
         let lock = NSLock()
         var latest = ""            // partial も貯める（isFinal が遅いことがある）
-        var finished = false
+        var done = false
         let t = recognizer.recognitionTask(with: req) { result, error in
             if let result {
-                lock.lock(); latest = result.bestTranscription.formattedString; lock.unlock()
-                if result.isFinal { finished = true; sem.signal() }
+                lock.lock(); latest = result.bestTranscription.formattedString
+                if result.isFinal { done = true }
+                lock.unlock()
             }
-            if error != nil { sem.signal() }
+            if error != nil { lock.lock(); done = true; lock.unlock() }
         }
-        _ = finished
-        if sem.wait(timeout: .now() + timeout) == .timedOut { t.cancel() }
+        let deadline = Date().addingTimeInterval(timeout)
+        while true {
+            lock.lock(); let d = done; lock.unlock()
+            if d || Date() > deadline { break }
+            CFRunLoopRunInMode(.defaultMode, 0.05, true)   // 塞がず回して callback を届かせる
+        }
+        t.cancel()
         lock.lock(); let out = latest; lock.unlock()
         return out.isEmpty ? nil : out
     }
