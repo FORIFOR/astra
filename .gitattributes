@@ -1,0 +1,16 @@
+# 全テキストを LF で checkout する（Windows CI で LF→CRLF 変換による
+# freshness 誤判定を防ぐ。生成物 Metrics/fixture の比較を OS 間で一致させる）。
+* text=auto eol=lf
+
+# バイナリは変換しない。
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.icns binary
+*.docx binary
+*.pdf binary
+*.woff binary
+*.woff2 binary
+*.ttf binary

@@ -89,7 +89,10 @@ for (const [rel, body] of outputs) {
   const target = path.join(root, rel);
   if (check) {
     const current = await readFile(target, 'utf8').catch(() => '');
-    if (current !== body) {
+    // 改行を正規化して比較する（Windows の checkout で LF→CRLF に変換されても
+    // 「stale」と誤判定しないため。.gitattributes で LF 固定もするが二重の保険）。
+    const norm = (s) => s.replace(/\r\n/g, '\n');
+    if (norm(current) !== norm(body)) {
       console.error(`FAIL: ${rel} is stale. Run: pnpm gen:design-tokens`);
       stale = true;
     }
