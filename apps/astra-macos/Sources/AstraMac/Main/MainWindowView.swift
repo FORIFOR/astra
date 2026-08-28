@@ -89,25 +89,9 @@ struct MainWindowView: View {
 private struct HomePane: View {
     let recent: [String]
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                Text("こんにちは").font(.system(size: 22, weight: .semibold))
-                RoundedRectangle(cornerRadius: 10).fill(Color(nsColor: .textBackgroundColor))
-                    .frame(height: 44)
-                    .overlay(HStack { Text("何を終わらせますか？").foregroundStyle(.secondary); Spacer() }.padding(.horizontal, 12))
-                Text("最近の成果物").font(.system(size: 13, weight: .semibold)).foregroundStyle(.secondary)
-                if recent.isEmpty {
-                    Text("まだ成果物はありません。").font(.system(size: 12)).foregroundStyle(.secondary)
-                } else {
-                    ForEach(recent, id: \.self) { t in
-                        HStack { Text(t); Spacer(); Text("資料").foregroundStyle(.secondary) }
-                            .padding(12)
-                            .background(RoundedRectangle(cornerRadius: 10).fill(Color(nsColor: .controlBackgroundColor)))
-                    }
-                }
-                Spacer()
-            }.padding(24)
-        }.navigationTitle("Home")
+        // §8 Home: spec 準拠の HomeView（greeting+intent・Attention・Active work）。実 library を Active work に流す。
+        HomeView(active: recent.prefix(3).map { HomeWork(title: $0, meta: "資料 · Library") })
+            .navigationTitle("Home")
     }
 }
 
@@ -116,7 +100,7 @@ private struct AgentsPane: View {
     var body: some View {
         let agents = apps.isEmpty ? ["Research Agent", "Meeting Agent", "Sales CRM"] : apps
         return List(agents, id: \.self) { a in Label(a, systemImage: "sparkles") }
-            .navigationTitle("AI Agents")
+            .navigationTitle("Work")
     }
 }
 
