@@ -174,8 +174,8 @@ fn uploader(
         if let Some(s) = socket.as_mut() {
             while let Some(item) = pending.pop_front() {
                 let message = match &item {
-                    Outbound::Audio(bytes) => Message::Binary(bytes.clone().into()),
-                    Outbound::Control(text) => Message::Text(text.clone().into()),
+                    Outbound::Audio(bytes) => Message::Binary(bytes.clone()),
+                    Outbound::Control(text) => Message::Text(text.clone()),
                     Outbound::Stop => continue,
                 };
                 if let Err(error) = s.send(message) {
@@ -184,7 +184,11 @@ fn uploader(
                     log::warn!("meeting audio send failed ({error}); will reconnect");
                     socket = None;
                     next_attempt = Instant::now() + backoff;
-                    emit(LinkState::Reconnecting, pending_ms(&pending), &mut last_state);
+                    emit(
+                        LinkState::Reconnecting,
+                        pending_ms(&pending),
+                        &mut last_state,
+                    );
                     break;
                 }
             }
@@ -397,7 +401,7 @@ pub fn meeting_reupload(
     for seq in first..=last {
         let bytes = journal.read_fragment(seq).map_err(|e| e.to_string())?;
         socket
-            .send(Message::Binary(bytes.into()))
+            .send(Message::Binary(bytes))
             .map_err(|e| format!("re-upload stopped at fragment {seq}: {e}"))?;
         journal.mark_uploaded(seq).map_err(|e| e.to_string())?;
         sent_ms += FRAGMENT_MS;

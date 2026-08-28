@@ -162,7 +162,10 @@ mod tests {
 #[tauri::command]
 pub fn oauth_open_browser(url: String) -> Result<(), String> {
     if !astra_core::is_allowed_auth_url(&url) {
-        return Err(format!("refusing to open a non-https url: {}", url.chars().take(32).collect::<String>()));
+        return Err(format!(
+            "refusing to open a non-https url: {}",
+            url.chars().take(32).collect::<String>()
+        ));
     }
     #[cfg(target_os = "macos")]
     {
