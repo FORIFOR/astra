@@ -1,15 +1,33 @@
 <Window
     x:Class="Astra.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:muxc="using:Microsoft.UI.Xaml.Controls">
-    <muxc:NavigationView x:Name="Nav" PaneDisplayMode="Left" IsBackButtonVisible="Collapsed">
-        <muxc:NavigationView.MenuItems>
-            <muxc:NavigationViewItem Content="Home" Icon="Home" Tag="home"/>
-            <muxc:NavigationViewItem Content="AI Agents" Icon="Emoji" Tag="agents"/>
-            <muxc:NavigationViewItem Content="Library" Icon="Library" Tag="library"/>
-            <muxc:NavigationViewItem Content="Apps" Icon="AllApps" Tag="apps"/>
-        </muxc:NavigationView.MenuItems>
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- WinUI 3 では NavigationView 等は既定 namespace。muxc 前置は不要。
+         Icon は Symbol 名文字列ではなく FontIcon(Segoe Fluent) の glyph で明示し、
+         実行時 XAML パースの失敗を避ける。 -->
+    <NavigationView x:Name="Nav" PaneDisplayMode="Left" IsBackButtonVisible="Collapsed">
+        <NavigationView.MenuItems>
+            <NavigationViewItem Content="Home" Tag="home">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE80F;"/>
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+            <NavigationViewItem Content="AI Agents" Tag="agents">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE99A;"/>
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+            <NavigationViewItem Content="Library" Tag="library">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE8F1;"/>
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+            <NavigationViewItem Content="Apps" Tag="apps">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE71D;"/>
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+        </NavigationView.MenuItems>
         <Frame x:Name="ContentFrame"/>
-    </muxc:NavigationView>
+    </NavigationView>
 </Window>
