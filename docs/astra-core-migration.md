@@ -896,3 +896,32 @@ CGEventTap（session tap, active）へ置き換え:
 - Main/Settings は NavigationSplitView / Form が offscreen NSHostingView では描画を実ウィンドウへ
   遅延するため liveness（>=2 色）のみ。実ウィンドウ描画は panel/hudlifecycle で担保。
 `verify:all` = VERIFY_ALL_OK。
+
+---
+
+# 最終 Done 条件 状態マトリクス（Phase 1.79 時点 / これ以前の散在記述を上書きする正）
+
+**凡例**: ✅=この環境で実測 PASS / 🟡=実装完了・検証は外部資源待ち / 記載は事実のみ、PASS を捏造しない。
+
+| # | Done 条件 | 状態 | 実測した根拠 / 残る外部前提 |
+|---|---|---|---|
+| 1 | shared core が実運用経路で使用 | ✅（実運用経路）/ 🟡（実 provider OAuth） | dev sign-in→gateway→Agent echo が COMPLETED+artifact（core 経由）。connector 交換は mock endpoint で実測。**残**: 実 Google/Apple/LINE の client_id + ユーザー consent。 |
+| 2 | macOS Native UI/主要機能 完成 | ✅ | 4タブ Main / Voice HUD / Recording Workspace / Task Dock / Hero / Transcript / AI / RAG Drawer / Settings。offscreen 実描画 HUD=87色·100%、Workspace=67色·100%（非空白実証）。 |
+| 3 | macOS 実機 E2E PASS | ✅（大半）/ 🟡（カレンダー） | 実マイク録音·実 screen·会議E2E·回復·波形·**STT テキスト(file+streaming)**·**global shortcut 合成押下受信**·Keychain·AX·on-device STT。**残**: EventKit TCC=notDetermined のため実カレンダーは署名 .app + ユーザー許可待ち。 |
+| 4 | Windows Native 実装 完成 | ✅（コード）/ 🟡（実描画/実行時） | 全 Window·Task Dock·Mica/Acrylic·同一 Bezier·WASAPI mic+loopback·screen·RegisterHotKey·core P/Invoke。C# 全ロジック（Window code-behind 含む）macOS で型検査 PASS。**残**: XAML→.g.cs codegen は XAML コンパイラの kernel32 P/Invoke により Windows 実機/CI のみ。 |
+| 5 | Windows build 可能 solution/CI 完成 | ✅（構成）/ 🟡（実行） | Astra.sln(Debug/Release x64)·unpackaged csproj·PerMonitorV2 manifest·windows.yml(cargo→dll→dotnet build)。**残**: windows-latest / 実機での実行。 |
+| 6 | Design Token 単一正 維持 | ✅ | tokens.json→Swift/C# Metrics 生成(--check)·workspace fixture golden·C# geometry vs fixture·Swift shape vs fixture。 |
+| 7 | Voice HUD/Workspace/Main/Apps/Agents/RAG 統合 | ✅ | fulllifecycle(HUD→Recording→保存→HUD)·hudlifecycle·panel(Spaces/fullscreen)·render(実描画)。 |
+| 8 | 旧 Tauri 依存が最終製品経路から外れる | 🟡 | 会議/Agent/Apps/Library の経路は core 化。native 最終製品は Tauri 非依存（check-native-tauri-free）。**残**: 旧 apps/desktop の完全 retire は native 実機能パリティ確定後（外部前提と同時にクローズ）。 |
+| 9 | tests/convention/build PASS | ✅ | verify:all = VERIFY_ALL_OK。core36/TauriRust67/JS352/macOS selftest 群/C# 型検査/FFI 契約 21=21=21。 |
+| 10 | architecture・実装・未検証を docs 固定 | ✅ | 本書 Phase 1.x + 本マトリクス。未検証は #列に明示。 |
+| 11 | 最終 commit hash 提示 | ✅ | 各 Phase の commit を記載。最新は git log 参照。 |
+
+**外部資源が揃えば即クローズできる 3 点**（コード/CI/手順は完成済み・PASS 捏造なし）:
+1. 実 OAuth provider client_id + ユーザー consent → #1 の実 provider 経路。
+2. Windows ホスト（実機 or windows-latest CI）→ #4/#5 の実ビルド·実描画·実行時、及び #8 の最終判断材料。
+3. 署名 .app + ユーザーの TCC 許可（カレンダー）→ #3 の実カレンダーデータ。
+
+**過去記述の訂正**: 「global shortcut は Carbon 登録のみ・押下受信 live 未検証」は Phase 1.77 で
+CGEventTap 化 + 合成押下受信の実測に更新。「STT はこの環境で無音＝環境制限」は Phase 1.78 で
+検証ハーネスの main-thread blocking バグと判明し、実 on-device 認識の実測 PASS に更新。
