@@ -697,8 +697,20 @@ enum SelfTest {
         main.contentView = NSHostingView(rootView: MainWindowView())
         let mainR = shoot("main", window: main) { centered(main, mainSize); main.makeKeyAndOrderFront(nil); NSApp.activate(ignoringOtherApps: true) }
 
+        // 4) Task Dock / Intent Bar（spec §4: 画面下部中央・560×56、§4.2 bottom inset）
+        let ibSize = NSSize(width: Metrics.intentReadyWidth, height: Metrics.intentReadyHeight)
+        let ib = AstraPanel(size: ibSize, level: .normal, canKey: false,
+                            content: IntentBarView())
+        let ibR = shoot("intentbar", window: ib) {
+            if let s = NSScreen.main {
+                let f = s.visibleFrame
+                ib.setFrameOrigin(NSPoint(x: f.midX - ibSize.width / 2, y: f.minY + Metrics.intentBottomInset))
+            }
+            ib.orderFrontRegardless()
+        }
+
         // いずれも撮れない（実ディスプレイ無し）なら SKIP。
-        guard hudR != nil || wsR != nil || mainR != nil else {
+        guard hudR != nil || wsR != nil || mainR != nil || ibR != nil else {
             print("SELFTEST_SKIP guishot: no on-screen window (headless display?)"); exit(0)
         }
         // 撮れたサーフェスは非空白であること。borderless の 2 面は token 実寸（±2pt）。
@@ -715,9 +727,12 @@ enum SelfTest {
         let sWs = check("Workspace", wsR, expW: Int(Metrics.workspaceWidth), expH: Int(Metrics.workspaceHeight), minColors: 8)
         // Main は titled（title bar 分だけ高さが増える）ので幅のみ検査、色数は offscreen(3色)より十分多いこと。
         let sMain = check("Main", mainR, expW: 900, expH: nil, minColors: 8)
+        // Task Dock / Intent Bar は spec §4.1 の 560×56（±2pt）・非空白（>=6色）。
+        let sIntent = check("IntentBar", ibR, expW: Int(Metrics.intentReadyWidth), expH: Int(Metrics.intentReadyHeight), minColors: 6)
         guard fails.isEmpty else { print("SELFTEST_FAIL guishot: \(fails.joined(separator: ","))"); exit(2) }
-        let anyPath = wsR?.path ?? hudR?.path ?? mainR?.path ?? ""
-        print("SELFTEST_OK guishot: 実提示 \(sHud) \(sWs) \(sMain) png=\(anyPath)")
+        let anyPath = wsR?.path ?? hudR?.path ?? mainR?.path ?? ibR?.path ?? ""
+        let summary = [sHud, sWs, sMain, sIntent].joined(separator: " ")
+        print("SELFTEST_OK guishot: 実提示 " + summary + " png=" + anyPath)
         exit(0)
     }
 
