@@ -29,4 +29,4 @@ Tauri/React 版 `apps/desktop` は参照実装。mock と real を分け、逸�
 ## 残（判断待ち）
 
 (B) ネイティブ Task Dock を 560×56 下部中央 Intent Bar へ、(C) Meeting を Notes-first へ、
-(D) ネイティブ Home/Work/Library/Apps のページ中身と Context Lens/Work Surface 移植。いずれも実質再設計。
+(D) Context Lens/Work Surface 移植。**§8 HomeView 追加済（greeting+intent・Attention最大3・Active work・token由来・render c25）**。§9/§10/§11 と MainWindowView への差し込みは次段。
