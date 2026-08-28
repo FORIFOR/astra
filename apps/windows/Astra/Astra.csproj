@@ -15,6 +15,8 @@
     <!-- AppLogic の各ファイルは using System; 等を暗黙に前提にしている（logic-check/bridge-check と同じ）。
          実ビルドでも同じになるよう ImplicitUsings を有効化する（System/Threading 等を自動 import）。 -->
     <ImplicitUsings>enable</ImplicitUsings>
+    <!-- 自前の Program.Main（App/Program.cs）を使う。XAML 生成の Main は無効化して二重定義を避ける。 -->
+    <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
     <LangVersion>latest</LangVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <!-- 高 DPI（PerMonitorV2）を宣言。shared token の寸法を実寸で描くため。 -->
