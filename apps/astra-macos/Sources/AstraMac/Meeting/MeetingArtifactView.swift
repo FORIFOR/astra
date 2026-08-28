@@ -25,7 +25,7 @@ struct MeetingArtifactView: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 0) {
-            VStack(alignment: .leading, spacing: Space.base) {
+            VStack(alignment: .leading, spacing: Space.largePadding) {
                 HStack {
                     Text(title).font(.system(size: TypeScale.sectionTitleSize, weight: TypeScale.sectionTitleWeight))
                         .foregroundStyle(Palette.text(dark))
@@ -36,9 +36,15 @@ struct MeetingArtifactView: View {
                 section("Summary", summary)
                 section("Decisions \(decisions.count)", decisions)
                 section("Action items \(actionItems.count)", actionItems)
-                HStack(spacing: 10) {
+                HStack(spacing: 6) {
                     ForEach(["Transcript", "Recording", "Related files", "Evidence"], id: \.self) { t in
-                        Text(t).font(.system(size: TypeScale.microSize, weight: .medium)).foregroundStyle(Palette.accent(dark))
+                        Text(t)
+                            .font(.system(size: TypeScale.microSize, weight: .medium))
+                            .foregroundStyle(Palette.text(dark))
+                            .padding(.horizontal, 10)
+                            .frame(height: 28)   // §16 hit area
+                            .background(RoundedRectangle(cornerRadius: 8).fill(Palette.muted(dark).opacity(0.10)))
+                            .contentShape(Rectangle())
                     }
                 }
                 Spacer()
@@ -72,11 +78,15 @@ struct MeetingArtifactView: View {
     }
 
     private func section(_ label: String, _ items: [MeetingCitation]) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(label).font(.system(size: TypeScale.microSize, weight: .semibold)).foregroundStyle(Palette.muted(dark))
+        // 見出しは小さく静かに、中身は 1 段大きく。余白ではなく**文字の重み**で階層を作る。
+        VStack(alignment: .leading, spacing: 6) {
+            Text(label.uppercased())
+                .font(.system(size: TypeScale.microSize, weight: .semibold))
+                .kerning(0.6)
+                .foregroundStyle(Palette.muted(dark))
             ForEach(items) { c in
                 HStack(alignment: .top, spacing: 6) {
-                    Text(c.text).font(.system(size: TypeScale.secondarySize)).foregroundStyle(Palette.text(dark))
+                    Text(c.text).font(.system(size: TypeScale.bodySize)).foregroundStyle(Palette.text(dark))
                     Text("[\(c.number)]")   // 押すと Inspector へ jump
                         .font(.system(size: TypeScale.microSize, weight: .semibold))
                         .foregroundStyle(Palette.accent(dark))
