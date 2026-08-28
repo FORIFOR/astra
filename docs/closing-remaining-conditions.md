@@ -54,7 +54,18 @@ C# 全ロジック（Window code-behind 含む）は macOS で型検査 PASS 済
    - 注意（方針）: 本人の Google は Final Acceptance まで触らない。開発検証は専用テスト
      アカウントで。refresh/device トークンは Keychain の外（Cloud/DB）へ出さない。
 
-## C. #3 — カレンダー実データ（要: 署名 .app + ユーザーの TCC 許可）
+## C. #3 — カレンダー実データ ✅ **CLOSED (2026-08-28 実測)**
+
+**実測 PASS**: 署名 .app（Apple Development / com.astra.desktop / Team 6RR7572ZLU）で
+ユーザーが Calendar TCC を許可 → `--selftest calendarlive` が **実 EventKit から実イベント 6 件**を取得。
+`SELFTEST_CAL_OK: authorized=true events=6 sample="Anna Haro's 第41 Birthday"@2026-08-29[Birthdays],
+"敬老の日"@2026-09-21[日本の祝日]` — 実カレンダー（Birthdays / 日本の祝日）由来で mock/fixture ではない。
+TCC db に `kTCCServiceCalendar|com.astra.desktop|2` が記録（seed ではなくユーザーの実許可）。
+denied/authorized/no-events を区別する実装（空なら「取得成功・0件」、架空データは作らない）。
+regression: swift build 0 error / swift test 3 pass / verify:all VERIFY_ALL_OK。
+前提だった `EKEventStore` 保持バグ修正（commit 8546417）が効いてプロンプト→許可→取得が成立した。
+
+### （参考）以前の pending 記録
 
 > **この環境での実測(2026-08-28)**: 署名 .app を作成し（`scripts/package-macos-app.sh`、
 > Apple Development / com.astra.desktop / Team 6RR7572ZLU）、`open` 経由で `--selftest calendarlive`
