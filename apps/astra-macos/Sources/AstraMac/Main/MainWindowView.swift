@@ -125,9 +125,22 @@ private struct AgentsPane: View {
 
 private struct LibraryPane: View {
     let titles: [String]
+    @State private var typeFilter = "All"
+    private let types = ["All", "Meeting", "Report", "Document", "Image", "Video", "Other"] // §10.1
     var body: some View {
         let items = titles.isEmpty ? ["（まだありません）"] : titles
         return ScrollView {
+            HStack(spacing: 6) { // §10.1 Type chips
+                ForEach(types, id: \.self) { t in
+                    Text(t)
+                        .font(.system(size: 11, weight: typeFilter == t ? .semibold : .regular))
+                        .padding(.horizontal, 9).padding(.vertical, 3)
+                        .background(Capsule().fill(typeFilter == t ? Color.astraAccent.opacity(0.15) : Color.clear))
+                        .foregroundStyle(typeFilter == t ? Color.astraAccent : Color.secondary)
+                        .onTapGesture { typeFilter = t }
+                }
+                Spacer()
+            }.padding(.horizontal, 20).padding(.top, 16)
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 200), spacing: 12)], spacing: 12) {
                 ForEach(Array(items.enumerated()), id: \.offset) { _, t in
                     VStack(alignment: .leading, spacing: 6) {
