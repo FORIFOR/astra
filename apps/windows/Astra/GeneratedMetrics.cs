@@ -19,6 +19,16 @@ public static class Metrics
     public const double PaletteWidth = 140;
     public const double AssistantWidth = 180;
     public const double PaletteRadius = 12;
+    public const double IntentReadyWidth = 560;
+    public const double IntentReadyHeight = 56;
+    public const double IntentTypingWidth = 640;
+    public const double IntentTypingHeightMax = 140;
+    public const double IntentListeningWidth = 560;
+    public const double IntentListeningHeight = 96;
+    public const double IntentContextPeekWidth = 640;
+    public const double IntentContextPeekHeightMax = 220;
+    public const double IntentBottomInset = 60;
+    public const double IntentRadius = 16;
 }
 
 /// <summary>遷移の時間（ミリ秒）。</summary>

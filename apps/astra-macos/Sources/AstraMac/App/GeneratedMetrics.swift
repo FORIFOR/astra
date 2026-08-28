@@ -19,6 +19,16 @@ enum Metrics {
     static let paletteWidth: CGFloat = 140
     static let assistantWidth: CGFloat = 180
     static let paletteRadius: CGFloat = 12
+    static let intentReadyWidth: CGFloat = 560
+    static let intentReadyHeight: CGFloat = 56
+    static let intentTypingWidth: CGFloat = 640
+    static let intentTypingHeightMax: CGFloat = 140
+    static let intentListeningWidth: CGFloat = 560
+    static let intentListeningHeight: CGFloat = 96
+    static let intentContextPeekWidth: CGFloat = 640
+    static let intentContextPeekHeightMax: CGFloat = 220
+    static let intentBottomInset: CGFloat = 60
+    static let intentRadius: CGFloat = 16
 }
 
 /// 遷移の時間（秒）。

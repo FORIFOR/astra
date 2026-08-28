@@ -20,6 +20,7 @@ const d = tokens.taskDock;
 const h = tokens.voiceHud;
 const p = tokens.palette;
 const a = tokens.animation;
+const ib = tokens.intentBar;
 
 /** Swift/C# が使う名前 → 値。名前は両 OS で共通にして、生成物の差を値だけにする。 */
 const FIELDS = [
@@ -37,6 +38,16 @@ const FIELDS = [
   ['paletteWidth', p.toolWidth],
   ['assistantWidth', p.aiWidth],
   ['paletteRadius', p.radius],
+  ['intentReadyWidth', ib.readyWidth],
+  ['intentReadyHeight', ib.readyHeight],
+  ['intentTypingWidth', ib.typingWidth],
+  ['intentTypingHeightMax', ib.typingHeightMax],
+  ['intentListeningWidth', ib.listeningWidth],
+  ['intentListeningHeight', ib.listeningHeight],
+  ['intentContextPeekWidth', ib.contextPeekWidth],
+  ['intentContextPeekHeightMax', ib.contextPeekHeightMax],
+  ['intentBottomInset', ib.bottomInset],
+  ['intentRadius', ib.radius],
 ];
 const DURATIONS = [
   ['showMs', a.showMs],

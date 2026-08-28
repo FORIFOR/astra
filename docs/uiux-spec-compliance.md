@@ -24,6 +24,7 @@ Tauri/React 版 `apps/desktop` は参照実装。mock と real を分け、逸�
 
 - ナビ Work 化: `6aaa62f`
 - §17 token 単一正 + accent #5B4CF0: `d2cfa9f`
+- §4.1 Task Dock geometry token + IntentBarView(§4.3): 本コミット
 
 ## 残（判断待ち）
 
