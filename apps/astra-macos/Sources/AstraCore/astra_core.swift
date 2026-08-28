@@ -2747,6 +2747,23 @@ public func connectorConfiguredProviderIds(clientIds: [String: String]) -> [Stri
 })
 }
 /**
+ * トークン交換（UniFFI）。token endpoint を差し替え可能にして mock でも本物でも叩ける。
+ * 成功で TokenSet の JSON、失敗で空文字。now_ms は expires_at 計算用。
+ */
+public func connectorExchangeCode(tokenUrl: String, providerId: String, clientId: String, redirectUri: String, code: String, codeVerifier: String, nowMs: UInt64) -> String  {
+    return try!  FfiConverterString.lift(try! rustCall() {
+    uniffi_astra_core_fn_func_connector_exchange_code(
+        FfiConverterString.lower(tokenUrl),
+        FfiConverterString.lower(providerId),
+        FfiConverterString.lower(clientId),
+        FfiConverterString.lower(redirectUri),
+        FfiConverterString.lower(code),
+        FfiConverterString.lower(codeVerifier),
+        FfiConverterUInt64.lower(nowMs),$0
+    )
+})
+}
+/**
  * 折り返し URL（`/callback?code=...`）を解析する。解析は core の parse_callback に一本化。
  */
 public func connectorParseCallback(target: String) -> OauthCallback  {
@@ -2900,6 +2917,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_astra_core_checksum_func_connector_configured_provider_ids() != 48177) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_astra_core_checksum_func_connector_exchange_code() != 37563) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_astra_core_checksum_func_connector_parse_callback() != 11016) {

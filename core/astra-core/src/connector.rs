@@ -414,6 +414,33 @@ pub fn connector_authorize_url(
     build_authorize_url(&config, &state, &code_challenge).ok()
 }
 
+/// トークン交換（UniFFI）。token endpoint を差し替え可能にして mock でも本物でも叩ける。
+/// 成功で TokenSet の JSON、失敗で空文字。now_ms は expires_at 計算用。
+#[uniffi::export]
+pub fn connector_exchange_code(
+    token_url: String,
+    provider_id: String,
+    client_id: String,
+    redirect_uri: String,
+    code: String,
+    code_verifier: String,
+    now_ms: u64,
+) -> String {
+    let Some(provider) = OauthProvider::from_id(&provider_id) else { return String::new() };
+    let config = ProviderConfig { provider, client_id, redirect_uri, scopes: vec![] };
+    match exchange_code_at(&token_url, &config, &code, &code_verifier, now_ms) {
+        Ok(t) => serde_json::json!({
+            "access_token": t.access_token,
+            "refresh_token": t.refresh_token,
+            "expires_at_ms": t.expires_at_ms,
+            "granted_scopes": t.granted_scopes,
+            "token_type": t.token_type,
+            "id_token": t.id_token,
+        }).to_string(),
+        Err(_) => String::new(),
+    }
+}
+
 /// 繋げる提供者の id 一覧（client_id が env にあるものだけ）。
 #[uniffi::export]
 pub fn connector_configured_provider_ids(client_ids: std::collections::HashMap<String, String>) -> Vec<String> {

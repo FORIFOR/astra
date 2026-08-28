@@ -67,6 +67,8 @@ OUTCF="$("$BIN" --selftest connectorflow)"; echo "$OUTCF"
 [[ "$OUTCF" == SELFTEST_OK* ]] || { echo "FAIL: macOS OAuth loopback flow" >&2; exit 1; }
 OUTCS="$("$BIN" --selftest connectorstate)"; echo "$OUTCS"
 [[ "$OUTCS" == SELFTEST_OK* ]] || { echo "FAIL: macOS connector state" >&2; exit 1; }
+OUTCE="$("$BIN" --selftest connectorexchange)"; echo "$OUTCE"
+[[ "$OUTCE" == SELFTEST_OK* ]] || { echo "FAIL: macOS connector exchange (mock token endpoint)" >&2; exit 1; }
 OUTVA="$("$BIN" --selftest voiceask http://127.0.0.1:3000)"; echo "$OUTVA"
 [[ "$OUTVA" == SELFTEST_OK* || "$OUTVA" == SELFTEST_SKIP* ]] || { echo "FAIL: macOS voice ask via Agent" >&2; exit 1; }
 OUTRO="$("$BIN" --selftest recoveryoffline http://127.0.0.1:3000)"; echo "$OUTRO"

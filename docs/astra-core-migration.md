@@ -799,3 +799,12 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
   返らない。→ **bundle 文脈の問題ではなく、この非対話環境（前面セッション無し）で Speech 認識サービスが実結果を
   返さない環境限界**と確定。STT の**パイプライン**（setup/start/append/live capture 中の稼働）は実測 PASS 済み、
   **実発話→テキストだけ**が署名 .app を前面でユーザーが実操作したときにのみ確認可能（Done#3 live）。
+
+## 追記: Swift の connector 交換を mock 提供者で end-to-end 検証（Phase 1.73, #1/#8）
+- core に uniffi `connector_exchange_code(token_url, …)`（endpoint 差し替え可）を追加。Swift から実 HTTP 交換を叩ける。
+- `--selftest connectorexchange`: **Swift 内にローカル mock token サーバ（`NWListener`, 背景キュー）を立て**、
+  `Swift→core(UniFFI)→実 HTTP POST` でトークン交換 → mock がサーバ側で **PKCE `code_verifier` 送信を確認** →
+  access/refresh を Swift に復元 → **refresh を Keychain に保管**。**実測 PASS**:
+  `Swift→core→実HTTP 交換 tokens 取得+Keychain 保管 (verifier 送信=true)`。verify に組み込み。
+- **意味（#1/#8）**: native の connector OAuth **全経路**（authorize URL/PKCE ＋ loopback callback 解析 ＋ **実 HTTP 交換** ＋
+  Keychain 保管）が mock 提供者に対し end-to-end 検証済み。**残る外部依存は実 Google/Microsoft の実挙動＋ユーザー consent のみ**。

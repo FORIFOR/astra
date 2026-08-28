@@ -1,5 +1,6 @@
 import Foundation
 import CoreVideo
+import Network
 import SwiftUI
 import AstraCore
 
@@ -39,6 +40,7 @@ enum SelfTest {
         case "timer": timer(); return true
         case "connectorflow": connectorflow(); return true
         case "connectorstate": connectorstate(); return true
+        case "connectorexchange": connectorExchange(); return true
         case "voiceask": voiceask(args); return true
         case "recoveryoffline": recoveryOffline(args); return true
         case "fulllifecycle": fullLifecycle(args); return true
@@ -893,6 +895,55 @@ enum SelfTest {
         let failed = checks.filter { !$0.1 }.map { $0.0 }
         guard failed.isEmpty else { print("SELFTEST_FAIL render: \(failed.joined(separator: ","))"); exit(2) }
         print("SELFTEST_OK render: \(checks.map { $0.0 }.joined(separator: "/")) 全てオフスクリーン描画 OK")
+        exit(0)
+    }
+
+    /// `--selftest connectorexchange`: connector のトークン交換を、ローカル mock token サーバに対して
+    /// Swift→core(P/Invoke 相当の UniFFI)→実 HTTP で end-to-end 検証する（残るは実提供者の実挙動のみ）。
+    @MainActor
+    private static func connectorExchange() {
+        // mock token endpoint（127.0.0.1:port）を Network で立てる。
+        let flow = ConnectorFlow()  // loopback は別途 connectorflow で検証済み。ここは交換のみ。
+        _ = flow
+        let listener: NWListener
+        do {
+            let params = NWParameters.tcp
+            if let ip = params.defaultProtocolStack.internetProtocol as? NWProtocolIP.Options { ip.version = .v4 }
+            listener = try NWListener(using: params)
+        } catch { print("SELFTEST_FAIL connectorexchange listener: \(error)"); exit(2) }
+        var sawVerifier = false
+        let q = DispatchQueue(label: "astra.mock.token")
+        listener.newConnectionHandler = { conn in
+            conn.start(queue: q)
+            conn.receive(minimumIncompleteLength: 1, maximumLength: 8192) { data, _, _, _ in
+                let req = data.flatMap { String(data: $0, encoding: .utf8) } ?? ""
+                if req.contains("code_verifier=ver-swift") && req.contains("grant_type=authorization_code") { sawVerifier = true }
+                let body = "{\"access_token\":\"at-sw\",\"refresh_token\":\"rt-sw\",\"expires_in\":3600,\"token_type\":\"Bearer\"}"
+                let resp = "HTTP/1.1 200 OK\r\ncontent-type: application/json\r\ncontent-length: \(body.utf8.count)\r\nconnection: close\r\n\r\n\(body)"
+                conn.send(content: resp.data(using: .utf8), completion: .contentProcessed { _ in conn.cancel() })
+            }
+        }
+        let readyLock = NSLock(); var ready = false
+        listener.stateUpdateHandler = { st in if case .ready = st { readyLock.lock(); ready = true; readyLock.unlock() } }
+        listener.start(queue: q)
+        var waited = 0
+        while true { readyLock.lock(); let r = ready; readyLock.unlock(); if r || waited >= 200 { break }
+            RunLoop.current.run(until: Date().addingTimeInterval(0.02)); waited += 1 }
+        guard let port = listener.port?.rawValue else { print("SELFTEST_FAIL connectorexchange: no port"); exit(3) }
+        let tokenUrl = "http://127.0.0.1:\(port)/token"
+        // Swift→core→実 HTTP でトークン交換。
+        let json = connectorExchangeCode(tokenUrl: tokenUrl, providerId: "google", clientId: "cid",
+            redirectUri: "http://127.0.0.1:1/cb", code: "code-1", codeVerifier: "ver-swift", nowMs: 1000)
+        listener.cancel()
+        guard !json.isEmpty, json.contains("at-sw"), json.contains("rt-sw"), sawVerifier else {
+            print("SELFTEST_FAIL connectorexchange json=\(json) sawVerifier=\(sawVerifier)"); exit(4)
+        }
+        // refresh token を Keychain へ（実運用と同じ）。
+        try? KeychainStore.set("astra.selftest.conntok.\(getpid())", "rt-sw")
+        let read = (try? KeychainStore.get("astra.selftest.conntok.\(getpid())")) ?? nil
+        try? KeychainStore.delete("astra.selftest.conntok.\(getpid())")
+        guard read == "rt-sw" else { print("SELFTEST_FAIL connectorexchange keychain"); exit(5) }
+        print("SELFTEST_OK connectorexchange: Swift→core→実HTTP 交換 tokens 取得+Keychain 保管 (verifier 送信=\(sawVerifier))")
         exit(0)
     }
 

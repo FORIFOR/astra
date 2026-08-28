@@ -392,6 +392,11 @@ RustBuffer uniffi_astra_core_fn_func_connector_authorize_url(RustBuffer provider
 RustBuffer uniffi_astra_core_fn_func_connector_configured_provider_ids(RustBuffer client_ids, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_CONNECTOR_EXCHANGE_CODE
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_CONNECTOR_EXCHANGE_CODE
+RustBuffer uniffi_astra_core_fn_func_connector_exchange_code(RustBuffer token_url, RustBuffer provider_id, RustBuffer client_id, RustBuffer redirect_uri, RustBuffer code, RustBuffer code_verifier, uint64_t now_ms, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_CONNECTOR_PARSE_CALLBACK
 #define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_CONNECTOR_PARSE_CALLBACK
 RustBuffer uniffi_astra_core_fn_func_connector_parse_callback(RustBuffer target, RustCallStatus *_Nonnull out_status
@@ -817,6 +822,12 @@ uint16_t uniffi_astra_core_checksum_func_connector_authorize_url(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_CONNECTOR_CONFIGURED_PROVIDER_IDS
 #define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_CONNECTOR_CONFIGURED_PROVIDER_IDS
 uint16_t uniffi_astra_core_checksum_func_connector_configured_provider_ids(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_CONNECTOR_EXCHANGE_CODE
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_CONNECTOR_EXCHANGE_CODE
+uint16_t uniffi_astra_core_checksum_func_connector_exchange_code(void
     
 );
 #endif
