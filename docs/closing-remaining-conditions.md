@@ -88,3 +88,7 @@ C# 全ロジック（Window code-behind 含む）は macOS で型検査 PASS 済
 ## クローズ後に #10/#11 を更新
 
 3 条件クローズ後、`docs/astra-core-migration.md` の状態マトリクスを ✅ 更新し、最終 commit hash を提示する。
+
+### B turnkey
+
+scripts/verify-live-oauth.mjs で client_id/secret(.env)→consent→real id_token→gateway 検証を一気通貫。
