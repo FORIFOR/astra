@@ -65,6 +65,8 @@ jobs:
             Shot $m.name
             if ($p.HasExited) {
               $failed += "$($m.name)(exit=$($p.ExitCode))"
+              $crash = Join-Path $env:TEMP "astra-crash.log"
+              if (Test-Path $crash) { Write-Host "CRASHLOG[$($m.name)]: $(Get-Content $crash -Raw)"; Remove-Item $crash -Force }
               # クラッシュ理由を Application イベントログから拾って表示する。
               try {
                 Get-WinEvent -FilterHashtable @{ LogName = 'Application'; StartTime = $t0 } -ErrorAction SilentlyContinue |
