@@ -14,7 +14,8 @@ const CSHARP = resolve(ROOT, 'apps/windows/Astra/CoreBridge/AstraCore.cs');
 function argCount(args) {
   const a = args.trim().replace(/,\s*$/, ''); // Rust の末尾カンマを無視
   if (a === '' || a === 'void') return 0;
-  let depth = 0, count = 1;
+  let depth = 0,
+    count = 1;
   for (const ch of a) {
     if (ch === '(' || ch === '<') depth++;
     else if (ch === ')' || ch === '>') depth--;
@@ -35,10 +36,7 @@ function collect(text, pattern) {
 
 // Rust: 実体。`pub [unsafe] extern "C" fn astra_core_NAME(<args>) [-> ...]`
 const rustText = readFileSync(RUST, 'utf8');
-const rust = collect(
-  rustText,
-  /extern\s+"C"\s+fn\s+(astra_core_[a-z0-9_]+)\s*\(([^)]*)\)/gis,
-);
+const rust = collect(rustText, /extern\s+"C"\s+fn\s+(astra_core_[a-z0-9_]+)\s*\(([^)]*)\)/gis);
 
 // Header: 宣言。`<type> astra_core_NAME(<args>);`（複数行に跨るので改行を潰す）
 const headerText = readFileSync(HEADER, 'utf8').replace(/\s+/g, ' ');
@@ -56,7 +54,8 @@ const problems = [];
 // Rust（実体）と Header（宣言）が一致するか。実体に無いものを宣言していないか。
 for (const [name, n] of rust) {
   if (!header.has(name)) problems.push(`header に ${name} の宣言が無い（Rust には実体がある）`);
-  else if (header.get(name) !== n) problems.push(`${name}: Rust 引数 ${n} 個 ≠ header ${header.get(name)} 個`);
+  else if (header.get(name) !== n)
+    problems.push(`${name}: Rust 引数 ${n} 個 ≠ header ${header.get(name)} 個`);
 }
 for (const [name] of header) {
   if (!rust.has(name)) problems.push(`Rust に ${name} の実体が無い（header が宣言している）`);
@@ -65,7 +64,8 @@ for (const [name] of header) {
 // C#（呼び出し側）が header の宣言と一致するか。C# が呼ぶものが実体とズレていないか。
 for (const [name, n] of csharp) {
   if (!header.has(name)) problems.push(`C# が呼ぶ ${name} が header に無い`);
-  else if (header.get(name) !== n) problems.push(`${name}: C# 引数 ${n} 個 ≠ header ${header.get(name)} 個`);
+  else if (header.get(name) !== n)
+    problems.push(`${name}: C# 引数 ${n} 個 ≠ header ${header.get(name)} 個`);
   if (!rust.has(name)) problems.push(`C# が呼ぶ ${name} の実体が Rust に無い`);
 }
 

@@ -13,6 +13,7 @@ Phase 1.81 時点。この環境で実測できるものは全て緑（`pnpm ver
 C# 全ロジック（Window code-behind 含む）は macOS で型検査 PASS 済み。
 
 **クローズ手順**:
+
 1. `apps/windows/**` を含むコミットを push（または GitHub Actions で `windows` workflow を手動実行）。
    - `.github/workflows/windows.yml` が windows-latest で自動実行する:
      `cargo build --release`（astra_core.dll）→ dll を配置 → `check-cabi-csharp` →
@@ -30,6 +31,7 @@ C# 全ロジック（Window code-behind 含む）は macOS で型検査 PASS 済
 実運用経路で COMPLETED 実測済み（#1 の実運用経路は達成）。残るは実 provider のみ。
 
 **クローズ手順**:
+
 1. `.env` に Desktop 用 OAuth client を設定: `ASTRA_AUTH_GOOGLE_CLIENT_IDS=<client_id>`
    （Apple web / LINE を使うなら加えて `ASTRA_PUBLIC_URL`(https) と relay）。
 2. gateway を起動（compose）。アプリでその client を使って一度サインイン。
@@ -45,6 +47,7 @@ C# 全ロジック（Window code-behind 含む）は macOS で型検査 PASS 済
 カレンダーは未付与）。状態読み取り・無許可時 空（捏造なし）は実測済み（`--selftest calendar`）。
 
 **クローズ手順**:
+
 1. `apps/astra-macos` を署名して .app 化し起動（Info.plist に `NSCalendarsFullAccessUsageDescription`）。
 2. 初回にカレンダー許可プロンプトでユーザーが許可。
 3. `CalendarAccess.upcoming(hours:)` が実イベントを返す（`--selftest calendar` が
@@ -53,4 +56,5 @@ C# 全ロジック（Window code-behind 含む）は macOS で型検査 PASS 済
 ---
 
 ## クローズ後に #10/#11 を更新
+
 3 条件クローズ後、`docs/astra-core-migration.md` の状態マトリクスを ✅ 更新し、最終 commit hash を提示する。

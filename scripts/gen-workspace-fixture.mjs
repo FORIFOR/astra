@@ -12,9 +12,15 @@ import { resolve, dirname } from 'node:path';
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const tokens = JSON.parse(readFileSync(resolve(ROOT, 'shared/design/tokens.json'), 'utf8'));
 const w = tokens.recordingWorkspace;
-const W = w.width, H = w.height, r = w.cornerRadius;
-const nW = w.notchWidth, depth = w.notchDepth, shoulder = w.notchShoulder;
-const cx = W / 2, nL = cx - nW / 2, nR = cx + nW / 2;
+const W = w.width,
+  H = w.height,
+  r = w.cornerRadius;
+const nW = w.notchWidth,
+  depth = w.notchDepth,
+  shoulder = w.notchShoulder;
+const cx = W / 2,
+  nL = cx - nW / 2,
+  nR = cx + nW / 2;
 
 // Swift/WinUI と同一の制御点（固定オフセット 14/15）で d を組む。
 const n = (x) => (Number.isInteger(x) ? String(x) : x.toFixed(2));
@@ -45,9 +51,15 @@ const target = resolve(ROOT, 'shared/design/fixtures/recording-workspace.svg');
 const check = process.argv.includes('--check');
 if (check) {
   let current = '';
-  try { current = readFileSync(target, 'utf8'); } catch { /* missing */ }
+  try {
+    current = readFileSync(target, 'utf8');
+  } catch {
+    /* missing */
+  }
   if (current !== svg) {
-    console.error('recording-workspace fixture is stale — run `node scripts/gen-workspace-fixture.mjs`');
+    console.error(
+      'recording-workspace fixture is stale — run `node scripts/gen-workspace-fixture.mjs`',
+    );
     process.exit(1);
   }
   console.log('recording-workspace fixture is current');
@@ -60,8 +72,15 @@ if (check) {
 const dTarget = resolve(ROOT, 'shared/design/fixtures/recording-workspace.path');
 if (check) {
   let cur = '';
-  try { cur = readFileSync(dTarget, 'utf8'); } catch { /* */ }
-  if (cur.trim() !== d) { console.error('recording-workspace.path is stale'); process.exit(1); }
+  try {
+    cur = readFileSync(dTarget, 'utf8');
+  } catch {
+    /* */
+  }
+  if (cur.trim() !== d) {
+    console.error('recording-workspace.path is stale');
+    process.exit(1);
+  }
 } else {
   writeFileSync(dTarget, d + '\n');
 }

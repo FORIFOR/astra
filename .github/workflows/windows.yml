@@ -4,7 +4,8 @@
 name: windows
 on:
   push:
-    paths: ["apps/windows/**", "core/astra-core/**", "shared/design/**", ".github/workflows/windows.yml"]
+    paths:
+      ['apps/windows/**', 'core/astra-core/**', 'shared/design/**', '.github/workflows/windows.yml']
   workflow_dispatch:
 jobs:
   build:
@@ -23,7 +24,7 @@ jobs:
       # C ABI 契約は macOS 側で `pnpm verify:c-abi` により実証済み（Windows build 自体はここで検証）。
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "8.0.x"
+          dotnet-version: '8.0.x'
       - name: C ABI contract (Rust <-> header <-> C# P/Invoke)
         run: node scripts/check-cabi-csharp.mjs
       - name: Recording Workspace shape fixture freshness

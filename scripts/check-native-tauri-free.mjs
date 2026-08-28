@@ -24,7 +24,7 @@ const problems = [];
 // コメントを外してから実コードだけを見る（"Tauri を介さない" のような説明コメントは依存ではない）。
 function stripComments(text) {
   return text
-    .replace(/\/\*[\s\S]*?\*\//g, ' ')   // ブロックコメント
+    .replace(/\/\*[\s\S]*?\*\//g, ' ') // ブロックコメント
     .split('\n')
     .map((line) => line.replace(/\/\/.*$/, '')) // 行コメント / ドキュメントコメント
     .join('\n');
