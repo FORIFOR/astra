@@ -1075,3 +1075,17 @@ private→(ユーザー承認で)public リポジトリ `FORIFOR/astra` を作�
 結果: **windows workflow = success（WinUI 3 solution ビルド緑）/ ci workflow = success（全ゲート緑）**。
 Done#5=実測 PASS、Done#4=実 Windows で実装がビルド/型解決/リソース生成まで PASS（実行時 GUI 描画のみ
 Windows 実機の手動 smoke に残す）、Done#9=実 CI（ubuntu + windows-latest）で PASS。
+
+## Phase 1.83 — Windows 実行時スモーク: Astra.exe 起動 + Voice HUD 実描画（Done#4 実行時）
+
+ビルド緑化（Phase 1.82）に続き、`windows` workflow に**実行時スモーク**を追加した:
+
+- `dotnet publish --self-contained -p:WindowsAppSDKSelfContained=true`（WindowsAppSDK runtime 同梱、
+  unpackaged でも起動可）→ 実 `Astra.exe` を windows-latest で起動 → 12 秒生存を確認 → プライマリ画面を撮影。
+- 結果: **`SMOKE_OK: Astra.exe stayed alive 12s (WinUI bootstrap + window created)`**。
+  撮影スクショに、上部中央へ **実 Voice HUD（option / command / 長押しで音声入力）** が実描画されている
+  （`VoiceHudWindow.xaml` と一致）。artifact `astra-windows-smoke.png`。
+
+これで Done#4 は、実 Windows で **ビルド + 起動 + Voice HUD の実描画**まで実測 PASS。残るのは
+Recording Workspace への遷移や WASAPI 実録音など**対話操作を伴う実機フル smoke**（自動 CI では
+起動と HUD 描画までを担保）。Windows PASS は捏造せず、CI で実際に取れた範囲を明記する。
