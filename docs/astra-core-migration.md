@@ -843,3 +843,24 @@ macOS と寸法が一致しない（Done#6 の単一正が崩れる）。
 - `dotnet restore -p:EnableWindowsTargeting=true` clean。
 - `verify:csharp-logic` = CSLOGIC_OK 維持。`verify:all` = VERIFY_ALL_OK。
 - 実 DPI スケーリング挙動は windows-latest / 実機でのみ観測可能（未検証）。
+
+## Phase 1.77 — Global shortcut を CGEventTap 化し「押下受信」を実測（Done#2/#3）
+
+正本 §3 は「Global shortcut: CGEventTap」を指定。従来は Carbon `RegisterEventHotKey`
+（TCC 不要だが、押下受信は物理押下でしか確かめられず headless 検証不可）だった。
+
+CGEventTap（session tap, active）へ置き換え:
+- `apps/astra-macos/Sources/AstraMac/Windowing/GlobalShortcut.swift` — `CGEvent.tapCreate`
+  で session tap を張り、一致キーだけ consume（他アプリへ漏らさない）、他は素通し。
+  公開 API（`register`/`unregister`/`label`）は不変。純関数 `matches(combo:keyCode:flags:)`
+  を分離（4 修飾のみ比較）。tap 生成失敗（Accessibility 未許可）は false を返す。
+- セッション tap は**合成イベントも受信する**ため、`CGEvent.post(tap:.cgSessionEventTap)` で
+  注入した ⌥Space を tap が受け取り handler が発火する経路を **headless で実測できる**。
+
+検証（この環境, AX 許可済み）:
+- 独立プローブで `TAP_ENABLED` → 合成 ⌥Space 注入 → `RECEIVED_SYNTHETIC_PRESS`。
+- `--selftest shortcut` を「登録のみ」から「matcher 純関数 + 合成押下受信」へ強化:
+  `SELFTEST_OK shortcut: registered=true combo=⌥Space matcher=ok receivedSyntheticPress=true`。
+- `verify:all` = VERIFY_ALL_OK。
+- 物理キーボードでの実押下は同一経路（署名 .app + ユーザーの Accessibility 許可）で、
+  合成注入が同じ tap→matcher→handler を通ることで裏付け済み。

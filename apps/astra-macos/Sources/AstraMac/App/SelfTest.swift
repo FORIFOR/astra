@@ -123,12 +123,40 @@ enum SelfTest {
     /// TCC も GUI も要らない（押下の live 受信はユーザーが署名済み .app で確かめる）。
     @MainActor
     private static func shortcut() {
+        // 純関数の一致ロジックを先に確かめる（⌥Space は一致、Space 単独/⌘Space は不一致）。
+        let combo = GlobalShortcut.Combo()   // ⌥Space
+        let mSpace = GlobalShortcut.matches(combo: combo, keyCode: 49, flags: [.maskAlternate])
+        let mPlain = GlobalShortcut.matches(combo: combo, keyCode: 49, flags: [])
+        let mCmd = GlobalShortcut.matches(combo: combo, keyCode: 49, flags: [.maskCommand])
+        guard mSpace, !mPlain, !mCmd else {
+            print("SELFTEST_FAIL shortcut matcher space=\(mSpace) plain=\(mPlain) cmd=\(mCmd)"); exit(2)
+        }
+
+        // CGEventTap を実登録し、合成 ⌥Space をセッションtapへ注入して「受信→発火」を実測する。
+        // 一致キーは tap が consume するので他アプリへ漏れない。
         var fired = false
-        let ok = GlobalShortcut.shared.register { fired = true }
+        let ok = GlobalShortcut.shared.register(combo) { fired = true }
         let label = GlobalShortcut.label()
+        guard ok else {
+            GlobalShortcut.shared.unregister()
+            print("SELFTEST_FAIL shortcut register (Accessibility 未許可?)"); exit(2)
+        }
+        let source = CGEventSource(stateID: .privateState)
+        if let down = CGEvent(keyboardEventSource: source, virtualKey: 49, keyDown: true) {
+            down.flags = [.maskAlternate]; down.post(tap: .cgSessionEventTap)
+        }
+        if let up = CGEvent(keyboardEventSource: source, virtualKey: 49, keyDown: false) {
+            up.flags = [.maskAlternate]; up.post(tap: .cgSessionEventTap)
+        }
+        let deadline = Date().addingTimeInterval(1.5)
+        while !fired && Date() < deadline {
+            CFRunLoopRunInMode(.defaultMode, 0.05, true)
+        }
         GlobalShortcut.shared.unregister()
-        guard ok else { print("SELFTEST_FAIL shortcut register"); exit(2) }
-        print("SELFTEST_OK shortcut: registered=\(ok) combo=\(label) firedAtRegister=\(fired)")
+        guard fired else {
+            print("SELFTEST_FAIL shortcut: synthetic press not received"); exit(2)
+        }
+        print("SELFTEST_OK shortcut: registered=\(ok) combo=\(label) matcher=ok receivedSyntheticPress=\(fired)")
         exit(0)
     }
 
