@@ -952,10 +952,11 @@ Transcript（田中·あなた·鈴木）/ Task Dock / RAG Context Drawer（フ�
 自プロセスの AX API で走査し、UI を pixels でなく**構造として**実測した（XCUITest の主眼＝
 UI 要素の存在/属性検証と同じ）。
 `--selftest axtree`:
-- 実 Main Window を提示し、`AXUIElementCreateApplication(getpid())` から子孫を走査。
-- テキスト系属性（AXTitle/AXDescription/AXValue/AXLabel/AXIdentifier）を集め、
-  **4 セクション Home / AI Agents / Library / Apps** が実アクセシブル要素として存在することを確認
-  （実測 elements=14, 4/4 検出）。
+- 実 Main Window と Recording Workspace を提示し、`AXUIElementCreateApplication(getpid())` から子孫を走査。
+- **Main**: 4 セクション Home / AI Agents / Library / Apps を実アクセシブル要素として検出（elements=14）。
+- **Workspace**: 統合サーフェス 8 件 — 録音中(Recording Hero) / 文字起こし(Transcript) / 翻訳(Translation) /
+  リアルタイム要約(AI Summary) / 決定事項(Decisions) / アクション(Actions) / 質問する(Ask) / RAG Context(RAG Drawer)
+  を実アクセシブル要素として検出（elements=33）。§2/§7 の統合を pixels でなく**構造として**実証。
 - AX 未許可 / 自プロセス AX が空の環境では捏造せず SELFTEST_SKIP。
 `verify:all` = VERIFY_ALL_OK。これで §6 test 一覧のうち XCUITest 相当が埋まった（完全な
 xcodebuild UI テストは .xcodeproj を要し、実機/署名環境での追加項目として残す）。

@@ -662,57 +662,76 @@ enum SelfTest {
         exit(0)
     }
 
-    /// `--selftest axtree`: 実提示した Main Window の**アクセシビリティツリー**を走査し、
-    /// 4 セクション（Home / AI Agents / Library / Apps）が実アクセシブル要素として存在するか検証する。
+    /// `--selftest axtree`: 実提示した Main Window と Recording Workspace の**アクセシビリティツリー**を
+    /// 走査し、統合された各サーフェスが実アクセシブル要素として存在するか検証する（正本 §2/§7）。
     /// XCUITest 相当（UI を pixels でなく構造として実測）。AX 許可が無ければ SKIP。
     @MainActor
     private static func axtree() {
         guard AXIsProcessTrusted() else { print("SELFTEST_SKIP axtree: AX not trusted"); exit(0) }
-        let mainSize = NSSize(width: 900, height: 600)
-        let win = NSWindow(contentRect: NSRect(origin: .zero, size: mainSize),
-                           styleMask: [.titled, .closable, .resizable], backing: .buffered, defer: false)
-        win.contentView = NSHostingView(rootView: MainWindowView())
-        if let screen = NSScreen.main {
-            win.setFrameOrigin(NSPoint(x: screen.frame.midX - 450, y: screen.frame.midY - 300))
-        }
-        win.makeKeyAndOrderFront(nil)
-        NSApp.activate(ignoringOtherApps: true)
-        let show = Date().addingTimeInterval(1.0)
-        while Date() < show { CFRunLoopRunInMode(.defaultMode, 0.05, true) }
+        RecordingWorkspaceState.shared.loadDemo(ragOpen: true)
 
-        // 自プロセスの AX ツリーを走査し、テキスト系属性を集める。
-        let app = AXUIElementCreateApplication(getpid())
-        var texts = Set<String>()
-        func attr(_ el: AXUIElement, _ name: String) -> String? {
-            var v: CFTypeRef?
-            guard AXUIElementCopyAttributeValue(el, name as CFString, &v) == .success else { return nil }
-            if let s = v as? String, !s.isEmpty { return s }
-            return nil
-        }
-        func walk(_ el: AXUIElement, _ depth: Int) {
-            if depth > 20 { return }
-            for a in ["AXTitle", "AXDescription", "AXValue", "AXLabel", "AXIdentifier", "AXHelp"] {
-                if let s = attr(el, a) { texts.insert(s) }
+        // 1 つの window を提示し、自プロセス AX ツリーのテキスト系属性を集めて返す。
+        func axTexts(present: () -> NSWindow) -> Set<String> {
+            let win = present()
+            let show = Date().addingTimeInterval(1.0)
+            while Date() < show { CFRunLoopRunInMode(.defaultMode, 0.05, true) }
+            let app = AXUIElementCreateApplication(getpid())
+            var texts = Set<String>()
+            func attr(_ el: AXUIElement, _ name: String) -> String? {
+                var v: CFTypeRef?
+                guard AXUIElementCopyAttributeValue(el, name as CFString, &v) == .success else { return nil }
+                if let s = v as? String, !s.isEmpty { return s }
+                return nil
             }
-            var kids: CFTypeRef?
-            if AXUIElementCopyAttributeValue(el, kAXChildrenAttribute as CFString, &kids) == .success,
-               let arr = kids as? [AXUIElement] {
-                for k in arr { walk(k, depth + 1) }
+            func walk(_ el: AXUIElement, _ depth: Int) {
+                if depth > 20 { return }
+                for a in ["AXTitle", "AXDescription", "AXValue", "AXLabel", "AXIdentifier", "AXHelp"] {
+                    if let s = attr(el, a) { texts.insert(s) }
+                }
+                var kids: CFTypeRef?
+                if AXUIElementCopyAttributeValue(el, kAXChildrenAttribute as CFString, &kids) == .success,
+                   let arr = kids as? [AXUIElement] {
+                    for k in arr { walk(k, depth + 1) }
+                }
             }
+            walk(app, 0)
+            win.orderOut(nil); win.close()
+            return texts
         }
-        walk(app, 0)
-        win.orderOut(nil); win.close()
 
-        let want = ["Home", "AI Agents", "Library", "Apps"]
-        let found = want.filter { w in texts.contains { $0.localizedCaseInsensitiveContains(w) } }
-        // 自プロセス AX が空（sandbox/権限差でツリーを返さない）なら捏造せず SKIP。
-        guard !texts.isEmpty else {
+        // Main Window（4 セクション）
+        let mainTexts = axTexts {
+            let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 900, height: 600),
+                             styleMask: [.titled, .closable, .resizable], backing: .buffered, defer: false)
+            w.contentView = NSHostingView(rootView: MainWindowView())
+            if let s = NSScreen.main { w.setFrameOrigin(NSPoint(x: s.frame.midX - 450, y: s.frame.midY - 300)) }
+            w.makeKeyAndOrderFront(nil); NSApp.activate(ignoringOtherApps: true)
+            return w
+        }
+        // 自プロセス AX が空（sandbox/権限差）なら捏造せず SKIP。
+        guard !mainTexts.isEmpty else {
             print("SELFTEST_SKIP axtree: own-process AX tree empty in this context"); exit(0)
         }
-        guard found.count == want.count else {
-            print("SELFTEST_FAIL axtree: nav found=\(found) of \(want) (elements=\(texts.count))"); exit(2)
+        // Recording Workspace（統合サーフェス群）
+        let wsSize = NSSize(width: Metrics.workspaceWidth, height: Metrics.workspaceHeight)
+        let wsTexts = axTexts {
+            let p = AstraPanel(size: wsSize, level: .normal, canKey: false, content: RecordingWorkspaceView())
+            if let s = NSScreen.main { p.setFrameOrigin(NSPoint(x: s.frame.midX - wsSize.width/2, y: s.frame.midY - wsSize.height/2)) }
+            p.orderFrontRegardless()
+            return p
         }
-        print("SELFTEST_OK axtree: Main の4セクションを実アクセシブル要素として検出 \(found) elements=\(texts.count)")
+
+        func has(_ set: Set<String>, _ needle: String) -> Bool { set.contains { $0.localizedCaseInsensitiveContains(needle) } }
+        // Main: 4 セクション（§2）
+        let mainWant = ["Home", "AI Agents", "Library", "Apps"]
+        let mainMiss = mainWant.filter { !has(mainTexts, $0) }
+        // Workspace: 統合サーフェス（§2/§7）— Recording Hero / Transcript / Translation / AI / RAG / Task Dock
+        let wsWant = ["録音中", "文字起こし", "翻訳", "リアルタイム要約", "決定事項", "アクション", "質問する", "RAG Context"]
+        let wsMiss = wsWant.filter { !has(wsTexts, $0) }
+        guard mainMiss.isEmpty, wsMiss.isEmpty else {
+            print("SELFTEST_FAIL axtree: mainMiss=\(mainMiss) wsMiss=\(wsMiss) (main=\(mainTexts.count) ws=\(wsTexts.count))"); exit(2)
+        }
+        print("SELFTEST_OK axtree: Main 4セクション + Workspace 統合サーフェス\(wsWant.count)件を実アクセシブル要素として検出 (main=\(mainTexts.count) ws=\(wsTexts.count))")
         exit(0)
     }
 
