@@ -162,6 +162,12 @@ private struct AppsPane: View {
     var body: some View {
         let apps = self.apps.isEmpty ? ["Gmail", "Google Calendar", "Finder"] : self.apps
         return ScrollView {
+            // §11: 「できる仕事を増やす場所」。Connector 単体より Pack/できる仕事を先に見せる。
+            VStack(alignment: .leading, spacing: 4) {
+                Text("できる仕事を増やす").font(.system(size: 16, weight: .semibold))
+                Text("Pack や Connector を追加すると、Astra ができる仕事が増えます。")
+                    .font(.system(size: 12)).foregroundStyle(.secondary)
+            }.frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 20).padding(.top, 16)
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 240), spacing: 12)], spacing: 12) {
                 ForEach(apps, id: \.self) { a in
                     let connectable = connectors.canConnect(a)
