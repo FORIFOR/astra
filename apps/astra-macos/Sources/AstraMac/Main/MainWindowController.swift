@@ -1,7 +1,7 @@
 import AppKit
 import SwiftUI
 
-/// Astra の Main Window（Home / AI Agents / Library / Apps）。overlay とは別に、必要なときに開く。
+/// Astra の Main Window（Home / Work / Library / Apps）。overlay とは別に、必要なときに開く。
 @MainActor
 final class MainWindowController {
     static let shared = MainWindowController()

@@ -782,7 +782,7 @@ enum SelfTest {
 
         func has(_ set: Set<String>, _ needle: String) -> Bool { set.contains { $0.localizedCaseInsensitiveContains(needle) } }
         // Main: 4 セクション（§2）
-        let mainWant = ["Home", "AI Agents", "Library", "Apps"]
+        let mainWant = ["Home", "Work", "Library", "Apps"]
         let mainMiss = mainWant.filter { !has(mainTexts, $0) }
         // Workspace: 統合サーフェス（§2/§7）— Recording Hero / Transcript / Translation / AI / RAG / Task Dock
         let wsWant = ["録音中", "文字起こし", "翻訳", "リアルタイム要約", "決定事項", "アクション", "質問する", "RAG Context"]

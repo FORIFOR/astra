@@ -12,9 +12,9 @@
                     <FontIcon Glyph="&#xE80F;"/>
                 </NavigationViewItem.Icon>
             </NavigationViewItem>
-            <NavigationViewItem Content="AI Agents" Tag="agents">
+            <NavigationViewItem Content="Work" Tag="agents">
                 <NavigationViewItem.Icon>
-                    <FontIcon Glyph="&#xE99A;"/>
+                    <FontIcon Glyph="&#xE8FD;"/>
                 </NavigationViewItem.Icon>
             </NavigationViewItem>
             <NavigationViewItem Content="Library" Tag="library">

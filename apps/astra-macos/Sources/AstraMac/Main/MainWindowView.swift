@@ -7,7 +7,7 @@ enum MainSection: String, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .home: return "Home"
-        case .agents: return "AI Agents"
+        case .agents: return "Work"
         case .library: return "Library"
         case .apps: return "Apps"
         }
@@ -15,7 +15,7 @@ enum MainSection: String, CaseIterable, Identifiable {
     var icon: String {
         switch self {
         case .home: return "house"
-        case .agents: return "sparkles"
+        case .agents: return "checklist"
         case .library: return "books.vertical"
         case .apps: return "square.grid.2x2"
         }
