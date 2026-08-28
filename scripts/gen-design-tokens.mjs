@@ -22,6 +22,8 @@ const p = tokens.palette;
 const a = tokens.animation;
 const ib = tokens.intentBar;
 const ri = tokens.recordingIndicator;
+const sh = tokens.shell;
+const bp = tokens.breakpoint;
 
 /** Swift/C# が使う名前 → 値。名前は両 OS で共通にして、生成物の差を値だけにする。 */
 const FIELDS = [
@@ -52,6 +54,16 @@ const FIELDS = [
   ['recordingIndicatorWidth', ri.width],
   ['recordingIndicatorHeight', ri.height],
   ['recordingIndicatorRadius', ri.radius],
+  ['sidebarWidth', sh.sidebarWidth],
+  ['sidebarCollapsed', sh.sidebarCollapsed],
+  ['topBarHeight', sh.topBar],
+  ['mainMinWidth', sh.mainMin],
+  ['inspectorWidth', sh.inspector],
+  ['composerMinHeight', sh.composerMin],
+  ['composerMaxHeight', sh.composerMax],
+  ['bpThreeColumn', bp.threeColumn],
+  ['bpInspectorDrawer', bp.inspectorDrawer],
+  ['bpSidebarCollapse', bp.sidebarCollapse],
 ];
 const DURATIONS = [
   ['showMs', a.showMs],

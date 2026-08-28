@@ -32,6 +32,16 @@ enum Metrics {
     static let recordingIndicatorWidth: CGFloat = 390
     static let recordingIndicatorHeight: CGFloat = 52
     static let recordingIndicatorRadius: CGFloat = 12
+    static let sidebarWidth: CGFloat = 208
+    static let sidebarCollapsed: CGFloat = 64
+    static let topBarHeight: CGFloat = 56
+    static let mainMinWidth: CGFloat = 640
+    static let inspectorWidth: CGFloat = 320
+    static let composerMinHeight: CGFloat = 48
+    static let composerMaxHeight: CGFloat = 72
+    static let bpThreeColumn: CGFloat = 1280
+    static let bpInspectorDrawer: CGFloat = 960
+    static let bpSidebarCollapse: CGFloat = 720
 }
 
 /// 遷移の時間（秒）。

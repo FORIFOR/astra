@@ -32,6 +32,16 @@ public static class Metrics
     public const double RecordingIndicatorWidth = 390;
     public const double RecordingIndicatorHeight = 52;
     public const double RecordingIndicatorRadius = 12;
+    public const double SidebarWidth = 208;
+    public const double SidebarCollapsed = 64;
+    public const double TopBarHeight = 56;
+    public const double MainMinWidth = 640;
+    public const double InspectorWidth = 320;
+    public const double ComposerMinHeight = 48;
+    public const double ComposerMaxHeight = 72;
+    public const double BpThreeColumn = 1280;
+    public const double BpInspectorDrawer = 960;
+    public const double BpSidebarCollapse = 720;
 }
 
 /// <summary>遷移の時間（ミリ秒）。</summary>

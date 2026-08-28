@@ -35,6 +35,7 @@ enum SelfTest {
         case "sttstream": sttStream(); return true
         case "guishot": guishot(); return true
         case "axtree": axtree(); return true
+        case "breakpoints": breakpoints(); return true
         case "shape": shape(); return true
         case "hudlifecycle": hudlifecycle(); return true
         case "pause": pauseWorks(); return true
@@ -739,6 +740,56 @@ enum SelfTest {
         let anyPath = wsR?.path ?? hudR?.path ?? mainR?.path ?? ibR?.path ?? ""
         let summary = [sHud, sWs, sMain, sIntent].joined(separator: " ")
         print("SELFTEST_OK guishot: 実提示 " + summary + " png=" + anyPath)
+        exit(0)
+    }
+
+    /// `--selftest breakpoints`: §7.2 の reflow（AC-13）を実測する。純関数 ShellLayout.forWidth の
+    /// 判定と、実際に 3 幅で offscreen 描画した時の中身（非空白）を確かめる。
+    @MainActor
+    private static func breakpoints() {
+        // 純関数の閾値（tokens 由来）
+        let wide = ShellLayout.forWidth(Metrics.bpThreeColumn)          // >=1280 → 3-column
+        let mid = ShellLayout.forWidth(Metrics.bpInspectorDrawer + 100) // 960-1279 → drawer
+        let narrow = ShellLayout.forWidth(Metrics.bpSidebarCollapse + 10) // 720-959 → collapsed
+        guard wide == .threeColumn, mid == .inspectorDrawer, narrow == .sidebarCollapsed,
+              wide.showsInspectorInline, !mid.showsInspectorInline,
+              narrow.sidebarWidth == Metrics.sidebarCollapsed, wide.sidebarWidth == Metrics.sidebarWidth
+        else {
+            print("SELFTEST_FAIL breakpoints: wide=\(wide.rawValue) mid=\(mid.rawValue) narrow=\(narrow.rawValue)"); exit(2)
+        }
+        // 実描画（各幅で非空白）
+        func render(_ w: CGFloat) -> Int {
+            let v = WorkspaceShellView(title: "A社 商談準備", main: {
+                VStack(alignment: .leading) { Text("Overview / Progress / Outputs").padding() }
+            }, inspector: {
+                VStack(alignment: .leading) { Text("Context / Evidence / Activity").padding() }
+            })
+            let host = NSHostingView(rootView: v)
+            host.frame = NSRect(x: 0, y: 0, width: w, height: 700)
+            host.layoutSubtreeIfNeeded()
+            guard let rep = host.bitmapImageRepForCachingDisplay(in: host.bounds) else { return 0 }
+            host.cacheDisplay(in: host.bounds, to: rep)
+            var seen = Set<UInt32>()
+            let pw = rep.pixelsWide, ph = rep.pixelsHigh
+            let sx = max(1, pw / 40), sy = max(1, ph / 40)
+            var y = 0
+            while y < ph { var x = 0
+                while x < pw {
+                    if let c = rep.colorAt(x: x, y: y) {
+                        let r = UInt32(max(0, min(255, c.redComponent * 255)))
+                        let g = UInt32(max(0, min(255, c.greenComponent * 255)))
+                        let b = UInt32(max(0, min(255, c.blueComponent * 255)))
+                        seen.insert((r << 16) | (g << 8) | b)
+                    }
+                    x += sx }
+                y += sy }
+            return seen.count
+        }
+        let c1 = render(1400), c2 = render(1100), c3 = render(820)
+        guard c1 >= 3, c2 >= 3, c3 >= 3 else {
+            print("SELFTEST_FAIL breakpoints render: 1400=\(c1) 1100=\(c2) 820=\(c3)"); exit(3)
+        }
+        print("SELFTEST_OK breakpoints: >=1280 3-column / 960-1279 inspector drawer / <960 sidebar collapsed; render c\(c1)/c\(c2)/c\(c3)")
         exit(0)
     }
 
