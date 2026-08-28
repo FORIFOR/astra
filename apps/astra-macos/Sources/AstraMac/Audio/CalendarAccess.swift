@@ -22,6 +22,11 @@ enum CalendarAccess {
         case writeOnly = "書き込みのみ"
     }
 
+    /// **共有の EKEventStore を保持する。** ローカル変数のままだと、非同期の許可要求が返る前に
+    /// store が解放され、completion handler が二度と呼ばれない（プロンプトも成立しない）。Apple も
+    /// 単一の長命 store を推奨。
+    private static let store = EKEventStore()
+
     /// 認可状態を読む（プロンプトを出さない）。headless で検証できる。
     static func status() -> Access {
         switch EKEventStore.authorizationStatus(for: .event) {
@@ -36,7 +41,6 @@ enum CalendarAccess {
 
     /// 許可を要求する（.app 側でユーザーがダイアログで許す）。
     static func requestAccess(_ done: @escaping (Bool) -> Void) {
-        let store = EKEventStore()
         if #available(macOS 14.0, *) {
             store.requestFullAccessToEvents { ok, _ in DispatchQueue.main.async { done(ok) } }
         } else {
@@ -47,7 +51,6 @@ enum CalendarAccess {
     /// 今から `hours` 時間先までの予定を返す。許可が無ければ空（**推測で埋めない**）。
     static func upcoming(hours: Double = 12, now: Date = Date()) -> [Event] {
         guard status() == .granted else { return [] }
-        let store = EKEventStore()
         let end = now.addingTimeInterval(hours * 3600)
         let predicate = store.predicateForEvents(withStart: now, end: end, calendars: nil)
         return store.events(matching: predicate).map { ev in

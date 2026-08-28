@@ -65,6 +65,12 @@ C# 全ロジック（Window code-behind 含む）は macOS で型検査 PASS 済
 > セキュリティ設定変更かつ同意の捏造になるため行わない。→ **external verification pending**。
 > コード・署名 .app・実 request/read フローは完成。実対話セッション（人が TCC を許可できる macOS ログイン）
 > があれば下記手順でそのままクローズできる。
+>
+> **追加修正(2026-08-28)**: `CalendarAccess.requestAccess` がローカルの `EKEventStore` を使っており、
+> 非同期の許可要求が返る前に store が解放されて completion handler が発火しない実バグがあった
+> （実アプリでもカレンダー許可が成立しない）。共有の長命 store を保持するよう修正済み。実対話セッション
+> では本修正でプロンプトが正しく成立する。daemons(dataaccessd/calaccessd)は稼働、この環境は
+> 対話 TCC ダイアログを提示できないため未応答のまま。
 
 **なぜこの環境で不可**: EventKit の認可が `notDetermined`。実データ取得は
 `requestFullAccessToEvents` のプロンプト許可が要る（mic/screen/speech/AX は付与済みだが
