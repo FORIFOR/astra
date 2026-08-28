@@ -29,4 +29,4 @@ Tauri/React 版 `apps/desktop` は参照実装。mock と real を分け、逸�
 ## 残（判断待ち）
 
 (B) ネイティブ Task Dock を 560×56 下部中央 Intent Bar へ、(C) Meeting を Notes-first へ、
-(D) **§5 ContextLensView 追加済（Current/Entity/Schedule/Internal/External/Policy 分類・sensitive badge・Why this?・320px inspector・render c64）**。Work Surface 移植。**§8 HomeView 追加済（greeting+intent・Attention最大3・Active work・token由来・render c25）**。§9/§10/§11 と MainWindowView への差し込みは次段。
+(D) **§5 ContextLensView 追加済（Current/Entity/Schedule/Internal/External/Policy 分類・sensitive badge・Why this?・320px inspector・render c64）**。**§6 WorkSurfaceView 追加済（semantic steps done/active/todo/retrying・source count・Agent名を出さない・render c78）**。**§8 HomeView 追加済（greeting+intent・Attention最大3・Active work・token由来・render c25）**。§9/§10/§11 と MainWindowView への差し込みは次段。
