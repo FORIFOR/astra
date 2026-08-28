@@ -79,6 +79,10 @@ OUTFL="$("$BIN" --selftest fulllifecycle http://127.0.0.1:3000)"; echo "$OUTFL"
 # HUD と Recording Workspace が同時に画面へ残らないことまで実測する。
 OUTE2E="$("$BIN" --selftest e2e001 http://127.0.0.1:3000)"; echo "$OUTE2E"
 [[ "$OUTE2E" == SELFTEST_OK* || "$OUTE2E" == SELFTEST_SKIP* ]] || { echo "FAIL: E2E-001 Product Reality Gate" >&2; exit 1; }
+# Visual Gate: 8 主要画面を実アプリで撮り、geometry まで検査する（窓が在るだけでは PASS にしない）。
+OUTSHOTS="$("$BIN" --selftest shots "${ASTRA_SHOTS_DIR:-/tmp/astra-shots}")"; echo "$OUTSHOTS" | tail -1
+[[ "$OUTSHOTS" == *SELFTEST_OK* || "$OUTSHOTS" == *SELFTEST_SKIP* ]] || { echo "FAIL: Visual Gate (8 screens)" >&2; exit 1; }
+
 for t in screenshot waveform livemic livemeeting livescreen sttrecognize sttstream guishot axtree breakpoints dictation; do
   OUT="$("$BIN" --selftest "$t")"
   echo "$OUT"

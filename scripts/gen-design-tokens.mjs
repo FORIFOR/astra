@@ -22,6 +22,7 @@ const p = tokens.palette;
 const a = tokens.animation;
 const ib = tokens.intentBar;
 const ri = tokens.recordingIndicator;
+const wl = tokens.workspaceLayout;
 const sh = tokens.shell;
 const bp = tokens.breakpoint;
 
@@ -64,6 +65,12 @@ const FIELDS = [
   ['bpThreeColumn', bp.threeColumn],
   ['bpInspectorDrawer', bp.inspectorDrawer],
   ['bpSidebarCollapse', bp.sidebarCollapse],
+  ['wsGutter', wl.gutter],
+  ['wsContentTop', wl.contentTop],
+  ['wsColumnGap', wl.columnGap],
+  ['wsRightColumn', wl.rightColumn],
+  ['wsRagDrawer', wl.ragDrawer],
+  ['wsBottomBar', wl.bottomBar],
 ];
 const DURATIONS = [
   ['showMs', a.showMs],

@@ -42,6 +42,12 @@ public static class Metrics
     public const double BpThreeColumn = 1280;
     public const double BpInspectorDrawer = 960;
     public const double BpSidebarCollapse = 720;
+    public const double WsGutter = 24;
+    public const double WsContentTop = 64;
+    public const double WsColumnGap = 20;
+    public const double WsRightColumn = 320;
+    public const double WsRagDrawer = 196;
+    public const double WsBottomBar = 44;
 }
 
 /// <summary>遷移の時間（ミリ秒）。</summary>

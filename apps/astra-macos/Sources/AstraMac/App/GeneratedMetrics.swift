@@ -42,6 +42,12 @@ enum Metrics {
     static let bpThreeColumn: CGFloat = 1280
     static let bpInspectorDrawer: CGFloat = 960
     static let bpSidebarCollapse: CGFloat = 720
+    static let wsGutter: CGFloat = 24
+    static let wsContentTop: CGFloat = 64
+    static let wsColumnGap: CGFloat = 20
+    static let wsRightColumn: CGFloat = 320
+    static let wsRagDrawer: CGFloat = 196
+    static let wsBottomBar: CGFloat = 44
 }
 
 /// 遷移の時間（秒）。

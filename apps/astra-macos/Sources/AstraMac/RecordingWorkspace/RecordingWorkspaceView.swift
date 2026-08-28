@@ -1,27 +1,20 @@
 import SwiftUI
 
-/// 手書き案の 1 枚。外枠だけ Shape、中身はすべて SwiftUI のカードを自由配置。
+/// 録音中の 1 枚。外枠だけ Shape、中身は**構造化レイアウト**（絶対座標を使わない）。
 /// 上辺の凹みに Task Dock を ZStack で重ねる（Workspace の内側には入れない）。
+///
+/// 以前は `.position(x:120,y:300)` のような絶対配置でカードを浮かせており、
+/// ①視線が定まらない ②RAG を開くと他のカードを**切ってしまう** という実機で見える破綻があった。
+/// いまは「左: 録音の主役＋AI 操作 / 右: 文字起こし列 / 下: RAG バー」の 3 区画に固定し、
+/// 余白・列幅・ドロワー高さは **すべて tokens（Metrics.ws*）** から取る。
 struct RecordingWorkspaceView: View {
     @StateObject private var state = RecordingWorkspaceState.shared
 
     var body: some View {
         ZStack(alignment: .top) {
             RecordingSurface()
-
             workspaceContent
-                .padding(.top, 55)
-
-            TaskDockView(state: state)
-                .offset(y: 3)
-
-            if state.ragOpen {
-                RAGDrawerView(state: state)
-                    .padding(.horizontal, 18)
-                    .padding(.bottom, 16)
-                    .frame(maxHeight: .infinity, alignment: .bottom)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
-            }
+            TaskDockView(state: state).offset(y: 3)
         }
         .frame(width: Metrics.workspaceWidth, height: Metrics.workspaceHeight)
         .animation(.easeOut(duration: Motion.drawerMs), value: state.ragOpen)
@@ -32,34 +25,62 @@ struct RecordingWorkspaceView: View {
     }
 
     private var workspaceContent: some View {
-        GeometryReader { geo in
-            ZStack {
-                RecordingHeroView(state: state)
-                    .position(x: geo.size.width * 0.5, y: 175)
+        VStack(spacing: 0) {
+            // 上辺は notch と Task Dock の領域。本文はその下から始める。
+            Spacer(minLength: 0).frame(height: Metrics.wsContentTop)
 
-                RecordingToolPalette(selection: $state.selectedTool)
-                    .position(x: 120, y: 300)
-
-                TranscriptPanel(state: state)
-                    .position(x: geo.size.width - 170, y: 300)
-
-                AIActionsPalette(state: state)
-                    .position(x: geo.size.width * 0.5, y: 380)
-
-                Button {
-                    state.ragOpen.toggle()
-                } label: {
-                    HStack(spacing: 5) {
-                        Image(systemName: "plus")
-                        Text("RAG")
-                    }
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(Color.astraAccent)
+            HStack(alignment: .top, spacing: Metrics.wsColumnGap) {
+                // 左: 録音の主役 → AI 操作。視線が上から下へ一本で流れる。
+                VStack(spacing: 18) {
+                    RecordingHeroView(state: state)
+                    AIActionsPalette(state: state)
+                    // 押した結果はここに出る。走っていない/結果が無いときは何も置かない。
+                    AIResultPanel(state: state)
+                    Spacer(minLength: 0)
                 }
-                .buttonStyle(.plain)
-                .accessibilityIdentifier("ragToggle")
-                .position(x: geo.size.width * 0.5, y: geo.size.height - 30)
+                .padding(.top, 18)
+                .frame(maxWidth: .infinity)
+
+                // 右: いま見ている中身（文字起こし / 翻訳 / 字幕）。切替は同じ列の上に置く。
+                VStack(spacing: 10) {
+                    RecordingToolPalette(selection: $state.selectedTool)
+                    TranscriptPanel(state: state)
+                    Spacer(minLength: 0)
+                }
+                .frame(width: Metrics.wsRightColumn)
             }
+            .padding(.horizontal, Metrics.wsGutter)
+            .frame(maxHeight: .infinity)
+
+            // 下: RAG。閉じているときは 1 本のバー、開くとこの区画だけが伸びる。
+            // 他のカードの上に**かぶせない**ので、開いても画面が破綻しない。
+            ragSection
+        }
+        .frame(width: Metrics.workspaceWidth, height: Metrics.workspaceHeight)
+    }
+
+    @ViewBuilder private var ragSection: some View {
+        if state.ragOpen {
+            RAGDrawerView(state: state)
+                .frame(height: Metrics.wsRagDrawer)
+                .padding(.horizontal, Metrics.wsGutter)
+                .padding(.bottom, Metrics.wsGutter)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+        } else {
+            Button { state.ragOpen = true } label: {
+                HStack(spacing: 5) {
+                    Image(systemName: "plus")
+                    Text("RAG")
+                }
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(Color.astraAccent)
+                // 小さい字でも押せる面を確保する（UI/UX 仕様 §16: hit area 28〜32pt）。
+                .frame(height: Metrics.wsBottomBar)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("ragToggle")
+            .padding(.bottom, Metrics.wsGutter - 8)
         }
     }
 }

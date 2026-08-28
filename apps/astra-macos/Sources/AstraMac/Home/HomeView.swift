@@ -38,6 +38,19 @@ struct HomeView: View {
                             title: a.title, sub: a.kind, action: a.action)
                     }
                 }
+                if attention.isEmpty && active.isEmpty {
+                    // §8.1: 空状態では機能説明を並べず、頼み方を 1 行だけ示す。
+                    VStack(spacing: 6) {
+                        Text("今日はまだ何もありません。")
+                            .font(.system(size: TypeScale.bodySize))
+                            .foregroundStyle(Palette.text(dark))
+                        Text("面倒なことを 1 つ頼んでください。")
+                            .font(.system(size: TypeScale.secondarySize))
+                            .foregroundStyle(Palette.muted(dark))
+                    }
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.vertical, Space.largePadding)
+                }
                 if !active.isEmpty {
                     section("Active work")
                     ForEach(active) { w in

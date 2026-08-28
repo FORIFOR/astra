@@ -53,6 +53,7 @@ enum SelfTest {
         case "recoveryoffline": recoveryOffline(args); return true
         case "fulllifecycle": fullLifecycle(args); return true
         case "e2e001": e2e001(args); return true
+        case "shots": shots(args); return true
         case "panel": panelBehavior(); return true
         case "render": render(); return true
         default: return false
@@ -1275,6 +1276,132 @@ enum SelfTest {
         } catch { print("SELFTEST_FAIL recoveryoffline error=\(error)"); exit(3) }
     }
 
+
+
+    /// `--selftest shots [outDir]`: Visual Gate の 8 画面を**実アプリで実提示して撮る**。
+    /// 撮るのは自プロセスの窓だけ（デスクトップや他アプリを写さない）。geometry も同時に測り、
+    /// 「窓が在るだけ」で PASS にしない。既定の出力先は /tmp/astra-shots。
+    @MainActor
+    private static func shots(_ args: [String]) {
+        let i = args.firstIndex(of: "--selftest")!
+        let outDir = args.count > i + 2 ? args[i + 2] : "/tmp/astra-shots"
+        try? FileManager.default.createDirectory(atPath: outDir, withIntermediateDirectories: true)
+        NSApp.setActivationPolicy(.regular)
+
+        func settle(_ s: Double) {
+            let until = Date().addingTimeInterval(s)
+            while Date() < until { CFRunLoopRunInMode(.defaultMode, 0.05, true) }
+        }
+
+        /// 自プロセスの最前面の窓を撮る。戻りは (幅, 高さ, 色数)。
+        func capture(_ name: String) -> (w: Int, h: Int, colors: Int)? {
+            settle(1.0)
+            var best: (CGWindowID, Int, Int)? = nil
+            var area = 0
+            if let infos = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] {
+                for info in infos {
+                    guard let owner = info[kCGWindowOwnerPID as String] as? pid_t, owner == getpid(),
+                          let num = info[kCGWindowNumber as String] as? CGWindowID,
+                          let b = info[kCGWindowBounds as String] as? [String: Any],
+                          let w = b["Width"] as? CGFloat, let h = b["Height"] as? CGFloat,
+                          w > 40, h > 20 else { continue }
+                    if Int(w * h) > area { area = Int(w * h); best = (num, Int(w), Int(h)) }
+                }
+            }
+            guard let (winID, w, h) = best,
+                  let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, winID, [.boundsIgnoreFraming, .bestResolution])
+            else { return nil }
+            let rep = NSBitmapImageRep(cgImage: cg)
+            var seen = Set<UInt32>()
+            let pw = rep.pixelsWide, ph = rep.pixelsHigh
+            let sx = max(1, pw / 60), sy = max(1, ph / 60)
+            var y = 0
+            while y < ph { var x = 0
+                while x < pw {
+                    if let c = rep.colorAt(x: x, y: y) {
+                        let r = UInt32(max(0, min(255, c.redComponent * 255)))
+                        let g = UInt32(max(0, min(255, c.greenComponent * 255)))
+                        let bl = UInt32(max(0, min(255, c.blueComponent * 255)))
+                        seen.insert((r << 16) | (g << 8) | bl)
+                    }
+                    x += sx }
+                y += sy }
+            if let png = rep.representation(using: .png, properties: [:]) {
+                try? png.write(to: URL(fileURLWithPath: "\(outDir)/\(name).png"))
+            }
+            return (w, h, seen.count)
+        }
+
+        var report: [String] = []
+        var failures: [String] = []
+        func record(_ name: String, _ r: (w: Int, h: Int, colors: Int)?, expW: CGFloat?, expH: CGFloat?, minColors: Int) {
+            guard let r = r else { failures.append("\(name)=撮影不可"); return }
+            var ok = r.colors >= minColors
+            if let ew = expW { ok = ok && abs(r.w - Int(ew)) <= 2 }
+            if let eh = expH { ok = ok && abs(r.h - Int(eh)) <= 2 }
+            if !ok { failures.append("\(name)(\(r.w)x\(r.h),c\(r.colors))") }
+            report.append("\(name) \(r.w)x\(r.h) c\(r.colors)")
+        }
+
+        let state = RecordingWorkspaceState.shared
+
+        // 01 voice-hud-idle
+        VoiceHUDState.shared.mode = .idle
+        WindowCoordinator.shared.showVoiceHUD()
+        record("01-voice-hud-idle", capture("01-voice-hud-idle"),
+               expW: Metrics.hudWidth, expH: Metrics.hudHeight, minColors: 4)
+
+        // 02 voice-hud-listening
+        VoiceHUDState.shared.mode = .listening
+        record("02-voice-hud-listening", capture("02-voice-hud-listening"),
+               expW: Metrics.hudWidth, expH: Metrics.hudHeight, minColors: 4)
+        VoiceHUDState.shared.mode = .idle
+        WindowCoordinator.shared.hideVoiceHUD()
+        settle(0.4)
+
+        // 03 recording-workspace（Hero 中心・RAG 閉）
+        state.loadDemo(ragOpen: false)
+        state.selectedTool = .transcript
+        WindowCoordinator.shared.showRecordingWorkspace()
+        record("03-recording-workspace", capture("03-recording-workspace"),
+               expW: Metrics.workspaceWidth, expH: Metrics.workspaceHeight, minColors: 12)
+
+        // 04 recording-transcript（Transcript を開いた状態）
+        state.selectedTool = .transcript
+        record("04-recording-transcript", capture("04-recording-transcript"),
+               expW: Metrics.workspaceWidth, expH: Metrics.workspaceHeight, minColors: 12)
+
+        // 05 recording-rag（RAG Drawer 展開）
+        state.ragOpen = true
+        state.refreshRag()
+        record("05-recording-rag", capture("05-recording-rag"),
+               expW: Metrics.workspaceWidth, expH: Metrics.workspaceHeight, minColors: 12)
+        WindowCoordinator.shared.hideRecordingWorkspace()
+        settle(0.5)
+
+        // 06 main-home / 07 apps は Main Window から
+        MainWindowController.shared.show()
+        settle(1.2)
+        record("06-main-home", capture("06-main-home"), expW: nil, expH: nil, minColors: 8)
+
+        // 07 apps: Main の Apps タブへ（accessibility 経由ではなく状態で切り替える）
+        MainWindowController.shared.showSection(.apps)
+        record("07-apps", capture("07-apps"), expW: nil, expH: nil, minColors: 8)
+
+        // 08 meeting-detail: Library の会議詳細（MeetingArtifactView）
+        MainWindowController.shared.showMeetingDetailPreview()
+        record("08-meeting-detail", capture("08-meeting-detail"), expW: nil, expH: nil, minColors: 8)
+
+        print("SHOTS_DIR \(outDir)")
+        for line in report { print("SHOT \(line)") }
+        if failures.isEmpty {
+            print("SELFTEST_OK shots: 8面を実アプリで撮影・geometry OK")
+            exit(0)
+        } else {
+            print("SELFTEST_FAIL shots: \(failures.joined(separator: ", "))")
+            exit(2)
+        }
+    }
 
     /// 自プロセスが**画面に出している**窓の寸法一覧。HUD と Workspace の排他を
     /// window server の事実として測るために使う（内部フラグではなく実表示を見る）。

@@ -54,14 +54,23 @@ final class MainData: ObservableObject {
     }
 }
 
+/// Main Window のナビ状態。Visual Gate の撮影や外部導線から切り替えるため共有にする。
+@MainActor
+final class MainNav: ObservableObject {
+    static let shared = MainNav()
+    @Published var section: MainSection = .home
+    /// 会議詳細のプレビュー（Library から開いた状態を撮るため）。
+    @Published var meetingDetail = false
+}
+
 /// 4 タブの native シェル。Windows 版は同じ構成を NavigationView + Mica で作る（設計共通・実装別）。
 struct MainWindowView: View {
-    @State private var section: MainSection = .home
+    @StateObject private var nav = MainNav.shared
     @StateObject private var data = MainData()
 
     var body: some View {
         NavigationSplitView {
-            List(MainSection.allCases, selection: $section) { s in
+            List(MainSection.allCases, selection: $nav.section) { s in
                 Label(s.title, systemImage: s.icon).tag(s)
             }
             .navigationSplitViewColumnWidth(min: 176, ideal: 200, max: 240)
@@ -74,11 +83,22 @@ struct MainWindowView: View {
                 }.padding(10)
             }
         } detail: {
-            switch section {
-            case .home: HomePane(recent: data.library)
-            case .agents: AgentsPane(apps: data.apps)
-            case .library: LibraryPane(titles: data.library)
-            case .apps: AppsPane(apps: data.apps)
+            if nav.meetingDetail {
+                MeetingArtifactView(
+                    title: "A社 新規提案", duration: "42:18", participants: 3,
+                    summary: [MeetingCitation(number: 1, text: "先方は10月導入を希望。最大の懸念は初期費用。", transcriptTime: "14:18", speaker: "田中")],
+                    decisions: [MeetingCitation(number: 2, text: "導入時期を10月で検討", transcriptTime: "14:22", speaker: "鈴木")],
+                    actionItems: [MeetingCitation(number: 3, text: "伊藤 修正版見積を送付 明日", transcriptTime: "14:31", speaker: "伊藤")],
+                    selected: MeetingCitation(number: 1, text: "初期費用が少し気になっています。", transcriptTime: "14:18", speaker: "田中")
+                )
+                .navigationTitle("Meeting")
+            } else {
+                switch nav.section {
+                case .home: HomePane(recent: data.library)
+                case .agents: AgentsPane(apps: data.apps)
+                case .library: LibraryPane(titles: data.library)
+                case .apps: AppsPane(apps: data.apps)
+                }
             }
         }
         .frame(minWidth: 900, minHeight: 560)
@@ -88,10 +108,34 @@ struct MainWindowView: View {
 
 private struct HomePane: View {
     let recent: [String]
+    /// 直近の予定は**実カレンダー**から取る（MEET-001）。許可が無ければ空のまま（架空の予定を作らない）。
+    @State private var upcoming: [HomeAttention] = []
+
     var body: some View {
-        // §8 Home: spec 準拠の HomeView（greeting+intent・Attention・Active work）。実 library を Active work に流す。
-        HomeView(active: recent.prefix(3).map { HomeWork(title: $0, meta: "資料 · Library") })
-            .navigationTitle("Home")
+        // §8 Home: greeting + intent・Attention（実カレンダー）・Active work（実 Library）。
+        HomeView(
+            attention: upcoming,
+            active: recent.prefix(3).map { HomeWork(title: $0, meta: "資料 · Library") }
+        )
+        .navigationTitle("Home")
+        .onAppear(perform: loadUpcoming)
+    }
+
+    private func loadUpcoming() {
+        let fmt = DateFormatter(); fmt.dateFormat = "HH:mm"
+        // 終日の予定（誕生日・祝日など）は会議ではない。ここに「録音を開始」を出すと
+        // 押しても意味が無い導線になるので、時刻のある予定だけを Attention にする。
+        let timed = CalendarAccess.upcoming(hours: 24).filter { e in
+            let duration = e.endEpoch - e.startEpoch
+            return duration > 0 && duration < 20 * 3600
+        }
+        upcoming = timed.prefix(3).map { e in
+            HomeAttention(
+                kind: fmt.string(from: Date(timeIntervalSince1970: e.startEpoch)) + " " + e.calendar,
+                title: e.title,
+                action: "録音を開始"
+            )
+        }
     }
 }
 
@@ -156,40 +200,90 @@ private struct LibraryPane: View {
     }
 }
 
+/// §10 Apps: 「できる仕事を増やす場所」。接続状態は **色だけでなく文字でも**示す（§17）。
 private struct AppsPane: View {
     let apps: [String]
     @ObservedObject private var connectors = ConnectorState.shared
+
+    /// APP-002 の状態。トグル 1 個では「未接続 / 権限が要る / 繋げない」が区別できないので分ける。
+    private enum ConnState {
+        case connected, disconnected, permissionRequired
+        var label: String {
+            switch self {
+            case .connected: return "接続済み"
+            case .disconnected: return "未接続"
+            case .permissionRequired: return "設定が必要"
+            }
+        }
+        var icon: String {
+            switch self {
+            case .connected: return "checkmark.circle.fill"
+            case .disconnected: return "circle"
+            case .permissionRequired: return "exclamationmark.triangle.fill"
+            }
+        }
+    }
+
+    private func stateOf(_ app: String) -> ConnState {
+        if connectors.connected.contains(app) { return .connected }
+        // provider があるのに繋げない＝client_id 未設定。繋げるつもりにさせない。
+        if ConnectorState.provider(for: app) != nil && !connectors.canConnect(app) { return .permissionRequired }
+        return .disconnected
+    }
+
+    private func tint(_ s: ConnState) -> Color {
+        switch s {
+        case .connected: return Palette.successLight
+        case .permissionRequired: return Palette.warningLight
+        case .disconnected: return .secondary
+        }
+    }
+
     var body: some View {
         let apps = self.apps.isEmpty ? ["Gmail", "Google Calendar", "Finder"] : self.apps
         return ScrollView {
-            // §11: 「できる仕事を増やす場所」。Connector 単体より Pack/できる仕事を先に見せる。
             VStack(alignment: .leading, spacing: 4) {
                 Text("できる仕事を増やす").font(.system(size: 16, weight: .semibold))
                 Text("Pack や Connector を追加すると、Astra ができる仕事が増えます。")
                     .font(.system(size: 12)).foregroundStyle(.secondary)
-            }.frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 20).padding(.top, 16)
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 240), spacing: 12)], spacing: 12) {
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 20).padding(.top, 16)
+
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 260), spacing: 12)], spacing: 12) {
                 ForEach(apps, id: \.self) { a in
-                    let connectable = connectors.canConnect(a)
+                    let st = stateOf(a)
                     HStack(spacing: 10) {
                         RoundedRectangle(cornerRadius: 7).fill(Color.astraAccent.opacity(0.85))
                             .frame(width: 27, height: 27)
                             .overlay(Text(String(a.prefix(1))).font(.system(size: 12, weight: .bold)).foregroundStyle(.white))
-                        VStack(alignment: .leading, spacing: 1) {
+                        VStack(alignment: .leading, spacing: 2) {
                             Text(a).font(.system(size: 12, weight: .semibold))
-                            if ConnectorState.provider(for: a) != nil && !connectable {
-                                Text("接続には client_id の設定が必要").font(.system(size: 9)).foregroundStyle(.secondary)
+                            HStack(spacing: 4) {
+                                Image(systemName: st.icon).font(.system(size: 9))
+                                Text(st.label).font(.system(size: 10))
                             }
+                            .foregroundStyle(tint(st))
                         }
-                        Spacer()
-                        // 設定済みのものだけ接続開始できる（繋げないものを繋いだつもりにさせない）。
-                        Toggle("", isOn: Binding(
-                            get: { connectors.connected.contains(a) },
-                            set: { on in if on { _ = connectors.connect(a) } else { connectors.connected.remove(a) } }
-                        )).labelsHidden().controlSize(.small).disabled(!connectable)
+                        Spacer(minLength: 0)
+                        // 繋げるものだけ操作を出す。繋げないものに操作を出して失敗させない。
+                        if st == .connected {
+                            Button("切断") { connectors.connected.remove(a) }
+                                .buttonStyle(.plain)
+                                .font(.system(size: 11))
+                                .foregroundStyle(.secondary)
+                                .frame(height: 28).contentShape(Rectangle())
+                        } else if connectors.canConnect(a) {
+                            Button("接続") { _ = connectors.connect(a) }
+                                .buttonStyle(.plain)
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundStyle(Color.astraAccent)
+                                .frame(height: 28).contentShape(Rectangle())
+                        }
                     }
                     .padding(12)
                     .background(RoundedRectangle(cornerRadius: 10).stroke(Color.black.opacity(0.08)))
+                    .accessibilityIdentifier("connector-\(a)")
                 }
             }.padding(20)
         }.navigationTitle("Apps")

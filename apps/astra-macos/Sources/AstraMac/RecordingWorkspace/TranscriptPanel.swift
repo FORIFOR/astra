@@ -7,13 +7,10 @@ struct TranscriptPanel: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(state.selectedTool.title)
-                .font(.system(size: 11, weight: .semibold)).foregroundStyle(.secondary)
-            Divider()
             content
         }
         .padding(11)
-        .frame(width: 300, height: 190, alignment: .topLeading)
+        .frame(maxWidth: .infinity, minHeight: 190, maxHeight: .infinity, alignment: .topLeading)
         .background(
             RoundedRectangle(cornerRadius: 12).fill(.white)
                 .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.black.opacity(0.08)))

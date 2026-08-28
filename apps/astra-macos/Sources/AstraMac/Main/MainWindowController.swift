@@ -23,4 +23,18 @@ final class MainWindowController {
         window?.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
     }
+
+    /// タブを切り替えて前面に出す（Visual Gate の撮影・外部導線から使う）。
+    func showSection(_ section: MainSection) {
+        MainNav.shared.meetingDetail = false
+        MainNav.shared.section = section
+        show()
+    }
+
+    /// Library の会議詳細を開いた状態にする。
+    func showMeetingDetailPreview() {
+        MainNav.shared.section = .library
+        MainNav.shared.meetingDetail = true
+        show()
+    }
 }

@@ -17,29 +17,30 @@ struct AIActionsPalette: View {
     ]
 
     var body: some View {
-        VStack(spacing: 4) {
+        // Hero の直下に横一列。以前は独立した白カードで、右の文字起こし面と視覚的な重さが
+        // 釣り合わず「浮いた小箱」に見えていた。面を敷かず、操作だけを静かに並べる。
+        HStack(spacing: 6) {
             ForEach(actions) { action in
                 Button { state.runAIAction(action.title) } label: {
-                    HStack(spacing: 9) {
-                        Image(systemName: action.icon).frame(width: 15).foregroundStyle(Color.astraAccent)
+                    HStack(spacing: 5) {
+                        Image(systemName: action.icon).font(.system(size: 10))
+                            .foregroundStyle(Color.astraAccent)
                         Text(action.title)
-                        Spacer(minLength: 0)
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(Color.primary)
                     }
-                    .font(.system(size: 11, weight: .medium))
-                    .padding(.horizontal, 9)
+                    .padding(.horizontal, 11)
+                    // 小さい字でも押せる面を確保する（UI/UX 仕様 §16: hit area 28〜32pt）。
                     .frame(height: 30)
+                    .background(
+                        RoundedRectangle(cornerRadius: 9).fill(Color.black.opacity(0.045))
+                    )
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .accessibilityIdentifier("ai-\(action.title)")
             }
         }
-        .padding(7)
-        .frame(width: Metrics.assistantWidth)
-        .background(
-            RoundedRectangle(cornerRadius: 12).fill(.white)
-                .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.black.opacity(0.08)))
-                .shadow(color: .black.opacity(0.05), radius: 10, y: 3)
-        )
         .accessibilityIdentifier("aiActions")
     }
 }
