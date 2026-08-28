@@ -59,7 +59,13 @@ mod tests {
         let result = secret_get("astra.test.absent".to_string());
         match result {
             Ok(value) => assert!(value.is_none()),
-            Err(message) => assert!(message.contains("credential store unavailable")),
+            // 資格情報ストアが無い CI では、失敗は Entry 生成時（"credential store unavailable"）でも
+            // 読み出し時（secret-service 未起動 → "could not read"）でも起こりうる。どちらも許容する。
+            Err(message) => assert!(
+                message.contains("credential store unavailable")
+                    || message.contains("could not read"),
+                "unexpected error: {message}"
+            ),
         }
     }
 }
