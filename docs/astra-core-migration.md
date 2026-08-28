@@ -906,7 +906,7 @@ CGEventTap（session tap, active）へ置き換え:
 | # | Done 条件 | 状態 | 実測した根拠 / 残る外部前提 |
 |---|---|---|---|
 | 1 | shared core が実運用経路で使用 | ✅（実運用経路）/ 🟡（実 provider OAuth） | dev sign-in→gateway→Agent echo が COMPLETED+artifact（core 経由）。connector 交換は mock endpoint で実測。**残**: 実 Google/Apple/LINE の client_id + ユーザー consent。 |
-| 2 | macOS Native UI/主要機能 完成 | ✅ | 4タブ Main / Voice HUD / Recording Workspace / Task Dock / Hero / Transcript / AI / RAG Drawer / Settings。offscreen 実描画 HUD=87色·100%、Workspace=67色·100%（非空白実証）。 |
+| 2 | macOS Native UI/主要機能 完成 | ✅ | 4タブ Main / Voice HUD / Recording Workspace / Task Dock / Hero / Transcript / AI / RAG Drawer / Settings。offscreen 実描画 HUD=87色·100%、Workspace=67色·100%。**実ディスプレイ提示**も guishot で実測（920×590 token実寸·83色·PNG証跡）。 |
 | 3 | macOS 実機 E2E PASS | ✅（大半）/ 🟡（カレンダー） | 実マイク録音·実 screen·会議E2E·回復·波形·**STT テキスト(file+streaming)**·**global shortcut 合成押下受信**·Keychain·AX·on-device STT。**残**: EventKit TCC=notDetermined のため実カレンダーは署名 .app + ユーザー許可待ち。 |
 | 4 | Windows Native 実装 完成 | ✅（コード）/ 🟡（実描画/実行時） | 全 Window·Task Dock·Mica/Acrylic·同一 Bezier·WASAPI mic+loopback·screen·RegisterHotKey·core P/Invoke。C# 全ロジック（Window code-behind 含む）macOS で型検査 PASS。**残**: XAML→.g.cs codegen は XAML コンパイラの kernel32 P/Invoke により Windows 実機/CI のみ。 |
 | 5 | Windows build 可能 solution/CI 完成 | ✅（構成）/ 🟡（実行） | Astra.sln(Debug/Release x64)·unpackaged csproj·PerMonitorV2 manifest·windows.yml(cargo→dll→dotnet build)。**残**: windows-latest / 実機での実行。 |
@@ -925,3 +925,19 @@ CGEventTap（session tap, active）へ置き換え:
 **過去記述の訂正**: 「global shortcut は Carbon 登録のみ・押下受信 live 未検証」は Phase 1.77 で
 CGEventTap 化 + 合成押下受信の実測に更新。「STT はこの環境で無音＝環境制限」は Phase 1.78 で
 検証ハーネスの main-thread blocking バグと判明し、実 on-device 認識の実測 PASS に更新。
+
+## Phase 1.80 — 実ディスプレイ上の実提示を実測（Done#2/#3/#7）
+
+offscreen 描画（Phase 1.79）に加え、**実 window server 上の実提示**を実測した。
+`--selftest guishot`:
+- 実 `AstraPanel`(Recording Workspace, RecordingWorkspaceView, demo state) を画面中央に
+  `orderFrontRegardless` で提示（一瞬で閉じる）。
+- `CGWindowListCopyWindowInfo` で自プロセス(pid)所有の on-screen window を特定し、
+  bounds が **token 実寸 920×590**（workspaceWidth×Height, ±2pt）であることを確認。
+- `CGWindowListCreateImage` で自 window を撮影 → 非空白（実測 **83 色**）を確認、PNG を証跡保存。
+- headless（CI 等で画面が無い）なら SELFTEST_SKIP。
+
+撮影された PNG には notch / HUD 操作バー / Recording Hero（録音中·04:21·波形）/ 話者ラベル付き
+Transcript（田中·あなた·鈴木）/ Task Dock / RAG Context Drawer（ファイル·Gmail·Drive + スコア）が
+実描画されており、**mock でなく統合済み UI が実ディスプレイに token 実寸で提示される**ことを裏付ける。
+`verify:all` = VERIFY_ALL_OK。

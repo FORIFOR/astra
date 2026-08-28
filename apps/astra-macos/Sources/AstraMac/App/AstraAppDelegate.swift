@@ -7,7 +7,7 @@ final class AstraAppDelegate: NSObject, NSApplicationDelegate {
         let demo = DemoMode.fromArguments(CommandLine.arguments)
         WindowCoordinator.shared.start(demo: demo)
         // グローバル音声ショートカット（⌥Space）で録音を出し入れする。
-        // Carbon の RegisterEventHotKey は Accessibility 権限を要さない。
+        // CGEventTap（正本指定）で受信する。Accessibility 権限を使う（§3 と共用）。
         GlobalShortcut.shared.register { WindowCoordinator.shared.toggleRecording() }
         // 前回落ちたまま残っている録音があれば知らせる（§3 meeting recovery）。
         let recoverable = RecordingRuntime.shared.recoverableMeetings()

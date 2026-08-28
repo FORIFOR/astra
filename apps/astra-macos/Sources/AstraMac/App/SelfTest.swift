@@ -1,5 +1,6 @@
 import Foundation
 import CoreVideo
+import CoreGraphics
 import AVFoundation
 import Network
 import SwiftUI
@@ -31,6 +32,7 @@ enum SelfTest {
         case "livemeeting": livemeeting(); return true
         case "sttrecognize": sttrecognize(); return true
         case "sttstream": sttStream(); return true
+        case "guishot": guishot(); return true
         case "shape": shape(); return true
         case "hudlifecycle": hudlifecycle(); return true
         case "pause": pauseWorks(); return true
@@ -554,6 +556,83 @@ enum SelfTest {
         if err != nil { return nil }
         guard let ch = outBuf.floatChannelData else { return nil }
         return Array(UnsafeBufferPointer(start: ch[0], count: Int(outBuf.frameLength)))
+    }
+
+    /// `--selftest guishot`: 実 NSPanel（Recording Workspace）を**window server 上に実提示**し、
+    /// 自プロセスの window を CGWindowList で撮って「実描画・token 実寸・非空白」を実測する。
+    /// offscreen 描画では確認できない「実ディスプレイ提示」を裏付ける（一瞬だけ表示して閉じる）。
+    @MainActor
+    private static func guishot() {
+        RecordingWorkspaceState.shared.loadDemo(ragOpen: true)
+        let size = NSSize(width: Metrics.workspaceWidth, height: Metrics.workspaceHeight)
+        let panel = AstraPanel(size: size, level: .normal, canKey: false, content: RecordingWorkspaceView())
+        if let screen = NSScreen.main {
+            let f = screen.frame
+            panel.setFrameOrigin(NSPoint(x: f.midX - size.width / 2, y: f.midY - size.height / 2))
+        }
+        panel.orderFrontRegardless()
+        // 提示が window server に反映されるまで run loop を回す。
+        let show = Date().addingTimeInterval(1.0)
+        while Date() < show { CFRunLoopRunInMode(.defaultMode, 0.05, true) }
+
+        // 自プロセスが所有する on-screen window を探す。
+        let pid = getpid()
+        var winID: CGWindowID = 0
+        var bounds = CGRect.zero
+        if let infos = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] {
+            for info in infos {
+                guard let owner = info[kCGWindowOwnerPID as String] as? pid_t, owner == pid,
+                      let num = info[kCGWindowNumber as String] as? CGWindowID,
+                      let b = info[kCGWindowBounds as String] as? [String: Any],
+                      let bw = b["Width"] as? CGFloat, let bh = b["Height"] as? CGFloat,
+                      bw > 50, bh > 50 else { continue }
+                winID = num
+                bounds = CGRect(x: b["X"] as? CGFloat ?? 0, y: b["Y"] as? CGFloat ?? 0, width: bw, height: bh)
+                break
+            }
+        }
+        guard winID != 0 else {
+            panel.close()
+            print("SELFTEST_SKIP guishot: no on-screen window for pid (headless display?)"); exit(0)
+        }
+        // token 実寸で提示されているか（±2pt 許容）。
+        let wOK = abs(bounds.width - CGFloat(Metrics.workspaceWidth)) <= 2
+        let hOK = abs(bounds.height - CGFloat(Metrics.workspaceHeight)) <= 2
+
+        // 自 window を撮る（screen recording 許可済み）。
+        guard let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, winID,
+                                               [.boundsIgnoreFraming, .bestResolution]) else {
+            panel.close()
+            print("SELFTEST_SKIP guishot: window image unavailable"); exit(0)
+        }
+        let rep = NSBitmapImageRep(cgImage: cg)
+        // 非空白（>=4 色）を確認。
+        var seen = Set<UInt32>()
+        let w = rep.pixelsWide, h = rep.pixelsHigh
+        let sx = max(1, w / 40), sy = max(1, h / 40)
+        var y = 0
+        while y < h { var x = 0
+            while x < w {
+                if let c = rep.colorAt(x: x, y: y) {
+                    let r = UInt32(max(0, min(255, c.redComponent * 255)))
+                    let g = UInt32(max(0, min(255, c.greenComponent * 255)))
+                    let bl = UInt32(max(0, min(255, c.blueComponent * 255)))
+                    seen.insert((r << 16) | (g << 8) | bl)
+                }
+                x += sx }
+            y += sy }
+        // PNG 保存（証跡）。
+        var savedPath = ""
+        if let png = rep.representation(using: .png, properties: [:]) {
+            let out = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("astra-guishot-\(pid).png")
+            try? png.write(to: out); savedPath = out.path
+        }
+        panel.orderOut(nil); panel.close()
+        guard wOK, hOK, seen.count >= 4 else {
+            print("SELFTEST_FAIL guishot: bounds=\(Int(bounds.width))x\(Int(bounds.height)) wOK=\(wOK) hOK=\(hOK) colors=\(seen.count)"); exit(2)
+        }
+        print("SELFTEST_OK guishot: 実提示 \(Int(bounds.width))x\(Int(bounds.height)) colors=\(seen.count) png=\(savedPath)")
+        exit(0)
     }
 
     /// `--selftest shape`: RecordingWorkspaceShape のパスが共有 fixture（tokens 由来の golden）と
