@@ -12,12 +12,16 @@ fi
 PROJ="$ROOT/apps/windows/bridge-check"
 dotnet build "$PROJ" -v q -o "$PROJ/bin/out" >/dev/null
 # DllImport("astra_core") が見つけられるよう、共有ライブラリを出力先へ置く。
-for ext in dylib so dll; do
-  LIB="$ROOT/core/astra-core/target/debug/libastra_core.$ext"
-  [[ -f "$LIB" ]] && cp "$LIB" "$PROJ/bin/out/"
+# 注意: Rust の cdylib は macOS=libastra_core.dylib / Linux=libastra_core.so だが
+# **Windows は lib 接頭辞なしの astra_core.dll**。両系統の名前を探す。
+TARGET="$ROOT/core/astra-core/target/debug"
+for f in libastra_core.dylib libastra_core.so libastra_core.dll astra_core.dll; do
+  [[ -f "$TARGET/$f" ]] && cp "$TARGET/$f" "$PROJ/bin/out/"
 done
-# Windows では libastra_core.dll ではなく astra_core.dll を探すので、その名前でも置く。
-[[ -f "$PROJ/bin/out/libastra_core.dll" ]] && cp "$PROJ/bin/out/libastra_core.dll" "$PROJ/bin/out/astra_core.dll" || true
+# P/Invoke("astra_core") が探す名前を確実に用意する。
+if [[ ! -f "$PROJ/bin/out/astra_core.dll" && -f "$PROJ/bin/out/libastra_core.dll" ]]; then
+  cp "$PROJ/bin/out/libastra_core.dll" "$PROJ/bin/out/astra_core.dll"
+fi
 OUT="$(cd "$PROJ/bin/out" && dotnet bridge-check.dll)"
 echo "$OUT"
 [[ "$OUT" == CS_OK* ]] || { echo "FAIL: C# bridge -> core" >&2; exit 1; }
