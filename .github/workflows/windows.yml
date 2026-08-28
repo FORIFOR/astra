@@ -37,5 +37,37 @@ jobs:
         run: bash scripts/verify-csharp-logic.sh
       - name: Restore + build WinUI 3 solution
         run: dotnet build apps/windows/Astra.sln -c Release -p:Platform=x64 -v normal
+      # 実行時スモーク: 実際に Astra.exe を起動し、WinUI ブートストラップ + ウィンドウ生成が
+      # クラッシュせず立ち上がることを実測する（unpackaged なので WindowsAppRuntime を同梱する
+      # self-contained publish を使う）。プライマリ画面のスクショを証跡として artifact にする。
+      - name: Publish self-contained (bundles WindowsAppSDK runtime)
+        run: dotnet publish apps/windows/Astra/Astra.csproj -c Release -p:Platform=x64 -r win-x64 --self-contained true -p:WindowsAppSDKSelfContained=true -o publish
+      - name: Runtime smoke (launch Astra.exe, verify it initializes)
+        shell: pwsh
+        run: |
+          $exe = "publish/Astra.exe"
+          if (!(Test-Path $exe)) { throw "Astra.exe not found at $exe" }
+          $p = Start-Process -FilePath (Resolve-Path $exe) -PassThru
+          Start-Sleep -Seconds 12
+          Add-Type -AssemblyName System.Windows.Forms, System.Drawing
+          $b = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
+          $bmp = New-Object System.Drawing.Bitmap $b.Width, $b.Height
+          $g = [System.Drawing.Graphics]::FromImage($bmp)
+          $g.CopyFromScreen($b.Location, [System.Drawing.Point]::Empty, $b.Size)
+          $bmp.Save("$PWD\astra-windows-smoke.png")
+          $alive = -not $p.HasExited
+          if (-not $p.HasExited) { Stop-Process -Id $p.Id -Force }
+          if ($alive) {
+            Write-Host "SMOKE_OK: Astra.exe stayed alive 12s (WinUI bootstrap + window created)"
+          } else {
+            throw "Astra.exe exited early with code $($p.ExitCode)"
+          }
+      - name: Upload runtime smoke screenshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-windows-smoke
+          path: astra-windows-smoke.png
+          if-no-files-found: ignore
       - name: Note
-        run: echo "WinUI build runs on windows-latest; macOS host cannot build this (unverified there)."
+        run: echo "WinUI build + runtime smoke run on windows-latest; macOS host cannot build this."
