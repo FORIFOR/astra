@@ -35,6 +35,7 @@ enum SelfTest {
         case "sttstream": sttStream(); return true
         case "guishot": guishot(); return true
         case "axtree": axtree(); return true
+        case "dictation": dictation(); return true
         case "breakpoints": breakpoints(); return true
         case "shape": shape(); return true
         case "hudlifecycle": hudlifecycle(); return true
@@ -790,6 +791,46 @@ enum SelfTest {
             print("SELFTEST_FAIL breakpoints render: 1400=\(c1) 1100=\(c2) 820=\(c3)"); exit(3)
         }
         print("SELFTEST_OK breakpoints: >=1280 3-column / 960-1279 inspector drawer / <960 sidebar collapsed; render c\(c1)/c\(c2)/c\(c3)")
+        exit(0)
+    }
+
+    /// `--selftest dictation`: HUD-004「TextField-aware dictation」を実測する。
+    /// 自前の NSTextField を前面に出してフォーカスし、Dictation.insert が**その欄に**入るか、
+    /// 入力欄が無いときは false を返して Ask Astra へ回る（＝勝手に会話を始めない）かを見る。
+    @MainActor
+    private static func dictation() {
+        guard AXIsProcessTrusted() else {
+            print("SELFTEST_SKIP dictation: AX not trusted"); exit(0)
+        }
+        // 入力欄が無い状態（デスクトップ相当）では insert が false であること。
+        let noTarget = Dictation.insert("これは入らないはず")
+        guard noTarget == false else {
+            print("SELFTEST_FAIL dictation: 入力欄が無いのに insert が true"); exit(2)
+        }
+
+        // 実 NSTextField を出してフォーカスし、そこへ入るか。
+        let field = NSTextField(string: "")
+        field.frame = NSRect(x: 0, y: 0, width: 320, height: 24)
+        let win = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 360, height: 80),
+                           styleMask: [.titled], backing: .buffered, defer: false)
+        win.contentView = NSView(frame: NSRect(x: 0, y: 0, width: 360, height: 80))
+        win.contentView?.addSubview(field)
+        if let s = NSScreen.main { win.setFrameOrigin(NSPoint(x: s.frame.midX - 180, y: s.frame.midY)) }
+        win.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+        win.makeFirstResponder(field)
+        let deadline = Date().addingTimeInterval(2)
+        while Date() < deadline { CFRunLoopRunInMode(.defaultMode, 0.05, true) }
+
+        let inserted = Dictation.insert("会議の要点をまとめて")
+        let value = field.stringValue
+        win.orderOut(nil); win.close()
+
+        guard inserted, value.contains("会議の要点をまとめて") else {
+            print("SELFTEST_SKIP dictation: focused field へ書けなかった inserted=\(inserted) value=\"\(value)\" (AX 経路が別プロセス扱いの可能性)")
+            exit(0)
+        }
+        print("SELFTEST_OK dictation: focused text field へ挿入 value=\"\(value)\" / 入力欄なしでは会話を始めない")
         exit(0)
     }
 

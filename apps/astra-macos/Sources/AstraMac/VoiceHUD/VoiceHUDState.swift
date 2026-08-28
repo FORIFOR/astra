@@ -18,6 +18,22 @@ final class VoiceHUDState: ObservableObject {
         apiBase = base; apiToken = token; conversationId = nil
     }
 
+    /// 認識した発話の行き先を決める（UI/UX テスト仕様 HUD-004 / P1 Context-aware Voice Routing）。
+    ///
+    /// 前面アプリにテキスト入力欄があれば**そこへ入れて終わり**。Agent 会話は始めない。
+    /// 入力欄が無いときだけ Ask Astra に回す。推測で会話を始めないのが PASS 条件。
+    /// 戻り値は「dictation として入れたか」。
+    @discardableResult
+    func speak(_ text: String) -> Bool {
+        if Dictation.insert(text) {
+            mode = .idle
+            answer = ""
+            return true
+        }
+        ask(text)
+        return false
+    }
+
     /// 声/テキストの依頼を Agent に投げる。listening→thinking→answer→idle と状態を進める。
     func ask(_ text: String) {
         guard let base = apiBase, let token = apiToken else {
