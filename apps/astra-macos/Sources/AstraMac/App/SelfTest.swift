@@ -558,80 +558,106 @@ enum SelfTest {
         return Array(UnsafeBufferPointer(start: ch[0], count: Int(outBuf.frameLength)))
     }
 
-    /// `--selftest guishot`: 実 NSPanel（Recording Workspace）を**window server 上に実提示**し、
-    /// 自プロセスの window を CGWindowList で撮って「実描画・token 実寸・非空白」を実測する。
-    /// offscreen 描画では確認できない「実ディスプレイ提示」を裏付ける（一瞬だけ表示して閉じる）。
+    /// `--selftest guishot`: 3 つの主要サーフェス（Voice HUD / Recording Workspace / Main Window）を
+    /// **window server 上に実提示**し、自プロセスの window を CGWindowList で撮って
+    /// 「実描画・非空白（・borderless は token 実寸）」を実測する。offscreen では確認できない
+    /// 「実ディスプレイ提示」を裏付ける（各サーフェスを一瞬だけ表示して閉じる）。特に Main は
+    /// NavigationSplitView が offscreen では疎にしか描かれないため、実ウィンドウ提示で解消を示す。
     @MainActor
     private static func guishot() {
         RecordingWorkspaceState.shared.loadDemo(ragOpen: true)
-        let size = NSSize(width: Metrics.workspaceWidth, height: Metrics.workspaceHeight)
-        let panel = AstraPanel(size: size, level: .normal, canKey: false, content: RecordingWorkspaceView())
-        if let screen = NSScreen.main {
-            let f = screen.frame
-            panel.setFrameOrigin(NSPoint(x: f.midX - size.width / 2, y: f.midY - size.height / 2))
-        }
-        panel.orderFrontRegardless()
-        // 提示が window server に反映されるまで run loop を回す。
-        let show = Date().addingTimeInterval(1.0)
-        while Date() < show { CFRunLoopRunInMode(.defaultMode, 0.05, true) }
-
-        // 自プロセスが所有する on-screen window を探す。
         let pid = getpid()
-        var winID: CGWindowID = 0
-        var bounds = CGRect.zero
-        if let infos = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] {
-            for info in infos {
-                guard let owner = info[kCGWindowOwnerPID as String] as? pid_t, owner == pid,
-                      let num = info[kCGWindowNumber as String] as? CGWindowID,
-                      let b = info[kCGWindowBounds as String] as? [String: Any],
-                      let bw = b["Width"] as? CGFloat, let bh = b["Height"] as? CGFloat,
-                      bw > 50, bh > 50 else { continue }
-                winID = num
-                bounds = CGRect(x: b["X"] as? CGFloat ?? 0, y: b["Y"] as? CGFloat ?? 0, width: bw, height: bh)
-                break
+
+        // 1 サーフェスを提示→自 window 撮影→色数と bounds を返す。撮れなければ nil。
+        func shoot(_ label: String, window: NSWindow, present: () -> Void) -> (w: Int, h: Int, colors: Int, path: String)? {
+            present()
+            let show = Date().addingTimeInterval(0.8)
+            while Date() < show { CFRunLoopRunInMode(.defaultMode, 0.05, true) }
+            var winID: CGWindowID = 0
+            var bw = 0, bh = 0
+            if let infos = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] {
+                var best = 0
+                for info in infos {
+                    guard let owner = info[kCGWindowOwnerPID as String] as? pid_t, owner == pid,
+                          let num = info[kCGWindowNumber as String] as? CGWindowID,
+                          let b = info[kCGWindowBounds as String] as? [String: Any],
+                          let iw = b["Width"] as? CGFloat, let ih = b["Height"] as? CGFloat,
+                          iw > 40, ih > 20 else { continue }   // HUD は 310x31 と低いので閾値を下げる
+                    if Int(iw * ih) > best { best = Int(iw * ih); winID = num; bw = Int(iw); bh = Int(ih) }
+                }
+            }
+            guard winID != 0,
+                  let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, winID, [.boundsIgnoreFraming, .bestResolution])
+            else { window.orderOut(nil); window.close(); return nil }
+            let rep = NSBitmapImageRep(cgImage: cg)
+            var seen = Set<UInt32>()
+            let w = rep.pixelsWide, h = rep.pixelsHigh
+            let sx = max(1, w / 40), sy = max(1, h / 40)
+            var y = 0
+            while y < h { var x = 0
+                while x < w {
+                    if let c = rep.colorAt(x: x, y: y) {
+                        let r = UInt32(max(0, min(255, c.redComponent * 255)))
+                        let g = UInt32(max(0, min(255, c.greenComponent * 255)))
+                        let bl = UInt32(max(0, min(255, c.blueComponent * 255)))
+                        seen.insert((r << 16) | (g << 8) | bl)
+                    }
+                    x += sx }
+                y += sy }
+            var path = ""
+            if let png = rep.representation(using: .png, properties: [:]) {
+                let out = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("astra-guishot-\(label)-\(pid).png")
+                try? png.write(to: out); path = out.path
+            }
+            window.orderOut(nil); window.close()
+            return (bw, bh, seen.count, path)
+        }
+
+        func centered(_ win: NSWindow, _ size: NSSize) {
+            if let screen = NSScreen.main {
+                let f = screen.frame
+                win.setFrameOrigin(NSPoint(x: f.midX - size.width / 2, y: f.midY - size.height / 2))
             }
         }
-        guard winID != 0 else {
-            panel.close()
-            print("SELFTEST_SKIP guishot: no on-screen window for pid (headless display?)"); exit(0)
-        }
-        // token 実寸で提示されているか（±2pt 許容）。
-        let wOK = abs(bounds.width - CGFloat(Metrics.workspaceWidth)) <= 2
-        let hOK = abs(bounds.height - CGFloat(Metrics.workspaceHeight)) <= 2
 
-        // 自 window を撮る（screen recording 許可済み）。
-        guard let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, winID,
-                                               [.boundsIgnoreFraming, .bestResolution]) else {
-            panel.close()
-            print("SELFTEST_SKIP guishot: window image unavailable"); exit(0)
+        // 1) Voice HUD（borderless, token 実寸）
+        let hudSize = NSSize(width: Metrics.hudWidth, height: Metrics.hudHeight)
+        let hud = AstraPanel(size: hudSize, level: .normal, canKey: false, content: VoiceHUDView())
+        let hudR = shoot("hud", window: hud) { centered(hud, hudSize); hud.orderFrontRegardless() }
+
+        // 2) Recording Workspace（borderless, token 実寸）
+        let wsSize = NSSize(width: Metrics.workspaceWidth, height: Metrics.workspaceHeight)
+        let ws = AstraPanel(size: wsSize, level: .normal, canKey: false, content: RecordingWorkspaceView())
+        let wsR = shoot("workspace", window: ws) { centered(ws, wsSize); ws.orderFrontRegardless() }
+
+        // 3) Main Window（titled 実ウィンドウ。offscreen で疎だった NavigationSplitView が実提示で描かれる）
+        let mainSize = NSSize(width: 900, height: 600)
+        let main = NSWindow(contentRect: NSRect(origin: .zero, size: mainSize),
+                            styleMask: [.titled, .closable, .resizable], backing: .buffered, defer: false)
+        main.contentView = NSHostingView(rootView: MainWindowView())
+        let mainR = shoot("main", window: main) { centered(main, mainSize); main.makeKeyAndOrderFront(nil); NSApp.activate(ignoringOtherApps: true) }
+
+        // いずれも撮れない（実ディスプレイ無し）なら SKIP。
+        guard hudR != nil || wsR != nil || mainR != nil else {
+            print("SELFTEST_SKIP guishot: no on-screen window (headless display?)"); exit(0)
         }
-        let rep = NSBitmapImageRep(cgImage: cg)
-        // 非空白（>=4 色）を確認。
-        var seen = Set<UInt32>()
-        let w = rep.pixelsWide, h = rep.pixelsHigh
-        let sx = max(1, w / 40), sy = max(1, h / 40)
-        var y = 0
-        while y < h { var x = 0
-            while x < w {
-                if let c = rep.colorAt(x: x, y: y) {
-                    let r = UInt32(max(0, min(255, c.redComponent * 255)))
-                    let g = UInt32(max(0, min(255, c.greenComponent * 255)))
-                    let bl = UInt32(max(0, min(255, c.blueComponent * 255)))
-                    seen.insert((r << 16) | (g << 8) | bl)
-                }
-                x += sx }
-            y += sy }
-        // PNG 保存（証跡）。
-        var savedPath = ""
-        if let png = rep.representation(using: .png, properties: [:]) {
-            let out = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("astra-guishot-\(pid).png")
-            try? png.write(to: out); savedPath = out.path
+        // 撮れたサーフェスは非空白であること。borderless の 2 面は token 実寸（±2pt）。
+        var fails: [String] = []
+        func check(_ name: String, _ r: (w: Int, h: Int, colors: Int, path: String)?, expW: Int?, expH: Int?, minColors: Int) -> String {
+            guard let r = r else { return "\(name)=SKIP" }
+            var ok = r.colors >= minColors
+            if let ew = expW { ok = ok && abs(r.w - ew) <= 2 }
+            if let eh = expH { ok = ok && abs(r.h - eh) <= 2 }
+            if !ok { fails.append("\(name)(\(r.w)x\(r.h),c\(r.colors))") }
+            return "\(name)=\(r.w)x\(r.h)/c\(r.colors)"
         }
-        panel.orderOut(nil); panel.close()
-        guard wOK, hOK, seen.count >= 4 else {
-            print("SELFTEST_FAIL guishot: bounds=\(Int(bounds.width))x\(Int(bounds.height)) wOK=\(wOK) hOK=\(hOK) colors=\(seen.count)"); exit(2)
-        }
-        print("SELFTEST_OK guishot: 実提示 \(Int(bounds.width))x\(Int(bounds.height)) colors=\(seen.count) png=\(savedPath)")
+        let sHud = check("HUD", hudR, expW: Int(Metrics.hudWidth), expH: Int(Metrics.hudHeight), minColors: 4)
+        let sWs = check("Workspace", wsR, expW: Int(Metrics.workspaceWidth), expH: Int(Metrics.workspaceHeight), minColors: 8)
+        // Main は titled（title bar 分だけ高さが増える）ので幅のみ検査、色数は offscreen(3色)より十分多いこと。
+        let sMain = check("Main", mainR, expW: 900, expH: nil, minColors: 8)
+        guard fails.isEmpty else { print("SELFTEST_FAIL guishot: \(fails.joined(separator: ","))"); exit(2) }
+        let anyPath = wsR?.path ?? hudR?.path ?? mainR?.path ?? ""
+        print("SELFTEST_OK guishot: 実提示 \(sHud) \(sWs) \(sMain) png=\(anyPath)")
         exit(0)
     }
 

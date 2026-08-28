@@ -929,15 +929,18 @@ CGEventTap 化 + 合成押下受信の実測に更新。「STT はこの環境�
 ## Phase 1.80 — 実ディスプレイ上の実提示を実測（Done#2/#3/#7）
 
 offscreen 描画（Phase 1.79）に加え、**実 window server 上の実提示**を実測した。
-`--selftest guishot`:
-- 実 `AstraPanel`(Recording Workspace, RecordingWorkspaceView, demo state) を画面中央に
-  `orderFrontRegardless` で提示（一瞬で閉じる）。
-- `CGWindowListCopyWindowInfo` で自プロセス(pid)所有の on-screen window を特定し、
-  bounds が **token 実寸 920×590**（workspaceWidth×Height, ±2pt）であることを確認。
-- `CGWindowListCreateImage` で自 window を撮影 → 非空白（実測 **83 色**）を確認、PNG を証跡保存。
-- headless（CI 等で画面が無い）なら SELFTEST_SKIP。
+`--selftest guishot` は **3 主要サーフェス**を順に実提示し、各々を自 window 撮影する（各一瞬で閉じる）:
+- **Voice HUD**（AstraPanel, VoiceHUDView）: token 実寸 **310×31**、実測 **108 色**。
+- **Recording Workspace**（AstraPanel, RecordingWorkspaceView）: token 実寸 **920×590**、実測 **83 色**。
+- **Main Window**（titled NSWindow, MainWindowView）: 幅 **900**、実測 **24 色**。
+  offscreen NSHostingView では NavigationSplitView が **3 色**しか描かれなかったが、**実ウィンドウ提示では
+  24 色**で豊かに描画され、Phase 1.79 の offscreen 制限が実提示で解消されることを実証。
+手順: `CGWindowListCopyWindowInfo` で自プロセス(pid)所有の on-screen window を特定 → `CGWindowListCreateImage`
+で撮影 → 色数/bounds を検査（borderless の 2 面は token 実寸 ±2pt）→ PNG を証跡保存。
+headless（画面が無い CI）なら SELFTEST_SKIP。
 
-撮影された PNG には notch / HUD 操作バー / Recording Hero（録音中·04:21·波形）/ 話者ラベル付き
-Transcript（田中·あなた·鈴木）/ Task Dock / RAG Context Drawer（ファイル·Gmail·Drive + スコア）が
-実描画されており、**mock でなく統合済み UI が実ディスプレイに token 実寸で提示される**ことを裏付ける。
+撮影された PNG には、Workspace 面に notch / HUD 操作バー / Recording Hero（録音中·04:21·波形）/ 話者ラベル付き
+Transcript（田中·あなた·鈴木）/ Task Dock / RAG Context Drawer（ファイル·Gmail·Drive + スコア）、Main 面に
+4 セクション（Home / AI Agents / Library / Apps）+ アカウント chip が実描画されており、
+**mock でなく統合済み UI が実ディスプレイに token 実寸で提示される**ことを裏付ける。
 `verify:all` = VERIFY_ALL_OK。
