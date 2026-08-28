@@ -808,3 +808,11 @@ RecoverableMeeting camelCase）は core 側 serde で維持。Tauri crate の Ru
   `Swift→core→実HTTP 交換 tokens 取得+Keychain 保管 (verifier 送信=true)`。verify に組み込み。
 - **意味（#1/#8）**: native の connector OAuth **全経路**（authorize URL/PKCE ＋ loopback callback 解析 ＋ **実 HTTP 交換** ＋
   Keychain 保管）が mock 提供者に対し end-to-end 検証済み。**残る外部依存は実 Google/Microsoft の実挙動＋ユーザー consent のみ**。
+
+## 追記: グローバルショートカット受信は実押下が要ると確定（Phase 1.74）
+- ⌥Space を `CGEventPostToPid(getpid())` で**自プロセスにのみ**注入（システム全体に影響しない安全な方法）して
+  Carbon ホットキーハンドラの発火を試みたが、**発火しない**。Carbon `RegisterEventHotKey` は WindowServer 経由の
+  グローバル実押下で届く機構で、PID への合成キー注入では起動しない（かつ headless で GUI 副作用を招くため本採用しない）。
+- → **グローバルショートカットの登録は検証済み**（`--selftest shortcut`=Alt/⌥Space 登録 OK）だが、**受信は署名 .app を
+  前面で動かし、ユーザーが実際に ⌥Space を押したときにのみ確認可能**（Done#3 live）。システム全体へのキー注入は
+  ユーザーの生セッションに干渉するため実施しない（安全方針）。
