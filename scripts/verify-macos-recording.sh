@@ -75,7 +75,7 @@ OUTRO="$("$BIN" --selftest recoveryoffline http://127.0.0.1:3000)"; echo "$OUTRO
 [[ "$OUTRO" == SELFTEST_OK* || "$OUTRO" == SELFTEST_SKIP* ]] || { echo "FAIL: macOS offline recovery" >&2; exit 1; }
 OUTFL="$("$BIN" --selftest fulllifecycle http://127.0.0.1:3000)"; echo "$OUTFL"
 [[ "$OUTFL" == SELFTEST_OK* || "$OUTFL" == SELFTEST_SKIP* ]] || { echo "FAIL: macOS full Voice HUD->Recording->save->HUD lifecycle" >&2; exit 1; }
-for t in screenshot waveform livemic livemeeting livescreen sttrecognize sttstream guishot; do
+for t in screenshot waveform livemic livemeeting livescreen sttrecognize sttstream guishot axtree; do
   OUT="$("$BIN" --selftest "$t")"
   echo "$OUT"
   [[ "$OUT" == SELFTEST_OK* || "$OUT" == SELFTEST_SKIP* ]] || { echo "FAIL: macOS live $t" >&2; exit 1; }

@@ -944,3 +944,18 @@ Transcript（田中·あなた·鈴木）/ Task Dock / RAG Context Drawer（フ�
 4 セクション（Home / AI Agents / Library / Apps）+ アカウント chip が実描画されており、
 **mock でなく統合済み UI が実ディスプレイに token 実寸で提示される**ことを裏付ける。
 `verify:all` = VERIFY_ALL_OK。
+
+## Phase 1.81 — Main Window の AX ツリーを実測（§6「macOS XCUITest」相当 / Done#2/#7）
+
+§6 test 一覧の「macOS XCUITest」は、SwiftPM executable では XCUITest ターゲットを持てず
+.xcodeproj 生成が要る。代替として、**実提示した Main Window のアクセシビリティツリー**を
+自プロセスの AX API で走査し、UI を pixels でなく**構造として**実測した（XCUITest の主眼＝
+UI 要素の存在/属性検証と同じ）。
+`--selftest axtree`:
+- 実 Main Window を提示し、`AXUIElementCreateApplication(getpid())` から子孫を走査。
+- テキスト系属性（AXTitle/AXDescription/AXValue/AXLabel/AXIdentifier）を集め、
+  **4 セクション Home / AI Agents / Library / Apps** が実アクセシブル要素として存在することを確認
+  （実測 elements=14, 4/4 検出）。
+- AX 未許可 / 自プロセス AX が空の環境では捏造せず SELFTEST_SKIP。
+`verify:all` = VERIFY_ALL_OK。これで §6 test 一覧のうち XCUITest 相当が埋まった（完全な
+xcodebuild UI テストは .xcodeproj を要し、実機/署名環境での追加項目として残す）。

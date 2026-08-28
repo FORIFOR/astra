@@ -33,6 +33,7 @@ enum SelfTest {
         case "sttrecognize": sttrecognize(); return true
         case "sttstream": sttStream(); return true
         case "guishot": guishot(); return true
+        case "axtree": axtree(); return true
         case "shape": shape(); return true
         case "hudlifecycle": hudlifecycle(); return true
         case "pause": pauseWorks(); return true
@@ -658,6 +659,60 @@ enum SelfTest {
         guard fails.isEmpty else { print("SELFTEST_FAIL guishot: \(fails.joined(separator: ","))"); exit(2) }
         let anyPath = wsR?.path ?? hudR?.path ?? mainR?.path ?? ""
         print("SELFTEST_OK guishot: 実提示 \(sHud) \(sWs) \(sMain) png=\(anyPath)")
+        exit(0)
+    }
+
+    /// `--selftest axtree`: 実提示した Main Window の**アクセシビリティツリー**を走査し、
+    /// 4 セクション（Home / AI Agents / Library / Apps）が実アクセシブル要素として存在するか検証する。
+    /// XCUITest 相当（UI を pixels でなく構造として実測）。AX 許可が無ければ SKIP。
+    @MainActor
+    private static func axtree() {
+        guard AXIsProcessTrusted() else { print("SELFTEST_SKIP axtree: AX not trusted"); exit(0) }
+        let mainSize = NSSize(width: 900, height: 600)
+        let win = NSWindow(contentRect: NSRect(origin: .zero, size: mainSize),
+                           styleMask: [.titled, .closable, .resizable], backing: .buffered, defer: false)
+        win.contentView = NSHostingView(rootView: MainWindowView())
+        if let screen = NSScreen.main {
+            win.setFrameOrigin(NSPoint(x: screen.frame.midX - 450, y: screen.frame.midY - 300))
+        }
+        win.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+        let show = Date().addingTimeInterval(1.0)
+        while Date() < show { CFRunLoopRunInMode(.defaultMode, 0.05, true) }
+
+        // 自プロセスの AX ツリーを走査し、テキスト系属性を集める。
+        let app = AXUIElementCreateApplication(getpid())
+        var texts = Set<String>()
+        func attr(_ el: AXUIElement, _ name: String) -> String? {
+            var v: CFTypeRef?
+            guard AXUIElementCopyAttributeValue(el, name as CFString, &v) == .success else { return nil }
+            if let s = v as? String, !s.isEmpty { return s }
+            return nil
+        }
+        func walk(_ el: AXUIElement, _ depth: Int) {
+            if depth > 20 { return }
+            for a in ["AXTitle", "AXDescription", "AXValue", "AXLabel", "AXIdentifier", "AXHelp"] {
+                if let s = attr(el, a) { texts.insert(s) }
+            }
+            var kids: CFTypeRef?
+            if AXUIElementCopyAttributeValue(el, kAXChildrenAttribute as CFString, &kids) == .success,
+               let arr = kids as? [AXUIElement] {
+                for k in arr { walk(k, depth + 1) }
+            }
+        }
+        walk(app, 0)
+        win.orderOut(nil); win.close()
+
+        let want = ["Home", "AI Agents", "Library", "Apps"]
+        let found = want.filter { w in texts.contains { $0.localizedCaseInsensitiveContains(w) } }
+        // 自プロセス AX が空（sandbox/権限差でツリーを返さない）なら捏造せず SKIP。
+        guard !texts.isEmpty else {
+            print("SELFTEST_SKIP axtree: own-process AX tree empty in this context"); exit(0)
+        }
+        guard found.count == want.count else {
+            print("SELFTEST_FAIL axtree: nav found=\(found) of \(want) (elements=\(texts.count))"); exit(2)
+        }
+        print("SELFTEST_OK axtree: Main の4セクションを実アクセシブル要素として検出 \(found) elements=\(texts.count)")
         exit(0)
     }
 
