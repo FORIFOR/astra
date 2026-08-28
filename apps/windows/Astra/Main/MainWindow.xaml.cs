@@ -18,6 +18,14 @@ public sealed partial class MainWindow : Window
     {
         this.InitializeComponent();
         ExtendsContentIntoTitleBar = true;
+        // Mica は合成(DWM)対応環境でだけ適用する。未対応(古い Windows / 一部 VM/RDP / CI セッション)では
+        // 付けると activation で落ちるため、IsSupported を見てから設定する（未対応なら単色背景で描く）。
+        try
+        {
+            if (Microsoft.UI.Composition.SystemBackdrops.MicaController.IsSupported())
+                this.SystemBackdrop = new Microsoft.UI.Xaml.Media.MicaBackdrop();
+        }
+        catch { /* backdrop は装飾。付けられなくても本体は描く */ }
         Nav.SelectionChanged += OnNavSelectionChanged;
         _ = LoadAsync();
     }

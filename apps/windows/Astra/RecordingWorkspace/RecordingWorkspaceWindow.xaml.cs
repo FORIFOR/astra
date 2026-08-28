@@ -13,6 +13,14 @@ public sealed partial class RecordingWorkspaceWindow : Window
     public RecordingWorkspaceWindow()
     {
         this.InitializeComponent();
+        // Acrylic は合成(DWM)対応環境でだけ適用する（未対応だと activation で落ちる）。
+        // 未対応なら単色背景（ShapePath の Fill）で描く。装飾なので機能には影響しない。
+        try
+        {
+            if (Microsoft.UI.Composition.SystemBackdrops.DesktopAcrylicController.IsSupported())
+                this.SystemBackdrop = new Microsoft.UI.Xaml.Media.DesktopAcrylicBackdrop();
+        }
+        catch { /* backdrop は装飾 */ }
         if (AppWindow.Presenter is OverlappedPresenter p)
         {
             p.IsAlwaysOnTop = true;

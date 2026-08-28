@@ -2,9 +2,6 @@
     x:Class="Astra.RecordingWorkspaceWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <Window.SystemBackdrop>
-        <DesktopAcrylicBackdrop/>
-    </Window.SystemBackdrop>
     <Grid>
         <!-- 外枠（凹み）は RecordingWorkspaceGeometry.Build を code-behind で流し込む -->
         <Path x:Name="ShapePath" Fill="#F6FAFAFB" Stroke="#14000000" StrokeThickness="0.7"/>

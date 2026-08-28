@@ -3,9 +3,6 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls">
-    <Window.SystemBackdrop>
-        <MicaBackdrop/>
-    </Window.SystemBackdrop>
     <muxc:NavigationView x:Name="Nav" PaneDisplayMode="Left" IsBackButtonVisible="Collapsed">
         <muxc:NavigationView.MenuItems>
             <muxc:NavigationViewItem Content="Home" Icon="Home" Tag="home"/>
