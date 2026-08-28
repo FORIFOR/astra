@@ -163,7 +163,14 @@ export function buildApp(deps: AppDeps): App {
   });
   if (deps.domain) registerDomainRoutes(app, deps.domain);
   if (deps.conversations) {
-    registerConversationRoutes(app, { conversations: deps.conversations, tasks: deps.tasks });
+    registerConversationRoutes(app, {
+      conversations: deps.conversations,
+      tasks: deps.tasks,
+      redis: deps.redis,
+      ...(deps.ssePollIntervalMs === undefined
+        ? {}
+        : { ssePollIntervalMs: deps.ssePollIntervalMs }),
+    });
   }
   if (deps.world) {
     registerBriefRoutes(app, {

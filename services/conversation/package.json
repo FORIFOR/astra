@@ -23,6 +23,7 @@
   "dependencies": {
     "@astra/contracts": "workspace:*",
     "@astra/db": "workspace:*",
+    "@astra/service-task": "workspace:*",
     "@astra/telemetry": "workspace:*",
     "kysely": "catalog:"
   },

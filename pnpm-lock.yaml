@@ -630,6 +630,9 @@ importers:
       '@astra/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@astra/service-task':
+        specifier: workspace:*
+        version: link:../task
       '@astra/telemetry':
         specifier: workspace:*
         version: link:../../packages/telemetry

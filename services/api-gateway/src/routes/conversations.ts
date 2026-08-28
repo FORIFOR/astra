@@ -13,12 +13,16 @@ import {
   routeLane,
 } from '@astra/service-conversation';
 import { agentKindFor, type TaskService } from '@astra/service-task';
+import type { Redis } from 'ioredis';
 import type { App } from '../fastify.js';
+import { parseLastEventId, pollingWaker, pumpEventStream, redisWaker } from './sse.js';
 import { requirePrincipal } from '../auth/middleware.js';
 
 export interface ConversationRouteDeps {
   readonly conversations: ConversationService;
   readonly tasks: TaskService;
+  readonly redis: Redis | null;
+  readonly ssePollIntervalMs?: number;
 }
 
 export function registerConversationRoutes(app: App, deps: ConversationRouteDeps): void {
@@ -43,6 +47,60 @@ export function registerConversationRoutes(app: App, deps: ConversationRouteDeps
         deps.conversations.summaries(principal.tenantId, id),
       ]);
       return { id, state, turns, summaries };
+    },
+  );
+
+  /**
+   * SSE。正本 §19 `GET /v1/conversations/{id}/stream`、§20 の統一 envelope（sequence 付き）を流す。
+   * Last-Event-ID で再開できる（取りこぼしを検知できるよう sequence は詰めない）。
+   */
+  app.get<{ Params: { conversationId: string } }>(
+    '/v1/conversations/:conversationId/stream',
+    { config: { rateLimit: false } },
+    async (request, reply) => {
+      const principal = requirePrincipal();
+      const conversationId = request.params.conversationId;
+      // 存在しない / 他テナントならストリームを開く前に 404
+      await deps.conversations.state(principal.tenantId, conversationId);
+
+      // 購読はリプレイの前に張る（実装仕様 §7.3）
+      const waker = deps.redis
+        ? await redisWaker(deps.redis, 'conversation', conversationId)
+        : pollingWaker();
+
+      reply.raw.writeHead(200, {
+        'content-type': 'text/event-stream',
+        'cache-control': 'no-cache, no-transform',
+        connection: 'keep-alive',
+        'x-accel-buffering': 'no',
+      });
+      reply.hijack();
+
+      let open = true;
+      const close = (): void => {
+        open = false;
+      };
+      request.raw.on('close', close);
+      request.raw.on('error', close);
+
+      try {
+        await pumpEventStream({
+          write: (chunk) => {
+            if (open) reply.raw.write(chunk);
+          },
+          isOpen: () => open && !reply.raw.destroyed,
+          fetchAfter: (sequence) =>
+            deps.conversations.eventsAfter(principal.tenantId, conversationId, sequence),
+          waker,
+          startAfter: parseLastEventId(request.headers['last-event-id']),
+          ...(deps.ssePollIntervalMs === undefined
+            ? {}
+            : { pollIntervalMs: deps.ssePollIntervalMs }),
+        });
+      } finally {
+        await waker.close();
+        if (!reply.raw.destroyed) reply.raw.end();
+      }
     },
   );
 

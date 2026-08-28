@@ -15,6 +15,7 @@ import {
   type Turn,
 } from '@astra/contracts';
 import { withTenant, type DbHandle } from '@astra/db';
+import { readEventsAfter } from '@astra/service-task';
 
 export interface ConversationDeps {
   readonly db: DbHandle;
@@ -114,6 +115,17 @@ export class ConversationService {
         .executeTakeFirst();
     });
     return row ? toTurn(row) : null;
+  }
+
+  /**
+   * SSE のリプレイ（正本 §19 `GET /v1/conversations/{id}/stream`、§20 の sequence 契約）。
+   * 会話が無い / 他テナントなら state() が 404 にしてから読む。
+   */
+  async eventsAfter(tenantId: string, conversationId: string, after: number) {
+    await this.state(tenantId, conversationId);
+    return withTenant(this.#db, tenantId, (tx) =>
+      readEventsAfter(tx, 'conversation', conversationId, after),
+    );
   }
 
   async append(input: AppendTurnInput): Promise<Turn> {
