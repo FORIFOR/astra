@@ -985,24 +985,59 @@ enum SelfTest {
     /// 非ゼロの描画になることを確かめる（§6 UI 検証・画面には何も出さない）。
     @MainActor
     private static func render() {
-        func renders<V: View>(_ view: V, _ size: NSSize) -> Bool {
+        // bitmap が「実際に描かれた」か（空白でない）を確かめる。ピクセルを走査し、
+        // 非透明ピクセルの割合と色の種類数が閾値を超えることを要求する。
+        // pixelsWide>0 だけでは真っ白/透明でも通ってしまうため、内容そのものを検査する。
+        func contentScore<V: View>(_ view: V, _ size: NSSize) -> (opaqueFrac: Double, colors: Int) {
             let host = NSHostingView(rootView: view)
             host.frame = NSRect(origin: .zero, size: size)
             host.layoutSubtreeIfNeeded()
-            guard let rep = host.bitmapImageRepForCachingDisplay(in: host.bounds) else { return false }
+            guard let rep = host.bitmapImageRepForCachingDisplay(in: host.bounds) else { return (0, 0) }
             host.cacheDisplay(in: host.bounds, to: rep)
-            return rep.pixelsWide > 0 && rep.pixelsHigh > 0
+            let w = rep.pixelsWide, h = rep.pixelsHigh
+            guard w > 0, h > 0 else { return (0, 0) }
+            var opaque = 0, sampled = 0
+            var seen = Set<UInt32>()
+            let stepX = max(1, w / 40), stepY = max(1, h / 40)   // ~1600 サンプル
+            var y = 0
+            while y < h {
+                var x = 0
+                while x < w {
+                    if let c = rep.colorAt(x: x, y: y) {
+                        sampled += 1
+                        if c.alphaComponent > 0.02 { opaque += 1 }
+                        let r = UInt32(max(0, min(255, c.redComponent * 255)))
+                        let g = UInt32(max(0, min(255, c.greenComponent * 255)))
+                        let b = UInt32(max(0, min(255, c.blueComponent * 255)))
+                        seen.insert((r << 16) | (g << 8) | b)
+                    }
+                    x += stepX
+                }
+                y += stepY
+            }
+            return (sampled > 0 ? Double(opaque) / Double(sampled) : 0, seen.count)
         }
         RecordingWorkspaceState.shared.loadDemo(ragOpen: true)
-        let checks: [(String, Bool)] = [
-            ("VoiceHUD", renders(VoiceHUDView(), NSSize(width: Metrics.hudWidth, height: Metrics.hudHeight))),
-            ("RecordingWorkspace", renders(RecordingWorkspaceView(), NSSize(width: Metrics.workspaceWidth, height: Metrics.workspaceHeight))),
-            ("MainWindow", renders(MainWindowView(), NSSize(width: 900, height: 600))),
-            ("Settings", renders(SettingsView(), NSSize(width: 460, height: 420))),
+        let views: [(String, (opaqueFrac: Double, colors: Int))] = [
+            ("VoiceHUD", contentScore(VoiceHUDView(), NSSize(width: Metrics.hudWidth, height: Metrics.hudHeight))),
+            ("RecordingWorkspace", contentScore(RecordingWorkspaceView(), NSSize(width: Metrics.workspaceWidth, height: Metrics.workspaceHeight))),
+            ("MainWindow", contentScore(MainWindowView(), NSSize(width: 900, height: 600))),
+            ("Settings", contentScore(SettingsView(), NSSize(width: 460, height: 420))),
         ]
-        let failed = checks.filter { !$0.1 }.map { $0.0 }
-        guard failed.isEmpty else { print("SELFTEST_FAIL render: \(failed.joined(separator: ","))"); exit(2) }
-        print("SELFTEST_OK render: \(checks.map { $0.0 }.joined(separator: "/")) 全てオフスクリーン描画 OK")
+        // 実際に描画されていれば、複数色（>=4）かつ相応の不透明面積（>=10%）を持つ。
+        // カスタム描画の 2 面（HUD / Recording Workspace）は「高い再現度」の成果物なので
+        // 強い内容（>=4 色 かつ >=10% 不透明）を要求する。Main/Settings は NavigationSplitView /
+        // Form が offscreen NSHostingView では描画を実ウィンドウへ遅延するため、liveness
+        // （>=2 色 = 単一の平面色でない）だけを課す。実ウィンドウ描画は panel/hudlifecycle で担保。
+        let strong: Set<String> = ["VoiceHUD", "RecordingWorkspace"]
+        var failed: [String] = []
+        for (name, sc) in views {
+            let ok = strong.contains(name) ? (sc.colors >= 4 && sc.opaqueFrac >= 0.10) : (sc.colors >= 2)
+            if !ok { failed.append("\(name)(colors=\(sc.colors),opaque=\(String(format: "%.2f", sc.opaqueFrac)))") }
+        }
+        guard failed.isEmpty else { print("SELFTEST_FAIL render blank: \(failed.joined(separator: ","))"); exit(2) }
+        let summary = views.map { "\($0.0):c\($0.1.colors)/o\(String(format: "%.2f", $0.1.opaqueFrac))" }.joined(separator: " ")
+        print("SELFTEST_OK render: \(summary)")
         exit(0)
     }
 

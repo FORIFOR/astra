@@ -884,3 +884,15 @@ CGEventTap（session tap, active）へ置き換え:
 これで Done#3 の「Streaming STT / transcript」は**実測 PASS**（合成音声だが実 STT エンジンが
 実際に文字を返す。人間の発話でも同一経路）。残る #3 は署名 .app 越しのカレンダー実データと
 物理キーボード実押下のみ（後者も CGEventTap 経路を Phase 1.77 で合成押下により実測済み）。
+
+## Phase 1.79 — offscreen render 検査を「非空白」まで強化（Done#2/#6/#7）
+
+従来の render selftest は `pixelsWide>0` しか見ておらず、**真っ白/透明でも通る**弱い検査だった。
+実際に描画されたか（内容があるか）を検査するよう強化:
+- bitmap をグリッド走査し「非透明ピクセル割合」と「distinct 色数」を測る。
+- カスタム描画の 2 面（VoiceHUD / Recording Workspace = 「高い再現度」の成果物）には
+  強い閾値（>=4 色 かつ >=10% 不透明）。実測 VoiceHUD=87色/100%、Workspace=67色/100% で、
+  **中身のある実描画**であることを裏付ける（mock なら弾かれる）。
+- Main/Settings は NavigationSplitView / Form が offscreen NSHostingView では描画を実ウィンドウへ
+  遅延するため liveness（>=2 色）のみ。実ウィンドウ描画は panel/hudlifecycle で担保。
+`verify:all` = VERIFY_ALL_OK。
