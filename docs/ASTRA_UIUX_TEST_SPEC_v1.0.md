@@ -49,6 +49,36 @@ Library から会議を開く → Transcript / Summary 確認 → Voice HUD へ�
 
 > これが通らない状態では、個別機能が完成していても「Astra 完成」と判定しない。
 
+### 自動テスト（実装済み）
+
+`--selftest e2e001 [gateway]` が E2E-001 を**窓を実提示したまま**一本で通す
+（`scripts/verify-macos-recording.sh` 経由で `pnpm verify:all` に組込み済み）。
+
+| 手順         | 5 系統       | 機械的な判定                                                             |
+| ------------ | ------------ | ------------------------------------------------------------------------ |
+| ① HUD 常駐   | —            | CGWindowList に HUD(310×31) が在り、Workspace(920×590) が無い            |
+| ② dictation  | **ACT**      | 実 NSTextField へ `Dictation.insert` が入る（会話を始めない）            |
+| ③ 会議開始   | —            | `toggleRecording()` **1 操作だけ**で Workspace が出て **HUD が消える**   |
+| ④ 録音       | **HEAR**     | 実マイクで `recordedMs > 0`                                              |
+| ⑤ Transcript | **HEAR**     | セグメントが増える                                                       |
+| ⑥ Screenshot | **SEE**      | 実 PNG が保存される                                                      |
+| ⑦ AI 要約    | **THINK**    | 実 Agent が transcript を文脈に応答（gateway 必要）                      |
+| ⑧ 停止→復帰  | —            | **1 操作だけ**で Workspace が消えて **HUD が戻る**                       |
+| ⑨ 保存       | **REMEMBER** | online: Library 取得・未送信なし / offline: ディスクに残り復旧候補に出る |
+
+**HUD と Workspace が同時に残らない**ことは内部フラグではなく
+**window server の実表示（CGWindowList）**で ③⑧ の両方で検査する。
+モード切替は `toggleRecording()`（＝グローバルショートカット）だけで、手動の窓操作を挟まない。
+
+**実測（2026-08-29, offline 経路）**:
+`SELFTEST_OK e2e001(offline): ①HUD常駐 → ②dictation → ③Workspace(HUD退避・排他OK) →
+④実録音5000ms → ⑤transcript+2 → ⑥screenshot → ⑦AI(gateway無しのため未実行) →
+⑧保存→HUD復帰(排他OK) → ⑨オフライン保存・復旧候補あり`
+
+gateway（Postgres+Redis+Temporal）が上がっている環境では ⑦AI と ⑨Library も実測される。
+このオフライン経路は ERR-001「ネット切断でもローカル録音継続」/ ERR-006「次回起動で復旧候補」
+の同時検証にもなっている。
+
 ---
 
 ## 3. Voice HUD

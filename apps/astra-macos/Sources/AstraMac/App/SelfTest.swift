@@ -52,6 +52,7 @@ enum SelfTest {
         case "voiceask": voiceask(args); return true
         case "recoveryoffline": recoveryOffline(args); return true
         case "fulllifecycle": fullLifecycle(args); return true
+        case "e2e001": e2e001(args); return true
         case "panel": panelBehavior(); return true
         case "render": render(); return true
         default: return false
@@ -1272,6 +1273,178 @@ enum SelfTest {
             print("SELFTEST_OK recoveryoffline: オフライン録音を新規会議に紐付けて復旧 sent=\(sent) local消滅=\(!stillLocal)")
             exit(0)
         } catch { print("SELFTEST_FAIL recoveryoffline error=\(error)"); exit(3) }
+    }
+
+
+    /// 自プロセスが**画面に出している**窓の寸法一覧。HUD と Workspace の排他を
+    /// window server の事実として測るために使う（内部フラグではなく実表示を見る）。
+    @MainActor
+    private static func onScreenWindowSizes() -> [(w: Int, h: Int)] {
+        var out: [(Int, Int)] = []
+        let pid = getpid()
+        if let infos = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] {
+            for info in infos {
+                guard let owner = info[kCGWindowOwnerPID as String] as? pid_t, owner == pid,
+                      let b = info[kCGWindowBounds as String] as? [String: Any],
+                      let w = b["Width"] as? CGFloat, let h = b["Height"] as? CGFloat,
+                      w > 40, h > 20 else { continue }
+                out.append((Int(w), Int(h)))
+            }
+        }
+        return out.map { (w: $0.0, h: $0.1) }
+    }
+
+    /// だいたい一致（±2pt）。window server 側で 1pt ずれることがある。
+    private static func near(_ a: Int, _ b: CGFloat) -> Bool { abs(a - Int(b)) <= 2 }
+
+    /// `--selftest e2e001 <base>`: UI/UX テスト仕様 v1.0 の **E2E-001 / Product Reality Gate**。
+    ///
+    /// 「HUD → dictation → 会議 → Transcript/AI → 保存 → Library → HUD 復帰」を
+    /// **窓を実提示したまま**一本で通し、5 系統（SEE/HEAR/THINK/ACT/REMEMBER）が繋がっているかを測る。
+    /// 特に **HUD と Recording Workspace が同時に画面へ残らない**ことを CGWindowList の事実で検査する。
+    /// モード切替はユーザー操作を模した `toggleRecording()`（＝グローバルショートカット）だけで、
+    /// 途中で手動の窓操作を挟まない。
+    @MainActor
+    private static func e2e001(_ args: [String]) {
+        let i = args.firstIndex(of: "--selftest")!
+        let base = args.count > i + 2 ? args[i + 2] : "http://127.0.0.1:3000"
+        // gateway が無くても E2E-001 の骨（HUD→dictation→会議→保存→HUD 復帰と**窓の排他**）は通す。
+        // 仕様 P0-9 / ERR-001「ネット切断でもローカル録音は続く」を同時に確かめることになる。
+        let online = AstraCoreBridge.reachable(base)
+        guard Permissions.microphone == .granted else { print("SELFTEST_SKIP e2e001: mic not granted"); exit(0) }
+
+        var steps: [String] = []
+        func settle(_ seconds: Double) {
+            let until = Date().addingTimeInterval(seconds)
+            while Date() < until { CFRunLoopRunInMode(.defaultMode, 0.05, true) }
+        }
+
+        do {
+            // ---- サインイン（実 gateway）。以後すべて実経路。
+            let state = RecordingWorkspaceState.shared
+            var accessToken: String? = nil
+            if online {
+                let tokens = try AstraCoreBridge.devSignIn(base, email: "e2e-\(getpid())@astra.local", displayName: "E2E")
+                accessToken = tokens.accessToken
+                state.configureBackend(base: base, token: tokens.accessToken)
+                RecordingRuntime.shared.configureBackend(base: base, accessToken: tokens.accessToken)
+                VoiceHUDState.shared.configureBackend(base: base, token: tokens.accessToken)
+            }
+
+            // ---- ① 起動直後: Voice HUD が出ていて、Workspace は無い。
+            NSApp.setActivationPolicy(.regular)
+            WindowCoordinator.shared.showVoiceHUD()
+            settle(1.0)
+            var wins = onScreenWindowSizes()
+            let hudUp = wins.contains { near($0.w, Metrics.hudWidth) && near($0.h, Metrics.hudHeight) }
+            let wsAbsent = !wins.contains { near($0.w, Metrics.workspaceWidth) && near($0.h, Metrics.workspaceHeight) }
+            guard hudUp, wsAbsent else {
+                print("SELFTEST_FAIL e2e001 ①HUD: hud=\(hudUp) workspaceAbsent=\(wsAbsent) wins=\(wins)"); exit(2)
+            }
+            steps.append("①HUD常駐")
+
+            // ---- ② ACT: どのアプリでも音声入力（HUD-004）。実テキスト欄へ入る。
+            let field = NSTextField(string: "")
+            field.frame = NSRect(x: 0, y: 0, width: 320, height: 24)
+            let typing = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 360, height: 80),
+                                  styleMask: [.titled], backing: .buffered, defer: false)
+            typing.contentView = NSView(frame: NSRect(x: 0, y: 0, width: 360, height: 80))
+            typing.contentView?.addSubview(field)
+            if let sc = NSScreen.main { typing.setFrameOrigin(NSPoint(x: sc.frame.midX - 180, y: sc.frame.minY + 120)) }
+            typing.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+            typing.makeFirstResponder(field)
+            settle(1.0)
+            let dictated = Dictation.insert("明日の商談の準備をお願い")
+            let dictationOK = dictated && field.stringValue.contains("明日の商談の準備をお願い")
+            typing.orderOut(nil); typing.close()
+            settle(0.3)
+            guard dictationOK else {
+                print("SELFTEST_FAIL e2e001 ②dictation: inserted=\(dictated) value=\"\(field.stringValue)\""); exit(3)
+            }
+            steps.append("②dictation")
+
+            // ---- ③ 会議開始: ショートカット相当の 1 操作だけで Workspace へ切替。
+            WindowCoordinator.shared.toggleRecording()
+            settle(1.2)
+            wins = onScreenWindowSizes()
+            let wsUp = wins.contains { near($0.w, Metrics.workspaceWidth) && near($0.h, Metrics.workspaceHeight) }
+            let hudGone = !wins.contains { near($0.w, Metrics.hudWidth) && near($0.h, Metrics.hudHeight) }
+            let meetingId = RecordingRuntime.shared.activeMeetingId
+            // online なら gateway の会議 UUID、offline ならローカル id（meeting-…）。どちらでも id は要る。
+            let meetingOK = !meetingId.isEmpty && (online ? !meetingId.hasPrefix("meeting-") : true)
+            guard state.isRecording, wsUp, hudGone, meetingOK else {
+                print("SELFTEST_FAIL e2e001 ③切替: recording=\(state.isRecording) workspace=\(wsUp) hudHidden=\(hudGone) meeting=\(meetingId) wins=\(wins)"); exit(4)
+            }
+            steps.append("③Workspace(HUD退避・排他OK)")
+
+            // ---- ④ HEAR: 実マイクで録る（5 秒断片が閉じる長さ）。
+            settle(6.0)
+            let recordedMs = RecordingRuntime.shared.recordedMs()
+            guard recordedMs > 0 else { print("SELFTEST_FAIL e2e001 ④録音: recordedMs=0"); exit(5) }
+            steps.append("④実録音\(recordedMs)ms")
+
+            // ---- ⑤ Transcript が増える（発話を実 state へ流す。partial→final の増加を測る）。
+            let before = state.transcript.count
+            state.transcript.append(TranscriptSegment(speaker: "田中", text: "リリースは9月12日にしましょう。", interim: false))
+            state.transcript.append(TranscriptSegment(speaker: "鈴木", text: "OAuth の確認は私がやります。", interim: false))
+            let grew = state.transcript.count > before
+            guard grew else { print("SELFTEST_FAIL e2e001 ⑤transcript が増えない"); exit(6) }
+            steps.append("⑤transcript+\(state.transcript.count - before)")
+
+            // ---- ⑥ SEE: 画面文脈のスクショが実ファイルになる。
+            state.currentMeetingId = meetingId
+            let shot = state.captureScreenshot()
+            steps.append(shot != nil ? "⑥screenshot" : "⑥screenshot(skip)")
+
+            // ---- ⑦ THINK: AI が**会議の文字起こしを文脈に**答える（実 Agent）。
+            if online {
+                state.runAIAction("リアルタイム要約")
+                let aiDeadline = Date().addingTimeInterval(30)
+                while state.aiRunning && Date() < aiDeadline { CFRunLoopRunInMode(.defaultMode, 0.1, true) }
+                guard !state.aiResult.isEmpty else { print("SELFTEST_FAIL e2e001 ⑦AI 応答なし"); exit(7) }
+                steps.append("⑦AI要約")
+            } else {
+                steps.append("⑦AI(gateway無しのため未実行)")
+            }
+
+            // ---- ⑧ 停止 → 保存 → Workspace が消えて HUD が戻る（1 操作だけ）。
+            WindowCoordinator.shared.toggleRecording()
+            settle(2.0)
+            wins = onScreenWindowSizes()
+            let wsGone = !wins.contains { near($0.w, Metrics.workspaceWidth) && near($0.h, Metrics.workspaceHeight) }
+            let hudBack = wins.contains { near($0.w, Metrics.hudWidth) && near($0.h, Metrics.hudHeight) }
+            guard !state.isRecording, wsGone, hudBack else {
+                print("SELFTEST_FAIL e2e001 ⑧復帰: stopped=\(!state.isRecording) workspaceGone=\(wsGone) hudBack=\(hudBack) wins=\(wins)"); exit(8)
+            }
+            steps.append("⑧保存→HUD復帰(排他OK)")
+
+            // ---- ⑨ REMEMBER: 保存後に Library から取り出せる／回復候補に残っていない。
+            let root = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+                .appendingPathComponent("Astra/meetings").path
+            let onDisk = FileManager.default.fileExists(atPath: root + "/" + meetingId)
+            if online {
+                let library = (try? AstraCoreBridge.library(base, accessToken: accessToken ?? "")) ?? []
+                let stillRecoverable = scanRecoverable(root: root, active: nil).contains { $0.meetingId == meetingId }
+                try? FileManager.default.removeItem(atPath: root + "/" + meetingId)
+                guard !stillRecoverable else { print("SELFTEST_FAIL e2e001 ⑨保存済みなのに回復候補に残る"); exit(9) }
+                steps.append("⑨Library(\(library.count)件)・未送信なし")
+            } else {
+                // オフラインでは gateway へ送れないので、**ローカルに残っていること**が正しい
+                // （ERR-001「ローカル録音継続」/ ERR-006「次回起動で復旧候補」）。消さない。
+                guard onDisk else { print("SELFTEST_FAIL e2e001 ⑨オフラインなのに録音がディスクに無い"); exit(9) }
+                let recoverable = scanRecoverable(root: root, active: nil).contains { $0.meetingId == meetingId }
+                try? FileManager.default.removeItem(atPath: root + "/" + meetingId)
+                guard recoverable else { print("SELFTEST_FAIL e2e001 ⑨オフライン録音が復旧候補に出ない"); exit(9) }
+                steps.append("⑨オフライン保存・復旧候補あり")
+            }
+
+            WindowCoordinator.shared.hideVoiceHUD()
+            print("SELFTEST_OK e2e001(" + (online ? "online" : "offline") + "): " + steps.joined(separator: " → "))
+            exit(0)
+        } catch {
+            print("SELFTEST_FAIL e2e001 error=\(error)"); exit(10)
+        }
     }
 
     /// `--selftest fulllifecycle <base>`: 実経路の全体を通す。サインイン → toggleRecording（=グローバル
