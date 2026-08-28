@@ -57,6 +57,8 @@ describe.skipIf(!url)('conversation sse', () => {
       headers: auth,
       payload: {},
     });
+    // 作成に失敗したまま seed へ進むと「stream_id が null」という遠い所で落ちる。ここで止める。
+    expect(res.statusCode).toBe(201);
     return res.json<{ id: string }>().id;
   };
 

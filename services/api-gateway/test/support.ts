@@ -7,6 +7,7 @@ import { Writable } from 'node:stream';
 import { createDb, type DbConfig, type DbHandle } from '@astra/db';
 import { createLogger } from '@astra/telemetry';
 import { FsObjectStore, LibraryService } from '@astra/service-library';
+import { ConversationService } from '@astra/service-conversation';
 import { InMemoryTaskRuntime, TaskService } from '@astra/service-task';
 import { PluginRegistryService } from '@astra/service-plugin-registry';
 import type { DataSourceResolver } from '@astra/service-plugin-registry';
@@ -95,6 +96,8 @@ export async function makeTestApp(options: MakeAppOptions): Promise<TestApp> {
   const library = new LibraryService(db, new FsObjectStore(storeRoot));
   const runtime = new InMemoryTaskRuntime();
   const tasks = new TaskService(db, runtime);
+  // 会話経路も本番同様に積む。積まないと conversation の HTTP 契約を試験が見逃す。
+  const conversations = new ConversationService({ db });
   const registry = new PluginRegistryService({ db, coreVersion: '0.1.0' });
   const shares = new ShareService({ db, library, shareHost: 'http://localhost:1430' });
   const meetings = new MeetingService({ db, publisher: { async publish() {} } });
@@ -130,6 +133,7 @@ export async function makeTestApp(options: MakeAppOptions): Promise<TestApp> {
     logger: createLogger({ service: 'test', level: 'silent' }, sink),
     tokens: options.tokens,
     tasks,
+    conversations,
     library,
     registry,
     shares,
