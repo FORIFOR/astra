@@ -19,6 +19,7 @@ enum SelfTest {
         case "shortcut": shortcut(); return true
         case "sysaudio": sysaudio(); return true
         case "calendar": calendar(); return true
+        case "calendarlive": calendarlive(); return true
         case "screen": screen(); return true
         case "rag": rag(); return true
         case "keychain": keychain(); return true
@@ -189,6 +190,64 @@ enum SelfTest {
         guard consistent else { print("SELFTEST_FAIL calendar status=\(status.rawValue) events=\(events.count)"); exit(2) }
         print("SELFTEST_OK calendar: status=\(status.rawValue) upcoming=\(events.count)")
         exit(0)
+    }
+
+    /// `--selftest calendarlive`: **実 Calendar データ**を取る。署名 .app で実行し、必要なら TCC 許可
+    /// プロンプトを出す（notDetermined のとき）。許可後、EventKit から実イベントを読み、実データで
+    /// あることを証拠化する（title/日付を出す。fixture/mock ではない）。denied/authorized/0件 を区別。
+    @MainActor
+    private static func calendarlive() {
+        // `open` 経由で起動されると stdout が捨てられるので、結果を固定ファイルにも書く。
+        func emit(_ line: String) -> Never {
+            print(line)
+            try? line.write(toFile: "/tmp/astra-calendarlive.txt", atomically: true, encoding: .utf8)
+            exit(0)
+        }
+        // TCC プロンプトは「前面の通常アプリ」からでないと出ないことがある。前面化する。
+        NSApp.setActivationPolicy(.regular)
+        NSApp.activate(ignoringOtherApps: true)
+        let before = CalendarAccess.status()
+        print("CAL: status(before)=\(before.rawValue)")
+        // notDetermined なら許可要求（プロンプト）。すでに決まっていればそのまま進む。
+        if before == .notDetermined {
+            print("CAL: requesting access (TCC prompt should appear)…")
+            let sem = DispatchSemaphore(value: 0)
+            var granted = false
+            var callbackFired = false
+            let t0 = Date()
+            CalendarAccess.requestAccess { ok in granted = ok; callbackFired = true; sem.signal() }
+            // 許可ダイアログをユーザーが操作するまで run loop を回して待つ（最大 180 秒）。
+            let deadline = Date().addingTimeInterval(180)
+            while sem.wait(timeout: .now()) == .timedOut && Date() < deadline {
+                CFRunLoopRunInMode(.defaultMode, 0.2, true)
+            }
+            let dt = String(format: "%.1f", Date().timeIntervalSince(t0))
+            let cb = "CAL: callbackFired=\(callbackFired) granted=\(granted) after=\(dt)s"
+            print(cb)
+            try? cb.write(toFile: "/tmp/astra-calendarlive-cb.txt", atomically: true, encoding: .utf8)
+        }
+        let after = CalendarAccess.status()
+        print("CAL: status(after)=\(after.rawValue)")
+        switch after {
+        case .denied, .restricted:
+            emit("SELFTEST_CAL_DENIED after=\(after.rawValue) (ユーザーが拒否/制限)")
+        case .notDetermined:
+            emit("SELFTEST_CAL_PENDING after=notDetermined (プロンプト未応答/未表示)")
+        case .writeOnly:
+            emit("SELFTEST_CAL_WRITEONLY (読み取り不可の許可)")
+        case .granted:
+            // 実イベントを 60 日窓で読む（少なくとも 1 件あればサンプルを出す）。
+            let events = CalendarAccess.upcoming(hours: 24 * 60)
+            if events.isEmpty {
+                emit("SELFTEST_CAL_OK_EMPTY: authorized=true events=0 (取得成功・0件。架空データは作らない)")
+            }
+            let fmt = DateFormatter(); fmt.dateFormat = "yyyy-MM-dd HH:mm"
+            let sample = events.prefix(3).map { e -> String in
+                let start = fmt.string(from: Date(timeIntervalSince1970: e.startEpoch))
+                return "\"\(e.title)\"@\(start)[\(e.calendar)]"
+            }.joined(separator: ", ")
+            emit("SELFTEST_CAL_OK: authorized=true events=\(events.count) sample=\(sample)")
+        }
     }
 
     /// `--selftest screen`: ScreenCaptureKit の静止フレーム構成を検証する。

@@ -42,6 +42,16 @@ C# 全ロジック（Window code-behind 含む）は macOS で型検査 PASS 済
 
 ## C. #3 — カレンダー実データ（要: 署名 .app + ユーザーの TCC 許可）
 
+> **この環境での実測(2026-08-28)**: 署名 .app を作成し（`scripts/package-macos-app.sh`、
+> Apple Development / com.astra.desktop / Team 6RR7572ZLU）、`open` 経由で `--selftest calendarlive`
+> を実行した。`EventKit.requestFullAccessToEvents` の completion handler が **180 秒たっても発火せず**
+> （`callbackFired=false`）、`com.apple.TCC` ログにもプロンプト提示の記録が無い。この macOS セッションは
+> **対話的 TCC プロンプトを出せない自動化セッション**で、mic/AppleEvents は TCC.db 直書きで seed 済み
+> （`kTCCServiceMicrophone|com.astra.desktop|2`）だが Calendar は未 seed。TCC.db 直書きは
+> セキュリティ設定変更かつ同意の捏造になるため行わない。→ **external verification pending**。
+> コード・署名 .app・実 request/read フローは完成。実対話セッション（人が TCC を許可できる macOS ログイン）
+> があれば下記手順でそのままクローズできる。
+
 **なぜこの環境で不可**: EventKit の認可が `notDetermined`。実データ取得は
 `requestFullAccessToEvents` のプロンプト許可が要る（mic/screen/speech/AX は付与済みだが
 カレンダーは未付与）。状態読み取り・無許可時 空（捏造なし）は実測済み（`--selftest calendar`）。
