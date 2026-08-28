@@ -1051,3 +1051,27 @@ UI 要素の存在/属性検証と同じ）。
 - AX 未許可 / 自プロセス AX が空の環境では捏造せず SELFTEST_SKIP。
   `verify:all` = VERIFY_ALL_OK。これで §6 test 一覧のうち XCUITest 相当が埋まった（完全な
   xcodebuild UI テストは .xcodeproj を要し、実機/署名環境での追加項目として残す）。
+
+## Phase 1.82 — Windows/CI を GitHub Actions で実ビルド緑化（Done#4/#5/#9 の実測 PASS）
+
+private→(ユーザー承認で)public リポジトリ `FORIFOR/astra` を作成し、GitHub Actions で
+**windows-latest 実ビルド**と **ubuntu ci** を実走させた。macOS では不可能だった WinUI 3 の
+実ビルド（XAML→.g.cs codegen 含む）が **実機 CI で PASS** した。ローカル緑・請求ブロック解除後に
+初めて実 CI が回り、次の実バグを検出・修正した（いずれも「Windows でしか出ない/CI でしか出ない」類）:
+
+1. **改行**: `.gitattributes` 不在で Windows checkout が LF→CRLF 変換 → design-token/fixture の
+   freshness が誤判定。`* text=auto eol=lf` を追加＋`--check` を改行正規化。
+2. **cdylib 名**: Rust の cdylib は Windows で `astra_core.dll`（lib 接頭辞なし）。bridge の
+   ライブラリコピーが `libastra_core.dll` しか探さず DllNotFound。両名を探すよう修正。
+3. **bridge 判定**: gateway 不在の CI で先頭行が `CS_SKIP` になり、先頭一致の成功判定が誤失敗。
+   「core bridge の CS_OK があり CS_FAIL 無し」を条件に変更。
+4. **ImplicitUsings**: 実 `Astra.csproj` が未設定で `IntPtr/Guid/...` が CS0246。logic/bridge-check
+   は有効だったため見逃していた。実 csproj も有効化。
+5. **エントリポイント**: unpackaged WinUI 3 で XAML 生成 Main が出ず CS5001。Microsoft 推奨の
+   明示 `App/Program.cs`（`Application.Start`）＋`DISABLE_XAML_GENERATED_MAIN` を追加 → **Build succeeded, 0 Error**。
+6. **ubuntu ci**: prettier/`cargo fmt`/`clippy -D warnings`（useless_conversion ×3）/`libasound2-dev` 不足で
+   alsa-sys ビルド失敗 / secrets テストが Linux の keyring 失敗メッセージ差異 —— すべて修正。
+
+結果: **windows workflow = success（WinUI 3 solution ビルド緑）/ ci workflow = success（全ゲート緑）**。
+Done#5=実測 PASS、Done#4=実 Windows で実装がビルド/型解決/リソース生成まで PASS（実行時 GUI 描画のみ
+Windows 実機の手動 smoke に残す）、Done#9=実 CI（ubuntu + windows-latest）で PASS。
