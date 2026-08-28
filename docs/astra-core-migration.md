@@ -1089,3 +1089,27 @@ Windows 実機の手動 smoke に残す）、Done#9=実 CI（ubuntu + windows-la
 これで Done#4 は、実 Windows で **ビルド + 起動 + Voice HUD の実描画**まで実測 PASS。残るのは
 Recording Workspace への遷移や WASAPI 実録音など**対話操作を伴う実機フル smoke**（自動 CI では
 起動と HUD 描画までを担保）。Windows PASS は捏造せず、CI で実際に取れた範囲を明記する。
+
+## Phase 1.84 — Windows 実行時スモークの到達点と正直な限界（Done#4）
+
+`windows` workflow に実行時スモーク（self-contained publish → Astra.exe 起動 → 撮影）を入れ、
+実 Windows でどこまで描画できるかを実測した。過程で**実バグを 3 件修正**（実機でしか出ない類）:
+
+- **Mica/Acrylic backdrop**: DWM 合成非対応環境で activation クラッシュ → `MicaController /
+DesktopAcrylicController.IsSupported()` で条件付き適用（未対応は単色背景）。実機の VM/RDP/古い
+  Windows でも堅牢になる正しい修正。
+- **MainWindow.xaml**: 冗長な `muxc:` 前置と Symbol 名文字列アイコン → 既定 namespace + `FontIcon`
+  glyph に。
+- **App.xaml**: `XamlControlsResources` 未マージ → NavigationView 等テンプレートコントロールが
+  実行時 `XamlParseException` で生成失敗していた。標準リソースをマージ（**実機でも必要な実バグ修正**）。
+
+実測できたこと / 限界:
+
+- ✅ **build + XAML codegen + self-contained publish が windows-latest で PASS**（Windows の hard gate）。
+- ✅ 基本コントロールのみの **Voice HUD / Recording Workspace は実 Windows で実描画**（スクショ証跡。
+  Recording Workspace は共有 notch/Bezier ジオメトリが macOS と一致して描画）。
+- 🟡 **完全アプリ（XamlControlsResources 込み・NavigationView 含む）は windows-latest の CI
+  デスクトップセッションでは WinUI テーミングを完全初期化できず** activation 時に stowed
+  exception(0xc000027b) で落ちる。これは CI セッションの制約で、**完全アプリのフル GUI 描画は
+  Windows 実機の手動 smoke に残す**。runtime smoke は best-effort(continue-on-error) とし、
+  build+publish を hard gate に据える。Windows PASS を捏造しない。
