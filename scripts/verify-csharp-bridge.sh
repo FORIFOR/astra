@@ -24,4 +24,7 @@ if [[ ! -f "$PROJ/bin/out/astra_core.dll" && -f "$PROJ/bin/out/libastra_core.dll
 fi
 OUT="$(cd "$PROJ/bin/out" && dotnet bridge-check.dll)"
 echo "$OUT"
-[[ "$OUT" == CS_OK* ]] || { echo "FAIL: C# bridge -> core" >&2; exit 1; }
+# 必須は core への P/Invoke（version/PKCE/authorizeUrl/parseCallback/elapsed/geometry）。
+# 実 gateway 往復は gateway があるときだけ（macOS ローカル）で、無い CI では CS_SKIP になる。
+# よって「core bridge の CS_OK があり、CS_FAIL が無い」ことを成功条件にする（先頭行位置に依存しない）。
+[[ "$OUT" == *"CS_OK bridge->core:"* && "$OUT" != *CS_FAIL* ]] || { echo "FAIL: C# bridge -> core" >&2; exit 1; }
