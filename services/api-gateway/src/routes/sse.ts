@@ -25,6 +25,8 @@ const TERMINAL_TYPES = new Set([
   'task.cancelled',
   // 会議も終端を持つ。無いと終わった会議の購読が開いたままになる。
   'meeting.ended',
+  // 会話の応答が終わったら閉じる。無いと Task Dock の購読が開いたままになる（正本 §20）。
+  'conversation.completed',
 ]);
 
 export interface EventWaker {
