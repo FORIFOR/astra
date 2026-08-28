@@ -8,6 +8,20 @@ Phase 1.81 時点。この環境で実測できるものは全て緑（`pnpm ver
 
 ## A. #4/#5 — Windows 実ビルド・実描画・実行時（要: Windows ホスト）
 
+> **実機フル GUI(#4) の手順（2026-08-28 整備）**: `windows` workflow が self-contained アプリを
+> artifact `astra-windows-app`（`publish/` 一式 = Astra.exe + WindowsAppSDK ランタイム）として出力する。
+>
+> 1. GitHub Actions の最新 `windows` run から `astra-windows-app` を Windows 実機にダウンロードして展開。
+> 2. `Astra.exe` を実行し、以下を目視（最大 5 項目）:
+>    - **Voice HUD**（上部中央・borderless・option/command/長押しで音声入力）
+>    - **Recording Workspace**（`Astra.exe --smoke-workspace`。notch/Bezier・Task Dock・録音中 Hero）
+>    - **Main Window**（`Astra.exe --smoke-main`。NavigationView 4 セクション Home/AI Agents/Library/Apps）
+>    - **Task Dock / notch geometry** が tokens 実寸で描かれる
+>    - 録音終了 → HUD 復帰の遷移
+> 3. スクショか結果を戻せば #4 クローズ。
+>    CI(windows-latest) セッションは WinUI コントロールリソースを完全初期化できず完全アプリは落ちるため、
+>    このフル GUI だけは実機目視に残す（build+publish は CI で PASS 済み・HUD/Workspace は CI で実描画済み）。
+
 **なぜこの環境で不可**: WinUI の XAML→`.g.cs` codegen は XAML コンパイラ(net472 exe)が
 `kernel32.dll` を P/Invoke するため、macOS では実行できない（Phase 1.5x で根本原因を実測確定）。
 C# 全ロジック（Window code-behind 含む）は macOS で型検査 PASS 済み。

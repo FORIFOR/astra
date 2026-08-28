@@ -42,6 +42,15 @@ jobs:
       # self-contained publish を使う）。プライマリ画面のスクショを証跡として artifact にする。
       - name: Publish self-contained (bundles WindowsAppSDK runtime)
         run: dotnet publish apps/windows/Astra/Astra.csproj -c Release -p:Platform=x64 -r win-x64 --self-contained true -p:WindowsAppSDKSelfContained=true -o publish
+      # 実機で目視確認するための self-contained アプリ一式（Astra.exe + ランタイム）を artifact 化する。
+      # 実機手順: 展開して Astra.exe を実行 → Voice HUD / Recording Workspace(--smoke-workspace) /
+      # Main(--smoke-main) / Task Dock・notch / 終了→HUD 復帰 を目視。
+      - name: Upload self-contained app (for real-device GUI check)
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-windows-app
+          path: publish/
+          if-no-files-found: error
       # 実行時スモークは best-effort。build + self-contained publish が Windows の hard gate。
       # windows-latest の CI デスクトップセッションは WinUI のコントロールリソース
       # (XamlControlsResources) を完全に初期化できず、NavigationView 等を含む完全アプリは
