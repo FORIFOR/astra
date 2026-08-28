@@ -95,12 +95,31 @@ private struct HomePane: View {
     }
 }
 
+/// §9 Work: 仕事単位で管理（Active/Waiting/Done/Failed/All）。Agent は詳細/管理者向けにのみ開示。
 private struct AgentsPane: View {
     let apps: [String]
+    @State private var filter = "Active"
+    private let filters = ["Active", "Waiting", "Done", "Failed", "All"]
     var body: some View {
-        let agents = apps.isEmpty ? ["Research Agent", "Meeting Agent", "Sales CRM"] : apps
-        return List(agents, id: \.self) { a in Label(a, systemImage: "sparkles") }
-            .navigationTitle("Work")
+        ScrollView {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack(spacing: 8) {
+                    ForEach(filters, id: \.self) { f in
+                        Text(f)
+                            .font(.system(size: 12, weight: filter == f ? .semibold : .regular))
+                            .padding(.horizontal, 10).padding(.vertical, 4)
+                            .background(Capsule().fill(filter == f ? Color.astraAccent.opacity(0.15) : Color.clear))
+                            .foregroundStyle(filter == f ? Color.astraAccent : Color.secondary)
+                            .onTapGesture { filter = f }
+                    }
+                    Spacer()
+                }
+                // 実タスクが無い間は spec 構造 + 正直な空状態（架空タスクを作らない）。
+                Text("実行中の仕事はありません。Task Dock から「◯◯して」と頼むとここに出ます。")
+                    .font(.system(size: 12)).foregroundStyle(.secondary)
+                Spacer()
+            }.padding(24)
+        }.navigationTitle("Work")
     }
 }
 
