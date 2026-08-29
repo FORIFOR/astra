@@ -79,12 +79,12 @@ struct MainWindowView: View {
             List(MainSection.allCases, selection: $nav.section) { s in
                 Label(s.title, systemImage: s.icon).tag(s)
             }
-            .navigationSplitViewColumnWidth(min: 176, ideal: 200, max: 240)
+            .navigationSplitViewColumnWidth(min: Metrics.sidebarWidth - 20, ideal: Metrics.sidebarWidth, max: Metrics.sidebarWidth + 40)
             .safeAreaInset(edge: .bottom) {
                 HStack(spacing: 8) {
-                    Circle().fill(Color.astraAccent.opacity(0.2)).frame(width: 22, height: 22)
-                        .overlay(Text("U").font(.system(size: 10, weight: .semibold)))
-                    Text("ui-check").font(.system(size: 11))
+                    Circle().fill(Color.astraAccent.opacity(0.2)).frame(width: 26, height: 26)
+                        .overlay(Text("U").font(.system(size: 12, weight: .semibold)))
+                    Text("ui-check").font(.system(size: TypeScale.secondarySize))
                     Spacer()
                 }.padding(10)
             }
@@ -93,7 +93,7 @@ struct MainWindowView: View {
                 // 右の Agent Activity は **既定で閉じる**。Content を主役にする（Linear の作法）。
                 .inspector(isPresented: $nav.activityOpen) {
                     AgentActivityPane()
-                        .inspectorColumnWidth(min: 240, ideal: 280, max: 340)
+                        .inspectorColumnWidth(min: Metrics.inspectorWidth - 40, ideal: Metrics.inspectorWidth, max: Metrics.inspectorWidth + 60)
                 }
                 .toolbar {
                     ToolbarItem {
@@ -105,7 +105,7 @@ struct MainWindowView: View {
                     }
                 }
         }
-        .frame(minWidth: 900, minHeight: 560)
+        .frame(minWidth: 1020, minHeight: 640)
         .onAppear { data.load() }
     }
 

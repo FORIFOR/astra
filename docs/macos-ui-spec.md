@@ -93,6 +93,9 @@ focus リングは **Tab / 矢印を押してから**出す（`KeyboardNavigatio
 | 7 Meeting         | 460×56 / 196 | 既定は 1 行。5 面のうち**開くのは 1 枚だけ**           |
 | 8 Full Workspace  | —            | Dock は静かなまま、Workspace が開く                    |
 
+- **ダイナミックレンジ**: idle 220pt → agent 680pt（3.1 倍）。Astra を menu bar utility に見せない。
+  「小さい＝洗練」ではなく「必要なときだけ堂々と大きくなる＝洗練」
+- 文字は Dock 主テキスト 16pt / 発話 18pt / 行 15pt / メタ 13pt（`dockType` トークン）
 - **top anchor 固定**: `screen.frame.maxY - height`。高さが変わっても上辺は動かず下へ伸びる
 - 白基調。`.regularMaterial` に薄い白（dark では薄い黒）を重ね、髪の毛ほどの縁。影は控えめ
 - 色は orb だけに持たせる。Context Strip の ✓ は形で伝える（色を増やさない）
@@ -113,6 +116,8 @@ apps/astra-macos/.build/debug/AstraMac --selftest dockanim
 - **上辺の Y が全状態で同一**（中央から広がっていない）
 - **窓が常に 1 枚**（第二 Panel を出していない）
 - 中身が入っている（真っ白/真っ黒な板ではない）
+- **小さすぎないこと**: Task Dock は 600pt 以上、展開時は idle の 2 倍以上、
+  主テキスト 15pt 以上・発話 16pt 以上。下回ったら FAIL（画面に埋もれる UI を通さない）
 
 `dockanim` は遷移中の window frame を 8ms ごとに拾い、
 **その間ずっと上辺 Y が動かない**ことと、幅が滑らかに変わることを実測する

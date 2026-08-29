@@ -363,11 +363,11 @@ enum SelfTest {
             store.startTask(AgentTask(
                 id: UUID(), title: "週次ブリーフィングを作る", status: .running,
                 steps: [
-                    AgentStep(title: "Calendar", tool: "calendar", state: .success),
-                    AgentStep(title: "Gmail", tool: "gmail", state: .success),
-                    AgentStep(title: "Notion", tool: "notion", state: .running),
-                    AgentStep(title: "Web", tool: "web"),
-                    AgentStep(title: "Generate briefing", tool: "agent"),
+                    AgentStep(title: "Calendar", tool: "calendar", detail: "明日 10:00 / 田中さん", state: .success),
+                    AgentStep(title: "Gmail", tool: "gmail", detail: "直近 12 通を読んだ", state: .success),
+                    AgentStep(title: "Notion", tool: "notion", detail: "Q3 Proposal を読んでいます", state: .running),
+                    AgentStep(title: "Web", tool: "web", detail: "先方の最新情報を調べる"),
+                    AgentStep(title: "Briefing", tool: "agent", detail: "資料をまとめる"),
                 ],
                 startedAt: Date(), context: store.state.context))
         })
@@ -421,6 +421,29 @@ enum SelfTest {
             failures.append("10-workspace=撮影不可")
         }
 
+        // Astra を menu bar utility に見せない。**小さすぎたら FAIL**。
+        // Idle だけは小さく保ち、使い始めたら主役の大きさへ展開する。
+        let minima: [(String, CGFloat)] = [
+            ("listening", Metrics.dockListeningWidth),
+            ("thinking", Metrics.dockThinkingWidth),
+            ("agent", Metrics.dockAgentWidth),
+            ("confirmation", Metrics.dockConfirmWidth),
+            ("meeting", Metrics.dockMeetingWidth),
+        ]
+        for (name, w) in minima where w < 500 {
+            failures.append("\(name) が \(Int(w))pt しかない（補助 UI に見える）")
+        }
+        if Metrics.dockAgentWidth < 600 {
+            failures.append("Task Dock が \(Int(Metrics.dockAgentWidth))pt（最低 600pt）")
+        }
+        // 使い始めたときの幅が idle の 2 倍以上ある（＝ダイナミックレンジがある）。
+        if Metrics.dockAgentWidth < Metrics.dockIdleWidth * 2 {
+            failures.append("展開してもほとんど大きくならない（Dock のバリエーションに見える）")
+        }
+        // 主テキストは 15–18pt。小さいと画面に埋もれる。
+        if Metrics.dockPrimarySize < 15 { failures.append("Dock の主テキストが \(Int(Metrics.dockPrimarySize))pt") }
+        if Metrics.dockSpeechSize < 16 { failures.append("発話文字が \(Int(Metrics.dockSpeechSize))pt") }
+
         // **top anchor 固定**: Dock の上辺 Y が全状態で同じ。
         if topEdges.count > 1 {
             failures.append("上辺の Y が状態でずれた: \(topEdges.sorted())")
@@ -433,7 +456,7 @@ enum SelfTest {
         print("DOCK8_DIR \(outDir)")
         for line in report { print("DOCK8 \(line)") }
         if failures.isEmpty {
-            print("SELFTEST_OK dock8: 8状態を実遷移で撮影・top anchor 固定・窓は常に1枚")
+            print("SELFTEST_OK dock8: 8状態を実遷移で撮影・top anchor 固定・窓は常に1枚・idle \(Int(Metrics.dockIdleWidth))pt→agent \(Int(Metrics.dockAgentWidth))pt")
             exit(0)
         } else {
             print("SELFTEST_FAIL dock8: \(failures.joined(separator: ", "))")

@@ -77,7 +77,7 @@ private struct IdleDock: View {
         HStack(spacing: 7) {
             AstraOrb()
             Text("Astra")
-                .font(.system(size: 11, weight: .medium))
+                .font(.system(size: Metrics.dockPrimarySize, weight: .medium))
                 .foregroundStyle(Palette.muted(scheme == .dark))
             Spacer(minLength: 0)
             KeyBadge("⌥")
@@ -104,10 +104,10 @@ private struct AppContextDock: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 7) {
                 Image(systemName: "diamond.fill")
-                    .font(.system(size: 7))
+                    .font(.system(size: 9))
                     .foregroundStyle(Palette.accent(dark))
                 Text(summary.app)
-                    .font(.system(size: 11, weight: .medium))
+                    .font(.system(size: Metrics.dockPrimarySize, weight: .medium))
                     .foregroundStyle(Palette.text(dark))
                 Spacer(minLength: 0)
                 if !summary.suggestions.isEmpty {
@@ -127,7 +127,7 @@ private struct AppContextDock: View {
                 VStack(alignment: .leading, spacing: 8) {
                     if let document = summary.document {
                         Text(document)
-                            .font(.system(size: 13, weight: .semibold))
+                            .font(.system(size: 20, weight: .semibold))
                             .foregroundStyle(Palette.text(dark))
                             .lineLimit(1)
                     }
@@ -137,12 +137,12 @@ private struct AppContextDock: View {
                             Button { VoiceHUDState.shared.runSuggestion(s) } label: {
                                 HStack(spacing: 0) {
                                     Text(s)
-                                        .font(.system(size: 12))
+                                        .font(.system(size: Metrics.dockRowSize))
                                         .foregroundStyle(Palette.text(dark))
                                     Spacer(minLength: 0)
                                 }
-                                .padding(.horizontal, 6)
-                                .frame(height: 26)
+                                .padding(.horizontal, 8)
+                                .frame(height: Metrics.dockAgentRowHeight)
                             }
                             .buttonStyle(AstraControlStyle(radius: 6, base: 0.0))
                             .accessibilityIdentifier("suggest-\(s)")
@@ -173,9 +173,9 @@ private struct ListeningDock: View {
             HStack(spacing: 9) {
                 AstraOrb(active: true)
                 MiniWaveform()
-                    .frame(width: 34, height: 12)
+                    .frame(width: 44, height: 16)
                 Text(partial.isEmpty ? "聞いています…" : partial)
-                    .font(.system(size: 13))
+                    .font(.system(size: Metrics.dockSpeechSize))
                     .foregroundStyle(partial.isEmpty ? Palette.muted(dark) : Palette.text(dark))
                     .lineLimit(1)
                     .truncationMode(.head)
@@ -202,16 +202,16 @@ struct ContextStrip: View {
                 HStack(spacing: 4) {
                     // 色を増やさない。印は形（✓）で伝え、色は orb だけに持たせる。
                     Image(systemName: "checkmark")
-                        .font(.system(size: 8, weight: .semibold))
+                        .font(.system(size: 10, weight: .semibold))
                         .foregroundStyle(Palette.muted(dark))
                     Text(item.application)
-                        .font(.system(size: 10))
+                        .font(.system(size: Metrics.dockMetaSize))
                         .foregroundStyle(Palette.text(dark))
                 }
             }
             if store.state.context.items.isEmpty {
                 Text("見えている文脈はありません")
-                    .font(.system(size: 10))
+                    .font(.system(size: Metrics.dockMetaSize))
                     .foregroundStyle(Palette.muted(dark))
             }
             Spacer(minLength: 0)
@@ -237,9 +237,9 @@ private struct SimpleDock: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            Image(systemName: icon).font(.system(size: 10)).foregroundStyle(tint)
+            Image(systemName: icon).font(.system(size: 14)).foregroundStyle(tint)
             Text(text)
-                .font(.system(size: 12))
+                .font(.system(size: Metrics.dockPrimarySize))
                 .foregroundStyle(Palette.text(scheme == .dark))
             Spacer(minLength: 0)
         }
@@ -252,41 +252,113 @@ private struct SimpleDock: View {
 // MARK: - 5. Agent
 
 /// 仕事の進行そのもの。chat bubble では出さない。
+///
+/// 「小さな floating utility」ではなく、デスクトップに現れる **AI task surface** に見せる。
+/// そのために横幅を取り、各段に「いま何を見ているか」を 1 行添える。
 private struct AgentDock: View {
     @Environment(\.colorScheme) private var scheme
     private var dark: Bool { scheme == .dark }
     @ObservedObject private var store = AstraStateStore.shared
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 7) {
-            HStack(spacing: 8) {
-                AstraOrb(active: true)
-                Text(store.state.activeTask?.title ?? "実行中")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(Palette.text(dark))
-                Spacer(minLength: 0)
-            }
-            VStack(alignment: .leading, spacing: 0) {
-                ForEach(store.state.activeTask?.steps ?? []) { step in
-                    HStack(spacing: 8) {
-                        Image(systemName: icon(step.state))
-                            .font(.system(size: 9, weight: .semibold))
-                            .foregroundStyle(tint(step.state))
-                            .frame(width: 11)
-                        Text(step.title)
-                            .font(.system(size: 12))
-                            .foregroundStyle(step.state == .pending ? Palette.muted(dark) : Palette.text(dark))
-                        Spacer(minLength: 0)
-                    }
-                    .frame(height: Metrics.dockAgentRowHeight)
-                    .accessibilityIdentifier("step-\(step.tool)")
-                }
-            }
+        VStack(alignment: .leading, spacing: 12) {
+            header
+            steps
+            contextChips
+            Spacer(minLength: 0)
+            footer
         }
         .padding(.horizontal, Metrics.dockPadH)
-        .padding(.vertical, 10)
+        .padding(.vertical, 14)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .accessibilityIdentifier("dockAgent")
+    }
+
+    private var header: some View {
+        HStack(spacing: 10) {
+            AstraOrb(active: true)
+            Text("Astra")
+                .font(.system(size: Metrics.dockMetaSize, weight: .medium))
+                .foregroundStyle(Palette.muted(dark))
+            Text(store.state.activeTask?.title ?? "実行中")
+                .font(.system(size: Metrics.dockPrimarySize, weight: .semibold))
+                .foregroundStyle(Palette.text(dark))
+            Spacer(minLength: 0)
+            if let task = store.state.activeTask {
+                Text("\(Int(task.progress * 100))%")
+                    .font(.system(size: Metrics.dockMetaSize, design: .monospaced))
+                    .foregroundStyle(Palette.muted(dark))
+            }
+        }
+    }
+
+    private var steps: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            ForEach(store.state.activeTask?.steps ?? []) { step in
+                HStack(spacing: 10) {
+                    Image(systemName: icon(step.state))
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(tint(step.state))
+                        .frame(width: 13)
+                    Text(step.title)
+                        .font(.system(size: Metrics.dockRowSize,
+                                      weight: step.state == .running ? .semibold : .regular))
+                        .foregroundStyle(step.state == .pending ? Palette.muted(dark) : Palette.text(dark))
+                        .frame(width: 118, alignment: .leading)
+                    // その段で実際に何を見ているか。空欄のままにしない。
+                    Text(step.detail)
+                        .font(.system(size: Metrics.dockMetaSize))
+                        .foregroundStyle(Palette.muted(dark))
+                        .lineLimit(1)
+                    Spacer(minLength: 0)
+                }
+                .frame(height: Metrics.dockAgentRowHeight)
+                .accessibilityIdentifier("step-\(step.tool)")
+            }
+        }
+    }
+
+    @ViewBuilder private var contextChips: some View {
+        let items = store.state.context.items
+        if !items.isEmpty {
+            VStack(alignment: .leading, spacing: 6) {
+                DockLabel(text: "Context")
+                HStack(spacing: 6) {
+                    ForEach(items) { item in
+                        Text(item.application)
+                            .font(.system(size: Metrics.dockMetaSize))
+                            .foregroundStyle(Palette.text(dark))
+                            .padding(.horizontal, 10)
+                            .frame(height: 24)
+                            .background(
+                                Capsule().fill(Color.subtleFill(dark, 0.05))
+                                    .overlay(Capsule().stroke(Color.hairline(dark), lineWidth: 0.5)))
+                    }
+                    Spacer(minLength: 0)
+                }
+            }
+            .accessibilityIdentifier("agentContextChips")
+        }
+    }
+
+    private var footer: some View {
+        HStack(spacing: 0) {
+            Spacer(minLength: 0)
+            Button {
+                MainWindowController.shared.show()
+                AstraStateStore.shared.workspaceOpened()
+            } label: {
+                HStack(spacing: 5) {
+                    Text("Open Workspace")
+                    Image(systemName: "arrow.up.right").font(.system(size: 10, weight: .semibold))
+                }
+                .font(.system(size: Metrics.dockMetaSize, weight: .medium))
+                .foregroundStyle(Palette.accent(dark))
+                .frame(height: 28).padding(.horizontal, 10)
+            }
+            .buttonStyle(AstraControlStyle(radius: 7, base: 0.0))
+            .accessibilityIdentifier("openWorkspace")
+        }
     }
 
     private func icon(_ s: AgentRunState) -> String {
@@ -330,13 +402,13 @@ private struct ConfirmationDock: View {
                 Spacer(minLength: 0)
             }
             Text(confirmation.title)
-                .font(.system(size: 14, weight: .semibold))
+                .font(.system(size: 20, weight: .semibold))
                 .foregroundStyle(Palette.text(dark))
                 .fixedSize(horizontal: false, vertical: true)
             VStack(alignment: .leading, spacing: 3) {
                 ForEach(confirmation.details, id: \.self) { d in
                     Text(d)
-                        .font(.system(size: 11))
+                        .font(.system(size: Metrics.dockRowSize))
                         .foregroundStyle(Palette.muted(dark))
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -345,15 +417,15 @@ private struct ConfirmationDock: View {
             HStack(spacing: 8) {
                 Spacer(minLength: 0)
                 Button("Cancel") { AstraStateStore.shared.resolveConfirmation(approved: false) }
-                    .font(.system(size: 12))
+                    .font(.system(size: Metrics.dockRowSize))
                     .foregroundStyle(Palette.muted(dark))
-                    .frame(height: 28).padding(.horizontal, 14)
+                    .frame(height: 34).padding(.horizontal, 18)
                     .buttonStyle(AstraControlStyle(radius: 7, base: 0.0))
                     .accessibilityIdentifier("confirmCancel")
                 Button(confirmation.confirmLabel) { AstraStateStore.shared.resolveConfirmation(approved: true) }
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.system(size: Metrics.dockRowSize, weight: .semibold))
                     .foregroundStyle(riskTint)
-                    .frame(height: 28).padding(.horizontal, 16)
+                    .frame(height: 34).padding(.horizontal, 22)
                     .buttonStyle(AstraControlStyle(radius: 7, base: 0.07))
                     .accessibilityIdentifier("confirmProceed")
             }
@@ -377,20 +449,20 @@ private struct MeetingDock: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 8) {
-                Circle().fill(Color.recordingRed).frame(width: 7, height: 7)
+                Circle().fill(Color.recordingRed).frame(width: 9, height: 9)
                 Text(store.state.meeting.detectedApp ?? "会議")
-                    .font(.system(size: 11, weight: .medium))
+                    .font(.system(size: Metrics.dockPrimarySize, weight: .medium))
                     .foregroundStyle(Palette.text(dark))
                 Text(RecordingWorkspaceState.shared.elapsedText)
-                    .font(.system(size: 11, design: .monospaced))
+                    .font(.system(size: Metrics.dockPrimarySize, design: .monospaced))
                     .foregroundStyle(Palette.muted(dark))
                 Spacer(minLength: 0)
                 ForEach(DockPresentation.MeetingPanel.allCases, id: \.self) { panel in
                     Button { VoiceHUDState.shared.toggleMeetingPanel(panel) } label: {
                         Image(systemName: panel.icon)
-                            .font(.system(size: 11))
+                            .font(.system(size: 14))
                             .foregroundStyle(open == panel ? Palette.accent(dark) : Palette.muted(dark))
-                            .frame(width: 28, height: 28)   // §16 hit area
+                            .frame(width: 34, height: 34)   // §16 hit area
                     }
                     .buttonStyle(AstraControlStyle(radius: 6, base: open == panel ? 0.07 : 0.0))
                     .help(panel.title)
@@ -428,11 +500,11 @@ private struct MeetingPanelBody: View {
                 ForEach(recording.transcript.suffix(4)) { line in
                     HStack(alignment: .top, spacing: 7) {
                         Text(line.speaker)
-                            .font(.system(size: 10, weight: .medium))
+                            .font(.system(size: Metrics.dockMetaSize, weight: .medium))
                             .foregroundStyle(Palette.accent(dark))
-                            .frame(width: 40, alignment: .leading)
+                            .frame(width: 56, alignment: .leading)
                         Text(line.text)
-                            .font(.system(size: 12))
+                            .font(.system(size: Metrics.dockRowSize))
                             .foregroundStyle(line.interim ? Palette.muted(dark) : Palette.text(dark))
                             .fixedSize(horizontal: false, vertical: true)
                         Spacer(minLength: 0)
@@ -443,7 +515,7 @@ private struct MeetingPanelBody: View {
             case .actions: lines(store.state.meeting.canvas.actions)
             case .ask:
                 Text("この会議について聞けます。⌥Space で話しかけてください。")
-                    .font(.system(size: 12))
+                    .font(.system(size: Metrics.dockRowSize))
                     .foregroundStyle(Palette.muted(dark))
             }
         }
@@ -453,12 +525,12 @@ private struct MeetingPanelBody: View {
     @ViewBuilder private func lines(_ items: [String]) -> some View {
         if items.isEmpty {
             Text("まだありません")
-                .font(.system(size: 12))
+                .font(.system(size: Metrics.dockRowSize))
                 .foregroundStyle(Palette.muted(dark))
         } else {
             ForEach(items.suffix(5), id: \.self) { line in
                 Text("· \(line)")
-                    .font(.system(size: 12))
+                    .font(.system(size: Metrics.dockRowSize))
                     .foregroundStyle(Palette.text(dark))
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -493,12 +565,12 @@ private struct QuickActionsDock: View {
             ForEach(items) { item in
                 Button(action: item.run) {
                     HStack(spacing: 6) {
-                        Image(systemName: item.icon).font(.system(size: 11))
-                        Text(item.title).font(.system(size: 12))
+                        Image(systemName: item.icon).font(.system(size: 14))
+                        Text(item.title).font(.system(size: Metrics.dockRowSize))
                     }
                     .foregroundStyle(Palette.text(dark))
                     .frame(maxWidth: .infinity)
-                    .frame(height: 30)
+                    .frame(height: 36)
                 }
                 .buttonStyle(AstraControlStyle(radius: 7, base: 0.0))
                 .accessibilityIdentifier("quick-\(item.title)")

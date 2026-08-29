@@ -28,7 +28,7 @@ struct DockLabel: View {
     let text: String
     var body: some View {
         Text(text)
-            .font(.system(size: 9, weight: .medium))
+            .font(.system(size: Metrics.dockLabelSize, weight: .medium))
             .foregroundStyle(Palette.muted(scheme == .dark))
             .textCase(.uppercase)
             .tracking(0.4)

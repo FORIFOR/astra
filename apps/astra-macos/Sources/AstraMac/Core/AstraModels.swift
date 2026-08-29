@@ -60,13 +60,16 @@ enum DockPresentation: Equatable {
 
     /// この状態での Dock の大きさ。**top anchor は固定**なので、変わるのは幅と高さだけ。
     func size(agentRows: Int = 0) -> CGSize {
+        // 候補や段の数で高さが決まるものは、数から導く（固定値だと最後の 1 行が切れる）。
         switch self {
         case .idle:
             return CGSize(width: Metrics.dockIdleWidth, height: Metrics.dockIdleHeight)
         case .appContext:
             return CGSize(width: Metrics.dockContextWidth, height: Metrics.dockContextHeight)
-        case .appContextExpanded:
-            return CGSize(width: Metrics.dockContextExpandedWidth, height: Metrics.dockContextExpandedHeight)
+        case .appContextExpanded(let summary):
+            return CGSize(width: Metrics.dockContextExpandedWidth,
+                          height: Metrics.dockContextExpandedBase
+                              + CGFloat(summary.suggestions.count) * Metrics.dockAgentRowHeight)
         case .listening:
             return CGSize(width: Metrics.dockListeningWidth, height: Metrics.dockListeningHeight)
         case .thinking:
@@ -171,10 +174,20 @@ struct AgentStep: Identifiable, Equatable {
     let id = UUID()
     let title: String
     let tool: String
+    /// その段で**実際に何を見て / 何をしたか**。空欄にしない方が、待っている間の不安が減る。
+    var detail: String = ""
     var state: AgentRunState = .pending
 }
 
 struct AgentTask: Identifiable, Equatable {
+    /// 進み具合（0–1）。段の状態から出す。持たせると必ずずれるので、計算にする。
+    var progress: Double {
+        guard !steps.isEmpty else { return 0 }
+        let done = steps.filter { $0.state == .success }.count
+        let running = steps.contains { $0.state == .running } ? 0.5 : 0
+        return min(1, (Double(done) + running) / Double(steps.count))
+    }
+
     let id: UUID
     let title: String
     var status: AgentRunState

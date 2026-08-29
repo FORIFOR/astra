@@ -45,7 +45,7 @@ const FIELDS = [
   ['dockContextWidth', h.contextWidth],
   ['dockContextHeight', h.contextHeight],
   ['dockContextExpandedWidth', h.contextExpandedWidth],
-  ['dockContextExpandedHeight', h.contextExpandedHeight],
+  ['dockContextExpandedBase', h.contextExpandedBase],
   ['dockListeningWidth', h.listeningWidth],
   ['dockListeningHeight', h.listeningHeight],
   ['dockThinkingWidth', h.thinkingWidth],
@@ -58,6 +58,11 @@ const FIELDS = [
   ['dockMeetingWidth', h.meetingWidth],
   ['dockMeetingHeight', h.meetingHeight],
   ['dockMeetingExpandedHeight', h.meetingExpandedHeight],
+  ['dockSpeechSize', tokens.dockType.speech],
+  ['dockPrimarySize', tokens.dockType.primary],
+  ['dockRowSize', tokens.dockType.row],
+  ['dockMetaSize', tokens.dockType.meta],
+  ['dockLabelSize', tokens.dockType.label],
   ['dockPadH', h.padH],
   ['dockPadV', h.padV],
   ['dockRowGap', h.rowGap],
@@ -110,7 +115,7 @@ const DURATIONS = [
 
 // §17 Visual Design System を単一正に。色/タイポ/余白を各 OS へ直書きせず tokens から生成する。
 const COLORS = Object.entries(tokens.color); // [name, {light,dark}]
-const TYPE = Object.entries(tokens.type); // [role, {size,weight}]
+const TYPE = Object.entries(tokens.type).filter(([k]) => !k.startsWith('$')); // [role, {size,weight}]
 const SPACE = Object.entries(tokens.space).concat(
   Object.entries(tokens.radius).map(([k, v]) => [
     `radius${k.charAt(0).toUpperCase() + k.slice(1)}`,
