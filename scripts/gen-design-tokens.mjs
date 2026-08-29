@@ -25,6 +25,7 @@ const ri = tokens.recordingIndicator;
 const wl = tokens.workspaceLayout;
 const sh = tokens.shell;
 const bp = tokens.breakpoint;
+const ix = tokens.interaction;
 
 /** Swift/C# が使う名前 → 値。名前は両 OS で共通にして、生成物の差を値だけにする。 */
 const FIELDS = [
@@ -71,11 +72,16 @@ const FIELDS = [
   ['wsRightColumn', wl.rightColumn],
   ['wsRagDrawer', wl.ragDrawer],
   ['wsBottomBar', wl.bottomBar],
+  ['hoverDelta', ix.hoverDelta],
+  ['pressedDelta', ix.pressedDelta],
+  ['pressedScale', ix.pressedScale],
+  ['focusRing', ix.focusRing],
 ];
 const DURATIONS = [
   ['showMs', a.showMs],
   ['hideMs', a.hideMs],
   ['drawerMs', a.drawerMs],
+  ['hoverMs', ix.hoverMs],
 ];
 
 // §17 Visual Design System を単一正に。色/タイポ/余白を各 OS へ直書きせず tokens から生成する。

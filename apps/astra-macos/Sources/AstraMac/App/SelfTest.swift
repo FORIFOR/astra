@@ -54,9 +54,112 @@ enum SelfTest {
         case "fulllifecycle": fullLifecycle(args); return true
         case "e2e001": e2e001(args); return true
         case "shots": shots(args); return true
+        case "states": states(args); return true
         case "panel": panelBehavior(); return true
         case "render": render(); return true
         default: return false
+        }
+    }
+
+    /// `--selftest states <dir> [dark]`: hover / focus / pressed が **実際に見えているか**。
+    ///
+    /// Visual Gate はマウスを動かせないので、状態を差し込んで撮り
+    /// neutral との**画素差**で判定する。「実装した」ではなく「画面が変わった」を証拠にする。
+    @MainActor
+    private static func states(_ args: [String]) {
+        let i = args.firstIndex(of: "--selftest")!
+        let outDir = args.count > i + 2 ? args[i + 2] : "/tmp/astra-states"
+        let dark = args.count > i + 3 && args[i + 3] == "dark"
+        try? FileManager.default.createDirectory(atPath: outDir, withIntermediateDirectories: true)
+        NSApp.setActivationPolicy(.regular)
+        NSApp.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
+
+        func settle(_ s: Double) {
+            let until = Date().addingTimeInterval(s)
+            while Date() < until { CFRunLoopRunInMode(.defaultMode, 0.05, true) }
+        }
+
+        /// 自プロセスの最大の窓を撮り、PNG 保存して縮小グレースケール列を返す。
+        func grab(_ name: String) -> [UInt8]? {
+            settle(0.9)
+            var best: (CGWindowID, Int, Int)? = nil
+            var area = 0
+            if let infos = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] {
+                for info in infos {
+                    guard let owner = info[kCGWindowOwnerPID as String] as? pid_t, owner == getpid(),
+                          let num = info[kCGWindowNumber as String] as? CGWindowID,
+                          let b = info[kCGWindowBounds as String] as? [String: Any],
+                          let w = b["Width"] as? CGFloat, let h = b["Height"] as? CGFloat,
+                          w > 40, h > 20 else { continue }
+                    if Int(w * h) > area { area = Int(w * h); best = (num, Int(w), Int(h)) }
+                }
+            }
+            guard let (winID, _, _) = best,
+                  let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, winID, [.boundsIgnoreFraming, .bestResolution])
+            else { return nil }
+            let rep = NSBitmapImageRep(cgImage: cg)
+            if let png = rep.representation(using: .png, properties: [:]) {
+                try? png.write(to: URL(fileURLWithPath: "\(outDir)/\(name).png"))
+            }
+            var out: [UInt8] = []
+            let pw = rep.pixelsWide, ph = rep.pixelsHigh
+            let sx = max(1, pw / 200), sy = max(1, ph / 200)
+            var y = 0
+            while y < ph { var x = 0
+                while x < pw {
+                    if let c = rep.colorAt(x: x, y: y) {
+                        let l = 0.299 * c.redComponent + 0.587 * c.greenComponent + 0.114 * c.blueComponent
+                        out.append(UInt8(max(0, min(255, l * 255))))
+                    }
+                    x += sx }
+                y += sy }
+            return out
+        }
+
+        /// 目に見える差だけ数える（8/255 未満は撮影ノイズとして無視）。
+        func changedRatio(_ a: [UInt8], _ b: [UInt8]) -> Double {
+            guard a.count == b.count, !a.isEmpty else { return 0 }
+            var n = 0
+            for i in 0..<a.count where abs(Int(a[i]) - Int(b[i])) >= 8 { n += 1 }
+            return Double(n) / Double(a.count)
+        }
+
+        let preview = InteractionPreview.shared
+        let state = RecordingWorkspaceState.shared
+        state.loadDemo(ragOpen: false)
+        state.selectedTool = .transcript
+        WindowCoordinator.shared.showRecordingWorkspace()
+        settle(1.0)
+
+        guard let neutral = grab("00-neutral") else {
+            print("SELFTEST_FAIL states: neutral 撮影不可"); exit(2)
+        }
+
+        // 目視で分かる最小限。0.1% 未満は「実質見えない」とみなす。
+        let minRatio = 0.001
+        var report: [String] = []
+        var failures: [String] = []
+        for (name, apply) in [("hover", { preview.hover = true }),
+                              ("focus", { preview.focus = true }),
+                              ("pressed", { preview.pressed = true })] as [(String, () -> Void)] {
+            preview.reset()
+            apply()
+            guard let shot = grab("\(name)") else { failures.append("\(name)=撮影不可"); continue }
+            let r = changedRatio(neutral, shot)
+            report.append(String(format: "%@ diff=%.3f%%", name, r * 100))
+            if r < minRatio { failures.append(String(format: "%@ が neutral と同じ (diff=%.3f%%)", name, r * 100)) }
+        }
+        preview.reset()
+        WindowCoordinator.shared.hideRecordingWorkspace()
+
+        print("STATES_DIR \(outDir)")
+        for line in report { print("STATE \(line)") }
+        if failures.isEmpty {
+            print("SELFTEST_OK states: hover/focus/pressed が実画面で neutral と異なる")
+            exit(0)
+        } else {
+            print("SELFTEST_FAIL states: \(failures.joined(separator: ", "))")
+            exit(2)
         }
     }
 

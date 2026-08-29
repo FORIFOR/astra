@@ -8,6 +8,8 @@ final class AstraAppDelegate: NSObject, NSApplicationDelegate {
         WindowCoordinator.shared.start(demo: demo)
         // Dock アイコンが無いので、ここが起動後の唯一の入口になる（Main/録音/設定/終了）。
         StatusBarController.shared.install()
+        // focus リングは Tab / 矢印を押してから見せる（開いた瞬間に出さない）。
+        KeyboardNavigation.shared.install()
         // グローバル音声ショートカット（⌥Space）で録音を出し入れする。
         // CGEventTap（正本指定）で受信する。Accessibility 権限を使う（§3 と共用）。
         GlobalShortcut.shared.register { WindowCoordinator.shared.toggleRecording() }

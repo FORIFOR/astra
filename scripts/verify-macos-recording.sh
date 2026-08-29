@@ -85,6 +85,9 @@ for appearance in light dark; do
   ARG=""; [[ "$appearance" == dark ]] && ARG="dark"
   OUTSHOTS="$("$BIN" --selftest shots "$SHOTS_BASE-$appearance" $ARG)"; echo "$appearance: $(echo "$OUTSHOTS" | tail -1)"
   [[ "$OUTSHOTS" == *SELFTEST_OK* || "$OUTSHOTS" == *SELFTEST_SKIP* ]] || { echo "FAIL: Visual Gate ($appearance)" >&2; exit 1; }
+  # hover / focus / pressed が neutral と画素で違うことまで見る（実装の有無ではなく画面の差）。
+  OUTST="$("$BIN" --selftest states "$SHOTS_BASE-states-$appearance" $ARG)"; echo "$OUTST" | grep '^STATE ' || true
+  [[ "$OUTST" == *SELFTEST_OK* || "$OUTST" == *SELFTEST_SKIP* ]] || { echo "FAIL: interaction states ($appearance)" >&2; exit 1; }
 done
 
 for t in screenshot waveform livemic livemeeting livescreen sttrecognize sttstream guishot axtree breakpoints dictation; do

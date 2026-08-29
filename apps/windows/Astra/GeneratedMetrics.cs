@@ -48,6 +48,10 @@ public static class Metrics
     public const double WsRightColumn = 320;
     public const double WsRagDrawer = 196;
     public const double WsBottomBar = 44;
+    public const double HoverDelta = 0.06;
+    public const double PressedDelta = 0.11;
+    public const double PressedScale = 0.97;
+    public const double FocusRing = 2;
 }
 
 /// <summary>遷移の時間（ミリ秒）。</summary>
@@ -56,6 +60,7 @@ public static class Motion
     public const int ShowMs = 120;
     public const int HideMs = 100;
     public const int DrawerMs = 180;
+    public const int HoverMs = 110;
 }
 
 /// <summary>§17.1 カラートークン（Light/Dark, #AARRGGBB は不要な #RRGGBB 文字列）。</summary>

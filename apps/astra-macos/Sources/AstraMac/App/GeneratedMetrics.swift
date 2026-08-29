@@ -48,6 +48,10 @@ enum Metrics {
     static let wsRightColumn: CGFloat = 320
     static let wsRagDrawer: CGFloat = 196
     static let wsBottomBar: CGFloat = 44
+    static let hoverDelta: CGFloat = 0.06
+    static let pressedDelta: CGFloat = 0.11
+    static let pressedScale: CGFloat = 0.97
+    static let focusRing: CGFloat = 2
 }
 
 /// 遷移の時間（秒）。
@@ -55,6 +59,7 @@ enum Motion {
     static let showMs: Double = 0.120
     static let hideMs: Double = 0.100
     static let drawerMs: Double = 0.180
+    static let hoverMs: Double = 0.110
 }
 
 /// §17.1 カラートークン（Light/Dark）。UI に直書きせずここから使う。

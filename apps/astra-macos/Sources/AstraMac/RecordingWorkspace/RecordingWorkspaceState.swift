@@ -14,6 +14,14 @@ enum RecordingTool: String, CaseIterable, Identifiable {
         case .captions: return "字幕"
         }
     }
+    /// ⌘1 / ⌘2 / ⌘3 で切り替える（マウス無しでも右列を操作できるように）。
+    var shortcut: KeyEquivalent {
+        switch self {
+        case .transcript: return "1"
+        case .translation: return "2"
+        case .captions: return "3"
+        }
+    }
     var icon: String {
         switch self {
         case .transcript: return "text.alignleft"

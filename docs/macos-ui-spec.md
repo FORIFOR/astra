@@ -26,6 +26,36 @@ apps/astra-macos/.build/debug/AstraMac --selftest shots /tmp/astra-shots
 **light / dark の両方**を撮る（`--selftest shots <dir> [dark]`）。dark 版は `docs/golden-screenshots/dark/`。
 `scripts/verify-macos-recording.sh` に組み込み済みなので `pnpm verify:all` で毎回走る。
 
+### hover / focus / pressed
+
+```bash
+apps/astra-macos/.build/debug/AstraMac --selftest states /tmp/astra-states [dark]
+```
+
+Visual Gate はマウスを動かせないので、状態を差し込んで撮り **neutral との画素差**で判定する。
+「実装した」ではなく「画面が実際に変わった」を証拠にする。実測（light / dark）:
+
+| 状態    | 見え方                                            | neutral との差 |
+| ------- | ------------------------------------------------- | -------------: |
+| hover   | 地が `hoverDelta` 濃くなる                        |  4.01% / 3.94% |
+| focus   | アクセント色のリング `focusRing`                  |  0.93% / 0.93% |
+| pressed | 地が `pressedDelta` 濃く＋`pressedScale` 押し込み |  4.06% / 3.89% |
+
+保存先は `docs/golden-screenshots/states/`（`dark-` 接頭辞が dark）。
+0.1% 未満は「実質見えない」として FAIL にする。
+
+### キーボード操作
+
+| 操作                 | 割り当て     |
+| -------------------- | ------------ |
+| 文字起こし/翻訳/字幕 | ⌘1 / ⌘2 / ⌘3 |
+| RAG を開く           | ⌘R           |
+| 録音を止める         | ⌘.           |
+| 要素間の移動         | Tab / 矢印   |
+
+focus リングは **Tab / 矢印を押してから**出す（`KeyboardNavigation`）。
+標準の focus effect は `.focusEffectDisabled()` で切り、リングを自前の 1 本に統一している。
+
 ## レイアウトの正（tokens）
 
 数値は View に直書きせず `shared/design/tokens.json` → `Metrics` から取る。
@@ -41,6 +71,8 @@ apps/astra-macos/.build/debug/AstraMac --selftest shots /tmp/astra-shots
 | `wsRightColumn`                |           320 | 文字起こし列              |
 | `wsRagDrawer`                  |           196 | RAG Drawer 高さ           |
 | `wsBottomBar`                  |            44 | 下部バー（hit area 兼用） |
+| `hoverDelta` / `pressedDelta`  |   0.06 / 0.11 | hover / pressed の地の差  |
+| `pressedScale` / `focusRing`   |      0.97 / 2 | 押し込み / focus リング   |
 | `hudWidth/Height/BottomRadius` | 310 / 31 / 17 | Voice HUD                 |
 
 ## Recording Workspace の構造
@@ -74,13 +106,21 @@ apps/astra-macos/.build/debug/AstraMac --selftest shots /tmp/astra-shots
 7. **dark で本文が読めない**: 面は固定の白のまま、文字は `.primary`（dark では白）だったので
    白 on 白になっていた（実機の dark 撮影で判明）→ 面・カード・罫線・薄塗りを
    `Color.workspaceSurface(dark)` / `cardSurface` / `hairline` / `subtleFill` に集約し外観へ追従
-8. **Main の geometry 固定検査が脆い**: titled window は WM がサイズを詰める → 最小寸法＋内容量で判定（commit 3011d8b）
+8. **触っても何も返らない**: hover / focus / pressed が**アプリ全体で 0 箇所**だった。
+   静止画では整って見えるが、押せるものが押せると分からない → `AstraControlStyle` に集約し
+   tokens（`interaction`）から差分量を取る
+9. **窓を開いた瞬間に青い focus リング**: `.focusable(true)` を付けたことで SwiftUI 標準の
+   focus effect が出ていた（実機の hover 撮影で判明）。macOS はマウスで開いた直後にリングを見せない
+   → `.focusEffectDisabled()` ＋ `KeyboardNavigation`（Tab/矢印で初めて点灯）
+10. **左列の下 260pt が空白**: 上詰めのため右の全高カードと釣り合わず構図が上に寄っていた
+    → AI 結果が無い間は左列を上下中央に、結果が出たら上詰めへ
+11. **Main の geometry 固定検査が脆い**: titled window は WM がサイズを詰める → 最小寸法＋内容量で判定（commit 3011d8b）
 
 ## Accessibility identifier
 
 `recordingWorkspace` / `toolPalette` / `tool-<id>` / `aiActions` / `ai-<title>` / `aiResult` /
 `aiResultClose` / `ragToggle` / `voiceHUD` / `intentBar` / `contextLens` / `workSurface` /
-`approvalCard` / `actionReceipt` / `evidenceSummary` / `lineagePanel` / `meetingSurface` /
+`stopRecording` / `approvalCard` / `actionReceipt` / `evidenceSummary` / `lineagePanel` / `meetingSurface` /
 `meetingArtifact` / `researchResult` / `homeView` / `connector-<app>` / `workspaceShell`
 
 `--selftest axtree` が Main の 4 セクションと Workspace の統合サーフェスを

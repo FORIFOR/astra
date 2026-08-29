@@ -31,15 +31,21 @@ struct RecordingWorkspaceView: View {
 
             HStack(alignment: .top, spacing: Metrics.wsColumnGap) {
                 // 左: 録音の主役 → AI 操作。視線が上から下へ一本で流れる。
+                //
+                // 結果がまだ無いときは列ごと**上下中央**に置く。上詰めだと下に 260pt の
+                // 空白が残り（実機で確認）、右の全高カードと釣り合わず構図が上に寄って見えた。
+                // 結果が出たら上詰めへ切り替え、面が下へ伸びられるようにする。
                 VStack(spacing: 18) {
+                    if !hasAIOutput { Spacer(minLength: 0) }
                     RecordingHeroView(state: state)
                     AIActionsPalette(state: state)
                     // 押した結果はここに出る。走っていない/結果が無いときは何も置かない。
                     AIResultPanel(state: state)
                     Spacer(minLength: 0)
                 }
-                .padding(.top, 18)
+                .padding(.top, hasAIOutput ? 18 : 0)
                 .frame(maxWidth: .infinity)
+                .animation(.easeOut(duration: Motion.drawerMs), value: hasAIOutput)
 
                 // 右: いま見ている中身（文字起こし / 翻訳 / 字幕）。切替は同じ列の上に置く。
                 VStack(spacing: 10) {
@@ -59,6 +65,9 @@ struct RecordingWorkspaceView: View {
         .frame(width: Metrics.workspaceWidth, height: Metrics.workspaceHeight)
     }
 
+    /// AI の結果が出ているか（左列を中央寄せにするか上詰めにするかの分かれ目）。
+    private var hasAIOutput: Bool { state.aiRunning || !state.aiResult.isEmpty }
+
     @ViewBuilder private var ragSection: some View {
         if state.ragOpen {
             RAGDrawerView(state: state)
@@ -76,10 +85,11 @@ struct RecordingWorkspaceView: View {
                 .foregroundStyle(Color.astraAccent)
                 // 小さい字でも押せる面を確保する（UI/UX 仕様 §16: hit area 28〜32pt）。
                 .frame(height: Metrics.wsBottomBar)
-                .contentShape(Rectangle())
+                .padding(.horizontal, 14)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(AstraControlStyle(radius: 10, base: 0.0))
             .accessibilityIdentifier("ragToggle")
+            .keyboardShortcut("r", modifiers: [.command])
             .padding(.bottom, Metrics.wsGutter - 8)
         }
     }

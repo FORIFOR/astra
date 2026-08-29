@@ -10,9 +10,8 @@ struct DockIcon: View {
             Image(systemName: systemName)
                 .font(.system(size: 12, weight: .medium))
                 .frame(width: 28, height: 28)
-                .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(AstraControlStyle(radius: 7, filled: false))
         .foregroundStyle(.white.opacity(0.85))
     }
 }
@@ -35,8 +34,9 @@ struct StopRecordingButton: View {
                 RoundedRectangle(cornerRadius: 1.5).fill(.white).frame(width: 8, height: 8)
             }
         }
-        .buttonStyle(.plain)
+        .buttonStyle(AstraControlStyle(radius: 13, filled: false))
         .accessibilityIdentifier("stopRecording")
+        .keyboardShortcut(".", modifiers: [.command])
         .accessibilityLabel("録音を止める")
     }
 }

@@ -34,12 +34,8 @@ struct AIActionsPalette: View {
                     .padding(.horizontal, 11)
                     // 小さい字でも押せる面を確保する（UI/UX 仕様 §16: hit area 28〜32pt）。
                     .frame(height: 30)
-                    .background(
-                        RoundedRectangle(cornerRadius: 9).fill(Color.subtleFill(dark, 0.045))
-                    )
-                    .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(AstraControlStyle(radius: 9, base: 0.045))
                 .accessibilityIdentifier("ai-\(action.title)")
             }
         }

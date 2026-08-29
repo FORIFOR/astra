@@ -25,14 +25,10 @@ struct RecordingToolPalette: View {
                     .padding(.horizontal, 10)
                     // 小さい字でも押せる面を確保する（UI/UX 仕様 §16: hit area 28〜32pt）。
                     .frame(height: 28)
-                    .background {
-                        if selection == tool {
-                            RoundedRectangle(cornerRadius: 7).fill(Color.subtleFill(dark, 0.06))
-                        }
-                    }
-                    .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(AstraControlStyle(radius: 7,
+                                               base: selection == tool ? 0.06 : 0.0))
+                .keyboardShortcut(tool.shortcut, modifiers: [.command])
                 .accessibilityIdentifier("tool-\(tool.rawValue)")
             }
             Spacer(minLength: 0)
