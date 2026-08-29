@@ -2,6 +2,8 @@ import SwiftUI
 
 /// 中央右の AI 操作。要約 / 質問 / 決定事項 / アクション。
 struct AIActionsPalette: View {
+    @Environment(\.colorScheme) private var scheme
+    private var dark: Bool { scheme == .dark }
     @ObservedObject var state: RecordingWorkspaceState
 
     private struct Action: Identifiable {
@@ -33,7 +35,7 @@ struct AIActionsPalette: View {
                     // 小さい字でも押せる面を確保する（UI/UX 仕様 §16: hit area 28〜32pt）。
                     .frame(height: 30)
                     .background(
-                        RoundedRectangle(cornerRadius: 9).fill(Color.black.opacity(0.045))
+                        RoundedRectangle(cornerRadius: 9).fill(Color.subtleFill(dark, 0.045))
                     )
                     .contentShape(Rectangle())
                 }

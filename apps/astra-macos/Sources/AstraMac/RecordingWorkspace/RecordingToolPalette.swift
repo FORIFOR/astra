@@ -6,6 +6,8 @@ import SwiftUI
 /// カードが 1 枚増えるぶん情報が散らかっていたので、結果（TranscriptPanel）の真上に置く
 /// 横並びのセグメントへ変えた。カード地は敷かず、面の一部として静かに見せる。
 struct RecordingToolPalette: View {
+    @Environment(\.colorScheme) private var scheme
+    private var dark: Bool { scheme == .dark }
     @Binding var selection: RecordingTool
 
     var body: some View {
@@ -25,7 +27,7 @@ struct RecordingToolPalette: View {
                     .frame(height: 28)
                     .background {
                         if selection == tool {
-                            RoundedRectangle(cornerRadius: 7).fill(Color.black.opacity(0.06))
+                            RoundedRectangle(cornerRadius: 7).fill(Color.subtleFill(dark, 0.06))
                         }
                     }
                     .contentShape(Rectangle())
@@ -37,7 +39,7 @@ struct RecordingToolPalette: View {
         }
         .padding(3)
         .background(
-            RoundedRectangle(cornerRadius: 10).fill(Color.black.opacity(0.035))
+            RoundedRectangle(cornerRadius: 10).fill(Color.subtleFill(dark, 0.035))
         )
         .accessibilityIdentifier("toolPalette")
     }

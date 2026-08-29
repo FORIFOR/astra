@@ -3,6 +3,8 @@ import AstraCore
 
 /// 下から伸びる RAG コンテキスト。閉じているときは「+ RAG」だけ。
 struct RAGDrawerView: View {
+    @Environment(\.colorScheme) private var scheme
+    private var dark: Bool { scheme == .dark }
     @ObservedObject var state: RecordingWorkspaceState
 
     var body: some View {
@@ -40,9 +42,9 @@ struct RAGDrawerView: View {
                 .padding(.horizontal, 14).padding(.bottom, 12)
             }
         }
-        .background(Color.white)
+        .background(Color.cardSurface(dark))
         .clipShape(RoundedRectangle(cornerRadius: 14))
-        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.black.opacity(0.08)))
+        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.hairline(dark)))
         .shadow(color: .black.opacity(0.1), radius: 16, y: 6)
         .accessibilityIdentifier("ragDrawer")
     }

@@ -23,6 +23,7 @@ apps/astra-macos/.build/debug/AstraMac --selftest shots /tmp/astra-shots
 | 08  | `08-meeting-detail.png`       | Meeting Detail      | 1040×680                             |
 
 `shots` は撮るだけでなく **geometry と非空白（色数）を検査**する。窓が在るだけでは PASS にしない。
+**light / dark の両方**を撮る（`--selftest shots <dir> [dark]`）。dark 版は `docs/golden-screenshots/dark/`。
 `scripts/verify-macos-recording.sh` に組み込み済みなので `pnpm verify:all` で毎回走る。
 
 ## レイアウトの正（tokens）
@@ -70,7 +71,10 @@ apps/astra-macos/.build/debug/AstraMac --selftest shots /tmp/astra-shots
    メニューバーも無く、Main / 設定 / 終了へ到達できなかった（`open --args` は
    起動済みプロセスには渡らないため実質行き止まり）→ メニューバーに status item を追加
    （Astra を開く / 会議を録音・停止 / ショートカットの表示 / 設定 / 終了）
-7. **Main の geometry 固定検査が脆い**: titled window は WM がサイズを詰める → 最小寸法＋内容量で判定（commit 3011d8b）
+7. **dark で本文が読めない**: 面は固定の白のまま、文字は `.primary`（dark では白）だったので
+   白 on 白になっていた（実機の dark 撮影で判明）→ 面・カード・罫線・薄塗りを
+   `Color.workspaceSurface(dark)` / `cardSurface` / `hairline` / `subtleFill` に集約し外観へ追従
+8. **Main の geometry 固定検査が脆い**: titled window は WM がサイズを詰める → 最小寸法＋内容量で判定（commit 3011d8b）
 
 ## Accessibility identifier
 

@@ -6,6 +6,8 @@ import SwiftUI
 /// 走っている間は何をしているかを即出し（spinner だけにしない）、
 /// 応答が無いうちは**空の箱を置かない**（左列の余白のままにする）。
 struct AIResultPanel: View {
+    @Environment(\.colorScheme) private var scheme
+    private var dark: Bool { scheme == .dark }
     @ObservedObject var state: RecordingWorkspaceState
 
     var body: some View {
@@ -43,8 +45,8 @@ struct AIResultPanel: View {
             .padding(12)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .background(
-                RoundedRectangle(cornerRadius: 12).fill(.white.opacity(0.75))
-                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.black.opacity(0.07)))
+                RoundedRectangle(cornerRadius: 12).fill(Color.cardSurface(dark).opacity(0.85))
+                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.hairline(dark)))
             )
             .accessibilityIdentifier("aiResult")
         }

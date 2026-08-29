@@ -1285,8 +1285,11 @@ enum SelfTest {
     private static func shots(_ args: [String]) {
         let i = args.firstIndex(of: "--selftest")!
         let outDir = args.count > i + 2 ? args[i + 2] : "/tmp/astra-shots"
+        // 3 番目の引数で外観を切り替える（Visual Gate の light/dark 視認性）。
+        let dark = args.count > i + 3 && args[i + 3] == "dark"
         try? FileManager.default.createDirectory(atPath: outDir, withIntermediateDirectories: true)
         NSApp.setActivationPolicy(.regular)
+        NSApp.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
 
         func settle(_ s: Double) {
             let until = Date().addingTimeInterval(s)

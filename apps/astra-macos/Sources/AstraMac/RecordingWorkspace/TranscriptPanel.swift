@@ -3,6 +3,8 @@ import SwiftUI
 /// 道具箱の選択に応じて中身を出す面: 文字起こし / 翻訳 / 字幕。
 /// transcript は STT が埋める実データ。翻訳は Agent 経由。字幕は直近の 1 行を大きく。
 struct TranscriptPanel: View {
+    @Environment(\.colorScheme) private var scheme
+    private var dark: Bool { scheme == .dark }
     @ObservedObject var state: RecordingWorkspaceState
 
     var body: some View {
@@ -12,8 +14,8 @@ struct TranscriptPanel: View {
         .padding(11)
         .frame(maxWidth: .infinity, minHeight: 190, maxHeight: .infinity, alignment: .topLeading)
         .background(
-            RoundedRectangle(cornerRadius: 12).fill(.white)
-                .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.black.opacity(0.08)))
+            RoundedRectangle(cornerRadius: 12).fill(Color.cardSurface(dark))
+                .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.hairline(dark)))
                 .shadow(color: .black.opacity(0.05), radius: 10, y: 3)
         )
         .accessibilityIdentifier("transcriptPanel")

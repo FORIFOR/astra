@@ -85,13 +85,16 @@ struct RecordingWorkspaceView: View {
     }
 }
 
-/// 白い面 + 本物の vibrancy + 凹み。手書きは白基調なので黒パネルにはしない。
+/// 面 + 本物の vibrancy + 凹み。light は白基調、dark は canvas トークンへ追従する
+/// （白のままだと本文が白 on 白になって読めなくなる。実機の dark 撮影で確認した）。
 struct RecordingSurface: View {
+    @Environment(\.colorScheme) private var scheme
+    private var dark: Bool { scheme == .dark }
     var body: some View {
         RecordingWorkspaceShape()
-            .fill(Color.workspaceSurface)
+            .fill(Color.workspaceSurface(dark))
             .background(RecordingWorkspaceShape().fill(.ultraThinMaterial))
-            .overlay(RecordingWorkspaceShape().stroke(Color.black.opacity(0.075), lineWidth: 0.7))
-            .shadow(color: .black.opacity(0.17), radius: 30, y: 13)
+            .overlay(RecordingWorkspaceShape().stroke(Color.hairline(dark), lineWidth: 0.7))
+            .shadow(color: .black.opacity(dark ? 0.45 : 0.17), radius: 30, y: 13)
     }
 }
