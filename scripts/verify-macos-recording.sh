@@ -115,7 +115,7 @@ for appearance in light dark; do
   [[ "$OUTD" == *SELFTEST_OK* ]] || { echo "$OUTD" >&2; echo "FAIL: Task Dock 8 states ($appearance)" >&2; exit 1; }
 done
 
-for t in screenshot waveform livemic livemeeting livescreen sttrecognize sttstream guishot axtree breakpoints dictation state presence perf storage meetingiq vad browser dockanim entry secret recordbutton session uiscale; do
+for t in screenshot waveform livemic livemeeting livescreen sttrecognize sttstream guishot axtree breakpoints dictation state presence perf storage meetingiq vad browser dockanim entry secret recordbutton session uiscale acceptance; do
   OUT="$("$BIN" --selftest "$t")"
   echo "$OUT"
   [[ "$OUT" == SELFTEST_OK* || "$OUT" == SELFTEST_SKIP* ]] || { echo "FAIL: macOS live $t" >&2; exit 1; }

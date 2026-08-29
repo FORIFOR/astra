@@ -64,6 +64,7 @@ enum SelfTest {
         case "session": sessionLifecycle(); return true
         case "sessionshots": sessionShots(args); return true
         case "uiscale": uiScale(); return true
+        case "acceptance": acceptance(); return true
         case "state": stateMachine(); return true
         case "presence": presence(); return true
         case "perf": perf(); return true
@@ -1007,6 +1008,18 @@ enum SelfTest {
 
         let sessions = MeetingSessionStore.shared
         sessions.reset()
+        // Upcoming の差し込みは Home を出す**前**に用意する（onAppear で読むので）。
+        let realEvents = CalendarAccess.upcoming(hours: 24).filter { $0.endEpoch - $0.startEpoch > 0 }
+        if realEvents.isEmpty {
+            HomePane.previewUpcoming = [
+                HomeAttention(kind: "10:00 Google Meet", title: "Product Weekly", action: "録音を開始",
+                              link: CalendarLink(eventId: "preview-1", title: "Product Weekly",
+                                                 participantCount: 5, meetingURL: nil, projectId: "Product")),
+                HomeAttention(kind: "13:30 Zoom", title: "A社 商談", action: "録音を開始",
+                              link: CalendarLink(eventId: "preview-2", title: "A社 商談",
+                                                 participantCount: 3, meetingURL: nil, projectId: nil)),
+            ]
+        }
         MainWindowController.shared.showSection(.home)
         settle(1.4)
 
@@ -1048,9 +1061,31 @@ enum SelfTest {
         // 6 Session Detail
         step("06-session-detail", { MainNav.shared.openSession = liveId })
 
-        // 8-10 UI Scale の 3 段。Home の Session Card で比べる（同じ画面で見比べたい）。
+        // ここから先は Home に戻して撮る（Detail を開いたままだと Home の面が出ない）。
         MainNav.shared.openSession = nil
+        MainWindowController.shared.showSection(.home)
+        settle(0.8)
+
+        // 11 Upcoming: 予定から 1 click で録れる行。
+        //    実カレンダーに予定があればそれを出す。無い時間帯でも見た目を確かめられるよう、
+        //    そのときだけ差し込む（差し込んだかどうかは出力に出す）。
+        report.append(realEvents.isEmpty ? "upcoming=差し込み(実カレンダーに予定なし)" : "upcoming=実カレンダー\(realEvents.count)件")
+        // 一度別の面へ移してから戻し、onAppear を通す。
+        step("11-upcoming", {
+            MainWindowController.shared.showSection(.tasks)
+            settle(0.5)
+            MainWindowController.shared.showSection(.home)
+        })
+
+        // 12 New Recording Sheet: 設定を決めて始める 1 枚（Window は増やさない）。
+        step("12-new-recording", { NewRecordingSheetOpener.shared.open() })
+        // 面が出ている間も窓は 1 枚のまま（sheet は Home に重なる）。
+        let duringSheet = windows().filter { $0.w >= 400 }.count
+        if duringSheet > 1 { failures.append("Sheet で窓が \(duringSheet) 枚に増えた") }
+        NewRecordingSheetOpener.shared.close()
         settle(0.5)
+
+        // 8-10 UI Scale の 3 段。Home の Session Card で比べる（同じ画面で見比べたい）。
         for size in UIScale.Size.allCases {
             step("0\(8 + (UIScale.Size.allCases.firstIndex(of: size) ?? 0))-scale-\(size.rawValue)", {
                 UIScale.shared.set(size)
@@ -1142,6 +1177,122 @@ enum SelfTest {
             exit(0)
         } else {
             print("SELFTEST_FAIL uiscale: \(fail.joined(separator: ", "))")
+            exit(2)
+        }
+    }
+
+
+    /// `--selftest acceptance`: 録音セッションの受け入れ 14 項目を通しで。
+    ///
+    /// 個々のゲートは通っていても、**繋がっているか**は別。ここは
+    /// 「Home から押す → Home に残る → 後から開ける」を一本で歩く。
+    @MainActor
+    private static func acceptance() {
+        let path = NSTemporaryDirectory() + "astra-accept-\(getpid()).sqlite"
+        defer { try? FileManager.default.removeItem(atPath: path) }
+        LocalStore.shared.open(path)
+        WindowCoordinator.headless = true
+        let sessions = MeetingSessionStore.shared
+        let recording = RecordingWorkspaceState.shared
+        let dock = AstraStateStore.shared
+        sessions.reset(); dock.reset()
+        var passed: [String] = []
+        var fail: [String] = []
+
+        func check(_ n: Int, _ name: String, _ ok: Bool, _ detail: String = "") {
+            if ok { passed.append("\(n).\(name)") }
+            else { fail.append("\(n).\(name)\(detail.isEmpty ? "" : " (\(detail))")") }
+        }
+
+        // 1 Home から予定なし録音（StartRecordingCard が呼ぶのと同じ経路）
+        recording.start()
+        let live = sessions.live
+        check(1, "予定なし録音", live != nil)
+        guard let id = live?.id else { reportAcceptance(passed, fail); return }
+
+        // 3 録音開始直後に Home へ出る（＝ store に居る）
+        check(3, "開始直後に Home へ", sessions.recent.contains { $0.id == id })
+        // 4 Recording Now が指すものが同じ Session
+        check(4, "Recording Now と同一 Session", sessions.live?.id == id)
+        // Dock も同じ状態
+        check(4, "Dock も会議へ", { if case .meeting = dock.dock { return true }; return false }())
+
+        // 5 停止 → processing（同じ id、カードは増えない）
+        let before = sessions.sessions.count
+        recording.stop()
+        check(5, "processing へ", sessions.session(id: id)?.status == .processing,
+              sessions.session(id: id)?.status.rawValue ?? "nil")
+        check(5, "カードが増えない", sessions.sessions.count == before)
+
+        // 6 ready（stop 後の読み取りが終わるのを待つ）
+        let deadline = Date().addingTimeInterval(6)
+        while sessions.session(id: id)?.status != .ready, Date() < deadline {
+            CFRunLoopRunInMode(.defaultMode, 0.05, true)
+        }
+        check(6, "ready へ", sessions.session(id: id)?.status == .ready,
+              sessions.session(id: id)?.status.rawValue ?? "nil")
+        check(6, "同じ id のまま", sessions.sessions.count == before)
+
+        // 7 中身が入る
+        if let s = sessions.session(id: id) {
+            check(7, "件数が入る", s.actionCount >= 0 && s.decisionCount >= 0)
+        }
+
+        // 8 My Space / Workspace
+        sessions.setVisibility(.workspace, for: id)
+        check(8, "保存先を変えられる", sessions.session(id: id)?.visibility == .workspace)
+
+        // 9 Project
+        sessions.setProject("Product", for: id)
+        check(9, "project を変えられる", sessions.session(id: id)?.projectId == "Product")
+
+        // 2 + 10 Calendar から 1-click、project 自動継承
+        let link = CalendarLink(eventId: "e1", title: "Design Review", participantCount: 4,
+                                meetingURL: "https://meet.google.com/x", projectId: "Research")
+        recording.pendingCalendarLink = link
+        recording.start()
+        let fromCal = sessions.live
+        check(2, "Calendar から 1-click", fromCal != nil && fromCal?.calendarEventId == "e1")
+        check(10, "project 自動継承", fromCal?.projectId == "Research")
+        check(10, "題と人数を継承", fromCal?.title == "Design Review" && fromCal?.participantCount == 4)
+        recording.stop()
+
+        // 11 再起動で復元
+        sessions.reset()
+        sessions.load()
+        check(11, "再起動で復元", sessions.session(id: id) != nil)
+
+        // 12 Interrupted 復旧
+        sessions.begin(id: "crash", title: "落ちた会議")
+        sessions.reset()
+        sessions.load()
+        check(12, "interrupted で復旧", sessions.session(id: "crash")?.status == .interrupted,
+              sessions.session(id: "crash")?.status.rawValue ?? "nil")
+
+        // 13 New Recording Sheet が開ける（window は増えない＝Home の重ね面）
+        NewRecordingSheetOpener.shared.open()
+        check(13, "New Recording を開ける", NewRecordingSheetOpener.shared.isOpen)
+        NewRecordingSheetOpener.shared.close()
+
+        // 14 UI Scale 3 段
+        let scales = UIScale.Size.allCases.map { size -> CGFloat in
+            UIScale.shared.set(size); return S.type(TypeScale.bodySize)
+        }
+        UIScale.shared.set(.comfortable)
+        check(14, "UI Scale 3 段", Set(scales).count == 3, "\(scales)")
+
+        sessions.reset(); dock.reset()
+        WindowCoordinator.headless = false
+        LocalStore.shared.close()
+        reportAcceptance(passed, fail)
+    }
+
+    private static func reportAcceptance(_ passed: [String], _ fail: [String]) {
+        if fail.isEmpty {
+            print("SELFTEST_OK acceptance: \(passed.count) 項目 PASS — \(passed.joined(separator: " / "))")
+            exit(0)
+        } else {
+            print("SELFTEST_FAIL acceptance: \(fail.joined(separator: ", "))")
             exit(2)
         }
     }

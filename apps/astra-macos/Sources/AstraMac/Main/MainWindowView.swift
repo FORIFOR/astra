@@ -180,7 +180,7 @@ private struct AgentActivityPane: View {
     }
 }
 
-private struct HomePane: View {
+struct HomePane: View {
     let recent: [String]
     /// 直近の予定は**実カレンダー**から取る（MEET-001）。許可が無ければ空のまま（架空の予定を作らない）。
     @State private var upcoming: [HomeAttention] = []
@@ -195,6 +195,10 @@ private struct HomePane: View {
         .onAppear(perform: loadUpcoming)
     }
 
+    /// 撮影用の差し込み。**実カレンダーに予定があればそちらが勝つ**。
+    /// この Mac に予定が無い時間帯でも Upcoming の見た目を確かめられるようにするためのもの。
+    nonisolated(unsafe) static var previewUpcoming: [HomeAttention] = []
+
     private func loadUpcoming() {
         let fmt = DateFormatter(); fmt.dateFormat = "HH:mm"
         // 終日の予定（誕生日・祝日など）は会議ではない。ここに「録音を開始」を出すと
@@ -202,6 +206,11 @@ private struct HomePane: View {
         let timed = CalendarAccess.upcoming(hours: 24).filter { e in
             let duration = e.endEpoch - e.startEpoch
             return duration > 0 && duration < 20 * 3600
+        }
+        guard !timed.isEmpty else {
+            // 実データが無いときだけ、差し込みがあれば使う（無ければ空のまま）。
+            upcoming = HomePane.previewUpcoming
+            return
         }
         upcoming = timed.prefix(3).map { e in
             HomeAttention(

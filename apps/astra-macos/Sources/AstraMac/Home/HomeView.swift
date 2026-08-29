@@ -30,6 +30,7 @@ struct HomeView: View {
     @ObservedObject private var voice = VoiceHUDState.shared
     @ObservedObject private var store = AstraStateStore.shared
     @ObservedObject private var sessions = MeetingSessionStore.shared
+    @ObservedObject private var sheetOpener = NewRecordingSheetOpener.shared
     @FocusState private var intentFocused: Bool
 
     static func greetingForNow(_ date: Date = Date()) -> String {
@@ -41,6 +42,24 @@ struct HomeView: View {
     }
 
     var body: some View {
+        ZStack {
+            homeBody
+            // §4 New Recording は Home に**重ねて**出す。window を増やさない。
+            if sheetOpener.isOpen {
+                Color.black.opacity(0.24)
+                    .ignoresSafeArea()
+                    .onTapGesture { sheetOpener.close() }
+                NewRecordingSheet(isPresented: Binding(
+                    get: { sheetOpener.isOpen },
+                    set: { sheetOpener.isOpen = $0 }))
+                    .transition(.opacity.combined(with: .scale(scale: 0.98)))
+                    .shadow(color: .black.opacity(dark ? 0.5 : 0.22), radius: 40, y: 16)
+            }
+        }
+        .animation(.easeOut(duration: 0.14), value: sheetOpener.isOpen)
+    }
+
+    private var homeBody: some View {
         GeometryReader { proxy in
         ScrollView {
             VStack(alignment: .leading, spacing: S.metric(Space.largePadding)) {

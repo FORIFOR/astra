@@ -8,7 +8,8 @@ import SwiftUI
 struct StartRecordingCard: View {
     @Environment(\.colorScheme) private var scheme
     private var dark: Bool { scheme == .dark }
-    @State private var showsSheet = false
+    /// 撮影や外の導線から開けるようにする。
+    @ObservedObject private var opener = NewRecordingSheetOpener.shared
 
     var body: some View {
         HStack(spacing: 0) {
@@ -35,7 +36,7 @@ struct StartRecordingCard: View {
             Divider().frame(height: 34).overlay(Palette.border(dark))
 
             // ⌄ は設定つきで始めるとき。
-            Button { showsSheet = true } label: {
+            Button { opener.open() } label: {
                 Image(systemName: "chevron.down")
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(Palette.muted(dark))
@@ -51,7 +52,6 @@ struct StartRecordingCard: View {
                 .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
                     .stroke(Color.hairline(dark)))
         )
-        // Window を増やさず、Home の上に 1 枚だけ重ねる。
-        .sheet(isPresented: $showsSheet) { NewRecordingSheet(isPresented: $showsSheet) }
+        // 面は Home の上に重ねる（`.sheet` は macOS では実際に window を 1 枚増やすので使わない）。
     }
 }
