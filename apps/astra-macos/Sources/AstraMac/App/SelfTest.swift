@@ -58,6 +58,8 @@ enum SelfTest {
         case "golden": golden(args); return true
         case "dockshots": dockShots(args); return true
         case "dockdiff": dockDiff(args); return true
+        case "state": stateMachine(); return true
+        case "presence": presence(); return true
         case "panel": panelBehavior(); return true
         case "render": render(); return true
         default: return false
@@ -439,6 +441,152 @@ enum SelfTest {
             exit(0)
         } else {
             print("SELFTEST_FAIL dockdiff: \(failures.joined(separator: ", "))")
+            exit(2)
+        }
+    }
+
+    /// `--selftest state`: 仕様書 §5 / §28 / §31。状態が**本当に 1 箇所**にあるか。
+    ///
+    /// 「AstraState を作った」だけでは意味がない。既存の Surface が自前の状態を持ったままだと、
+    /// 二つが静かにずれる。ここでは *どちらから書いても両方が動く* ことを実測する。
+    @MainActor
+    private static func stateMachine() {
+        let store = AstraStateStore.shared
+        let bus = AstraEventBus.shared
+        store.reset()
+        var fail: [String] = []
+
+        // ① Surface（VoiceHUDState）から書いても Store が動く。
+        VoiceHUDState.shared.mode = .listening
+        if store.state.dock != .listening { fail.append("Surface→Store が伝わらない") }
+        if store.state.mode != .listening { fail.append("dock→mode が連動しない (\(store.state.mode))") }
+
+        // ② Store から書いても Surface が同じものを返す（二重持ちしていない）。
+        store.setDock(.thinking)
+        if VoiceHUDState.shared.mode != .thinking { fail.append("Store→Surface が伝わらない") }
+        if store.state.mode != .thinking { fail.append("mode が thinking にならない") }
+
+        // ③ 勧誘や Quick Actions は「活動」ではないので idle のまま（§5 の mode と混ぜない）。
+        store.setDock(.quickActions)
+        if store.state.mode != .idle { fail.append("quickActions で mode が動いた (\(store.state.mode))") }
+
+        // ④ 会議中は Dock が idle でも活動は meeting のまま。
+        store.meetingStarted(id: "m1")
+        store.setDock(.idle)
+        if store.state.mode != .meeting { fail.append("会議中に mode が idle へ落ちた") }
+        store.meetingEnded()
+
+        // ⑤ §16 R0/R1 は確認カードを出さない。R2/R3 は必ず出す。
+        let r1 = ActionConfirmation(title: "下書きを作る", details: [], risk: .r1, confirmLabel: "作る")
+        if store.requireConfirmation(r1) { fail.append("R1 で確認カードが出た") }
+        let r3 = ActionConfirmation(title: "3 件削除する", details: ["Library"], risk: .r3, confirmLabel: "削除する")
+        if !store.requireConfirmation(r3) { fail.append("R3 で確認カードが出ない") }
+        if store.state.mode != .awaitingConfirmation { fail.append("確認待ちに入らない") }
+        store.resolveConfirmation(approved: false)
+        if store.state.confirmation != nil { fail.append("確認を閉じても残っている") }
+
+        // ⑥ §7 文脈は出所つきで、同じアプリなら**信頼できる方だけ**残る。期限切れは落ちる。
+        let now = Date()
+        let raw = [
+            ContextFact(source: .ocr, application: "Notion", sensitivity: .workspace,
+                        summary: "OCR 版", capturedAt: now, expiresAt: now.addingTimeInterval(60)),
+            ContextFact(source: .browserDOM, application: "Notion", sensitivity: .workspace,
+                        summary: "DOM 版", capturedAt: now, expiresAt: now.addingTimeInterval(60)),
+            ContextFact(source: .accessibility, application: "Slack", sensitivity: .personal,
+                        summary: "古い", capturedAt: now.addingTimeInterval(-120), expiresAt: now.addingTimeInterval(-60)),
+        ]
+        store.updateContext(raw, now: now)
+        let items = store.state.context.items
+        if items.count != 1 { fail.append("文脈の解決が誤り count=\(items.count)") }
+        if items.first?.summary != "DOM 版" { fail.append("優先度の低い source が勝った") }
+
+        // ⑦ §28 イベントが実際に流れている（購読者に届く）。
+        var received: [String] = []
+        let token = bus.subscribe { received.append($0.name) }
+        store.setMode(.acting)
+        store.workspaceOpened()
+        bus.unsubscribe(token)
+        if !received.contains("mode.changed") { fail.append("mode.changed が流れない") }
+        if !received.contains("workspace.opened") { fail.append("workspace.opened が流れない") }
+
+        // ⑧ 記録された名前が §28 の一覧と一致している。
+        let names = Set(bus.recent.map { $0.name })
+        for want in ["mode.changed", "context.updated", "confirmation.required", "meeting.started"] where !names.contains(want) {
+            fail.append("\(want) が記録されていない")
+        }
+
+        store.reset()
+        if fail.isEmpty {
+            print("SELFTEST_OK state: 状態は AstraStateStore 1 箇所・dock↔mode 連動・R0/R1 は無確認 R2/R3 は確認・文脈は出所優先・EventBus 到達")
+            exit(0)
+        } else {
+            print("SELFTEST_FAIL state: \(fail.joined(separator: ", "))")
+            exit(2)
+        }
+    }
+
+    /// `--selftest presence`: §6 Presence / §18 Meeting Detector / §22 Presentation Guard。
+    ///
+    /// いちばん確かめたいのは **検出しても録音が始まらない**こと。
+    /// 「会議を見つけたら録り始める」は、同意していない会議まで録る製品になる。
+    @MainActor
+    private static func presence() {
+        WindowCoordinator.headless = true
+        let store = AstraStateStore.shared
+        store.reset()
+        var fail: [String] = []
+
+        // ① 会議アプリの判定。Zoom / Meet（ブラウザのタイトル経由）を拾う。
+        if MeetingDetector.detect(bundleId: "us.zoom.xos", windowTitle: "Zoom Meeting") != "Zoom" {
+            fail.append("Zoom を検出できない")
+        }
+        if MeetingDetector.detect(bundleId: "com.google.Chrome", windowTitle: "Google Meet — 週次") != "Google Meet" {
+            fail.append("ブラウザの Meet を検出できない")
+        }
+        // ② Slack は常駐しているだけでは会議にしない（Huddle のときだけ）。
+        if MeetingDetector.detect(bundleId: "com.tinyspeck.slackmacgap", windowTitle: "Slack — general") != nil {
+            fail.append("Slack を開いているだけで会議と判定した")
+        }
+        if MeetingDetector.detect(bundleId: "com.tinyspeck.slackmacgap", windowTitle: "Huddle in #sales") == nil {
+            fail.append("Slack ハドルを検出できない")
+        }
+        // ③ 会議でないものを会議にしない。
+        if MeetingDetector.detect(bundleId: "com.apple.finder", windowTitle: "書類") != nil {
+            fail.append("Finder を会議と判定した")
+        }
+
+        // ④ **検出は録音開始ではない**（§18）。
+        store.meetingDetected(app: "Zoom")
+        if store.state.meeting.isRecording { fail.append("検出しただけで録音が始まった") }
+        if store.state.mode == .meeting { fail.append("検出しただけで mode が meeting になった") }
+        if RecordingRuntime.shared.snapshot() != nil { fail.append("検出しただけでランタイムが動いた") }
+        if RecordingWorkspaceState.shared.isRecording { fail.append("検出しただけで録音状態になった") }
+        if !AstraEventBus.shared.recent.contains(where: { $0.name == "meeting.detected" }) {
+            fail.append("meeting.detected が流れない")
+        }
+
+        // ⑤ §22 共有が始まったら Dock を出さない。終われば戻す。
+        let guardian = PresentationGuard.shared
+        guardian.apply(sharing: true)
+        if !guardian.isSharing { fail.append("共有中にならない") }
+        guardian.apply(sharing: false)
+        if guardian.isSharing { fail.append("共有終了が反映されない") }
+
+        // ⑥ §8 AXContext は取れなかった項目を埋めない。
+        let ax = AXContext(appName: "Notion", bundleId: "notion.id", windowTitle: "Q3 Roadmap",
+                           focusedRole: nil, selectedText: nil)
+        let fact = ax.fact()
+        if fact.source != .accessibility { fail.append("AX の出所が違う") }
+        if fact.sensitivity != .workspace { fail.append("選択なしなのに personal 扱い") }
+        if !fact.summary.contains("Q3 Roadmap") { fail.append("窓タイトルが文脈に入らない") }
+
+        store.reset()
+        WindowCoordinator.headless = false
+        if fail.isEmpty {
+            print("SELFTEST_OK presence: 会議検出（Zoom/Meet/Huddle）・検出しても録音は始まらない・共有中は Dock を出さない・AX は推測で埋めない")
+            exit(0)
+        } else {
+            print("SELFTEST_FAIL presence: \(fail.joined(separator: ", "))")
             exit(2)
         }
     }
@@ -2076,6 +2224,9 @@ enum SelfTest {
             ("VoiceHUD", contentScore(VoiceHUDView(), NSSize(width: Metrics.hudWidth, height: Metrics.hudHeight))),
             ("IntentBar", contentScore(IntentBarView(contextChips: ["Q4提案.pptx", "A社", "明日10:00", "+X"]), NSSize(width: Metrics.intentReadyWidth, height: Metrics.intentListeningHeight))),
             ("RecordingIndicator", contentScore(RecordingIndicatorView(), NSSize(width: Metrics.recordingIndicatorWidth, height: Metrics.recordingIndicatorHeight))),
+            ("ConfirmationCard", contentScore(ConfirmationCardView(confirmation: ActionConfirmation(
+                title: "田中さんにメールを送ります", details: ["宛先: tanaka@example.com", "件名: 明日の会議"],
+                risk: .r2, confirmLabel: "送信する")) { _ in }, NSSize(width: 320, height: 220))),
             ("MeetingArtifact", contentScore(MeetingArtifactView(title: "A社 新規提案", duration: "42:18", participants: 3, summary: [MeetingCitation(number: 1, text: "先方は10月導入を希望。最大の懸念は初期費用。", transcriptTime: "14:18", speaker: "田中")], decisions: [MeetingCitation(number: 2, text: "導入時期を10月で検討", transcriptTime: "14:22", speaker: "鈴木")], actionItems: [MeetingCitation(number: 3, text: "伊藤 修正版見積を送付 明日", transcriptTime: "14:31", speaker: "伊藤")], selected: MeetingCitation(number: 1, text: "先方は10月導入を希望。最大の懸念は初期費用。", transcriptTime: "14:18", speaker: "田中")), NSSize(width: 900, height: 460))),
             ("ResearchResult", contentScore(ResearchResultView(title: "競合比較を調査", summaryPoints: ["主要3社が価格改定", "初期費用の分割が一般化", "10月改定が多い"], sourceCount: 12, confidence: "High", contradictions: 1), NSSize(width: 460, height: 330))),
             ("MeetingSurface", contentScore(MeetingSurfaceView(title: "A社 新規提案", elapsed: "18:42", languages: "JP→EN", notes: [MeetingNote(text: "価格条件について"), MeetingNote(text: "・導入時期は10月"), MeetingNote(text: "・先方は初期費用を懸念")], transcript: [MeetingLine(time: "14:18", speaker: "田中", text: "初期費用が少し気になっています。", translated: "We are concerned about the upfront cost.")], transcriptOpen: true), NSSize(width: 900, height: 520))),

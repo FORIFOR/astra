@@ -1,0 +1,149 @@
+import SwiftUI
+
+/// §5 / §31 Astra の状態はここ **1 箇所** にしか無い。
+///
+/// 仕様書の最重要ルール:「Chat UI / Voice UI / Agent UI / Meeting UI / Context UI という
+/// 別々の製品を作らない。すべて AstraState → Astra Surface から描画する」。
+///
+/// そのため各 Surface は自前の mode を**持たない**。`VoiceHUDState` などは残っているが、
+/// 状態の置き場ではなく、この Store への窓口（façade）にしてある。二重に持って
+/// 「同期し忘れ」を作らないため —— 宣言だけして繋がっていない作りが一番静かに壊れる。
+@MainActor
+final class AstraStateStore: ObservableObject {
+    static let shared = AstraStateStore()
+
+    @Published private(set) var state = AstraState()
+
+    private var bus: AstraEventBus { AstraEventBus.shared }
+
+    // MARK: - 活動状態（§5）
+
+    func setMode(_ mode: AstraMode) {
+        guard state.mode != mode else { return }
+        state.mode = mode
+        bus.publish(.modeChanged(mode))
+    }
+
+    // MARK: - Dock の見せ方
+
+    var dock: DockPresentation { state.dock }
+
+    /// Dock の表示を変える。**活動状態も合わせて動かす**ので、両者がずれない。
+    func setDock(_ presentation: DockPresentation) {
+        guard state.dock != presentation else { return }
+        state.dock = presentation
+        setMode(Self.mode(for: presentation, current: state.mode))
+    }
+
+    /// 表示 → 活動状態の対応。勧誘や Quick Actions は「活動」ではないので idle のまま。
+    static func mode(for dock: DockPresentation, current: AstraMode) -> AstraMode {
+        switch dock {
+        case .listening: return .listening
+        case .transcribing: return .transcribing
+        case .thinking: return .thinking
+        case .enteringRecording: return .meeting
+        case .idle, .contextualApp, .quickActions:
+            // 会議中や workspace 表示中は、Dock が idle でも活動は続いている。
+            return (current == .meeting || current == .workspace) ? current : .idle
+        }
+    }
+
+    // MARK: - 文脈（§7 / §25）
+
+    func updateContext(_ raw: [ContextFact], now: Date = Date()) {
+        let resolved = ContextBundle.resolved(raw, now: now)
+        guard state.context != resolved else { return }
+        state.context = resolved
+        bus.publish(.contextUpdated(sources: resolved.visibleSources))
+    }
+
+    // MARK: - Agent（§15）
+
+    func startTask(_ task: AgentTask) {
+        state.activeTask = task
+        setMode(.acting)
+        bus.publish(.agentStarted(taskId: task.id))
+    }
+
+    func updateStep(_ stepId: UUID, to newState: AgentRunState) {
+        guard var task = state.activeTask,
+              let index = task.steps.firstIndex(where: { $0.id == stepId }) else { return }
+        task.steps[index].state = newState
+        let title = task.steps[index].title
+        state.activeTask = task
+        switch newState {
+        case .running: bus.publish(.agentStepStarted(taskId: task.id, step: title))
+        case .success, .failed:
+            bus.publish(.agentStepCompleted(taskId: task.id, step: title, ok: newState == .success))
+        case .pending: break
+        }
+    }
+
+    func finishTask(_ status: AgentRunState) {
+        guard var task = state.activeTask else { return }
+        task.status = status
+        state.activeTask = task
+        setMode(status == .success ? .completed : .failed)
+    }
+
+    // MARK: - 確認（§16 / §17）
+
+    /// R2/R3 のときだけカードを出す。R0/R1 は黙って通す（毎回聞くと確認が意味を失う）。
+    /// 戻り値は「カードを出したか」。
+    @discardableResult
+    func requireConfirmation(_ confirmation: ActionConfirmation) -> Bool {
+        guard confirmation.risk.needsConfirmation else { return false }
+        state.confirmation = confirmation
+        setMode(.awaitingConfirmation)
+        bus.publish(.confirmationRequired(confirmation))
+        return true
+    }
+
+    func resolveConfirmation(approved: Bool) {
+        guard let pending = state.confirmation else { return }
+        state.confirmation = nil
+        bus.publish(.confirmationResolved(id: pending.id, approved: approved))
+        setMode(approved ? .acting : .idle)
+    }
+
+    // MARK: - 会議（§18 / §21）
+
+    /// 検出しただけ。**録音は始めない**（§18: Meeting 検出 = 録音開始 にはしない）。
+    func meetingDetected(app: String?) {
+        guard state.meeting.detectedApp != app else { return }
+        state.meeting.detectedApp = app
+        if let app { bus.publish(.meetingDetected(app: app)) }
+    }
+
+    func meetingStarted(id: String) {
+        state.meeting.meetingId = id
+        state.meeting.isRecording = true
+        setMode(.meeting)
+        bus.publish(.meetingStarted(id: id))
+    }
+
+    func meetingEnded() {
+        let id = state.meeting.meetingId
+        state.meeting.isRecording = false
+        state.meeting.meetingId = nil
+        setMode(.idle)
+        if let id { bus.publish(.meetingEnded(id: id)) }
+    }
+
+    func updateCanvas(_ canvas: MeetingCanvas) {
+        state.meeting.canvas = canvas
+    }
+
+    // MARK: - Workspace
+
+    func workspaceOpened() {
+        setMode(.workspace)
+        bus.publish(.workspaceOpened)
+    }
+
+    /// テスト用に初期化する。
+    func reset() {
+        state = AstraState()
+        bus.reset()
+    }
+}

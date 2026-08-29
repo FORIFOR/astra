@@ -5,19 +5,19 @@ import SwiftUI
 @MainActor
 final class VoiceHUDState: ObservableObject {
     static let shared = VoiceHUDState()
-    /// Task Dock は機能一覧ではなく**状態表示器**。UI はこの enum そのもの。
-    enum Mode: Equatable {
-        case idle
-        case listening
-        /// 認識中の途中経過（確定前）。
-        case transcribing(String)
-        case thinking
-        /// 前面アプリを見つけた。勧誘は下の Panel に出す。
-        case contextualApp(AppSuggestion)
-        case quickActions
-        case enteringRecording
+    /// Dock の表示。**ここには持たない** —— 実体は `AstraStateStore` にある。
+    ///
+    /// 仕様書 §31「UI ごとに勝手に状態を持たせない」。以前はここが真の置き場だったので、
+    /// 全体の活動状態（会議中か / 確認待ちか）と Dock の見た目が別々に動き得た。
+    /// いまは読み書きとも Store を通るので、ずれようがない。
+    typealias Mode = DockPresentation
+    var mode: Mode {
+        get { AstraStateStore.shared.dock }
+        set {
+            objectWillChange.send()
+            AstraStateStore.shared.setDock(newValue)
+        }
     }
-    @Published var mode: Mode = .idle
     /// 直近の Agent 応答（HUD 下や通知に出す）。
     @Published var answer = ""
 

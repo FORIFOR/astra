@@ -6,6 +6,19 @@ import AppKit
 /// 会議が黙って消え、Apps の「切断」は一度の誤クリックで繋ぎ直しになった。
 /// 文言は「何が起きるか」を先に書き、既定のボタンは**安全な方**にする。
 enum Confirm {
+    /// §16/§17 の正式な入口。**確認の要否は risk が決める**（呼び出し側では決めない）。
+    /// R0/R1 は聞かずに true を返す。R2/R3 はカードを出して答えを待つ。
+    @MainActor
+    static func ask(_ confirmation: ActionConfirmation) -> Bool {
+        guard confirmation.risk.needsConfirmation else { return true }
+        let store = AstraStateStore.shared
+        store.requireConfirmation(confirmation)
+        let approved = ConfirmationPresenter.present(confirmation)
+        store.resolveConfirmation(approved: approved)
+        return approved
+    }
+
+    /// 旧入口。risk を持たない呼び出しが残っている間の橋渡しで、R3 として扱う。
     /// destructive を選んだら true。ボタンの並びは macOS の作法（右が既定＝安全側）。
     @MainActor
     static func destructive(_ title: String, detail: String, confirm: String, cancel: String = "やめる") -> Bool {

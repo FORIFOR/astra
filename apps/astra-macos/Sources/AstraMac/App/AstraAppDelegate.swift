@@ -16,8 +16,22 @@ final class AstraAppDelegate: NSObject, NSApplicationDelegate {
             forName: NSWorkspace.didActivateApplicationNotification,
             object: nil, queue: .main
         ) { _ in
-            MainActor.assumeIsolated { VoiceHUDState.shared.refreshContextualApp() }
+            MainActor.assumeIsolated {
+                VoiceHUDState.shared.refreshContextualApp()
+                // §6 Presence: 前面アプリを State と EventBus に流す。
+                let app = NSWorkspace.shared.frontmostApplication
+                AstraEventBus.shared.publish(.appChanged(
+                    bundleId: app?.bundleIdentifier, name: app?.localizedName ?? "?"))
+                // §7/§8 文脈を取り直す（取れたものだけ）。
+                if let ax = AccessibilityContext.snapshot() {
+                    AstraStateStore.shared.updateContext([ax.fact()])
+                }
+                // §18 会議アプリの検出。**録音は始めない。**
+                MeetingDetector.refresh()
+            }
         }
+        // §22 画面共有が始まったら Astra を出さない。
+        PresentationGuard.shared.start()
         // グローバル音声ショートカット（⌥Space）で録音を出し入れする。
         // CGEventTap（正本指定）で受信する。Accessibility 権限を使う（§3 と共用）。
         GlobalShortcut.shared.register { WindowCoordinator.shared.toggleRecording() }
@@ -33,11 +47,13 @@ final class AstraAppDelegate: NSObject, NSApplicationDelegate {
     /// 録音中の終了は会議を失う操作。黙って落とさず一度だけ聞く。
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         guard RecordingWorkspaceState.shared.isRecording else { return .terminateNow }
-        let go = Confirm.destructive(
-            "録音中です。終了しますか？",
-            detail: "ここまでの音声はディスクに残り、次の起動で復元できます。",
-            confirm: "録音を止めて終了",
-            cancel: "録音を続ける")
+        // §16 R3: 進行中の会議を失いうる、元に戻せない操作。
+        let go = Confirm.ask(ActionConfirmation(
+            title: "録音を止めて Astra を終了します",
+            details: ["ここまでの音声はディスクに残ります",
+                      "次の起動で続きから復元できます"],
+            risk: .r3,
+            confirmLabel: "録音を止めて終了"))
         guard go else { return .terminateCancel }
         RecordingWorkspaceState.shared.stop()
         return .terminateNow

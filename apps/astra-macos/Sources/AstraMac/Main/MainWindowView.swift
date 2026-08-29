@@ -282,10 +282,13 @@ private struct AppsPane: View {
                         // 繋げるものだけ操作を出す。繋げないものに操作を出して失敗させない。
                         if st == .connected {
                             Button("切断") {
-                                guard Confirm.destructive(
-                                    "\(a) を切断しますか？",
-                                    detail: "Astra はこのアプリを読めなくなります。使うにはもう一度つなぎ直してください。",
-                                    confirm: "切断する") else { return }
+                                // §16 R2: 外部サービスとの接続を切る＝外部への副作用。
+                                guard Confirm.ask(ActionConfirmation(
+                                    title: "\(a) との接続を切ります",
+                                    details: ["Astra はこのアプリを読めなくなります",
+                                              "使うにはもう一度つなぎ直してください"],
+                                    risk: .r2,
+                                    confirmLabel: "切断する")) else { return }
                                 connectors.connected.remove(a)
                             }
                                 .font(.system(size: 11))

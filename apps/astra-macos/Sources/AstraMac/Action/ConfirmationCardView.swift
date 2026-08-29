@@ -1,0 +1,73 @@
+import SwiftUI
+
+/// §17 Confirmation Engine。AI の文章で「よろしいですか？」とは聞かない。
+///
+/// 見出しは**何が起きるか**を結果の文で書き、ボタンにも結果を書く。
+/// どの操作でこれを出すかは呼び出し側の気分ではなく `ActionRiskLevel`（§16）が決める。
+struct ConfirmationCardView: View {
+    let confirmation: ActionConfirmation
+    var onResolve: (Bool) -> Void
+
+    @Environment(\.colorScheme) private var scheme
+    private var dark: Bool { scheme == .dark }
+
+    private var riskTint: Color {
+        confirmation.risk == .r3 ? Palette.danger(dark) : Palette.warning(dark)
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 6) {
+                Image(systemName: confirmation.risk == .r3 ? "exclamationmark.octagon.fill" : "arrow.up.forward.app.fill")
+                    .font(.system(size: 10))
+                    .foregroundStyle(riskTint)
+                Text(confirmation.risk.label)
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(riskTint)
+                Spacer(minLength: 0)
+            }
+
+            Text(confirmation.title)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(Palette.text(dark))
+                .fixedSize(horizontal: false, vertical: true)
+
+            if !confirmation.details.isEmpty {
+                VStack(alignment: .leading, spacing: 3) {
+                    ForEach(confirmation.details, id: \.self) { d in
+                        Text(d)
+                            .font(.system(size: 11))
+                            .foregroundStyle(Palette.muted(dark))
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+            }
+
+            HStack(spacing: 8) {
+                Spacer(minLength: 0)
+                Button("やめる") { onResolve(false) }
+                    .font(.system(size: 11))
+                    .foregroundStyle(Palette.muted(dark))
+                    .frame(height: 28).padding(.horizontal, 12)
+                    .buttonStyle(AstraControlStyle(radius: 8, base: 0.0))
+                    .accessibilityIdentifier("confirmCancel")
+                Button(confirmation.confirmLabel) { onResolve(true) }
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(riskTint)
+                    .frame(height: 28).padding(.horizontal, 14)
+                    .buttonStyle(AstraControlStyle(radius: 8, base: 0.06))
+                    .accessibilityIdentifier("confirmProceed")
+            }
+        }
+        .padding(16)
+        .frame(width: 320)
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(Color.cardSurface(dark))
+                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(Color.hairline(dark)))
+                .shadow(color: .black.opacity(dark ? 0.5 : 0.2), radius: 24, y: 10)
+        )
+        .accessibilityIdentifier("confirmationCard")
+    }
+}

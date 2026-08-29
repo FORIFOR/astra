@@ -30,10 +30,73 @@ enum AccessibilityContext {
         return text
     }
 
+    /// 前面アプリの窓のタイトル。許可が無ければ nil（推測で埋めない）。
+    static func frontmostWindowTitle() -> String? {
+        guard isTrusted, let pid = NSWorkspace.shared.frontmostApplication?.processIdentifier else { return nil }
+        let app = AXUIElementCreateApplication(pid)
+        var window: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(app, kAXFocusedWindowAttribute as CFString, &window) == .success,
+              let w = window else { return nil }
+        var title: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(w as! AXUIElement, kAXTitleAttribute as CFString, &title) == .success,
+              let text = title as? String, !text.isEmpty
+        else { return nil }
+        return text
+    }
+
+    /// §8 の AXContext。取れたものだけ入れる（取れないものは nil のまま）。
+    static func snapshot() -> AXContext? {
+        guard let app = NSWorkspace.shared.frontmostApplication else { return nil }
+        return AXContext(
+            appName: app.localizedName ?? app.bundleIdentifier ?? "?",
+            bundleId: app.bundleIdentifier,
+            windowTitle: frontmostWindowTitle(),
+            focusedRole: focusedRole(),
+            selectedText: selectedText()
+        )
+    }
+
+    /// focus している要素の role（AXTextField など）。
+    static func focusedRole() -> String? {
+        guard isTrusted else { return nil }
+        let system = AXUIElementCreateSystemWide()
+        var focused: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(system, kAXFocusedUIElementAttribute as CFString, &focused) == .success,
+              let element = focused else { return nil }
+        var role: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(element as! AXUIElement, kAXRoleAttribute as CFString, &role) == .success
+        else { return nil }
+        return role as? String
+    }
+
     /// 選択テキストを RAG 候補にする（あれば 1 件）。source は .message（外から来た文脈）。
     static func candidate(now: Date = Date()) -> [ContextCandidateLite] {
         guard let text = selectedText() else { return [] }
         return [ContextCandidateLite(id: "ax.selection", text: text)]
+    }
+}
+
+/// §8 のデータモデル。取れなかった項目は nil のままにする（推測で埋めない）。
+struct AXContext: Equatable {
+    let appName: String
+    let bundleId: String?
+    let windowTitle: String?
+    let focusedRole: String?
+    let selectedText: String?
+
+    /// §7/§25 の文脈へ詰め替える。出所は accessibility、機微度は選択の有無で分ける。
+    func fact(now: Date = Date(), ttl: TimeInterval = 60) -> ContextFact {
+        let summary = selectedText.map { "選択: \($0.prefix(120))" }
+            ?? windowTitle.map { "画面: \($0)" }
+            ?? "アプリ: \(appName)"
+        return ContextFact(
+            source: .accessibility,
+            application: appName,
+            sensitivity: selectedText == nil ? .workspace : .personal,
+            summary: summary,
+            capturedAt: now,
+            expiresAt: now.addingTimeInterval(ttl)
+        )
     }
 }
 
