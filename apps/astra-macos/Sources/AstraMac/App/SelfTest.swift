@@ -58,6 +58,7 @@ enum SelfTest {
         case "golden": golden(args); return true
         case "dock8": dock8(args); return true
         case "dockanim": dockAnim(); return true
+        case "entry": entryPoints(); return true
         case "state": stateMachine(); return true
         case "presence": presence(); return true
         case "perf": perf(); return true
@@ -568,6 +569,76 @@ enum SelfTest {
             exit(0)
         } else {
             print("SELFTEST_FAIL dockanim: \(fail.joined(separator: ", "))")
+            exit(2)
+        }
+    }
+
+
+    /// `--selftest entry`: Main View への導線が**本当に開く**か。
+    ///
+    /// ボタンの有無ではなく、押した結果 window が出るところまで見る。
+    /// 「開く」と書いてあるのに閉じるだけ、という状態を一度作ってしまったので。
+    @MainActor
+    private static func entryPoints() {
+        let store = AstraStateStore.shared
+        store.reset()
+        var fail: [String] = []
+
+        func settle(_ s: Double) {
+            let until = Date().addingTimeInterval(s)
+            while Date() < until { CFRunLoopRunInMode(.defaultMode, 0.05, true) }
+        }
+
+        func mainWindowOnScreen() -> Bool {
+            guard let infos = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] else { return false }
+            return infos.contains { info in
+                guard let owner = info[kCGWindowOwnerPID as String] as? pid_t, owner == getpid(),
+                      let b = info[kCGWindowBounds as String] as? [String: Any],
+                      let w = b["Width"] as? CGFloat, let h = b["Height"] as? CGFloat else { return false }
+                return w > Metrics.workspaceWidth && h >= 600
+            }
+        }
+
+        // ① メニューバーからの経路。ここが**主**の入口なので割り当ても要る。
+        StatusBarController.shared.install()
+        guard let item = StatusBarController.shared.menuItemTitles().first(where: { $0.title.contains("開く") }) else {
+            print("SELFTEST_FAIL entry: メニューに「Astra を開く」が無い"); exit(2)
+        }
+        if item.key.isEmpty { fail.append("「Astra を開く」にショートカットが無い") }
+
+        // ② 実際に開く。
+        MainWindowController.shared.showSection(.home)
+        store.workspaceOpened()
+        settle(1.2)
+        if !mainWindowOnScreen() { fail.append("メニュー経路で window が出ない") }
+        if store.state.mode != .workspace { fail.append("workspace に遷移していない") }
+        MainWindowController.shared.hide()
+        settle(0.6)
+
+        // ③ 結果面の各操作が**ラベルどおりに**効くか。閉じるだけの偽ボタンを置かない。
+        for action in [AgentResult.Action.openWorkspace, .openNotes] {
+            store.reset()
+            store.setDock(.result(AgentResult(title: "検証", actions: [action])))
+            ResultActionRunner.run(action, title: "検証")
+            settle(1.0)
+            if !mainWindowOnScreen() { fail.append("\(action.title) が window を開かない") }
+            MainWindowController.shared.hide()
+            settle(0.5)
+        }
+
+        // ④ copy は本当に貼り付けられる形にする。
+        NSPasteboard.general.clearContents()
+        ResultActionRunner.run(.copy, title: "コピーされる文字")
+        if NSPasteboard.general.string(forType: .string) != "コピーされる文字" {
+            fail.append("コピーが効いていない")
+        }
+
+        store.reset()
+        if fail.isEmpty {
+            print("SELFTEST_OK entry: メニュー(⌘O)・Dock・結果面のどれからも Main View が実際に開く")
+            exit(0)
+        } else {
+            print("SELFTEST_FAIL entry: \(fail.joined(separator: ", "))")
             exit(2)
         }
     }

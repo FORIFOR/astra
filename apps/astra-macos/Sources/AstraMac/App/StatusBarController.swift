@@ -33,7 +33,8 @@ final class StatusBarController {
     fileprivate func rebuild(_ menu: NSMenu) {
         menu.removeAllItems()
 
-        let open = NSMenuItem(title: "Astra を開く", action: #selector(openMain), keyEquivalent: "")
+        // 設定が ⌘, 終了が ⌘Q を持つのに、いちばん開くものに割り当てが無かった。
+        let open = NSMenuItem(title: "Astra を開く", action: #selector(openMain), keyEquivalent: "o")
         open.target = self
         menu.addItem(open)
 
@@ -62,6 +63,12 @@ final class StatusBarController {
         let quit = NSMenuItem(title: "Astra を終了", action: #selector(quit), keyEquivalent: "q")
         quit.target = self
         menu.addItem(quit)
+    }
+
+    /// メニューの項目（題とショートカット）。導線の検査から読む。
+    /// status item を出せない環境でも読めるよう、作り直して返す。
+    func menuItemTitles() -> [(title: String, key: String)] {
+        buildMenu().items.map { ($0.title, $0.keyEquivalent) }
     }
 
     @objc private func openMain() { MainWindowController.shared.showSection(.home) }

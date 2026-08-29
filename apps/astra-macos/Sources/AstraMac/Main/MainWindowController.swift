@@ -31,6 +31,9 @@ final class MainWindowController {
     }
 
     /// タブを切り替えて前面に出す（Visual Gate の撮影・外部導線から使う）。
+    /// 閉じる（検査と、録音中に邪魔なときに使う）。
+    func hide() { window?.orderOut(nil) }
+
     func showSection(_ section: MainSection) {
         MainNav.shared.meetingDetail = false
         MainNav.shared.section = section

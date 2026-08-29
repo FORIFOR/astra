@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 /// Task Dock。画面上辺中央に常駐する **Astra という一つの存在**。
@@ -89,6 +90,12 @@ private struct IdleDock: View {
         .frame(maxHeight: .infinity)
         .contentShape(Rectangle())
         .onTapGesture { VoiceHUDState.shared.toggleQuickActions() }
+        // Quick Actions を挟まずに 1 手で開く道も用意する（2 クリックが要るのは面倒）。
+        .simultaneousGesture(TapGesture().modifiers(.command).onEnded {
+            MainWindowController.shared.showSection(.home)
+            AstraStateStore.shared.workspaceOpened()
+        })
+        .help("クリックで操作、⌘クリックで Astra を開く")
         .accessibilityIdentifier("dockIdle")
     }
 }
@@ -688,12 +695,12 @@ private struct ResultDock: View {
             Spacer(minLength: 0)
             HStack(spacing: 6) {
                 ForEach(result.actions, id: \.self) { action in
-                    Button(action) { AstraStateStore.shared.dismissResult() }
+                    Button(action.title) { ResultActionRunner.run(action, title: result.title) }
                         .font(.system(size: Metrics.dockRowSize, weight: .medium))
                         .foregroundStyle(Palette.text(dark))
                         .frame(height: 32).padding(.horizontal, 16)
                         .buttonStyle(AstraControlStyle(radius: 8, base: 0.07))
-                        .accessibilityIdentifier("result-\(action)")
+                        .accessibilityIdentifier("result-\(action.rawValue)")
                 }
                 Spacer(minLength: 0)
                 Button { AstraStateStore.shared.dismissResult() } label: {
@@ -710,6 +717,8 @@ private struct ResultDock: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .accessibilityIdentifier("dockResult")
     }
+
+
 }
 
 // MARK: - 文脈の棚（Dropover 型: 棚そのものが詳細へ展開する）

@@ -99,8 +99,22 @@ enum DockPresentation: Equatable {
 /// 終わった仕事。「✓ できました」で消さず、次にやることを出したまま少し残す。
 struct AgentResult: Equatable {
     let title: String
-    /// 後始末。開く / 複製 / 送る など、**その成果物に対して実際にできること**だけ。
-    let actions: [String]
+    /// 後始末。**実際にできることだけ**を挙げる。
+    /// ラベルだけ出して何も起きないボタンは置かない（実機で一度そうなっていた）。
+    let actions: [Action]
+
+    enum Action: String, Equatable {
+        case openWorkspace, openNotes, ask, copy
+
+        var title: String {
+            switch self {
+            case .openWorkspace: return "開く"
+            case .openNotes: return "ノートを開く"
+            case .ask: return "Ask Astra"
+            case .copy: return "コピー"
+            }
+        }
+    }
 }
 
 /// 前面アプリの要約。Presence に出すのはこの 1 行だけ。

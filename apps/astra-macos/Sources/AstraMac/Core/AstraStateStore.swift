@@ -102,7 +102,7 @@ final class AstraStateStore: ObservableObject {
             setDock(.meeting(expanded: nil))
         } else if status == .success {
             // 題は仕事の名前そのまま。語尾を足すと題によって日本語が崩れる。
-            setDock(.result(AgentResult(title: task.title, actions: ["開く", "複製", "送る"])))
+            setDock(.result(AgentResult(title: task.title, actions: [.openWorkspace, .copy])))
         } else {
             setDock(.idle)
         }
@@ -157,7 +157,7 @@ final class AstraStateStore: ObservableObject {
         // 大きな面を開いていたら閉じる（開いていなければ何も起きない）。
         WindowCoordinator.shared.leaveRecordingMode()
         // 停止しても巨大な modal は出さない。Dock が結果へ morph する。
-        setDock(.result(AgentResult(title: id ?? "会議", actions: ["ノートを開く", "Ask Astra"])))
+        setDock(.result(AgentResult(title: id ?? "会議", actions: [.openNotes, .ask])))
         if let id { bus.publish(.meetingEnded(id: id)) }
     }
 
