@@ -20,6 +20,13 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
   <key>CFBundleVersion</key><string>1</string>
   <key>LSMinimumSystemVersion</key><string>14.0</string>
   <key>NSCalendarsFullAccessUsageDescription</key><string>会議の予定を文脈として読むために、カレンダーを使います。読み取りは手元で行い、外部には送りません。</string>
+  <!-- 用途説明が無い権限を要求すると、OS がプロセスを**落とす**
+       （TCC crashing due to privacy violation）。実際に録音開始でそうなった。
+       要求しうるものは全部ここに書く。 -->
+  <key>NSMicrophoneUsageDescription</key><string>会議を録音し、手元で文字にするためにマイクを使います。音声は端末から出しません。</string>
+  <key>NSSpeechRecognitionUsageDescription</key><string>会議の音声を手元で文字起こしするために使います。音は端末から出しません。</string>
+  <key>NSAppleEventsUsageDescription</key><string>前面アプリの文脈（開いている書類名など）を読むために使います。</string>
+  <key>NSCameraUsageDescription</key><string>使いません。</string>
   <key>NSCalendarsUsageDescription</key><string>会議の予定を文脈として読むために、カレンダーを使います。</string>
 </dict></plist>
 PLIST

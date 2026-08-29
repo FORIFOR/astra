@@ -513,8 +513,8 @@ private struct MeetingDock: View {
             ForEach(DockPresentation.MeetingPanel.allCases, id: \.self) { panel in
                 Button { VoiceHUDState.shared.toggleMeetingPanel(panel) } label: {
                     HStack(spacing: 5) {
-                        Image(systemName: panel.icon).font(.system(size: 11))
-                        Text(panel.title).font(.system(size: Metrics.dockMetaSize, weight: .medium))
+                        Image(systemName: panel.icon).font(.system(size: 13))
+                        Text(panel.title).font(.system(size: Metrics.dockRowSize, weight: .medium))
                     }
                     .foregroundStyle(open == panel ? Palette.accent(dark) : Palette.muted(dark))
                     .frame(height: 30).padding(.horizontal, 10)
@@ -573,23 +573,51 @@ private struct MeetingPanelBody: View {
     @ViewBuilder private var content: some View {
         switch panel {
         case .captions:
-            ScrollView {
-                VStack(alignment: .leading, spacing: 9) {
-                    ForEach(recording.transcript.suffix(8)) { line in
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(line.speaker)
-                                .font(.system(size: Metrics.dockMetaSize, weight: .semibold))
-                                .foregroundStyle(Palette.accent(dark))
-                            Text(line.text)
-                                .font(.system(size: Metrics.dockRowSize))
-                                .foregroundStyle(line.interim ? Palette.muted(dark) : Palette.text(dark))
-                                .fixedSize(horizontal: false, vertical: true)
+            // 切替は Dock の中に置く。以前は大きな面へ detach しないと
+            // 翻訳・字幕へ行けなかった（既定の経路から到達できない機能になっていた）。
+            VStack(alignment: .leading, spacing: 10) {
+                RecordingToolPalette(selection: Binding(
+                    get: { recording.selectedTool },
+                    set: { tool in
+                        recording.selectedTool = tool
+                        if tool == .translation, recording.translatedText.isEmpty { recording.translate() }
+                    }))
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 9) {
+                        switch recording.selectedTool {
+                        case .transcript:
+                            ForEach(recording.transcript.suffix(8)) { line in
+                                captionLine(speaker: line.speaker, text: line.text, interim: line.interim)
+                            }
+                        case .translation:
+                            if recording.translating {
+                                Text("翻訳しています…")
+                                    .font(.system(size: Metrics.dockRowSize))
+                                    .foregroundStyle(Palette.muted(dark))
+                            } else if recording.translatedText.isEmpty {
+                                Text("まだ訳すものがありません。")
+                                    .font(.system(size: Metrics.dockRowSize))
+                                    .foregroundStyle(Palette.muted(dark))
+                            } else {
+                                Text(recording.translatedText)
+                                    .font(.system(size: Metrics.dockRowSize))
+                                    .foregroundStyle(Palette.text(dark))
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                        case .captions:
+                            // 字幕は話者名を出さず、直近の発言だけを大きく読ませる。
+                            ForEach(recording.transcript.suffix(3)) { line in
+                                Text(line.text)
+                                    .font(.system(size: 20, weight: .medium))
+                                    .foregroundStyle(line.interim ? Palette.muted(dark) : Palette.text(dark))
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                            }
                         }
-                        .frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
+                .scrollIndicators(.never)
             }
-            .scrollIndicators(.never)
         case .notes:
             let canvas = store.state.meeting.canvas
             if canvas.isEmpty {
@@ -611,6 +639,19 @@ private struct MeetingPanelBody: View {
         case .ask:
             AskInDockField()
         }
+    }
+
+    private func captionLine(speaker: String, text: String, interim: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(speaker)
+                .font(.system(size: Metrics.dockMetaSize, weight: .semibold))
+                .foregroundStyle(Palette.accent(dark))
+            Text(text)
+                .font(.system(size: Metrics.dockRowSize))
+                .foregroundStyle(interim ? Palette.muted(dark) : Palette.text(dark))
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     @ViewBuilder private func notesGroup(_ title: String, _ lines: [String]) -> some View {

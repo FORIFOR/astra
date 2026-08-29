@@ -35,9 +35,23 @@ final class WindowCoordinator {
         case .recordingRAG:
             RecordingWorkspaceState.shared.loadDemo(ragOpen: true)
             showRecordingWorkspace()
+        case .startRecording:
+            // 実アプリと同じ状態から、ボタンが呼ぶのと同じものを呼ぶ。
+            VoiceHUDState.shared.mode = .idle
+            showVoiceHUD()
+            MainWindowController.shared.show()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                RecordingWorkspaceState.shared.start()
+            }
         case .main:
+            // Dock は常駐。Main を開いていても上端から消えない
+            // （--demo main で Dock が出ず、実機で「Dock が無い」状態になっていた）。
+            VoiceHUDState.shared.mode = .idle
+            showVoiceHUD()
             MainWindowController.shared.show()
         case .settings:
+            VoiceHUDState.shared.mode = .idle
+            showVoiceHUD()
             SettingsWindowController.shared.show()
         }
     }

@@ -91,6 +91,12 @@ struct HomeView: View {
                         upcomingRow(a)
                     }
                 }
+                // 予定が無くても、ここから会議を録り始められる。
+                // 予定行の [Record] だけだと、予定が無い日は録音の入口が消えていた。
+                if !store.state.meeting.isRecording {
+                    StartRecordingCard()
+                }
+
                 // 実際にこの Mac にあるものを出す。架空の行は作らない。
                 if !recentTasks.isEmpty {
                     section("最近の仕事")

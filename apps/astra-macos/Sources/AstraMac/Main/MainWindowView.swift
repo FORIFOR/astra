@@ -77,7 +77,11 @@ struct MainWindowView: View {
     var body: some View {
         NavigationSplitView {
             List(MainSection.allCases, selection: $nav.section) { s in
-                Label(s.title, systemImage: s.icon).tag(s)
+                // 既定の 13pt のままで、他を大きくしたぶん相対的に小さく見えていた。
+                Label(s.title, systemImage: s.icon)
+                    .font(.system(size: TypeScale.bodySize))
+                    .padding(.vertical, 3)
+                    .tag(s)
             }
             .navigationSplitViewColumnWidth(min: Metrics.sidebarWidth - 20, ideal: Metrics.sidebarWidth, max: Metrics.sidebarWidth + 40)
             .safeAreaInset(edge: .bottom) {
@@ -215,7 +219,7 @@ private struct AgentsPane: View {
                 HStack(spacing: 8) {
                     ForEach(filters, id: \.self) { f in
                         Text(f)
-                            .font(.system(size: 12, weight: filter == f ? .semibold : .regular))
+                            .font(.system(size: TypeScale.secondarySize, weight: filter == f ? .semibold : .regular))
                             .padding(.horizontal, 10).padding(.vertical, 4)
                             .background(Capsule().fill(filter == f ? Color.astraAccent.opacity(0.15) : Color.clear))
                             .foregroundStyle(filter == f ? Color.astraAccent : Color.secondary)
@@ -242,7 +246,7 @@ private struct LibraryPane: View {
             HStack(spacing: 6) { // §10.1 Type chips
                 ForEach(types, id: \.self) { t in
                     Text(t)
-                        .font(.system(size: 11, weight: typeFilter == t ? .semibold : .regular))
+                        .font(.system(size: TypeScale.secondarySize, weight: typeFilter == t ? .semibold : .regular))
                         .padding(.horizontal, 9).padding(.vertical, 3)
                         .background(Capsule().fill(typeFilter == t ? Color.astraAccent.opacity(0.15) : Color.clear))
                         .foregroundStyle(typeFilter == t ? Color.astraAccent : Color.secondary)

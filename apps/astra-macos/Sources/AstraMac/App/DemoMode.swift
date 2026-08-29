@@ -7,6 +7,8 @@ enum DemoMode: Equatable {
     case hudThinking
     case recording
     case recordingRAG
+    /// 実アプリのまま、ボタンと同じ経路で録音を始める（実機で挙動を見るため）。
+    case startRecording
     case main
     case settings
 
@@ -19,6 +21,7 @@ enum DemoMode: Equatable {
         case "hud-thinking": return .hudThinking
         case "recording": return .recording
         case "recording-rag": return .recordingRAG
+        case "start-recording": return .startRecording
         case "main": return .main
         case "settings": return .settings
         default: return .none
