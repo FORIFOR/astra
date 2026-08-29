@@ -109,7 +109,7 @@ else
   echo "SELFTEST_SKIP dockdiff(VoiceOS): docs/reference/voiceos-task-dock.png が未着"
 fi
 
-for t in screenshot waveform livemic livemeeting livescreen sttrecognize sttstream guishot axtree breakpoints dictation state presence perf; do
+for t in screenshot waveform livemic livemeeting livescreen sttrecognize sttstream guishot axtree breakpoints dictation state presence perf storage meetingiq; do
   OUT="$("$BIN" --selftest "$t")"
   echo "$OUT"
   [[ "$OUT" == SELFTEST_OK* || "$OUT" == SELFTEST_SKIP* ]] || { echo "FAIL: macOS live $t" >&2; exit 1; }

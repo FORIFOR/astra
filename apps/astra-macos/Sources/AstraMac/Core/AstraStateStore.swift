@@ -54,6 +54,8 @@ final class AstraStateStore: ObservableObject {
         let resolved = ContextBundle.resolved(raw, now: now)
         guard state.context != resolved else { return }
         state.context = resolved
+        // §25 残すのは metadata だけ。本文はディスクに書かない。
+        for fact in resolved.items { LocalStore.shared.saveContextMetadata(fact) }
         bus.publish(.contextUpdated(sources: resolved.visibleSources))
     }
 
@@ -61,6 +63,8 @@ final class AstraStateStore: ObservableObject {
 
     func startTask(_ task: AgentTask) {
         state.activeTask = task
+        // §23 UI lifecycle ≠ Task lifecycle。Dock を閉じても task は消えない。
+        LocalStore.shared.save(task)
         setMode(.acting)
         bus.publish(.agentStarted(taskId: task.id))
     }
@@ -71,6 +75,7 @@ final class AstraStateStore: ObservableObject {
         task.steps[index].state = newState
         let title = task.steps[index].title
         state.activeTask = task
+        LocalStore.shared.save(task)
         switch newState {
         case .running: bus.publish(.agentStepStarted(taskId: task.id, step: title))
         case .success, .failed:
@@ -83,6 +88,7 @@ final class AstraStateStore: ObservableObject {
         guard var task = state.activeTask else { return }
         task.status = status
         state.activeTask = task
+        LocalStore.shared.save(task)
         setMode(status == .success ? .completed : .failed)
     }
 
@@ -139,6 +145,14 @@ final class AstraStateStore: ObservableObject {
     func workspaceOpened() {
         setMode(.workspace)
         bus.publish(.workspaceOpened)
+    }
+
+    /// §23 起動時に、走っていた task を読み戻す（Dock を開き直したら状態が戻る）。
+    func restoreRunningTask() {
+        guard state.activeTask == nil,
+              let task = LocalStore.shared.loadTasks(status: .running).first else { return }
+        state.activeTask = task
+        setMode(.acting)
     }
 
     /// テスト用に初期化する。

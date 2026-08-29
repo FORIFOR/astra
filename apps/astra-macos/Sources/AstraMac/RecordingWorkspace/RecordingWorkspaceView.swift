@@ -42,6 +42,8 @@ struct RecordingWorkspaceView: View {
                     AIActionsPalette(state: state)
                     // §15 走っている間、何をしているかを段階で見せる。
                     TaskTimelineView()
+                    // §21 会議中に溜まっていく構造データ。
+                    MeetingCanvasView()
                     // 押した結果はここに出る。走っていない/結果が無いときは何も置かない。
                     AIResultPanel(state: state)
                     Spacer(minLength: 0)

@@ -4,6 +4,9 @@ final class AstraAppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         // headless の自己検証（Swift → core → ディスク）。UI を出さずに終了する。
         if SelfTest.run(CommandLine.arguments) { return }
+        // §24 ローカル保存を開く。§23 走っていた task を読み戻す。
+        LocalStore.shared.open()
+        AstraStateStore.shared.restoreRunningTask()
         let demo = DemoMode.fromArguments(CommandLine.arguments)
         WindowCoordinator.shared.start(demo: demo)
         // Dock アイコンが無いので、ここが起動後の唯一の入口になる（Main/録音/設定/終了）。

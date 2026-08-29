@@ -61,6 +61,8 @@ enum SelfTest {
         case "state": stateMachine(); return true
         case "presence": presence(); return true
         case "perf": perf(); return true
+        case "storage": storage(); return true
+        case "meetingiq": meetingIQ(); return true
         case "panel": panelBehavior(); return true
         case "render": render(); return true
         default: return false
@@ -179,7 +181,7 @@ enum SelfTest {
         let goldenDir = args[i + 2], freshDir = args[i + 3]
         let names = ["01-voice-hud-idle", "02-voice-hud-listening", "03-recording-workspace",
                      "04-recording-transcript", "05-recording-rag", "08-meeting-detail",
-                     "09-permission-denied", "10-agent-timeline"]
+                     "09-permission-denied", "10-agent-timeline", "11-meeting-canvas"]
 
         /// 縮小グレースケール列。撮影ごとの微差を拾わないよう 200 点角に落とす。
         func signature(_ path: String) -> [UInt8]? {
@@ -705,6 +707,163 @@ enum SelfTest {
         let until = Date().addingTimeInterval(seconds)
         while Date() < until { CFRunLoopRunInMode(.defaultMode, 0.05, true) }
         return (cpuSeconds() - before) / seconds * 100
+    }
+
+    /// `--selftest storage`: §24 ローカル保存 / §23 UI を閉じても task が消えないこと。
+    ///
+    /// 「保存しない」を検査するのが難しいので、**列そのものを作っていない**ことを見る。
+    /// 列が無ければ後から入れられない。
+    @MainActor
+    private static func storage() {
+        let path = NSTemporaryDirectory() + "astra-storage-\(getpid()).sqlite"
+        defer { try? FileManager.default.removeItem(atPath: path) }
+        let store = LocalStore(path: path)
+        var fail: [String] = []
+
+        // ① §24 のテーブルが揃っている。
+        let tables = Set(store.tableNames())
+        for want in LocalStore.tables where !tables.contains(want) { fail.append("\(want) が無い") }
+
+        // ② 画像・音声・文脈の本文を入れる列を**作っていない**。
+        let banned = ["image", "png", "screenshot", "audio", "pcm", "wav", "blob", "summary", "content", "body"]
+        for table in LocalStore.tables {
+            for column in store.columnNames(table) {
+                let lower = column.lowercased()
+                for bad in banned where lower.contains(bad) {
+                    fail.append("\(table).\(column) は保存してはいけないものの列")
+                }
+            }
+        }
+        // 文脈は metadata だけ（source/sensitivity/期限）。
+        let ctxColumns = Set(store.columnNames("context_metadata"))
+        if !ctxColumns.isSuperset(of: ["source", "application", "sensitivity", "captured_at", "expires_at"]) {
+            fail.append("context_metadata に §25 の項目が足りない")
+        }
+
+        // ③ §23 task は UI と無関係に残り、読み戻せる。
+        let id = UUID()
+        let task = AgentTask(id: id, title: "調べる", status: .running,
+                             steps: [AgentStep(title: "検索", tool: "web", state: .success),
+                                     AgentStep(title: "まとめる", tool: "agent", state: .running)],
+                             startedAt: Date(), context: ContextBundle())
+        store.save(task)
+        // 「UI を閉じた」= panel を全部片付ける。task には触らない。
+        WindowCoordinator.headless = true
+        WindowCoordinator.shared.hideVoiceHUD()
+        let running = store.loadTasks(status: .running)
+        guard let restored = running.first(where: { $0.id == id }) else {
+            fail.append("UI を閉じたら task が読み戻せない")
+            report(fail); return
+        }
+        if restored.steps.count != 2 { fail.append("step が失われた (\(restored.steps.count))") }
+        if restored.steps.first?.state != .success { fail.append("step の状態が失われた") }
+        if restored.title != "調べる" { fail.append("title が失われた") }
+
+        // ④ §11 画面は既定で見ない。連続取得は tracking/meeting のときだけ、しかも 3fps 上限。
+        if ScreenCapturePolicy.fps(for: .idle) != 0 { fail.append("通常時に画面を見ている") }
+        if ScreenCapturePolicy.allowsSingleShot(.idle) { fail.append("通常時に 1 枚撮れてしまう") }
+        if ScreenCapturePolicy.minimumInterval(for: .idle) != nil { fail.append("通常時に連続取得できる") }
+        for need in [ScreenCapturePolicy.Need.tracking, .meeting] where ScreenCapturePolicy.fps(for: need) > 3 {
+            fail.append("連続取得が 3fps を超える")
+        }
+
+        // ⑤ §14 実行経路。上位が使えるなら Vision は選ばれない。
+        if ExecutionPlanner.choose(available: [.visionUI, .accessibility]) != .accessibility {
+            fail.append("AX があるのに Vision を選んだ")
+        }
+        if ExecutionPlanner.choose(available: [.browserDOM, .plugin]) != .plugin {
+            fail.append("Plugin があるのに別経路を選んだ")
+        }
+        if ExecutionPlanner.mayUseVision(available: [.visionUI, .accessibility]) {
+            fail.append("上位経路があるのに Vision を許した")
+        }
+        if !ExecutionPlanner.mayUseVision(available: [.visionUI]) {
+            fail.append("他に何も無いのに Vision を禁じた")
+        }
+        if ExecutionPlanner.choose(available: []) != nil { fail.append("経路が無いのに選んだ") }
+
+        // ⑥ 文脈は metadata だけが 1 行入り、本文はどこにも無い。
+        let fact = ContextFact(source: .accessibility, application: "Notion", sensitivity: .personal,
+                               summary: "これは本文なので保存されてはいけない",
+                               capturedAt: Date(), expiresAt: Date().addingTimeInterval(60))
+        store.saveContextMetadata(fact)
+        if store.countRows("context_metadata") != 1 { fail.append("文脈 metadata が入らない") }
+        if let blob = try? String(contentsOfFile: path, encoding: .isoLatin1),
+           blob.contains("これは本文なので保存されてはいけない") {
+            fail.append("文脈の本文がファイルに書かれている")
+        }
+
+        WindowCoordinator.headless = false
+        store.close()
+        report(fail)
+    }
+
+    private static func report(_ fail: [String]) {
+        if fail.isEmpty {
+            print("SELFTEST_OK storage: §24 の7テーブル・画像/音声/本文の列を持たない・UI を閉じても task が残る・§11 通常時 0fps/上限3fps・§14 Vision は最後の手段")
+            exit(0)
+        } else {
+            print("SELFTEST_FAIL storage: \(fail.joined(separator: ", "))")
+            exit(2)
+        }
+    }
+
+    /// `--selftest meetingiq`: §20 増分抽出 / §21 Canvas が構造データであること。
+    ///
+    /// 確かめたいのは **全 Transcript を毎回投げていない**こと。
+    /// 行が増えるたびに全部投げ直す実装でも「動いて」は見えるので、
+    /// 各回に渡した行数を見て、増分だけを渡していることを確認する。
+    @MainActor
+    private static func meetingIQ() {
+        let iq = MeetingIntelligence.shared
+        iq.reset()
+        AstraStateStore.shared.reset()
+        var fail: [String] = []
+
+        // ① 溜まるまでは回さない（1 行ごとに LLM を叩かない）。
+        if iq.ingest(["おはようございます"]) { fail.append("1 行で抽出を回した") }
+        if iq.passes != 0 { fail.append("溜まる前に回っている") }
+
+        // ② 溜まったら回る。渡すのは**その回の新しい行だけ**。
+        let first = ["おはようございます", "導入時期は 10 月で行きます", "初期費用が心配です"]
+        if !iq.ingest(first) { fail.append("溜まっても回らない") }
+        if iq.lastBatchSize != 3 { fail.append("初回の投入行数が \(iq.lastBatchSize)") }
+
+        // ③ 続きを足したとき、渡すのは増えた分だけ（全文ではない）。
+        let second = first + ["見積は明日までにお願いします", "誰が対応しますか？", "私が担当します"]
+        if !iq.ingest(second) { fail.append("追記で回らない") }
+        if iq.lastBatchSize != 3 { fail.append("増分ではなく \(iq.lastBatchSize) 行を投入した（全文再投入）") }
+        if iq.passes != 2 { fail.append("回数が \(iq.passes)") }
+
+        // ④ §21 Canvas は Markdown ではなく分類済みの構造データ。
+        let canvas = iq.canvas
+        if canvas.isEmpty { fail.append("Canvas が空") }
+        if !canvas.decisions.contains(where: { $0.contains("10 月") }) { fail.append("決定事項を拾えない") }
+        if !canvas.concerns.contains(where: { $0.contains("心配") }) { fail.append("懸念を拾えない") }
+        if !canvas.questions.contains(where: { $0.contains("？") }) { fail.append("質問を拾えない") }
+        if !canvas.actions.contains(where: { $0.contains("明日まで") }) { fail.append("アクションを拾えない") }
+
+        // ⑤ 前の結果を作り直さず積み増している（Incremental）。
+        if canvas.decisions.count + canvas.actions.count + canvas.questions.count
+            + canvas.concerns.count + canvas.notes.count != 6 {
+            fail.append("行が失われたか重複した")
+        }
+
+        // ⑥ State と EventBus に反映されている。
+        if AstraStateStore.shared.state.meeting.canvas != canvas { fail.append("State に Canvas が入っていない") }
+        if !AstraEventBus.shared.recent.contains(where: { $0.name == "meeting.transcript.updated" }) {
+            fail.append("meeting.transcript.updated が流れない")
+        }
+
+        iq.reset()
+        AstraStateStore.shared.reset()
+        if fail.isEmpty {
+            print("SELFTEST_OK meetingiq: 増分だけ投入（全文再投入なし）・Canvas は構造データ・State/EventBus へ反映")
+            exit(0)
+        } else {
+            print("SELFTEST_FAIL meetingiq: \(fail.joined(separator: ", "))")
+            exit(2)
+        }
     }
 
     /// begin → push → end の実ランタイム経路（I/O のみ、window は触らない）。
@@ -2054,6 +2213,17 @@ enum SelfTest {
                expW: Metrics.workspaceWidth, expH: Metrics.workspaceHeight, minColors: 12)
         AstraStateStore.shared.reset()
 
+        // 11 meeting-canvas: §21 会議中に溜まる構造データが画面に出るか。
+        AstraStateStore.shared.updateCanvas(MeetingCanvas(
+            decisions: ["導入時期は 10 月で行きます"],
+            actions: ["見積は明日までにお願いします"],
+            questions: ["誰が対応しますか？"],
+            concerns: ["初期費用が心配です"],
+            notes: []))
+        record("11-meeting-canvas", capture("11-meeting-canvas"),
+               expW: Metrics.workspaceWidth, expH: Metrics.workspaceHeight, minColors: 12)
+        AstraStateStore.shared.reset()
+
         // 09 permission-denied: 許可が無いまま録り続けていることが画面に出るか。
         // 「録音中」と出ているのに無音、が一番高くつく壊れ方なので必ず撮る。
         state.ragOpen = false
@@ -2080,7 +2250,7 @@ enum SelfTest {
         print("SHOTS_DIR \(outDir)")
         for line in report { print("SHOT \(line)") }
         if failures.isEmpty {
-            print("SELFTEST_OK shots: 10面を実アプリで撮影・geometry OK")
+            print("SELFTEST_OK shots: 11面を実アプリで撮影・geometry OK")
             exit(0)
         } else {
             print("SELFTEST_FAIL shots: \(failures.joined(separator: ", "))")

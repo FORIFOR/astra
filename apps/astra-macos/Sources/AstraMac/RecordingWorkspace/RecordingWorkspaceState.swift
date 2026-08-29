@@ -179,6 +179,11 @@ final class RecordingWorkspaceState: ObservableObject {
                 self.transcript.append(TranscriptSegment(speaker: "あなた", text: text, interim: !isFinal))
             }
             self.refreshRag()
+            // §20 確定行が溜まったら**新しい分だけ**抽出する（全文を毎回投げない）。
+            if isFinal {
+                MeetingIntelligence.shared.ingest(
+                    self.transcript.filter { !$0.interim }.map(\.text))
+            }
         }
         // 波形を実マイクレベルで更新する（デモの固定値をやめてフラットから始める）。
         audioLevels = Array(repeating: 0.06, count: 12)
@@ -188,6 +193,7 @@ final class RecordingWorkspaceState: ObservableObject {
             self.audioLevels.append(CGFloat(level))
         }
         // 実ランタイム: マイク → astra-core → ディスク断片（許可があればライブ取り込み + 手元 STT）
+        MeetingIntelligence.shared.reset()
         // §26 会議に要るものだけを、始めるこの瞬間に要求する（起動時に一括で聞かない）。
         PermissionCenter.request(.meeting)
         // 許可が無いまま黙って録り続けない。始めた時点で画面に出す。
