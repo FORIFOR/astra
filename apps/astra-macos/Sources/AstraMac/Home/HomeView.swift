@@ -19,6 +19,7 @@ struct HomeView: View {
     @State private var recordedCount = 0
     @State private var pluginCount = 0
     @ObservedObject private var voice = VoiceHUDState.shared
+    @ObservedObject private var store = AstraStateStore.shared
     @FocusState private var intentFocused: Bool
 
     static func greetingForNow(_ date: Date = Date()) -> String {
@@ -33,6 +34,10 @@ struct HomeView: View {
         GeometryReader { proxy in
         ScrollView {
             VStack(alignment: .leading, spacing: Space.largePadding) {
+                // 録音中は Home の一番上でそれが分かる。録音のために画面を切り替えさせない。
+                if store.state.meeting.isRecording {
+                    RecordingNowBanner()
+                }
                 Text(greeting)
                     .font(.system(size: TypeScale.pageTitleSize, weight: TypeScale.pageTitleWeight))
                     .foregroundStyle(Palette.text(dark))
@@ -82,8 +87,8 @@ struct HomeView: View {
                 if !attention.isEmpty {
                     section("Attention")
                     ForEach(attention.prefix(3)) { a in // §8.1 最大3件
-                        row(icon: "exclamationmark.circle", accent: Palette.warning(dark),
-                            title: a.title, sub: a.kind, action: a.action)
+                        // 予定からそのまま録り始められる。設定画面は挟まない。
+                        upcomingRow(a)
                     }
                 }
                 // 実際にこの Mac にあるものを出す。架空の行は作らない。
@@ -169,6 +174,35 @@ struct HomeView: View {
             .tracking(0.4)
             .padding(.top, 6)
     }
+    /// 予定の行。[Record] を押したらその場で録音が始まる（毎回設定を出さない）。
+    private func upcomingRow(_ a: HomeAttention) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: "calendar").font(.system(size: 12)).foregroundStyle(Palette.muted(dark))
+            VStack(alignment: .leading, spacing: 2) {
+                Text(a.title)
+                    .font(.system(size: TypeScale.cardTitleSize, weight: TypeScale.cardTitleWeight))
+                    .foregroundStyle(Palette.text(dark))
+                Text(a.kind).font(.system(size: TypeScale.secondarySize)).foregroundStyle(Palette.muted(dark))
+            }
+            Spacer(minLength: 12)
+            Button {
+                RecordingWorkspaceState.shared.start()
+            } label: {
+                HStack(spacing: 5) {
+                    Circle().fill(Color.recordingRed).frame(width: 7, height: 7)
+                    Text("Record").font(.system(size: TypeScale.secondarySize, weight: .medium))
+                }
+                .foregroundStyle(Palette.text(dark))
+                .frame(height: 30).padding(.horizontal, 12)
+            }
+            .buttonStyle(AstraControlStyle(radius: 8, base: 0.05))
+            .accessibilityIdentifier("record-\(a.title)")
+        }
+        .padding(Space.cardPadding)
+        .background(RoundedRectangle(cornerRadius: Metrics.paletteRadius, style: .continuous).fill(Palette.surface(dark))
+            .overlay(RoundedRectangle(cornerRadius: Metrics.paletteRadius, style: .continuous).stroke(Palette.border(dark), lineWidth: 1)))
+    }
+
     private func row(icon: String, accent: Color, title: String, sub: String, action: String?) -> some View {
         HStack(spacing: 12) {
             Image(systemName: icon).font(.system(size: 10)).foregroundStyle(accent)

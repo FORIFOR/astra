@@ -386,9 +386,8 @@ enum SelfTest {
                 risk: .r2, confirmLabel: "Send"))
         })
 
-        // 7. Meeting: 録音中は **Dock ではなく録音の面**が立ち上がる（実遷移）。
-        //    ここだけは Dock ではないので、寸法の期待値も面のものを使う。
-        do {
+        // 7. Meeting: 録音中は Dock が録音コントローラになる。**窓は増えない。**
+        shoot("08-meeting", {
             store.resolveConfirmation(approved: false)
             store.finishTask(.success)
             recording.loadDemo(ragOpen: false)
@@ -399,18 +398,10 @@ enum SelfTest {
                 concerns: ["初期費用が心配です"], notes: []))
             store.meetingDetected(app: "Google Meet")
             store.meetingStarted(id: "dock8")
-            if let r = capture("08-meeting-surface",
-                               expect: CGSize(width: Metrics.workspaceWidth, height: Metrics.workspaceHeight)) {
-                report.append("08-meeting-surface \(Int(r.w))x\(Int(r.h)) c\(r.colors)")
-                if r.colors < 12 { failures.append("08-meeting-surface=中身なし") }
-            } else {
-                failures.append("08-meeting-surface=撮影不可")
-            }
-            // 録音中に Dock が残っていないこと（面と Dock が同時に出ない）。
-            if windows().contains(where: { abs($0.w - Metrics.dockMeetingWidth) <= 2 }) {
-                failures.append("録音中に Dock が残っている")
-            }
-        }
+        })
+        // 録音開始では窓を増やさない。Dock だけが録音コントローラになる。
+        shoot("09-meeting-notes", { hud.toggleMeetingPanel(.notes) })
+        shoot("09b-meeting-captions", { hud.toggleMeetingPanel(.captions) })
 
         // 8. Full Workspace（Dock は静かなまま、Workspace が開く）
         store.meetingEnded()
@@ -2701,10 +2692,21 @@ enum SelfTest {
         MainWindowController.shared.showMeetingDetailPreview()
         record("08-meeting-detail", capture("08-meeting-detail", minW: 700, minH: 500), expW: nil, expH: nil, minColors: 8)
 
+        // 12 recording-now: 録音中に Home へ戻ったとき、そこに録音が見えるか。
+        AstraStateStore.shared.meetingDetected(app: "Google Meet")
+        AstraStateStore.shared.meetingStarted(id: "home-banner")
+        MainWindowController.shared.showSection(.home)
+        record("12-recording-now", capture("12-recording-now", minW: 700, minH: 500),
+               expW: nil, expH: nil, minColors: 8)
+        AstraStateStore.shared.meetingEnded()
+        AstraStateStore.shared.reset()
+        WindowCoordinator.shared.hideRecordingWorkspace()
+
+
         print("SHOTS_DIR \(outDir)")
         for line in report { print("SHOT \(line)") }
         if failures.isEmpty {
-            print("SELFTEST_OK shots: 11面を実アプリで撮影・geometry OK")
+            print("SELFTEST_OK shots: 12面を実アプリで撮影・geometry OK")
             exit(0)
         } else {
             print("SELFTEST_FAIL shots: \(failures.joined(separator: ", "))")

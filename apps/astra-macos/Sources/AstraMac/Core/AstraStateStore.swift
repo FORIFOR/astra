@@ -143,9 +143,9 @@ final class AstraStateStore: ObservableObject {
         state.meeting.meetingId = id
         state.meeting.isRecording = true
         setMode(.meeting)
-        // 録音中は Dock ではなく、**録音のあいだだけ現れる面**が主役になる。
-        // Dock は退く（E2E-001 の排他はここで担保される）。
-        WindowCoordinator.shared.enterRecordingMode()
+        // 録音を始めた瞬間に窓を増やさない。Dock が録音コントローラになるだけで、
+        // Notes / Captions / Ask は**押されたときだけ**開く。
+        setDock(.meeting(expanded: nil))
         bus.publish(.meetingStarted(id: id))
     }
 
@@ -154,9 +154,10 @@ final class AstraStateStore: ObservableObject {
         state.meeting.isRecording = false
         state.meeting.meetingId = nil
         setMode(.idle)
-        // 面を閉じ、Dock を戻す。
+        // 大きな面を開いていたら閉じる（開いていなければ何も起きない）。
         WindowCoordinator.shared.leaveRecordingMode()
-        setDock(.idle)
+        // 停止しても巨大な modal は出さない。Dock が結果へ morph する。
+        setDock(.result(AgentResult(title: id ?? "会議", actions: ["ノートを開く", "Ask Astra"])))
         if let id { bus.publish(.meetingEnded(id: id)) }
     }
 

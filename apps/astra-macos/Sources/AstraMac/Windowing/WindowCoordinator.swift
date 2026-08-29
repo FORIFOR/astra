@@ -50,6 +50,12 @@ final class WindowCoordinator {
         showRecordingWorkspace()
     }
 
+    /// 「両方同時に見たい」と言われたときだけ、大きな面を出す。既定では出さない。
+    func detachMeetingSurface() {
+        if Self.headless { return }
+        showRecordingWorkspace()
+    }
+
     func leaveRecordingMode() {
         isRecording = false
         hideRecordingWorkspace()

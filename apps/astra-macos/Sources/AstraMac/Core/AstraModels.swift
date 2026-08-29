@@ -39,24 +39,21 @@ enum DockPresentation: Equatable {
     /// 録音へ移る途中。
     case enteringRecording
 
-    /// 会議 Dock から開ける面。常時 5 枚並べない（§Meeting）。
+    /// 録音中に開ける面。**録音開始では 1 つも開かない**（controller だけ）。
+    /// 押されたものだけが、同じ面の中身として入れ替わる。
     enum MeetingPanel: String, Equatable, CaseIterable {
-        case caption, decisions, concerns, actions, ask
+        case notes, captions, ask
         var title: String {
             switch self {
-            case .caption: return "Live Caption"
-            case .decisions: return "Decision"
-            case .concerns: return "Concern"
-            case .actions: return "Next Action"
+            case .notes: return "Notes"
+            case .captions: return "Captions"
             case .ask: return "Ask Astra"
             }
         }
         var icon: String {
             switch self {
-            case .caption: return "text.viewfinder"
-            case .decisions: return "checkmark.circle"
-            case .concerns: return "exclamationmark.triangle"
-            case .actions: return "arrow.right.circle"
+            case .notes: return "doc.text"
+            case .captions: return "text.viewfinder"
             case .ask: return "sparkles"
             }
         }

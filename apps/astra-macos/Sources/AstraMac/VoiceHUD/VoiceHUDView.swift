@@ -459,49 +459,65 @@ private struct ConfirmationDock: View {
 
 // MARK: - 7. Meeting
 
-/// 会議中。既定は 1 行のまま。**必要な面だけ**開く（常時 5 枚並べない）。
+/// 録音中の Dock。**これが録音 UI の本体**（別窓を 3 枚出さない）。
+///
+/// SuperIntern の control bar の考え方を Dock に吸収した。録音を始めた時点では
+/// controller だけが出て、Notes / Captions / Ask は押されたときにこの面の中身として開く。
+/// 両方同時に見たいときだけ、明示的に大きな面へ detach する。
 private struct MeetingDock: View {
     @Environment(\.colorScheme) private var scheme
     private var dark: Bool { scheme == .dark }
     @ObservedObject private var store = AstraStateStore.shared
+    @ObservedObject private var recording = RecordingWorkspaceState.shared
     let open: DockPresentation.MeetingPanel?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 8) {
-                Circle().fill(Color.recordingRed).frame(width: 9, height: 9)
-                Text(store.state.meeting.detectedApp ?? "会議")
-                    .font(.system(size: Metrics.dockPrimarySize, weight: .medium))
-                    .foregroundStyle(Palette.text(dark))
-                Text(RecordingWorkspaceState.shared.elapsedText)
-                    .font(.system(size: Metrics.dockPrimarySize, design: .monospaced))
-                    .foregroundStyle(Palette.muted(dark))
-                Spacer(minLength: 0)
-                ForEach(DockPresentation.MeetingPanel.allCases, id: \.self) { panel in
-                    Button { VoiceHUDState.shared.toggleMeetingPanel(panel) } label: {
-                        Image(systemName: panel.icon)
-                            .font(.system(size: 14))
-                            .foregroundStyle(open == panel ? Palette.accent(dark) : Palette.muted(dark))
-                            .frame(width: 34, height: 34)   // §16 hit area
-                    }
-                    .buttonStyle(AstraControlStyle(radius: 6, base: open == panel ? 0.07 : 0.0))
-                    .help(panel.title)
-                    .accessibilityIdentifier("meetingPanel-\(panel.rawValue)")
-                }
-            }
-            .padding(.horizontal, Metrics.dockPadH)
-            .frame(height: Metrics.dockMeetingHeight)
-
+            controller
             if let open {
                 Divider().overlay(Palette.border(dark))
                 MeetingPanelBody(panel: open)
                     .padding(.horizontal, Metrics.dockPadH)
-                    .padding(.top, 9)
+                    .padding(.top, 12)
                 Spacer(minLength: 0)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .accessibilityIdentifier("dockMeeting")
+    }
+
+    private var controller: some View {
+        HStack(spacing: 12) {
+            Circle().fill(recording.isPaused ? Color.secondary : Color.recordingRed)
+                .frame(width: 9, height: 9)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(store.state.meeting.detectedApp ?? "Recording")
+                    .font(.system(size: Metrics.dockPrimarySize, weight: .semibold))
+                    .foregroundStyle(Palette.text(dark))
+                    .lineLimit(1)
+                Text(recording.elapsedText)
+                    .font(.system(size: Metrics.dockMetaSize, design: .monospaced))
+                    .foregroundStyle(Palette.muted(dark))
+            }
+            Waveform(levels: recording.audioLevels)
+                .frame(width: 56, height: 16)
+            Spacer(minLength: 0)
+            ForEach(DockPresentation.MeetingPanel.allCases, id: \.self) { panel in
+                Button { VoiceHUDState.shared.toggleMeetingPanel(panel) } label: {
+                    HStack(spacing: 5) {
+                        Image(systemName: panel.icon).font(.system(size: 11))
+                        Text(panel.title).font(.system(size: Metrics.dockMetaSize, weight: .medium))
+                    }
+                    .foregroundStyle(open == panel ? Palette.accent(dark) : Palette.muted(dark))
+                    .frame(height: 30).padding(.horizontal, 10)
+                }
+                .buttonStyle(AstraControlStyle(radius: 8, base: open == panel ? 0.07 : 0.0))
+                .accessibilityIdentifier("meetingPanel-\(panel.rawValue)")
+            }
+            StopRecordingButton { WindowCoordinator.shared.toggleRecording() }
+        }
+        .padding(.horizontal, Metrics.dockPadH)
+        .frame(height: Metrics.dockMeetingHeight)
     }
 }
 
@@ -513,48 +529,135 @@ private struct MeetingPanelBody: View {
     let panel: DockPresentation.MeetingPanel
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            DockLabel(text: panel.title)
-            switch panel {
-            case .caption:
-                ForEach(recording.transcript.suffix(4)) { line in
-                    HStack(alignment: .top, spacing: 7) {
-                        Text(line.speaker)
-                            .font(.system(size: Metrics.dockMetaSize, weight: .medium))
-                            .foregroundStyle(Palette.accent(dark))
-                            .frame(width: 56, alignment: .leading)
-                        Text(line.text)
-                            .font(.system(size: Metrics.dockRowSize))
-                            .foregroundStyle(line.interim ? Palette.muted(dark) : Palette.text(dark))
-                            .fixedSize(horizontal: false, vertical: true)
-                        Spacer(minLength: 0)
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 8) {
+                DockLabel(text: panel == .notes ? "Live Notes" : panel.title)
+                Spacer(minLength: 0)
+                // 両方同時に見たいときだけ、大きな面へ出す（既定では出さない）。
+                Button { WindowCoordinator.shared.detachMeetingSurface() } label: {
+                    HStack(spacing: 4) {
+                        Text("Open beside meeting")
+                        Image(systemName: "arrow.up.right").font(.system(size: 9, weight: .semibold))
                     }
-                }
-            case .decisions: lines(store.state.meeting.canvas.decisions)
-            case .concerns: lines(store.state.meeting.canvas.concerns)
-            case .actions: lines(store.state.meeting.canvas.actions)
-            case .ask:
-                Text("この会議について聞けます。⌥Space で話しかけてください。")
-                    .font(.system(size: Metrics.dockRowSize))
+                    .font(.system(size: Metrics.dockLabelSize, weight: .medium))
                     .foregroundStyle(Palette.muted(dark))
+                    .frame(height: 26).padding(.horizontal, 8)
+                }
+                .buttonStyle(AstraControlStyle(radius: 7, base: 0.0))
+                .accessibilityIdentifier("detachMeeting")
             }
+            content
+            Spacer(minLength: 0)
         }
         .accessibilityIdentifier("meetingPanelBody")
     }
 
-    @ViewBuilder private func lines(_ items: [String]) -> some View {
-        if items.isEmpty {
-            Text("まだありません")
-                .font(.system(size: Metrics.dockRowSize))
-                .foregroundStyle(Palette.muted(dark))
-        } else {
-            ForEach(items.suffix(5), id: \.self) { line in
-                Text("· \(line)")
+    @ViewBuilder private var content: some View {
+        switch panel {
+        case .captions:
+            ScrollView {
+                VStack(alignment: .leading, spacing: 9) {
+                    ForEach(recording.transcript.suffix(8)) { line in
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(line.speaker)
+                                .font(.system(size: Metrics.dockMetaSize, weight: .semibold))
+                                .foregroundStyle(Palette.accent(dark))
+                            Text(line.text)
+                                .font(.system(size: Metrics.dockRowSize))
+                                .foregroundStyle(line.interim ? Palette.muted(dark) : Palette.text(dark))
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                }
+            }
+            .scrollIndicators(.never)
+        case .notes:
+            let canvas = store.state.meeting.canvas
+            if canvas.isEmpty {
+                Text("聞きながら、決まったこと・やること・懸念をここに書いていきます。")
+                    .font(.system(size: Metrics.dockRowSize))
+                    .foregroundStyle(Palette.muted(dark))
+            } else {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 14) {
+                        notesGroup("Decisions", canvas.decisions)
+                        notesGroup("Concerns", canvas.concerns)
+                        notesGroup("Next Actions", canvas.actions)
+                        notesGroup("Questions", canvas.questions)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .scrollIndicators(.never)
+            }
+        case .ask:
+            AskInDockField()
+        }
+    }
+
+    @ViewBuilder private func notesGroup(_ title: String, _ lines: [String]) -> some View {
+        if !lines.isEmpty {
+            VStack(alignment: .leading, spacing: 5) {
+                Text(title)
+                    .font(.system(size: Metrics.dockMetaSize, weight: .semibold))
+                    .foregroundStyle(Palette.muted(dark))
+                ForEach(lines, id: \.self) { line in
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Text("•").foregroundStyle(Palette.muted(dark))
+                        Text(line)
+                            .font(.system(size: Metrics.dockRowSize))
+                            .foregroundStyle(Palette.text(dark))
+                            .fixedSize(horizontal: false, vertical: true)
+                        Spacer(minLength: 0)
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// 会議中に、その場で聞く。
+private struct AskInDockField: View {
+    @Environment(\.colorScheme) private var scheme
+    private var dark: Bool { scheme == .dark }
+    @State private var question = ""
+    @FocusState private var focused: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 10) {
+                Image(systemName: "sparkles").font(.system(size: 12))
+                    .foregroundStyle(Palette.accent(dark))
+                TextField("この会議について聞く", text: $question)
+                    .textFieldStyle(.plain)
+                    .font(.system(size: Metrics.dockPrimarySize))
+                    .foregroundStyle(Palette.text(dark))
+                    .focused($focused)
+                    .onSubmit(ask)
+                    .accessibilityIdentifier("askInDock")
+            }
+            .padding(.horizontal, 14)
+            .frame(height: 42)
+            .background(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(Color.subtleFill(dark, 0.04))
+                    .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .stroke(focused ? Palette.accent(dark) : Color.hairline(dark),
+                                lineWidth: focused ? Metrics.focusRing : 1)))
+            if !RecordingWorkspaceState.shared.aiResult.isEmpty {
+                Text(RecordingWorkspaceState.shared.aiResult)
                     .font(.system(size: Metrics.dockRowSize))
                     .foregroundStyle(Palette.text(dark))
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
+    }
+
+    private func ask() {
+        let text = question.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return }
+        question = ""
+        RecordingWorkspaceState.shared.runAIAction(text)
     }
 }
 
