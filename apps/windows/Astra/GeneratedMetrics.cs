@@ -27,13 +27,13 @@ public static class Metrics
     public const double DockThinkingWidth = 300;
     public const double DockThinkingHeight = 44;
     public const double DockAgentWidth = 480;
-    public const double DockAgentHeightBase = 64;
+    public const double DockAgentHeightBase = 52;
     public const double DockAgentRowHeight = 26;
     public const double DockConfirmWidth = 420;
     public const double DockConfirmHeight = 168;
     public const double DockMeetingWidth = 460;
     public const double DockMeetingHeight = 56;
-    public const double DockMeetingExpandedHeight = 212;
+    public const double DockMeetingExpandedHeight = 196;
     public const double DockPadH = 12;
     public const double DockPadV = 7;
     public const double DockRowGap = 6;

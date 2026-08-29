@@ -27,13 +27,13 @@ enum Metrics {
     static let dockThinkingWidth: CGFloat = 300
     static let dockThinkingHeight: CGFloat = 44
     static let dockAgentWidth: CGFloat = 480
-    static let dockAgentHeightBase: CGFloat = 64
+    static let dockAgentHeightBase: CGFloat = 52
     static let dockAgentRowHeight: CGFloat = 26
     static let dockConfirmWidth: CGFloat = 420
     static let dockConfirmHeight: CGFloat = 168
     static let dockMeetingWidth: CGFloat = 460
     static let dockMeetingHeight: CGFloat = 56
-    static let dockMeetingExpandedHeight: CGFloat = 212
+    static let dockMeetingExpandedHeight: CGFloat = 196
     static let dockPadH: CGFloat = 12
     static let dockPadV: CGFloat = 7
     static let dockRowGap: CGFloat = 6

@@ -401,8 +401,15 @@ enum SelfTest {
         WindowCoordinator.shared.syncDockPanels()
         MainWindowController.shared.show()
         store.workspaceOpened()
-        settle(1.2)
-        if let big = windows().max(by: { $0.w * $0.h < $1.w * $1.h }),
+        // 窓が出るまで待つ。固定待ちだと、忙しいときに Dock を拾ってしまう（実際に起きた）。
+        var workspaceWindow: (id: CGWindowID, x: CGFloat, y: CGFloat, w: CGFloat, h: CGFloat)?
+        let wsDeadline = Date().addingTimeInterval(8)
+        repeat {
+            settle(0.25)
+            workspaceWindow = windows().first { $0.w >= 700 && $0.h >= 480 }
+        } while workspaceWindow == nil && Date() < wsDeadline
+        settle(0.6)
+        if let big = workspaceWindow,
            let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, big.id, [.boundsIgnoreFraming, .bestResolution]) {
             let rep = NSBitmapImageRep(cgImage: cg)
             if let png = rep.representation(using: .png, properties: [:]) {

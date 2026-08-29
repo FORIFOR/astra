@@ -70,55 +70,55 @@ Visual Gate はマウスを動かせないので、状態を差し込んで撮�
 focus リングは **Tab / 矢印を押してから**出す（`KeyboardNavigation`）。
 標準の focus effect は `.focusEffectDisabled()` で切り、リングを自前の 1 本に統一している。
 
-## Task Dock（VoiceOS を Golden Reference にした再実装）
+## Task Dock（一つの存在が、大きさと役割を変える）
 
-「上端に置いた `Capsule()`」ではなく、**専用 NSPanel + Custom Bezier + 2 層**として作る。
+**窓を足さない。** 状態ごとに別 Panel を出すのをやめ、上辺中央の一枚が姿を変える。
 
 ```text
-画面上端 ────────────────────────────────
-        ╭──────────────────────╮        Outer shell  374×68
-      ╭─╯                      ╰─╮      VoiceDockShellShape
-      │ [option][command] …     │      + native vibrancy(.hudWindow) + 黒 92%
-      ╰──────────────────────────╯
-         └ Inner HUD 322×35（白 4.5% のガラス、offset 27）
+画面上端 ──────────────────────────────  上辺は角丸を付けず、縁に接する
+        ┌──────────────────┐            （丸めた瞬間「上に置いたカード」になる）
+        │ ● Astra    ⌥ space│            下の 2 角だけ丸い。くびれは作らない
+        └──────────────────┘
 ```
 
-| 決めごと     | 中身                                                                                          |
-| ------------ | --------------------------------------------------------------------------------------------- |
-| Window       | `VoiceHUDPanel`（`.borderless` / `.nonactivatingPanel` / level `.statusBar`）                 |
-| 位置         | `screen.frame.maxY - height`（`visibleFrame` ではない＝上端に**接着**する）                   |
-| 外形         | `VoiceDockShellShape`。上辺が最も狭く、肩で外へ**凹んで**張り出し、下部だけ絞る               |
-| 状態         | idle / listening / transcribing / thinking / contextualApp / quickActions / enteringRecording |
-| 不変条件     | **状態が変わっても Window 寸法は変えない**。中身だけ入れ替える                                |
-| 機能の出し方 | Dock に並べない。クリックで `QuickActionsPanel` を下に開く                                    |
-| 勧誘の出し方 | `AppDiscoveryPanel` を下に開く。Dock 本体は伸ばさない                                         |
-| 画面追従     | マウスのいる画面へ。ただし **500ms 安定してから**移す（跨いだ瞬間には動かさない）             |
-| 録音中       | Dock は完全退避。Recording Workspace 側の Task Dock と役割を分ける                            |
+| 状態              | 実寸         | 中身                                                   |
+| ----------------- | ------------ | ------------------------------------------------------ |
+| 1 Idle / Presence | 156×34       | 点と名前だけ                                           |
+| 2 App Context     | 196×34       | `◈ Notion` の 1 行（巨大 popup を出さない）            |
+| 2' 展開           | 320×176      | ページ名 + Suggested（そのアプリで実際に頼めること）   |
+| 3 Listening       | 420×84       | **発話内容が主役**。小さな波形 + Context Strip         |
+| 4 Thinking        | 300×44       | 1 行                                                   |
+| 5 Agent           | 480×可変     | 段ごとの進行（chat bubble ではない）。段数で下へ伸びる |
+| 6 Confirmation    | 420×168      | **Dock 自身が聞く**（NSAlert も別窓も使わない）        |
+| 7 Meeting         | 460×56 / 196 | 既定は 1 行。5 面のうち**開くのは 1 枚だけ**           |
+| 8 Full Workspace  | —            | Dock は静かなまま、Workspace が開く                    |
 
-寸法・肩の制御点・orb・余白はすべて `shared/design/tokens.json` の `voiceHud`。
-形を詰めるときは View ではなくトークンを動かす。
+- **top anchor 固定**: `screen.frame.maxY - height`。高さが変わっても上辺は動かず下へ伸びる
+- 白基調。`.regularMaterial` に薄い白（dark では薄い黒）を重ね、髪の毛ほどの縁。影は控えめ
+- 色は orb だけに持たせる。Context Strip の ✓ は形で伝える（色を増やさない）
+- 寸法・余白・時間はすべて `tokens.json` の `voiceHud` / `animation`
 
 ### Task Dock の Visual Gate
 
 ```bash
-apps/astra-macos/.build/debug/AstraMac --selftest dockshots /tmp/astra-dock
-apps/astra-macos/.build/debug/AstraMac --selftest dockdiff docs/golden-screenshots/task-dock /tmp/astra-dock
+apps/astra-macos/.build/debug/AstraMac --selftest dock8 /tmp/astra-dock [dark]
+apps/astra-macos/.build/debug/AstraMac --selftest dockanim
 ```
 
-`dockshots` が検査するのは窓の存在ではなく:
+`dock8` は fixture を並べない。`AstraStateStore` を**実際に遷移させて**撮る
+（`requireConfirmation` が Dock を展開し、`startTask` が timeline にし、
+`meetingStarted` が会議バーにする）。検査するのは:
 
-- 外形が 374×68 で、**5 状態すべてで同じ**（暴れない）
-- `screen.frame.maxY` に接着している（浮いていない）
-- Inner HUD に中身がある（真っ黒な板ではない）
-- 勧誘 / Quick Actions が **Dock の下に別 window として**出る
+- 各状態の実寸が仕様どおり
+- **上辺の Y が全状態で同一**（中央から広がっていない）
+- **窓が常に 1 枚**（第二 Panel を出していない）
+- 中身が入っている（真っ白/真っ黒な板ではない）
 
-Golden は `docs/golden-screenshots/task-dock/`（5 状態＋画面上端の文脈 2 枚）。
-`dockdiff` は色や文言ではなく **2 値の外形マスク**で比べる。
+`dockanim` は遷移中の window frame を 8ms ごとに拾い、
+**その間ずっと上辺 Y が動かない**ことと、幅が滑らかに変わることを実測する
+（実測 185–196ms / 上辺の値は 1 種類）。
 
-**VoiceOS 実機スクショとの比較は external verification pending。**
-`docs/reference/voiceos-task-dock.png` が置かれた時点で `pnpm verify:all` が自動で走る
-（未着の間は SKIP。無い物を PASS にしない）。今回の添付には画像が届いていなかったため、
-形状は仕様書の実測値（374×67 / 内側 320〜330×35 / offset 27 / bottom radius 17〜20）を正とした。
+golden は `docs/golden-screenshots/task-dock/`（light）と `.../dark/`。
 
 ## レイアウトの正（tokens）
 

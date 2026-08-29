@@ -47,6 +47,10 @@ enum AccessibilityContext {
     /// §8 の AXContext。取れたものだけ入れる（取れないものは nil のまま）。
     static func snapshot() -> AXContext? {
         guard let app = NSWorkspace.shared.frontmostApplication else { return nil }
+        // 自分自身は文脈ではない。Astra が前面のときに「Astra を見ています」と出すと、
+        // Context Strip が何も言っていないのと同じになる（実機で出た）。
+        if app.bundleIdentifier == Bundle.main.bundleIdentifier { return nil }
+        if app.localizedName == "Astra" { return nil }
         return AXContext(
             appName: app.localizedName ?? app.bundleIdentifier ?? "?",
             bundleId: app.bundleIdentifier,
