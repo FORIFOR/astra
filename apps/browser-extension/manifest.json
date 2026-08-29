@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "Astra Context Bridge",
+  "version": "0.1.0",
+  "description": "いま見ているページの必要な部分だけを、この Mac の Astra へ渡します。ページ全文は送りません。",
+  "minimum_chrome_version": "116",
+  "permissions": ["activeTab", "scripting", "nativeMessaging"],
+  "host_permissions": [
+    "https://www.notion.so/*",
+    "https://notion.so/*",
+    "https://mail.google.com/*"
+  ],
+  "background": { "service_worker": "src/background.js", "type": "module" },
+  "content_scripts": [
+    {
+      "matches": ["https://www.notion.so/*", "https://notion.so/*", "https://mail.google.com/*"],
+      "js": ["src/content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

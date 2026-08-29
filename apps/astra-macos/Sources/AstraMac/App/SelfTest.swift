@@ -64,6 +64,7 @@ enum SelfTest {
         case "storage": storage(); return true
         case "meetingiq": meetingIQ(); return true
         case "vad": vad(); return true
+        case "browser": browser(); return true
         case "panel": panelBehavior(); return true
         case "render": render(); return true
         default: return false
@@ -984,6 +985,113 @@ enum SelfTest {
             exit(0)
         } else {
             print("SELFTEST_FAIL vad: \(fail.joined(separator: ", "))")
+            exit(2)
+        }
+    }
+
+    /// `--selftest browser`: §9 Native Messaging / §10 Notion Adapter。
+    ///
+    /// ブラウザ無しで走る。確かめるのは
+    ///   - Chrome のフレーム形式（4byte LE + JSON）を正しく切り出すこと
+    ///   - **DOM 全文を受け取らないこと**（送られてきても上限で切る）
+    ///   - Notion のときだけ「どのページを見ているか」まで分かること
+    ///   - ブラウザ由来は AX より**信頼できる**として扱われること（§7 優先順位）
+    @MainActor
+    private static func browser() {
+        var fail: [String] = []
+        let store = AstraStateStore.shared
+        store.reset()
+
+        func frame(_ object: [String: Any]) -> Data {
+            NativeMessagingHost.encode(object) ?? Data()
+        }
+
+        // ① 1 通ぶん届いていなければ nil（エラーにしない）。
+        let full = frame(["type": "context", "payload": ["url": "https://example.com", "title": "T"]])
+        if (try? NativeMessagingHost.decode(full.prefix(3))) as? (json: [String: Any], consumed: Int) != nil {
+            fail.append("途中のバッファで復号した")
+        }
+        do {
+            guard let (json, consumed) = try NativeMessagingHost.decode(full) else {
+                fail.append("完全なフレームを復号できない"); reportBrowser(fail); return
+            }
+            if consumed != full.count { fail.append("消費バイト数が違う") }
+            if json["type"] as? String != "context" { fail.append("type が読めない") }
+        } catch {
+            fail.append("復号で例外 \(error)")
+        }
+
+        // ② 桁違いの長さは読まない（メモリを食い尽くさせない）。
+        var huge = Data([0xFF, 0xFF, 0xFF, 0xFF])
+        huge.append(Data(repeating: 0x20, count: 8))
+        do {
+            _ = try NativeMessagingHost.decode(huge)
+            fail.append("巨大な長さを受け入れた")
+        } catch NativeMessagingHost.FrameError.tooLarge {
+            // 期待どおり
+        } catch {
+            fail.append("巨大な長さで別の例外 \(error)")
+        }
+
+        // ③ 送り手を信用しきらない。全文を送られても上限で切る。
+        let many = (0..<50).map { ["id": "b\($0)", "role": "p", "text": String(repeating: "あ", count: 5000)] }
+        guard let payload = BrowserPayload.from(json: [
+            "url": "https://www.notion.so/team/Q3-Product-Roadmap-0123456789abcdef0123456789abcdef",
+            "title": "Q3 Product Roadmap | Notion",
+            "selection": String(repeating: "い", count: 9000),
+            "focusedElement": ["role": "textbox"],
+            "semanticBlocks": many,
+        ]) else {
+            fail.append("payload を作れない"); reportBrowser(fail); return
+        }
+        if payload.blocks.count > BrowserPayload.maxBlocks { fail.append("ブロック数を切っていない") }
+        if payload.blocks.contains(where: { $0.text.count > BrowserPayload.maxBlockChars }) {
+            fail.append("ブロック本文を切っていない")
+        }
+        if payload.selection.count > BrowserPayload.maxSelectionChars { fail.append("選択を切っていない") }
+
+        // ④ §10 Notion のときは「どのページか」まで分かる。
+        guard let bundle = NotionAdapter.bundle(payload) else {
+            fail.append("Notion を Notion と認識しない"); reportBrowser(fail); return
+        }
+        if bundle.document != "Q3 Product Roadmap" { fail.append("ページ名が取れない (\(bundle.document))") }
+        if bundle.pageId != "0123456789abcdef0123456789abcdef" { fail.append("page id が取れない") }
+        if !bundle.capabilities.contains("edit") { fail.append("入力できる場所なのに edit が無い") }
+        if bundle.selection.isEmpty { fail.append("block id を拾えない") }
+
+        // 入力欄に focus していないときは edit を出さない（できないことを挙げない）。
+        let reading = BrowserPayload(url: payload.url, title: payload.title, selection: "",
+                                     focusedRole: nil, blocks: payload.blocks)
+        if NotionAdapter.bundle(reading)?.capabilities.contains("edit") == true {
+            fail.append("読んでいるだけなのに edit を出した")
+        }
+        // Notion 以外では起きない。
+        let other = BrowserPayload(url: "https://example.com/x", title: "X", selection: "",
+                                   focusedRole: nil, blocks: [])
+        if NotionAdapter.bundle(other) != nil { fail.append("Notion でないのに Adapter が動いた") }
+
+        // ⑤ §7 ブラウザ由来は AX より信頼できる。同じアプリなら DOM が勝つ。
+        let now = Date()
+        NativeMessagingHost.handle(["type": "context", "payload": [
+            "url": payload.url, "title": payload.title, "selection": "",
+            "semanticBlocks": [["id": "b1", "role": "p", "text": "本文"]],
+        ]], now: now)
+        let ax = ContextFact(source: .accessibility, application: "Notion", sensitivity: .workspace,
+                             summary: "AX 版", capturedAt: now, expiresAt: now.addingTimeInterval(60))
+        store.updateContext(store.state.context.items + [ax], now: now)
+        if store.state.context.items.count != 1 { fail.append("同じアプリが 2 件残った") }
+        if store.state.context.items.first?.source != .browserDOM { fail.append("AX が DOM に勝った") }
+
+        store.reset()
+        reportBrowser(fail)
+    }
+
+    private static func reportBrowser(_ fail: [String]) {
+        if fail.isEmpty {
+            print("SELFTEST_OK browser: フレーム形式・全文は受け取らない・Notion のページを特定・DOM は AX より優先")
+            exit(0)
+        } else {
+            print("SELFTEST_FAIL browser: \(fail.joined(separator: ", "))")
             exit(2)
         }
     }

@@ -4,6 +4,13 @@ final class AstraAppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         // headless の自己検証（Swift → core → ディスク）。UI を出さずに終了する。
         if SelfTest.run(CommandLine.arguments) { return }
+        // §9 Chrome の Native Messaging host として起動されたとき。UI は出さない。
+        if CommandLine.arguments.contains("--native-messaging") {
+            LocalStore.shared.open()
+            NativeMessagingHost.runLoop()
+            NSApp.terminate(nil)
+            return
+        }
         // §24 ローカル保存を開く。§23 走っていた task を読み戻す。
         LocalStore.shared.open()
         AstraStateStore.shared.restoreRunningTask()
