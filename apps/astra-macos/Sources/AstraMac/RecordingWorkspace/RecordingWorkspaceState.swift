@@ -188,6 +188,8 @@ final class RecordingWorkspaceState: ObservableObject {
             self.audioLevels.append(CGFloat(level))
         }
         // 実ランタイム: マイク → astra-core → ディスク断片（許可があればライブ取り込み + 手元 STT）
+        // §26 会議に要るものだけを、始めるこの瞬間に要求する（起動時に一括で聞かない）。
+        PermissionCenter.request(.meeting)
         // 許可が無いまま黙って録り続けない。始めた時点で画面に出す。
         permissionIssue = Permissions.microphone == .granted ? nil : .microphoneDenied
         let localId = "meeting-\(Int(Date().timeIntervalSince1970))"
@@ -224,22 +226,49 @@ final class RecordingWorkspaceState: ObservableObject {
         }
         aiRunning = true; aiResult = ""
         let prompt = instruction + "\n---\n" + (transcriptText.isEmpty ? "(まだ発話がありません)" : transcriptText)
+
+        // §15 何をしているかを段階で見せる。Timeline はこの task を描くだけ（別に状態を持たない）。
+        let steps = [
+            AgentStep(title: "会話を用意する", tool: "conversation"),
+            AgentStep(title: "文字起こしを読む", tool: "transcript"),
+            AgentStep(title: "答えをまとめる", tool: "agent"),
+        ]
+        let store = AstraStateStore.shared
+        let task = AgentTask(id: UUID(), title: title, status: .running, steps: steps,
+                             startedAt: Date(), context: store.state.context)
+        store.startTask(task)
+        let stepIds = steps.map(\.id)
+
         Task.detached { [weak self] in
             do {
+                await MainActor.run { store.updateStep(stepIds[0], to: .running) }
                 let conv: String
                 if let existing = await self?.conversationId { conv = existing }
                 else {
                     conv = try AstraCoreBridge.startConversation(base, accessToken: token)
                     await MainActor.run { self?.conversationId = conv }
                 }
+                await MainActor.run {
+                    store.updateStep(stepIds[0], to: .success)
+                    store.updateStep(stepIds[1], to: transcriptText.isEmpty ? .failed : .success)
+                    store.updateStep(stepIds[2], to: .running)
+                }
                 let outcome = try AstraCoreBridge.sendTurn(base, accessToken: token, conversationId: conv, text: prompt)
                 let text = !outcome.answer.isEmpty ? outcome.answer
                     : !outcome.notice.isEmpty ? outcome.notice
                     : outcome.needsClarification ? "詳しく教えてください。"
                     : "(応答なし)"
-                await MainActor.run { self?.aiResult = text; self?.aiRunning = false }
+                await MainActor.run {
+                    store.updateStep(stepIds[2], to: .success)
+                    store.finishTask(.success)
+                    self?.aiResult = text; self?.aiRunning = false
+                }
             } catch {
-                await MainActor.run { self?.aiResult = "AI 操作に失敗しました: \(error)"; self?.aiRunning = false }
+                await MainActor.run {
+                    store.updateStep(stepIds[2], to: .failed)
+                    store.finishTask(.failed)
+                    self?.aiResult = "AI 操作に失敗しました: \(error)"; self?.aiRunning = false
+                }
             }
         }
     }

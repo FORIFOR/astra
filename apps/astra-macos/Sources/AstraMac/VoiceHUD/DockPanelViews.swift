@@ -62,7 +62,7 @@ struct QuickActionsView: View {
     private var actions: [Action] {
         [
             Action(icon: "square.dashed", title: "取り込む") { state.mode = .idle },
-            Action(icon: "sparkles", title: "聞く") { state.mode = .listening },
+            Action(icon: "sparkles", title: "聞く") { state.beginListening() },
             Action(icon: "record.circle", title: "録音") {
                 state.mode = .enteringRecording
                 WindowCoordinator.shared.toggleRecording()

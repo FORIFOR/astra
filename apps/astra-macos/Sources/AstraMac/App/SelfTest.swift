@@ -60,6 +60,7 @@ enum SelfTest {
         case "dockdiff": dockDiff(args); return true
         case "state": stateMachine(); return true
         case "presence": presence(); return true
+        case "perf": perf(); return true
         case "panel": panelBehavior(); return true
         case "render": render(); return true
         default: return false
@@ -178,7 +179,7 @@ enum SelfTest {
         let goldenDir = args[i + 2], freshDir = args[i + 3]
         let names = ["01-voice-hud-idle", "02-voice-hud-listening", "03-recording-workspace",
                      "04-recording-transcript", "05-recording-rag", "08-meeting-detail",
-                     "09-permission-denied"]
+                     "09-permission-denied", "10-agent-timeline"]
 
         /// 縮小グレースケール列。撮影ごとの微差を拾わないよう 200 点角に落とす。
         func signature(_ path: String) -> [UInt8]? {
@@ -572,6 +573,30 @@ enum SelfTest {
         guardian.apply(sharing: false)
         if guardian.isSharing { fail.append("共有終了が反映されない") }
 
+        // ⑥ §26 Progressive Permission: 機能ごとに**その分だけ**。他機能の許可を巻き込まない。
+        if PermissionCenter.Capability.voice.required != [.microphone] {
+            fail.append("voice がマイク以外まで要求している")
+        }
+        if PermissionCenter.Capability.control.required != [.accessibility] {
+            fail.append("control がアクセシビリティ以外まで要求している")
+        }
+        if PermissionCenter.Capability.screenAsk.required != [.screenRecording] {
+            fail.append("screenAsk が画面以外まで要求している")
+        }
+        if Set(PermissionCenter.Capability.meeting.required) != [.microphone, .screenRecording] {
+            fail.append("meeting の要求が仕様と違う")
+        }
+        // 全機能の和集合を、どれか 1 機能が単独で要求してはいけない（＝初回一括の禁止）。
+        let all = Set(PermissionCenter.Capability.allCases.flatMap(\.required))
+        for c in PermissionCenter.Capability.allCases where Set(c.required) == all && all.count > 1 {
+            fail.append("\(c.rawValue) が全部まとめて要求している")
+        }
+        // 使えないときは黙らず理由を返す。
+        for c in PermissionCenter.Capability.allCases {
+            let r = PermissionCenter.check(c)
+            if !r.ok && (r.reason ?? "").isEmpty { fail.append("\(c.rawValue) の不足理由が空") }
+        }
+
         // ⑥ §8 AXContext は取れなかった項目を埋めない。
         let ax = AXContext(appName: "Notion", bundleId: "notion.id", windowTitle: "Q3 Roadmap",
                            focusedRole: nil, selectedText: nil)
@@ -583,12 +608,103 @@ enum SelfTest {
         store.reset()
         WindowCoordinator.headless = false
         if fail.isEmpty {
-            print("SELFTEST_OK presence: 会議検出（Zoom/Meet/Huddle）・検出しても録音は始まらない・共有中は Dock を出さない・AX は推測で埋めない")
+            print("SELFTEST_OK presence: 会議検出（Zoom/Meet/Huddle）・検出しても録音は始まらない・共有中は Dock を出さない・許可は機能ごとに最小・AX は推測で埋めない")
             exit(0)
         } else {
             print("SELFTEST_FAIL presence: \(fail.joined(separator: ", "))")
             exit(2)
         }
+    }
+
+    /// `--selftest perf`: §29 の性能目標を**実測**する。目標値を書いただけにしない。
+    ///
+    /// ここで測るのは Astra が自分で決められるところだけ:
+    ///   - Dock が出るまで < 120ms
+    ///   - AX 取得 < 250ms
+    ///   - アプリ変更の認識 < 150ms
+    ///   - idle のメモリ < 180MB
+    /// CPU < 1% は測るのに時間の窓が要るので、ここでは idle 1 秒の実測を出す（判定は緩め）。
+    @MainActor
+    private static func perf() {
+        var report: [String] = []
+        var fail: [String] = []
+
+        func ms(_ block: () -> Void) -> Double {
+            let t0 = Date()
+            block()
+            return Date().timeIntervalSince(t0) * 1000
+        }
+
+        // Dock を出すまで（window を実際に出す）。
+        let dockMs = ms { WindowCoordinator.shared.showVoiceHUD() }
+        report.append(String(format: "dock=%.0fms", dockMs))
+        if dockMs >= 120 { fail.append(String(format: "Dock が %.0fms (目標 <120ms)", dockMs)) }
+
+        // AX 取得（許可が無ければ nil が返るが、かかる時間は測れる）。
+        let axMs = ms { _ = AccessibilityContext.snapshot() }
+        report.append(String(format: "ax=%.0fms", axMs))
+        if axMs >= 250 { fail.append(String(format: "AX が %.0fms (目標 <250ms)", axMs)) }
+
+        // 前面アプリの認識（NSWorkspace 読み + 会議判定 + 文脈更新まで）。
+        let appMs = ms {
+            _ = NSWorkspace.shared.frontmostApplication
+            MeetingDetector.refresh()
+        }
+        report.append(String(format: "app=%.0fms", appMs))
+        if appMs >= 150 { fail.append(String(format: "アプリ認識が %.0fms (目標 <150ms)", appMs)) }
+
+        // idle のメモリ（footprint）。
+        var info = task_vm_info_data_t()
+        var count = mach_msg_type_number_t(MemoryLayout<task_vm_info_data_t>.size / MemoryLayout<natural_t>.size)
+        let kr = withUnsafeMutablePointer(to: &info) {
+            $0.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
+                task_info(mach_task_self_, task_flavor_t(TASK_VM_INFO), $0, &count)
+            }
+        }
+        if kr == KERN_SUCCESS {
+            let mb = Double(info.phys_footprint) / 1_048_576
+            report.append(String(format: "mem=%.0fMB", mb))
+            if mb >= 180 { fail.append(String(format: "idle メモリが %.0fMB (目標 <180MB)", mb)) }
+        } else {
+            fail.append("メモリを測れない")
+        }
+
+        // idle 1 秒の CPU。数値は出すが、他プロセスの影響を受けるので判定は 10% で置く。
+        let cpu = idleCPUPercent(seconds: 1.0)
+        report.append(String(format: "cpu=%.1f%%", cpu))
+        if cpu >= 10 { fail.append(String(format: "idle CPU が %.1f%%", cpu)) }
+
+        WindowCoordinator.shared.hideVoiceHUD()
+        // 詳細は stderr へ。stdout の 1 行目は SELFTEST_* に保つ（呼び出し側が先頭で判定するため）。
+        FileHandle.standardError.write(Data(("PERF " + report.joined(separator: " ") + "\n").utf8))
+        if fail.isEmpty {
+            print("SELFTEST_OK perf: §29 の実測が目標内 (\(report.joined(separator: " ")))")
+            exit(0)
+        } else {
+            print("SELFTEST_FAIL perf: \(fail.joined(separator: ", "))")
+            exit(2)
+        }
+    }
+
+    /// 自プロセスの CPU 使用率（%）を実測する。
+    private static func idleCPUPercent(seconds: Double) -> Double {
+        func cpuSeconds() -> Double {
+            var info = task_thread_times_info_data_t()
+            var count = mach_msg_type_number_t(MemoryLayout<task_thread_times_info_data_t>.size / MemoryLayout<natural_t>.size)
+            let kr = withUnsafeMutablePointer(to: &info) {
+                $0.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
+                    task_info(mach_task_self_, task_flavor_t(TASK_THREAD_TIMES_INFO), $0, &count)
+                }
+            }
+            guard kr == KERN_SUCCESS else { return 0 }
+            let user = Double(info.user_time.seconds) + Double(info.user_time.microseconds) / 1e6
+            let sys = Double(info.system_time.seconds) + Double(info.system_time.microseconds) / 1e6
+            return user + sys
+        }
+        let before = cpuSeconds()
+        let until = Date().addingTimeInterval(seconds)
+        while Date() < until { CFRunLoopRunInMode(.defaultMode, 0.05, true) }
+        return (cpuSeconds() - before) / seconds * 100
     }
 
     /// begin → push → end の実ランタイム経路（I/O のみ、window は触らない）。
@@ -1920,6 +2036,24 @@ enum SelfTest {
         state.refreshRag()
         record("05-recording-rag", capture("05-recording-rag"),
                expW: Metrics.workspaceWidth, expH: Metrics.workspaceHeight, minColors: 12)
+        // 10 agent-timeline: §15 AI が何をしているかが段階で見えるか。
+        state.permissionIssue = nil
+        state.ragOpen = false
+        AstraStateStore.shared.startTask(AgentTask(
+            id: UUID(), title: "リアルタイム要約", status: .running,
+            steps: [
+                AgentStep(title: "会話を用意する", tool: "conversation", state: .success),
+                AgentStep(title: "文字起こしを読む", tool: "transcript", state: .running),
+                AgentStep(title: "答えをまとめる", tool: "agent"),
+            ],
+            startedAt: Date(),
+            context: ContextBundle(items: [ContextFact(
+                source: .accessibility, application: "Zoom", sensitivity: .workspace,
+                summary: "会議中", capturedAt: Date(), expiresAt: Date().addingTimeInterval(60))])))
+        record("10-agent-timeline", capture("10-agent-timeline"),
+               expW: Metrics.workspaceWidth, expH: Metrics.workspaceHeight, minColors: 12)
+        AstraStateStore.shared.reset()
+
         // 09 permission-denied: 許可が無いまま録り続けていることが画面に出るか。
         // 「録音中」と出ているのに無音、が一番高くつく壊れ方なので必ず撮る。
         state.ragOpen = false
@@ -1946,7 +2080,7 @@ enum SelfTest {
         print("SHOTS_DIR \(outDir)")
         for line in report { print("SHOT \(line)") }
         if failures.isEmpty {
-            print("SELFTEST_OK shots: 9面を実アプリで撮影・geometry OK")
+            print("SELFTEST_OK shots: 10面を実アプリで撮影・geometry OK")
             exit(0)
         } else {
             print("SELFTEST_FAIL shots: \(failures.joined(separator: ", "))")

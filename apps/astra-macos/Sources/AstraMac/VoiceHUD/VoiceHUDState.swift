@@ -29,6 +29,13 @@ final class VoiceHUDState: ObservableObject {
         apiBase = base; apiToken = token; conversationId = nil
     }
 
+    /// 声を使い始める。§26 マイクだけを、この瞬間に要求する。
+    func beginListening() {
+        PermissionCenter.request(.voice)
+        mode = .listening
+        AstraEventBus.shared.publish(.voiceStarted)
+    }
+
     /// Dock 本体のクリック。機能を Dock に並べず、下の Quick Actions Panel を出し入れする。
     func toggleQuickActions() {
         mode = mode == .quickActions ? .idle : .quickActions

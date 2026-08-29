@@ -44,7 +44,7 @@ struct HomeView: View {
                         .focused($intentFocused)
                         .onSubmit(submitIntent)
                         .accessibilityIdentifier("homeIntentField")
-                    Button { VoiceHUDState.shared.mode = .listening } label: {
+                    Button { VoiceHUDState.shared.beginListening() } label: {
                         Image(systemName: "mic").foregroundStyle(Palette.muted(dark))
                             .frame(width: 28, height: 28)   // §16 hit area
                     }
