@@ -32,37 +32,59 @@ final class VoiceHUDState: ObservableObject {
     /// 声を使い始める。§26 マイクだけを、この瞬間に要求する。
     func beginListening() {
         PermissionCenter.request(.voice)
-        mode = .listening
+        mode = .listening(partial: "")
         AstraEventBus.shared.publish(.voiceStarted)
     }
 
-    /// Dock 本体のクリック。機能を Dock に並べず、下の Quick Actions Panel を出し入れする。
+    /// 認識の途中経過。**確定を待たずに** Dock へ出す（§Listening）。
+    func updatePartial(_ text: String) {
+        guard case .listening = mode else { return }
+        mode = .listening(partial: text)
+        AstraEventBus.shared.publish(.voicePartial(text))
+    }
+
+    /// Dock 本体のクリック。窓は増やさず、Dock 自身が Quick Actions の姿になる。
     func toggleQuickActions() {
         mode = mode == .quickActions ? .idle : .quickActions
-        WindowCoordinator.shared.syncDockPanels()
     }
 
-    /// 前面アプリを見て、繋がっていないものがあれば勧める（1 セッション 1 回）。
-    func refreshContextualApp() {
-        guard mode == .idle || isContextual else { return }
-        if let s = AppDiscovery.suggestionForFrontmostApp() {
-            mode = .contextualApp(s)
-        } else if isContextual {
-            mode = .idle
+    /// App Context の開閉。閉じているときは 1 行、開くと頼めることを出す。
+    func toggleContextExpanded() {
+        switch mode {
+        case .appContext(let s) where !s.suggestions.isEmpty: mode = .appContextExpanded(s)
+        case .appContextExpanded(let s): mode = .appContext(s)
+        default: break
         }
-        WindowCoordinator.shared.syncDockPanels()
     }
 
-    private var isContextual: Bool {
-        if case .contextualApp = mode { return true }
-        return false
+    /// 提案を押した。Agent へ渡し、Dock は実行中の姿になる。
+    func runSuggestion(_ title: String) {
+        RecordingWorkspaceState.shared.runAIAction(title)
     }
 
-    /// 勧誘を断られた。二度と同じセッションでは出さない。
-    func dismissSuggestion() {
-        if case .contextualApp(let s) = mode { AppDiscovery.dismiss(s) }
-        mode = .idle
-        WindowCoordinator.shared.syncDockPanels()
+    /// 会議 Dock の面を開閉する。**常時 5 枚は並べない**ので、開くのは 1 枚だけ。
+    func toggleMeetingPanel(_ panel: DockPresentation.MeetingPanel) {
+        guard case .meeting(let open) = mode else { return }
+        mode = .meeting(expanded: open == panel ? nil : panel)
+    }
+
+    /// 前面アプリを見て、Presence を静かに変える。**巨大な popup は出さない。**
+    func refreshContextualApp() {
+        // 何かしている最中は割り込まない。
+        switch mode {
+        case .idle, .appContext, .appContextExpanded: break
+        default: return
+        }
+        guard let summary = AppContextResolver.current() else {
+            if case .idle = mode {} else { mode = .idle }
+            return
+        }
+        // 開いている最中に同じアプリなら、開いたままにする。
+        if case .appContextExpanded(let current) = mode, current.app == summary.app {
+            mode = .appContextExpanded(summary)
+        } else {
+            mode = .appContext(summary)
+        }
     }
 
     /// 認識した発話の行き先を決める（UI/UX テスト仕様 HUD-004 / P1 Context-aware Voice Routing）。

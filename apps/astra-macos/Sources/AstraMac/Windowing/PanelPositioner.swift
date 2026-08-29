@@ -7,21 +7,12 @@ enum PanelPositioner {
     /// 「メニューバーの下に浮いている」と「画面上端から生えている」は別物で、
     /// VoiceOS らしさは後者にある。level は `.statusBar` なのでメニューバーより手前に出る
     /// （以前ここを visibleFrame にしたのは level が低く裏へ潜っていたときの手当て）。
-    static func voiceHUDFrame(screen: NSScreen) -> NSRect {
+    static func voiceHUDFrame(screen: NSScreen,
+                              size: CGSize = CGSize(width: Metrics.hudWidth, height: Metrics.hudHeight)) -> NSRect {
+        // **top anchor 固定**。高さが変わっても上辺は画面の縁のまま、下へ伸びる。
         NSRect(
-            x: screen.frame.midX - Metrics.hudWidth / 2,
-            y: screen.frame.maxY - Metrics.hudHeight,
-            width: Metrics.hudWidth,
-            height: Metrics.hudHeight
-        )
-    }
-
-    /// Dock の真下に出す第二 Panel（勧誘 / Quick Actions）。Dock 本体は伸ばさない。
-    static func belowDockFrame(screen: NSScreen, size: NSSize) -> NSRect {
-        let dock = voiceHUDFrame(screen: screen)
-        return NSRect(
-            x: dock.midX - size.width / 2,
-            y: dock.minY - Metrics.dockPanelGap - size.height,
+            x: (screen.frame.midX - size.width / 2).rounded(),
+            y: screen.frame.maxY - size.height,
             width: size.width,
             height: size.height
         )

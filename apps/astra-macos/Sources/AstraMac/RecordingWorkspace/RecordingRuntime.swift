@@ -74,6 +74,8 @@ final class RecordingRuntime {
                         if let started { self?.lastPartialLatencyMs = Date().timeIntervalSince(started) * 1000 }
                         self?.lastTranscriptChannel = channel
                         self?.onTranscript?(live.text, live.isFinal)
+                        // Dock が listening のときは、そこにも途中経過を出す。
+                        if !live.isFinal { VoiceHUDState.shared.updatePartial(live.text) }
                     }
                 }
                 self.speech = st

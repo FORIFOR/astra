@@ -33,16 +33,19 @@ final class AstraStateStore: ObservableObject {
         guard state.dock != presentation else { return }
         state.dock = presentation
         setMode(Self.mode(for: presentation, current: state.mode))
+        // 見た目の大きさは状態から導く。ここで必ず合わせる。
+        WindowCoordinator.shared.syncDockPanels()
     }
 
-    /// 表示 → 活動状態の対応。勧誘や Quick Actions は「活動」ではないので idle のまま。
+    /// 表示 → 活動状態の対応。App Context や Quick Actions は「活動」ではないので idle のまま。
     static func mode(for dock: DockPresentation, current: AstraMode) -> AstraMode {
         switch dock {
-        case .listening: return .listening
-        case .transcribing: return .transcribing
+        case .listening(let partial): return partial.isEmpty ? .listening : .transcribing
         case .thinking: return .thinking
-        case .enteringRecording: return .meeting
-        case .idle, .contextualApp, .quickActions:
+        case .agent: return .acting
+        case .confirmation: return .awaitingConfirmation
+        case .meeting, .enteringRecording: return .meeting
+        case .idle, .appContext, .appContextExpanded, .quickActions:
             // 会議中や workspace 表示中は、Dock が idle でも活動は続いている。
             return (current == .meeting || current == .workspace) ? current : .idle
         }
@@ -65,6 +68,7 @@ final class AstraStateStore: ObservableObject {
         state.activeTask = task
         // §23 UI lifecycle ≠ Task lifecycle。Dock を閉じても task は消えない。
         LocalStore.shared.save(task)
+        setDock(.agent)
         setMode(.acting)
         bus.publish(.agentStarted(taskId: task.id))
     }
@@ -76,6 +80,8 @@ final class AstraStateStore: ObservableObject {
         let title = task.steps[index].title
         state.activeTask = task
         LocalStore.shared.save(task)
+        // 段が増減すると Dock の高さも変わる。
+        WindowCoordinator.shared.syncDockPanels()
         switch newState {
         case .running: bus.publish(.agentStepStarted(taskId: task.id, step: title))
         case .success, .failed:
@@ -90,6 +96,8 @@ final class AstraStateStore: ObservableObject {
         state.activeTask = task
         LocalStore.shared.save(task)
         setMode(status == .success ? .completed : .failed)
+        // 終わったら静かな姿へ戻す。会議中なら会議 Dock へ。
+        setDock(state.meeting.isRecording ? .meeting(expanded: nil) : .idle)
     }
 
     // MARK: - 確認（§16 / §17）
@@ -100,7 +108,8 @@ final class AstraStateStore: ObservableObject {
     func requireConfirmation(_ confirmation: ActionConfirmation) -> Bool {
         guard confirmation.risk.needsConfirmation else { return false }
         state.confirmation = confirmation
-        setMode(.awaitingConfirmation)
+        // §Confirmation Dock 自身が下へ伸びて聞く。
+        setDock(.confirmation(confirmation))
         bus.publish(.confirmationRequired(confirmation))
         return true
     }
@@ -109,6 +118,7 @@ final class AstraStateStore: ObservableObject {
         guard let pending = state.confirmation else { return }
         state.confirmation = nil
         bus.publish(.confirmationResolved(id: pending.id, approved: approved))
+        setDock(state.meeting.isRecording ? .meeting(expanded: nil) : .idle)
         setMode(approved ? .acting : .idle)
     }
 
@@ -124,6 +134,7 @@ final class AstraStateStore: ObservableObject {
     func meetingStarted(id: String) {
         state.meeting.meetingId = id
         state.meeting.isRecording = true
+        setDock(.meeting(expanded: nil))
         setMode(.meeting)
         bus.publish(.meetingStarted(id: id))
     }
@@ -132,6 +143,7 @@ final class AstraStateStore: ObservableObject {
         let id = state.meeting.meetingId
         state.meeting.isRecording = false
         state.meeting.meetingId = nil
+        setDock(.idle)
         setMode(.idle)
         if let id { bus.publish(.meetingEnded(id: id)) }
     }

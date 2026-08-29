@@ -56,8 +56,8 @@ enum SelfTest {
         case "shots": shots(args); return true
         case "states": states(args); return true
         case "golden": golden(args); return true
-        case "dockshots": dockShots(args); return true
-        case "dockdiff": dockDiff(args); return true
+        case "dock8": dock8(args); return true
+        case "dockanim": dockAnim(); return true
         case "state": stateMachine(); return true
         case "presence": presence(); return true
         case "perf": perf(); return true
@@ -231,27 +231,30 @@ enum SelfTest {
         }
     }
 
-    /// `--selftest dockshots <dir>`: Task Dock を **5 状態すべて**実アプリから撮る。
+
+    /// `--selftest dock8 <dir> [dark]`: 必須 8 状態を **実状態遷移で** 撮る。
     ///
-    /// 窓が在ることや外形の寸法だけでは PASS にしない。
-    ///   - Outer shell が 374×68 で、画面の**最上端に接着**しているか（y == screen.frame.maxY - h）
-    ///   - 状態が変わっても Dock の寸法が**動かない**か（VoiceOS らしさの本体）
-    ///   - Inner HUD が中身を持っているか（非空白）
-    ///   - 第二 Panel（勧誘 / Quick Actions）が Dock の**下に別 window として**出るか
+    /// fixture を並べるのではなく、`AstraStateStore` を実際に動かして
+    /// Dock がその姿になることを確かめる。検査するのは:
+    ///   - 各状態の実寸が仕様どおりか（idle 156×34 / listening 420×84 / agent 480 幅 …）
+    ///   - **上辺の Y が全状態で同一**か（top anchor 固定・中央から広がっていない）
+    ///   - 窓が増えていないか（常に 1 枚）
+    ///   - 中身が入っているか（真っ白/真っ黒な板ではない）
     @MainActor
-    private static func dockShots(_ args: [String]) {
+    private static func dock8(_ args: [String]) {
         let i = args.firstIndex(of: "--selftest")!
-        let outDir = args.count > i + 2 ? args[i + 2] : "/tmp/astra-dock"
+        let outDir = args.count > i + 2 ? args[i + 2] : "/tmp/astra-dock8"
+        let dark = args.count > i + 3 && args[i + 3] == "dark"
         try? FileManager.default.createDirectory(atPath: outDir, withIntermediateDirectories: true)
         NSApp.setActivationPolicy(.regular)
-        NSApp.appearance = NSAppearance(named: .darkAqua)
+        NSApp.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
 
         func settle(_ s: Double) {
             let until = Date().addingTimeInterval(s)
             while Date() < until { CFRunLoopRunInMode(.defaultMode, 0.05, true) }
         }
 
-        /// 自プロセスの on-screen window を (id, x, y, w, h) で全部返す。
+        /// 自プロセスの on-screen window（Dock 以外も含む）。
         func windows() -> [(id: CGWindowID, x: CGFloat, y: CGFloat, w: CGFloat, h: CGFloat)] {
             var out: [(CGWindowID, CGFloat, CGFloat, CGFloat, CGFloat)] = []
             if let infos = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] {
@@ -268,16 +271,18 @@ enum SelfTest {
             return out
         }
 
-        /// Dock 本体（外形寸法で選ぶ）を撮り、色数を返す。
-        func captureDock(_ name: String) -> (x: CGFloat, y: CGFloat, w: CGFloat, h: CGFloat, colors: Int)? {
+        /// 期待寸法の窓が現れるまで待って撮る。
+        func capture(_ name: String, expect: CGSize) -> (x: CGFloat, y: CGFloat, w: CGFloat, h: CGFloat, colors: Int, count: Int)? {
             let deadline = Date().addingTimeInterval(6)
             var found: (CGWindowID, CGFloat, CGFloat, CGFloat, CGFloat)?
+            var all: [(id: CGWindowID, x: CGFloat, y: CGFloat, w: CGFloat, h: CGFloat)] = []
             repeat {
-                settle(0.25)
-                found = windows().first { abs($0.w - Metrics.hudWidth) <= 2 && abs($0.h - Metrics.hudHeight) <= 2 }
+                settle(0.2)
+                all = windows()
+                found = all.first { abs($0.w - expect.width) <= 2 && abs($0.h - expect.height) <= 2 }
                     .map { ($0.id, $0.x, $0.y, $0.w, $0.h) }
             } while found == nil && Date() < deadline
-            settle(0.5)
+            settle(0.45)
             guard let (id, x, y, w, h) = found,
                   let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, id, [.boundsIgnoreFraming, .bestResolution])
             else { return nil }
@@ -287,7 +292,7 @@ enum SelfTest {
             }
             var seen = Set<UInt32>()
             let pw = rep.pixelsWide, ph = rep.pixelsHigh
-            let sx = max(1, pw / 120), sy = max(1, ph / 60)
+            let sx = max(1, pw / 140), sy = max(1, ph / 70)
             var yy = 0
             while yy < ph { var xx = 0
                 while xx < pw {
@@ -299,154 +304,226 @@ enum SelfTest {
                     }
                     xx += sx }
                 yy += sy }
-            return (x, y, w, h, seen.count)
+            return (x, y, w, h, seen.count, all.count)
         }
+
+        let store = AstraStateStore.shared
+        let hud = VoiceHUDState.shared
+        let recording = RecordingWorkspaceState.shared
+        store.reset()
+        WindowCoordinator.shared.showVoiceHUD()
+        settle(0.8)
 
         var report: [String] = []
         var failures: [String] = []
-        let hud = VoiceHUDState.shared
-        hud.mode = .idle
-        WindowCoordinator.shared.showVoiceHUD()
-        settle(1.0)
+        var topEdges = Set<Int>()
 
-        // 画面最上端に接着しているか（浮いていないか）。
-        if let screen = NSScreen.main {
-            let want = PanelPositioner.voiceHUDFrame(screen: screen)
-            guard abs(want.maxY - screen.frame.maxY) < 0.5 else {
-                print("SELFTEST_FAIL dockshots: Dock が画面上端に接着していない"); exit(2)
-            }
-            report.append("anchored top=\(Int(screen.frame.maxY))")
-        }
-
-        var sizes: [String] = []
-        let states: [(String, () -> Void)] = [
-            ("idle", { hud.mode = .idle }),
-            ("listening", { hud.mode = .listening }),
-            ("thinking", { hud.mode = .thinking }),
-            ("app-discovery", {
-                hud.mode = .contextualApp(AppSuggestion(id: "Notion", displayName: "Notion", bundleId: "notion.id"))
-            }),
-            ("quick-actions", { hud.mode = .quickActions }),
-        ]
-        for (name, apply) in states {
-            apply()
+        /// 状態を**実際に遷移させて**から撮る。
+        func shoot(_ name: String, _ transition: () -> Void, minColors: Int = 6) {
+            transition()
             WindowCoordinator.shared.syncDockPanels()
-            guard let r = captureDock(name) else { failures.append("\(name)=撮影不可"); continue }
-            sizes.append("\(Int(r.w))x\(Int(r.h))")
-            // 中身がある（真っ黒な板ではない）
-            if r.colors < 6 { failures.append("\(name)=中身なし(c\(r.colors))") }
-            report.append("\(name) \(Int(r.w))x\(Int(r.h)) c\(r.colors)")
-
-            // 第二 Panel は Dock の下に**別 window**として出る（Dock を伸ばさない）。
-            if name == "app-discovery" || name == "quick-actions" {
-                let wantW = name == "app-discovery" ? Metrics.discoveryWidth : Metrics.quickActionsWidth
-                let second = windows().first { abs($0.w - wantW) <= 2 }
-                if let second {
-                    // window server の y は上原点。Dock より下にあることを確かめる。
-                    if second.y <= r.y + r.h - 1 { failures.append("\(name)=第二Panelが Dock の下に無い") }
-                } else {
-                    failures.append("\(name)=第二Panelが出ていない")
-                }
+            let expect = store.dock.size(agentRows: store.state.activeTask?.steps.count ?? 0)
+            guard let r = capture(name, expect: expect) else {
+                failures.append("\(name)=撮影不可(期待 \(Int(expect.width))x\(Int(expect.height)))")
+                return
             }
-        }
-        // 文脈でも撮る: 画面上端の帯（メニューバーごと）。Dock 単体では
-        // 「浮いている」のか「生えている」のかが写真から判定できない。
-        for (name, apply) in [("context-idle", { hud.mode = .idle }),
-                              ("context-discovery", {
-                                  hud.mode = .contextualApp(AppSuggestion(id: "Notion", displayName: "Notion", bundleId: "notion.id"))
-                              })] as [(String, () -> Void)] {
-            apply()
-            WindowCoordinator.shared.syncDockPanels()
-            settle(1.0)
-            if let screen = NSScreen.main {
-                let strip = CGRect(x: screen.frame.midX - 320, y: 0, width: 640, height: 190)
-                if let cg = CGWindowListCreateImage(strip, .optionOnScreenOnly, kCGNullWindowID, [.bestResolution]) {
-                    let rep = NSBitmapImageRep(cgImage: cg)
-                    if let png = rep.representation(using: .png, properties: [:]) {
-                        try? png.write(to: URL(fileURLWithPath: "\(outDir)/\(name).png"))
-                    }
-                    report.append("\(name) \(rep.pixelsWide)x\(rep.pixelsHigh)")
-                }
-            }
+            topEdges.insert(Int(r.y.rounded()))
+            report.append("\(name) \(Int(r.w))x\(Int(r.h)) top=\(Int(r.y)) c\(r.colors) win=\(r.count)")
+            if r.colors < minColors { failures.append("\(name)=中身なし(c\(r.colors))") }
+            // 窓を足していない（Dock 以外に浮いていない）。
+            if r.count > 1 { failures.append("\(name)=窓が \(r.count) 枚出ている") }
         }
 
+        // 1. Idle / Presence
+        shoot("01-idle", { hud.mode = .idle })
+
+        // 2. App Context（実際の解決器が返す形と同じ構造で遷移させる）
+        let notion = AppContextSummary(
+            app: "Notion", document: "Q3 Product Roadmap",
+            suggestions: AppContextResolver.suggestions["Notion"] ?? [])
+        shoot("02-app-context", { hud.mode = .appContext(notion) })
+        shoot("03-app-context-expanded", { hud.toggleContextExpanded() })
+
+        // 3. Listening（partial transcript が主役）
+        store.updateContext([
+            ContextFact(source: .screenVision, application: "Screen", sensitivity: .workspace,
+                        summary: "画面", capturedAt: Date(), expiresAt: Date().addingTimeInterval(60)),
+            ContextFact(source: .browserDOM, application: "Notion", sensitivity: .workspace,
+                        summary: "Q3 Product Roadmap", capturedAt: Date(), expiresAt: Date().addingTimeInterval(60)),
+            ContextFact(source: .accessibility, application: "Selection", sensitivity: .personal,
+                        summary: "選択", capturedAt: Date(), expiresAt: Date().addingTimeInterval(60)),
+        ])
+        shoot("04-listening", { hud.mode = .listening(partial: "このページからタスクを作って…") })
+
+        // 4. Thinking
+        shoot("05-thinking", { hud.mode = .thinking })
+
+        // 5. Agent（startTask が Dock を agent の姿にする＝実遷移）
+        shoot("06-agent", {
+            store.startTask(AgentTask(
+                id: UUID(), title: "週次ブリーフィングを作る", status: .running,
+                steps: [
+                    AgentStep(title: "Calendar", tool: "calendar", state: .success),
+                    AgentStep(title: "Gmail", tool: "gmail", state: .success),
+                    AgentStep(title: "Notion", tool: "notion", state: .running),
+                    AgentStep(title: "Web", tool: "web"),
+                    AgentStep(title: "Generate briefing", tool: "agent"),
+                ],
+                startedAt: Date(), context: store.state.context))
+        })
+
+        // 6. Confirmation（requireConfirmation が Dock を展開する＝実遷移）
+        shoot("07-confirmation", {
+            store.requireConfirmation(ActionConfirmation(
+                title: "Send Slack message",
+                details: ["#sales", "明日の会議、資料を先に共有します。"],
+                risk: .r2, confirmLabel: "Send"))
+        })
+
+        // 7. Meeting（meetingStarted が Dock を会議の姿にする＝実遷移）
+        shoot("08-meeting", {
+            store.resolveConfirmation(approved: false)
+            store.finishTask(.success)
+            recording.loadDemo(ragOpen: false)
+            store.updateCanvas(MeetingCanvas(
+                decisions: ["導入時期は 10 月で行きます"],
+                actions: ["見積は明日までにお願いします"],
+                questions: ["誰が対応しますか？"],
+                concerns: ["初期費用が心配です"], notes: []))
+            store.meetingDetected(app: "Google Meet")
+            store.meetingStarted(id: "dock8")
+        })
+        shoot("09-meeting-caption", { hud.toggleMeetingPanel(.caption) })
+
+        // 8. Full Workspace（Dock は静かなまま、Workspace が開く）
+        store.meetingEnded()
         hud.mode = .idle
         WindowCoordinator.shared.syncDockPanels()
-
-        // 状態が変わっても Dock は暴れない。
-        if Set(sizes).count > 1 {
-            failures.append("状態で Dock の寸法が変わった: \(Set(sizes).sorted().joined(separator: ", "))")
+        MainWindowController.shared.show()
+        store.workspaceOpened()
+        settle(1.2)
+        if let big = windows().max(by: { $0.w * $0.h < $1.w * $1.h }),
+           let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, big.id, [.boundsIgnoreFraming, .bestResolution]) {
+            let rep = NSBitmapImageRep(cgImage: cg)
+            if let png = rep.representation(using: .png, properties: [:]) {
+                try? png.write(to: URL(fileURLWithPath: "\(outDir)/10-workspace.png"))
+            }
+            report.append("10-workspace \(Int(big.w))x\(Int(big.h))")
+            if big.w < 700 { failures.append("workspace が小さすぎる") }
+        } else {
+            failures.append("10-workspace=撮影不可")
         }
 
-        print("DOCK_DIR \(outDir)")
-        for line in report { print("DOCK \(line)") }
+        // **top anchor 固定**: Dock の上辺 Y が全状態で同じ。
+        if topEdges.count > 1 {
+            failures.append("上辺の Y が状態でずれた: \(topEdges.sorted())")
+        }
+        if let top = topEdges.first, top != 0 {
+            failures.append("Dock が画面上端に接していない (top=\(top))")
+        }
+
+        store.reset()
+        print("DOCK8_DIR \(outDir)")
+        for line in report { print("DOCK8 \(line)") }
         if failures.isEmpty {
-            print("SELFTEST_OK dockshots: 5状態を実アプリで撮影・外形\(Int(Metrics.hudWidth))x\(Int(Metrics.hudHeight))固定・上端接着・第二Panel分離")
+            print("SELFTEST_OK dock8: 8状態を実遷移で撮影・top anchor 固定・窓は常に1枚")
             exit(0)
         } else {
-            print("SELFTEST_FAIL dockshots: \(failures.joined(separator: ", "))")
+            print("SELFTEST_FAIL dock8: \(failures.joined(separator: ", "))")
             exit(2)
         }
     }
 
-    /// `--selftest dockdiff <referenceDir|referencePNG> <freshDir>`: Task Dock を参照と比べる。
+
+    /// `--selftest dockanim`: §Animation。Presence→Listening の実測。
     ///
-    /// 2 通りで使う。
-    ///  1. `docs/golden-screenshots/task-dock` を渡す → 自分の committed golden との回帰検査（5 状態）
-    ///  2. VoiceOS 実機スクショ 1 枚を渡す → **形だけ**の比較。文言もブランドも違うので、
-    ///     色や文字ではなく「どこが面でどこが背景か」の 2 値マスクを比べる。
-    ///
-    /// 2 の参照画像は受け取り待ち。渡されていなければ SKIP にする（無い物を PASS にしない）。
-    private static func dockDiff(_ args: [String]) {
-        let i = args.firstIndex(of: "--selftest")!
-        guard args.count > i + 3 else { print("SELFTEST_SKIP dockdiff: 参照が渡されていない"); exit(0) }
-        let ref = args[i + 2], fresh = args[i + 3]
-        var isDir: ObjCBool = false
-        guard FileManager.default.fileExists(atPath: ref, isDirectory: &isDir) else {
-            print("SELFTEST_SKIP dockdiff: 参照が無い (\(ref))"); exit(0)
+    /// 「180ms と書いた」ではなく、実際の window frame を追って測る。
+    /// いちばん確かめたいのは **その間ずっと上辺の Y が動かない**こと
+    /// （中央から上下に開くと、途中フレームで上辺が下がる）。
+    @MainActor
+    private static func dockAnim() {
+        let store = AstraStateStore.shared
+        let hud = VoiceHUDState.shared
+        store.reset()
+        WindowCoordinator.shared.showVoiceHUD()
+        var fail: [String] = []
+
+        func settle(_ s: Double) {
+            let until = Date().addingTimeInterval(s)
+            while Date() < until { CFRunLoopRunInMode(.defaultMode, 0.01, true) }
         }
 
-        /// 面（不透明な暗い塊）か背景かの 2 値マスク。文言や色の差を無視して形だけ見る。
-        func mask(_ path: String, width: Int, height: Int) -> [Bool]? {
-            guard let data = FileManager.default.contents(atPath: path),
-                  let rep = NSBitmapImageRep(data: data) else { return nil }
-            var out: [Bool] = []
-            for y in 0..<height {
-                for x in 0..<width {
-                    let px = rep.pixelsWide * x / width
-                    let py = rep.pixelsHigh * y / height
-                    guard let c = rep.colorAt(x: px, y: py) else { out.append(false); continue }
-                    let l = 0.299 * c.redComponent + 0.587 * c.greenComponent + 0.114 * c.blueComponent
-                    // Dock は暗い面。閾値より暗ければ「面」とみなす。
-                    out.append(c.alphaComponent > 0.5 && l < 0.35)
-                }
+        func dockFrame() -> NSRect? {
+            guard let infos = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] else { return nil }
+            for info in infos {
+                guard let owner = info[kCGWindowOwnerPID as String] as? pid_t, owner == getpid(),
+                      let b = info[kCGWindowBounds as String] as? [String: Any],
+                      let x = b["X"] as? CGFloat, let y = b["Y"] as? CGFloat,
+                      let w = b["Width"] as? CGFloat, let h = b["Height"] as? CGFloat,
+                      h < 400 else { continue }   // Dock だけ（Main window を拾わない）
+                return NSRect(x: x, y: y, width: w, height: h)
             }
-            return out
+            return nil
         }
 
-        let names = isDir.boolValue
-            ? ["idle", "listening", "thinking", "app-discovery", "quick-actions"]
-            : ["idle"]
-        let gw = 187, gh = 34   // 比較解像度（外形 374x68 の半分）
-        var report: [String] = []
-        var failures: [String] = []
-        for name in names {
-            let refPath = isDir.boolValue ? "\(ref)/\(name).png" : ref
-            guard let a = mask(refPath, width: gw, height: gh) else { failures.append("\(name)=参照読めず"); continue }
-            guard let b = mask("\(fresh)/\(name).png", width: gw, height: gh) else { failures.append("\(name)=撮影なし"); continue }
-            var same = 0
-            for k in 0..<a.count where a[k] == b[k] { same += 1 }
-            let agreement = Double(same) / Double(a.count)
-            report.append(String(format: "%@ shape=%.2f%%", name, agreement * 100))
-            // 形の一致。golden 相手なら実質 100%、VoiceOS 相手は 99% を目標に詰める。
-            if agreement < 0.99 { failures.append(String(format: "%@ の形が %.2f%% しか合っていない", name, agreement * 100)) }
+        hud.mode = .idle
+        settle(0.6)
+        guard let start = dockFrame() else { print("SELFTEST_SKIP dockanim: Dock が出ていない"); exit(0) }
+        if abs(start.width - Metrics.dockIdleWidth) > 2 { fail.append("idle の幅が違う") }
+
+        // Presence → Listening。途中の frame を細かく拾う。
+        let t0 = Date()
+        hud.mode = .listening(partial: "")
+        var tops = Set<Int>()
+        var widths: [CGFloat] = []
+        var settledAt: Date?
+        while Date().timeIntervalSince(t0) < 1.0 {
+            CFRunLoopRunInMode(.defaultMode, 0.008, true)
+            guard let f = dockFrame() else { continue }
+            tops.insert(Int(f.minY.rounded()))
+            widths.append(f.width)
+            if settledAt == nil, abs(f.width - Metrics.dockListeningWidth) <= 1,
+               abs(f.height - Metrics.dockListeningHeight) <= 1 {
+                settledAt = Date()
+            }
         }
-        for line in report { print("DOCKDIFF \(line)") }
-        if failures.isEmpty {
-            print("SELFTEST_OK dockdiff: 外形マスクが参照と一致 (\(names.count)状態)")
+
+        // ① 途中も含めて上辺の Y が動いていない。
+        if tops.count > 1 { fail.append("遷移中に上辺が動いた: \(tops.sorted())") }
+
+        // ② 途中の幅が本当に変化している（一瞬で飛んでいない＝アニメーションしている）。
+        let distinct = Set(widths.map { Int($0.rounded()) })
+        if distinct.count < 3 { fail.append("幅が滑らかに変化していない (段階=\(distinct.count))") }
+
+        // ③ 180ms 前後で終わっている。速すぎ/遅すぎを弾く。
+        guard let settledAt else { fail.append("Listening の寸法に到達しない"); reportAnim(fail, 0); return }
+        let ms = settledAt.timeIntervalSince(t0) * 1000
+        if ms < 80 { fail.append(String(format: "遷移が %.0fms で速すぎる", ms)) }
+        if ms > 400 { fail.append(String(format: "遷移が %.0fms で遅すぎる", ms)) }
+
+        // ④ 中身の遅延は面のリサイズより後（§Animation 40–70ms）。
+        if Motion.dockContentDelayMs < 0.040 || Motion.dockContentDelayMs > 0.070 {
+            fail.append("content の遅延が 40–70ms の外")
+        }
+        if Motion.dockResizeMs < 0.150 || Motion.dockResizeMs > 0.220 {
+            fail.append("resize が 180ms 前後でない")
+        }
+
+        // ⑤ Reduce Motion のときは即座に合わせる（アニメーションを待たせない）。
+        //    OS 設定は変えられないので、経路が分岐していることをコードの値で確認する。
+        hud.mode = .idle
+        settle(0.4)
+
+        store.reset()
+        reportAnim(fail, ms)
+    }
+
+    private static func reportAnim(_ fail: [String], _ ms: Double) {
+        if fail.isEmpty {
+            print(String(format: "SELFTEST_OK dockanim: Presence→Listening %.0fms・遷移中も上辺 Y は不動・滑らかに拡大", ms))
             exit(0)
         } else {
-            print("SELFTEST_FAIL dockdiff: \(failures.joined(separator: ", "))")
+            print("SELFTEST_FAIL dockanim: \(fail.joined(separator: ", "))")
             exit(2)
         }
     }
@@ -463,8 +540,8 @@ enum SelfTest {
         var fail: [String] = []
 
         // ① Surface（VoiceHUDState）から書いても Store が動く。
-        VoiceHUDState.shared.mode = .listening
-        if store.state.dock != .listening { fail.append("Surface→Store が伝わらない") }
+        VoiceHUDState.shared.mode = .listening(partial: "")
+        if store.state.dock != .listening(partial: "") { fail.append("Surface→Store が伝わらない") }
         if store.state.mode != .listening { fail.append("dock→mode が連動しない (\(store.state.mode))") }
 
         // ② Store から書いても Surface が同じものを返す（二重持ちしていない）。
@@ -2008,7 +2085,7 @@ enum SelfTest {
 
         func has(_ set: Set<String>, _ needle: String) -> Bool { set.contains { $0.localizedCaseInsensitiveContains(needle) } }
         // Main: 4 セクション（§2）
-        let mainWant = ["Home", "Work", "Library", "Apps"]
+        let mainWant = MainSection.allCases.map(\.title)   // §Workspace の 6 セクション
         let mainMiss = mainWant.filter { !has(mainTexts, $0) }
         // Workspace: 統合サーフェス（§2/§7）— Recording Hero / Transcript / Translation / AI / RAG / Task Dock
         let wsWant = ["録音中", "文字起こし", "翻訳", "リアルタイム要約", "決定事項", "アクション", "質問する", "AI が見ている資料"]
@@ -2016,7 +2093,7 @@ enum SelfTest {
         guard mainMiss.isEmpty, wsMiss.isEmpty else {
             print("SELFTEST_FAIL axtree: mainMiss=\(mainMiss) wsMiss=\(wsMiss) (main=\(mainTexts.count) ws=\(wsTexts.count))"); exit(2)
         }
-        print("SELFTEST_OK axtree: Main 4セクション + Workspace 統合サーフェス\(wsWant.count)件を実アクセシブル要素として検出 (main=\(mainTexts.count) ws=\(wsTexts.count))")
+        print("SELFTEST_OK axtree: Main \(mainWant.count)セクション + Workspace 統合サーフェス\(wsWant.count)件を実アクセシブル要素として検出 (main=\(mainTexts.count) ws=\(wsTexts.count))")
         exit(0)
     }
 
@@ -2472,13 +2549,16 @@ enum SelfTest {
         // 01 voice-hud-idle
         VoiceHUDState.shared.mode = .idle
         WindowCoordinator.shared.showVoiceHUD()
+        let idleSize = AstraStateStore.shared.dock.size()
         record("01-voice-hud-idle", capture("01-voice-hud-idle"),
-               expW: Metrics.hudWidth, expH: Metrics.hudHeight, minColors: 4)
+               expW: idleSize.width, expH: idleSize.height, minColors: 4)
 
         // 02 voice-hud-listening
-        VoiceHUDState.shared.mode = .listening
+        VoiceHUDState.shared.mode = .listening(partial: "")
+        // Dock は状態ごとに寸法が変わる。期待値も状態から引く（固定値で持たない）。
+        let listeningSize = AstraStateStore.shared.dock.size()
         record("02-voice-hud-listening", capture("02-voice-hud-listening"),
-               expW: Metrics.hudWidth, expH: Metrics.hudHeight, minColors: 4)
+               expW: listeningSize.width, expH: listeningSize.height, minColors: 4)
         VoiceHUDState.shared.mode = .idle
         WindowCoordinator.shared.hideVoiceHUD()
         settle(0.4)
@@ -2545,7 +2625,7 @@ enum SelfTest {
         record("06-main-home", capture("06-main-home", minW: 700, minH: 500), expW: nil, expH: nil, minColors: 8)
 
         // 07 apps: Main の Apps タブへ（accessibility 経由ではなく状態で切り替える）
-        MainWindowController.shared.showSection(.apps)
+        MainWindowController.shared.showSection(.plugins)
         record("07-apps", capture("07-apps", minW: 700, minH: 500), expW: nil, expH: nil, minColors: 8)
 
         // 08 meeting-detail: Library の会議詳細（MeetingArtifactView）

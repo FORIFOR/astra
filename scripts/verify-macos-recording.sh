@@ -98,22 +98,16 @@ done
 OUTP="$("$BIN" --selftest plugins "$ROOT/plugins/builtin")"; echo "$OUTP" | tail -1
 [[ "$OUTP" == SELFTEST_OK* || "$OUTP" == SELFTEST_SKIP* ]] || { echo "FAIL: plugin runtime" >&2; exit 1; }
 
-# Task Dock 単体の Visual Gate。5 状態を実アプリで撮り、外形が状態で動かないこと・
-# 画面上端に接着していること・第二 Panel が別 window として下に出ることまで見る。
+# Task Dock の 8 状態。fixture ではなく **AstraStateStore の実遷移**で撮り、
+# 各状態の実寸・top anchor 固定・窓が増えていないことまで見る。
 DOCK_DIR="${ASTRA_DOCK_DIR:-/tmp/astra-dock}"
-OUTD="$("$BIN" --selftest dockshots "$DOCK_DIR")"; echo "$OUTD" | tail -1
-[[ "$OUTD" == *SELFTEST_OK* ]] || { echo "$OUTD" >&2; echo "FAIL: Task Dock Visual Gate" >&2; exit 1; }
-OUTDD="$("$BIN" --selftest dockdiff "$ROOT/docs/golden-screenshots/task-dock" "$DOCK_DIR")"; echo "$OUTDD" | tail -1
-[[ "$OUTDD" == *SELFTEST_OK* || "$OUTDD" == *SELFTEST_SKIP* ]] || { echo "$OUTDD" >&2; echo "FAIL: Task Dock shape diff" >&2; exit 1; }
-# VoiceOS 実機スクショが置かれていれば、外形マスクをそれとも比べる（未着なら SKIP）。
-if [[ -f "$ROOT/docs/reference/voiceos-task-dock.png" ]]; then
-  OUTVR="$("$BIN" --selftest dockdiff "$ROOT/docs/reference/voiceos-task-dock.png" "$DOCK_DIR")"; echo "$OUTVR" | tail -1
-  [[ "$OUTVR" == *SELFTEST_OK* ]] || { echo "$OUTVR" >&2; echo "FAIL: VoiceOS reference diff" >&2; exit 1; }
-else
-  echo "SELFTEST_SKIP dockdiff(VoiceOS): docs/reference/voiceos-task-dock.png が未着"
-fi
+for appearance in light dark; do
+  ARG=""; [[ "$appearance" == dark ]] && ARG="dark"
+  OUTD="$("$BIN" --selftest dock8 "$DOCK_DIR-$appearance" $ARG)"; echo "$appearance: $(echo "$OUTD" | tail -1)"
+  [[ "$OUTD" == *SELFTEST_OK* ]] || { echo "$OUTD" >&2; echo "FAIL: Task Dock 8 states ($appearance)" >&2; exit 1; }
+done
 
-for t in screenshot waveform livemic livemeeting livescreen sttrecognize sttstream guishot axtree breakpoints dictation state presence perf storage meetingiq vad browser; do
+for t in screenshot waveform livemic livemeeting livescreen sttrecognize sttstream guishot axtree breakpoints dictation state presence perf storage meetingiq vad browser dockanim; do
   OUT="$("$BIN" --selftest "$t")"
   echo "$OUT"
   [[ "$OUT" == SELFTEST_OK* || "$OUT" == SELFTEST_SKIP* ]] || { echo "FAIL: macOS live $t" >&2; exit 1; }

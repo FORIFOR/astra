@@ -24,7 +24,7 @@ struct Waveform: View {
 /// HUD 用の小さな波形。
 struct MiniWaveform: View {
     var body: some View {
-        Waveform(levels: [0.3, 0.6, 0.9, 0.5, 0.7, 0.4], color: .cyan, barWidth: 2, spacing: 2)
+        Waveform(levels: [0.3, 0.6, 0.9, 0.5, 0.7, 0.4], color: Palette.accent(false).opacity(0.55), barWidth: 2, spacing: 2)
             .frame(width: 32, height: 12)
     }
 }

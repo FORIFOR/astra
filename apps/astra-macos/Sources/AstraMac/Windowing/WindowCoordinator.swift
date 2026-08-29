@@ -12,9 +12,6 @@ final class WindowCoordinator {
 
     private var hudPanel: AstraPanel<VoiceTaskDockView>?
     private var recordingPanel: AstraPanel<RecordingWorkspaceView>?
-    /// Dock の下に出す第二 Panel。Dock 本体を伸ばさないために分けている（§13）。
-    private var discoveryPanel: AstraPanel<AppDiscoveryView>?
-    private var quickActionsPanel: AstraPanel<QuickActionsView>?
     /// Dock を置く画面。切り替えは 500ms 安定してから（画面間でバタつかせない）。
     private var dockScreen: NSScreen?
     private var pendingScreen: (screen: NSScreen, since: Date)?
@@ -27,7 +24,7 @@ final class WindowCoordinator {
             VoiceHUDState.shared.mode = .idle
             showVoiceHUD()
         case .hudListening:
-            VoiceHUDState.shared.mode = .listening
+            VoiceHUDState.shared.mode = .listening(partial: "")
             showVoiceHUD()
         case .hudThinking:
             VoiceHUDState.shared.mode = .thinking
@@ -73,66 +70,49 @@ final class WindowCoordinator {
     func showVoiceHUD() {
         if Self.headless { return }
         if hudPanel == nil {
+            // 確認や入力を受けるので key になれる必要がある（ただし他アプリを非活性にしない）。
             hudPanel = AstraPanel(
-                size: NSSize(width: Metrics.hudWidth, height: Metrics.hudHeight),
+                size: AstraStateStore.shared.dock.size(),
                 level: .statusBar,
-                canKey: false,
+                canKey: true,
                 content: VoiceTaskDockView()
             )
         }
         guard let panel = hudPanel, let screen = activeScreen() else { return }
-        panel.setFrame(PanelPositioner.voiceHUDFrame(screen: screen), display: false)
+        panel.setFrame(
+            PanelPositioner.voiceHUDFrame(screen: screen, size: AstraStateStore.shared.dock.size()),
+            display: false)
         fadeIn(panel, makeKey: false)
-        syncDockPanels()
     }
 
     func hideVoiceHUD() {
         if Self.headless { return }
-        hideDockPanels()
         guard let panel = hudPanel else { return }
         fadeOut(panel)
     }
 
-    /// Dock の状態に合わせて第二 Panel を出し入れする。Dock 本体の寸法は決して変えない。
+    /// Dock の大きさを状態に合わせる。**窓は増やさない**。
+    ///
+    /// 上辺の Y を固定したまま高さだけ変える。中央から上下へ広がると、
+    /// メニューバーの上にはみ出したり、画面の縁から離れたりして一体感が壊れる。
     func syncDockPanels() {
         if Self.headless { return }
-        guard let screen = activeScreen() else { return }
-        switch VoiceHUDState.shared.mode {
-        case .contextualApp(let suggestion):
-            hide(&quickActionsPanel)
-            let size = NSSize(width: Metrics.discoveryWidth, height: Metrics.discoveryHeight)
-            if discoveryPanel == nil {
-                discoveryPanel = AstraPanel(size: size, level: .statusBar, canKey: false,
-                                            content: AppDiscoveryView(suggestion: suggestion))
+        guard let panel = hudPanel, let screen = activeScreen() else { return }
+        let target = PanelPositioner.voiceHUDFrame(
+            screen: screen,
+            size: AstraStateStore.shared.dock.size(
+                agentRows: AstraStateStore.shared.state.activeTask?.steps.count ?? 0))
+        guard panel.frame != target else { return }
+        // Reduce Motion のときは一気に。そうでなければ 180ms で。
+        if NSWorkspace.shared.accessibilityDisplayShouldReduceMotion {
+            panel.setFrame(target, display: true)
+        } else {
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = Motion.dockResizeMs
+                context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+                panel.animator().setFrame(target, display: true)
             }
-            show(discoveryPanel, frame: PanelPositioner.belowDockFrame(screen: screen, size: size))
-        case .quickActions:
-            hide(&discoveryPanel)
-            let size = NSSize(width: Metrics.quickActionsWidth, height: Metrics.quickActionsHeight)
-            if quickActionsPanel == nil {
-                quickActionsPanel = AstraPanel(size: size, level: .statusBar, canKey: false,
-                                               content: QuickActionsView())
-            }
-            show(quickActionsPanel, frame: PanelPositioner.belowDockFrame(screen: screen, size: size))
-        default:
-            hideDockPanels()
         }
-    }
-
-    private func hideDockPanels() {
-        hide(&discoveryPanel)
-        hide(&quickActionsPanel)
-    }
-
-    private func show<V: View>(_ panel: AstraPanel<V>?, frame: NSRect) {
-        guard let panel else { return }
-        panel.setFrame(frame, display: false)
-        fadeIn(panel, makeKey: false)
-    }
-
-    private func hide<V: View>(_ panel: inout AstraPanel<V>?) {
-        panel?.orderOut(nil)
-        panel = nil
     }
 
     /// Dock を置く画面。使っているアプリの窓がある画面へ移すが、跨いだ瞬間には動かさない。

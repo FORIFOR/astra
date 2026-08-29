@@ -11,15 +11,92 @@ enum AstraMode: String, Equatable {
 }
 
 /// Task Dock が何を見せているか。`AstraMode` は「何が起きているか」、こちらは「何を出しているか」。
-/// 分けているのは、勧誘や Quick Actions が **活動ではない**ため（idle のまま出る）。
+///
+/// Astra は **窓を増やさない**。一枚の Dock が状態に応じて大きさと役割を変える。
+/// 寸法もここから引く（View 側で分岐して数字を書かない）。
 enum DockPresentation: Equatable {
+    /// 常駐。名前も出さない、いちばん静かな姿。
     case idle
-    case listening
-    case transcribing(String)
+    /// 前面アプリを認識した。巨大な popup は出さず、Presence が静かに変わるだけ。
+    case appContext(AppContextSummary)
+    /// 上を押して開いた状態。そのアプリで頼めることを出す。
+    case appContextExpanded(AppContextSummary)
+    /// 声を聞いている。主役は波形ではなく**話した内容**。
+    case listening(partial: String)
     case thinking
-    case contextualApp(AppSuggestion)
+    /// Agent 実行中。仕事の進行そのものを段で出す。
+    case agent
+    /// 取り返しのつかない操作の確認。Dock 自体が下へ伸びて聞く（別窓も NSAlert も使わない）。
+    case confirmation(ActionConfirmation)
+    /// 会議中。既定は 1 行。必要なものだけ開く。
+    case meeting(expanded: MeetingPanel?)
+    /// 旧 Quick Actions（Dock を押したとき）。
     case quickActions
+    /// 録音へ移る途中。
     case enteringRecording
+
+    /// 会議 Dock から開ける面。常時 5 枚並べない（§Meeting）。
+    enum MeetingPanel: String, Equatable, CaseIterable {
+        case caption, decisions, concerns, actions, ask
+        var title: String {
+            switch self {
+            case .caption: return "Live Caption"
+            case .decisions: return "Decision"
+            case .concerns: return "Concern"
+            case .actions: return "Next Action"
+            case .ask: return "Ask Astra"
+            }
+        }
+        var icon: String {
+            switch self {
+            case .caption: return "text.viewfinder"
+            case .decisions: return "checkmark.circle"
+            case .concerns: return "exclamationmark.triangle"
+            case .actions: return "arrow.right.circle"
+            case .ask: return "sparkles"
+            }
+        }
+    }
+
+    /// この状態での Dock の大きさ。**top anchor は固定**なので、変わるのは幅と高さだけ。
+    func size(agentRows: Int = 0) -> CGSize {
+        switch self {
+        case .idle:
+            return CGSize(width: Metrics.dockIdleWidth, height: Metrics.dockIdleHeight)
+        case .appContext:
+            return CGSize(width: Metrics.dockContextWidth, height: Metrics.dockContextHeight)
+        case .appContextExpanded:
+            return CGSize(width: Metrics.dockContextExpandedWidth, height: Metrics.dockContextExpandedHeight)
+        case .listening:
+            return CGSize(width: Metrics.dockListeningWidth, height: Metrics.dockListeningHeight)
+        case .thinking:
+            return CGSize(width: Metrics.dockThinkingWidth, height: Metrics.dockThinkingHeight)
+        case .agent:
+            // 内容に応じて**下へ**伸びる。幅は変えない。
+            return CGSize(width: Metrics.dockAgentWidth,
+                          height: Metrics.dockAgentHeightBase + CGFloat(agentRows) * Metrics.dockAgentRowHeight)
+        case .confirmation:
+            return CGSize(width: Metrics.dockConfirmWidth, height: Metrics.dockConfirmHeight)
+        case .meeting(let panel):
+            return CGSize(width: Metrics.dockMeetingWidth,
+                          height: panel == nil ? Metrics.dockMeetingHeight : Metrics.dockMeetingExpandedHeight)
+        case .quickActions:
+            return CGSize(width: Metrics.dockContextExpandedWidth, height: Metrics.dockThinkingHeight + 24)
+        case .enteringRecording:
+            return CGSize(width: Metrics.dockThinkingWidth, height: Metrics.dockThinkingHeight)
+        }
+    }
+}
+
+/// 前面アプリの要約。Presence に出すのはこの 1 行だけ。
+struct AppContextSummary: Equatable {
+    let app: String
+    /// 開いている書類（Notion のページ名など）。無ければ nil。
+    let document: String?
+    /// そのアプリで頼めること。空なら展開しても意味がないので開かせない。
+    let suggestions: [String]
+
+    static let none = AppContextSummary(app: "", document: nil, suggestions: [])
 }
 
 // MARK: - §7 / §25 Context

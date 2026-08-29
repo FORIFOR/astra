@@ -2,22 +2,26 @@ import SwiftUI
 import AstraCore
 
 enum MainSection: String, CaseIterable, Identifiable {
-    case home, agents, library, apps
+    case home, tasks, meetings, library, agents, plugins
     var id: String { rawValue }
     var title: String {
         switch self {
         case .home: return "Home"
-        case .agents: return "Work"
+        case .tasks: return "Tasks"
+        case .meetings: return "Meetings"
         case .library: return "Library"
-        case .apps: return "Apps"
+        case .agents: return "Agents"
+        case .plugins: return "Plugins"
         }
     }
     var icon: String {
         switch self {
         case .home: return "house"
-        case .agents: return "checklist"
+        case .tasks: return "checklist"
+        case .meetings: return "waveform"
         case .library: return "books.vertical"
-        case .apps: return "square.grid.2x2"
+        case .agents: return "sparkles"
+        case .plugins: return "square.grid.2x2"
         }
     }
 }
@@ -58,6 +62,8 @@ final class MainData: ObservableObject {
 @MainActor
 final class MainNav: ObservableObject {
     static let shared = MainNav()
+    /// 右 Panel は既定で閉じる（§Workspace）。
+    @Published var activityOpen = false
     @Published var section: MainSection = .home
     /// 会議詳細のプレビュー（Library から開いた状態を撮るため）。
     @Published var meetingDetail = false
@@ -83,6 +89,28 @@ struct MainWindowView: View {
                 }.padding(10)
             }
         } detail: {
+            detailContent
+                // 右の Agent Activity は **既定で閉じる**。Content を主役にする（Linear の作法）。
+                .inspector(isPresented: $nav.activityOpen) {
+                    AgentActivityPane()
+                        .inspectorColumnWidth(min: 240, ideal: 280, max: 340)
+                }
+                .toolbar {
+                    ToolbarItem {
+                        Button { nav.activityOpen.toggle() } label: {
+                            Image(systemName: "sidebar.trailing")
+                        }
+                        .help("Agent Activity")
+                        .accessibilityIdentifier("toggleActivity")
+                    }
+                }
+        }
+        .frame(minWidth: 900, minHeight: 560)
+        .onAppear { data.load() }
+    }
+
+    @ViewBuilder private var detailContent: some View {
+        Group {
             if nav.meetingDetail {
                 MeetingArtifactView(
                     title: "A社 新規提案", duration: "42:18", participants: 3,
@@ -95,14 +123,49 @@ struct MainWindowView: View {
             } else {
                 switch nav.section {
                 case .home: HomePane(recent: data.library)
-                case .agents: AgentsPane(apps: data.apps)
+                case .tasks: AgentsPane(apps: data.apps)
+                case .meetings: LibraryPane(titles: data.library)
                 case .library: LibraryPane(titles: data.library)
-                case .apps: AppsPane(apps: data.apps)
+                case .agents: AgentsPane(apps: data.apps)
+                case .plugins: AppsPane(apps: data.apps)
                 }
             }
         }
-        .frame(minWidth: 900, minHeight: 560)
-        .onAppear { data.load() }
+    }
+}
+
+/// 右の Agent Activity。既定は閉じていて、要るときだけ開く。
+private struct AgentActivityPane: View {
+    @ObservedObject private var store = AstraStateStore.shared
+    @Environment(\.colorScheme) private var scheme
+    private var dark: Bool { scheme == .dark }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Agent Activity")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(Palette.muted(dark))
+            if store.state.activeTask != nil {
+                TaskTimelineView()
+            } else {
+                Text("いま動いている仕事はありません。")
+                    .font(.system(size: 12))
+                    .foregroundStyle(Palette.muted(dark))
+            }
+            // 直近の出来事（§28 EventBus）。何が起きたかを追えるようにする。
+            if !AstraEventBus.shared.recent.isEmpty {
+                Divider().overlay(Palette.border(dark))
+                ForEach(Array(AstraEventBus.shared.recent.suffix(6).enumerated()), id: \.offset) { _, e in
+                    Text(e.name)
+                        .font(.system(size: 10, design: .monospaced))
+                        .foregroundStyle(Palette.muted(dark))
+                }
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityIdentifier("agentActivity")
     }
 }
 
