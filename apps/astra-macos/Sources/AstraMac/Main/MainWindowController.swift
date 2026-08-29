@@ -9,8 +9,14 @@ final class MainWindowController {
 
     func show() {
         if window == nil {
+            // 画面に対する割合で開く。固定 1040pt だと大きな画面で「浮いた小窓」に見える
+            // （2560pt のデスクトップで実際にそう見えた）。
+            let visible = NSScreen.main?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
+            let size = NSSize(
+                width: max(1120, min(visible.width * 0.72, 1680)),
+                height: max(720, min(visible.height * 0.80, 1040)))
             let win = NSWindow(
-                contentRect: NSRect(x: 0, y: 0, width: 1040, height: 680),
+                contentRect: NSRect(origin: .zero, size: size),
                 styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
                 backing: .buffered, defer: false)
             win.title = "Astra"

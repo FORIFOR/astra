@@ -90,6 +90,8 @@ struct MainWindowView: View {
             }
         } detail: {
             detailContent
+                // 見出しは開いている面に合わせる（以前は常に Home のままだった）。
+                .navigationTitle(nav.meetingDetail ? "Meeting" : nav.section.title)
                 // 右の Agent Activity は **既定で閉じる**。Content を主役にする（Linear の作法）。
                 .inspector(isPresented: $nav.activityOpen) {
                     AgentActivityPane()
@@ -123,11 +125,11 @@ struct MainWindowView: View {
             } else {
                 switch nav.section {
                 case .home: HomePane(recent: data.library)
-                case .tasks: AgentsPane(apps: data.apps)
-                case .meetings: LibraryPane(titles: data.library)
+                case .tasks: TasksPane()
+                case .meetings: MeetingsPane()
                 case .library: LibraryPane(titles: data.library)
                 case .agents: AgentsPane(apps: data.apps)
-                case .plugins: AppsPane(apps: data.apps)
+                case .plugins: PluginsPane()
                 }
             }
         }
