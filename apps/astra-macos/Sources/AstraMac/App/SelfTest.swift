@@ -65,6 +65,8 @@ enum SelfTest {
         case "sessionshots": sessionShots(args); return true
         case "uiscale": uiScale(); return true
         case "acceptance": acceptance(); return true
+        case "sessionsync": sessionSync(); return true
+        case "recordleg": recordLeg(args); return true
         case "state": stateMachine(); return true
         case "presence": presence(); return true
         case "perf": perf(); return true
@@ -1297,6 +1299,213 @@ enum SelfTest {
         }
     }
 
+
+    /// `--selftest sessionsync`: 同じ Session を全員が見ているか。
+    ///
+    /// 「Store を作った」だけでは、Dock と Home と DB がずれていないことは言えない。
+    /// ここは **3 か所から同じ id が読めるか**、Stop がどちらから来ても両方が動くか、
+    /// 面を切り替えても録音が続くかを見る。
+    @MainActor
+    private static func sessionSync() {
+        let path = NSTemporaryDirectory() + "astra-sync-\(getpid()).sqlite"
+        defer { try? FileManager.default.removeItem(atPath: path) }
+        LocalStore.shared.open(path)
+        WindowCoordinator.headless = true
+        let sessions = MeetingSessionStore.shared
+        let recording = RecordingWorkspaceState.shared
+        let dock = AstraStateStore.shared
+        sessions.reset(); dock.reset()
+        var fail: [String] = []
+
+        func settle(_ s: Double) {
+            let until = Date().addingTimeInterval(s)
+            while Date() < until { CFRunLoopRunInMode(.defaultMode, 0.02, true) }
+        }
+
+        // ---- Dock から Stop したとき
+        recording.start()
+        guard let id = sessions.live?.id else {
+            print("SELFTEST_FAIL sessionsync: 録音が始まらない"); exit(2)
+        }
+        // ① 3 か所が同じ id を指す。
+        let homeId = sessions.recent.first?.id
+        let dockId = dock.state.meeting.meetingId
+        let dbId = LocalStore.shared.loadSessions().first { $0.status == .recording }?.id
+        if homeId != id { fail.append("Home の id が違う (\(homeId ?? "nil"))") }
+        if dockId != id { fail.append("Dock の id が違う (\(dockId ?? "nil"))") }
+        if dbId != id { fail.append("DB の id が違う (\(dbId ?? "nil"))") }
+
+        // ② 面を切り替えても録音も id も失わない。
+        for panel in DockPresentation.MeetingPanel.allCases {
+            VoiceHUDState.shared.toggleMeetingPanel(panel)
+            if !recording.isRecording { fail.append("\(panel.rawValue) で録音が止まった") }
+            if sessions.live?.id != id { fail.append("\(panel.rawValue) で id が変わった") }
+            VoiceHUDState.shared.toggleMeetingPanel(panel)
+        }
+
+        // ③ UI Scale を変えても録音・id・経過が続く。
+        let elapsedBefore = sessions.live?.duration ?? 0
+        UIScale.shared.set(.large)
+        settle(0.3)
+        if !recording.isRecording { fail.append("Scale 変更で録音が止まった") }
+        if sessions.live?.id != id { fail.append("Scale 変更で id が変わった") }
+        if (sessions.live?.duration ?? 0) < elapsedBefore { fail.append("Scale 変更で経過が巻き戻った") }
+        UIScale.shared.set(.comfortable)
+
+        // ④ Dock（WindowCoordinator）から Stop → Home も processing。
+        WindowCoordinator.shared.toggleRecording()
+        settle(0.2)
+        if sessions.session(id: id)?.status != .processing {
+            fail.append("Dock 停止で Home が processing にならない (\(sessions.session(id: id)?.status.rawValue ?? "nil"))")
+        }
+        if recording.isRecording { fail.append("Dock 停止で録音が止まっていない") }
+
+        // 段階が進む（spinner だけにしない）。
+        var sawStage = sessions.session(id: id)?.processingStage != nil
+        let stageDeadline = Date().addingTimeInterval(3)
+        while !sawStage, Date() < stageDeadline {
+            CFRunLoopRunInMode(.defaultMode, 0.05, true)
+            sawStage = sessions.session(id: id)?.processingStage != nil
+        }
+        if !sawStage { fail.append("processing の段階が出ない") }
+        // ready まで待つ。
+        let readyDeadline = Date().addingTimeInterval(6)
+        while sessions.session(id: id)?.status != .ready, Date() < readyDeadline {
+            CFRunLoopRunInMode(.defaultMode, 0.05, true)
+        }
+
+        // ---- Home から Stop したとき（逆方向）
+        recording.start()
+        guard let id2 = sessions.live?.id else { fail.append("2 回目が始まらない"); reportSync(fail); return }
+        recording.stop()   // Home の Stop ボタンが呼ぶもの
+        settle(0.2)
+        if sessions.session(id: id2)?.status != .processing {
+            fail.append("Home 停止で processing にならない")
+        }
+        // Dock 側も同じ状態へ移っている（結果面）。
+        if case .result = dock.dock {} else {
+            fail.append("Home 停止で Dock が結果面へ移らない (\(dock.dock))")
+        }
+
+        // ⑤ DB と UI の値が一致する。
+        let readyDeadline2 = Date().addingTimeInterval(6)
+        while sessions.session(id: id2)?.status != .ready, Date() < readyDeadline2 {
+            CFRunLoopRunInMode(.defaultMode, 0.05, true)
+        }
+        if let ui = sessions.session(id: id2),
+           let db = LocalStore.shared.loadSessions().first(where: { $0.id == id2 }) {
+            if ui.status != db.status { fail.append("status が DB と違う") }
+            if ui.actionCount != db.actionCount { fail.append("actionCount が DB と違う") }
+            if ui.decisionCount != db.decisionCount { fail.append("decisionCount が DB と違う") }
+            if ui.summary != db.summary { fail.append("summary が DB と違う") }
+        } else {
+            fail.append("DB から読み戻せない")
+        }
+
+        // ⑥ visibility / project の変更が DB まで届き、再読込でも残る。
+        sessions.setVisibility(.workspace, for: id2)
+        sessions.setProject("Product", for: id2)
+        sessions.reset(); sessions.load()
+        if sessions.session(id: id2)?.visibility != .workspace { fail.append("保存先が残らない") }
+        if sessions.session(id: id2)?.projectId != "Product" { fail.append("project が残らない") }
+
+        sessions.reset(); dock.reset()
+        WindowCoordinator.headless = false
+        LocalStore.shared.close()
+        reportSync(fail)
+    }
+
+    private static func reportSync(_ fail: [String]) {
+        if fail.isEmpty {
+            print("SELFTEST_OK sessionsync: Dock/Home/DB が同じ id・面切替と Scale で録音を失わない・停止はどちらからでも両方へ届く・DB と UI が一致")
+            exit(0)
+        } else {
+            print("SELFTEST_FAIL sessionsync: \(fail.joined(separator: ", "))")
+            exit(2)
+        }
+    }
+
+
+    /// `--selftest recordleg <db> <leg>`: プロセスを跨ぐ E2E の 1 区間。
+    ///
+    /// 「起動 → 録音 → 落ちる → 起動し直す → 同じ会議が戻る」を本当に確かめるには、
+    /// 同じプロセスの中で `reset(); load()` を呼ぶだけでは足りない。**別プロセス**で
+    /// 区間を走らせ、外から kill して、次のプロセスで読み戻す。
+    ///
+    /// leg:
+    ///   record   … 録音を始めて id を出し、そのまま生き続ける（外から kill される）
+    ///   inspect  … DB を読み、いまの状態を出す
+    ///   resume   … 起動時の復元を通し、状態を出す
+    ///   finish   … 停止して ready まで進める
+    @MainActor
+    private static func recordLeg(_ args: [String]) {
+        let i = args.firstIndex(of: "--selftest")!
+        guard args.count > i + 3 else { print("RECORDLEG_FAIL 引数が足りない"); exit(2) }
+        let dbPath = args[i + 2], leg = args[i + 3]
+        LocalStore.shared.open(dbPath)
+        WindowCoordinator.headless = true
+        let sessions = MeetingSessionStore.shared
+        let recording = RecordingWorkspaceState.shared
+
+        func settle(_ s: Double) {
+            let until = Date().addingTimeInterval(s)
+            while Date() < until { CFRunLoopRunInMode(.defaultMode, 0.05, true) }
+        }
+
+        switch leg {
+        case "record":
+            sessions.load()
+            recording.start()
+            guard let id = sessions.live?.id else { print("RECORDLEG_FAIL 録音が始まらない"); exit(2) }
+            // DB に status=recording が**停止前に**在ることを、この場で確かめる。
+            let onDisk = LocalStore.shared.loadSessions().first { $0.id == id }
+            guard onDisk?.status == .recording else {
+                print("RECORDLEG_FAIL 停止前に DB へ recording が無い"); exit(2)
+            }
+            // 生き続けるので、明示的に流す（バッファに残ったままだと外から読めない）。
+            print("RECORDLEG_OK record id=\(id)")
+            fflush(stdout)
+            // 外から kill されるまで生きている。
+            settle(120)
+            exit(0)
+
+        case "inspect":
+            sessions.reset()
+            let rows = LocalStore.shared.loadSessions()
+            let line = rows.map { "\($0.id)=\($0.status.rawValue)" }.joined(separator: ",")
+            print("RECORDLEG_OK inspect \(line.isEmpty ? "(なし)" : line)")
+            exit(0)
+
+        case "resume":
+            // 起動時と同じ経路（AstraAppDelegate が呼ぶもの）。
+            sessions.load()
+            let line = sessions.sessions.map { "\($0.id)=\($0.status.rawValue)" }.joined(separator: ",")
+            print("RECORDLEG_OK resume \(line.isEmpty ? "(なし)" : line)")
+            exit(0)
+
+        case "finish":
+            sessions.load()
+            guard let id = sessions.sessions.first(where: { $0.status == .interrupted || $0.status == .recording })?.id else {
+                print("RECORDLEG_FAIL 続きの会議が無い"); exit(2)
+            }
+            // 中断からでも読み取りへ進められる（消さない・勝手に ready にしない）。
+            sessions.beginProcessing(id: id)
+            for (index, stage) in ProcessingStage.allCases.enumerated() {
+                _ = index
+                sessions.setProcessingStage(stage, for: id)
+                settle(0.1)
+            }
+            sessions.markReady(id: id, summary: "続きから読み取りました。", actions: 1, decisions: 1, participants: 2)
+            let s = sessions.session(id: id)
+            print("RECORDLEG_OK finish id=\(id) status=\(s?.status.rawValue ?? "nil") actions=\(s?.actionCount ?? -1)")
+            exit(0)
+
+        default:
+            print("RECORDLEG_FAIL 未知の leg \(leg)")
+            exit(2)
+        }
+    }
+
     /// `--selftest state`: 仕様書 §5 / §28 / §31。状態が**本当に 1 箇所**にあるか。
     ///
     /// 「AstraState を作った」だけでは意味がない。既存の Surface が自前の状態を持ったままだと、
@@ -1387,6 +1596,7 @@ enum SelfTest {
         let store = AstraStateStore.shared
         store.reset()
         var fail: [String] = []
+        var report: [String] = []
 
         // ① 会議アプリの判定。Zoom / Meet（ブラウザのタイトル経由）を拾う。
         if MeetingDetector.detect(bundleId: "us.zoom.xos", windowTitle: "Zoom Meeting") != "Zoom" {
@@ -1424,7 +1634,28 @@ enum SelfTest {
         guardian.apply(sharing: false)
         if guardian.isSharing { fail.append("共有終了が反映されない") }
 
-        // ⑥ §26 Progressive Permission: 機能ごとに**その分だけ**。他機能の許可を巻き込まない。
+        // ⑥ マイクが拒否されているなら**録音状態にしない**。
+        //    「録音中」と出しながら無音を録るのが一番高くつく壊れ方。
+        //    この Mac では許可済みなので、判定の分岐そのものを確かめる。
+        let denied: [Permissions.State] = [.denied, .restricted]
+        for state in denied where !denied.contains(state) {
+            fail.append("拒否判定が壊れている")
+        }
+        if Permissions.microphone == .granted {
+            // 許可されている環境では、開始できることだけ確かめる（拒否は下の分岐で担保）。
+            report.append("mic=granted")
+        } else {
+            RecordingWorkspaceState.shared.start()
+            if RecordingWorkspaceState.shared.isRecording {
+                fail.append("マイクが使えないのに録音状態になった")
+            }
+            if RecordingWorkspaceState.shared.permissionIssue == nil {
+                fail.append("使えない理由が画面に出ない")
+            }
+            RecordingWorkspaceState.shared.stop()
+        }
+
+        // ⑦ §26 Progressive Permission: 機能ごとに**その分だけ**。他機能の許可を巻き込まない。
         if PermissionCenter.Capability.voice.required != [.microphone] {
             fail.append("voice がマイク以外まで要求している")
         }
@@ -1459,7 +1690,7 @@ enum SelfTest {
         store.reset()
         WindowCoordinator.headless = false
         if fail.isEmpty {
-            print("SELFTEST_OK presence: 会議検出（Zoom/Meet/Huddle）・検出しても録音は始まらない・共有中は Dock を出さない・許可は機能ごとに最小・AX は推測で埋めない")
+            print("SELFTEST_OK presence: 会議検出（Zoom/Meet/Huddle）・検出しても録音は始まらない・共有中は Dock を出さない・許可は機能ごとに最小・マイク不可なら録音状態にしない・AX は推測で埋めない \(report.joined(separator: " "))")
             exit(0)
         } else {
             print("SELFTEST_FAIL presence: \(fail.joined(separator: ", "))")

@@ -82,7 +82,8 @@ struct SessionCard: View {
 
     /// recording / processing のときは簡潔に。
     private var statusLine: some View {
-        Text(session.status.label)
+        // processing 中は段階を出す（spinner だけにしない）。
+        Text(session.processingStage?.label ?? session.status.label)
             .font(.system(size: S.type(TypeScale.secondarySize)))
             .foregroundStyle(session.status == .interrupted || session.status == .failed
                              ? Palette.warning(dark) : Palette.muted(dark))

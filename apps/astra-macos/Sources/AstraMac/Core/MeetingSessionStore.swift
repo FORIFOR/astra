@@ -58,8 +58,18 @@ final class MeetingSessionStore: ObservableObject {
     func beginProcessing(id: String, now: Date = Date()) {
         update(id) { s in
             s.status = .processing
+            s.processingStage = .savingTranscript
             s.endedAt = now
             s.updatedAt = now
+        }
+    }
+
+    /// 読み取りの段階を進める。「何をしているか」を出すため。
+    func setProcessingStage(_ stage: ProcessingStage, for id: String) {
+        update(id) { s in
+            guard s.status == .processing else { return }
+            s.processingStage = stage
+            s.updatedAt = Date()
         }
     }
 
@@ -68,6 +78,7 @@ final class MeetingSessionStore: ObservableObject {
                    participants: Int? = nil, now: Date = Date()) {
         update(id) { s in
             s.status = .ready
+            s.processingStage = nil
             s.summary = summary
             s.actionCount = actions
             s.decisionCount = decisions

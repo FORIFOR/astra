@@ -198,7 +198,16 @@ final class RecordingWorkspaceState: ObservableObject {
         MeetingIntelligence.shared.reset()
         // §26 会議に要るものだけを、始めるこの瞬間に要求する（起動時に一括で聞かない）。
         PermissionCenter.request(.meeting)
-        // 許可が無いまま黙って録り続けない。始めた時点で画面に出す。
+        // マイクが**拒否**されているなら録音状態にしない。
+        // 「録音中」と出しながら無音を録るのが一番高くつく壊れ方なので、始めない。
+        if Permissions.microphone == .denied || Permissions.microphone == .restricted {
+            permissionIssue = .microphoneDenied
+            isRecording = false
+            tickTimer?.invalidate(); tickTimer = nil
+            pendingCalendarLink = nil
+            return
+        }
+        // 未確認のまま進む場合（プロンプト待ち）は、録れていないことを画面に出す。
         permissionIssue = Permissions.microphone == .granted ? nil : .microphoneDenied
         let localId = "meeting-\(Int(Date().timeIntervalSince1970))"
         RecordingRuntime.shared.begin(meetingId: localId)
@@ -239,10 +248,17 @@ final class RecordingWorkspaceState: ObservableObject {
     private func finishProcessing(id: String) {
         let canvas = AstraStateStore.shared.state.meeting.canvas
         let speakers = Set(transcript.map(\.speaker))
-        // 少しだけ待たせる。読み取り中であることが画面に出る時間を作る。
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.6) {
+        let store = MeetingSessionStore.shared
+        // 段階を順に進める。spinner だけでは「止まっている」と区別がつかない。
+        let stages: [ProcessingStage] = [.savingTranscript, .analyzing, .extractingActions, .preparingNotes]
+        for (index, stage) in stages.enumerated() {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.45 * Double(index)) {
+                store.setProcessingStage(stage, for: id)
+            }
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.45 * Double(stages.count)) {
             let summary = canvas.decisions.first ?? canvas.notes.first
-            MeetingSessionStore.shared.markReady(
+            store.markReady(
                 id: id,
                 summary: summary,
                 actions: canvas.actions.count,

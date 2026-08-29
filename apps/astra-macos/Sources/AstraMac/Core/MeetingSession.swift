@@ -8,7 +8,7 @@ struct MeetingSession: Identifiable, Equatable {
     enum Status: String, Equatable {
         /// いま録っている。
         case recording
-        /// 録り終えて、読み取りをしている途中。
+        /// 録り終えて、読み取りをしている途中。段階は `processingStage` に持つ。
         case processing
         /// 使える。
         case ready
@@ -62,6 +62,8 @@ struct MeetingSession: Identifiable, Equatable {
     var summary: String?
     var actionCount: Int = 0
     var decisionCount: Int = 0
+    /// processing の段階。spinner だけにしないための文言。
+    var processingStage: ProcessingStage?
     var createdAt: Date = Date()
     var updatedAt: Date = Date()
 
@@ -89,6 +91,20 @@ struct MeetingSession: Identifiable, Equatable {
     static let dayFormatter: DateFormatter = {
         let f = DateFormatter(); f.dateFormat = "M/d"; return f
     }()
+}
+
+/// 読み取りの段階。何をしているかを言うためのもの。
+enum ProcessingStage: String, Equatable, CaseIterable {
+    case savingTranscript, analyzing, extractingActions, preparingNotes
+
+    var label: String {
+        switch self {
+        case .savingTranscript: return "Saving transcript…"
+        case .analyzing: return "Analyzing conversation…"
+        case .extractingActions: return "Extracting actions…"
+        case .preparingNotes: return "Preparing notes…"
+        }
+    }
 }
 
 /// 予定に紐づく最小限。Calendar から録ったときに引き継ぐ。

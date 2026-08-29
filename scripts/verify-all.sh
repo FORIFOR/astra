@@ -25,6 +25,9 @@ run "C# bridge -> core + gateway" bash scripts/verify-csharp-bridge.sh
 run "Windows C# logic type-check" bash scripts/verify-csharp-logic.sh
 run "C ABI round-trip (C)"        bash scripts/verify-c-abi.sh
 run "macOS recording + live E2E"  bash scripts/verify-macos-recording.sh
+# 録音セッションの通し。**プロセスを跨いで** kill → 復元まで確かめる。
+# CI が緑でもここが通らなければ未達、という位置づけのゲート。
+run "recording experience E2E"    bash scripts/verify-recording-experience.sh
 run "macOS swift unit tests"      bash -c "cd apps/astra-macos && swift test 2>&1 | grep -E 'Executed [0-9]+ tests' | head -1"
 
 echo
