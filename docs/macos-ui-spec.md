@@ -66,7 +66,11 @@ apps/astra-macos/.build/debug/AstraMac --selftest shots /tmp/astra-shots
 3. **AI の結果が表示されない**: `aiResult` が UI に無かった → `AIResultPanel` 追加
 4. **Apps の接続状態が読めない**: 灰色トグルのみ → 接続済み/未接続/設定が必要を**文字＋アイコン**で（色だけに頼らない）
 5. **誕生日の予定に「録音を開始」**: 終日イベントを Attention から除外
-6. **Main の geometry 固定検査が脆い**: titled window は WM がサイズを詰める → 最小寸法＋内容量で判定（commit 3011d8b）
+6. **起動後にアプリへ触れる入口が無い**: `.accessory` 起動で Dock アイコンも
+   メニューバーも無く、Main / 設定 / 終了へ到達できなかった（`open --args` は
+   起動済みプロセスには渡らないため実質行き止まり）→ メニューバーに status item を追加
+   （Astra を開く / 会議を録音・停止 / ショートカットの表示 / 設定 / 終了）
+7. **Main の geometry 固定検査が脆い**: titled window は WM がサイズを詰める → 最小寸法＋内容量で判定（commit 3011d8b）
 
 ## Accessibility identifier
 
