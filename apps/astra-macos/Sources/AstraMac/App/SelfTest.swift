@@ -65,6 +65,7 @@ enum SelfTest {
         case "meetingiq": meetingIQ(); return true
         case "vad": vad(); return true
         case "browser": browser(); return true
+        case "plugins": plugins(args); return true
         case "panel": panelBehavior(); return true
         case "render": render(); return true
         default: return false
@@ -673,10 +674,12 @@ enum SelfTest {
             fail.append("メモリを測れない")
         }
 
-        // idle 1 秒の CPU。数値は出すが、他プロセスの影響を受けるので判定は 10% で置く。
-        let cpu = idleCPUPercent(seconds: 1.0)
-        report.append(String(format: "cpu=%.1f%%", cpu))
-        if cpu >= 10 { fail.append(String(format: "idle CPU が %.1f%%", cpu)) }
+        // idle の CPU。1 秒窓は起動直後の後片付けを拾って揺れるので、5 秒窓も測る。
+        // §29 の目標は < 1%。短い窓は参考値にとどめ、判定は 5 秒窓で行う。
+        let cpu1 = idleCPUPercent(seconds: 1.0)
+        let cpu5 = idleCPUPercent(seconds: 5.0)
+        report.append(String(format: "cpu1s=%.1f%% cpu5s=%.2f%%", cpu1, cpu5))
+        if cpu5 >= 1.0 { fail.append(String(format: "idle CPU(5s) が %.2f%% (目標 <1%%)", cpu5)) }
 
         WindowCoordinator.shared.hideVoiceHUD()
         // 詳細は stderr へ。stdout の 1 行目は SELFTEST_* に保つ（呼び出し側が先頭で判定するため）。
@@ -1092,6 +1095,78 @@ enum SelfTest {
             exit(0)
         } else {
             print("SELFTEST_FAIL browser: \(fail.joined(separator: ", "))")
+            exit(2)
+        }
+    }
+
+    /// `--selftest plugins <plugins/builtin>`: §27 Plugin。
+    ///
+    /// 確かめたいのは **manifest に書いてあるだけでは呼べない**こと。
+    /// 宣言と許諾を混同すると、入れた瞬間に全部できる製品になる。
+    @MainActor
+    private static func plugins(_ args: [String]) {
+        let i = args.firstIndex(of: "--selftest")!
+        let root = args.count > i + 2 ? args[i + 2] : "plugins/builtin"
+        let runtime = PluginRuntime.shared
+        runtime.reset()
+        LocalStore.shared.open(NSTemporaryDirectory() + "astra-plugins-\(getpid()).sqlite")
+        var fail: [String] = []
+
+        // ① 同梱の manifest を全部読める（Phase 0 の conformance fixture）。
+        let (loaded, skipped) = runtime.load(from: root)
+        if loaded == 0 { print("SELFTEST_SKIP plugins: manifest が見つからない (\(root))"); exit(0) }
+        if skipped > 0 { fail.append("\(skipped) 件の manifest を読めない") }
+
+        guard let gmail = runtime.installed.first(where: { $0.id == "com.astra.gmail" }) else {
+            fail.append("Gmail の manifest が無い"); reportPlugins(fail); return
+        }
+        if gmail.name != "Gmail" { fail.append("name が読めない (\(gmail.name))") }
+        if !gmail.permissions.contains("email.send") { fail.append("permissions が読めない") }
+        // 資格情報が端末にしか無いものは cloud で走らせない。
+        if !gmail.runsLocallyOnly { fail.append("Gmail が local 以外でも走ることになっている") }
+
+        // ② 宣言しているだけでは呼べない。
+        if runtime.mayCall("com.astra.gmail", permission: "email.send") {
+            fail.append("許諾なしで呼べてしまう")
+        }
+        // ③ 許せば呼べる。
+        runtime.grant("com.astra.gmail", "email.send")
+        if !runtime.mayCall("com.astra.gmail", permission: "email.send") {
+            fail.append("許しても呼べない")
+        }
+        // ④ 許していない権限は、許諾済みの plugin でも呼べない。
+        if runtime.mayCall("com.astra.gmail", permission: "email.read") {
+            fail.append("許していない権限まで通った")
+        }
+        // ⑤ manifest に無い権限は、許しても呼べない。
+        runtime.grant("com.astra.gmail", "disk.format")
+        if runtime.mayCall("com.astra.gmail", permission: "disk.format") {
+            fail.append("manifest に無い権限が通った")
+        }
+        // ⑥ 取り消せる。
+        runtime.revoke("com.astra.gmail", "email.send")
+        if runtime.mayCall("com.astra.gmail", permission: "email.send") {
+            fail.append("取り消しても呼べる")
+        }
+        // ⑦ 入っていない plugin は呼べない。
+        if runtime.mayCall("com.example.unknown", permission: "email.send") {
+            fail.append("入っていない plugin が呼べた")
+        }
+        // ⑧ §24 許諾がディスクに残っている。
+        if LocalStore.shared.countRows("plugin_permissions") < 1 {
+            fail.append("許諾が保存されていない")
+        }
+
+        runtime.reset()
+        reportPlugins(fail, count: loaded)
+    }
+
+    private static func reportPlugins(_ fail: [String], count: Int = 0) {
+        if fail.isEmpty {
+            print("SELFTEST_OK plugins: manifest \(count) 件・宣言だけでは呼べない・許諾で呼べる・取り消せる・manifest 外は通らない")
+            exit(0)
+        } else {
+            print("SELFTEST_FAIL plugins: \(fail.joined(separator: ", "))")
             exit(2)
         }
     }

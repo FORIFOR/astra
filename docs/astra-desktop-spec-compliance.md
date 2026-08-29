@@ -32,6 +32,7 @@
 | 19        | System Audio と mic を混ぜても speaker channel を保つ                                             | `Audio/AudioMixer`。混合波は記録用、STT へは `local_user` / `remote_audio` に分けて渡す。話者名は channel から                                                        | `vad`                                                   |
 | 9         | Chrome Extension → Native Messaging → Astra。**DOM 全文を送らない**                               | `apps/browser-extension`（見えているブロック 12 件 / 各 400 字 / 選択 2000 字まで）+ `Context/NativeMessagingHost`（4byte LE + JSON、1MB 上限）。受け側でも上限で切る | `browser`                                               |
 | 10        | Notion Adapter（ページ名 / page id / capabilities）                                               | `Context/NotionAdapter`。入力欄に focus しているときだけ `edit` を出す（できないことを挙げない）                                                                      | `browser`                                               |
+| 27        | Plugin System（manifest / permissions / tools）                                                   | `Plugins/PluginRuntime`。同梱 12 件を読む。**宣言だけでは呼べない**——許諾が要り、manifest に無い権限は許しても通らない。許諾は §24 に残る                             | `plugins`                                               |
 | 30 Phase1 | Presence / Task Dock / Global Shortcut / Voice STT / NSWorkspace Context / AX Context / Basic Ask | Task Dock は VoiceOS 準拠で再実装済み（`docs/macos-ui-spec.md`）。STT は実音声で実測                                                                                  | `dockshots` / `sttrecognize` / `sttstream` / `shortcut` |
 
 ## 未実装 / 未検証

@@ -94,6 +94,10 @@ for appearance in light dark; do
   [[ "$OUTG" == *SELFTEST_OK* ]] || { echo "$OUTG" >&2; echo "FAIL: golden diff ($appearance)" >&2; exit 1; }
 done
 
+# §27 Plugin。同梱 manifest を読み、宣言だけでは呼べないことまで見る。
+OUTP="$("$BIN" --selftest plugins "$ROOT/plugins/builtin")"; echo "$OUTP" | tail -1
+[[ "$OUTP" == SELFTEST_OK* || "$OUTP" == SELFTEST_SKIP* ]] || { echo "FAIL: plugin runtime" >&2; exit 1; }
+
 # Task Dock 単体の Visual Gate。5 状態を実アプリで撮り、外形が状態で動かないこと・
 # 画面上端に接着していること・第二 Panel が別 window として下に出ることまで見る。
 DOCK_DIR="${ASTRA_DOCK_DIR:-/tmp/astra-dock}"
