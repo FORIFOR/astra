@@ -553,9 +553,29 @@ mod tests {
         let port = listener.local_addr().unwrap().port();
         let handle = std::thread::spawn(move || {
             let (mut stream, _) = listener.accept().unwrap();
+            // 1 回の read で足りる保証はない。ヘッダと本文は別のセグメントで届きうるので、
+            // content-length 分の本文が揃うまで読む。ここを読み切らずに close すると、
+            // 受信待ちのバイトが残ったソケットを閉じることになり、OS は FIN ではなく
+            // **RST** を返す。RST は送信バッファも捨てるので、応答を書いた直後でも
+            // クライアント側は本文を読めずに落ちる（負荷が高いほど再現しやすい）。
+            let mut req = Vec::new();
             let mut buf = [0u8; 4096];
-            let n = stream.read(&mut buf).unwrap();
-            let req = String::from_utf8_lossy(&buf[..n]).to_string();
+            loop {
+                let n = stream.read(&mut buf).unwrap();
+                if n == 0 { break; }
+                req.extend_from_slice(&buf[..n]);
+                let text = String::from_utf8_lossy(&req);
+                let Some(head_end) = text.find("\r\n\r\n") else { continue };
+                let want: usize = text[..head_end]
+                    .lines()
+                    .find_map(|l| l.to_ascii_lowercase()
+                        .strip_prefix("content-length:")
+                        .map(|v| v.trim().to_string()))
+                    .and_then(|v| v.parse().ok())
+                    .unwrap_or(0);
+                if req.len() >= head_end + 4 + want { break; }
+            }
+            let req = String::from_utf8_lossy(&req).to_string();
             // POST body に PKCE の code_verifier と code が乗っていることを確認。
             let ok = req.contains("grant_type=authorization_code")
                 && req.contains("code=auth-code")
@@ -570,6 +590,8 @@ mod tests {
                 body.len(), body);
             stream.write_all(resp.as_bytes()).unwrap();
             stream.flush().unwrap();
+            // 書き終わりを FIN で伝えてから閉じる。drop 任せにしない。
+            let _ = stream.shutdown(std::net::Shutdown::Write);
         });
         let config = ProviderConfig {
             provider: OauthProvider::Google,

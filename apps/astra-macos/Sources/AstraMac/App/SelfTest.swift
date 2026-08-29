@@ -67,6 +67,8 @@ enum SelfTest {
         case "acceptance": acceptance(); return true
         case "sessionsync": sessionSync(); return true
         case "recordleg": recordLeg(args); return true
+        case "dockedge": dockEdge(args); return true
+        case "pixels": pixels(args); return true
         case "state": stateMachine(); return true
         case "presence": presence(); return true
         case "perf": perf(); return true
@@ -1504,6 +1506,116 @@ enum SelfTest {
             print("RECORDLEG_FAIL 未知の leg \(leg)")
             exit(2)
         }
+    }
+
+
+    /// `--selftest dockedge <out.png>`: Dock の**縁を、背後ごと**撮る。
+    ///
+    /// 窓だけを撮ると、面の外にはみ出しているもの（影や素材の矩形）が写らない。
+    /// 画面が複数あると座標合わせも当てにならないので、
+    /// 自分の窓の位置を知っているアプリ自身に、その周りを撮らせる。
+    @MainActor
+    private static func dockEdge(_ args: [String]) {
+        let i = args.firstIndex(of: "--selftest")!
+        let out = args.count > i + 2 ? args[i + 2] : "/tmp/astra-dockedge.png"
+        NSApp.setActivationPolicy(.regular)
+        VoiceHUDState.shared.mode = .idle
+        WindowCoordinator.shared.showVoiceHUD()
+
+        func settle(_ s: Double) {
+            let until = Date().addingTimeInterval(s)
+            while Date() < until { CFRunLoopRunInMode(.defaultMode, 0.05, true) }
+        }
+        settle(1.2)
+
+        guard let panel = NSApp.windows.first(where: { $0.isVisible && $0.frame.height < 200 }),
+              let screen = panel.screen ?? NSScreen.main else {
+            print("SELFTEST_FAIL dockedge: Dock が出ていない"); exit(2)
+        }
+        // 撮る直前にもう一度 idle に固定して寸法を読み直す。
+        // 前面アプリの認識で appContext へ変わると、測った寸法と撮る寸法がずれる
+        // （それを「外形の外に帯がある」と読み違えていた）。
+        VoiceHUDState.shared.mode = .idle
+        WindowCoordinator.shared.syncDockPanels()
+        settle(0.8)
+        // window server 座標（上原点）へ直す。周囲 40pt を含めて撮る。
+        let f = panel.frame
+        let pad: CGFloat = 40
+        // CoreGraphics の画面座標は **主ディスプレイ**の左上が原点で y は下向き。
+        // panel.screen の maxY で反転すると、複数ディスプレイのときにずれる
+        // （ずれた場所を撮って「外形の外に帯がある」と読み違えていた）。
+        _ = screen
+        let mainMaxY = NSScreen.screens.first?.frame.maxY ?? 0
+        let rect = CGRect(x: f.minX - pad,
+                          y: (mainMaxY - f.maxY) - pad,
+                          width: f.width + pad * 2,
+                          height: f.height + pad * 2)
+        guard let cg = CGWindowListCreateImage(rect, .optionOnScreenOnly, kCGNullWindowID, [.bestResolution]),
+              let png = NSBitmapImageRep(cgImage: cg).representation(using: .png, properties: [:]) else {
+            print("SELFTEST_FAIL dockedge: 撮影できない"); exit(2)
+        }
+        try? png.write(to: URL(fileURLWithPath: out))
+
+        // 同じ場所を **Dock を隠して** もう一枚。帯が Dock 由来か背景かを切り分ける。
+        WindowCoordinator.shared.hideVoiceHUD()
+        settle(1.0)
+        let without = out.replacingOccurrences(of: ".png", with: "-without.png")
+        if let cg2 = CGWindowListCreateImage(rect, .optionOnScreenOnly, kCGNullWindowID, [.bestResolution]),
+           let png2 = NSBitmapImageRep(cgImage: cg2).representation(using: .png, properties: [:]) {
+            try? png2.write(to: URL(fileURLWithPath: without))
+        }
+        print("SELFTEST_OK dockedge: \(out) / \(without) frame=\(Int(f.width))x\(Int(f.height)) 周囲\(Int(pad))pt 込み")
+        exit(0)
+    }
+
+
+    /// `--selftest pixels <png>`: 画像の四隅を実測する。目で見て言い当てない。
+    private static func pixels(_ args: [String]) {
+        let i = args.firstIndex(of: "--selftest")!
+        guard args.count > i + 2,
+              let data = FileManager.default.contents(atPath: args[i + 2]),
+              let rep = NSBitmapImageRep(data: data) else {
+            print("SELFTEST_FAIL pixels: 読めない"); exit(2)
+        }
+        let w = rep.pixelsWide, h = rep.pixelsHigh
+        func describe(_ x: Int, _ y: Int) -> String {
+            guard let c = rep.colorAt(x: min(max(0, x), w - 1), y: min(max(0, y), h - 1)) else { return "?" }
+            return String(format: "(%d,%d) rgba=%.2f,%.2f,%.2f,%.2f",
+                          x, y, c.redComponent, c.greenComponent, c.blueComponent, c.alphaComponent)
+        }
+        print("size=\(w)x\(h)")
+        // 縦一列を走査して、色が変わる位置を出す（帯がどこにあるかを目で言い当てない）。
+        var last = ""
+        for y in stride(from: 0, to: h, by: max(1, h / 60)) {
+            guard let c = rep.colorAt(x: 12, y: y) else { continue }
+            let key = String(format: "%.2f,%.2f,%.2f", c.redComponent, c.greenComponent, c.blueComponent)
+            if key != last {
+                print(String(format: "  y=%3d 左端 rgb=%@", y, key))
+                last = key
+            }
+        }
+        // 左下の角: 外形の外（角の丸みの外側）と、面の内側を比べる。
+        print("角の外 " + describe(2, h - 3))
+        print("角の外 " + describe(6, h - 6))
+        print("面の内 " + describe(w / 2, h - 6))
+        print("面の内 " + describe(w / 2, h / 2))
+        print("右下外 " + describe(w - 3, h - 3))
+        print("上辺外 " + describe(2, 2))
+        // 2 枚目が渡されていれば、同じ点を引き算して「何が足されたか」を出す。
+        if args.count > i + 3, let d2 = FileManager.default.contents(atPath: args[i + 3]),
+           let rep2 = NSBitmapImageRep(data: d2), rep2.pixelsWide == w, rep2.pixelsHigh == h {
+            print("-- 差分（with - without）--")
+            for (label, x, y) in [("角の外下", 44, h - 42), ("角の外左", 42, h - 46),
+                                  ("面の内", w / 2, h / 2), ("外側", 8, h - 8)] {
+                guard let a = rep.colorAt(x: x, y: y), let b = rep2.colorAt(x: x, y: y) else { continue }
+                print(String(format: "  %@ (%d,%d) Δrgb=%+.3f,%+.3f,%+.3f",
+                             label, x, y,
+                             a.redComponent - b.redComponent,
+                             a.greenComponent - b.greenComponent,
+                             a.blueComponent - b.blueComponent))
+            }
+        }
+        exit(0)
     }
 
     /// `--selftest state`: 仕様書 §5 / §28 / §31。状態が**本当に 1 箇所**にあるか。
@@ -3902,11 +4014,13 @@ enum SelfTest {
         let allSpaces = cb.contains(.canJoinAllSpaces)
         let fsAux = cb.contains(.fullScreenAuxiliary)
         let borderless = panel.styleMask.contains(.borderless)
-        let clear = !panel.isOpaque && panel.hasShadow == false
+        // 透過は必須。影は**窓が持つ**（window server がアルファをなぞるので外形どおりに落ちる）。
+        // SwiftUI 側で影を掛けると、素材やレイヤを含む合成では矩形で落ちた。
+        let clear = !panel.isOpaque && panel.backgroundColor == .clear && panel.hasShadow
         let notMain = panel.canBecomeMain == false
         panel.close()
         guard allSpaces, fsAux, borderless, clear, notMain else {
-            print("SELFTEST_FAIL panel allSpaces=\(allSpaces) fsAux=\(fsAux) borderless=\(borderless) clear=\(clear) notMain=\(notMain)"); exit(2)
+            print("SELFTEST_FAIL panel allSpaces=\(allSpaces) fsAux=\(fsAux) borderless=\(borderless) transparent+windowShadow=\(clear) notMain=\(notMain)"); exit(2)
         }
         print("SELFTEST_OK panel: 全Space=\(allSpaces) fullscreen補助=\(fsAux) borderless=\(borderless) 透過=\(clear) notMain=\(notMain)")
         exit(0)

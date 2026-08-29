@@ -126,12 +126,16 @@ final class WindowCoordinator {
         // Reduce Motion のときは一気に。そうでなければ 180ms で。
         if NSWorkspace.shared.accessibilityDisplayShouldReduceMotion {
             panel.setFrame(target, display: true)
+            panel.invalidateShadow()
         } else {
-            NSAnimationContext.runAnimationGroup { context in
+            NSAnimationContext.runAnimationGroup({ context in
                 context.duration = Motion.dockResizeMs
                 context.timingFunction = CAMediaTimingFunction(name: .easeOut)
                 panel.animator().setFrame(target, display: true)
-            }
+            }, completionHandler: {
+                // 形が変わったら影も計算し直す（古い形の影が残る）。
+                panel.invalidateShadow()
+            })
         }
     }
 

@@ -10,9 +10,10 @@ run() { echo; echo "== $1 =="; shift; if "$@"; then :; else echo "  ^ FAILED"; f
 
 # `cmd | grep ...` は grep の終了状態になるので、**テストが落ちても緑**になっていた。
 # 実際に 1 件落ちたまま VERIFY_ALL_OK が出た。要約だけ見せつつ、状態は元のコマンドのものを返す。
-run "astra-core tests"            bash -c "cd core/astra-core && out=\$(cargo test --quiet 2>&1); st=\$?; echo \"\$out\" | grep 'test result' | head -1; exit \$st"
-run "Tauri Rust regression"       bash -c "cd apps/desktop/src-tauri && out=\$(cargo test --quiet 2>&1); st=\$?; echo \"\$out\" | grep 'test result' | head -1; exit \$st"
-run "Tauri desktop JS regression" bash -c "out=\$(pnpm --filter @astra/desktop test 2>&1); st=\$?; echo \"\$out\" | grep -E 'Tests +[0-9]+ passed' | tail -1; exit \$st"
+# 落ちたときは要約だけでは追えない。**どのテストが落ちたか**を必ず残す。
+run "astra-core tests"            bash -c "cd core/astra-core && out=\$(cargo test --quiet 2>&1); st=\$?; echo \"\$out\" | grep 'test result' | head -1; [ \$st -eq 0 ] || sed -n '/^failures:/,\$p' <<<\"\$out\" | head -40; exit \$st"
+run "Tauri Rust regression"       bash -c "cd apps/desktop/src-tauri && out=\$(cargo test --quiet 2>&1); st=\$?; echo \"\$out\" | grep 'test result' | head -1; [ \$st -eq 0 ] || sed -n '/^failures:/,\$p' <<<\"\$out\" | head -40; exit \$st"
+run "Tauri desktop JS regression" bash -c "out=\$(pnpm --filter @astra/desktop test 2>&1); st=\$?; echo \"\$out\" | grep -E 'Tests +[0-9]+ passed' | tail -1; [ \$st -eq 0 ] || grep -E '^ *(×|FAIL)' <<<\"\$out\" | head -40; exit \$st"
 run "TCC usage descriptions"     bash scripts/verify-usage-descriptions.sh
 run "design tokens fresh"         node scripts/gen-design-tokens.mjs --check
 run "swift bindings fresh"        bash scripts/gen-swift-bindings.sh --check
