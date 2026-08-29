@@ -114,13 +114,27 @@ focus リングは **Tab / 矢印を押してから**出す（`KeyboardNavigatio
    → `.focusEffectDisabled()` ＋ `KeyboardNavigation`（Tab/矢印で初めて点灯）
 10. **左列の下 260pt が空白**: 上詰めのため右の全高カードと釣り合わず構図が上に寄っていた
     → AI 結果が無い間は左列を上下中央に、結果が出たら上詰めへ
-11. **Main の geometry 固定検査が脆い**: titled window は WM がサイズを詰める → 最小寸法＋内容量で判定（commit 3011d8b）
+11. **夜に「Good morning」**: 挨拶が英語で固定されており、日本語の画面に 1 行だけ英語が混ざり、
+    しかも時刻と合っていなかった（18 時台の撮影で判明）→ 時刻から日本語で作る
+12. **入力欄に見えて入力できない**: Home の「何を終わらせますか？」は `Text` を箱に入れただけだった
+    → 本物の `TextField` にし、Enter で Voice HUD と同じ依頼経路へ。途中と結果もその場に返す
+13. **空状態が入力欄の直下に貼り付く**: 下に 400pt の空白が残り「途中で切れた画面」に見えた
+    → 残りの高さの中央へ
+14. **Apps のカードの縁が dark で消える**: 枠線を `Color.black.opacity(0.08)` で直書きしていた
+    → `Color.hairline(dark)`。状態色も `Palette.successLight` 固定 → `Palette.success(dark)`
+15. **「設定が必要」だけで何をすべきか分からない**: 止まっている理由を 1 行添える
+    （「接続に使う client ID がまだ設定されていません」）
+16. **Meeting Detail だけ英語**: SUMMARY / DECISIONS / Related files / audio jump …
+    → 画面の言語を日本語へ統一。タブは `Text` の箱で押せなかったので実ボタン＋選択状態に。
+    音声リンクは飛ぶ手当てが無いときリンク色で出さない（押して何も起きない状態を作らない）
+17. **Main の geometry 固定検査が脆い**: titled window は WM がサイズを詰める → 最小寸法＋内容量で判定（commit 3011d8b）
 
 ## Accessibility identifier
 
 `recordingWorkspace` / `toolPalette` / `tool-<id>` / `aiActions` / `ai-<title>` / `aiResult` /
 `aiResultClose` / `ragToggle` / `voiceHUD` / `intentBar` / `contextLens` / `workSurface` /
-`stopRecording` / `approvalCard` / `actionReceipt` / `evidenceSummary` / `lineagePanel` / `meetingSurface` /
+`homeIntentField` / `homeIntentMic` / `homeIntentAnswer` / `meetingTab-<name>` /
+`meetingAudioJump` / `stopRecording` / `approvalCard` / `actionReceipt` / `evidenceSummary` / `lineagePanel` / `meetingSurface` /
 `meetingArtifact` / `researchResult` / `homeView` / `connector-<app>` / `workspaceShell`
 
 `--selftest axtree` が Main の 4 セクションと Workspace の統合サーフェスを

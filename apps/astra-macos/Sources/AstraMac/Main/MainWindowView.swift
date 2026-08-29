@@ -204,6 +204,8 @@ private struct LibraryPane: View {
 private struct AppsPane: View {
     let apps: [String]
     @ObservedObject private var connectors = ConnectorState.shared
+    @Environment(\.colorScheme) private var scheme
+    private var dark: Bool { scheme == .dark }
 
     /// APP-002 の状態。トグル 1 個では「未接続 / 権限が要る / 繋げない」が区別できないので分ける。
     private enum ConnState {
@@ -213,6 +215,13 @@ private struct AppsPane: View {
             case .connected: return "接続済み"
             case .disconnected: return "未接続"
             case .permissionRequired: return "設定が必要"
+            }
+        }
+        /// 止まっている理由を必ず添える。「設定が必要」だけでは何をすればいいか分からない。
+        var reason: String? {
+            switch self {
+            case .permissionRequired: return "接続に使う client ID がまだ設定されていません"
+            case .connected, .disconnected: return nil
             }
         }
         var icon: String {
@@ -233,8 +242,8 @@ private struct AppsPane: View {
 
     private func tint(_ s: ConnState) -> Color {
         switch s {
-        case .connected: return Palette.successLight
-        case .permissionRequired: return Palette.warningLight
+        case .connected: return Palette.success(dark)
+        case .permissionRequired: return Palette.warning(dark)
         case .disconnected: return .secondary
         }
     }
@@ -264,25 +273,31 @@ private struct AppsPane: View {
                                 Text(st.label).font(.system(size: 10))
                             }
                             .foregroundStyle(tint(st))
+                            if let reason = st.reason {
+                                Text(reason).font(.system(size: 10)).foregroundStyle(.secondary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
                         }
                         Spacer(minLength: 0)
                         // 繋げるものだけ操作を出す。繋げないものに操作を出して失敗させない。
                         if st == .connected {
                             Button("切断") { connectors.connected.remove(a) }
-                                .buttonStyle(.plain)
                                 .font(.system(size: 11))
                                 .foregroundStyle(.secondary)
-                                .frame(height: 28).contentShape(Rectangle())
+                                .frame(height: 28).padding(.horizontal, 8)
+                                .buttonStyle(AstraControlStyle(radius: 8, base: 0.0))
                         } else if connectors.canConnect(a) {
                             Button("接続") { _ = connectors.connect(a) }
-                                .buttonStyle(.plain)
                                 .font(.system(size: 11, weight: .medium))
-                                .foregroundStyle(Color.astraAccent)
-                                .frame(height: 28).contentShape(Rectangle())
+                                .foregroundStyle(Color.astraAccent(dark))
+                                .frame(height: 28).padding(.horizontal, 8)
+                                .buttonStyle(AstraControlStyle(radius: 8, base: 0.0))
                         }
                     }
                     .padding(12)
-                    .background(RoundedRectangle(cornerRadius: 10).stroke(Color.black.opacity(0.08)))
+                    // 枠線を黒で直書きしていたため dark でカードの縁が消えていた（実機で判明）。
+                    .background(RoundedRectangle(cornerRadius: 10).fill(Color.cardSurface(dark).opacity(dark ? 0.5 : 0)))
+                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.hairline(dark)))
                     .accessibilityIdentifier("connector-\(a)")
                 }
             }.padding(20)
