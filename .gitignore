@@ -24,3 +24,6 @@ apps/astra-macos/.build/
 core/astra-core/target/
 core/astra-core/generated/
 apps/astra-macos/build/
+
+# 配布物（scripts/build-dmg.sh が作る）
+apps/astra-macos/dist/
