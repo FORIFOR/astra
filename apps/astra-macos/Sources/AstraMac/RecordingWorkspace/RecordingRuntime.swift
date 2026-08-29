@@ -8,6 +8,15 @@ final class RecordingRuntime {
     static let shared = RecordingRuntime()
 
     private var session: RecordingSession?
+    /// §12 声が乗っている間だけ STT へ流す門番。
+    private var vad = VoiceActivityDetector()
+    /// §12 partial が UI に出るまでの実測（最後の 1 件、ミリ秒）。
+    private(set) var lastPartialLatencyMs: Double = 0
+    private var speechStartedAt: Date?
+    /// §19 いま STT に流している音がどちらから来たか。混合波では失われる情報。
+    private(set) var currentChannel: SpeakerChannel = .localUser
+    /// 直近の文字起こしがどちらの声だったか（UI の話者名に使う）。
+    private(set) var lastTranscriptChannel: SpeakerChannel = .localUser
     private var mic: MicCapture?
     private var sysAudio: AnyObject?
     private var speech: SpeechTranscriber?
@@ -58,7 +67,14 @@ final class RecordingRuntime {
             let st = SpeechTranscriber()
             do {
                 try st.start { [weak self] live in
-                    DispatchQueue.main.async { self?.onTranscript?(live.text, live.isFinal) }
+                    // §12 partial は final を待たずに UI へ。出るまでの時間を実測しておく。
+                    let started = self?.speechStartedAt
+                    let channel = self?.currentChannel ?? .localUser
+                    DispatchQueue.main.async {
+                        if let started { self?.lastPartialLatencyMs = Date().timeIntervalSince(started) * 1000 }
+                        self?.lastTranscriptChannel = channel
+                        self?.onTranscript?(live.text, live.isFinal)
+                    }
                 }
                 self.speech = st
             } catch {
@@ -70,8 +86,13 @@ final class RecordingRuntime {
             do {
                 try mic.start { [weak self, weak session] frame in
                     _ = session?.pushSamples(samples: frame, sampleRate: 16_000)
+                    // §12 VAD: 声が乗っているフレームだけ STT へ流す（無音を延々と認識させない）。
                     // 一時停止中は文字起こしもしない（session 側は core が sample を捨てる）。
-                    if self?.paused != true { self?.speech?.append(frame, sampleRate: 16_000) }
+                    if self?.paused != true, self?.vad.accept(frame) == true {
+                        self?.currentChannel = .localUser
+                        if self?.speechStartedAt == nil { self?.speechStartedAt = Date() }
+                        self?.speech?.append(frame, sampleRate: 16_000)
+                    }
                     // 波形用の音量（peak）を出す。
                     var peak: Float = 0
                     for v in frame { let a = abs(v); if a > peak { peak = a } }
@@ -89,8 +110,10 @@ final class RecordingRuntime {
             self.sysAudio = sys
             Task { [weak session] in
                 do {
-                    try await sys.start { frame in
+                    try await sys.start { [weak self] frame in
                         _ = session?.pushSamples(samples: frame, sampleRate: 16_000)
+                        // §19 相手の声は remote_audio として扱う。混ぜてから起こすと主語が消える。
+                        self?.currentChannel = .remoteAudio
                     }
                 } catch {
                     // 画面収録許可が無ければ system audio 無しで続ける（mic だけで成り立つ）
@@ -115,6 +138,8 @@ final class RecordingRuntime {
 
     /// 停止して確定。書けた断片は残り、回復候補になる。
     func end() {
+        vad.reset()
+        speechStartedAt = nil
         mic?.stop(); mic = nil
         speech?.finish(); speech = nil
         if #available(macOS 13.0, *), let sys = sysAudio as? SystemAudioCapture {

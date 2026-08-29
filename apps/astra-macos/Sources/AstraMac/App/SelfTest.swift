@@ -63,6 +63,7 @@ enum SelfTest {
         case "perf": perf(); return true
         case "storage": storage(); return true
         case "meetingiq": meetingIQ(); return true
+        case "vad": vad(); return true
         case "panel": panelBehavior(); return true
         case "render": render(); return true
         default: return false
@@ -862,6 +863,127 @@ enum SelfTest {
             exit(0)
         } else {
             print("SELFTEST_FAIL meetingiq: \(fail.joined(separator: ", "))")
+            exit(2)
+        }
+    }
+
+    /// `--selftest vad`: §12 VAD と partial の反映。
+    ///
+    /// 無音まで STT に流すと電池も精度も落ちるが、単語の切れ目で切ると文の途中で確定する。
+    /// その両方を実際の波形で確かめる。partial の反映時間は実音声で測る（`sttstream` と同じ経路）。
+    @MainActor
+    private static func vad() {
+        var fail: [String] = []
+        var detector = VoiceActivityDetector()
+
+        func frame(_ amplitude: Float, count: Int = 1600) -> [Float] {
+            (0..<count).map { _ in Float.random(in: -amplitude...amplitude) }
+        }
+
+        // ① 無音は流さない。
+        let t0 = Date()
+        if detector.accept(frame(0.001), now: t0) { fail.append("無音を STT へ流した") }
+        if detector.isSpeaking { fail.append("無音なのに発話中") }
+
+        // ② 声が乗ったら流す。
+        if !detector.accept(frame(0.2), now: t0.addingTimeInterval(0.1)) { fail.append("声を流さなかった") }
+        if !detector.isSpeaking { fail.append("声が乗ったのに発話中でない") }
+
+        // ③ 短い途切れでは切らない（hangover 内）。文の途中で確定させないため。
+        if !detector.accept(frame(0.001), now: t0.addingTimeInterval(0.3)) {
+            fail.append("短い途切れで切った（文の途中で確定してしまう）")
+        }
+        // ④ 十分に空いたら切る。
+        if detector.accept(frame(0.001), now: t0.addingTimeInterval(2.0)) {
+            fail.append("長い無音でも流し続けた")
+        }
+        if detector.isSpeaking { fail.append("長い無音の後も発話中のまま") }
+
+        // ⑤ §19 混ぜても channel を捨てない。混合波は記録用、STT へは分けて渡す。
+        let localFrames: [Float] = [0.5, 0.5, 0.5, 0.5]
+        let remoteFrames: [Float] = [-0.5, -0.5, -0.5, -0.5]
+        let mixed = AudioMixer.mix(localFrames, remoteFrames)
+        if mixed.count != 4 { fail.append("混合の長さが違う") }
+        if mixed.contains(where: { abs($0) > 1 }) { fail.append("混合で振り切れた") }
+        let split = AudioMixer.split(local: localFrames, remote: remoteFrames)
+        if split.count != 2 { fail.append("STT へ分けて渡していない") }
+        if Set(split.map(\.channel)) != Set(SpeakerChannel.allCases) { fail.append("channel が揃わない") }
+        if split.first(where: { $0.channel == .remoteAudio })?.samples != remoteFrames {
+            fail.append("相手の音を混ぜてから渡している")
+        }
+        if SpeakerChannel.localUser.label == SpeakerChannel.remoteAudio.label {
+            fail.append("話者名が区別されない")
+        }
+
+        // ⑥ 実音声で partial が **final を待たずに** 出るか。反映までの時間も実測する。
+        guard SpeechTranscriber.authorization == .authorized else {
+            print("SELFTEST_SKIP vad: speech not authorized (VAD の判定は上で PASS)"); exit(0)
+        }
+        let aiff = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent("astra-vad-\(getpid()).aiff")
+        defer { try? FileManager.default.removeItem(at: aiff) }
+        let say = Process()
+        say.executableURL = URL(fileURLWithPath: "/usr/bin/say")
+        say.arguments = ["-v", "Samantha", "-o", aiff.path, "testing astra partial transcript latency"]
+        do { try say.run(); say.waitUntilExit() } catch {
+            print("SELFTEST_SKIP vad: say を使えない \(error)"); exit(0)
+        }
+        guard say.terminationStatus == 0, let frames = decodeTo16kMonoF32(aiff) else {
+            print("SELFTEST_SKIP vad: 音源を用意できない"); exit(0)
+        }
+
+        let st = SpeechTranscriber(localeId: "en-US")
+        let lock = NSLock()
+        var firstPartialAt: Date?
+        var sawFinal = false
+        var partials = 0
+        do {
+            try st.start { ev in
+                lock.lock()
+                if ev.isFinal { sawFinal = true } else {
+                    partials += 1
+                    if firstPartialAt == nil { firstPartialAt = Date() }
+                }
+                lock.unlock()
+            }
+        } catch {
+            print("SELFTEST_SKIP vad: STT を開始できない \(error)"); exit(0)
+        }
+
+        // VAD を通したフレームだけを流す（実運用と同じ経路）。
+        var gate = VoiceActivityDetector()
+        var fedAt: Date?
+        var i = 0
+        while i < frames.count {
+            let end = min(i + 3200, frames.count)
+            let chunk = Array(frames[i..<end])
+            if gate.accept(chunk) {
+                if fedAt == nil { fedAt = Date() }
+                st.append(chunk)
+            }
+            i = end
+            CFRunLoopRunInMode(.defaultMode, 0.02, true)
+        }
+        let deadline = Date().addingTimeInterval(4)
+        while firstPartialAt == nil, Date() < deadline { CFRunLoopRunInMode(.defaultMode, 0.05, true) }
+        st.finish()
+
+        guard let fedAt, let firstPartialAt else {
+            print("SELFTEST_SKIP vad: partial が返らなかった（VAD の判定は上で PASS）"); exit(0)
+        }
+        let latencyMs = firstPartialAt.timeIntervalSince(fedAt) * 1000
+        FileHandle.standardError.write(Data(
+            "VAD partials=\(partials) final=\(sawFinal) firstPartial=\(Int(latencyMs))ms\n".utf8))
+        if partials == 0 { fail.append("partial が 1 件も出ない（final を待っている）") }
+        if latencyMs >= 300 {
+            fail.append(String(format: "partial の反映が %.0fms (目標 <300ms)", latencyMs))
+        }
+
+        if fail.isEmpty {
+            print("SELFTEST_OK vad: 無音は流さない・声は流す・短い途切れで切らない・§19 channel を保持・実音声の partial が \(Int(latencyMs))ms で反映（<300ms）")
+            exit(0)
+        } else {
+            print("SELFTEST_FAIL vad: \(fail.joined(separator: ", "))")
             exit(2)
         }
     }

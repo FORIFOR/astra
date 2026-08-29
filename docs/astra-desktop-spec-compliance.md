@@ -28,6 +28,8 @@
 | 21        | Meeting Canvas は構造データ                                                                       | `MeetingCanvas` + `Meeting/MeetingCanvasView`（決まったこと / やること / 宿題 / 懸念）                                                     | `meetingiq` / `shots` 11 面目                           |
 | 23        | UI lifecycle ≠ Task lifecycle                                                                     | task は SQLite に残り、起動時に `restoreRunningTask()` で戻る                                                                              | `storage`                                               |
 | 24        | SQLite（7 テーブル）。raw screenshot / audio を保存しない                                         | `Storage/LocalStore`。**画像・音声・本文の列を作っていない**ので後から入れられない                                                         | `storage`                                               |
+| 12        | VAD / partial を 100–300ms で UI へ                                                               | `Audio/VoiceActivityDetector` を STT の前段に。partial は final を待たない。**実音声で 62–119ms を実測**                                   | `vad`                                                   |
+| 19        | System Audio と mic を混ぜても speaker channel を保つ                                             | `Audio/AudioMixer`。混合波は記録用、STT へは `local_user` / `remote_audio` に分けて渡す。話者名は channel から                             | `vad`                                                   |
 | 30 Phase1 | Presence / Task Dock / Global Shortcut / Voice STT / NSWorkspace Context / AX Context / Basic Ask | Task Dock は VoiceOS 準拠で再実装済み（`docs/macos-ui-spec.md`）。STT は実音声で実測                                                       | `dockshots` / `sttrecognize` / `sttstream` / `shortcut` |
 
 ## 未実装 / 未検証

@@ -172,11 +172,13 @@ final class RecordingWorkspaceState: ObservableObject {
         RecordingRuntime.shared.onTranscript = { [weak self] text, isFinal in
             guard let self else { return }
             // 直近の interim を置き換え、確定したら確定行にする（重なりは core の merge に委ねる設計）。
+            // §19 誰の声かを channel から取る（混合波からは分からない）。
+            let speaker = RecordingRuntime.shared.lastTranscriptChannel.label
             if let last = self.transcript.last, last.interim {
                 self.transcript[self.transcript.count - 1] =
-                    TranscriptSegment(speaker: "あなた", text: text, interim: !isFinal)
+                    TranscriptSegment(speaker: speaker, text: text, interim: !isFinal)
             } else {
-                self.transcript.append(TranscriptSegment(speaker: "あなた", text: text, interim: !isFinal))
+                self.transcript.append(TranscriptSegment(speaker: speaker, text: text, interim: !isFinal))
             }
             self.refreshRag()
             // §20 確定行が溜まったら**新しい分だけ**抽出する（全文を毎回投げない）。
