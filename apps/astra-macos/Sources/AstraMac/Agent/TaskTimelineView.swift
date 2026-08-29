@@ -23,13 +23,14 @@ struct TaskTimelineView: View {
                         .font(.system(size: 11, weight: .semibold))
                         .foregroundStyle(Palette.text(dark))
                     Spacer(minLength: 0)
-                    if !task.context.items.isEmpty {
-                        // §25 「AI がいま何を見ているか」をその場に出す。
-                        Text(task.context.visibleSources.joined(separator: " · "))
-                            .font(.system(size: 9))
-                            .foregroundStyle(Palette.muted(dark))
-                            .lineLimit(1)
-                    }
+                }
+                // §25 「AI がいま何を見ているか」。狭い列で 1 行に押し込むと語の途中で
+                // 切れるので、行を分けて名前だけ出す（出所は Dock の Context チップにある）。
+                if !task.context.items.isEmpty {
+                    Text(task.context.items.map(\.application).joined(separator: " · "))
+                        .font(.system(size: 10))
+                        .foregroundStyle(Palette.muted(dark))
+                        .lineLimit(1)
                 }
                 ForEach(task.steps) { step in
                     HStack(spacing: 7) {

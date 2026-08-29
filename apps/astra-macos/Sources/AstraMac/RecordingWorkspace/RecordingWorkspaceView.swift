@@ -1,12 +1,27 @@
 import SwiftUI
 
-/// 録音中の 1 枚。外枠だけ Shape、中身は**構造化レイアウト**（絶対座標を使わない）。
-/// 上辺の凹みに Task Dock を ZStack で重ねる（Workspace の内側には入れない）。
+/// 録音中に立ち上がる面。**Dock ではなく、録音のあいだだけ現れる別のサーフェス**。
 ///
-/// 以前は `.position(x:120,y:300)` のような絶対配置でカードを浮かせており、
-/// ①視線が定まらない ②RAG を開くと他のカードを**切ってしまう** という実機で見える破綻があった。
-/// いまは「左: 録音の主役＋AI 操作 / 右: 文字起こし列 / 下: RAG バー」の 3 区画に固定し、
-/// 余白・列幅・ドロワー高さは **すべて tokens（Metrics.ws*）** から取る。
+/// DeepNote 型のノート・キャンバスにしてある。主役は文字起こしの生ログではなく、
+/// 会議が進むにつれて**書かれていくノート**:
+///
+/// ```text
+/// ┌─ notch + Task Dock ────────────────────────────────┐
+/// │ ● 録音中 04:21                    [ノート|文字起こし] │
+/// ├──────────────────────────────┬─────────────────────┤
+/// │ 決まったこと                  │ Live transcript     │
+/// │  · 導入時期は 10 月で行きます   │ 田中 それでは…      │
+/// │ やること                      │ あなた 了解しました  │
+/// │  · 見積は明日までに            │ 鈴木 OAuth だけ…    │
+/// │ 宿題 / 懸念                   │                     │
+/// │ （ノートとして読める）         │ （脇に控える）       │
+/// ├──────────────────────────────┴─────────────────────┤
+/// │ Ask Astra…                                          │
+/// └─────────────────────────────────────────────────────┘
+/// ```
+///
+/// 会議のあとで欲しいのは発言の全文ではなくノートなので、そちらを主列に置く。
+/// 生ログは消さずに右へ控えさせ、`[ノート|文字起こし]` で入れ替えられる。
 struct RecordingWorkspaceView: View {
     @StateObject private var state = RecordingWorkspaceState.shared
 
@@ -29,48 +44,34 @@ struct RecordingWorkspaceView: View {
             // 上辺は notch と Task Dock の領域。本文はその下から始める。
             Spacer(minLength: 0).frame(height: Metrics.wsContentTop)
 
-            HStack(alignment: .top, spacing: Metrics.wsColumnGap) {
-                // 左: 録音の主役 → AI 操作。視線が上から下へ一本で流れる。
-                //
-                // 結果がまだ無いときは列ごと**上下中央**に置く。上詰めだと下に 260pt の
-                // 空白が残り（実機で確認）、右の全高カードと釣り合わず構図が上に寄って見えた。
-                // 結果が出たら上詰めへ切り替え、面が下へ伸びられるようにする。
-                VStack(spacing: 18) {
-                    if !hasAIOutput { Spacer(minLength: 0) }
-                    RecordingHeroView(state: state)
-                    PermissionBanner(state: state)
-                    AIActionsPalette(state: state)
-                    // §15 走っている間、何をしているかを段階で見せる。
-                    TaskTimelineView()
-                    // §21 会議中に溜まっていく構造データ。
-                    MeetingCanvasView()
-                    // 押した結果はここに出る。走っていない/結果が無いときは何も置かない。
-                    AIResultPanel(state: state)
-                    Spacer(minLength: 0)
-                }
-                .padding(.top, hasAIOutput ? 18 : 0)
-                .frame(maxWidth: .infinity)
-                .animation(.easeOut(duration: Motion.drawerMs), value: hasAIOutput)
+            RecordingStatusBar(state: state)
+                .padding(.horizontal, Metrics.wsGutter)
+                .frame(height: Metrics.wsStatusBar)
 
-                // 右: いま見ている中身（文字起こし / 翻訳 / 字幕）。切替は同じ列の上に置く。
-                VStack(spacing: 10) {
-                    RecordingToolPalette(selection: $state.selectedTool)
-                    TranscriptPanel(state: state)
-                    Spacer(minLength: 0)
-                }
-                .frame(width: Metrics.wsRightColumn)
+            HStack(alignment: .top, spacing: Metrics.wsColumnGap) {
+                // 主列: 書かれていくノート。会議のあとに読み返すのはこちら。
+                MeetingNotesCanvas(state: state)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                // 右: 生ログと AI 操作。脇に控えさせる（消しはしない）。
+                RecordingSideRail(state: state)
+                    .frame(width: Metrics.wsRightColumn)
             }
             .padding(.horizontal, Metrics.wsGutter)
+            .padding(.top, 10)
             .frame(maxHeight: .infinity)
 
+            AskAstraBar(state: state)
+                .padding(.horizontal, Metrics.wsGutter)
+                .frame(height: Metrics.wsAskBar)
+
             // 下: RAG。閉じているときは 1 本のバー、開くとこの区画だけが伸びる。
-            // 他のカードの上に**かぶせない**ので、開いても画面が破綻しない。
             ragSection
         }
         .frame(width: Metrics.workspaceWidth, height: Metrics.workspaceHeight)
     }
 
-    /// AI の結果が出ているか（左列を中央寄せにするか上詰めにするかの分かれ目）。
+    /// AI の結果が出ているか（右レールの並びを決める）。
     private var hasAIOutput: Bool { state.aiRunning || !state.aiResult.isEmpty }
 
     @ViewBuilder private var ragSection: some View {
@@ -83,20 +84,182 @@ struct RecordingWorkspaceView: View {
         } else {
             Button { state.ragOpen = true } label: {
                 HStack(spacing: 5) {
-                    Image(systemName: "plus")
-                    Text("RAG")
+                    Image(systemName: "books.vertical")
+                    Text("AI が見ている資料")
                 }
                 .font(.system(size: 12, weight: .medium))
                 .foregroundStyle(Color.astraAccent)
-                // 小さい字でも押せる面を確保する（UI/UX 仕様 §16: hit area 28〜32pt）。
-                .frame(height: Metrics.wsBottomBar)
+                .frame(height: Metrics.wsBottomBar - 12)
                 .padding(.horizontal, 14)
             }
-            .buttonStyle(AstraControlStyle(radius: 10, base: 0.0))
+            .buttonStyle(AstraControlStyle(radius: 8, base: 0.0))
             .accessibilityIdentifier("ragToggle")
-            .keyboardShortcut("r", modifiers: [.command])
-            .padding(.bottom, Metrics.wsGutter - 8)
+            .padding(.bottom, 10)
         }
+    }
+}
+
+/// 録音の状態は細いバーに落とす。巨大な波形やタイマーで面積を使わない。
+private struct RecordingStatusBar: View {
+    @Environment(\.colorScheme) private var scheme
+    private var dark: Bool { scheme == .dark }
+    @ObservedObject var state: RecordingWorkspaceState
+    @ObservedObject private var store = AstraStateStore.shared
+
+    private var silent: Bool { state.permissionIssue != nil }
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Circle()
+                .fill(silent || state.isPaused ? Color.secondary : Color.recordingRed)
+                .frame(width: 9, height: 9)
+            Text(silent ? "\(state.heroText)（音声なし）" : state.heroText)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(Palette.text(dark))
+            Text(state.elapsedText)
+                .font(.system(size: 15, design: .monospaced))
+                .foregroundStyle(Palette.muted(dark))
+            // 波形は「録れている」ことの小さな印にとどめる。
+            Waveform(levels: silent ? Array(repeating: 0.04, count: state.audioLevels.count) : state.audioLevels)
+                .frame(width: 60, height: 16)
+                .opacity(silent ? 0.4 : 1)
+            Spacer(minLength: 0)
+        }
+        .accessibilityIdentifier("recordingStatus")
+    }
+}
+
+/// 右: 生ログと AI に頼める操作。ノートの脇に控える。
+private struct RecordingSideRail: View {
+    @ObservedObject var state: RecordingWorkspaceState
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            PermissionBanner(state: state)
+            RecordingToolPalette(selection: $state.selectedTool)
+            TranscriptPanel(state: state)
+                .frame(maxHeight: .infinity)
+            TaskTimelineView()
+            AIResultPanel(state: state)
+            AIActionsPalette(state: state)
+        }
+        .accessibilityIdentifier("recordingSideRail")
+    }
+}
+
+/// DeepNote 型のノート面。会議が進むにつれてここが書かれていく。
+///
+/// Markdown を吐くのではなく、`MeetingCanvas`（決定 / やること / 宿題 / 懸念）の
+/// 構造データから書く。まだ何も無いときは、空の見出しを並べずに 1 行だけ出す
+/// —— 空の枠が並ぶと「動いていない」ではなく「壊れている」ように見える。
+private struct MeetingNotesCanvas: View {
+    @Environment(\.colorScheme) private var scheme
+    private var dark: Bool { scheme == .dark }
+    @ObservedObject var state: RecordingWorkspaceState
+    @ObservedObject private var store = AstraStateStore.shared
+
+    var body: some View {
+        let canvas = store.state.meeting.canvas
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                Text(store.state.meeting.detectedApp ?? "会議のノート")
+                    .font(.system(size: 24, weight: .semibold))
+                    .foregroundStyle(Palette.text(dark))
+                if canvas.isEmpty {
+                    Text("聞きながら、決まったこと・やること・宿題・懸念をここに書いていきます。")
+                        .font(.system(size: 15))
+                        .foregroundStyle(Palette.muted(dark))
+                } else {
+                    group("決まったこと", canvas.decisions)
+                    group("やること", canvas.actions)
+                    group("宿題", canvas.questions)
+                    group("懸念", canvas.concerns)
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(24)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .scrollIndicators(.never)
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(Color.cardSurface(dark))
+                .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .stroke(Color.hairline(dark)))
+        )
+        .accessibilityIdentifier("meetingNotes")
+    }
+
+    @ViewBuilder private func group(_ title: String, _ lines: [String]) -> some View {
+        if !lines.isEmpty {
+            VStack(alignment: .leading, spacing: 7) {
+                Text(title)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(Palette.muted(dark))
+                    .tracking(0.4)
+                ForEach(lines, id: \.self) { line in
+                    HStack(alignment: .firstTextBaseline, spacing: 9) {
+                        Text("·").foregroundStyle(Palette.muted(dark))
+                        Text(line)
+                            .font(.system(size: 16))
+                            .foregroundStyle(Palette.text(dark))
+                            .fixedSize(horizontal: false, vertical: true)
+                        Spacer(minLength: 0)
+                    }
+                }
+            }
+            .accessibilityIdentifier("notes-\(title)")
+        }
+    }
+}
+
+/// 会議について聞く。SuperIntern の Ask に当たる位置。
+private struct AskAstraBar: View {
+    @Environment(\.colorScheme) private var scheme
+    private var dark: Bool { scheme == .dark }
+    @ObservedObject var state: RecordingWorkspaceState
+    @State private var question = ""
+    @FocusState private var focused: Bool
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "sparkles")
+                .font(.system(size: 12))
+                .foregroundStyle(Palette.accent(dark))
+            TextField("この会議について聞く", text: $question)
+                .textFieldStyle(.plain)
+                .font(.system(size: 14))
+                .foregroundStyle(Palette.text(dark))
+                .focused($focused)
+                .onSubmit(ask)
+                .accessibilityIdentifier("askAstraField")
+            Button { VoiceHUDState.shared.beginListening() } label: {
+                Image(systemName: "mic")
+                    .font(.system(size: 12))
+                    .foregroundStyle(Palette.muted(dark))
+                    .frame(width: 28, height: 28)   // §16 hit area
+            }
+            .buttonStyle(AstraControlStyle(radius: 7, base: 0.0))
+            .accessibilityIdentifier("askAstraMic")
+        }
+        .padding(.horizontal, 14)
+        .frame(maxHeight: .infinity)
+        .background(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(Color.cardSurface(dark))
+                .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .stroke(focused ? Palette.accent(dark) : Color.hairline(dark),
+                            lineWidth: focused ? Metrics.focusRing : 1))
+        )
+        .padding(.bottom, 10)
+        .accessibilityIdentifier("askAstra")
+    }
+
+    private func ask() {
+        let text = question.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return }
+        question = ""
+        state.runAIAction(text)
     }
 }
 

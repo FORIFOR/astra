@@ -30,6 +30,10 @@ enum DockPresentation: Equatable {
     case confirmation(ActionConfirmation)
     /// 会議中。既定は 1 行。必要なものだけ開く。
     case meeting(expanded: MeetingPanel?)
+    /// 仕事が終わった直後。消して終わらせず、後始末だけ出して残す（CleanShot の Quick Access）。
+    case result(AgentResult)
+    /// 文脈の棚を開いた状態（Dropover: 棚そのものが詳細へ展開する）。
+    case contextDetail
     /// 旧 Quick Actions（Dock を押したとき）。
     case quickActions
     /// 録音へ移る途中。
@@ -83,12 +87,23 @@ enum DockPresentation: Equatable {
         case .meeting(let panel):
             return CGSize(width: Metrics.dockMeetingWidth,
                           height: panel == nil ? Metrics.dockMeetingHeight : Metrics.dockMeetingExpandedHeight)
+        case .result:
+            return CGSize(width: Metrics.dockResultWidth, height: Metrics.dockResultHeight)
+        case .contextDetail:
+            return CGSize(width: Metrics.dockContextExpandedWidth, height: Metrics.dockContextExpandedBase + 180)
         case .quickActions:
-            return CGSize(width: Metrics.dockContextExpandedWidth, height: Metrics.dockThinkingHeight + 24)
+            return CGSize(width: Metrics.dockThinkingWidth, height: Metrics.dockThinkingHeight + 24)
         case .enteringRecording:
             return CGSize(width: Metrics.dockThinkingWidth, height: Metrics.dockThinkingHeight)
         }
     }
+}
+
+/// 終わった仕事。「✓ できました」で消さず、次にやることを出したまま少し残す。
+struct AgentResult: Equatable {
+    let title: String
+    /// 後始末。開く / 複製 / 送る など、**その成果物に対して実際にできること**だけ。
+    let actions: [String]
 }
 
 /// 前面アプリの要約。Presence に出すのはこの 1 行だけ。

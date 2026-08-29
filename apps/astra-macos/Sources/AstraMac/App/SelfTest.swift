@@ -372,6 +372,12 @@ enum SelfTest {
                 startedAt: Date(), context: store.state.context))
         })
 
+        // 5'. 文脈の棚を開く（Dropover 型）。
+        shoot("06b-context-detail", { hud.mode = .contextDetail })
+
+        // 5''. 終わった直後（CleanShot 型）。finishTask が結果面へ遷移させる＝実遷移。
+        shoot("06c-result", { store.finishTask(.success) })
+
         // 6. Confirmation（requireConfirmation が Dock を展開する＝実遷移）
         shoot("07-confirmation", {
             store.requireConfirmation(ActionConfirmation(
@@ -380,8 +386,9 @@ enum SelfTest {
                 risk: .r2, confirmLabel: "Send"))
         })
 
-        // 7. Meeting（meetingStarted が Dock を会議の姿にする＝実遷移）
-        shoot("08-meeting", {
+        // 7. Meeting: 録音中は **Dock ではなく録音の面**が立ち上がる（実遷移）。
+        //    ここだけは Dock ではないので、寸法の期待値も面のものを使う。
+        do {
             store.resolveConfirmation(approved: false)
             store.finishTask(.success)
             recording.loadDemo(ragOpen: false)
@@ -392,8 +399,18 @@ enum SelfTest {
                 concerns: ["初期費用が心配です"], notes: []))
             store.meetingDetected(app: "Google Meet")
             store.meetingStarted(id: "dock8")
-        })
-        shoot("09-meeting-caption", { hud.toggleMeetingPanel(.caption) })
+            if let r = capture("08-meeting-surface",
+                               expect: CGSize(width: Metrics.workspaceWidth, height: Metrics.workspaceHeight)) {
+                report.append("08-meeting-surface \(Int(r.w))x\(Int(r.h)) c\(r.colors)")
+                if r.colors < 12 { failures.append("08-meeting-surface=中身なし") }
+            } else {
+                failures.append("08-meeting-surface=撮影不可")
+            }
+            // 録音中に Dock が残っていないこと（面と Dock が同時に出ない）。
+            if windows().contains(where: { abs($0.w - Metrics.dockMeetingWidth) <= 2 }) {
+                failures.append("録音中に Dock が残っている")
+            }
+        }
 
         // 8. Full Workspace（Dock は静かなまま、Workspace が開く）
         store.meetingEnded()
@@ -406,9 +423,15 @@ enum SelfTest {
         let wsDeadline = Date().addingTimeInterval(8)
         repeat {
             settle(0.25)
-            workspaceWindow = windows().first { $0.w >= 700 && $0.h >= 480 }
+            // 録音面（1080x680）がフェードアウト中に引っかかると、撮る頃には消えている。
+            // Main は必ずそれより広いので、幅で区別する。
+            workspaceWindow = windows().first { $0.w > Metrics.workspaceWidth && $0.h >= 640 }
         } while workspaceWindow == nil && Date() < wsDeadline
         settle(0.6)
+        // 撮る直前にもう一度確かめる（待っている間に消えていることがある）。
+        if let found = workspaceWindow, !windows().contains(where: { $0.id == found.id }) {
+            workspaceWindow = windows().first { $0.w > Metrics.workspaceWidth && $0.h >= 640 }
+        }
         if let big = workspaceWindow,
            let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, big.id, [.boundsIgnoreFraming, .bestResolution]) {
             let rep = NSBitmapImageRep(cgImage: cg)
@@ -2022,10 +2045,26 @@ enum SelfTest {
         guard AXIsProcessTrusted() else {
             print("SELFTEST_SKIP dictation: AX not trusted"); exit(0)
         }
-        // 入力欄が無い状態（デスクトップ相当）では insert が false であること。
-        let noTarget = Dictation.insert("これは入らないはず")
-        guard noTarget == false else {
-            print("SELFTEST_FAIL dictation: 入力欄が無いのに insert が true"); exit(2)
+        // 否定側は**自分の窓で**確かめる。「どのアプリにも入力欄が無い」状態は
+        // こちらから作れず（端末やエディタが入力欄を持っていると真になる）、
+        // それで落ちるテストは環境の話であって Astra の話ではない。
+        // ここではテキストではない要素（ボタン）に focus を当てて、書き込まないことを見る。
+        let button = NSButton(title: "not a text field", target: nil, action: nil)
+        button.frame = NSRect(x: 0, y: 0, width: 200, height: 24)
+        let negWin = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 240, height: 60),
+                              styleMask: [.titled], backing: .buffered, defer: false)
+        negWin.contentView = NSView(frame: NSRect(x: 0, y: 0, width: 240, height: 60))
+        negWin.contentView?.addSubview(button)
+        if let s = NSScreen.main { negWin.setFrameOrigin(NSPoint(x: s.frame.midX - 120, y: s.frame.midY + 120)) }
+        negWin.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+        negWin.makeFirstResponder(button)
+        let negDeadline = Date().addingTimeInterval(1.5)
+        while Date() < negDeadline { CFRunLoopRunInMode(.defaultMode, 0.05, true) }
+        let wroteToButton = Dictation.insert("これは入らないはず")
+        negWin.orderOut(nil); negWin.close()
+        guard wroteToButton == false else {
+            print("SELFTEST_FAIL dictation: 入力欄でない要素へ書き込んだ"); exit(2)
         }
 
         // 実 NSTextField を出してフォーカスし、そこへ入るか。
@@ -2050,7 +2089,7 @@ enum SelfTest {
             print("SELFTEST_SKIP dictation: focused field へ書けなかった inserted=\(inserted) value=\"\(value)\" (AX 経路が別プロセス扱いの可能性)")
             exit(0)
         }
-        print("SELFTEST_OK dictation: focused text field へ挿入 value=\"\(value)\" / 入力欄なしでは会話を始めない")
+        print("SELFTEST_OK dictation: focused text field へ挿入 value=\"\(value)\" / テキストでない要素には書かない")
         exit(0)
     }
 

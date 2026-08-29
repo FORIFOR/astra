@@ -59,6 +59,8 @@ struct VoiceTaskDockView: View {
         case .agent: AgentDock()
         case .confirmation(let confirmation): ConfirmationDock(confirmation: confirmation)
         case .meeting(let panel): MeetingDock(open: panel)
+        case .result(let result): ResultDock(result: result)
+        case .contextDetail: ContextDetailDock()
         case .quickActions: QuickActionsDock()
         case .enteringRecording: SimpleDock(icon: "record.circle", text: "録音を始めます…", tint: .recordingRed)
         }
@@ -214,8 +216,16 @@ struct ContextStrip: View {
                     .font(.system(size: Metrics.dockMetaSize))
                     .foregroundStyle(Palette.muted(dark))
             }
+            if !store.state.context.items.isEmpty {
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 8, weight: .semibold))
+                    .foregroundStyle(Palette.muted(dark))
+            }
             Spacer(minLength: 0)
         }
+        .contentShape(Rectangle())
+        // Dropover の作法。棚を押すと、棚そのものが詳細へ広がる。
+        .onTapGesture { VoiceHUDState.shared.mode = .contextDetail }
         .accessibilityIdentifier("contextStrip")
     }
 }
@@ -263,6 +273,7 @@ private struct AgentDock: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             header
+            taskTitle
             steps
             contextChips
             Spacer(minLength: 0)
@@ -280,16 +291,25 @@ private struct AgentDock: View {
             Text("Astra")
                 .font(.system(size: Metrics.dockMetaSize, weight: .medium))
                 .foregroundStyle(Palette.muted(dark))
-            Text(store.state.activeTask?.title ?? "実行中")
-                .font(.system(size: Metrics.dockPrimarySize, weight: .semibold))
-                .foregroundStyle(Palette.text(dark))
             Spacer(minLength: 0)
             if let task = store.state.activeTask {
+                // 何をしているか（状態語）と、どこまで進んだか。
+                Text(task.status == .running ? "Working" : task.status.rawValue.capitalized)
+                    .font(.system(size: Metrics.dockMetaSize, weight: .medium))
+                    .foregroundStyle(Palette.muted(dark))
                 Text("\(Int(task.progress * 100))%")
                     .font(.system(size: Metrics.dockMetaSize, design: .monospaced))
                     .foregroundStyle(Palette.muted(dark))
             }
         }
+    }
+
+    /// 仕事の名前は状態語と分けて、1 行の見出しにする。
+    private var taskTitle: some View {
+        Text(store.state.activeTask?.title ?? "実行中")
+            .font(.system(size: 20, weight: .semibold))
+            .foregroundStyle(Palette.text(dark))
+            .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var steps: some View {
@@ -322,7 +342,7 @@ private struct AgentDock: View {
         let items = store.state.context.items
         if !items.isEmpty {
             VStack(alignment: .leading, spacing: 6) {
-                DockLabel(text: "Context")
+                DockLabel(text: "Sources")
                 HStack(spacing: 6) {
                     ForEach(items) { item in
                         Text(item.application)
@@ -349,7 +369,7 @@ private struct AgentDock: View {
                 AstraStateStore.shared.workspaceOpened()
             } label: {
                 HStack(spacing: 5) {
-                    Text("Open Workspace")
+                    Text("Continue in Workspace")
                     Image(systemName: "arrow.up.right").font(.system(size: 10, weight: .semibold))
                 }
                 .font(.system(size: Metrics.dockMetaSize, weight: .medium))
@@ -535,6 +555,122 @@ private struct MeetingPanelBody: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
+    }
+}
+
+// MARK: - 結果（CleanShot 型: 終わっても消さず、後始末を出して残す）
+
+private struct ResultDock: View {
+    @Environment(\.colorScheme) private var scheme
+    private var dark: Bool { scheme == .dark }
+    let result: AgentResult
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 9) {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 13))
+                    .foregroundStyle(Palette.success(dark))
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(result.title)
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(Palette.text(dark))
+                        .lineLimit(1)
+                    Text("できました")
+                        .font(.system(size: Metrics.dockMetaSize))
+                        .foregroundStyle(Palette.muted(dark))
+                }
+                Spacer(minLength: 0)
+            }
+            Spacer(minLength: 0)
+            HStack(spacing: 6) {
+                ForEach(result.actions, id: \.self) { action in
+                    Button(action) { AstraStateStore.shared.dismissResult() }
+                        .font(.system(size: Metrics.dockRowSize, weight: .medium))
+                        .foregroundStyle(Palette.text(dark))
+                        .frame(height: 32).padding(.horizontal, 16)
+                        .buttonStyle(AstraControlStyle(radius: 8, base: 0.07))
+                        .accessibilityIdentifier("result-\(action)")
+                }
+                Spacer(minLength: 0)
+                Button { AstraStateStore.shared.dismissResult() } label: {
+                    Image(systemName: "xmark").font(.system(size: 11))
+                        .foregroundStyle(Palette.muted(dark))
+                        .frame(width: 30, height: 30)
+                }
+                .buttonStyle(AstraControlStyle(radius: 8, base: 0.0))
+                .accessibilityIdentifier("resultDismiss")
+            }
+        }
+        .padding(.horizontal, Metrics.dockPadH)
+        .padding(.vertical, 14)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .accessibilityIdentifier("dockResult")
+    }
+}
+
+// MARK: - 文脈の棚（Dropover 型: 棚そのものが詳細へ展開する）
+
+private struct ContextDetailDock: View {
+    @Environment(\.colorScheme) private var scheme
+    private var dark: Bool { scheme == .dark }
+    @ObservedObject private var store = AstraStateStore.shared
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 8) {
+                DockLabel(text: "Context")
+                Spacer(minLength: 0)
+                Text("\(store.state.context.items.count) sources available to Astra")
+                    .font(.system(size: Metrics.dockMetaSize))
+                    .foregroundStyle(Palette.muted(dark))
+                Button { VoiceHUDState.shared.mode = .idle } label: {
+                    Image(systemName: "chevron.up").font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(Palette.muted(dark))
+                        .frame(width: 28, height: 28)
+                }
+                .buttonStyle(AstraControlStyle(radius: 7, base: 0.0))
+                .accessibilityIdentifier("contextCollapse")
+            }
+            if store.state.context.items.isEmpty {
+                Text("いま見えている文脈はありません。")
+                    .font(.system(size: Metrics.dockRowSize))
+                    .foregroundStyle(Palette.muted(dark))
+            } else {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 10)], spacing: 10) {
+                    ForEach(store.state.context.items) { item in
+                        VStack(alignment: .leading, spacing: 5) {
+                            Text(item.application)
+                                .font(.system(size: Metrics.dockRowSize, weight: .semibold))
+                                .foregroundStyle(Palette.text(dark))
+                                .lineLimit(1)
+                            Text(item.summary)
+                                .font(.system(size: Metrics.dockMetaSize))
+                                .foregroundStyle(Palette.muted(dark))
+                                .lineLimit(2)
+                            Spacer(minLength: 0)
+                            Text(item.source.label)
+                                .font(.system(size: Metrics.dockLabelSize))
+                                .foregroundStyle(Palette.muted(dark))
+                        }
+                        .padding(12)
+                        .frame(height: 104, alignment: .topLeading)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(
+                            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                .fill(Color.subtleFill(dark, 0.04))
+                                .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                    .stroke(Color.hairline(dark))))
+                        .accessibilityIdentifier("contextCard-\(item.application)")
+                    }
+                }
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, Metrics.dockPadH)
+        .padding(.vertical, 14)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .accessibilityIdentifier("dockContextDetail")
     }
 }
 

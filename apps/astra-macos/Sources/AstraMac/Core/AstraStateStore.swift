@@ -45,7 +45,8 @@ final class AstraStateStore: ObservableObject {
         case .agent: return .acting
         case .confirmation: return .awaitingConfirmation
         case .meeting, .enteringRecording: return .meeting
-        case .idle, .appContext, .appContextExpanded, .quickActions:
+        case .result: return .completed
+        case .idle, .appContext, .appContextExpanded, .contextDetail, .quickActions:
             // 会議中や workspace 表示中は、Dock が idle でも活動は続いている。
             return (current == .meeting || current == .workspace) ? current : .idle
         }
@@ -96,8 +97,15 @@ final class AstraStateStore: ObservableObject {
         state.activeTask = task
         LocalStore.shared.save(task)
         setMode(status == .success ? .completed : .failed)
-        // 終わったら静かな姿へ戻す。会議中なら会議 Dock へ。
-        setDock(state.meeting.isRecording ? .meeting(expanded: nil) : .idle)
+        // 会議中は会議へ戻す。そうでなければ、消さずに**後始末を出したまま**残す。
+        if state.meeting.isRecording {
+            setDock(.meeting(expanded: nil))
+        } else if status == .success {
+            // 題は仕事の名前そのまま。語尾を足すと題によって日本語が崩れる。
+            setDock(.result(AgentResult(title: task.title, actions: ["開く", "複製", "送る"])))
+        } else {
+            setDock(.idle)
+        }
     }
 
     // MARK: - 確認（§16 / §17）
@@ -134,8 +142,10 @@ final class AstraStateStore: ObservableObject {
     func meetingStarted(id: String) {
         state.meeting.meetingId = id
         state.meeting.isRecording = true
-        setDock(.meeting(expanded: nil))
         setMode(.meeting)
+        // 録音中は Dock ではなく、**録音のあいだだけ現れる面**が主役になる。
+        // Dock は退く（E2E-001 の排他はここで担保される）。
+        WindowCoordinator.shared.enterRecordingMode()
         bus.publish(.meetingStarted(id: id))
     }
 
@@ -143,8 +153,10 @@ final class AstraStateStore: ObservableObject {
         let id = state.meeting.meetingId
         state.meeting.isRecording = false
         state.meeting.meetingId = nil
-        setDock(.idle)
         setMode(.idle)
+        // 面を閉じ、Dock を戻す。
+        WindowCoordinator.shared.leaveRecordingMode()
+        setDock(.idle)
         if let id { bus.publish(.meetingEnded(id: id)) }
     }
 
@@ -165,6 +177,11 @@ final class AstraStateStore: ObservableObject {
               let task = LocalStore.shared.loadTasks(status: .running).first else { return }
         state.activeTask = task
         setMode(.acting)
+    }
+
+    /// 結果面を閉じる。
+    func dismissResult() {
+        if case .result = state.dock { setDock(.idle) }
     }
 
     /// テスト用に初期化する。
