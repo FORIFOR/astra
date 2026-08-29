@@ -25,7 +25,20 @@ apps/astra-macos/.build/debug/AstraMac --selftest shots /tmp/astra-shots
 
 `shots` は撮るだけでなく **geometry と非空白（色数）を検査**する。窓が在るだけでは PASS にしない。
 **light / dark の両方**を撮る（`--selftest shots <dir> [dark]`）。dark 版は `docs/golden-screenshots/dark/`。
-`scripts/verify-macos-recording.sh` に組み込み済みなので `pnpm verify:all` で毎回走る。
+`scripts/verify-macos-recording.sh` に組み込み済みなので `pnpm verify:all` で毎回走る（light/dark とも）。
+
+### Golden 差分
+
+```bash
+apps/astra-macos/.build/debug/AstraMac --selftest golden docs/golden-screenshots /tmp/astra-shots-light
+```
+
+撮り直した画面を **committed の golden と画素で**比べる（許容 0.5%、200 点角のグレースケール）。
+比べるのは中身が決まっている 7 面のみ:
+`01 / 02 / 03 / 04 / 05 / 08 / 09`。
+Home は挨拶が時刻で変わり、Apps は接続状態で変わるので入れない
+（落ちる理由が「時計が進んだ」になるテストは、次から誰も直さない）。
+実測の再撮影差は **0.000%**。dark を fresh として渡すと 97〜99% で落ちることを確認済み（検出力の確認）。
 
 ### hover / focus / pressed
 

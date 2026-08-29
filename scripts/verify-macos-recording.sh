@@ -88,6 +88,10 @@ for appearance in light dark; do
   # hover / focus / pressed が neutral と画素で違うことまで見る（実装の有無ではなく画面の差）。
   OUTST="$("$BIN" --selftest states "$SHOTS_BASE-states-$appearance" $ARG)"; echo "$OUTST" | grep '^STATE ' || true
   [[ "$OUTST" == *SELFTEST_OK* || "$OUTST" == *SELFTEST_SKIP* ]] || { echo "FAIL: interaction states ($appearance)" >&2; exit 1; }
+  # committed の golden と画素で比べる（中身が決まっている面だけ。Home/Apps は時刻や接続で変わるので除外）。
+  GDIR="$ROOT/docs/golden-screenshots"; [[ "$appearance" == dark ]] && GDIR="$GDIR/dark"
+  OUTG="$("$BIN" --selftest golden "$GDIR" "$SHOTS_BASE-$appearance")"; echo "$OUTG" | tail -1
+  [[ "$OUTG" == *SELFTEST_OK* ]] || { echo "$OUTG" >&2; echo "FAIL: golden diff ($appearance)" >&2; exit 1; }
 done
 
 for t in screenshot waveform livemic livemeeting livescreen sttrecognize sttstream guishot axtree breakpoints dictation; do

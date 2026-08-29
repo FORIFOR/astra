@@ -55,6 +55,7 @@ enum SelfTest {
         case "e2e001": e2e001(args); return true
         case "shots": shots(args); return true
         case "states": states(args); return true
+        case "golden": golden(args); return true
         case "panel": panelBehavior(); return true
         case "render": render(); return true
         default: return false
@@ -159,6 +160,63 @@ enum SelfTest {
             exit(0)
         } else {
             print("SELFTEST_FAIL states: \(failures.joined(separator: ", "))")
+            exit(2)
+        }
+    }
+
+    /// `--selftest golden <goldenDir> <freshDir>`: 撮り直した画面を **committed の golden と画素で比べる**。
+    ///
+    /// 比べるのは中身が決まっている面だけ。Home は挨拶が時刻で変わり、Apps は接続状態で変わるので
+    /// ここには入れない（落ちる理由が「時計が進んだ」になるテストは、次から誰も直さない）。
+    private static func golden(_ args: [String]) {
+        let i = args.firstIndex(of: "--selftest")!
+        guard args.count > i + 3 else { print("SELFTEST_FAIL golden: 引数が足りない"); exit(2) }
+        let goldenDir = args[i + 2], freshDir = args[i + 3]
+        let names = ["01-voice-hud-idle", "02-voice-hud-listening", "03-recording-workspace",
+                     "04-recording-transcript", "05-recording-rag", "08-meeting-detail",
+                     "09-permission-denied"]
+
+        /// 縮小グレースケール列。撮影ごとの微差を拾わないよう 200 点角に落とす。
+        func signature(_ path: String) -> [UInt8]? {
+            guard let data = FileManager.default.contents(atPath: path),
+                  let rep = NSBitmapImageRep(data: data) else { return nil }
+            var out: [UInt8] = []
+            let pw = rep.pixelsWide, ph = rep.pixelsHigh
+            let sx = max(1, pw / 200), sy = max(1, ph / 200)
+            var y = 0
+            while y < ph { var x = 0
+                while x < pw {
+                    if let c = rep.colorAt(x: x, y: y) {
+                        let l = 0.299 * c.redComponent + 0.587 * c.greenComponent + 0.114 * c.blueComponent
+                        out.append(UInt8(max(0, min(255, l * 255))))
+                    }
+                    x += sx }
+                y += sy }
+            return out
+        }
+
+        var report: [String] = []
+        var failures: [String] = []
+        // アンチエイリアスと影のにじみで数点は必ず動く。0.5% までは同じ絵とみなす。
+        let tolerance = 0.005
+        for name in names {
+            let g = "\(goldenDir)/\(name).png", f = "\(freshDir)/\(name).png"
+            guard let a = signature(g) else { failures.append("\(name)=golden なし"); continue }
+            guard let b = signature(f) else { failures.append("\(name)=撮影なし"); continue }
+            guard a.count == b.count else { failures.append("\(name)=寸法が違う"); continue }
+            var n = 0
+            for k in 0..<a.count where abs(Int(a[k]) - Int(b[k])) >= 16 { n += 1 }
+            let ratio = Double(n) / Double(a.count)
+            report.append(String(format: "%@ %.3f%%", name, ratio * 100))
+            if ratio > tolerance { failures.append(String(format: "%@ が golden と %.2f%% 違う", name, ratio * 100)) }
+        }
+
+        for line in report { print("GOLDEN \(line)") }
+        if failures.isEmpty {
+            print("SELFTEST_OK golden: \(names.count)面が committed の golden と一致")
+            exit(0)
+        } else {
+            print("SELFTEST_FAIL golden: \(failures.joined(separator: ", "))")
             exit(2)
         }
     }
