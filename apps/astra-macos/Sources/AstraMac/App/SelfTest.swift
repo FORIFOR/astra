@@ -1482,6 +1482,13 @@ enum SelfTest {
         state.refreshRag()
         record("05-recording-rag", capture("05-recording-rag"),
                expW: Metrics.workspaceWidth, expH: Metrics.workspaceHeight, minColors: 12)
+        // 09 permission-denied: 許可が無いまま録り続けていることが画面に出るか。
+        // 「録音中」と出ているのに無音、が一番高くつく壊れ方なので必ず撮る。
+        state.ragOpen = false
+        state.permissionIssue = .microphoneDenied
+        record("09-permission-denied", capture("09-permission-denied"),
+               expW: Metrics.workspaceWidth, expH: Metrics.workspaceHeight, minColors: 12)
+        state.permissionIssue = nil
         WindowCoordinator.shared.hideRecordingWorkspace()
         settle(0.5)
 
@@ -1501,7 +1508,7 @@ enum SelfTest {
         print("SHOTS_DIR \(outDir)")
         for line in report { print("SHOT \(line)") }
         if failures.isEmpty {
-            print("SELFTEST_OK shots: 8面を実アプリで撮影・geometry OK")
+            print("SELFTEST_OK shots: 9面を実アプリで撮影・geometry OK")
             exit(0)
         } else {
             print("SELFTEST_FAIL shots: \(failures.joined(separator: ", "))")

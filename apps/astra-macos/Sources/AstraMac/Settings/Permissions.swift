@@ -19,6 +19,12 @@ enum Permissions {
         AVCaptureDevice.requestAccess(for: .audio) { ok in DispatchQueue.main.async { done(ok) } }
     }
 
+    static func openMicrophoneSettings() {
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone") {
+            NSWorkspace.shared.open(url)
+        }
+    }
+
     static var accessibility: State {
         AXIsProcessTrusted() ? .granted : .notDetermined
     }

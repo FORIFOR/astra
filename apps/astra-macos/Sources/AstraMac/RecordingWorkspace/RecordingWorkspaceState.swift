@@ -53,6 +53,8 @@ final class RecordingWorkspaceState: ObservableObject {
     static let shared = RecordingWorkspaceState()
 
     @Published var isRecording = false
+    /// 録音を成り立たなくしている許可。無ければ nil。バナーで出す。
+    @Published var permissionIssue: PermissionIssue?
     private var tickTimer: Timer?
     @Published var isPaused = false
     @Published var elapsedSeconds = 0
@@ -186,6 +188,8 @@ final class RecordingWorkspaceState: ObservableObject {
             self.audioLevels.append(CGFloat(level))
         }
         // 実ランタイム: マイク → astra-core → ディスク断片（許可があればライブ取り込み + 手元 STT）
+        // 許可が無いまま黙って録り続けない。始めた時点で画面に出す。
+        permissionIssue = Permissions.microphone == .granted ? nil : .microphoneDenied
         let localId = "meeting-\(Int(Date().timeIntervalSince1970))"
         RecordingRuntime.shared.begin(meetingId: localId)
         // スクショ等は実際に journal を作った id に合わせる（サインイン時は gateway id）。
@@ -194,6 +198,7 @@ final class RecordingWorkspaceState: ObservableObject {
     }
     func stop() {
         isRecording = false
+        permissionIssue = nil
         tickTimer?.invalidate(); tickTimer = nil
         RecordingRuntime.shared.end()   // 断片を確定（回復候補として残る）
         WindowCoordinator.shared.leaveRecordingMode()

@@ -38,6 +38,7 @@ struct RecordingWorkspaceView: View {
                 VStack(spacing: 18) {
                     if !hasAIOutput { Spacer(minLength: 0) }
                     RecordingHeroView(state: state)
+                    PermissionBanner(state: state)
                     AIActionsPalette(state: state)
                     // 押した結果はここに出る。走っていない/結果が無いときは何も置かない。
                     AIResultPanel(state: state)

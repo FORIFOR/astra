@@ -21,4 +21,17 @@ final class AstraAppDelegate: NSObject, NSApplicationDelegate {
         }
         NSApp.activate(ignoringOtherApps: true)
     }
+
+    /// 録音中の終了は会議を失う操作。黙って落とさず一度だけ聞く。
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        guard RecordingWorkspaceState.shared.isRecording else { return .terminateNow }
+        let go = Confirm.destructive(
+            "録音中です。終了しますか？",
+            detail: "ここまでの音声はディスクに残り、次の起動で復元できます。",
+            confirm: "録音を止めて終了",
+            cancel: "録音を続ける")
+        guard go else { return .terminateCancel }
+        RecordingWorkspaceState.shared.stop()
+        return .terminateNow
+    }
 }

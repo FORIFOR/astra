@@ -281,7 +281,13 @@ private struct AppsPane: View {
                         Spacer(minLength: 0)
                         // 繋げるものだけ操作を出す。繋げないものに操作を出して失敗させない。
                         if st == .connected {
-                            Button("切断") { connectors.connected.remove(a) }
+                            Button("切断") {
+                                guard Confirm.destructive(
+                                    "\(a) を切断しますか？",
+                                    detail: "Astra はこのアプリを読めなくなります。使うにはもう一度つなぎ直してください。",
+                                    confirm: "切断する") else { return }
+                                connectors.connected.remove(a)
+                            }
                                 .font(.system(size: 11))
                                 .foregroundStyle(.secondary)
                                 .frame(height: 28).padding(.horizontal, 8)

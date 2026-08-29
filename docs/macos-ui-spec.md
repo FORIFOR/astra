@@ -5,22 +5,23 @@
 
 ## Golden Screenshot 一覧
 
-`docs/golden-screenshots/` に 8 面を保存。再取得は次のコマンド（実アプリが自分で撮る）:
+`docs/golden-screenshots/` に 9 面を保存。再取得は次のコマンド（実アプリが自分で撮る）:
 
 ```bash
 apps/astra-macos/.build/debug/AstraMac --selftest shots /tmp/astra-shots
 ```
 
-| #   | ファイル                      | 画面                | geometry（実測）                     |
-| --- | ----------------------------- | ------------------- | ------------------------------------ |
-| 01  | `01-voice-hud-idle.png`       | Voice HUD idle      | 310×31（tokens: hudWidth/hudHeight） |
-| 02  | `02-voice-hud-listening.png`  | Voice HUD listening | 310×31                               |
-| 03  | `03-recording-workspace.png`  | Recording Workspace | 920×590（workspaceWidth/Height）     |
-| 04  | `04-recording-transcript.png` | 文字起こし表示      | 920×590                              |
-| 05  | `05-recording-rag.png`        | RAG Drawer 展開     | 920×590                              |
-| 06  | `06-main-home.png`            | Main / Home         | 1040×680                             |
-| 07  | `07-apps.png`                 | Main / Apps         | 1040×680                             |
-| 08  | `08-meeting-detail.png`       | Meeting Detail      | 1040×680                             |
+| #   | ファイル                      | 画面                   | geometry（実測）                     |
+| --- | ----------------------------- | ---------------------- | ------------------------------------ |
+| 01  | `01-voice-hud-idle.png`       | Voice HUD idle         | 310×31（tokens: hudWidth/hudHeight） |
+| 02  | `02-voice-hud-listening.png`  | Voice HUD listening    | 310×31                               |
+| 03  | `03-recording-workspace.png`  | Recording Workspace    | 920×590（workspaceWidth/Height）     |
+| 04  | `04-recording-transcript.png` | 文字起こし表示         | 920×590                              |
+| 05  | `05-recording-rag.png`        | RAG Drawer 展開        | 920×590                              |
+| 06  | `06-main-home.png`            | Main / Home            | 1040×680                             |
+| 07  | `07-apps.png`                 | Main / Apps            | 1040×680                             |
+| 08  | `08-meeting-detail.png`       | Meeting Detail         | 1040×680                             |
+| 09  | `09-permission-denied.png`    | マイク許可なしで録音中 | 920×590                              |
 
 `shots` は撮るだけでなく **geometry と非空白（色数）を検査**する。窓が在るだけでは PASS にしない。
 **light / dark の両方**を撮る（`--selftest shots <dir> [dark]`）。dark 版は `docs/golden-screenshots/dark/`。
@@ -127,14 +128,22 @@ focus リングは **Tab / 矢印を押してから**出す（`KeyboardNavigatio
 16. **Meeting Detail だけ英語**: SUMMARY / DECISIONS / Related files / audio jump …
     → 画面の言語を日本語へ統一。タブは `Text` の箱で押せなかったので実ボタン＋選択状態に。
     音声リンクは飛ぶ手当てが無いときリンク色で出さない（押して何も起きない状態を作らない）
-17. **Main の geometry 固定検査が脆い**: titled window は WM がサイズを詰める → 最小寸法＋内容量で判定（commit 3011d8b）
+17. **マイク拒否のまま黙って録り続ける**: 許可が無くても `NSLog` を出して続行していたので、
+    画面は「録音中 / 04:21 / 波形」なのに中身は無音——会議が終わってから気づく壊れ方だった
+    → `PermissionBanner`（理由＋設定への導線）を出し、見出しを「録音中（音声なし）」、
+    波形を平らに、録音ドットを灰色にして**画面が嘘をつかない**ようにする
+18. **戻せない操作の確認が 0 箇所**: 録音中に「Astra を終了」を押すと会議が黙って消え、
+    Apps の「切断」は一度の誤クリックで繋ぎ直しになった
+    → `Confirm.destructive` を 1 か所に置き、`applicationShouldTerminate` と切断に適用。
+    既定のボタンは安全側（録音を続ける / やめる）
+19. **Main の geometry 固定検査が脆い**: titled window は WM がサイズを詰める → 最小寸法＋内容量で判定（commit 3011d8b）
 
 ## Accessibility identifier
 
 `recordingWorkspace` / `toolPalette` / `tool-<id>` / `aiActions` / `ai-<title>` / `aiResult` /
 `aiResultClose` / `ragToggle` / `voiceHUD` / `intentBar` / `contextLens` / `workSurface` /
 `homeIntentField` / `homeIntentMic` / `homeIntentAnswer` / `meetingTab-<name>` /
-`meetingAudioJump` / `stopRecording` / `approvalCard` / `actionReceipt` / `evidenceSummary` / `lineagePanel` / `meetingSurface` /
+`permissionBanner` / `permissionOpenSettings` / `meetingAudioJump` / `stopRecording` / `approvalCard` / `actionReceipt` / `evidenceSummary` / `lineagePanel` / `meetingSurface` /
 `meetingArtifact` / `researchResult` / `homeView` / `connector-<app>` / `workspaceShell`
 
 `--selftest axtree` が Main の 4 セクションと Workspace の統合サーフェスを

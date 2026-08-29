@@ -4,20 +4,26 @@ import SwiftUI
 struct RecordingHeroView: View {
     @ObservedObject var state: RecordingWorkspaceState
 
+    /// 音が入っていないとき、主役だけ元気に動いていると画面が嘘をつく。
+    private var silent: Bool { state.permissionIssue != nil }
+
     var body: some View {
         VStack(spacing: 12) {
             ZStack {
-                Circle().fill(Color.recordingRed.opacity(0.12)).frame(width: 72, height: 72)
-                Circle().fill(state.isPaused ? Color.secondary : Color.recordingRed)
+                Circle().fill(Color.recordingRed.opacity(silent ? 0.06 : 0.12)).frame(width: 72, height: 72)
+                Circle().fill(state.isPaused || silent ? Color.secondary : Color.recordingRed)
                     .frame(width: 18, height: 18)
             }
-            Text(state.heroText)
+            // 見出しも合わせる。「録音中」だけだと、下のバナーと画面が食い違って見える。
+            Text(silent ? "\(state.heroText)（音声なし）" : state.heroText)
                 .font(.system(size: 18, weight: .semibold))
             Text(state.elapsedText)
                 .font(.system(size: 13, design: .monospaced))
                 .foregroundStyle(.secondary)
-            Waveform(levels: state.audioLevels)
+            // 許可が無いときは平らにする（動いていると「録れている」と読めてしまう）。
+            Waveform(levels: silent ? Array(repeating: 0.04, count: state.audioLevels.count) : state.audioLevels)
                 .frame(width: 180, height: 30)
+                .opacity(silent ? 0.45 : 1)
         }
         .accessibilityIdentifier("recordingHero")
     }
