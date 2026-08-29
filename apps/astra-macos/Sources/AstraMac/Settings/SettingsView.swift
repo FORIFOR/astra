@@ -16,6 +16,17 @@ struct SettingsView: View {
                 row("録音を開始 / 停止", GlobalShortcut.label())
             }
 
+            // §10 Interface Size。文字だけでなく面・余白も一緒に動く。
+            section("Interface Size") {
+                Picker("", selection: Binding(
+                    get: { UIScale.shared.size },
+                    set: { UIScale.shared.set($0) })) {
+                    ForEach(UIScale.Size.allCases) { Text($0.title).tag($0) }
+                }
+                .labelsHidden()
+                .pickerStyle(.segmented)
+                .accessibilityIdentifier("uiScale")
+            }
             section("許可（OS）") {
                 permissionRow("マイク", mic, request: { Permissions.requestMicrophone { _ in mic = Permissions.microphone } })
                 permissionRow("画面収録", screen, request: { Permissions.requestScreenRecording(); screen = Permissions.screenRecording })

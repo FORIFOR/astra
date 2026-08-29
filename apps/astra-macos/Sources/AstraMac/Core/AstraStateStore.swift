@@ -157,7 +157,12 @@ final class AstraStateStore: ObservableObject {
         // 大きな面を開いていたら閉じる（開いていなければ何も起きない）。
         WindowCoordinator.shared.leaveRecordingMode()
         // 停止しても巨大な modal は出さない。Dock が結果へ morph する。
-        setDock(.result(AgentResult(title: id ?? "会議", actions: [.openNotes, .ask])))
+        // 中身は Session を見る（Home のカードと同じもの）。
+        if let id, let session = MeetingSessionStore.shared.session(id: id) {
+            setDock(.result(AgentResult(title: session.title, actions: [.openNotes, .ask])))
+        } else {
+            setDock(.idle)
+        }
         if let id { bus.publish(.meetingEnded(id: id)) }
     }
 

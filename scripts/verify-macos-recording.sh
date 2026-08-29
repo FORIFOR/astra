@@ -98,6 +98,14 @@ done
 OUTP="$("$BIN" --selftest plugins "$ROOT/plugins/builtin")"; echo "$OUTP" | tail -1
 [[ "$OUTP" == SELFTEST_OK* || "$OUTP" == SELFTEST_SKIP* ]] || { echo "FAIL: plugin runtime" >&2; exit 1; }
 
+# Session UX の面。録音開始 → processing → ready を **実遷移で**撮る。
+SESS_DIR="${ASTRA_SESSION_DIR:-/tmp/astra-session}"
+for appearance in light dark; do
+  ARG=""; [[ "$appearance" == dark ]] && ARG="dark"
+  OUTS="$("$BIN" --selftest sessionshots "$SESS_DIR-$appearance" $ARG)"; echo "$appearance: $(echo "$OUTS" | tail -1)"
+  [[ "$OUTS" == *SELFTEST_OK* ]] || { echo "$OUTS" >&2; echo "FAIL: Session UX ($appearance)" >&2; exit 1; }
+done
+
 # Task Dock の 8 状態。fixture ではなく **AstraStateStore の実遷移**で撮り、
 # 各状態の実寸・top anchor 固定・窓が増えていないことまで見る。
 DOCK_DIR="${ASTRA_DOCK_DIR:-/tmp/astra-dock}"
@@ -107,7 +115,7 @@ for appearance in light dark; do
   [[ "$OUTD" == *SELFTEST_OK* ]] || { echo "$OUTD" >&2; echo "FAIL: Task Dock 8 states ($appearance)" >&2; exit 1; }
 done
 
-for t in screenshot waveform livemic livemeeting livescreen sttrecognize sttstream guishot axtree breakpoints dictation state presence perf storage meetingiq vad browser dockanim entry secret recordbutton; do
+for t in screenshot waveform livemic livemeeting livescreen sttrecognize sttstream guishot axtree breakpoints dictation state presence perf storage meetingiq vad browser dockanim entry secret recordbutton session uiscale; do
   OUT="$("$BIN" --selftest "$t")"
   echo "$OUT"
   [[ "$OUT" == SELFTEST_OK* || "$OUT" == SELFTEST_SKIP* ]] || { echo "FAIL: macOS live $t" >&2; exit 1; }

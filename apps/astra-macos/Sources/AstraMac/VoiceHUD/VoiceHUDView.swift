@@ -19,6 +19,8 @@ import SwiftUI
 ///
 /// 高さが変わるときは **上辺の Y を固定**して下へ伸ばす（`WindowCoordinator`）。
 struct VoiceTaskDockView: View {
+    /// §10 Interface Size を変えたら描き直す（購読していないと変わらない）。
+    @ObservedObject private var uiScale = UIScale.shared
     @ObservedObject private var store = AstraStateStore.shared
     @ObservedObject private var state = VoiceHUDState.shared
     @Environment(\.colorScheme) private var scheme
@@ -80,13 +82,13 @@ private struct IdleDock: View {
         HStack(spacing: 7) {
             AstraOrb()
             Text("Astra")
-                .font(.system(size: Metrics.dockPrimarySize, weight: .medium))
+                .font(.system(size: S.type(Metrics.dockPrimarySize), weight: .medium))
                 .foregroundStyle(Palette.muted(scheme == .dark))
             Spacer(minLength: 0)
             KeyBadge("⌥")
             KeyBadge("space")
         }
-        .padding(.horizontal, Metrics.dockPadH)
+        .padding(.horizontal, S.metric(Metrics.dockPadH))
         .frame(maxHeight: .infinity)
         .contentShape(Rectangle())
         .onTapGesture { VoiceHUDState.shared.toggleQuickActions() }
@@ -116,7 +118,7 @@ private struct AppContextDock: View {
                     .font(.system(size: 9))
                     .foregroundStyle(Palette.accent(dark))
                 Text(summary.app)
-                    .font(.system(size: Metrics.dockPrimarySize, weight: .medium))
+                    .font(.system(size: S.type(Metrics.dockPrimarySize), weight: .medium))
                     .foregroundStyle(Palette.text(dark))
                 Spacer(minLength: 0)
                 if !summary.suggestions.isEmpty {
@@ -125,7 +127,7 @@ private struct AppContextDock: View {
                         .foregroundStyle(Palette.muted(dark))
                 }
             }
-            .padding(.horizontal, Metrics.dockPadH)
+            .padding(.horizontal, S.metric(Metrics.dockPadH))
             .frame(height: Metrics.dockContextHeight)
             .contentShape(Rectangle())
             .onTapGesture { VoiceHUDState.shared.toggleContextExpanded() }
@@ -146,7 +148,7 @@ private struct AppContextDock: View {
                             Button { VoiceHUDState.shared.runSuggestion(s) } label: {
                                 HStack(spacing: 0) {
                                     Text(s)
-                                        .font(.system(size: Metrics.dockRowSize))
+                                        .font(.system(size: S.type(Metrics.dockRowSize)))
                                         .foregroundStyle(Palette.text(dark))
                                     Spacer(minLength: 0)
                                 }
@@ -158,7 +160,7 @@ private struct AppContextDock: View {
                         }
                     }
                 }
-                .padding(.horizontal, Metrics.dockPadH - 4)
+                .padding(.horizontal, S.metric(Metrics.dockPadH) - 4)
                 .padding(.top, 9)
                 Spacer(minLength: 0)
             }
@@ -184,7 +186,7 @@ private struct ListeningDock: View {
                 MiniWaveform()
                     .frame(width: 44, height: 16)
                 Text(partial.isEmpty ? "聞いています…" : partial)
-                    .font(.system(size: Metrics.dockSpeechSize))
+                    .font(.system(size: S.type(Metrics.dockSpeechSize)))
                     .foregroundStyle(partial.isEmpty ? Palette.muted(dark) : Palette.text(dark))
                     .lineLimit(1)
                     .truncationMode(.head)
@@ -192,7 +194,7 @@ private struct ListeningDock: View {
             }
             ContextStrip()
         }
-        .padding(.horizontal, Metrics.dockPadH)
+        .padding(.horizontal, S.metric(Metrics.dockPadH))
         // 2 行を面の中で上下に振り分ける（下に余白を溜めない）。
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
         .accessibilityIdentifier("dockListening")
@@ -214,13 +216,13 @@ struct ContextStrip: View {
                         .font(.system(size: 10, weight: .semibold))
                         .foregroundStyle(Palette.muted(dark))
                     Text(item.application)
-                        .font(.system(size: Metrics.dockMetaSize))
+                        .font(.system(size: S.type(Metrics.dockMetaSize)))
                         .foregroundStyle(Palette.text(dark))
                 }
             }
             if store.state.context.items.isEmpty {
                 Text("見えている文脈はありません")
-                    .font(.system(size: Metrics.dockMetaSize))
+                    .font(.system(size: S.type(Metrics.dockMetaSize)))
                     .foregroundStyle(Palette.muted(dark))
             }
             if !store.state.context.items.isEmpty {
@@ -256,11 +258,11 @@ private struct SimpleDock: View {
         HStack(spacing: 8) {
             Image(systemName: icon).font(.system(size: 14)).foregroundStyle(tint)
             Text(text)
-                .font(.system(size: Metrics.dockPrimarySize))
+                .font(.system(size: S.type(Metrics.dockPrimarySize)))
                 .foregroundStyle(Palette.text(scheme == .dark))
             Spacer(minLength: 0)
         }
-        .padding(.horizontal, Metrics.dockPadH)
+        .padding(.horizontal, S.metric(Metrics.dockPadH))
         .frame(maxHeight: .infinity)
         .accessibilityIdentifier("dockSimple")
     }
@@ -286,7 +288,7 @@ private struct AgentDock: View {
             Spacer(minLength: 0)
             footer
         }
-        .padding(.horizontal, Metrics.dockPadH)
+        .padding(.horizontal, S.metric(Metrics.dockPadH))
         .padding(.vertical, 14)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .accessibilityIdentifier("dockAgent")
@@ -296,16 +298,16 @@ private struct AgentDock: View {
         HStack(spacing: 10) {
             AstraOrb(active: true)
             Text("Astra")
-                .font(.system(size: Metrics.dockMetaSize, weight: .medium))
+                .font(.system(size: S.type(Metrics.dockMetaSize), weight: .medium))
                 .foregroundStyle(Palette.muted(dark))
             Spacer(minLength: 0)
             if let task = store.state.activeTask {
                 // 何をしているか（状態語）と、どこまで進んだか。
                 Text(task.status == .running ? "Working" : task.status.rawValue.capitalized)
-                    .font(.system(size: Metrics.dockMetaSize, weight: .medium))
+                    .font(.system(size: S.type(Metrics.dockMetaSize), weight: .medium))
                     .foregroundStyle(Palette.muted(dark))
                 Text("\(Int(task.progress * 100))%")
-                    .font(.system(size: Metrics.dockMetaSize, design: .monospaced))
+                    .font(.system(size: S.type(Metrics.dockMetaSize), design: .monospaced))
                     .foregroundStyle(Palette.muted(dark))
             }
         }
@@ -328,13 +330,13 @@ private struct AgentDock: View {
                         .foregroundStyle(tint(step.state))
                         .frame(width: 13)
                     Text(step.title)
-                        .font(.system(size: Metrics.dockRowSize,
+                        .font(.system(size: S.type(Metrics.dockRowSize),
                                       weight: step.state == .running ? .semibold : .regular))
                         .foregroundStyle(step.state == .pending ? Palette.muted(dark) : Palette.text(dark))
                         .frame(width: 118, alignment: .leading)
                     // その段で実際に何を見ているか。空欄のままにしない。
                     Text(step.detail)
-                        .font(.system(size: Metrics.dockMetaSize))
+                        .font(.system(size: S.type(Metrics.dockMetaSize)))
                         .foregroundStyle(Palette.muted(dark))
                         .lineLimit(1)
                     Spacer(minLength: 0)
@@ -353,7 +355,7 @@ private struct AgentDock: View {
                 HStack(spacing: 6) {
                     ForEach(items) { item in
                         Text(item.application)
-                            .font(.system(size: Metrics.dockMetaSize))
+                            .font(.system(size: S.type(Metrics.dockMetaSize)))
                             .foregroundStyle(Palette.text(dark))
                             .padding(.horizontal, 10)
                             .frame(height: 24)
@@ -379,7 +381,7 @@ private struct AgentDock: View {
                     Text("Continue in Workspace")
                     Image(systemName: "arrow.up.right").font(.system(size: 10, weight: .semibold))
                 }
-                .font(.system(size: Metrics.dockMetaSize, weight: .medium))
+                .font(.system(size: S.type(Metrics.dockMetaSize), weight: .medium))
                 .foregroundStyle(Palette.accent(dark))
                 .frame(height: 28).padding(.horizontal, 10)
             }
@@ -435,7 +437,7 @@ private struct ConfirmationDock: View {
             VStack(alignment: .leading, spacing: 3) {
                 ForEach(confirmation.details, id: \.self) { d in
                     Text(d)
-                        .font(.system(size: Metrics.dockRowSize))
+                        .font(.system(size: S.type(Metrics.dockRowSize)))
                         .foregroundStyle(Palette.muted(dark))
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -444,20 +446,20 @@ private struct ConfirmationDock: View {
             HStack(spacing: 8) {
                 Spacer(minLength: 0)
                 Button("Cancel") { AstraStateStore.shared.resolveConfirmation(approved: false) }
-                    .font(.system(size: Metrics.dockRowSize))
+                    .font(.system(size: S.type(Metrics.dockRowSize)))
                     .foregroundStyle(Palette.muted(dark))
                     .frame(height: 34).padding(.horizontal, 18)
                     .buttonStyle(AstraControlStyle(radius: 7, base: 0.0))
                     .accessibilityIdentifier("confirmCancel")
                 Button(confirmation.confirmLabel) { AstraStateStore.shared.resolveConfirmation(approved: true) }
-                    .font(.system(size: Metrics.dockRowSize, weight: .semibold))
+                    .font(.system(size: S.type(Metrics.dockRowSize), weight: .semibold))
                     .foregroundStyle(riskTint)
                     .frame(height: 34).padding(.horizontal, 22)
                     .buttonStyle(AstraControlStyle(radius: 7, base: 0.07))
                     .accessibilityIdentifier("confirmProceed")
             }
         }
-        .padding(.horizontal, Metrics.dockPadH + 2)
+        .padding(.horizontal, S.metric(Metrics.dockPadH) + 2)
         .padding(.vertical, 12)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .accessibilityIdentifier("dockConfirmation")
@@ -485,7 +487,7 @@ private struct MeetingDock: View {
             if let open {
                 Divider().overlay(Palette.border(dark))
                 MeetingPanelBody(panel: open)
-                    .padding(.horizontal, Metrics.dockPadH)
+                    .padding(.horizontal, S.metric(Metrics.dockPadH))
                     .padding(.top, 12)
                 Spacer(minLength: 0)
             }
@@ -500,11 +502,11 @@ private struct MeetingDock: View {
                 .frame(width: 9, height: 9)
             VStack(alignment: .leading, spacing: 1) {
                 Text(store.state.meeting.detectedApp ?? "Recording")
-                    .font(.system(size: Metrics.dockPrimarySize, weight: .semibold))
+                    .font(.system(size: S.type(Metrics.dockPrimarySize), weight: .semibold))
                     .foregroundStyle(Palette.text(dark))
                     .lineLimit(1)
                 Text(recording.elapsedText)
-                    .font(.system(size: Metrics.dockMetaSize, design: .monospaced))
+                    .font(.system(size: S.type(Metrics.dockMetaSize), design: .monospaced))
                     .foregroundStyle(Palette.muted(dark))
             }
             Waveform(levels: recording.audioLevels)
@@ -514,7 +516,7 @@ private struct MeetingDock: View {
                 Button { VoiceHUDState.shared.toggleMeetingPanel(panel) } label: {
                     HStack(spacing: 5) {
                         Image(systemName: panel.icon).font(.system(size: 13))
-                        Text(panel.title).font(.system(size: Metrics.dockRowSize, weight: .medium))
+                        Text(panel.title).font(.system(size: S.type(Metrics.dockRowSize), weight: .medium))
                     }
                     .foregroundStyle(open == panel ? Palette.accent(dark) : Palette.muted(dark))
                     .frame(height: 30).padding(.horizontal, 10)
@@ -534,7 +536,7 @@ private struct MeetingDock: View {
             .accessibilityIdentifier("secretToggle")
             StopRecordingButton { WindowCoordinator.shared.toggleRecording() }
         }
-        .padding(.horizontal, Metrics.dockPadH)
+        .padding(.horizontal, S.metric(Metrics.dockPadH))
         .frame(height: Metrics.dockMeetingHeight)
     }
 }
@@ -557,7 +559,7 @@ private struct MeetingPanelBody: View {
                         Text("Open beside meeting")
                         Image(systemName: "arrow.up.right").font(.system(size: 9, weight: .semibold))
                     }
-                    .font(.system(size: Metrics.dockLabelSize, weight: .medium))
+                    .font(.system(size: S.type(Metrics.dockLabelSize), weight: .medium))
                     .foregroundStyle(Palette.muted(dark))
                     .frame(height: 26).padding(.horizontal, 8)
                 }
@@ -592,15 +594,15 @@ private struct MeetingPanelBody: View {
                         case .translation:
                             if recording.translating {
                                 Text("翻訳しています…")
-                                    .font(.system(size: Metrics.dockRowSize))
+                                    .font(.system(size: S.type(Metrics.dockRowSize)))
                                     .foregroundStyle(Palette.muted(dark))
                             } else if recording.translatedText.isEmpty {
                                 Text("まだ訳すものがありません。")
-                                    .font(.system(size: Metrics.dockRowSize))
+                                    .font(.system(size: S.type(Metrics.dockRowSize)))
                                     .foregroundStyle(Palette.muted(dark))
                             } else {
                                 Text(recording.translatedText)
-                                    .font(.system(size: Metrics.dockRowSize))
+                                    .font(.system(size: S.type(Metrics.dockRowSize)))
                                     .foregroundStyle(Palette.text(dark))
                                     .fixedSize(horizontal: false, vertical: true)
                             }
@@ -622,7 +624,7 @@ private struct MeetingPanelBody: View {
             let canvas = store.state.meeting.canvas
             if canvas.isEmpty {
                 Text("聞きながら、決まったこと・やること・懸念をここに書いていきます。")
-                    .font(.system(size: Metrics.dockRowSize))
+                    .font(.system(size: S.type(Metrics.dockRowSize)))
                     .foregroundStyle(Palette.muted(dark))
             } else {
                 ScrollView {
@@ -644,10 +646,10 @@ private struct MeetingPanelBody: View {
     private func captionLine(speaker: String, text: String, interim: Bool) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(speaker)
-                .font(.system(size: Metrics.dockMetaSize, weight: .semibold))
+                .font(.system(size: S.type(Metrics.dockMetaSize), weight: .semibold))
                 .foregroundStyle(Palette.accent(dark))
             Text(text)
-                .font(.system(size: Metrics.dockRowSize))
+                .font(.system(size: S.type(Metrics.dockRowSize)))
                 .foregroundStyle(interim ? Palette.muted(dark) : Palette.text(dark))
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -658,13 +660,13 @@ private struct MeetingPanelBody: View {
         if !lines.isEmpty {
             VStack(alignment: .leading, spacing: 5) {
                 Text(title)
-                    .font(.system(size: Metrics.dockMetaSize, weight: .semibold))
+                    .font(.system(size: S.type(Metrics.dockMetaSize), weight: .semibold))
                     .foregroundStyle(Palette.muted(dark))
                 ForEach(lines, id: \.self) { line in
                     HStack(alignment: .firstTextBaseline, spacing: 8) {
                         Text("•").foregroundStyle(Palette.muted(dark))
                         Text(line)
-                            .font(.system(size: Metrics.dockRowSize))
+                            .font(.system(size: S.type(Metrics.dockRowSize)))
                             .foregroundStyle(Palette.text(dark))
                             .fixedSize(horizontal: false, vertical: true)
                         Spacer(minLength: 0)
@@ -689,7 +691,7 @@ private struct AskInDockField: View {
                     .foregroundStyle(Palette.accent(dark))
                 TextField("この会議について聞く", text: $question)
                     .textFieldStyle(.plain)
-                    .font(.system(size: Metrics.dockPrimarySize))
+                    .font(.system(size: S.type(Metrics.dockPrimarySize)))
                     .foregroundStyle(Palette.text(dark))
                     .focused($focused)
                     .onSubmit(ask)
@@ -705,7 +707,7 @@ private struct AskInDockField: View {
                                 lineWidth: focused ? Metrics.focusRing : 1)))
             if !RecordingWorkspaceState.shared.aiResult.isEmpty {
                 Text(RecordingWorkspaceState.shared.aiResult)
-                    .font(.system(size: Metrics.dockRowSize))
+                    .font(.system(size: S.type(Metrics.dockRowSize)))
                     .foregroundStyle(Palette.text(dark))
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -725,7 +727,21 @@ private struct AskInDockField: View {
 private struct ResultDock: View {
     @Environment(\.colorScheme) private var scheme
     private var dark: Bool { scheme == .dark }
+    @ObservedObject private var sessions = MeetingSessionStore.shared
     let result: AgentResult
+
+    /// 直近の会議の状態を 1 行で。processing の間は spinner だけにしない。
+    private var sessionLine: String {
+        guard let s = sessions.recent.first(where: { $0.title == result.title }) else { return "できました" }
+        switch s.status {
+        case .processing: return "Generating summary and actions…"
+        case .ready:
+            return "\(s.actionCount) actions · \(s.decisionCount) decisions · \(s.participantCount) participants"
+        case .interrupted: return "途中で終わっています"
+        case .failed: return "失敗しました"
+        case .recording: return "録音中"
+        }
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -738,8 +754,9 @@ private struct ResultDock: View {
                         .font(.system(size: 18, weight: .semibold))
                         .foregroundStyle(Palette.text(dark))
                         .lineLimit(1)
-                    Text("できました")
-                        .font(.system(size: Metrics.dockMetaSize))
+                    // Session の状態をそのまま出す。読み取り中は「何をしているか」を言う。
+                    Text(sessionLine)
+                        .font(.system(size: S.type(Metrics.dockMetaSize)))
                         .foregroundStyle(Palette.muted(dark))
                 }
                 Spacer(minLength: 0)
@@ -748,7 +765,7 @@ private struct ResultDock: View {
             HStack(spacing: 6) {
                 ForEach(result.actions, id: \.self) { action in
                     Button(action.title) { ResultActionRunner.run(action, title: result.title) }
-                        .font(.system(size: Metrics.dockRowSize, weight: .medium))
+                        .font(.system(size: S.type(Metrics.dockRowSize), weight: .medium))
                         .foregroundStyle(Palette.text(dark))
                         .frame(height: 32).padding(.horizontal, 16)
                         .buttonStyle(AstraControlStyle(radius: 8, base: 0.07))
@@ -764,7 +781,7 @@ private struct ResultDock: View {
                 .accessibilityIdentifier("resultDismiss")
             }
         }
-        .padding(.horizontal, Metrics.dockPadH)
+        .padding(.horizontal, S.metric(Metrics.dockPadH))
         .padding(.vertical, 14)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .accessibilityIdentifier("dockResult")
@@ -786,7 +803,7 @@ private struct ContextDetailDock: View {
                 DockLabel(text: "Context")
                 Spacer(minLength: 0)
                 Text("\(store.state.context.items.count) sources available to Astra")
-                    .font(.system(size: Metrics.dockMetaSize))
+                    .font(.system(size: S.type(Metrics.dockMetaSize)))
                     .foregroundStyle(Palette.muted(dark))
                 Button { VoiceHUDState.shared.mode = .idle } label: {
                     Image(systemName: "chevron.up").font(.system(size: 10, weight: .semibold))
@@ -798,23 +815,23 @@ private struct ContextDetailDock: View {
             }
             if store.state.context.items.isEmpty {
                 Text("いま見えている文脈はありません。")
-                    .font(.system(size: Metrics.dockRowSize))
+                    .font(.system(size: S.type(Metrics.dockRowSize)))
                     .foregroundStyle(Palette.muted(dark))
             } else {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 10)], spacing: 10) {
                     ForEach(store.state.context.items) { item in
                         VStack(alignment: .leading, spacing: 5) {
                             Text(item.application)
-                                .font(.system(size: Metrics.dockRowSize, weight: .semibold))
+                                .font(.system(size: S.type(Metrics.dockRowSize), weight: .semibold))
                                 .foregroundStyle(Palette.text(dark))
                                 .lineLimit(1)
                             Text(item.summary)
-                                .font(.system(size: Metrics.dockMetaSize))
+                                .font(.system(size: S.type(Metrics.dockMetaSize)))
                                 .foregroundStyle(Palette.muted(dark))
                                 .lineLimit(2)
                             Spacer(minLength: 0)
                             Text(item.source.label)
-                                .font(.system(size: Metrics.dockLabelSize))
+                                .font(.system(size: S.type(Metrics.dockLabelSize)))
                                 .foregroundStyle(Palette.muted(dark))
                         }
                         .padding(12)
@@ -831,7 +848,7 @@ private struct ContextDetailDock: View {
             }
             Spacer(minLength: 0)
         }
-        .padding(.horizontal, Metrics.dockPadH)
+        .padding(.horizontal, S.metric(Metrics.dockPadH))
         .padding(.vertical, 14)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .accessibilityIdentifier("dockContextDetail")
@@ -866,7 +883,7 @@ private struct QuickActionsDock: View {
                 Button(action: item.run) {
                     HStack(spacing: 6) {
                         Image(systemName: item.icon).font(.system(size: 14))
-                        Text(item.title).font(.system(size: Metrics.dockRowSize))
+                        Text(item.title).font(.system(size: S.type(Metrics.dockRowSize)))
                     }
                     .foregroundStyle(Palette.text(dark))
                     .frame(maxWidth: .infinity)

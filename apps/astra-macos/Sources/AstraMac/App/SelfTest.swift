@@ -61,6 +61,9 @@ enum SelfTest {
         case "entry": entryPoints(); return true
         case "secret": secretMode(); return true
         case "recordbutton": recordButton(); return true
+        case "session": sessionLifecycle(); return true
+        case "sessionshots": sessionShots(args); return true
+        case "uiscale": uiScale(); return true
         case "state": stateMachine(); return true
         case "presence": presence(); return true
         case "perf": perf(); return true
@@ -824,6 +827,325 @@ enum SelfTest {
         }
     }
 
+
+    /// `--selftest session`: 録音セッションの一生。
+    ///
+    /// 確かめたいのは「同じカードが姿を変える」こと。停止のたびに別の会議が増える実装でも
+    /// 画面は動いて見えるので、**id が変わらないこと**を見る。
+    @MainActor
+    private static func sessionLifecycle() {
+        let path = NSTemporaryDirectory() + "astra-session-\(getpid()).sqlite"
+        defer { try? FileManager.default.removeItem(atPath: path) }
+        LocalStore.shared.open(path)
+        let store = MeetingSessionStore.shared
+        store.reset()
+        var fail: [String] = []
+
+        // ① 録音開始で 1 件できて、すぐ保存される（「保存しますか」を出さない）。
+        let started = store.begin(id: "s1", title: "Product Weekly")
+        if started.status != .recording { fail.append("開始直後が recording でない") }
+        if store.live?.id != "s1" { fail.append("live が拾えない") }
+        if LocalStore.shared.loadSessions().first(where: { $0.id == "s1" }) == nil {
+            fail.append("開始直後にディスクへ保存されていない")
+        }
+        // 既定は自分だけ。
+        if started.visibility != .mySpace { fail.append("既定の保存先が My Space でない") }
+
+        // ② 停止 → processing。**同じ id**のまま、件数は増えない。
+        store.beginProcessing(id: "s1")
+        if store.sessions.count != 1 { fail.append("停止でカードが増えた (\(store.sessions.count))") }
+        guard let processing = store.session(id: "s1") else { fail.append("消えた"); reportSession(fail); return }
+        if processing.status != .processing { fail.append("processing にならない") }
+        if processing.endedAt == nil { fail.append("終了時刻が入らない") }
+
+        // ③ ready。ここで初めて中身が入る。
+        store.markReady(id: "s1", summary: "Q4 移行計画とコストを議論。", actions: 3, decisions: 2, participants: 5)
+        guard let ready = store.session(id: "s1") else { fail.append("消えた"); reportSession(fail); return }
+        if ready.status != .ready { fail.append("ready にならない") }
+        if ready.actionCount != 3 || ready.decisionCount != 2 || ready.participantCount != 5 {
+            fail.append("件数が入らない")
+        }
+        if store.sessions.count != 1 { fail.append("ready でカードが増えた") }
+
+        // ④ 保存先と project は後から変えられる。
+        store.setVisibility(.workspace, for: "s1")
+        store.setProject("Product", for: "s1")
+        if store.session(id: "s1")?.visibility != .workspace { fail.append("保存先を変えられない") }
+        if store.session(id: "s1")?.projectId != "Product" { fail.append("project を変えられない") }
+
+        // ⑤ 再起動しても戻る（§9）。
+        store.reset()
+        store.load()
+        guard let restored = store.session(id: "s1") else {
+            fail.append("再起動で復元できない"); reportSession(fail); return
+        }
+        if restored.status != .ready { fail.append("復元後の状態が違う (\(restored.status))") }
+        if restored.summary?.contains("Q4") != true { fail.append("要約が復元されない") }
+        if restored.projectId != "Product" { fail.append("project が復元されない") }
+
+        // ⑥ 録音中に落ちたものは **interrupted**。勝手に ready にしない。
+        store.begin(id: "s2", title: "落ちた会議")
+        store.reset()
+        store.load()
+        guard let crashed = store.session(id: "s2") else {
+            fail.append("落ちた録音が復元されない"); reportSession(fail); return
+        }
+        if crashed.status != .interrupted {
+            fail.append("落ちた録音が \(crashed.status) になっている（interrupted であるべき）")
+        }
+
+        // ⑦ §6 予定から録ると引き継ぐ。project があれば自動割当。
+        let link = CalendarLink(eventId: "evt-1", title: "Design Review",
+                                participantCount: 4, meetingURL: "https://meet.google.com/x",
+                                projectId: "Research")
+        let fromCalendar = store.begin(id: "s3", title: "無視される", link: link)
+        if fromCalendar.title != "Design Review" { fail.append("予定の題を引き継がない") }
+        if fromCalendar.calendarEventId != "evt-1" { fail.append("event id を引き継がない") }
+        if fromCalendar.participantCount != 4 { fail.append("参加人数を引き継がない") }
+        if fromCalendar.projectId != "Research" { fail.append("project を自動割当しない") }
+
+        // ⑧ 同じ題の会議は前回の project を再利用する（recurring）。
+        store.beginProcessing(id: "s3")
+        store.markReady(id: "s3", summary: nil, actions: 0, decisions: 0)
+        let again = store.begin(id: "s4", title: "Design Review")
+        if again.projectId != "Research" {
+            fail.append("同じ題の会議で前回の project を引き継がない (\(again.projectId ?? "nil"))")
+        }
+
+        // ⑨ project が無くても録音は始まる（失敗しても止めない）。
+        let noProject = store.begin(id: "s5", title: "初めての会議")
+        if noProject.status != .recording { fail.append("project 無しで録音が始まらない") }
+        if noProject.projectId != nil { fail.append("勝手に project を割り当てた") }
+
+        store.reset()
+        LocalStore.shared.close()
+        reportSession(fail)
+    }
+
+    private static func reportSession(_ fail: [String]) {
+        if fail.isEmpty {
+            print("SELFTEST_OK session: 開始で保存・同じ id が recording→processing→ready・保存先/project を後から変更・再起動で復元・落ちたら interrupted・予定から継承")
+            exit(0)
+        } else {
+            print("SELFTEST_FAIL session: \(fail.joined(separator: ", "))")
+            exit(2)
+        }
+    }
+
+
+    /// `--selftest sessionshots <dir> [dark]`: Session UX の面を**実遷移で**撮る。
+    ///
+    /// fixture を並べない。`MeetingSessionStore` を実際に動かし、Home が
+    /// recording → processing → ready と姿を変えるところを撮る。
+    @MainActor
+    private static func sessionShots(_ args: [String]) {
+        let i = args.firstIndex(of: "--selftest")!
+        let outDir = args.count > i + 2 ? args[i + 2] : "/tmp/astra-session"
+        let dark = args.count > i + 3 && args[i + 3] == "dark"
+        try? FileManager.default.createDirectory(atPath: outDir, withIntermediateDirectories: true)
+        NSApp.setActivationPolicy(.regular)
+        NSApp.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
+        LocalStore.shared.open(NSTemporaryDirectory() + "astra-shots-\(getpid()).sqlite")
+
+        func settle(_ s: Double) {
+            let until = Date().addingTimeInterval(s)
+            while Date() < until { CFRunLoopRunInMode(.defaultMode, 0.05, true) }
+        }
+        func windows() -> [(id: CGWindowID, x: CGFloat, y: CGFloat, w: CGFloat, h: CGFloat)] {
+            guard let infos = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] else { return [] }
+            return infos.compactMap { info in
+                guard let owner = info[kCGWindowOwnerPID as String] as? pid_t, owner == getpid(),
+                      let num = info[kCGWindowNumber as String] as? CGWindowID,
+                      let b = info[kCGWindowBounds as String] as? [String: Any],
+                      let x = b["X"] as? CGFloat, let y = b["Y"] as? CGFloat,
+                      let w = b["Width"] as? CGFloat, let h = b["Height"] as? CGFloat,
+                      w > 20, h > 10 else { return nil }
+                return (num, x, y, w, h)
+            }
+        }
+        func shoot(_ name: String) -> Bool {
+            let deadline = Date().addingTimeInterval(8)
+            var found: (id: CGWindowID, x: CGFloat, y: CGFloat, w: CGFloat, h: CGFloat)?
+            repeat {
+                settle(0.25)
+                found = windows().first { $0.w >= 900 && $0.h >= 600 }
+            } while found == nil && Date() < deadline
+            // 前面に出してから撮る。背面のままだと window server が画像を返さないことがある
+            // （dark で断続的に「撮影不可」になっていた原因）。
+            NSApp.activate(ignoringOtherApps: true)
+            MainWindowController.shared.orderFront()
+            settle(0.8)
+            guard let win = found else {
+                FileHandle.standardError.write(Data("SESSIONSHOT \(name) 窓一覧: \(windows().map { "\(Int($0.w))x\(Int($0.h))" })\n".utf8))
+                return false
+            }
+            // 画像生成はときどき nil を返す（窓の再描画中など）。数回試す。
+            let rect = CGRect(x: win.x, y: win.y, width: win.w, height: win.h)
+            // 何度か試す。失敗のたびに前面へ出し直す。
+            for attempt in 0..<10 {
+                if attempt > 0 {
+                    NSApp.activate(ignoringOtherApps: true)
+                    MainWindowController.shared.orderFront()
+                }
+                // 窓 id 経由。dark へ切り替えた直後などに nil を返すことがある。
+                var image = CGWindowListCreateImage(.null, .optionIncludingWindow, win.id,
+                                                    [.boundsIgnoreFraming, .bestResolution])
+                if image == nil {
+                    // 代わりに画面のその領域を撮る。窓の再描画中でもこちらは通ることが多い。
+                    image = CGWindowListCreateImage(rect, .optionOnScreenOnly, kCGNullWindowID, [.bestResolution])
+                }
+                if let cg = image,
+                   let png = NSBitmapImageRep(cgImage: cg).representation(using: .png, properties: [:]) {
+                    try? png.write(to: URL(fileURLWithPath: "\(outDir)/\(name).png"))
+                    return true
+                }
+                _ = attempt
+                settle(0.5)
+            }
+            return false
+        }
+
+        let sessions = MeetingSessionStore.shared
+        sessions.reset()
+        MainWindowController.shared.showSection(.home)
+        settle(1.4)
+
+        var report: [String] = []
+        var failures: [String] = []
+        func step(_ name: String, _ transition: () -> Void) {
+            transition()
+            settle(0.6)
+            if shoot(name) { report.append(name) } else { failures.append("\(name)=撮影不可") }
+        }
+
+        // 1 Home idle（会議も予定も無い）
+        step("01-home-idle", {})
+
+        // 2 録音中: 開始した瞬間に Home へ出る
+        step("02-recording", {
+            sessions.begin(id: "shot-1", title: "Product Weekly", source: "Google Meet")
+        })
+        guard let liveId = sessions.live?.id else {
+            print("SELFTEST_FAIL sessionshots: 録音中の Session が無い"); exit(2)
+        }
+
+        // 3 processing: **同じ id**のまま
+        step("03-processing", { sessions.beginProcessing(id: liveId) })
+
+        // 4 ready
+        step("04-ready", {
+            sessions.markReady(id: liveId,
+                               summary: "Q4 移行計画とトレーニングコストを議論。10 月から Phase 1 開始で合意。",
+                               actions: 3, decisions: 2, participants: 5)
+        })
+
+        // 5 保存先と project を付けた姿
+        step("05-project", {
+            sessions.setVisibility(.workspace, for: liveId)
+            sessions.setProject("Product", for: liveId)
+        })
+
+        // 6 Session Detail
+        step("06-session-detail", { MainNav.shared.openSession = liveId })
+
+        // 8-10 UI Scale の 3 段。Home の Session Card で比べる（同じ画面で見比べたい）。
+        MainNav.shared.openSession = nil
+        settle(0.5)
+        for size in UIScale.Size.allCases {
+            step("0\(8 + (UIScale.Size.allCases.firstIndex(of: size) ?? 0))-scale-\(size.rawValue)", {
+                UIScale.shared.set(size)
+            })
+        }
+        UIScale.shared.set(.comfortable)
+
+        // 7 interrupted（前回落ちたもの）
+        step("07-interrupted", {
+            MainNav.shared.openSession = nil
+            sessions.begin(id: "shot-2", title: "落ちた会議")
+            sessions.reset()
+            sessions.load()
+        })
+
+        // カードが増えていないこと（同じ id が姿を変えている）。
+        let ids = Set(sessions.sessions.map(\.id))
+        if ids.count != 2 { failures.append("カードが \(ids.count) 件に増えた（2 件のはず）") }
+        if sessions.session(id: liveId)?.status != .ready { failures.append("ready のままでない") }
+        if sessions.session(id: "shot-2")?.status != .interrupted { failures.append("interrupted になっていない") }
+
+        sessions.reset()
+        print("SESSIONSHOTS_DIR \(outDir)")
+        for line in report { print("SESSIONSHOT \(line)") }
+        if failures.isEmpty {
+            print("SELFTEST_OK sessionshots: \(report.count)面を実遷移で撮影・同じ id が姿を変える")
+            exit(0)
+        } else {
+            print("SELFTEST_FAIL sessionshots: \(failures.joined(separator: ", "))")
+            exit(2)
+        }
+    }
+
+
+    /// `--selftest uiscale`: §10 Interface Size。
+    ///
+    /// 「文字だけ大きい」でも「窓ごと拡大」でもないことを見る。
+    /// 文字・面のどちらも動き、しかも比率が違う（文字は控えめ）ことまで確かめる。
+    @MainActor
+    private static func uiScale() {
+        let scale = UIScale.shared
+        var fail: [String] = []
+        let baseType = TypeScale.bodySize
+        let baseMetric = Metrics.sidebarWidth
+
+        var typeBySize: [UIScale.Size: CGFloat] = [:]
+        var metricBySize: [UIScale.Size: CGFloat] = [:]
+        for size in UIScale.Size.allCases {
+            scale.set(size)
+            typeBySize[size] = S.type(baseType)
+            metricBySize[size] = S.metric(baseMetric)
+        }
+
+        // ① 3 段が本当に違う。
+        if Set(typeBySize.values).count != 3 { fail.append("文字が 3 段に分かれていない \(typeBySize.values.sorted())") }
+        if Set(metricBySize.values).count != 3 { fail.append("寸法が 3 段に分かれていない \(metricBySize.values.sorted())") }
+
+        // ② 順序が正しい。
+        if !(typeBySize[.compact]! < typeBySize[.comfortable]! && typeBySize[.comfortable]! < typeBySize[.large]!) {
+            fail.append("文字の大小が逆")
+        }
+        if !(metricBySize[.compact]! < metricBySize[.comfortable]! && metricBySize[.comfortable]! < metricBySize[.large]!) {
+            fail.append("寸法の大小が逆")
+        }
+
+        // ③ 既定は Comfortable で、素の値と同じ。
+        scale.set(.comfortable)
+        if S.type(baseType) != baseType { fail.append("Comfortable が素の値と違う") }
+        if S.metric(baseMetric) != baseMetric { fail.append("Comfortable の寸法が素の値と違う") }
+
+        // ④ **文字と面が別の係数**で動く（窓ごと拡大していない証拠）。
+        scale.set(.large)
+        let typeRatio = S.type(baseType) / baseType
+        let metricRatio = S.metric(baseMetric) / baseMetric
+        if abs(typeRatio - metricRatio) < 0.01 {
+            fail.append("文字と寸法が同じ倍率（単純な拡大になっている）")
+        }
+
+        // ⑤ 覚えている（次の起動でも同じ）。
+        scale.set(.compact)
+        if UserDefaults.standard.string(forKey: "astra.uiScale") != "compact" {
+            fail.append("設定が保存されない")
+        }
+        scale.set(.comfortable)
+
+        if fail.isEmpty {
+            print(String(format: "SELFTEST_OK uiscale: 3段が別々に効く（文字 x%.2f / 寸法 x%.2f）・既定は素の値・設定は残る",
+                         typeRatio, metricRatio))
+            exit(0)
+        } else {
+            print("SELFTEST_FAIL uiscale: \(fail.joined(separator: ", "))")
+            exit(2)
+        }
+    }
+
     /// `--selftest state`: 仕様書 §5 / §28 / §31。状態が**本当に 1 箇所**にあるか。
     ///
     /// 「AstraState を作った」だけでは意味がない。既存の Surface が自前の状態を持ったままだと、
@@ -1102,14 +1424,22 @@ enum SelfTest {
         let tables = Set(store.tableNames())
         for want in LocalStore.tables where !tables.contains(want) { fail.append("\(want) が無い") }
 
-        // ② 画像・音声・文脈の本文を入れる列を**作っていない**。
-        let banned = ["image", "png", "screenshot", "audio", "pcm", "wav", "blob", "summary", "content", "body"]
+        // ② 画像と音声の列は**どこにも作らない**（§24）。
+        let bannedEverywhere = ["image", "png", "screenshot", "audio", "pcm", "wav", "blob"]
         for table in LocalStore.tables {
             for column in store.columnNames(table) {
                 let lower = column.lowercased()
-                for bad in banned where lower.contains(bad) {
+                for bad in bannedEverywhere where lower.contains(bad) {
                     fail.append("\(table).\(column) は保存してはいけないものの列")
                 }
+            }
+        }
+        // ③ 文脈は **metadata だけ**。本文の列は context_metadata に作らない（§25）。
+        //    会議の summary は仕様が要求しているので、禁じるのは文脈側だけ。
+        for column in store.columnNames("context_metadata") {
+            let lower = column.lowercased()
+            for bad in ["summary", "content", "body", "text"] where lower.contains(bad) {
+                fail.append("context_metadata.\(column) は文脈の本文を持つ列")
             }
         }
         // 文脈は metadata だけ（source/sensitivity/期限）。

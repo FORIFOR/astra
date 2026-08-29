@@ -156,30 +156,21 @@ struct TasksPane: View {
 struct MeetingsPane: View {
     @Environment(\.colorScheme) private var scheme
     private var dark: Bool { scheme == .dark }
-    @State private var meetings: [RecoverableMeeting] = []
-    @ObservedObject private var nav = MainNav.shared
+    @ObservedObject private var sessions = MeetingSessionStore.shared
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 WorkspaceHeader(title: "Meetings",
-                                subtitle: "この Mac に残っている録音。音声は端末から出ません。")
-                if meetings.isEmpty {
+                                subtitle: "録った会議。音声は端末から出ません。")
+                if sessions.recent.isEmpty {
                     WorkspaceEmpty(title: "録音した会議はまだありません。",
-                                   hint: "⌥Space か Task Dock の「録音」で始められます。")
+                                   hint: "Home の Start recording か、予定の Record から始められます。")
                 } else {
-                    ForEach(meetings, id: \.meetingId) { m in
-                        Button { nav.meetingDetail = true } label: {
-                            WorkspaceRow(icon: "waveform", tint: Palette.accent(dark),
-                                         title: m.meetingId,
-                                         detail: "\(m.startedAt) · \(Self.duration(m.recordedMs))") {
-                                Image(systemName: "chevron.right")
-                                    .font(.system(size: 11, weight: .semibold))
-                                    .foregroundStyle(Palette.muted(dark))
-                            }
+                    ForEach(sessions.recent) { s in
+                        SessionCard(session: s) {
+                            MainNav.shared.openSession = s.id
                         }
-                        .buttonStyle(.plain)
-                        .accessibilityIdentifier("meeting-\(m.meetingId)")
                     }
                 }
             }
@@ -189,14 +180,7 @@ struct MeetingsPane: View {
         }
         .navigationTitle("Meetings")
         .background(Palette.canvas(dark))
-        .onAppear { meetings = RecordingRuntime.shared.recoverableMeetings() }
         .accessibilityIdentifier("meetingsPane")
-    }
-
-    /// ミリ秒を mm:ss にする。
-    static func duration(_ ms: UInt64) -> String {
-        let total = Int(ms / 1000)
-        return String(format: "%02d:%02d", total / 60, total % 60)
     }
 }
 

@@ -58,10 +58,17 @@ final class LocalStore {
         CREATE TABLE IF NOT EXISTS context_metadata (
           id TEXT PRIMARY KEY, source TEXT NOT NULL, application TEXT NOT NULL,
           sensitivity TEXT NOT NULL, captured_at REAL NOT NULL, expires_at REAL NOT NULL);
-        -- 音声そのものは入れない。場所と長さだけ（§24）。
+        -- 会議 1 回分＝Session。音声そのものは入れない（§24）。
+        -- 「録音ファイル」ではなく「会議」を持つので、題・要約・件数が列になる。
         CREATE TABLE IF NOT EXISTS meetings (
-          id TEXT PRIMARY KEY, title TEXT, started_at REAL NOT NULL,
-          ended_at REAL, detected_app TEXT, journal_path TEXT);
+          id TEXT PRIMARY KEY, title TEXT, status TEXT NOT NULL DEFAULT 'ready',
+          started_at REAL NOT NULL, ended_at REAL,
+          calendar_event_id TEXT, project_id TEXT,
+          visibility TEXT NOT NULL DEFAULT 'mySpace',
+          participant_count INTEGER NOT NULL DEFAULT 0,
+          summary TEXT, action_count INTEGER NOT NULL DEFAULT 0,
+          decision_count INTEGER NOT NULL DEFAULT 0,
+          source TEXT, created_at REAL NOT NULL, updated_at REAL NOT NULL);
         CREATE TABLE IF NOT EXISTS transcripts (
           id TEXT PRIMARY KEY, meeting_id TEXT NOT NULL, speaker TEXT,
           text TEXT NOT NULL, at REAL NOT NULL);
@@ -149,6 +156,75 @@ final class LocalStore {
                                  startedAt: started, context: ContextBundle()))
         }
         sqlite3_finalize(stmt)
+        return out
+    }
+
+    // MARK: - meeting sessions（§9 録音開始で insert、状態変化ごとに update）
+
+    func saveSession(_ s: MeetingSession) {
+        let sql = """
+        INSERT OR REPLACE INTO meetings
+        (id,title,status,started_at,ended_at,calendar_event_id,project_id,visibility,
+         participant_count,summary,action_count,decision_count,source,created_at,updated_at)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+        """
+        var stmt: OpaquePointer?
+        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return }
+        bind(stmt, 1, s.id)
+        bind(stmt, 2, s.title)
+        bind(stmt, 3, s.status.rawValue)
+        sqlite3_bind_double(stmt, 4, s.startedAt.timeIntervalSince1970)
+        if let e = s.endedAt { sqlite3_bind_double(stmt, 5, e.timeIntervalSince1970) } else { sqlite3_bind_null(stmt, 5) }
+        if let v = s.calendarEventId { bind(stmt, 6, v) } else { sqlite3_bind_null(stmt, 6) }
+        if let v = s.projectId { bind(stmt, 7, v) } else { sqlite3_bind_null(stmt, 7) }
+        bind(stmt, 8, s.visibility.rawValue)
+        sqlite3_bind_int(stmt, 9, Int32(s.participantCount))
+        if let v = s.summary { bind(stmt, 10, v) } else { sqlite3_bind_null(stmt, 10) }
+        sqlite3_bind_int(stmt, 11, Int32(s.actionCount))
+        sqlite3_bind_int(stmt, 12, Int32(s.decisionCount))
+        if let v = s.source { bind(stmt, 13, v) } else { sqlite3_bind_null(stmt, 13) }
+        sqlite3_bind_double(stmt, 14, s.createdAt.timeIntervalSince1970)
+        sqlite3_bind_double(stmt, 15, s.updatedAt.timeIntervalSince1970)
+        sqlite3_step(stmt)
+        sqlite3_finalize(stmt)
+    }
+
+    func loadSessions() -> [MeetingSession] {
+        let sql = """
+        SELECT id,title,status,started_at,ended_at,calendar_event_id,project_id,visibility,
+               participant_count,summary,action_count,decision_count,source,created_at,updated_at
+        FROM meetings ORDER BY started_at DESC
+        """
+        var stmt: OpaquePointer?
+        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return [] }
+        defer { sqlite3_finalize(stmt) }
+        func text(_ i: Int32) -> String? {
+            sqlite3_column_text(stmt, i).map { String(cString: $0) }
+        }
+        var out: [MeetingSession] = []
+        while sqlite3_step(stmt) == SQLITE_ROW {
+            guard let id = text(0) else { continue }
+            let status = MeetingSession.Status(rawValue: text(2) ?? "ready") ?? .ready
+            var session = MeetingSession(
+                id: id,
+                title: text(1) ?? "会議",
+                status: status,
+                startedAt: Date(timeIntervalSince1970: sqlite3_column_double(stmt, 3)))
+            if sqlite3_column_type(stmt, 4) != SQLITE_NULL {
+                session.endedAt = Date(timeIntervalSince1970: sqlite3_column_double(stmt, 4))
+            }
+            session.calendarEventId = text(5)
+            session.projectId = text(6)
+            session.visibility = MeetingSession.Visibility(rawValue: text(7) ?? "mySpace") ?? .mySpace
+            session.participantCount = Int(sqlite3_column_int(stmt, 8))
+            session.summary = text(9)
+            session.actionCount = Int(sqlite3_column_int(stmt, 10))
+            session.decisionCount = Int(sqlite3_column_int(stmt, 11))
+            session.source = text(12)
+            session.createdAt = Date(timeIntervalSince1970: sqlite3_column_double(stmt, 13))
+            session.updatedAt = Date(timeIntervalSince1970: sqlite3_column_double(stmt, 14))
+            out.append(session)
+        }
         return out
     }
 

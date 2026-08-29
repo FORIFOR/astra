@@ -14,6 +14,8 @@ final class AstraAppDelegate: NSObject, NSApplicationDelegate {
         // §24 ローカル保存を開く。§23 走っていた task を読み戻す。
         LocalStore.shared.open()
         AstraStateStore.shared.restoreRunningTask()
+        // §9 前回の会議を読み戻す。録音中のまま落ちていたものは interrupted になる。
+        MeetingSessionStore.shared.load()
         let demo = DemoMode.fromArguments(CommandLine.arguments)
         WindowCoordinator.shared.start(demo: demo)
         // Dock アイコンが無いので、ここが起動後の唯一の入口になる（Main/録音/設定/終了）。

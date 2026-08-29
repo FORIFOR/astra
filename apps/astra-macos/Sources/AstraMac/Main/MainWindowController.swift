@@ -9,12 +9,13 @@ final class MainWindowController {
 
     func show() {
         if window == nil {
-            // 画面に対する割合で開く。固定 1040pt だと大きな画面で「浮いた小窓」に見える
-            // （2560pt のデスクトップで実際にそう見えた）。
+            // 中身に合う大きさで開く。画面比で大きく取ると、本文が上に寄って
+            // 下半分が空きっぱなしになる（実機で余白ばかりに見えた）。
+            // 本文の幅は 900pt に絞ってあるので、sidebar 260 + 本文 900 + 余白で足りる。
             let visible = NSScreen.main?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
             let size = NSSize(
-                width: max(1120, min(visible.width * 0.72, 1680)),
-                height: max(720, min(visible.height * 0.80, 1040)))
+                width: min(1240, visible.width - 80),
+                height: min(820, visible.height - 80))
             let win = NSWindow(
                 contentRect: NSRect(origin: .zero, size: size),
                 styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
@@ -31,6 +32,9 @@ final class MainWindowController {
     }
 
     /// タブを切り替えて前面に出す（Visual Gate の撮影・外部導線から使う）。
+    /// 前面へ。撮影や、他アプリの裏に回ったときに使う。
+    func orderFront() { window?.orderFrontRegardless() }
+
     /// 閉じる（検査と、録音中に邪魔なときに使う）。
     func hide() { window?.orderOut(nil) }
 

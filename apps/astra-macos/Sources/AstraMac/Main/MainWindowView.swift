@@ -64,6 +64,8 @@ final class MainNav: ObservableObject {
     static let shared = MainNav()
     /// 右 Panel は既定で閉じる（§Workspace）。
     @Published var activityOpen = false
+    /// Home の Session Card から開いた会議（§8 Home → Session Detail の導線）。
+    @Published var openSession: String?
     @Published var section: MainSection = .home
     /// 会議詳細のプレビュー（Library から開いた状態を撮るため）。
     @Published var meetingDetail = false
@@ -72,6 +74,7 @@ final class MainNav: ObservableObject {
 /// 4 タブの native シェル。Windows 版は同じ構成を NavigationView + Mica で作る（設計共通・実装別）。
 struct MainWindowView: View {
     @StateObject private var nav = MainNav.shared
+    @ObservedObject private var uiScale = UIScale.shared
     @StateObject private var data = MainData()
 
     var body: some View {
@@ -83,7 +86,7 @@ struct MainWindowView: View {
                     .padding(.vertical, 3)
                     .tag(s)
             }
-            .navigationSplitViewColumnWidth(min: Metrics.sidebarWidth - 20, ideal: Metrics.sidebarWidth, max: Metrics.sidebarWidth + 40)
+            .navigationSplitViewColumnWidth(min: S.metric(Metrics.sidebarWidth) - 20, ideal: S.metric(Metrics.sidebarWidth), max: S.metric(Metrics.sidebarWidth) + 40)
             .safeAreaInset(edge: .bottom) {
                 HStack(spacing: 8) {
                     Circle().fill(Color.astraAccent.opacity(0.2)).frame(width: 26, height: 26)
@@ -99,7 +102,7 @@ struct MainWindowView: View {
                 // 右の Agent Activity は **既定で閉じる**。Content を主役にする（Linear の作法）。
                 .inspector(isPresented: $nav.activityOpen) {
                     AgentActivityPane()
-                        .inspectorColumnWidth(min: Metrics.inspectorWidth - 40, ideal: Metrics.inspectorWidth, max: Metrics.inspectorWidth + 60)
+                        .inspectorColumnWidth(min: S.metric(Metrics.inspectorWidth) - 40, ideal: S.metric(Metrics.inspectorWidth), max: S.metric(Metrics.inspectorWidth) + 60)
                 }
                 .toolbar {
                     ToolbarItem {
@@ -111,13 +114,15 @@ struct MainWindowView: View {
                     }
                 }
         }
-        .frame(minWidth: 1020, minHeight: 640)
+        .frame(minWidth: 940, minHeight: 620)
         .onAppear { data.load() }
     }
 
     @ViewBuilder private var detailContent: some View {
         Group {
-            if nav.meetingDetail {
+            if let id = nav.openSession, let session = MeetingSessionStore.shared.session(id: id) {
+                SessionDetailView(session: session)
+            } else if nav.meetingDetail {
                 MeetingArtifactView(
                     title: "A社 新規提案", duration: "42:18", participants: 3,
                     summary: [MeetingCitation(number: 1, text: "先方は10月導入を希望。最大の懸念は初期費用。", transcriptTime: "14:18", speaker: "田中")],
@@ -202,7 +207,16 @@ private struct HomePane: View {
             HomeAttention(
                 kind: fmt.string(from: Date(timeIntervalSince1970: e.startEpoch)) + " " + e.calendar,
                 title: e.title,
-                action: "録音を開始"
+                action: "録音を開始",
+                // §6 予定 → Session。project は前に同じ題で録っていれば引き継ぐ。
+                link: CalendarLink(
+                    // EKEvent の識別子はここまで持ってきていないので、
+                    // 予定を一意にできる範囲（題＋開始時刻）で作る。推測で埋めない。
+                    eventId: "\(e.title)@\(Int(e.startEpoch))",
+                    title: e.title,
+                    participantCount: 0,
+                    meetingURL: nil,
+                    projectId: MeetingSessionStore.rememberedProject(forTitle: e.title))
             )
         }
     }

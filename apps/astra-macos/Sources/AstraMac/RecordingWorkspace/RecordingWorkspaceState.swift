@@ -204,19 +204,53 @@ final class RecordingWorkspaceState: ObservableObject {
         RecordingRuntime.shared.begin(meetingId: localId)
         // スクショ等は実際に journal を作った id に合わせる（サインイン時は gateway id）。
         currentMeetingId = RecordingRuntime.shared.activeMeetingId
+        // §1 録音を始めたこの瞬間に Session を作って保存する。
+        // 止めたときに「保存しますか」とは聞かない。
+        let link = pendingCalendarLink
+        pendingCalendarLink = nil
+        let session = MeetingSessionStore.shared.begin(
+            id: currentMeetingId,
+            title: link?.title ?? AstraStateStore.shared.state.meeting.detectedApp ?? "会議",
+            link: link,
+            source: AstraStateStore.shared.state.meeting.detectedApp)
         // 録音の UI は Store が決める。ここで直接 window を開かない
         // —— 以前ここが `enterRecordingMode()` を呼んでいたため、録音ボタンだけが
         // 大きな面を開き、Dock コントローラの経路を通っていなかった。
-        AstraStateStore.shared.meetingStarted(id: currentMeetingId)
+        AstraStateStore.shared.meetingStarted(id: session.id)
     }
     func stop() {
         isRecording = false
         permissionIssue = nil
         tickTimer?.invalidate(); tickTimer = nil
         RecordingRuntime.shared.end()   // 断片を確定（回復候補として残る）
+        // §1 同じ Session が processing へ。新しいカードは作らない。
+        let id = currentMeetingId
+        MeetingSessionStore.shared.beginProcessing(id: id)
         // 停止後の姿も Store が決める（結果面へ morph する）。
         AstraStateStore.shared.meetingEnded()
+        // 読み取りが終わったら同じ id を ready にする。
+        finishProcessing(id: id)
     }
+    /// 予定から録音するときに引き継ぐもの（§6）。start() が読んで消す。
+    var pendingCalendarLink: CalendarLink?
+
+    /// 読み取り。会議中に溜めた構造データをそのまま Session の中身にする。
+    /// gateway が無くても成立するよう、手元の抽出結果を使う。
+    private func finishProcessing(id: String) {
+        let canvas = AstraStateStore.shared.state.meeting.canvas
+        let speakers = Set(transcript.map(\.speaker))
+        // 少しだけ待たせる。読み取り中であることが画面に出る時間を作る。
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.6) {
+            let summary = canvas.decisions.first ?? canvas.notes.first
+            MeetingSessionStore.shared.markReady(
+                id: id,
+                summary: summary,
+                actions: canvas.actions.count,
+                decisions: canvas.decisions.count,
+                participants: max(speakers.count, 0))
+        }
+    }
+
     /// サインイン済みセッションを渡す（Main Window のサインインから）。
     func configureBackend(base: String, token: String) {
         apiBase = base; apiToken = token; conversationId = nil

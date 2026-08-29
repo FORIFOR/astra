@@ -8,47 +8,42 @@ import SwiftUI
 struct StartRecordingCard: View {
     @Environment(\.colorScheme) private var scheme
     private var dark: Bool { scheme == .dark }
-    @State private var showsOptions = false
+    @State private var showsSheet = false
 
     var body: some View {
-        VStack(spacing: 0) {
-            HStack(spacing: 12) {
-                Circle().fill(Color.recordingRed).frame(width: 10, height: 10)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Start recording")
-                        .font(.system(size: TypeScale.cardTitleSize, weight: TypeScale.cardTitleWeight))
-                        .foregroundStyle(Palette.text(dark))
-                    Text("会議や打ち合わせをその場で録り始めます")
-                        .font(.system(size: TypeScale.secondarySize))
-                        .foregroundStyle(Palette.muted(dark))
-                }
-                Spacer(minLength: 12)
-                Button { showsOptions.toggle() } label: {
-                    Image(systemName: "chevron.down")
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(Palette.muted(dark))
-                        .frame(width: 30, height: 30)   // §16 hit area
-                }
-                .buttonStyle(AstraControlStyle(radius: 8, base: 0.0))
-                .help("録音の設定")
-                .accessibilityIdentifier("startRecordingOptions")
-            }
-            .padding(16)
-            .contentShape(Rectangle())
-            .onTapGesture { RecordingWorkspaceState.shared.start() }
-
-            if showsOptions {
-                Divider().overlay(Palette.border(dark))
-                VStack(alignment: .leading, spacing: 10) {
-                    optionRow("マイク", Permissions.microphone == .granted ? "使えます" : "許可が要ります",
-                              ok: Permissions.microphone == .granted)
-                    optionRow("相手の音声", Permissions.screenRecording == .granted ? "取り込みます" : "画面の許可が要ります",
-                              ok: Permissions.screenRecording == .granted)
-                    optionRow("保存先", "この Mac の中（My Space）", ok: true)
-                    optionRow("音声の保存", "残しません（文字起こしとノートだけ）", ok: true)
+        HStack(spacing: 0) {
+            // 本体は「録音を始めるボタン」。設定画面を開くボタンではない。
+            Button { RecordingWorkspaceState.shared.start() } label: {
+                HStack(spacing: 12) {
+                    Circle().fill(Color.recordingRed).frame(width: 10, height: 10)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Start recording")
+                            .font(.system(size: TypeScale.cardTitleSize, weight: TypeScale.cardTitleWeight))
+                            .foregroundStyle(Palette.text(dark))
+                        Text("前回の設定でその場で録り始めます")
+                            .font(.system(size: TypeScale.secondarySize))
+                            .foregroundStyle(Palette.muted(dark))
+                    }
+                    Spacer(minLength: 0)
                 }
                 .padding(16)
+                .contentShape(Rectangle())
             }
+            .buttonStyle(AstraControlStyle(radius: 12, base: 0.0))
+            .accessibilityIdentifier("startRecording")
+
+            Divider().frame(height: 34).overlay(Palette.border(dark))
+
+            // ⌄ は設定つきで始めるとき。
+            Button { showsSheet = true } label: {
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(Palette.muted(dark))
+                    .frame(width: 44, height: 60)
+            }
+            .buttonStyle(AstraControlStyle(radius: 12, base: 0.0))
+            .help("録音の設定を決めて始める")
+            .accessibilityIdentifier("startRecordingOptions")
         }
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
@@ -56,22 +51,7 @@ struct StartRecordingCard: View {
                 .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
                     .stroke(Color.hairline(dark)))
         )
-        .accessibilityIdentifier("startRecording")
-    }
-
-    private func optionRow(_ title: String, _ value: String, ok: Bool) -> some View {
-        HStack(spacing: 8) {
-            Image(systemName: ok ? "checkmark.circle" : "exclamationmark.triangle")
-                .font(.system(size: 11))
-                .foregroundStyle(ok ? Palette.success(dark) : Palette.warning(dark))
-            Text(title)
-                .font(.system(size: TypeScale.secondarySize))
-                .foregroundStyle(Palette.muted(dark))
-                .frame(width: 90, alignment: .leading)
-            Text(value)
-                .font(.system(size: TypeScale.secondarySize))
-                .foregroundStyle(Palette.text(dark))
-            Spacer(minLength: 0)
-        }
+        // Window を増やさず、Home の上に 1 枚だけ重ねる。
+        .sheet(isPresented: $showsSheet) { NewRecordingSheet(isPresented: $showsSheet) }
     }
 }
