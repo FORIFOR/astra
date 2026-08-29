@@ -41,15 +41,16 @@ struct AstraControlStyle: ButtonStyle {
             let amount = base + (down ? Metrics.pressedDelta : hot ? Metrics.hoverDelta : 0)
 
             configuration.label
-                .opacity(filled ? 1 : (down ? 0.55 : hot ? 0.8 : 1))
+                .opacity(filled ? 1 : (down ? 0.72 : hot ? 0.88 : 1))
                 .background {
                     if filled {
                         RoundedRectangle(cornerRadius: radius, style: .continuous)
                             .fill(Color.subtleFill(dark, amount))
                     } else if hot || down {
                         // 地を敷かない操作でも、触れたことは面で返す。
+                        // Dock の上では派手に光らせない（白 6% / 10% まで）。
                         RoundedRectangle(cornerRadius: radius, style: .continuous)
-                            .fill(Color.white.opacity(down ? 0.22 : 0.13))
+                            .fill(Color.white.opacity(down ? 0.10 : 0.06))
                     }
                 }
                 .overlay {

@@ -10,6 +10,14 @@ final class AstraAppDelegate: NSObject, NSApplicationDelegate {
         StatusBarController.shared.install()
         // focus リングは Tab / 矢印を押してから見せる（開いた瞬間に出さない）。
         KeyboardNavigation.shared.install()
+        // 前面アプリが変わったら、まだ繋がっていないものを 1 度だけ勧める（§14）。
+        // 勧誘は Dock の下の別 Panel に出す（Dock 本体は伸ばさない）。
+        NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.didActivateApplicationNotification,
+            object: nil, queue: .main
+        ) { _ in
+            MainActor.assumeIsolated { VoiceHUDState.shared.refreshContextualApp() }
+        }
         // グローバル音声ショートカット（⌥Space）で録音を出し入れする。
         // CGEventTap（正本指定）で受信する。Accessibility 権限を使う（§3 と共用）。
         GlobalShortcut.shared.register { WindowCoordinator.shared.toggleRecording() }

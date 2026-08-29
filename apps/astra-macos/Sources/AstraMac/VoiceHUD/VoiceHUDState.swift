@@ -5,7 +5,18 @@ import SwiftUI
 @MainActor
 final class VoiceHUDState: ObservableObject {
     static let shared = VoiceHUDState()
-    enum Mode { case idle, listening, thinking }
+    /// Task Dock は機能一覧ではなく**状態表示器**。UI はこの enum そのもの。
+    enum Mode: Equatable {
+        case idle
+        case listening
+        /// 認識中の途中経過（確定前）。
+        case transcribing(String)
+        case thinking
+        /// 前面アプリを見つけた。勧誘は下の Panel に出す。
+        case contextualApp(AppSuggestion)
+        case quickActions
+        case enteringRecording
+    }
     @Published var mode: Mode = .idle
     /// 直近の Agent 応答（HUD 下や通知に出す）。
     @Published var answer = ""
@@ -16,6 +27,35 @@ final class VoiceHUDState: ObservableObject {
 
     func configureBackend(base: String, token: String) {
         apiBase = base; apiToken = token; conversationId = nil
+    }
+
+    /// Dock 本体のクリック。機能を Dock に並べず、下の Quick Actions Panel を出し入れする。
+    func toggleQuickActions() {
+        mode = mode == .quickActions ? .idle : .quickActions
+        WindowCoordinator.shared.syncDockPanels()
+    }
+
+    /// 前面アプリを見て、繋がっていないものがあれば勧める（1 セッション 1 回）。
+    func refreshContextualApp() {
+        guard mode == .idle || isContextual else { return }
+        if let s = AppDiscovery.suggestionForFrontmostApp() {
+            mode = .contextualApp(s)
+        } else if isContextual {
+            mode = .idle
+        }
+        WindowCoordinator.shared.syncDockPanels()
+    }
+
+    private var isContextual: Bool {
+        if case .contextualApp = mode { return true }
+        return false
+    }
+
+    /// 勧誘を断られた。二度と同じセッションでは出さない。
+    func dismissSuggestion() {
+        if case .contextualApp(let s) = mode { AppDiscovery.dismiss(s) }
+        mode = .idle
+        WindowCoordinator.shared.syncDockPanels()
     }
 
     /// 認識した発話の行き先を決める（UI/UX テスト仕様 HUD-004 / P1 Context-aware Voice Routing）。

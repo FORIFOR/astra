@@ -70,6 +70,56 @@ Visual Gate はマウスを動かせないので、状態を差し込んで撮�
 focus リングは **Tab / 矢印を押してから**出す（`KeyboardNavigation`）。
 標準の focus effect は `.focusEffectDisabled()` で切り、リングを自前の 1 本に統一している。
 
+## Task Dock（VoiceOS を Golden Reference にした再実装）
+
+「上端に置いた `Capsule()`」ではなく、**専用 NSPanel + Custom Bezier + 2 層**として作る。
+
+```text
+画面上端 ────────────────────────────────
+        ╭──────────────────────╮        Outer shell  374×68
+      ╭─╯                      ╰─╮      VoiceDockShellShape
+      │ [option][command] …     │      + native vibrancy(.hudWindow) + 黒 92%
+      ╰──────────────────────────╯
+         └ Inner HUD 322×35（白 4.5% のガラス、offset 27）
+```
+
+| 決めごと     | 中身                                                                                          |
+| ------------ | --------------------------------------------------------------------------------------------- |
+| Window       | `VoiceHUDPanel`（`.borderless` / `.nonactivatingPanel` / level `.statusBar`）                 |
+| 位置         | `screen.frame.maxY - height`（`visibleFrame` ではない＝上端に**接着**する）                   |
+| 外形         | `VoiceDockShellShape`。上辺が最も狭く、肩で外へ**凹んで**張り出し、下部だけ絞る               |
+| 状態         | idle / listening / transcribing / thinking / contextualApp / quickActions / enteringRecording |
+| 不変条件     | **状態が変わっても Window 寸法は変えない**。中身だけ入れ替える                                |
+| 機能の出し方 | Dock に並べない。クリックで `QuickActionsPanel` を下に開く                                    |
+| 勧誘の出し方 | `AppDiscoveryPanel` を下に開く。Dock 本体は伸ばさない                                         |
+| 画面追従     | マウスのいる画面へ。ただし **500ms 安定してから**移す（跨いだ瞬間には動かさない）             |
+| 録音中       | Dock は完全退避。Recording Workspace 側の Task Dock と役割を分ける                            |
+
+寸法・肩の制御点・orb・余白はすべて `shared/design/tokens.json` の `voiceHud`。
+形を詰めるときは View ではなくトークンを動かす。
+
+### Task Dock の Visual Gate
+
+```bash
+apps/astra-macos/.build/debug/AstraMac --selftest dockshots /tmp/astra-dock
+apps/astra-macos/.build/debug/AstraMac --selftest dockdiff docs/golden-screenshots/task-dock /tmp/astra-dock
+```
+
+`dockshots` が検査するのは窓の存在ではなく:
+
+- 外形が 374×68 で、**5 状態すべてで同じ**（暴れない）
+- `screen.frame.maxY` に接着している（浮いていない）
+- Inner HUD に中身がある（真っ黒な板ではない）
+- 勧誘 / Quick Actions が **Dock の下に別 window として**出る
+
+Golden は `docs/golden-screenshots/task-dock/`（5 状態＋画面上端の文脈 2 枚）。
+`dockdiff` は色や文言ではなく **2 値の外形マスク**で比べる。
+
+**VoiceOS 実機スクショとの比較は external verification pending。**
+`docs/reference/voiceos-task-dock.png` が置かれた時点で `pnpm verify:all` が自動で走る
+（未着の間は SKIP。無い物を PASS にしない）。今回の添付には画像が届いていなかったため、
+形状は仕様書の実測値（374×67 / 内側 320〜330×35 / offset 27 / bottom radius 17〜20）を正とした。
+
 ## レイアウトの正（tokens）
 
 数値は View に直書きせず `shared/design/tokens.json` → `Metrics` から取る。

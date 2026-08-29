@@ -1,16 +1,29 @@
 import AppKit
 
-/// Window の置き場所。上部ピルはメニューバー直下中央、録音 Workspace は画面中央。
+/// Window の置き場所。Task Dock は画面最上端、録音 Workspace は画面中央。
 enum PanelPositioner {
+    /// Task Dock は `visibleFrame` ではなく `frame` の上端に**接着**する。
+    ///
+    /// 「メニューバーの下に浮いている」と「画面上端から生えている」は別物で、
+    /// VoiceOS らしさは後者にある。level は `.statusBar` なのでメニューバーより手前に出る
+    /// （以前ここを visibleFrame にしたのは level が低く裏へ潜っていたときの手当て）。
     static func voiceHUDFrame(screen: NSScreen) -> NSRect {
-        // メニューバー**直下**に吊る。screen.frame.maxY だとメニューバー（と notch/Now Playing）の
-        // 裏に潜って見えなくなるので、visibleFrame.maxY（メニューバーを除いた上端）を使う。
-        let visible = screen.visibleFrame
-        return NSRect(
-            x: visible.midX - Metrics.hudWidth / 2,
-            y: visible.maxY - Metrics.hudHeight,
+        NSRect(
+            x: screen.frame.midX - Metrics.hudWidth / 2,
+            y: screen.frame.maxY - Metrics.hudHeight,
             width: Metrics.hudWidth,
             height: Metrics.hudHeight
+        )
+    }
+
+    /// Dock の真下に出す第二 Panel（勧誘 / Quick Actions）。Dock 本体は伸ばさない。
+    static func belowDockFrame(screen: NSScreen, size: NSSize) -> NSRect {
+        let dock = voiceHUDFrame(screen: screen)
+        return NSRect(
+            x: dock.midX - size.width / 2,
+            y: dock.minY - Metrics.dockPanelGap - size.height,
+            width: size.width,
+            height: size.height
         )
     }
 
