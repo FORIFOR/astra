@@ -55,6 +55,27 @@
 | 1       | Developer ID 署名 + Notarization + DMG                | 現在は Apple Development 署名。未着手                          |
 | 2       | Windows（WinUI 3 ほか）                               | Phase 5                                                        |
 
+## §4 ディレクトリ対応
+
+仕様書の構成は「推奨」なので、既存の名前を尊重しつつ役割で対応させている
+（rename は必要なときだけ、が本プロジェクトの方針）。
+
+| 仕様書                                     | Astra の実体                                                                            |
+| ------------------------------------------ | --------------------------------------------------------------------------------------- |
+| `App/`                                     | `App/`（`AstraAppDelegate` / `SelfTest` / `DemoMode`）                                  |
+| `Core/State`, `Core/Events`, `Core/Models` | `Core/`（`AstraStateStore` / `AstraEventBus` / `AstraModels`）                          |
+| `Surface/Presence`, `Surface/TaskDock`     | `VoiceHUD/`（Task Dock 本体と第二 Panel）＋ `Windowing/`                                |
+| `Surface/Meeting`, `Surface/Workspace`     | `Meeting/` / `RecordingWorkspace/` / `Main/` / `Home/` / `Work/`                        |
+| `Surface/ContextCard`                      | `Context/ContextLensView` / `Evidence/`                                                 |
+| `Context/*`                                | `Context/`（AX / Browser / Notion / Connector / File）                                  |
+| `Voice/*`                                  | `Audio/`（`MicCapture` / `VoiceActivityDetector` / `SpeechTranscriber` / `AudioMixer`） |
+| `Agent/*`                                  | `Agent/`（`ExecutionPlanner` / `TaskTimelineView`）＋ `Action/`（確認カード）           |
+| `Meeting/*`                                | `Meeting/`（`MeetingDetector` / `MeetingIntelligence` / `MeetingCanvasView`）           |
+| `BrowserExtension/`                        | `apps/browser-extension/`（アプリ本体の外）                                             |
+| `Plugins/`                                 | `Plugins/`（`PluginRuntime`）＋ `plugins/builtin/`（manifest）                          |
+| `Storage/`                                 | `Storage/`（`LocalStore`）                                                              |
+| `Security/`                                | `Settings/KeychainStore` / `Settings/SessionStore` / `Settings/PermissionCenter`        |
+
 ## 進め方
 
 仕様書 §30 の Phase 順に、1 つずつ「実測ゲート付き」で足す。
