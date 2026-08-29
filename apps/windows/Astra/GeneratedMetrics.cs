@@ -16,6 +16,7 @@ public static class Metrics
     public const double HudWidth = 220;
     public const double HudHeight = 44;
     public const double HudBottomRadius = 18;
+    public const double HudTopRadius = 10;
     public const double DockIdleWidth = 220;
     public const double DockIdleHeight = 44;
     public const double DockContextWidth = 320;

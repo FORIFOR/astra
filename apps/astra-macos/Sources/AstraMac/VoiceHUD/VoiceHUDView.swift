@@ -37,6 +37,9 @@ struct VoiceTaskDockView: View {
                 .opacity(contentVisible ? 1 : 0)
                 .animation(reduceMotion ? nil : .easeOut(duration: 0.12), value: contentVisible)
         }
+        // 地が暗いので、中身も暗色側の配色で描く。
+        // 各 View は `@Environment(\.colorScheme)` を見ているので、ここで一括して切り替わる。
+        .environment(\.colorScheme, .dark)
         .frame(width: size.width, height: size.height)
         .onChange(of: store.dock) { _, _ in
             guard !reduceMotion else { return }
@@ -427,7 +430,7 @@ private struct ConfirmationDock: View {
                 Image(systemName: confirmation.risk == .r3 ? "exclamationmark.octagon.fill" : "arrow.up.forward")
                     .font(.system(size: 9))
                     .foregroundStyle(riskTint)
-                DockLabel(text: confirmation.risk.label)
+                DockLabel(text: confirmation.risk.label, tint: riskTint)
                 Spacer(minLength: 0)
             }
             Text(confirmation.title)

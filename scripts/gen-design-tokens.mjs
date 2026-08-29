@@ -40,6 +40,7 @@ const FIELDS = [
   ['hudWidth', h.width],
   ['hudHeight', h.height],
   ['hudBottomRadius', h.bottomRadius],
+  ['hudTopRadius', h.topRadius],
   ['dockIdleWidth', h.idleWidth],
   ['dockIdleHeight', h.idleHeight],
   ['dockContextWidth', h.contextWidth],

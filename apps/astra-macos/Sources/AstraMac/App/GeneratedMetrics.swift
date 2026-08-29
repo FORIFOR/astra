@@ -16,6 +16,7 @@ enum Metrics {
     static let hudWidth: CGFloat = 220
     static let hudHeight: CGFloat = 44
     static let hudBottomRadius: CGFloat = 18
+    static let hudTopRadius: CGFloat = 10
     static let dockIdleWidth: CGFloat = 220
     static let dockIdleHeight: CGFloat = 44
     static let dockContextWidth: CGFloat = 320

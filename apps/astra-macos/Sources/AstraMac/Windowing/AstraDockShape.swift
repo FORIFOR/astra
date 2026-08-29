@@ -1,25 +1,34 @@
 import SwiftUI
 
-/// Task Dock の外形。**画面上辺と一体に見せる**ための形。
+/// Task Dock の外形。画面上辺から下へ伸びる面。
 ///
-/// 上辺は面いっぱいに真っすぐ画面の縁へ接する（角丸を付けない）。丸めた瞬間、
-/// 「上に置かれたカード」に見えて、OS の一部という感じが消える。
-/// 丸いのは下の 2 角だけ。左右や上に**くびれは作らない** —— くびれは
-/// 別ブランドの造形であって、上辺との一体感には要らない。
+/// 下の 2 角は大きく、上の 2 角は控えめに丸める。上を角のままにすると、
+/// 面の左右の縁が画面の縁に当たるところで角が立って見える。
+/// 上を丸め過ぎると今度は「上に置かれたカード」になるので、
+/// 上下で半径を変えて、画面から生えている感じを残す。
+/// 左右や上に**くびれは作らない**（くびれは別ブランドの造形）。
 struct AstraDockShape: Shape {
     var bottomRadius: CGFloat = Metrics.hudBottomRadius
+    var topRadius: CGFloat = Metrics.hudTopRadius
 
     func path(in rect: CGRect) -> Path {
-        let r = min(bottomRadius, min(rect.width, rect.height) / 2)
+        let limit = min(rect.width, rect.height) / 2
+        let rb = min(bottomRadius, limit)
+        let rt = min(topRadius, limit)
         var p = Path()
-        p.move(to: CGPoint(x: rect.minX, y: rect.minY))
-        p.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
-        p.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY - r))
-        p.addQuadCurve(to: CGPoint(x: rect.maxX - r, y: rect.maxY),
+        p.move(to: CGPoint(x: rect.minX + rt, y: rect.minY))
+        p.addLine(to: CGPoint(x: rect.maxX - rt, y: rect.minY))
+        p.addQuadCurve(to: CGPoint(x: rect.maxX, y: rect.minY + rt),
+                       control: CGPoint(x: rect.maxX, y: rect.minY))
+        p.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY - rb))
+        p.addQuadCurve(to: CGPoint(x: rect.maxX - rb, y: rect.maxY),
                        control: CGPoint(x: rect.maxX, y: rect.maxY))
-        p.addLine(to: CGPoint(x: rect.minX + r, y: rect.maxY))
-        p.addQuadCurve(to: CGPoint(x: rect.minX, y: rect.maxY - r),
+        p.addLine(to: CGPoint(x: rect.minX + rb, y: rect.maxY))
+        p.addQuadCurve(to: CGPoint(x: rect.minX, y: rect.maxY - rb),
                        control: CGPoint(x: rect.minX, y: rect.maxY))
+        p.addLine(to: CGPoint(x: rect.minX, y: rect.minY + rt))
+        p.addQuadCurve(to: CGPoint(x: rect.minX + rt, y: rect.minY),
+                       control: CGPoint(x: rect.minX, y: rect.minY))
         p.closeSubpath()
         return p
     }
