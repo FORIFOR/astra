@@ -60,6 +60,7 @@ enum SelfTest {
         case "dockanim": dockAnim(); return true
         case "entry": entryPoints(); return true
         case "secret": secretMode(); return true
+        case "recordbutton": recordButton(); return true
         case "state": stateMachine(); return true
         case "presence": presence(); return true
         case "perf": perf(); return true
@@ -399,7 +400,9 @@ enum SelfTest {
                 questions: ["誰が対応しますか？"],
                 concerns: ["初期費用が心配です"], notes: []))
             store.meetingDetected(app: "Google Meet")
-            store.meetingStarted(id: "dock8")
+            // **録音ボタンと同じ経路**を通す。Store を直接叩くと、ボタンが別のことを
+            // していても気づけない（実際に一度そうなっていた）。
+            recording.start()
         })
         // 録音開始では窓を増やさない。Dock だけが録音コントローラになる。
         shoot("09-meeting-notes", { hud.toggleMeetingPanel(.notes) })
@@ -745,6 +748,80 @@ enum SelfTest {
             y += sy
         }
         return total > 0 && Double(diff) / Double(total) < 0.02
+    }
+
+
+    /// `--selftest recordbutton`: **録音ボタンを押したら何が出るか。**
+    ///
+    /// UI の状態を Store から作って撮るのではなく、`RecordingWorkspaceState.start()`
+    /// ——ボタンが呼ぶそのもの——を呼んで、画面に何が出たかを見る。
+    /// ここを Store 直叩きで検査していたせいで、ボタンだけ別のことをしていたのを見逃した。
+    @MainActor
+    private static func recordButton() {
+        let store = AstraStateStore.shared
+        let recording = RecordingWorkspaceState.shared
+        store.reset()
+        var fail: [String] = []
+
+        func settle(_ s: Double) {
+            let until = Date().addingTimeInterval(s)
+            while Date() < until { CFRunLoopRunInMode(.defaultMode, 0.05, true) }
+        }
+        func windows() -> [(w: CGFloat, h: CGFloat)] {
+            guard let infos = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] else { return [] }
+            return infos.compactMap { info in
+                guard let owner = info[kCGWindowOwnerPID as String] as? pid_t, owner == getpid(),
+                      let b = info[kCGWindowBounds as String] as? [String: Any],
+                      let w = b["Width"] as? CGFloat, let h = b["Height"] as? CGFloat,
+                      w > 20, h > 10 else { return nil }
+                return (w, h)
+            }
+        }
+
+        WindowCoordinator.shared.showVoiceHUD()
+        settle(0.8)
+        let before = windows().count
+
+        // ここがボタンの中身そのもの。
+        recording.start()
+        settle(1.4)
+
+        let after = windows()
+        // ① 窓を増やしていない。
+        if after.count > before {
+            fail.append("録音開始で窓が \(before)→\(after.count) に増えた")
+        }
+        // ② Dock が録音コントローラの寸法になっている。
+        if !after.contains(where: { abs($0.w - Metrics.dockMeetingWidth) <= 2 }) {
+            fail.append("Dock が録音コントローラ(\(Int(Metrics.dockMeetingWidth))pt)になっていない: \(after.map { Int($0.w) })")
+        }
+        // ③ 大きな面は**開いていない**（押されるまで出さない）。
+        if after.contains(where: { abs($0.w - Metrics.workspaceWidth) <= 2 }) {
+            fail.append("録音開始で大きな面が勝手に開いた")
+        }
+        // ④ State も会議になっている。
+        if store.state.mode != .meeting { fail.append("mode が meeting でない (\(store.state.mode))") }
+        if case .meeting(let panel) = store.dock {
+            if panel != nil { fail.append("Notes/Captions が勝手に開いている") }
+        } else {
+            fail.append("dock が meeting でない (\(store.dock))")
+        }
+
+        // ⑤ 止めたら結果面へ morph する（巨大 modal を出さない）。
+        recording.stop()
+        settle(1.0)
+        if case .result = store.dock {} else { fail.append("停止後に結果面へ移らない (\(store.dock))") }
+        if windows().count > before { fail.append("停止後に窓が残っている") }
+
+        WindowCoordinator.shared.hideVoiceHUD()
+        store.reset()
+        if fail.isEmpty {
+            print("SELFTEST_OK recordbutton: 録音ボタンは窓を増やさず Dock を録音コントローラにする・面は勝手に開かない・停止で結果面へ")
+            exit(0)
+        } else {
+            print("SELFTEST_FAIL recordbutton: \(fail.joined(separator: ", "))")
+            exit(2)
+        }
     }
 
     /// `--selftest state`: 仕様書 §5 / §28 / §31。状態が**本当に 1 箇所**にあるか。
@@ -2977,19 +3054,23 @@ enum SelfTest {
             }
             steps.append("②dictation")
 
-            // ---- ③ 会議開始: ショートカット相当の 1 操作だけで Workspace へ切替。
+            // ---- ③ 会議開始: ショートカット相当の 1 操作だけで録音コントローラへ切替。
+            //
+            // 録音は**窓を増やさない**。Dock がそのまま録音コントローラになり、
+            // 大きな面は押されるまで開かない（以前はここで Workspace が出ることを見ていた）。
             WindowCoordinator.shared.toggleRecording()
             settle(1.2)
             wins = onScreenWindowSizes()
-            let wsUp = wins.contains { near($0.w, Metrics.workspaceWidth) && near($0.h, Metrics.workspaceHeight) }
-            let hudGone = !wins.contains { near($0.w, Metrics.hudWidth) && near($0.h, Metrics.hudHeight) }
+            let controllerUp = wins.contains { near($0.w, Metrics.dockMeetingWidth) && near($0.h, Metrics.dockMeetingHeight) }
+            let idleGone = !wins.contains { near($0.w, Metrics.dockIdleWidth) && near($0.h, Metrics.dockIdleHeight) }
+            let noExtraSurface = !wins.contains { near($0.w, Metrics.workspaceWidth) && near($0.h, Metrics.workspaceHeight) }
             let meetingId = RecordingRuntime.shared.activeMeetingId
             // online なら gateway の会議 UUID、offline ならローカル id（meeting-…）。どちらでも id は要る。
             let meetingOK = !meetingId.isEmpty && (online ? !meetingId.hasPrefix("meeting-") : true)
-            guard state.isRecording, wsUp, hudGone, meetingOK else {
-                print("SELFTEST_FAIL e2e001 ③切替: recording=\(state.isRecording) workspace=\(wsUp) hudHidden=\(hudGone) meeting=\(meetingId) wins=\(wins)"); exit(4)
+            guard state.isRecording, controllerUp, idleGone, noExtraSurface, meetingOK else {
+                print("SELFTEST_FAIL e2e001 ③切替: recording=\(state.isRecording) controller=\(controllerUp) idleGone=\(idleGone) noExtra=\(noExtraSurface) meeting=\(meetingId) wins=\(wins)"); exit(4)
             }
-            steps.append("③Workspace(HUD退避・排他OK)")
+            steps.append("③録音コントローラへ(窓は増えない)")
 
             // ---- ④ HEAR: 実マイクで録る（5 秒断片が閉じる長さ）。
             settle(6.0)
@@ -3021,16 +3102,17 @@ enum SelfTest {
                 steps.append("⑦AI(gateway無しのため未実行)")
             }
 
-            // ---- ⑧ 停止 → 保存 → Workspace が消えて HUD が戻る（1 操作だけ）。
+            // ---- ⑧ 停止 → 保存 → 結果面へ morph（巨大 modal を出さない・窓も増えない）。
             WindowCoordinator.shared.toggleRecording()
             settle(2.0)
             wins = onScreenWindowSizes()
-            let wsGone = !wins.contains { near($0.w, Metrics.workspaceWidth) && near($0.h, Metrics.workspaceHeight) }
-            let hudBack = wins.contains { near($0.w, Metrics.hudWidth) && near($0.h, Metrics.hudHeight) }
-            guard !state.isRecording, wsGone, hudBack else {
-                print("SELFTEST_FAIL e2e001 ⑧復帰: stopped=\(!state.isRecording) workspaceGone=\(wsGone) hudBack=\(hudBack) wins=\(wins)"); exit(8)
+            let controllerGone = !wins.contains { near($0.w, Metrics.dockMeetingWidth) && near($0.h, Metrics.dockMeetingHeight) }
+            let resultUp = wins.contains { near($0.w, Metrics.dockResultWidth) && near($0.h, Metrics.dockResultHeight) }
+            let stillOneSurface = wins.count == 1
+            guard !state.isRecording, controllerGone, resultUp, stillOneSurface else {
+                print("SELFTEST_FAIL e2e001 ⑧復帰: stopped=\(!state.isRecording) controllerGone=\(controllerGone) result=\(resultUp) wins=\(wins)"); exit(8)
             }
-            steps.append("⑧保存→HUD復帰(排他OK)")
+            steps.append("⑧停止→結果面へ morph(窓は1枚のまま)")
 
             // ---- ⑨ REMEMBER: 保存後に Library から取り出せる／回復候補に残っていない。
             let root = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!

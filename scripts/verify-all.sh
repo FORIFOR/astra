@@ -8,9 +8,11 @@ cd "$ROOT"
 fail=0
 run() { echo; echo "== $1 =="; shift; if "$@"; then :; else echo "  ^ FAILED"; fail=1; fi; }
 
-run "astra-core tests"            bash -c "cd core/astra-core && cargo test --quiet 2>&1 | grep 'test result' | head -1"
-run "Tauri Rust regression"       bash -c "cd apps/desktop/src-tauri && cargo test --quiet 2>&1 | grep 'test result' | head -1"
-run "Tauri desktop JS regression" bash -c "pnpm --filter @astra/desktop test 2>&1 | grep -E 'Tests +[0-9]+ passed' | tail -1"
+# `cmd | grep ...` は grep の終了状態になるので、**テストが落ちても緑**になっていた。
+# 実際に 1 件落ちたまま VERIFY_ALL_OK が出た。要約だけ見せつつ、状態は元のコマンドのものを返す。
+run "astra-core tests"            bash -c "cd core/astra-core && out=\$(cargo test --quiet 2>&1); st=\$?; echo \"\$out\" | grep 'test result' | head -1; exit \$st"
+run "Tauri Rust regression"       bash -c "cd apps/desktop/src-tauri && out=\$(cargo test --quiet 2>&1); st=\$?; echo \"\$out\" | grep 'test result' | head -1; exit \$st"
+run "Tauri desktop JS regression" bash -c "out=\$(pnpm --filter @astra/desktop test 2>&1); st=\$?; echo \"\$out\" | grep -E 'Tests +[0-9]+ passed' | tail -1; exit \$st"
 run "design tokens fresh"         node scripts/gen-design-tokens.mjs --check
 run "swift bindings fresh"        bash scripts/gen-swift-bindings.sh --check
 run "workspace fixture fresh"     node scripts/gen-workspace-fixture.mjs --check

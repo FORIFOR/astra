@@ -204,14 +204,18 @@ final class RecordingWorkspaceState: ObservableObject {
         RecordingRuntime.shared.begin(meetingId: localId)
         // スクショ等は実際に journal を作った id に合わせる（サインイン時は gateway id）。
         currentMeetingId = RecordingRuntime.shared.activeMeetingId
-        WindowCoordinator.shared.enterRecordingMode()
+        // 録音の UI は Store が決める。ここで直接 window を開かない
+        // —— 以前ここが `enterRecordingMode()` を呼んでいたため、録音ボタンだけが
+        // 大きな面を開き、Dock コントローラの経路を通っていなかった。
+        AstraStateStore.shared.meetingStarted(id: currentMeetingId)
     }
     func stop() {
         isRecording = false
         permissionIssue = nil
         tickTimer?.invalidate(); tickTimer = nil
         RecordingRuntime.shared.end()   // 断片を確定（回復候補として残る）
-        WindowCoordinator.shared.leaveRecordingMode()
+        // 停止後の姿も Store が決める（結果面へ morph する）。
+        AstraStateStore.shared.meetingEnded()
     }
     /// サインイン済みセッションを渡す（Main Window のサインインから）。
     func configureBackend(base: String, token: String) {
