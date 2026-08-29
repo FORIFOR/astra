@@ -18,6 +18,8 @@ class AstraPanel<Content: View>: NSPanel {
         self.hidesOnDeactivate = false
         self.isMovableByWindowBackground = true
         self.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary]
+        // シークレットモードの既定値をここで反映する（窓を作った後に変えても効く）。
+        self.sharingType = SecretMode.shared.isOn ? .none : .readOnly
         self.canKeyOverride = canKey
         let hosting = NSHostingView(rootView: content)
         hosting.frame = NSRect(origin: .zero, size: size)

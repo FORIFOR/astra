@@ -59,6 +59,7 @@ enum SelfTest {
         case "dock8": dock8(args); return true
         case "dockanim": dockAnim(); return true
         case "entry": entryPoints(); return true
+        case "secret": secretMode(); return true
         case "state": stateMachine(); return true
         case "presence": presence(); return true
         case "perf": perf(); return true
@@ -641,6 +642,109 @@ enum SelfTest {
             print("SELFTEST_FAIL entry: \(fail.joined(separator: ", "))")
             exit(2)
         }
+    }
+
+
+    /// `--selftest secret`: シークレットモード。**本当に画面キャプチャから消えるか。**
+    ///
+    /// 「sharingType を設定した」で終わらせない。画面全体を撮って、
+    /// その中に Astra の窓が写っていないことを window server 側で確かめる。
+    @MainActor
+    private static func secretMode() {
+        var fail: [String] = []
+        let secret = SecretMode.shared
+        let store = AstraStateStore.shared
+        store.reset()
+        secret.set(false)
+
+        func settle(_ s: Double) {
+            let until = Date().addingTimeInterval(s)
+            while Date() < until { CFRunLoopRunInMode(.defaultMode, 0.05, true) }
+        }
+
+        /// 画面全体のキャプチャに、自分の窓が含まれているか。
+        /// `CGWindowListCreateImage` の onScreenOnly は他プロセスの画面共有と同じ経路を通る。
+        func dockAppearsInScreenCapture() -> Bool {
+            guard let screen = NSScreen.main,
+                  let panel = NSApp.windows.first(where: { $0.isVisible && $0.sharingType != .none || $0.isVisible })
+            else { return false }
+            _ = screen
+            // 画面全体から Astra の窓「だけ」を除いて撮り、同じ範囲を全部込みで撮って比べる。
+            let frame = panel.frame
+            let flipped = CGRect(x: frame.minX,
+                                 y: (NSScreen.main?.frame.height ?? 0) - frame.maxY,
+                                 width: frame.width, height: frame.height)
+            guard let all = CGWindowListCreateImage(flipped, .optionOnScreenOnly, kCGNullWindowID, [.bestResolution]),
+                  let below = CGWindowListCreateImage(flipped, .optionOnScreenBelowWindow,
+                                                      CGWindowID(panel.windowNumber), [.bestResolution])
+            else { return false }
+            // 窓が映っているなら「全部込み」と「その窓より下だけ」が違うはず。
+            return !imagesLookEqual(all, below)
+        }
+
+        // 出しておく。
+        WindowCoordinator.shared.showVoiceHUD()
+        settle(1.0)
+        guard let dock = NSApp.windows.first(where: { $0.isVisible && $0.frame.height < 200 }) else {
+            print("SELFTEST_SKIP secret: Dock を出せない"); exit(0)
+        }
+
+        // ① 既定では映る。
+        if SecretMode.isHidden(dock) { fail.append("既定でキャプチャから外れている（気づかず隠れてしまう）") }
+        settle(0.4)
+        let visibleBefore = dockAppearsInScreenCapture()
+        if !visibleBefore { fail.append("通常時に画面キャプチャへ写っていない") }
+
+        // ② ON にすると消える。
+        secret.set(true)
+        settle(0.6)
+        if !SecretMode.isHidden(dock) { fail.append("ON にしても sharingType が変わらない") }
+        if dockAppearsInScreenCapture() { fail.append("ON にしても画面キャプチャに写る") }
+
+        // ③ 後から作った窓にも効く（作った順で漏れない）。
+        WindowCoordinator.shared.showRecordingWorkspace()
+        settle(0.8)
+        let leaked = NSApp.windows.filter { $0.isVisible && !SecretMode.isHidden($0) }
+        if !leaked.isEmpty { fail.append("\(leaked.count) 枚の窓が隠れていない") }
+        WindowCoordinator.shared.hideRecordingWorkspace()
+
+        // ④ OFF に戻せる。
+        secret.set(false)
+        settle(0.5)
+        if SecretMode.isHidden(dock) { fail.append("OFF に戻らない") }
+
+        WindowCoordinator.shared.hideVoiceHUD()
+        store.reset()
+        if fail.isEmpty {
+            print("SELFTEST_OK secret: 既定は映る・ON で実際に画面キャプチャから消える・後から出した窓にも効く・戻せる")
+            exit(0)
+        } else {
+            print("SELFTEST_FAIL secret: \(fail.joined(separator: ", "))")
+            exit(2)
+        }
+    }
+
+    /// 2 枚の画像が（縮小して見て）同じか。
+    private static func imagesLookEqual(_ a: CGImage, _ b: CGImage) -> Bool {
+        let ra = NSBitmapImageRep(cgImage: a), rb = NSBitmapImageRep(cgImage: b)
+        guard ra.pixelsWide == rb.pixelsWide, ra.pixelsHigh == rb.pixelsHigh else { return false }
+        let sx = max(1, ra.pixelsWide / 40), sy = max(1, ra.pixelsHigh / 40)
+        var diff = 0, total = 0
+        var y = 0
+        while y < ra.pixelsHigh {
+            var x = 0
+            while x < ra.pixelsWide {
+                total += 1
+                if let ca = ra.colorAt(x: x, y: y), let cb = rb.colorAt(x: x, y: y) {
+                    if abs(ca.redComponent - cb.redComponent)
+                        + abs(ca.greenComponent - cb.greenComponent)
+                        + abs(ca.blueComponent - cb.blueComponent) > 0.12 { diff += 1 }
+                }
+                x += sx
+            }
+            y += sy
+        }
+        return total > 0 && Double(diff) / Double(total) < 0.02
     }
 
     /// `--selftest state`: 仕様書 §5 / §28 / §31。状態が**本当に 1 箇所**にあるか。

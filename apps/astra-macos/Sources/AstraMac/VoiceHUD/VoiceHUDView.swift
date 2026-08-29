@@ -476,6 +476,7 @@ private struct MeetingDock: View {
     private var dark: Bool { scheme == .dark }
     @ObservedObject private var store = AstraStateStore.shared
     @ObservedObject private var recording = RecordingWorkspaceState.shared
+    @ObservedObject private var secret = SecretMode.shared
     let open: DockPresentation.MeetingPanel?
 
     var body: some View {
@@ -521,6 +522,16 @@ private struct MeetingDock: View {
                 .buttonStyle(AstraControlStyle(radius: 8, base: open == panel ? 0.07 : 0.0))
                 .accessibilityIdentifier("meetingPanel-\(panel.rawValue)")
             }
+            // シークレット: 画面共有・録画に Astra を映さない。会議中こそ要る。
+            Button { SecretMode.shared.toggle() } label: {
+                Image(systemName: secret.isOn ? "eye.slash.fill" : "eye")
+                    .font(.system(size: 12))
+                    .foregroundStyle(secret.isOn ? Palette.accent(dark) : Palette.muted(dark))
+                    .frame(width: 32, height: 30)
+            }
+            .buttonStyle(AstraControlStyle(radius: 8, base: secret.isOn ? 0.07 : 0.0))
+            .help(secret.isOn ? "画面共有に映りません" : "画面共有に映ります")
+            .accessibilityIdentifier("secretToggle")
             StopRecordingButton { WindowCoordinator.shared.toggleRecording() }
         }
         .padding(.horizontal, Metrics.dockPadH)
