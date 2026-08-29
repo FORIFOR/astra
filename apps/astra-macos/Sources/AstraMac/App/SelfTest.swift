@@ -1061,7 +1061,7 @@ enum SelfTest {
         let mainWant = ["Home", "Work", "Library", "Apps"]
         let mainMiss = mainWant.filter { !has(mainTexts, $0) }
         // Workspace: 統合サーフェス（§2/§7）— Recording Hero / Transcript / Translation / AI / RAG / Task Dock
-        let wsWant = ["録音中", "文字起こし", "翻訳", "リアルタイム要約", "決定事項", "アクション", "質問する", "RAG Context"]
+        let wsWant = ["録音中", "文字起こし", "翻訳", "リアルタイム要約", "決定事項", "アクション", "質問する", "AI が見ている資料"]
         let wsMiss = wsWant.filter { !has(wsTexts, $0) }
         guard mainMiss.isEmpty, wsMiss.isEmpty else {
             print("SELFTEST_FAIL axtree: mainMiss=\(mainMiss) wsMiss=\(wsMiss) (main=\(mainTexts.count) ws=\(wsTexts.count))"); exit(2)
@@ -1458,20 +1458,30 @@ enum SelfTest {
         }
 
         /// 自プロセスの最前面の窓を撮る。戻りは (幅, 高さ, 色数)。
-        func capture(_ name: String) -> (w: Int, h: Int, colors: Int)? {
-            settle(1.0)
+        ///
+        /// 窓が出るまでの時間は機械の忙しさで変わる。固定待ちにすると、
+        /// verify:all のように連続で回したときだけ「撮影不可」で落ちた（実際に起きた）。
+        /// 目当ての寸法の窓が window server に現れるまで待ってから撮る。
+        func capture(_ name: String, minW: CGFloat = 40, minH: CGFloat = 20) -> (w: Int, h: Int, colors: Int)? {
             var best: (CGWindowID, Int, Int)? = nil
-            var area = 0
-            if let infos = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] {
-                for info in infos {
-                    guard let owner = info[kCGWindowOwnerPID as String] as? pid_t, owner == getpid(),
-                          let num = info[kCGWindowNumber as String] as? CGWindowID,
-                          let b = info[kCGWindowBounds as String] as? [String: Any],
-                          let w = b["Width"] as? CGFloat, let h = b["Height"] as? CGFloat,
-                          w > 40, h > 20 else { continue }
-                    if Int(w * h) > area { area = Int(w * h); best = (num, Int(w), Int(h)) }
+            let deadline = Date().addingTimeInterval(8)
+            repeat {
+                settle(0.25)
+                var area = 0
+                best = nil
+                if let infos = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] {
+                    for info in infos {
+                        guard let owner = info[kCGWindowOwnerPID as String] as? pid_t, owner == getpid(),
+                              let num = info[kCGWindowNumber as String] as? CGWindowID,
+                              let b = info[kCGWindowBounds as String] as? [String: Any],
+                              let w = b["Width"] as? CGFloat, let h = b["Height"] as? CGFloat,
+                              w >= minW, h >= minH else { continue }
+                        if Int(w * h) > area { area = Int(w * h); best = (num, Int(w), Int(h)) }
+                    }
                 }
-            }
+            } while best == nil && Date() < deadline
+            // 出た直後は描画が終わっていないことがあるので一拍おく。
+            settle(0.6)
             guard let (winID, w, h) = best,
                   let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, winID, [.boundsIgnoreFraming, .bestResolution])
             else { return nil }
@@ -1553,15 +1563,15 @@ enum SelfTest {
         // 06 main-home / 07 apps は Main Window から
         MainWindowController.shared.show()
         settle(1.2)
-        record("06-main-home", capture("06-main-home"), expW: nil, expH: nil, minColors: 8)
+        record("06-main-home", capture("06-main-home", minW: 700, minH: 500), expW: nil, expH: nil, minColors: 8)
 
         // 07 apps: Main の Apps タブへ（accessibility 経由ではなく状態で切り替える）
         MainWindowController.shared.showSection(.apps)
-        record("07-apps", capture("07-apps"), expW: nil, expH: nil, minColors: 8)
+        record("07-apps", capture("07-apps", minW: 700, minH: 500), expW: nil, expH: nil, minColors: 8)
 
         // 08 meeting-detail: Library の会議詳細（MeetingArtifactView）
         MainWindowController.shared.showMeetingDetailPreview()
-        record("08-meeting-detail", capture("08-meeting-detail"), expW: nil, expH: nil, minColors: 8)
+        record("08-meeting-detail", capture("08-meeting-detail", minW: 700, minH: 500), expW: nil, expH: nil, minColors: 8)
 
         print("SHOTS_DIR \(outDir)")
         for line in report { print("SHOT \(line)") }

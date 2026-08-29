@@ -10,7 +10,8 @@ struct RAGDrawerView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                Label("RAG Context", systemImage: "books.vertical")
+                // 何の面かを日本語で言う（"RAG Context" は中身を説明していない）。
+                Label("AI が見ている資料", systemImage: "books.vertical")
                     .font(.system(size: 12, weight: .semibold))
                 Spacer()
                 Button { state.ragOpen = false } label: { Image(systemName: "xmark") }
@@ -59,8 +60,14 @@ struct RAGDrawerView: View {
                 Text(item.reason).font(.system(size: 9)).foregroundStyle(.secondary).lineLimit(1)
             }
             Spacer()
-            Text(String(format: "%.2f", item.score))
-                .font(.system(size: 10, design: .monospaced)).foregroundStyle(.secondary)
+            // 生の 0.45 は読み手にとって意味が無い。強さは棒で見せ、理由は左の 1 行に任せる。
+            Capsule().fill(Color.subtleFill(dark, 0.06))
+                .frame(width: 44, height: 4)
+                .overlay(alignment: .leading) {
+                    Capsule().fill(Color.astraAccent(dark))
+                        .frame(width: max(4, 44 * min(1, max(0, item.score))), height: 4)
+                }
+                .accessibilityLabel("関連の強さ \(Int(item.score * 100)) パーセント")
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }

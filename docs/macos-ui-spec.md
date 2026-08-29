@@ -149,7 +149,12 @@ focus リングは **Tab / 矢印を押してから**出す（`KeyboardNavigatio
     Apps の「切断」は一度の誤クリックで繋ぎ直しになった
     → `Confirm.destructive` を 1 か所に置き、`applicationShouldTerminate` と切断に適用。
     既定のボタンは安全側（録音を続ける / やめる）
-19. **Main の geometry 固定検査が脆い**: titled window は WM がサイズを詰める → 最小寸法＋内容量で判定（commit 3011d8b）
+19. **「RAG Context」と生スコア 0.45**: 何の面か英語で書かれ、点数だけ出ていて
+    「AI が何を見ているか」が伝わらなかった → 「AI が見ている資料」＋関連の強さを棒で
+20. **Visual Gate が忙しいときだけ落ちる**: 窓の出現を固定待ちしていたため、
+    連続実行時に `06/08=撮影不可` で落ちた（テスト側の欠陥）
+    → 目当ての寸法の窓が window server に現れるまで待ってから撮る
+21. **Main の geometry 固定検査が脆い**: titled window は WM がサイズを詰める → 最小寸法＋内容量で判定（commit 3011d8b）
 
 ## Accessibility identifier
 
