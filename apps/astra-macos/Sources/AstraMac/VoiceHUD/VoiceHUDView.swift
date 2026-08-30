@@ -493,11 +493,14 @@ private struct ConfirmationDock: View {
                     .frame(height: 34).padding(.horizontal, 18)
                     .buttonStyle(AstraControlStyle(radius: 7, base: 0.0))
                     .accessibilityIdentifier("confirmCancel")
+                // 外へ出る操作は、押す先が一目で分かる面にする。両方とも文字だけだと、
+                // 取り消しと実行が同じ重さに見えて、暗い地では色の差しか手がかりが無い。
                 Button(confirmation.confirmLabel) { AstraStateStore.shared.resolveConfirmation(approved: true) }
                     .font(.system(size: S.type(Metrics.dockRowSize), weight: .semibold))
-                    .foregroundStyle(riskTint)
+                    .foregroundStyle(.white)
                     .frame(height: 34).padding(.horizontal, 22)
-                    .buttonStyle(AstraControlStyle(radius: 7, base: 0.07))
+                    .background(RoundedRectangle(cornerRadius: 7, style: .continuous).fill(riskTint))
+                    .buttonStyle(AstraControlStyle(radius: 7, base: 0.0, filled: false))
                     .accessibilityIdentifier("confirmProceed")
             }
         }

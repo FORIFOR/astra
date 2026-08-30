@@ -3984,6 +3984,12 @@ enum SelfTest {
         // 「録音中」と出ているのに無音、が一番高くつく壊れ方なので必ず撮る。
         state.ragOpen = false
         state.permissionIssue = .microphoneDenied
+        // 聞けていないのに文字起こしが並んでいる絵を「正しい」として残さない。
+        // デモの transcript が載ったままだったので、「音声が記録されていません」の
+        // すぐ隣で 3 人が喋っている画面をゲートが通していた。
+        state.transcript = []
+        state.refreshRag()
+        settle(0.3)
         record("09-permission-denied", capture("09-permission-denied"),
                expW: Metrics.workspaceWidth, expH: Metrics.workspaceHeight, minColors: 12)
         state.permissionIssue = nil

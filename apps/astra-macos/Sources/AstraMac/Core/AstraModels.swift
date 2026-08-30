@@ -79,8 +79,13 @@ enum DockPresentation: Equatable {
             // 内容に応じて**下へ**伸びる。幅は変えない。
             return CGSize(width: Metrics.dockAgentWidth,
                           height: Metrics.dockAgentHeightBase + CGFloat(agentRows) * Metrics.dockAgentRowHeight)
-        case .confirmation:
-            return CGSize(width: Metrics.dockConfirmWidth, height: Metrics.dockConfirmHeight)
+        case .confirmation(let confirmation):
+            // 中身の行数から出す。固定だと 2 行の確認でも面の半分が空き、
+            // 押してほしいボタンが遠くに離れて置かれていた。
+            // 既定は説明 1 行ぶん。2 行目からは 1 行の高さだけ伸ばす。
+            return CGSize(width: Metrics.dockConfirmWidth,
+                          height: Metrics.dockConfirmHeight
+                              + CGFloat(max(0, confirmation.details.count - 1)) * (Metrics.dockRowSize + 7))
         case .meeting(let panel):
             return CGSize(width: Metrics.dockMeetingWidth,
                           height: panel == nil ? Metrics.dockMeetingHeight : Metrics.dockMeetingExpandedHeight)

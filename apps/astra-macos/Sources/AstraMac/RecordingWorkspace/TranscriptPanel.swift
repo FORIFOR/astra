@@ -25,7 +25,11 @@ struct TranscriptPanel: View {
         switch state.selectedTool {
         case .transcript:
             if state.transcript.isEmpty {
-                empty("まだ発話がありません。")
+                // 「まだ発話がありません」は、聞けているのに誰も話していない、という意味になる。
+                // 許可が無くて聞けていないなら、そう言う。待っても何も出ないので。
+                empty(state.permissionIssue == nil
+                      ? "まだ発話がありません。"
+                      : "マイクが使えないので、聞き取れていません。")
             } else {
                 // 時刻・話者・本文の 3 列。時刻が無いと、後から音のどこに戻ればよいか分からない。
                 // まだ確定していない行は、薄いだけでは「小声」と見分けが付かないので、

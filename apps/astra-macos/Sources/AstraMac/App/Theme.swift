@@ -24,6 +24,10 @@ extension Color {
     }
     /// 面にうっすら乗せる塗り（選択中・二次ボタンの地）。
     static func subtleFill(_ dark: Bool, _ amount: Double = 0.05) -> Color {
-        dark ? Color.white.opacity(amount + 0.03) : Color.black.opacity(amount)
+        // 0 は「敷かない」。dark のときだけ下駄を履かせていたので、地を敷かないつもりの
+        // ボタンが白 3% の板として浮いていた。Start recording の ⌄ が、カードの中に
+        // もう一枚の角丸として見えていたのがこれ（light では透明なので気づけなかった）。
+        guard amount > 0 else { return .clear }
+        return dark ? Color.white.opacity(amount + 0.03) : Color.black.opacity(amount)
     }
 }

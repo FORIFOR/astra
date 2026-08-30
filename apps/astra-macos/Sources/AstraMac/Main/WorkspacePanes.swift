@@ -244,6 +244,9 @@ struct PluginsPane: View {
                     .foregroundStyle(Palette.muted(dark))
             }
             if !m.permissions.isEmpty {
+                // 行の高さまで伸ばしたぶんの余白は、札の途中ではなく上に置く。
+                // 権限が下端で揃うので、余白が「空き」ではなく並びに見える。
+                Spacer(minLength: 0)
                 // 切れた文字を並べない。3 つまで出して、残りは数で言う。
                 FlowChips(items: Array(m.permissions.prefix(3)),
                           overflow: max(0, m.permissions.count - 3))
@@ -251,7 +254,12 @@ struct PluginsPane: View {
         }
         .padding(14)
         // 高さを揃える。行ごとに凸凹すると一覧が読みにくい。
-        .frame(maxWidth: .infinity, minHeight: 104, alignment: .topLeading)
+        //
+        // `minHeight` は最小値でしかないので、これだけでは揃わなかった。
+        // 「この Mac の中だけで動きます」が付く札だけ背が高くなり、同じ行の
+        // 2 枚が別の高さ・別の開始位置になって、左右の列がずれて見えていた。
+        // 行の高さまで伸ばす（LazyVGrid の行の高さは、その行のいちばん高い札で決まる）。
+        .frame(maxWidth: .infinity, minHeight: 104, maxHeight: .infinity, alignment: .topLeading)
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .fill(Color.cardSurface(dark))
