@@ -2650,8 +2650,8 @@ enum SelfTest {
         for _ in 0..<6 { runtime.push(oneSec, sampleRate: 16_000) }
         let elapsed = runtime.snapshot()?.elapsedLabel ?? "?"
         runtime.end()
-        let root = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-            .appendingPathComponent("Astra/meetings").path
+        let root = LocalStore.dataRoot
+            .appendingPathComponent("meetings").path
         let ok = scanRecoverable(root: root, active: nil).contains { $0.meetingId == "lifecycle-selftest" }
         try? FileManager.default.removeItem(atPath: root + "/lifecycle-selftest")
         guard elapsed == "00:05", ok else { print("SELFTEST_FAIL lifecycle elapsed=\(elapsed) recovered=\(ok)"); exit(3) }
@@ -3082,8 +3082,8 @@ enum SelfTest {
         RunLoop.current.run(until: Date().addingTimeInterval(6.0))
         let recorded = runtime.recordedMs()
         runtime.end()
-        let root = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-            .appendingPathComponent("Astra/meetings").path
+        let root = LocalStore.dataRoot
+            .appendingPathComponent("meetings").path
         let recovered = scanRecoverable(root: root, active: nil).contains { $0.meetingId == id }
         try? FileManager.default.removeItem(atPath: root + "/" + id)
         guard recorded > 0, recovered else {
@@ -3587,8 +3587,8 @@ enum SelfTest {
         for _ in 0..<6 { runtime.push(oneSec, sampleRate: 16_000) }
         let afterResume = runtime.recordedMs()
         runtime.end()
-        let root = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-            .appendingPathComponent("Astra/meetings").path
+        let root = LocalStore.dataRoot
+            .appendingPathComponent("meetings").path
         try? FileManager.default.removeItem(atPath: root + "/pause-selftest")
         guard before > 0, duringPause == before, afterResume > duringPause else {
             print("SELFTEST_FAIL pause before=\(before) duringPause=\(duringPause) afterResume=\(afterResume)"); exit(3)
@@ -3613,8 +3613,8 @@ enum SelfTest {
         // PNG マジックナンバーを確認（実画像であること）。
         let data = FileManager.default.contents(atPath: path) ?? Data()
         let isPng = data.count > 8 && data[0] == 0x89 && data[1] == 0x50 && data[2] == 0x4E && data[3] == 0x47
-        let root = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-            .appendingPathComponent("Astra/meetings/screenshot-selftest").path
+        let root = LocalStore.dataRoot
+            .appendingPathComponent("meetings/screenshot-selftest").path
         try? FileManager.default.removeItem(atPath: root)
         guard (size ?? 0) > 1000, isPng else {
             print("SELFTEST_FAIL screenshot size=\(size ?? 0) isPng=\(isPng)"); exit(2)
@@ -3696,8 +3696,8 @@ enum SelfTest {
         }
         RunLoop.current.run(until: Date().addingTimeInterval(1.2))
         runtime.end()
-        let root = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-            .appendingPathComponent("Astra/meetings").path
+        let root = LocalStore.dataRoot
+            .appendingPathComponent("meetings").path
         try? FileManager.default.removeItem(atPath: root + "/waveform-selftest")
         guard levelCallbacks > 0 else { print("SELFTEST_FAIL waveform: no level callbacks"); exit(3) }
         print("SELFTEST_OK waveform: 実マイクレベルで更新 callbacks=\(levelCallbacks)")
@@ -3714,8 +3714,8 @@ enum SelfTest {
             let tokens = try AstraCoreBridge.devSignIn(base, email: "recovery-\(getpid())@astra.local", displayName: "R")
             // gateway に会議を作り、その id で「クラッシュした録音」を作る（アップロードしない）。
             let mid = try AstraCoreBridge.createMeeting(base, accessToken: tokens.accessToken, title: "Recovery 会議", language: "ja-JP")
-            let root = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-                .appendingPathComponent("Astra/meetings").path
+            let root = LocalStore.dataRoot
+                .appendingPathComponent("meetings").path
             let session = try RecordingSession.start(root: root, meetingId: mid)
             let oneSec = [Float](repeating: 0.1, count: 16_000)
             for _ in 0..<6 { _ = session.pushSamples(samples: oneSec, sampleRate: 16_000) }
@@ -3753,8 +3753,8 @@ enum SelfTest {
         let resumed = state.elapsedSeconds
         state.stop()
         // 片付け
-        let root = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-            .appendingPathComponent("Astra/meetings/\(state.currentMeetingId)").path
+        let root = LocalStore.dataRoot
+            .appendingPathComponent("meetings/\(state.currentMeetingId)").path
         try? FileManager.default.removeItem(atPath: root)
         guard running >= 2, paused == running, resumed > paused else {
             print("SELFTEST_FAIL timer running=\(running) paused=\(paused) resumed=\(resumed)"); exit(2)
@@ -3847,8 +3847,8 @@ enum SelfTest {
         do {
             // オフライン録音: gateway 会議を作らず、local id で断片を書く。
             let localId = "meeting-\(getpid())"
-            let root = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-                .appendingPathComponent("Astra/meetings").path
+            let root = LocalStore.dataRoot
+                .appendingPathComponent("meetings").path
             let session = try RecordingSession.start(root: root, meetingId: localId)
             let oneSec = [Float](repeating: 0.1, count: 16_000)
             for _ in 0..<6 { _ = session.pushSamples(samples: oneSec, sampleRate: 16_000) }
@@ -4260,8 +4260,8 @@ enum SelfTest {
             steps.append("⑧停止→結果面へ morph(窓は1枚のまま)")
 
             // ---- ⑨ REMEMBER: 保存後に Library から取り出せる／回復候補に残っていない。
-            let root = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-                .appendingPathComponent("Astra/meetings").path
+            let root = LocalStore.dataRoot
+                .appendingPathComponent("meetings").path
             let onDisk = FileManager.default.fileExists(atPath: root + "/" + meetingId)
             if online {
                 let library = (try? AstraCoreBridge.library(base, accessToken: accessToken ?? "")) ?? []
@@ -4313,8 +4313,8 @@ enum SelfTest {
             WindowCoordinator.shared.toggleRecording()
             let stopped = !state.isRecording
             // 送信済みなので回復候補に出ない。
-            let root = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-                .appendingPathComponent("Astra/meetings").path
+            let root = LocalStore.dataRoot
+                .appendingPathComponent("meetings").path
             let recoverable = scanRecoverable(root: root, active: nil).contains { $0.meetingId == meetingId }
             try? FileManager.default.removeItem(atPath: root + "/" + meetingId)
             guard recording, isGatewayMeeting, stopped, !recoverable else {
