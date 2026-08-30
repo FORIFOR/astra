@@ -190,17 +190,30 @@ private struct MeetingNotesCanvas: View {
         .accessibilityIdentifier("meetingNotes")
     }
 
-    @ViewBuilder private func group(_ title: String, _ lines: [String]) -> some View {
+    @ViewBuilder private func group(_ title: String, _ lines: [CanvasItem]) -> some View {
         if !lines.isEmpty {
             VStack(alignment: .leading, spacing: 7) {
                 Text(title)
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(Palette.muted(dark))
                     .tracking(0.4)
-                ForEach(lines, id: \.self) { line in
+                // 拾った行は、いつ誰が言ったのかを添えて出す。
+                ForEach(lines) { line in
                     HStack(alignment: .firstTextBaseline, spacing: 9) {
-                        Text("·").foregroundStyle(Palette.muted(dark))
-                        Text(line)
+                        if let t = line.timeLabel {
+                            Text(t)
+                                .font(.system(size: 11, design: .monospaced))
+                                .foregroundStyle(Palette.muted(dark))
+                                .frame(width: 38, alignment: .leading)
+                        } else {
+                            Text("·").foregroundStyle(Palette.muted(dark))
+                        }
+                        if let who = line.speaker {
+                            Text(who)
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(Palette.accent(dark))
+                        }
+                        Text(line.text)
                             .font(.system(size: 16))
                             .foregroundStyle(Palette.text(dark))
                             .fixedSize(horizontal: false, vertical: true)

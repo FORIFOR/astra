@@ -273,12 +273,46 @@ struct MeetingState: Equatable {
 }
 
 /// §21 Markdown ではなく構造データ。UI はここから描く。
+/// Canvas に並ぶ 1 行。
+///
+/// 中身は発言そのもの（`MeetingIntelligence` は言い換えず、拾って分類するだけ）。
+/// だから出典は「いつ・誰が」で足りる。以前は `[String]` で、抽出に渡す時点で
+/// 話者と時刻を捨てていたので、「決まったこと」から発言に戻れなかった
+/// —— 会議詳細の方には引用番号があるのに、AI が拾った側にだけ出所が無かった。
+///
+/// 文字列リテラルからも作れるようにして、既存の `["…"]` の書き方を壊さない。
+struct CanvasItem: Equatable, Identifiable, ExpressibleByStringLiteral {
+    let id = UUID()
+    let text: String
+    /// 会議開始からの秒数。
+    var at: TimeInterval?
+    var speaker: String?
+
+    init(_ text: String, at: TimeInterval? = nil, speaker: String? = nil) {
+        self.text = text; self.at = at; self.speaker = speaker
+    }
+    init(stringLiteral value: String) { self.init(value) }
+
+    static func == (a: CanvasItem, b: CanvasItem) -> Bool {
+        a.text == b.text && a.at == b.at && a.speaker == b.speaker
+    }
+
+    /// 「04:21」。時刻が無ければ nil。
+    var timeLabel: String? {
+        guard let at else { return nil }
+        let t = Int(max(0, at))
+        return String(format: "%02d:%02d", t / 60, t % 60)
+    }
+
+    func contains(_ s: String) -> Bool { text.contains(s) }
+}
+
 struct MeetingCanvas: Equatable {
-    var decisions: [String] = []
-    var actions: [String] = []
-    var questions: [String] = []
-    var concerns: [String] = []
-    var notes: [String] = []
+    var decisions: [CanvasItem] = []
+    var actions: [CanvasItem] = []
+    var questions: [CanvasItem] = []
+    var concerns: [CanvasItem] = []
+    var notes: [CanvasItem] = []
 
     var isEmpty: Bool {
         decisions.isEmpty && actions.isEmpty && questions.isEmpty && concerns.isEmpty && notes.isEmpty

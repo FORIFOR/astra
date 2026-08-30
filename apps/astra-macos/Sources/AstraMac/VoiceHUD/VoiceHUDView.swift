@@ -701,16 +701,22 @@ private struct MeetingPanelBody: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    @ViewBuilder private func notesGroup(_ title: String, _ lines: [String]) -> some View {
+    @ViewBuilder private func notesGroup(_ title: String, _ lines: [CanvasItem]) -> some View {
         if !lines.isEmpty {
             VStack(alignment: .leading, spacing: 5) {
                 Text(title)
                     .font(.system(size: S.type(Metrics.dockMetaSize), weight: .semibold))
                     .foregroundStyle(Palette.muted(dark))
-                ForEach(lines, id: \.self) { line in
+                ForEach(lines) { line in
                     HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        Text("•").foregroundStyle(Palette.muted(dark))
-                        Text(line)
+                        if let t = line.timeLabel {
+                            Text(t)
+                                .font(.system(size: S.type(Metrics.dockMetaSize), design: .monospaced))
+                                .foregroundStyle(Palette.muted(dark))
+                        } else {
+                            Text("•").foregroundStyle(Palette.muted(dark))
+                        }
+                        Text(line.text)
                             .font(.system(size: S.type(Metrics.dockRowSize)))
                             .foregroundStyle(Palette.text(dark))
                             .fixedSize(horizontal: false, vertical: true)

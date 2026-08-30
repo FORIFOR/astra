@@ -36,6 +36,13 @@ final class MeetingIntelligence {
     /// 戻り値は「抽出を回したか」。
     @discardableResult
     func ingest(_ lines: [String], force: Bool = false) -> Bool {
+        ingest(lines.map { CanvasItem($0) }, force: force)
+    }
+
+    /// 出所つきで取り込む。話者と時刻を持ったまま Canvas に載せる
+    /// —— 「決まったこと」から発言に戻れないと、拾い間違いを直せない。
+    @discardableResult
+    func ingest(_ lines: [CanvasItem], force: Bool = false) -> Bool {
         guard consumedLines <= lines.count else { reset(); return false }
         let fresh = Array(lines[consumedLines...])
         guard !fresh.isEmpty, force || fresh.count >= Self.batchThreshold else { return false }
@@ -51,20 +58,27 @@ final class MeetingIntelligence {
     /// 手元だけの抽出。**言い切りの推測はしない**——語をそのまま拾って分類するだけ。
     /// gateway がある場合はここを差し替える（`AgentTask` 経由）。
     static func extract(_ lines: [String]) -> MeetingCanvas {
+        extract(lines.map { CanvasItem($0) })
+    }
+
+    static func extract(_ lines: [CanvasItem]) -> MeetingCanvas {
         var out = MeetingCanvas()
         for line in lines {
-            let t = line.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !t.isEmpty else { continue }
+            let trimmed = line.text.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty else { continue }
+            // 分類は本文で見るが、Canvas に載せるのは**出所を持ったまま**の行。
+            let t = trimmed
+            let item = CanvasItem(trimmed, at: line.at, speaker: line.speaker)
             if t.contains("？") || t.contains("?") {
-                out.questions.append(t)
+                out.questions.append(item)
             } else if ["決定", "決めま", "確定", "で行き", "にしま"].contains(where: t.contains) {
-                out.decisions.append(t)
+                out.decisions.append(item)
             } else if ["まで", "お願い", "対応し", "送り", "作成し", "担当"].contains(where: t.contains) {
-                out.actions.append(t)
+                out.actions.append(item)
             } else if ["懸念", "心配", "リスク", "気になる", "難し"].contains(where: t.contains) {
-                out.concerns.append(t)
+                out.concerns.append(item)
             } else {
-                out.notes.append(t)
+                out.notes.append(item)
             }
         }
         return out

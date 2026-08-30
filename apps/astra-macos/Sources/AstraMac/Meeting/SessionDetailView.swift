@@ -111,11 +111,11 @@ struct SessionDetailView: View {
             lines(recording.transcript.map { "\($0.speaker): \($0.text)" },
                   empty: "文字起こしはまだありません。")
         case .notes:
-            lines(canvas.notes, empty: "ノートはまだありません。")
+            lines(canvas.notes.map(\.text), empty: "ノートはまだありません。")
         case .actions:
-            lines(canvas.actions, empty: "やることはまだありません。")
+            lines(canvas.actions.map(\.text), empty: "やることはまだありません。")
         case .decisions:
-            lines(canvas.decisions, empty: "決まったことはまだありません。")
+            lines(canvas.decisions.map(\.text), empty: "決まったことはまだありません。")
         }
     }
 

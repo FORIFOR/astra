@@ -194,8 +194,10 @@ final class RecordingWorkspaceState: ObservableObject {
             self.refreshRag()
             // §20 確定行が溜まったら**新しい分だけ**抽出する（全文を毎回投げない）。
             if isFinal {
+                // 話者と時刻を落とさずに渡す。落とすと Canvas から発言に戻れない。
                 MeetingIntelligence.shared.ingest(
-                    self.transcript.filter { !$0.interim }.map(\.text))
+                    self.transcript.filter { !$0.interim }
+                        .map { CanvasItem($0.text, at: $0.at, speaker: $0.speaker) })
             }
         }
         // 波形を実マイクレベルで更新する（デモの固定値をやめてフラットから始める）。
@@ -278,7 +280,7 @@ final class RecordingWorkspaceState: ObservableObject {
             }
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.45 * Double(stages.count)) {
-            let summary = canvas.decisions.first ?? canvas.notes.first
+            let summary = (canvas.decisions.first ?? canvas.notes.first)?.text
             store.markReady(
                 id: id,
                 summary: summary,

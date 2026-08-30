@@ -148,7 +148,14 @@ struct MainWindowView: View {
                     summary: [MeetingCitation(number: 1, text: "先方は10月導入を希望。最大の懸念は初期費用。", transcriptTime: "14:18", speaker: "田中")],
                     decisions: [MeetingCitation(number: 2, text: "導入時期を10月で検討", transcriptTime: "14:22", speaker: "鈴木")],
                     actionItems: [MeetingCitation(number: 3, text: "伊藤 修正版見積を送付 明日", transcriptTime: "14:31", speaker: "伊藤")],
-                    selected: MeetingCitation(number: 1, text: "初期費用が少し気になっています。", transcriptTime: "14:18", speaker: "田中")
+                    selected: MeetingCitation(number: 1, text: "初期費用が少し気になっています。", transcriptTime: "14:18", speaker: "田中"),
+                    // タブに中身を渡す。渡さないと「押せるが何も出ない」に戻る。
+                    transcript: [
+                        MeetingCitation(number: 1, text: "初期費用が少し気になっています。", transcriptTime: "14:18", speaker: "田中"),
+                        MeetingCitation(number: 2, text: "10 月からでしたら枠を取れます。", transcriptTime: "14:22", speaker: "鈴木"),
+                        MeetingCitation(number: 3, text: "修正版の見積を明日お送りします。", transcriptTime: "14:31", speaker: "伊藤"),
+                    ],
+                    relatedFiles: ["A社_提案書_v3.pdf", "見積_10月導入.xlsx"]
                 )
             } else {
                 switch nav.section {

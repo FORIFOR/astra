@@ -97,6 +97,7 @@ enum SelfTest {
         try? FileManager.default.createDirectory(atPath: outDir, withIntermediateDirectories: true)
         NSApp.setActivationPolicy(.regular)
         NSApp.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
+        parkCursor()
 
         func settle(_ s: Double) {
             let until = Date().addingTimeInterval(s)
@@ -261,6 +262,7 @@ enum SelfTest {
         try? FileManager.default.createDirectory(atPath: outDir, withIntermediateDirectories: true)
         NSApp.setActivationPolicy(.regular)
         NSApp.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
+        parkCursor()
 
         func settle(_ s: Double) {
             let until = Date().addingTimeInterval(s)
@@ -677,22 +679,27 @@ enum SelfTest {
 
         /// 画面全体のキャプチャに、自分の窓が含まれているか。
         /// `CGWindowListCreateImage` の onScreenOnly は他プロセスの画面共有と同じ経路を通る。
-        func dockAppearsInScreenCapture() -> Bool {
-            guard let screen = NSScreen.main,
-                  let panel = NSApp.windows.first(where: { $0.isVisible && $0.sharingType != .none || $0.isVisible })
-            else { return false }
-            _ = screen
-            // 画面全体から Astra の窓「だけ」を除いて撮り、同じ範囲を全部込みで撮って比べる。
-            let frame = panel.frame
-            let flipped = CGRect(x: frame.minX,
-                                 y: (NSScreen.main?.frame.height ?? 0) - frame.maxY,
-                                 width: frame.width, height: frame.height)
-            guard let all = CGWindowListCreateImage(flipped, .optionOnScreenOnly, kCGNullWindowID, [.bestResolution]),
-                  let below = CGWindowListCreateImage(flipped, .optionOnScreenBelowWindow,
-                                                      CGWindowID(panel.windowNumber), [.bestResolution])
-            else { return false }
-            // 窓が映っているなら「全部込み」と「その窓より下だけ」が違うはず。
-            return !imagesLookEqual(all, below)
+        /// Dock の載っている帯を**別プロセス**に撮らせて返す。
+        ///
+        /// `sharingType = .none` は「他のプロセスから読めない」という約束なので、
+        /// 自分で `CGWindowListCreateImage` を呼んでも必ず写る（実測: 秘匿 ON・
+        /// `sharingType=0` でも自プロセスからは見えた）。以前ここは自分で撮っていて、
+        /// 画面構成が変わるまでたまたま通っていた。約束を確かめるなら他人に撮らせる。
+        func screenStrip(_ panel: NSWindow, _ tag: String) -> CGImage? {
+            let primaryHeight = NSScreen.screens.first?.frame.height ?? 0
+            let f = panel.frame
+            // screencapture の -R は左上原点。
+            let rect = "\(Int(f.minX)),\(Int(primaryHeight - f.maxY)),\(Int(f.width)),\(Int(f.height))"
+            let out = NSTemporaryDirectory() + "astra-secret-\(tag)-\(getpid()).png"
+            let p = Process()
+            p.executableURL = URL(fileURLWithPath: "/usr/sbin/screencapture")
+            p.arguments = ["-x", "-o", "-R", rect, out]
+            do { try p.run(); p.waitUntilExit() } catch { return nil }
+            guard p.terminationStatus == 0,
+                  let data = FileManager.default.contents(atPath: out),
+                  let rep = NSBitmapImageRep(data: data) else { return nil }
+            try? FileManager.default.removeItem(atPath: out)
+            return rep.cgImage
         }
 
         // 出しておく。
@@ -705,14 +712,28 @@ enum SelfTest {
         // ① 既定では映る。
         if SecretMode.isHidden(dock) { fail.append("既定でキャプチャから外れている（気づかず隠れてしまう）") }
         settle(0.4)
-        let visibleBefore = dockAppearsInScreenCapture()
-        if !visibleBefore { fail.append("通常時に画面キャプチャへ写っていない") }
+        let shown = screenStrip(dock, "on")
 
         // ② ON にすると消える。
         secret.set(true)
         settle(0.6)
         if !SecretMode.isHidden(dock) { fail.append("ON にしても sharingType が変わらない") }
-        if dockAppearsInScreenCapture() { fail.append("ON にしても画面キャプチャに写る") }
+        let hidden = screenStrip(dock, "off")
+
+        // ③ 比べる相手として、Dock を実際に閉じた同じ帯も撮る。
+        WindowCoordinator.shared.hideVoiceHUD()
+        settle(0.6)
+        let absent = screenStrip(dock, "absent")
+        WindowCoordinator.shared.showVoiceHUD()
+        settle(0.6)
+
+        if let shown, let hidden, let absent {
+            // 出ているときは「無い」と違って見え、秘匿したら「無い」と同じに見えること。
+            if imagesLookEqual(shown, absent) { fail.append("通常時に画面キャプチャへ写っていない") }
+            if !imagesLookEqual(hidden, absent) { fail.append("ON にしても他プロセスのキャプチャに写る") }
+        } else {
+            print("SELFTEST_SKIP secret: screencapture が使えない"); exit(0)
+        }
 
         // ③ 後から作った窓にも効く（作った順で漏れない）。
         WindowCoordinator.shared.showRecordingWorkspace()
@@ -897,6 +918,22 @@ enum SelfTest {
             print("SELFTEST_FAIL density: \(worse.joined(separator: ", "))")
             exit(2)
         }
+    }
+
+    /// 撮る前にカーソルを画面の隅へ退ける。
+    ///
+    /// 押せる要素は hover で地の濃さが変わる。カーソルがたまたま行の上にあると
+    /// その 1 行だけ濃くなり、撮るたびに golden が動く（会議詳細の引用の行を
+    /// ボタンにした直後、dark で 1.55% 揺れた）。撮影は人の手の位置に依存させない。
+    @MainActor
+    private static func parkCursor() {
+        guard let screen = NSScreen.screens.first else { return }
+        // 右端の中ほど。**隅は避ける** —— Hot Corner を踏むと Mission Control が出て、
+        // 窓のキャプチャそのものが失敗する（右下に置いた直後、guishot と secret が
+        // 実行のたびに別々に落ちた）。窓は中央にあるので、右端なら重ならない。
+        let frame = screen.frame
+        CGWarpMouseCursorPosition(CGPoint(x: frame.maxX - 40, y: frame.midY))
+        CGAssociateMouseAndMouseCursorPosition(1)
     }
 
     /// 撮った面のうち、実質同じ絵になっている組。
@@ -2345,6 +2382,26 @@ enum SelfTest {
         }
         guard say.terminationStatus == 0, let frames = decodeTo16kMonoF32(aiff) else {
             print("SELFTEST_SKIP vad: 音源を用意できない"); exit(0)
+        }
+
+        // 先に一度回して Speech を暖める。
+        //
+        // 測りたいのは「話してから画面に出るまで」であって、認識器の起動時間ではない。
+        // 冷えた 1 回目は 300〜420ms、暖まった後は 150〜220ms で、同じ機械でも
+        // 5 回中 3 回落ちていた（実測）。基準は緩めず、測る対象を揃える。
+        do {
+            let warm = SpeechTranscriber(localeId: "en-US")
+            try? warm.start { _ in }
+            var i = 0
+            while i < frames.count {
+                let end = min(i + 3200, frames.count)
+                warm.append(Array(frames[i..<end]))
+                i = end
+                CFRunLoopRunInMode(.defaultMode, 0.01, true)
+            }
+            warm.finish()
+            let until = Date().addingTimeInterval(0.4)
+            while Date() < until { CFRunLoopRunInMode(.defaultMode, 0.05, true) }
         }
 
         let st = SpeechTranscriber(localeId: "en-US")
@@ -3828,6 +3885,7 @@ enum SelfTest {
         try? FileManager.default.createDirectory(atPath: outDir, withIntermediateDirectories: true)
         NSApp.setActivationPolicy(.regular)
         NSApp.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
+        parkCursor()
 
         func settle(_ s: Double) {
             let until = Date().addingTimeInterval(s)
@@ -3970,11 +4028,12 @@ enum SelfTest {
         AstraStateStore.shared.reset()
 
         // 11 meeting-canvas: §21 会議中に溜まる構造データが画面に出るか。
+        // 拾った行には出所（いつ・誰が）が付く。付かない絵を golden に残さない。
         AstraStateStore.shared.updateCanvas(MeetingCanvas(
-            decisions: ["導入時期は 10 月で行きます"],
-            actions: ["見積は明日までにお願いします"],
-            questions: ["誰が対応しますか？"],
-            concerns: ["初期費用が心配です"],
+            decisions: [CanvasItem("導入時期は 10 月で行きます", at: 262, speaker: "田中")],
+            actions: [CanvasItem("見積は明日までにお願いします", at: 288, speaker: "あなた")],
+            questions: [CanvasItem("誰が対応しますか？", at: 301, speaker: "鈴木")],
+            concerns: [CanvasItem("初期費用が心配です", at: 254, speaker: "田中")],
             notes: []))
         record("11-meeting-canvas", capture("11-meeting-canvas"),
                expW: Metrics.workspaceWidth, expH: Metrics.workspaceHeight, minColors: 12)

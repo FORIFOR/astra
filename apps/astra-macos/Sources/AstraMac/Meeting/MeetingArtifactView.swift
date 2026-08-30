@@ -25,7 +25,31 @@ struct MeetingArtifactView: View {
     var actionItems: [MeetingCitation]
     /// 引用番号を押した時に Inspector に出る内容（nil なら未選択）。
     var selected: MeetingCitation? = nil
+    /// この会議の文字起こし。無ければ「まだ無い」と言う（タブだけ在って中身が無い状態を作らない）。
+    var transcript: [MeetingCitation] = []
+    /// 会議に紐づくファイル。
+    var relatedFiles: [String] = []
+    /// 録音が残っているか。
+    var hasAudio: Bool = false
+
+    /// 押された引用。外から渡された `selected` を初期値にする。
+    ///
+    /// 以前は `selected` が外からの指定だけで、`[1]` は「押すと Inspector へ jump」と
+    /// 書いてあるただの `Text` だった。押しても何も起きず、AC-09 の導線は死んでいた。
+    @State private var picked: MeetingCitation?
+    private var shown: MeetingCitation? { picked ?? selected }
+
+    /// 同じ発言か。`id` は生成のたびに変わる UUID なので、突き合わせには使えない
+    /// （本文の引用とタブの一覧が別々に作られるため、一致せず光る行がずれていた）。
+    /// 「いつ・誰が」で見る。
+    private func isShown(_ c: MeetingCitation) -> Bool {
+        guard let s = shown else { return false }
+        return s.transcriptTime == c.transcriptTime && s.speaker == c.speaker
+    }
     private var dark: Bool { scheme == .dark }
+
+    /// 引用は 3 節にまたがるので、番号で引ける形にしておく。
+    private var allCitations: [MeetingCitation] { summary + decisions + actionItems }
 
     var body: some View {
         HStack(alignment: .top, spacing: 0) {
@@ -48,7 +72,7 @@ struct MeetingArtifactView: View {
                         Button { tab = t } label: {
                             Text(t)
                                 .font(.system(size: TypeScale.microSize, weight: .medium))
-                                .foregroundStyle(Palette.text(dark))
+                                .foregroundStyle(tab == t ? Palette.accent(dark) : Palette.text(dark))
                                 .padding(.horizontal, 10)
                                 .frame(height: 28)   // §16 hit area
                         }
@@ -56,12 +80,15 @@ struct MeetingArtifactView: View {
                         .accessibilityIdentifier("meetingTab-\(t)")
                     }
                 }
-                Spacer()
+                // タブは自分の色を変えるだけで、切り替わる中身が無かった。
+                // 押した先を必ず出す。中身が無いものは「無い」と言う。
+                tabContent
+                Spacer(minLength: 0)
             }
             .padding(Space.cardPadding)
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            if let c = selected {   // AC-09: 引用 → transcript + timestamp を Inspector に
+            if let c = shown {   // AC-09: 引用 → transcript + timestamp を Inspector に
                 Divider().overlay(Palette.border(dark))
                 VStack(alignment: .leading, spacing: 6) {
                     Text("根拠 [\(c.number)]").font(.system(size: TypeScale.microSize, weight: .semibold))
@@ -100,6 +127,82 @@ struct MeetingArtifactView: View {
         .accessibilityIdentifier("meetingArtifact")
     }
 
+    /// 選んだタブの中身。持っていないものは、空欄ではなく理由を出す。
+    @ViewBuilder private var tabContent: some View {
+        switch tab {
+        case "文字起こし":
+            if transcript.isEmpty { emptyTab("この会議の文字起こしはまだありません。") }
+            else { citationList(transcript) }
+        case "録音":
+            if hasAudio, let jump = onAudioJump {
+                Button { jump(shown?.transcriptTime ?? "00:00") } label: {
+                    Text("▶ 録音を再生")
+                        .font(.system(size: TypeScale.secondarySize, weight: .medium))
+                        .foregroundStyle(Palette.accent(dark))
+                        .frame(height: 30).padding(.horizontal, 12)
+                }
+                .buttonStyle(AstraControlStyle(radius: 8, base: 0.05))
+                .accessibilityIdentifier("meetingPlayAudio")
+            } else {
+                emptyTab("この会議の録音は残っていません。")
+            }
+        case "関連ファイル":
+            if relatedFiles.isEmpty { emptyTab("紐づいたファイルはありません。") }
+            else {
+                VStack(alignment: .leading, spacing: 4) {
+                    ForEach(relatedFiles, id: \.self) { f in
+                        HStack(spacing: 6) {
+                            Image(systemName: "doc").font(.system(size: 10))
+                                .foregroundStyle(Palette.muted(dark))
+                            Text(f).font(.system(size: TypeScale.secondarySize))
+                                .foregroundStyle(Palette.text(dark))
+                            Spacer(minLength: 0)
+                        }
+                    }
+                }
+            }
+        default:   // 根拠
+            if allCitations.isEmpty { emptyTab("根拠はまだありません。") }
+            else { citationList(allCitations) }
+        }
+    }
+
+    private func emptyTab(_ s: String) -> some View {
+        Text(s)
+            .font(.system(size: TypeScale.secondarySize))
+            .foregroundStyle(Palette.muted(dark))
+    }
+
+    /// 発言の一覧。押すと右にその 1 件を出す（本文の引用番号と同じ動き）。
+    private func citationList(_ items: [MeetingCitation]) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            ForEach(items) { c in
+                Button { picked = c } label: {
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Text(c.transcriptTime)
+                            .font(.system(size: TypeScale.microSize, design: .monospaced))
+                            .foregroundStyle(Palette.muted(dark))
+                            .frame(width: 42, alignment: .leading)
+                        Text(c.speaker)
+                            .font(.system(size: TypeScale.microSize, weight: .semibold))
+                            .foregroundStyle(Palette.accent(dark))
+                            .frame(width: 52, alignment: .leading)
+                        Text(c.text)
+                            .font(.system(size: TypeScale.secondarySize))
+                            .foregroundStyle(Palette.text(dark))
+                            .lineLimit(2)
+                            .multilineTextAlignment(.leading)
+                        Spacer(minLength: 0)
+                    }
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 5)
+                }
+                .buttonStyle(AstraControlStyle(radius: 7, base: isShown(c) ? 0.08 : 0.0))
+                .accessibilityIdentifier("citation-\(c.number)")
+            }
+        }
+    }
+
     private func section(_ label: String, _ items: [MeetingCitation]) -> some View {
         // 見出しは小さく静かに、中身は 1 段大きく。余白ではなく**文字の重み**で階層を作る。
         VStack(alignment: .leading, spacing: 6) {
@@ -110,9 +213,17 @@ struct MeetingArtifactView: View {
             ForEach(items) { c in
                 HStack(alignment: .top, spacing: 6) {
                     Text(c.text).font(.system(size: TypeScale.bodySize)).foregroundStyle(Palette.text(dark))
-                    Text("[\(c.number)]")   // 押すと Inspector へ jump
-                        .font(.system(size: TypeScale.microSize, weight: .semibold))
-                        .foregroundStyle(Palette.accent(dark))
+                    // 番号は**押せる**。以前はリンク色の Text で、押しても何も起きなかった。
+                    Button { picked = c } label: {
+                        Text("[\(c.number)]")
+                            .font(.system(size: TypeScale.microSize, weight: .semibold))
+                            .foregroundStyle(Palette.accent(dark))
+                            .padding(.horizontal, 5)
+                            .frame(height: 24)   // §16 hit area
+                    }
+                    .buttonStyle(AstraControlStyle(radius: 6, base: isShown(c) ? 0.10 : 0.0))
+                    .help("根拠になった発言を見る")
+                    .accessibilityIdentifier("citationRef-\(c.number)")
                     Spacer()
                 }
             }
