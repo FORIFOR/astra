@@ -735,6 +735,47 @@ enum SelfTest {
         }
     }
 
+    /// 撮った面のうち、実質同じ絵になっている組。
+    ///
+    /// 「別の状態を写しているはず」の面が同じなら、その面のゲートは何も見ていない。
+    /// 撮影ごとの微差（アンチエイリアス・影のにじみ・カーソル）は拾わないよう、
+    /// 200 点角のグレースケールに落として 0.5% を境にする。golden 比較と同じ尺度。
+    static func duplicatePairs(in dir: String, names: [String]) -> [(String, String)] {
+        func signature(_ path: String) -> [UInt8]? {
+            guard let data = FileManager.default.contents(atPath: path),
+                  let rep = NSBitmapImageRep(data: data) else { return nil }
+            var out: [UInt8] = []
+            let pw = rep.pixelsWide, ph = rep.pixelsHigh
+            let sx = max(1, pw / 200), sy = max(1, ph / 200)
+            var y = 0
+            while y < ph { var x = 0
+                while x < pw {
+                    if let c = rep.colorAt(x: x, y: y) {
+                        let l = 0.299 * c.redComponent + 0.587 * c.greenComponent + 0.114 * c.blueComponent
+                        out.append(UInt8(max(0, min(255, l * 255))))
+                    }
+                    x += sx }
+                y += sy }
+            return out
+        }
+        var sigs: [(String, [UInt8])] = []
+        for n in names { if let s = signature("\(dir)/\(n).png") { sigs.append((n, s)) } }
+        var dupes: [(String, String)] = []
+        for i in sigs.indices {
+            for j in sigs.indices where j > i {
+                let (na, a) = sigs[i], (nb, b) = sigs[j]
+                guard a.count == b.count else { continue }
+                var n = 0
+                for k in 0..<a.count where abs(Int(a[k]) - Int(b[k])) >= 16 { n += 1 }
+                // 実測で決める。名前だけ違う組は 0.000%（03/04 と 06/12 がそうだった）。
+                // 一方、正しく別物でも最も近い組は 0.463%（03 と 10：右レールの
+                // Agent パネルだけが違う）。0.1% なら両者をきれいに分けられる。
+                if Double(n) / Double(a.count) <= 0.001 { dupes.append((na, nb)) }
+            }
+        }
+        return dupes
+    }
+
     /// 2 枚の画像が（縮小して見て）同じか。
     private static func imagesLookEqual(_ a: CGImage, _ b: CGImage) -> Bool {
         let ra = NSBitmapImageRep(cgImage: a), rb = NSBitmapImageRep(cgImage: b)
@@ -3706,10 +3747,31 @@ enum SelfTest {
         record("03-recording-workspace", capture("03-recording-workspace"),
                expW: Metrics.workspaceWidth, expH: Metrics.workspaceHeight, minColors: 12)
 
-        // 04 recording-transcript（Transcript を開いた状態）
+        // 04 recording-transcript（会話が伸びた Transcript）
+        //
+        // ここは `selectedTool = .transcript` を置き直すだけだった。だが loadDemo が
+        // 既に transcript を選んでいるので、03 と**画素まで同じ絵**になっていた。
+        // 3 発話の短い会話では、伸びたときに読めるかが分からない。実際の会議の長さで撮る。
         state.selectedTool = .transcript
+        let shortTranscript = state.transcript
+        state.transcript += [
+            TranscriptSegment(speaker: "田中", text: "見積は今週中にいただけますか。", interim: false),
+            TranscriptSegment(speaker: "伊藤", text: "修正版を明日お送りします。", interim: false),
+            TranscriptSegment(speaker: "あなた", text: "初期費用の内訳も添えてください。", interim: false),
+            TranscriptSegment(speaker: "鈴木", text: "OAuth の権限範囲は最小にしています。", interim: false),
+            TranscriptSegment(speaker: "田中", text: "では 10 月導入で進めます。", interim: false),
+            TranscriptSegment(speaker: "伊藤", text: "承知しました。稟議を通します。", interim: true),
+        ]
+        state.refreshRag()
+        settle(0.3)
         record("04-recording-transcript", capture("04-recording-transcript"),
                expW: Metrics.workspaceWidth, expH: Metrics.workspaceHeight, minColors: 12)
+        // 長い会話を 05 / 10 へ持ち越さない。行数がスクロールの境目に乗ると、
+        // 撮影のたびに 1〜2px 縦へずれて golden が安定しなくなる（実測 1.08%）。
+        // 05 が見せたいのは RAG Drawer で、会話の長さではない。
+        state.transcript = shortTranscript
+        state.refreshRag()
+        settle(0.3)
 
         // 05 recording-rag（RAG Drawer 展開）
         state.ragOpen = true
@@ -3769,20 +3831,41 @@ enum SelfTest {
         record("08-meeting-detail", capture("08-meeting-detail", minW: 700, minH: 500), expW: nil, expH: nil, minColors: 8)
 
         // 12 recording-now: 録音中に Home へ戻ったとき、そこに録音が見えるか。
+        //
+        // ここは `AstraStateStore.meetingStarted()` を直に叩いていた。だが Home が見るのは
+        // `MeetingSessionStore` で、Session を作るのは `RecordingWorkspaceState.start()` の側。
+        // つまりボタンより下の層を叩いていたので Session が生まれず、
+        // **録音が写っていない Home** を「recording-now」として撮って緑にしていた。
+        // ボタンと同じ入口を通す。
         AstraStateStore.shared.meetingDetected(app: "Google Meet")
-        AstraStateStore.shared.meetingStarted(id: "home-banner")
+        state.start()
         MainWindowController.shared.showSection(.home)
+        settle(0.5)
         record("12-recording-now", capture("12-recording-now", minW: 700, minH: 500),
                expW: nil, expH: nil, minColors: 8)
-        AstraStateStore.shared.meetingEnded()
+        // 録音中の Home に、その録音が実際に出ているか（絵だけでなく状態でも言う）。
+        if MeetingSessionStore.shared.sessions.first(where: { $0.isLive }) == nil {
+            failures.append("12-recording-now=録音中なのに Home に live な Session が無い")
+        }
+        state.stop()
         AstraStateStore.shared.reset()
         WindowCoordinator.shared.hideRecordingWorkspace()
 
 
+        // 別々の名前の面が、同じ絵になっていないか。
+        //
+        // 名前が違うだけの golden は、通っても何も証明しない。実際に
+        // `04-recording-transcript` は `03-recording-workspace` と画素まで同一で、
+        // `12-recording-now` は録音が写っていない Home そのものだった。
+        // どちらもゲートは緑だった。**寸法と色数だけ見ていたから**気づけなかった。
+        for pair in duplicatePairs(in: outDir, names: report.map { $0.split(separator: " ")[0] }.map(String.init)) {
+            failures.append("\(pair.0) と \(pair.1) が同じ絵（名前だけ違う）")
+        }
+
         print("SHOTS_DIR \(outDir)")
         for line in report { print("SHOT \(line)") }
         if failures.isEmpty {
-            print("SELFTEST_OK shots: 12面を実アプリで撮影・geometry OK")
+            print("SELFTEST_OK shots: 12面を実アプリで撮影・geometry OK・面どうしが別の絵")
             exit(0)
         } else {
             print("SELFTEST_FAIL shots: \(failures.joined(separator: ", "))")
