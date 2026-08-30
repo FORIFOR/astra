@@ -94,6 +94,11 @@ for appearance in light dark; do
   [[ "$OUTG" == *SELFTEST_OK* ]] || { echo "$OUTG" >&2; echo "FAIL: golden diff ($appearance)" >&2; exit 1; }
 done
 
+# 面がどれだけ空いているかを測り、基準より悪くなったら落とす（歯止め）。
+# 「良い UI」を目で言い合っても決まらないので数字にする。light だけで足りる。
+OUTD="$("$BIN" --selftest density "$SHOTS_BASE-light" "$ROOT/docs/evidence/density-baseline.json")"; echo "$OUTD" | tail -1
+[[ "$OUTD" == *SELFTEST_OK* ]] || { echo "$OUTD" >&2; echo "FAIL: density regression" >&2; exit 1; }
+
 # §27 Plugin。同梱 manifest を読み、宣言だけでは呼べないことまで見る。
 OUTP="$("$BIN" --selftest plugins "$ROOT/plugins/builtin")"; echo "$OUTP" | tail -1
 [[ "$OUTP" == SELFTEST_OK* || "$OUTP" == SELFTEST_SKIP* ]] || { echo "FAIL: plugin runtime" >&2; exit 1; }
@@ -115,7 +120,7 @@ for appearance in light dark; do
   [[ "$OUTD" == *SELFTEST_OK* ]] || { echo "$OUTD" >&2; echo "FAIL: Task Dock 8 states ($appearance)" >&2; exit 1; }
 done
 
-for t in screenshot waveform livemic livemeeting livescreen sttrecognize sttstream guishot axtree breakpoints dictation state presence perf storage meetingiq vad browser dockanim entry secret recordbutton session uiscale acceptance sessionsync; do
+for t in screenshot waveform livemic livemeeting livescreen sttrecognize sttstream guishot axtree navtitle breakpoints dictation state presence perf storage meetingiq vad browser dockanim entry secret recordbutton session uiscale acceptance sessionsync; do
   OUT="$("$BIN" --selftest "$t")"
   echo "$OUT"
   [[ "$OUT" == SELFTEST_OK* || "$OUT" == SELFTEST_SKIP* ]] || { echo "FAIL: macOS live $t" >&2; exit 1; }

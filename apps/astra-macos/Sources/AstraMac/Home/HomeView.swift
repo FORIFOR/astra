@@ -27,6 +27,8 @@ struct HomeView: View {
     @State private var recentTasks: [AgentTask] = []
     @State private var recordedCount = 0
     @State private var pluginCount = 0
+    /// 復旧を押したあとの返事。押して何も起きないように見せない。
+    @State private var recoverNote = ""
     @ObservedObject private var voice = VoiceHUDState.shared
     @ObservedObject private var store = AstraStateStore.shared
     @ObservedObject private var sessions = MeetingSessionStore.shared
@@ -86,6 +88,11 @@ struct HomeView: View {
                     }
                 }
 
+                // 録りかけが残っているなら、まずそれを出す。放っておくと消える。
+                if recordedCount > 0 {
+                    recoverableRow
+                }
+
                 if !sessions.recent.isEmpty {
                     section("Recent Sessions")
                     ForEach(sessions.recent.prefix(6)) { s in
@@ -93,7 +100,18 @@ struct HomeView: View {
                     }
                 }
 
-                if attention.isEmpty && sessions.recent.isEmpty {
+                // 頼んだ仕事。**DB から読んでいたのに、どこにも出していなかった。**
+                if !recentTasks.isEmpty {
+                    section("Recent Work")
+                    ForEach(recentTasks.prefix(5)) { t in
+                        taskRow(t)
+                    }
+                }
+
+                // 録音中は「何もありません」ではない。live を recent から外したので、
+                // ここも live を見ないと、録音カードの真下で「今日はまだ何もありません」と
+                // 言うことになる。
+                if attention.isEmpty && sessions.recent.isEmpty && sessions.live == nil && recentTasks.isEmpty && recordedCount == 0 {
                     Spacer(minLength: 0)
                     VStack(spacing: 6) {
                         Text("今日はまだ何もありません。")
@@ -186,6 +204,102 @@ struct HomeView: View {
     }
 
     /// 節の見出し。**中身より小さく静かに**する。以前は 22pt で、行より目立っていた。
+    /// 溜まっていた録りかけを片付ける。送れなかったときは黙らずに理由を返す。
+    private func recoverPending() {
+        RecoveryState.shared.pending = RecordingRuntime.shared.recoverableMeetings()
+        let sent = RecoveryState.shared.recoverAll()
+        let after = RecordingRuntime.shared.recoverableMeetings().count
+        recordedCount = after
+        // サインインしていないと送り先が無い。押しても何も起きないように見せない。
+        recoverNote = sent > 0
+            ? "\(recordedCount == 0 ? "すべて" : "一部を")読み取りました。"
+            : "送り先がまだありません。サインインすると続きから読み取れます。"
+    }
+
+    /// 保存し切れていない録音がある、という報せ。件数だけ出して押せば続きへ。
+    private var recoverableRow: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "arrow.counterclockwise.circle")
+                .font(.system(size: 13))
+                .foregroundStyle(Palette.warning(dark))
+            VStack(alignment: .leading, spacing: 2) {
+                Text("録りかけが \(recordedCount) 件あります")
+                    .font(.system(size: S.type(TypeScale.bodySize), weight: .medium))
+                    .foregroundStyle(Palette.text(dark))
+                Text(recoverNote.isEmpty
+                     ? "前回、保存し切る前に終わった録音です。続きから読み取れます。"
+                     : recoverNote)
+                    .font(.system(size: S.type(TypeScale.secondarySize)))
+                    .foregroundStyle(Palette.muted(dark))
+            }
+            Spacer(minLength: 0)
+            // 件数を出すだけで手が無いと、毎回同じ数を見せられるだけになる。
+            Button("続きから") { recoverPending() }
+                .font(.system(size: S.type(TypeScale.secondarySize), weight: .medium))
+                .foregroundStyle(Palette.accent(dark))
+                .frame(height: 30).padding(.horizontal, 12)
+                .buttonStyle(AstraControlStyle(radius: 8, base: 0.05))
+                .accessibilityIdentifier("recoverPending")
+        }
+        .padding(S.metric(Space.cardPadding))
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(Palette.warning(dark).opacity(dark ? 0.12 : 0.07))
+                .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .stroke(Palette.warning(dark).opacity(0.3))))
+        .accessibilityIdentifier("recoverableRecordings")
+    }
+
+    /// 頼んだ仕事 1 件。いつ・どこまで・どうなったか。
+    private func taskRow(_ t: AgentTask) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: taskIcon(t.status))
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(taskTint(t.status))
+                .frame(width: 14)
+            Text(t.title)
+                .font(.system(size: S.type(TypeScale.bodySize)))
+                .foregroundStyle(Palette.text(dark))
+                .lineLimit(1)
+            Spacer(minLength: 12)
+            if !t.steps.isEmpty {
+                Text("\(t.steps.filter { $0.state == .success }.count)/\(t.steps.count)")
+                    .font(.system(size: S.type(TypeScale.microSize), design: .monospaced))
+                    .foregroundStyle(Palette.muted(dark))
+            }
+            Text(t.startedAt.formatted(date: .omitted, time: .shortened))
+                .font(.system(size: S.type(TypeScale.microSize)))
+                .foregroundStyle(Palette.muted(dark))
+        }
+        .padding(.horizontal, S.metric(Space.cardPadding))
+        .frame(height: 40)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(Color.cardSurface(dark))
+                .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .stroke(Color.hairline(dark))))
+        .accessibilityIdentifier("homeTask-\(t.title)")
+    }
+
+    private func taskIcon(_ s: AgentRunState) -> String {
+        switch s {
+        case .success: return "checkmark.circle.fill"
+        case .failed: return "exclamationmark.triangle.fill"
+        case .running: return "circle.dotted"
+        case .pending: return "circle"
+        }
+    }
+
+    private func taskTint(_ s: AgentRunState) -> Color {
+        switch s {
+        case .success: return Palette.accent(dark)
+        case .failed: return Palette.warning(dark)
+        case .running, .pending: return Palette.muted(dark)
+        }
+    }
+
     private func section(_ t: String) -> some View {
         Text(t)
             .font(.system(size: S.type(TypeScale.microSize), weight: .semibold))

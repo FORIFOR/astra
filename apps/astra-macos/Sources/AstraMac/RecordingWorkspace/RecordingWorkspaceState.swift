@@ -36,6 +36,14 @@ struct TranscriptSegment: Identifiable {
     let speaker: String
     let text: String
     let interim: Bool
+    /// 会議の開始からの秒数。どこで言われたかが分からないと、後から音に戻れない。
+    var at: TimeInterval = 0
+
+    /// 「04:21」。
+    var timeLabel: String {
+        let t = Int(max(0, at))
+        return String(format: "%02d:%02d", t / 60, t % 60)
+    }
 }
 
 /// RAG ドロワーの 1 行。並べ替え（score/reason）は core が決める。
@@ -99,9 +107,9 @@ final class RecordingWorkspaceState: ObservableObject {
         selectedTool = .transcript
         self.ragOpen = ragOpen
         transcript = [
-            TranscriptSegment(speaker: "田中", text: "それでは 9 月 12 日に出しましょう。", interim: false),
-            TranscriptSegment(speaker: "あなた", text: "了解しました。", interim: false),
-            TranscriptSegment(speaker: "鈴木", text: "OAuth だけ確認お願いします。", interim: true),
+            TranscriptSegment(speaker: "田中", text: "それでは 9 月 12 日に出しましょう。", interim: false, at: 233),
+            TranscriptSegment(speaker: "あなた", text: "了解しました。", interim: false, at: 245),
+            TranscriptSegment(speaker: "鈴木", text: "OAuth だけ確認お願いします。", interim: true, at: 258),
         ]
         refreshRag()
     }
@@ -175,10 +183,13 @@ final class RecordingWorkspaceState: ObservableObject {
             // §19 誰の声かを channel から取る（混合波からは分からない）。
             let speaker = RecordingRuntime.shared.lastTranscriptChannel.label
             if let last = self.transcript.last, last.interim {
+                // 言い始めた時刻を保つ（確定するたびに時刻が動くと読みづらい）。
                 self.transcript[self.transcript.count - 1] =
-                    TranscriptSegment(speaker: speaker, text: text, interim: !isFinal)
+                    TranscriptSegment(speaker: speaker, text: text, interim: !isFinal, at: last.at)
             } else {
-                self.transcript.append(TranscriptSegment(speaker: speaker, text: text, interim: !isFinal))
+                self.transcript.append(TranscriptSegment(
+                    speaker: speaker, text: text, interim: !isFinal,
+                    at: Double(self.elapsedSeconds)))
             }
             self.refreshRag()
             // §20 確定行が溜まったら**新しい分だけ**抽出する（全文を毎回投げない）。
@@ -217,11 +228,15 @@ final class RecordingWorkspaceState: ObservableObject {
         // 止めたときに「保存しますか」とは聞かない。
         let link = pendingCalendarLink
         pendingCalendarLink = nil
+        // 予定が無いときの題は**始めた時刻**にする。会議アプリ名を題にすると、
+        // 題と出所が同じ文字になって「Google Meet / Google Meet」と 2 回出るうえ、
+        // 後から一覧で見ても、同じ名前の行が並ぶだけで見分けが付かない。
+        let detectedApp = AstraStateStore.shared.state.meeting.detectedApp
         let session = MeetingSessionStore.shared.begin(
             id: currentMeetingId,
-            title: link?.title ?? AstraStateStore.shared.state.meeting.detectedApp ?? "会議",
+            title: link?.title ?? Self.untitledMeetingName(),
             link: link,
-            source: AstraStateStore.shared.state.meeting.detectedApp)
+            source: detectedApp)
         // 録音の UI は Store が決める。ここで直接 window を開かない
         // —— 以前ここが `enterRecordingMode()` を呼んでいたため、録音ボタンだけが
         // 大きな面を開き、Dock コントローラの経路を通っていなかった。
@@ -240,6 +255,12 @@ final class RecordingWorkspaceState: ObservableObject {
         // 読み取りが終わったら同じ id を ready にする。
         finishProcessing(id: id)
     }
+    /// 予定に紐づかない録音の題。「14:32 の会議」。
+    static func untitledMeetingName(now: Date = Date()) -> String {
+        let f = DateFormatter(); f.dateFormat = "HH:mm"
+        return "\(f.string(from: now)) の会議"
+    }
+
     /// 予定から録音するときに引き継ぐもの（§6）。start() が読んで消す。
     var pendingCalendarLink: CalendarLink?
 

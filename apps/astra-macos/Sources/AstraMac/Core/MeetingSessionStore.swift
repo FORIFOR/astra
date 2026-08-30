@@ -15,8 +15,11 @@ final class MeetingSessionStore: ObservableObject {
     var live: MeetingSession? { sessions.first { $0.status == .recording } }
 
     /// 直近から並べたもの（Home の Recent Sessions）。
+    ///
+    /// 録音中のものは外す。Home の最上部に Recording now として、経過・波形・停止まで
+    /// 付いた姿で既に出ているので、同じ会議が 1 画面に 2 回並ぶことになっていた。
     var recent: [MeetingSession] {
-        sessions.sorted { $0.startedAt > $1.startedAt }
+        sessions.filter { $0.status != .recording }.sorted { $0.startedAt > $1.startedAt }
     }
 
     func session(id: String) -> MeetingSession? { sessions.first { $0.id == id } }

@@ -1,0 +1,14 @@
+{
+  "01-voice-hud-idle" : 80.900000000000006,
+  "02-voice-hud-listening" : 94.900000000000006,
+  "03-recording-workspace" : 62.100000000000001,
+  "04-recording-transcript" : 61.100000000000001,
+  "05-recording-rag" : 67.700000000000003,
+  "06-main-home" : 82,
+  "07-apps" : 42.700000000000003,
+  "08-meeting-detail" : 71.5,
+  "09-permission-denied" : 59.700000000000003,
+  "10-agent-timeline" : 61.200000000000003,
+  "11-meeting-canvas" : 61.700000000000003,
+  "12-recording-now" : 71.900000000000006
+}

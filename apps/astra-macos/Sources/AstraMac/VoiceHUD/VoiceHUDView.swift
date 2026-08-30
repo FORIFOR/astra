@@ -281,11 +281,14 @@ private struct AgentDock: View {
     @Environment(\.colorScheme) private var scheme
     private var dark: Bool { scheme == .dark }
     @ObservedObject private var store = AstraStateStore.shared
+    @State private var tick = Date()
+    private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             header
             taskTitle
+            progressBar
             steps
             contextChips
             Spacer(minLength: 0)
@@ -294,6 +297,7 @@ private struct AgentDock: View {
         .padding(.horizontal, S.metric(Metrics.dockPadH))
         .padding(.vertical, 14)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .onReceive(timer) { tick = $0 }
         .accessibilityIdentifier("dockAgent")
     }
 
@@ -309,11 +313,37 @@ private struct AgentDock: View {
                 Text(task.status == .running ? "Working" : task.status.rawValue.capitalized)
                     .font(.system(size: S.type(Metrics.dockMetaSize), weight: .medium))
                     .foregroundStyle(Palette.muted(dark))
+                // 待っている間、どれだけ待つのかが分かるように経過も出す。
+                Text(elapsedLabel(task))
+                    .font(.system(size: S.type(Metrics.dockMetaSize), design: .monospaced))
+                    .foregroundStyle(Palette.muted(dark))
                 Text("\(Int(task.progress * 100))%")
                     .font(.system(size: S.type(Metrics.dockMetaSize), design: .monospaced))
                     .foregroundStyle(Palette.muted(dark))
             }
         }
+    }
+
+    /// 進み具合は数字だけだと目に入らない。細い帯で出す。
+    @ViewBuilder private var progressBar: some View {
+        if let task = store.state.activeTask {
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(Color.subtleFill(dark, 0.10))
+                    Capsule().fill(Palette.accent(dark))
+                        .frame(width: max(2, geo.size.width * task.progress))
+                }
+            }
+            .frame(height: 3)
+            .animation(.easeOut(duration: Motion.drawerMs), value: task.progress)
+            .accessibilityIdentifier("agentProgress")
+            .accessibilityLabel("進み具合 \(Int(task.progress * 100))%")
+        }
+    }
+
+    private func elapsedLabel(_ task: AgentTask) -> String {
+        let t = Int(max(0, tick.timeIntervalSince(task.startedAt)))
+        return String(format: "%02d:%02d", t / 60, t % 60)
     }
 
     /// 仕事の名前は状態語と分けて、1 行の見出しにする。
@@ -375,6 +405,15 @@ private struct AgentDock: View {
 
     private var footer: some View {
         HStack(spacing: 0) {
+            // 走っている仕事は止められること。止め方が無いまま待たせない。
+            if store.state.activeTask?.status == .running {
+                Button("Stop") { AstraStateStore.shared.finishTask(.failed) }
+                    .font(.system(size: S.type(Metrics.dockMetaSize), weight: .medium))
+                    .foregroundStyle(Palette.danger(dark))
+                    .frame(height: 28).padding(.horizontal, 10)
+                    .buttonStyle(AstraControlStyle(radius: 7, base: 0.0))
+                    .accessibilityIdentifier("stopAgent")
+            }
             Spacer(minLength: 0)
             Button {
                 MainWindowController.shared.show()

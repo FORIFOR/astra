@@ -35,6 +35,7 @@ enum SelfTest {
         case "sttstream": sttStream(); return true
         case "guishot": guishot(); return true
         case "axtree": axtree(); return true
+        case "navtitle": navtitle(); return true
         case "dictation": dictation(); return true
         case "breakpoints": breakpoints(); return true
         case "shape": shape(); return true
@@ -69,6 +70,7 @@ enum SelfTest {
         case "recordleg": recordLeg(args); return true
         case "dockedge": dockEdge(args); return true
         case "pixels": pixels(args); return true
+        case "density": density(args); return true
         case "state": stateMachine(); return true
         case "presence": presence(); return true
         case "perf": perf(); return true
@@ -735,6 +737,168 @@ enum SelfTest {
         }
     }
 
+    /// `--selftest navtitle`: **見出しは、いま開いている面のものか。**
+    ///
+    /// 見出しは `MainNav.title` の 1 か所から決まるが、「決めた」だけでは効いたことに
+    /// ならない。実際、各 Pane が自分の `.navigationTitle` を持っていた頃は、会議詳細を
+    /// 開いても "Home" のままだった。宣言ではなく**描かれた見出し帯を撮って**確かめる。
+    /// 面を変えたのに帯が同じ絵なら、見出しが状態から外れている。
+    @MainActor
+    private static func navtitle() {
+        func settle(_ sec: Double) {
+            let until = Date().addingTimeInterval(sec)
+            while Date() < until { CFRunLoopRunInMode(.defaultMode, 0.05, true) }
+        }
+        MainWindowController.shared.show()
+        settle(1.0)
+
+        /// 見出し帯（sidebar の右・toolbar の高さ）だけを切り出して署名にする。
+        func titleStrip() -> [UInt8]? {
+            settle(0.6)
+            guard let win = NSApp.windows.first(where: { $0.isVisible && $0.frame.width > 900 }),
+                  let cg = CGWindowListCreateImage(
+                    .null, .optionIncludingWindow, CGWindowID(win.windowNumber),
+                    [.boundsIgnoreFraming, .bestResolution]) else { return nil }
+            let rep = NSBitmapImageRep(cgImage: cg)
+            // point → pixel。Retina では 2 倍になる。
+            let scale = CGFloat(rep.pixelsWide) / win.frame.width
+            let x0 = Int((Metrics.sidebarWidth + 10) * scale)
+            let x1 = min(rep.pixelsWide, Int((Metrics.sidebarWidth + 260) * scale))
+            let y0 = Int(8 * scale), y1 = min(rep.pixelsHigh, Int(44 * scale))
+            guard x1 > x0, y1 > y0 else { return nil }
+            var out: [UInt8] = []
+            for y in stride(from: y0, to: y1, by: 2) {
+                for x in stride(from: x0, to: x1, by: 2) {
+                    if let c = rep.colorAt(x: x, y: y) {
+                        let l = 0.299 * c.redComponent + 0.587 * c.greenComponent + 0.114 * c.blueComponent
+                        out.append(UInt8(max(0, min(255, l * 255))))
+                    }
+                }
+            }
+            return out
+        }
+
+        var strips: [(String, [UInt8])] = []
+        var fail: [String] = []
+        for s in MainSection.allCases {
+            MainWindowController.shared.showSection(s)
+            guard let strip = titleStrip() else { fail.append("\(s.title)=撮影不可"); continue }
+            if MainNav.shared.title != s.title { fail.append("\(s.title)=状態が合わない(\(MainNav.shared.title))") }
+            strips.append((s.title, strip))
+        }
+        MainWindowController.shared.showMeetingDetailPreview()
+        let detailTitle = MainNav.shared.title
+        // 詳細の見出しは、一覧("Meetings")と紛れない**その会議の名前**であること。
+        if detailTitle == "Meeting" || detailTitle == MainSection.meetings.title {
+            fail.append("会議詳細の見出しが一覧と紛れる(\(detailTitle))")
+        }
+        if let strip = titleStrip() { strips.append((detailTitle, strip)) } else { fail.append("\(detailTitle)=撮影不可") }
+
+        // 帯どうしが別の絵か。同じなら見出しが更新されていない。
+        for i in strips.indices {
+            for j in strips.indices where j > i {
+                let (na, a) = strips[i], (nb, b) = strips[j]
+                guard a.count == b.count else { continue }
+                var n = 0
+                for k in 0..<a.count where abs(Int(a[k]) - Int(b[k])) >= 16 { n += 1 }
+                if Double(n) / Double(a.count) <= 0.005 {
+                    fail.append("\(na) と \(nb) の見出しが同じ絵")
+                }
+            }
+        }
+        MainWindowController.shared.hide()
+        if fail.isEmpty {
+            print("SELFTEST_OK navtitle: \(strips.count)面の見出しが状態と一致し、面ごとに実際に描き変わる")
+            exit(0)
+        } else {
+            print("SELFTEST_FAIL navtitle: \(fail.joined(separator: ", "))")
+            exit(2)
+        }
+    }
+
+    /// `--selftest density <shotsDir> <baseline.json>`: **面がどれだけ空いているか。**
+    ///
+    /// 「Voice OS / SuperIntern より良い」を目で言い合っても決まらないので、測る。
+    /// いちばん多く使われている色（＝地）が画面のどれだけを占めるかを面ごとに出す。
+    /// 高いほど、開いているのに何も返していない画面ということ。
+    ///
+    /// 絶対値の合格線は引かない（面によって適正が違う）。**基準より悪くなったら落とす**
+    /// 歯止めにする。良くなったぶんは基準を更新して締め直す。
+    private static func density(_ args: [String]) {
+        let i = args.firstIndex(of: "--selftest")!
+        guard args.count > i + 3 else { print("SELFTEST_FAIL density: 引数が足りない"); exit(2) }
+        let dir = args[i + 2], baselinePath = args[i + 3]
+
+        /// 地の色が占める割合（%）。
+        func emptiness(_ path: String) -> Double? {
+            guard let data = FileManager.default.contents(atPath: path),
+                  let rep = NSBitmapImageRep(data: data) else { return nil }
+            var counts: [UInt32: Int] = [:]
+            var pts: [UInt32] = []
+            let pw = rep.pixelsWide, ph = rep.pixelsHigh
+            let step = max(1, min(pw, ph) / 220)
+            var y = 0
+            while y < ph { var x = 0
+                while x < pw {
+                    if let c = rep.colorAt(x: x, y: y) {
+                        let r = UInt32(max(0, min(255, c.redComponent * 255)))
+                        let g = UInt32(max(0, min(255, c.greenComponent * 255)))
+                        let b = UInt32(max(0, min(255, c.blueComponent * 255)))
+                        let key = (r << 16) | (g << 8) | b
+                        pts.append(key); counts[key, default: 0] += 1
+                    }
+                    x += step }
+                y += step }
+            guard let bg = counts.max(by: { $0.value < $1.value })?.key, !pts.isEmpty else { return nil }
+            let br = Int((bg >> 16) & 255), bgc = Int((bg >> 8) & 255), bb = Int(bg & 255)
+            var same = 0
+            for p in pts {
+                let r = Int((p >> 16) & 255), g = Int((p >> 8) & 255), b = Int(p & 255)
+                if abs(r - br) + abs(g - bgc) + abs(b - bb) <= 12 { same += 1 }
+            }
+            return Double(same) / Double(pts.count) * 100
+        }
+
+        var baseline: [String: Double] = [:]
+        if let d = FileManager.default.contents(atPath: baselinePath),
+           let obj = try? JSONSerialization.jsonObject(with: d) as? [String: Double] {
+            baseline = obj
+        }
+
+        let names = (try? FileManager.default.contentsOfDirectory(atPath: dir))?
+            .filter { $0.hasSuffix(".png") }.map { String($0.dropLast(4)) }.sorted() ?? []
+        guard !names.isEmpty else { print("SELFTEST_FAIL density: \(dir) に png が無い"); exit(2) }
+
+        var measured: [String: Double] = [:]
+        var worse: [String] = []
+        for n in names {
+            guard let e = emptiness("\(dir)/\(n).png") else { continue }
+            measured[n] = (e * 10).rounded() / 10
+            print(String(format: "DENSITY %@ 地 %.1f%%", n, e))
+            // 撮影ごとの揺れを拾わないよう 1.5 ポイントの遊びを持たせる。
+            if let b = baseline[n], e > b + 1.5 {
+                worse.append(String(format: "%@ が %.1f%% → %.1f%% に空いた", n, b, e))
+            }
+        }
+        if baseline.isEmpty {
+            let out = try? JSONSerialization.data(withJSONObject: measured, options: [.sortedKeys, .prettyPrinted])
+            try? out?.write(to: URL(fileURLWithPath: baselinePath))
+            print("SELFTEST_OK density: 基準が無かったので \(measured.count) 面を記録した")
+            exit(0)
+        }
+        if worse.isEmpty {
+            let best = measured.min(by: { $0.value < $1.value })
+            let hollow = measured.max(by: { $0.value < $1.value })
+            print(String(format: "SELFTEST_OK density: %d面が基準以下（最も詰まっている %@ %.1f%% / 最も空いている %@ %.1f%%）",
+                         measured.count, best?.key ?? "-", best?.value ?? 0,
+                         hollow?.key ?? "-", hollow?.value ?? 0))
+            exit(0)
+        } else {
+            print("SELFTEST_FAIL density: \(worse.joined(separator: ", "))")
+            exit(2)
+        }
+    }
+
     /// 撮った面のうち、実質同じ絵になっている組。
     ///
     /// 「別の状態を写しているはず」の面が同じなら、その面のゲートは何も見ていない。
@@ -1255,8 +1419,11 @@ enum SelfTest {
         check(1, "予定なし録音", live != nil)
         guard let id = live?.id else { reportAcceptance(passed, fail); return }
 
-        // 3 録音開始直後に Home へ出る（＝ store に居る）
-        check(3, "開始直後に Home へ", sessions.recent.contains { $0.id == id })
+        // 3 録音開始直後に Home へ出る（＝ store に居る）。
+        // 出るのは最上部の Recording now としてで、Recent Sessions には**並べない**。
+        // 以前は両方に出ていて、同じ会議が 1 画面に 2 回並んでいた。
+        check(3, "開始直後に Home へ", sessions.sessions.contains { $0.id == id })
+        check(3, "Recent には重ねて出さない", !sessions.recent.contains { $0.id == id })
         // 4 Recording Now が指すものが同じ Session
         check(4, "Recording Now と同一 Session", sessions.live?.id == id)
         // Dock も同じ状態
@@ -1371,7 +1538,13 @@ enum SelfTest {
             print("SELFTEST_FAIL sessionsync: 録音が始まらない"); exit(2)
         }
         // ① 3 か所が同じ id を指す。
-        let homeId = sessions.recent.first?.id
+        // Home が録音を出すのは最上部の Recording now（`live`）で、Recent Sessions には
+        // 並べない。以前ここは `recent.first` を見ていたので、同じ会議が 2 か所に
+        // 出ている状態を「正しい」として通していた。
+        let liveOnHome = sessions.sessions.filter { $0.status == .recording }
+        if liveOnHome.count != 1 { fail.append("Home に出る録音が \(liveOnHome.count) 件") }
+        if sessions.recent.contains(where: { $0.id == id }) { fail.append("Recent にも重ねて出ている") }
+        let homeId = liveOnHome.first?.id
         let dockId = dock.state.meeting.meetingId
         let dbId = LocalStore.shared.loadSessions().first { $0.status == .recording }?.id
         if homeId != id { fail.append("Home の id が違う (\(homeId ?? "nil"))") }
@@ -3755,12 +3928,12 @@ enum SelfTest {
         state.selectedTool = .transcript
         let shortTranscript = state.transcript
         state.transcript += [
-            TranscriptSegment(speaker: "田中", text: "見積は今週中にいただけますか。", interim: false),
-            TranscriptSegment(speaker: "伊藤", text: "修正版を明日お送りします。", interim: false),
-            TranscriptSegment(speaker: "あなた", text: "初期費用の内訳も添えてください。", interim: false),
-            TranscriptSegment(speaker: "鈴木", text: "OAuth の権限範囲は最小にしています。", interim: false),
-            TranscriptSegment(speaker: "田中", text: "では 10 月導入で進めます。", interim: false),
-            TranscriptSegment(speaker: "伊藤", text: "承知しました。稟議を通します。", interim: true),
+            TranscriptSegment(speaker: "田中", text: "見積は今週中にいただけますか。", interim: false, at: 271),
+            TranscriptSegment(speaker: "伊藤", text: "修正版を明日お送りします。", interim: false, at: 284),
+            TranscriptSegment(speaker: "あなた", text: "初期費用の内訳も添えてください。", interim: false, at: 296),
+            TranscriptSegment(speaker: "鈴木", text: "OAuth の権限範囲は最小にしています。", interim: false, at: 309),
+            TranscriptSegment(speaker: "田中", text: "では 10 月導入で進めます。", interim: false, at: 323),
+            TranscriptSegment(speaker: "伊藤", text: "承知しました。稟議を通します。", interim: true, at: 337),
         ]
         state.refreshRag()
         settle(0.3)

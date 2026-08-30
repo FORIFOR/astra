@@ -122,7 +122,6 @@ struct TasksPane: View {
             .frame(maxWidth: 900, alignment: .leading)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .navigationTitle("Tasks")
         .background(Palette.canvas(dark))
         .onAppear { tasks = LocalStore.shared.loadTasks() }
         .accessibilityIdentifier("tasksPane")
@@ -178,7 +177,6 @@ struct MeetingsPane: View {
             .frame(maxWidth: 900, alignment: .leading)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .navigationTitle("Meetings")
         .background(Palette.canvas(dark))
         .accessibilityIdentifier("meetingsPane")
     }
@@ -209,7 +207,6 @@ struct PluginsPane: View {
             }
             .padding(28)
         }
-        .navigationTitle("Plugins")
         .background(Palette.canvas(dark))
         .onAppear { runtime.load() }
         .accessibilityIdentifier("pluginsPane")

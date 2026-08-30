@@ -69,6 +69,20 @@ final class MainNav: ObservableObject {
     @Published var section: MainSection = .home
     /// 会議詳細のプレビュー（Library から開いた状態を撮るため）。
     @Published var meetingDetail = false
+
+    /// 会議詳細で見せている会議の名前。
+    var meetingTitle = "A社 新規提案"
+
+    /// いま開いている面の見出し。表示はここから引く（画面側で別名を持たない）。
+    /// ゲートもこれと実際の見出しを突き合わせる。
+    ///
+    /// 会議詳細は "Meeting" ではなく**その会議の名前**にする。一覧が "Meetings" なので、
+    /// 1 文字違いの見出しでは「一覧に居るのか 1 件を開いているのか」が見分けられなかった。
+    var title: String {
+        if let id = openSession, let s = MeetingSessionStore.shared.session(id: id) { return s.title }
+        if meetingDetail { return meetingTitle }
+        return section.title
+    }
 }
 
 /// 4 タブの native シェル。Windows 版は同じ構成を NavigationView + Mica で作る（設計共通・実装別）。
@@ -97,8 +111,14 @@ struct MainWindowView: View {
             }
         } detail: {
             detailContent
-                // 見出しは開いている面に合わせる（以前は常に Home のままだった）。
-                .navigationTitle(nav.meetingDetail ? "Meeting" : nav.section.title)
+                // 見出しは開いている面に合わせる。
+                //
+                // 以前も同じ意図でここに書いてあったが、効いていなかった。各 Pane が
+                // それぞれ `.navigationTitle` を持っていて（Home / Work / Library / Apps /
+                // Tasks / Meetings / Plugins / Meeting の 8 か所）、どれが勝つかが
+                // SwiftUI の解決順に委ねられていたため。会議詳細を開いても "Home" のままだった。
+                // 見出しを決めるのはここ 1 か所だけにする。
+                .navigationTitle(nav.title)
                 // 右の Agent Activity は **既定で閉じる**。Content を主役にする（Linear の作法）。
                 .inspector(isPresented: $nav.activityOpen) {
                     AgentActivityPane()
@@ -130,7 +150,6 @@ struct MainWindowView: View {
                     actionItems: [MeetingCitation(number: 3, text: "伊藤 修正版見積を送付 明日", transcriptTime: "14:31", speaker: "伊藤")],
                     selected: MeetingCitation(number: 1, text: "初期費用が少し気になっています。", transcriptTime: "14:18", speaker: "田中")
                 )
-                .navigationTitle("Meeting")
             } else {
                 switch nav.section {
                 case .home: HomePane(recent: data.library)
@@ -191,7 +210,6 @@ struct HomePane: View {
             attention: upcoming,
             active: recent.prefix(3).map { HomeWork(title: $0, meta: "資料 · Library") }
         )
-        .navigationTitle("Home")
         .onAppear(perform: loadUpcoming)
     }
 
@@ -255,7 +273,7 @@ private struct AgentsPane: View {
                     .font(.system(size: 12)).foregroundStyle(.secondary)
                 Spacer()
             }.padding(24)
-        }.navigationTitle("Work")
+        }
     }
 }
 
@@ -288,7 +306,7 @@ private struct LibraryPane: View {
                     .background(RoundedRectangle(cornerRadius: 10).stroke(Color.black.opacity(0.08)))
                 }
             }.padding(20)
-        }.navigationTitle("Library")
+        }
     }
 }
 
@@ -402,6 +420,6 @@ private struct AppsPane: View {
                     .accessibilityIdentifier("connector-\(a)")
                 }
             }.padding(20)
-        }.navigationTitle("Apps")
+        }
     }
 }
