@@ -27,7 +27,10 @@ Readiness = SIGNED_NOT_NOTARIZED
 | Developer ID 署名 | ✅ Shuhei Horio (6RR7572ZLU) |
 | hardened runtime | ✅ `flags=0x10000(runtime)` |
 | 外部 dylib への依存 | ✅ 無し（静的リンク） |
-| 署名済み .app の実動 | ✅ 8 ゲートを **配布物そのもの**で通した |
+| 同梱プラグイン | ✅ 12 件をバンドルへ。repo の外から起動して画面で確認 |
+| 初回起動 | ✅ 何も無い状態から DB を作って起動（`ASTRA_DATA_ROOT`） |
+| 署名済み .app の実動 | ✅ **配布物そのもの**で 47 ゲート PASS / 2 SKIP / 0 FAIL |
+| Gatekeeper の実測 | ❌ `rejected` / `source=Unnotarized Developer ID` |
 | **公証** | ❌ 資格情報が無い |
 | 配布先 | ❌ 未定（置き場も更新の仕組みも無い） |
 | Windows | ❌ 別（`apps/windows`。CI で実ビルドまで） |
@@ -71,6 +74,15 @@ bash scripts/release-macos.sh
 - **用途説明が足りないとプロセスが落ちる。** TCC は拒否ではなく SIGABRT。
   要求しうる権限は全部 plist に書く。`verify-usage-descriptions.sh` が
   両方のスクリプトと実際の .app を突き合わせている。
+- **同梱プラグインが手元でしか読めなかった。** バンドルへ入れておらず、
+  解決の候補に開発機の絶対パスが 1 本入っていたので、私の Mac でだけ 12 件読めていた。
+  配った先では 0 件になる。バンドルへ同梱し、個人のパスは消した。
+  cwd 相対も当てにしない（ゲートは `apps/astra-macos` へ cd して動かすので外れる）
+  —— 実行体から上へ辿って探す。
+- **初回起動を試せなかった。** macOS の `applicationSupportDirectory` は HOME を
+  見ずに実ユーザーから解決するので、HOME を変えても隔離できない。
+  `ASTRA_DATA_ROOT` で置き場所を差し替えられるようにした。利用者のデータを
+  退避させずに「何も無いところから」を確かめられる。
 
 ---
 
@@ -107,8 +119,11 @@ xcrun notarytool store-credentials "astra-notary" \
 アシスタントは GUI を人の目で見られないので、代わりに
 **配布物そのもの**で自己検査を回している（`dist/Astra.app` を直接起動）:
 
+zip を別の場所へ展開し、リポジトリの外を作業ディレクトリにして 49 件:
+
 ```
-acceptance / session / sessionsync / recordbutton / storage / plugins / state / permissions
+47 PASS / 2 SKIP / 0 FAIL
+（SKIP の 2 件は repo 内の fixture を引数に取るもの。外からは当然読めない）
 ```
 
 これは人の目視の代わりにはなるが、同じものではない。

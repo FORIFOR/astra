@@ -308,11 +308,26 @@ final class PluginRuntimeStore: ObservableObject {
     func load() {
         guard manifests.isEmpty else { return }
         // 開発時はリポジトリの plugins/、配布時はバンドル内を見る。
-        let candidates = [
-            Bundle.main.resourcePath.map { $0 + "/plugins/builtin" },
-            FileManager.default.currentDirectoryPath + "/plugins/builtin",
-            "/Users/horioshuuhei/Projects/astra/plugins/builtin",
-        ].compactMap { $0 }
+        //
+        // 以前ここに開発機の絶対パスが 1 本入っていた。バンドルへ plugins を
+        // 同梱していなかったので最初の候補は常に外れ、この絶対パスだけで拾えていた。
+        // つまり**私の Mac でしか同梱プラグインが読めない**状態で、それに気づけなかった。
+        // 個人のパスは置かない。無ければ「無い」と分かるようにする。
+        // cwd には頼らない。ゲートは `apps/astra-macos` へ cd して動かすので、
+        // cwd 相対では外れる（実際、絶対パスを消したら Plugins 面が空になり、
+        // 密度の歯止めが 45.5% → 98.0% で捕まえた）。実行体から上へ辿って探す。
+        var candidates: [String] = []
+        if let res = Bundle.main.resourcePath { candidates.append(res + "/plugins/builtin") }
+        if let env = ProcessInfo.processInfo.environment["ASTRA_PLUGINS_DIR"], !env.isEmpty {
+            candidates.append(env)
+        }
+        candidates.append(FileManager.default.currentDirectoryPath + "/plugins/builtin")
+        var dir = URL(fileURLWithPath: CommandLine.arguments[0]).resolvingSymlinksInPath()
+            .deletingLastPathComponent()
+        for _ in 0..<8 {
+            candidates.append(dir.appendingPathComponent("plugins/builtin").path)
+            dir = dir.deletingLastPathComponent()
+        }
         for path in candidates where FileManager.default.fileExists(atPath: path) {
             let runtime = PluginRuntime.shared
             if runtime.load(from: path).loaded > 0 {

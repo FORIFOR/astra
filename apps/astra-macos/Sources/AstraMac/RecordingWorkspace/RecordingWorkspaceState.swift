@@ -394,8 +394,8 @@ final class RecordingWorkspaceState: ObservableObject {
     @discardableResult
     func captureScreenshot() -> String? {
         guard #available(macOS 14.0, *), let image = ScreenContextCapture.captureFrameCG() else { return nil }
-        let dir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-            .appendingPathComponent("Astra/meetings/\(currentMeetingId)/screens", isDirectory: true)
+        let dir = LocalStore.dataRoot
+            .appendingPathComponent("meetings/\(currentMeetingId)/screens", isDirectory: true)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         let url = dir.appendingPathComponent("screen-\(Int(Date().timeIntervalSince1970)).png")
         guard let dest = CGImageDestinationCreateWithURL(url as CFURL, UTType.png.identifier as CFString, 1, nil)

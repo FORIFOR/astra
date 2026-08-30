@@ -39,10 +39,10 @@ final class RecordingRuntime {
     }
 
     /// 保存先（Application Support/Astra/meetings）。core の既定と同じ。
+    /// 置き場所は `LocalStore.dataRoot` に合わせる（DB と録音が別の場所へ行くと、
+    /// 初回起動の検証で片方だけまっさらになる）。
     private var root: String {
-        let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
-        return (base ?? URL(fileURLWithPath: NSTemporaryDirectory()))
-            .appendingPathComponent("Astra/meetings").path
+        LocalStore.dataRoot.appendingPathComponent("meetings").path
     }
 
     /// core にセッションを作り、（可能なら）マイクを開く。live 取り込みは .app + 許可が要る。

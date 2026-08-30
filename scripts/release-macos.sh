@@ -58,6 +58,14 @@ echo "== bundle =="
 rm -rf "$APP"; mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$ROOT/apps/astra-macos/.build/release/AstraMac" "$APP/Contents/MacOS/AstraMac"
 
+# 同梱プラグインをバンドルへ。入れ忘れると、配った先では 1 件も読めない
+# （以前は開発機の絶対パスで拾えていたので、手元でだけ動いていた）。
+mkdir -p "$APP/Contents/Resources/plugins"
+cp -R "$ROOT/plugins/builtin" "$APP/Contents/Resources/plugins/builtin"
+PLUGIN_COUNT="$(find "$APP/Contents/Resources/plugins/builtin" -name plugin.yaml | wc -l | tr -d ' ')"
+[[ "$PLUGIN_COUNT" -gt 0 ]] || { echo "FAIL: 同梱プラグインが 0 件" >&2; exit 1; }
+echo "plugins: $PLUGIN_COUNT 件を同梱"
+
 # 用途説明は package-macos-app.sh と同じものを使う。片方だけ直すとずれるので、
 # verify-usage-descriptions.sh が両方を突き合わせている。
 cat > "$APP/Contents/Info.plist" <<PLIST

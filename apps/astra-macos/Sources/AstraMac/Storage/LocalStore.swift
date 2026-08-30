@@ -15,11 +15,26 @@ final class LocalStore {
     private var db: OpaquePointer?
     private(set) var path: String = ""
 
-    static var defaultPath: String {
+    /// データの置き場所。既定は Application Support/Astra。
+    ///
+    /// `ASTRA_DATA_ROOT` で差し替えられる。**初回起動を試すため**の口
+    /// —— macOS の `applicationSupportDirectory` は HOME を見ずに実ユーザーから
+    /// 解決するので、HOME を変えても隔離できず、まっさらな状態を作れなかった。
+    /// 利用者のデータを退避させずに「何も無いところから始める」を確かめられるようにする。
+    static var dataRoot: URL {
+        if let override = ProcessInfo.processInfo.environment["ASTRA_DATA_ROOT"], !override.isEmpty {
+            let url = URL(fileURLWithPath: override)
+            try? FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+            return url
+        }
         let root = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
             .appendingPathComponent("Astra")
         try? FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
-        return root.appendingPathComponent("astra.sqlite").path
+        return root
+    }
+
+    static var defaultPath: String {
+        dataRoot.appendingPathComponent("astra.sqlite").path
     }
 
     private init() {}
