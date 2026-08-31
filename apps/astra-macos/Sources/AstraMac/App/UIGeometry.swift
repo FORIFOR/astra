@@ -53,6 +53,16 @@ enum UIGeometry {
         }
     }
 
+    /// 基準に使える文言か。
+    ///
+    /// 経過時間（00:00）や進み具合（50%）は撮るたびに変わる。文言を鍵にしている以上、
+    /// これらを入れると毎回「無い要素」が出て、ゲートが嘘をつく。
+    /// 数字と記号だけのものは見ない。語が入っていれば位置の基準として使える。
+    static func isStableLabel(_ text: String) -> Bool {
+        let volatile = CharacterSet(charactersIn: "0123456789:%.,/-— \t")
+        return text.unicodeScalars.contains { !volatile.contains($0) }
+    }
+
     /// いま出ている窓から、識別子の付いた要素の実寸を集める。
     ///
     /// AX 権限が無ければ空を返す（呼ぶ側が SKIP を選べるように、失敗と区別する）。
@@ -100,6 +110,17 @@ enum UIGeometry {
 
         func walk(_ el: AXUIElement, _ depth: Int) {
             if depth > 24 { return }
+            // 文字の行。識別子が無くても **AXStaticText の枠**は取れるので、
+            // 本文に識別子を足さずにベースラインを見られる。
+            // 鍵は「text:<読み上げ内容>」。文言が変われば別の行として出る（それでよい
+            // —— 文言を変えたなら、位置の基準も引き直すべきなので）。
+            if let roleRef = value(el, kAXRoleAttribute as String), let role = roleRef as? String,
+               role == (kAXStaticTextRole as String),
+               let valRef = value(el, kAXValueAttribute as String), let text = valRef as? String,
+               !text.isEmpty, let b = box(el), isStableLabel(text) {
+                let key = "text:" + String(text.prefix(24))
+                if out[key] == nil { out[key] = b }
+            }
             if let idRef = value(el, "AXIdentifier"), let id = idRef as? String, !id.isEmpty,
                let b = box(el) {
                 // 同じ識別子が複数出たときは、最初に見つけたものを採る（撮影は 1 面ずつ）。
