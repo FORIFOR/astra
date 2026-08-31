@@ -133,7 +133,62 @@ enum UIGeometry {
         // 無い要素は「置き場所が違う」より重い。同じ段で先に出す。
         let firstLayer = missing + geometry
         if !firstLayer.isEmpty { return [(.geometry, firstLayer)] }
+
+        // ② Spacing: 繰り返す行の**並びが揃っているか**。
+        // Geometry が合ってから見る（幅が違うのに行間を直しても意味がない）。
+        let rhythm = rhythmProblems(actual, tolerance: tolerance)
+        if !rhythm.isEmpty { return [(.spacing, rhythm)] }
         return []
+    }
+
+    /// 同じ種類のものが、等間隔に・端を揃えて並んでいるか。
+    ///
+    /// `step-calendar` `step-gmail` … のように識別子の頭を共有するものを 1 組と見る。
+    /// 「各行の高さ一定」「アイコンの位置が揃っている」は目で数えるものではない。
+    ///
+    /// **並びの向きを先に決める。** 縦リスト前提で見ると、横並び（Notes/Captions/Ask）や
+    /// 2 列の格子（AI 操作）を「ばらついている」と誤って言う（実際そう出た）。
+    /// 縦でも横でもないもの（格子）は、意図を推し量れないので見ない。
+    static func rhythmProblems(_ snapshot: Snapshot, tolerance: Double = 2.0) -> [String] {
+        var groups: [String: [(String, Box)]] = [:]
+        for (id, box) in snapshot {
+            guard let dash = id.firstIndex(of: "-"), !id.hasPrefix("window:") else { continue }
+            groups[String(id[id.startIndex..<dash]), default: []].append((id, box))
+        }
+        var out: [String] = []
+        for (prefix, items) in groups.sorted(by: { $0.key < $1.key }) where items.count >= 3 {
+            let xs = items.map { $0.1.x }, ys = items.map { $0.1.y }
+            let xSpread = (xs.max() ?? 0) - (xs.min() ?? 0)
+            let ySpread = (ys.max() ?? 0) - (ys.min() ?? 0)
+
+            /// 端が揃っていて、**隙間**が一定か。
+            ///
+            /// 測るのは位置の差ではなく隙間（前の要素の終わり → 次の始まり）。
+            /// 幅が違うものが並ぶとき（Notes / Captions / Ask Astra）、
+            /// 位置の差は幅のぶんだけ必ず変わるので、それを「ばらつき」と呼ばない。
+            func check(_ axis: String, aligned: [Double], starts: [Double], sizes: [Double]) {
+                let lo = aligned.min() ?? 0, hi = aligned.max() ?? 0
+                if hi - lo > tolerance {
+                    out.append(String(format: "%@-* の%@が %.1fpt ばらついた", prefix, axis, hi - lo))
+                }
+                let ordered = zip(starts, sizes).sorted { $0.0 < $1.0 }
+                var gaps: [Double] = []
+                for i in 1..<ordered.count {
+                    gaps.append(ordered[i].0 - (ordered[i - 1].0 + ordered[i - 1].1))
+                }
+                if let g0 = gaps.min(), let g1 = gaps.max(), g1 - g0 > tolerance {
+                    out.append(String(format: "%@-* の隙間が %.1f〜%.1fpt でばらついた", prefix, g0, g1))
+                }
+            }
+
+            if xSpread <= tolerance {           // 縦に並んでいる
+                check("左端", aligned: xs, starts: ys, sizes: items.map { $0.1.h })
+            } else if ySpread <= tolerance {    // 横に並んでいる
+                check("上端", aligned: ys, starts: xs, sizes: items.map { $0.1.w })
+            }
+            // 縦でも横でもない＝格子。行と列の意図が分からないので見ない。
+        }
+        return out
     }
 
     // MARK: - 保存と読み出し

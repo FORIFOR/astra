@@ -34,6 +34,27 @@
 
 ---
 
+## 2.5 Dock の中身も測れる
+
+SwiftUI は `.accessibilityLabel` を container に付けると**全体を 1 要素に畳む**。
+そのため当初は Dock 全体で 1 個・96x76 しか取れず、中の行やボタンが見えなかった
+（96x19 はラベルの寸法で、Dock の寸法ですらなかった）。
+
+`.accessibilityElement(children: .contain)` に変えて、中の操作が AX に出るようにした。
+VoiceOver から見ても、複数の操作を持つ面を 1 つの読み上げにするのは誤りなので、
+測定の都合ではなく本来の形。
+
+```
+01-idle           3 要素
+02-listening      4
+03-task-dock      9   ← step-* の行、progress、Stop、Continue
+04-meeting        8   ← Notes / Captions / Ask / secret / Stop
+05-meeting-notes  9
+06-workspace     16
+```
+
+---
+
 ## 3. 直す順番（機械が強制する）
 
 ```
@@ -62,6 +83,8 @@ Window level → 位置 → 幅・高さ → 影 → 背景 → 角丸 → hit t
 | 窓の位置・寸法 | **2pt** | `--selftest geometry` |
 | 中央からのずれ | **2pt** | 同上（`:centerOffset`） |
 | 上辺から画面上端 | **2pt** | 同上 |
+| 同じ種類の行の**隙間** | **2pt** | 同上（`② Spacing`） |
+| 同じ種類の行の**端** | **2pt** | 同上 |
 | 見た目 | 0.5%（縮小グレースケール） | `--selftest golden` |
 | 面の空き | 基準 +1.5pt 以内 | `--selftest density` |
 
@@ -113,4 +136,5 @@ apps/astra-macos/.build/debug/AstraMac --selftest dock8 /tmp/d && cp /tmp/d/*.pn
 - **行のベースライン**を pt で測っていない（SwiftUI の Text が AX に個別の枠を出さないため）
 - **hover / press / focus** は画素差でしか見ていない（`--selftest states`）
 - **操作の手触り**（Dock がジャンプしないか、focus を奪わないか）は人が触る
-- Dock の**中身**の実寸。AX が SwiftUI の階層を畳むので、窓の枠しか取れていない
+- **格子**（2 列の AI 操作など）の並びは見ていない。行と列の意図を推し量れないので、
+  誤って「ばらついた」と言うより見ないほうがよいと判断した

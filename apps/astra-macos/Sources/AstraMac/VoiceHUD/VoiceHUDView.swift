@@ -49,8 +49,12 @@ struct VoiceTaskDockView: View {
                 contentVisible = true
             }
         }
+        // **container として扱う。** `.accessibilityLabel` を付けると SwiftUI は
+        // 全体を 1 要素に畳み、中の操作が AX に出なくなる（実寸を測ろうとしたら
+        // Dock 全体で 1 個・96x19 しか取れなかった。それはラベルの寸法だった）。
+        // VoiceOver から見ても、複数の操作を持つ面を 1 つの読み上げにするのは誤り。
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("voiceHUD")
-        .accessibilityLabel("Astra")
     }
 
     private var size: CGSize { store.dock.size(agentRows: store.state.activeTask?.steps.count ?? 0) }
@@ -101,6 +105,7 @@ private struct IdleDock: View {
             AstraStateStore.shared.workspaceOpened()
         })
         .help("クリックで操作、⌘クリックで Astra を開く")
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("dockIdle")
     }
 }
@@ -134,6 +139,7 @@ private struct AppContextDock: View {
             .frame(height: Metrics.dockContextHeight)
             .contentShape(Rectangle())
             .onTapGesture { VoiceHUDState.shared.toggleContextExpanded() }
+            .accessibilityElement(children: .contain)
             .accessibilityIdentifier("dockAppContext")
 
             if expanded {
@@ -200,6 +206,7 @@ private struct ListeningDock: View {
         .padding(.horizontal, S.metric(Metrics.dockPadH))
         // 2 行を面の中で上下に振り分ける（下に余白を溜めない）。
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("dockListening")
     }
 }
@@ -267,6 +274,7 @@ private struct SimpleDock: View {
         }
         .padding(.horizontal, S.metric(Metrics.dockPadH))
         .frame(maxHeight: .infinity)
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("dockSimple")
     }
 }
@@ -298,6 +306,7 @@ private struct AgentDock: View {
         .padding(.vertical, 14)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .onReceive(timer) { tick = $0 }
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("dockAgent")
     }
 
@@ -507,6 +516,7 @@ private struct ConfirmationDock: View {
         .padding(.horizontal, S.metric(Metrics.dockPadH) + 2)
         .padding(.vertical, 12)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("dockConfirmation")
     }
 }
@@ -538,6 +548,7 @@ private struct MeetingDock: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("dockMeeting")
     }
 
@@ -835,6 +846,7 @@ private struct ResultDock: View {
         .padding(.horizontal, S.metric(Metrics.dockPadH))
         .padding(.vertical, 14)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("dockResult")
     }
 
@@ -902,6 +914,7 @@ private struct ContextDetailDock: View {
         .padding(.horizontal, S.metric(Metrics.dockPadH))
         .padding(.vertical, 14)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("dockContextDetail")
     }
 }
@@ -946,6 +959,7 @@ private struct QuickActionsDock: View {
         }
         .padding(.horizontal, 8)
         .frame(maxHeight: .infinity)
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("dockQuickActions")
     }
 }

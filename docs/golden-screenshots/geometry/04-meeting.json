@@ -1,9 +1,39 @@
 {
+  "meetingPanel-ask" : {
+    "h" : 30,
+    "w" : 107,
+    "x" : 1162,
+    "y" : 23
+  },
+  "meetingPanel-captions" : {
+    "h" : 30,
+    "w" : 105,
+    "x" : 1045,
+    "y" : 23
+  },
+  "meetingPanel-notes" : {
+    "h" : 30,
+    "w" : 82,
+    "x" : 951,
+    "y" : 23
+  },
+  "secretToggle" : {
+    "h" : 30,
+    "w" : 32,
+    "x" : 1281,
+    "y" : 23
+  },
+  "stopRecording" : {
+    "h" : 25,
+    "w" : 25,
+    "x" : 1325,
+    "y" : 26
+  },
   "voiceHUD" : {
-    "h" : 19,
-    "w" : 96,
-    "x" : 591,
-    "y" : 20
+    "h" : 76.5,
+    "w" : 820.5,
+    "x" : 550,
+    "y" : -0.5
   },
   "window:AstraPanel<VoiceTaskDockView>" : {
     "h" : 76,

@@ -1124,7 +1124,13 @@ enum SelfTest {
         for (name, lines) in problems {
             for l in lines { print("GEOMETRY \(name): \(l)") }
         }
-        print("SELFTEST_FAIL geometry: \(problems.count)面が基準から外れた（まず ① Geometry から直す）")
+        // 出ている層のうち、いちばん上のものを名指しする。「まず Geometry」と
+        // 決め打ちすると、Spacing しか出ていないときに嘘になる。
+        let firstLayer = problems.flatMap { $0.1 }
+            .compactMap { line in UIGeometry.Layer.allCases.first { line.hasPrefix($0.label) } }
+            .min(by: { $0.rawValue < $1.rawValue })
+        let hint = firstLayer.map { "まず \($0.label) から直す" } ?? "上の層から直す"
+        print("SELFTEST_FAIL geometry: \(problems.count)面が基準から外れた（\(hint)）")
         exit(2)
     }
 

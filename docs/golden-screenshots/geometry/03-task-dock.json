@@ -1,9 +1,45 @@
 {
-  "voiceHUD" : {
+  "agentProgress" : {
+    "h" : 3,
+    "w" : 680,
+    "x" : 620,
+    "y" : 78
+  },
+  "openWorkspace" : {
+    "h" : 28,
+    "w" : 178,
+    "x" : 1122,
+    "y" : 256
+  },
+  "step-calendar" : {
+    "h" : 10,
+    "w" : 10,
+    "x" : 622,
+    "y" : 106
+  },
+  "step-gmail" : {
+    "h" : 12,
+    "w" : 12,
+    "x" : 621,
+    "y" : 141
+  },
+  "step-notion" : {
+    "h" : 12,
+    "w" : 12,
+    "x" : 621,
+    "y" : 177
+  },
+  "stopAgent" : {
     "h" : 16,
-    "w" : 33,
-    "x" : 639,
-    "y" : 14
+    "w" : 29,
+    "x" : 630,
+    "y" : 262
+  },
+  "voiceHUD" : {
+    "h" : 298.5,
+    "w" : 720.5,
+    "x" : 600,
+    "y" : -0.5
   },
   "window:AstraPanel<VoiceTaskDockView>" : {
     "h" : 298,

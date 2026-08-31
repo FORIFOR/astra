@@ -1,9 +1,15 @@
 {
+  "contextStrip" : {
+    "h" : 16,
+    "w" : 560,
+    "x" : 680,
+    "y" : 68
+  },
   "voiceHUD" : {
-    "h" : 10,
-    "w" : 22,
-    "x" : 709,
-    "y" : 42
+    "h" : 120.5,
+    "w" : 600.5,
+    "x" : 660,
+    "y" : -0.5
   },
   "window:AstraPanel<VoiceTaskDockView>" : {
     "h" : 120,
