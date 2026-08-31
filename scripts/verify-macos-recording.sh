@@ -87,14 +87,17 @@ OUTE2E="$("$BIN" --selftest e2e001 http://127.0.0.1:3000)"; echo "$OUTE2E"
 SHOTS_BASE="${ASTRA_SHOTS_DIR:-/tmp/astra-shots}"
 for appearance in light dark; do
   ARG=""; [[ "$appearance" == dark ]] && ARG="dark"
-  OUTSHOTS="$("$BIN" --selftest shots "$SHOTS_BASE-$appearance" $ARG)"; echo "$appearance: $(echo "$OUTSHOTS" | tail -1)"
+  # `set -e` の下では、代入の中で落ちた時点でスクリプトごと静かに終わる。
+  # どの面で落ちたのか分からなくなるので、状態を受け取ってから判定する。
+  OUTSHOTS="$("$BIN" --selftest shots "$SHOTS_BASE-$appearance" $ARG || true)"
+  echo "$appearance: $(echo "$OUTSHOTS" | tail -1)"
   [[ "$OUTSHOTS" == *SELFTEST_OK* || "$OUTSHOTS" == *SELFTEST_SKIP* ]] || { echo "FAIL: Visual Gate ($appearance)" >&2; exit 1; }
   # hover / focus / pressed が neutral と画素で違うことまで見る（実装の有無ではなく画面の差）。
-  OUTST="$("$BIN" --selftest states "$SHOTS_BASE-states-$appearance" $ARG)"; echo "$OUTST" | grep '^STATE ' || true
+  OUTST="$("$BIN" --selftest states "$SHOTS_BASE-states-$appearance" $ARG || true)"; echo "$OUTST" | grep '^STATE ' || true
   [[ "$OUTST" == *SELFTEST_OK* || "$OUTST" == *SELFTEST_SKIP* ]] || { echo "FAIL: interaction states ($appearance)" >&2; exit 1; }
   # committed の golden と画素で比べる（中身が決まっている面だけ。Home/Apps は時刻や接続で変わるので除外）。
   GDIR="$ROOT/docs/golden-screenshots"; [[ "$appearance" == dark ]] && GDIR="$GDIR/dark"
-  OUTG="$("$BIN" --selftest golden "$GDIR" "$SHOTS_BASE-$appearance")"; echo "$OUTG" | tail -1
+  OUTG="$("$BIN" --selftest golden "$GDIR" "$SHOTS_BASE-$appearance" || true)"; echo "$OUTG" | tail -1
   [[ "$OUTG" == *SELFTEST_OK* ]] || { echo "$OUTG" >&2; echo "FAIL: golden diff ($appearance)" >&2; exit 1; }
 done
 
@@ -124,7 +127,7 @@ for appearance in light dark; do
   [[ "$OUTD" == *SELFTEST_OK* ]] || { echo "$OUTD" >&2; echo "FAIL: Task Dock 8 states ($appearance)" >&2; exit 1; }
 done
 
-for t in screenshot waveform livemic livemeeting livescreen sttrecognize sttstream guishot axtree navtitle breakpoints dictation state presence perf storage meetingiq vad browser dockanim entry secret recordbutton session uiscale acceptance sessionsync; do
+for t in screenshot waveform livemic livemeeting livescreen sttrecognize sttstream guishot axtree navtitle recoveryui breakpoints dictation state presence perf storage meetingiq vad browser dockanim entry secret recordbutton session uiscale acceptance sessionsync; do
   OUT="$("$BIN" --selftest "$t")"
   echo "$OUT"
   [[ "$OUT" == SELFTEST_OK* || "$OUT" == SELFTEST_SKIP* ]] || { echo "FAIL: macOS live $t" >&2; exit 1; }

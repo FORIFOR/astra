@@ -160,6 +160,27 @@ final class RecordingRuntime {
         meetingId = nil
     }
 
+    /// 録りかけを 1 件捨てる。**音は消える。戻せない。**
+    ///
+    /// 送り先が無いと `recover` は何もできないので、捨てる道が無いと
+    /// 「録りかけが N 件あります」を永久に見続けることになる（実測で 150 件まで
+    /// 溜まった）。消せないお知らせは、ただの雑音になる。
+    @discardableResult
+    func discard(meetingId id: String) -> Bool {
+        // 走っている録音は消さない。
+        //
+        // 判定は**開いている journal**で見る。`meetingId` はサインインしている
+        // ときしか入らず、`end()` で nil に戻るので、これだけでは録音中を
+        // 取りこぼす（実際、録音中のものを消せてしまった）。
+        guard !(session != nil && id == activeMeetingId) else { return false }
+        guard id != meetingId else { return false }
+        let dir = root + "/" + id
+        // 置き場の外を消さない（id に .. などが混ざっても root の下に留める）。
+        guard URL(fileURLWithPath: dir).standardizedFileURL.path.hasPrefix(
+                URL(fileURLWithPath: root).standardizedFileURL.path + "/") else { return false }
+        do { try FileManager.default.removeItem(atPath: dir); return true } catch { return false }
+    }
+
     /// 前回落ちたまま残っている録音（未アップロードの断片）。起動時に surface する。
     func recoverableMeetings() -> [RecoverableMeeting] {
         AstraCoreBridge.recoverable(root: root, active: nil)

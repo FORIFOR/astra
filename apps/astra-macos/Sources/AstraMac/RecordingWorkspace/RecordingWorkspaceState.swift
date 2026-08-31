@@ -85,6 +85,8 @@ final class RecordingWorkspaceState: ObservableObject {
     private var conversationId: String?
     /// ユーザーが選んだローカルファイル由来の候補（Finder access）。transcript と混ぜて並べ替える。
     var fileCandidates: [ContextCandidate] = []
+    /// まだ一度も実マイクの値が来ていない。「静か」と「聞けていない」を描き分けるため。
+    @Published private(set) var awaitingAudio = true
     @Published var audioLevels: [CGFloat] =
         [0.3, 0.5, 0.8, 0.4, 0.9, 0.6, 0.35, 0.7, 0.5, 0.85, 0.45, 0.6]
 
@@ -201,9 +203,11 @@ final class RecordingWorkspaceState: ObservableObject {
             }
         }
         // 波形を実マイクレベルで更新する（デモの固定値をやめてフラットから始める）。
-        audioLevels = Array(repeating: 0.06, count: 12)
+        audioLevels = Array(repeating: 0.0, count: 12)
+        awaitingAudio = true
         RecordingRuntime.shared.onLevel = { [weak self] level in
             guard let self else { return }
+            self.awaitingAudio = false
             self.audioLevels.removeFirst()
             self.audioLevels.append(CGFloat(level))
         }

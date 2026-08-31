@@ -36,7 +36,7 @@ struct RecordingNowCard: View {
                     .font(.system(size: S.type(TypeScale.secondarySize)))
                     .foregroundStyle(Palette.muted(dark))
             }
-            Waveform(levels: recording.audioLevels)
+            Waveform(levels: recording.audioLevels, awaitingInput: recording.awaitingAudio)
                 .frame(height: 22)
             HStack(spacing: 8) {
                 Button("Open live notes") { VoiceHUDState.shared.toggleMeetingPanel(.notes) }

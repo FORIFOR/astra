@@ -37,6 +37,7 @@ enum SelfTest {
         case "axtree": axtree(); return true
         case "navtitle": navtitle(); return true
         case "update": updateCheck(); return true
+        case "recoveryui": recoveryUI(); return true
         case "dictation": dictation(); return true
         case "breakpoints": breakpoints(); return true
         case "shape": shape(); return true
@@ -967,6 +968,60 @@ enum SelfTest {
             exit(0)
         } else {
             print("SELFTEST_FAIL update: \(fail.joined(separator: ", "))")
+            exit(2)
+        }
+    }
+
+    /// `--selftest recoveryui`: **録りかけを捨てられるか。**
+    ///
+    /// 送り先が無いと `recover` は何もできない。捨てる道が無いと
+    /// 「録りかけが N 件あります」を永久に見続けることになる（実測で 150 件まで
+    /// 溜まった）。消せないお知らせは、ただの雑音になる。
+    /// 走っている録音を巻き込まないことと、置き場の外を消さないことも見る。
+    @MainActor
+    private static func recoveryUI() {
+        var fail: [String] = []
+        let runtime = RecordingRuntime.shared
+        let root = LocalStore.dataRoot.appendingPathComponent("meetings")
+        try? FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+
+        // 捨てる対象を 2 件作る（実ディレクトリ）。
+        var made: [String] = []
+        for i in 0..<2 {
+            let id = "discard-selftest-\(getpid())-\(i)"
+            let dir = root.appendingPathComponent(id)
+            try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+            try? Data("x".utf8).write(to: dir.appendingPathComponent("fragment.bin"))
+            made.append(id)
+        }
+
+        // ① 捨てられる。
+        for id in made where !runtime.discard(meetingId: id) { fail.append("\(id) を捨てられない") }
+        for id in made where FileManager.default.fileExists(atPath: root.appendingPathComponent(id).path) {
+            fail.append("\(id) が残っている")
+        }
+
+        // ② **置き場の外は消さない。** id に .. が混ざっても外へ出ない。
+        let outside = LocalStore.dataRoot.appendingPathComponent("do-not-delete-selftest")
+        try? FileManager.default.createDirectory(at: outside, withIntermediateDirectories: true)
+        _ = runtime.discard(meetingId: "../do-not-delete-selftest")
+        if !FileManager.default.fileExists(atPath: outside.path) {
+            fail.append("置き場の外を消した")
+        }
+        try? FileManager.default.removeItem(at: outside)
+
+        // ③ 走っている録音は捨てない。
+        let live = "live-selftest-\(getpid())"
+        runtime.begin(meetingId: live, captureMic: false)
+        if runtime.discard(meetingId: runtime.activeMeetingId) { fail.append("録音中のものを捨てた") }
+        runtime.end()
+        _ = runtime.discard(meetingId: runtime.activeMeetingId)
+
+        if fail.isEmpty {
+            print("SELFTEST_OK recoveryui: 録りかけを捨てられる・置き場の外は消さない・録音中のものは捨てない")
+            exit(0)
+        } else {
+            print("SELFTEST_FAIL recoveryui: \(fail.joined(separator: ", "))")
             exit(2)
         }
     }
@@ -3985,7 +4040,23 @@ enum SelfTest {
         /// 窓が出るまでの時間は機械の忙しさで変わる。固定待ちにすると、
         /// verify:all のように連続で回したときだけ「撮影不可」で落ちた（実際に起きた）。
         /// 目当ての寸法の窓が window server に現れるまで待ってから撮る。
-        func capture(_ name: String, minW: CGFloat = 40, minH: CGFloat = 20) -> (w: Int, h: Int, colors: Int)? {
+        /// 出し直しても撮れないときだけ諦める。`present` を渡すと、失敗したときに
+        /// もう一度提示してから撮り直す —— 稀に窓が window server に現れないまま
+        /// 8 秒が過ぎることがあり、そのたびにゲート全体が落ちていた。
+        /// 撮れないことと、撮った結果が違うことは別に扱う。
+        func capture(_ name: String, minW: CGFloat = 40, minH: CGFloat = 20,
+                     present: (() -> Void)? = nil) -> (w: Int, h: Int, colors: Int)? {
+            for attempt in 0..<3 {
+                if attempt > 0 {
+                    present?()
+                    settle(1.0)
+                }
+                if let got = captureOnce(name, minW: minW, minH: minH) { return got }
+            }
+            return nil
+        }
+
+        func captureOnce(_ name: String, minW: CGFloat = 40, minH: CGFloat = 20) -> (w: Int, h: Int, colors: Int)? {
             var best: (CGWindowID, Int, Int)? = nil
             let deadline = Date().addingTimeInterval(8)
             repeat {
@@ -4146,15 +4217,18 @@ enum SelfTest {
         // 06 main-home / 07 apps は Main Window から
         MainWindowController.shared.show()
         settle(1.2)
-        record("06-main-home", capture("06-main-home", minW: 700, minH: 500), expW: nil, expH: nil, minColors: 8)
+        record("06-main-home", capture("06-main-home", minW: 700, minH: 500,
+                       present: { MainWindowController.shared.showSection(.home) }), expW: nil, expH: nil, minColors: 8)
 
         // 07 apps: Main の Apps タブへ（accessibility 経由ではなく状態で切り替える）
         MainWindowController.shared.showSection(.plugins)
-        record("07-apps", capture("07-apps", minW: 700, minH: 500), expW: nil, expH: nil, minColors: 8)
+        record("07-apps", capture("07-apps", minW: 700, minH: 500,
+                       present: { MainWindowController.shared.showSection(.plugins) }), expW: nil, expH: nil, minColors: 8)
 
         // 08 meeting-detail: Library の会議詳細（MeetingArtifactView）
         MainWindowController.shared.showMeetingDetailPreview()
-        record("08-meeting-detail", capture("08-meeting-detail", minW: 700, minH: 500), expW: nil, expH: nil, minColors: 8)
+        record("08-meeting-detail", capture("08-meeting-detail", minW: 700, minH: 500,
+                       present: { MainWindowController.shared.showMeetingDetailPreview() }), expW: nil, expH: nil, minColors: 8)
 
         // 12 recording-now: 録音中に Home へ戻ったとき、そこに録音が見えるか。
         //
@@ -4167,7 +4241,8 @@ enum SelfTest {
         state.start()
         MainWindowController.shared.showSection(.home)
         settle(0.5)
-        record("12-recording-now", capture("12-recording-now", minW: 700, minH: 500),
+        record("12-recording-now", capture("12-recording-now", minW: 700, minH: 500,
+                       present: { MainWindowController.shared.showSection(.home) }),
                expW: nil, expH: nil, minColors: 8)
         // 録音中の Home に、その録音が実際に出ているか（絵だけでなく状態でも言う）。
         if MeetingSessionStore.shared.sessions.first(where: { $0.isLive }) == nil {

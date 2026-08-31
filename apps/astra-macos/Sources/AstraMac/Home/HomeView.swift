@@ -204,6 +204,23 @@ struct HomeView: View {
     }
 
     /// 節の見出し。**中身より小さく静かに**する。以前は 22pt で、行より目立っていた。
+    /// 録りかけを捨てる。**音が消えて戻せない**ので、必ず一度聞く（§16 R3）。
+    private func discardPending() {
+        let all = RecordingRuntime.shared.recoverableMeetings()
+        guard !all.isEmpty else { recordedCount = 0; return }
+        let go = Confirm.ask(ActionConfirmation(
+            title: "録りかけ \(all.count) 件を捨てます",
+            details: ["録音した音が消えます。戻せません",
+                      "読み取りたいものがあるなら、先に「続きから」を試してください"],
+            risk: .r3,
+            confirmLabel: "\(all.count) 件を捨てる"))
+        guard go else { return }
+        RecoveryState.shared.pending = all
+        let n = RecoveryState.shared.discardAll()
+        recordedCount = RecordingRuntime.shared.recoverableMeetings().count
+        recoverNote = recordedCount == 0 ? "\(n) 件を捨てました。" : "\(n) 件を捨てました（\(recordedCount) 件残っています）。"
+    }
+
     /// 溜まっていた録りかけを片付ける。送れなかったときは黙らずに理由を返す。
     private func recoverPending() {
         RecoveryState.shared.pending = RecordingRuntime.shared.recoverableMeetings()
@@ -240,6 +257,14 @@ struct HomeView: View {
                 .frame(height: 30).padding(.horizontal, 12)
                 .buttonStyle(AstraControlStyle(radius: 8, base: 0.05))
                 .accessibilityIdentifier("recoverPending")
+            // **捨てる道**。送り先が無ければ「続きから」は何もできないので、
+            // これが無いと消せないお知らせを永久に見続けることになる。
+            Button("破棄") { discardPending() }
+                .font(.system(size: S.type(TypeScale.secondarySize)))
+                .foregroundStyle(Palette.muted(dark))
+                .frame(height: 30).padding(.horizontal, 10)
+                .buttonStyle(AstraControlStyle(radius: 8, base: 0.0))
+                .accessibilityIdentifier("discardPending")
         }
         .padding(S.metric(Space.cardPadding))
         .frame(maxWidth: .infinity, alignment: .leading)

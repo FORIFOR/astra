@@ -554,7 +554,7 @@ private struct MeetingDock: View {
                     .font(.system(size: S.type(Metrics.dockMetaSize), design: .monospaced))
                     .foregroundStyle(Palette.muted(dark))
             }
-            Waveform(levels: recording.audioLevels)
+            Waveform(levels: recording.audioLevels, awaitingInput: recording.awaitingAudio)
                 .frame(width: 56, height: 16)
             Spacer(minLength: 0)
             ForEach(DockPresentation.MeetingPanel.allCases, id: \.self) { panel in

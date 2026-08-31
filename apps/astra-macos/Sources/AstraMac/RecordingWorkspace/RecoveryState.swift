@@ -8,6 +8,16 @@ final class RecoveryState: ObservableObject {
     static let shared = RecoveryState()
     @Published var pending: [RecoverableMeeting] = []
 
+    /// まとめて捨てる。**音は消える。戻せない。**呼ぶ前に必ず確認を取ること。
+    /// 捨てた件数を返す。
+    @discardableResult
+    func discardAll() -> Int {
+        var n = 0
+        for meeting in pending where RecordingRuntime.shared.discard(meetingId: meeting.meetingId) { n += 1 }
+        pending = []
+        return n
+    }
+
     /// 見つかった録音をまとめて復旧する（サインイン済みのときだけ実際に送れる）。送れたバイト合計を返す。
     @discardableResult
     func recoverAll() -> UInt64 {
