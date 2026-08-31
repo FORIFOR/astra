@@ -1,0 +1,62 @@
+{
+  "ai-アクション" : {
+    "h" : 32,
+    "w" : 157,
+    "x" : 1321,
+    "y" : 722
+  },
+  "ai-リアルタイム要約" : {
+    "h" : 32,
+    "w" : 157,
+    "x" : 1158,
+    "y" : 684
+  },
+  "ai-決定事項" : {
+    "h" : 32,
+    "w" : 157,
+    "x" : 1158,
+    "y" : 722
+  },
+  "ai-質問する" : {
+    "h" : 32,
+    "w" : 157,
+    "x" : 1321,
+    "y" : 684
+  },
+  "recordingWorkspace" : {
+    "h" : 39,
+    "w" : 2,
+    "x" : 863,
+    "y" : 180.5
+  },
+  "voiceHUD" : {
+    "h" : 19,
+    "w" : 96,
+    "x" : 591,
+    "y" : 20
+  },
+  "window:AstraPanel<RecordingWorkspaceView>" : {
+    "h" : 680,
+    "w" : 1080,
+    "x" : 420,
+    "y" : 224
+  },
+  "window:AstraPanel<RecordingWorkspaceView>:centerOffset" : {
+    "h" : 0,
+    "w" : 0,
+    "x" : 0,
+    "y" : 176
+  },
+  "window:AstraPanel<VoiceTaskDockView>" : {
+    "h" : 460,
+    "w" : 820,
+    "x" : 550,
+    "y" : 620
+  },
+  "window:AstraPanel<VoiceTaskDockView>:centerOffset" : {
+    "h" : 0,
+    "w" : 0,
+    "x" : 0,
+    "y" : 0
+  }
+}

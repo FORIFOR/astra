@@ -36,6 +36,7 @@ enum SelfTest {
         case "guishot": guishot(); return true
         case "axtree": axtree(); return true
         case "navtitle": navtitle(); return true
+        case "geometry": geometryGate(args); return true
         case "update": updateCheck(); return true
         case "recoveryui": recoveryUI(); return true
         case "dictation": dictation(); return true
@@ -234,7 +235,17 @@ enum SelfTest {
             for k in 0..<a.count where abs(Int(a[k]) - Int(b[k])) >= 16 { n += 1 }
             let ratio = Double(n) / Double(a.count)
             report.append(String(format: "%@ %.3f%%", name, ratio * 100))
-            if ratio > tolerance { failures.append(String(format: "%@ が golden と %.2f%% 違う", name, ratio * 100)) }
+            if ratio > tolerance {
+                // **差分画像を残す。**「1.08% 違う」だけでは、どこが違うのか
+                // 分からないので直しようがない。基準｜実際｜差分を 1 枚にして置く。
+                let diffPath = "\(freshDir)/diff/\(name)-diff.png"
+                if let pct = UIDiffImage.write(reference: g, actual: f, to: diffPath) {
+                    failures.append(String(format: "%@ が golden と %.2f%% 違う（差分: %@ / 画素 %.2f%%）",
+                                           name, ratio * 100, diffPath, pct))
+                } else {
+                    failures.append(String(format: "%@ が golden と %.2f%% 違う", name, ratio * 100))
+                }
+            }
         }
 
         for line in report { print("GOLDEN \(line)") }
@@ -1024,6 +1035,97 @@ enum SelfTest {
             print("SELFTEST_FAIL recoveryui: \(fail.joined(separator: ", "))")
             exit(2)
         }
+    }
+
+    /// `--selftest geometry <reference-dir> [--record]`:
+    /// **6 状態の実寸を pt で測り、基準と 2pt で突き合わせる。**
+    ///
+    /// 画素の何 % で見ていると、「30pt ずれている」も「影が少し濃い」も同じ 0.4% に
+    /// なり、どちらを先に直すか決まらない。位置・寸法を pt で測れば、ずれた量が
+    /// そのまま出るし、直す順番も機械的に決まる（geometry が合うまで下の層は見ない）。
+    ///
+    /// `--record` で今の値を基準として書き出す。
+    @MainActor
+    private static func geometryGate(_ args: [String]) {
+        let i = args.firstIndex(of: "--selftest")!
+        let refDir = args.count > i + 2 ? args[i + 2] : "docs/golden-screenshots/geometry"
+        let record = args.contains("--record")
+        try? FileManager.default.createDirectory(atPath: refDir, withIntermediateDirectories: true)
+
+        guard AXIsProcessTrusted() else {
+            print("SELFTEST_SKIP geometry: AX not trusted（実寸を読めない）"); exit(0)
+        }
+        func settle(_ sec: Double) {
+            let until = Date().addingTimeInterval(sec)
+            while Date() < until { CFRunLoopRunInMode(.defaultMode, 0.05, true) }
+        }
+
+        let store = AstraStateStore.shared
+        let recording = RecordingWorkspaceState.shared
+        WindowCoordinator.shared.showVoiceHUD()
+
+        // 6 状態。名前は正解画像（task-dock/）と揃える。
+        let states: [(String, () -> Void)] = [
+            ("01-idle", { store.reset(); VoiceHUDState.shared.mode = .idle }),
+            ("02-listening", { store.reset(); VoiceHUDState.shared.mode = .listening(partial: "このページからタスクを作って…") }),
+            ("03-task-dock", {
+                store.reset()
+                store.startTask(AgentTask(
+                    id: UUID(), title: "週次ブリーフィングを作る", status: .running,
+                    steps: [AgentStep(title: "Calendar", tool: "calendar", state: .success),
+                            AgentStep(title: "Gmail", tool: "gmail", state: .running),
+                            AgentStep(title: "Notion", tool: "notion")],
+                    startedAt: Date(), context: ContextBundle(items: [])))
+            }),
+            ("04-meeting", {
+                store.reset(); store.meetingDetected(app: "Google Meet")
+                store.meetingStarted(id: "geometry-selftest")
+            }),
+            ("05-meeting-notes", { VoiceHUDState.shared.toggleMeetingPanel(.notes) }),
+            ("06-workspace", {
+                recording.loadDemo(ragOpen: false)
+                WindowCoordinator.shared.showRecordingWorkspace()
+            }),
+        ]
+
+        var problems: [(String, [String])] = []
+        var recorded = 0
+        for (name, present) in states {
+            present()
+            settle(1.2)
+            guard let snap = UIGeometry.snapshot(), !snap.isEmpty else {
+                problems.append((name, ["実寸を 1 つも読めない"])); continue
+            }
+            let path = "\(refDir)/\(name).json"
+            if record {
+                UIGeometry.write(snap, to: path); recorded += 1; continue
+            }
+            guard let want = UIGeometry.read(path) else {
+                problems.append((name, ["基準が無い（--record で作る）"])); continue
+            }
+            let diffs = UIGeometry.compare(snap, to: want)
+            for (layer, lines) in diffs where !lines.isEmpty {
+                problems.append((name, lines.map { "\(layer.label) \($0)" }))
+            }
+        }
+        WindowCoordinator.shared.hideRecordingWorkspace()
+        WindowCoordinator.shared.hideVoiceHUD()
+        store.reset()
+
+        if record {
+            print("SELFTEST_OK geometry: \(recorded)状態の実寸を基準として記録した（\(refDir)）")
+            exit(0)
+        }
+        if problems.isEmpty {
+            print("SELFTEST_OK geometry: 6状態の位置・寸法が基準と 2pt 以内")
+            exit(0)
+        }
+        // **直す順番に並べて出す。** 上の段が残っているうちは下を出さない。
+        for (name, lines) in problems {
+            for l in lines { print("GEOMETRY \(name): \(l)") }
+        }
+        print("SELFTEST_FAIL geometry: \(problems.count)面が基準から外れた（まず ① Geometry から直す）")
+        exit(2)
     }
 
     /// 撮った面のうち、実質同じ絵になっている組。

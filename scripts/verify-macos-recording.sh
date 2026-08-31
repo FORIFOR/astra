@@ -101,6 +101,13 @@ for appearance in light dark; do
   [[ "$OUTG" == *SELFTEST_OK* ]] || { echo "$OUTG" >&2; echo "FAIL: golden diff ($appearance)" >&2; exit 1; }
 done
 
+# 6 状態の**実寸**を pt で見る。画素の何 % では「30pt ずれた」も「影が濃い」も
+# 同じ数字になり、どちらを先に直すか決まらない。2pt を超えたら落とす。
+OUTGEO="$("$BIN" --selftest geometry "$ROOT/docs/golden-screenshots/geometry" || true)"
+echo "$OUTGEO" | grep '^GEOMETRY ' || true; echo "$OUTGEO" | tail -1
+[[ "$OUTGEO" == *SELFTEST_OK* || "$OUTGEO" == *SELFTEST_SKIP* ]] || {
+  echo "FAIL: UI geometry (2pt)" >&2; exit 1; }
+
 # 面がどれだけ空いているかを測り、基準より悪くなったら落とす（歯止め）。
 # 「良い UI」を目で言い合っても決まらないので数字にする。light だけで足りる。
 OUTD="$("$BIN" --selftest density "$SHOTS_BASE-light" "$ROOT/docs/evidence/density-baseline.json")"; echo "$OUTD" | tail -1

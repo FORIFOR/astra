@@ -16,6 +16,7 @@ run "Tauri Rust regression"       bash -c "cd apps/desktop/src-tauri && out=\$(c
 run "Tauri desktop JS regression" bash -c "out=\$(pnpm --filter @astra/desktop test 2>&1); st=\$?; echo \"\$out\" | grep -E 'Tests +[0-9]+ passed' | tail -1; [ \$st -eq 0 ] || grep -E '^ *(×|FAIL)' <<<\"\$out\" | head -40; exit \$st"
 run "TCC usage descriptions"     bash scripts/verify-usage-descriptions.sh
 run "release consistency"        bash scripts/verify-release-consistency.sh
+run "UI taste"                   bash scripts/verify-ui-taste.sh
 run "design tokens fresh"         node scripts/gen-design-tokens.mjs --check
 run "swift bindings fresh"        bash scripts/gen-swift-bindings.sh --check
 run "workspace fixture fresh"     node scripts/gen-workspace-fixture.mjs --check

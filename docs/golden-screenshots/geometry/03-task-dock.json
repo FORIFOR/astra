@@ -1,0 +1,20 @@
+{
+  "voiceHUD" : {
+    "h" : 16,
+    "w" : 33,
+    "x" : 639,
+    "y" : 14
+  },
+  "window:AstraPanel<VoiceTaskDockView>" : {
+    "h" : 298,
+    "w" : 720,
+    "x" : 600,
+    "y" : 782
+  },
+  "window:AstraPanel<VoiceTaskDockView>:centerOffset" : {
+    "h" : 0,
+    "w" : 0,
+    "x" : 0,
+    "y" : 0
+  }
+}
