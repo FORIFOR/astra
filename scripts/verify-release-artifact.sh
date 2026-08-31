@@ -70,10 +70,21 @@ xattr -w com.apple.quarantine "0083;$(printf %x "$(date +%s)");Safari;" "$QDIR/d
 QAPP="$QDIR/Astra.app"
 
 # Gatekeeper は**落とさない**。公証前は必ず rejected になるので、状態を報告するだけ。
+#
+# **`spctl` だけで判断しない。** 評価は経路ごとに再利用されるので、公証していない
+# 版でも「受理」と出ることがある（実際に出た。同じ場所で前に公証した版を
+# 評価した結果が効いていた）。券が貼られているか（staple）を別に見る。
+# 券が無いと、ネットに繋がっていない利用者は開けない。
 GK="$(spctl --assess --type execute "$QAPP" 2>&1 | tail -1)"
-if spctl --assess --type execute "$QAPP" >/dev/null 2>&1; then
-  echo "  Gatekeeper: 受理（落としてきた状態でも開ける）"
+STAPLED=no
+xcrun stapler validate "$QAPP" >/dev/null 2>&1 && STAPLED=yes
+if spctl --assess --type execute "$QAPP" >/dev/null 2>&1 && [ "$STAPLED" = yes ]; then
+  echo "  Gatekeeper: 受理・券あり（落としてきた状態でも、圏外でも開ける）"
   READINESS=NOTARIZED
+elif [ "$STAPLED" = no ]; then
+  echo "  Gatekeeper: $GK / 券が貼られていない"
+  echo "    ← 圏外の利用者は開けない。公証と staple が要る。"
+  READINESS=SIGNED_NOT_STAPLED
 else
   echo "  Gatekeeper: $GK"
   echo "    ← 落としてきた状態では開けない。公証が要る。"
@@ -129,7 +140,7 @@ echo
 if [[ $fail -eq 0 ]]; then
   echo "RELEASE_ARTIFACT_OK: 配布物が、repo の外・まっさらな置き場で動く（$PASS PASS / $SKIP SKIP）"
   echo "RELEASE_READINESS=$READINESS"
-  [[ "$READINESS" == NOTARIZED ]] || echo "  ※ 公証が済むまで、他人の Mac では Gatekeeper に止められる"
+  [[ "$READINESS" == NOTARIZED ]] || echo "  ※ 公証と staple が済むまで、配ってはいけない"
   exit 0
 else
   echo "RELEASE_ARTIFACT_FAIL" >&2

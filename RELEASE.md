@@ -133,7 +133,7 @@ bash scripts/release-macos.sh
 4. `.app` を組む。版番号は `package.json` から取る（plist に直書きしない）
 5. Developer ID + hardened runtime で署名し、`codesign --verify --strict` で確認
 6. zip を作る
-7. 公証 → staple → `spctl --assess`
+7. 公証 → staple → `spctl --assess`（**staple まで通す**。§2 の最後を見ること）
 
 資格情報が無ければ 6 の後で止まり、`RELEASE_READINESS=SIGNED_NOT_NOTARIZED`
 を出して終了コード 3 を返す。
@@ -161,6 +161,12 @@ bash scripts/release-macos.sh
   配った先では 0 件になる。バンドルへ同梱し、個人のパスは消した。
   cwd 相対も当てにしない（ゲートは `apps/astra-macos` へ cd して動かすので外れる）
   —— 実行体から上へ辿って探す。
+- **`spctl` だけで「公証済み」と判断しない。** 評価は経路ごとに再利用されるので、
+  公証していない版でも「受理」と出ることがある（実際に出た。同じ場所で前に
+  公証した版の評価が効いていた）。券が貼られているか（`stapler validate`）を
+  別に見る。券が無いと**ネットに繋がっていない利用者は開けない**。
+  `verify-release-artifact.sh` は両方を見て、券が無ければ
+  `SIGNED_NOT_STAPLED` と言う。
 - **初回起動を試せなかった。** macOS の `applicationSupportDirectory` は HOME を
   見ずに実ユーザーから解決するので、HOME を変えても隔離できない。
   `ASTRA_DATA_ROOT` で置き場所を差し替えられるようにした。利用者のデータを
