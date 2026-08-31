@@ -8,6 +8,11 @@
 #
 # 版番号は package.json 1 か所から取る。plist に直に書くと、必ずどこかとずれる。
 #
+# Sparkle の公開鍵は既定でこの Mac の keychain にある鍵のもの。**公開鍵なので
+# 秘密ではない**（アプリに埋めて配るもの）。対の秘密鍵は keychain にあり、
+# 失うと以後の更新に署名できない —— 別の鍵に変えると、古い版のアプリは
+# 新しい更新を検証できなくなる。
+#
 # 必要なもの:
 #   - "Developer ID Application" の証明書（security find-identity -v -p codesigning）
 #   - notarization の資格情報。あらかじめ keychain profile にしておく:
@@ -91,7 +96,7 @@ cat > "$APP/Contents/Info.plist" <<PLIST
        配布先が決まったら appcast の URL を、`generate_keys` を回したら
        その公開鍵をここへ入れる。片方だけ入れても SoftwareUpdate は起動しない。 -->
   <key>SUFeedURL</key><string>${ASTRA_UPDATE_FEED:-}</string>
-  <key>SUPublicEDKey</key><string>${ASTRA_UPDATE_PUBKEY:-}</string>
+  <key>SUPublicEDKey</key><string>${ASTRA_UPDATE_PUBKEY:-b61dWnFNEdpzAWG/V5SMb4bZGrqgzJwMDAcuw/564cs=}</string>
   <key>SUEnableAutomaticChecks</key><true/>
   <!-- 黙って入れ替えない。落としてくるかは利用者が決める。 -->
   <key>SUAutomaticallyUpdate</key><false/>

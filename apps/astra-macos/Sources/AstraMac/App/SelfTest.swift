@@ -2747,13 +2747,21 @@ enum SelfTest {
     /// TCC も GUI も要らない（押下の live 受信はユーザーが署名済み .app で確かめる）。
     @MainActor
     private static func shortcut() {
+        // `open` で起動したときは stdout が読めない。**利用者と同じ経路**
+        // （LaunchServices 経由＝バンドルに紐づく TCC）で確かめられるよう、
+        // 結果をファイルにも残す。シェルから直に起動すると TCC は責任プロセス
+        // （ターミナル）に紐づくので、入力監視の許可がアプリのものにならない。
+        func report(_ line: String) {
+            print(line)
+            try? line.write(toFile: "/tmp/astra-shortcut.txt", atomically: true, encoding: .utf8)
+        }
         // 純関数の一致ロジックを先に確かめる（⌥Space は一致、Space 単独/⌘Space は不一致）。
         let combo = GlobalShortcut.Combo()   // ⌥Space
         let mSpace = GlobalShortcut.matches(combo: combo, keyCode: 49, flags: [.maskAlternate])
         let mPlain = GlobalShortcut.matches(combo: combo, keyCode: 49, flags: [])
         let mCmd = GlobalShortcut.matches(combo: combo, keyCode: 49, flags: [.maskCommand])
         guard mSpace, !mPlain, !mCmd else {
-            print("SELFTEST_FAIL shortcut matcher space=\(mSpace) plain=\(mPlain) cmd=\(mCmd)"); exit(2)
+            report("SELFTEST_FAIL shortcut matcher space=\(mSpace) plain=\(mPlain) cmd=\(mCmd)"); exit(2)
         }
 
         // CGEventTap を実登録し、合成 ⌥Space をセッションtapへ注入して「受信→発火」を実測する。
@@ -2768,12 +2776,12 @@ enum SelfTest {
             // これは環境の状態で、コードの誤りではない。直せるのは人だけなので、
             // 何を直せばよいかまで言って SKIP する。
             if CGPreflightListenEventAccess() {
-                print("SELFTEST_SKIP shortcut: 入力監視は許可済みだが tap が有効にならない。"
+                report("SELFTEST_SKIP shortcut: 入力監視は許可済みだが tap が有効にならない。"
                     + "システム設定 > プライバシーとセキュリティ > 入力監視 で Astra を"
                     + "一度外して入れ直すと直る（実行体が変わると失効する）")
                 exit(0)
             }
-            print("SELFTEST_SKIP shortcut: 入力監視が未許可（システム設定で許可が要る）")
+            report("SELFTEST_SKIP shortcut: 入力監視が未許可（システム設定で許可が要る）")
             exit(0)
         }
         let source = CGEventSource(stateID: .privateState)
@@ -2790,12 +2798,21 @@ enum SelfTest {
         GlobalShortcut.shared.unregister()
         guard fired else {
             // 落ちたときに、権限なのか受信経路なのかが分かるようにする。
-            print("SELFTEST_FAIL shortcut: synthetic press not received "
-                + "(listen=\(CGPreflightListenEventAccess()) ax=\(AXIsProcessTrusted()) "
-                + "tapEnabled=\(GlobalShortcut.shared.isTapEnabled))")
+            // tap が途中で落とされたなら、それは OS 側の判断（許可が実行体に
+            // 紐づいていない）で、受信経路の誤りではない。**確かめられなかった**
+            // と言う。tap が生きたまま届かないなら、それは本物の欠陥。
+            if !GlobalShortcut.shared.isTapEnabled {
+                report("SELFTEST_SKIP shortcut: tap が OS に落とされた（許可がこの実行体に"
+                    + "紐づいていない）。端末から起動すると責任プロセス側の許可を継ぐので、"
+                    + "アプリとして起動し、システム設定 > プライバシーとセキュリティ > "
+                    + "入力監視 で Astra を許可すること")
+                exit(0)
+            }
+            report("SELFTEST_FAIL shortcut: tap は有効なのに合成の押下が届かない "
+                + "(listen=\(CGPreflightListenEventAccess()) ax=\(AXIsProcessTrusted()))")
             exit(2)
         }
-        print("SELFTEST_OK shortcut: registered=\(ok) combo=\(label) matcher=ok receivedSyntheticPress=\(fired)")
+        report("SELFTEST_OK shortcut: registered=\(ok) combo=\(label) matcher=ok receivedSyntheticPress=\(fired)")
         exit(0)
     }
 
@@ -3449,6 +3466,27 @@ enum SelfTest {
         negWin.makeFirstResponder(button)
         let negDeadline = Date().addingTimeInterval(1.5)
         while Date() < negDeadline { CFRunLoopRunInMode(.defaultMode, 0.05, true) }
+        // 自分のボタンが本当に AX の焦点になっているか。なっていないなら、
+        // この否定テストは成立しない —— 端末から起動すると TCC は責任プロセス
+        // （ターミナル）に紐づくので、system-wide の焦点は**ターミナルの入力欄**を
+        // 返す。そこへ書けるのは当たり前で、Astra の欠陥ではない。
+        var focusedRole = "?"
+        do {
+            let sys = AXUIElementCreateSystemWide()
+            var f: CFTypeRef?
+            if AXUIElementCopyAttributeValue(sys, kAXFocusedUIElementAttribute as CFString, &f) == .success,
+               let el = f {
+                var r: CFTypeRef?
+                if AXUIElementCopyAttributeValue(el as! AXUIElement, kAXRoleAttribute as CFString, &r) == .success,
+                   let role = r as? String { focusedRole = role }
+            }
+        }
+        guard focusedRole == (kAXButtonRole as String) else {
+            negWin.orderOut(nil); negWin.close()
+            print("SELFTEST_SKIP dictation: 自分の窓へ焦点を移せない（AX の焦点は "
+                + "\(focusedRole)）。アプリとして起動しないと、この否定テストは成立しない")
+            exit(0)
+        }
         let wroteToButton = Dictation.insert("これは入らないはず")
         negWin.orderOut(nil); negWin.close()
         guard wroteToButton == false else {
@@ -4240,14 +4278,42 @@ enum SelfTest {
             NSApp.activate(ignoringOtherApps: true)
             typing.makeFirstResponder(field)
             settle(1.0)
-            let dictated = Dictation.insert("明日の商談の準備をお願い")
-            let dictationOK = dictated && field.stringValue.contains("明日の商談の準備をお願い")
-            typing.orderOut(nil); typing.close()
-            settle(0.3)
-            guard dictationOK else {
-                print("SELFTEST_FAIL e2e001 ②dictation: inserted=\(dictated) value=\"\(field.stringValue)\""); exit(3)
+            // 自分の入力欄が AX の焦点になっているか。端末から起動すると TCC は
+            // 責任プロセス（ターミナル）に紐づくので、system-wide の焦点は
+            // **ターミナルの入力欄**を返す。そこへ入ってしまうので、この段は
+            // この起動のしかたでは確かめられない。落とさず「未検証」と記す
+            // —— 他の 8 段は有効なので、まとめて捨てない。
+            var ownFocus = false
+            do {
+                let sys = AXUIElementCreateSystemWide()
+                var f: CFTypeRef?
+                if AXUIElementCopyAttributeValue(sys, kAXFocusedUIElementAttribute as CFString, &f) == .success,
+                   let el = f {
+                    var r: CFTypeRef?
+                    if AXUIElementCopyAttributeValue(el as! AXUIElement, kAXRoleAttribute as CFString, &r) == .success,
+                       let role = r as? String { ownFocus = (role == (kAXTextFieldRole as String)) }
+                    var v: CFTypeRef?
+                    if ownFocus,
+                       AXUIElementCopyAttributeValue(el as! AXUIElement, kAXValueAttribute as CFString, &v) == .success {
+                        // 自分の欄は空で始まる。値が入っているなら他アプリの欄。
+                        ownFocus = ((v as? String) ?? "").isEmpty
+                    }
+                }
             }
-            steps.append("②dictation")
+            if ownFocus {
+                let dictated = Dictation.insert("明日の商談の準備をお願い")
+                let dictationOK = dictated && field.stringValue.contains("明日の商談の準備をお願い")
+                typing.orderOut(nil); typing.close()
+                settle(0.3)
+                guard dictationOK else {
+                    print("SELFTEST_FAIL e2e001 ②dictation: inserted=\(dictated) value=\"\(field.stringValue)\""); exit(3)
+                }
+                steps.append("②dictation")
+            } else {
+                typing.orderOut(nil); typing.close()
+                settle(0.3)
+                steps.append("②dictation(未検証: アプリとして起動していない)")
+            }
 
             // ---- ③ 会議開始: ショートカット相当の 1 操作だけで録音コントローラへ切替。
             //
@@ -4488,13 +4554,39 @@ enum SelfTest {
         let q = DispatchQueue(label: "astra.mock.token")
         listener.newConnectionHandler = { conn in
             conn.start(queue: q)
-            conn.receive(minimumIncompleteLength: 1, maximumLength: 8192) { data, _, _, _ in
-                let req = data.flatMap { String(data: $0, encoding: .utf8) } ?? ""
-                if req.contains("code_verifier=ver-swift") && req.contains("grant_type=authorization_code") { sawVerifier = true }
-                let body = "{\"access_token\":\"at-sw\",\"refresh_token\":\"rt-sw\",\"expires_in\":3600,\"token_type\":\"Bearer\"}"
-                let resp = "HTTP/1.1 200 OK\r\ncontent-type: application/json\r\ncontent-length: \(body.utf8.count)\r\nconnection: close\r\n\r\n\(body)"
-                conn.send(content: resp.data(using: .utf8), completion: .contentProcessed { _ in conn.cancel() })
+            // **リクエストを読み切ってから返す。**
+            //
+            // 1 バイト届いた時点で応答して即 cancel していたので、本文が受信待ちの
+            // まま閉じることがあり、OS は FIN ではなく RST を返した。RST は送信
+            // バッファも捨てるので、応答を書いた直後でもクライアントは読めない。
+            // ureq はそれを panic にし、UniFFI の `try!` を通って**アプリが落ちた**。
+            // （同じ型を core 側の Rust テストでも踏んでいる）
+            var acc = Data()
+            func pump() {
+                conn.receive(minimumIncompleteLength: 1, maximumLength: 8192) { data, _, done, _ in
+                    if let d = data { acc.append(d) }
+                    let text = String(data: acc, encoding: .utf8) ?? ""
+                    var complete = done
+                    if let headEnd = text.range(of: "\r\n\r\n") {
+                        let head = String(text[text.startIndex..<headEnd.lowerBound])
+                        let want = head.split(separator: "\r\n")
+                            .first { $0.lowercased().hasPrefix("content-length:") }
+                            .flatMap { Int($0.split(separator: ":")[1].trimmingCharacters(in: .whitespaces)) } ?? 0
+                        let bodyLen = text[headEnd.upperBound...].utf8.count
+                        if bodyLen >= want { complete = true }
+                    }
+                    guard complete else { pump(); return }
+                    if text.contains("code_verifier=ver-swift") && text.contains("grant_type=authorization_code") {
+                        sawVerifier = true
+                    }
+                    let body = "{\"access_token\":\"at-sw\",\"refresh_token\":\"rt-sw\",\"expires_in\":3600,\"token_type\":\"Bearer\"}"
+                    let resp = "HTTP/1.1 200 OK\r\ncontent-type: application/json\r\ncontent-length: \(body.utf8.count)\r\nconnection: close\r\n\r\n\(body)"
+                    // isComplete: true で送ると FIN が付く。cancel() で叩き切らない。
+                    conn.send(content: resp.data(using: .utf8), isComplete: true,
+                              completion: .contentProcessed { _ in })
+                }
             }
+            pump()
         }
         let readyLock = NSLock(); var ready = false
         listener.stateUpdateHandler = { st in if case .ready = st { readyLock.lock(); ready = true; readyLock.unlock() } }

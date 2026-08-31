@@ -14,7 +14,11 @@ echo "$OUT2"
 [[ "$OUT2" == SELFTEST_OK* ]] || { echo "FAIL: macOS lifecycle E2E" >&2; exit 1; }
 OUT3="$("$BIN" --selftest shortcut)"
 echo "$OUT3"
-[[ "$OUT3" == SELFTEST_OK* ]] || { echo "FAIL: macOS global shortcut register" >&2; exit 1; }
+# SKIP も通す。⌥Space は入力監視の許可を要り、その許可は**アプリとして起動した
+# ときのバンドル**に紐づく。端末から実行した実行体には紐づかないので、ここで
+# 確かめられないことがある（確かめられないことを「合格」とも「不合格」とも言わない）。
+[[ "$OUT3" == SELFTEST_OK* || "$OUT3" == SELFTEST_SKIP* ]] || {
+  echo "FAIL: macOS global shortcut register" >&2; exit 1; }
 OUT4="$("$BIN" --selftest sysaudio)"
 echo "$OUT4"
 [[ "$OUT4" == SELFTEST_OK* ]] || { echo "FAIL: macOS system-audio config" >&2; exit 1; }

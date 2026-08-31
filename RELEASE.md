@@ -34,6 +34,7 @@ Readiness = SIGNED_NOT_NOTARIZED
 | **公証** | ❌ 資格情報が無い |
 | 自動更新 | ✅ Sparkle 2.9.6 を同梱・署名。設定が揃った状態で起動を確認 |
 | 更新の出し方 | ✅ `scripts/publish-update.sh`（appcast まで作る。上げはしない） |
+| Sparkle 署名鍵 | ✅ 作成済み・公開鍵は release-macos.sh の既定値 |
 | 配布先 URL | ❌ 未定（appcast の置き場が決まっていない） |
 | Windows | ❌ 別（`apps/windows`。CI で実ビルドまで） |
 
@@ -93,18 +94,21 @@ bash scripts/release-macos.sh
 同梱済み。**設定が揃うまで動かない**——appcast の URL と公開鍵のどちらかが
 欠けたまま起動すると、確かめているつもりで何も見ていない状態になるため。
 
-一度だけ、鍵を作る（秘密鍵は keychain に入る。**リポジトリに置かない**）:
+鍵は**作成済み**（2026-08-31）。公開鍵はこれで、`release-macos.sh` の既定値に
+入っている（公開鍵なので秘密ではない。アプリに埋めて配るもの）:
 
-```sh
-./apps/astra-macos/Vendor/Sparkle/bin/generate_keys
+```
+b61dWnFNEdpzAWG/V5SMb4bZGrqgzJwMDAcuw/564cs=
 ```
 
-出てきた公開鍵と、配布先の appcast URL を渡して梱包する:
+対の**秘密鍵はこの Mac の keychain にある**（"Private key for signing Sparkle updates"）。
+失うと以後の更新に署名できない。別の鍵に変えると、既に配った版は新しい更新を
+検証できなくなる。機械を移るときは `generate_keys -x` で書き出して持っていく。
+
+残るは配布先の URL だけ。決まったら:
 
 ```sh
-ASTRA_UPDATE_FEED=https://…/astra/appcast.xml \
-ASTRA_UPDATE_PUBKEY=<generate_keys が出した公開鍵> \
-  bash scripts/release-macos.sh
+ASTRA_UPDATE_FEED=https://…/astra/appcast.xml bash scripts/release-macos.sh
 ```
 
 更新を 1 つ出す（appcast を作るところまで。**置きに行くのは人**）:
@@ -144,8 +148,7 @@ xcrun notarytool store-credentials "astra-notary" \
 
 1. **置き場所**。自前の配布先という方針までは決まっている。URL が決まれば
    `ASTRA_UPDATE_FEED` と `ASTRA_UPDATE_BASE` に入れるだけ。
-2. **Sparkle の署名鍵**。`generate_keys` を一度回す（人がやる。秘密鍵は
-   その人の keychain に入り、失うと以後の更新に署名できない）。
+2. ~~**Sparkle の署名鍵**~~ 作成済み（§2.5）。
 3. **gateway の向き先**。`docs/production-readiness.md` の判定は
    Client ID を入れた状態のもの。配布ビルドがどこを向くかは未決。
 
