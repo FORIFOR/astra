@@ -124,17 +124,18 @@ struct HomeView: View {
                 // ここも live を見ないと、録音カードの真下で「今日はまだ何もありません」と
                 // 言うことになる。
                 if attention.isEmpty && sessions.recent.isEmpty && sessions.live == nil && recentTasks.isEmpty && recordedCount == 0 {
-                    Spacer(minLength: 0)
-                    VStack(spacing: 6) {
-                        Text("今日はまだ何もありません。")
-                            .font(.system(size: S.type(TypeScale.bodySize)))
+                    // 中央に浮かせない。上の操作の続きとして、左揃えで置く。
+                    // 虚空の真ん中に文字があると、余白が「空き」に見えて落ち着かない。
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("まだ何もありません")
+                            .font(.system(size: S.type(TypeScale.bodySize), weight: .medium))
                             .foregroundStyle(Palette.text(dark))
-                        Text("会議を録るか、面倒なことを 1 つ頼んでください。")
+                        // 次にすることを 1 つだけ書く。説明はしない。
+                        Text("⌥Space でどこからでも始められます")
                             .font(.system(size: S.type(TypeScale.secondarySize)))
                             .foregroundStyle(Palette.muted(dark))
                     }
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.vertical, S.metric(Space.largePadding))
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
 
                 Spacer(minLength: 0)

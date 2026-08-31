@@ -136,9 +136,23 @@ export function useDockMachine(
     setContextExpanded(false);
   }, []);
 
+  // 読み取りが終わるまでの待ち。**外れたら止める。**
+  // ここだけ片付けが無く、消えたあとに setState していた。試験では環境が
+  // 畳まれたあとに発火して `window is not defined` になり、全部通っているのに
+  // 非ゼロ終了する形で出ていた（40 回に 1〜2 回。原因が分かるまで 3 度見送った）。
+  const processingTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(
+    () => () => {
+      if (processingTimer.current !== undefined) clearTimeout(processingTimer.current);
+    },
+    [],
+  );
+
   const leaveRecording = useCallback(() => {
     setState((current) => (current === 'RECORDING' ? 'PROCESSING' : current));
-    setTimeout(() => {
+    if (processingTimer.current !== undefined) clearTimeout(processingTimer.current);
+    processingTimer.current = setTimeout(() => {
+      processingTimer.current = undefined;
       setState((current) => {
         if (current !== 'PROCESSING') return current;
         setSurface('pill');

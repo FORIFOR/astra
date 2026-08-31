@@ -95,6 +95,14 @@ export function TaskDock({
     dictation,
     initialSurface ?? (initialState === 'IDLE' ? 'pill' : 'card'),
   );
+  // 開始確認までの待ち。外れたら止める（消えた相手へ呼びかけない）。
+  const startTimer = useRef<number | undefined>(undefined);
+  useEffect(
+    () => () => {
+      if (startTimer.current !== undefined) window.clearTimeout(startTimer.current);
+    },
+    [],
+  );
   const [sources, setSources] = useState<readonly ContextSource[]>(initialSources);
   const [explanation, setExplanation] = useState<string | null>(null);
   /*
@@ -365,7 +373,14 @@ export function TaskDock({
             // 先に本体を前に出す（Work タブへ移る）。その後で開始確認を頼む。
             // 逆にすると、タブ移動が「開始確認を閉じる」扱いになって消える
             void workspace.open().then(() => {
-              setTimeout(() => onMeetingCommand?.('start'), 150);
+              // **消えたあとに撃たない。** 片付けずに放っていたので、
+              // 150ms 以内に外れると壊れた相手へ呼びかけていた
+              // （試験では環境が畳まれたあとに発火して window is not defined になり、
+              //  全部通っているのに非ゼロ終了する形で 2 度出た）。
+              startTimer.current = window.setTimeout(() => {
+                startTimer.current = undefined;
+                onMeetingCommand?.('start');
+              }, 150);
             });
           }}
           onClose={machine.collapse}
