@@ -11,15 +11,21 @@
 ## 0. いまの判定
 
 ```
-Readiness = SIGNED_NOT_NOTARIZED
+Readiness = NOTARIZED
 ```
 
-配り方は 2 通りある:
+**配れる。** 2026-08-31 に公証を通した（submission `d249bf4b-…` / status Accepted）。
+利用者が受け取る形——zip に quarantine の印が付いた状態——で実測:
 
-| | 相手 | 手順 |
-| --- | --- | --- |
-| **いま配る** | 数人・手順を伝えられる | 受け取る人が初回だけ右クリック→開く（§0.5） |
-| **公証してから** | 誰でも | ダブルクリックで開く（§3 の資格情報が要る） |
+```
+Astra.app: accepted
+source=Notarized Developer ID
+```
+
+ダブルクリックで開く。§0.5 の右クリック手順は要らない。
+
+配布物: `dist/Astra-0.1.0.zip` (4.1MB)
+sha256: `f864b2b620da6345a6bceb1076873e6cf6042562ebdc253b4daf56960c69bf26`
 
 配布できる形まで作れているが、**公証（notarization）が済んでいないので配れない**。
 公証を通すには Apple ID と app 用パスワードが要り、これは私（アシスタント）が
@@ -47,12 +53,12 @@ source=Unnotarized Developer ID
 | 同梱プラグイン | ✅ 12 件をバンドルへ。repo の外から起動して画面で確認 |
 | 初回起動 | ✅ 何も無い状態から DB を作って起動（`ASTRA_DATA_ROOT`） |
 | 署名済み .app の実動 | ✅ **配布物そのもの**で 47 ゲート PASS / 2 SKIP / 0 FAIL |
-| Gatekeeper の実測 | ❌ **落としてきた状態**（quarantine 付き）で `rejected` / `Unnotarized Developer ID` |
-| **公証** | ❌ 資格情報が無い |
+| Gatekeeper の実測 | ✅ **落としてきた状態**で `accepted` / `Notarized Developer ID` |
+| **公証** | ✅ Accepted・staple 済み・quarantine 付きで Gatekeeper 受理 |
 | 自動更新 | ✅ Sparkle 2.9.6 を同梱・署名。設定が揃った状態で起動を確認 |
 | 更新の出し方 | ✅ `scripts/publish-update.sh`（appcast まで作る。上げはしない） |
 | Sparkle 署名鍵 | ✅ 作成済み・公開鍵は release-macos.sh の既定値 |
-| 配布先 URL | ❌ 未定（appcast の置き場が決まっていない） |
+| 配布先 URL | ❌ 未定（**配布自体は URL 無しでも可**。自動更新だけが未設定） |
 | Windows | ❌ 別（`apps/windows`。CI で実ビルドまで） |
 
 ---
