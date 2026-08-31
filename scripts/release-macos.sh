@@ -43,7 +43,9 @@ if [[ -z "$IDENTITY" ]]; then
 fi
 
 echo "== build (release) =="
-# Rust も release で作る。ここを忘れると、配布物に debug の Rust が入る。
+# **両アーキで作る。** arm64 だけで配ると Intel Mac では動かない
+# （appcast にも hardwareRequirements=arm64 が入り、対象外として扱われる）。
+# 不特定多数へ配るなら、どちらでも動く形にする。
 # panic の位置文字列にはビルドした人の絶対パスがそのまま入る（実測 175 箇所）。
 # 不特定多数へ配るものに開発者のユーザー名を載せない。開発ビルドはそのままにして、
 # 配布ビルドだけ畳む。
@@ -58,7 +60,7 @@ bash "$ROOT/scripts/fetch-sparkle.sh"
 
 # 実行時に外の dylib を掴んでいないこと。掴んでいたら、その絶対パスが無い
 # 他人の Mac では起動しない（一度そうなっていた）。
-BIN="$ROOT/apps/astra-macos/.build/release/AstraMac"
+BIN="$ROOT/apps/astra-macos/.build/apple/Products/Release/AstraMac"
 if otool -L "$BIN" | grep -q "astra_core.*dylib"; then
   echo "FAIL: astra_core を dylib で掴んでいる（静的リンクになっていない）" >&2
   otool -L "$BIN" | grep astra_core >&2
@@ -67,7 +69,14 @@ fi
 
 echo "== bundle =="
 rm -rf "$APP"; mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
-cp "$ROOT/apps/astra-macos/.build/release/AstraMac" "$APP/Contents/MacOS/AstraMac"
+cp "$BIN" "$APP/Contents/MacOS/AstraMac"
+
+# 両アーキ入っているか。片方だけだと、その CPU の人は起動できない。
+for a in arm64 x86_64; do
+  lipo -info "$APP/Contents/MacOS/AstraMac" | grep -q "$a" || {
+    echo "FAIL: $a が入っていない（universal になっていない）" >&2; exit 1; }
+done
+echo "arch: $(lipo -info "$APP/Contents/MacOS/AstraMac" | sed 's/.*are: //')"
 
 # 記号を落とす。**署名より前に**やること（後でやると署名が壊れる）。
 # 依存の C ソース（ring 等）の絶対パスは rustc の --remap-path-prefix では

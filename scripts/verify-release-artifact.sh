@@ -41,7 +41,10 @@ case "$SIGINFO" in
 esac
 # バンドルの外を絶対パスで掴んでいないか。`@rpath` / `@executable_path` は
 # バンドル内（Contents/Frameworks）への参照なので正しい —— Sparkle がそれ。
-OUTSIDE="$(otool -L "$BIN" | tail -n +2 \
+# universal だと otool はアーキごとに見出し行（"… (architecture arm64):"）を出す。
+# 見出しを依存と数えないよう、`:` で終わる行は落とす。
+OUTSIDE="$(otool -L "$BIN" \
+  | grep -vE ":$" \
   | grep -vE "/usr/lib|/System/Library|@rpath|@executable_path|@loader_path" | sed 's/^[[:space:]]*//')"
 if [[ -n "$OUTSIDE" ]]; then
   echo "  バンドルの外を掴んでいる:" >&2; echo "$OUTSIDE" >&2; fail=1

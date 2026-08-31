@@ -24,8 +24,13 @@ source=Notarized Developer ID
 
 ダブルクリックで開く。§0.5 の右クリック手順は要らない。
 
-配布物: `dist/Astra-0.1.0.zip` (4.1MB)
-sha256: `f864b2b620da6345a6bceb1076873e6cf6042562ebdc253b4daf56960c69bf26`
+**公開済み**: https://github.com/FORIFOR/astra/releases/tag/v0.1.0
+配布物: `Astra-0.1.0.zip` (9.2MB) / universal (arm64 + x86_64)
+sha256: `571a00271f8469036464333233ee285e27d19480a1c611b2c52661c49235310b`
+
+自動更新も有効。feed は `releases/latest/download/appcast.xml` を指すので、
+**版が上がっても URL が変わらない**。次の版は新しいリリースに `appcast.xml` を
+添えるだけで既存の利用者に届く。
 
 配布できる形まで作れているが、**公証（notarization）が済んでいないので配れない**。
 公証を通すには Apple ID と app 用パスワードが要り、これは私（アシスタント）が
@@ -58,7 +63,9 @@ source=Unnotarized Developer ID
 | 自動更新 | ✅ Sparkle 2.9.6 を同梱・署名。設定が揃った状態で起動を確認 |
 | 更新の出し方 | ✅ `scripts/publish-update.sh`（appcast まで作る。上げはしない） |
 | Sparkle 署名鍵 | ✅ 作成済み・公開鍵は release-macos.sh の既定値 |
-| 配布先 URL | ❌ 未定（**配布自体は URL 無しでも可**。自動更新だけが未設定） |
+| 配布先 | ✅ GitHub Releases（FORIFOR/astra） |
+| 自動更新 | ✅ 有効（appcast 署名済み・feed URL は版に依らず固定） |
+| 対応 CPU | ✅ Apple Silicon / Intel（universal） |
 | Windows | ❌ 別（`apps/windows`。CI で実ビルドまで） |
 
 ---
@@ -218,9 +225,11 @@ xcrun notarytool store-credentials "astra-notary" \
 
 配布まで進めるなら、この 3 つは人が決める必要がある。
 
-1. **置き場所**。自前の配布先という方針までは決まっている。URL が決まれば
-   `ASTRA_UPDATE_FEED` と `ASTRA_UPDATE_BASE` に入れるだけ。
+1. ~~**置き場所**~~ GitHub Releases。
+   `ASTRA_UPDATE_FEED=https://github.com/FORIFOR/astra/releases/latest/download/appcast.xml`
+   `ASTRA_UPDATE_BASE=https://github.com/FORIFOR/astra/releases/download/v<版>`
 2. ~~**Sparkle の署名鍵**~~ 作成済み（§2.5）。
+3. ~~**置き場所**~~ GitHub Releases に決定。
 3. **gateway の向き先**。`docs/production-readiness.md` の判定は
    Client ID を入れた状態のもの。配布ビルドがどこを向くかは未決。
 
