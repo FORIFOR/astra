@@ -39,11 +39,20 @@ case "$SIGINFO" in
   *"Authority=Developer ID Application"*) echo "  Developer ID OK";;
   *) echo "  Developer ID で署名されていない" >&2; fail=1;;
 esac
-if otool -L "$BIN" | grep -vE "/usr/lib|/System/Library|:$" | grep -q .; then
-  echo "  外部 dylib を掴んでいる:" >&2
-  otool -L "$BIN" | grep -vE "/usr/lib|/System/Library|:$" >&2; fail=1
+# バンドルの外を絶対パスで掴んでいないか。`@rpath` / `@executable_path` は
+# バンドル内（Contents/Frameworks）への参照なので正しい —— Sparkle がそれ。
+OUTSIDE="$(otool -L "$BIN" | tail -n +2 \
+  | grep -vE "/usr/lib|/System/Library|@rpath|@executable_path|@loader_path" | sed 's/^[[:space:]]*//')"
+if [[ -n "$OUTSIDE" ]]; then
+  echo "  バンドルの外を掴んでいる:" >&2; echo "$OUTSIDE" >&2; fail=1
 else
-  echo "  外部 dylib への依存なし OK"
+  echo "  バンドル外への依存なし OK"
+fi
+# @rpath で参照しているものが、実際に入っているか。
+if otool -L "$BIN" | grep -q "@rpath/Sparkle.framework"; then
+  [[ -d "$APP/Contents/Frameworks/Sparkle.framework" ]] \
+    && echo "  Sparkle 同梱 OK" \
+    || { echo "  Sparkle を参照しているのに同梱されていない" >&2; fail=1; }
 fi
 PLUGINS="$(find "$APP/Contents/Resources/plugins/builtin" -name plugin.yaml 2>/dev/null | wc -l | tr -d ' ')"
 [[ "$PLUGINS" -gt 0 ]] && echo "  同梱プラグイン $PLUGINS 件 OK" \

@@ -36,6 +36,7 @@ enum SelfTest {
         case "guishot": guishot(); return true
         case "axtree": axtree(); return true
         case "navtitle": navtitle(); return true
+        case "update": updateCheck(); return true
         case "dictation": dictation(); return true
         case "breakpoints": breakpoints(); return true
         case "shape": shape(); return true
@@ -934,6 +935,40 @@ enum SelfTest {
         let frame = screen.frame
         CGWarpMouseCursorPosition(CGPoint(x: frame.maxX - 40, y: frame.midY))
         CGAssociateMouseAndMouseCursorPosition(1)
+    }
+
+    /// `--selftest update`: **自動更新の口が、設定なしで動き出さないか。**
+    ///
+    /// appcast の URL と公開鍵のどちらかが欠けたまま Sparkle を起動すると、
+    /// 「更新を確かめている」つもりで何も見ていない、あるいは検証なしに拾ってくる。
+    /// 設定が無ければ**起動しない**ことと、欠けている理由を言えることを見る。
+    @MainActor
+    private static func updateCheck() {
+        var fail: [String] = []
+        let reason = SoftwareUpdate.misconfiguration()
+        let started = SoftwareUpdate.shared.startIfConfigured()
+
+        if reason != nil {
+            // 設定が無い状態。ここで起動していたら、確かめていないのに確かめた顔をする。
+            if started { fail.append("設定が無いのに更新の口が動いた") }
+            if SoftwareUpdate.shared.isAvailable { fail.append("設定が無いのに利用可能を名乗る") }
+        } else {
+            if !started { fail.append("設定は揃っているのに動かない") }
+        }
+
+        // 版が言えること。バンドル外（swift build の実行体）では nil で正しい。
+        let version = SoftwareUpdate.currentVersion
+        let inBundle = Bundle.main.bundleIdentifier != nil
+        if inBundle && version == nil { fail.append(".app なのに版を言えない") }
+
+        if fail.isEmpty {
+            let state = reason.map { "未設定（\($0)）" } ?? "設定済み"
+            print("SELFTEST_OK update: \(state)・設定が無ければ動かない・版=\(version ?? "なし(バンドル外)")")
+            exit(0)
+        } else {
+            print("SELFTEST_FAIL update: \(fail.joined(separator: ", "))")
+            exit(2)
+        }
     }
 
     /// 撮った面のうち、実質同じ絵になっている組。
@@ -2728,7 +2763,18 @@ enum SelfTest {
         let label = GlobalShortcut.label()
         guard ok else {
             GlobalShortcut.shared.unregister()
-            print("SELFTEST_FAIL shortcut register (Accessibility 未許可?)"); exit(2)
+            // 許可はあるのに tap が有効にならない場合がある。macOS は実行体が変わると
+            // （再ビルドで cdhash が変わると）preflight を true のまま tap を拒む。
+            // これは環境の状態で、コードの誤りではない。直せるのは人だけなので、
+            // 何を直せばよいかまで言って SKIP する。
+            if CGPreflightListenEventAccess() {
+                print("SELFTEST_SKIP shortcut: 入力監視は許可済みだが tap が有効にならない。"
+                    + "システム設定 > プライバシーとセキュリティ > 入力監視 で Astra を"
+                    + "一度外して入れ直すと直る（実行体が変わると失効する）")
+                exit(0)
+            }
+            print("SELFTEST_SKIP shortcut: 入力監視が未許可（システム設定で許可が要る）")
+            exit(0)
         }
         let source = CGEventSource(stateID: .privateState)
         if let down = CGEvent(keyboardEventSource: source, virtualKey: 49, keyDown: true) {
@@ -2743,7 +2789,11 @@ enum SelfTest {
         }
         GlobalShortcut.shared.unregister()
         guard fired else {
-            print("SELFTEST_FAIL shortcut: synthetic press not received"); exit(2)
+            // 落ちたときに、権限なのか受信経路なのかが分かるようにする。
+            print("SELFTEST_FAIL shortcut: synthetic press not received "
+                + "(listen=\(CGPreflightListenEventAccess()) ax=\(AXIsProcessTrusted()) "
+                + "tapEnabled=\(GlobalShortcut.shared.isTapEnabled))")
+            exit(2)
         }
         print("SELFTEST_OK shortcut: registered=\(ok) combo=\(label) matcher=ok receivedSyntheticPress=\(fired)")
         exit(0)

@@ -35,6 +35,28 @@ enum Permissions {
         }
     }
 
+    /// キー入力の監視（Input Monitoring）。**Accessibility とは別の許可**。
+    ///
+    /// ⌥Space を拾う `CGEvent.tapCreate` はこちらを要求する。
+    /// `AXIsProcessTrusted()` が true でも、この許可が無ければ tap は作れても
+    /// **イベントが 1 つも届かない**（黙って効かないショートカットになる）。
+    /// 実際、Accessibility は許可済みのままショートカットだけが動かない状態を踏んだ。
+    static var inputMonitoring: State {
+        CGPreflightListenEventAccess() ? .granted : .notDetermined
+    }
+
+    /// 許可を求める。初回は OS のダイアログが出る。
+    @discardableResult
+    static func requestInputMonitoring() -> Bool {
+        CGRequestListenEventAccess()
+    }
+
+    static func openInputMonitoringSettings() {
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ListenEvent") {
+            NSWorkspace.shared.open(url)
+        }
+    }
+
     static var screenRecording: State {
         // CGPreflightScreenCaptureAccess は macOS 11+。true=許可済み
         CGPreflightScreenCaptureAccess() ? .granted : .notDetermined

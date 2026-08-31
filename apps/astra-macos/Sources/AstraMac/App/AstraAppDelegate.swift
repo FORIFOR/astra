@@ -22,6 +22,9 @@ final class AstraAppDelegate: NSObject, NSApplicationDelegate {
         StatusBarController.shared.install()
         // focus リングは Tab / 矢印を押してから見せる（開いた瞬間に出さない）。
         KeyboardNavigation.shared.install()
+        // 自動更新。配布先と公開鍵が Info.plist に入っていなければ何もしない
+        // （確かめているつもりで何も見ていない状態を作らない）。
+        SoftwareUpdate.shared.startIfConfigured()
         // 前面アプリが変わったら、まだ繋がっていないものを 1 度だけ勧める（§14）。
         // 勧誘は Dock の下の別 Panel に出す（Dock 本体は伸ばさない）。
         NSWorkspace.shared.notificationCenter.addObserver(

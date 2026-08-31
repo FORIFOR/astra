@@ -43,6 +43,7 @@ echo "== build (release) =="
 export ASTRA_CORE_LIB_DIR="$ROOT/core/astra-core/target/release"
 [[ -f "$ASTRA_CORE_LIB_DIR/libastra_core.a" ]] || {
   echo "FAIL: release の libastra_core.a が無い" >&2; exit 1; }
+bash "$ROOT/scripts/fetch-sparkle.sh"
 ( cd "$ROOT/apps/astra-macos" && swift build -c release )
 
 # 実行時に外の dylib を掴んでいないこと。掴んでいたら、その絶対パスが無い
@@ -86,6 +87,14 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>NSAppleEventsUsageDescription</key><string>前面アプリの文脈（開いている書類名など）を読むために使います。</string>
   <key>NSCameraUsageDescription</key><string>使いません。</string>
   <key>NSCalendarsUsageDescription</key><string>会議の予定を文脈として読むために、カレンダーを使います。</string>
+  <!-- 自動更新（Sparkle）。**どちらも空のままでは更新を確かめない。**
+       配布先が決まったら appcast の URL を、`generate_keys` を回したら
+       その公開鍵をここへ入れる。片方だけ入れても SoftwareUpdate は起動しない。 -->
+  <key>SUFeedURL</key><string>${ASTRA_UPDATE_FEED:-}</string>
+  <key>SUPublicEDKey</key><string>${ASTRA_UPDATE_PUBKEY:-}</string>
+  <key>SUEnableAutomaticChecks</key><true/>
+  <!-- 黙って入れ替えない。落としてくるかは利用者が決める。 -->
+  <key>SUAutomaticallyUpdate</key><false/>
 </dict></plist>
 PLIST
 
@@ -100,7 +109,31 @@ cat > "$OUT/astra.entitlements" <<'ENT'
 </dict></plist>
 ENT
 
+# Sparkle を同梱する。framework が入っていないと、更新の口だけ在って動かない。
+SPARKLE_FW="$(find "$ROOT/apps/astra-macos/Vendor/Sparkle/Sparkle.xcframework" \
+  -type d -name "Sparkle.framework" -path "*macos*" 2>/dev/null | head -1)"
+if [[ -n "$SPARKLE_FW" ]]; then
+  mkdir -p "$APP/Contents/Frameworks"
+  rm -rf "$APP/Contents/Frameworks/Sparkle.framework"
+  cp -R "$SPARKLE_FW" "$APP/Contents/Frameworks/Sparkle.framework"
+  # 実行体が @rpath で framework を見つけられるように。
+  install_name_tool -add_rpath "@executable_path/../Frameworks" \
+    "$APP/Contents/MacOS/AstraMac" 2>/dev/null || true
+  echo "sparkle: 同梱した"
+else
+  echo "FAIL: Sparkle.framework が見つからない（scripts/fetch-sparkle.sh を先に）" >&2; exit 1
+fi
+
 echo "== sign (Developer ID + hardened runtime) =="
+# **内側から署名する。** 入れ子の framework を後から署名すると、外側の署名が壊れる。
+# Sparkle は中に XPC サービスと Autoupdate を持つので、それぞれ署名が要る。
+while IFS= read -r nested; do
+  codesign --force --timestamp --options runtime --sign "$IDENTITY" "$nested"
+done < <(find "$APP/Contents/Frameworks/Sparkle.framework" \
+  \( -name "*.xpc" -o -name "Autoupdate" -o -name "Updater.app" \) 2>/dev/null)
+codesign --force --timestamp --options runtime --sign "$IDENTITY" \
+  "$APP/Contents/Frameworks/Sparkle.framework"
+
 codesign --force --timestamp --options runtime \
   --entitlements "$OUT/astra.entitlements" \
   --sign "$IDENTITY" --identifier com.astra.desktop "$APP"

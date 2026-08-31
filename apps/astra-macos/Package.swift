@@ -34,9 +34,17 @@ let package = Package(
                 ])
             ]
         ),
+        // 自動更新。配布先へ置いた appcast を見て、新しい版があれば知らせる。
+        // 署名は EdDSA（Sparkle 自前の鍵）で、Developer ID とは別物。
+        //
+        // `.package(url:)` ではなくローカルの xcframework を指す。この環境では
+        // SwiftPM の binary artifact 取得だけが固まるため、取得は
+        // `scripts/fetch-sparkle.sh` に切り出してある（checksum は Sparkle 自身の
+        // Package.swift と同じ値で照合する）。
+        .binaryTarget(name: "Sparkle", path: "Vendor/Sparkle/Sparkle.xcframework"),
         .executableTarget(
             name: "AstraMac",
-            dependencies: ["AstraCore"],
+            dependencies: ["AstraCore", "Sparkle"],
             path: "Sources/AstraMac"
         ),
         .testTarget(

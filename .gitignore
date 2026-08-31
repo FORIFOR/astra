@@ -27,3 +27,4 @@ apps/astra-macos/build/
 
 # 配布物（scripts/build-dmg.sh が作る）
 apps/astra-macos/dist/
+apps/astra-macos/Vendor/

@@ -28,10 +28,18 @@ final class GlobalShortcut {
     private var onFire: (() -> Void)?
     private var combo = Combo()
 
+    /// ⌥Space を受け取れる状態か。tap を作れても、この許可が無ければ
+    /// **イベントは 1 つも届かない**（黙って効かないショートカットになる）。
+    /// Accessibility とは別の許可なので、`AXIsProcessTrusted()` では分からない。
+    static var canListen: Bool { CGPreflightListenEventAccess() }
+
     /// 登録する。tap 生成に成功すれば true。押されると `handler` が MainActor で呼ばれる。
     @discardableResult
     func register(_ combo: Combo = Combo(), handler: @escaping () -> Void) -> Bool {
         unregister()
+        // 許可が無いまま「登録できた」と言わない。届かないものを登録済みにすると、
+        // 効かない理由が誰にも分からなくなる。
+        guard Self.canListen else { return false }
         onFire = handler
         self.combo = combo
 
@@ -56,7 +64,7 @@ final class GlobalShortcut {
             },
             userInfo: selfPtr
         ) else {
-            return false   // tap 生成失敗 = Accessibility 未許可
+            return false   // tap 生成失敗（入力監視の許可が要る）
         }
 
         let src = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0)
@@ -64,7 +72,21 @@ final class GlobalShortcut {
         CGEvent.tapEnable(tap: tap, enable: true)
         eventTap = tap
         runLoopSource = src
+        // 作れても、OS がその場で落とすことがある（許可が古いと preflight は true の
+        // まま tap だけ拒まれる。再ビルドで実行体が変わったときに実際に起きた）。
+        // 有効になっていないなら「登録できた」と言わない —— 効かないショートカットを
+        // 登録済みとして持つと、なぜ効かないのかが誰にも分からなくなる。
+        guard CGEvent.tapIsEnabled(tap: tap) else {
+            unregister()
+            return false
+        }
         return true
+    }
+
+    /// tap が実際に有効か。作れても OS 側で落とされることがある。
+    var isTapEnabled: Bool {
+        guard let eventTap else { return false }
+        return CGEvent.tapIsEnabled(tap: eventTap)
     }
 
     func unregister() {
