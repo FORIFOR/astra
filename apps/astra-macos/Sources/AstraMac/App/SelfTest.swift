@@ -37,6 +37,7 @@ enum SelfTest {
         case "axtree": axtree(); return true
         case "navtitle": navtitle(); return true
         case "geometry": geometryGate(args); return true
+        case "focus": focusGate(); return true
         case "update": updateCheck(); return true
         case "recoveryui": recoveryUI(); return true
         case "dictation": dictation(); return true
@@ -1132,6 +1133,81 @@ enum SelfTest {
         let hint = firstLayer.map { "まず \($0.label) から直す" } ?? "上の層から直す"
         print("SELFTEST_FAIL geometry: \(problems.count)面が基準から外れた（\(hint)）")
         exit(2)
+    }
+
+    /// `--selftest focus`: **Dock は前面のアプリから焦点を奪わないか。**
+    ///
+    /// 「窓が増えない」は測っていたが、「邪魔をしない」は測っていなかった。
+    /// 常駐して姿を変える面は、出るたびに他アプリの入力を横取りすると
+    /// 使い物にならない。`.nonactivatingPanel` と `canBecomeKey=false` は
+    /// 宣言してあるが、**宣言だけでは効いたことにならない**ので実際に確かめる。
+    @MainActor
+    private static func focusGate() {
+        var fail: [String] = []
+        func settle(_ sec: Double) {
+            let until = Date().addingTimeInterval(sec)
+            while Date() < until { CFRunLoopRunInMode(.defaultMode, 0.05, true) }
+        }
+
+        // 他アプリを前面にする。Finder はどの Mac にも居る。
+        let others = NSWorkspace.shared.runningApplications.filter {
+            $0.bundleIdentifier == "com.apple.finder"
+        }
+        guard let other = others.first else {
+            print("SELFTEST_SKIP focus: 前面にできる他アプリが無い"); exit(0)
+        }
+        other.activate()
+        settle(1.2)
+        guard NSWorkspace.shared.frontmostApplication?.bundleIdentifier == other.bundleIdentifier else {
+            print("SELFTEST_SKIP focus: 他アプリを前面にできない（この環境では確かめられない）"); exit(0)
+        }
+
+        let store = AstraStateStore.shared
+        // Dock を出して、姿を変えていく。どの段でも前面が入れ替わってはいけない。
+        let steps: [(String, () -> Void)] = [
+            ("Dock を出す", { WindowCoordinator.shared.showVoiceHUD() }),
+            ("Listening へ", { VoiceHUDState.shared.mode = .listening(partial: "…") }),
+            ("Agent へ", {
+                store.startTask(AgentTask(
+                    id: UUID(), title: "焦点の検査", status: .running,
+                    steps: [AgentStep(title: "step", tool: "t", state: .running)],
+                    startedAt: Date(), context: ContextBundle(items: [])))
+            }),
+            ("会議へ", { store.meetingDetected(app: "Google Meet"); store.meetingStarted(id: "focus-selftest") }),
+            ("Notes を開く", { VoiceHUDState.shared.toggleMeetingPanel(.notes) }),
+        ]
+        for (label, act) in steps {
+            act()
+            settle(0.9)
+
+            // 製品がしない操作（makeKeyAndOrderFront を総当たり）でこじ開けるのは
+            // やめた。Ask 用の面は key になれてよいので、それを「奪った」と呼ぶのは誤り。
+            // 実際に焦点を奪う経路は `NSApp.activate` で、それはこの下の判定が捕まえる
+            // （showVoiceHUD に activate を仕込んだら 5 段すべてで検出できた）。
+
+            let frontApp = NSWorkspace.shared.frontmostApplication
+            if frontApp?.bundleIdentifier != other.bundleIdentifier {
+                // 誰に移ったかまで言う。自分に移ったのか別のアプリなのかで、直す先が違う。
+                let who = frontApp?.localizedName
+                    ?? frontApp?.bundleIdentifier
+                    ?? "不明（bundle 無し＝自分の可能性）"
+                fail.append("\(label)で前面が \(who) に移った")
+            }
+            // 他アプリが前面のあいだ、こちらに key 窓が在ってはいけない。
+            if let key = NSApp.keyWindow {
+                fail.append("\(label)で自分の窓が key になった（\(type(of: key))）")
+            }
+        }
+
+        WindowCoordinator.shared.hideVoiceHUD()
+        store.reset()
+        if fail.isEmpty {
+            print("SELFTEST_OK focus: Dock は出ても姿を変えても、前面のアプリから焦点を奪わない")
+            exit(0)
+        } else {
+            print("SELFTEST_FAIL focus: \(fail.joined(separator: ", "))")
+            exit(2)
+        }
     }
 
     /// 撮った面のうち、実質同じ絵になっている組。
