@@ -70,9 +70,13 @@ struct HomeView: View {
                     RecordingNowCard(session: live)
                 }
 
-                Text(greeting)
-                    .font(.system(size: S.type(TypeScale.pageTitleSize), weight: TypeScale.pageTitleWeight))
-                    .foregroundStyle(Palette.text(dark))
+                // 録音中は挨拶を出さない。いま起きていることの下で「おはようございます」と
+                // 言われても意味が無いし、画面の主役が挨拶に見えてしまう。
+                if sessions.live == nil {
+                    Text(greeting)
+                        .font(.system(size: S.type(TypeScale.pageTitleSize), weight: TypeScale.pageTitleWeight))
+                        .foregroundStyle(Palette.text(dark))
+                }
 
                 intentField
                 answerLine
@@ -81,16 +85,18 @@ struct HomeView: View {
                     StartRecordingCard()
                 }
 
+                // 直近の録りかけは**予定より先**に出す。落ちた直後に気づけることが
+                // この札の目的なので、Upcoming と Recent の間に挟まっていると
+                // 「割り込み」でしかなくなる。
+                if recordedCount > 0 && hasRecentRecoverable {
+                    recoverableRow
+                }
+
                 if !attention.isEmpty {
                     section("Upcoming")
                     ForEach(attention.prefix(3)) { a in
                         upcomingRow(a)
                     }
-                }
-
-                // 録りかけが残っているなら、まずそれを出す。放っておくと消える。
-                if recordedCount > 0 {
-                    recoverableRow
                 }
 
                 if !sessions.recent.isEmpty {
@@ -106,6 +112,12 @@ struct HomeView: View {
                     ForEach(recentTasks.prefix(5)) { t in
                         taskRow(t)
                     }
+                }
+
+                // 古い録りかけは**いちばん下**。急ぐものではないので、
+                // 予定や直近の会議より前に置かない。
+                if recordedCount > 0 && !hasRecentRecoverable {
+                    recoverableRow
                 }
 
                 // 録音中は「何もありません」ではない。live を recent から外したので、

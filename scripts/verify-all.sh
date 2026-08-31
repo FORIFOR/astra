@@ -13,7 +13,7 @@ run() { echo; echo "== $1 =="; shift; if "$@"; then :; else echo "  ^ FAILED"; f
 # 落ちたときは要約だけでは追えない。**どのテストが落ちたか**を必ず残す。
 run "astra-core tests"            bash -c "cd core/astra-core && out=\$(cargo test --quiet 2>&1); st=\$?; echo \"\$out\" | grep 'test result' | head -1; [ \$st -eq 0 ] || sed -n '/^failures:/,\$p' <<<\"\$out\" | head -40; exit \$st"
 run "Tauri Rust regression"       bash -c "cd apps/desktop/src-tauri && out=\$(cargo test --quiet 2>&1); st=\$?; echo \"\$out\" | grep 'test result' | head -1; [ \$st -eq 0 ] || sed -n '/^failures:/,\$p' <<<\"\$out\" | head -40; exit \$st"
-run "Tauri desktop JS regression" bash -c "out=\$(pnpm --filter @astra/desktop test 2>&1); st=\$?; echo \"\$out\" | grep -E 'Tests +[0-9]+ passed' | tail -1; [ \$st -eq 0 ] || grep -E '^ *(×|FAIL)' <<<\"\$out\" | head -40; exit \$st"
+run "Tauri desktop JS regression" bash -c "out=\$(pnpm --filter @astra/desktop test 2>&1); st=\$?; echo \"\$out\" | grep -E 'Tests +[0-9]+ passed' | tail -1; [ \$st -eq 0 ] || { echo '--- 落ちたときの全文（末尾40行）---'; tail -40 <<<\"\$out\"; }; exit \$st"
 run "TCC usage descriptions"     bash scripts/verify-usage-descriptions.sh
 run "release consistency"        bash scripts/verify-release-consistency.sh
 run "UI taste"                   bash scripts/verify-ui-taste.sh
