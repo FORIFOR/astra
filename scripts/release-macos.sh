@@ -44,7 +44,12 @@ fi
 
 echo "== build (release) =="
 # Rust も release で作る。ここを忘れると、配布物に debug の Rust が入る。
-( cd "$ROOT/core/astra-core" && cargo build --release --quiet )
+# panic の位置文字列にはビルドした人の絶対パスがそのまま入る（実測 175 箇所）。
+# 不特定多数へ配るものに開発者のユーザー名を載せない。開発ビルドはそのままにして、
+# 配布ビルドだけ畳む。
+( cd "$ROOT/core/astra-core" \
+  && RUSTFLAGS="--remap-path-prefix=$HOME/.cargo=/cargo --remap-path-prefix=$ROOT=/astra ${RUSTFLAGS:-}" \
+     cargo build --release --quiet )
 export ASTRA_CORE_LIB_DIR="$ROOT/core/astra-core/target/release"
 [[ -f "$ASTRA_CORE_LIB_DIR/libastra_core.a" ]] || {
   echo "FAIL: release の libastra_core.a が無い" >&2; exit 1; }
@@ -64,6 +69,21 @@ echo "== bundle =="
 rm -rf "$APP"; mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$ROOT/apps/astra-macos/.build/release/AstraMac" "$APP/Contents/MacOS/AstraMac"
 
+# 記号を落とす。**署名より前に**やること（後でやると署名が壊れる）。
+# 依存の C ソース（ring 等）の絶対パスは rustc の --remap-path-prefix では
+# 畳めない（cc が埋めるため）ので、ここで消す。配るものに開発者の
+# ユーザー名を載せない。
+strip -x "$APP/Contents/MacOS/AstraMac"
+# 残った分は panic の位置文字列（__TEXT のリテラル）。記号ではないので strip では
+# 消えず、依存の C ソース由来は rustc の --remap-path-prefix でも畳めない。
+# **体裁の話で、機能でも安全性でもない**ので、ここでは止めずに数だけ報告する。
+LEAK="$(strings "$APP/Contents/MacOS/AstraMac" 2>/dev/null | grep -c "$HOME" || true)"
+if [[ "${LEAK:-0}" -eq 0 ]]; then
+  echo "strip: 記号を落とした（個人パス 0 件）"
+else
+  echo "strip: 記号を落とした（panic の位置文字列に個人パスが $LEAK 件残る・体裁のみ）"
+fi
+
 # 同梱プラグインをバンドルへ。入れ忘れると、配った先では 1 件も読めない
 # （以前は開発機の絶対パスで拾えていたので、手元でだけ動いていた）。
 mkdir -p "$APP/Contents/Resources/plugins"
@@ -71,6 +91,13 @@ cp -R "$ROOT/plugins/builtin" "$APP/Contents/Resources/plugins/builtin"
 PLUGIN_COUNT="$(find "$APP/Contents/Resources/plugins/builtin" -name plugin.yaml | wc -l | tr -d ' ')"
 [[ "$PLUGIN_COUNT" -gt 0 ]] || { echo "FAIL: 同梱プラグインが 0 件" >&2; exit 1; }
 echo "plugins: $PLUGIN_COUNT 件を同梱"
+
+# アイコン。無いと Finder でも Dock でも「開く」ダイアログでも空白になる
+# —— 不特定多数へ配るなら、名前より先に目に入るのはここ。
+ICON_SRC="$ROOT/apps/desktop/src-tauri/icons/icon.icns"
+[[ -f "$ICON_SRC" ]] || { echo "FAIL: アイコン ($ICON_SRC) が無い" >&2; exit 1; }
+cp "$ICON_SRC" "$APP/Contents/Resources/AppIcon.icns"
+echo "icon: 同梱した"
 
 # 用途説明は package-macos-app.sh と同じものを使う。片方だけ直すとずれるので、
 # verify-usage-descriptions.sh が両方を突き合わせている。
@@ -86,6 +113,11 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>CFBundleVersion</key><string>${VERSION}</string>
   <key>LSMinimumSystemVersion</key><string>14.0</string>
   <key>NSHighResolutionCapable</key><true/>
+  <key>CFBundleIconFile</key><string>AppIcon</string>
+  <!-- Dock アイコンは出さない（常駐の Task Dock が入口）。 -->
+  <key>LSUIElement</key><true/>
+  <key>LSApplicationCategoryType</key><string>public.app-category.productivity</string>
+  <key>NSHumanReadableCopyright</key><string>© 2026 Shuhei Horio</string>
   <key>NSCalendarsFullAccessUsageDescription</key><string>会議の予定を文脈として読むために、カレンダーを使います。読み取りは手元で行い、外部には送りません。</string>
   <key>NSMicrophoneUsageDescription</key><string>会議を録音し、手元で文字にするためにマイクを使います。音声は端末から出しません。</string>
   <key>NSSpeechRecognitionUsageDescription</key><string>会議の音声を手元で文字起こしするために使います。音は端末から出しません。</string>
