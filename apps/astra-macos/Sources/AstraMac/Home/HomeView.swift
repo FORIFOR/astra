@@ -233,18 +233,37 @@ struct HomeView: View {
             : "送り先がまだありません。サインインすると続きから読み取れます。"
     }
 
+    /// 直近の録りかけがあるか（7 日以内）。
+    ///
+    /// 古いものまで警告色で出し続けると、ただの雑音になる。落ちた直後に気づける
+    /// ことが大事なのであって、3 週間前の断片を毎朝知らせても誰も助からない。
+    private var hasRecentRecoverable: Bool {
+        let week: TimeInterval = 7 * 24 * 60 * 60
+        let now = Date().timeIntervalSince1970
+        return RecordingRuntime.shared.recoverableMeetings().contains { m in
+            guard let started = TimeInterval(m.startedAt) else { return true }  // 読めないものは新しい扱い
+            return now - started <= week
+        }
+    }
+
     /// 保存し切れていない録音がある、という報せ。件数だけ出して押せば続きへ。
     private var recoverableRow: some View {
-        HStack(spacing: 10) {
+        let recent = hasRecentRecoverable
+        return HStack(spacing: 10) {
             Image(systemName: "arrow.counterclockwise.circle")
                 .font(.system(size: 13))
-                .foregroundStyle(Palette.warning(dark))
+                .foregroundStyle(recent ? Palette.warning(dark) : Palette.muted(dark))
             VStack(alignment: .leading, spacing: 2) {
-                Text("録りかけが \(recordedCount) 件あります")
-                    .font(.system(size: S.type(TypeScale.bodySize), weight: .medium))
-                    .foregroundStyle(Palette.text(dark))
+                Text(recent
+                     ? "録りかけが \(recordedCount) 件あります"
+                     : "古い録りかけが \(recordedCount) 件残っています")
+                    .font(.system(size: S.type(TypeScale.bodySize),
+                                  weight: recent ? .medium : .regular))
+                    .foregroundStyle(recent ? Palette.text(dark) : Palette.muted(dark))
                 Text(recoverNote.isEmpty
-                     ? "前回、保存し切る前に終わった録音です。続きから読み取れます。"
+                     ? (recent
+                        ? "前回、保存し切る前に終わった録音です。続きから読み取れます。"
+                        : "1 週間より前のものです。要らなければ破棄できます。")
                      : recoverNote)
                     .font(.system(size: S.type(TypeScale.secondarySize)))
                     .foregroundStyle(Palette.muted(dark))
@@ -270,9 +289,10 @@ struct HomeView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(Palette.warning(dark).opacity(dark ? 0.12 : 0.07))
+                .fill(recent ? Palette.warning(dark).opacity(dark ? 0.12 : 0.07)
+                             : Color.cardSurface(dark))
                 .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .stroke(Palette.warning(dark).opacity(0.3))))
+                    .stroke(recent ? Palette.warning(dark).opacity(0.3) : Color.hairline(dark))))
         .accessibilityIdentifier("recoverableRecordings")
     }
 

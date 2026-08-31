@@ -24,11 +24,21 @@ struct Waveform: View {
             if levels.isEmpty || isQuiet {
                 // 静かなときは、途切れない細い線。振れていないことは分かるが、
                 // 壊れているようには見えない。
-                Capsule()
-                    .fill(color.opacity(awaitingInput ? 0.18 : 0.35))
-                    .frame(height: 2)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-                    .accessibilityLabel(awaitingInput ? "音の入力を待っています" : "静かです")
+                //
+                // **幅は棒が占めるぶんに留める。** 幅いっぱいに引くと区切り線に見え、
+                // 「ここが音の場所」だと分からなくなる（Recording Now でカードを
+                // 横断する 1 本になり、下線と区別が付かなかった）。
+                // 棒の並びは保ったまま、低く・薄くする。1 本の線にすると下線に見え、
+                // 2pt の点にすると壊れて見えた。「同じ形のまま静まっている」が正しい。
+                HStack(alignment: .center, spacing: spacing) {
+                    ForEach(0..<max(levels.count, 12), id: \.self) { _ in
+                        Capsule()
+                            .fill(color.opacity(awaitingInput ? 0.22 : 0.38))
+                            .frame(width: barWidth, height: 5)
+                    }
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+                .accessibilityLabel(awaitingInput ? "音の入力を待っています" : "静かです")
             } else {
                 HStack(alignment: .center, spacing: spacing) {
                     ForEach(levels.indices, id: \.self) { i in
