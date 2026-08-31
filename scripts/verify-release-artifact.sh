@@ -58,13 +58,22 @@ PLUGINS="$(find "$APP/Contents/Resources/plugins/builtin" -name plugin.yaml 2>/d
 [[ "$PLUGINS" -gt 0 ]] && echo "  同梱プラグイン $PLUGINS 件 OK" \
   || { echo "  同梱プラグインが入っていない" >&2; fail=1; }
 
+# 落としてきたものと同じ印（quarantine）を付けて判定する。
+# 印が無い状態で見ると Gatekeeper は甘くなる。利用者が受け取るのは印の付いた方。
+QDIR="$WORK/quarantined"; mkdir -p "$QDIR"
+cp "$ZIP" "$QDIR/dl.zip"
+xattr -w com.apple.quarantine "0083;$(printf %x "$(date +%s)");Safari;" "$QDIR/dl.zip" 2>/dev/null || true
+( cd "$QDIR" && ditto -x -k dl.zip . )
+QAPP="$QDIR/Astra.app"
+
 # Gatekeeper は**落とさない**。公証前は必ず rejected になるので、状態を報告するだけ。
-GK="$(spctl --assess --type execute "$APP" 2>&1 | tail -1)"
-if spctl --assess --type execute "$APP" >/dev/null 2>&1; then
-  echo "  Gatekeeper: 受理（公証済み）"
+GK="$(spctl --assess --type execute "$QAPP" 2>&1 | tail -1)"
+if spctl --assess --type execute "$QAPP" >/dev/null 2>&1; then
+  echo "  Gatekeeper: 受理（落としてきた状態でも開ける）"
   READINESS=NOTARIZED
 else
-  echo "  Gatekeeper: $GK  ← 公証が済んでいない"
+  echo "  Gatekeeper: $GK"
+  echo "    ← 落としてきた状態では開けない。公証が要る。"
   READINESS=SIGNED_NOT_NOTARIZED
 fi
 

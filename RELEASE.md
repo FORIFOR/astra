@@ -18,6 +18,16 @@ Readiness = SIGNED_NOT_NOTARIZED
 公証を通すには Apple ID と app 用パスワードが要り、これは私（アシスタント）が
 用意できるものではない。入れ方は §3。
 
+利用者が受け取る形（zip に quarantine の印が付いた状態）で実測した結果:
+
+```
+Astra.app: rejected
+source=Unnotarized Developer ID
+```
+
+印が付いていない状態で見ると Gatekeeper は甘くなるので、
+`verify-release-artifact.sh` は**印を付けてから**判定する。
+
 | | 状態 |
 | --- | --- |
 | 版番号の一致 | ✅ 0.1.0 で 4 か所一致 |
@@ -30,7 +40,7 @@ Readiness = SIGNED_NOT_NOTARIZED
 | 同梱プラグイン | ✅ 12 件をバンドルへ。repo の外から起動して画面で確認 |
 | 初回起動 | ✅ 何も無い状態から DB を作って起動（`ASTRA_DATA_ROOT`） |
 | 署名済み .app の実動 | ✅ **配布物そのもの**で 47 ゲート PASS / 2 SKIP / 0 FAIL |
-| Gatekeeper の実測 | ❌ `rejected` / `source=Unnotarized Developer ID` |
+| Gatekeeper の実測 | ❌ **落としてきた状態**（quarantine 付き）で `rejected` / `Unnotarized Developer ID` |
 | **公証** | ❌ 資格情報が無い |
 | 自動更新 | ✅ Sparkle 2.9.6 を同梱・署名。設定が揃った状態で起動を確認 |
 | 更新の出し方 | ✅ `scripts/publish-update.sh`（appcast まで作る。上げはしない） |
