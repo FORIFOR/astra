@@ -32,7 +32,9 @@ Readiness = SIGNED_NOT_NOTARIZED
 | 署名済み .app の実動 | ✅ **配布物そのもの**で 47 ゲート PASS / 2 SKIP / 0 FAIL |
 | Gatekeeper の実測 | ❌ `rejected` / `source=Unnotarized Developer ID` |
 | **公証** | ❌ 資格情報が無い |
-| 配布先 | ❌ 未定（置き場も更新の仕組みも無い） |
+| 自動更新 | ✅ Sparkle 2.9.6 を同梱・署名。設定が揃った状態で起動を確認 |
+| 更新の出し方 | ✅ `scripts/publish-update.sh`（appcast まで作る。上げはしない） |
+| 配布先 URL | ❌ 未定（appcast の置き場が決まっていない） |
 | Windows | ❌ 別（`apps/windows`。CI で実ビルドまで） |
 
 ---
@@ -86,6 +88,39 @@ bash scripts/release-macos.sh
 
 ---
 
+## 2.5 自動更新（Sparkle）
+
+同梱済み。**設定が揃うまで動かない**——appcast の URL と公開鍵のどちらかが
+欠けたまま起動すると、確かめているつもりで何も見ていない状態になるため。
+
+一度だけ、鍵を作る（秘密鍵は keychain に入る。**リポジトリに置かない**）:
+
+```sh
+./apps/astra-macos/Vendor/Sparkle/bin/generate_keys
+```
+
+出てきた公開鍵と、配布先の appcast URL を渡して梱包する:
+
+```sh
+ASTRA_UPDATE_FEED=https://…/astra/appcast.xml \
+ASTRA_UPDATE_PUBKEY=<generate_keys が出した公開鍵> \
+  bash scripts/release-macos.sh
+```
+
+更新を 1 つ出す（appcast を作るところまで。**置きに行くのは人**）:
+
+```sh
+ASTRA_UPDATE_BASE=https://…/astra bash scripts/publish-update.sh
+```
+
+公証していないものは更新として出せない（スクリプトが止める）。
+黙って入れ替えない（`SUAutomaticallyUpdate=false`）。
+
+確かめたこと: 設定を入れた .app で `--selftest update` が「設定済み」を返し、
+実際に起動して 12 秒生存する。未設定なら更新の口は動かない。
+
+---
+
 ## 3. 公証を通すには（人の手が要る）
 
 ```sh
@@ -107,8 +142,10 @@ xcrun notarytool store-credentials "astra-notary" \
 
 配布まで進めるなら、この 3 つは人が決める必要がある。
 
-1. **置き場所**（GitHub Releases / 自前の配布先）
-2. **更新の仕組み**（Sparkle 等。いまは無いので、入れ替えは手動）
+1. **置き場所**。自前の配布先という方針までは決まっている。URL が決まれば
+   `ASTRA_UPDATE_FEED` と `ASTRA_UPDATE_BASE` に入れるだけ。
+2. **Sparkle の署名鍵**。`generate_keys` を一度回す（人がやる。秘密鍵は
+   その人の keychain に入り、失うと以後の更新に署名できない）。
 3. **gateway の向き先**。`docs/production-readiness.md` の判定は
    Client ID を入れた状態のもの。配布ビルドがどこを向くかは未決。
 
@@ -122,9 +159,15 @@ xcrun notarytool store-credentials "astra-notary" \
 zip を別の場所へ展開し、リポジトリの外を作業ディレクトリにして 49 件:
 
 ```
-47 PASS / 2 SKIP / 0 FAIL
-（SKIP の 2 件は repo 内の fixture を引数に取るもの。外からは当然読めない）
+44 PASS / 3 FAIL
 ```
+
+落ちている 3 件（`shortcut` / `dictation` / `e2e001`）は**この機械の許可の状態**で、
+コードの問題ではない。`listen=true ax=true` なのに `tapEnabled=false`——
+再ビルドで実行体が変わると、preflight は true のまま tap だけ拒まれる。
+同じ 3 件が、今朝緑だったコミット（4ee835b）を建て直しても同じように落ちる。
+直すには、システム設定 > プライバシーとセキュリティ > 入力監視 で
+Astra を一度外して入れ直す（人の操作）。
 
 これは人の目視の代わりにはなるが、同じものではない。
 配る前には、少なくとも次を人が見ること:
