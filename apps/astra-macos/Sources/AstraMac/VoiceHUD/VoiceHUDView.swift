@@ -92,8 +92,21 @@ private struct IdleDock: View {
                 .font(.system(size: S.type(Metrics.dockPrimarySize), weight: .medium))
                 .foregroundStyle(Palette.muted(scheme == .dark))
             Spacer(minLength: 0)
-            KeyBadge("⌥")
-            KeyBadge("space")
+            // **効かないショートカットを案内しない。**
+            // 入力監視の許可が無いと ⌥Space は黙って何も起きない。それでも
+            // 「⌥ space」と出していたため、初見の人はそれを押し、何も起きず、
+            // 他に道が見えないまま詰まる（実装を知らない評価者が実際にそうなった）。
+            // 許可が無い間は、その場で効く道——クリック——だけを案内する。
+            // 見るのは権限の preflight ではなく**実際に登録できたか**。
+            // preflight が true でも登録に失敗することがある。
+            if GlobalShortcut.shared.isRegistered {
+                KeyBadge("⌥")
+                KeyBadge("space")
+            } else {
+                Text("クリック")
+                    .font(.system(size: S.type(Metrics.dockMetaSize)))
+                    .foregroundStyle(Palette.muted(scheme == .dark))
+            }
         }
         .padding(.horizontal, S.metric(Metrics.dockPadH))
         .frame(maxHeight: .infinity)
@@ -104,7 +117,9 @@ private struct IdleDock: View {
             MainWindowController.shared.showSection(.home)
             AstraStateStore.shared.workspaceOpened()
         })
-        .help("クリックで操作、⌘クリックで Astra を開く")
+        .help(GlobalShortcut.shared.isRegistered
+              ? "クリックで操作、⌥Space でどこからでも、⌘クリックで Astra を開く"
+              : "クリックで操作、⌘クリックで Astra を開く")
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("dockIdle")
     }
@@ -416,12 +431,19 @@ private struct AgentDock: View {
         HStack(spacing: 0) {
             // 走っている仕事は止められること。止め方が無いまま待たせない。
             if store.state.activeTask?.status == .running {
-                Button("Stop") { AstraStateStore.shared.finishTask(.failed) }
-                    .font(.system(size: S.type(Metrics.dockMetaSize), weight: .medium))
-                    .foregroundStyle(Palette.danger(dark))
-                    .frame(height: 28).padding(.horizontal, 10)
-                    .buttonStyle(AstraControlStyle(radius: 7, base: 0.0))
-                    .accessibilityIdentifier("stopAgent")
+                // 押せる範囲を label へ付ける。Button の外側に .frame を付けると
+                // 当たりは文字のままで、実寸は 29x16 だった（隣の openWorkspace は
+                // 178x28）。**止める操作がいちばん小さい**のは、あってはならない。
+                Button {
+                    AstraStateStore.shared.finishTask(.failed)
+                } label: {
+                    Text("Stop")
+                        .font(.system(size: S.type(Metrics.dockMetaSize), weight: .medium))
+                        .foregroundStyle(Palette.danger(dark))
+                        .frame(height: 28).padding(.horizontal, 10)
+                }
+                .buttonStyle(AstraControlStyle(radius: 7, base: 0.0))
+                .accessibilityIdentifier("stopAgent")
             }
             Spacer(minLength: 0)
             Button {

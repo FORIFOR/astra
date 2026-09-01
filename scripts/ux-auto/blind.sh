@@ -20,9 +20,14 @@ case "${1:-}" in
   start)
     pkill -9 -f AstraMac 2>/dev/null; sleep 1
     rm -f "$OUT"/*.png "$OUT"/rect.txt
-    "$BIN" --selftest idle-hold "${2:-180}" >"$OUT/app.log" 2>&1 &
+    # 既定を長く取る。**評価の途中でアプリが寿命で消えると、それを製品の欠陥と
+    # 読み違える**（実際そうなった: 60 秒で終了したのを「窓が二度と戻らない」と
+    # 記録してしまった）。
+    HOLD="${2:-900}"
+    "$BIN" --selftest idle-hold "$HOLD" >"$OUT/app.log" 2>&1 &
+    echo $! > "$OUT/app.pid"
     sleep 2.5
-    echo "started"
+    echo "started (hold ${HOLD}s)"
     ;;
   shot)
     name="${2:-shot}"
@@ -30,7 +35,13 @@ case "${1:-}" in
     # 混ざるうえ、上に重なった別アプリごと評価してしまう。
     # 「上から覆われているか」は絵ではなく calm の coverage で測る。
     r="$("$LAB/winrect")"
-    if [ -z "$r" ]; then echo "NO_WINDOW"; exit 1; fi
+    if [ -z "$r" ]; then
+      # 窓が無い理由を区別する。アプリが終わっているなら、それは製品の話ではない。
+      if [ -f "$OUT/app.pid" ] && ! kill -0 "$(cat "$OUT/app.pid")" 2>/dev/null; then
+        echo "HARNESS_EXPIRED: 検査用のアプリが終了している（製品の不具合ではない）"; exit 2
+      fi
+      echo "NO_WINDOW"; exit 1
+    fi
     echo "$r" > "$OUT/rect.txt"
     wid=$(echo "$r" | awk '{print $5}')
     screencapture -x -o -l"$wid" "$OUT/$name.png" 2>/dev/null

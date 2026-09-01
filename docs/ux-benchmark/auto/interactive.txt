@@ -1,0 +1,24 @@
+# 押せるもの / 触れるもの の一覧。ACCESSIBILITY_GATE の的の大きさは**ここだけ**見る。
+#
+# 進捗バーや区切り線まで的として数えると、未達が並んで誰も読まなくなる。
+# 逆に、ここに書き忘れた新しいボタンは検査されない。**書き忘れが起きたら分かるよう**、
+# 一覧に無い実寸キーは「分類されていない」として毎回出る。
+#
+# 1 行 1 キー。実寸の基準（docs/golden-screenshots/geometry/*.json）のキー名。
+
+stopAgent
+recordButton
+askInput
+toolTranscript
+toolTranslation
+toolCaptions
+canvasEdit
+canvasRemove
+openWorkspace
+meetingPanel-notes
+meetingPanel-captions
+meetingPanel-ask
+ai-リアルタイム要約
+ai-質問する
+ai-決定事項
+ai-アクション

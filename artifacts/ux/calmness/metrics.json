@@ -1,0 +1,15 @@
+{
+  "samples": 35,
+  "occupation_max": 0.0047,
+  "occupation_mean": 0.0003,
+  "occlusion_max": 0.0,
+  "focus_theft": 0,
+  "unexpected_expansion": 0,
+  "windows_max": 1,
+  "coverage_max": 0.9318,
+  "coverage_mean": 0.0532,
+  "not_measured": [
+    "キーボードの横取り（外から観測する手段がこの環境に無い）",
+    "pointer の横取り（同上）"
+  ]
+}

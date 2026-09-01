@@ -18,13 +18,13 @@ bash "$ROOT/scripts/ux-auto/build-tools.sh" >/dev/null
 pkill -9 -f AstraMac 2>/dev/null; sleep 1
 
 # Astra を出したまま置く。ここで前へ出てきたら、それが「邪魔」。
-"$BIN" --selftest idle-hold "$DUR" >"$OUT/app.log" 2>&1 &
+"$BIN" --selftest idle-hold $((DUR+30)) >"$OUT/app.log" 2>&1 &
 APP=$!
 sleep 2
 
 APPS=("Finder" "Safari" "Notes" "Mail")
 : > "$OUT/samples.tsv"
-printf "t\toccupation\tocclusion\tfrontmost\tastraFront\twindows\n" >> "$OUT/samples.tsv"
+printf "t\toccupation\tocclusion\tfrontmost\tastraFront\twindows\tcoverage\n" >> "$OUT/samples.tsv"
 
 start=$(python3 -c "import time;print(time.time())")
 i=0
@@ -40,8 +40,8 @@ while :; do
   fi
 
   eval "$("$LAB/calm" | sed 's/^/S_/')"
-  printf "%s\t%s\t%s\t%s\t%s\t%s\n" "$el" "$S_occupation" "$S_occlusion" \
-         "$S_frontmost" "$S_astraFrontmost" "$S_astraWindows" >> "$OUT/samples.tsv"
+  printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\n" "$el" "$S_occupation" "$S_occlusion" \
+         "$S_frontmost" "$S_astraFrontmost" "$S_astraWindows" "$S_coverage" >> "$OUT/samples.tsv"
   i=$((i+1)); sleep 1
 done
 
@@ -57,6 +57,7 @@ occ = [float(r[1]) for r in rows]
 ocl = [float(r[2]) for r in rows]
 theft = sum(1 for r in rows if r[4] == "true")
 wins = [int(r[5]) for r in rows]
+cov = [float(r[6]) for r in rows if len(r) > 6]
 # 突然の膨張: 1 標本で占有が 5 ポイント以上増えた回数。
 jumps = sum(1 for a, b in zip(occ, occ[1:]) if b - a > 0.05)
 
@@ -68,6 +69,10 @@ m = {
   "focus_theft": theft,
   "unexpected_expansion": jumps,
   "windows_max": max(wins),
+  # **見えているか。** 落ち着いていても、他の窓に覆われて見えないなら
+  # 「邪魔をしない」ではなく「気付けない」。別の欠陥として出す。
+  "coverage_max": round(max(cov), 4) if cov else None,
+  "coverage_mean": round(statistics.mean(cov), 4) if cov else None,
   "not_measured": [
     "キーボードの横取り（外から観測する手段がこの環境に無い）",
     "pointer の横取り（同上）",
@@ -77,7 +82,8 @@ json.dump(m, open(os.path.join(d, "metrics.json"), "w"), ensure_ascii=False, ind
 
 print("== CALMNESS_TEST ==")
 for k in ["samples","occupation_max","occupation_mean","occlusion_max",
-          "focus_theft","unexpected_expansion","windows_max"]:
+          "focus_theft","unexpected_expansion","windows_max",
+          "coverage_max","coverage_mean"]:
     print(f"  {k:22s} {m[k]}")
 for n in m["not_measured"]:
     print(f"  未計測                 {n}")
@@ -86,6 +92,8 @@ fail = []
 if m["focus_theft"] > 0: fail.append(f"焦点を奪った {m['focus_theft']} 回")
 if m["unexpected_expansion"] > 0: fail.append(f"勝手に広がった {m['unexpected_expansion']} 回")
 if m["occupation_max"] >= 0.10: fail.append(f"占有 {m['occupation_max']*100:.1f}%（10% 以上）")
+if m["coverage_mean"] is not None and m["coverage_mean"] > 0.5:
+    fail.append(f"他の窓に平均 {m['coverage_mean']*100:.0f}% 覆われていた（見えていない）")
 print()
 if fail:
     for f in fail: print("  未達:", f)

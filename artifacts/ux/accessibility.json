@@ -1,0 +1,9 @@
+{
+  "verdict": "PARTIAL",
+  "failures": [],
+  "not_measured": [
+    "VoiceOver の読み上げ順と label（自プロセスの AX 木が子を返さない）",
+    "focus の見え方と順序（同上）",
+    "Reduce Motion / 文字サイズ変更（外から切り替えて再撮影する仕組みが要る）"
+  ]
+}

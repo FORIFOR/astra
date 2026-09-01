@@ -1060,6 +1060,11 @@ enum SelfTest {
         guard AXIsProcessTrusted() else {
             print("SELFTEST_SKIP geometry: AX not trusted（実寸を読めない）"); exit(0)
         }
+
+        // 撮る前に本番と同じ状態にする。ショートカットを登録しないまま測ると、
+        // 実利用者が見ない姿（⌥Space の案内がクリック案内に化けた状態）が
+        // 基準になる。検査の環境と製品の姿がずれると、ずれのほうを直してしまう。
+        _ = GlobalShortcut.shared.register(handler: {})
         func settle(_ sec: Double) {
             let until = Date().addingTimeInterval(sec)
             while Date() < until { CFRunLoopRunInMode(.defaultMode, 0.05, true) }
@@ -1222,9 +1227,17 @@ enum SelfTest {
     /// 自分からは何も開かない——勝手に前へ出たらそれ自体が測定結果になる。
     @MainActor
     static func idleHold(_ args: [String]) {
-        let secs = Double(args.first ?? "") ?? 60
+        // 引数は `--selftest idle-hold <秒>` の並びで来る。`args.first` は実行ファイルの
+        // 経路なので、そこから読むと常に既定値になる（実際 25 を渡して 60 で動いていた）。
+        let i = args.firstIndex(of: "--selftest")
+        let secs = Double(i.map { args.count > $0 + 2 ? args[$0 + 2] : "" } ?? "") ?? 60
         WindowCoordinator.shared.showVoiceHUD()
-        print("IDLE_HOLD \(secs)s")
+        // **本番と同じものを登録する。** ここを省いたために、⌥Space が効かないのを
+        // 製品の欠陥として記録してしまった（実際は検査側が登録していなかった）。
+        let hot = GlobalShortcut.shared.register(handler: {
+            WindowCoordinator.shared.toggleRecording()
+        })
+        print("IDLE_HOLD \(secs)s shortcut=\(hot)")
         fflush(stdout)
         DispatchQueue.main.asyncAfter(deadline: .now() + secs) { exit(0) }
         RunLoop.main.run()
@@ -4615,6 +4628,11 @@ enum SelfTest {
         }
 
         let state = RecordingWorkspaceState.shared
+
+        // 本番と同じ状態で撮る。ショートカットを登録しないまま撮ると、
+        // 待機中の HUD が「登録できていないときの姿」になり、**実利用者が見ない絵**が
+        // 基準になる（実際そうなった: ⌥Space の案内がクリック案内に変わった）。
+        _ = GlobalShortcut.shared.register(handler: {})
 
         // 01 voice-hud-idle
         VoiceHUDState.shared.mode = .idle

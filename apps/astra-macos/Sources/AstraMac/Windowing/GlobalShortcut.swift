@@ -33,6 +33,11 @@ final class GlobalShortcut {
     /// Accessibility とは別の許可なので、`AXIsProcessTrusted()` では分からない。
     static var canListen: Bool { CGPreflightListenEventAccess() }
 
+    /// 実際に登録できたか。**画面はこれを見る。**
+    /// 権限の preflight が true でも登録に失敗することがあり、そのとき
+    /// 「⌥Space」と案内すると、押しても何も起きない案内になる。
+    private(set) var isRegistered = false
+
     /// 登録する。tap 生成に成功すれば true。押されると `handler` が MainActor で呼ばれる。
     @discardableResult
     func register(_ combo: Combo = Combo(), handler: @escaping () -> Void) -> Bool {
@@ -80,7 +85,7 @@ final class GlobalShortcut {
             unregister()
             return false
         }
-        return true
+        isRegistered = true; return true
     }
 
     /// tap が実際に有効か。作れても OS 側で落とされることがある。
