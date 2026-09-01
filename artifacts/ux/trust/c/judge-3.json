@@ -1,0 +1,56 @@
+{
+  "visible_text": [
+    "録音中 00:02",
+    "16:55 の会議",
+    "決まったこと",
+    "決まったことを待っています...",
+    "やること",
+    "やることを待っています...",
+    "メモ",
+    "18:42 Ken macOS を先に出します",
+    "会議から・Ken・10:42",
+    "14:21 Sarah オンボーディングを試作する",
+    "会議から・Sarah・14:21",
+    "文字起こし",
+    "18:30 Sarah Windows はいつ出しますか。",
+    "18:42 Ken macOS を先に出します",
+    "18:55 Ken Windows は次の周で出します。"
+  ],
+  "answers": {
+    "q1": "Partially grounded. The memo items (macOS/onboarding) have direct speaker attribution with timestamps that match the transcript on the right, so they're clearly tied to the meeting. But the two category sections (決まったこと/やること) show only placeholder text saying 'waiting for items', so those aren't grounded yet—unclear if extraction failed or is still in progress.",
+    "q2": "I would click the blue '直す>' (fix) link next to the item. That appears to be the path to verify and correct extracted content. Alternatively, I'd scan the transcript panel on the right to cross-check the speaker and timestamp.",
+    "q3": "Yes, clearly. Ken said 'macOS を先に出します' at 18:42, and Sarah said 'オンボーディングを試作する' at 14:21. The timestamps are explicit and match the transcript shown on the right (18:42 Ken, 18:55 Ken, etc.).",
+    "q4": "I would click the '直す>' link next to the incorrectly extracted item to enter an edit mode. The interface explicitly provides this correction path for each memo entry.",
+    "q5": "Moderately uneasy (score ~3-4). The extracted items are traceable to the source, but two of the three main categories are empty placeholders ('waiting for items'), creating doubt about completeness. The memo items appear reliable because they're grounded in the transcript, but I'd need to verify the extraction didn't miss anything before sharing what look like internal product decisions."
+  },
+  "trust": {
+    "provenance_comprehension": 6,
+    "source_discoverability": 6,
+    "correction_discoverability": 7,
+    "verification_cost": 5,
+    "confidence_to_share": 4
+  },
+  "scores": {
+    "clarity": 6,
+    "calmness": 6,
+    "hierarchy": 6,
+    "density": 5
+  },
+  "weaknesses": [
+    {
+      "axis": "completeness",
+      "what": "Two of three main extraction categories (決まったこと, やること) show placeholder text 'waiting for items' with no actual extracted content. Creates ambiguity: is extraction still running, or were no items found?",
+      "fix": "Show clear status: either 'No items detected' or a progress indicator. If extraction is incomplete, indicate that explicitly with a timestamp."
+    },
+    {
+      "axis": "confidence signaling",
+      "what": "No visual indication of extraction confidence, accuracy, or completeness. All memo items appear equally certain but we cannot tell if the AI is very confident or just showing its best guess.",
+      "fix": "Add confidence badges or visual weight to memo items (e.g., color, icon) indicating high/medium/low confidence. Show a summary bar indicating '2 of N items extracted'."
+    },
+    {
+      "axis": "density & balance",
+      "what": "The left panel feels sparse due to empty placeholder sections; the right panel (transcript) carries most actual content. First-time user may not realize they should read both sides together.",
+      "fix": "Rebalance: either populate the empty categories or collapse them; or re-layout so the transcript is more prominent as the 'ground truth' next to extractions."
+    }
+  ]
+}

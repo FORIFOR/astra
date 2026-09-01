@@ -1,0 +1,61 @@
+{
+  "visible_text": [
+    "16:55 の会議",
+    "Ken Windows は次の周で追いします。",
+    "決まったこと",
+    "やること",
+    "メモ",
+    "18:42 Ken macOS を先に出します",
+    "14:21 Sarah オンボーディングを試作する",
+    "18:30 Sarah Windows はいつ出しますか。",
+    "18:55 Ken Windows は次の周で追いします。",
+    "文字起こし",
+    "翻訳",
+    "字幕",
+    "リアルタイム要約",
+    "決定事項",
+    "アクション"
+  ],
+  "answers": {
+    "q1": "Grounded. Each extracted item (Ken at 18:42, Sarah at 14:21) appears verbatim in the transcription panel on the right with matching timestamps and speakers. The quotes are directly from what was said, not AI inference.",
+    "q2": "The timestamp+speaker link (e.g., '18:42 Ken'). Click that to jump to the source in the transcription or recording.",
+    "q3": "Yes, clearly. Each note shows speaker name and timestamp: '18:42 Ken', '14:21 Sarah', etc. Time is precise to the minute.",
+    "q4": "Unclear. There's no visible edit button or pencil icon on the items. I'd try clicking the item itself or looking for an edit affordance in the 'アクション' or ' 決定事項' buttons at the bottom, but it's not obvious from this view.",
+    "q5": "Moderately confident (5/7). Items are grounded with clear sources, but I'd verify critical ones first before forwarding. The placeholder text '待っています...' under 'やること' and '決まったこと' creates uncertainty—are these real or incomplete extracts?"
+  },
+  "trust": {
+    "provenance_comprehension": 6,
+    "source_discoverability": 6,
+    "correction_discoverability": 3,
+    "verification_cost": 5,
+    "confidence_to_share": 5
+  },
+  "scores": {
+    "clarity": 6,
+    "calmness": 6,
+    "hierarchy": 6,
+    "density": 5
+  },
+  "weaknesses": [
+    {
+      "axis": "correction_discoverability",
+      "what": "No visible edit UI. If an item is wrong (e.g., misattributed to wrong speaker or wrong time), there's no affordance to fix it in-place.",
+      "fix": "Add edit icon (pencil) or hover state to extracted items. Or add an 'Edit extraction' mode."
+    },
+    {
+      "axis": "provenance_comprehension",
+      "what": "Placeholder text '決まったことを待っています...' and 'やることを待っています...' creates ambiguity: are these real unresolved items, or is extraction still running? A first-time user won't know.",
+      "fix": "Replace with 'No decisions yet' / 'No actions yet' or remove the section entirely until items exist. Add a spinner if actively extracting."
+    },
+    {
+      "axis": "source_discoverability",
+      "what": "Left panel (extracted) and right panel (transcription) are visually separate. The connection between '18:42 Ken macOS を先に出します' (left) and its source in the transcript (right) requires scanning. No visual highlight or link.",
+      "fix": "Highlight the corresponding transcript line when hovering an extracted item, or add a jump-to-source arrow."
+    },
+    {
+      "axis": "density",
+      "what": "Wasted whitespace in '決まったこと' and 'やること' sections when they're empty (just placeholders). Also, '14:21 Sarah オンボーディングを試作する' appears only in the メモ section; unclear why it's not categorized under 'やること'.",
+      "fix": "Clarify categorization rules or auto-categorize memos into the right bucket. Hide empty sections until they have content."
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{"visible_text":["16:55 の会議","決まったこと","決まったことを待っています...","やること","やることを待っています...","メモ","macOS を先に出します","原文 ›","直す","文字起こし","リアルタイム要約","質問する","決定事項","アクション","この会議について聞く","AI が見ている資料"],
+ "answers":{
+   "q1":"There is a visible grounding mechanism: each メモ item shows a speaker name, a timestamp, and an expandable quoted original line with a 原文 (source) link, which reads as 'grounded in the meeting' rather than a free guess. But looking closely, the item labeled 'Ken・10:42' quotes 「Windows はいつ出しますか。」 — that line was actually said by Sarah at 10:30 per the transcript on the right, not by Ken at 10:42. So the UI announces grounding but the specific attribution shown is internally inconsistent, which would confuse anyone who actually checks it.",
+   "q2":"I'd click the 原文 › link right under the quoted line inside the メモ card — it's the most explicit 'go see the source' affordance on screen.",
+   "q3":"Yes for the top-level surfaces: the highlighted line under the title shows 'Ken' as speaker, each メモ card shows a name and time (e.g. '10:42 Ken'), and the 文字起こし panel lists every line with a timestamp and speaker. So attribution is visible without extra clicks — though as noted in q1, one attribution doesn't match its quoted text.",
+   "q4":"The '直す' (fix) link sitting directly beneath the quoted original text in each メモ card is the obvious correction entry point.",
+   "q5":"Moderately uneasy. The visible bullet has a name/time/quote trail, which helps, but 決まったこと and やること both show placeholder 'waiting...' text, so the doc reads as unfinished, and the one populated citation I could check didn't line up with its speaker — that would make me want to double-check everything else before forwarding it."
+ },
+ "trust":{"provenance_comprehension":6,"source_discoverability":6,"correction_discoverability":7,"verification_cost":6,"confidence_to_share":4},
+ "scores":{"clarity":6,"calmness":6,"hierarchy":6,"density":5},
+ "weaknesses":[
+   {"axis":"provenance_comprehension","what":"The メモ card credited to 'Ken・10:42' quotes 「Windows はいつ出しますか。」, which the transcript shows was actually said by Sarah at 10:30 — the grounding UI exists but the attached evidence doesn't match its claimed speaker/time.","fix":"Guarantee the quoted 原文 snippet always comes from the exact speaker+timestamp shown on the card, or display the full Q&A exchange so it's clear whose words are whose."},
+   {"axis":"confidence_to_share","what":"決まったこと and やること both render as visible empty-state placeholders ('...を待っています'), making the document look broken or unfinished if shared this early.","fix":"Suppress or visually de-emphasize empty sections (e.g. collapse to a single subtle 'not yet' line) instead of giving them full section weight."},
+   {"axis":"density","what":"Large empty vertical gap between the title/highlighted line and the メモ section makes the left panel feel sparse this early in the recording.","fix":"Collapse placeholder sections or tighten spacing until real content exists, then expand as content arrives."}
+ ]}

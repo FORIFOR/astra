@@ -203,6 +203,24 @@ private struct MeetingNotesCanvas: View {
     @State private var editText = ""
     @State private var editing: UUID?
 
+    /// 拾った行のすぐ下に出所を 1 行。
+    ///
+    /// 自動評価の A/B/C で選ばれた形（Trust 3.80 → 5.00）。
+    /// 根拠を最初から見せる案（B）は Trust が最も上がった（5.60）が、
+    /// clarity と hierarchy を 1.0 ずつ落としたので採らなかった。
+    /// 「会議から ✓」を足す案（C）は 4.80 で A に届かなかった。
+    @ViewBuilder private func trustBand(_ line: CanvasItem) -> some View {
+        HStack(spacing: 5) {
+            if let who = line.speaker { Text(who) }
+            if let t = line.timeLabel { Text("· \(t)") }
+            Text("· 出所 ›").foregroundStyle(Palette.accent(dark))
+            Spacer(minLength: 0)
+        }
+        .font(.system(size: 11))
+        .foregroundStyle(Palette.muted(dark))
+        .padding(.leading, 47)
+    }
+
     /// その項目の前後の文字起こし。拾った時刻を挟んで前後 1 行ずつ。
     private func context(_ line: CanvasItem) -> [TranscriptSegment] {
         guard let at = line.at, !state.transcript.isEmpty else { return [] }
@@ -399,6 +417,7 @@ private struct MeetingNotesCanvas: View {
                     }
                     .buttonStyle(AstraControlStyle(radius: 7, base: 0.0))
 
+                    trustBand(line)
                     if openedItem == line.id { provenance(line) }
                     }
                 }

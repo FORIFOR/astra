@@ -1,0 +1,20 @@
+{
+  "target": "trust",
+  "candidates": {
+    "a": "行の下に出所 1 行",
+    "b": "根拠を最初から見せる",
+    "c": "会議から ✓ と 確かめる ›"
+  },
+  "trust_mean": {
+    "base": 3.8,
+    "a": 5.0,
+    "b": 5.6,
+    "c": 4.8
+  },
+  "adopted": "a",
+  "why": "A は Trust +1.20 で壊れ無し。B は Trust +1.80 と最も高いが clarity -1.0 / hierarchy -1.0 で規則違反。C は +1.00 で A に届かず。",
+  "rule": "target >= +0.25 かつ clarity/calmness/hierarchy/density の悪化 > -0.15",
+  "next": "correction_discoverability が base 2.0 / A 2.0 のまま。直す道が見えていない。B は 6.0 にできたので、B の混雑を持ち込まずに同じ効果を出す案を次に探す。",
+  "judges": 3,
+  "judge_source_access": false
+}

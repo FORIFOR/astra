@@ -1,0 +1,263 @@
+{
+  "base": {
+    "n": 3,
+    "trust": {
+      "provenance_comprehension": 5,
+      "source_discoverability": 4,
+      "correction_discoverability": 2,
+      "verification_cost": 4,
+      "confidence_to_share": 4
+    },
+    "guard": {
+      "clarity": 6,
+      "calmness": 6,
+      "hierarchy": 6,
+      "density": 4
+    },
+    "trust_mean": 3.8,
+    "weaknesses": [
+      {
+        "axis": "correction_discoverability",
+        "what": "メモや冒頭の引用に、誤りを直すための編集アイコンやボタンが一切見えない。",
+        "fix": "各抽出項目にホバー時または常時表示の鉛筆アイコンを置き、クリックで修正・削除できるようにする。"
+      },
+      {
+        "axis": "source_discoverability",
+        "what": "抽出項目の時刻表示が文字起こしへのリンクになっておらず、根拠を見るには時刻を目視で照合する必要がある。",
+        "fix": "メモの時刻をクリック可能にし、右パネルの該当発言までスクロール・ハイライトさせる。"
+      },
+      {
+        "axis": "density",
+        "what": "『決まったこと』と『やること』の両方が空のプレースホルダーのままで、要約全体が未完成に見える。",
+        "fix": "空セクションは薄いプレースホルダーではなく非表示にするか、進行中であることが分かる控えめな表現に変える。"
+      },
+      {
+        "axis": "correction_discoverability",
+        "what": "メモや抽出項目に編集・訂正のためのアイコン(鉛筆など)が一切なく、AIが誤って抽出した場合にどこを直せばよいか画面から読み取れない。",
+        "fix": "各メモ/抽出項目にホバー時またはシェブロン展開時に表示される編集ボタンを追加し、修正フローへの入り口を明示する。"
+      },
+      {
+        "axis": "provenance_comprehension",
+        "what": "一番目立つ位置にある抽出発言『Windows は次の周で追います。』にタイムスタンプが付いておらず、右の文字起こしと突き合わせないと発言時刻・根拠が確認できない。",
+        "fix": "強調表示された抽出項目にも他のメモ項目と同様に時刻を併記し、根拠となる発言だと一目でわかるようにする。"
+      },
+      {
+        "axis": "verification_cost",
+        "what": "抽出項目の出典を確認するには、時刻と話者名を頼りに右パネルの文字起こしを目視でスクロール・照合する必要があり、ワンクリックで該当箇所へ飛ぶ手段がない。",
+        "fix": "メモ項目をクリックすると文字起こしパネル内の該当行へ自動スクロール・ハイライトする機能を追加する。"
+      },
+      {
+        "axis": "correction_discoverability",
+        "what": "No visible edit UI. If an item is wrong (e.g., misattributed to wrong speaker or wrong time), there's no affordance to fix it in-place.",
+        "fix": "Add edit icon (pencil) or hover state to extracted items. Or add an 'Edit extraction' mode."
+      },
+      {
+        "axis": "provenance_comprehension",
+        "what": "Placeholder text '決まったことを待っています...' and 'やることを待っています...' creates ambiguity: are these real unresolved items, or is extraction still running? A first-time user won't know.",
+        "fix": "Replace with 'No decisions yet' / 'No actions yet' or remove the section entirely until items exist. Add a spinner if actively extracting."
+      },
+      {
+        "axis": "source_discoverability",
+        "what": "Left panel (extracted) and right panel (transcription) are visually separate. The connection between '18:42 Ken macOS を先に出します' (left) and its source in the transcript (right) requires scanning. No visual highlight or link.",
+        "fix": "Highlight the corresponding transcript line when hovering an extracted item, or add a jump-to-source arrow."
+      },
+      {
+        "axis": "density",
+        "what": "Wasted whitespace in '決まったこと' and 'やること' sections when they're empty (just placeholders). Also, '14:21 Sarah オンボーディングを試作する' appears only in the メモ section; unclear why it's not categorized under 'やること'.",
+        "fix": "Clarify categorization rules or auto-categorize memos into the right bucket. Hide empty sections until they have content."
+      }
+    ]
+  },
+  "a": {
+    "n": 3,
+    "trust": {
+      "provenance_comprehension": 6,
+      "source_discoverability": 6,
+      "correction_discoverability": 2,
+      "verification_cost": 6,
+      "confidence_to_share": 5
+    },
+    "guard": {
+      "clarity": 6,
+      "calmness": 6,
+      "hierarchy": 6,
+      "density": 6
+    },
+    "trust_mean": 5,
+    "weaknesses": [
+      {
+        "axis": "correction_discoverability",
+        "what": "No visible edit/correct affordance on memo items — only an ambiguous chevron with unclear function (expand? edit? collapse detail?).",
+        "fix": "Add an explicit pencil/edit icon or a small 'correct' action next to each memo item so users know exactly where to fix a wrong extraction."
+      },
+      {
+        "axis": "confidence_to_share",
+        "what": "'決まったこと' and 'やること' both show placeholder 'waiting' text, making the summary look incomplete at first glance.",
+        "fix": "Either hide empty sections until populated, or show a lighter-weight 'in progress' indicator that doesn't read as a stalled/broken feature."
+      },
+      {
+        "axis": "provenance_comprehension",
+        "what": "Groundedness is implied only by the presence of name+timestamp+出所, with no explicit label like 'from transcript' vs 'AI inference', so a literal-minded first-time user could still wonder if the summary text was paraphrased/altered by the AI.",
+        "fix": "Add a one-word tag (e.g. '引用' vs '要約') distinguishing verbatim quotes from AI-paraphrased extractions."
+      },
+      {
+        "axis": "correction_discoverability",
+        "what": "Each メモ item only exposes a generic chevron (⌄); there is no visible edit, delete, or 'this is wrong' control, so a user who spots an AI error has no clear next step.",
+        "fix": "Add an explicit inline edit/flag affordance (pencil or ⋯ menu) next to the chevron on each memo item, distinct from the expand action."
+      },
+      {
+        "axis": "confidence_to_share",
+        "what": "'決まったこと' and 'やること' are shown as empty sections with waiting placeholder text, which makes the whole panel read as unfinished even though the メモ section already has solid content.",
+        "fix": "Collapse or visually de-emphasize empty sections until they have content, or show a lightweight 'in progress' state instead of a full-height empty block."
+      },
+      {
+        "axis": "correction_discoverability",
+        "what": "No visible edit or correction interface for extracted items. If the AI misheard or misinterpreted something, there's no obvious button or affordance to fix it.",
+        "fix": "Add an edit pencil icon, 'Correct' button, or right-click menu option on each extracted item to allow inline editing or flagging for review."
+      },
+      {
+        "axis": "source_discoverability",
+        "what": "The '出所' (source) link is small and its affordance is unclear. A first-time user might not realize it's clickable or what it does.",
+        "fix": "Make the source link more prominent (e.g., underline or highlight on hover), or add a small icon (e.g., a link icon) to signal it's interactive. Add a tooltip on hover explaining 'Click to jump to this moment in the recording.'"
+      },
+      {
+        "axis": "verification_cost",
+        "what": "To verify an extracted item, a user must manually scan the transcript on the right to find the matching speaker and timestamp. No automatic highlighting or synchronized playback makes this tedious.",
+        "fix": "When a user clicks an extracted item, highlight or scroll the transcript to show the corresponding line, and optionally seek the recording player to that timestamp."
+      }
+    ]
+  },
+  "b": {
+    "n": 3,
+    "trust": {
+      "provenance_comprehension": 6,
+      "source_discoverability": 6,
+      "correction_discoverability": 6,
+      "verification_cost": 6,
+      "confidence_to_share": 4
+    },
+    "guard": {
+      "clarity": 5,
+      "calmness": 6,
+      "hierarchy": 5,
+      "density": 5
+    },
+    "trust_mean": 5.6,
+    "weaknesses": [
+      {
+        "axis": "provenance_comprehension",
+        "what": "The メモ card credited to 'Ken・10:42' quotes 「Windows はいつ出しますか。」, which the transcript shows was actually said by Sarah at 10:30 — the grounding UI exists but the attached evidence doesn't match its claimed speaker/time.",
+        "fix": "Guarantee the quoted 原文 snippet always comes from the exact speaker+timestamp shown on the card, or display the full Q&A exchange so it's clear whose words are whose."
+      },
+      {
+        "axis": "confidence_to_share",
+        "what": "決まったこと and やること both render as visible empty-state placeholders ('...を待っています'), making the document look broken or unfinished if shared this early.",
+        "fix": "Suppress or visually de-emphasize empty sections (e.g. collapse to a single subtle 'not yet' line) instead of giving them full section weight."
+      },
+      {
+        "axis": "density",
+        "what": "Large empty vertical gap between the title/highlighted line and the メモ section makes the left panel feel sparse this early in the recording.",
+        "fix": "Collapse placeholder sections or tighten spacing until real content exists, then expand as content arrives."
+      },
+      {
+        "axis": "provenance_comprehension",
+        "what": "メモ項目「10:42 Ken macOSを先に出します」の引用カードには『Windows はいつ出しますか。』と表示されるが、文字起こしパネルではこの発言は10:30のSarahのものであり、Ken・10:42の発言とは一致しない。引用の紐付けが信頼できるか疑わしくなる。",
+        "fix": "各メモ項目の引用は、実際にその抽出のもとになった話者・時刻のセグメントを正確に参照するようにする。"
+      },
+      {
+        "axis": "confidence_to_share",
+        "what": "メモ項目「14:21 Sarah オンボーディングを試作する」のカードには引用原文が表示されておらず、1件目のカードとフォーマットが揃っていない。",
+        "fix": "全メモ項目で話者・時刻・引用を同じ形式で必ず表示し、根拠が無い場合はその旨を明示する。"
+      },
+      {
+        "axis": "density",
+        "what": "「決まったこと」「やること」セクションが共に「〜を待っています…」のプレースホルダーのままで、画面上部の情報密度が薄く見える。",
+        "fix": "空状態の表示を簡潔にするか、録音開始直後であることが伝わる文言に調整する。"
+      },
+      {
+        "axis": "provenance",
+        "what": "Timestamp format is inconsistent ('18:42 Ken' vs. 'Ken · 10:42'), making it unclear which is the canonical reference",
+        "fix": "Standardize timestamp format across all items (e.g., always 'Speaker · HH:MM' or 'HH:MM Speaker')"
+      },
+      {
+        "axis": "correction_discoverability",
+        "what": "Buttons '直父' and '復討' are cryptic; unclear whether they edit, mark as resolved, or serve another function",
+        "fix": "Use clear labels like '修正' (edit), '確認' (confirm), or icons with tooltips"
+      },
+      {
+        "axis": "hierarchy",
+        "what": "Section headers ('決まったこと', 'やること', 'メモ') are visually undifferentiated; placeholder text '...を待っています' blends into the layout as if items exist",
+        "fix": "Visually de-emphasize or hide placeholder sections; use background color or borders to distinguish section headers"
+      },
+      {
+        "axis": "source_discoverability",
+        "what": "Connection between left extracted items and right transcript is implicit; new user may not realize how to verify an item",
+        "fix": "Add visual connection (arrow, highlight, or side-by-side open on click) linking item to source in transcript"
+      },
+      {
+        "axis": "confidence_to_share",
+        "what": "Placeholder sections signal incompleteness, reducing confidence that this is a polished final extraction ready for sharing",
+        "fix": "Only show sections with actual content; hide empty sections or display as 'No items yet' in a less prominent way"
+      }
+    ]
+  },
+  "c": {
+    "n": 3,
+    "trust": {
+      "provenance_comprehension": 5,
+      "source_discoverability": 6,
+      "correction_discoverability": 3,
+      "verification_cost": 6,
+      "confidence_to_share": 4
+    },
+    "guard": {
+      "clarity": 6,
+      "calmness": 6,
+      "hierarchy": 6,
+      "density": 6
+    },
+    "trust_mean": 4.8,
+    "weaknesses": [
+      {
+        "axis": "correction_discoverability",
+        "what": "メモ項目に編集・訂正のための明示的なボタンやアイコンが無く、唯一それらしい『⌄』シェブロンも機能が不明瞭。",
+        "fix": "各メモ項目に『修正する』のような明示ラベル付きボタンを『確かめる』の隣に常設し、クリックで該当箇所を直接編集できるようにする。"
+      },
+      {
+        "axis": "provenance_comprehension",
+        "what": "『会議から』ラベルと時計アイコンが、抽出方法（自動要約か発言引用か）を説明しておらず、初見では推測に頼る。",
+        "fix": "ラベルを『発言から自動抽出』のような具体的文言にするか、ホバーで元発言の一部をプレビュー表示する。"
+      },
+      {
+        "axis": "correction_discoverability",
+        "what": "各メモ項目に「確かめる」ボタンはあるが、AIの抽出が間違っていた場合にどこから修正・訂正すればよいかを示す明示的な導線(編集アイコンやボタン)が見当たらない。右端の山形アイコンの役割も不明瞭。",
+        "fix": "「確かめる」の隣に明確な「修正する」または鉛筆アイコンを常設し、クリックで該当箇所をインライン編集できるようにする。"
+      },
+      {
+        "axis": "provenance_comprehension",
+        "what": "「会議から・Ken・10:42」というタグが、発言の直接引用なのかAIによる要約・解釈なのかを区別していない。文字起こしパネルの原文と見比べないと確信が持てない。",
+        "fix": "タグに『引用』『要約』などの種別を付けるか、ホバー/クリックで元発言のスニペットをその場に展開して照合の手間を減らす。"
+      },
+      {
+        "axis": "confidence_to_share",
+        "what": "「決まったこと」「やること」セクションが空のまま『〜を待っています…』というプレースホルダーで表示され続けており、会議開始直後とはいえ画面全体が未完成に見える。",
+        "fix": "空セクションは折りたたむか非表示にし、内容が生成された時点で初めて展開表示する。"
+      },
+      {
+        "axis": "completeness",
+        "what": "Two of three main extraction categories (決まったこと, やること) show placeholder text 'waiting for items' with no actual extracted content. Creates ambiguity: is extraction still running, or were no items found?",
+        "fix": "Show clear status: either 'No items detected' or a progress indicator. If extraction is incomplete, indicate that explicitly with a timestamp."
+      },
+      {
+        "axis": "confidence signaling",
+        "what": "No visual indication of extraction confidence, accuracy, or completeness. All memo items appear equally certain but we cannot tell if the AI is very confident or just showing its best guess.",
+        "fix": "Add confidence badges or visual weight to memo items (e.g., color, icon) indicating high/medium/low confidence. Show a summary bar indicating '2 of N items extracted'."
+      },
+      {
+        "axis": "density & balance",
+        "what": "The left panel feels sparse due to empty placeholder sections; the right panel (transcript) carries most actual content. First-time user may not realize they should read both sides together.",
+        "fix": "Rebalance: either populate the empty categories or collapse them; or re-layout so the transcript is more prominent as the 'ground truth' next to extractions."
+      }
+    ]
+  }
+}

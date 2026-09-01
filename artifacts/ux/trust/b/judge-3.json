@@ -1,0 +1,66 @@
+{
+  "visible_text": [
+    "16:55の会議",
+    "Ken Windows はどの周で追いです。",
+    "決まったこと",
+    "決まったことを待っています...",
+    "やること",
+    "やることを待っています...",
+    "メモ",
+    "18:42 Ken macOS を先に出します",
+    "Ken · 10:42 Windows は出しません。",
+    "直父 復討",
+    "14:21 Sarah オンボーディングを試作する",
+    "Sarah · 14:21",
+    "文字起こし",
+    "翻訳",
+    "字幕"
+  ],
+  "answers": {
+    "q1": "Grounded in the meeting — each extracted item shows a timestamp (18:42, 14:21, 10:42) and speaker name (Ken, Sarah), clearly linked to the transcript. The right panel displays what appears to be a transcript with matching speaker names and times. I can tell these are speaker quotes, not AI invention.",
+    "q2": "Click the timestamp (e.g., '18:42') or the speaker name to jump to that point in the recording/transcript. Failing that, click the expand arrow on the item itself to show more context.",
+    "q3": "Yes — speaker name (Ken or Sarah) and timestamp (e.g., '18:42', '14:21', '10:42'). Though inconsistency: some show 'Ken · 10:42' while others show '18:42 Ken', making the format slightly confusing at first glance.",
+    "q4": "I see two button-like labels ('直父', '復討') below the expanded items. I would try clicking those, but their purpose isn't obvious — they might be 'edit' and 'resolve' or similar. An inline edit pencil icon or 'Edit' label would be clearer.",
+    "q5": "Moderately uneasy (5/10 confidence). Sections like '決まったこと' and 'やること' show placeholder text '...を待っています...' (waiting), suggesting the extraction is incomplete. The right panel's raw transcript isn't polished for sharing. I'd want to confirm these are finalized before forwarding."
+  },
+  "trust": {
+    "provenance_comprehension": 6,
+    "source_discoverability": 5,
+    "correction_discoverability": 4,
+    "verification_cost": 5,
+    "confidence_to_share": 3
+  },
+  "scores": {
+    "clarity": 5,
+    "calmness": 6,
+    "hierarchy": 4,
+    "density": 5
+  },
+  "weaknesses": [
+    {
+      "axis": "provenance",
+      "what": "Timestamp format is inconsistent ('18:42 Ken' vs. 'Ken · 10:42'), making it unclear which is the canonical reference",
+      "fix": "Standardize timestamp format across all items (e.g., always 'Speaker · HH:MM' or 'HH:MM Speaker')"
+    },
+    {
+      "axis": "correction_discoverability",
+      "what": "Buttons '直父' and '復討' are cryptic; unclear whether they edit, mark as resolved, or serve another function",
+      "fix": "Use clear labels like '修正' (edit), '確認' (confirm), or icons with tooltips"
+    },
+    {
+      "axis": "hierarchy",
+      "what": "Section headers ('決まったこと', 'やること', 'メモ') are visually undifferentiated; placeholder text '...を待っています' blends into the layout as if items exist",
+      "fix": "Visually de-emphasize or hide placeholder sections; use background color or borders to distinguish section headers"
+    },
+    {
+      "axis": "source_discoverability",
+      "what": "Connection between left extracted items and right transcript is implicit; new user may not realize how to verify an item",
+      "fix": "Add visual connection (arrow, highlight, or side-by-side open on click) linking item to source in transcript"
+    },
+    {
+      "axis": "confidence_to_share",
+      "what": "Placeholder sections signal incompleteness, reducing confidence that this is a polished final extraction ready for sharing",
+      "fix": "Only show sections with actual content; hide empty sections or display as 'No items yet' in a less prominent way"
+    }
+  ]
+}
