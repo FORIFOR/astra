@@ -16,12 +16,20 @@ case "pos":
 case "move":
     CGEvent(mouseEventSource: nil, mouseType: .mouseMoved, mouseCursorPosition: pt(2), mouseButton: .left)?.post(tap: .cghidEventTap)
 case "click":
+    // **source を nil にすると押下が届かない。** 実際、合成クリックでデスクトップを
+    // 押しても Finder が前面にならず、「Astra がクリックを無視する」と読み違えた。
+    // hidSystemState の source を使い、clickState も明示する。
     let p = pt(2)
-    CGEvent(mouseEventSource: nil, mouseType: .mouseMoved, mouseCursorPosition: p, mouseButton: .left)?.post(tap: .cghidEventTap)
-    usleep(60_000)
-    CGEvent(mouseEventSource: nil, mouseType: .leftMouseDown, mouseCursorPosition: p, mouseButton: .left)?.post(tap: .cghidEventTap)
-    usleep(40_000)
-    CGEvent(mouseEventSource: nil, mouseType: .leftMouseUp, mouseCursorPosition: p, mouseButton: .left)?.post(tap: .cghidEventTap)
+    let src = CGEventSource(stateID: .hidSystemState)
+    func send(_ type: CGEventType) {
+        guard let e = CGEvent(mouseEventSource: src, mouseType: type,
+                              mouseCursorPosition: p, mouseButton: .left) else { return }
+        e.setIntegerValueField(.mouseEventClickState, value: 1)
+        e.post(tap: .cgSessionEventTap)
+    }
+    send(.mouseMoved); usleep(120_000)
+    send(.leftMouseDown); usleep(90_000)
+    send(.leftMouseUp)
 case "key":
     let code = CGKeyCode(UInt16(a[2]) ?? 0)
     var flags: CGEventFlags = []

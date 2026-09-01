@@ -16,7 +16,26 @@ BIN="$ROOT/apps/astra-macos/.build/debug/AstraMac"
 OUT="${BLIND_OUT:-$ROOT/artifacts/ux/blind/session}"
 mkdir -p "$OUT"
 
+# 合成クリックが本当に届くかを、**自分で作った的**で確かめる。
+# Astra を的にしたままでは、道具の不備と製品の欠陥を切り分けられない。
+# 実際、届かないクリックを「Astra がクリックを無視する」と 2 回記録した。
+selfcheck() {
+  bash "$ROOT/scripts/ux-auto/build-tools.sh" >/dev/null
+  local log="$OUT/selfcheck.log"
+  "$LAB/clicktest" > "$log" 2>&1 &
+  sleep 2
+  local t; t="$(head -1 "$log")"
+  if [ -z "$t" ]; then echo "CLICK_UNKNOWN"; return 2; fi
+  set -- $t
+  "$LAB/uxin" click $(( $2 + 150 )) $(( $3 + 100 ))
+  sleep 3
+  pkill -f clicktest 2>/dev/null
+  if grep -q CLICK_RECEIVED "$log"; then echo "CLICK_OK"; return 0; fi
+  echo "CLICK_NOT_DELIVERED"; return 3
+}
+
 case "${1:-}" in
+  selfcheck) selfcheck ;;
   start)
     pkill -9 -f AstraMac 2>/dev/null; sleep 1
     rm -f "$OUT"/*.png "$OUT"/rect.txt
@@ -48,6 +67,15 @@ case "${1:-}" in
     echo "$OUT/$name.png"
     ;;
   click)
+    # 届かないクリックを「押した」と記録しない。
+    if [ ! -f "$OUT/.click-ok" ]; then
+      if selfcheck >/dev/null 2>&1; then touch "$OUT/.click-ok"
+      else
+        echo "CLICK_NOT_DELIVERED: この環境では合成クリックが届かない。"
+        echo "  鍵盤だけで進めること。押せないことを製品の欠陥として記録しない。"
+        exit 4
+      fi
+    fi
     r="$(cat "$OUT/rect.txt" 2>/dev/null)"; [ -n "$r" ] || { echo "先に shot"; exit 1; }
     set -- $r
     # 画像座標 → 画面座標。撮った画像は窓と同じ pt 寸法に見えるよう扱う。
