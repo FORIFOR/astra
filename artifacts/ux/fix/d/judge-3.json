@@ -1,0 +1,63 @@
+{
+  "visible_text": [
+    "17:52の会議",
+    "Ken Windows は次の周で追いいます",
+    "決まったこと",
+    "決まったことを待っています...",
+    "やること",
+    "やることを待っています...",
+    "メモ",
+    "18:42 Ken macOS を先に出します",
+    "14:21 Sarah オンボーディングを試作する",
+    "Windows はいつ出しますか。",
+    "macOS を先に出します",
+    "Windows は次の周で追いいます。"
+  ],
+  "answers": {
+    "q1": "Partially grounded. The items in the Notes (メモ) section show speaker names (Ken, Sarah) and timestamps (18:42, 14:21), suggesting they are extracted from meeting statements. However, the placeholder text in the Decisions (決まったこと) and Actions (やること) sections—saying 'waiting for decided things' and 'waiting for things to do'—is clearly AI-generated filler. The challenge: I cannot immediately tell whether extracted items are direct quotes or AI-summarized versions of what was said.",
+    "q2": "I would click on the Ken entry in the transcript panel on the right (the one at 18:42 labeled 'macOS を先に出します'), or click the speaker name 'Ken' next to the timestamp. This should either play/seek to that moment in the recording or highlight it in the transcript.",
+    "q3": "Yes, but inconsistently. The Notes section shows speaker name and timestamp for each action (Ken at 18:42, Sarah at 14:21). The transcript on the right shows speaker name and timestamp for each line. However, the Decisions and Actions sections at the top left do not show who said them or when—they appear unattributed. This is a significant gap.",
+    "q4": "I cannot see a clear way to correct it. The interface shows expandable items (dropdown arrows), but clicking one might only reveal more detail, not open an edit mode. There is no visible pencil icon, edit button, or input field that signals 'you can change this here.' If I had to guess, I might right-click or look for a context menu, but the UI does not suggest this is possible.",
+    "q5": "Moderately to quite uneasy (score 4/7 confidence to share). The speaker and timestamp attribution exists for the Notes section, which is good. However, the Decisions and Actions sections lack any attribution, and the placeholder text raises questions about AI quality. I would want to review the transcript myself before forwarding this to someone else, or at least mark it as a draft summary pending verification."
+  },
+  "trust": {
+    "provenance_comprehension": 4,
+    "source_discoverability": 4,
+    "correction_discoverability": 2,
+    "verification_cost": 4,
+    "confidence_to_share": 4
+  },
+  "scores": {
+    "clarity": 5,
+    "calmness": 6,
+    "hierarchy": 5,
+    "density": 5
+  },
+  "weaknesses": [
+    {
+      "axis": "provenance_comprehension",
+      "what": "Placeholder text (決まったことを待っています) mixes visually with actual extracted items, making it unclear which are grounded vs. AI-generated filler",
+      "fix": "Use visual language (color, opacity, italics, or an explicit badge) to distinguish placeholders and AI summaries from extracted meeting content"
+    },
+    {
+      "axis": "provenance_comprehension",
+      "what": "Decisions and Actions sections show no speaker name or timestamp; only Notes section does. This breaks trust in those summaries",
+      "fix": "Show speaker and timestamp for every extracted item, across all sections. If a summary synthesizes multiple speakers, attribute it explicitly (e.g., 'Ken & Sarah, 18:42-19:10')"
+    },
+    {
+      "axis": "source_discoverability",
+      "what": "The path from an item to its source in the transcript is not obvious. No visual connection (line, button, or highlight) links them",
+      "fix": "Add a clickable speaker name or timestamp on each item that jumps to or highlights that moment in the transcript panel"
+    },
+    {
+      "axis": "correction_discoverability",
+      "what": "No visible affordance to edit or correct an extracted item; no pencil icon, edit button, or input field",
+      "fix": "Add an edit button or icon on hover, or make items inline-editable. Make it visually clear that corrections are possible"
+    },
+    {
+      "axis": "clarity",
+      "what": "It is ambiguous whether the quoted text (e.g., 'macOS を先に出します') is a direct transcription or an AI paraphrase",
+      "fix": "Use quotation marks or a 'verbatim' badge for direct quotes; use different styling or a label for AI summaries"
+    }
+  ]
+}

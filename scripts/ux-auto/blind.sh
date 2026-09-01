@@ -44,7 +44,13 @@ case "${1:-}" in
     # 読み違える**（実際そうなった: 60 秒で終了したのを「窓が二度と戻らない」と
     # 記録してしまった）。
     HOLD="${2:-900}"
-    "$BIN" --selftest idle-hold "$HOLD" >"$OUT/app.log" 2>&1 &
+    # 第 3 引数で待つ姿を選ぶ。meeting は会議の面（訂正の道を測るため）。
+    MODE="${3:-idle}"
+    if [ "$MODE" = "meeting" ]; then
+      "$BIN" --selftest hold-meeting "$HOLD" >"$OUT/app.log" 2>&1 &
+    else
+      "$BIN" --selftest idle-hold "$HOLD" >"$OUT/app.log" 2>&1 &
+    fi
     echo $! > "$OUT/app.pid"
     sleep 2.5
     echo "started (hold ${HOLD}s)"

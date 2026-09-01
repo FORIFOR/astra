@@ -1,0 +1,268 @@
+{
+  "base": {
+    "n": 3,
+    "trust": {
+      "provenance_comprehension": 6,
+      "source_discoverability": 6,
+      "correction_discoverability": 2,
+      "verification_cost": 6,
+      "confidence_to_share": 5
+    },
+    "guard": {
+      "clarity": 6,
+      "calmness": 6,
+      "hierarchy": 6,
+      "density": 6
+    },
+    "trust_mean": 5,
+    "weaknesses": [
+      {
+        "axis": "correction_discoverability",
+        "what": "No visible edit/correct affordance on memo items — only an ambiguous chevron with unclear function (expand? edit? collapse detail?).",
+        "fix": "Add an explicit pencil/edit icon or a small 'correct' action next to each memo item so users know exactly where to fix a wrong extraction."
+      },
+      {
+        "axis": "confidence_to_share",
+        "what": "'決まったこと' and 'やること' both show placeholder 'waiting' text, making the summary look incomplete at first glance.",
+        "fix": "Either hide empty sections until populated, or show a lighter-weight 'in progress' indicator that doesn't read as a stalled/broken feature."
+      },
+      {
+        "axis": "provenance_comprehension",
+        "what": "Groundedness is implied only by the presence of name+timestamp+出所, with no explicit label like 'from transcript' vs 'AI inference', so a literal-minded first-time user could still wonder if the summary text was paraphrased/altered by the AI.",
+        "fix": "Add a one-word tag (e.g. '引用' vs '要約') distinguishing verbatim quotes from AI-paraphrased extractions."
+      },
+      {
+        "axis": "correction_discoverability",
+        "what": "Each メモ item only exposes a generic chevron (⌄); there is no visible edit, delete, or 'this is wrong' control, so a user who spots an AI error has no clear next step.",
+        "fix": "Add an explicit inline edit/flag affordance (pencil or ⋯ menu) next to the chevron on each memo item, distinct from the expand action."
+      },
+      {
+        "axis": "confidence_to_share",
+        "what": "'決まったこと' and 'やること' are shown as empty sections with waiting placeholder text, which makes the whole panel read as unfinished even though the メモ section already has solid content.",
+        "fix": "Collapse or visually de-emphasize empty sections until they have content, or show a lightweight 'in progress' state instead of a full-height empty block."
+      },
+      {
+        "axis": "correction_discoverability",
+        "what": "No visible edit or correction interface for extracted items. If the AI misheard or misinterpreted something, there's no obvious button or affordance to fix it.",
+        "fix": "Add an edit pencil icon, 'Correct' button, or right-click menu option on each extracted item to allow inline editing or flagging for review."
+      },
+      {
+        "axis": "source_discoverability",
+        "what": "The '出所' (source) link is small and its affordance is unclear. A first-time user might not realize it's clickable or what it does.",
+        "fix": "Make the source link more prominent (e.g., underline or highlight on hover), or add a small icon (e.g., a link icon) to signal it's interactive. Add a tooltip on hover explaining 'Click to jump to this moment in the recording.'"
+      },
+      {
+        "axis": "verification_cost",
+        "what": "To verify an extracted item, a user must manually scan the transcript on the right to find the matching speaker and timestamp. No automatic highlighting or synchronized playback makes this tedious.",
+        "fix": "When a user clicks an extracted item, highlight or scroll the transcript to show the corresponding line, and optionally seek the recording player to that timestamp."
+      }
+    ]
+  },
+  "d": {
+    "n": 3,
+    "trust": {
+      "provenance_comprehension": 6,
+      "source_discoverability": 6,
+      "correction_discoverability": 6,
+      "verification_cost": 6,
+      "confidence_to_share": 5
+    },
+    "guard": {
+      "clarity": 6,
+      "calmness": 6,
+      "hierarchy": 5,
+      "density": 5
+    },
+    "trust_mean": 5.8,
+    "weaknesses": [
+      {
+        "axis": "source_discoverability / correction_discoverability",
+        "what": "「出所」「直す」リンクが各メモ項目の下に非常に小さく薄い色(グレー/薄紫)のテキストで表示されており、初見では見落としやすい。",
+        "fix": "文字サイズ・コントラストを上げるか、アイコン付きボタンにして視認性を高める。"
+      },
+      {
+        "axis": "clarity / density",
+        "what": "「決まったことを待っています...」「やることを待っています...」という空表示が、処理中なのか本当に抽出結果がゼロなのかを区別できない曖昧な文言になっている。",
+        "fix": "ローディングインジケータを付けるか、「まだ処理中です」と「該当なし」を明確に文言で分ける。"
+      },
+      {
+        "axis": "confidence_to_share",
+        "what": "メモ項目と右側の文字起こしの該当行の間に、時刻の一致以外に視覚的なつながり(ハイライトなど)がなく、対応関係を目で追うには「出所」クリックに頼るしかない。",
+        "fix": "メモ項目にホバーした際に対応する文字起こし行をハイライトするなど、クリック前に視覚的な紐付けを示す。"
+      },
+      {
+        "axis": "verification_cost",
+        "what": "It's unclear what clicking '出所' actually does — jump to the transcript line, highlight it, or open something else. Since the same text is already visible in the transcript pane, the payoff of the click is not signaled.",
+        "fix": "On hover/click, scroll the transcript panel to and highlight the exact source line so the link's effect is obvious before clicking."
+      },
+      {
+        "axis": "correction_discoverability",
+        "what": "'直す' is a small low-contrast text link identical in weight to '出所', tucked into a metadata row below each item — easy to overlook among several similarly-styled small blue links.",
+        "fix": "Give '直す' a slightly stronger visual weight (icon or button chip) so it reads as an action distinct from the informational '出所' link."
+      },
+      {
+        "axis": "density",
+        "what": "'決まったこと' and 'やること' each show a full-width empty placeholder ('...を待っています') that occupies real vertical space while conveying nothing, making the left panel feel emptier/sparser than the right transcript panel this early in the meeting.",
+        "fix": "Collapse empty sections into a single compact line or hide them until the first item lands, rather than reserving full block space for a waiting state."
+      },
+      {
+        "axis": "provenance_comprehension",
+        "what": "Placeholder text (決まったことを待っています) mixes visually with actual extracted items, making it unclear which are grounded vs. AI-generated filler",
+        "fix": "Use visual language (color, opacity, italics, or an explicit badge) to distinguish placeholders and AI summaries from extracted meeting content"
+      },
+      {
+        "axis": "provenance_comprehension",
+        "what": "Decisions and Actions sections show no speaker name or timestamp; only Notes section does. This breaks trust in those summaries",
+        "fix": "Show speaker and timestamp for every extracted item, across all sections. If a summary synthesizes multiple speakers, attribute it explicitly (e.g., 'Ken & Sarah, 18:42-19:10')"
+      },
+      {
+        "axis": "source_discoverability",
+        "what": "The path from an item to its source in the transcript is not obvious. No visual connection (line, button, or highlight) links them",
+        "fix": "Add a clickable speaker name or timestamp on each item that jumps to or highlights that moment in the transcript panel"
+      },
+      {
+        "axis": "correction_discoverability",
+        "what": "No visible affordance to edit or correct an extracted item; no pencil icon, edit button, or input field",
+        "fix": "Add an edit button or icon on hover, or make items inline-editable. Make it visually clear that corrections are possible"
+      },
+      {
+        "axis": "clarity",
+        "what": "It is ambiguous whether the quoted text (e.g., 'macOS を先に出します') is a direct transcription or an AI paraphrase",
+        "fix": "Use quotation marks or a 'verbatim' badge for direct quotes; use different styling or a label for AI summaries"
+      }
+    ]
+  },
+  "e": {
+    "n": 3,
+    "trust": {
+      "provenance_comprehension": 5,
+      "source_discoverability": 6,
+      "correction_discoverability": 5,
+      "verification_cost": 6,
+      "confidence_to_share": 4
+    },
+    "guard": {
+      "clarity": 5,
+      "calmness": 6,
+      "hierarchy": 5,
+      "density": 5
+    },
+    "trust_mean": 5.2,
+    "weaknesses": [
+      {
+        "axis": "confidence_to_share",
+        "what": "決まったこと and やること show a passive waiting placeholder ('を待っています…') with no distinct empty-state styling, which could read as a stuck or broken state to a first-time viewer rather than 'nothing decided yet'.",
+        "fix": "Use a clearly-labeled empty state (e.g. a muted icon plus 'まだありません') that visually differs from a loading/spinner state."
+      },
+      {
+        "axis": "provenance_comprehension",
+        "what": "The bold 'Ken Windows は次の周で追います。' line under the meeting title has no timestamp or 出所 link like the メモ items below it, so it's unclear whether it's a live extracted quote, a pinned highlight, or a heading.",
+        "fix": "Give it the same timestamp + 出所 link treatment as the メモ entries so its provenance is legible the same way."
+      },
+      {
+        "axis": "correction_discoverability",
+        "what": "The pencil and chevron icons on メモ items are small and low-contrast gray, easy to miss on a first pass despite being the only visible edit affordance.",
+        "fix": "Increase icon contrast or add a hover/tooltip cue so the edit action is noticed without deliberate searching."
+      },
+      {
+        "axis": "hierarchy",
+        "what": "The purple quote card at top ('Ken Windows は次の周で追います。') sits above and outside the 決まったこと/やること/メモ structure with no label explaining why it's featured or which category it belongs to.",
+        "fix": "Give it an explicit tag (e.g. '注目の発言' or fold it into whichever section it belongs to) instead of leaving it as an unlabeled floating quote."
+      },
+      {
+        "axis": "confidence_to_share",
+        "what": "決まったこと and やること both show only 'waiting for...' placeholders, so a snapshot shared now looks empty/broken in two of three sections even though the meeting has real content in メモ.",
+        "fix": "Either hide a section until it has content, or show a lighter 'still listening' state that doesn't read as a missing feature."
+      },
+      {
+        "axis": "source_discoverability",
+        "what": "'出所' is terse — a first-time user has to infer it means 'jump to the transcript quote', it's not self-explanatory as a verification action.",
+        "fix": "Pair it with a small quote/transcript icon or use a slightly more explicit label so its function is legible without guessing."
+      },
+      {
+        "axis": "provenance_comprehension",
+        "what": "No direct visual link from extracted item to source moment in recording. Must manually cross-reference timestamps.",
+        "fix": "Add clickable timestamp/speaker names that jump to that moment in playback, or show a snippet of original transcript on hover."
+      },
+      {
+        "axis": "clarity",
+        "what": "Placeholder sections show 'waiting for...' (待っています), which is ambiguous—unclear if AI found nothing, is still processing, or user hasn't recorded yet.",
+        "fix": "Replace with explicit status like 'ここにはまだ情報がありません' (no information yet) or hide empty sections entirely."
+      },
+      {
+        "axis": "correction_discoverability",
+        "what": "Edit controls (pencil icon) only visible on memo items. Decided things and to-do sections have no obvious edit path.",
+        "fix": "Add edit icons to ALL extracted items, or make entire item rows clickable to edit."
+      },
+      {
+        "axis": "verification_cost",
+        "what": "Items are AI paraphrases, not direct quotes. Requires listening to recording or reading full transcript to verify accuracy.",
+        "fix": "Show original transcript quote on click/hover, or highlight the transcript line corresponding to each extracted item."
+      }
+    ]
+  },
+  "f": {
+    "n": 3,
+    "trust": {
+      "provenance_comprehension": 6,
+      "source_discoverability": 6,
+      "correction_discoverability": 6,
+      "verification_cost": 6,
+      "confidence_to_share": 5
+    },
+    "guard": {
+      "clarity": 5,
+      "calmness": 6,
+      "hierarchy": 5,
+      "density": 5
+    },
+    "trust_mean": 5.8,
+    "weaknesses": [
+      {
+        "axis": "clarity",
+        "what": "The recording clock reads '00:02' (a brand-new recording) but the memo items and transcript are timestamped 10:30-14:21, and the header says '17:52 の会議'. As a first-time viewer I can't tell if these are stale example items, a resumed recording, or a real inconsistency, which undercuts trust in the timeline even though each item is individually well-attributed.",
+        "fix": "Either sync the elapsed-time indicator with the actual timestamps shown, or add a visible cue (e.g. 'continued from an earlier session') so the time gap is explained rather than left ambiguous."
+      },
+      {
+        "axis": "source_discoverability",
+        "what": "'出所 ›' is small, low-contrast gray text tucked under the attribution line — easy to miss on a first glance since the eye is drawn to the bold name and the blue '直す' button instead.",
+        "fix": "Give the source link slightly more visual weight (icon, or matching the blue accent used for '直す') so it reads as an equally valid action, not a footnote."
+      },
+      {
+        "axis": "correction_discoverability",
+        "what": "'直す' doesn't say what it lets you fix — the wording alone doesn't reveal whether it edits the text, the attribution, or both, so I'd have to click it just to find out.",
+        "fix": "Add a one-word qualifier or tooltip (e.g. '内容を直す') so the scope of the correction is clear before clicking."
+      },
+      {
+        "axis": "confidence_to_share",
+        "what": "Memo item timestamped 14:21 (Sarah, 'オンボーディングを試作する') has no corresponding entry in the visible transcript (which only shows 10:30-10:55), and the meeting header says 17:52 while the recording clock shows only 00:02 elapsed — the time system doesn't visibly cohere.",
+        "fix": "Use one consistent time reference (elapsed or wall-clock) everywhere, and make sure every extracted item's timestamp is traceable to a transcript line actually shown or scrollable-to."
+      },
+      {
+        "axis": "provenance_comprehension",
+        "what": "The pinned quote under the meeting title ('Ken: Windows は次の周で追います。') has no speaker/time label styling like the memo cards do, and no source link, so it's unclear if it's a grounded quote or an AI-chosen highlight.",
+        "fix": "Give the top quote the same name/time/出所 treatment as memo items, or add a short label explaining why it's surfaced there."
+      },
+      {
+        "axis": "density",
+        "what": "'決まったこと' and 'やること' sections are both empty placeholders ('...を待っています…') taking up prominent vertical space with zero content this early in the meeting.",
+        "fix": "Collapse or visually de-emphasize empty sections until they have content, so the populated 'メモ' section reads as the primary focus."
+      },
+      {
+        "axis": "completeness_signal",
+        "what": "Placeholder text '待っています...' (waiting) creates ambiguity about whether extraction is in progress, not yet attempted, or failed for those categories",
+        "fix": "Replace with explicit status: 'まだ分析中' (still analyzing) or 'この会議にはありません' (not present in this meeting) or show a loading indicator rather than placeholder text"
+      },
+      {
+        "axis": "source_linking",
+        "what": "Verification requires manually cross-referencing timestamps between two panels; the connection is not explicit",
+        "fix": "Make the link interactive: clicking a memo item highlights or jumps to that timestamp in the transcript panel, or show a visual line/indicator connecting the item to its source"
+      },
+      {
+        "axis": "extraction_confidence",
+        "what": "No indication of extraction confidence or whether AI extracted this automatically vs. user-curated, which affects how much to trust each item",
+        "fix": "Add a confidence indicator (icon, badge, or color) next to each item; or show 'ユーザー編集' (user edited) vs 'AI抽出' (AI extracted) to clarify origin"
+      }
+    ]
+  }
+}

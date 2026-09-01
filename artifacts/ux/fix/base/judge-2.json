@@ -1,0 +1,15 @@
+{"visible_text":["録音中 00:02","16:55 の会議","Windows は次の周で追います。","決まったこと","決まったことを待っています…","やること","やることを待っています…","メモ","macOS を先に出します","オンボーディングを試作する","出所","文字起こし","リアルタイム要約","決定事項","アクション","この会議について聞く","AI が見ている資料"],
+ "answers":{
+   "q1":"Grounded, and you can tell. Each メモ item is tagged with a speaker name and a timestamp (e.g. 'Ken · 10:42', 'Sarah · 14:21'), and carries its own '出所 >' (source) link right under the text. That combination reads as 'this came from the transcript', not a free-standing AI guess. The transcript panel on the right independently shows the same utterances with times, reinforcing that these are quotes, not inventions.",
+   "q2":"The '出所 >' link directly under each メモ item. It sits right where the eye lands after reading the extracted line, so it's the obvious first click to jump to the underlying moment in the meeting.",
+   "q3":"Yes for the メモ items — each shows a name and a clock time twice (once next to the bold headline, once in the small byline line, e.g. '10:42 Ken' and 'Ken · 10:42'). The transcript pane on the right also timestamps every line with a speaker name. The top 'Ken: Windows は次の周で追います。' banner line, however, has no visible timestamp next to it in the main card, only in the transcript list — so for that single headline item you'd have to cross-reference the transcript to be fully sure of the exact time.",
+   "q4":"Not clearly. Each メモ item has a small chevron (⌄) on its far right, which presumably expands the item, but nothing on the visible screen is labeled edit, delete, or correct. There is no pencil icon, no 'x' to remove a wrong entry, and no obvious inline-edit affordance. A first-time user would have to guess that the chevron leads somewhere useful, or hunt in an overflow menu that isn't shown here.",
+   "q5":"Fairly low unease for the parts that are filled in — the speaker/time/source tagging makes the memo items look credible and checkable. But two whole sections ('決まったこと' and 'やること') are still placeholder text ('◯◯を待っています…'), so sharing the screen as-is would visibly broadcast that the summary is incomplete/half-baked, which would make me hesitate to send it to someone expecting a finished recap."
+ },
+ "trust":{"provenance_comprehension":6,"source_discoverability":6,"correction_discoverability":3,"verification_cost":6,"confidence_to_share":5},
+ "scores":{"clarity":6,"calmness":6,"hierarchy":6,"density":6},
+ "weaknesses":[
+   {"axis":"correction_discoverability","what":"Each メモ item only exposes a generic chevron (⌄); there is no visible edit, delete, or 'this is wrong' control, so a user who spots an AI error has no clear next step.","fix":"Add an explicit inline edit/flag affordance (pencil or ⋯ menu) next to the chevron on each memo item, distinct from the expand action."},
+   {"axis":"confidence_to_share","what":"'決まったこと' and 'やること' are shown as empty sections with waiting placeholder text, which makes the whole panel read as unfinished even though the メモ section already has solid content.","fix":"Collapse or visually de-emphasize empty sections until they have content, or show a lightweight 'in progress' state instead of a full-height empty block."}
+ ]
+}

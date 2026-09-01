@@ -41,6 +41,7 @@ enum SelfTest {
         case "focus": focusGate(); return true
         case "journey": journeyGate(args); return true
         case "idle-hold": idleHold(args); return true
+        case "hold-meeting": holdMeeting(args); return true
         case "upgrade": upgradeGate(); return true
         case "update": updateCheck(); return true
         case "recoveryui": recoveryUI(); return true
@@ -1217,6 +1218,33 @@ enum SelfTest {
             print("SELFTEST_FAIL focus: \(fail.joined(separator: ", "))")
             exit(2)
         }
+    }
+
+    /// `--selftest hold-meeting <秒>`: **会議の面を出したまま置いておく。**
+    ///
+    /// 訂正の道が見えるかは、静止画 1 枚では測れない（開いた先が写らない）。
+    /// 実装を知らない評価者に**実際に直させて**測るために、拾ったものが在る
+    /// 状態で待つ口が要る。
+    @MainActor
+    static func holdMeeting(_ args: [String]) {
+        let i = args.firstIndex(of: "--selftest")
+        let secs = Double(i.map { args.count > $0 + 2 ? args[$0 + 2] : "" } ?? "") ?? 300
+        _ = GlobalShortcut.shared.register(handler: { WindowCoordinator.shared.toggleRecording() })
+        RecordingWorkspaceState.shared.start()
+        RecordingWorkspaceState.shared.transcript = [
+            TranscriptSegment(speaker: "Sarah", text: "Windows はいつ出しますか。", interim: false, at: 630),
+            TranscriptSegment(speaker: "Ken", text: "macOS を先に出します", interim: false, at: 642),
+            TranscriptSegment(speaker: "Ken", text: "Windows は次の周で追います。", interim: false, at: 655),
+        ]
+        MeetingIntelligence.shared.ingest([
+            CanvasItem("macOS を先に出します", at: 642, speaker: "Ken"),
+            CanvasItem("オンボーディングを試作する", at: 861, speaker: "Sarah"),
+        ], force: true)
+        WindowCoordinator.shared.showRecordingWorkspace()
+        print("HOLD_MEETING \(secs)s")
+        fflush(stdout)
+        DispatchQueue.main.asyncAfter(deadline: .now() + secs) { exit(0) }
+        RunLoop.main.run()
     }
 
     /// `--selftest idle-hold <秒>`: **普段の姿のまま置いておく。**

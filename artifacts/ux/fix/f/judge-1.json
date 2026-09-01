@@ -1,0 +1,56 @@
+{
+  "visible_text": [
+    "17:52 の会議",
+    "Windows は次の周で追います。",
+    "決まったこと",
+    "やること",
+    "メモ",
+    "macOS を先に出します",
+    "オンボーディングを試作する",
+    "出所 ›",
+    "直す",
+    "文字起こし",
+    "リアルタイム要約",
+    "質問する",
+    "決定事項",
+    "アクション",
+    "AI が見ている資料"
+  ],
+  "answers": {
+    "q1": "Grounded, and I can tell. Each item under 'メモ' carries a speaker name (Ken, Sarah), a timestamp (10:42, 14:21), and a small '出所 ›' (source) link right below the text. That combination reads as 'this was actually said, and here's the receipt' rather than an AI paraphrase or inference pulled from nowhere.",
+    "q2": "I'd click the '出所 ›' link directly under the item I doubt (e.g. under 'macOS を先に出します'). It's labeled exactly for that purpose, so it's the obvious first click over scrolling the transcript myself to find a matching timestamp.",
+    "q3": "Yes. Both memo cards show the speaker's name in bold color plus a clock time twice over (once next to the quote, once again in the small attribution line under it), so who-and-when is answered without extra clicks.",
+    "q4": "The blue '直す' (fix) button sitting to the right of each memo item is the visible correction path — I'd click that. It's unambiguous and right next to the content it applies to, so there is a way to correct it and it's not hidden.",
+    "q5": "Fairly comfortable, not fully worry-free. The per-item attribution and source link make we willing to forward it, but the recording timer says '00:02' while the memo items are timestamped 10:42 and 14:21 and the transcript entries say 10:30/10:42/10:55 — that mismatch would make me pause and double check the meeting's actual timeline before sending it on, even though the content itself looks sourced."
+  },
+  "trust": {
+    "provenance_comprehension": 6,
+    "source_discoverability": 5,
+    "correction_discoverability": 6,
+    "verification_cost": 6,
+    "confidence_to_share": 5
+  },
+  "scores": {
+    "clarity": 5,
+    "calmness": 6,
+    "hierarchy": 5,
+    "density": 5
+  },
+  "weaknesses": [
+    {
+      "axis": "clarity",
+      "what": "The recording clock reads '00:02' (a brand-new recording) but the memo items and transcript are timestamped 10:30-14:21, and the header says '17:52 の会議'. As a first-time viewer I can't tell if these are stale example items, a resumed recording, or a real inconsistency, which undercuts trust in the timeline even though each item is individually well-attributed.",
+      "fix": "Either sync the elapsed-time indicator with the actual timestamps shown, or add a visible cue (e.g. 'continued from an earlier session') so the time gap is explained rather than left ambiguous."
+    },
+    {
+      "axis": "source_discoverability",
+      "what": "'出所 ›' is small, low-contrast gray text tucked under the attribution line — easy to miss on a first glance since the eye is drawn to the bold name and the blue '直す' button instead.",
+      "fix": "Give the source link slightly more visual weight (icon, or matching the blue accent used for '直す') so it reads as an equally valid action, not a footnote."
+    },
+    {
+      "axis": "correction_discoverability",
+      "what": "'直す' doesn't say what it lets you fix — the wording alone doesn't reveal whether it edits the text, the attribution, or both, so I'd have to click it just to find out.",
+      "fix": "Add a one-word qualifier or tooltip (e.g. '内容を直す') so the scope of the correction is clear before clicking."
+    }
+  ]
+}

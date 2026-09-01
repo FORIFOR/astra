@@ -1,0 +1,16 @@
+{"visible_text":["録音中","17:52 の会議","Windows は次の周で追います。","決まったこと","やること","メモ","macOS を先に出します","オンボーディングを試作する","出所","文字起こし","翻訳","字幕","リアルタイム要約","決定事項","アクション","AI が見ている資料"],
+ "answers":{
+   "q1":"They read as grounded, not pure guesses. Each メモ line is tagged with a person's name (Ken, Sarah), a timestamp (10:42, 14:21), and a small 'Ken · 10:42 · 出所 >' link right under the text, and those same name+time pairs reappear verbatim in the 文字起こし panel on the right. That name/time/出所 pattern is the tell — without it I'd assume it was the AI's own summary.",
+   "q2":"I'd click the '出所' (source) link directly under the item, e.g. under 'macOS を先に出します' — it reads as the built-in 'jump to where this came from' control, cheaper than scanning the transcript list myself.",
+   "q3":"Yes for the two メモ items — each shows a name and a time (Ken 10:42, Sarah 14:21) and I can match Ken/10:42 to the 10:42 transcript line. The big quote at the top ('Ken Windows は次の周で追います。') also has a name but its time isn't shown next to it there (I have to notice it matches the 10:55 line in the transcript), so that one is slightly harder to place.",
+   "q4":"I'd click the pencil icon next to a メモ line (visible next to 'macOS を先に出します' and 'オンボーディングを試作する') to edit the text directly. There's also a chevron next to it that presumably expands/collapses or offers more options, but the pencil is the obvious 'fix it' target. I don't see any correction control on the top quote card, on 決まったこと, or on やること — those two are still just placeholder text ('...を待っています') so there's nothing to correct yet.",
+   "q5":"Moderately uneasy. The メモ section looks trustworthy because it's sourced and attributed, but 決まったこと (decisions) and やること (action items) are both empty placeholders — sharing this now would hand someone a report that looks unfinished, and the unlabeled quote at the top could be misread as an already-agreed decision when it's really just one more transcript line."
+ },
+ "trust":{"provenance_comprehension":6,"source_discoverability":6,"correction_discoverability":6,"verification_cost":6,"confidence_to_share":5},
+ "scores":{"clarity":6,"calmness":6,"hierarchy":5,"density":5},
+ "weaknesses":[
+   {"axis":"hierarchy","what":"The purple quote card at top ('Ken Windows は次の周で追います。') sits above and outside the 決まったこと/やること/メモ structure with no label explaining why it's featured or which category it belongs to.","fix":"Give it an explicit tag (e.g. '注目の発言' or fold it into whichever section it belongs to) instead of leaving it as an unlabeled floating quote."},
+   {"axis":"confidence_to_share","what":"決まったこと and やること both show only 'waiting for...' placeholders, so a snapshot shared now looks empty/broken in two of three sections even though the meeting has real content in メモ.","fix":"Either hide a section until it has content, or show a lighter 'still listening' state that doesn't read as a missing feature."},
+   {"axis":"source_discoverability","what":"'出所' is terse — a first-time user has to infer it means 'jump to the transcript quote', it's not self-explanatory as a verification action.","fix":"Pair it with a small quote/transcript icon or use a slightly more explicit label so its function is legible without guessing."}
+ ]
+}

@@ -1,0 +1,60 @@
+{
+  "visible_text": [
+    "17:52の会議",
+    "決まったこと",
+    "やること",
+    "メモ",
+    "macOS を先に出します",
+    "オンボーディングを試作する",
+    "文字起こし",
+    "翻訳",
+    "字幕",
+    "決定事項",
+    "アクション",
+    "AIが見ている資料",
+    "Windows はいつ出しますか。",
+    "Windows は次の周で説いています。"
+  ],
+  "answers": {
+    "q1": "Partially grounded. The extracted items (macOS release, onboarding prototype) each have a timestamp and speaker name (Ken 18:42, Sarah 14:21), visible in both the left panel and right transcript. However, there is no explicit visual connection showing 'this extracted item came from THIS exact moment in the transcript.' The items appear to be AI paraphrases of what was said, not direct quotes, which makes it harder to immediately verify they are accurately grounded versus the AI's interpretation.",
+    "q2": "I would first click on the speaker name or timestamp next to the item (e.g., 'Ken · 10:42') or click on the transcript panel on the right (文字起こし tab) to read the full transcript. Looking at the right panel, I can see the same timestamps and speaker names, so I'd cross-reference there. Ideally, I'd want a clickable link that jumps me to that exact moment in the recording timeline.",
+    "q3": "Yes, clearly. Each extracted item shows the speaker name and time: 'Ken' at '18:42' said macOS will be released first, and 'Sarah' at '14:21' will prototype onboarding. The right panel transcript also shows speaker/time pairs (e.g., '18:30 Sarah', '10:42 Ken'). The meeting title and timestamps are consistent across both panels.",
+    "q4": "I can see pencil icons (✏️) with dropdown arrows next to the memo items (macOS, onboarding). I would click those to edit. However, the upper sections 'decided things' (決まったこと) and 'to-do items' (やること) show placeholder text 'waiting for...' with no visible edit controls. If the AI incorrectly extracted something into those empty sections, I cannot see how to correct it. The correction path is incomplete for all sections.",
+    "q5": "Moderately uneasy (score 4). I can see who said what and when, which is good. But these are paraphrases ('macOS を先に出します' might not be the exact wording), and I'd need to listen to the recording or read the transcript carefully to verify the AI didn't misinterpret. Sharing without that verification feels risky. I would want to spot-check at least one item by playing back that moment in the recording first."
+  },
+  "trust": {
+    "provenance_comprehension": 5,
+    "source_discoverability": 5,
+    "correction_discoverability": 4,
+    "verification_cost": 4,
+    "confidence_to_share": 4
+  },
+  "scores": {
+    "clarity": 5,
+    "calmness": 6,
+    "hierarchy": 5,
+    "density": 5
+  },
+  "weaknesses": [
+    {
+      "axis": "provenance_comprehension",
+      "what": "No direct visual link from extracted item to source moment in recording. Must manually cross-reference timestamps.",
+      "fix": "Add clickable timestamp/speaker names that jump to that moment in playback, or show a snippet of original transcript on hover."
+    },
+    {
+      "axis": "clarity",
+      "what": "Placeholder sections show 'waiting for...' (待っています), which is ambiguous—unclear if AI found nothing, is still processing, or user hasn't recorded yet.",
+      "fix": "Replace with explicit status like 'ここにはまだ情報がありません' (no information yet) or hide empty sections entirely."
+    },
+    {
+      "axis": "correction_discoverability",
+      "what": "Edit controls (pencil icon) only visible on memo items. Decided things and to-do sections have no obvious edit path.",
+      "fix": "Add edit icons to ALL extracted items, or make entire item rows clickable to edit."
+    },
+    {
+      "axis": "verification_cost",
+      "what": "Items are AI paraphrases, not direct quotes. Requires listening to recording or reading full transcript to verify accuracy.",
+      "fix": "Show original transcript quote on click/hover, or highlight the transcript line corresponding to each extracted item."
+    }
+  ]
+}

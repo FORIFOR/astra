@@ -10,7 +10,7 @@
 """
 import glob, json, os, re, statistics, sys, unicodedata
 
-ROOT = "artifacts/ux/trust"
+ROOT = sys.argv[1] if len(sys.argv) > 1 else "artifacts/ux/trust"
 TRUST = ["provenance_comprehension", "source_discoverability",
          "correction_discoverability", "verification_cost", "confidence_to_share"]
 GUARD = ["clarity", "calmness", "hierarchy", "density"]
@@ -44,9 +44,11 @@ def med(rows, group, key):
     vals = [v for v in vals if 1 <= v <= 7]
     return statistics.median(vals) if vals else None
 
-variants = ["base", "a", "b", "c"]
+variants = ["base"] + sorted(
+    os.path.basename(p) for p in glob.glob(os.path.join(ROOT, "*"))
+    if os.path.isdir(p) and os.path.basename(p) != "base")
 data = {}
-print("== Trust A/B/C ==\n")
+print(f"== 案の比較 — {ROOT} ==\n")
 for v in variants:
     rows, rej = load(v)
     for n, why in rej: print(f"  無効 {v}/{n}: {why}")

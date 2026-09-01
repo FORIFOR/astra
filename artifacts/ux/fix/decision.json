@@ -1,0 +1,42 @@
+{
+  "target": "correction_discoverability",
+  "base": "1 周目で採った A（行の下に出所 1 行）",
+  "candidates": {
+    "d": "同じ 1 行に「· 直す」を足す",
+    "e": "行の右端に鉛筆を常時出す",
+    "f": "右端に囲み付きの「直す」ボタン"
+  },
+  "trust_mean": {
+    "base": 5.0,
+    "d": 5.8,
+    "e": 5.2,
+    "f": 5.8
+  },
+  "correction_discoverability": {
+    "base": 2.0,
+    "d": 6.0,
+    "e": 5.0,
+    "f": 6.0
+  },
+  "regression": {
+    "d": {
+      "hierarchy": -1.0,
+      "density": -1.0
+    },
+    "e": {
+      "clarity": -1.0,
+      "hierarchy": -1.0,
+      "density": -1.0
+    },
+    "f": {
+      "clarity": -1.0,
+      "hierarchy": -1.0,
+      "density": -1.0
+    }
+  },
+  "adopted": null,
+  "why": "3 案とも訂正の道は見えるようになった（2.0 → 5〜6）が、全案が hierarchy と density を 1.0 落とした。規則により全て revert。行ごとに訂正の入口を常設すると、面が混む。",
+  "insight": "静止画 1 枚では『開いた先に何があるか』は写らない。base の訂正は 1 タップ後ろに在るのに、Judge には見えない。**これは計測の限界であって、必ずしも製品の欠陥ではない。** 次は静止画ではなく、Blind Operator に実際に訂正させて測る。",
+  "judges": 3,
+  "judge_source_access": false
+}

@@ -1,0 +1,61 @@
+{
+  "visible_text": [
+    "17:52の会議",
+    "録音中 00:02",
+    "Ken Windows は次の周で進います。",
+    "決まったこと",
+    "決まったことを待っています...",
+    "やること",
+    "やることを待っています...",
+    "メモ",
+    "18:42 Ken macOS を先に出します",
+    "Ken・10:42・山辺",
+    "直す",
+    "14:21 Sarah オンボーディングを試作する",
+    "Sarah・14:21・山辺",
+    "文字起こし",
+    "翻訳",
+    "字幕",
+    "リアルタイム要約",
+    "実問する",
+    "決定事項",
+    "アクション"
+  ],
+  "answers": {
+    "q1": "Grounded in the meeting. I can tell because the memo items (macOS, onboarding) appear with specific timestamps (18:42, 14:21) and speaker names (Ken, Sarah) that match entries visible in the transcript panel on the right. The timestamps align between what's extracted on the left and what's shown in the transcript, establishing a direct link to what was actually said.",
+    "q2": "I would click on the transcript panel on the right side (where I can see the timestamps and full spoken text), or click on one of the timestamps in the extracted items (like '18:42' or '14:21') to correlate it back to the original recording and verify the full context of what was said.",
+    "q3": "Yes, very clearly. Each memo item shows: speaker name (Ken, Sarah), exact timestamp (18:42, 14:21), and there's even a secondary reference ('Ken・10:42・山辺'). The speaker and timing are unambiguous and immediately visible without any hunting.",
+    "q4": "I would click the '直す' (Fix) button that appears to the right of each memo item (like the one next to 'macOS を先に出します' or 'オンボーディングを試作する'). This button appears to be the direct control for correcting an extracted item. If these buttons were not visible, I would have no clear way to correct an item.",
+    "q5": "Moderately comfortable, around 5-6. The items that are filled in are grounded and sourced (timestamps match, speakers are named). However, I would hesitate slightly because several sections say '待っています...' (waiting), which suggests the extraction is incomplete. I would want to clarify with the recipient that some categories haven't been populated yet by the AI."
+  },
+  "trust": {
+    "provenance_comprehension": 6,
+    "source_discoverability": 6,
+    "correction_discoverability": 6,
+    "verification_cost": 5,
+    "confidence_to_share": 5
+  },
+  "scores": {
+    "clarity": 6,
+    "calmness": 6,
+    "hierarchy": 6,
+    "density": 6
+  },
+  "weaknesses": [
+    {
+      "axis": "completeness_signal",
+      "what": "Placeholder text '待っています...' (waiting) creates ambiguity about whether extraction is in progress, not yet attempted, or failed for those categories",
+      "fix": "Replace with explicit status: 'まだ分析中' (still analyzing) or 'この会議にはありません' (not present in this meeting) or show a loading indicator rather than placeholder text"
+    },
+    {
+      "axis": "source_linking",
+      "what": "Verification requires manually cross-referencing timestamps between two panels; the connection is not explicit",
+      "fix": "Make the link interactive: clicking a memo item highlights or jumps to that timestamp in the transcript panel, or show a visual line/indicator connecting the item to its source"
+    },
+    {
+      "axis": "extraction_confidence",
+      "what": "No indication of extraction confidence or whether AI extracted this automatically vs. user-curated, which affects how much to trust each item",
+      "fix": "Add a confidence indicator (icon, badge, or color) next to each item; or show 'ユーザー編集' (user edited) vs 'AI抽出' (AI extracted) to clarify origin"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{"visible_text":["録音中 00:02","17:52 の会議","Windows は次の周で追います。","決まったこと","決まったことを待っています…","やること","やることを待っています…","メモ","macOS を先に出します","出所","直す","オンボーディングを試作する","文字起こし","リアルタイム要約","AI が見ている資料"],
+ "answers":{
+   "q1":"Grounded, and I can tell. Each memo item shows a speaker name (Ken/Sarah), a timestamp, and an explicit '出所' (source) link, and the same wording also appears verbatim in the transcript panel on the right (e.g. '10:42 Ken macOSを先に出します' matches the memo item). That pairing reads as extraction-from-speech, not an AI guess.",
+   "q2":"I would click '出所' (source) directly under the memo item — it is labeled exactly for this purpose, right next to the item text, no hunting required.",
+   "q3":"Yes. Every memo item carries a name and a timestamp both in the bold header line and again in the small metadata line below (e.g. 'Ken · 10:42 · 出所 > · 直す').",
+   "q4":"I would click '直す' (fix), which sits immediately next to '出所' under each item — it's visibly present as a correction affordance. I did not need to hunt for it; it's the second of two identical small links under every memo entry.",
+   "q5":"Fairly comfortable for the two concrete memo items — they carry attribution and a visible correction path, which reads as trustworthy. Less comfortable for the '決まったこと' (decisions) and 'やること' (to-dos) sections, which are still empty ('...を待っています') since the recording is only 2 seconds old — sharing now would just be sharing a mostly blank template."
+ },
+ "trust":{"provenance_comprehension":6,"source_discoverability":6,"correction_discoverability":6,"verification_cost":6,"confidence_to_share":5},
+ "scores":{"clarity":6,"calmness":6,"hierarchy":5,"density":5},
+ "weaknesses":[
+   {"axis":"verification_cost","what":"It's unclear what clicking '出所' actually does — jump to the transcript line, highlight it, or open something else. Since the same text is already visible in the transcript pane, the payoff of the click is not signaled.","fix":"On hover/click, scroll the transcript panel to and highlight the exact source line so the link's effect is obvious before clicking."},
+   {"axis":"correction_discoverability","what":"'直す' is a small low-contrast text link identical in weight to '出所', tucked into a metadata row below each item — easy to overlook among several similarly-styled small blue links.","fix":"Give '直す' a slightly stronger visual weight (icon or button chip) so it reads as an action distinct from the informational '出所' link."},
+   {"axis":"density","what":"'決まったこと' and 'やること' each show a full-width empty placeholder ('...を待っています') that occupies real vertical space while conveying nothing, making the left panel feel emptier/sparser than the right transcript panel this early in the meeting.","fix":"Collapse empty sections into a single compact line or hide them until the first item lands, rather than reserving full block space for a waiting state."}
+ ]}

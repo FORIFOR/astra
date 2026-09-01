@@ -1,0 +1,55 @@
+{
+  "visible_text": [
+    "16:55の会議",
+    "Windows は次の周で追いています",
+    "決まったこと",
+    "やること",
+    "メモ",
+    "macOS を先に出します",
+    "オンボーディングを試作する",
+    "文字起こし",
+    "翻訳",
+    "字幕",
+    "リアルタイム要約",
+    "実施する",
+    "決定事項",
+    "アクション"
+  ],
+  "answers": {
+    "q1": "The extracted items appear grounded in the meeting. Each memo item shows a timestamp (10:42, 14:21) and speaker name (Ken, Sarah), with a '出所' (source) link suggesting they're linked to the meeting recording/transcript. This attribution makes it clear they're not the AI's own guess but pulled from what was actually said.",
+    "q2": "I would click the '出所' (source) link next to each item, or click on the transcript panel on the right side. The transcript shows the actual conversation with timestamps and speakers, which would let me cross-reference the extracted item to what was really said.",
+    "q3": "Yes, clearly. Each extracted item shows the speaker (Ken or Sarah) and the exact time they said it (10:42, 14:21). The transcript panel also shows speaker names and precise timestamps (18:38, 18:42, 18:55) for each turn of conversation.",
+    "q4": "This is very unclear. There's no visible edit button, pencil icon, or 'correct this' option on the extracted items themselves. I would try clicking on an item to see if an edit mode appears, but there's no obvious path forward if the AI misheard something.",
+    "q5": "Moderately uneasy. The presence of timestamps and speaker attribution is reassuring, but I cannot verify accuracy at a glance—I'd have to manually match each extracted item against the transcript to confirm the AI captured it correctly. Without spot-checking a few items first, I'd hesitate to share this with others."
+  },
+  "trust": {
+    "provenance_comprehension": 6,
+    "source_discoverability": 5,
+    "correction_discoverability": 2,
+    "verification_cost": 5,
+    "confidence_to_share": 5
+  },
+  "scores": {
+    "clarity": 6,
+    "calmness": 6,
+    "hierarchy": 5,
+    "density": 6
+  },
+  "weaknesses": [
+    {
+      "axis": "correction_discoverability",
+      "what": "No visible edit or correction interface for extracted items. If the AI misheard or misinterpreted something, there's no obvious button or affordance to fix it.",
+      "fix": "Add an edit pencil icon, 'Correct' button, or right-click menu option on each extracted item to allow inline editing or flagging for review."
+    },
+    {
+      "axis": "source_discoverability",
+      "what": "The '出所' (source) link is small and its affordance is unclear. A first-time user might not realize it's clickable or what it does.",
+      "fix": "Make the source link more prominent (e.g., underline or highlight on hover), or add a small icon (e.g., a link icon) to signal it's interactive. Add a tooltip on hover explaining 'Click to jump to this moment in the recording.'"
+    },
+    {
+      "axis": "verification_cost",
+      "what": "To verify an extracted item, a user must manually scan the transcript on the right to find the matching speaker and timestamp. No automatic highlighting or synchronized playback makes this tedious.",
+      "fix": "When a user clicks an extracted item, highlight or scroll the transcript to show the corresponding line, and optionally seek the recording player to that timestamp."
+    }
+  ]
+}
