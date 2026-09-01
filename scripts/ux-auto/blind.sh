@@ -107,6 +107,23 @@ case "${1:-}" in
     x=$(python3 -c "print(int($1 + ${2:-0}))"); y=$(python3 -c "print(int($2 + ${3:-0}))")
     "$LAB/uxin" click "$x" "$y"; sleep 0.5; echo "clicked"
     ;;
+  type)
+    # 文字を打つ。これが無いために、訂正を最後まで進められなかった。
+    shift; "$LAB/uxin" type "$*"; sleep 0.5; echo "typed"
+    ;;
+  help)
+    # **評価者が中身を読まずに済むように、使い方はここで出す。**
+    # 実際、引数の書き方を確かめようとして評価者が blind.sh を読んでしまい、
+    # 「実装を見ない」約束が破れかけた。
+    cat <<'H'
+blind.sh start [秒] [idle|meeting]   Astra を出して待つ
+blind.sh shot <名前>                 いまの Astra の窓を撮る（他アプリは写さない）
+blind.sh press <x> <y>               撮った画像の座標を押す（PRESSED/NOT_PRESSABLE/NOTHING_THERE）
+blind.sh type <文字>                 文字を打つ
+blind.sh key esc|enter|opt-space     鍵を送る
+blind.sh stop                        終わる
+H
+    ;;
   key)
     case "${2:-}" in
       opt-space) "$LAB/uxin" key 49 opt ;;

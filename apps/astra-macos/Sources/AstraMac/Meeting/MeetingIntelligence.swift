@@ -91,9 +91,38 @@ final class MeetingIntelligence {
         AstraStateStore.shared.updateCanvas(canvas)
     }
 
-    /// 拾い間違いを消す。
+    /// 直前に消したもの。**戻せるようにするため**に持つ。
+    ///
+    /// 実装を知らない評価者が「これは違う」を押し、メモが確認も取り消しも無く
+    /// 消えた。隣は「直す」で、間違えて押しやすい位置に在る。
+    /// 確認ダイアログで止めるのではなく、**戻せる**ようにする
+    /// （§6 間違いを見つけた場所で直せる）。
+    @Published private(set) var lastRemoved: CanvasItem?
+    /// 消したものが**どの束に居たか**。戻すときに要る。
+    private var lastRemovedGroup: WritableKeyPath<MeetingCanvas, [CanvasItem]>?
+
+    /// 拾い間違いを消す。直前の 1 件は戻せる。
     func remove(_ item: CanvasItem) {
+        let groups: [WritableKeyPath<MeetingCanvas, [CanvasItem]>] =
+            [\.decisions, \.actions, \.questions, \.concerns, \.notes]
+        lastRemovedGroup = groups.first { canvas[keyPath: $0].contains { $0.id == item.id } }
+        lastRemoved = item
         canvas = Self.replace(canvas, id: item.id, with: nil)
+        AstraStateStore.shared.updateCanvas(canvas)
+    }
+
+    /// 消したものを戻す。**出所（誰・いつ）も、居た束も、そのまま戻す。**
+    ///
+    /// 拾い直し（`ingest`）を通すと分類からやり直され、別の項目として入る。
+    /// 実際それで時刻と話者が失われた（J09 が捕まえた）。元の場所へ戻す。
+    func undoRemove() {
+        guard let item = lastRemoved, let group = lastRemovedGroup else { return }
+        lastRemoved = nil
+        lastRemovedGroup = nil
+        var next = canvas
+        next[keyPath: group].append(item)
+        next[keyPath: group].sort { ($0.at ?? 0) < ($1.at ?? 0) }
+        canvas = next
         AstraStateStore.shared.updateCanvas(canvas)
     }
 

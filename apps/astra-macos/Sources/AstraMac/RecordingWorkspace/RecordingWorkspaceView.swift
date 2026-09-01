@@ -172,6 +172,27 @@ private struct MeetingNotesCanvas: View {
                 header(session)
                 liveLine
                 Divider().overlay(Palette.border(dark))
+                // 消したものを戻す道。**確認で止めるのではなく、戻せるようにする。**
+                // 「これは違う」は「直す」の隣に在って押し間違えやすく、
+                // 実装を知らない評価者が実際に消してしまった。
+                if let removed = MeetingIntelligence.shared.lastRemoved {
+                    HStack(spacing: 8) {
+                        Text("「\(removed.text)」を消しました")
+                            .font(.system(size: 12))
+                            .foregroundStyle(Palette.muted(dark))
+                            .lineLimit(1)
+                        ProbeButton(id: "canvasUndo",
+                                    action: { MeetingIntelligence.shared.undoRemove() }) {
+                            Text("元に戻す")
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundStyle(Palette.accent(dark))
+                                .padding(.horizontal, 8).padding(.vertical, 4)
+                        }
+                        .buttonStyle(AstraControlStyle(radius: 6, base: 0.05))
+                        Spacer(minLength: 0)
+                    }
+                    .padding(.vertical, 2)
+                }
                 group("決まったこと", canvas.decisions,
                       waiting: "決まったことを待っています…")
                 group("やること", canvas.actions,

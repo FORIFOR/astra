@@ -43,6 +43,21 @@ case "key":
     let up = CGEvent(keyboardEventSource: src, virtualKey: code, keyDown: false)
     down?.flags = flags; up?.flags = flags
     down?.post(tap: .cghidEventTap); usleep(40_000); up?.post(tap: .cghidEventTap)
+case "type":
+    // 文字を打つ口が無かったため、訂正の途中で止まっていた（道具の不備）。
+    let text = a.dropFirst(2).joined(separator: " ")
+    let src = CGEventSource(stateID: .hidSystemState)
+    for ch in text.unicodeScalars {
+        var u = UniChar(ch.value)
+        guard ch.value <= 0xFFFF else { continue }
+        for down in [true, false] {
+            if let e = CGEvent(keyboardEventSource: src, virtualKey: 0, keyDown: down) {
+                e.keyboardSetUnicodeString(stringLength: 1, unicodeString: &u)
+                e.post(tap: .cghidEventTap)
+            }
+        }
+        usleep(12_000)
+    }
 default:
-    print("usage: uxin click|move <x> <y> | key <code> [opt|cmd|shift] | pos"); exit(2)
+    print("usage: uxin click|move <x> <y> | key <code> [opt|cmd|shift] | type <text> | pos"); exit(2)
 }

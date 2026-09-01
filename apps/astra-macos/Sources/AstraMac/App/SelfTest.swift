@@ -1280,6 +1280,11 @@ enum SelfTest {
     /// ここで走らせられるのは Astra だけ。声や他アプリが要る Journey は
     /// このプロセスからは動かせないので、**測れないと記録して終わる**
     /// （0 として数えると、やっていないことを「勝ち」に見せてしまう）。
+    /// Canvas の全項目数。消えた／戻ったを数で確かめるため。
+    static func countItems(_ c: MeetingCanvas) -> Int {
+        c.decisions.count + c.actions.count + c.questions.count + c.concerns.count + c.notes.count
+    }
+
     @MainActor
     private static func journeyGate(_ args: [String]) {
         let i = args.firstIndex(of: "--selftest")!
@@ -1439,13 +1444,39 @@ enum SelfTest {
             else if !keptOrigin { rec.error("直したら出所が消えた") }
             rec.step("その場で直す", interactions: 2)
 
+            // ④ 消したものを戻せるか。**「これは違う」は「直す」の隣に在り、
+            //    押し間違えやすい。** 実装を知らない評価者が実際に消し、戻せずに
+            //    メモを失った。確認で止めるのではなく、戻せることを測る。
+            var undoShown = false, restored = false
+            if let target = store.state.meeting.canvas.notes.first
+                ?? store.state.meeting.canvas.decisions.first {
+                let before = countItems(store.state.meeting.canvas)
+                MeetingIntelligence.shared.remove(target)
+                settle(0.5)
+                let after = countItems(store.state.meeting.canvas)
+                undoShown = UIProbe.exists("canvasUndo")
+                if after != before - 1 { rec.error("「これは違う」で消えていない") }
+                if !undoShown { rec.error("消したのに「元に戻す」が出ない") }
+                _ = rec.shot("03-消したあと")
+                MeetingIntelligence.shared.undoRemove()
+                settle(0.4)
+                let back = store.state.meeting.canvas
+                let all = back.decisions + back.actions + back.questions + back.concerns + back.notes
+                if let m = all.first(where: { $0.text == target.text }) {
+                    restored = (m.speaker == target.speaker && m.at == target.at)
+                }
+                if !restored { rec.error("戻したのに出所が失われる／戻らない") }
+            }
+            rec.step("消して戻す", interactions: 2)
+
             // 音声へ戻る導線は**置いていない**。再生の実装が無いので、
             // 押して何も起きない飾りになる。実装したら測る。
             rec.cannotMeasure("その時刻の音声へ戻る（再生が未実装。飾りは置かない判断）")
             rec.cannotMeasure("実際のマウス当たり判定（自プロセスの AX は子を返さない。絵で見る）")
             recording.stop()
             rec.finish(success: !items.isEmpty && haveWho == items.count && haveWhen == items.count
-                       && opened && canEdit && canReject && edited && keptOrigin)
+                       && opened && canEdit && canReject && edited && keptOrigin
+                       && undoShown && restored)
 
         case "J10":   // 落ちたあと
             // 強制終了を挟む本番の検証は scripts/verify-recording-experience.sh。
