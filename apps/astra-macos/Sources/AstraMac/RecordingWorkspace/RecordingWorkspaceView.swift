@@ -399,6 +399,13 @@ private struct MeetingNotesCanvas: View {
                     .foregroundStyle(last.interim ? Palette.muted(dark) : Palette.text(dark))
                     .lineLimit(2)
             }
+        } else if RecordingRuntime.shared.listening.isEmpty, state.isRecording {
+            // **音が来ていないのに「聞いています」と言わない。**
+            // 見出しが「音が届いていません」と言う横で、ここが「聞いています…」と
+            // 言っていた。同じ画面の中で食い違うと、どちらも信じられなくなる。
+            Label("まだ音が届いていません", systemImage: "waveform.slash")
+                .font(.system(size: 13))
+                .foregroundStyle(Palette.danger(dark))
         } else {
             Label("聞いています…", systemImage: "waveform")
                 .font(.system(size: 13))

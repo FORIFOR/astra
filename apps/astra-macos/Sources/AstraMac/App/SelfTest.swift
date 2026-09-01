@@ -1231,6 +1231,19 @@ enum SelfTest {
         let secs = Double(i.map { args.count > $0 + 2 ? args[$0 + 2] : "" } ?? "") ?? 300
         _ = GlobalShortcut.shared.register(handler: { WindowCoordinator.shared.toggleRecording() })
         RecordingWorkspaceState.shared.start()
+
+        // `silent` は**音も発話も無い**状態で置く。矛盾（「聞いています…」と
+        // 「音が届いていません」が同時に出る）が起きるのはここだけなので、
+        // これが無いと歯止めが素通りする（実際、壊しても落ちなかった）。
+        if args.contains("silent") {
+            WindowCoordinator.shared.showRecordingWorkspace()
+            print("HOLD_MEETING \(secs)s silent")
+            fflush(stdout)
+            DispatchQueue.main.asyncAfter(deadline: .now() + secs) { exit(0) }
+            RunLoop.main.run()
+            return
+        }
+
         RecordingWorkspaceState.shared.transcript = [
             TranscriptSegment(speaker: "Sarah", text: "Windows はいつ出しますか。", interim: false, at: 630),
             TranscriptSegment(speaker: "Ken", text: "macOS を先に出します", interim: false, at: 642),
