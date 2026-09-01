@@ -14,25 +14,25 @@
     "実際のマウス当たり判定（自プロセスの AX は子を返さない。絵で見る）"
   ],
   "product" : "Astra",
-  "startedAt" : "2026-09-01T03:50:00Z",
+  "startedAt" : "2026-09-01T04:05:59Z",
   "steps" : [
     {
       "interactions" : 0,
-      "ms" : 608,
+      "ms" : 607,
       "name" : "拾わせる"
     },
     {
       "interactions" : 1,
-      "ms" : 941,
+      "ms" : 944,
       "name" : "拾った行を押す"
     },
     {
       "interactions" : 2,
-      "ms" : 348,
+      "ms" : 347,
       "name" : "その場で直す"
     }
   ],
   "success" : true,
-  "totalMs" : 1924,
+  "totalMs" : 1927,
   "windowsOpened" : 0
 }
