@@ -1,0 +1,16 @@
+{"visible_text":["録音中","00:02","01:53 の会議","マイク と 画面の音 を聞いています","聞いています…","決まったこと","決まったことを待っています…","やること","やることを待っています…","文字起こし","翻訳","字幕","まだ発話がありません。","リアルタイム要約","質問する","決定事項","アクション","この会議について聞く","AI が見ている資料"],
+ "answers":{
+  "q1":"Partially. A red '録音中 00:02' badge and 'マイク と 画面の音 を聞いています' tell you it is live-recording mic + system audio, but the only meeting identifier is '01:53 の会議' — a duration/timestamp, not an actual meeting name, calendar title, or participant list, so you can't tell WHICH meeting this is.",
+  "q2":"No. There's a link at the bottom labeled 'AI が見ている資料' (material the AI is looking at), but no document name, thumbnail, or count is shown next to it, and the transcript/summary/decisions/todo panels all say they're empty ('待っています…' / 'まだ発話がありません。'). So it's unclear whether any material is actually loaded right now.",
+  "q3":"Mostly one surface — a single rounded card holds the meeting panel and transcript panel — but a separate small dark pill toolbar floats above/overlapping the top edge, which reads as a second, distinct control layer rather than part of the same card.",
+  "q4":"The recording status ('録音中 00:02') and live transcript panel, since they signal the app is actively capturing the meeting right now.",
+  "q5":"The meeting title is just an elapsed-time stamp ('01:53 の会議') rather than a real name, so it gives no context. 'AI が見ている資料' shows no actual material, leaving it ambiguous if anything is attached. The screen is dominated by near-identical empty placeholder lines ('を待っています…') across transcript, decisions, and todos, which feels redundant and makes the surface feel barren rather than informative."
+ },
+ "trust":{"context":3,"continuity":5},
+ "scores":{"clarity":5,"calmness":6,"hierarchy":5,"density":4},
+ "weaknesses":[
+  {"axis":"context","what":"Meeting label is a duration/timestamp ('01:53 の会議'), not the actual meeting name or source app","fix":"Show the real calendar event title or source app/window name instead of an elapsed-time placeholder"},
+  {"axis":"context","what":"'AI が見ている資料' link gives no visible document name, icon, or count, so presence of source material is unverifiable","fix":"Show the material name/thumbnail or an explicit 'no material' state instead of a bare link"},
+  {"axis":"density","what":"Multiple sections (transcript, 決まったこと, やること) all show near-duplicate 'を待っています…' placeholder copy, making the screen feel empty/redundant","fix":"Collapse or visually de-emphasize empty sections until content arrives, or use a single shared empty-state treatment"}
+ ]
+}

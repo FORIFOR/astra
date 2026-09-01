@@ -1327,6 +1327,12 @@ enum SelfTest {
         case "J05":   // 会議中の Live Notes
             WindowCoordinator.shared.showVoiceHUD()
             recording.start(); settle(0.8)
+            // 実際の録音では音の callback が経路を記録する。この検査には音が
+            // 流れないので、同じ入口を呼んで**普通に録れている姿**にする。
+            // ここを省くと「音が届いていません」の画面を採点することになる。
+            RecordingRuntime.shared.markListening(.localUser)
+            RecordingRuntime.shared.markListening(.remoteAudio)
+            settle(0.3)
             rec.begin()
             WindowCoordinator.shared.showRecordingWorkspace(); settle(1.0)
             rec.step("会議の面を開く", interactions: 1, opensWindow: true)
@@ -4687,6 +4693,11 @@ enum SelfTest {
         }
 
         let state = RecordingWorkspaceState.shared
+
+        // 音の経路も本番と同じにする。検査には音が流れないので、そのまま撮ると
+        // 「音が届いていません」という**異常時の姿**が基準になってしまう。
+        RecordingRuntime.shared.markListening(.localUser)
+        RecordingRuntime.shared.markListening(.remoteAudio)
 
         // 本番と同じ状態で撮る。ショートカットを登録しないまま撮ると、
         // 待機中の HUD が「登録できていないときの姿」になり、**実利用者が見ない絵**が

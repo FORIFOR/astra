@@ -85,7 +85,11 @@ struct RecordingWorkspaceView: View {
             Button { state.ragOpen = true } label: {
                 HStack(spacing: 5) {
                     Image(systemName: "books.vertical")
-                    Text("AI が見ている資料")
+                    // 何件見ているのかを言う。件数が無いと、資料が在るのか
+                    // 無いのかも分からない。**0 件なら 0 件と言う。**
+                    Text(state.ragResults.isEmpty
+                         ? "AI が見ている資料 — まだありません"
+                         : "AI が見ている資料 \(state.ragResults.count) 件")
                 }
                 .font(.system(size: 12, weight: .medium))
                 .foregroundStyle(Color.astraAccent)
@@ -344,6 +348,16 @@ private struct MeetingNotesCanvas: View {
     }
 
     /// 会議の素性。題・出所・人数は、拾う前から分かっている。
+    /// いま**実際に**届いている音源。意図ではなく実測を言う。
+    private var listeningLabel: String? {
+        let ch = RecordingRuntime.shared.listening
+        if ch.isEmpty { return state.isRecording ? "音が届いていません" : nil }
+        var parts: [String] = []
+        if ch.contains(.localUser) { parts.append("マイク") }
+        if ch.contains(.remoteAudio) { parts.append("画面の音") }
+        return parts.joined(separator: " と ") + " を聞いています"
+    }
+
     @ViewBuilder private func header(_ session: MeetingSession?) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(session?.title ?? store.state.meeting.detectedApp ?? "会議")
@@ -360,6 +374,13 @@ private struct MeetingNotesCanvas: View {
                 }
                 if let link = session?.calendarEventId, !link.isEmpty {
                     Label("予定から", systemImage: "calendar")
+                        .font(.system(size: 12)).foregroundStyle(Palette.muted(dark))
+                }
+                // 何を聞いているのかを名前で言う。予定にもアプリにも紐付いていない
+                // 録音では、ここだけが「何に対して働いているか」を示す。
+                // 自動探索で選ばれた形（context 2.0 → 4.0、壊れ無し）。
+                if let l = listeningLabel {
+                    Label(l, systemImage: "mic")
                         .font(.system(size: 12)).foregroundStyle(Palette.muted(dark))
                 }
             }

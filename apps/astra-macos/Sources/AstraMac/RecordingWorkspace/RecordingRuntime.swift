@@ -17,6 +17,19 @@ final class RecordingRuntime {
     private(set) var currentChannel: SpeakerChannel = .localUser
     /// 直近の文字起こしがどちらの声だったか（UI の話者名に使う）。
     private(set) var lastTranscriptChannel: SpeakerChannel = .localUser
+
+    /// **実際に音が届いている経路。** 意図ではなく実測を持つ。
+    ///
+    /// 画面収録の許可が無いと system audio は黙って落ちて mic だけになる。
+    /// 「相手の声も拾っているつもり」で拾えていない状態が、画面から分からなかった。
+    @Published private(set) var listening: Set<SpeakerChannel> = []
+
+    /// 音が 1 フレーム届いたことを記録する。音声の callback と検査の両方から呼ぶ。
+    /// 検査だけ別経路にすると、検査が本番と違う姿を測ることになる。
+    func markListening(_ ch: SpeakerChannel) {
+        guard !listening.contains(ch) else { return }
+        DispatchQueue.main.async { self.listening.insert(ch) }
+    }
     private var mic: MicCapture?
     private var sysAudio: AnyObject?
     private var speech: SpeechTranscriber?
@@ -92,6 +105,7 @@ final class RecordingRuntime {
                     // 一時停止中は文字起こしもしない（session 側は core が sample を捨てる）。
                     if self?.paused != true, self?.vad.accept(frame) == true {
                         self?.currentChannel = .localUser
+                        self?.markListening(.localUser)
                         if self?.speechStartedAt == nil { self?.speechStartedAt = Date() }
                         self?.speech?.append(frame, sampleRate: 16_000)
                     }
@@ -116,6 +130,7 @@ final class RecordingRuntime {
                         _ = session?.pushSamples(samples: frame, sampleRate: 16_000)
                         // §19 相手の声は remote_audio として扱う。混ぜてから起こすと主語が消える。
                         self?.currentChannel = .remoteAudio
+                        self?.markListening(.remoteAudio)
                     }
                 } catch {
                     // 画面収録許可が無ければ system audio 無しで続ける（mic だけで成り立つ）

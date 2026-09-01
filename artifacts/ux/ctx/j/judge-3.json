@@ -1,0 +1,61 @@
+{
+  "visible_text": [
+    "録音中 00:02",
+    "01:53の会議",
+    "マイクと画面の音を聞いています",
+    "聞いています...",
+    "決まったこと",
+    "決まったことを待っています...",
+    "やること",
+    "やることを待っています...",
+    "この会議について聞く",
+    "文字起こし",
+    "翻訳",
+    "字幕",
+    "まだ発話がありません。",
+    "リアルタイム要約",
+    "質問する",
+    "決定事項",
+    "アクション",
+    "AIが見ている資料"
+  ],
+  "answers": {
+    "q1": "This app is recording a meeting labeled '01:53の会議' (01 minute 53 second meeting). It is currently recording (shown by the red dot and '録音中 00:02' timer at top). The audio source is explicitly stated: 'マイクと画面の音を聞いています' — microphone and screen audio.",
+    "q2": "The app displays 'AIが見ている資料' (Materials that AI is looking at) at the bottom. Currently, no materials are loaded or visible. The right panel shows 'まだ発話がありません。' (No speech yet), indicating it's waiting for content to process.",
+    "q3": "This is ONE application surface. It has a clean two-column layout: left column for meeting transcription and analysis, right column for AI-extracted outputs (summaries, decisions, actions). No window seams or separate applications are visible.",
+    "q4": "That the app is actively recording a meeting from mic and screen audio, and waiting to capture and analyze meeting content (decisions and action items). The red recording indicator and time counter make the active recording state the most prominent information.",
+    "q5": "Minor redundancy: '聞いています...' (Listening...) repeats the earlier '音を聞いています' (listening to audio). The large empty area on the right with 'まだ発話がありません。' reads as incomplete rather than calm. It's unclear what happens when speech is detected or how to interact with captured content. The purpose of the bottom section 'AIが見ている資料' is not immediately evident with no materials shown."
+  },
+  "trust": {
+    "context": 7,
+    "continuity": 6
+  },
+  "scores": {
+    "clarity": 6,
+    "calmness": 6,
+    "hierarchy": 6,
+    "density": 6
+  },
+  "weaknesses": [
+    {
+      "axis": "redundancy",
+      "what": "Status message '聞いています...' repeats earlier statement about listening",
+      "fix": "Remove redundant message or replace with more specific state (e.g., 'No audio detected yet' or progress indicator)"
+    },
+    {
+      "axis": "completeness",
+      "what": "Right panel is mostly empty; unclear if this is waiting state or placeholder",
+      "fix": "Show onboarding or placeholder content explaining what will appear once speech is detected"
+    },
+    {
+      "axis": "clarity",
+      "what": "'AIが見ている資料' section at bottom is empty; its purpose is not obvious on first view",
+      "fix": "Add brief label or explain where/how to attach reference materials"
+    },
+    {
+      "axis": "hierarchy",
+      "what": "No visual indication of data flow — unclear how left panel (input) connects to right panel (analysis output)",
+      "fix": "Consider subtle visual connectors or clearer labeling (e.g., 'Transcription' on left, 'AI Analysis' on right)"
+    }
+  ]
+}

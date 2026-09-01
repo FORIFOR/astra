@@ -1,0 +1,15 @@
+{"visible_text":["録音中","00:02","01:54 の会議","聞いています...","決まったこと","決まったことを待っています...","やること","やることを待っています...","文字起こし","翻訳","字幕","まだ発話がありません。","リアルタイム要約","質問する","決定事項","アクション","この会議について聞く","AI が見ている資料"],
+ "answers":{
+  "q1":"Not really. The title just says '01:54 の会議' (a generic elapsed-time label), with no participant names, calendar title, or company/meeting identity. There is a recording indicator ('録音中 00:02') and a 'listening' waveform icon, but nothing shows which call app or audio source (system audio, mic, Zoom/Meet/Teams) is being captured.",
+  "q2":"No. There is a link at the bottom labeled 'AI が見ている資料' (material the AI is looking at), but it shows no file name, icon, or count — so I cannot tell what document it refers to or whether any material is actually attached right now.",
+  "q3":"Mostly one surface, but the floating pill-shaped control bar at the very top (with pause/comment/expand/more/stop icons) sits on its own rounded capsule, visually separated from the main panel below by a gap and its own shadow — it reads slightly like a small floating toolbar hovering over a separate window rather than fully part of the same surface.",
+  "q4":"The recording status and meeting timer (録音中 00:02 / 01:54 の会議) — since this is the only indication that anything is actively happening — followed by the empty transcript panel that will fill in as the meeting proceeds.",
+  "q5":"Several things are placeholder/empty at once (決まったこと, やること, 文字起こし transcript, all four action buttons grayed out), which is expected this early but makes the screen feel mostly like blank scaffolding. The 'AI が見ている資料' label is unclear since it names no actual resource. The relationship between the top floating capsule and the main panel is not obvious — it's unclear if they're the same window or two."
+ },
+ "trust":{"context":2,"continuity":4},
+ "scores":{"clarity":5,"calmness":6,"hierarchy":4,"density":5},
+ "weaknesses":[
+  {"axis":"context","what":"Meeting title is only a generic time stamp ('01:54 の会議') with no participant, calendar event name, or source app shown.","fix":"Show the actual meeting/calendar title and a small source-app icon (Zoom/Meet/Teams/system audio) next to the recording indicator."},
+  {"axis":"continuity","what":"The floating top control capsule is visually detached (separate rounded shape, gap, and shadow) from the main content panel below it.","fix":"Either merge the toolbar into the same rounded container as the panel or reduce the visual separation (matching radius, background, shadow) so it reads as one continuous surface."},
+  {"axis":"context","what":"'AI が見ている資料' gives no visible file name, thumbnail, or explicit empty state, so it's unclear whether material exists.","fix":"Show the referenced document's name/icon when present, or an explicit '資料なし' state when nothing is attached."}
+ ]}

@@ -1,0 +1,53 @@
+{
+  "visible_text": [
+    "録音中 00:02",
+    "01:54の会議",
+    "マイクと画面の音を聞いています",
+    "聞いています...",
+    "決まったこと",
+    "決まったことを待っています...",
+    "やること",
+    "やることを待っています...",
+    "文字起こし",
+    "翻訳",
+    "字幕",
+    "まだ発話がありません。",
+    "AIが見ている資料 — まだありません",
+    "この会議について聞く",
+    "リアルタイム要約"
+  ],
+  "answers": {
+    "q1": "Yes. The app is recording a 1:54 meeting. Audio source is explicitly labeled: mic and screen audio. Currently at 00:02 into recording.",
+    "q2": "Yes. Bottom of screen clearly states: 'AIが見ている資料 — まだありません' (AI viewing material — there is none yet). No documents attached.",
+    "q3": "One application surface. The floating control bar at top integrates smoothly; left and right panels form continuous unified layout, not stacked separate windows.",
+    "q4": "Active recording status (red dot + timer). Meeting is 1:54 total. Listening to mic and screen. Two tracked topics: decisions and action items. No transcription captured yet.",
+    "q5": "Right panel empty and redundant — 'まだ発話がありません' (no speech yet) repeats the recording state. Action buttons below (summary, duplicate, decisions, actions) inactive/irrelevant until first transcript. Placeholder sections on left create incomplete feeling. Status '聞いています...' is somewhat redundant with recording indicator."
+  },
+  "trust": {
+    "context": 6,
+    "continuity": 6
+  },
+  "scores": {
+    "clarity": 6,
+    "calmness": 5,
+    "hierarchy": 6,
+    "density": 6
+  },
+  "weaknesses": [
+    {
+      "axis": "redundancy",
+      "what": "Empty transcript area + placeholder sections both signal 'waiting for input' — visual repetition",
+      "fix": "Either hide empty sections until first speech detected, or show one unified 'listening...' state that covers both"
+    },
+    {
+      "axis": "premature elements",
+      "what": "Action buttons (リアルタイム要約, 複製する, etc.) visible but inactive/irrelevant before transcript appears",
+      "fix": "Defer button row or grey them out until transcription begins"
+    },
+    {
+      "axis": "balance",
+      "what": "Large empty right panel creates visual weight imbalance during initial listening phase",
+      "fix": "Consider showing guidance, tips, or formatting hints instead of blank space while waiting for first speech"
+    }
+  ]
+}

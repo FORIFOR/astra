@@ -1,0 +1,256 @@
+{
+  "base": {
+    "n": 3,
+    "trust": {
+      "context": 2,
+      "continuity": 5
+    },
+    "guard": {
+      "clarity": 5,
+      "calmness": 6,
+      "hierarchy": 5,
+      "density": 5
+    },
+    "trust_mean": 3.5,
+    "weaknesses": [
+      {
+        "axis": "context",
+        "what": "Title \"01:54 の会議\" is only an elapsed-time label, not a real meeting name/source, and there is no indicator of audio origin (mic vs system vs specific app).",
+        "fix": "Show the actual meeting/calendar title when available and a small badge naming the audio source (e.g. mic, system audio, Zoom)."
+      },
+      {
+        "axis": "continuity",
+        "what": "The dark recording-control pill floats above and overlaps the main card's top edge, reading as a separate floating toolbar rather than part of the same surface.",
+        "fix": "Dock the recording controls into the main card's own header/title bar instead of an overlapping floating pill."
+      },
+      {
+        "axis": "density",
+        "what": "\"AI が見ている資料\" gives no visible content, count, or empty-state message, so it's unclear if any material is attached.",
+        "fix": "Show attached document names/thumbnails when present, or an explicit \"資料なし\" state when empty."
+      },
+      {
+        "axis": "context",
+        "what": "Meeting title is only a generic time stamp ('01:54 の会議') with no participant, calendar event name, or source app shown.",
+        "fix": "Show the actual meeting/calendar title and a small source-app icon (Zoom/Meet/Teams/system audio) next to the recording indicator."
+      },
+      {
+        "axis": "continuity",
+        "what": "The floating top control capsule is visually detached (separate rounded shape, gap, and shadow) from the main content panel below it.",
+        "fix": "Either merge the toolbar into the same rounded container as the panel or reduce the visual separation (matching radius, background, shadow) so it reads as one continuous surface."
+      },
+      {
+        "axis": "context",
+        "what": "'AI が見ている資料' gives no visible file name, thumbnail, or explicit empty state, so it's unclear whether material exists.",
+        "fix": "Show the referenced document's name/icon when present, or an explicit '資料なし' state when nothing is attached."
+      },
+      {
+        "axis": "context",
+        "what": "Meeting identity is generic ('01:54の会議') with no participant names, room, or calendar reference visible. Audio source is unlabeled.",
+        "fix": "Show meeting title, participants, or calendar details; label audio input source (microphone, browser tab, etc.)"
+      },
+      {
+        "axis": "clarity",
+        "what": "Waiting states ('待っています...', 'まだ発話がありません') don't explain what happens next or how to proceed if nothing is detected.",
+        "fix": "Add brief inline guidance: 'Listening for speech...' or 'Decisions will appear here as you talk'; show timeout or retry option if no speech detected after N seconds"
+      },
+      {
+        "axis": "hierarchy",
+        "what": "The floating control bar's purpose and primary actions are visually separated from the main content, making it unclear what users should focus on first.",
+        "fix": "Integrate recording status and key controls more tightly with the main panel header, or add a label explaining the floating bar's role"
+      }
+    ]
+  },
+  "j": {
+    "n": 3,
+    "trust": {
+      "context": 3,
+      "continuity": 5
+    },
+    "guard": {
+      "clarity": 5,
+      "calmness": 6,
+      "hierarchy": 5,
+      "density": 5
+    },
+    "trust_mean": 4,
+    "weaknesses": [
+      {
+        "axis": "context",
+        "what": "Meeting label is a duration/timestamp ('01:53 の会議'), not the actual meeting name or source app",
+        "fix": "Show the real calendar event title or source app/window name instead of an elapsed-time placeholder"
+      },
+      {
+        "axis": "context",
+        "what": "'AI が見ている資料' link gives no visible document name, icon, or count, so presence of source material is unverifiable",
+        "fix": "Show the material name/thumbnail or an explicit 'no material' state instead of a bare link"
+      },
+      {
+        "axis": "density",
+        "what": "Multiple sections (transcript, 決まったこと, やること) all show near-duplicate 'を待っています…' placeholder copy, making the screen feel empty/redundant",
+        "fix": "Collapse or visually de-emphasize empty sections until content arrives, or use a single shared empty-state treatment"
+      },
+      {
+        "axis": "context",
+        "what": "Meeting is identified only by a generic timestamp title ('01:53 の会議'), with no meeting name, participants, or source app shown.",
+        "fix": "Surface the actual meeting title (from calendar or the captured app/window) next to or instead of the timestamp."
+      },
+      {
+        "axis": "context",
+        "what": "'AI が見ている資料' gives no visible evidence of any material — no file name, icon, or count — so it reads as an inert label rather than live status.",
+        "fix": "Show attached document names/thumbnails when present, and an explicit 'no material' state when empty."
+      },
+      {
+        "axis": "continuity",
+        "what": "The floating toolbar pill at the top overlaps the main panel's edge and has its own rounded shape/shadow, reading as a separate floating window stacked on top rather than part of the same surface.",
+        "fix": "Dock the toolbar flush into the main panel's frame or reduce its independent styling so it reads as one continuous surface."
+      },
+      {
+        "axis": "hierarchy",
+        "what": "'決まったこと'/'やること' sections on the left and '決定事項'/'アクション' buttons on the right appear to duplicate the same concepts (decisions, action items) without clarifying if they show the same or different data.",
+        "fix": "Merge into a single decisions/actions area, or visually distinguish the button's role (e.g., 'jump to' vs. a separate feature) from the panel content."
+      },
+      {
+        "axis": "redundancy",
+        "what": "Status message '聞いています...' repeats earlier statement about listening",
+        "fix": "Remove redundant message or replace with more specific state (e.g., 'No audio detected yet' or progress indicator)"
+      },
+      {
+        "axis": "completeness",
+        "what": "Right panel is mostly empty; unclear if this is waiting state or placeholder",
+        "fix": "Show onboarding or placeholder content explaining what will appear once speech is detected"
+      },
+      {
+        "axis": "clarity",
+        "what": "'AIが見ている資料' section at bottom is empty; its purpose is not obvious on first view",
+        "fix": "Add brief label or explain where/how to attach reference materials"
+      },
+      {
+        "axis": "hierarchy",
+        "what": "No visual indication of data flow — unclear how left panel (input) connects to right panel (analysis output)",
+        "fix": "Consider subtle visual connectors or clearer labeling (e.g., 'Transcription' on left, 'AI Analysis' on right)"
+      }
+    ]
+  },
+  "k": {
+    "n": 3,
+    "trust": {
+      "context": 3,
+      "continuity": 5
+    },
+    "guard": {
+      "clarity": 5,
+      "calmness": 6,
+      "hierarchy": 6,
+      "density": 6
+    },
+    "trust_mean": 4,
+    "weaknesses": [
+      {
+        "axis": "context",
+        "what": "No source/platform/audio indicator; title is just an auto-generated timestamp, not a real meeting identity",
+        "fix": "Show the actual meeting/event name (or app being captured, e.g. Zoom/Meet) and label the audio source (mic vs system audio)"
+      },
+      {
+        "axis": "clarity",
+        "what": "Bottom action buttons are disabled with no explanation of why or when they become active",
+        "fix": "Add a tooltip or subtle hint like '発話が始まると使えます' on hover/disabled state"
+      },
+      {
+        "axis": "continuity",
+        "what": "Floating pill toolbar overlapping the panel top edge reads as a separate layer rather than fused chrome",
+        "fix": "Dock the toolbar flush into the panel's top edge or visually merge its background with the card below"
+      },
+      {
+        "axis": "context",
+        "what": "Meeting is identified only by a timestamp ('01:54 の会議'), with no meeting name, participant, calendar link, or audio-source indicator (mic vs system audio vs call app)",
+        "fix": "Show the actual meeting/event title when available, and a small source indicator (e.g. app icon or 'System Audio' / 'Microphone') near the recording status"
+      },
+      {
+        "axis": "continuity",
+        "what": "The dark floating pill toolbar at the very top visually separates from the white panel below via distinct shape, color, and shadow",
+        "fix": "Either dock the toolbar flush into the panel's top edge with matching background, or keep it visually consistent (e.g. same corner radius/color language) so it reads as one continuous control strip"
+      },
+      {
+        "axis": "clarity",
+        "what": "Two different word pairs are used for what look like the same two concepts: 決まったこと/決定事項 (decisions) and やること/アクション (action items)",
+        "fix": "Standardize on one term per concept across the transcript panel and the button row"
+      },
+      {
+        "axis": "clarity",
+        "what": "Empty state with waiting placeholders is visually confusing — suggests data should be there but isn't",
+        "fix": "Replace waiting messages with action-oriented prompts ('Start speaking to capture decisions') or hide them until speech begins"
+      },
+      {
+        "axis": "context",
+        "what": "Audio source is ambiguous — unclear if recording device input, participant feed, or meeting stream",
+        "fix": "Add a label showing input source (e.g., 'Microphone • Meeting Feed • Participant 1')"
+      },
+      {
+        "axis": "continuity",
+        "what": "Bottom message 'Material AI is viewing' contradicts the empty transcription panel, creating uncertainty about app state",
+        "fix": "Either show the materials in the right panel, or defer this message until speech/materials actually appear"
+      }
+    ]
+  },
+  "l": {
+    "n": 3,
+    "trust": {
+      "context": 4,
+      "continuity": 5
+    },
+    "guard": {
+      "clarity": 6,
+      "calmness": 6,
+      "hierarchy": 6,
+      "density": 5
+    },
+    "trust_mean": 4.5,
+    "weaknesses": [
+      {
+        "axis": "context",
+        "what": "Meeting is identified only by a generic timestamp ('01:54 の会議') with no link to an actual calendar event, app window, or participant list, so a first-time user can't tell which real-world meeting this is.",
+        "fix": "Surface the actual meeting title/source app (e.g. detected Zoom/Meet window name or calendar event title) instead of a clock-based placeholder."
+      },
+      {
+        "axis": "continuity",
+        "what": "The top black pill toolbar looks like a separate floating overlay rather than a header of the same card, breaking the single-surface impression.",
+        "fix": "Visually dock the pill into the main panel (shared background/border radius) or reduce the gap so it reads as one attached control strip."
+      },
+      {
+        "axis": "density",
+        "what": "The screen is dominated by empty placeholder states and four disabled buttons with no current function, making it feel sparse/barren rather than balanced.",
+        "fix": "Collapse or defer the action buttons and secondary sections until there is real content, showing a simpler single waiting-state instead of multiple empty panels at once."
+      },
+      {
+        "axis": "context",
+        "what": "The only meeting identifier is '01:54 の会議', a generic elapsed-time label with no calendar title, participant names, or source app shown.",
+        "fix": "Pull the real event title (or app/platform name) from the calendar or meeting source and show that instead of a timestamp-based placeholder."
+      },
+      {
+        "axis": "continuity",
+        "what": "The floating dark capsule toolbar at the top sits outside and above the white card's rounded edge, visually reading as a separate overlay window rather than part of the same surface.",
+        "fix": "Dock the control bar as a header row inside the same card frame instead of a detached floating pill."
+      },
+      {
+        "axis": "density",
+        "what": "The right-hand panel is almost entirely empty placeholder text plus four grayed-out buttons, making that half of the screen feel underused at a glance.",
+        "fix": "Combine the idle states into a single lighter-weight message, or use the space for a short onboarding hint instead of near-empty duplicated placeholders."
+      },
+      {
+        "axis": "redundancy",
+        "what": "Empty transcript area + placeholder sections both signal 'waiting for input' — visual repetition",
+        "fix": "Either hide empty sections until first speech detected, or show one unified 'listening...' state that covers both"
+      },
+      {
+        "axis": "premature elements",
+        "what": "Action buttons (リアルタイム要約, 複製する, etc.) visible but inactive/irrelevant before transcript appears",
+        "fix": "Defer button row or grey them out until transcription begins"
+      },
+      {
+        "axis": "balance",
+        "what": "Large empty right panel creates visual weight imbalance during initial listening phase",
+        "fix": "Consider showing guidance, tips, or formatting hints instead of blank space while waiting for first speech"
+      }
+    ]
+  }
+}

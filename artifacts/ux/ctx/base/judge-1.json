@@ -1,0 +1,15 @@
+{"visible_text":["録音中","00:02","01:54 の会議","聞いています...","決まったこと","決まったことを待っています...","やること","やることを待っています...","文字起こし","翻訳","字幕","まだ発話がありません。","リアルタイム要約","質問する","決定事項","アクション","この会議について聞く","AI が見ている資料"],
+ "answers":{
+   "q1":"Not really. The panel is titled \"01:54 の会議\" which is just an elapsed-time label, not a meeting name, calendar event, or app being captured. There is a red 録音中 (recording) indicator and a waveform icon next to \"聞いています...\" (listening), but nothing states whether audio comes from the mic, system audio, or a specific call app.",
+   "q2":"No. There is a link/label \"AI が見ている資料\" (material the AI is looking at) at the very bottom, but it shows no document names, thumbnails, or count — it's unclear whether any material is actually attached right now or if this is just an empty affordance.",
+   "q3":"Mostly one surface: a single rounded card holds the transcript, decisions, and action items. However, a small dark pill toolbar (with pause, comment, expand, more, and stop icons) floats above and overlaps the top edge of the card, which reads as a separate floating control window rather than a header built into the same surface.",
+   "q4":"The recording status row (録音中 00:02) and the meeting title (01:54 の会議) at the top-left, since they anchor what's happening right now; the empty transcript/summary panels are secondary until content arrives.",
+   "q5":"The meeting title is just a timestamp, which is not meaningful/unclear as an identifier. Several sections show near-identical placeholder copy (\"...を待っています\", \"まだ発話がありません\") which feels a bit redundant. The four bottom action buttons (リアルタイム要約/質問する/決定事項/アクション) are grayed out with no visible explanation of why they're disabled. The floating top toolbar overlapping the card edge is visually redundant with having its own controls separate from the main surface."
+ },
+ "trust":{"context":2,"continuity":5},
+ "scores":{"clarity":5,"calmness":6,"hierarchy":5,"density":4},
+ "weaknesses":[
+   {"axis":"context","what":"Title \"01:54 の会議\" is only an elapsed-time label, not a real meeting name/source, and there is no indicator of audio origin (mic vs system vs specific app).","fix":"Show the actual meeting/calendar title when available and a small badge naming the audio source (e.g. mic, system audio, Zoom)."},
+   {"axis":"continuity","what":"The dark recording-control pill floats above and overlaps the main card's top edge, reading as a separate floating toolbar rather than part of the same surface.","fix":"Dock the recording controls into the main card's own header/title bar instead of an overlapping floating pill."},
+   {"axis":"density","what":"\"AI が見ている資料\" gives no visible content, count, or empty-state message, so it's unclear if any material is attached.","fix":"Show attached document names/thumbnails when present, or an explicit \"資料なし\" state when empty."}
+ ]}

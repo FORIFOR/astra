@@ -1,0 +1,55 @@
+{
+  "visible_text": [
+    "録音中 00:02",
+    "01:54の会議",
+    "聞いています...",
+    "決まったこと",
+    "決まったことを待っています...",
+    "やること",
+    "やることを待っています...",
+    "この会議について聞く",
+    "文字起こし",
+    "翻訳",
+    "字幕",
+    "まだ発話がありません。",
+    "リアルタイム要約",
+    "質問する",
+    "決定事項",
+    "アクション",
+    "AIが見ている資料 — まだあります"
+  ],
+  "answers": {
+    "q1": "The app is recording a meeting labeled '01:54の会議' (01:54 meeting). Audio is coming from live speech/meeting input — shown by the waveform indicator and status 'Recording 00:02' with 'listening...' state. The specific source device/participant is not explicitly shown.",
+    "q2": "The bottom states 'Material AI is viewing — there is more' (AIが見ている資料 — まだあります), suggesting documents exist. However, the right panel showing AI-drawn material is currently empty: 'No speech yet.' So materials may be loaded but not yet active in the summary panels.",
+    "q3": "This reads as ONE continuous application surface — a single unified window with integrated left panel (main meeting notes), right panel (transcription/summary), top controls, and bottom status. No separate stacked windows are visible.",
+    "q4": "The most important information is: (1) Meeting identity ('01:54の会議'), (2) Current active state (Recording, Listening), (3) The prompt to engage ('Ask about this meeting'). The empty transcription and waiting states are secondary.",
+    "q5": "Redundancy: The repeated 'waiting for...' messages (待っています) under 'Things decided' and 'Things to do' feel repetitive when nothing has been captured yet. Confusion: The bottom message says AI has materials, but the right panel is empty — these seem to contradict. Unclear: The audio source/input device is not explicit (local microphone? meeting participant?)."
+  },
+  "trust": {
+    "context": 5,
+    "continuity": 6
+  },
+  "scores": {
+    "clarity": 5,
+    "calmness": 6,
+    "hierarchy": 6,
+    "density": 6
+  },
+  "weaknesses": [
+    {
+      "axis": "clarity",
+      "what": "Empty state with waiting placeholders is visually confusing — suggests data should be there but isn't",
+      "fix": "Replace waiting messages with action-oriented prompts ('Start speaking to capture decisions') or hide them until speech begins"
+    },
+    {
+      "axis": "context",
+      "what": "Audio source is ambiguous — unclear if recording device input, participant feed, or meeting stream",
+      "fix": "Add a label showing input source (e.g., 'Microphone • Meeting Feed • Participant 1')"
+    },
+    {
+      "axis": "continuity",
+      "what": "Bottom message 'Material AI is viewing' contradicts the empty transcription panel, creating uncertainty about app state",
+      "fix": "Either show the materials in the right panel, or defer this message until speech/materials actually appear"
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "target": [
+    "context",
+    "continuity"
+  ],
+  "candidates": {
+    "j": "何を聞いているかを名前で言う（実測の音源）",
+    "k": "AI が見ている資料の件数を出す（0 件なら 0 件と言う）",
+    "l": "J + K"
+  },
+  "context": {
+    "base": 2.0,
+    "j": 3.0,
+    "k": 3.0,
+    "l": 4.0
+  },
+  "continuity": {
+    "base": 5.0,
+    "j": 5.0,
+    "k": 5.0,
+    "l": 5.0
+  },
+  "target_mean": {
+    "base": 3.5,
+    "j": 4.0,
+    "k": 4.0,
+    "l": 4.5
+  },
+  "guards": {
+    "base": {
+      "clarity": 5.0,
+      "calmness": 6.0,
+      "hierarchy": 5.0,
+      "density": 5.0
+    },
+    "l": {
+      "clarity": 6.0,
+      "calmness": 6.0,
+      "hierarchy": 6.0,
+      "density": 5.0
+    }
+  },
+  "adopted": "l",
+  "why": "L は狙い +1.00 で壊れ無し。clarity と hierarchy はむしろ上がった（5.0 → 6.0）。J と K も単独で採用可（+0.50）だが、L が最も高い。",
+  "note": "4 周目で外した仮説（造形を直す）に対し、5 周目は Judge の弁どおり**中身**を足した。context 2.0 → 4.0。",
+  "next": "床（6.2）にはまだ届かない。会議の題が時刻だけなのは、予定にもアプリにも紐付いていない録音では実際にそれしか無いため。次は検出したアプリ名や参加者を拾える経路を増やす話になる（表示ではなくデータの問題）。",
+  "judges": 3,
+  "judge_source_access": false
+}
