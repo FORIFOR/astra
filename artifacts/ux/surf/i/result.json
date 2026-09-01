@@ -1,0 +1,38 @@
+{
+  "artifacts" : [
+    "01-start.png",
+    "02-notes.png"
+  ],
+  "errors" : [
+
+  ],
+  "focusTheft" : 0,
+  "interactions" : 1,
+  "journey" : "J05",
+  "notMeasured" : [
+    "実会議での拾い漏れ（実音声が要る）"
+  ],
+  "product" : "Astra",
+  "startedAt" : "2026-09-01T14:33:08Z",
+  "steps" : [
+    {
+      "interactions" : 1,
+      "ms" : 1065,
+      "name" : "会議の面を開く"
+    },
+    {
+      "interactions" : 0,
+      "ms" : 67,
+      "name" : "開始 0 秒の画面",
+      "note" : "地 62.3%"
+    },
+    {
+      "interactions" : 0,
+      "ms" : 827,
+      "name" : "3 分ぶんの発話を入れる"
+    }
+  ],
+  "success" : true,
+  "totalMs" : 1987,
+  "windowsOpened" : 0
+}

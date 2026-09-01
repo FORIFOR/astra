@@ -1,0 +1,55 @@
+{
+  "visible_text": [
+    "録音中 00:02",
+    "14:50 の会議",
+    "聞いています...",
+    "決まったこと",
+    "決まったことを待っています...",
+    "やること",
+    "やることを待っています...",
+    "文字起こし",
+    "翻訳",
+    "字幕",
+    "まだ発話がありません。",
+    "リアルタイム要約",
+    "質問する",
+    "決定事項",
+    "アクション",
+    "この会議について聞く",
+    "AIが見ている資料"
+  ],
+  "answers": {
+    "q1": "This reads as ONE unified application surface. The floating toolbar at the top is clearly part of the app (not a separate window), the left panel shows the meeting info, and the right panel shows AI-generated transcription and analysis. All elements share consistent styling and layout. The floating toolbar could theoretically feel detached, but it's visually integrated as a compact control area.",
+    "q2": "Yes, very clear. The app is recording a meeting scheduled for 14:50 (2:50 PM). The source is real-time audio input (it's currently listening). You can tell it's waiting to capture decisions and action items from the discussion in this specific meeting.",
+    "q3": "Right now: The app is actively recording (red dot + 00:02 elapsed timer) and listening to real-time audio input. It is waiting for: speech to be captured and transcribed, and for discussion content that will populate the 'Decided Things' and 'Things To Do' sections. The right panel confirms 'No speech yet' (まだ発話がありません).",
+    "q4": "The most important information: (1) Recording is active (red indicator + timer), (2) The meeting it is recording (14:50 meeting title), (3) The status that it's listening and ready to capture decisions and actions. The meeting time/subject anchors what is being acted upon.",
+    "q5": "Mostly clear, but a few areas could be improved: (1) The floating toolbar buttons are not obviously labeled—a first-time user won't immediately know what each icon does without hovering or tooltips; (2) The 'Materials AI is viewing' link at the bottom is truncated/unclear—what materials is it seeing?; (3) The right panel being empty ('No speech yet') is expected during startup, but it reads as inactive and waiting."
+  },
+  "trust": {
+    "continuity": 6,
+    "context": 6
+  },
+  "scores": {
+    "clarity": 6,
+    "calmness": 6,
+    "hierarchy": 6,
+    "density": 6
+  },
+  "weaknesses": [
+    {
+      "axis": "affordance",
+      "what": "Floating toolbar buttons are not labeled. Icons alone don't communicate their function to a first-time user.",
+      "fix": "Add a tooltip on hover, or use icon + label for at least the most important controls (pause/play, maximize, recording stop)."
+    },
+    {
+      "axis": "context",
+      "what": "'AIが見ている資料' (Materials AI is viewing) at the bottom is cut off or unclear. What materials? Where do they come from?",
+      "fix": "Either show a preview/list of the materials, or clarify in a tooltip what this section displays."
+    },
+    {
+      "axis": "state",
+      "what": "Right panel shows 'No speech yet' which is expected, but it reads as empty/inactive to a newcomer. Might feel like the app is not working.",
+      "fix": "Add a light hint or placeholder message like 'Awaiting transcription...' or 'Start speaking to see transcription here' to signal the app is ready and working."
+    }
+  ]
+}

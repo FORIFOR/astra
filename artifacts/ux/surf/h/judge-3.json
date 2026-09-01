@@ -1,0 +1,60 @@
+{
+  "visible_text": [
+    "録音中 00:02",
+    "23:34 の会議",
+    "聞いています...",
+    "決まったこと",
+    "決まったことを待っています...",
+    "やること",
+    "やることを待っています...",
+    "文字起こし",
+    "翻訳",
+    "字幕",
+    "まだ発話がありません。",
+    "リアルタイム要約",
+    "要約する",
+    "決定事項",
+    "アクション",
+    "この会議について聞く",
+    "AIが読んでいる資料"
+  ],
+  "answers": {
+    "q1": "Mostly one unified surface, but with some visual separation. The top floating control bar (play/pause/stop) reads as a system overlay distinct from the main content. The left and right panels feel integrated as a two-column layout. The bottom resource indicator (AIが読んでいる資料) appears somewhat detached.",
+    "q2": "Yes, clearly. The app is acting on a meeting from 23:34. You can see the meeting's transcript and topics on the left (decisions and actions being discussed). The right panel shows processing of this specific meeting's content.",
+    "q3": "The app is currently recording or playing back a meeting (00:02 elapsed, red recording indicator). It is displaying and processing a transcript of discussion topics. The right panel shows it's waiting for more speech input to transcribe—the status says 'まだ発話がありません' (no speech yet). It's ready to generate summaries and answer questions about the meeting when there is more content.",
+    "q4": "The meeting identifier (23:34 の会議) and the live transcript content showing discussion points are most important. The recording status and available action buttons (summarize, ask, etc.) are secondary but critical.",
+    "q5": "The relationship between left and right panels is unclear—they show similar meeting content but serve different purposes that are not immediately obvious. The right panel saying 'no speech yet' when a transcript is visible on the left creates confusion. The bottom section 'AIが読んでいる資料' (AI is reading materials) is vague and feels disconnected from the main flow."
+  },
+  "trust": {
+    "continuity": 5,
+    "context": 6
+  },
+  "scores": {
+    "clarity": 6,
+    "calmness": 5,
+    "hierarchy": 5,
+    "density": 6
+  },
+  "weaknesses": [
+    {
+      "axis": "continuity",
+      "what": "The floating control bar at top and resource indicator at bottom create visual breaks in the unified surface feeling.",
+      "fix": "Integrate controls more visually into the main panel layout, or remove the bottom resource indicator if not immediately actionable."
+    },
+    {
+      "axis": "clarity",
+      "what": "The purpose of left panel (transcript) versus right panel (processing UI) is not immediately clear—they seem to show related but different information.",
+      "fix": "Add subtle labels or visual cues explaining that left shows meeting history and right shows AI processing/summaries."
+    },
+    {
+      "axis": "hierarchy",
+      "what": "The right panel showing 'no speech yet' contradicts the visible transcript on the left, creating cognitive friction.",
+      "fix": "Either unify the transcription display or clarify that they represent different capture states (real-time vs. historical)."
+    },
+    {
+      "axis": "density",
+      "what": "The bottom 'AIが読んでいる資料' section is vague and its relationship to the meeting recording is unclear.",
+      "fix": "Either integrate this into the main flow with clearer purpose, or remove if not critical to current task."
+    }
+  ]
+}

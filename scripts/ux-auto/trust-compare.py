@@ -11,8 +11,9 @@
 import glob, json, os, re, statistics, sys, unicodedata
 
 ROOT = sys.argv[1] if len(sys.argv) > 1 else "artifacts/ux/trust"
-TRUST = ["provenance_comprehension", "source_discoverability",
-         "correction_discoverability", "verification_cost", "confidence_to_share"]
+# 狙う軸は周ごとに変わる。Judge が出した key をそのまま使う。
+TRUST = os.environ.get("UX_TARGET_AXES", "provenance_comprehension,source_discoverability,"
+                       "correction_discoverability,verification_cost,confidence_to_share").split(",")
 GUARD = ["clarity", "calmness", "hierarchy", "density"]
 
 def norm(s):
@@ -72,7 +73,7 @@ for k in TRUST:
         x = data[v]["trust"][k]
         line += (f"{x:.1f}" if x is not None else "-").ljust(8)
     print(line)
-line = "  " + "Trust（平均）".ljust(24)
+line = "  " + "狙い（平均）".ljust(24)
 for v in variants:
     if v in data: line += f"{data[v]['trust_mean']:.2f}".ljust(8)
 print("\n" + line)
@@ -98,14 +99,14 @@ for v in variants[1:]:
         if b - a < -0.15: reg.append(f"{k} {b-a:+.1f}")
     ok = gain >= 0.25 and not reg
     why = []
-    if gain < 0.25: why.append(f"Trust {gain:+.2f}（+0.25 未満）")
+    if gain < 0.25: why.append(f"狙い {gain:+.2f}（+0.25 未満）")
     if reg: why.append("壊した: " + ", ".join(reg))
-    print(f"  {v}: Trust {gain:+.2f}  {'採用可' if ok else '不採用 — ' + ' / '.join(why)}")
+    print(f"  {v}: 狙い {gain:+.2f}  {'採用可' if ok else '不採用 — ' + ' / '.join(why)}")
     if ok and gain > best_gain: best, best_gain = v, gain
 
 print()
 if best:
-    print(f"ADOPT={best}（Trust {best_gain:+.2f}）")
+    print(f"ADOPT={best}（狙い {best_gain:+.2f}）")
 else:
     print("ADOPT=none — どの案も規則を満たさない。base のまま戻す。")
 json.dump(data, open(os.path.join(ROOT, "compare.json"), "w"), ensure_ascii=False, indent=2)

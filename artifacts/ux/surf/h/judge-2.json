@@ -1,0 +1,15 @@
+{"visible_text":["録音中","00:02","23:34 の会議","聞いています...","決まったこと","決まったことを待っています...","やること","やることを待っています...","文字起こし","翻訳","字幕","まだ発話がありません。","リアルタイム要約","質問する","決定事項","アクション","この会議について聞く","AI が見ている資料"],
+ "answers":{
+   "q1":"Mostly one surface — the transcript panel and the left summary panel share one rounded card with a shared border. But two pieces feel detached: the small pill toolbar at the very top (dot, pause, comment, expand, more, stop) sits half outside the card, overlapping its top edge like a floating HUD/control strip rather than part of the card; and the 'AI が見ている資料' line sits below the card on the bare background, disconnected from the input bar right above it.",
+   "q2":"Only partially. I can see it's recording a meeting labeled '23:34 の会議' (just a timestamp, not a real title) and that it's 'listening', but there's no participant name, app/source icon, or indication of what audio source (Zoom, Meet, system mic, etc.) it's capturing. I can't tell what specific meeting or source this is.",
+   "q3":"It's actively recording (red dot, 00:02 elapsed) and listening for speech, but nothing has been transcribed yet — the transcript pane says 'no speech yet', and both the 'decided' and 'to-do' sections are shown as empty placeholders waiting for content to appear.",
+   "q4":"The recording status (red dot + 00:02, '録音中') paired with the live transcript panel — that's the core state telling you it's actually capturing something right now.",
+   "q5":"The floating top toolbar's icons (speech bubble, expand, ellipsis) have no labels, so their function isn't obvious. The meeting name is just a time ('23:34の会議'), which doesn't identify the meeting. 'AI が見ている資料' floats outside the card with no visible attached content, so it's unclear what it refers to at this stage."
+ },
+ "trust":{"continuity":4,"context":3},
+ "scores":{"clarity":5,"calmness":6,"hierarchy":5,"density":6},
+ "weaknesses":[
+   {"axis":"continuity","what":"The top pill toolbar overlaps the card's top edge instead of being docked inside it, reading as a separate floating overlay window.","fix":"Embed the toolbar as the card's own header bar (flush with the card's top edge and border) instead of a floating pill that straddles the boundary."},
+   {"axis":"continuity","what":"'AI が見ている資料' sits outside the main card, below the input bar, on the bare background — visually orphaned from the rest of the surface.","fix":"Move it inside the card, e.g. as a small footer row beneath the chat input, so it reads as part of the same panel."},
+   {"axis":"context","what":"Nothing identifies the meeting source (which app/call, which participants) — only a generic timestamp title and a generic 'listening' state.","fix":"Show the source app icon/name or a real meeting title near '23:34の会議' so the user knows what it's actually capturing."}
+ ]}

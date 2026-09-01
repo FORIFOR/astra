@@ -1,0 +1,15 @@
+{"visible_text":["録音中","00:02","14:50 の会議","聞いています…","決まったこと","決まったことを待っています…","やること","やることを待っています…","文字起こし","翻訳","字幕","まだ発話がありません。","リアルタイム要約","質問する","決定事項","アクション","この会議について聞く","AI が見ている資料"],
+ "answers":{
+   "q1":"Mostly one surface, but the dark pill-shaped toolbar at the top (pause, chat, expand, more, stop) floats on top of and overlaps the white card rather than sitting inside its header, so it reads as a separate floating control bar stacked over the main panel, not part of the same surface.",
+   "q2":"Only partly. The title '14:50 の会議' tells me a meeting is being recorded at that time, but there is no meeting name, participant list, or source app/platform shown. The 'AI が見ている資料' line at the bottom implies some material is being referenced but shows no actual document name or content, so I can't tell what specific meeting or source this is.",
+   "q3":"It is actively recording and listening (録音中 00:02, 聞いています…) but nothing has happened yet — the transcript says 'まだ発話がありません' (no speech yet), and the decisions/action-item sections are both shown as waiting placeholders. It's waiting for someone to start speaking.",
+   "q4":"The recording indicator with elapsed time (録音中 00:02) and the meeting title (14:50 の会議), since together they confirm the app is live and recording right now.",
+   "q5":"The floating top toolbar's icons (pause, chat bubble, expand, more-dots, stop) have no labels, so their function isn't obvious at a glance. The meeting title '14:50 の会議' is just a timestamp with no real name, which feels like a placeholder. Most of the screen (transcript panel, decisions, action items) is empty placeholder text, which is expected at the very start but makes the screen feel sparse right now."
+ },
+ "trust":{"continuity":5,"context":3},
+ "scores":{"clarity":6,"calmness":6,"hierarchy":6,"density":4},
+ "weaknesses":[
+   {"axis":"continuity","what":"The dark rounded toolbar at the top overlaps and floats above the white content card with its own shadow, looking like a separate control widget stacked on the surface rather than integrated into it.","fix":"Dock the toolbar into the card's own header/chrome, or unify its color/shape language with the card below so it reads as one continuous surface."},
+   {"axis":"context","what":"Nothing identifies which meeting, platform, or people this is — '14:50 の会議' is a generic timestamp title and 'AI が見ている資料' names no actual resource.","fix":"Show the real meeting/event name, source app icon, or participant names so the user can confirm the app is attached to the right meeting."},
+   {"axis":"density","what":"At this very first moment almost everything shown is a waiting/placeholder state (transcript, decisions, action items all empty), making the screen feel barren.","fix":"Acceptable for a true cold-start, but consider surfacing any known context (calendar title, invited resource) earlier so the screen isn't almost entirely placeholders."}
+ ]}

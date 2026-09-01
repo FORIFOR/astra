@@ -1,0 +1,36 @@
+{
+  "target": [
+    "continuity",
+    "context"
+  ],
+  "hypothesis": "上の黒い浮遊塊が別窓に見えるのが continuity と context を下げている（Judge が両軸でそう言った）",
+  "candidates": {
+    "g": "凹みに座らせる（offset 0・影を弱く）",
+    "h": "面と同じ地にする（黒い塊をやめる）",
+    "i": "待ち文言を具体化する"
+  },
+  "target_mean": {
+    "base": 4.5,
+    "g": 4.0,
+    "h": 3.5,
+    "i": 4.5
+  },
+  "continuity": {
+    "base": 5.0,
+    "g": 5.0,
+    "h": 4.0,
+    "i": 5.0
+  },
+  "context": {
+    "base": 4.0,
+    "g": 3.0,
+    "h": 3.0,
+    "i": 4.0
+  },
+  "adopted": null,
+  "why": "仮説が外れた。浮遊感を消しても continuity は上がらず（G 5.0 据え置き、H は 4.0 へ低下）、context はむしろ下がった。G は clarity と hierarchy も落とした。I は完全に横ばい。",
+  "insight": "context が低い理由は見た目ではなく**中身**だった。Judge の弁: 「どの会議・どのアプリ・誰なのかが分からない。『14:50 の会議』は時刻だけ」「『AI が見ている資料』が何の資料か言っていない」。次はここを埋める。",
+  "caution": "この周の base の context は 4.0 だが、J05 の周では 5.0 だった。**問いが違えば絶対値は比べられない。** 比べてよいのは同じ周の base と案だけ。",
+  "judges": 3,
+  "judge_source_access": false
+}

@@ -1,0 +1,53 @@
+{
+  "visible_text": [
+    "録音中 00:02",
+    "23:33 の会議",
+    "聞いています...",
+    "決まったこと",
+    "やること",
+    "文字起こし",
+    "翻訳",
+    "字幕",
+    "まだ発話がありません。",
+    "リアルタイム要約",
+    "確認する",
+    "決定事項",
+    "アクション",
+    "この会議について聞く",
+    "AIが読んでいる資料"
+  ],
+  "answers": {
+    "q1": "This reads as ONE unified application surface. The floating control bar at the top has subtle separation (rounded corners, shadow) but is clearly integrated as a standard session control for the active recording. The main layout is cohesive: left content column (meeting notes), right analysis column (transcription, translation, subtitles), bottom action area. Nothing feels stacked or detached.",
+    "q2": "Yes, entirely clear. Recording a meeting that started at 23:33. The app is actively listening to live meeting audio (status shows '聞いています...' = Listening). The meeting is the source — you can see it's extracting decisions and action items from real-time speech.",
+    "q3": "The app is recording and listening (00:02 elapsed). It is waiting for speech to appear. The transcription panel shows 'まだ発話がありません。' (No speech yet), so it's actively monitoring audio but has not detected speech to transcribe or process yet.",
+    "q4": "The meeting title '23:33 の会議' and the active recording status (00:02 with red indicator). These anchor what the app is acting on. The structured sections for 'Things Decided' (決まったこと) and 'Things to Do' (やること) are the functional core.",
+    "q5": "The three tab headers (Transcription/Translation/Subtitles) on the right are clear, but the right panel is visually sparse—showing only placeholder text 'まだ発話がありません。' The link at the very bottom 'AIが読んでいる資料' (Material AI is reading) is vague with no visible content or context. These empty states reduce clarity of what this section does when active."
+  },
+  "trust": {
+    "continuity": 6,
+    "context": 6
+  },
+  "scores": {
+    "clarity": 6,
+    "calmness": 6,
+    "hierarchy": 6,
+    "density": 6
+  },
+  "weaknesses": [
+    {
+      "axis": "visual_separation",
+      "what": "Floating control bar at top has distinct visual treatment (rounded, shadowed) that creates subtle visual break from the main window body.",
+      "fix": "Integrate the control bar visually with the main frame, or make the separation intentional and thematic rather than accidental."
+    },
+    {
+      "axis": "content_balance",
+      "what": "Right panel (transcription/translation/subtitles) is mostly empty during startup, creating visual imbalance and suggesting the section is secondary rather than equal to the meeting notes on the left.",
+      "fix": "Populate the placeholder state with actionable guidance ('Transcriptions will appear here as speech is detected') or redistribute space so the layout feels intentional even when empty."
+    },
+    {
+      "axis": "clarity",
+      "what": "Bottom link 'AIが読んでいる資料' (Material AI is reading) lacks context—no indication of what material, where it came from, or why it's relevant to this meeting.",
+      "fix": "Either show the material inline, add a brief description of what the AI is processing, or remove it from the start screen if not yet functional."
+    }
+  ]
+}

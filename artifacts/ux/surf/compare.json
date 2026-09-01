@@ -1,0 +1,256 @@
+{
+  "base": {
+    "n": 3,
+    "trust": {
+      "continuity": 5,
+      "context": 4
+    },
+    "guard": {
+      "clarity": 6,
+      "calmness": 6,
+      "hierarchy": 6,
+      "density": 4
+    },
+    "trust_mean": 4.5,
+    "weaknesses": [
+      {
+        "axis": "continuity",
+        "what": "The dark rounded toolbar at the top overlaps and floats above the white content card with its own shadow, looking like a separate control widget stacked on the surface rather than integrated into it.",
+        "fix": "Dock the toolbar into the card's own header/chrome, or unify its color/shape language with the card below so it reads as one continuous surface."
+      },
+      {
+        "axis": "context",
+        "what": "Nothing identifies which meeting, platform, or people this is — '14:50 の会議' is a generic timestamp title and 'AI が見ている資料' names no actual resource.",
+        "fix": "Show the real meeting/event name, source app icon, or participant names so the user can confirm the app is attached to the right meeting."
+      },
+      {
+        "axis": "density",
+        "what": "At this very first moment almost everything shown is a waiting/placeholder state (transcript, decisions, action items all empty), making the screen feel barren.",
+        "fix": "Acceptable for a true cold-start, but consider surfacing any known context (calendar title, invited resource) earlier so the screen isn't almost entirely placeholders."
+      },
+      {
+        "axis": "continuity",
+        "what": "The dark pill toolbar at top overlaps and floats above the card boundary instead of being visually merged into it",
+        "fix": "Dock the toolbar inside the card's top edge (shared background/border) instead of letting it float above and overlap the corner radius"
+      },
+      {
+        "axis": "context",
+        "what": "No indication of which real meeting/app/participants this is beyond a generic time-based title",
+        "fix": "Surface the source (calendar event name, app being captured, or participant names) near the title"
+      },
+      {
+        "axis": "density",
+        "what": "Large empty transcript and summary areas with only placeholder waiting-text make the first screen feel sparse/barren",
+        "fix": "Use a lighter-weight empty state (e.g. single subtle hint) so the empty regions don't dominate the layout"
+      },
+      {
+        "axis": "affordance",
+        "what": "Floating toolbar buttons are not labeled. Icons alone don't communicate their function to a first-time user.",
+        "fix": "Add a tooltip on hover, or use icon + label for at least the most important controls (pause/play, maximize, recording stop)."
+      },
+      {
+        "axis": "context",
+        "what": "'AIが見ている資料' (Materials AI is viewing) at the bottom is cut off or unclear. What materials? Where do they come from?",
+        "fix": "Either show a preview/list of the materials, or clarify in a tooltip what this section displays."
+      },
+      {
+        "axis": "state",
+        "what": "Right panel shows 'No speech yet' which is expected, but it reads as empty/inactive to a newcomer. Might feel like the app is not working.",
+        "fix": "Add a light hint or placeholder message like 'Awaiting transcription...' or 'Start speaking to see transcription here' to signal the app is ready and working."
+      }
+    ]
+  },
+  "g": {
+    "n": 3,
+    "trust": {
+      "continuity": 5,
+      "context": 3
+    },
+    "guard": {
+      "clarity": 5,
+      "calmness": 6,
+      "hierarchy": 5,
+      "density": 5
+    },
+    "trust_mean": 4,
+    "weaknesses": [
+      {
+        "axis": "context",
+        "what": "The only identifier for the meeting is a generic auto-generated timestamp title ('23:32 の会議'); there is no participant, source app, or calendar-event context anywhere on screen.",
+        "fix": "Show the actual meeting/event title or participant names when available, or at least the audio source (app/mic) being captured."
+      },
+      {
+        "axis": "continuity",
+        "what": "The small capsule toolbar at the top overlaps and sits proud of the main card's top edge, visually detaching it as a floating overlay rather than part of the same surface.",
+        "fix": "Recess the toolbar into the card's own header or give it a shared shadow/edge treatment so it reads as one continuous surface."
+      },
+      {
+        "axis": "hierarchy",
+        "what": "Four separate empty-state messages (transcript, decisions, to-dos, and implicitly the resource link) compete at similar visual weight with no single focal point while waiting for speech.",
+        "fix": "Collapse or de-emphasize the empty sections and give the single 'listening' state more visual priority until real content arrives."
+      },
+      {
+        "axis": "continuity",
+        "what": "The top pill toolbar (pause/comment/expand/more/stop) overlaps and floats above the main panel with its own shadow, visually detaching it from the rest of the interface like a separate floating control strip.",
+        "fix": "Dock the toolbar flush into the main panel's top edge, or remove the shadow/gap so it reads as one continuous frame."
+      },
+      {
+        "axis": "context",
+        "what": "No meeting title, calendar source, or participant info is shown — only a generic time-based label — so a first-time viewer cannot tell what meeting or source this is.",
+        "fix": "Pull in the real meeting/event title or participant names when available, or clearly label it as an ad-hoc/untitled recording."
+      },
+      {
+        "axis": "density",
+        "what": "Three separate placeholder 'waiting for...' messages (listening, decisions, todos) make the screen feel empty and repetitive before anything has happened.",
+        "fix": "Collapse the empty states into a single lighter-weight waiting indicator until real content starts flowing in."
+      },
+      {
+        "axis": "visual_cohesion",
+        "what": "The black floating control bar at top feels detached from the main interface—reads like a separate floating widget rather than integrated toolbar",
+        "fix": "Anchor the control bar as part of the window chrome or window header, or visually integrate it with the main content area"
+      },
+      {
+        "axis": "clarity",
+        "what": "Right panel (Transcription/Translation/Subtitles tabs) is mostly empty, creating visual dead space and unclear purpose on first viewing",
+        "fix": "Either show placeholder content explaining what will appear here, or collapse/hide the panel until transcription begins"
+      },
+      {
+        "axis": "context",
+        "what": "Bottom element 'AIが見ている資料' (Materials AI is watching) is vague and unexplained—materials from where? What purpose does this serve?",
+        "fix": "Clarify this section's purpose with a label or remove it if not essential to core function"
+      },
+      {
+        "axis": "density",
+        "what": "Multiple waiting/placeholder messages on left panel ('待っています' appearing twice) plus 'まだ発話がありません' on right create redundancy",
+        "fix": "Consolidate into a single clear initial state message, or show actual content placeholders"
+      },
+      {
+        "axis": "hierarchy",
+        "what": "Four action buttons at bottom-right (Real-time summary / Cost / Decisions / Actions) lack visual priority or explanation",
+        "fix": "Add brief labels or tooltips; differentiate primary actions from secondary; consider grouping or reordering"
+      }
+    ]
+  },
+  "h": {
+    "n": 3,
+    "trust": {
+      "continuity": 4,
+      "context": 3
+    },
+    "guard": {
+      "clarity": 6,
+      "calmness": 6,
+      "hierarchy": 5,
+      "density": 6
+    },
+    "trust_mean": 3.5,
+    "weaknesses": [
+      {
+        "axis": "continuity",
+        "what": "The top pill toolbar (pause/comment/expand/more/stop) has a different corner radius and floats above/overlapping the main card's top edge instead of sharing its border, so it reads as a separate floating control bar rather than part of one surface.",
+        "fix": "Dock the toolbar into the main panel's own header with a matching radius and continuous background/shadow so it reads as one shape."
+      },
+      {
+        "axis": "context",
+        "what": "The only identifying label is the generic timestamp title '23:34 の会議' — no participant names, meeting title, or source app/calendar icon is shown, so it's unclear which real meeting or call this is.",
+        "fix": "Surface the actual meeting title or participant names (e.g. from a calendar or call-app integration) instead of a bare time-based placeholder."
+      },
+      {
+        "axis": "density",
+        "what": "Four separate 'waiting for...' placeholder strings (聞いています..., まだ発話がありません, 決まったことを待っています, やることを待っています) are all shown at once, which is repetitive and makes the screen feel sparse/premature this early in the recording.",
+        "fix": "Consolidate into a single unified waiting state until real content starts arriving, rather than one waiting message per section."
+      },
+      {
+        "axis": "continuity",
+        "what": "The top pill toolbar overlaps the card's top edge instead of being docked inside it, reading as a separate floating overlay window.",
+        "fix": "Embed the toolbar as the card's own header bar (flush with the card's top edge and border) instead of a floating pill that straddles the boundary."
+      },
+      {
+        "axis": "continuity",
+        "what": "'AI が見ている資料' sits outside the main card, below the input bar, on the bare background — visually orphaned from the rest of the surface.",
+        "fix": "Move it inside the card, e.g. as a small footer row beneath the chat input, so it reads as part of the same panel."
+      },
+      {
+        "axis": "context",
+        "what": "Nothing identifies the meeting source (which app/call, which participants) — only a generic timestamp title and a generic 'listening' state.",
+        "fix": "Show the source app icon/name or a real meeting title near '23:34の会議' so the user knows what it's actually capturing."
+      },
+      {
+        "axis": "continuity",
+        "what": "The floating control bar at top and resource indicator at bottom create visual breaks in the unified surface feeling.",
+        "fix": "Integrate controls more visually into the main panel layout, or remove the bottom resource indicator if not immediately actionable."
+      },
+      {
+        "axis": "clarity",
+        "what": "The purpose of left panel (transcript) versus right panel (processing UI) is not immediately clear—they seem to show related but different information.",
+        "fix": "Add subtle labels or visual cues explaining that left shows meeting history and right shows AI processing/summaries."
+      },
+      {
+        "axis": "hierarchy",
+        "what": "The right panel showing 'no speech yet' contradicts the visible transcript on the left, creating cognitive friction.",
+        "fix": "Either unify the transcription display or clarify that they represent different capture states (real-time vs. historical)."
+      },
+      {
+        "axis": "density",
+        "what": "The bottom 'AIが読んでいる資料' section is vague and its relationship to the meeting recording is unclear.",
+        "fix": "Either integrate this into the main flow with clearer purpose, or remove if not critical to current task."
+      }
+    ]
+  },
+  "i": {
+    "n": 3,
+    "trust": {
+      "continuity": 5,
+      "context": 4
+    },
+    "guard": {
+      "clarity": 6,
+      "calmness": 6,
+      "hierarchy": 6,
+      "density": 5
+    },
+    "trust_mean": 4.5,
+    "weaknesses": [
+      {
+        "axis": "continuity",
+        "what": "The black pill control bar at the top overlaps the main card's edge and reads as a separate floating overlay rather than part of the same surface.",
+        "fix": "Dock the controls into the main card's header bar (or give them a connecting visual seam) so it reads as one piece, not a widget stacked on top."
+      },
+      {
+        "axis": "context",
+        "what": "The meeting title is just an auto-generated timestamp ('23:33 の会議') with no participant names, source app, or calendar link visible.",
+        "fix": "Surface the actual meeting title/participants or the app/call source being captured so the user can confirm what is being recorded."
+      },
+      {
+        "axis": "continuity",
+        "what": "The top black pill toolbar overlaps and floats above the main card's edge instead of being docked inside it, reading as a separate overlay window stacked on the app rather than part of it.",
+        "fix": "Embed the toolbar as a header row inside the card's own rounded boundary so the whole surface reads as one shape."
+      },
+      {
+        "axis": "context",
+        "what": "The only identifier for the meeting is a bare timestamp title ('23:33 の会議'); no participants, calendar name, or connected source is visible, so a first-time viewer can't tell what is actually being recorded.",
+        "fix": "Surface the meeting/event name or participant names if known, and show a preview of the linked material under 'AI が見ている資料' instead of leaving it unexplained."
+      },
+      {
+        "axis": "clarity",
+        "what": "The four action buttons (リアルタイム要約, 質問する, 決定事項, アクション) are grayed out with no visible reason or hint for when they become active.",
+        "fix": "Add a short disabled-state hint (e.g. 'available once there is a transcript') or tooltip."
+      },
+      {
+        "axis": "visual_separation",
+        "what": "Floating control bar at top has distinct visual treatment (rounded, shadowed) that creates subtle visual break from the main window body.",
+        "fix": "Integrate the control bar visually with the main frame, or make the separation intentional and thematic rather than accidental."
+      },
+      {
+        "axis": "content_balance",
+        "what": "Right panel (transcription/translation/subtitles) is mostly empty during startup, creating visual imbalance and suggesting the section is secondary rather than equal to the meeting notes on the left.",
+        "fix": "Populate the placeholder state with actionable guidance ('Transcriptions will appear here as speech is detected') or redistribute space so the layout feels intentional even when empty."
+      },
+      {
+        "axis": "clarity",
+        "what": "Bottom link 'AIが読んでいる資料' (Material AI is reading) lacks context—no indication of what material, where it came from, or why it's relevant to this meeting.",
+        "fix": "Either show the material inline, add a brief description of what the AI is processing, or remove it from the start screen if not yet functional."
+      }
+    ]
+  }
+}

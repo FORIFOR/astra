@@ -1,0 +1,15 @@
+{"visible_text":["録音中","00:02","23:34 の会議","聞いています...","決まったこと","決まったことを待っています...","やること","やることを待っています...","文字起こし","翻訳","字幕","まだ発話がありません。","リアルタイム要約","質問する","決定事項","アクション","この会議について聞く","AI が見ている資料"],
+ "answers":{
+   "q1":"Mostly one surface, but not entirely: a pill-shaped floating toolbar (pause/comment/expand/more/stop icons) sits on top of the main rounded card with its own separate rounding and edge, overlapping rather than merging into the panel below it. It reads as a small floating control bar stacked on the main window rather than a single seamless surface.",
+   "q2":"Only weakly. The title says '23:34 の会議' (a bare timestamp, not a real meeting name), and there is no participant list, no calendar/app source icon, and no indication of which call or audio source is being captured. 'AI が見ている資料' hints materials are being referenced but does not show what they are.",
+   "q3":"It is actively recording (録音中, 00:02 elapsed, red dot, waveform dots) and listening ('聞いています...'). It is waiting for speech to transcribe ('まだ発話がありません'), waiting for decisions to emerge ('決まったことを待っています'), and waiting for action items ('やることを待っています'). Right side panel and bottom action buttons (要約/質問する/決定事項/アクション) are greyed out/inactive, waiting for enough content.",
+   "q4":"The recording status (録音中, timer, red dot) — it's the one piece of information confirming the app is actually capturing something right now.",
+   "q5":"The floating top toolbar feels visually detached from the main panel (different corner radius, overlapping rather than integrated). Also several 'waiting for X...' placeholder lines appear all at once (聞いています / 決まったことを待っています / やることを待っています / まだ発話がありません), which is repetitive and makes the screen feel emptier than necessary this early."
+ },
+ "trust":{"continuity":4,"context":3},
+ "scores":{"clarity":6,"calmness":6,"hierarchy":5,"density":4},
+ "weaknesses":[
+   {"axis":"continuity","what":"The top pill toolbar (pause/comment/expand/more/stop) has a different corner radius and floats above/overlapping the main card's top edge instead of sharing its border, so it reads as a separate floating control bar rather than part of one surface.","fix":"Dock the toolbar into the main panel's own header with a matching radius and continuous background/shadow so it reads as one shape."},
+   {"axis":"context","what":"The only identifying label is the generic timestamp title '23:34 の会議' — no participant names, meeting title, or source app/calendar icon is shown, so it's unclear which real meeting or call this is.","fix":"Surface the actual meeting title or participant names (e.g. from a calendar or call-app integration) instead of a bare time-based placeholder."},
+   {"axis":"density","what":"Four separate 'waiting for...' placeholder strings (聞いています..., まだ発話がありません, 決まったことを待っています, やることを待っています) are all shown at once, which is repetitive and makes the screen feel sparse/premature this early in the recording.","fix":"Consolidate into a single unified waiting state until real content starts arriving, rather than one waiting message per section."}
+ ]}

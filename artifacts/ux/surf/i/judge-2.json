@@ -1,0 +1,16 @@
+{"visible_text":["録音中","00:02","23:33 の会議","聞いています...","決まったこと","決まったことが出たら、ここに並びます","やること","やることが出たら、ここに並びます","文字起こし","翻訳","字幕","まだ発話がありません。","リアルタイム要約","質問する","決定事項","アクション","この会議について聞く","AI が見ている資料"],
+ "answers":{
+   "q1":"Mostly one surface, but the small black pill toolbar at the very top (record dot, pause, comment, expand, more, stop) sits detached from the white card below it — it overlaps the card's top edge with its own rounded shape and shadow, reading like a separate floating mini-window rather than part of the card. Everything else (left transcript column, right panel with tabs, bottom input bar, 'AI が見ている資料' link) is contained in one continuous white rounded card.",
+   "q2":"Only partially. It shows a generic title '23:33 の会議' (a timestamp, not a named meeting) and a status 'listening...', so I know it's an active recording, but there's no participant list, calendar event, or specific source named — I can't tell who is in the meeting or what material it's drawing from beyond the vague 'AI が見ている資料' link at the bottom, which itself shows no content yet.",
+   "q3":"It's actively recording audio (00:02 elapsed) and listening for speech. It's waiting for someone to talk — the transcript panel says 'まだ発話がありません' (no speech yet), and the summary/decisions/action-item sections are all empty placeholders waiting to populate once conversation happens.",
+   "q4":"The recording status indicator ('録音中 00:02') combined with the empty transcript panel — it's the clearest signal of what's actually happening right now: the app is live and capturing, but nothing has been said yet.",
+   "q5":"The floating black pill toolbar at top is unclear — several icons (comment bubble, expand, three-dot menu) have no labels so their function isn't obvious. The four bottom-right action buttons (リアルタイム要約/質問する/決定事項/アクション) are grayed out with no explanation of why they're disabled or when they'll activate. The repeated placeholder sentences ('〜が出たら、ここに並びます') are a bit redundant given the empty-state is already obvious from the blank space below them."
+ },
+ "trust":{"continuity":5,"context":4},
+ "scores":{"clarity":6,"calmness":6,"hierarchy":5,"density":5},
+ "weaknesses":[
+   {"axis":"continuity","what":"The top black pill toolbar overlaps and floats above the main card's edge instead of being docked inside it, reading as a separate overlay window stacked on the app rather than part of it.","fix":"Embed the toolbar as a header row inside the card's own rounded boundary so the whole surface reads as one shape."},
+   {"axis":"context","what":"The only identifier for the meeting is a bare timestamp title ('23:33 の会議'); no participants, calendar name, or connected source is visible, so a first-time viewer can't tell what is actually being recorded.","fix":"Surface the meeting/event name or participant names if known, and show a preview of the linked material under 'AI が見ている資料' instead of leaving it unexplained."},
+   {"axis":"clarity","what":"The four action buttons (リアルタイム要約, 質問する, 決定事項, アクション) are grayed out with no visible reason or hint for when they become active.","fix":"Add a short disabled-state hint (e.g. 'available once there is a transcript') or tooltip."}
+ ]
+}
