@@ -1,0 +1,32 @@
+# 採点票。reviews/<あなたの名前>.yaml として複製して使う。
+# 1 明確に悪い / 2 悪い / 3 やや悪い / 4 普通 / 5 良い / 6 非常に良い / 7 卓越している
+#
+# **点だけ書かない。** なぜその点なのかを一行。理由の無い点は直せない。
+reviewer: ""            # 名前または識別子
+reviewed_at: ""         # 2026-09-01
+astra_version: "0.1.0"
+blind: false            # 製品名を伏せて見たか（競合比較のときは true にする）
+
+scores:
+  clarity:      { score: 0, why: "" }   # Critical
+  calmness:     { score: 0, why: "" }   # Critical
+  continuity:   { score: 0, why: "" }
+  context:      { score: 0, why: "" }
+  trust:        { score: 0, why: "" }   # Critical
+  control:      { score: 0, why: "" }   # Critical
+  hierarchy:    { score: 0, why: "" }
+  efficiency:   { score: 0, why: "" }
+  craft:        { score: 0, why: "" }
+  delight:      { score: 0, why: "" }
+
+# 見たもの。何を見ずに付けた点かが分かるようにする。
+saw:
+  - "01-idle"
+  - "02-listening"
+  - "03-task-dock"
+  - "04-meeting"
+  - "05-meeting-notes"
+  - "06-workspace"
+
+notes: |
+  気づいたこと。直すべき順に書けるとよい。

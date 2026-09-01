@@ -14,6 +14,22 @@
 
 ---
 
+## 0. 4 つのゲート
+
+「UI が良いか」は 1 つの問いではない。**別々に証明する。**
+
+```
+VISUAL_GATE       造形が崩れていない      2pt / golden / density
+FUNCTIONAL_GATE   動く                    verify:all / 配布物 47 ゲート
+QUALITATIVE_GATE  人が見て良いと言う      10 軸 × 3 人以上
+COMPETITIVE_GATE  競合より良い            同じ課題で 3 製品
+```
+
+`bash scripts/gates.sh` でいまの現在地が出る。
+**どれかが未達なら、その上の言い方はしない**（`CLAIMS.md`）。
+
+---
+
 ## 1. いまの状態（正直に）
 
 | | 状態 |
