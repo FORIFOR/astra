@@ -1,0 +1,65 @@
+{
+  "visible_text": [
+    "録音中",
+    "00:02",
+    "02:58 の会議",
+    "マイクと 画面の音を聞いています",
+    "聞いています...",
+    "決まったこと",
+    "決まったことを待っています...",
+    "やること",
+    "やることを待っています...",
+    "文字起こし",
+    "翻訳",
+    "字幕",
+    "まだ発話がありません。",
+    "リアルタイム要約",
+    "質問する",
+    "決定書簡",
+    "アクション",
+    "この会議について聞く",
+    "AI が関わっている機能 — まだありません"
+  ],
+  "answers": {
+    "q1": "A meeting recording has just started (2 seconds in). The app is actively capturing audio from microphone and screen, waiting to detect speech for transcription and analysis.",
+    "q2": "The active recording status (red indicator + 00:02 timer) and the meeting title '02:58 の会議'. The system confirms it is listening but has detected no speech yet.",
+    "q3": "The interface offers buttons to ask questions about the meeting, view transcription, translate, add captions, and panels for decisions and action items will populate as content is captured.",
+    "q4": "Yes. The red recording indicator is active, the timer is running, and the system explicitly states it's listening to microphone and screen audio. It correctly waits for speech before populating summary/decision sections.",
+    "q5": "The 'まだ発話がありません' (no speech yet) message is honest but premature. The empty 'decisions' and 'action items' sections are placeholders that clutter the early-stage view. The three-dot menu in the control bar may not be essential at launch.",
+    "q6": "The red recording dot and elapsed timer bar (top-left), followed by the meeting title '02:58 の会議', then the recording status confirmation text below."
+  },
+  "scores": {
+    "clarity": 6,
+    "calmness": 6,
+    "continuity": 5,
+    "context": 6,
+    "trust": 6,
+    "control": 5,
+    "hierarchy": 6,
+    "efficiency": 5,
+    "craft": 6,
+    "delight": 4
+  },
+  "weaknesses": [
+    {
+      "axis": "efficiency",
+      "what": "Too many empty placeholder sections visible at launch (decisions, actions, summary). Wastes visual space and creates cognitive load.",
+      "fix": "Hide or collapse empty sections in the early state. Introduce them only when content becomes available, or show a single status area instead."
+    },
+    {
+      "axis": "delight",
+      "what": "'AI が関わっている機能 — まだありません' is discouraging. Honest but pessimistic tone for a new user.",
+      "fix": "Replace with encouraging language: 'AI features activate when speech is detected' or 'Ready to capture and analyze your meeting'."
+    },
+    {
+      "axis": "continuity",
+      "what": "Unclear what the user should do during recording. No guidance on whether to speak now, wait, or adjust anything.",
+      "fix": "Add subtle instruction or status: 'Recording... speak naturally' or show a visual cue that recording is ready for input."
+    },
+    {
+      "axis": "hierarchy",
+      "what": "Right panel is largely empty; visual weight is unbalanced between left (content) and right (analysis panels).",
+      "fix": "Either streamline the right panel to show only active elements, or move secondary controls elsewhere to avoid wasted space."
+    }
+  ]
+}
