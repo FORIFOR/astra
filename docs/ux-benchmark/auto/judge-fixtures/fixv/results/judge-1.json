@@ -1,0 +1,38 @@
+{
+  "F8E6": {
+    "speaker": "YES",
+    "time": "YES",
+    "to_source": "YES",
+    "to_audio": "NO",
+    "to_fix": "NO",
+    "crowding": "sparse",
+    "why": "Only 2 note items shown, each with generous spacing, and a large empty area below the last item; only a chevron (expand) and '出所 ›' link are visible per item, no edit/delete control."
+  },
+  "6724": {
+    "speaker": "YES",
+    "time": "YES",
+    "to_source": "YES",
+    "to_audio": "NO",
+    "to_fix": "YES",
+    "crowding": "sparse",
+    "why": "Same 2-item list with large blank space beneath it; each item's metadata line now also shows a '直す' text link next to '出所 ›', visible without expanding."
+  },
+  "457F": {
+    "speaker": "YES",
+    "time": "YES",
+    "to_source": "YES",
+    "to_audio": "NO",
+    "to_fix": "YES",
+    "crowding": "sparse",
+    "why": "Same 2-item list with ample surrounding whitespace; each item row shows a pencil/edit icon next to the chevron on the title line, visible without expanding."
+  },
+  "28EF": {
+    "speaker": "YES",
+    "time": "YES",
+    "to_source": "YES",
+    "to_audio": "NO",
+    "to_fix": "YES",
+    "crowding": "sparse",
+    "why": "Same 2-item list with large blank space beneath it; each item shows a blue '直す' pill button on the metadata row, visible without expanding."
+  }
+}

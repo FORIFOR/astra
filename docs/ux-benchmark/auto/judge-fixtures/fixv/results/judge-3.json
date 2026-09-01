@@ -1,0 +1,38 @@
+{
+  "F8E6": {
+    "speaker": "YES",
+    "time": "YES",
+    "to_source": "YES",
+    "to_audio": "NO",
+    "to_fix": "NO",
+    "crowding": "balanced",
+    "why": "Clear vertical spacing between memo items with consistent label positions"
+  },
+  "6724": {
+    "speaker": "YES",
+    "time": "YES",
+    "to_source": "YES",
+    "to_audio": "NO",
+    "to_fix": "NO",
+    "crowding": "balanced",
+    "why": "Same layout as F8E6 with adequate whitespace around items"
+  },
+  "457F": {
+    "speaker": "YES",
+    "time": "YES",
+    "to_source": "NO",
+    "to_audio": "NO",
+    "to_fix": "YES",
+    "crowding": "balanced",
+    "why": "Edit icons (✏️) visible on right side of each item without expansion needed"
+  },
+  "28EF": {
+    "speaker": "YES",
+    "time": "YES",
+    "to_source": "NO",
+    "to_audio": "NO",
+    "to_fix": "YES",
+    "crowding": "balanced",
+    "why": "Blue '直す' (fix) buttons visible inline on right side of each item"
+  }
+}

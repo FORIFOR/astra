@@ -1,0 +1,38 @@
+{
+  "F8E6": {
+    "speaker": "YES",
+    "time": "YES",
+    "to_source": "YES",
+    "to_audio": "NO",
+    "to_fix": "NO",
+    "crowding": "sparse",
+    "why": "Only two メモ items sit in a tall panel with wide empty gaps around the placeholder 決まったこと/やること sections; no edit/delete control appears on the collapsed rows, only a chevron and a 出所 link."
+  },
+  "6724": {
+    "speaker": "YES",
+    "time": "YES",
+    "to_source": "YES",
+    "to_audio": "NO",
+    "to_fix": "YES",
+    "crowding": "sparse",
+    "why": "Same two-item メモ list with generous vertical spacing; each item's meta line now also shows a blue 直す link next to 出所 ›, visible without expanding the item."
+  },
+  "457F": {
+    "speaker": "YES",
+    "time": "YES",
+    "to_source": "YES",
+    "to_audio": "NO",
+    "to_fix": "YES",
+    "crowding": "sparse",
+    "why": "Same sparse two-item layout; a small pencil icon now sits in each collapsed item row next to the chevron, giving a fix affordance without expanding."
+  },
+  "28EF": {
+    "speaker": "YES",
+    "time": "YES",
+    "to_source": "YES",
+    "to_audio": "NO",
+    "to_fix": "YES",
+    "crowding": "sparse",
+    "why": "Same sparse two-item layout; a highlighted 直す pill button is right-aligned on each item's meta line, visible in the collapsed state."
+  }
+}

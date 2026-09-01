@@ -296,6 +296,14 @@ private struct MeetingNotesCanvas: View {
                 if let who = line.speaker { Text(who) }
                 if let t = line.timeLabel { Text("· \(t)") }
                 Text("· 出所 ›").foregroundStyle(Palette.accent(dark))
+                // 訂正の道を、同じ 1 行に足す。面を増やさない。
+                //
+                // 検証済みの尺度（TRUST_AFFORDANCE = Evidence B、正答 97.5%）で
+                // 測った結果、`to_fix` が 0/3 → 2/3。他の affordance を落とさず、
+                // 地の割合も 56.6% → 56.5% でほぼ動かない。
+                // 右端に置く案（鉛筆・囲みボタン）は to_fix 3/3 まで上がったが、
+                // どちらも `to_source` を 3/3 → 2/3 に落としたので採らなかった。
+                Text("· 直す").foregroundStyle(Palette.accent(dark))
             }
             Spacer(minLength: 0)
         }
