@@ -1,0 +1,8 @@
+{
+  "2900": {"one_surface": "NO", "detached_overlay": "YES", "consistent_style": "YES", "why": "A black pill-shaped toolbar overlaps the top edge of the white panel with its own heavy shadow, offset above the frame; the left and right content panels themselves share the same white fill and rounded corners."},
+  "5F3D": {"one_surface": "NO", "detached_overlay": "YES", "consistent_style": "YES", "why": "Same black floating toolbar sits above/over the white panel with a distinct shadow, unaligned to the container; left and right panels match each other in fill and corner rounding."},
+  "F8D0": {"one_surface": "NO", "detached_overlay": "YES", "consistent_style": "YES", "why": "Black pill toolbar again floats over the top of the white panel with its own shadow, offset from the frame; left and right panels are consistent white with matching corners."},
+  "9282": {"one_surface": "NO", "detached_overlay": "YES", "consistent_style": "YES", "why": "Same detached black toolbar over the panel top edge with heavy shadow; the two content panels share the same white material and rounding."},
+  "4681": {"one_surface": "NO", "detached_overlay": "YES", "consistent_style": "NO", "why": "Black floating toolbar overlaps the panel top as before, and now the left panel also has a thick blue/purple border while the right panel has no such border, a visibly different treatment."},
+  "ED1D": {"one_surface": "NO", "detached_overlay": "YES", "consistent_style": "NO", "why": "Black floating toolbar still overlaps the top of the panel; the left panel is outlined with a heavy blue border that the right panel lacks, so the two panels no longer match."}
+}

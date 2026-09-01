@@ -1,0 +1,38 @@
+{
+  "2900": {
+    "one_surface": "NO",
+    "detached_overlay": "YES",
+    "consistent_style": "YES",
+    "why": "Black control bar floats with shadow; left/right panels are same material"
+  },
+  "5F3D": {
+    "one_surface": "NO",
+    "detached_overlay": "YES",
+    "consistent_style": "YES",
+    "why": "Black control bar floats with shadow; left/right panels are same material"
+  },
+  "F8D0": {
+    "one_surface": "NO",
+    "detached_overlay": "YES",
+    "consistent_style": "YES",
+    "why": "Black control bar floats with prominent shadow; left/right panels are same material"
+  },
+  "9282": {
+    "one_surface": "NO",
+    "detached_overlay": "YES",
+    "consistent_style": "YES",
+    "why": "Black control bar floats with shadow; left/right panels are same material"
+  },
+  "4681": {
+    "one_surface": "NO",
+    "detached_overlay": "YES",
+    "consistent_style": "NO",
+    "why": "Blue border appears on left panel, making it visibly different from right panel; control bar floats"
+  },
+  "ED1D": {
+    "one_surface": "NO",
+    "detached_overlay": "YES",
+    "consistent_style": "NO",
+    "why": "Blue border on left panel distinguishes it from right panel; control bar floats"
+  }
+}

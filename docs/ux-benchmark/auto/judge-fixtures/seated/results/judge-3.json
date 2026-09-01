@@ -1,0 +1,3 @@
+{"2190": {"one_surface":"YES","detached_overlay":"YES","why":"Dark control bar at top has visible drop shadow and floats above main interface; left/right panels form unified surface"},
+ "D749": {"one_surface":"YES","detached_overlay":"YES","why":"Identical layout and appearance to 2190; same floating control bar with drop shadow"},
+ "difference": "No visible differences detected between the two images; they appear virtually identical"}

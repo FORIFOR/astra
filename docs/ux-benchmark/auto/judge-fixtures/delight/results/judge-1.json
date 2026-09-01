@@ -1,0 +1,5 @@
+{"6F1D": {"padding_even":"YES","aligned":"YES","decoration_restraint":"YES","why":"Notes panel: plain labels, all rows (decided/todo/memo, both memo entries) start at the same left edge, comfortable even margins."},
+ "798E": {"padding_even":"YES","aligned":"YES","decoration_restraint":"YES","why":"Empty/waiting state, same layout as baseline: plain text labels aligned to one left edge, no ornament."},
+ "00DA": {"padding_even":"YES","aligned":"YES","decoration_restraint":"YES","why":"Memo entries now show a metadata sub-line but the main item rows (10:42/14:21) still share the same left edge; no decorative icons."},
+ "8D8D": {"padding_even":"YES","aligned":"YES","decoration_restraint":"NO","why":"Section labels are prefixed with sparkle/star/fire emoji in colored text that add no information, though rows still line up and margins look even."},
+ "495C": {"padding_even":"YES","aligned":"NO","decoration_restraint":"YES","why":"Second memo entry ('14:21 Sarah...') is indented further right than the first ('10:42 Ken...'), breaking the shared left edge; no decoration present."}}

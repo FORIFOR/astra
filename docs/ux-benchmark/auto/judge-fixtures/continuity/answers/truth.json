@@ -1,0 +1,32 @@
+{
+  "2900": {
+    "one_surface": "YES",
+    "detached_overlay": "NO",
+    "consistent_style": "YES"
+  },
+  "5F3D": {
+    "one_surface": "YES",
+    "detached_overlay": "NO",
+    "consistent_style": "YES"
+  },
+  "F8D0": {
+    "one_surface": "NO",
+    "detached_overlay": "YES",
+    "consistent_style": "YES"
+  },
+  "9282": {
+    "one_surface": "NO",
+    "detached_overlay": "YES",
+    "consistent_style": "YES"
+  },
+  "4681": {
+    "one_surface": "YES",
+    "detached_overlay": "NO",
+    "consistent_style": "NO"
+  },
+  "ED1D": {
+    "one_surface": "YES",
+    "detached_overlay": "NO",
+    "consistent_style": "NO"
+  }
+}

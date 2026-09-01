@@ -1,0 +1,42 @@
+{
+  "dimension": "continuity",
+  "accuracy": 48.1,
+  "promoted_questions": [],
+  "blocked_questions": [
+    "one_surface",
+    "detached_overlay",
+    "consistent_style"
+  ],
+  "grounded_accuracy": 0,
+  "observable_questions": [
+    "one_surface",
+    "detached_overlay",
+    "consistent_style"
+  ],
+  "not_measured": [
+    "grounded",
+    "holistic_trust"
+  ],
+  "false_positive": 22.2,
+  "false_negative": 29.6,
+  "abstention": 0.0,
+  "passed": false,
+  "failed_checks": [
+    "問いのどれかが 95% 以上",
+    "誤って在ると言った <= 5%"
+  ],
+  "per_question": {
+    "one_surface": [
+      6,
+      18
+    ],
+    "detached_overlay": [
+      6,
+      18
+    ],
+    "consistent_style": [
+      14,
+      18
+    ]
+  }
+}

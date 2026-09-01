@@ -1,0 +1,42 @@
+{
+  "dimension": "delight",
+  "accuracy": 84.4,
+  "promoted_questions": [
+    "decoration_restraint"
+  ],
+  "blocked_questions": [
+    "padding_even",
+    "aligned"
+  ],
+  "grounded_accuracy": 0,
+  "observable_questions": [
+    "padding_even",
+    "aligned",
+    "decoration_restraint"
+  ],
+  "not_measured": [
+    "grounded",
+    "holistic_trust"
+  ],
+  "false_positive": 6.7,
+  "false_negative": 8.9,
+  "abstention": 0.0,
+  "passed": false,
+  "failed_checks": [
+    "誤って在ると言った <= 5%"
+  ],
+  "per_question": {
+    "padding_even": [
+      12,
+      15
+    ],
+    "aligned": [
+      11,
+      15
+    ],
+    "decoration_restraint": [
+      15,
+      15
+    ]
+  }
+}

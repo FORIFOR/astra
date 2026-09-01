@@ -17,7 +17,16 @@ enum Fixture: String {
     case fakeConfidence = "bad-fake-confidence"
     /// 拾った文と、引いた原文が食い違う
     case contradictory = "bad-contradictory"
-    case continuityBad = "continuity-bad", delightBad = "delight-bad"
+    /// 面から引き離し、別の窓のように見せる
+    case detached = "bad-detached"
+    /// 主列だけ別素材にする（角丸・境界・地が揃わない）
+    case mismatchedSurface = "bad-mismatched-surface"
+    /// 余白が不揃い
+    case unevenPadding = "bad-uneven-padding"
+    /// 意味を持たない装飾を足す
+    case decoration = "bad-decoration"
+    /// 行の左端が揃わない
+    case misaligned = "bad-misaligned"
     static var current: Fixture {
         Fixture(rawValue: ProcessInfo.processInfo.environment["ASTRA_FIXTURE"] ?? "") ?? .none
     }
@@ -247,18 +256,24 @@ private struct MeetingNotesCanvas: View {
                 }
                 Spacer(minLength: 0)
             }
-            .padding(.leading, Fixture.current == .delightBad ? 9 : 24)
-            .padding(.trailing, Fixture.current == .delightBad ? 41 : 24)
-            .padding(.top, Fixture.current == .delightBad ? 7 : 24)
-            .padding(.bottom, Fixture.current == .delightBad ? 33 : 24)
+            .padding(.leading, Fixture.current == .unevenPadding ? 9 : 24)
+            .padding(.trailing, Fixture.current == .unevenPadding ? 41 : 24)
+            .padding(.top, Fixture.current == .unevenPadding ? 7 : 24)
+            .padding(.bottom, Fixture.current == .unevenPadding ? 33 : 24)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .scrollIndicators(.never)
         .background(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(Color.cardSurface(dark))
-                .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .stroke(Color.hairline(dark)))
+            // mismatched-surface: 主列だけ別素材にする（角丸・境界・地が揃わない）
+            RoundedRectangle(cornerRadius: Fixture.current == .mismatchedSurface ? 2 : 12,
+                             style: .continuous)
+                .fill(Fixture.current == .mismatchedSurface
+                      ? Color.subtleFill(dark, 0.10) : Color.cardSurface(dark))
+                .overlay(RoundedRectangle(cornerRadius: Fixture.current == .mismatchedSurface ? 2 : 12,
+                                          style: .continuous)
+                    .stroke(Fixture.current == .mismatchedSurface
+                            ? Palette.accent(dark) : Color.hairline(dark),
+                            lineWidth: Fixture.current == .mismatchedSurface ? 2 : 1))
         )
         .accessibilityIdentifier("meetingNotes")
     }
@@ -493,24 +508,53 @@ private struct MeetingNotesCanvas: View {
         if lines.isEmpty, let waiting {
             // 何も無いことを隠さない。**偽の skeleton は置かない。**
             VStack(alignment: .leading, spacing: 7) {
-                Text(title)
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(Palette.muted(dark))
-                    .tracking(0.4)
+                HStack(spacing: 6) {
+                    // decoration: 意味を持たない飾りを足す
+                    if Fixture.current == .decoration {
+                        Image(systemName: "sparkles")
+                            .foregroundStyle(LinearGradient(colors: [.purple, .pink],
+                                                            startPoint: .leading, endPoint: .trailing))
+                        Image(systemName: "star.fill").foregroundStyle(.yellow)
+                    }
+                    Text(title)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(Fixture.current == .decoration
+                                         ? AnyShapeStyle(LinearGradient(colors: [.purple, .orange],
+                                             startPoint: .leading, endPoint: .trailing))
+                                         : AnyShapeStyle(Palette.muted(dark)))
+                        .tracking(0.4)
+                    if Fixture.current == .decoration {
+                        Image(systemName: "flame.fill").foregroundStyle(.orange)
+                    }
+                }
                 Text(waiting)
                     .font(.system(size: 14))
                     .foregroundStyle(Palette.muted(dark).opacity(0.7))
             }
         } else if !lines.isEmpty {
             VStack(alignment: .leading, spacing: 7) {
-                Text(title)
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(Palette.muted(dark))
-                    .tracking(0.4)
+                HStack(spacing: 6) {
+                    if Fixture.current == .decoration {
+                        Image(systemName: "sparkles")
+                            .foregroundStyle(LinearGradient(colors: [.purple, .pink],
+                                                            startPoint: .leading, endPoint: .trailing))
+                        Image(systemName: "star.fill").foregroundStyle(.yellow)
+                    }
+                    Text(title)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(Fixture.current == .decoration
+                                         ? AnyShapeStyle(LinearGradient(colors: [.purple, .orange],
+                                             startPoint: .leading, endPoint: .trailing))
+                                         : AnyShapeStyle(Palette.muted(dark)))
+                        .tracking(0.4)
+                    if Fixture.current == .decoration {
+                        Image(systemName: "flame.fill").foregroundStyle(.orange)
+                    }
+                }
                 // 拾った行は、いつ誰が言ったのかを添えて出す。
                 // 押すと**原文と直す手段**が開く。確かめられて、違っていたら
                 // 直せて、初めて「検証できる」と言える。
-                ForEach(lines) { line in
+                ForEach(Array(lines.enumerated()), id: \.element.id) { idx, line in
                     VStack(alignment: .leading, spacing: 6) {
                     ProbeButton(id: "canvasItem-\(line.id.uuidString.prefix(8))",
                                 action: { openedItem = (openedItem == line.id) ? nil : line.id }) {
@@ -541,6 +585,8 @@ private struct MeetingNotesCanvas: View {
                     .contentShape(Rectangle())
                     }
                     .buttonStyle(AstraControlStyle(radius: 7, base: 0.0))
+                    // misaligned: 行ごとに左端をずらす
+                    .padding(.leading, Fixture.current == .misaligned ? CGFloat(idx % 3) * 17 : 0)
 
                     trustBand(line)
                     if openedItem == line.id { provenance(line) }

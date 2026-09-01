@@ -1,0 +1,8 @@
+{
+  "2900": {"one_surface": "NO", "detached_overlay": "YES", "consistent_style": "NO", "why": "A solid-black pill-shaped recording toolbar overlaps the top edge of the light gray/white panel, with its own drop shadow and fully rounded shape unlike the rest of the app."},
+  "5F3D": {"one_surface": "NO", "detached_overlay": "YES", "consistent_style": "NO", "why": "Same black pill toolbar floats above the top edge of the panel (transcript area empty) with a distinct shadow and different fill/corner treatment from the rest of the UI."},
+  "F8D0": {"one_surface": "NO", "detached_overlay": "YES", "consistent_style": "NO", "why": "Identical layout: black recording toolbar sits as a separate floating pill above the main white/gray content panel, differing in fill and corner rounding."},
+  "9282": {"one_surface": "NO", "detached_overlay": "YES", "consistent_style": "NO", "why": "Empty transcript state with the same black floating pill toolbar overlapping the panel's top edge, casting its own shadow distinct from the container."},
+  "4681": {"one_surface": "NO", "detached_overlay": "YES", "consistent_style": "NO", "why": "Black floating toolbar overlaps the top edge as before, and the left panel additionally has a blue/purple selection border and slightly grayed fill that does not match the right panel's plain white/border style."},
+  "ED1D": {"one_surface": "NO", "detached_overlay": "YES", "consistent_style": "NO", "why": "Empty transcript state; black floating toolbar still overlaps the top edge, and the left panel has a blue/purple outline and gray fill contrasting with the unstyled right panel."}
+}

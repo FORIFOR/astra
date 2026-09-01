@@ -1,0 +1,5 @@
+{"6F1D": {"padding_even":"YES","aligned":"NO","decoration_restraint":"YES","why":"Nested items have varying indentation; only functional name labels"},
+ "798E": {"padding_even":"YES","aligned":"NO","decoration_restraint":"YES","why":"Indentation varies; sound wave icon is informational for listening state"},
+ "00DA": {"padding_even":"YES","aligned":"NO","decoration_restraint":"YES","why":"Indentation varies across sections; only functional elements present"},
+ "8D8D": {"padding_even":"YES","aligned":"NO","decoration_restraint":"NO","why":"Decorative emoji trio (✨⭐️🔥) on section headers adds no information"},
+ "495C": {"padding_even":"YES","aligned":"NO","decoration_restraint":"YES","why":"Indentation varies; only functional elements, no gratuitous ornament"}}

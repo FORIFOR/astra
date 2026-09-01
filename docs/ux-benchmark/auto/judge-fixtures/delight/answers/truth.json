@@ -1,0 +1,27 @@
+{
+  "6F1D": {
+    "padding_even": "YES",
+    "aligned": "YES",
+    "decoration_restraint": "YES"
+  },
+  "798E": {
+    "padding_even": "YES",
+    "aligned": "YES",
+    "decoration_restraint": "YES"
+  },
+  "00DA": {
+    "padding_even": "NO",
+    "aligned": "YES",
+    "decoration_restraint": "YES"
+  },
+  "8D8D": {
+    "padding_even": "YES",
+    "aligned": "YES",
+    "decoration_restraint": "NO"
+  },
+  "495C": {
+    "padding_even": "YES",
+    "aligned": "NO",
+    "decoration_restraint": "YES"
+  }
+}
