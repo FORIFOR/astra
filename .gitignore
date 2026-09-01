@@ -34,3 +34,4 @@ apps/astra-macos/Vendor/
 artifacts/ux/**/frames/
 artifacts/ux/**/*.mp4
 artifacts/ux/**/data/
+artifacts/ux/motion/**/frames/

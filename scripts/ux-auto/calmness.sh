@@ -71,7 +71,9 @@ m = {
   "windows_max": max(wins),
   # **見えているか。** 落ち着いていても、他の窓に覆われて見えないなら
   # 「邪魔をしない」ではなく「気付けない」。別の欠陥として出す。
+  # 観測のみ。状態ごとの判定は VISIBILITY_BY_STATE（未実装）で行う。
   "coverage_max": round(max(cov), 4) if cov else None,
+  "coverage_note": "idle を測っている。覆われること自体は FAIL にしない",
   "coverage_mean": round(statistics.mean(cov), 4) if cov else None,
   "not_measured": [
     "キーボードの横取り（外から観測する手段がこの環境に無い）",
@@ -92,8 +94,12 @@ fail = []
 if m["focus_theft"] > 0: fail.append(f"焦点を奪った {m['focus_theft']} 回")
 if m["unexpected_expansion"] > 0: fail.append(f"勝手に広がった {m['unexpected_expansion']} 回")
 if m["occupation_max"] >= 0.10: fail.append(f"占有 {m['occupation_max']*100:.1f}%（10% 以上）")
-if m["coverage_mean"] is not None and m["coverage_mean"] > 0.5:
-    fail.append(f"他の窓に平均 {m['coverage_mean']*100:.0f}% 覆われていた（見えていない）")
+# **覆われること自体は悪ではない。** idle の Astra が他アプリの後ろに退いて
+# いるのは望ましい。「93% 覆われている＝FAIL」は Calmness の評価として逆だった。
+# 見えていなければならないのは状態ごとに違う（EVIDENCE_LEVELS.md）:
+#   idle 覆われてよい / listening 聞いていることが見える /
+#   confirmation 押せる操作が見える / expanded 中身が使える
+# ここは idle を測っているので、覆われていても FAIL にしない。観測だけ残す。
 print()
 if fail:
     for f in fail: print("  未達:", f)

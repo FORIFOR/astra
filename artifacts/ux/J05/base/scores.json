@@ -1,0 +1,148 @@
+{
+  "valid": 3,
+  "rejected": [],
+  "axes": {
+    "clarity": {
+      "median": 6,
+      "stddev": 0.47,
+      "values": [
+        5,
+        6,
+        6
+      ]
+    },
+    "calmness": {
+      "median": 6,
+      "stddev": 0.0,
+      "values": [
+        6,
+        6,
+        6
+      ]
+    },
+    "continuity": {
+      "median": 5,
+      "stddev": 0.47,
+      "values": [
+        6,
+        5,
+        5
+      ]
+    },
+    "context": {
+      "median": 5,
+      "stddev": 0.47,
+      "values": [
+        5,
+        5,
+        6
+      ]
+    },
+    "trust": {
+      "median": 4,
+      "stddev": 0.94,
+      "values": [
+        4,
+        4,
+        6
+      ]
+    },
+    "control": {
+      "median": 5,
+      "stddev": 0.0,
+      "values": [
+        5,
+        5,
+        5
+      ]
+    },
+    "hierarchy": {
+      "median": 6,
+      "stddev": 0.47,
+      "values": [
+        5,
+        6,
+        6
+      ]
+    },
+    "efficiency": {
+      "median": 5,
+      "stddev": 0.0,
+      "values": [
+        5,
+        5,
+        5
+      ]
+    },
+    "craft": {
+      "median": 6,
+      "stddev": 0.0,
+      "values": [
+        6,
+        6,
+        6
+      ]
+    },
+    "delight": {
+      "median": 3,
+      "stddev": 0.47,
+      "values": [
+        3,
+        3,
+        4
+      ]
+    }
+  },
+  "weaknesses": [
+    {
+      "axis": "trust",
+      "what": "At 2 seconds in, every panel just says 'waiting' with no live signal (e.g. audio level, partial word) that speech is actually being captured, so a first-time user has no way to confirm recording is working besides the static status text.",
+      "fix": "Show a live mic/audio-level indicator or the first partial transcript fragment as soon as sound is detected, so the listening state feels verifiably active."
+    },
+    {
+      "axis": "efficiency",
+      "what": "Four action buttons (リアルタイム要約, 質問する, 決定事項, アクション) are all disabled with nothing to act on yet, adding visual clutter without offering any usable function this early.",
+      "fix": "Hide or visually de-emphasize these buttons until there is enough transcript/content for them to be meaningful."
+    },
+    {
+      "axis": "delight",
+      "what": "The whole screen is gray/monochrome placeholder text with only a dotted animation for motion, giving no sense of the app being alive or responsive.",
+      "fix": "Add a subtle accent color or micro-animation (e.g. a gentle pulse on the recording dot or a soft waveform) to make the listening state feel more alive."
+    },
+    {
+      "axis": "trust",
+      "what": "Every content area (transcript, 決まったこと, やること, referenced materials) shows only placeholder 'waiting' text with no live signal that audio is truly being captured or understood.",
+      "fix": "Add a small live audio-level meter or animated waveform next to 'マイク と 画面の音 を聞いています' so the user gets continuous visual proof of capture before any transcript appears."
+    },
+    {
+      "axis": "control",
+      "what": "The floating toolbar icons (comment bubble, expand, '…', stop) have no text labels, so their function is ambiguous on first viewing.",
+      "fix": "Add hover tooltips or brief micro-labels under each icon in the floating toolbar."
+    },
+    {
+      "axis": "delight",
+      "what": "The entire screen is functional but sterile — nothing signals life or progress beyond static placeholder sentences.",
+      "fix": "Give the 'listening' state a subtle pulsing or breathing animation so the waiting period feels active rather than frozen."
+    },
+    {
+      "axis": "efficiency",
+      "what": "Too many empty placeholder sections visible at launch (decisions, actions, summary). Wastes visual space and creates cognitive load.",
+      "fix": "Hide or collapse empty sections in the early state. Introduce them only when content becomes available, or show a single status area instead."
+    },
+    {
+      "axis": "delight",
+      "what": "'AI が関わっている機能 — まだありません' is discouraging. Honest but pessimistic tone for a new user.",
+      "fix": "Replace with encouraging language: 'AI features activate when speech is detected' or 'Ready to capture and analyze your meeting'."
+    },
+    {
+      "axis": "continuity",
+      "what": "Unclear what the user should do during recording. No guidance on whether to speak now, wait, or adjust anything.",
+      "fix": "Add subtle instruction or status: 'Recording... speak naturally' or show a visual cue that recording is ready for input."
+    },
+    {
+      "axis": "hierarchy",
+      "what": "Right panel is largely empty; visual weight is unbalanced between left (content) and right (analysis panels).",
+      "fix": "Either streamline the right panel to show only active elements, or move secondary controls elsewhere to avoid wasted space."
+    }
+  ]
+}

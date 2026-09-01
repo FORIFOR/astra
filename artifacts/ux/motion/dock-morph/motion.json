@@ -1,0 +1,21 @@
+{
+  "frames": 112,
+  "fps": 60,
+  "runs": [
+    {
+      "frames": 6,
+      "ms": 100,
+      "peak": 0.0661,
+      "shape": "減衰（ease-out）"
+    },
+    {
+      "frames": 3,
+      "ms": 50,
+      "peak": 0.0207,
+      "shape": "減衰（ease-out）"
+    }
+  ],
+  "verdict": "GRADUAL",
+  "evidence_level": "A",
+  "note": "画像の中身の変化量。印象ではなく形で見る"
+}

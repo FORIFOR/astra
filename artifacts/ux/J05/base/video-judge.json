@@ -1,27 +1,87 @@
-{"frames_examined":["001.png","002.png","003.png","004.png","005.png","006.png","007.png","008.png","009.png"],
- "answers":{
-  "q1":"It reads as one window being REPLACED by a different one, not a single surface resizing. Frames 001-004 show a full-width dark strip (red dot + 'Recording' label + timer + text buttons 'Notes/Captions/Ask Astra' + eye icon + red stop button). Between frame 004 and 005 that entire strip is gone and a much larger white card (a full meeting workspace with title, transcript panel, decision/action lists, chat input) appears, topped by a small floating black pill with a different, icon-only control set (dot, pause, comment, expand, ellipsis, stop). Because the control iconography, layout, width and position all change simultaneously with no visible intermediate state, it reads as a swap/materialization of a new window rather than the same surface growing.",
-  "q2":"Yes, a major layout shift occurs at 004→005: content jumps from a thin top strip to a large centered card with entirely different internal structure and position. Within the large-card frames (005-009) there is no further positional shift; only content values change in place (timer digits, and two placeholder lines being replaced by real items) without moving surrounding layout.",
-  "q3":"No flicker or half-drawn rendering is visible in any single frame, but the 006→007 transition shows two content blocks ('決まったこと' and 'やること') switching instantly from placeholder text ('...を待っています') to fully-formed items with avatar initial, speaker name, timestamp and a chevron — no partial/loading state is visible in between, so it reads as a pop-in rather than a rendered transition. The 004→005 jump is similarly instantaneous with no partial-size or partial-opacity intermediate frame captured.",
-  "q4":"Partially. The timer (00:00→00:01→00:02→00:03) and the recording dot give continuous feedback that recording is live. The appearance of transcript-derived items in 007 is understandable in context (the meeting produced a decision and an action item), but there is no visible transition/highlight marking them as newly added, so a viewer would only notice via careful before/after comparison. The 004→005 change itself (small bar to full workspace) has no visible causal cue in these frames — it just appears, so 'why now' isn't explained by the motion.",
-  "q5":"Mixed. The timer ticking and the incremental appearance of decision/action items do explain real state (recording duration, live meeting understanding) — that motion is purposeful. But the large structural jump at 004→005 does not itself explain anything visually; it looks like an instant swap rather than a motion that communicates 'the recording UI is expanding into a workspace.'",
-  "q6":"The 004→005 transition would feel abrupt if it truly happens within one 0.25s frame gap with no scaling/fade — going from a slim strip to a full multi-panel workspace instantly reads as jarring rather than smooth. The 006→007 item pop-in (placeholders replaced by real content with no fade/slide) would also feel abrupt. Two pairs of frames (001-002 and 003-004, 007-008) show zero change at all, suggesting dead time between the timer ticks with nothing else happening, which is fine but reinforces that the one real transition is comparatively sudden."
- },
- "scores":{"surface_continuity":2,"no_layout_shift":3,"no_flicker":4,"state_feedback":4,"motion_purpose":4},
- "observations":[
-  {"between":"001→002","what":"No visible change; timer still 00:00."},
-  {"between":"002→003","what":"Timer advances 00:00→00:01; layout and buttons unchanged."},
-  {"between":"003→004","what":"No visible change."},
-  {"between":"004→005","what":"Abrupt replacement: full-width dark recording strip (text buttons, eye icon) disappears; a large white meeting-workspace card appears with a small floating icon-only black pill at top. Size, position and control set all change at once with no visible intermediate frame."},
-  {"between":"005→006","what":"Timer advances 00:01→00:02; no other change."},
-  {"between":"006→007","what":"Placeholder text under '決まったこと' and 'やること' is replaced by two concrete items (speaker initial, name, quote, timestamp, chevron) with no visible transition animation."},
-  {"between":"007→008","what":"No visible change."},
-  {"between":"008→009","what":"Timer advances 00:02→00:03; no other change."}
- ],
- "weaknesses":[
-  {"axis":"surface_continuity","what":"The switch from the compact recording strip to the full meeting workspace shows no shared visual anchor or morph — different icon set, different width/position — so it reads as a different window appearing rather than the same control surface growing.","fix":"Keep the recording pill's visible identity (position, at least one persistent element like the red dot) constant through the transition and animate the workspace card growing from/around it so the eye can track it as one surface."},
-  {"axis":"no_layout_shift","what":"The 004→005 jump moves all content from a thin top strip to a large centered card in a single step with no captured intermediate size.","fix":"Add an intermediate scaling/expansion frame (or slow the capture) so the size change reads as continuous growth rather than a jump cut."},
-  {"axis":"no_flicker","what":"Decision/action items pop in fully-formed between 006 and 007 with no entry animation, which can look like a jarring content swap rather than an update.","fix":"Fade-in or slide-in newly added transcript-derived items so their appearance reads as an incremental update rather than an instant replacement of placeholder text."},
-  {"axis":"motion_purpose","what":"The large structural transition (strip → workspace) carries no visible motion cue explaining cause, so it doesn't communicate why the UI expanded.","fix":"Tie the expansion to a visible trigger animation (e.g., the strip visibly stretching/unfolding into the card) so the size change itself explains the state transition."}
- ]
+{
+  "frames_examined": [
+    "001.png",
+    "002.png",
+    "003.png",
+    "004.png",
+    "005.png",
+    "006.png",
+    "007.png",
+    "008.png",
+    "009.png"
+  ],
+  "answers": {
+    "q1": "It reads as one window being REPLACED by a different one, not a single surface resizing. Frames 001-004 show a full-width dark strip (red dot + 'Recording' label + timer + text buttons 'Notes/Captions/Ask Astra' + eye icon + red stop button). Between frame 004 and 005 that entire strip is gone and a much larger white card (a full meeting workspace with title, transcript panel, decision/action lists, chat input) appears, topped by a small floating black pill with a different, icon-only control set (dot, pause, comment, expand, ellipsis, stop). Because the control iconography, layout, width and position all change simultaneously with no visible intermediate state, it reads as a swap/materialization of a new window rather than the same surface growing.",
+    "q2": "Yes, a major layout shift occurs at 004→005: content jumps from a thin top strip to a large centered card with entirely different internal structure and position. Within the large-card frames (005-009) there is no further positional shift; only content values change in place (timer digits, and two placeholder lines being replaced by real items) without moving surrounding layout.",
+    "q3": "No flicker or half-drawn rendering is visible in any single frame, but the 006→007 transition shows two content blocks ('決まったこと' and 'やること') switching instantly from placeholder text ('...を待っています') to fully-formed items with avatar initial, speaker name, timestamp and a chevron — no partial/loading state is visible in between, so it reads as a pop-in rather than a rendered transition. The 004→005 jump is similarly instantaneous with no partial-size or partial-opacity intermediate frame captured.",
+    "q4": "Partially. The timer (00:00→00:01→00:02→00:03) and the recording dot give continuous feedback that recording is live. The appearance of transcript-derived items in 007 is understandable in context (the meeting produced a decision and an action item), but there is no visible transition/highlight marking them as newly added, so a viewer would only notice via careful before/after comparison. The 004→005 change itself (small bar to full workspace) has no visible causal cue in these frames — it just appears, so 'why now' isn't explained by the motion.",
+    "q5": "Mixed. The timer ticking and the incremental appearance of decision/action items do explain real state (recording duration, live meeting understanding) — that motion is purposeful. But the large structural jump at 004→005 does not itself explain anything visually; it looks like an instant swap rather than a motion that communicates 'the recording UI is expanding into a workspace.'",
+    "q6": "The 004→005 transition would feel abrupt if it truly happens within one 0.25s frame gap with no scaling/fade — going from a slim strip to a full multi-panel workspace instantly reads as jarring rather than smooth. The 006→007 item pop-in (placeholders replaced by real content with no fade/slide) would also feel abrupt. Two pairs of frames (001-002 and 003-004, 007-008) show zero change at all, suggesting dead time between the timer ticks with nothing else happening, which is fine but reinforces that the one real transition is comparatively sudden."
+  },
+  "scores": {
+    "surface_continuity": 2,
+    "no_layout_shift": 3,
+    "no_flicker": 4,
+    "state_feedback": 4,
+    "motion_purpose": 4
+  },
+  "observations": [
+    {
+      "between": "001→002",
+      "what": "No visible change; timer still 00:00."
+    },
+    {
+      "between": "002→003",
+      "what": "Timer advances 00:00→00:01; layout and buttons unchanged."
+    },
+    {
+      "between": "003→004",
+      "what": "No visible change."
+    },
+    {
+      "between": "004→005",
+      "what": "Abrupt replacement: full-width dark recording strip (text buttons, eye icon) disappears; a large white meeting-workspace card appears with a small floating icon-only black pill at top. Size, position and control set all change at once with no visible intermediate frame."
+    },
+    {
+      "between": "005→006",
+      "what": "Timer advances 00:01→00:02; no other change."
+    },
+    {
+      "between": "006→007",
+      "what": "Placeholder text under '決まったこと' and 'やること' is replaced by two concrete items (speaker initial, name, quote, timestamp, chevron) with no visible transition animation."
+    },
+    {
+      "between": "007→008",
+      "what": "No visible change."
+    },
+    {
+      "between": "008→009",
+      "what": "Timer advances 00:02→00:03; no other change."
+    }
+  ],
+  "weaknesses": [
+    {
+      "axis": "surface_continuity",
+      "what": "The switch from the compact recording strip to the full meeting workspace shows no shared visual anchor or morph — different icon set, different width/position — so it reads as a different window appearing rather than the same control surface growing.",
+      "fix": "Keep the recording pill's visible identity (position, at least one persistent element like the red dot) constant through the transition and animate the workspace card growing from/around it so the eye can track it as one surface."
+    },
+    {
+      "axis": "no_layout_shift",
+      "what": "The 004→005 jump moves all content from a thin top strip to a large centered card in a single step with no captured intermediate size.",
+      "fix": "Add an intermediate scaling/expansion frame (or slow the capture) so the size change reads as continuous growth rather than a jump cut."
+    },
+    {
+      "axis": "no_flicker",
+      "what": "Decision/action items pop in fully-formed between 006 and 007 with no entry animation, which can look like a jarring content swap rather than an update.",
+      "fix": "Fade-in or slide-in newly added transcript-derived items so their appearance reads as an incremental update rather than an instant replacement of placeholder text."
+    },
+    {
+      "axis": "motion_purpose",
+      "what": "The large structural transition (strip → workspace) carries no visible motion cue explaining cause, so it doesn't communicate why the UI expanded.",
+      "fix": "Tie the expansion to a visible trigger animation (e.g., the strip visibly stretching/unfolding into the card) so the size change itself explains the state transition."
+    }
+  ],
+  "validity": "INVALID",
+  "why_invalid": "0.25 秒ごとの連写では 180〜220ms の morph が 0〜1 枚しか写らない。この点は取り方の限界であって、動きの質ではない。60fps で撮り直すまで使わない。",
+  "evidence_level": "D"
 }

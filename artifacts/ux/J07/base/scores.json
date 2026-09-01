@@ -1,0 +1,143 @@
+{
+  "valid": 3,
+  "rejected": [],
+  "axes": {
+    "clarity": {
+      "median": 5,
+      "stddev": 0.47,
+      "values": [
+        5,
+        5,
+        6
+      ]
+    },
+    "calmness": {
+      "median": 6,
+      "stddev": 0.0,
+      "values": [
+        6,
+        6,
+        6
+      ]
+    },
+    "continuity": {
+      "median": 4,
+      "stddev": 0.47,
+      "values": [
+        4,
+        4,
+        5
+      ]
+    },
+    "context": {
+      "median": 4,
+      "stddev": 0.94,
+      "values": [
+        4,
+        4,
+        6
+      ]
+    },
+    "trust": {
+      "median": 4,
+      "stddev": 0.47,
+      "values": [
+        4,
+        4,
+        5
+      ]
+    },
+    "control": {
+      "median": 5,
+      "stddev": 0.47,
+      "values": [
+        5,
+        5,
+        6
+      ]
+    },
+    "hierarchy": {
+      "median": 5,
+      "stddev": 0.47,
+      "values": [
+        5,
+        5,
+        6
+      ]
+    },
+    "efficiency": {
+      "median": 5,
+      "stddev": 0.0,
+      "values": [
+        5,
+        5,
+        5
+      ]
+    },
+    "craft": {
+      "median": 5,
+      "stddev": 0.47,
+      "values": [
+        5,
+        5,
+        6
+      ]
+    },
+    "delight": {
+      "median": 3,
+      "stddev": 0.47,
+      "values": [
+        3,
+        3,
+        4
+      ]
+    }
+  },
+  "weaknesses": [
+    {
+      "axis": "continuity",
+      "what": "録音を終えた直後であることを示す明確な合図（トースト、ハイライト、アニメーション）がなく、普段のホーム画面と見分けがつきにくい。",
+      "fix": "直後に追加されたカードを一時的にハイライトするか、「録音が終わりました」という短い確認メッセージを添える。"
+    },
+    {
+      "axis": "trust",
+      "what": "「短すぎて、拾えたものはありません」が失敗なのか正常な検知結果なのか区別できず、AIが正しく動作したか判断しづらい。",
+      "fix": "アイコンや文言で「正常に検知した空振り」であることを明示し、エラー表示と混同しないデザインにする。"
+    },
+    {
+      "axis": "context",
+      "what": "会議カードのタイトルが時刻のみで内容が想像できず、画面下部も余白が多くて手がかりが少ない。",
+      "fix": "内容が無い場合でも録音時間や次のアクション候補（再録音、削除など）を提示し、空白を意味のある情報で埋める。"
+    },
+    {
+      "axis": "trust",
+      "what": "The message '短すぎて、拾えたものはありません' reads ambiguously as either a normal outcome (recording too short by design) or a failure, with no icon/state to disambiguate.",
+      "fix": "Add a distinct visual state (e.g., muted icon or explanatory tooltip) that clarifies this is an expected outcome for very short recordings, not an error."
+    },
+    {
+      "axis": "continuity",
+      "what": "There is no visible transition or confirmation moment marking that the just-finished recording ended and produced this specific card — it just appears in a static list.",
+      "fix": "Show a brief transient confirmation (toast or highlight animation) when a recording ends, linking the just-completed action to its resulting card."
+    },
+    {
+      "axis": "delight",
+      "what": "The completed-meeting state is flat and slightly discouraging (empty result, generic tags), giving no positive reinforcement even though the user just finished a task.",
+      "fix": "Soften the empty-result state with encouraging copy or a suggested next action (e.g., 'try recording longer next time') instead of a bare negative statement."
+    },
+    {
+      "axis": "efficiency",
+      "what": "Significant white space below the meeting card with no information or next-step prompts, making the interface feel incomplete or leaving users wondering what to do.",
+      "fix": "Fill the space with a suggested action card, quick stats about recent recordings, or a prompt like 'Next: Review what was captured?' to maintain momentum."
+    },
+    {
+      "axis": "trust",
+      "what": "'Too short to capture' message is ambiguous—unclear whether the recording failed, was discarded, or succeeded but found nothing meaningful.",
+      "fix": "Replace with more specific messaging: 'Recording saved but no speech detected' or 'Meeting too short—do you want to discard this recording?' with clear options."
+    },
+    {
+      "axis": "continuity",
+      "what": "Abrupt transition from 'Start recording' prompt to 'meeting just ended' state feels disjointed, as if the user is seeing two separate screens rather than a natural flow.",
+      "fix": "Add a brief confirmation state or animation showing the recording completed, then smoothly transition to the summary view."
+    }
+  ]
+}

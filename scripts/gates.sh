@@ -58,7 +58,7 @@ pub=$((vp + sp)); hands=$((vh + sh_))
 if [ "$hands" -gt 0 ]; then
   state "COMPETITIVE_GATE" "PARTIAL" "実機 ${hands} 件（VoiceOS ${vh} / SuperIntern ${sh_}）"
 elif [ "$pub" -gt 0 ]; then
-  state "COMPETITIVE_GATE" "PUBLIC_ONLY" "公開 ${pub} 件のみ → 画面に写るものだけ比べられる"
+  state "PUBLIC_COMPETITIVE_DESIGN" "PARTIAL" "公開 ${pub} 件 → 設計だけ比べる（操作性は比べない）"
 else
   state "COMPETITIVE_GATE" "UNDETERMINED" "競合素材 0 件 → 「競合より優れている」とは言えない"
 fi

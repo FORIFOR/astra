@@ -1,0 +1,15 @@
+{"visible_text":["Home","Tasks","Meetings","Library","Agents","Plugins","こんばんは","何を終わらせますか？","録音を始める","前回の設定でその場で録り始めます","最近の会議","02:59 の会議","今日 ・ 0 分","短すぎて、拾えたものはありません","自分だけ","プロジェクト無し"],
+ "answers":{
+   "q1":"A meeting recording that was just started has already ended (labeled '02:59 の会議', today, 0 minutes), and the home/dashboard screen is showing it in a 'recent meetings' list with a note that nothing useful was captured because it was too short.",
+   "q2":"The recent meeting card's status line: '短すぎて、拾えたものはありません' (too short, nothing was captured) — this tells the user the recording produced no usable result.",
+   "q3":"Start a new recording via '録音を始める', type a task/goal into the '何を終わらせますか？' input box, click into the meeting card for more detail, or navigate to Tasks/Meetings/Library/Agents/Plugins in the sidebar.",
+   "q4":"Not clearly — the app reports the recording was too short to capture anything, but there is no visible confirmation that this is expected behavior (e.g., a duration threshold) versus a malfunction, so a first-time user can't be sure the AI processed things correctly or just failed silently.",
+   "q5":"The 'Agents' and 'Plugins' sidebar items feel unnecessary/unexplained on a first encounter, and the '自分だけ' / 'プロジェクト無し' tags on the meeting card add clutter without clear value for a nearly-empty result.",
+   "q6":"The bold greeting 'こんばんは' at the top, then quickly down to the bold '02:59 の会議' title in the recent meeting card."
+ },
+ "scores":{"clarity":5,"calmness":6,"continuity":4,"context":4,"trust":4,"control":5,"hierarchy":5,"efficiency":5,"craft":5,"delight":3},
+ "weaknesses":[
+   {"axis":"trust","what":"The message '短すぎて、拾えたものはありません' reads ambiguously as either a normal outcome (recording too short by design) or a failure, with no icon/state to disambiguate.","fix":"Add a distinct visual state (e.g., muted icon or explanatory tooltip) that clarifies this is an expected outcome for very short recordings, not an error."},
+   {"axis":"continuity","what":"There is no visible transition or confirmation moment marking that the just-finished recording ended and produced this specific card — it just appears in a static list.","fix":"Show a brief transient confirmation (toast or highlight animation) when a recording ends, linking the just-completed action to its resulting card."},
+   {"axis":"delight","what":"The completed-meeting state is flat and slightly discouraging (empty result, generic tags), giving no positive reinforcement even though the user just finished a task.","fix":"Soften the empty-result state with encouraging copy or a suggested next action (e.g., 'try recording longer next time') instead of a bare negative statement."}
+ ]}
