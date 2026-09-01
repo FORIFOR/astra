@@ -41,8 +41,14 @@ printf "  %-14s 焦点を奪った回数 %s\n" "Calmness" "$theft"
 if [ -f "$journeys/J09/result.json" ]; then
   ok="$(python3 -c "import json;print(json.load(open('$journeys/J09/result.json'))['success'])" 2>/dev/null)"
   miss="$(python3 -c "import json;d=json.load(open('$journeys/J09/result.json'));print(len(d['notMeasured']))" 2>/dev/null)"
-  printf "  %-14s 出所の付与 %s（未実装 %s 件：原文/音声/その場編集）\n" "Trust" \
-    "$([ "$ok" = True ] && echo 全件 || echo 欠けあり)" "$miss"
+  # 「出所が付いている」ではなく「**辿って確かめられる**」を出す。
+  # 付いていても開けなければ、信じるしかない点は変わらない。
+  printf "  %-14s 出所を辿れる %s（未計測 %s 件）\n" "Trust" \
+    "$([ "$ok" = True ] && echo はい || echo いいえ)" "$miss"
+  python3 -c "
+import json
+d=json.load(open('$journeys/J09/result.json'))
+for m in d['notMeasured']: print('                 未計測:', m)" 2>/dev/null
 else
   printf "  %-14s 未計測\n" "Trust"
 fi

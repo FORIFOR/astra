@@ -1319,7 +1319,16 @@ enum SelfTest {
 
         case "J09":   // 出所
             recording.start(); settle(0.5)
+            // 出所は**画面で辿れるか**を測る。面を開かずに測ると、
+            // 出所が付いていることだけ見て「確かめられる」と言ってしまう。
+            WindowCoordinator.shared.showRecordingWorkspace(); settle(0.8)
             rec.begin()
+            // 前後を読ませるので、文字起こしも実際に入れる。
+            recording.transcript = [
+                TranscriptSegment(speaker: "Sarah", text: "Windows はいつ出しますか。", interim: false, at: 630),
+                TranscriptSegment(speaker: "Ken", text: "macOS を先に出します", interim: false, at: 642),
+                TranscriptSegment(speaker: "Ken", text: "Windows は次の周で追います。", interim: false, at: 655),
+            ]
             MeetingIntelligence.shared.ingest([
                 CanvasItem("macOS を先に出します", at: 642, speaker: "Ken"),
                 CanvasItem("オンボーディングを試作する", at: 861, speaker: "Sarah"),
@@ -1333,12 +1342,52 @@ enum SelfTest {
             if items.isEmpty { rec.error("拾えていない") }
             if haveWho < items.count { rec.error("話者の無い項目が \(items.count - haveWho) 件") }
             if haveWhen < items.count { rec.error("時刻の無い項目が \(items.count - haveWhen) 件") }
-            // 原文へ 1 クリックで戻れるか。**まだ無い。**
-            rec.cannotMeasure("原文への 1 クリック（未実装）")
-            rec.cannotMeasure("その時刻の音声へ戻る（未実装）")
-            rec.cannotMeasure("その場で直す（未実装）")
+            // ここから先は「出所が付いている」ではなく、**確かめられるか**を測る。
+            // 付いていても辿れなければ、信じるしかない点は変わらない。
+
+            // ① 原文へ 1 クリック。宣言ではなく AX で実際に押す。
+            let first = items.first
+            let rowId = "canvasItem-" + String(first?.id.uuidString.prefix(8) ?? "")
+            _ = rec.shot("01-拾ったあと")
+            let opened = UIProbe.tap(rowId)
+            settle(0.4)
+            if !opened { rec.error("拾った行を押せない（原文へ辿れない）") }
+            settle(0.5); _ = rec.shot("02-原文を開いた")
+            rec.step("拾った行を押す", interactions: 1)
+
+            // ② 開いた先に、直す手段が在るか。
+            let canEdit = UIProbe.exists("canvasEdit")
+            let canReject = UIProbe.exists("canvasRemove")
+            // 前後の文字起こしが**実際に描かれた**か。同じ文をもう一度出すだけでは
+            // 確かめたことにならないので、ここが出所の要。
+            if !UIProbe.exists("canvasContext") { rec.error("前後の文字起こしが出ない") }
+            if !canEdit { rec.error("原文の下に「直す」が無い") }
+            if !canReject { rec.error("原文の下に「これは違う」が無い") }
+
+            // ③ その場で直す。**直したあとも出所が残ること**まで見る。
+            //    文言だけ直したのに誰の発言かが消えるなら、直すたびに根拠を失う。
+            var edited = false, keptOrigin = false
+            if let target = first {
+                MeetingIntelligence.shared.edit(target, to: "macOS を先に出す")
+                settle(0.3)
+                let now = store.state.meeting.canvas
+                let all = now.decisions + now.actions + now.questions + now.concerns + now.notes
+                if let m = all.first(where: { $0.text == "macOS を先に出す" }) {
+                    edited = true
+                    keptOrigin = (m.speaker == target.speaker && m.at == target.at)
+                }
+            }
+            if !edited { rec.error("その場で直せない") }
+            else if !keptOrigin { rec.error("直したら出所が消えた") }
+            rec.step("その場で直す", interactions: 2)
+
+            // 音声へ戻る導線は**置いていない**。再生の実装が無いので、
+            // 押して何も起きない飾りになる。実装したら測る。
+            rec.cannotMeasure("その時刻の音声へ戻る（再生が未実装。飾りは置かない判断）")
+            rec.cannotMeasure("実際のマウス当たり判定（自プロセスの AX は子を返さない。絵で見る）")
             recording.stop()
-            rec.finish(success: !items.isEmpty && haveWho == items.count && haveWhen == items.count)
+            rec.finish(success: !items.isEmpty && haveWho == items.count && haveWhen == items.count
+                       && opened && canEdit && canReject && edited && keptOrigin)
 
         case "J10":   // 落ちたあと
             // 強制終了を挟む本番の検証は scripts/verify-recording-experience.sh。

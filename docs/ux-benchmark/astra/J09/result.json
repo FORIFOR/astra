@@ -1,28 +1,38 @@
 {
   "artifacts" : [
-
+    "01-拾ったあと.png",
+    "02-原文を開いた.png"
   ],
   "errors" : [
 
   ],
   "focusTheft" : 0,
-  "interactions" : 0,
+  "interactions" : 3,
   "journey" : "J09",
   "notMeasured" : [
-    "原文への 1 クリック（未実装）",
-    "その時刻の音声へ戻る（未実装）",
-    "その場で直す（未実装）"
+    "その時刻の音声へ戻る（再生が未実装。飾りは置かない判断）",
+    "実際のマウス当たり判定（自プロセスの AX は子を返さない。絵で見る）"
   ],
   "product" : "Astra",
-  "startedAt" : "2026-09-01T02:30:16Z",
+  "startedAt" : "2026-09-01T03:50:00Z",
   "steps" : [
     {
       "interactions" : 0,
-      "ms" : 603,
+      "ms" : 608,
       "name" : "拾わせる"
+    },
+    {
+      "interactions" : 1,
+      "ms" : 941,
+      "name" : "拾った行を押す"
+    },
+    {
+      "interactions" : 2,
+      "ms" : 348,
+      "name" : "その場で直す"
     }
   ],
   "success" : true,
-  "totalMs" : 657,
+  "totalMs" : 1924,
   "windowsOpened" : 0
 }

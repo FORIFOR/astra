@@ -226,3 +226,4 @@ enum UIGeometry {
         return try? JSONDecoder().decode(Snapshot.self, from: data)
     }
 }
+

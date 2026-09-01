@@ -84,6 +84,37 @@ final class MeetingIntelligence {
         return out
     }
 
+    /// 拾い間違いを人が直す。**AI の結果を直せないと、出所を見せる意味が薄い。**
+    /// 確かめられて、違っていたら直せて、初めて「検証できる」と言える。
+    func edit(_ item: CanvasItem, to text: String) {
+        canvas = Self.replace(canvas, id: item.id, with: text)
+        AstraStateStore.shared.updateCanvas(canvas)
+    }
+
+    /// 拾い間違いを消す。
+    func remove(_ item: CanvasItem) {
+        canvas = Self.replace(canvas, id: item.id, with: nil)
+        AstraStateStore.shared.updateCanvas(canvas)
+    }
+
+    /// 出所（いつ・誰が）は保つ。**直したのは文言だけ**で、誰の発言かは変えない。
+    static func replace(_ base: MeetingCanvas, id: UUID, with text: String?) -> MeetingCanvas {
+        func apply(_ xs: [CanvasItem]) -> [CanvasItem] {
+            xs.compactMap { item in
+                guard item.id == id else { return item }
+                guard let text else { return nil }
+                return CanvasItem(text, at: item.at, speaker: item.speaker)
+            }
+        }
+        var out = base
+        out.decisions = apply(out.decisions)
+        out.actions = apply(out.actions)
+        out.questions = apply(out.questions)
+        out.concerns = apply(out.concerns)
+        out.notes = apply(out.notes)
+        return out
+    }
+
     /// 前の状態に差分を足す。作り直さない（§20 Incremental）。
     static func merge(_ base: MeetingCanvas, delta: MeetingCanvas) -> MeetingCanvas {
         var out = base

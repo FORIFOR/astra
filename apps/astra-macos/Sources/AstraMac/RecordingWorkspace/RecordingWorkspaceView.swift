@@ -178,6 +178,10 @@ private struct MeetingNotesCanvas: View {
                       waiting: "やることを待っています…")
                 if !canvas.questions.isEmpty { group("宿題", canvas.questions, waiting: nil) }
                 if !canvas.concerns.isEmpty { group("懸念", canvas.concerns, waiting: nil) }
+                // メモ。**描かないと、拾ったのに画面から消える。**
+                // 決定にも作業にも当てはまらない発言はここへ入るが、以前は
+                // どのグループにも出しておらず、黙って落ちていた。
+                if !canvas.notes.isEmpty { group("メモ", canvas.notes, waiting: nil) }
                 Spacer(minLength: 0)
             }
             .padding(24)
@@ -191,6 +195,113 @@ private struct MeetingNotesCanvas: View {
                     .stroke(Color.hairline(dark)))
         )
         .accessibilityIdentifier("meetingNotes")
+    }
+
+    /// 開いている行。押した 1 件だけ開く。
+    @State private var openedItem: UUID?
+    /// 直しているときの文言。
+    @State private var editText = ""
+    @State private var editing: UUID?
+
+    /// その項目の前後の文字起こし。拾った時刻を挟んで前後 1 行ずつ。
+    private func context(_ line: CanvasItem) -> [TranscriptSegment] {
+        guard let at = line.at, !state.transcript.isEmpty else { return [] }
+        let sorted = state.transcript.sorted { $0.at < $1.at }
+        guard let i = sorted.firstIndex(where: { $0.at >= at - 2 }) else { return [] }
+        let lo = max(0, i - 1), hi = min(sorted.count - 1, i + 1)
+        return Array(sorted[lo...hi])
+    }
+
+    /// 出所。**その発言の前後を読ませ、違っていたらその場で直せる。**
+    ///
+    /// 音声へ戻る導線は置かない —— 再生の実装が無いので、押して何も起きない
+    /// 飾りになる。実装したら足す。
+    @ViewBuilder private func provenance(_ line: CanvasItem) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            // 行そのものが「10:42 Ken 〜」を出しているので、ここで同じ文を
+            // もう一度出しても確かめたことにならない。**前後の文字起こし**を出す。
+            // 前後が読めて初めて「そういう文脈で言ったのか」が分かる。
+            let around = context(line)
+            if around.isEmpty {
+                Text(state.transcript.isEmpty
+                     ? "文字起こしがまだありません。"
+                     : "この時刻の文字起こしが見つかりません。")
+                    .font(.system(size: 12))
+                    .foregroundStyle(Palette.muted(dark))
+            } else {
+                VStack(alignment: .leading, spacing: 5) {
+                    ForEach(around) { seg in
+                        // どれがその発言かが分からないと、前後を出した意味が無い。
+                        // 当該行だけ濃く出す（他は文脈として薄く）。
+                        let isSource = abs(seg.at - (line.at ?? -1)) < 2
+                        HStack(alignment: .firstTextBaseline, spacing: 8) {
+                            Text(seg.timeLabel)
+                                .font(.system(size: 10, design: .monospaced))
+                                .foregroundStyle(.tertiary)
+                                .frame(width: 34, alignment: .leading)
+                            Text(seg.speaker)
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundStyle(Palette.muted(dark))
+                                .frame(width: 44, alignment: .leading)
+                            Text(seg.text)
+                                .font(.system(size: 12, weight: isSource ? .semibold : .regular))
+                                .foregroundStyle(isSource ? Palette.text(dark) : Palette.muted(dark))
+                                .fixedSize(horizontal: false, vertical: true)
+                            Spacer(minLength: 0)
+                        }
+                    }
+                }
+                .onAppear { UIProbe.register("canvasContext", {}) }
+                .onDisappear { UIProbe.unregister("canvasContext") }
+            }
+
+            if editing == line.id {
+                TextField("直す", text: $editText)
+                    .textFieldStyle(.plain)
+                    .font(.system(size: 13))
+                    .padding(8)
+                    .background(RoundedRectangle(cornerRadius: 7).fill(Palette.surface(dark)))
+                    .accessibilityIdentifier("canvasEditField")
+                HStack(spacing: 8) {
+                    Button("直す") {
+                        MeetingIntelligence.shared.edit(line, to: editText)
+                        editing = nil; openedItem = nil
+                    }
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(Palette.accent(dark))
+                    .frame(height: 26).padding(.horizontal, 10)
+                    .buttonStyle(AstraControlStyle(radius: 6, base: 0.05))
+                    Button("やめる") { editing = nil }
+                        .font(.system(size: 12))
+                        .foregroundStyle(Palette.muted(dark))
+                        .frame(height: 26).padding(.horizontal, 8)
+                        .buttonStyle(AstraControlStyle(radius: 6, base: 0.0))
+                    Spacer(minLength: 0)
+                }
+            } else {
+                HStack(spacing: 8) {
+                    ProbeButton(id: "canvasEdit",
+                                action: { editing = line.id; editText = line.text }) { Text("直す") }
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(Palette.accent(dark))
+                        .frame(height: 26).padding(.horizontal, 10)
+                        .buttonStyle(AstraControlStyle(radius: 6, base: 0.05))
+                                            ProbeButton(id: "canvasRemove",
+                                action: { MeetingIntelligence.shared.remove(line); openedItem = nil }) {
+                        Text("これは違う")
+                    }
+                    .font(.system(size: 12))
+                    .foregroundStyle(Palette.muted(dark))
+                    .frame(height: 26).padding(.horizontal, 8)
+                    .buttonStyle(AstraControlStyle(radius: 6, base: 0.0))
+                                        Spacer(minLength: 0)
+                }
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 9, style: .continuous)
+            .fill(Color.subtleFill(dark, 0.04)))
     }
 
     /// 会議の素性。題・出所・人数は、拾う前から分かっている。
@@ -255,7 +366,12 @@ private struct MeetingNotesCanvas: View {
                     .foregroundStyle(Palette.muted(dark))
                     .tracking(0.4)
                 // 拾った行は、いつ誰が言ったのかを添えて出す。
+                // 押すと**原文と直す手段**が開く。確かめられて、違っていたら
+                // 直せて、初めて「検証できる」と言える。
                 ForEach(lines) { line in
+                    VStack(alignment: .leading, spacing: 6) {
+                    ProbeButton(id: "canvasItem-\(line.id.uuidString.prefix(8))",
+                                action: { openedItem = (openedItem == line.id) ? nil : line.id }) {
                     HStack(alignment: .firstTextBaseline, spacing: 9) {
                         if let t = line.timeLabel {
                             Text(t)
@@ -275,6 +391,15 @@ private struct MeetingNotesCanvas: View {
                             .foregroundStyle(Palette.text(dark))
                             .fixedSize(horizontal: false, vertical: true)
                         Spacer(minLength: 0)
+                        Image(systemName: openedItem == line.id ? "chevron.up" : "chevron.down")
+                            .font(.system(size: 9, weight: .semibold))
+                            .foregroundStyle(Palette.muted(dark))
+                    }
+                    .contentShape(Rectangle())
+                    }
+                    .buttonStyle(AstraControlStyle(radius: 7, base: 0.0))
+
+                    if openedItem == line.id { provenance(line) }
                     }
                 }
             }
