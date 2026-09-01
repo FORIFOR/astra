@@ -1,0 +1,66 @@
+{
+  "B00B": {
+    "speaker": "YES",
+    "time": "YES",
+    "to_source": "YES",
+    "to_audio": "NO",
+    "to_fix": "NO",
+    "grounded": "YES"
+  },
+  "076D": {
+    "speaker": "YES",
+    "time": "YES",
+    "to_source": "YES",
+    "to_audio": "NO",
+    "to_fix": "NO",
+    "grounded": "YES"
+  },
+  "DA59": {
+    "speaker": "NO",
+    "time": "NO",
+    "to_source": "NO",
+    "to_audio": "NO",
+    "to_fix": "NO",
+    "grounded": "NO"
+  },
+  "021D": {
+    "speaker": "YES",
+    "time": "NO",
+    "to_source": "NO",
+    "to_audio": "NO",
+    "to_fix": "NO",
+    "grounded": "NO"
+  },
+  "7C92": {
+    "speaker": "YES",
+    "time": "YES",
+    "to_source": "YES",
+    "to_audio": "NO",
+    "to_fix": "NO",
+    "grounded": "NO"
+  },
+  "F994": {
+    "speaker": "YES",
+    "time": "YES",
+    "to_source": "NO",
+    "to_audio": "NO",
+    "to_fix": "NO",
+    "grounded": "NO"
+  },
+  "7791": {
+    "speaker": "YES",
+    "time": "YES",
+    "to_source": "YES",
+    "to_audio": "NO",
+    "to_fix": "YES",
+    "grounded": "NO"
+  },
+  "DED6": {
+    "speaker": "YES",
+    "time": "YES",
+    "to_source": "YES",
+    "to_audio": "NO",
+    "to_fix": "YES",
+    "grounded": "YES"
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "B00B": {
+    "speaker": "YES",
+    "time": "YES",
+    "to_source": "YES",
+    "to_audio": "NO",
+    "to_fix": "NO",
+    "grounded": "NO",
+    "note": "Each memo item shows speaker+time (e.g. Ken 10:42) and a '出所 >' (source) label, but no quote is shown to verify the tie, no play button, no edit/delete control."
+  },
+  "076D": {
+    "speaker": "YES",
+    "time": "YES",
+    "to_source": "YES",
+    "to_audio": "NO",
+    "to_fix": "NO",
+    "grounded": "NO",
+    "note": "Identical to B00B: speaker/time shown with '出所 >' link but no visible quoted original to check; no audio or fix affordance."
+  },
+  "DA59": {
+    "speaker": "NO",
+    "time": "NO",
+    "to_source": "NO",
+    "to_audio": "NO",
+    "to_fix": "NO",
+    "grounded": "NO",
+    "note": "Memo items are plain bullet text ('macOS を先に出します', 'オンボーディングを試作する') with only a collapse chevron, no speaker, time, source, audio, or fix control."
+  },
+  "021D": {
+    "speaker": "YES",
+    "time": "NO",
+    "to_source": "NO",
+    "to_audio": "NO",
+    "to_fix": "NO",
+    "grounded": "NO",
+    "note": "Items show speaker name (Ken, Sarah) above and below the text but no timestamp, no source link, no audio or fix affordance."
+  },
+  "7C92": {
+    "speaker": "YES",
+    "time": "YES",
+    "to_source": "YES",
+    "to_audio": "NO",
+    "to_fix": "NO",
+    "grounded": "NO",
+    "note": "Items show speaker+time; a separate '出典' section below reads 'Ken · 10:42 · 出所 >' but shows no actual quoted words to verify the tie; no audio/fix control."
+  },
+  "F994": {
+    "speaker": "YES",
+    "time": "YES",
+    "to_source": "NO",
+    "to_audio": "NO",
+    "to_fix": "NO",
+    "grounded": "NO",
+    "note": "Items show speaker+time and a green '確認済み' (verified) badge, but no source link/quote is shown to check what the verification is tied to; no audio or fix control."
+  },
+  "7791": {
+    "speaker": "YES",
+    "time": "YES",
+    "to_source": "YES",
+    "to_audio": "NO",
+    "to_fix": "YES",
+    "grounded": "NO",
+    "note": "Expanded item shows '出所 >' plus a quoted transcript box with '直す'/'これは違う' fix buttons, but the only quoted line shown ('10:30 Sarah Windows はいつ出しますか。') does not match the item's own text ('macOS を先に出します', Ken, 10:42)."
+  },
+  "DED6": {
+    "speaker": "YES",
+    "time": "YES",
+    "to_source": "YES",
+    "to_audio": "NO",
+    "to_fix": "YES",
+    "grounded": "YES",
+    "note": "Expanded item shows '出所 >' plus a quoted transcript box including a bolded line '10:42 Ken macOS を先に出します' that matches the item's own text exactly, with '直す'/'これは違う' fix buttons; no audio play control visible."
+  }
+}

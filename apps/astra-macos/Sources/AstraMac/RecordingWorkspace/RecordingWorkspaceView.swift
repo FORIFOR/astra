@@ -6,7 +6,18 @@ import SwiftUI
 /// 無い。同じ Astra を、その軸だけ壊して撮る。
 /// 既定は素の姿。`ASTRA_FIXTURE=trust-bad` などで壊す。
 enum Fixture: String {
-    case none, trustBad = "trust-bad", continuityBad = "continuity-bad", delightBad = "delight-bad"
+    case none
+    /// 出所を完全に消す
+    case noSource = "bad-no-source"
+    /// 話者だけ。時刻も原文への道も無い
+    case ambiguousSource = "bad-ambiguous-source"
+    /// 出所は在るが、その項目から遠い場所に置く
+    case wrongHierarchy = "bad-wrong-hierarchy"
+    /// 根拠が無いのに「確認済み」と出す
+    case fakeConfidence = "bad-fake-confidence"
+    /// 拾った文と、引いた原文が食い違う
+    case contradictory = "bad-contradictory"
+    case continuityBad = "continuity-bad", delightBad = "delight-bad"
     static var current: Fixture {
         Fixture(rawValue: ProcessInfo.processInfo.environment["ASTRA_FIXTURE"] ?? "") ?? .none
     }
@@ -219,6 +230,21 @@ private struct MeetingNotesCanvas: View {
                 // 決定にも作業にも当てはまらない発言はここへ入るが、以前は
                 // どのグループにも出しておらず、黙って落ちていた。
                 if !canvas.notes.isEmpty { group("メモ", canvas.notes, waiting: nil) }
+                // wrong-hierarchy: 出所は在るが、どの項目のものか分からない場所に置く。
+                if Fixture.current == .wrongHierarchy {
+                    let all = canvas.decisions + canvas.actions + canvas.notes
+                    if !all.isEmpty {
+                        Divider().overlay(Palette.border(dark)).padding(.top, 18)
+                        Text("出典")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(Palette.muted(dark))
+                        ForEach(all) { it in
+                            Text("\(it.speaker ?? "?") · \(it.timeLabel ?? "?") · 出所 ›")
+                                .font(.system(size: 11))
+                                .foregroundStyle(Palette.muted(dark))
+                        }
+                    }
+                }
                 Spacer(minLength: 0)
             }
             .padding(.leading, Fixture.current == .delightBad ? 9 : 24)
@@ -250,14 +276,27 @@ private struct MeetingNotesCanvas: View {
     /// clarity と hierarchy を 1.0 ずつ落としたので採らなかった。
     /// 「会議から ✓」を足す案（C）は 4.80 で A に届かなかった。
     @ViewBuilder private func trustBand(_ line: CanvasItem) -> some View {
-        if Fixture.current == .trustBad {
+        if Fixture.current == .noSource {
             // 出所を消す。拾った文だけが残り、根拠へ辿る道が無くなる。
             EmptyView()
         } else {
         HStack(spacing: 5) {
-            if let who = line.speaker { Text(who) }
-            if let t = line.timeLabel { Text("· \(t)") }
-            Text("· 出所 ›").foregroundStyle(Palette.accent(dark))
+            switch Fixture.current {
+            case .ambiguousSource:
+                // 話者だけ。どの発言か分からず、原文へ戻る道も無い。
+                if let who = line.speaker { Text(who) }
+            case .fakeConfidence:
+                // 根拠が無いのに「確認済み」。**中身の無い信頼の主張。**
+                Image(systemName: "checkmark.seal.fill")
+                    .font(.system(size: 10)).foregroundStyle(Palette.success(dark))
+                Text("確認済み").foregroundStyle(Palette.success(dark))
+            case .wrongHierarchy:
+                EmptyView()   // 下の別の場所へ出す
+            default:
+                if let who = line.speaker { Text(who) }
+                if let t = line.timeLabel { Text("· \(t)") }
+                Text("· 出所 ›").foregroundStyle(Palette.accent(dark))
+            }
             Spacer(minLength: 0)
         }
         .font(.system(size: 11))
@@ -269,6 +308,10 @@ private struct MeetingNotesCanvas: View {
     /// その項目の前後の文字起こし。拾った時刻を挟んで前後 1 行ずつ。
     private func context(_ line: CanvasItem) -> [TranscriptSegment] {
         guard let at = line.at, !state.transcript.isEmpty else { return [] }
+        if Fixture.current == .contradictory {
+            // 拾った文と食い違う原文を引く。**出所が在るのに、内容が合わない。**
+            return Array(state.transcript.sorted { $0.at < $1.at }.prefix(1))
+        }
         let sorted = state.transcript.sorted { $0.at < $1.at }
         guard let i = sorted.firstIndex(where: { $0.at >= at - 2 }) else { return [] }
         let lo = max(0, i - 1), hi = min(sorted.count - 1, i + 1)
@@ -464,7 +507,8 @@ private struct MeetingNotesCanvas: View {
                     ProbeButton(id: "canvasItem-\(line.id.uuidString.prefix(8))",
                                 action: { openedItem = (openedItem == line.id) ? nil : line.id }) {
                     HStack(alignment: .firstTextBaseline, spacing: 9) {
-                        if Fixture.current != .trustBad, let t = line.timeLabel {
+                        if Fixture.current != .noSource, Fixture.current != .ambiguousSource,
+                           let t = line.timeLabel {
                             Text(t)
                                 .font(.system(size: 11, design: .monospaced))
                                 .foregroundStyle(Palette.muted(dark))
@@ -472,7 +516,7 @@ private struct MeetingNotesCanvas: View {
                         } else {
                             Text("·").foregroundStyle(Palette.muted(dark))
                         }
-                        if Fixture.current != .trustBad, let who = line.speaker {
+                        if Fixture.current != .noSource, let who = line.speaker {
                             Text(who)
                                 .font(.system(size: 12, weight: .semibold))
                                 .foregroundStyle(Palette.accent(dark))

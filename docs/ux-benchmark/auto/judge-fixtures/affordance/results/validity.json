@@ -1,0 +1,47 @@
+{
+  "dimension": "trust_affordance",
+  "accuracy": 97.5,
+  "grounded_accuracy": 73.9,
+  "observable_questions": [
+    "speaker",
+    "time",
+    "to_source",
+    "to_audio",
+    "to_fix"
+  ],
+  "not_measured": [
+    "grounded",
+    "holistic_trust"
+  ],
+  "false_positive": 1.7,
+  "false_negative": 5.8,
+  "abstention": 0.8,
+  "passed": true,
+  "failed_checks": [],
+  "per_question": {
+    "speaker": [
+      23,
+      24
+    ],
+    "time": [
+      23,
+      24
+    ],
+    "to_source": [
+      23,
+      24
+    ],
+    "to_audio": [
+      24,
+      24
+    ],
+    "to_fix": [
+      24,
+      24
+    ],
+    "grounded": [
+      17,
+      23
+    ]
+  }
+}
