@@ -3,7 +3,8 @@
 #
 #   blind.sh start [秒]     Astra を出して待つ
 #   blind.sh shot <名前>    いまの画面を撮る（Astra の窓だけ。他アプリは写さない）
-#   blind.sh click <x> <y>  撮った画像の座標で押す
+#   blind.sh press <x> <y>  撮った画像の座標を**意味として押す**（Vision→AX）
+#   blind.sh click <x> <y>  物理クリック（この環境では届かない。press を使う）
 #   blind.sh key <名前>     ショートカットを送る（opt-space など）
 #   blind.sh stop
 #
@@ -66,13 +67,31 @@ case "${1:-}" in
     screencapture -x -o -l"$wid" "$OUT/$name.png" 2>/dev/null
     echo "$OUT/$name.png"
     ;;
+  press)
+    # **発見は絵、実行だけ AX。**
+    # 物理クリックが届かない環境でも「押す」遷移は試せる。
+    # ここが要素の役割や説明を出すと、絵で気付けないものまで見つけられてしまい、
+    # 発見性の検査が壊れる。だから **座標の解決結果しか返さない**。
+    r="$(cat "$OUT/rect.txt" 2>/dev/null)"; [ -n "$r" ] || { echo "先に shot"; exit 1; }
+    set -- $r "$2" "$3"
+    x=$(python3 -c "print(int($1 + $6))"); y=$(python3 -c "print(int($2 + $7))")
+    out="$("$LAB/axpress" "$x" "$y")"
+    case "$out" in
+      PRESSED*)          echo "PRESSED" ;;
+      NO_PRESS_ACTION*)  echo "NOT_PRESSABLE: そこに押せるものは無い" ;;
+      NO_ELEMENT*)       echo "NOTHING_THERE: そこには要素が無い" ;;
+      *)                 echo "EXECUTION_FAILED: $out" ;;
+    esac
+    sleep 0.6
+    ;;
   click)
     # 届かないクリックを「押した」と記録しない。
     if [ ! -f "$OUT/.click-ok" ]; then
       if selfcheck >/dev/null 2>&1; then touch "$OUT/.click-ok"
       else
-        echo "CLICK_NOT_DELIVERED: この環境では合成クリックが届かない。"
-        echo "  鍵盤だけで進めること。押せないことを製品の欠陥として記録しない。"
+        echo "CLICK_NOT_DELIVERED: この環境では物理クリックが届かない。"
+        echo "  代わりに press を使うこと（押す遷移は試せる）。"
+        echo "  押せないことを製品の欠陥として記録しない。"
         exit 4
       fi
     fi
@@ -92,5 +111,5 @@ case "${1:-}" in
     sleep 0.6; echo "sent"
     ;;
   stop) pkill -9 -f AstraMac 2>/dev/null; echo "stopped" ;;
-  *) echo "usage: blind.sh start|shot|click|key|stop"; exit 2 ;;
+  *) echo "usage: blind.sh start|shot|press|click|key|selfcheck|stop"; exit 2 ;;
 esac

@@ -1,0 +1,8 @@
+{
+  "probed_at": "2026-09-01",
+  "xcodebuild": "/usr/bin/xcodebuild",
+  "version": "Xcode 26.6",
+  "ui_test_target": false,
+  "available": false,
+  "note": "XCUIAutomation は Xcode の UI テスト標的が要る。この repo は Swift Package で .xcodeproj が無いため動かせない。**以後くり返し回避策を探さない**（AX 経路を本線にする）。"
+}
