@@ -1,17 +1,47 @@
 # 採点票。reviews/<あなたの名前>.yaml として複製して使う。
-# 1 明確に悪い / 2 悪い / 3 やや悪い / 4 普通 / 5 良い / 6 非常に良い / 7 卓越している
 #
-# **点だけ書かない。** なぜその点なのかを一行。理由の無い点は直せない。
+# 順番を守る: **R01–R10 を実施 → 観察を書く → 最後に 10 軸へ点を付ける。**
+# 点を先に付けると、観察が点の言い訳になる。
+#
+# 1 明確に悪い / 2 悪い / 3 やや悪い / 4 普通 / 5 良い / 6 非常に良い / 7 卓越している
+# 0 のままの欄は「未回答」として扱われ、ゲートは PASS を出さない。
+
 reviewer: ""            # 名前または識別子
 reviewed_at: ""         # 2026-09-01
 astra_version: "0.1.0"
-blind: false            # 製品名を伏せて見たか（競合比較のときは true にする）
+build: ""               # git のコミット。どの版を触ったかが後で分かるように
+blind: false            # 製品名を伏せて見たか（競合比較のときは true）
 
+# ---- R01–R10（docs/ux-benchmark/qualitative/PROTOCOL.md の手順）----
+#
+# observed: 見えた事実。**答えた言葉そのまま。** 要約しない。
+# stuck:    迷った箇所と秒数。空でよい。無かったなら "なし"。
+# suggest:  こう直せば良くなる、という具体案。空でよい。
+scenarios:
+  R01_first_impression:  { score: 0, observed: "", stuck: "", suggest: "" }
+  R02_voice_discovery:   { score: 0, observed: "", stuck: "", suggest: "" }
+  R03_listening:         { score: 0, observed: "", stuck: "", suggest: "" }
+  R04_agent:             { score: 0, observed: "", stuck: "", suggest: "" }
+  R05_meeting_start:     { score: 0, observed: "", stuck: "", suggest: "" }
+  R06_provenance:        { score: 0, observed: "", stuck: "", suggest: "" }
+  R07_correction:        { score: 0, observed: "", stuck: "", suggest: "" }
+  R08_recovery:          { score: 0, observed: "", stuck: "", suggest: "" }
+  R09_calmness:          { score: 0, observed: "", stuck: "", suggest: "" }
+  R10_preference:        { score: 0, observed: "", stuck: "", suggest: "" }
+
+# R05 は 0 秒 / 10 秒 / 30 秒 の 3 回聞く。答えをそのまま置く。
+r05_timeline:
+  at_0s:  ""
+  at_10s: ""
+  at_30s: ""
+
+# ---- 10 軸（R01–R10 を終えてから付ける）----
+# Critical = 6.0 未満で FAIL。その他 = 5.5 未満で FAIL。
 scores:
   clarity:      { score: 0, why: "" }   # Critical
   calmness:     { score: 0, why: "" }   # Critical
-  continuity:   { score: 0, why: "" }
-  context:      { score: 0, why: "" }
+  continuity:   { score: 0, why: "" }   # Critical
+  context:      { score: 0, why: "" }   # Critical
   trust:        { score: 0, why: "" }   # Critical
   control:      { score: 0, why: "" }   # Critical
   hierarchy:    { score: 0, why: "" }
@@ -19,14 +49,8 @@ scores:
   craft:        { score: 0, why: "" }
   delight:      { score: 0, why: "" }
 
-# 見たもの。何を見ずに付けた点かが分かるようにする。
-saw:
-  - "01-idle"
-  - "02-listening"
-  - "03-task-dock"
-  - "04-meeting"
-  - "05-meeting-notes"
-  - "06-workspace"
+# 毎日使いたいか（R10）。他の軸とは別枠で 6.0 以上が要る。
+daily_use_preference: 0
 
 notes: |
-  気づいたこと。直すべき順に書けるとよい。
+  直すべき順に書く。

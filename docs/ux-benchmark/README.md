@@ -19,14 +19,26 @@
 「UI が良いか」は 1 つの問いではない。**別々に証明する。**
 
 ```
-VISUAL_GATE       造形が崩れていない      2pt / golden / density
-FUNCTIONAL_GATE   動く                    verify:all / 配布物 47 ゲート
-QUALITATIVE_GATE  人が見て良いと言う      10 軸 × 3 人以上
-COMPETITIVE_GATE  競合より良い            同じ課題で 3 製品
+VISUAL_GATE         造形が崩れていない    2pt / golden / density
+FUNCTIONAL_GATE     動く                  verify:all / 配布物 47 ゲート
+QUALITATIVE_UI_GATE 人が触って良いと言う  R01〜R10 → 10 軸 × 3 人
+COMPETITIVE_GATE    競合より良い          同じ課題で 3 製品（実機）
 ```
 
 `bash scripts/gates.sh` でいまの現在地が出る。
 **どれかが未達なら、その上の言い方はしない**（`CLAIMS.md`）。
+
+---
+
+## 0.1 三段で進む
+
+```
+Level 1  公開素材の比較     いまできる。画面に写るものだけ（EVIDENCE.md）
+Level 2  人の定性評価       R01〜R10 を 3 人（qualitative/PROTOCOL.md）← いまここ
+Level 3  実機の競合比較     競合を動かせてから
+```
+
+設計の拠り所は `../ASTRA_UX_PRINCIPLES.md` の 6 原則。
 
 ---
 

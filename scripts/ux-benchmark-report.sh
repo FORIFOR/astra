@@ -16,7 +16,18 @@ printf "%-6s %-26s %-10s %-10s %-10s\n" "ID" "課題" "Astra" "VoiceOS" "SuperIn
 printf "%-6s %-26s %-10s %-10s %-10s\n" "----" "------------------------" "--------" "--------" "-----------"
 
 astra_measured=0; astra_success=0
-competitor_have=0
+competitor_have=0; public_only=0
+
+# その製品のその Journey に、どの格の素材があるか。
+#   実機     handson/ にある → 速度・焦点・成功率まで比べてよい
+#   公開のみ public/ にある  → 画面に写るものだけ。速度は出せない
+#   未取得   何も無い
+evidence() {
+  local prod="$1" j="$2"
+  if [ -n "$(ls "$BENCH/$prod/handson/${j}"* 2>/dev/null)" ]; then echo "実機"
+  elif [ -n "$(ls "$BENCH/$prod/public/${j}"* 2>/dev/null)" ]; then echo "公開のみ"
+  else echo "未取得"; fi
+}
 
 for j in $JOURNEYS; do
   title="$(sed -n '1s/^# *//p' "$BENCH/journeys/${j}-"*.md 2>/dev/null | head -1)"
@@ -31,16 +42,28 @@ for j in $JOURNEYS; do
     if [ "$ok" = "True" ]; then a="${ms}ms"; astra_success=$((astra_success+1)); else a="失敗"; fi
   fi
 
-  v="未取得"; s="未取得"
-  [ -n "$(ls "$BENCH/voiceos/${j}"* 2>/dev/null)" ] && { v="取得済"; competitor_have=$((competitor_have+1)); }
-  [ -n "$(ls "$BENCH/superintern/${j}"* 2>/dev/null)" ] && { s="取得済"; competitor_have=$((competitor_have+1)); }
+  # 公開素材と実機素材を**分けて数える**。公開素材からは速度・焦点・成功率を
+  # 出せないので、それを「取得済」と同じ扱いにすると、公式サイトの 1 枚が
+  # 実測に化ける（docs/ux-benchmark/EVIDENCE.md）。
+  v="$(evidence voiceos "$j")"; s="$(evidence superintern "$j")"
+  [ "$v" = "実機" ] && competitor_have=$((competitor_have+1))
+  [ "$s" = "実機" ] && competitor_have=$((competitor_have+1))
+  [ "$v" = "公開のみ" ] && public_only=$((public_only+1))
+  [ "$s" = "公開のみ" ] && public_only=$((public_only+1))
 
   printf "%-6s %-26s %-10s %-10s %-10s\n" "$j" "$(echo "$title" | cut -c1-24)" "$a" "$v" "$s"
 done
 
 echo
 echo "Astra: ${astra_measured}/10 計測・${astra_success} 完遂"
-echo "競合:  ${competitor_have} 件取得"
+echo "競合:  実機 ${competitor_have} 件 / 公開のみ ${public_only} 件"
+if [ "$public_only" -gt 0 ]; then
+  echo
+  echo "  公開素材からは **速度・焦点を奪ったか・完遂したか・操作数・初回成功率** を出さない。"
+  echo "  公式素材は最良の撮り直しなので、そこから所要時間を読むと必ず有利に出る。"
+  echo "  比べてよいのは、情報階層・Density・Surface 設計・画面占有率・状態の見え方・"
+  echo "  Action visibility・空状態・Confirmation・Canvas 構成（docs/ux-benchmark/EVIDENCE.md）。"
+fi
 echo
 
 # ---- SUPERIOR_GATE ----
@@ -53,11 +76,15 @@ if [ "$competitor_have" -eq 0 ]; then
   「Astra のほうが優れている」は競合と比べて初めて言えることなので、
   ここで「合格」と出すのは、確かめていないことを確かめたと言うことになる。
 
-  必要なもの:
-    docs/ux-benchmark/voiceos/      V01… + metadata.yaml
-    docs/ux-benchmark/superintern/  S01… + metadata.yaml
+  必要なもの（**実機**。公開素材ではこのゲートは通らない）:
+    docs/ux-benchmark/voiceos/handson/      J01… + metadata.yaml
+    docs/ux-benchmark/superintern/handson/  J01… + metadata.yaml
   静止画だけでなく、状態が変わる Journey は .mp4 も。
   アシスタントはこの 2 製品を入手できないので、ここは人が撮る。
+
+  公開素材だけで先に進める分（Level 1）は別にある:
+    docs/ux-benchmark/<製品>/public/ + sources.md
+  こちらは画面に写るものだけを比べる。速度・焦点・成功率は出さない。
 
 SUPERIOR_GATE=UNDETERMINED（競合未取得）
 EOF
