@@ -12,11 +12,11 @@
     "kill -9 を挟んだ全体（別スクリプトで実施）"
   ],
   "product" : "Astra",
-  "startedAt" : "2026-09-01T01:50:39Z",
+  "startedAt" : "2026-09-01T02:30:18Z",
   "steps" : [
     {
       "interactions" : 1,
-      "ms" : 1095,
+      "ms" : 1048,
       "name" : "録音中"
     },
     {
@@ -26,6 +26,6 @@
     }
   ],
   "success" : true,
-  "totalMs" : 1546,
+  "totalMs" : 1495,
   "windowsOpened" : 0
 }

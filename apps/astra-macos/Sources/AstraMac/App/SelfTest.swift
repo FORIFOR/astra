@@ -1268,10 +1268,17 @@ enum SelfTest {
             WindowCoordinator.shared.showRecordingWorkspace(); settle(1.0)
             rec.step("会議の面を開く", interactions: 1, opensWindow: true)
             rec.shot("01-start")
-            // 開始直後に何が出ているか。ここが白紙だと SuperIntern に負ける。
-            let canvasAtStart = store.state.meeting.canvas
-            if canvasAtStart.isEmpty {
-                rec.error("開始直後に出せるものが無い（白紙）")
+            // 開始直後の**画面**が空かを見る。canvas が空なのは開始時は当然で、
+            // それを「白紙」と呼ぶと、何を出しても直らない検査になる（実際そうなっていた）。
+            // 撮った絵の地の割合で見る。会議の素性・聞こえていること・待っている状態が
+            // 出ていれば、拾えたものが無くても空ではない。
+            let startShot = "\(outDir)/01-start.png"
+            if let blank = SelfTest.emptiness(startShot) {
+                rec.step("開始 0 秒の画面", interactions: 0,
+                         note: String(format: "地 %.1f%%", blank))
+                if blank > 90 { rec.error(String(format: "開始直後の画面が白紙に近い（地 %.1f%%）", blank)) }
+            } else {
+                rec.cannotMeasure("開始直後の画面を測れない")
             }
             MeetingIntelligence.shared.ingest([
                 CanvasItem("導入時期は 10 月で行きます", at: 12, speaker: "田中"),
@@ -1423,6 +1430,37 @@ enum SelfTest {
             print("SELFTEST_FAIL upgrade: \(fail.joined(separator: ", "))")
             exit(2)
         }
+    }
+
+    /// 1 枚の絵の「地の割合」。最も多い色が画面のどれだけを占めるか（%）。
+    /// 高いほど、開いているのに何も返していない画面。
+    static func emptiness(_ path: String) -> Double? {
+        guard let data = FileManager.default.contents(atPath: path),
+              let rep = NSBitmapImageRep(data: data) else { return nil }
+        var counts: [UInt32: Int] = [:]
+        var pts: [UInt32] = []
+        let pw = rep.pixelsWide, ph = rep.pixelsHigh
+        let step = max(1, min(pw, ph) / 220)
+        var y = 0
+        while y < ph { var x = 0
+            while x < pw {
+                if let c = rep.colorAt(x: x, y: y) {
+                    let r = UInt32(max(0, min(255, c.redComponent * 255)))
+                    let g = UInt32(max(0, min(255, c.greenComponent * 255)))
+                    let b = UInt32(max(0, min(255, c.blueComponent * 255)))
+                    let key = (r << 16) | (g << 8) | b
+                    pts.append(key); counts[key, default: 0] += 1
+                }
+                x += step }
+            y += step }
+        guard let bg = counts.max(by: { $0.value < $1.value })?.key, !pts.isEmpty else { return nil }
+        let br = Int((bg >> 16) & 255), bgc = Int((bg >> 8) & 255), bb = Int(bg & 255)
+        var same = 0
+        for p in pts {
+            let r = Int((p >> 16) & 255), g = Int((p >> 8) & 255), b = Int(p & 255)
+            if abs(r - br) + abs(g - bgc) + abs(b - bb) <= 12 { same += 1 }
+        }
+        return Double(same) / Double(pts.count) * 100
     }
 
     /// 撮った面のうち、実質同じ絵になっている組。

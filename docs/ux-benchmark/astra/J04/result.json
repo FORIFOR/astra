@@ -13,7 +13,7 @@
     "検出までの時間（実際の会議アプリが要る）"
   ],
   "product" : "Astra",
-  "startedAt" : "2026-09-01T01:50:26Z",
+  "startedAt" : "2026-09-01T02:30:05Z",
   "steps" : [
     {
       "interactions" : 0,
@@ -23,12 +23,12 @@
     },
     {
       "interactions" : 1,
-      "ms" : 1242,
+      "ms" : 1231,
       "name" : "録音開始",
       "note" : "利用者が始める"
     }
   ],
   "success" : true,
-  "totalMs" : 2373,
+  "totalMs" : 2364,
   "windowsOpened" : 0
 }

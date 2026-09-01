@@ -29,6 +29,8 @@ struct HomeView: View {
     @State private var pluginCount = 0
     /// 復旧を押したあとの返事。押して何も起きないように見せない。
     @State private var recoverNote = ""
+    /// ⌥Space の許可を求めたあとか。求めた直後は、次にどこを見ればよいか言う。
+    @State private var inputMonitoringAsked = false
     @ObservedObject private var voice = VoiceHUDState.shared
     @ObservedObject private var store = AstraStateStore.shared
     @ObservedObject private var sessions = MeetingSessionStore.shared
@@ -131,9 +133,38 @@ struct HomeView: View {
                             .font(.system(size: S.type(TypeScale.bodySize), weight: .medium))
                             .foregroundStyle(Palette.text(dark))
                         // 次にすることを 1 つだけ書く。説明はしない。
-                        Text("⌥Space でどこからでも始められます")
-                            .font(.system(size: S.type(TypeScale.secondarySize)))
-                            .foregroundStyle(Palette.muted(dark))
+                        //
+                        // ただし ⌥Space が**実際に効かない**なら、そう言わない。
+                        // 効かせるための許可は、この案内を押したときに求める
+                        // —— 起動した瞬間に出すと、まだ何も使っていない人に
+                        // 判断を迫ることになる（Apple も、機能を使う瞬間まで
+                        // 待つよう勧めている）。
+                        if Permissions.inputMonitoring == .granted {
+                            Text("⌥Space でどこからでも始められます")
+                                .font(.system(size: S.type(TypeScale.secondarySize)))
+                                .foregroundStyle(Palette.muted(dark))
+                        } else {
+                            Button {
+                                Permissions.requestInputMonitoring()
+                                inputMonitoringAsked = true
+                            } label: {
+                                HStack(spacing: 5) {
+                                    Text("⌥Space を使えるようにする")
+                                    Image(systemName: "arrow.right")
+                                        .font(.system(size: 10, weight: .semibold))
+                                }
+                                .font(.system(size: S.type(TypeScale.secondarySize), weight: .medium))
+                                .foregroundStyle(Palette.accent(dark))
+                                .frame(height: 28)
+                            }
+                            .buttonStyle(AstraControlStyle(radius: 7, base: 0.0))
+                            .accessibilityIdentifier("askInputMonitoring")
+                            if inputMonitoringAsked {
+                                Text("システム設定で Astra を許可してください")
+                                    .font(.system(size: S.type(TypeScale.microSize)))
+                                    .foregroundStyle(Palette.muted(dark))
+                            }
+                        }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }

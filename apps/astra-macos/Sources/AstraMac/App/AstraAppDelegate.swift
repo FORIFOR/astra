@@ -50,14 +50,10 @@ final class AstraAppDelegate: NSObject, NSApplicationDelegate {
         // グローバル音声ショートカット（⌥Space）で録音を出し入れする。
         // CGEventTap（正本指定）で受信する。Accessibility 権限を使う（§3 と共用）。
         if !GlobalShortcut.shared.register(handler: { WindowCoordinator.shared.toggleRecording() }) {
-            // 入力監視（Input Monitoring）が無いと tap にイベントが 1 つも届かない。
-            // **一度も要求していなかったので、誰も ⌥Space を使えなかった。**
-            // 許可のダイアログは OS が 1 回だけ出す（以後は黙って false が返る）。
-            // 端末から実行していたときは責任プロセス（ターミナル）の許可を継いで
-            // いたので、この穴が見えていなかった。
-            if Permissions.inputMonitoring != .granted {
-                Permissions.requestInputMonitoring()
-            }
+            // **ここでは求めない。** 起動した瞬間にダイアログを出すと、まだ何も
+            // 使っていない人に判断を迫ることになる。⌥Space を案内している場所
+            // （Home の空状態）で、押されたときに求める。
+            // 許可が無いこと自体は状態として持ち、画面がそれを見る。
             NSLog("astra: ⌥Space を登録できない（入力監視の許可が要る）")
         }
         // 前回落ちたまま残っている録音があれば知らせる（§3 meeting recovery）。

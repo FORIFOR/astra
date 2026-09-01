@@ -160,21 +160,24 @@ private struct MeetingNotesCanvas: View {
 
     var body: some View {
         let canvas = store.state.meeting.canvas
+        let session = MeetingSessionStore.shared.live
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
-                Text(store.state.meeting.detectedApp ?? "会議のノート")
-                    .font(.system(size: 24, weight: .semibold))
-                    .foregroundStyle(Palette.text(dark))
-                if canvas.isEmpty {
-                    Text("聞きながら、決まったこと・やること・宿題・懸念をここに書いていきます。")
-                        .font(.system(size: 15))
-                        .foregroundStyle(Palette.muted(dark))
-                } else {
-                    group("決まったこと", canvas.decisions)
-                    group("やること", canvas.actions)
-                    group("宿題", canvas.questions)
-                    group("懸念", canvas.concerns)
-                }
+                // **開始 0 秒から空にしない。**
+                //
+                // 拾えたものが無いうちは白紙だった。会議が始まった直後こそ
+                // 「ちゃんと聞いているのか」が不安になるところなので、いちばん悪い。
+                // 会議の素性・いま聞こえていること・何を待っているかを出す。
+                // ただし**偽の skeleton は置かない**。無いものは「待っています」と言う。
+                header(session)
+                liveLine
+                Divider().overlay(Palette.border(dark))
+                group("決まったこと", canvas.decisions,
+                      waiting: "決まったことを待っています…")
+                group("やること", canvas.actions,
+                      waiting: "やることを待っています…")
+                if !canvas.questions.isEmpty { group("宿題", canvas.questions, waiting: nil) }
+                if !canvas.concerns.isEmpty { group("懸念", canvas.concerns, waiting: nil) }
                 Spacer(minLength: 0)
             }
             .padding(24)
@@ -190,8 +193,62 @@ private struct MeetingNotesCanvas: View {
         .accessibilityIdentifier("meetingNotes")
     }
 
-    @ViewBuilder private func group(_ title: String, _ lines: [CanvasItem]) -> some View {
-        if !lines.isEmpty {
+    /// 会議の素性。題・出所・人数は、拾う前から分かっている。
+    @ViewBuilder private func header(_ session: MeetingSession?) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(session?.title ?? store.state.meeting.detectedApp ?? "会議")
+                .font(.system(size: 24, weight: .semibold))
+                .foregroundStyle(Palette.text(dark))
+            HStack(spacing: 12) {
+                if let src = session?.source ?? store.state.meeting.detectedApp {
+                    Label(src, systemImage: "video")
+                        .font(.system(size: 12)).foregroundStyle(Palette.muted(dark))
+                }
+                if let n = session?.participantCount, n > 0 {
+                    Label("\(n) 人", systemImage: "person.2")
+                        .font(.system(size: 12)).foregroundStyle(Palette.muted(dark))
+                }
+                if let link = session?.calendarEventId, !link.isEmpty {
+                    Label("予定から", systemImage: "calendar")
+                        .font(.system(size: 12)).foregroundStyle(Palette.muted(dark))
+                }
+            }
+        }
+    }
+
+    /// いま聞こえていること。ここが動いていれば「聞いている」と分かる。
+    @ViewBuilder private var liveLine: some View {
+        if let last = state.transcript.last {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text(last.speaker)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(Palette.accent(dark))
+                Text(last.text)
+                    .font(.system(size: 15))
+                    .foregroundStyle(last.interim ? Palette.muted(dark) : Palette.text(dark))
+                    .lineLimit(2)
+            }
+        } else {
+            Label("聞いています…", systemImage: "waveform")
+                .font(.system(size: 13))
+                .foregroundStyle(Palette.muted(dark))
+        }
+    }
+
+    @ViewBuilder private func group(_ title: String, _ lines: [CanvasItem],
+                                    waiting: String?) -> some View {
+        if lines.isEmpty, let waiting {
+            // 何も無いことを隠さない。**偽の skeleton は置かない。**
+            VStack(alignment: .leading, spacing: 7) {
+                Text(title)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(Palette.muted(dark))
+                    .tracking(0.4)
+                Text(waiting)
+                    .font(.system(size: 14))
+                    .foregroundStyle(Palette.muted(dark).opacity(0.7))
+            }
+        } else if !lines.isEmpty {
             VStack(alignment: .leading, spacing: 7) {
                 Text(title)
                     .font(.system(size: 12, weight: .semibold))

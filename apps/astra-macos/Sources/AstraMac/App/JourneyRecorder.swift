@@ -102,10 +102,15 @@ final class JourneyRecorder {
     func cannotMeasure(_ what: String) { result.notMeasured.append(what) }
 
     /// いまの画面を 1 枚撮る。
+    ///
+    /// **いちばん大きい窓**を撮る。「最初に見つかった窓」にすると、常駐している
+    /// Dock（820x76）を撮ってしまい、会議の面を測っているつもりで Dock を
+    /// 測っていた（開始直後の白紙を測ろうとして、地 91.9% と出たのがそれ）。
     @discardableResult
     func shot(_ name: String) -> Bool {
         let path = "\(outDir)/\(name).png"
-        guard let win = NSApp.windows.first(where: { $0.isVisible }),
+        guard let win = NSApp.windows.filter(\.isVisible)
+                .max(by: { $0.frame.width * $0.frame.height < $1.frame.width * $1.frame.height }),
               let cg = CGWindowListCreateImage(
                 .null, .optionIncludingWindow, CGWindowID(win.windowNumber),
                 [.boundsIgnoreFraming, .bestResolution]),
