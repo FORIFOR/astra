@@ -1230,6 +1230,9 @@ enum SelfTest {
         let i = args.firstIndex(of: "--selftest")
         let secs = Double(i.map { args.count > $0 + 2 ? args[$0 + 2] : "" } ?? "") ?? 300
         _ = GlobalShortcut.shared.register(handler: { WindowCoordinator.shared.toggleRecording() })
+        // **ここでは音の経路を作らない。** `silent` は音ゼロの状態を作る口で、
+        // ここで「音が来ている」ことにすると、矛盾の検査が条件を通らなくなる
+        // （実際、一度そうなって歯止めが素通りした）。
         RecordingWorkspaceState.shared.start()
 
         // `silent` は**音も発話も無い**状態で置く。矛盾（「聞いています…」と
@@ -1304,6 +1307,11 @@ enum SelfTest {
         guard args.count > i + 3 else { print("SELFTEST_FAIL journey: 引数が足りない"); exit(2) }
         let id = args[i + 2], outDir = args[i + 3]
 
+        // 音の経路も本番と同じにする。検査には音が流れないので、そのままだと
+        // 「音が届いていません」という異常時の姿を採点することになる。
+        RecordingRuntime.shared.markListening(.localUser)
+        RecordingRuntime.shared.markListening(.remoteAudio)
+
         // 本番と同じ状態で測る。ショートカットを登録しないまま撮ると、待機中の
         // HUD が「登録できていないときの姿」になる。**仕掛けと本番を揃える作業は
         // これで 4 回目**なので、Journey 全体の入口でやる。
@@ -1345,12 +1353,6 @@ enum SelfTest {
         case "J05":   // 会議中の Live Notes
             WindowCoordinator.shared.showVoiceHUD()
             recording.start(); settle(0.8)
-            // 実際の録音では音の callback が経路を記録する。この検査には音が
-            // 流れないので、同じ入口を呼んで**普通に録れている姿**にする。
-            // ここを省くと「音が届いていません」の画面を採点することになる。
-            RecordingRuntime.shared.markListening(.localUser)
-            RecordingRuntime.shared.markListening(.remoteAudio)
-            settle(0.3)
             rec.begin()
             WindowCoordinator.shared.showRecordingWorkspace(); settle(1.0)
             rec.step("会議の面を開く", interactions: 1, opensWindow: true)

@@ -25,7 +25,10 @@ struct TaskDockView: View {
                 .background(VisualEffectView(material: .hudWindow).clipShape(Capsule()))
         }
         .overlay(Capsule().stroke(.white.opacity(0.1), lineWidth: 0.5))
-        .shadow(color: .black.opacity(0.27), radius: 14, y: 5)
+        // continuity-bad: 濃い影で浮かせ、別の窓のように見せる。
+        .shadow(color: .black.opacity(Fixture.current == .continuityBad ? 0.6 : 0.27),
+                radius: Fixture.current == .continuityBad ? 30 : 14,
+                y: Fixture.current == .continuityBad ? 16 : 5)
         .accessibilityIdentifier("taskDock")
     }
 }

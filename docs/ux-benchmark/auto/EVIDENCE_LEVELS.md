@@ -44,3 +44,44 @@ listening     いま聞いていることが見えていること
 confirmation  押せる操作が見えていること
 expanded      中身が使えること
 ```
+
+## VISUAL_JUDGE_VALIDITY の結果（trust）
+
+fixture 8 枚（good 3 / bad 3 / edge 2）を、実際の Astra から撮って乱数 ID を付け、
+正解を伏せて Judge 3 体に出した。
+
+```
+                        結果      条件
+対比較の正答率           66.7%    >= 90%   ✗
+known-good 平均          5.56     >= 5.8   ✗
+known-bad 平均           4.33     <= 4.2   ✗
+分離                     +1.22    >= 1.5   ✗
+Judge 間の最大ばらつき    1.63     <= 0.6   ✗
+左右を入れ替えた一致      100%     >= 90%   ✓
+根拠が画面に在る割合      100%     >= 85%   ✓
+画面に無い根拠            1.2%     <= 5%    ✓
+
+VISUAL_JUDGE_VALIDITY(trust) = FAIL → Evidence C のまま
+```
+
+決め手は 1 枚。**出所が全部揃った素直な good を、3 体が 4 / 2 / 6 と割った。**
+迷う余地の小さい絵で 4 点の開きが出るなら、この採点者の 4.0 を根拠に
+UI を直すことはできない。
+
+同時に、判定器の側にも誤りが 2 つあった（どちらも直した）:
+- 「作り話」を丸ごとの一致で見ており、OCR が別行に分けた 1 行を Judge が
+  繋いで書いただけで作り話と判定していた（23.3% → 1.2%）。
+- fixture が別の欠陥で汚れていた。見出しと本文が同じことを二重に言い、
+  片方が赤字で出ていた（**それ自体が本物の欠陥だったので直した**）。
+
+### いま言えること
+
+```
+trust 4.0        [UNVALIDATED / Evidence C]  ← 製品の点ではない
+continuity 4.5   [UNVALIDATED / Evidence C]
+delight 3.0      [UNVALIDATED / Evidence C]
+
+AUTO_QUALITATIVE_GATE = BLOCKED_BY_UNVALIDATED_JUDGE
+```
+
+**製品の FAIL ではない。採点者がまだ検証されていない。**

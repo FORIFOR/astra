@@ -28,7 +28,10 @@ final class RecordingRuntime {
     /// 検査だけ別経路にすると、検査が本番と違う姿を測ることになる。
     func markListening(_ ch: SpeakerChannel) {
         guard !listening.contains(ch) else { return }
-        DispatchQueue.main.async { self.listening.insert(ch) }
+        // 既に main なら**その場で**入れる。async に回すと、検査が撮る頃には
+        // まだ反映されておらず「音が届いていません」の姿を撮ってしまう。
+        if Thread.isMainThread { listening.insert(ch) }
+        else { DispatchQueue.main.async { self.listening.insert(ch) } }
     }
     private var mic: MicCapture?
     private var sysAudio: AnyObject?

@@ -1,0 +1,119 @@
+{
+  "absolute": {
+    "6C7D": 7,
+    "1017": 5,
+    "1A98": 6,
+    "FEDA": 5,
+    "F26E": 4,
+    "1AD7": 4,
+    "1D9E": 2,
+    "04EC": 2
+  },
+  "pairwise": {
+    "P1": "6C7D",
+    "P2": "6C7D",
+    "P3": "1017",
+    "P4": "1017",
+    "P5": "1A98",
+    "P6": "1A98"
+  },
+  "localization": [
+    {
+      "image": "1017",
+      "observation": "Expanded view shows \"直す これは違う\" annotation options without clear speaker or timestamp context",
+      "inference": "User markup appears without visible connection to source audio; interaction history is present but origin traceability is obscured",
+      "confidence": 0.8
+    },
+    {
+      "image": "FEDA",
+      "observation": "Memo section items \"macOS を先に出します\" and \"オンボーディングを試作する\" shown as text without timestamps or speaker names in left panel",
+      "inference": "Extracted items lack visible source attribution; right panel has chat but connection is not obvious",
+      "confidence": 0.9
+    },
+    {
+      "image": "F26E",
+      "observation": "Bullets \"· macOS を先に出します\" and \"· オンボーディングを試作する\" appear without any timestamp or speaker name attribution",
+      "inference": "Critical TRUST failure—extracted items have no visible origin information, making verification against source impossible",
+      "confidence": 0.95
+    },
+    {
+      "image": "1AD7",
+      "observation": "Items \"導入時期は 10 月で行きます\" and \"見積は明日までにお願いします\" shown as bullets with no timestamps or speaker attribution visible",
+      "inference": "Items are extracted but their source (who said it, when) is not linked in the UI",
+      "confidence": 0.85
+    },
+    {
+      "image": "1D9E",
+      "observation": "All content areas show placeholder text \"決まったことを待っています...\" and \"やることを待っています...\" with no actual extracted notes",
+      "inference": "No notes extracted; empty state prevents any trust evaluation",
+      "confidence": 0.95
+    },
+    {
+      "image": "04EC",
+      "observation": "Identical to 1D9E—placeholder text \"決まったことを待っています...\" with no extracted content visible",
+      "inference": "No extracted notes present; cannot establish trust in empty state",
+      "confidence": 0.95
+    }
+  ],
+  "visible_text": {
+    "6C7D": [
+      "07:18の会議",
+      "マイクと画面の音を聞いています",
+      "Ken Windows は次の周で迎えいます。",
+      "18:42 Ken macOS を先に出します",
+      "14:21 Sarah オンボーディングを試作する",
+      "AI が見ている資料 — まだありません"
+    ],
+    "1017": [
+      "07:18の会議",
+      "Ken Windows は次の周で迎えいます。",
+      "決まったことを待っています...",
+      "やることを待っています...",
+      "直す これは違う",
+      "18:30 Sarah Windows はいつ出しますか。"
+    ],
+    "1A98": [
+      "07:18の会議",
+      "マイクと画面の音を聞いています",
+      "08:12 田中 導入時期は 10 月で行きます",
+      "00:31 あなた 見積は明日までにお願いします",
+      "まだ発話がありません。"
+    ],
+    "FEDA": [
+      "07:18の会議",
+      "Ken Windows は次の周で迎えいます。",
+      "決まったことを待っています...",
+      "やることを待っています...",
+      "macOS を先に出します",
+      "オンボーディングを試作する"
+    ],
+    "F26E": [
+      "07:18の会議",
+      "Ken Windows は次の周で迎えいます。",
+      "決まったことを待っています...",
+      "· macOS を先に出します",
+      "· オンボーディングを試作する"
+    ],
+    "1AD7": [
+      "07:19の会議",
+      "マイクと画面の音を聞いています",
+      "聞いています...",
+      "· 導入時期は 10 月で行きます",
+      "· 見積は明日までにお願いします"
+    ],
+    "1D9E": [
+      "07:19の会議",
+      "マイクと画面の音を聞いています",
+      "聞いています...",
+      "決まったことを待っています...",
+      "やることを待っています..."
+    ],
+    "04EC": [
+      "07:19の会議",
+      "マイクと画面の音を聞いています",
+      "聞いています...",
+      "決まったことを待っています...",
+      "やることを待っています..."
+    ]
+  }
+}

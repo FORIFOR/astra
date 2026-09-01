@@ -1,0 +1,19 @@
+{
+  "dimension": "trust",
+  "pairwise_accuracy": 66.7,
+  "separation": 1.22,
+  "orientation_consistency": 100.0,
+  "localization": 100.0,
+  "hallucinated": 1.2,
+  "max_stddev": 1.63,
+  "good_mean": 5.56,
+  "bad_mean": 4.33,
+  "passed": false,
+  "failed_checks": [
+    "対比較 >= 90%",
+    "分離 >= 1.5",
+    "ばらつき <= 0.6",
+    "known-good >= 5.8",
+    "known-bad <= 4.2"
+  ]
+}

@@ -38,6 +38,13 @@ for jdir in sorted(glob.glob(os.path.join(ROOT, "J*"))):
         if a in per_axis:
             per_axis[a].append((j, v["median"], v["stddev"]))
 
+# Judge がまだ検証されていない軸は、点を出しても**製品の FAIL とは言わない**。
+# 製品の欠陥と測定系の未整備を混ぜないため（EVIDENCE_LEVELS.md）。
+VALID = {}
+for f in glob.glob("docs/ux-benchmark/auto/judge-fixtures/*/results/validity.json"):
+    v = json.load(open(f))
+    VALID[v["dimension"]] = v.get("passed", False)
+
 print("== AUTO_QUALITATIVE_GATE ==\n")
 if not per_journey:
     print("  採点済みの Journey が 0。")
@@ -61,7 +68,11 @@ for a in axes:
     summary[a] = med
     worst_sd = max((sd for _, _, sd in per_axis[a]), default=0)
     mark = ""
-    if med < FLOORS[a]:
+    validated = VALID.get(a, False)
+    if not validated:
+        # Evidence C。見るだけ。
+        mark = "  [UNVALIDATED / Evidence C]"
+    elif med < FLOORS[a]:
         fail.append(f"{a} が {med:.1f}（床 {FLOORS[a]}）"); mark = "  未達"
     if worst_sd > MAX_SD:
         wide.append(f"{a} の Judge がばらついた（stddev {worst_sd:.2f} > {MAX_SD}）")
@@ -132,6 +143,13 @@ print()
 for w in wide: print("  注意:", w)
 if fail:
     for f in fail: print("  未達:", f)
+    unvalidated = [a for a in axes if not VALID.get(a, False)]
+    if unvalidated:
+        print("\nAUTO_QUALITATIVE_GATE=BLOCKED_BY_UNVALIDATED_JUDGE")
+        print("  検証済みでない軸: " + ", ".join(unvalidated))
+        print("  → 製品の FAIL ではない。**採点者がまだ検証されていない。**")
+        print("     scripts/ux-auto/judge-validity.py <軸> を通してから判定する。")
+        sys.exit(1)
     print("\nAUTO_QUALITATIVE_GATE=FAIL")
     # 次に直すもの: 床からの不足がいちばん大きい軸。
     gaps = sorted(((FLOORS[a] - m, a, m) for a, m in summary.items() if m < FLOORS[a]),

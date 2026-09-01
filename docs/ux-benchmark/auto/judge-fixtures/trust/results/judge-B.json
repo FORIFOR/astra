@@ -1,0 +1,20 @@
+{"absolute": {"6C7D":6,"1017":7,"1A98":2,"FEDA":6,"F26E":7,"1AD7":3,"1D9E":5,"04EC":5},
+ "pairwise": {"P1":"tie","P2":"tie","P3":"tie","P4":"tie","P5":"1AD7","P6":"1AD7"},
+ "localization": [
+   {"image":"1A98","observation":"Under 決まったこと the item reads \"00:12  田中  導入時期は 10 月で行きます\" with byline \"田中・00:12・出所 ›\", but the recording indicator at top-left shows elapsed time \"00:03\" and the transcript pane on the right reads \"まだ発話がありません。\" (no utterances yet)","inference":"An extracted item is timestamped later (00:12) than the current recording position (00:03), and the transcript that would back it up shows nothing at all — the 出所 (source) link looks like a verification affordance but there is no transcript content for it to point to, making the attribution look fabricated rather than traceable","confidence":0.8},
+   {"image":"1A98","observation":"Under やること the item reads \"00:31  あなた  見積は明日までにお願いします\" with byline \"あなた・00:31・出所 ›\", again while the transcript pane still shows \"まだ発話がありません。\" and elapsed time is 00:03","inference":"Same impossible-timestamp problem repeats for a second item, reinforcing that the shown provenance (speaker + timestamp + 出所 link) cannot actually be checked against any real transcript content, undermining trust in the whole attribution mechanism","confidence":0.8},
+   {"image":"1AD7","observation":"Under 決まったこと the item \"導入時期は 10 月で行きます\" is rendered as a plain bullet with only a chevron (⌄) — no speaker name, no timestamp, and no visible \"出所\" link, unlike the メモ items in 6C7D/FEDA which show \"Ken・10:42・出所 ›\"","inference":"No origin information is visible for this decided item, so a viewer cannot tell who said it or when, nor is there a visible link to verify it against the transcript","confidence":0.7},
+   {"image":"1AD7","observation":"Under やること the item \"見積は明日までにお願いします\" is likewise shown as a bare bullet with a chevron and no name/timestamp/出所 text","inference":"Same lack of visible attribution for the action item; the chevron may expand to something, but nothing about origin or verification is shown in this state","confidence":0.65},
+   {"image":"1D9E","observation":"決まったこと shows only the placeholder \"決まったことを待っています…\" and やること shows only \"やることを待っています…\", while the transcript pane reads \"まだ発話がありません。\"","inference":"No items are extracted yet, so there is nothing with false or unverifiable attribution — this is consistent with the empty transcript, but it also means there is no positive evidence of a working source/verification mechanism to judge","confidence":0.6},
+   {"image":"04EC","observation":"決まったこと shows only the placeholder \"決まったことを待っています…\" and やること shows only \"やることを待っています…\", while the transcript pane reads \"まだ発話がありません。\" — identical to 1D9E","inference":"Same neutral empty state as 1D9E: no false claims are visible, but no verifiable extracted item is shown either","confidence":0.6}
+ ],
+ "visible_text": {
+   "6C7D": ["07:18 の会議", "Ken  Windows は次の周で追います。", "決まったことを待っています…", "やることを待っています…", "メモ", "10:42  Ken  macOS を先に出します", "Ken・10:42・出所 ›", "14:21  Sarah  オンボーディングを試作する"],
+   "1017": ["07:18 の会議", "10:42  Ken  macOS を先に出します", "Ken・10:42・出所 ›", "10:30  Sarah  Windows はいつ出しますか。", "10:55  Ken  Windows は次の周で追います。", "直す", "これは違う"],
+   "1A98": ["07:18 の会議", "聞いています…", "まだ発話がありません。", "決まったこと", "00:12  田中  導入時期は 10 月で行きます", "田中・00:12・出所 ›", "やること", "00:31  あなた  見積は明日までにお願いします"],
+   "FEDA": ["07:18 の会議", "Ken  Windows は次の周で追います。", "決まったことを待っています…", "やることを待っています…", "メモ", "10:42  Ken  macOS を先に出します", "Ken・10:42・出所 ›", "14:21  Sarah  オンボーディングを試作する"],
+   "F26E": ["07:18 の会議", "10:42  Ken  macOS を先に出します", "Ken・10:42・出所 ›", "10:30  Sarah  Windows はいつ出しますか。", "10:55  Ken  Windows は次の周で追います。", "直す", "これは違う"],
+   "1AD7": ["07:19 の会議", "聞いています…", "まだ発話がありません。", "決まったこと", "導入時期は 10 月で行きます", "やること", "見積は明日までにお願いします"],
+   "1D9E": ["07:19 の会議", "聞いています…", "まだ発話がありません。", "決まったこと", "決まったことを待っています…", "やること", "やることを待っています…"],
+   "04EC": ["07:19 の会議", "聞いています…", "まだ発話がありません。", "決まったこと", "決まったことを待っています…", "やること", "やることを待っています…"]
+ }}

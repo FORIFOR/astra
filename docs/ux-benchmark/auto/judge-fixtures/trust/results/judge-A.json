@@ -1,0 +1,21 @@
+{"absolute": {"6C7D":6,"1017":7,"1A98":4,"FEDA":3,"F26E":5,"1AD7":2,"1D9E":5,"04EC":5},
+ "pairwise": {"P1":"6C7D","P2":"6C7D","P3":"1017","P4":"1017","P5":"1A98","P6":"1A98"},
+ "localization": [
+   {"image":"1A98","observation":"決まったこと section shows \"00:12 田中 導入時期は10月で行きます\" with a caption \"田中 · 00:12 · 出所 ›\", while the right-hand transcript panel reads \"まだ発話がありません。\" and the recorder shows \"録音中 00:03\" — only 3 seconds elapsed.","inference":"The attributed timestamp (00:12) cannot exist yet given only 00:03 of recording and an empty transcript, so the claimed source for this item cannot actually be verified even though a 出所 link is shown.","confidence":0.75},
+   {"image":"FEDA","observation":"The メモ section lists items as plain bullets, \"・macOS を先に出します\" and \"・オンボーディングを試作する\", with only a chevron icon and no speaker name, timestamp, or 出所 link visible.","inference":"Without visible speaker/timestamp attribution or a source link, the viewer has no apparent way to trace these notes back to the transcript by default, weakening verifiability.","confidence":0.8},
+   {"image":"F26E","observation":"The second メモ item, \"・オンボーディングを試作する\", appears as a bare bullet with a collapsed chevron and no speaker, timestamp, or source-link caption; only the first (already-expanded) item shows the underlying transcript quote.","inference":"Attribution is only visible for the item a user happens to have expanded; other collapsed items show no persistent origin marker, so verifiability depends on extra interaction rather than being apparent at a glance.","confidence":0.65},
+   {"image":"1AD7","observation":"決まったこと shows \"・導入時期は10月で行きます\" and やること shows \"・見積は明日までにお願いします\" as plain bullets with no speaker name, timestamp, or 出所 link, while the transcript panel reads \"まだ発話がありません。\"","inference":"There is no visible attribution or link connecting these extracted items to any spoken content, and the shown transcript is empty, so the viewer has no apparent means to verify where these items came from.","confidence":0.8},
+   {"image":"1D9E","observation":"決まったこと and やること show only placeholder text \"決まったことを待っています…\" and \"やることを待っています…\", and the transcript panel reads \"まだ発話がありません。\" — no AI-extracted items are present.","inference":"With no extracted items shown, nothing is misattributed, so trust is neither demonstrated nor violated; the honest waiting placeholders avoid fabricating unverifiable content but also offer no verification mechanism to evaluate.","confidence":0.5},
+   {"image":"04EC","observation":"決まったこと and やること show only placeholder text \"決まったことを待っています…\" and \"やることを待っています…\", and the transcript panel reads \"まだ発話がありません。\" — no AI-extracted items are present.","inference":"With no extracted items shown, nothing is misattributed, so trust is neither demonstrated nor violated; the honest waiting placeholders avoid fabricating unverifiable content but also offer no verification mechanism to evaluate.","confidence":0.5}
+ ],
+ "visible_text": {
+   "6C7D": ["07:18 の会議","録音中 00:02","決まったこと","決まったことを待っています…","メモ","10:42 Ken macOS を先に出します","Ken · 10:42 · 出所 ›","14:21 Sarah オンボーディングを試作する"],
+   "1017": ["07:18 の会議","録音中 00:03","10:42 Ken macOS を先に出します","Ken · 10:42 · 出所 ›","10:30 Sarah Windows はいつ出しますか。","macOS を先に出します","直す","これは違う"],
+   "1A98": ["07:18 の会議","録音中 00:03","決まったこと","00:12 田中 導入時期は10月で行きます","田中 · 00:12 · 出所 ›","やること","00:31 あなた 見積は明日までにお願いします","あなた · 00:31 · 出所 ›"],
+   "FEDA": ["07:18 の会議","録音中 00:02","決まったこと","決まったことを待っています…","メモ","・macOS を先に出します","・オンボーディングを試作する"],
+   "F26E": ["07:18 の会議","録音中 00:03","メモ","・macOS を先に出します","10:30 Sarah Windows はいつ出しますか。","macOS を先に出します","直す","これは違う","・オンボーディングを試作する"],
+   "1AD7": ["07:19 の会議","録音中 00:02","決まったこと","・導入時期は10月で行きます","やること","・見積は明日までにお願いします","まだ発話がありません。"],
+   "1D9E": ["07:19 の会議","録音中 00:02","決まったこと","決まったことを待っています…","やること","やることを待っています…","まだ発話がありません。"],
+   "04EC": ["07:19 の会議","録音中 00:02","決まったこと","決まったことを待っています…","やること","やることを待っています…","まだ発話がありません。"]
+ }
+}

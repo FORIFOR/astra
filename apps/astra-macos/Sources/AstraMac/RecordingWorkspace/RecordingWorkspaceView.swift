@@ -1,5 +1,17 @@
 import SwiftUI
 
+/// Judge を試験するための、**わざと壊した姿**。
+///
+/// 手描きのモックで採点者を試しても、本物を採点したときに同じ判断をする保証が
+/// 無い。同じ Astra を、その軸だけ壊して撮る。
+/// 既定は素の姿。`ASTRA_FIXTURE=trust-bad` などで壊す。
+enum Fixture: String {
+    case none, trustBad = "trust-bad", continuityBad = "continuity-bad", delightBad = "delight-bad"
+    static var current: Fixture {
+        Fixture(rawValue: ProcessInfo.processInfo.environment["ASTRA_FIXTURE"] ?? "") ?? .none
+    }
+}
+
 /// 録音中に立ち上がる面。**Dock ではなく、録音のあいだだけ現れる別のサーフェス**。
 ///
 /// DeepNote 型のノート・キャンバスにしてある。主役は文字起こしの生ログではなく、
@@ -209,7 +221,10 @@ private struct MeetingNotesCanvas: View {
                 if !canvas.notes.isEmpty { group("メモ", canvas.notes, waiting: nil) }
                 Spacer(minLength: 0)
             }
-            .padding(24)
+            .padding(.leading, Fixture.current == .delightBad ? 9 : 24)
+            .padding(.trailing, Fixture.current == .delightBad ? 41 : 24)
+            .padding(.top, Fixture.current == .delightBad ? 7 : 24)
+            .padding(.bottom, Fixture.current == .delightBad ? 33 : 24)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .scrollIndicators(.never)
@@ -235,6 +250,10 @@ private struct MeetingNotesCanvas: View {
     /// clarity と hierarchy を 1.0 ずつ落としたので採らなかった。
     /// 「会議から ✓」を足す案（C）は 4.80 で A に届かなかった。
     @ViewBuilder private func trustBand(_ line: CanvasItem) -> some View {
+        if Fixture.current == .trustBad {
+            // 出所を消す。拾った文だけが残り、根拠へ辿る道が無くなる。
+            EmptyView()
+        } else {
         HStack(spacing: 5) {
             if let who = line.speaker { Text(who) }
             if let t = line.timeLabel { Text("· \(t)") }
@@ -244,6 +263,7 @@ private struct MeetingNotesCanvas: View {
         .font(.system(size: 11))
         .foregroundStyle(Palette.muted(dark))
         .padding(.leading, 47)
+        }
     }
 
     /// その項目の前後の文字起こし。拾った時刻を挟んで前後 1 行ずつ。
@@ -349,9 +369,13 @@ private struct MeetingNotesCanvas: View {
 
     /// 会議の素性。題・出所・人数は、拾う前から分かっている。
     /// いま**実際に**届いている音源。意図ではなく実測を言う。
+    ///
+    /// 音が来ていないことは**本文（liveLine）が言う**ので、ここでは言わない。
+    /// 見出しと本文が同じことを二重に言い、片方が赤字で、同じ画面に
+    /// 「音が届いていません」「まだ音が届いていません」が並んでいた。
     private var listeningLabel: String? {
         let ch = RecordingRuntime.shared.listening
-        if ch.isEmpty { return state.isRecording ? "音が届いていません" : nil }
+        if ch.isEmpty { return nil }
         var parts: [String] = []
         if ch.contains(.localUser) { parts.append("マイク") }
         if ch.contains(.remoteAudio) { parts.append("画面の音") }
@@ -440,7 +464,7 @@ private struct MeetingNotesCanvas: View {
                     ProbeButton(id: "canvasItem-\(line.id.uuidString.prefix(8))",
                                 action: { openedItem = (openedItem == line.id) ? nil : line.id }) {
                     HStack(alignment: .firstTextBaseline, spacing: 9) {
-                        if let t = line.timeLabel {
+                        if Fixture.current != .trustBad, let t = line.timeLabel {
                             Text(t)
                                 .font(.system(size: 11, design: .monospaced))
                                 .foregroundStyle(Palette.muted(dark))
@@ -448,7 +472,7 @@ private struct MeetingNotesCanvas: View {
                         } else {
                             Text("·").foregroundStyle(Palette.muted(dark))
                         }
-                        if let who = line.speaker {
+                        if Fixture.current != .trustBad, let who = line.speaker {
                             Text(who)
                                 .font(.system(size: 12, weight: .semibold))
                                 .foregroundStyle(Palette.accent(dark))
