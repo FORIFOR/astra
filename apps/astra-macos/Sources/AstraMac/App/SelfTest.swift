@@ -1,3 +1,4 @@
+import SQLite3
 import Foundation
 import CoreVideo
 import CoreGraphics
@@ -38,6 +39,8 @@ enum SelfTest {
         case "navtitle": navtitle(); return true
         case "geometry": geometryGate(args); return true
         case "focus": focusGate(); return true
+        case "journey": journeyGate(args); return true
+        case "upgrade": upgradeGate(); return true
         case "update": updateCheck(); return true
         case "recoveryui": recoveryUI(); return true
         case "dictation": dictation(); return true
@@ -1206,6 +1209,218 @@ enum SelfTest {
             exit(0)
         } else {
             print("SELFTEST_FAIL focus: \(fail.joined(separator: ", "))")
+            exit(2)
+        }
+    }
+
+    /// `--selftest journey <id> <outdir>`: **Golden Journey を 1 本走らせて実測する。**
+    ///
+    /// 2pt の視覚ゲートは「崩れていないこと」しか言えない。同じ Panel で、
+    /// 上辺 0px ずれで、±2pt に収まっていても、使いにくい製品は作れる。
+    /// 優劣は、同じ課題での**完遂・所要時間・操作数・邪魔の量**で決める。
+    ///
+    /// ここで走らせられるのは Astra だけ。声や他アプリが要る Journey は
+    /// このプロセスからは動かせないので、**測れないと記録して終わる**
+    /// （0 として数えると、やっていないことを「勝ち」に見せてしまう）。
+    @MainActor
+    private static func journeyGate(_ args: [String]) {
+        let i = args.firstIndex(of: "--selftest")!
+        guard args.count > i + 3 else { print("SELFTEST_FAIL journey: 引数が足りない"); exit(2) }
+        let id = args[i + 2], outDir = args[i + 3]
+
+        func settle(_ sec: Double) {
+            let until = Date().addingTimeInterval(sec)
+            while Date() < until { CFRunLoopRunInMode(.defaultMode, 0.05, true) }
+        }
+
+        // 保存を開けておく。開けずに測ると、Session が書かれず「落ちた録音が nil」に
+        // なる —— 製品ではなく測り方の誤り（実際そう出た）。
+        _ = LocalStore.shared.open()
+        MeetingSessionStore.shared.load()
+
+        let rec = JourneyRecorder(journey: id, outDir: outDir)
+        let store = AstraStateStore.shared
+        let recording = RecordingWorkspaceState.shared
+        let sessions = MeetingSessionStore.shared
+
+        switch id {
+        case "J04":   // 会議検出 → 録音開始
+            WindowCoordinator.shared.showVoiceHUD(); settle(0.8)
+            rec.begin()
+            store.meetingDetected(app: "Google Meet")
+            settle(0.6)
+            rec.step("会議を検出", interactions: 0, note: "検出しただけでは録らない")
+            rec.shot("01-detected")
+            recording.start()
+            settle(1.0)
+            rec.step("録音開始", interactions: 1, note: "利用者が始める")
+            rec.shot("02-recording")
+            let started = sessions.live != nil
+            if !started { rec.error("録音が始まっていない") }
+            rec.cannotMeasure("検出までの時間（実際の会議アプリが要る）")
+            recording.stop(); settle(0.5)
+            rec.finish(success: started)
+
+        case "J05":   // 会議中の Live Notes
+            WindowCoordinator.shared.showVoiceHUD()
+            recording.start(); settle(0.8)
+            rec.begin()
+            WindowCoordinator.shared.showRecordingWorkspace(); settle(1.0)
+            rec.step("会議の面を開く", interactions: 1, opensWindow: true)
+            rec.shot("01-start")
+            // 開始直後に何が出ているか。ここが白紙だと SuperIntern に負ける。
+            let canvasAtStart = store.state.meeting.canvas
+            if canvasAtStart.isEmpty {
+                rec.error("開始直後に出せるものが無い（白紙）")
+            }
+            MeetingIntelligence.shared.ingest([
+                CanvasItem("導入時期は 10 月で行きます", at: 12, speaker: "田中"),
+                CanvasItem("見積は明日までにお願いします", at: 31, speaker: "あなた"),
+            ], force: true)
+            settle(0.8)
+            rec.step("3 分ぶんの発話を入れる", interactions: 0)
+            rec.shot("02-notes")
+            let picked = store.state.meeting.canvas
+            let withSource = (picked.decisions + picked.actions).filter { $0.speaker != nil }.count
+            let total = picked.decisions.count + picked.actions.count
+            if total == 0 { rec.error("決定も行動も拾えていない") }
+            if total > 0 && withSource < total { rec.error("出所の付いていない項目がある") }
+            rec.cannotMeasure("実会議での拾い漏れ（実音声が要る）")
+            recording.stop()
+            WindowCoordinator.shared.hideRecordingWorkspace()
+            rec.finish(success: total > 0 && withSource == total)
+
+        case "J07":   // 会議終了 → 成果物
+            recording.start(); settle(0.8)
+            let id0 = sessions.live?.id
+            let before = sessions.sessions.count
+            rec.begin()
+            recording.stop()
+            settle(0.6)
+            rec.step("停止 → processing", interactions: 1, opensWindow: true)
+            let deadline = Date().addingTimeInterval(8)
+            while sessions.session(id: id0 ?? "")?.status != .ready, Date() < deadline {
+                CFRunLoopRunInMode(.defaultMode, 0.05, true)
+            }
+            rec.step("ready まで", interactions: 0)
+            let after = sessions.sessions.count
+            if after != before { rec.error("カードが増えた（同じ 1 件でない）") }
+            let ready = sessions.session(id: id0 ?? "")?.status == .ready
+            if !ready { rec.error("ready にならない") }
+            rec.cannotMeasure("拾い間違いを直せるか（画面操作が要る）")
+            rec.finish(success: ready && after == before)
+
+        case "J09":   // 出所
+            recording.start(); settle(0.5)
+            rec.begin()
+            MeetingIntelligence.shared.ingest([
+                CanvasItem("macOS を先に出します", at: 642, speaker: "Ken"),
+                CanvasItem("オンボーディングを試作する", at: 861, speaker: "Sarah"),
+            ], force: true)
+            settle(0.6)
+            rec.step("拾わせる", interactions: 0)
+            let c = store.state.meeting.canvas
+            let items = c.decisions + c.actions + c.questions + c.concerns + c.notes
+            let haveWho = items.filter { $0.speaker != nil }.count
+            let haveWhen = items.filter { $0.at != nil }.count
+            if items.isEmpty { rec.error("拾えていない") }
+            if haveWho < items.count { rec.error("話者の無い項目が \(items.count - haveWho) 件") }
+            if haveWhen < items.count { rec.error("時刻の無い項目が \(items.count - haveWhen) 件") }
+            // 原文へ 1 クリックで戻れるか。**まだ無い。**
+            rec.cannotMeasure("原文への 1 クリック（未実装）")
+            rec.cannotMeasure("その時刻の音声へ戻る（未実装）")
+            rec.cannotMeasure("その場で直す（未実装）")
+            recording.stop()
+            rec.finish(success: !items.isEmpty && haveWho == items.count && haveWhen == items.count)
+
+        case "J10":   // 落ちたあと
+            // 強制終了を挟む本番の検証は scripts/verify-recording-experience.sh。
+            // ここでは「落ちたまま残ったものを interrupted と言うか」を見る。
+            rec.begin()
+            recording.start(); settle(0.8)
+            let liveId = sessions.live?.id ?? ""
+            rec.step("録音中", interactions: 1)
+            sessions.load()   // 再起動と同じ経路
+            settle(0.4)
+            rec.step("再起動として読み戻す", interactions: 0)
+            let st = sessions.session(id: liveId)?.status
+            if st != .interrupted && st != .recording {
+                rec.error("落ちた録音の状態が \(st?.rawValue ?? "nil")")
+            }
+            rec.cannotMeasure("kill -9 を挟んだ全体（別スクリプトで実施）")
+            recording.stop()
+            rec.finish(success: st == .interrupted || st == .recording)
+
+        default:
+            // 声や他アプリが要るもの。**0 として数えない。**
+            rec.begin()
+            rec.cannotMeasure("この Journey はこのプロセスから動かせない（声・他アプリ・人の操作が要る）")
+            rec.finish(success: false)
+            print("SELFTEST_SKIP journey \(id): 自動では走らせられない。人が撮る")
+            exit(0)
+        }
+        exit(0)
+    }
+
+    /// `--selftest upgrade`: **古い DB を開いても会議が残るか。**
+    ///
+    /// `CREATE TABLE IF NOT EXISTS` は既に在る表に何もしない。Session を持つより
+    /// 前の版で作られた `meetings` は列が足りず、書き込みが黙って失敗する。
+    /// 実機の DB がまさにそれで、**会議が 1 件も残っていなかった**（0 件）。
+    /// これまでの検査は毎回まっさらな一時 DB を使っていたので、通っていなかった。
+    @MainActor
+    private static func upgradeGate() {
+        var fail: [String] = []
+        let path = NSTemporaryDirectory() + "astra-upgrade-\(getpid()).sqlite"
+        defer { try? FileManager.default.removeItem(atPath: path) }
+        try? FileManager.default.removeItem(atPath: path)
+
+        // 昔の形の meetings を作る（Session より前の版）。
+        // **LocalStore は使わない** —— 開いた時点で新しい表を作ってしまい、
+        // 古い DB を再現できない（最初これで作って、再現できていなかった）。
+        do {
+            var raw: OpaquePointer?
+            guard sqlite3_open(path, &raw) == SQLITE_OK else {
+                print("SELFTEST_FAIL upgrade: 古い DB を作れない"); exit(2)
+            }
+            let create = """
+            CREATE TABLE meetings (
+              id TEXT PRIMARY KEY, title TEXT, started_at REAL NOT NULL,
+              ended_at REAL, detected_app TEXT, journal_path TEXT);
+            INSERT INTO meetings (id,title,started_at) VALUES ('old-1','昔の会議',1);
+            """
+            if sqlite3_exec(raw, create, nil, nil, nil) != SQLITE_OK {
+                print("SELFTEST_FAIL upgrade: 古い表を作れない"); exit(2)
+            }
+            sqlite3_close(raw)
+        }
+
+        // 新しい版で開く → 列が足され、書き込めるようになるはず。
+        let store = LocalStore(path: path)
+        _ = store.open(path)
+        let cols = Set(store.columnNames("meetings"))
+        for want in ["status", "visibility", "summary", "action_count", "decision_count",
+                     "participant_count", "created_at", "updated_at"] where !cols.contains(want) {
+            fail.append("\(want) 列が足されていない")
+        }
+
+        let s = MeetingSession(id: "after-upgrade", title: "移行後の会議",
+                               status: .ready, startedAt: Date())
+        store.saveSession(s)
+        let loaded = store.loadSessions()
+        if !loaded.contains(where: { $0.id == "after-upgrade" }) {
+            fail.append("移行後も会議を保存できない")
+        }
+        // 昔の行を消していないこと。
+        if !loaded.contains(where: { $0.id == "old-1" }) {
+            fail.append("昔の行が消えた（移行で失っている）")
+        }
+
+        if fail.isEmpty {
+            print("SELFTEST_OK upgrade: 古い DB に列を足して開ける・保存できる・昔の行を失わない")
+            exit(0)
+        } else {
+            print("SELFTEST_FAIL upgrade: \(fail.joined(separator: ", "))")
             exit(2)
         }
     }

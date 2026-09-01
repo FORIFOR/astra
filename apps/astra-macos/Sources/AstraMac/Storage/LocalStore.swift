@@ -95,8 +95,42 @@ final class LocalStore {
           plugin TEXT NOT NULL, capability TEXT NOT NULL, granted INTEGER NOT NULL,
           decided_at REAL NOT NULL, PRIMARY KEY (plugin, capability));
         """
-        return exec(sql)
+        guard exec(sql) else { return false }
+
+        // **古い表に列を足す。**
+        //
+        // `CREATE TABLE IF NOT EXISTS` は、既に在る表には何もしない。Session を
+        // 持つより前の版で作られた `meetings` は列が足りず、書き込みが黙って失敗する
+        // —— 実際、実機の DB は古い列のままで 0 件だった。会議が 1 件も残らない。
+        // 検査は毎回まっさらな一時 DB を使っていたので、この経路を通っていなかった。
+        for (table, columns) in Self.addedColumns {
+            guard tableNames().contains(table) else { continue }
+            let have = Set(columnNames(table))
+            for (name, decl) in columns where !have.contains(name) {
+                // 既定値を持たせる。既存の行にも値が要る。
+                _ = exec("ALTER TABLE \(table) ADD COLUMN \(name) \(decl);")
+            }
+        }
+        return true
     }
+
+    /// 後から足した列。古い DB を開いたときに継ぎ足す。
+    /// **`NOT NULL` は付けない**（既存の行を埋められないため）。既定値で補う。
+    private static let addedColumns: [String: [(String, String)]] = [
+        "meetings": [
+            ("status", "TEXT NOT NULL DEFAULT 'ready'"),
+            ("calendar_event_id", "TEXT"),
+            ("project_id", "TEXT"),
+            ("visibility", "TEXT NOT NULL DEFAULT 'mySpace'"),
+            ("participant_count", "INTEGER NOT NULL DEFAULT 0"),
+            ("summary", "TEXT"),
+            ("action_count", "INTEGER NOT NULL DEFAULT 0"),
+            ("decision_count", "INTEGER NOT NULL DEFAULT 0"),
+            ("source", "TEXT"),
+            ("created_at", "REAL NOT NULL DEFAULT 0"),
+            ("updated_at", "REAL NOT NULL DEFAULT 0"),
+        ],
+    ]
 
     @discardableResult
     func exec(_ sql: String) -> Bool {

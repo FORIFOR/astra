@@ -1,0 +1,32 @@
+{
+  "artifacts" : [
+    "01-start.png",
+    "02-notes.png"
+  ],
+  "errors" : [
+    "開始直後に出せるものが無い（白紙）"
+  ],
+  "focusTheft" : 0,
+  "interactions" : 1,
+  "journey" : "J05",
+  "notMeasured" : [
+    "実会議での拾い漏れ（実音声が要る）"
+  ],
+  "product" : "Astra",
+  "startedAt" : "2026-09-01T01:50:29Z",
+  "steps" : [
+    {
+      "interactions" : 1,
+      "ms" : 1061,
+      "name" : "会議の面を開く"
+    },
+    {
+      "interactions" : 0,
+      "ms" : 867,
+      "name" : "3 分ぶんの発話を入れる"
+    }
+  ],
+  "success" : true,
+  "totalMs" : 1951,
+  "windowsOpened" : 0
+}

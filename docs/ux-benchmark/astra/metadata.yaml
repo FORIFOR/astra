@@ -1,0 +1,11 @@
+# Astra 側は scripts/ux-benchmark.sh が自動で撮る。
+product: Astra
+version: "0.1.0"
+os: macOS 26.0
+resolution: 1920x1080
+scale: 2x
+source: live
+notes: |
+  `--selftest journey <ID> <outdir>` が result.json と画像を書く。
+  声や他アプリが要る Journey（J01 J02 J03 J06 J08）は自動では走らせられないので、
+  **測れないと記録して終わる**。0 として数えない。

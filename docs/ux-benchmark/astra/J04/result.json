@@ -1,0 +1,34 @@
+{
+  "artifacts" : [
+    "01-detected.png",
+    "02-recording.png"
+  ],
+  "errors" : [
+
+  ],
+  "focusTheft" : 0,
+  "interactions" : 1,
+  "journey" : "J04",
+  "notMeasured" : [
+    "検出までの時間（実際の会議アプリが要る）"
+  ],
+  "product" : "Astra",
+  "startedAt" : "2026-09-01T01:50:26Z",
+  "steps" : [
+    {
+      "interactions" : 0,
+      "ms" : 610,
+      "name" : "会議を検出",
+      "note" : "検出しただけでは録らない"
+    },
+    {
+      "interactions" : 1,
+      "ms" : 1242,
+      "name" : "録音開始",
+      "note" : "利用者が始める"
+    }
+  ],
+  "success" : true,
+  "totalMs" : 2373,
+  "windowsOpened" : 0
+}

@@ -1,0 +1,22 @@
+{
+  "artifacts" : [
+
+  ],
+  "errors" : [
+
+  ],
+  "focusTheft" : 0,
+  "interactions" : 0,
+  "journey" : "J06",
+  "notMeasured" : [
+    "この Journey はこのプロセスから動かせない（声・他アプリ・人の操作が要る）"
+  ],
+  "product" : "Astra",
+  "startedAt" : "2026-09-01T01:50:42Z",
+  "steps" : [
+
+  ],
+  "success" : false,
+  "totalMs" : 0,
+  "windowsOpened" : 0
+}

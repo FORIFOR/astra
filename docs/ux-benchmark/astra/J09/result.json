@@ -1,0 +1,28 @@
+{
+  "artifacts" : [
+
+  ],
+  "errors" : [
+
+  ],
+  "focusTheft" : 0,
+  "interactions" : 0,
+  "journey" : "J09",
+  "notMeasured" : [
+    "原文への 1 クリック（未実装）",
+    "その時刻の音声へ戻る（未実装）",
+    "その場で直す（未実装）"
+  ],
+  "product" : "Astra",
+  "startedAt" : "2026-09-01T01:50:37Z",
+  "steps" : [
+    {
+      "interactions" : 0,
+      "ms" : 603,
+      "name" : "拾わせる"
+    }
+  ],
+  "success" : true,
+  "totalMs" : 655,
+  "windowsOpened" : 0
+}

@@ -1,0 +1,23 @@
+# VoiceOS の取得記録。**人が撮る**（アシスタントはこの製品を入手できない）。
+#
+# 「どこかで見た VoiceOS」ではなく「VoiceOS v0.1.25 のこの状態」と比べるための記録。
+# 版と取得日が無い素材は、比較の根拠にならない。
+product: VoiceOS
+version: ""            # 例: 0.1.25
+captured_at: ""        # 例: 2026-09-01
+os: ""                 # 例: macOS 26.0
+resolution: ""         # 例: 1920x1080
+scale: ""              # 例: 2x
+source: ""             # official | public | live
+scenario: ""           # 例: J01-pointer-context
+notes: |
+  取得時の条件。ネットワーク、サインイン状態、初回かどうか。
+
+# 撮るもの（静止画だけでは Morph を評価できない。状態が変わるものは mp4 も）
+files:
+  - V01-idle.png
+  - V02-listening.png
+  - V03-pointer-context.png
+  - V04-action-preview.png
+  - V05-confirmation.png
+  - V06-agent-response.mp4

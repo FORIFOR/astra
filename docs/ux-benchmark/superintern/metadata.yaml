@@ -1,0 +1,24 @@
+# SuperIntern の取得記録。**人が撮る**（アシスタントはこの製品を入手できない）。
+#
+# 「どこかで見た SuperIntern」ではなく「SuperIntern v現行 のこの状態」と比べるための記録。
+# 版と取得日が無い素材は、比較の根拠にならない。
+product: SuperIntern
+version: ""            # 例: 現行
+captured_at: ""        # 例: 2026-09-01
+os: ""                 # 例: macOS 26.0
+resolution: ""         # 例: 1920x1080
+scale: ""              # 例: 2x
+source: ""             # official | public | live
+scenario: ""           # 例: J01-pointer-context
+notes: |
+  取得時の条件。ネットワーク、サインイン状態、初回かどうか。
+
+# 撮るもの（静止画だけでは Morph を評価できない。状態が変わるものは mp4 も）
+files:
+  - S01-meeting-detected.png
+  - S02-recording.png
+  - S03-live-note.png
+  - S04-captions.png
+  - S05-ask-ai.png
+  - S06-invisible.mp4
+  - S07-after-meeting.png
