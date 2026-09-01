@@ -1,0 +1,1 @@
+JOURNEY J05 success=true ms=1950 interactions=1 windows=0 focusTheft=0 errors=0

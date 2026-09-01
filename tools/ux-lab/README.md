@@ -1,0 +1,17 @@
+# ux-lab — 自動 UX 評価の道具
+
+アプリの外から画面を見て、画面へ触る。**中身を知らないまま評価する**ために要る。
+
+| 道具 | 何をするか | なぜ要るか |
+| --- | --- | --- |
+| `ocr.swift` | 画面から文字と位置を取る（Vision） | Judge が「画面に無いもの」を根拠にしていないかを機械で確かめる |
+| `uxin.swift` | クリック・キー入力を合成する | Blind Operator の手。AX が使えないので座標で触る |
+
+`bash scripts/ux-auto/build-tools.sh` で `.build/uxlab/` へ作る。
+
+## なぜ AX ではなく画像と座標か
+
+自プロセスの AX 木は子を返さない（`AXUIElementCreateApplication(getpid())` の
+`AXChildren` が空。実測した）。外から見るのと同じ条件になるので、
+**Blind Operator にはむしろ都合が良い**: 目印の付いたボタンを名前で押せず、
+画面に見えているものだけを頼りに操作することになる。

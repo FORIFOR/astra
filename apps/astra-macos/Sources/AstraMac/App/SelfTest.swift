@@ -40,6 +40,7 @@ enum SelfTest {
         case "geometry": geometryGate(args); return true
         case "focus": focusGate(); return true
         case "journey": journeyGate(args); return true
+        case "idle-hold": idleHold(args); return true
         case "upgrade": upgradeGate(); return true
         case "update": updateCheck(); return true
         case "recoveryui": recoveryUI(); return true
@@ -1211,6 +1212,22 @@ enum SelfTest {
             print("SELFTEST_FAIL focus: \(fail.joined(separator: ", "))")
             exit(2)
         }
+    }
+
+    /// `--selftest idle-hold <秒>`: **普段の姿のまま置いておく。**
+    ///
+    /// Blind Operator（実装を知らずに画面だけで操作する評価者）と
+    /// CALMNESS_TEST が要る。どちらも「動いている Astra を外から見る」ので、
+    /// 検査が終わって即終了する journey では触れない。
+    /// 自分からは何も開かない——勝手に前へ出たらそれ自体が測定結果になる。
+    @MainActor
+    static func idleHold(_ args: [String]) {
+        let secs = Double(args.first ?? "") ?? 60
+        WindowCoordinator.shared.showVoiceHUD()
+        print("IDLE_HOLD \(secs)s")
+        fflush(stdout)
+        DispatchQueue.main.asyncAfter(deadline: .now() + secs) { exit(0) }
+        RunLoop.main.run()
     }
 
     /// `--selftest journey <id> <outdir>`: **Golden Journey を 1 本走らせて実測する。**

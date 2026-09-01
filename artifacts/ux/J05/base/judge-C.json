@@ -1,0 +1,74 @@
+{
+  "visible_text": [
+    "録音中",
+    "00:02",
+    "14:50 の会議",
+    "聞いています...",
+    "決まったこと",
+    "決まったことを待っています...",
+    "やること",
+    "やることを待っています...",
+    "文字起こし",
+    "翻訳",
+    "字幕",
+    "まだ発話がありません。",
+    "リアルタイム要約",
+    "管理する",
+    "決定事項",
+    "アクション",
+    "この会議について聞く",
+    "AI が聞いている資料"
+  ],
+  "answers": {
+    "q1": "The app is recording a meeting at 14:50 and actively listening for audio. It's 2 seconds into the recording, currently listening but has not detected any speech yet.",
+    "q2": "That it's recording a specific meeting and the audio capture is active. The real-time transcription and AI-driven features (summary, decisions, actions) are being extracted as the meeting progresses.",
+    "q3": "You can play/pause the recording with the floating control bar, switch between transcription/translation/captions views, see real-time summaries, manage decisions and actions, or ask questions about the meeting.",
+    "q4": "Partially. It shows 'Listening...' and 'No speech yet' messages, indicating it's working and waiting for input. But there's no visual waveform or other confirmation that audio is actually being captured.",
+    "q5": "The right panel (transcription/translation/captions area) is mostly empty because no speech has been detected yet—it feels like wasted space. The 'AI is listening to materials' link at the bottom feels disconnected. The floating control bar seems separate from the main interface.",
+    "q6": "The eye goes first to the red floating control bar at the top, then to the red 'Recording' indicator and timestamp in the top left, then to the large meeting title. The layout draws attention upward before settling on the main content."
+  },
+  "scores": {
+    "clarity": 6,
+    "calmness": 6,
+    "continuity": 5,
+    "context": 6,
+    "trust": 5,
+    "control": 5,
+    "hierarchy": 6,
+    "efficiency": 5,
+    "craft": 6,
+    "delight": 4
+  },
+  "weaknesses": [
+    {
+      "axis": "continuity",
+      "what": "The floating control bar at the top feels visually detached from the main interface—it hovers independently rather than appearing as part of the same surface",
+      "fix": "Either anchor the control bar to the main window edge, or integrate play/pause into the main interface panel itself"
+    },
+    {
+      "axis": "efficiency",
+      "what": "Large empty panels (transcription, translation, captions) occupy significant space while showing placeholder text. Meeting details (decisions, actions) also show waiting states",
+      "fix": "Condense empty states or use progressive disclosure—show these panels only when they have content"
+    },
+    {
+      "axis": "trust",
+      "what": "No visual confirmation that audio is being captured beyond the timer. No waveform, levels, or active recording indicator to verify the system is actually recording",
+      "fix": "Add a subtle waveform or audio level indicator in the recording status area"
+    },
+    {
+      "axis": "context",
+      "what": "The 'waiting' messages ('待っています') are vague—unclear whether the app is waiting for speech, processing, or something else",
+      "fix": "Use more specific language: 'No speech detected yet' or 'Waiting for meeting to start' would be clearer"
+    },
+    {
+      "axis": "hierarchy",
+      "what": "The bottom link 'AI is listening to materials' appears orphaned and unclear in its relationship to the main recording task",
+      "fix": "Either remove this link, clarify its purpose with better context, or integrate it into the main flow more clearly"
+    },
+    {
+      "axis": "delight",
+      "what": "The interface is purely functional with no engaging elements. Heavy reliance on waiting states makes the experience feel passive",
+      "fix": "Add micro-interactions (animate the listening indicator), provide encouraging feedback as the AI processes audio, or show live transcription preview as words arrive"
+    }
+  ]
+}

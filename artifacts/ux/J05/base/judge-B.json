@@ -1,0 +1,59 @@
+{
+  "visible_text": [
+    "録音中",
+    "00:02",
+    "14:50 の会議",
+    "聞いています...",
+    "決まったこと",
+    "決まったことを待っています...",
+    "やること",
+    "やることを待っています...",
+    "文字起こし",
+    "翻訳",
+    "字幕",
+    "まだ発話がありません。",
+    "リアルタイム要約",
+    "質問する",
+    "決定事項",
+    "アクション",
+    "この会議について聞く",
+    "AI が見ている資料"
+  ],
+  "answers": {
+    "q1": "A meeting recording/transcription tool has just started capturing a meeting called '14:50の会議'. It's 2 seconds into recording, actively listening, but nothing has been said yet, so the transcript, decisions, and to-dos are all empty placeholders.",
+    "q2": "That it is currently recording ('録音中 00:02') and listening ('聞いています...'), plus the meeting name '14:50の会議' — this tells the user the session is live and correctly capturing audio.",
+    "q3": "Start talking so the transcript fills in; use the floating pill controls at top to pause, add a comment, expand, or stop the recording; type a question in the bottom input box ('この会議について聞く'); or check summary/Q&A/decisions/action buttons once there is content.",
+    "q4": "Partially. The red recording dot, timer ticking up, and 'listening' waveform icon suggest it's active, but with an empty transcript and no live audio/waveform activity shown, there's no strong visual proof it's actually hearing anything yet — it could just as easily be stalled.",
+    "q5": "The four bottom action buttons (リアルタイム要約, 質問する, 決定事項, アクション) are all grayed out/disabled with no content yet, so they just occupy space without doing anything at this moment. The three tabs (文字起こし/翻訳/字幕) also feel premature before any text exists.",
+    "q6": "The floating black pill control bar at the very top center, then down to the red '録音中' dot/timer just below it."
+  },
+  "scores": {
+    "clarity": 6,
+    "calmness": 6,
+    "continuity": 5,
+    "context": 5,
+    "trust": 4,
+    "control": 6,
+    "hierarchy": 5,
+    "efficiency": 5,
+    "craft": 6,
+    "delight": 5
+  },
+  "weaknesses": [
+    {
+      "axis": "trust",
+      "what": "There is no visible live waveform or audio-level indicator tied to the microphone, so a first-time user watching an empty transcript at 00:02 cannot easily tell whether audio is truly being captured or the app is frozen.",
+      "fix": "Add a small live audio-level meter or pulsing waveform next to '聞いています...' that visibly reacts to sound, giving instant proof of capture."
+    },
+    {
+      "axis": "efficiency",
+      "what": "Four secondary action buttons (リアルタイム要約, 質問する, 決定事項, アクション) are shown disabled with no data behind them yet, adding visual clutter before they're usable.",
+      "fix": "Hide or collapse these buttons until the transcript has enough content to act on, or show them in a more minimal/ghost state until then."
+    },
+    {
+      "axis": "context",
+      "what": "The floating top control pill (pause/comment/expand/more/stop) is disconnected from the main card below it, making it unclear if it belongs to this meeting window or is a separate system-level overlay.",
+      "fix": "Visually connect the pill to the card (e.g., a subtle shadow/line linking them, or docking it to the card's top edge) so it reads as one surface."
+    }
+  ]
+}
