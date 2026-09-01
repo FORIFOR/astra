@@ -29,6 +29,11 @@ T_REC=$(python3 -c "import time;print(time.time())")
 sleep 1.2
 
 T_APP=$(python3 -c "import time;print(time.time())")
+# **検査ごとに使い捨ての置き場を使う。** これまで実際の置き場へ書いており、
+# 積み上がった試し録りが画面に出ていた（「録りかけが 397 件あります」）。
+# 判定に出す絵が、利用者の見る姿から離れる。
+export ASTRA_DATA_ROOT="${ASTRA_DATA_ROOT:-$OUT/data}"
+mkdir -p "$ASTRA_DATA_ROOT"
 "$BIN" --selftest journey "$J" "$OUT" >"$OUT/stdout.txt" 2>&1 &
 APP=$!
 # 走っている間に窓の位置を追う。いちばん大きく見えたものを切り出しに使う。

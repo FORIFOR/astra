@@ -1304,6 +1304,11 @@ enum SelfTest {
         guard args.count > i + 3 else { print("SELFTEST_FAIL journey: 引数が足りない"); exit(2) }
         let id = args[i + 2], outDir = args[i + 3]
 
+        // 本番と同じ状態で測る。ショートカットを登録しないまま撮ると、待機中の
+        // HUD が「登録できていないときの姿」になる。**仕掛けと本番を揃える作業は
+        // これで 4 回目**なので、Journey 全体の入口でやる。
+        _ = GlobalShortcut.shared.register(handler: { WindowCoordinator.shared.toggleRecording() })
+
         func settle(_ sec: Double) {
             let until = Date().addingTimeInterval(sec)
             while Date() < until { CFRunLoopRunInMode(.defaultMode, 0.05, true) }
@@ -1392,6 +1397,9 @@ enum SelfTest {
                 CFRunLoopRunInMode(.defaultMode, 0.05, true)
             }
             rec.step("ready まで", interactions: 0)
+            MainWindowController.shared.showSection(.home)
+            settle(1.0)
+            _ = rec.shot("01-終わったあと")
             let after = sessions.sessions.count
             if after != before { rec.error("カードが増えた（同じ 1 件でない）") }
             let ready = sessions.session(id: id0 ?? "")?.status == .ready
@@ -1507,6 +1515,9 @@ enum SelfTest {
             sessions.load()   // 再起動と同じ経路
             settle(0.4)
             rec.step("再起動として読み戻す", interactions: 0)
+            MainWindowController.shared.showSection(.home)
+            settle(1.0)
+            _ = rec.shot("01-落ちたあと")
             let st = sessions.session(id: liveId)?.status
             if st != .interrupted && st != .recording {
                 rec.error("落ちた録音の状態が \(st?.rawValue ?? "nil")")

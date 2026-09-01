@@ -1,26 +1,21 @@
 {
   "valid": 3,
-  "rejected": [
-    {
-      "judge": "FAKE",
-      "why": "画面に無い文字を根拠にした（照合 0/5）例: ['Weekly Product Sync', '3 participants', 'Waiting for a decision…', 'Stop recording']"
-    }
-  ],
+  "rejected": [],
   "axes": {
     "clarity": {
       "median": 6,
       "stddev": 0.47,
       "values": [
-        5,
         6,
+        5,
         6
       ]
     },
     "calmness": {
       "median": 6,
-      "stddev": 0.47,
+      "stddev": 0.0,
       "values": [
-        5,
+        6,
         6,
         6
       ]
@@ -29,7 +24,7 @@
       "median": 5,
       "stddev": 0.47,
       "values": [
-        4,
+        6,
         5,
         5
       ]
@@ -38,8 +33,8 @@
       "median": 5,
       "stddev": 0.82,
       "values": [
-        4,
         5,
+        4,
         6
       ]
     },
@@ -57,8 +52,8 @@
       "stddev": 0.47,
       "values": [
         6,
-        6,
-        5
+        5,
+        6
       ]
     },
     "hierarchy": {
@@ -74,7 +69,7 @@
       "median": 5,
       "stddev": 0.47,
       "values": [
-        4,
+        6,
         5,
         5
       ]
@@ -89,75 +84,65 @@
       ]
     },
     "delight": {
-      "median": 5,
-      "stddev": 0.47,
+      "median": 4,
+      "stddev": 0.0,
       "values": [
-        5,
-        5,
+        4,
+        4,
         4
       ]
     }
   },
   "weaknesses": [
     {
-      "axis": "continuity",
-      "what": "The black floating toolbar at the top reads as a separate overlay window rather than part of the same card/surface as the meeting panel below it.",
-      "fix": "Dock the recording controls into the header of the main content card instead of a floating detached pill, so it visually belongs to one surface."
-    },
-    {
-      "axis": "efficiency",
-      "what": "Four action buttons (リアルタイム要約, 質問する, 決定事項, アクション) are shown disabled/greyed with no content to act on yet, adding visual weight without utility at this stage.",
-      "fix": "Hide or fade these controls in until there is enough transcript content to make them meaningful, or replace with a single subtle 'available once discussion starts' hint."
-    },
-    {
-      "axis": "context",
-      "what": "There is no indication of which meeting platform or source this recording is coming from, and 'AI が見ている資料' does not show what material is actually referenced.",
-      "fix": "Add a small source icon/label (e.g. Zoom/Meet/mic) near the meeting title, and make 'AI が見ている資料' expandable to preview the referenced document(s)."
-    },
-    {
-      "axis": "trust",
-      "what": "There is no visible live waveform or audio-level indicator tied to the microphone, so a first-time user watching an empty transcript at 00:02 cannot easily tell whether audio is truly being captured or the app is frozen.",
-      "fix": "Add a small live audio-level meter or pulsing waveform next to '聞いています...' that visibly reacts to sound, giving instant proof of capture."
-    },
-    {
-      "axis": "efficiency",
-      "what": "Four secondary action buttons (リアルタイム要約, 質問する, 決定事項, アクション) are shown disabled with no data behind them yet, adding visual clutter before they're usable.",
-      "fix": "Hide or collapse these buttons until the transcript has enough content to act on, or show them in a more minimal/ghost state until then."
-    },
-    {
-      "axis": "context",
-      "what": "The floating top control pill (pause/comment/expand/more/stop) is disconnected from the main card below it, making it unclear if it belongs to this meeting window or is a separate system-level overlay.",
-      "fix": "Visually connect the pill to the card (e.g., a subtle shadow/line linking them, or docking it to the card's top edge) so it reads as one surface."
-    },
-    {
-      "axis": "continuity",
-      "what": "The floating control bar at the top feels visually detached from the main interface—it hovers independently rather than appearing as part of the same surface",
-      "fix": "Either anchor the control bar to the main window edge, or integrate play/pause into the main interface panel itself"
-    },
-    {
-      "axis": "efficiency",
-      "what": "Large empty panels (transcription, translation, captions) occupy significant space while showing placeholder text. Meeting details (decisions, actions) also show waiting states",
-      "fix": "Condense empty states or use progressive disclosure—show these panels only when they have content"
-    },
-    {
-      "axis": "trust",
-      "what": "No visual confirmation that audio is being captured beyond the timer. No waveform, levels, or active recording indicator to verify the system is actually recording",
-      "fix": "Add a subtle waveform or audio level indicator in the recording status area"
-    },
-    {
-      "axis": "context",
-      "what": "The 'waiting' messages ('待っています') are vague—unclear whether the app is waiting for speech, processing, or something else",
-      "fix": "Use more specific language: 'No speech detected yet' or 'Waiting for meeting to start' would be clearer"
-    },
-    {
       "axis": "hierarchy",
-      "what": "The bottom link 'AI is listening to materials' appears orphaned and unclear in its relationship to the main recording task",
-      "fix": "Either remove this link, clarify its purpose with better context, or integrate it into the main flow more clearly"
+      "what": "Four disabled bottom buttons (リアルタイム要約, 質問する, 決定事項, アクション) are rendered at full visual weight even though they can't be used yet, competing with the live 'waiting' content above them.",
+      "fix": "Dim/collapse these into a single lightweight affordance until the meeting produces enough content to enable them."
+    },
+    {
+      "axis": "trust",
+      "what": "There is no visible waveform or audio-level meter proving the microphone is actually picking up sound, only a static '聞いています...' label, so a first-time user can't visually confirm audio capture is live.",
+      "fix": "Add a small live waveform or level indicator next to '聞いています...' that reacts to actual sound input."
     },
     {
       "axis": "delight",
-      "what": "The interface is purely functional with no engaging elements. Heavy reliance on waiting states makes the experience feel passive",
-      "fix": "Add micro-interactions (animate the listening indicator), provide encouraging feedback as the AI processes audio, or show live transcription preview as words arrive"
+      "what": "The screen is entirely gray/utilitarian placeholder text ('待っています...') with no warmth or motion cues at the exciting moment a meeting just started.",
+      "fix": "Add a subtle animated pulse or friendly first-run microcopy to make the start-of-recording moment feel alive rather than empty."
+    },
+    {
+      "axis": "trust",
+      "what": "文字起こしパネル内の空状態が「まだ発話がありません。」という静的な文言のみで、AIが実際に音声を処理し続けているのかを示すリアルタイムの脈動やアクティビティ表示が欠けている。",
+      "fix": "文字起こしパネル内にも小さな波形や点滅インジケーターを常時表示し、録音開始直後から『聞き取り中』であることを視覚的に継続提示する。"
+    },
+    {
+      "axis": "hierarchy",
+      "what": "「決まったこと/やること」（メインパネル）と「決定事項/アクション」（右パネルのボタン）が同じ概念を二重に表現しており、初見ユーザーはどちらが本体でどちらが呼び出しボタンなのか区別しづらい。",
+      "fix": "右パネルのボタンをより明確に『アクションを実行する操作』として差別化するか、片方に統合してラベルの重複を解消する。"
+    },
+    {
+      "axis": "delight",
+      "what": "「決まったことを待っています...」「やることを待っています...」など、すべての空状態文言が無機質で同じトーンの繰り返しになっており、待機時間の体験に温かみがない。",
+      "fix": "待機中でも進捗が伝わる軽いアニメーションや、AIが実際に耳を傾けていることを示すフレンドリーなマイクロコピーに差し替える。"
+    },
+    {
+      "axis": "trust",
+      "what": "At 2 seconds with 'no speech yet', users cannot tell if the microphone is working, if they should speak, or if something is wrong.",
+      "fix": "Add guidance text: 'Ready to listen' or 'Waiting for speech' with a microphone status indicator (e.g., animated waveform or pulsing dot) to signal active capture."
+    },
+    {
+      "axis": "continuity",
+      "what": "The transition from empty panels to populated content is unclear—no visual signals or skeleton states guide the user's expectation.",
+      "fix": "Show skeleton loaders or animated placeholders in decision/action sections so users understand the app is actively populating them."
+    },
+    {
+      "axis": "efficiency",
+      "what": "Tabs (翻訳, 字幕) and buttons (実開する, 決定書類) are present but non-functional or unclear in an empty state, wasting visual real estate.",
+      "fix": "Hide or disable unavailable tabs/buttons until content exists. Or, replace the empty right panel with a single focused call-to-action during the listening phase."
+    },
+    {
+      "axis": "control",
+      "what": "The button labels are cryptic (実開する, 決定書類, アクション) and their interaction model is unclear without explanation.",
+      "fix": "Add tooltips or use more explicit labels. Surface the most important actions (e.g., view summary) prominently."
     }
   ]
 }

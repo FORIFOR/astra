@@ -1,0 +1,63 @@
+{
+  "visible_text": [
+    "録音中 00:02",
+    "14:50の会議",
+    "聞いています...",
+    "決まったこと",
+    "決まったことを待っています...",
+    "やること",
+    "やることを待っています...",
+    "文字起こし",
+    "翻訳",
+    "字幕",
+    "まだ発話がありません。",
+    "リアルタイム要約",
+    "実開する",
+    "決定書類",
+    "アクション",
+    "この会議について聞く",
+    "AIが見ている資料"
+  ],
+  "answers": {
+    "q1": "A meeting is being recorded right now. The app has just started capturing audio 2 seconds in, and is actively listening for speech. It's organizing content into decision items and action items, though none have been captured yet.",
+    "q2": "The meeting time (14:50), the recording status (active, 00:02), and that the AI is in listening mode. These establish the task context immediately.",
+    "q3": "Wait for the app to transcribe speech, then review transcriptions, translations, or subtitles in the right panel. You can also access real-time summaries, view decisions and action items as they emerge, or ask questions about the meeting.",
+    "q4": "Partly. The listening indicator and progress visualization suggest the app is active, but the 'no speech yet' message at 2 seconds creates uncertainty—is the microphone working? Should I be speaking? The empty categorized panels make it unclear if capture is functioning.",
+    "q5": "The Translation and Subtitles tabs feel premature when no transcription exists yet. The right-panel layout would benefit from guidance text. Some buttons (実開する, 決定書類) have unclear purpose without additional context.",
+    "q6": "The red recording indicator and timer catch attention first, followed immediately by the meeting title (14:50の会議). The floating control bar anchors the eye to the top."
+  },
+  "scores": {
+    "clarity": 6,
+    "calmness": 6,
+    "continuity": 5,
+    "context": 6,
+    "trust": 5,
+    "control": 6,
+    "hierarchy": 6,
+    "efficiency": 5,
+    "craft": 6,
+    "delight": 4
+  },
+  "weaknesses": [
+    {
+      "axis": "trust",
+      "what": "At 2 seconds with 'no speech yet', users cannot tell if the microphone is working, if they should speak, or if something is wrong.",
+      "fix": "Add guidance text: 'Ready to listen' or 'Waiting for speech' with a microphone status indicator (e.g., animated waveform or pulsing dot) to signal active capture."
+    },
+    {
+      "axis": "continuity",
+      "what": "The transition from empty panels to populated content is unclear—no visual signals or skeleton states guide the user's expectation.",
+      "fix": "Show skeleton loaders or animated placeholders in decision/action sections so users understand the app is actively populating them."
+    },
+    {
+      "axis": "efficiency",
+      "what": "Tabs (翻訳, 字幕) and buttons (実開する, 決定書類) are present but non-functional or unclear in an empty state, wasting visual real estate.",
+      "fix": "Hide or disable unavailable tabs/buttons until content exists. Or, replace the empty right panel with a single focused call-to-action during the listening phase."
+    },
+    {
+      "axis": "control",
+      "what": "The button labels are cryptic (実開する, 決定書類, アクション) and their interaction model is unclear without explanation.",
+      "fix": "Add tooltips or use more explicit labels. Surface the most important actions (e.g., view summary) prominently."
+    }
+  ]
+}

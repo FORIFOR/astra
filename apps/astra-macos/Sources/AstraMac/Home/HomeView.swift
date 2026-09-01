@@ -102,7 +102,7 @@ struct HomeView: View {
                 }
 
                 if !sessions.recent.isEmpty {
-                    section("Recent Sessions")
+                    section("最近の会議")
                     ForEach(sessions.recent.prefix(6)) { s in
                         SessionCard(session: s) { openDetail(s) }
                     }

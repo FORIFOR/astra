@@ -1,0 +1,1 @@
+JOURNEY J09 success=true ms=2868 interactions=5 windows=0 focusTheft=0 errors=0

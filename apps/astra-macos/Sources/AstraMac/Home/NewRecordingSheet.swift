@@ -30,7 +30,7 @@ struct NewRecordingSheet: View {
             }
             picker("Template", selection: $template, options: templates)
             picker("Save to", selection: Binding(
-                get: { MeetingSession.Visibility(rawValue: visibilityRaw)?.label ?? "My Space" },
+                get: { MeetingSession.Visibility(rawValue: visibilityRaw)?.label ?? "自分だけ" },
                 set: { label in
                     visibilityRaw = (MeetingSession.Visibility.allCases.first { $0.label == label } ?? .mySpace).rawValue
                 }), options: MeetingSession.Visibility.allCases.map(\.label))
@@ -54,7 +54,7 @@ struct NewRecordingSheet: View {
                 } label: {
                     HStack(spacing: 7) {
                         Circle().fill(Color.recordingRed).frame(width: 8, height: 8)
-                        Text("Start recording")
+                        Text("録音を始める")
                     }
                     .font(.system(size: TypeScale.bodySize, weight: .semibold))
                     .foregroundStyle(Palette.text(dark))

@@ -32,8 +32,9 @@ struct MeetingSession: Identifiable, Equatable {
         case mySpace, workspace
         var label: String {
             switch self {
-            case .mySpace: return "My Space"
-            case .workspace: return "Workspace"
+            // 説明文（detail）は日本語なのに、名札だけ英語だった。揃える。
+            case .mySpace: return "自分だけ"
+            case .workspace: return "みんなに公開"
             }
         }
         var detail: String {
@@ -72,14 +73,15 @@ struct MeetingSession: Identifiable, Equatable {
 
     var isLive: Bool { status == .recording }
 
-    /// 「Today · 42 min」。録音中は経過を出す。
+    /// 「今日 · 42 分」。録音中は経過を出す。
+    /// 画面の言葉は日本語で揃える。英語と混ざると、どちらも読み飛ばされる。
     func timeLabel(now: Date = Date()) -> String {
         let minutes = Int((endedAt?.timeIntervalSince(startedAt) ?? now.timeIntervalSince(startedAt)) / 60)
         let cal = Calendar.current
-        let day = cal.isDateInToday(startedAt) ? "Today"
-            : cal.isDateInYesterday(startedAt) ? "Yesterday"
+        let day = cal.isDateInToday(startedAt) ? "今日"
+            : cal.isDateInYesterday(startedAt) ? "昨日"
             : MeetingSession.dayFormatter.string(from: startedAt)
-        return "\(day) · \(minutes) min"
+        return "\(day) · \(minutes) 分"
     }
 
     /// 録音中の経過（00:00）。

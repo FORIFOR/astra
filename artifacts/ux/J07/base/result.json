@@ -1,0 +1,31 @@
+{
+  "artifacts" : [
+    "01-終わったあと.png"
+  ],
+  "errors" : [
+
+  ],
+  "focusTheft" : 0,
+  "interactions" : 1,
+  "journey" : "J07",
+  "notMeasured" : [
+    "拾い間違いを直せるか（画面操作が要る）"
+  ],
+  "product" : "Astra",
+  "startedAt" : "2026-09-01T17:50:15Z",
+  "steps" : [
+    {
+      "interactions" : 1,
+      "ms" : 667,
+      "name" : "停止 → processing"
+    },
+    {
+      "interactions" : 0,
+      "ms" : 1198,
+      "name" : "ready まで"
+    }
+  ],
+  "success" : true,
+  "totalMs" : 2970,
+  "windowsOpened" : 0
+}

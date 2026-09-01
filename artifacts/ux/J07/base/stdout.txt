@@ -1,0 +1,1 @@
+JOURNEY J07 success=true ms=2970 interactions=1 windows=0 focusTheft=0 errors=0

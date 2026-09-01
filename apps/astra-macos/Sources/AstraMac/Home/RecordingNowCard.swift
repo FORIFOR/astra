@@ -76,7 +76,7 @@ struct RecordingNowCard: View {
         var parts: [String] = []
         // 出所が題と同じ文字なら出さない（同じ語を 2 行続けて読ませない）。
         if let source = session.source, source != session.title { parts.append(source) }
-        if session.participantCount > 0 { parts.append("\(session.participantCount) participants") }
+        if session.participantCount > 0 { parts.append("\(session.participantCount) 人") }
         if let project = session.projectId { parts.append(project) }
         return parts.isEmpty ? session.visibility.label : parts.joined(separator: " · ")
     }

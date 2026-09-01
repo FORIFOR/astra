@@ -100,9 +100,9 @@ struct SessionCard: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
             HStack(spacing: 14) {
-                metric("person.2", "\(session.participantCount) participants")
-                metric("arrow.right.circle", "\(session.actionCount) actions")
-                metric("checkmark.circle", "\(session.decisionCount) decisions")
+                metric("person.2", "\(session.participantCount) 人")
+                metric("arrow.right.circle", "やること \(session.actionCount)")
+                metric("checkmark.circle", "決まったこと \(session.decisionCount)")
                 Spacer(minLength: 0)
             }
         }
@@ -136,15 +136,15 @@ struct SessionCard: View {
             .fixedSize()
             .accessibilityIdentifier("visibility-\(session.id)")
 
-            // project。無ければ「No Project」。
+            // project。無ければ「プロジェクト無し」。
             Menu {
-                Button("No Project") { store.setProject(nil, for: session.id) }
+                Button("プロジェクト無し") { store.setProject(nil, for: session.id) }
                 Divider()
                 ForEach(Projects.all(), id: \.self) { p in
                     Button(p) { store.setProject(p, for: session.id) }
                 }
             } label: {
-                chip(session.projectId ?? "No Project", filled: session.projectId != nil)
+                chip(session.projectId ?? "プロジェクト無し", filled: session.projectId != nil)
             }
             .menuStyle(.borderlessButton)
             .menuIndicator(.hidden)

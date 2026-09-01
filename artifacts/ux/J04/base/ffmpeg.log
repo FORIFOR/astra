@@ -1,0 +1,9 @@
+[libx264 @ 0x77500ca80] height not divisible by 2 (960x207)
+[vost#0:0/libx264 @ 0x774c7c000] [enc:libx264 @ 0x774c05810] Error while opening encoder - maybe incorrect parameters such as bit_rate, rate, width or height.
+[vf#0:0 @ 0x77542c000] Error sending frames to consumers: Generic error in an external library
+[vf#0:0 @ 0x77542c000] Task finished with error code: -542398533 (Generic error in an external library)
+[vf#0:0 @ 0x77542c000] Terminating thread with return code -542398533 (Generic error in an external library)
+[vost#0:0/libx264 @ 0x774c7c000] [enc:libx264 @ 0x774c05810] Could not open encoder before EOF
+[vost#0:0/libx264 @ 0x774c7c000] Task finished with error code: -22 (Invalid argument)
+[vost#0:0/libx264 @ 0x774c7c000] Terminating thread with return code -22 (Invalid argument)
+[out#0/mp4 @ 0x775008900] Nothing was written into output file, because at least one of its streams received no packets.

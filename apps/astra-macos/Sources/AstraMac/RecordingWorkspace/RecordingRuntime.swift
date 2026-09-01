@@ -197,8 +197,18 @@ final class RecordingRuntime {
     }
 
     /// 前回落ちたまま残っている録音（未アップロードの断片）。起動時に surface する。
+    /// 落ちたまま残っている録音。**正常に終わったものは含めない。**
+    ///
+    /// journal は送り終えるまで残るので、サインインしていない機械では
+    /// 普通に停止した会議まで候補に入っていた。Home が
+    /// 「保存し切る前に終わった録音です」と言うが、それは嘘になる。
+    /// 手元で ready / processing まで進んだ会議は、落ちていない。
     func recoverableMeetings() -> [RecoverableMeeting] {
-        AstraCoreBridge.recoverable(root: root, active: nil)
+        let finished = Set(MeetingSessionStore.shared.sessions
+            .filter { $0.status == .ready || $0.status == .processing }
+            .map { $0.id })
+        return AstraCoreBridge.recoverable(root: root, active: nil)
+            .filter { !finished.contains($0.meetingId) }
     }
 
     /// クラッシュした録音を復旧する: その会議の断片を gateway に送って finalize する。
