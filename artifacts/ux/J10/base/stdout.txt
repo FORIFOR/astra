@@ -1,1 +1,1 @@
-JOURNEY J10 success=true ms=2621 interactions=1 windows=0 focusTheft=0 errors=0
+JOURNEY J10 success=true ms=2611 interactions=1 windows=0 focusTheft=0 errors=0

@@ -99,11 +99,32 @@ struct SessionCard: View {
                     .lineLimit(3)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            HStack(spacing: 14) {
-                metric("person.2", "\(session.participantCount) 人")
-                metric("arrow.right.circle", "やること \(session.actionCount)")
-                metric("checkmark.circle", "決まったこと \(session.decisionCount)")
-                Spacer(minLength: 0)
+            // **ゼロが並ぶだけだと、成功か失敗か分からない。**
+            // 終わった直後の会議が「0 人・やること 0・決まったこと 0・0 分」で、
+            // 処理中なのか、何も拾えなかったのか、壊れたのかを見分けられない、と
+            // 実装を知らない評価者 3 人が揃って言った。
+            // 拾えたものが無いなら、数ではなく**言葉で**そう言う。
+            if session.actionCount == 0 && session.decisionCount == 0 {
+                HStack(spacing: 6) {
+                    Image(systemName: "text.badge.xmark")
+                        .font(.system(size: 11))
+                        .foregroundStyle(Palette.muted(dark))
+                    Text((session.endedAt?.timeIntervalSince(session.startedAt) ?? 0) < 30
+                         ? "短すぎて、拾えたものはありません"
+                         : "拾えたものはありません")
+                        .font(.system(size: S.type(TypeScale.secondarySize)))
+                        .foregroundStyle(Palette.muted(dark))
+                    Spacer(minLength: 0)
+                }
+            } else {
+                HStack(spacing: 14) {
+                    if session.participantCount > 0 {
+                        metric("person.2", "\(session.participantCount) 人")
+                    }
+                    metric("arrow.right.circle", "やること \(session.actionCount)")
+                    metric("checkmark.circle", "決まったこと \(session.decisionCount)")
+                    Spacer(minLength: 0)
+                }
             }
         }
     }

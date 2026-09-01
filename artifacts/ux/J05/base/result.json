@@ -13,26 +13,26 @@
     "実会議での拾い漏れ（実音声が要る）"
   ],
   "product" : "Astra",
-  "startedAt" : "2026-09-01T05:50:39Z",
+  "startedAt" : "2026-09-01T17:58:06Z",
   "steps" : [
     {
       "interactions" : 1,
-      "ms" : 1062,
+      "ms" : 1061,
       "name" : "会議の面を開く"
     },
     {
       "interactions" : 0,
-      "ms" : 57,
+      "ms" : 58,
       "name" : "開始 0 秒の画面",
-      "note" : "地 62.4%"
+      "note" : "地 62.3%"
     },
     {
       "interactions" : 0,
-      "ms" : 803,
+      "ms" : 848,
       "name" : "3 分ぶんの発話を入れる"
     }
   ],
   "success" : true,
-  "totalMs" : 1950,
+  "totalMs" : 1995,
   "windowsOpened" : 0
 }

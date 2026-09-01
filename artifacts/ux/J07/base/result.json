@@ -12,20 +12,20 @@
     "拾い間違いを直せるか（画面操作が要る）"
   ],
   "product" : "Astra",
-  "startedAt" : "2026-09-01T17:50:15Z",
+  "startedAt" : "2026-09-01T17:59:26Z",
   "steps" : [
     {
       "interactions" : 1,
-      "ms" : 667,
+      "ms" : 675,
       "name" : "停止 → processing"
     },
     {
       "interactions" : 0,
-      "ms" : 1198,
+      "ms" : 1224,
       "name" : "ready まで"
     }
   ],
   "success" : true,
-  "totalMs" : 2970,
+  "totalMs" : 2998,
   "windowsOpened" : 0
 }

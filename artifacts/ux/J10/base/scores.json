@@ -1,0 +1,153 @@
+{
+  "valid": 3,
+  "rejected": [],
+  "axes": {
+    "clarity": {
+      "median": 4,
+      "stddev": 0.82,
+      "values": [
+        3,
+        4,
+        5
+      ]
+    },
+    "calmness": {
+      "median": 6,
+      "stddev": 0.47,
+      "values": [
+        6,
+        6,
+        5
+      ]
+    },
+    "continuity": {
+      "median": 4,
+      "stddev": 1.25,
+      "values": [
+        3,
+        4,
+        6
+      ]
+    },
+    "context": {
+      "median": 4,
+      "stddev": 0.82,
+      "values": [
+        3,
+        4,
+        5
+      ]
+    },
+    "trust": {
+      "median": 4,
+      "stddev": 0.82,
+      "values": [
+        4,
+        3,
+        5
+      ]
+    },
+    "control": {
+      "median": 5,
+      "stddev": 1.25,
+      "values": [
+        3,
+        5,
+        6
+      ]
+    },
+    "hierarchy": {
+      "median": 5,
+      "stddev": 0.47,
+      "values": [
+        4,
+        5,
+        5
+      ]
+    },
+    "efficiency": {
+      "median": 5,
+      "stddev": 0.94,
+      "values": [
+        3,
+        5,
+        5
+      ]
+    },
+    "craft": {
+      "median": 6,
+      "stddev": 0.47,
+      "values": [
+        6,
+        5,
+        6
+      ]
+    },
+    "delight": {
+      "median": 3,
+      "stddev": 0.0,
+      "values": [
+        3,
+        3,
+        3
+      ]
+    }
+  },
+  "weaknesses": [
+    {
+      "axis": "context",
+      "what": "There is no explanation anywhere on screen of what 'Interrupted recording' actually means for the user's data — whether audio was partially saved, fully lost, or recoverable. The English label also sits alone in an otherwise all-Japanese UI, adding a small comprehension gap.",
+      "fix": "Add a short inline status line under the card (in Japanese, matching the rest of the UI) stating the concrete outcome, e.g. '録音は〇分保存されました' or '音声は保存されませんでした', so the user isn't left guessing."
+    },
+    {
+      "axis": "control",
+      "what": "No explicit recovery action is surfaced on the interrupted-recording card itself — only a generic '...' overflow menu, which is not an obvious place to look for something as important as recovering lost work.",
+      "fix": "Put a primary, visible action directly on the card (e.g. '詳細を見る' or '復元する' button) instead of hiding any recovery path inside a three-dot menu."
+    },
+    {
+      "axis": "continuity",
+      "what": "After restarting from a crash mid-recording, the app drops the user onto a generic, cheerful home screen ('こんばんは' + a fresh 'start recording' prompt) rather than acknowledging the session that was just interrupted, breaking continuity with what the user was doing before the crash.",
+      "fix": "On first launch after an interrupted session, surface a small dismissible banner or highlight state that ties directly back to the interrupted meeting before showing the normal home content."
+    },
+    {
+      "axis": "trust",
+      "what": "中断された会議カードに「今日・0 分」と表示されており、録音が全く保存されなかったように見える。何が残り何が失われたのかの説明が無く、ユーザーはデータの安否を判断できない。",
+      "fix": "実際に保存された秒数/分数を正確に表示するか、「録音データは保存されませんでした」「一部を復元しました（X分）」のように結果を明示する。"
+    },
+    {
+      "axis": "context",
+      "what": "アプリが予期せず終了して再起動したこと自体を伝えるメッセージが画面上に一切無い。「Interrupted recording」というラベル1つだけで状況全体を推測させている。",
+      "fix": "再起動直後に軽いトースト/バナーで「前回の録音は中断されました」と一言添え、原因や次の一手を短く案内する。"
+    },
+    {
+      "axis": "control",
+      "what": "中断された会議に対して取れる具体的なアクション（復元を試みる／文字起こしを確認する／破棄する）が見えず、「…」メニューを開かないと何ができるか分からない。",
+      "fix": "カード上に「詳細を見る」「復元を試す」のような明示的なボタンを1つ出し、次にすべき操作を迷わせない。"
+    },
+    {
+      "axis": "context",
+      "what": "No explanation of what 'Interrupted recording' means or how to recover it. Unclear if the data was saved or lost.",
+      "fix": "Add a subtitle like 'Your recording was saved and can be resumed' or 'This meeting will be merged with a new recording.'"
+    },
+    {
+      "axis": "calmness",
+      "what": "Orange warning color and lack of reassurance messaging create mild alarm rather than calm recovery experience.",
+      "fix": "Change to a lighter warning tone or add explicit reassurance text. Confirm that data is safe before prompting next action."
+    },
+    {
+      "axis": "trust",
+      "what": "No indication of system state after crash (did it save? did it lose audio? did it auto-recover?). Feels uncertain.",
+      "fix": "Add one reassuring detail: 'Automatically saved' or 'Recovery available' or timestamp of saved content."
+    },
+    {
+      "axis": "hierarchy",
+      "what": "Recovery path is unclear. The greeting and input box steal visual weight from the actual state problem.",
+      "fix": "When showing interrupted recording, make recovery options (Resume / Discard / Review) more prominent than the input prompt."
+    },
+    {
+      "axis": "delight",
+      "what": "The tone is transactional (state the problem, offer restart) rather than reassuring or positive.",
+      "fix": "Frame as 'Your recording is preserved' or 'Ready to continue where you left off' instead of just flagging the interruption."
+    }
+  ]
+}

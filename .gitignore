@@ -28,3 +28,9 @@ apps/astra-macos/build/
 # 配布物（scripts/build-dmg.sh が作る）
 apps/astra-macos/dist/
 apps/astra-macos/Vendor/
+
+# 画面の連写は判定のたびに撮り直す。repo に置かない
+# （画面全体を録っていた頃、利用者の私物が frame に入っていた）
+artifacts/ux/**/frames/
+artifacts/ux/**/*.mp4
+artifacts/ux/**/data/

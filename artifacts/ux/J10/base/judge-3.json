@@ -1,0 +1,68 @@
+{
+  "visible_text": [
+    "こんばんは",
+    "何を終わらせますか？",
+    "録音を始める",
+    "前回の設定でその場で録り始めます",
+    "最近の会議",
+    "02:55 の会議",
+    "Interrupted recording",
+    "自分だけ",
+    "プロジェクト無し",
+    "今日・0分",
+    "Home",
+    "Tasks",
+    "Meetings",
+    "Library",
+    "Agents",
+    "Plugins",
+    "ui-check"
+  ],
+  "answers": {
+    "q1": "The app just restarted. A previous meeting (02:55) shows 'Interrupted recording' in orange, clearly signaling a crash occurred during that session.",
+    "q2": "The interrupted recording status. It's the only signal that something went wrong, but it lacks context about what happened or what to do.",
+    "q3": "I can tap 'Start recording' to resume using previous settings, or open the meeting card with the menu. But it's not obvious if I'll lose the interrupted recording or recover it.",
+    "q4": "Unclear. The app is running and displays normally, but there's no confirmation that it recovered correctly or that previous data is safe. The greeting feels automatic rather than intentional recovery feedback.",
+    "q5": "'ui-check' in the bottom left looks like internal debug text that leaked into the UI. The greeting 'こんばんは' is nice but doesn't address the crash context.",
+    "q6": "First to the large greeting, then immediately to the orange 'Interrupted recording' warning, then to the Start Recording button."
+  },
+  "scores": {
+    "clarity": 5,
+    "calmness": 5,
+    "continuity": 6,
+    "context": 5,
+    "trust": 5,
+    "control": 6,
+    "hierarchy": 5,
+    "efficiency": 5,
+    "craft": 6,
+    "delight": 3
+  },
+  "weaknesses": [
+    {
+      "axis": "context",
+      "what": "No explanation of what 'Interrupted recording' means or how to recover it. Unclear if the data was saved or lost.",
+      "fix": "Add a subtitle like 'Your recording was saved and can be resumed' or 'This meeting will be merged with a new recording.'"
+    },
+    {
+      "axis": "calmness",
+      "what": "Orange warning color and lack of reassurance messaging create mild alarm rather than calm recovery experience.",
+      "fix": "Change to a lighter warning tone or add explicit reassurance text. Confirm that data is safe before prompting next action."
+    },
+    {
+      "axis": "trust",
+      "what": "No indication of system state after crash (did it save? did it lose audio? did it auto-recover?). Feels uncertain.",
+      "fix": "Add one reassuring detail: 'Automatically saved' or 'Recovery available' or timestamp of saved content."
+    },
+    {
+      "axis": "hierarchy",
+      "what": "Recovery path is unclear. The greeting and input box steal visual weight from the actual state problem.",
+      "fix": "When showing interrupted recording, make recovery options (Resume / Discard / Review) more prominent than the input prompt."
+    },
+    {
+      "axis": "delight",
+      "what": "The tone is transactional (state the problem, offer restart) rather than reassuring or positive.",
+      "fix": "Frame as 'Your recording is preserved' or 'Ready to continue where you left off' instead of just flagging the interruption."
+    }
+  ]
+}
