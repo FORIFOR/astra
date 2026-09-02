@@ -1,12 +1,8 @@
 {
   "2900": {
-    "one_surface": "YES",
-    "detached_overlay": "NO",
     "consistent_style": "YES"
   },
   "5F3D": {
-    "one_surface": "YES",
-    "detached_overlay": "NO",
     "consistent_style": "YES"
   },
   "F8D0": {
@@ -20,13 +16,9 @@
     "consistent_style": "YES"
   },
   "4681": {
-    "one_surface": "YES",
-    "detached_overlay": "NO",
     "consistent_style": "NO"
   },
   "ED1D": {
-    "one_surface": "YES",
-    "detached_overlay": "NO",
     "consistent_style": "NO"
   }
 }
