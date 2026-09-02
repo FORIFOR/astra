@@ -159,14 +159,19 @@ struct AppContextDock: View {
 
             if expanded {
                 Divider().overlay(Palette.border(dark))
+                // 左端は 1 本。題・見出し・候補の字がすべて padH（20）から始まる。
+                // 候補の押せる矩形は字より 8pt 外へ張り出すので、列全体を padH-8 に置き、
+                // 題と見出しだけ 8 戻す。（前は 16 / 16 / 24 の 3 本になっていた。実測。）
                 VStack(alignment: .leading, spacing: 8) {
                     if let document = summary.document {
                         Text(document)
                             .font(.system(size: S.type(Metrics.dockTitleSize), weight: .semibold))
                             .foregroundStyle(Palette.text(dark))
                             .lineLimit(1)
+                            .padding(.horizontal, 8)
                     }
                     DockLabel(text: "Suggested")
+                        .padding(.horizontal, 8)
                     VStack(alignment: .leading, spacing: 1) {
                         ForEach(summary.suggestions, id: \.self) { s in
                             Button { VoiceHUDState.shared.runSuggestion(s) } label: {
@@ -184,7 +189,7 @@ struct AppContextDock: View {
                         }
                     }
                 }
-                .padding(.horizontal, S.metric(Metrics.dockPadH) - 4)
+                .padding(.horizontal, S.metric(Metrics.dockPadH) - 8)
                 .padding(.top, 9)
                 // 最後の候補の下は padV。面の高さは実寸で決まるので、ここが底になる。
                 .padding(.bottom, S.metric(Metrics.dockPadV))
@@ -325,7 +330,7 @@ struct AgentDock: View {
             footer
         }
         .padding(.horizontal, S.metric(Metrics.dockPadH))
-        .padding(.vertical, 14)
+        .padding(.vertical, S.metric(Metrics.dockPadV))
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .onReceive(timer) { tick = $0 }
         .accessibilityElement(children: .contain)
@@ -606,8 +611,8 @@ struct ConfirmationDock: View {
                 }
             }
         }
-        .padding(.horizontal, S.metric(Metrics.dockPadH) + 2)
-        .padding(.vertical, 12)
+        .padding(.horizontal, S.metric(Metrics.dockPadH))
+        .padding(.vertical, S.metric(Metrics.dockPadV))
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         // Escape は取消。直している最中なら、直すのをやめて確認へ戻る。
         // **逃げ道は常に同じ鍵**でないと、危ないときに手が止まる。
@@ -751,7 +756,7 @@ private struct MeetingDock: View {
                 Divider().overlay(Palette.border(dark))
                 MeetingPanelBody(panel: open)
                     .padding(.horizontal, S.metric(Metrics.dockPadH))
-                    .padding(.top, 12)
+                    .padding(.top, S.metric(Metrics.dockPadV))
                 Spacer(minLength: 0)
             }
         }
@@ -1052,7 +1057,7 @@ struct ResultDock: View {
             }
         }
         .padding(.horizontal, S.metric(Metrics.dockPadH))
-        .padding(.vertical, 14)
+        .padding(.vertical, S.metric(Metrics.dockPadV))
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("dockResult")
@@ -1120,7 +1125,7 @@ struct ContextDetailDock: View {
             Spacer(minLength: 0)
         }
         .padding(.horizontal, S.metric(Metrics.dockPadH))
-        .padding(.vertical, 14)
+        .padding(.vertical, S.metric(Metrics.dockPadV))
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("dockContextDetail")

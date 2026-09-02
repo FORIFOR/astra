@@ -1,0 +1,5 @@
+A padV12 w560  (HEAD)  560x246
+B padV16 w560          560x254
+C padV20 w560          560x262
+D padV12 w520          520x268  (本文が 2 行に折れて面積は減らない → 採点に出さず除外)
+judge order: j1(sonnet) 1=A 2=B 3=C / j2(sonnet) 1=C 2=A 3=B / j3(opus) 1=B 2=C 3=A

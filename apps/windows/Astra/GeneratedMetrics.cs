@@ -45,7 +45,7 @@ public static class Metrics
     public const double DockMetaSize = 13;
     public const double DockLabelSize = 11;
     public const double DockPadH = 20;
-    public const double DockPadV = 12;
+    public const double DockPadV = 16;
     public const double DockRowGap = 8;
     public const double HudOrbSize = 9;
     public const double PaletteWidth = 140;

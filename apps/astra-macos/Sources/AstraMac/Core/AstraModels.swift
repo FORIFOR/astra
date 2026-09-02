@@ -334,7 +334,7 @@ struct ActionConfirmation: Identifiable, Equatable {
     }
 
     /// 中身が使える幅。左右の余白を引いたもの。
-    static var contentWidth: CGFloat { Metrics.dockConfirmWidth - (Metrics.dockPadH + 2) * 2 }
+    static var contentWidth: CGFloat { Metrics.dockConfirmWidth - Metrics.dockPadH * 2 }
 
     /// 造形⑨ 図形の重さ。**役割の順に重くする。**
     ///

@@ -45,7 +45,7 @@ enum Metrics {
     static let dockMetaSize: CGFloat = 13
     static let dockLabelSize: CGFloat = 11
     static let dockPadH: CGFloat = 20
-    static let dockPadV: CGFloat = 12
+    static let dockPadV: CGFloat = 16
     static let dockRowGap: CGFloat = 8
     static let hudOrbSize: CGFloat = 9
     static let paletteWidth: CGFloat = 140
