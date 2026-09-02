@@ -3,31 +3,31 @@
     "h" : 16,
     "w" : 560,
     "x" : 680,
-    "y" : 68
+    "y" : 43
   },
   "text:このページからタスクを作って…" : {
     "h" : 21,
     "w" : 247,
     "x" : 751,
-    "y" : 36.5
+    "y" : 12
   },
   "text:見えている文脈はありません" : {
     "h" : 16,
     "w" : 560,
     "x" : 680,
-    "y" : 68
+    "y" : 43
   },
   "voiceHUD" : {
-    "h" : 120.5,
+    "h" : 71.5,
     "w" : 600.5,
     "x" : 660,
     "y" : -0.5
   },
   "window:AstraPanel<VoiceTaskDockView>" : {
-    "h" : 120,
+    "h" : 71,
     "w" : 600,
     "x" : 660,
-    "y" : 960
+    "y" : 1009
   },
   "window:AstraPanel<VoiceTaskDockView>:centerOffset" : {
     "h" : 0,

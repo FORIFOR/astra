@@ -3,39 +3,52 @@ import SwiftUI
 
 /// 中身で高さが決まる Dock の状態は、**推定せず、描いて測る。**
 ///
-/// ③ で確認の面の高さを「積むものの実寸和」の式にした。式は view の写しなので、
-/// view を 1 か所変えるたびに式も追わないとずれる。実際 14pt 短くなり、
-/// 面（ZStack の地）が中身の高さまで伸びて窓の外へはみ出し、角丸が窓の縁で
-/// 切られて四角い黒い板になっていた（agent は 25pt）。採点者が「E7D5 は
-/// 角丸のカードに見えない」と言ったのはこれで、造形の話ではなかった。
+/// ③ で入れた `surfaceHeight`（view が積むものを式で足す）は 14pt 短く、
+/// agent の `base + 段数 × 行高` は 3 段で 31pt 長く、5 段で 25pt 短かった。
+/// 式が短いと ZStack の地が中身の大きさまで伸びて窓からはみ出し、角丸が
+/// 窓の縁で切られて**四角い黒い板**になる。式が長いと余りが Spacer に吸われて
+/// 出所とボタンの間に穴が出る。式と view は必ずずれる。だから式を持たない。
 ///
-/// 高さを決める場所は 1 つ。**view そのもの**。同じ view を同じ幅で
-/// 画面外に敷いて `fittingSize` を取る。式は持たない。
+/// **Dock の面の高さの規則は 1 つ**: 中身の実寸 + 上下の inset（view 自身の padding）。
+/// 例外は 2 つだけ ——
+/// - `.meeting(panel:)` の展開面: 生きて増える一覧を scroll で見せる **固定**の高さ
+/// - `.confirmation`: 決断の面が作業面ほど大きくならないよう **上限 360**
+/// - `.idle` / `.appContext`（畳んだ棚）: Dynamic Island の寸法そのもの（token）
+///
+/// 測るのは `NSHostingView.fittingSize`。実際に窓へ載せる view と同じ型・同じ幅・
+/// 同じ environment（dark / UIScale）で測るので、窓の中でだけ違う高さになることはない。
 enum DockContentMeasure {
-    /// 同じ中身を何度も敷かない（`size()` は body の評価ごとに呼ばれる）。
     private static var cache: (key: Key, height: CGFloat)?
 
+    /// 中身が変わったら測り直す。`AstraState` 全体を鍵にする —— 文脈の棚（listening の
+    /// ContextStrip / contextDetail の格子）や結果の行は `dock` の外にあるため。
     private struct Key: Equatable {
         let dock: DockPresentation
-        let task: AgentTask?
+        let state: AstraState
         let width: CGFloat
         let type: CGFloat
         let metric: CGFloat
     }
 
-    /// 中身で決まる状態なら描いた高さ、そうでなければ nil（token の寸法を使う）。
+    /// `nil` = この状態は固定寸法（token）で決める。
     @MainActor
     static func height(of dock: DockPresentation, width: CGFloat) -> CGFloat? {
         let body: AnyView
         switch dock {
-        case .confirmation(let c): body = AnyView(ConfirmationDock(confirmation: c))
+        case .appContextExpanded(let summary): body = AnyView(AppContextDock(summary: summary, expanded: true))
+        case .listening(let partial): body = AnyView(ListeningDock(partial: partial))
+        case .thinking: body = AnyView(ThinkingDock())
         case .agent: body = AnyView(AgentDock())
-        default: return nil
+        case .confirmation(let c): body = AnyView(ConfirmationDock(confirmation: c))
+        case .result(let r): body = AnyView(ResultDock(result: r))
+        case .contextDetail: body = AnyView(ContextDetailDock())
+        case .quickActions: body = AnyView(QuickActionsDock())
+        case .enteringRecording: body = AnyView(SimpleDock(icon: "record.circle", text: "録音を始めます…", tint: .recordingRed))
+        case .idle, .appContext, .meeting: return nil
         }
-        let key = Key(dock: dock, task: AstraStateStore.shared.state.activeTask, width: width,
+        let key = Key(dock: dock, state: AstraStateStore.shared.state, width: width,
                       type: UIScale.shared.size.type, metric: UIScale.shared.size.metric)
         if let cache, cache.key == key { return cache.height }
-        // 本番と同じ条件で敷く。地が暗いので中身は暗色側、幅は面の幅。
         let host = NSHostingView(rootView: body.frame(width: width).environment(\.colorScheme, .dark))
         let h = host.fittingSize.height.rounded(.up)
         cache = (key, h)

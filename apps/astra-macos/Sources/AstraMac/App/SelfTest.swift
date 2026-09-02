@@ -667,6 +667,7 @@ enum SelfTest {
         // Presence → Listening。途中の frame を細かく拾う。
         let t0 = Date()
         hud.mode = .listening(partial: "")
+        let listeningSize = store.dock.size()
         var tops = Set<Int>()
         var widths: [CGFloat] = []
         var settledAt: Date?
@@ -675,8 +676,8 @@ enum SelfTest {
             guard let f = dockFrame() else { continue }
             tops.insert(Int(f.minY.rounded()))
             widths.append(f.width)
-            if settledAt == nil, abs(f.width - Metrics.dockListeningWidth) <= 1,
-               abs(f.height - Metrics.dockListeningHeight) <= 1 {
+            if settledAt == nil, abs(f.width - listeningSize.width) <= 1,
+               abs(f.height - listeningSize.height) <= 1 {
                 settledAt = Date()
             }
         }
@@ -5234,7 +5235,8 @@ enum SelfTest {
             settle(2.0)
             wins = onScreenWindowSizes()
             let controllerGone = !wins.contains { near($0.w, Metrics.dockMeetingWidth) && near($0.h, Metrics.dockMeetingHeight) }
-            let resultUp = wins.contains { near($0.w, Metrics.dockResultWidth) && near($0.h, Metrics.dockResultHeight) }
+            let resultSize = AstraStateStore.shared.dock.size()
+            let resultUp = wins.contains { near($0.w, resultSize.width) && near($0.h, resultSize.height) }
             let stillOneSurface = wins.count == 1
             guard !state.isRecording, controllerGone, resultUp, stillOneSurface else {
                 print("SELFTEST_FAIL e2e001 ⑧復帰: stopped=\(!state.isRecording) controllerGone=\(controllerGone) result=\(resultUp) wins=\(wins)"); exit(8)

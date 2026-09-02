@@ -128,7 +128,7 @@ private struct IdleDock: View {
 // MARK: - 2. App Context
 
 /// アプリを認識したとき。閉じているときは **1 行だけ**（巨大 popup を出さない）。
-private struct AppContextDock: View {
+struct AppContextDock: View {
     @Environment(\.colorScheme) private var scheme
     private var dark: Bool { scheme == .dark }
     let summary: AppContextSummary
@@ -186,6 +186,8 @@ private struct AppContextDock: View {
                 }
                 .padding(.horizontal, S.metric(Metrics.dockPadH) - 4)
                 .padding(.top, 9)
+                // 最後の候補の下は padV。面の高さは実寸で決まるので、ここが底になる。
+                .padding(.bottom, S.metric(Metrics.dockPadV))
                 Spacer(minLength: 0)
             }
         }
@@ -197,7 +199,7 @@ private struct AppContextDock: View {
 
 /// 声を聞いている。主役は波形ではなく**話した内容**。
 /// 波形は左端の小さな印にとどめ、下に「何を見ているか」を必ず出す。
-private struct ListeningDock: View {
+struct ListeningDock: View {
     @Environment(\.colorScheme) private var scheme
     private var dark: Bool { scheme == .dark }
     @ObservedObject private var store = AstraStateStore.shared
@@ -219,7 +221,9 @@ private struct ListeningDock: View {
             ContextStrip()
         }
         .padding(.horizontal, S.metric(Metrics.dockPadH))
-        // 2 行を面の中で上下に振り分ける（下に余白を溜めない）。
+        // 面の高さはこの view の実寸で決まる（`DockContentMeasure`）。上下は padV。
+        // 120pt 固定だったころは 2 行 47pt の上下に 36pt ずつ空いていた。
+        .padding(.vertical, S.metric(Metrics.dockPadV))
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("dockListening")
@@ -266,14 +270,14 @@ struct ContextStrip: View {
 
 // MARK: - 4. Thinking
 
-private struct ThinkingDock: View {
+struct ThinkingDock: View {
     @Environment(\.colorScheme) private var scheme
     var body: some View {
         SimpleDock(icon: "sparkles", text: "考えています…", tint: Palette.accent(scheme == .dark))
     }
 }
 
-private struct SimpleDock: View {
+struct SimpleDock: View {
     @Environment(\.colorScheme) private var scheme
     let icon: String
     let text: String
@@ -288,6 +292,9 @@ private struct SimpleDock: View {
             Spacer(minLength: 0)
         }
         .padding(.horizontal, S.metric(Metrics.dockPadH))
+        // 1 行の面。高さは実寸 + padV（idle の pill と同じ背丈になる）。
+        // 88pt 固定だったころは 19pt の 1 行の上下に 34pt ずつ空いていた。
+        .padding(.vertical, S.metric(Metrics.dockPadV))
         .frame(maxHeight: .infinity)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("dockSimple")
@@ -987,7 +994,7 @@ private struct AskInDockField: View {
 
 // MARK: - 結果（CleanShot 型: 終わっても消さず、後始末を出して残す）
 
-private struct ResultDock: View {
+struct ResultDock: View {
     @Environment(\.colorScheme) private var scheme
     private var dark: Bool { scheme == .dark }
     @ObservedObject private var sessions = MeetingSessionStore.shared
@@ -1056,7 +1063,7 @@ private struct ResultDock: View {
 
 // MARK: - 文脈の棚（Dropover 型: 棚そのものが詳細へ展開する）
 
-private struct ContextDetailDock: View {
+struct ContextDetailDock: View {
     @Environment(\.colorScheme) private var scheme
     private var dark: Bool { scheme == .dark }
     @ObservedObject private var store = AstraStateStore.shared
@@ -1122,7 +1129,7 @@ private struct ContextDetailDock: View {
 
 // MARK: - Quick actions
 
-private struct QuickActionsDock: View {
+struct QuickActionsDock: View {
     @Environment(\.colorScheme) private var scheme
     private var dark: Bool { scheme == .dark }
     @ObservedObject private var state = VoiceHUDState.shared

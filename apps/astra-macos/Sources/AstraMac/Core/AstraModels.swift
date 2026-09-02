@@ -62,48 +62,47 @@ enum DockPresentation: Equatable {
     }
 
     /// この状態での Dock の大きさ。**top anchor は固定**なので、変わるのは幅と高さだけ。
+    ///
+    /// 幅は状態ごとの token。高さは **中身を描いて測る**（`DockContentMeasure`）。
+    /// 固定値や式で持つと、中身より短ければ角が切れ、長ければ穴が出る。
+    /// 固定なのは Dynamic Island そのもの（idle / 畳んだ棚）と、
+    /// 生きて増える一覧を scroll で見せる会議の展開面だけ。token の高さは
+    /// 測れなかったときの fallback として残す。
     @MainActor func size(agentRows: Int = 0) -> CGSize {
-        // 候補や段の数で高さが決まるものは、数から導く（固定値だと最後の 1 行が切れる）。
+        func measured(_ w: CGFloat, fallback: CGFloat) -> CGSize {
+            CGSize(width: w, height: DockContentMeasure.height(of: self, width: w) ?? fallback)
+        }
         switch self {
         case .idle:
             return CGSize(width: Metrics.dockIdleWidth, height: Metrics.dockIdleHeight)
         case .appContext:
             return CGSize(width: Metrics.dockContextWidth, height: Metrics.dockContextHeight)
         case .appContextExpanded(let summary):
-            return CGSize(width: Metrics.dockContextExpandedWidth,
-                          height: Metrics.dockContextExpandedBase
-                              + CGFloat(summary.suggestions.count) * Metrics.dockAgentRowHeight)
+            return measured(Metrics.dockContextExpandedWidth,
+                            fallback: Metrics.dockContextExpandedBase
+                                + CGFloat(summary.suggestions.count) * Metrics.dockAgentRowHeight)
         case .listening:
-            return CGSize(width: Metrics.dockListeningWidth, height: Metrics.dockListeningHeight)
-        case .thinking:
-            return CGSize(width: Metrics.dockThinkingWidth, height: Metrics.dockThinkingHeight)
+            return measured(Metrics.dockListeningWidth, fallback: Metrics.dockListeningHeight)
+        case .thinking, .enteringRecording, .quickActions:
+            return measured(Metrics.dockThinkingWidth, fallback: Metrics.dockThinkingHeight)
         case .agent:
             // 内容に応じて**下へ**伸びる。幅は変えない。
-            // 高さは描いて測る（`DockContentMeasure`）。`agentHeightBase + 段数 × 行高` の
-            // 式は 5 段で 25pt 短く、面が窓からはみ出して角が切れていた。
-            let w = Metrics.dockAgentWidth
-            let fallback = Metrics.dockAgentHeightBase + CGFloat(agentRows) * Metrics.dockAgentRowHeight
-            return CGSize(width: w, height: DockContentMeasure.height(of: self, width: w) ?? fallback)
+            return measured(Metrics.dockAgentWidth,
+                            fallback: Metrics.dockAgentHeightBase + CGFloat(agentRows) * Metrics.dockAgentRowHeight)
         case .confirmation:
             // 中身で決まる。固定だと 2 行の確認でも面の半分が空き、
             // 押してほしいボタンが遠くに離れて置かれていた。
-            // 高さは推定せず描いて測る（`DockContentMeasure`）。
             // **上限を置く。** 決断のための面が作業面ほど大きくなると、
             // 何を決めるのかが薄まる（外の製品に負けた理由がこれ）。
-            let w = Metrics.dockConfirmWidth
-            let h = DockContentMeasure.height(of: self, width: w) ?? Metrics.dockConfirmHeight
-            return CGSize(width: w, height: min(360, h))
+            let s = measured(Metrics.dockConfirmWidth, fallback: Metrics.dockConfirmHeight)
+            return CGSize(width: s.width, height: min(360, s.height))
         case .meeting(let panel):
             return CGSize(width: Metrics.dockMeetingWidth,
                           height: panel == nil ? Metrics.dockMeetingHeight : Metrics.dockMeetingExpandedHeight)
         case .result:
-            return CGSize(width: Metrics.dockResultWidth, height: Metrics.dockResultHeight)
+            return measured(Metrics.dockResultWidth, fallback: Metrics.dockResultHeight)
         case .contextDetail:
-            return CGSize(width: Metrics.dockContextExpandedWidth, height: Metrics.dockContextExpandedBase + 180)
-        case .quickActions:
-            return CGSize(width: Metrics.dockThinkingWidth, height: Metrics.dockThinkingHeight + 24)
-        case .enteringRecording:
-            return CGSize(width: Metrics.dockThinkingWidth, height: Metrics.dockThinkingHeight)
+            return measured(Metrics.dockContextExpandedWidth, fallback: Metrics.dockContextExpandedBase + 180)
         }
     }
 }
