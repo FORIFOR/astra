@@ -1,0 +1,26 @@
+{
+  "rankings": {
+    "role_legibility": ["D420", "F516", "14AA"],
+    "visual_craft": ["D420", "F516", "14AA"],
+    "information_hierarchy": ["D420", "F516", "14AA"],
+    "preview_readability": ["F516", "D420", "14AA"],
+    "provenance_visibility": ["F516", "D420", "14AA"],
+    "screen_occupation": ["F516", "14AA", "D420"],
+    "overall": ["D420", "F516", "14AA"]
+  },
+  "why": {
+    "role_legibility": "D420's lightning bolt icon paired with text on a separate line makes the warning role unmistakably distinct; F516/14AA integrate it into the header, making it blend rather than stand out.",
+    "visual_craft": "D420's two-tier header with icon adds visual hierarchy and rhythm; D420 has better spacing cadence despite using more height. F516 and 14AA are nearly identical.",
+    "information_hierarchy": "The lightning bolt in D420 immediately signals the critical warning (external send) at the visual center; F516/14AA require reading the text to parse the warning's importance.",
+    "preview_readability": "All three have identical message body placement, font, and spacing; readability is indistinguishable.",
+    "provenance_visibility": "Source line (出所) position and styling are identical across all three; equally visible without competing.",
+    "screen_occupation": "F516 and 14AA use a single-line header requiring minimal vertical space; D420's two-line header with icon uses ~10-15% more height.",
+    "overall": "D420's visual clarity about the external-send warning outweighs its space penalty—the icon is an affordance that prevents user error. F516 and 14AA are safer but visually quieter."
+  },
+  "differences": [
+    "D420 splits the header into two lines: '# Slack' + '⚡ 外部に出ます', introducing a lightning bolt icon",
+    "F516 and 14AA use a single-line header: '# Slack 外部に出ます' (no icon, no line break)",
+    "D420's warning text is typographically separated and icon-reinforced; F516/14AA integrate it inline",
+    "No discernible differences between F516 and 14AA—they appear to be the same design variant"
+  ]
+}

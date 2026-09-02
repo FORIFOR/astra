@@ -109,3 +109,52 @@ after 1 / before 3 → revert
 
 visual_craft は 6 種で 2/6 のまま。**次は ② 字面の階層**へ進む。
 色と際立ちは既に釣り合っている可能性があり、伸びしろは別の段階にある。
+
+---
+
+## ② 字面の階層 — C を採用
+
+`docs/ux-benchmark/compare/craft3/`。3 案を伏せて 3 人（Sonnet×2 / Haiku×1）に採点させた。
+
+| 軸 | 1位 | 2位 | 3位 |
+| --- | --- | --- | --- |
+| role_legibility | **C** | A | B |
+| visual_craft | **C** | A | B |
+| information_hierarchy | **C** | A | B |
+| preview_readability | A | B | C |
+| provenance_visibility | A | B | C |
+| screen_occupation | A | B | C |
+| overall | **C** | A | B |
+
+下 3 軸の順位は採らなかった。理由は 2 つある。
+
+**1. 面積は目で測ってはいけない。**
+3 人とも「C は背が高い」と書いた。判断の根拠も揃っている ——
+「`# Slack` と `外部に出る` が 2 行に分かれるぶん高くなる」。
+実寸は 3 枚とも **560x286 で同じ**だった。C の警告は題の下の余白へ入っており、
+面は伸びていない。審査員は版面を見て高さを**推論**しただけで、測っていない。
+
+以後 screen_occupation は `scripts/ux-auto/occupation.py` が出す（Evidence A）。
+審査員の screen_occupation は **Evidence D として捨てる**。
+
+**2. preview / provenance は「差が見えない」と本人たちが書いている。**
+3 人中 2 人が本文について「identical — no readability difference」、
+3 人とも出所について「identical across all three」と明記したうえで、
+順位を求められたので並べた。順位は付いたが差は無い。
+B の変更（ラベル 11→10.5pt、濃度 0.72、出所 0.8）は**視認閾値の下**にある。
+
+つまり測れた向上は **警告を独立した段へ出したこと**から来ている。
+字を 0.5pt 動かしたぶんではない。
+
+### 採用条件の照合
+
+| 条件 | 判定 |
+| --- | --- |
+| visual_craft 向上 | ✅ 3/3 一致で C |
+| information_hierarchy 低下なし | ✅ 向上 |
+| preview_readability 低下なし | ✅ 差が観測されない |
+| provenance_visibility 低下なし | ✅ 差が観測されない |
+| screen_occupation 増加なし | ✅ 実測 560x286 で同一 |
+
+C を既定にした（`VoiceHUDView.swift` の `TypeVariant` は削除）。
+CONFIRMATION_GATE = PASS（6 段すべて OCR で確認、560x286pt）。

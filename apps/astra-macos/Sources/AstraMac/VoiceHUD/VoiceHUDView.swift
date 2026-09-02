@@ -485,6 +485,12 @@ private struct AgentDock: View {
 // MARK: - 6. Confirmation
 
 /// 確認は **Dock 自身が下へ伸びて**聞く。NSAlert も別窓も使わない。
+/// 造形② 字面の階層は 3 案を伏せて採点し、C を採った。
+/// 補助（宛先・出所のラベル）を値より一段弱くし、「外部に出る」を題の下の
+/// **独立した段**へ出す。3 人とも visual_craft で C を 1 位に置いた。
+/// 「C は背が高い」という証言は出たが、実寸は 3 枚とも 560x286 で同じ。
+/// **面積は目で測らない**（`docs/ux-benchmark/auto/CRAFT.md`）。
+
 private struct ConfirmationDock: View {
     @Environment(\.colorScheme) private var scheme
     private var dark: Bool { scheme == .dark }
@@ -514,15 +520,27 @@ private struct ConfirmationDock: View {
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(Palette.text(dark))
                 }
-                DockLabel(text: confirmation.risk.label, tint: riskTint)
                 Spacer(minLength: 0)
             }
 
             // ② 何が起きるか。
             Text(confirmation.title)
-                .font(.system(size: 18, weight: .semibold))
+                .font(.system(size: 19, weight: .semibold))
+                .tracking(-0.2)
                 .foregroundStyle(Palette.text(dark))
                 .fixedSize(horizontal: false, vertical: true)
+
+            // 「外部に出る」は宛先の並びでも題でもない。**独立した補助の段**にする。
+            do {
+                HStack(spacing: 5) {
+                    Image(systemName: "arrow.up.forward")
+                        .font(.system(size: 9, weight: .semibold))
+                    Text(confirmation.risk.label)
+                    Spacer(minLength: 0)
+                }
+                .font(.system(size: 10.5))
+                .foregroundStyle(riskTint)
+            }
 
             if editing { editor } else { readOnly }
 
@@ -599,8 +617,8 @@ private struct ConfirmationDock: View {
             ForEach(confirmation.params, id: \.self) { p in
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
                     Text(p.label)
-                        .font(.system(size: 11))
-                        .foregroundStyle(Palette.muted(dark))
+                        .font(.system(size: 10.5))
+                        .foregroundStyle(Palette.muted(dark).opacity(0.72))
                         .frame(width: 56, alignment: .leading)
                     Text(edited[p.label] ?? p.value)
                         .font(.system(size: S.type(Metrics.dockRowSize)))
@@ -614,6 +632,7 @@ private struct ConfirmationDock: View {
                 ScrollView {
                     Text(preview)
                         .font(.system(size: S.type(Metrics.dockRowSize)))
+                        .lineSpacing(3)
                         .foregroundStyle(Palette.muted(dark))
                         .fixedSize(horizontal: false, vertical: true)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -642,6 +661,7 @@ private struct ConfirmationDock: View {
                         Spacer(minLength: 0)
                     }
                     .font(.system(size: 11))
+                    .opacity(0.8)
                 }
                 .buttonStyle(AstraControlStyle(radius: 6, base: 0.0))
                 .accessibilityIdentifier("confirmSource")
