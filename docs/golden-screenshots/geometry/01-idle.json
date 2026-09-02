@@ -2,34 +2,34 @@
   "text:Astra" : {
     "h" : 19,
     "w" : 40,
-    "x" : 886,
+    "x" : 36,
     "y" : 12.5
   },
   "text:space" : {
     "h" : 9,
     "w" : 23,
-    "x" : 1021,
+    "x" : 171,
     "y" : 17.5
   },
   "text:⌥" : {
     "h" : 9,
     "w" : 8,
-    "x" : 994,
+    "x" : 144,
     "y" : 17.5
   },
   "voiceHUD" : {
     "h" : 44.5,
     "w" : 220.5,
-    "x" : 850,
+    "x" : -0.5,
     "y" : -0.5
   },
   "window:AstraPanel<VoiceTaskDockView>" : {
     "h" : 44,
     "w" : 220,
-    "x" : 850,
-    "y" : 1036
+    "x" : 0,
+    "y" : 0
   },
-  "window:AstraPanel<VoiceTaskDockView>:centerOffset" : {
+  "window:AstraPanel<VoiceTaskDockView>:topOffset" : {
     "h" : 0,
     "w" : 0,
     "x" : 0,

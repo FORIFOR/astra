@@ -2,34 +2,34 @@
   "contextStrip" : {
     "h" : 16,
     "w" : 560,
-    "x" : 680,
+    "x" : 20,
     "y" : 43
   },
   "text:このページからタスクを作って…" : {
     "h" : 21,
     "w" : 247,
-    "x" : 751,
+    "x" : 91,
     "y" : 12
   },
   "text:見えている文脈はありません" : {
     "h" : 16,
     "w" : 560,
-    "x" : 680,
+    "x" : 20,
     "y" : 43
   },
   "voiceHUD" : {
     "h" : 71.5,
     "w" : 600.5,
-    "x" : 660,
+    "x" : -0.5,
     "y" : -0.5
   },
   "window:AstraPanel<VoiceTaskDockView>" : {
     "h" : 71,
     "w" : 600,
-    "x" : 660,
-    "y" : 1009
+    "x" : 0,
+    "y" : 0
   },
-  "window:AstraPanel<VoiceTaskDockView>:centerOffset" : {
+  "window:AstraPanel<VoiceTaskDockView>:topOffset" : {
     "h" : 0,
     "w" : 0,
     "x" : 0,

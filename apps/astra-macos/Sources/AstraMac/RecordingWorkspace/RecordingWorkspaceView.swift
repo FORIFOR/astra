@@ -39,7 +39,7 @@ enum Fixture: String {
 ///
 /// ```text
 /// ┌─ notch + Task Dock ────────────────────────────────┐
-/// │ ● 録音中 04:21                    [ノート|文字起こし] │
+/// │ 録音中 ~~~        ( ● 04:21 ⏸ CC □ … ■ )         │
 /// ├──────────────────────────────┬─────────────────────┤
 /// │ 決まったこと                  │ Live transcript     │
 /// │  · 導入時期は 10 月で行きます   │ 田中 それでは…      │
@@ -138,6 +138,12 @@ struct RecordingWorkspaceView: View {
 }
 
 /// 録音の状態は細いバーに落とす。巨大な波形やタイマーで面積を使わない。
+///
+/// **● と時計はここに置かない。** それは上の凹みの pill（`TaskDockView`）が持つ。
+/// 以前は pill の時計が 0 幅に潰れて見えず、この行が ● 04:21 を重ねて出していた。
+/// 同じ事実を 60pt 離れた 2 か所に出すと、どちらが本物か読む側が決めることになる。
+/// この行が持つのは、言葉の状態（録音中 / 一時停止中 / 音声なし）と、
+/// 録れている証拠の波形だけ。
 private struct RecordingStatusBar: View {
     @Environment(\.colorScheme) private var scheme
     private var dark: Bool { scheme == .dark }
@@ -148,15 +154,9 @@ private struct RecordingStatusBar: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            Circle()
-                .fill(silent || state.isPaused ? Color.secondary : Color.recordingRed)
-                .frame(width: 9, height: 9)
             Text(silent ? "\(state.heroText)（音声なし）" : state.heroText)
                 .font(.system(size: 15, weight: .semibold))
                 .foregroundStyle(Palette.text(dark))
-            Text(state.elapsedText)
-                .font(.system(size: 15, design: .monospaced))
-                .foregroundStyle(Palette.muted(dark))
             // 波形は「録れている」ことの小さな印にとどめる。
             Waveform(levels: silent ? Array(repeating: 0.04, count: state.audioLevels.count) : state.audioLevels)
                 .frame(width: 60, height: 16)

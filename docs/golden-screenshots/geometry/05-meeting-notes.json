@@ -2,70 +2,70 @@
   "meetingPanel-ask" : {
     "h" : 30,
     "w" : 107,
-    "x" : 1162,
+    "x" : 612,
     "y" : 23
   },
   "meetingPanel-captions" : {
     "h" : 30,
     "w" : 105,
-    "x" : 1045,
+    "x" : 495,
     "y" : 23
   },
   "meetingPanel-notes" : {
     "h" : 30,
     "w" : 82,
-    "x" : 951,
+    "x" : 401,
     "y" : 23
   },
   "meetingPanelBody" : {
     "h" : 14,
     "w" : 69,
-    "x" : 570,
+    "x" : 20,
     "y" : 95
   },
   "secretToggle" : {
     "h" : 30,
     "w" : 32,
-    "x" : 1281,
+    "x" : 731,
     "y" : 23
   },
   "stopRecording" : {
     "h" : 25,
     "w" : 25,
-    "x" : 1325,
+    "x" : 775,
     "y" : 26
   },
   "text:Google Meet" : {
     "h" : 19,
     "w" : 96,
-    "x" : 591,
+    "x" : 41,
     "y" : 20
   },
   "text:LIVE NOTES" : {
     "h" : 14,
     "w" : 69,
-    "x" : 570,
+    "x" : 20,
     "y" : 95
   },
   "text:聞きながら、決まったこと・やること・懸念をここに" : {
     "h" : 19,
     "w" : 444,
-    "x" : 570,
+    "x" : 20,
     "y" : 125
   },
   "voiceHUD" : {
     "h" : 460.5,
     "w" : 820.5,
-    "x" : 550,
+    "x" : -0.5,
     "y" : -0.5
   },
   "window:AstraPanel<VoiceTaskDockView>" : {
     "h" : 460,
     "w" : 820,
-    "x" : 550,
-    "y" : 620
+    "x" : 0,
+    "y" : 0
   },
-  "window:AstraPanel<VoiceTaskDockView>:centerOffset" : {
+  "window:AstraPanel<VoiceTaskDockView>:topOffset" : {
     "h" : 0,
     "w" : 0,
     "x" : 0,

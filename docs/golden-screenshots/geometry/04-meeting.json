@@ -2,52 +2,52 @@
   "meetingPanel-ask" : {
     "h" : 30,
     "w" : 107,
-    "x" : 1162,
+    "x" : 612,
     "y" : 23
   },
   "meetingPanel-captions" : {
     "h" : 30,
     "w" : 105,
-    "x" : 1045,
+    "x" : 495,
     "y" : 23
   },
   "meetingPanel-notes" : {
     "h" : 30,
     "w" : 82,
-    "x" : 951,
+    "x" : 401,
     "y" : 23
   },
   "secretToggle" : {
     "h" : 30,
     "w" : 32,
-    "x" : 1281,
+    "x" : 731,
     "y" : 23
   },
   "stopRecording" : {
     "h" : 25,
     "w" : 25,
-    "x" : 1325,
+    "x" : 775,
     "y" : 26
   },
   "text:Google Meet" : {
     "h" : 19,
     "w" : 96,
-    "x" : 591,
+    "x" : 41,
     "y" : 20
   },
   "voiceHUD" : {
     "h" : 76.5,
     "w" : 820.5,
-    "x" : 550,
+    "x" : -0.5,
     "y" : -0.5
   },
   "window:AstraPanel<VoiceTaskDockView>" : {
     "h" : 76,
     "w" : 820,
-    "x" : 550,
-    "y" : 1004
+    "x" : 0,
+    "y" : 0
   },
-  "window:AstraPanel<VoiceTaskDockView>:centerOffset" : {
+  "window:AstraPanel<VoiceTaskDockView>:topOffset" : {
     "h" : 0,
     "w" : 0,
     "x" : 0,

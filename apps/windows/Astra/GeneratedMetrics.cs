@@ -8,10 +8,10 @@ public static class Metrics
     public const double WorkspaceWidth = 1080;
     public const double WorkspaceHeight = 680;
     public const double WorkspaceRadius = 28;
-    public const double NotchWidth = 286;
+    public const double NotchWidth = 328;
     public const double NotchDepth = 25;
     public const double NotchShoulder = 30;
-    public const double DockWidth = 250;
+    public const double DockWidth = 292;
     public const double DockHeight = 42;
     public const double HudWidth = 220;
     public const double HudHeight = 44;

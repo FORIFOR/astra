@@ -8,10 +8,10 @@ enum Metrics {
     static let workspaceWidth: CGFloat = 1080
     static let workspaceHeight: CGFloat = 680
     static let workspaceRadius: CGFloat = 28
-    static let notchWidth: CGFloat = 286
+    static let notchWidth: CGFloat = 328
     static let notchDepth: CGFloat = 25
     static let notchShoulder: CGFloat = 30
-    static let dockWidth: CGFloat = 250
+    static let dockWidth: CGFloat = 292
     static let dockHeight: CGFloat = 42
     static let hudWidth: CGFloat = 220
     static let hudHeight: CGFloat = 44

@@ -11,7 +11,7 @@ import ApplicationServices
 /// 値は AX から取る。画像から輪郭を推定するより正確で、識別子と対応が付く。
 enum UIGeometry {
 
-    /// 要素 1 つの実寸（画面座標・pt）。
+    /// 要素 1 つの実寸（pt）。要素は窓の左上からの相対、窓は画面に対する置き方の規則で持つ。
     struct Box: Codable, Equatable {
         var x: Double
         var y: Double
@@ -73,16 +73,26 @@ enum UIGeometry {
         // **窓の枠を先に取る。** 中身より外枠のほうが壊れやすく、影響も大きい
         // （幅・上辺の位置・左右の余白）。AX は SwiftUI の階層を畳んでしまい
         // Dock の中身をほとんど出さないので、ここが実質の主役になる。
-        let screen = NSScreen.screens.first?.frame ?? .zero
+        //
+        // **画面の絶対座標は記録しない。** 基準を 1920x1080 で録り、その後ディスプレイが
+        // 2560x1440 になっただけで 6 状態すべてが「320pt ずれた」と落ちた（面は何も
+        // 変わっていない）。窓は「画面のどこに置く規則か」で記録する:
+        //   - 上辺に付く窓（Dock）: `:topOffset`   = (中央からの x, 上辺からの距離)
+        //   - 中央に置く窓        : `:centerOffset` = (中央からの x, 可視領域の中央からの y)
+        // 規則が変わる（上辺の窓が中央へ落ちる）と鍵そのものが無くなり、「が無い」で落ちる。
+        func r(_ d: CGFloat) -> Double { (Double(d) * 2).rounded() / 2 }
+        let screen = NSScreen.screens.first
+        let sf = screen?.frame ?? .zero, vf = screen?.visibleFrame ?? .zero
         for win in NSApp.windows where win.isVisible {
             let f = win.frame
             let key = "window:" + (win.identifier?.rawValue ?? String(describing: type(of: win)))
-            func r(_ d: CGFloat) -> Double { (Double(d) * 2).rounded() / 2 }
-            out[key] = Box(x: r(f.minX), y: r(f.minY), w: r(f.width), h: r(f.height))
-            // 画面に対する位置。中央からのずれと上辺からの距離は、これ自体が仕様。
-            if screen.width > 0 {
-                out[key + ":centerOffset"] = Box(
-                    x: r(f.midX - screen.midX), y: r(screen.maxY - f.maxY), w: 0, h: 0)
+            out[key] = Box(x: 0, y: 0, w: r(f.width), h: r(f.height))
+            guard sf.width > 0 else { continue }
+            let fromTop = sf.maxY - f.maxY
+            if abs(fromTop) < 0.5 {
+                out[key + ":topOffset"] = Box(x: r(f.midX - sf.midX), y: r(fromTop), w: 0, h: 0)
+            } else {
+                out[key + ":centerOffset"] = Box(x: r(f.midX - sf.midX), y: r(f.midY - vf.midY), w: 0, h: 0)
             }
         }
 
@@ -95,7 +105,7 @@ enum UIGeometry {
             return v
         }
 
-        func box(_ el: AXUIElement) -> Box? {
+        func rawBox(_ el: AXUIElement) -> (CGPoint, CGSize)? {
             guard let pRef = value(el, kAXPositionAttribute as String),
                   let sRef = value(el, kAXSizeAttribute as String),
                   CFGetTypeID(pRef) == AXValueGetTypeID(),
@@ -103,9 +113,20 @@ enum UIGeometry {
             var p = CGPoint.zero, s = CGSize.zero
             guard AXValueGetValue(pRef as! AXValue, .cgPoint, &p),
                   AXValueGetValue(sRef as! AXValue, .cgSize, &s) else { return nil }
+            return (p, s)
+        }
+
+        /// 要素の実寸。**位置は窓の左上からの相対。** 画面の絶対座標だと、
+        /// ディスプレイが変わっただけで全要素がずれる（上の窓の注記と同じ理由）。
+        func box(_ el: AXUIElement) -> Box? {
+            guard let (p, s) = rawBox(el) else { return nil }
+            var origin = CGPoint.zero
+            if let wRef = value(el, kAXWindowAttribute as String), CFGetTypeID(wRef) == AXUIElementGetTypeID(),
+               let (wp, _) = rawBox(wRef as! AXUIElement) {
+                origin = wp
+            }
             // 0.5pt 未満は丸める。描画の都合で末尾が揺れても差にしない。
-            func r(_ d: CGFloat) -> Double { (Double(d) * 2).rounded() / 2 }
-            return Box(x: r(p.x), y: r(p.y), w: r(s.width), h: r(s.height))
+            return Box(x: r(p.x - origin.x), y: r(p.y - origin.y), w: r(s.width), h: r(s.height))
         }
 
         func walk(_ el: AXUIElement, _ depth: Int) {
