@@ -300,7 +300,7 @@ private struct SimpleDock: View {
 ///
 /// 「小さな floating utility」ではなく、デスクトップに現れる **AI task surface** に見せる。
 /// そのために横幅を取り、各段に「いま何を見ているか」を 1 行添える。
-private struct AgentDock: View {
+struct AgentDock: View {
     @Environment(\.colorScheme) private var scheme
     private var dark: Bool { scheme == .dark }
     @ObservedObject private var store = AstraStateStore.shared
@@ -491,7 +491,7 @@ private struct AgentDock: View {
 /// 「C は背が高い」という証言は出たが、実寸は 3 枚とも 560x286 で同じ。
 /// **面積は目で測らない**（`docs/ux-benchmark/auto/CRAFT.md`）。
 
-private struct ConfirmationDock: View {
+struct ConfirmationDock: View {
     @Environment(\.colorScheme) private var scheme
     private var dark: Bool { scheme == .dark }
     let confirmation: ActionConfirmation

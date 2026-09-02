@@ -377,7 +377,7 @@ enum SelfTest {
         }
 
         /// 期待寸法の窓が現れるまで待って撮る。
-        func capture(_ name: String, expect: CGSize) -> (x: CGFloat, y: CGFloat, w: CGFloat, h: CGFloat, colors: Int, count: Int)? {
+        func capture(_ name: String, expect: CGSize) -> (x: CGFloat, y: CGFloat, w: CGFloat, h: CGFloat, colors: Int, count: Int, corner: Int)? {
             let deadline = Date().addingTimeInterval(6)
             var found: (CGWindowID, CGFloat, CGFloat, CGFloat, CGFloat)?
             var all: [(id: CGWindowID, x: CGFloat, y: CGFloat, w: CGFloat, h: CGFloat)] = []
@@ -416,7 +416,18 @@ enum SelfTest {
                     }
                     xx += sx }
                 yy += sy }
-            return (x, y, w, h, seen.count, all.count)
+            // 外形の 4 隅。Dock の形（上 10 / 下 18 の角丸）なら、隅の画素は**透明**。
+            // 中身が面より背が高いと、面（ZStack の地）が中身の大きさまで伸びて
+            // 窓の外へはみ出し、角丸が窓の縁で切られて**四角い黒い板**になる。
+            // ③ で高さの推定式が実寸より 14pt 短くなり、確認の面がそうなっていた。
+            // 影の絵（onBackdrop）は地を敷くので隅は測らない。
+            var corner = 0
+            if !shadow {
+                for (cx, cy) in [(1, 1), (pw - 2, 1), (1, ph - 2), (pw - 2, ph - 2)] {
+                    if let c = rep.colorAt(x: cx, y: cy) { corner = max(corner, Int(c.alphaComponent * 255)) }
+                }
+            }
+            return (x, y, w, h, seen.count, all.count, corner)
         }
 
         let store = AstraStateStore.shared
@@ -444,6 +455,8 @@ enum SelfTest {
             if r.colors < minColors { failures.append("\(name)=中身なし(c\(r.colors))") }
             // 窓を足していない（Dock 以外に浮いていない）。
             if r.count > 1 { failures.append("\(name)=窓が \(r.count) 枚出ている") }
+            // 外形が切れていない（中身が面からはみ出していない）。
+            if r.corner > 64 { failures.append("\(name)=角が切れている(隅の alpha \(r.corner))") }
         }
 
         // 1. Idle / Presence

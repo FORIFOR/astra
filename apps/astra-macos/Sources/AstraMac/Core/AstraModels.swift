@@ -62,7 +62,7 @@ enum DockPresentation: Equatable {
     }
 
     /// この状態での Dock の大きさ。**top anchor は固定**なので、変わるのは幅と高さだけ。
-    func size(agentRows: Int = 0) -> CGSize {
+    @MainActor func size(agentRows: Int = 0) -> CGSize {
         // 候補や段の数で高さが決まるものは、数から導く（固定値だと最後の 1 行が切れる）。
         switch self {
         case .idle:
@@ -79,17 +79,20 @@ enum DockPresentation: Equatable {
             return CGSize(width: Metrics.dockThinkingWidth, height: Metrics.dockThinkingHeight)
         case .agent:
             // 内容に応じて**下へ**伸びる。幅は変えない。
-            return CGSize(width: Metrics.dockAgentWidth,
-                          height: Metrics.dockAgentHeightBase + CGFloat(agentRows) * Metrics.dockAgentRowHeight)
-        case .confirmation(let confirmation):
-            // 中身の行数から出す。固定だと 2 行の確認でも面の半分が空き、
+            // 高さは描いて測る（`DockContentMeasure`）。`agentHeightBase + 段数 × 行高` の
+            // 式は 5 段で 25pt 短く、面が窓からはみ出して角が切れていた。
+            let w = Metrics.dockAgentWidth
+            let fallback = Metrics.dockAgentHeightBase + CGFloat(agentRows) * Metrics.dockAgentRowHeight
+            return CGSize(width: w, height: DockContentMeasure.height(of: self, width: w) ?? fallback)
+        case .confirmation:
+            // 中身で決まる。固定だと 2 行の確認でも面の半分が空き、
             // 押してほしいボタンが遠くに離れて置かれていた。
-            // 既定は説明 1 行ぶん。2 行目からは 1 行の高さだけ伸ばす。
-            // 中身の行数から出す。固定だと 2 行の確認でも面の半分が空く。
+            // 高さは推定せず描いて測る（`DockContentMeasure`）。
             // **上限を置く。** 決断のための面が作業面ほど大きくなると、
             // 何を決めるのかが薄まる（外の製品に負けた理由がこれ）。
-            let h = confirmation.surfaceHeight
-            return CGSize(width: Metrics.dockConfirmWidth, height: min(360, h))
+            let w = Metrics.dockConfirmWidth
+            let h = DockContentMeasure.height(of: self, width: w) ?? Metrics.dockConfirmHeight
+            return CGSize(width: w, height: min(360, h))
         case .meeting(let panel):
             return CGSize(width: Metrics.dockMeetingWidth,
                           height: panel == nil ? Metrics.dockMeetingHeight : Metrics.dockMeetingExpandedHeight)
@@ -297,22 +300,8 @@ struct ActionConfirmation: Identifiable, Equatable {
     /// ボタンの文字も結果を書く（「送信する」「3件削除する」）。
     let confirmLabel: String
 
-    /// 面の高さは中身で決まる。**固定しない。**
-    ///
-    /// 下見はここに数えない。行数ではなく実寸で足す（`previewHeight`）。
-    var contentRows: Int {
-        var n = details.count
-        if app != nil { n += 1 }
-        n += params.count
-        if source != nil { n += 1 }
-        return n
-    }
-
-    /// 字の 1 行が占める高さ。数え間違いを避けるため font から取る。
-    private static func line(_ size: CGFloat, _ weight: NSFont.Weight = .regular) -> CGFloat {
-        let f = NSFont.systemFont(ofSize: size, weight: weight)
-        return ceil(f.ascender - f.descender + f.leading)
-    }
+    /// 面の高さは中身で決まる。**固定しない。** 描いて測る（`DockContentMeasure`）。
+    /// ここには式を持たない —— 式と view がずれると、必ずどちらかが余るか切れる。
 
     /// 折り返しを含めた高さ。
     private static func box(_ text: String, size: CGFloat, weight: NSFont.Weight = .regular,
@@ -375,35 +364,6 @@ struct ActionConfirmation: Identifiable, Equatable {
         static let criticalSize: CGFloat = 10
     }
 
-    /// 面の高さ。**`ConfirmationDock` が縦に積むものを、そのまま足す。**
-    ///
-    /// もとは `176 + (行数-1) * 22` という推定式だった。基準の 176 が
-    /// 何を含むのか誰も言えないまま行数の数え方だけ変わっていったので、
-    /// 中身より 40pt 高い面ができ、余りが `Spacer` に吸われて
-    /// 出所とボタンの間に穴として出た（実測 57.5pt、他の段の間は 8〜12pt）。
-    ///
-    /// 積むものが変わったらここも変える。**式と view がずれたら、必ずどちらかが余る。**
-    var surfaceHeight: CGFloat {
-        let w = Self.contentWidth
-        let gap: CGFloat = 9        // 外側 VStack の spacing
-        let inner: CGFloat = 5      // readOnly VStack の spacing
-
-        var content: CGFloat = 0
-        var rows = 0
-        func stack(_ h: CGFloat) { content += h + (rows > 0 ? inner : 0); rows += 1 }
-        for p in params { stack(max(Self.line(10.5), Self.line(Metrics.dockRowSize))) ; _ = p }
-        if preview != nil { stack(previewHeight(width: w)) }
-        for d in details { stack(Self.box(d, size: Metrics.dockRowSize, width: w)) }
-        if source != nil { stack(Self.line(11) + 5) }   // 出所は一段離す（view の padding と対）
-
-        var h: CGFloat = 12 + 12                                    // 上下の余白
-        h += (app != nil ? Self.line(12, .semibold) + gap : 0)      // ① どのアプリ
-        h += Self.box(title, size: 19, weight: .semibold, width: w) // ② 何が起きるか
-        h += gap + Self.line(10.5)                                  // 「外部に出る」の段
-        h += (rows > 0 ? gap + content : 0)                         // ③④⑤
-        h += gap + 32                                               // ⑥ 操作
-        return h
-    }
 }
 
 // MARK: - §18 / §21 Meeting
