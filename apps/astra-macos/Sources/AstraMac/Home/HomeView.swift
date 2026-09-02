@@ -291,6 +291,10 @@ struct HomeView: View {
     }
 
     /// 保存し切れていない録音がある、という報せ。件数だけ出して押せば続きへ。
+    ///
+    /// **主役の一段下に置く。** 以前は暖色の地と縁を敷いた札で、「録音を始める」と
+    /// 同じ大きさ・より強い色で並んでいた。復旧は例外の道であって入口ではない。
+    /// 色は印（アイコン）だけに残し、地は敷かず、字は 1 段小さく、縁は hairline。
     private var recoverableRow: some View {
         let recent = hasRecentRecoverable
         return HStack(spacing: 10) {
@@ -301,7 +305,7 @@ struct HomeView: View {
                 Text(recent
                      ? "録りかけが \(recordedCount) 件あります"
                      : "古い録りかけが \(recordedCount) 件残っています")
-                    .font(.system(size: S.type(TypeScale.bodySize),
+                    .font(.system(size: S.type(TypeScale.secondarySize),
                                   weight: recent ? .medium : .regular))
                     .foregroundStyle(recent ? Palette.text(dark) : Palette.muted(dark))
                 Text(recoverNote.isEmpty
@@ -309,7 +313,7 @@ struct HomeView: View {
                         ? "前回、保存し切る前に終わった録音です。続きから読み取れます。"
                         : "1 週間より前のものです。要らなければ破棄できます。")
                      : recoverNote)
-                    .font(.system(size: S.type(TypeScale.secondarySize)))
+                    .font(.system(size: S.type(TypeScale.captionSize)))
                     .foregroundStyle(Palette.muted(dark))
             }
             Spacer(minLength: 0)
@@ -329,14 +333,12 @@ struct HomeView: View {
                 .buttonStyle(AstraControlStyle(radius: 8, base: 0.0))
                 .accessibilityIdentifier("discardPending")
         }
-        .padding(S.metric(Space.cardPadding))
+        .padding(.horizontal, S.metric(Space.cardPadding))
+        .padding(.vertical, 10)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(recent ? Palette.warning(dark).opacity(dark ? 0.12 : 0.07)
-                             : Color.cardSurface(dark))
-                .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .stroke(recent ? Palette.warning(dark).opacity(0.3) : Color.hairline(dark))))
+                .stroke(Color.hairline(dark)))
         .accessibilityIdentifier("recoverableRecordings")
     }
 

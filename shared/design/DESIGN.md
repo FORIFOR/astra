@@ -124,6 +124,12 @@ gate      : 何で決めるか（下の 3 つのどれか、順番どおり）
 3. **golden の更新**: 採用したら `docs/golden-screenshots`（light / dark / task-dock）と
    `geometry` を撮り直し、差分が意図した箇所だけであることを diff で確かめてから commit。
 
+`--selftest density`（`docs/evidence/density-baseline.json`）は「地の色に近い画素」を
+空きと数える歯止めなので、**飾りの地色や塗りのボタンを外すと "空いた" と出る**。
+§0 の「飾りの影・地を敷かない」を実行するとここに当たる。そのときは落ちた面だけ
+基準を書き直し、外したものが何かを commit に書く（d9d9f36 の右下 4 ボタン、
+Home の復旧札の暖色地）。基準を上げてよいのは外したものが飾りだったときだけ。
+
 参照が「こう言っている」だけでは値を変えない。参照どうしが割れたら（例: card radius
 Apple 8 / Notion 12 / ElevenLabs 20）、**いまの値を A に含めて** 3 択で盲検にかける。
 cannot tell が多数なら変えない（craft ⑦ の角丸はこれで差し戻した）。
