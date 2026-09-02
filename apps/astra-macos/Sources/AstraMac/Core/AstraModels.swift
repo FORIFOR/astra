@@ -113,6 +113,9 @@ struct AgentResult: Equatable {
     /// 後始末。**実際にできることだけ**を挙げる。
     /// ラベルだけ出して何も起きないボタンは置かない（実機で一度そうなっていた）。
     let actions: [Action]
+    /// 何を読んで作ったか。「できました」だけでは、根拠の有無が読めない。
+    /// 仕事の結果なら読んだ source の数、会議の結果なら nil（Session の状態を出す）。
+    var sourceCount: Int? = nil
 
     enum Action: String, Equatable {
         case openWorkspace, openNotes, ask, copy

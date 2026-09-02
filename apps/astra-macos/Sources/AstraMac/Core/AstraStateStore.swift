@@ -102,7 +102,8 @@ final class AstraStateStore: ObservableObject {
             setDock(.meeting(expanded: nil))
         } else if status == .success {
             // 題は仕事の名前そのまま。語尾を足すと題によって日本語が崩れる。
-            setDock(.result(AgentResult(title: task.title, actions: [.openWorkspace, .copy])))
+            setDock(.result(AgentResult(title: task.title, actions: [.openWorkspace, .copy],
+                                        sourceCount: task.steps.filter { $0.state == .success }.count)))
         } else {
             setDock(.idle)
         }

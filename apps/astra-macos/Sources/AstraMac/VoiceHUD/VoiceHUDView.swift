@@ -1014,11 +1014,14 @@ struct ResultDock: View {
 
     /// 直近の会議の状態を 1 行で。processing の間は spinner だけにしない。
     private var sessionLine: String {
-        guard let s = sessions.recent.first(where: { $0.title == result.title }) else { return "できました" }
+        guard let s = sessions.recent.first(where: { $0.title == result.title }) else {
+            if let n = result.sourceCount, n > 0 { return "\(n) 件のソースから作成しました" }
+            return "できました"
+        }
         switch s.status {
-        case .processing: return "Generating summary and actions…"
+        case .processing: return "要約とアクションを作っています…"
         case .ready:
-            return "\(s.actionCount) actions · \(s.decisionCount) decisions · \(s.participantCount) participants"
+            return "アクション \(s.actionCount) · 決定事項 \(s.decisionCount) · \(s.participantCount) 人"
         case .interrupted: return "途中で終わっています"
         case .failed: return "失敗しました"
         case .recording: return "録音中"
