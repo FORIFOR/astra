@@ -4522,7 +4522,8 @@ enum SelfTest {
         let mainWant = MainSection.allCases.map(\.title)   // §Workspace の 6 セクション
         let mainMiss = mainWant.filter { !has(mainTexts, $0) }
         // Workspace: 統合サーフェス（§2/§7）— Recording Hero / Transcript / Translation / AI / RAG / Task Dock
-        let wsWant = ["録音中", "文字起こし", "翻訳", "リアルタイム要約", "決定事項", "アクション", "質問する", "AI が見ている資料"]
+        // AI に頼む語は Ask 入力の横の 3 つ（要約 / 決定事項 / アクション）。「質問する」は入力欄そのもの。
+        let wsWant = ["録音中", "文字起こし", "翻訳", "要約", "決定事項", "アクション", "AI が見ている資料"]
         let wsMiss = wsWant.filter { !has(wsTexts, $0) }
         guard mainMiss.isEmpty, wsMiss.isEmpty else {
             print("SELFTEST_FAIL axtree: mainMiss=\(mainMiss) wsMiss=\(wsMiss) (main=\(mainTexts.count) ws=\(wsTexts.count))"); exit(2)

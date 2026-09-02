@@ -87,7 +87,8 @@ struct RecordingWorkspaceView: View {
                 MeetingNotesCanvas(state: state)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-                // 右: 生ログと AI 操作。脇に控えさせる（消しはしない）。
+                // 右: 生ログと AI の答え。脇に控えさせる（消しはしない）。
+                // AI に頼む操作は下の Ask 入力の横（`AIActionsPalette`）。
                 RecordingSideRail(state: state)
                     .frame(width: Metrics.wsRightColumn)
             }
@@ -167,7 +168,7 @@ private struct RecordingStatusBar: View {
     }
 }
 
-/// 右: 生ログと AI に頼める操作。ノートの脇に控える。
+/// 右: 生ログと AI の答え。ノートの脇に控える。
 private struct RecordingSideRail: View {
     @ObservedObject var state: RecordingWorkspaceState
 
@@ -179,7 +180,6 @@ private struct RecordingSideRail: View {
                 .frame(maxHeight: .infinity)
             TaskTimelineView()
             AIResultPanel(state: state)
-            AIActionsPalette(state: state)
         }
         .accessibilityIdentifier("recordingSideRail")
     }
@@ -620,6 +620,8 @@ private struct AskAstraBar: View {
                 .focused($focused)
                 .onSubmit(ask)
                 .accessibilityIdentifier("askAstraField")
+            // よく頼むこと。入力欄と同じ場所に置く（右レールの別の箱にしない）。
+            AIActionsPalette(state: state)
             Button { VoiceHUDState.shared.beginListening() } label: {
                 Image(systemName: "mic")
                     .font(.system(size: 12))
