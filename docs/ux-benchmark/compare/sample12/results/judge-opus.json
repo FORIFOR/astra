@@ -1,0 +1,17 @@
+{
+ "winners": {
+  "information_hierarchy": "AC0E",
+  "surface_fragmentation": "AC0E",
+  "screen_occupation": "cannot tell",
+  "state_legibility": "AC0E",
+  "control_visibility": "AC0E",
+  "visual_density": "AC0E",
+  "visual_craft": "AC0E",
+  "provenance_visibility": "tie"
+ },
+ "why": {
+  "visual_craft": "CF32 は検索バーが見出しを覆い、浮遊入力欄の下でテキストが途中で切れて重なっているが、AC0E は要素の重なりや切れが見当たらない。"
+ },
+ "model": "claude-opus-5",
+ "raw": "judge-opus.raw.txt (JSON に不正な引用符があり機械では読めない。winners はここに転記)"
+}

@@ -1,0 +1,46 @@
+{
+ "observations": {
+  "6A26": [
+   "左上に Gmail のアイコンと「Gmail」というサービス名がある",
+   "見出しは「Send this message?」",
+   "「To: hello@voiceos.com」と宛先が書かれている",
+   "「Subject: Meeting tomorrow」と件名が書かれている",
+   "「Message Preview: Hey team, just wanted to follow up on our meeting tomorrow...」と本文が省略記号付きで途中まで表示されている",
+   "右側に青い「Send」ボタンと、その下に濃いグレーの「Edit」ボタンが縦に並ぶ",
+   "右上に丸い × ボタンがある",
+   "角の丸い暗色パネルで、周囲にぼやけた影のような縁取りがある。危険や外部送信を示す警告文は見当たらない"
+  ],
+  "99D7": [
+   "左上に「# Slack」というチャンネル記号付きのサービス名がある",
+   "見出しは「このメッセージを送りますか？」",
+   "見出しの下にオレンジ色の矢印付きで「外部に出る」という注意書きがある",
+   "「宛先」というラベルの右に大きめの文字で「#sales」",
+   "「差出人」というラベルの右に「あなた」",
+   "本文として「明日の会議、資料を先に共有します。10 月の導入時期の件も入れておきました。」が全文表示されている",
+   "「出所」ラベルの右に「週次同期・田中・10:42」と、たどれることを示す > 記号がある",
+   "下部に横並びで「Cancel」「Edit」、そして塗りつぶしのオレンジ色の「送る」ボタンがある"
+  ]
+ },
+ "winners": {
+  "action_clarity": "tie",
+  "parameter_hierarchy": "99D7",
+  "preview_readability": "99D7",
+  "control_visibility": "99D7",
+  "screen_occupation": "cannot tell",
+  "visual_craft": "99D7",
+  "error_prevention": "99D7",
+  "provenance_visibility": "99D7"
+ },
+ "why": {
+  "action_clarity": "どちらも見出しが「Send this message?」「このメッセージを送りますか？」で、サービス名も添えられている",
+  "parameter_hierarchy": "99D7 は宛先 #sales と差出人をラベルより大きな字で置いているが、6A26 は To も Subject も本文と同じ小さな字で並ぶ",
+  "preview_readability": "99D7 は本文が末尾まで読めるが、6A26 の Message Preview は「...」で途切れている",
+  "control_visibility": "99D7 は Cancel・Edit・送る が一列に見え塗りは「送る」だけ、6A26 は取消が右上の × のみで Send と Edit が同じ大きさの箱で縦に並ぶ",
+  "screen_occupation": "画面全体に対する占有は 2 枚とも周囲が写っておらず cannot tell",
+  "visual_craft": "99D7 はラベル列と値の左端が揃い行間が一定だが、6A26 は Send/Edit の 2 ボタンの塗りの差以外に整列の手がかりが乏しくパネル縁がぼやけている",
+  "error_prevention": "99D7 だけがオレンジの「外部に出る」表示で送信先が社外であることを送信前に知らせている",
+  "provenance_visibility": "99D7 には「出所 週次同期・田中・10:42 >」があるが、6A26 に提案理由の表示は見当たらない"
+ },
+ "notes": "99D7 は宛先・外部警告・全文・出所と、送信前に確かめたいことが 1 画面に揃い、実行だけが色で立っている。6A26 は同じ用途だが本文が途切れ、取消が右上の × に退き、根拠の表示がない。",
+ "model": "claude-opus-5"
+}

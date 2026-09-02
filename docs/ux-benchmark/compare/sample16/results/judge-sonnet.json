@@ -1,0 +1,46 @@
+{
+ "observations": {
+  "6A26": [
+   "ヘッダーに Gmail アイコンと \"Gmail\" の文字がある",
+   "見出しに \"Send this message?\" とある",
+   "右上に \"×\" の閉じるボタンがある",
+   "\"To: hello@voiceos.com\" と表示されている",
+   "\"Subject: Meeting tomorrow\" と表示されている",
+   "\"Message Preview: Hey team, just wanted to follow up on our meeting tomorrow...\" と表示されている",
+   "青い塗りつぶしの \"Send\" ボタンがある",
+   "グレーの枠線の \"Edit\" ボタンがある"
+  ],
+  "99D7": [
+   "ヘッダーに \"#\" アイコンと \"Slack\" の文字がある",
+   "見出しに \"このメッセージを送りますか？\" とある",
+   "\"↗ 外部に出る\" というラベルが色付き文字で表示されている",
+   "\"宛先\" の項目に \"#sales\" とある",
+   "\"差出人\" の項目に \"あなた\" とある",
+   "メッセージ本文 \"明日の会議、資料を先に共有します。10月の導入時期の件も入れておきました。\" が表示されている",
+   "\"出所\" の項目に \"週次同期・田中・10:42\" と \">\" が表示されている",
+   "\"Cancel\"、\"Edit\"、オレンジ色の \"送る\" の3つのボタンがある"
+  ]
+ },
+ "winners": {
+  "action_clarity": "tie",
+  "parameter_hierarchy": "99D7",
+  "preview_readability": "99D7",
+  "control_visibility": "99D7",
+  "screen_occupation": "cannot tell",
+  "visual_craft": "tie",
+  "error_prevention": "99D7",
+  "provenance_visibility": "99D7"
+ },
+ "why": {
+  "action_clarity": "どちらも見出しが「送りますか？」という一目で分かる問いになっている。",
+  "parameter_hierarchy": "99D7 は宛先の直後に相手を表す差出人を太字で置くのに対し、6A26 の2番目の項目は相手ではなく Subject である。",
+  "preview_readability": "6A26 の本文は末尾が \"...\" で途切れているのに対し、99D7 の本文には省略記号がなく読み切れる形で表示されている。",
+  "control_visibility": "99D7 は Cancel・Edit・送る をすべて文字ラベル付きボタンで示すが、6A26 の取消手段は文字のない \"×\" アイコンのみである。",
+  "screen_occupation": "どちらの画像もカード単体が切り出されており、画面全体に対する占有率は画像から判断できない。",
+  "visual_craft": "どちらも整列や余白に目立った乱れは見えない。",
+  "error_prevention": "99D7 には \"外部に出る\" という警告表示があるが、6A26 にはそれに相当する表示がない。",
+  "provenance_visibility": "99D7 には \"出所 週次同期・田中・10:42 >\" という根拠を辿れる項目があるが、6A26 にはそれに相当する項目がない。"
+ },
+ "notes": "6A26 は英語のメール送信確認、99D7 は日本語のチャット送信確認で、99D7 のみが外部送信警告と出所の項目を持つ。",
+ "model": "claude-sonnet-5"
+}

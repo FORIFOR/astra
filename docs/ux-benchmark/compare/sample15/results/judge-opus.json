@@ -1,0 +1,17 @@
+{
+ "winners": {
+  "information_hierarchy": "26AA",
+  "surface_fragmentation": "E56B",
+  "screen_occupation": "cannot tell",
+  "state_legibility": "26AA",
+  "control_visibility": "26AA",
+  "visual_density": "26AA",
+  "visual_craft": "cannot tell",
+  "provenance_visibility": "26AA"
+ },
+ "why": {
+  "notes": "E56B は空の白いパネルしか写っておらず、多くの軸で比較材料そのものが存在しない。"
+ },
+ "model": "claude-opus-5",
+ "raw": "judge-opus.raw.txt (JSON に不正な引用符があり機械では読めない。winners はここに転記)"
+}

@@ -286,3 +286,84 @@ preview / source / 3 つの操作    ✓ OCR で実測
 **この検査自体が落ちることを確かめた。** 面を 900x400 に広げると
 「幅 900pt（620 超）／高さ 400pt（360 超）／中身を減らしても高さが変わらない」
 の 3 点で落ちる。
+
+---
+
+# Sample 11〜16 — DS-01〜04 のあとに、型 6 種を測り直した（DS-05）
+
+Astra 側は DS-04 まで入った HEAD（6d84dcf）の絵。競合側は Sample 04〜10 と同じ
+公開素材。判定は opus と sonnet の 2 名、観察を先に書かせ棄権を許す形
+（`sample11/answers/PROMPT-ds5.md`）。**1 型 = 1 票。軸ごとに tie / cannot tell を
+除いた票が全員一致ならその側、割れたら引分。**
+
+```
+Sample 11  live_notes              SuperIntern ライブ要約     Astra 7 / 競合 0            （占有 cannot tell）
+Sample 12  captions                SuperIntern 文字起こし検索 Astra 7 / 競合 0            （占有 cannot tell）
+Sample 13  meeting_controller      SuperIntern Control Bar    Astra 4 / 競合 3 / 引分 1
+Sample 14  post_meeting            SuperIntern フォローアップ Astra 2 / 競合 5            （状態 cannot tell）
+Sample 15  transcript_attribution  SuperIntern 話者分離       MATERIAL_INVALID ← 集計外
+Sample 16  action_confirmation     VoiceOS Gmail 確認         Astra 6 / 競合 0 / 引分 1   （確認用 8 軸）
+```
+
+## 軸別（有効 5 型）
+
+```
+information_hierarchy    4/4   ■■■■
+state_legibility         3/3   ■■■        （post_meeting は cannot tell）
+provenance_visibility    4/5   ■■■■□
+surface_fragmentation    3/4   ■■■□
+control_visibility       3/5   ■■■□□
+visual_craft             3/5   ■■■□□      ← 前回 2/6
+visual_density           2/4   ■■□·
+screen_occupation        1/5   ■□···      （3 型が cannot tell）
+```
+
+## Sample 15 は無効
+
+競合側の画像（`sample08/images/78AE.png` = `sample15/images/E56B.png`）は
+**空の白いパネル**で、文字も部品も写っていない。2 名とも観察にそう書いた:
+
+> 「パネル内に文字・アイコン・ボタン・境界線が一切見えない（読める文字はゼロ）」
+
+**Sample 08 の「Astra 6 / 競合 1」も同じ絵で採点していた。** あれは勝ちではなく
+比較の不成立。話者分離の型は競合素材を取り直すまで集計に入れない。
+Sample 01 の無効化と同じく、**採点者の観察が無ければ気付かなかった**。
+
+## Sample 14 は絵が同じで数字が動いた
+
+Sample 07 の Astra 画像と Sample 14 の Astra 画像は **pixel diff 0**（同じ状態の
+同じ撮り方）。それで 4/2 → 2/5。差は絵ではなく判定者にある。
+**2 名の panel は同じ絵に対して ±3 軸ぶれる。** 1 型の数字を単独で読まないこと。
+
+とはいえ 2 名が揃って言う観察は残る:
+
+> 「1539 は下半分と右パネルの大部分が空で密度が薄い」
+> 「1539 には信号ドット以外に戻る・止める手段が見当たらない」
+
+これは fixture の中身の量（発言 3 行・根拠 1 件）と、Library 詳細に戻る手段が
+無いことで、DS-01〜04 の対象ではなかった。post_meeting の次の課題。
+
+## visual_craft で落とした 2 型の理由
+
+```
+meeting_controller  「紫の波形がバーと繋がらず孤立して見える」（2 名一致）
+                    → 900x120 の切り抜き方。波形は面の左上で「録音中」の右に
+                      並ぶ録音インジケータで、切り抜きが「録音中」の文字だけを
+                      落とした（x=90 から切った）。標本の作り方の問題
+post_meeting        「右パネルの内容が上端に寄って余白が処理されていない」（opus）
+                    → 上と同じ、中身の量
+```
+
+どちらも面が浮いている / 地が gradient / 余白が広い、ではない。
+**Sample 10 で挙がった 5 つの負け筋は、今回の判定者の弁からは消えた。**
+
+## 限界
+
+```
+- judges 2（3 ではない）。1 名 tie + 1 名勝ちは勝ちに数える（Sample 04〜08 と同じ規則）
+- screen_occupation は面だけの絵からは測れない。judge ではなく selftest の寸法上限で見る
+- 競合素材は Sample 04〜10 と同じもの。競合側は動いていない
+- dark は採点していない（light のみ）
+- 前回と判定者の顔ぶれが違う（前回 A/B/C、今回 opus/sonnet）。前回との差は
+  ±3 軸の揺れの中にあり得る
+```

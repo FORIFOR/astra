@@ -1,0 +1,48 @@
+{
+ "observations": {
+  "56B4": [
+   "Two separate floating panels overlap each other on a blue wallpaper background, with visible gaps showing the desktop around them",
+   "Top panel is labeled \"Note\" with a small icon and an X close button",
+   "Top panel shows a truncated italic line ending \"...flagship Mac-based real-time meeting assistant, genera...\" with a \"show more\" link",
+   "Bold heading \"SuperIntern Usage Flow\" appears with a small badge next to it",
+   "A bulleted list under the heading reads in part \"SuperIntern auto-launches on meeting start with one click, offering live notes, captions, and AI chat for real-time alignment queries.\"",
+   "A floating pill-shaped control bar sits between the two panels showing \"Done\", a timer \"06:00\", a red circular icon, and mic/speaker/screen-shaped icons",
+   "Bottom panel is labeled \"Transcript\" with a gear icon, an \"Auto\" dropdown, and an X close button",
+   "Bottom panel shows a paragraph of transcript text ending \"...I'd love for you to try SuperIntern. Thank you.\"",
+   "A vertical stack of small circular icons sits at the far right edge of the image, outside both panels"
+  ],
+  "E119": [
+   "The entire image is one continuous white panel with no visible desktop background around it",
+   "A floating pill control bar at top center shows a red dot, \"04:21\", a pause icon, a speech-bubble icon, an expand icon, \"...\", and a red square stop button",
+   "Red text \"録音中\" appears with a small colored waveform icon next to it",
+   "Left column header \"会議\" appears with a mic icon and text \"マイクと画面の音を聞いています\"",
+   "A quoted line attributed to \"鈴木\" reads \"OAuth だけ確認お願いします。\"",
+   "Four labeled, timestamped sections with expand chevrons: \"決まったこと\" (04:22, 田中: \"導入時期は10月で行きます\"), \"やること\" (04:48, あなた: \"見積は明日までにお願いします\"), \"宿題\" (05:01, 鈴木: \"誰が対応しますか？\"), \"懸念\" (04:14, 田中: \"初期費用が心配です\")",
+   "Right column has three tabs \"文字起こし\" (selected), \"翻訳\", \"字幕\" above timestamped transcript lines (03:53 田中, 04:05 あなた, 04:18 鈴木)",
+   "Four buttons below the right column read \"リアルタイム要約\", \"質問する\", \"決定事項\", \"アクション\"",
+   "A bottom input bar reads \"この会議について聞く\" with a mic icon, and a footer line reads \"AIが見ている資料 3件\""
+  ]
+ },
+ "winners": {
+  "information_hierarchy": "E119",
+  "surface_fragmentation": "E119",
+  "screen_occupation": "cannot tell",
+  "state_legibility": "E119",
+  "control_visibility": "E119",
+  "visual_density": "E119",
+  "visual_craft": "E119",
+  "provenance_visibility": "E119"
+ },
+ "why": {
+  "information_hierarchy": "E119 opens with a clear \"録音中\" state label and structured named sections, while 56B4 opens with note-taking marketing copy before any meeting content.",
+  "surface_fragmentation": "56B4 shows two separate panels (\"Note\" and \"Transcript\") overlapping with visible desktop gaps between them, whereas E119 is one unbroken panel.",
+  "screen_occupation": "Neither image shows the full monitor bounds, so how much of the screen either surface occupies cannot be determined.",
+  "state_legibility": "E119 shows an explicit \"録音中\" label with a waveform icon next to a running timer, while 56B4 only shows a timer and an unlabeled red icon.",
+  "control_visibility": "E119's control bar has a clearly recognizable pause icon and red square stop button, while 56B4's bar has unlabeled mic/speaker/screen-like icons of less certain purpose.",
+  "visual_density": "E119 fills its space with evenly structured sections, tabs, and buttons, while 56B4's \"Note\" panel has a large empty dark area below a short bullet list.",
+  "visual_craft": "56B4's two panels overlap and are cropped at the image edges, whereas E119 shows aligned columns, consistent timestamps, and chevrons within one bounded panel.",
+  "provenance_visibility": "E119 attributes each entry to a named speaker with a timestamp and lists \"AIが見ている資料 3件\" as a source count, while 56B4's note and transcript text show no visible speaker attribution."
+ },
+ "notes": "56B4 reads as a note-taking overlay pair with marketing copy and no visible speaker attribution; E119 reads as a single structured meeting panel with named speakers, timestamps, and a recording state indicator.",
+ "model": "claude-sonnet-5"
+}

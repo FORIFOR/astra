@@ -1,0 +1,46 @@
+{
+ "observations": {
+  "1539": [
+   "左サイドバーに Home, Tasks, Meetings, Library, Agents, Plugins の項目があり、Library が選択(強調)されている",
+   "左下に丸いアバターと「ui-check」という表示がある",
+   "上部に「A社 新規提案」というパンくず、右側に「42:18・3人」の表示がある",
+   "見出し「要約」の下に「先方は10月導入を希望。最大の懸念は初期費用。」とあり [1] の印がついている",
+   "「決定事項1」に「導入時期を10月で検討」[2]、「アクション1」に「伊藤 修正版見積を送付 明日」[3] と書かれている",
+   "タブに「文字起こし」(選択中)・「録音」・「関連ファイル」・「根拠」が並んでいる",
+   "文字起こし欄に 14:18 田中「初期費用が少し気になっています。」/14:22 鈴木「10月からでしたら枠を取れます。」/14:31 伊藤「修正版の見積を明日お送りします。」の3行がある",
+   "右側パネルに「根拠[1]」「14:18 田中」「初期費用が少し気になっています。」「音声 14:18」と表示されている"
+  ],
+  "A00B": [
+   "青紫のグラデーション壁紙の上にウィンドウが浮かんでおり、周囲にデスクトップが見えている",
+   "左上に信号(赤黄緑)のドットと戻る矢印アイコンがある",
+   "右上に検索アイコン、「+ Take Notes」ボタン、共有アイコン、三点メニュー、オレンジ色の丸アイコン「K」が並んでいる",
+   "タイトル「SuperIntern Core Features and Usage Flow Overview」、その下に「Sun, Feb 15 06:33 PM」の日時がある",
+   "タブに Summary(選択中)・Transcript・Note が並んでいる",
+   "「Overview」見出しの下に「Nanohuman Inc.」「SuperIntern」「AI-native meeting assistant」などを含む説明段落がある",
+   "「SuperIntern Product Features」見出しの下に箇条書きがあり「The application runs locally on Mac hardware to provide a botless experience.」などと書かれている",
+   "下部に「Ask anything」というプレースホルダーの入力欄と「Follow-up」ボタンがあり、マウスカーソルがその付近に表示されている"
+  ]
+ },
+ "winners": {
+  "information_hierarchy": "1539",
+  "surface_fragmentation": "A00B",
+  "screen_occupation": "A00B",
+  "state_legibility": "cannot tell",
+  "control_visibility": "A00B",
+  "visual_density": "A00B",
+  "visual_craft": "tie",
+  "provenance_visibility": "1539"
+ },
+ "why": {
+  "information_hierarchy": "1539は本文冒頭の「要約」に結論(10月導入希望・懸念は初期費用)が一文で読めるが、A00Bは概要が長い段落文で始まり要点が一目では拾いにくい。",
+  "surface_fragmentation": "A00Bは単一の文章領域のみで構成されているが、1539はサイドバー・本文・右パネルの3領域に分かれて見える。",
+  "screen_occupation": "A00Bは周囲にデスクトップ壁紙が見えており画面の一部しか占めていないことが確認できるが、1539は画像の縁まで面が続いており占有度が判断できない。",
+  "state_legibility": "どちらの画像にも「録音中」「処理中」のような明示的な状態表示は見当たらない。",
+  "control_visibility": "A00Bには戻る矢印アイコンが見えるが、1539には信号ドット(閉じる等)以外に戻る・止める手段が見当たらない。",
+  "visual_density": "1539はサイドバーや右パネルに広い余白が目立つが、A00Bは本文とバーが余白を保ちつつ隙間なく続いている。",
+  "visual_craft": "両画像とも文字・アイコンの配置に大きな粗さは見えず、優劣を判断できる材料がない。",
+  "provenance_visibility": "1539には「根拠[1]」として発言者・時刻・音声由来が明示されたパネルがあるが、A00Bには本文中に出典を示す印が見当たらない。"
+ },
+ "notes": "1539は要約と根拠パネルを備えた多パネル構成、A00Bは単一の文章カードにチャット風の入力欄を添えた構成に見える。",
+ "model": "claude-sonnet-5"
+}

@@ -1,0 +1,89 @@
+# Astra Design System — 決まっている規則と、その根拠
+
+Astra の造形は飾って良くならない。**情報構造と物理寸法が正確なほど良くなる。**
+局所の造形 9 段（`docs/ux-benchmark/auto/CRAFT.md`）と、6 つの型を横断した
+DS-01〜05（同 末尾、`docs/ux-benchmark/compare/SAMPLES.md` Sample 11〜16）で
+確かめた。ここには **決まった規則** と **試して捨てたもの** だけを書く。
+値の正本は `shared/design/tokens.json`（→ `pnpm -s gen:design-tokens` で
+`GeneratedMetrics.swift` / `GeneratedMetrics.cs`）。
+
+## 1. 面の高さは中身で決まる（DS-01）
+
+- Dock のどの状態も **高さ = 中身の実寸 + inset**。推定式を持たない
+  （`DockContentMeasure`）。固定値は Dynamic Island そのもの（idle 44 / 棚 52）と、
+  生きて増える一覧を scroll で見せる会議の展開面 460 だけ。
+- 根拠: 固定値だったころ listening は中身 47 に対し面 120、thinking は 19 に対し 88。
+  **中身の無い部分が面の 40〜60%。** 「余白が広い」「浮いている」は飾りではなく
+  この寸法の誤りだった（commit 2a5cdb6 / 8fc8753）。
+- 確認カードは `confirmHeight` 176 を底に中身で伸びる。286 → 229 → 254（padV 16）。
+  高さ上限 360 / 幅上限 620 は `--selftest confirmflow` が測る。
+
+## 2. 字は段からしか取らない（DS-02）
+
+| 面                               | 段         | 値                                                                                                                              |
+| -------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| 窓（Main / Recording Workspace） | `type`     | workspaceTitle 32 / pageTitle 28 / sectionTitle 22 / cardTitle 18 / primary 17 / body 16 / secondary 14 / micro 12 / caption 11 |
+| Dock                             | `dockType` | title 20 / speech 18 / primary 16 / row 15 / meta 13 / label 11                                                                 |
+
+- 同じ役割は同じ段。会議の題は Workspace でも詳細でも 22。最新の発言行は
+  note の項目と同じ 16。
+- `scripts/lint-type-literals.mjs`（`pnpm lint:type-literals`、verify-all に含む）が
+  6 つの型を描く view の `.font(.system(size: <数字>` を落とす。
+  `Image(systemName:)` の寸法は図形なので対象外。
+- 根拠: Workspace は 1 面に 9/10/11/12/13/14/15/16/24 の 9 段を持っていた。
+  12・13・14・15 は「別の段」ではなく「揃っていない」に見える（commit ab97327）。
+  10.5pt の Dock label は知覚の下（CRAFT.md）。
+
+## 3. Dock の縁は 1 つ、縁は行間より広い（DS-03）
+
+- Dock の **全状態** の外側 inset は `voiceHud.padH` 20 / `padV` 16 から取る。
+  内側の隙間（行間 8、群の中の 5〜9）は literal のまま。
+- 根拠: 実測で確認カードの行間は 11.7pt（VoiceOS 9.5）なのに縁は 12〜13pt
+  （VoiceOS 20〜28）。**密度の差は行間ではなく縁にあった。** 内が外より広いと
+  穴に見える。padV 12 / 16 / 20 を盲検で比べ、観察が実測と一致した 2 名がともに
+  12 を最下位、16 と 20 で割れたので小さい方（`compare/craft13`）。
+- 幅 520 は本文が折れて高さが 268 になり面積が減らないので、判定にかけず実測で棄却。
+- 触らないもの: idle 220x44 / app-context 320x52 / 会議バー 820x76。
+
+## 4. 素材は平らな黒、面は画面に付属する（DS-04・造形⑧）
+
+- `DockSurface`: fill black 0.80、hairline white 0.14、上辺の内側光 0.10。
+  gradient / graphite は付けない。
+- 画面の縁に接した面（Dock）は **影で浮かせない**（造形⑧、3/3）。
+  Task Dock の pill は Workspace の凹みに食い込むので影あり（別の面ではない）。
+- 根拠: 縦 gradient（0.72→0.88）と graphite（0.17→0.07）を 3 名が盲検で
+  **cannot tell**。輝度差は 10〜16/255（`compare/craft14`）。競合の「gradient dark
+  surface」は影と壁紙の対比を読んだもので、⑧ で選ばなかった側。
+- 同じ理由で捨てたもの: 境界線 白 10%（3 名「線は無い」）、角丸の変更
+  （2 名 cannot tell）、群を余白で分ける（群の数は変わって見えない）。
+
+## 5. 図形と操作の重さは役割の順（造形⑤⑨）
+
+- 主たる操作: 塗り + `confirmPrimaryMinWidth` 96。副の操作（Cancel / Edit）は
+  文字だけ、枠を付けない。
+- 図形の重さ: 説明する図形 < 押せる図形 < 重い（警告）図形。飾りと警告が同じ
+  重さにならない。
+- 警告（「外部に出る」）は題の下の独立した段（造形②）。
+
+## 6. 測ってから決める
+
+- 判定は観察を先に書かせ、tie / cannot tell を許す（`auto/JUDGE_PROMPT.md`）。
+  観察が実測と矛盾した判定者は捨てる（craft13 の j1）。
+- 面積・間隔・当たり判定は機械が出す（`scripts/ux-auto/alignment.py` /
+  `occupation.py` / `primary.py`）。輝度差 16/255 以下・白 10% の線は知覚の下。
+- ゲートは **壊して落ちるのを見てから** 入れる（type lint 76 → 0、shape 292 の潰れ、
+  confirmflow 900x400）。
+- 2 名 panel は同じ絵で ±3 軸ぶれる（sample07 / 14）。1 型の数字を単独で読まない。
+  競合素材は絵を見て有効か確かめる（sample08 / 15 は空のパネルだった）。
+
+## いまの立ち位置（sample11〜16、有効 5 型）
+
+```
+visual_craft 3/5（前 2/6）  hierarchy 4/4  state 3/3  provenance 4/5
+fragmentation 3/4  control 3/5  density 2/4  occupation 1/5（3 型 cannot tell）
+action_confirmation  Astra 6 / VoiceOS 0 / 引分 1
+```
+
+残っている課題は DS の外: post_meeting の戻る手段と fixture の量、
+meeting_controller の標本の切り抜き、transcript_attribution の競合素材、
+screen_occupation の寸法ゲート化。

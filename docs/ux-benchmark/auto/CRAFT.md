@@ -742,3 +742,64 @@ surface composition / typographic rhythm / density / 素材感 —— であり�
 面積・間隔・当たり判定は機械が出すこと（`occupation.py` / `alignment.py` /
 `primary.py`）、ゲートは壊して落ちることを確かめてから入れること。
 9 段のうち 5 段で revert できたのは、この 3 つがあったから。
+
+---
+
+# DS-01〜05 — 視覚の文法を 6 つの型で横断して決めた
+
+結びで「次はそこへ移る」と書いた先。部品ではなく規則を 4 つ決め、最後に
+型 6 種を測り直した。規則の正本は `docs/DESIGN_SYSTEM.md`。
+
+| | 規則 | 決め方 | 結果 |
+| --- | --- | --- | --- |
+| DS-01 surface composition | 面の高さ = 中身の実寸 + inset。推定式を持たない | 描いて測る（`DockContentMeasure`） | listening 120→71 / thinking 88→43 / result 150→122（DS-01 時点。DS-03 の padV 16 で listening は 79）。空きが面の 40〜60% を占めていた |
+| DS-02 typographic rhythm | 窓は `type` の 9 段、Dock は `dockType` の 6 段からしか取らない | lint（`lint-type-literals.mjs`、HEAD で 76 箇所落ちるのを見せてから 0） | Workspace の 9 段 → 6 段、Dock の題 18/19/20 → 20 |
+| DS-03 density | Dock の全状態の縁は `padH` / `padV`。縁は行間より広い | 実測（縁 12〜13 vs 行間 11.7 / 競合 20〜28 vs 9.5）→ 盲検 A/B（craft13） | padV 12→16。幅 520 は本文が折れて面積が減らず、測定で棄却 |
+| DS-04 素材感 | 地は平らな black 0.80。gradient は付けない | 盲検 3 名（craft14）、輝度差 10〜16/255 | 3 名とも A/B/C を cannot tell。不採用 |
+| DS-05 再採点 | — | sample11〜16、opus + sonnet、観察先行 | 下表 |
+
+## DS-05 の結果（有効 5 型、1 型 = 1 票）
+
+```
+                        sample01-10   sample11-16
+visual_craft               2/6   →      3/5
+information_hierarchy      5/6   →      4/4
+state_legibility           6/6   →      3/3   （1 型 cannot tell）
+provenance_visibility      4/6   →      4/5
+surface_fragmentation      1/6   →      3/4
+control_visibility         5/6   →      3/5
+visual_density             3/6   →      2/4
+screen_occupation          2/6   →      1/5   （3 型 cannot tell）
+```
+
+action_confirmation は確認用 8 軸で **Astra 6 / VoiceOS 0 / 引分 1**。
+sample10 で 0:3 だった visual_craft は opus が Astra、sonnet が tie。
+
+## 前回と単純に比べてはいけない 3 点
+
+1. **transcript_attribution は無効**。競合の絵が空の白いパネルだった
+   （sample08 も同じ絵）。前回の 6/1 は勝ちではない。
+2. **post_meeting は同じ絵で 4/2 → 2/5**（pixel diff 0）。2 名 panel の揺れは
+   ±3 軸ある。1 型の数字は単独で読まない。
+3. 判定者の顔ぶれが違う（前回 A/B/C、今回 opus/sonnet）。
+
+## sample10 の 5 つの負け筋は、判定者の弁から消えた
+
+```
+面が浮いている / 地が gradient / アプリ図形が彩色 / 余白が広い / 副操作に枠
+```
+
+今回 craft を落とした 2 型の理由はどれでもない。meeting_controller は切り抜きが
+「録音中」の文字を落として波形が孤立して見えた（標本の作り方）、post_meeting は
+fixture の中身が 3 行で下半分が空（中身の量）。**DS-01〜03 は構造と寸法の規則で、
+それが craft の負け筋を消した。** DS-04 の飾りは何も足していない。
+9 段の結論 —— 飾って良くならず、構造と寸法で良くなる —— は 6 型でも同じだった。
+
+## ここからの課題（DS の外）
+
+```
+post_meeting         詳細画面に戻る手段が無い / fixture の中身が薄い
+meeting_controller   標本の切り抜きに「録音中」を含める（900x120 → 左端から）
+transcript_attribution  競合素材を取り直す
+screen_occupation    judge では測れない。寸法上限の selftest で見る
+```
