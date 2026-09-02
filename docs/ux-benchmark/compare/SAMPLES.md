@@ -74,17 +74,69 @@ One Surface を保ったまま面積だけ適応させる方向で、競合の 2
 
 ---
 
-## これから増やす標本
+---
+
+## Sample 02〜05
 
 ```
-Sample 02  VoiceOS Agent Mode / action
-Sample 03  VoiceOS Agent Mode / response
-Sample 04  SuperIntern Live Summary
-Sample 05  SuperIntern Live Caption
-Sample 06  SuperIntern Control Bar
-…
-Sample 10
+Sample 01  SuperIntern 会議中の面      Astra 7 / 競合 1   Judge 3
+Sample 02  VoiceOS Agent Mode / Gmail  Astra 1 / 競合 4   Judge 2  ← 負け
+Sample 03  VoiceOS Agent Mode / Slack  Astra 2 / 競合 5   Judge 2  ← 負け
+Sample 04  SuperIntern ライブ要約      Astra 7 / 競合 0   Judge 2
+Sample 05  SuperIntern 文字起こし検索  Astra 5 / 競合 2   Judge 2
 ```
 
-最終結果は「Astra 何勝」ではなく**軸別の勝率**で出す。
-どこに強く、どこに弱いかが分かる形にする。
+## 軸別の勝率（標本 5 組）
+
+```
+information_hierarchy    3/5   ■■■□□
+surface_fragmentation    3/5   ■■■□·
+screen_occupation        2/5   ■■□□·
+state_legibility         4/5   ■■■■·
+control_visibility       3/5   ■■■□·
+visual_density           2/5   ■■□□·
+visual_craft             2/5   ■■□□□
+provenance_visibility    3/5   ■■■□·
+```
+
+## 1 組では見えなかったこと
+
+**Sample 01 だけなら「Astra 7-1 で強い」だった。5 組にすると別の絵が出た。**
+
+```
+対 SuperIntern（会議の面）  Astra 7-1, 7-0, 5-2   → 強い
+対 VoiceOS（確認カード）    Astra 1-4, 2-5        → 弱い
+```
+
+相手が変わると結果が反転する。Judge の弁が理由を言っている:
+
+> 「6C60（VoiceOS）は一つの用事のための小さな確認で、単純さと階層が優れている。
+>  C5AB（Astra）は同時に多くのパネルを持つアプリ全体の画面」
+> 「43B9（VoiceOS）は送る前の確認として、出所のアプリ・宛先・本文・実行と取消が
+>  はっきりしている」
+
+**比べているものが違う。** Astra は会議の作業面、VoiceOS は 1 つの用事の確認カード。
+同じ「AI の面」でも、担っている役割が別。
+
+### ここから言えること
+
+- 会議の面としては、公開素材で見るかぎり Astra が上（3 組とも）
+- **1 つの用事を確認させる場面では、Astra は VoiceOS に負けている**
+  Astra には「これを送りますか」に相当する、小さく閉じた確認の面が無い
+- `visual_craft` が 2/5 まで落ちた。VoiceOS の確認カードの造形が効いている
+
+### 直す前に
+
+標本 5 組はまだ少ない。`screen_occupation` も `visual_craft` も、
+**相手が誰かで決まっている**可能性がある。10 組まで増やしてから判断する。
+
+## 限界（全標本に共通）
+
+```
+- public evidence only            公開素材だけ
+- no hands-on interaction         触っていない
+- no task success measurement     完遂率は測っていない
+- no focus-theft comparison       焦点を奪うかは比べていない
+- no interaction-speed comparison 速さは比べていない
+- feature not visible in competitor capture != feature absent
+```

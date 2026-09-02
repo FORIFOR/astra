@@ -1,0 +1,29 @@
+{
+  "winners": {
+    "information_hierarchy": "43B9",
+    "surface_fragmentation": "4CC7",
+    "screen_occupation": "4CC7",
+    "state_legibility": "43B9",
+    "control_visibility": "43B9",
+    "visual_density": "43B9",
+    "visual_craft": "43B9",
+    "provenance_visibility": "43B9"
+  },
+  "evidence": {
+    "43B9": [
+      "Clear visual hierarchy: app name, action question, recipient field, message preview, two action buttons",
+      "Explicit controls: Send and Edit buttons make next steps obvious",
+      "Preview shows exactly what will be sent and to whom",
+      "Professional spacing and typography hierarchy",
+      "Structured sections (header, to field, preview, controls) provide context and confidence"
+    ],
+    "4CC7": [
+      "Single unified visual piece with minimal fragmentation",
+      "Very small screen footprint, minimal overlay on user's work",
+      "Simple, clean aesthetic with minimal visual noise",
+      "No visible action controls or next steps",
+      "No preview or context about what will happen with captured input"
+    ]
+  },
+  "notes": "43B9 wins on information design, clarity, and control visibility—it's a complete interaction step. 4CC7 wins on minimalism and screen footprint by being a passive status indicator rather than an action dialog."
+}

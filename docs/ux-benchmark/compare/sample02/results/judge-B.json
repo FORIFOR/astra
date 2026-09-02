@@ -1,0 +1,31 @@
+{
+  "winners": {
+    "information_hierarchy": "6C60",
+    "surface_fragmentation": "6C60",
+    "screen_occupation": "6C60",
+    "state_legibility": "C5AB",
+    "control_visibility": "6C60",
+    "visual_density": "6C60",
+    "visual_craft": "6C60",
+    "provenance_visibility": "C5AB"
+  },
+  "evidence": {
+    "6C60": [
+      "Centered modal dialog with single task - send Gmail",
+      "Blue Send button highly visible and prominent with supporting Edit button",
+      "Message content, recipient, and subject clearly displayed",
+      "Minimal fragmentation with one unified interface element",
+      "Clean typography and generous spacing throughout",
+      "X close button clearly accessible"
+    ],
+    "C5AB": [
+      "Recording state explicitly shown with red dot and timestamp 04:21",
+      "Real-time transcript visible with multiple output options (字幕, 翻訳)",
+      "Meeting notes and agenda visible on left side",
+      "Footer explicitly labels 'AI が見ている資料 3 件' showing AI is analyzing content",
+      "Floating toolbar shows concurrent recording controls",
+      "Multiple simultaneous operations visibly indicated"
+    ]
+  },
+  "notes": "6C60 is a modal notification for a single task with excellent simplicity and visual hierarchy. C5AB is a full application interface supporting multiple concurrent operations with more explicit AI labeling but greater complexity and fragmentation."
+}

@@ -1,0 +1,23 @@
+{"winners":{"information_hierarchy":"B1A1","surface_fragmentation":"B1A1","screen_occupation":"tie","state_legibility":"B1A1","control_visibility":"B1A1","visual_density":"C67E","visual_craft":"C67E","provenance_visibility":"B1A1"},
+ "evidence":{
+   "B1A1":[
+     "Floating pill toolbar detached above the main window with pause/comment/expand/more/stop icons",
+     "Explicit '録音中 04:21' red-dot recording indicator plus waveform icon, top-left of panel",
+     "State text 'マイクと画面の音を聞いています' (listening to mic and screen audio)",
+     "Each transcript line shows a timestamp AND a colored speaker name (田中, あなた, 鈴木, 伊藤)",
+     "'決まったこと' and 'やること' sections shown with placeholder/empty state text",
+     "Row of 4 labeled action buttons: リアルタイム要約, 質問する, 決定事項, アクション",
+     "Chat input field 'この会議について聞く' plus footer 'AIが見ている資料 5件'"
+   ],
+   "C67E":[
+     "Two overlapping macOS windows (sharp foreground, blurred window behind it) visible over a blue gradient desktop background",
+     "Standard macOS window chrome: traffic lights, back arrow, search icon, '+Take Notes' button, avatar circle",
+     "Large document-style title 'SuperIntern Core Overview' with date/time and calendar/clock/person/share/more icons",
+     "Tabs: Summary / Transcript / Note, plus a search overlay box with match count '2/5' and nav/close arrows",
+     "Audio scrubber with play button, 00:00/06:14 time, '1x' speed, download icon",
+     "Transcript blocks show only timestamps (00:00, 01:06, 01:18, 01:26, 01:37) with a keyword highlighted in yellow; no speaker name visible on any line",
+     "Bottom bar with 'Ask anything' input and 'Follow-up' button"
+   ]
+ },
+ "notes":"B1A1 shows an explicit live-recording state with per-line speaker+time labels and visible pause/stop controls; C67E shows a calmer, more spacious document-style layout with cleaner type/spacing but no visible speaker attribution and no visible live-recording controls. screen_occupation is a tie: both screenshots are tightly cropped to the app so neither gives reliable evidence of how much of the full screen it occupies."
+}
