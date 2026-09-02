@@ -1,5 +1,5 @@
 {
-  "round": "ds5 (sample11-16, 2026-09-02, judges = opus + sonnet, observation-first prompt)",
+  "round": "ds5 (sample11-16 + sample17 re-crop, 2026-09-02, judges = opus + sonnet, observation-first prompt)",
   "rule": "1 型 = 1 票。軸ごとに tie / cannot tell を除いた票が全員一致ならその側、割れたら tie。action_confirmation は確認用の 8 軸で採点し、共通する 4 軸（control_visibility / screen_occupation / visual_craft / provenance_visibility）だけを per_axis に入れる。",
   "archetypes": {
     "live_notes": {
@@ -17,11 +17,18 @@
       "cannot_tell": 1
     },
     "meeting_controller": {
-      "sample": "sample13",
+      "sample": "sample17",
       "astra": 4,
-      "competitor": 3,
-      "tie": 1,
-      "cannot_tell": 0
+      "competitor": 1,
+      "tie": 2,
+      "cannot_tell": 1,
+      "raw": {
+        "astra": 4,
+        "competitor": 2,
+        "tie": 1,
+        "cannot_tell": 1
+      },
+      "replaces": "sample13 (Astra 4 / 競合 3 / 引分 1)。x=90 の切り抜きで「録音中」が落ちていたので x=0 から切り直した。visual_craft の opus 票は観察（文字と波形の高さが不揃い）が実測（両方 y=79〜92）と矛盾したので棄却。"
     },
     "post_meeting": {
       "sample": "sample14",
@@ -76,30 +83,35 @@
     },
     "control_visibility": {
       "astra": 3,
-      "competitor": 2,
-      "tie": 0,
+      "competitor": 1,
+      "tie": 1,
       "cannot_tell": 0,
       "n": 5
     },
     "visual_density": {
       "astra": 2,
-      "competitor": 1,
-      "tie": 1,
+      "competitor": 2,
+      "tie": 0,
       "cannot_tell": 0,
       "n": 4
     },
     "visual_craft": {
       "astra": 3,
-      "competitor": 2,
-      "tie": 0,
+      "competitor": 1,
+      "tie": 1,
       "cannot_tell": 0,
-      "n": 5
+      "n": 5,
+      "raw_without_measurement_discard": {
+        "astra": 3,
+        "competitor": 2,
+        "tie": 0
+      }
     },
     "provenance_visibility": {
       "astra": 4,
-      "competitor": 1,
+      "competitor": 0,
       "tie": 0,
-      "cannot_tell": 0,
+      "cannot_tell": 1,
       "n": 5
     }
   },
@@ -188,9 +200,10 @@
     "note": "sample01-10。transcript_attribution の 1 票は無効素材で得た票なので、この値も 5 型ぶんで読み直すこと。"
   },
   "notes": {
-    "visual_craft": "5 型で Astra 3 / 競合 2（前回 2 / 4）。live_notes・captions・action_confirmation で取り、meeting_controller と post_meeting で落とす。落とした理由は 2 型とも DS-01〜04 の外にある: meeting_controller は 900x120 の切り抜きで紫の波形が Dock と繋がらず孤立して見える（切り抜き方＝標本の作り方の問題）、post_meeting は右パネルの中身が上端に寄り下半分が空（fixture の中身の量）。",
+    "visual_craft": "5 型で Astra 3 / 競合 1 / 引分 1（sample13 を sample17 で置き換え。実測棄却前の raw は 3 / 2 / 0）。live_notes・captions・action_confirmation で取り、post_meeting で落とす。meeting_controller は切り直しで「波形が孤立」が 2 名から消え、残った opus の「文字と波形の高さが不揃い」は画素で同じ範囲（y=79〜92）だったので棄却、sonnet は tie。post_meeting の負け（右パネルの中身が上端に寄り下半分が空）は fixture の中身の量で、547dd40 で 8 行にした（再採点は未実施）。",
     "post_meeting": "sample07 と同じ Astra 画像（pixel diff 0）で 4/2 → 2/5。差は絵ではなく判定者。2 名の panel の揺れは ±3 軸ある。",
     "action_confirmation": "確認用 8 軸で Astra 6 / 競合 0 / 引分 1（sample09 5/0/3, sample10 では craft 0:3）。craft は opus が 99D7、sonnet が tie。",
-    "screen_occupation": "5 型中 3 型で cannot tell（live_notes・captions・action_confirmation）。meeting_controller は Astra、post_meeting は競合。今回の標本は面だけを切り出しているので占有は絵から測れない。占有は judge ではなく寸法（width/height 上限の selftest）で見る。"
+    "screen_occupation": "5 型中 3 型で cannot tell（live_notes・captions・action_confirmation）。meeting_controller は Astra、post_meeting は競合。今回の標本は面だけを切り出しているので占有は絵から測れない。占有は judge ではなく寸法（width/height 上限の selftest）で見る。",
+    "meeting_controller": "sample13 → sample17。競合画像は byte 一致なのに provenance（競合 2 → cannot tell 2）と density（tie 2 → 競合 1 / tie 1）が動いた。2 名 panel の ±2〜3 軸の揺れは同じ絵でも出る。"
   }
 }

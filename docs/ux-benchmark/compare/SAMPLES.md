@@ -111,9 +111,9 @@ provenance_visibility    3/5   ■■■□·
 相手が変わると結果が反転する。Judge の弁が理由を言っている:
 
 > 「6C60（VoiceOS）は一つの用事のための小さな確認で、単純さと階層が優れている。
->  C5AB（Astra）は同時に多くのパネルを持つアプリ全体の画面」
+> C5AB（Astra）は同時に多くのパネルを持つアプリ全体の画面」
 > 「43B9（VoiceOS）は送る前の確認として、出所のアプリ・宛先・本文・実行と取消が
->  はっきりしている」
+> はっきりしている」
 
 **比べているものが違う。** Astra は会議の作業面、VoiceOS は 1 つの用事の確認カード。
 同じ「AI の面」でも、担っている役割が別。
@@ -140,7 +140,6 @@ provenance_visibility    3/5   ■■■□·
 - no interaction-speed comparison 速さは比べていない
 - feature not visible in competitor capture != feature absent
 ```
-
 
 ---
 
@@ -238,7 +237,7 @@ Astra 5 / VoiceOS 0 / 引分 3
 Judge の弁:
 
 > 「C0FE（Astra）は本文が全部見え、**どの会議の誰がいつ**から来たかを名指しし、
->  外へ出る操作だと警告している」
+> 外へ出る操作だと警告している」
 > 「AFF1（VoiceOS）は効率を優先し、本文は途中で切れている」
 
 ## 引き分けた 3 つが次の課題
@@ -366,4 +365,58 @@ post_meeting        「右パネルの内容が上端に寄って余白が処理
 - dark は採点していない（light のみ）
 - 前回と判定者の顔ぶれが違う（前回 A/B/C、今回 opus/sonnet）。前回との差は
   ±3 軸の揺れの中にあり得る
+```
+
+---
+
+# Sample 17: meeting_controller の標本を切り直す（2026-09-02）
+
+Sample 13 の Astra 画像は 03-recording-workspace を **x=90 から 900x120** で切っていて、
+「録音中」の文字が落ち、紫の波形だけが左端に浮いていた。2 名が揃って
+「波形がバーと繋がらず孤立」と書いたのはそれ。標本の作り方の問題なので、
+**x=0 から 1080x120** で切り直し、競合画像（`sample13/images/E22B.png` と
+byte 一致）と同じ 2 名・同じプロンプトで採点し直した。
+
+```
+Sample 17  meeting_controller  SuperIntern Control Bar
+  raw          Astra 4 / 競合 2 / 引分 1 / cannot tell 1
+  実測後       Astra 4 / 競合 1 / 引分 2 / cannot tell 1   ← 集計はこちら
+（Sample 13   Astra 4 / 競合 3 / 引分 1）
+```
+
+## 軸別
+
+```
+information_hierarchy   7D3A 7D3A   → Astra
+surface_fragmentation   7D3A 7D3A   → Astra
+screen_occupation       7D3A ct     → Astra（judge の占有は Evidence D。寸法ゲートは別）
+state_legibility        7D3A 7D3A   → Astra
+control_visibility      tie  tie    → 引分
+visual_density          B41C tie    → 競合
+visual_craft            B41C tie    → raw は競合、**opus の観察を実測で棄却して引分**
+provenance_visibility   ct   ct     → cannot tell
+```
+
+## visual_craft の opus 票を捨てた理由
+
+opus の弁は「録音中 の文字と波形の高さや位置がやや不揃いに見える」。
+標本の画素で測ると、文字の縦範囲は **y=79〜92**、波形の縦範囲も **y=79〜92**
+（2x 画像、`PIL` で暗い画素と紫の画素の行を取った）。同じ高さに同じ範囲で
+並んでいる。観察が実測と矛盾した判定者はその軸で捨てる（craft13 の j1 と同じ規則）。
+sonnet は「no visible misalignment in either image」で tie。残る票は tie なので引分。
+
+Sample 13 の「波形が孤立」は 2 名から消えた。切り抜きの問題だったことは確認できた。
+
+## 同じ競合画像で動いた軸
+
+競合画像は byte 一致なのに、provenance が「競合 2 票」→「cannot tell 2 票」、
+density が「tie 2 票」→「競合 1 / tie 1」へ動いた。Sample 14 と同じで、
+**2 名 panel は同じ絵に対して ±2〜3 軸ぶれる。** 1 型の数字を単独で読まないこと。
+
+## 限界
+
+```
+- 競合画像は設定パネルが開いた状態、Astra は帯だけ。sonnet が「状態が違う」と注記した
+- 120px の帯なので、Astra 側は上のカードの始まりが写らず「空きが目立つ」（opus の density）
+- 面積は絵から測れない（sonnet: cannot tell）。占有は `--selftest occupation` で見る
 ```
