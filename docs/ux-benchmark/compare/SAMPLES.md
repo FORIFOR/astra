@@ -625,3 +625,35 @@ Sample 17 で棄却した弁（文字と波形の高さ不揃い）とは別の�
 - 競合は DS-05 の素材のまま。取り直していない
 - 12 名分の弁は sample20/results/*.json、問いは sample20/prompts/*.md
 ```
+
+# Sample 21 — craftL の規則を作業画面へ横展開してよいか、その面自身で測る（2026-09-03）
+
+Library で成立した「話者を accent から落とす」（`compare/craftL`）を、作業画面の生きている
+文字起こし（`TranscriptPanel`、37e1fa1）に当てた絵を、その面だけで A/B にした。
+採用条件は先に決めた: **明確な悪化なし AND attribution / hierarchy のどちらか改善**。
+引き分けなら Library の規則を根拠に押し通さず、作業画面だけ戻す。
+
+- A = 871c867（話者 accent）、B = 37e1fa1（話者 secondary、「確定前」の印だけ accent）
+- 差分は x793–823 の話者 1 列だけ（`ImageChops.difference` の bbox）。accent 画素 1937 → 1081
+- 5 軸 + 採用。観察を先に書かせ、tie / cannot tell を許す
+
+| judge     | O1 話者の色       | attribution | hierarchy | scanability | state | craft       | 採用 |
+| --------- | ----------------- | ----------- | --------- | ----------- | ----- | ----------- | ---- |
+| j1 opus   | A 紫 / B 灰（正） | **A**       | B         | A           | tie   | B           | B    |
+| j2 sonnet | A 紫 / B 灰（正） | **A**       | tie       | A           | tie   | A           | A    |
+| j3 opus   | A 紫 / B 灰（正） | **A**       | B         | A           | tie   | B           | B    |
+| j4 sonnet | 2 枚とも紫        | —           | —         | —           | —     | cannot tell | 棄却 |
+
+**結果: 戻す（作業画面は A のまま）。** hierarchy は opus 2 名が B、craft も B 2 / A 1 だが、
+attribution が有効 3 名全員で A（j1「名前の列を探す一拍が要る」、j3「名前が本文に溶けている」）。
+「明確な悪化なし」を満たさない。scanability も 3/3 で A。
+1 型 = 1 票では opus → B、sonnet → A で割れる。
+
+**分かったこと**: 同じ「時刻・名前・発言」の表でも、面の役割で色の意味が変わる。
+Library（結論を読む面）では話者の accent は結論と競合する飾りだったが、生きている文字起こし
+（誰がいま何を言ったかを拾う面）では話者の列が attribution の鍵で、色はそこで働いている。
+規則は「accent は参照記号と選択にだけ」ではなく、「accent はその面で**鍵になる 1 つの列**にだけ」。
+
+限界: 有効 3 名のうち sonnet は 1 名。j4（sonnet）は craftL の j2 と同じく色差そのものを見ていない。
+測定器では差があり（画素 −44%）、opus 2 名と sonnet 1 名は知覚し、sonnet 1 名は知覚しなかった、
+までに留める。

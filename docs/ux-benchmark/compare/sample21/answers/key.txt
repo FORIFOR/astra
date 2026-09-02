@@ -1,0 +1,6 @@
+A  before（作業画面の文字起こし: 話者 = accent）= 871c867 の 04-recording-transcript
+B  after （話者 = secondary、「確定前」の印だけ accent）= 37e1fa1 の同面
+j1 (opus):   1=A 2=B
+j2 (sonnet): 1=B 2=A
+j3 (opus):   1=B 2=A
+j4 (sonnet): 1=A 2=B   ← O1 が 2 枚とも「紫」（実測 accent 画素 1937 vs 1081）。棄却

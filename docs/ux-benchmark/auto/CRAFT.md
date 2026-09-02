@@ -873,3 +873,16 @@ C B + 話者 muted    1422             353 (−66%)          3
 同じ規則を作業画面の文字起こし列（`TranscriptPanel`）へも当てた（話者 → secondary、
 「まだ書き換わる行」の印だけ accent のまま）。03/04/05/10/11 の golden は話者の 1 列
 （x793–823）だけが変わった。
+
+# 横展開の検証（Sample 21）と Craft Freeze
+
+作業画面へ当てた話者 muted を、その面だけで A/B にした（`compare/sample21`）。
+hierarchy は opus 2 名が B、しかし attribution は有効 3 名全員が A。「明確な悪化なし」を
+満たさず、作業画面だけ戻した（37e1fa1 → 元へ。golden は 871c867 と byte 一致）。
+Library の規則は残す。同じ表でも、結論を読む面と誰が言ったかを拾う面では色の鍵が違う。
+
+ここで局所の造形を凍結する。9 段 + DS-01〜05 + 7 チケット + craftL + Sample 21 を通して
+効いたのは **情報階層・実寸・accent の意味・当たり判定・出所** だけで、
+radius / shadow / weight / spacing / border の単独操作は一度も改善を生まなかった。
+証拠の強さの目安: craftL は B-（測定器では差があり、opus は知覚し、sonnet は知覚しなかった。
+どちらかを絶対視しない）。次は面の局所ではなく、遷移をつないだ一連の journey を見る。

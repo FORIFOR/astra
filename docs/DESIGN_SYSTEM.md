@@ -1,9 +1,24 @@
 # Astra Design System — 決まっている規則と、その根拠
 
+## 0. 最上位原則 — Astra は装飾ではなく、構造・寸法・意味で美しくする
+
 Astra の造形は飾って良くならない。**情報構造と物理寸法が正確なほど良くなる。**
 局所の造形 9 段（`docs/ux-benchmark/auto/CRAFT.md`）と、6 つの型を横断した
-DS-01〜05（同 末尾、`docs/ux-benchmark/compare/SAMPLES.md` Sample 11〜16）で
-確かめた。ここには **決まった規則** と **試して捨てたもの** だけを書く。
+DS-01〜05（同 末尾、`docs/ux-benchmark/compare/SAMPLES.md` Sample 11〜16）、
+磨きの 7 チケット（Sample 20）と横展開（craftL / Sample 21）で確かめた。
+
+効いたもの: 情報階層 / 実寸で決まる面の寸法 / accent の意味の整理 / 当たり判定 /
+出所（provenance）。
+効かなかったもの: 飾りの区切り線 / 余白の微調整 / 主操作のさらなる強調 /
+隣り合う段の weight 差 / 角丸 / gradient 素材 / 影で浮かせる。
+
+**Craft Freeze（2026-09-03）**: radius / shadow / font weight / spacing / border を
+単独で動かす round はもう回さない。動かすのは、構造（列・段・出所）か寸法（token）か
+意味（accent が何を指すか）を変える理由があるときだけで、その場合も §4 の手順を通す。
+次の段は面の局所ではなく、Home → Listening → Task Running → Confirmation → Done、
+Meeting → Notes → Workspace → Library → 出所の確認、という一連の遷移を一つの製品として
+見る（continuity / task-adaptive sizing / grammar・用語の一貫性 / provenance の連続 /
+recovery / keyboard safety / perceived complexity）。ここには **決まった規則** と **試して捨てたもの** だけを書く。
 値の正本は `shared/design/tokens.json`（→ `pnpm -s gen:design-tokens` で
 `GeneratedMetrics.swift` / `GeneratedMetrics.cs`）。目指す方向と、面ごとに借りる
 参照、参照から出た仮説の検証手順は `shared/design/DESIGN.md`。
@@ -34,11 +49,15 @@ DS-01〜05（同 末尾、`docs/ux-benchmark/compare/SAMPLES.md` Sample 11〜16�
 - 根拠: Workspace は 1 面に 9/10/11/12/13/14/15/16/24 の 9 段を持っていた。
   12・13・14・15 は「別の段」ではなく「揃っていない」に見える（commit ab97327）。
   10.5pt の Dock label は知覚の下（CRAFT.md）。
-- accent は**参照記号と選択**にだけ（引用 [n]・選ばれたタブ・選択行）。名前や
-  話者のような「位置で分かる」情報には付けない。会議の詳細で話者 8 行を accent から
-  muted へ落とすと、盲検 3 名全員が「最初に目が行く場所」を表の名前の列から題へ
-  移した（`compare/craftL`、本文列の accent 画素 1044 → 353）。
-  要約 1 行だけ medium にする段（+19% の暗画素）は 3 名中 2 名が見えず、入れない。
+- accent は、その面で**鍵になる 1 つの列**にだけ。
+  - 結論を読む面（会議の詳細）では引用 [n]・選ばれたタブ・選択行。話者 8 行を accent
+    から muted へ落とすと、盲検 3 名全員が「最初に目が行く場所」を名前の列から題へ
+    移した（`compare/craftL`、本文列の accent 画素 1044 → 353。証拠の強さは B-:
+    有効な判定者が opus 3 名のみ。sonnet 1 名は色差を見ていない）。
+  - 生きている文字起こし（作業画面）では話者の列。同じ変更を当てると attribution が
+    有効 3 名全員で下がり、戻した（`compare/sample21`）。同じ表でも面の役割で色の
+    意味が変わる。
+  - 要約 1 行だけ medium にする段（+19% の暗画素）は 3 名中 2 名が見えず、入れない。
 
 ## 3. Dock の縁は 1 つ、縁は行間より広い（DS-03）
 

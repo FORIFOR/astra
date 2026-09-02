@@ -156,5 +156,7 @@ cannot tell が多数なら変えない（craft ⑦ の角丸はこれで差し�
 - idle 220x44 / app-context 320x52 / 会議バー 820x76 の寸法
 - One Surface / Stop / State / Provenance / Confirmation / Recovery の構造
 - 新しい画面・新しい機能（いまは「一つの製品に見える」まで磨く段階）
+- radius / shadow / font weight / spacing / border を単独で動かす round
+  （Craft Freeze 2026-09-03。`docs/DESIGN_SYSTEM.md` §0。効いたのは構造・寸法・意味だけだった）
 - Compact Meeting Mode を 4 段目の状態として足すこと（会議バー 76 / ライブメモ 357〜460 /
   作業画面の 3 段で足りている。`docs/DESIGN_SYSTEM.md` §7）

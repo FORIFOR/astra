@@ -44,9 +44,10 @@ struct TranscriptPanel: View {
                                         .font(.system(size: TypeScale.captionSize, design: .monospaced))
                                         .foregroundStyle(.tertiary)
                                         .frame(width: 36, alignment: .leading)
-                                    // 話者は列の位置で分かる。accent は「まだ書き換わる行」の印に取っておく（craftL）。
+                                    // 生きている文字起こしでは話者の列が「誰が」の鍵。muted に落とすと
+                                    // attribution が 3 名全員で下がった（sample21）。Library の規則とは別。
                                     Text(seg.speaker).font(.system(size: TypeScale.captionSize, weight: .semibold))
-                                        .foregroundStyle(.secondary)
+                                        .foregroundStyle(Color.astraAccent)
                                         .frame(width: 46, alignment: .leading)
                                         .lineLimit(1)
                                     HStack(alignment: .firstTextBaseline, spacing: 4) {
