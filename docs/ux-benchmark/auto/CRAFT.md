@@ -658,3 +658,87 @@ hasShadow を持っていたら FAIL
 （craft11「title の下線の幅が違う」/ craft12「角丸の大きさが違う」）。
 実際の違いは影だけ。この採点者の観察は採らなかったが、
 好みは 2 回とも他の 2 人と同じ側だったので票としては残している。
+
+---
+
+# 結び — 9 段を終えて。**局所の造形はここで打ち切る**
+
+## 採用 4 / revert 5
+
+| | 内容 | 結果 |
+| --- | --- | --- |
+| ① 際立ち | 実行=brand 色・直す=静かに | revert（control_visibility 0-3） |
+| ② 字面の階層 | 警告を題の下の独立した段へ | **採用**（visual_craft 3/3） |
+| ③ 行の揃い | 面の高さを推定式→実寸和 | **採用**（286→229pt） |
+| ④ 意味のある余白 | 群の中を詰め間を空ける | revert（tie 3） |
+| ⑤ ボタンの寸法 | 主たる操作に最小幅 96pt | **採用**（68→96pt） |
+| ⑥ 境界の線 | 中身と操作の間に白 10% | revert（3 人とも「線は無い」） |
+| ⑦ 角丸 | 柔らかく / 硬く | revert（2 人が cannot tell） |
+| ⑧ 影・奥行き | 接した面は浮かせない | **採用**（3/3、C 案は棄却） |
+| ⑨ 図形の重さ | 説明 < 押せる < 重い | **採用**（0.3% 差 → 33% 差） |
+
+**採用されたものは全部、構造か寸法の誤りを直したもの。**
+飾りを足した ④⑥⑦ は 3 つとも動かなかった。
+
+## そして、測り直したら craft は下がった
+
+`sample10` で action_confirmation を VoiceOS の確認カードと測り直した。
+
+```
+◎ parameter_hierarchy    astra 3 : voiceos 0
+◎ preview_readability    astra 3 : voiceos 0
+◎ error_prevention       astra 3 : voiceos 0
+◎ provenance_visibility  astra 3 : voiceos 0
+◎ control_visibility     astra 2 : voiceos 0  (tie 1)
+△ action_clarity         tie 3
+× screen_occupation      astra 1 : voiceos 2
+× visual_craft           astra 0 : voiceos 3   ← 引き分け(1:1:1) から負けへ
+```
+
+**中身では 4 軸を 3:0 で取り、造形で 0:3 で落ちた。**
+しかも Astra のほうが情報は多い（チャンネル・差出人・省略しない本文・
+どの会議の誰の発言かまで）。500x200 に対し 560x229。
+
+## 負けた理由は、私が 9 段で触ってきた場所には無い
+
+3 人の言い分が揃っている。
+
+> A「rounded card、**generous padding**、centered icon/button treatment が polished」
+> B「**elevated card**、rounded corners、**gradient dark surface**、**colorful brand icon**、
+>    generous padding、**two clearly-chromed buttons**（filled + outlined）。
+>    E7D5 は行が多く間隔が詰まっていて、Cancel/Edit は**ただの文字**」
+> C「refined spacing、optical balance in button sizing、modern type hierarchy」
+
+挙がっているのは 5 つ。
+
+```
+1  面が浮いている（elevation）
+2  地が gradient（素材）
+3  アプリの図形が彩色されている
+4  余白が広い（density）
+5  副の操作にも枠がある（chrome）
+```
+
+**どれも部品の調整では届かない。** そして 1 と 4 は、
+⑧ と ③ で私が**逆向きに動かしたもの**でもある。
+
+```
+⑧  影を外した      → 3/3「画面の一部に見える」   ／ 競合比では「浮いていない = craft が低い」
+③  57pt 詰めた     → 穴が消えて律動が揃った      ／ 競合比では「詰まっている = craft が低い」
+```
+
+**矛盾ではない。別の問いに、別の正しい答えが出ている。**
+⑧ が答えたのは「Astra は画面に付属するものか、浮遊するアプリか」。
+sample10 が答えたのは「作法どおりのカードとして磨かれて見えるか」。
+前者は製品の思想で、後者は視覚の語彙。9 段では後者に届かない。
+
+## ここで止める
+
+局所部品の調整はこれで終わり。残っているのは Astra 全体の視覚の文法 ——
+surface composition / typographic rhythm / density / 素材感 —— であり、
+6 つの型を横断して決める話。次はそこへ移る。
+
+**測り方は残す。** 観察を先に訊き棄権を許す形（`JUDGE_PROMPT.md`）、
+面積・間隔・当たり判定は機械が出すこと（`occupation.py` / `alignment.py` /
+`primary.py`）、ゲートは壊して落ちることを確かめてから入れること。
+9 段のうち 5 段で revert できたのは、この 3 つがあったから。

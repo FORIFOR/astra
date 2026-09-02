@@ -1,0 +1,26 @@
+{
+  "observations": {
+    "contents": "E7D5 (Slack): Slack logo, question 'このメッセージを送りますか?', warning icon 'external going out', channel metadata (#sales), sender (you), full message preview, timestamp. Buttons: Cancel, Edit, Send (orange). — 91C2 (Gmail): Gmail icon, close button (X), question 'Send this message?', To field (hello@voiceos.com), Subject line (Meeting tomorrow), truncated message preview. Buttons: Send (blue), Edit.",
+    "sizes": "E7D5 occupies moderate screen space with visible metadata rows; 91C2 is more compact. Both are modal dialogs of similar width; E7D5 slightly taller due to information density."
+  },
+  "winners": {
+    "action_clarity": "tie",
+    "parameter_hierarchy": "E7D5",
+    "preview_readability": "E7D5",
+    "control_visibility": "E7D5",
+    "screen_occupation": "91C2",
+    "visual_craft": "91C2",
+    "error_prevention": "E7D5",
+    "provenance_visibility": "E7D5"
+  },
+  "why": {
+    "action_clarity": "Both ask the same clear, direct question in their respective languages with no ambiguity.",
+    "parameter_hierarchy": "E7D5 layers metadata (warning, channel, sender, message) with clear visual breaks and icon guidance; 91C2 shows only To and Subject.",
+    "preview_readability": "E7D5 displays the full message text untruncated; 91C2 truncates with ellipsis, forcing the user to mentally complete the message.",
+    "control_visibility": "E7D5 presents Cancel as an explicit button alongside Edit and Send; 91C2 hides cancel behind the header X, making the destructive path (sending) more salient.",
+    "screen_occupation": "91C2 achieves the same confirmation task in a smaller footprint, respecting screen real estate; E7D5 requires more vertical space.",
+    "visual_craft": "91C2 exhibits refined spacing, optical balance in button sizing, and modern type hierarchy; E7D5 is well-organized but less refined in visual polish.",
+    "error_prevention": "E7D5 flags 'external going out' prominently at the top, explicitly warning of boundary crossing; provides full message preview to verify content. 91C2 relies on To/Subject recognition alone.",
+    "provenance_visibility": "E7D5 shows channel, sender, and timestamp; 91C2 shows recipient and subject only. E7D5 provides fuller context for understanding message origin and destination."
+  }
+}
