@@ -306,6 +306,76 @@ enum SelfTest {
             return out
         }
 
+        /// 影が見えるように、決まった地の上へ置き直す。
+        ///
+        /// 影は透明の上では読めない。かといって**実際の画面を撮らない**
+        /// —— 一度それをやって、利用者の Finder とメールが証拠に混ざった。
+        /// 地は合成する。上辺にメニューバーに相当する帯を置き、
+        /// 「画面の縁に接しているか、浮いているか」が見えるようにする。
+        /// 合成した地であることは `CRAFT.md` に明記する。
+        func onBackdrop(_ cg: CGImage) -> NSBitmapImageRep? {
+            // 合成は CoreGraphics でやる。`NSBitmapImageRep.draw` に渡すと
+            // premultiplied alpha を取り違えて、**影が白い帯**として出た。
+            let iw = cg.width, ih = cg.height
+            let space = CGColorSpaceCreateDeviceRGB()
+            let info = CGImageAlphaInfo.premultipliedLast.rawValue
+
+            // 面そのもの（不透明な部分）を探す。影は alpha < 1 なので外れる。
+            var px = [UInt8](repeating: 0, count: iw * ih * 4)
+            var x0 = iw, x1 = -1, y0 = ih, y1 = -1
+            px.withUnsafeMutableBytes { buf in
+                guard let ctx = CGContext(data: buf.baseAddress, width: iw, height: ih,
+                                          bitsPerComponent: 8, bytesPerRow: iw * 4,
+                                          space: space, bitmapInfo: info) else { return }
+                ctx.draw(cg, in: CGRect(x: 0, y: 0, width: iw, height: ih))
+            }
+            // **面は半透明**（`DockSurface` は黒 80%）。「不透明なら面」で探すと
+            // 塗りと文字しか拾えず、地の大きさが絵ごとに変わった。影は薄いので、
+            // alpha でしきい値を切れば分けられる。
+            //
+            // 1 画素でも越えたら採る、にすると影でぼけた角を面の上辺と誤り、
+            // 影のある絵とない絵で 2〜4px ずれた。ずれると採点者は影ではなく
+            // 位置の話を始める（一度そうなった）。**行ごとに数える。**
+            let solid: UInt8 = 160
+            var rowFull = [Bool](repeating: false, count: ih)
+            for y in 0..<ih {
+                var n = 0, lo = iw, hi = -1
+                for x in 0..<iw where px[(y * iw + x) * 4 + 3] >= solid {
+                    n += 1; lo = min(lo, x); hi = max(hi, x)
+                }
+                if n > iw / 4 { rowFull[y] = true; x0 = min(x0, lo); x1 = max(x1, hi) }
+            }
+            guard let ty = rowFull.firstIndex(of: true),
+                  let by = rowFull.lastIndex(of: true), x1 > x0 else { return nil }
+            y0 = ty; y1 = by
+
+            // 地は中身に合わせる。固定だと agent（幅 720）が切れて、
+            // 影ではなく切れ方を比べることになる。
+            //
+            // **上辺に隙間を作らない。** 最初はメニューバーの帯を描いて
+            // その 10px 下に面を置いたが、`PanelPositioner.voiceHUDFrame` は
+            // `y = screen.frame.maxY - size.height` —— 面の上辺は画面の上辺そのもの。
+            // 隙間は harness が作った嘘で、採点者 3 人中 2 人がそれを根拠にした
+            // （「隙間があるほうが別窓に見える」）。無い物を比べていた。
+            let cw = x1 - x0 + 1, ch = y1 - y0 + 1
+            let W = cw + 160, H = ch + 90
+            // 面の左上を、地の中でいつも同じ場所に置く。影の大きさが変わっても、
+            // **面の位置と大きさは動かない**。動くと影ではなく配置を比べてしまう。
+            let cardX = (W - cw) / 2, cardTop = 0
+            guard let out = CGContext(data: nil, width: W, height: H,
+                                      bitsPerComponent: 8, bytesPerRow: 0,
+                                      space: space, bitmapInfo: info) else { return nil }
+            out.setFillColor(gray: 0.36, alpha: 1)
+            out.fill(CGRect(x: 0, y: 0, width: W, height: H))
+            // 走査は上から、CG の原点は下。面の上辺を地の上辺へ合わせるので、
+            // 置く高さは「絵の下端が地のどこに来るか」で書く。
+            out.draw(cg, in: CGRect(x: cardX - x0,
+                                    y: H - cardTop - (ih - y0),
+                                    width: iw, height: ih))
+            guard let img = out.makeImage() else { return nil }
+            return NSBitmapImageRep(cgImage: img)
+        }
+
         /// 期待寸法の窓が現れるまで待って撮る。
         func capture(_ name: String, expect: CGSize) -> (x: CGFloat, y: CGFloat, w: CGFloat, h: CGFloat, colors: Int, count: Int)? {
             let deadline = Date().addingTimeInterval(6)
@@ -318,11 +388,18 @@ enum SelfTest {
                     .map { ($0.id, $0.x, $0.y, $0.w, $0.h) }
             } while found == nil && Date() < deadline
             settle(0.45)
+            // 造形⑧ を測るときだけ、外形の外（＝**窓の影**）も撮る。
+            // 既定の `boundsIgnoreFraming` は影を切り落とすので、
+            // 影を変えても絵が 1px も変わらない。
+            let shadow = ProcessInfo.processInfo.environment["ASTRA_SHOT_SHADOW"] == "1"
+            let opts: CGWindowImageOption = shadow
+                ? [.bestResolution] : [.boundsIgnoreFraming, .bestResolution]
             guard let (id, x, y, w, h) = found,
-                  let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, id, [.boundsIgnoreFraming, .bestResolution])
+                  let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, id, opts)
             else { return nil }
             let rep = NSBitmapImageRep(cgImage: cg)
-            if let png = rep.representation(using: .png, properties: [:]) {
+            let shot = shadow ? (onBackdrop(cg) ?? rep) : rep
+            if let png = shot.representation(using: .png, properties: [:]) {
                 try? png.write(to: URL(fileURLWithPath: "\(outDir)/\(name).png"))
             }
             var seen = Set<UInt32>()
@@ -508,6 +585,21 @@ enum SelfTest {
         }
         if let top = topEdges.first, top != 0 {
             failures.append("Dock が画面上端に接していない (top=\(top))")
+        }
+
+        // 造形⑧ **接している面は浮かない。** 上辺が画面の縁にあるのに四周へ影を
+        // 落とすと、目には「別の窓」に見える。3 人に伏せて見せたとき、
+        // 小さい面でも広がった面でも 3/3 で影なしが「画面の一部に見える」と出た。
+        // 宣言ではなく窓に訊く（`Elevation.apply` が実際に効いたか）。
+        if ProcessInfo.processInfo.environment["ASTRA_ELEVATION"] == nil {
+            let top = NSScreen.main?.frame.maxY ?? 0
+            let shadowed = NSApp.windows.filter {
+                $0.isVisible && $0.hasShadow && abs($0.frame.maxY - top) < 1
+            }
+            if !shadowed.isEmpty {
+                failures.append("画面上端に接した Dock に窓の影が付いている "
+                    + shadowed.map { "\(Int($0.frame.width))x\(Int($0.frame.height))" }.joined(separator: ","))
+            }
         }
 
         store.reset()

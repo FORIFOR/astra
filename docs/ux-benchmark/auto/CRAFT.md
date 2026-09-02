@@ -560,3 +560,101 @@ calmness         semantic 0 : flat 0  (tie 3)
 （`content_lost` の `›` で 3 回作り話が出たのと同じ場所）。
 規則はコードの註（`ActionConfirmation.Glyph`）に書いて、
 他の archetype へ展開するときの拠り所にする。
+
+---
+
+# ⑧ 影・奥行き — 採用。ただし当初の案とは違う形で
+
+`detached_overlay`（Dock が別の窓に見える）を、**material には触らず**
+`NSWindow.hasShadow` の切り替えだけで測った。自前の影は描かない。
+
+当初の案:
+
+```
+A  全状態で影あり（いまの姿）
+B  全状態で影なし
+C  小さい面は影なし / 広がった面は影あり   ← 本命
+```
+
+## 影を測るための撮り方を作った
+
+既存の撮り方（`boundsIgnoreFraming`）は**外形の外を切り落とす**ので、
+影を変えても絵が 1px も変わらない。`ASTRA_SHOT_SHADOW=1` で外形の外まで撮り、
+決まった地の上へ合成する（`SelfTest.onBackdrop`）。
+
+地は**合成**である。実際の画面は撮らない —— 一度それをやって、
+利用者の Finder とメールが証拠に混ざった。
+
+## harness の欠陥で、一度は逆の答えが出た
+
+最初の合成では、上辺にメニューバーの帯を描き、その **10px 下**に面を置いた。
+3 人中 2 人が、その隙間を根拠にした。
+
+> 「影ありは面がメニューバーに**吸い付いていて**、影なしは**隙間**があるので別窓に見える」
+
+隙間は harness が作った嘘だった。
+
+```swift
+// PanelPositioner.voiceHUDFrame
+y: screen.frame.maxY - size.height   // 面の上辺 = 画面の上辺
+```
+
+Dock の上辺は画面の上辺そのもので、隙間は無い。**無い物を比べていた。**
+
+直す過程でもう 2 つ harness の欠陥が出た。どちらも「影を比べるつもりで
+別のものを比べる」形になっていた。
+
+```
+地が固定 760x380 だった      agent（幅 720）が切れ、影ではなく切れ方を比べていた
+面の位置が 2〜4px ずれた     面が半透明（黒 80%）なのに「不透明なら面」で探しており、
+                             影でぼけた角の 1 行を上辺と誤っていた
+```
+
+面の幅の 1/4 以上が alpha ≥ 160 の**行**を面とみなすようにして揃えた。
+
+## 直したら結論が反転し、しかも一致した
+
+```
+A 小さい面（confirmation）    B 広がった面（agent）
+belongs_to_screen 影なし 3:0  belongs_to_screen 影なし 3:0
+separate_window   影あり 3:0  separate_window   影あり 3:0
+craft             影なし 3:0  craft             影なし 3:0
+overall           影なし 3:0  overall           影なし 3:0
+```
+
+**広がった面でも影は要らない。** C 案の前提が崩れた。
+理由は後から見れば当然で、agent の面も**同じ Dock が下へ伸びたもの**であり、
+上辺は画面の縁のままだから。
+
+```
+直す前の考え   小さい面 = 接している / 広がった面 = 浮く   （大きさで分ける）
+測って出た答え Dock = 接している / Workspace = 浮く        （接しているかで分ける）
+```
+
+`DockPresentation.elevation`（状態ごとの高さ）は消した。
+`Elevation.attached` / `.floating` の 2 つだけにして、
+Dock は全状態で `.attached`、Workspace と Main は `.floating` のまま。
+
+Workspace の影は**測っていない**。画面の中央に置かれた窓で、
+macOS の作法どおり浮いてよいはずだが、証拠は無いので触らない。
+
+## ゲートにした
+
+`--selftest dock8` に足した。**宣言ではなく窓に訊く。**
+
+```
+画面の上辺に接している（frame.maxY == screen.maxY）窓が
+hasShadow を持っていたら FAIL
+```
+
+`wantsShadow` を `true` に固定して落ちることを確かめた。
+
+```
+壊した状態  SELFTEST_FAIL dock8: 画面上端に接した Dock に窓の影が付いている 220x44
+直した状態  SELFTEST_OK dock8
+```
+
+※ Judge 3（Haiku）は 2 回とも観察を作り話で埋めた
+（craft11「title の下線の幅が違う」/ craft12「角丸の大きさが違う」）。
+実際の違いは影だけ。この採点者の観察は採らなかったが、
+好みは 2 回とも他の 2 人と同じ側だったので票としては残している。

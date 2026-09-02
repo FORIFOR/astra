@@ -1,0 +1,4 @@
+D6B1 compact-shadow
+72E4 compact-noshadow
+A83F expanded-shadow
+5C09 expanded-noshadow

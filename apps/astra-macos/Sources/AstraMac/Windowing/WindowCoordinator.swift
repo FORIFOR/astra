@@ -102,6 +102,7 @@ final class WindowCoordinator {
         panel.setFrame(
             PanelPositioner.voiceHUDFrame(screen: screen, size: AstraStateStore.shared.dock.size()),
             display: false)
+        Elevation.apply(to: panel, .attached)
         fadeIn(panel, makeKey: false)
     }
 
@@ -122,6 +123,8 @@ final class WindowCoordinator {
             screen: screen,
             size: AstraStateStore.shared.dock.size(
                 agentRows: AstraStateStore.shared.state.activeTask?.steps.count ?? 0))
+        // Dock は画面の縁から生えている。大きさが変わっても浮かない。
+        Elevation.apply(to: panel, .attached)
         guard panel.frame != target else { return }
         // Reduce Motion のときは一気に。そうでなければ 180ms で。
         if NSWorkspace.shared.accessibilityDisplayShouldReduceMotion {

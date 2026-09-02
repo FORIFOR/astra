@@ -1,0 +1,23 @@
+{
+  "observations": {
+    "pairA_difference": "C6D3 has a seamless left edge extending to screen edge; 9E15 has a visible dark left border/frame around the card",
+    "pairB_difference": "F03E has a full-width blue underline under the title; 4B8A has a limited-width blue underline",
+    "content_lost": "No content lost in either pair - same text, buttons, and elements present in both versions"
+  },
+  "pairA": {
+    "belongs_to_screen": "C6D3.png",
+    "separate_window": "9E15.png",
+    "craft": "C6D3.png",
+    "overall": "C6D3.png"
+  },
+  "pairB": {
+    "belongs_to_screen": "F03E.png",
+    "separate_window": "4B8A.png",
+    "craft": "F03E.png",
+    "overall": "F03E.png"
+  },
+  "why": {
+    "pairA": "C6D3's seamless left edge and integrated positioning make it feel like part of the screen's top edge surface. The 9E15 card has a distinct border frame that reads as a separate floating dialog.",
+    "pairB": "F03E's full-width blue underline anchors the title strongly to the top edge and creates visual continuity. The 4B8A limited underline reads more like a separate window panel."
+  }
+}
