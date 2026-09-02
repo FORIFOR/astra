@@ -15,6 +15,9 @@ DS-01〜05（同 末尾、`docs/ux-benchmark/compare/SAMPLES.md` Sample 11〜16�
 **Craft Freeze（2026-09-03）**: radius / shadow / font weight / spacing / border を
 単独で動かす round はもう回さない。動かすのは、構造（列・段・出所）か寸法（token）か
 意味（accent が何を指すか）を変える理由があるときだけで、その場合も §4 の手順を通す。
+解除は `CRAFT_FREEZE_OVERRIDE` の 3 条件が同時に成り立つときだけ:
+journey の失敗が起きている AND 原因が visual grammar に特定できる AND
+既存の構造・寸法・意味の修正では解決できない。「何となく直したい」では戻らない。
 次の段は面の局所ではなく、Home → Listening → Task Running → Confirmation → Done、
 Meeting → Notes → Workspace → Library → 出所の確認、という一連の遷移を一つの製品として
 見る（continuity / task-adaptive sizing / grammar・用語の一貫性 / provenance の連続 /
