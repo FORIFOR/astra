@@ -5,7 +5,8 @@ Astra の造形は飾って良くならない。**情報構造と物理寸法が
 DS-01〜05（同 末尾、`docs/ux-benchmark/compare/SAMPLES.md` Sample 11〜16）で
 確かめた。ここには **決まった規則** と **試して捨てたもの** だけを書く。
 値の正本は `shared/design/tokens.json`（→ `pnpm -s gen:design-tokens` で
-`GeneratedMetrics.swift` / `GeneratedMetrics.cs`）。
+`GeneratedMetrics.swift` / `GeneratedMetrics.cs`）。目指す方向と、面ごとに借りる
+参照、参照から出た仮説の検証手順は `shared/design/DESIGN.md`。
 
 ## 1. 面の高さは中身で決まる（DS-01）
 
