@@ -1,0 +1,23 @@
+{"winners":{"information_hierarchy":"3323","surface_fragmentation":"C6E5","screen_occupation":"3323","state_legibility":"3323","control_visibility":"3323","visual_density":"3323","visual_craft":"C6E5","provenance_visibility":"C6E5"},
+ "evidence":{
+  "3323":[
+    "small black pill-shaped toolbar centered at top of screen with rounded notches",
+    "red recording dot plus tiny level-meter bars inside the pill",
+    "pause icon (two vertical bars) in the pill",
+    "chat bubble icon, expand/fullscreen bracket icon, and ellipsis (more) icon in the pill",
+    "solid red circular stop button at the right end of the pill",
+    "separate '04:21' timer text with a purple/blue animated waveform, floating alone at bottom-left, visually disconnected from the pill"
+  ],
+  "C6E5":[
+    "large dark rounded settings panel stacked directly above the pill",
+    "'Stealth mode' row: eye icon, bold title, subtext 'Hidden from others while screen sharing', and a toggle switch",
+    "'Dictionary' row with book icon, count '4/100', and chevron",
+    "'Language' and 'Shortcuts' rows, each with icon, label, and chevron",
+    "'Microphone' row showing value 'MacBook Air Microp...' and chevron",
+    "'System Audio' row showing value 'MacBook Air Speak...' and chevron",
+    "separate black pill below with document icon, 'CC' icon, chat bubble, ellipsis, divider, small bars icon, and red stop button",
+    "colorful wallpaper visible around both dark surfaces, occupying most of the frame"
+  ]
+ },
+ "notes":"C6E5's dominant visible surface is an expanded settings/options panel (likely opened via the pill's '...' menu) rather than a live recording-status readout, which pulls attention away from the actual record/stop controls and shows no elapsed timer. 3323 shows two small, stylistically disconnected pieces (top pill + bottom-left timer/waveform) rather than one grouped panel, but each piece is minimal and the recording state (dot, live waveform, timer) is immediately legible."
+}

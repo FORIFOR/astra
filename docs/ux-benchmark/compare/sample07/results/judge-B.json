@@ -1,0 +1,29 @@
+{
+  "winners": {
+    "information_hierarchy": "4334",
+    "surface_fragmentation": "245E",
+    "screen_occupation": "245E",
+    "state_legibility": "4334",
+    "control_visibility": "4334",
+    "visual_density": "245E",
+    "visual_craft": "245E",
+    "provenance_visibility": "4334"
+  },
+  "evidence": {
+    "245E": [
+      "Modal presentation: compact, centered, floating window with strong frame",
+      "Tabs labeled Summary, Transcript, Note; clear section headers (Overview, Product Features)",
+      "Date/time in header (Sun, Feb 15, 06:33 PM)",
+      "Balanced whitespace; moderate text density; minimal visual elements",
+      "Action button at bottom; clean typography and alignment"
+    ],
+    "4334": [
+      "Full-window layout with left sidebar navigation (Home, Tasks, Meetings, Library, Agents, Plugins)",
+      "Three hierarchical sections clearly labeled: 要約, 決定事項, アクション with blue reference numbers [1][2][3]",
+      "Four feature tabs visible: 文字起こし, 議事, 関連ファイル, 補助",
+      "Transcript with timestamps and speaker names (14:18 田中, 14:22 鈴木, 14:31 伊藤); meeting duration and participant count shown (42:18 ・ 3人)",
+      "Right sidebar with additional notes/support context; higher information density overall"
+    ]
+  },
+  "notes": "4334 excels at extracting and labeling meeting structure with clear speaker attribution. 245E prioritizes clean presentation and screen efficiency but shows less context about meeting source. 245E's modal design is visually tighter; 4334 integrates meeting data into application context more thoroughly."
+}

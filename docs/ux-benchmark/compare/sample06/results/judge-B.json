@@ -1,0 +1,35 @@
+{
+  "winners": {
+    "information_hierarchy": "3323",
+    "surface_fragmentation": "3323",
+    "screen_occupation": "3323",
+    "state_legibility": "3323",
+    "control_visibility": "3323",
+    "visual_density": "3323",
+    "visual_craft": "tie",
+    "provenance_visibility": "C6E5"
+  },
+  "evidence": {
+    "C6E5": [
+      "Settings panel open showing Stealth mode, Dictionary (4/100), Language, Shortcuts, Microphone (MacBook Air), System Audio (MacBook Air)",
+      "Two floating surfaces: large settings panel + separate compact control bar below",
+      "Occupies significant screen real estate with the panel spanning center of screen",
+      "Recording state unclear—no visible timer or duration indicator in the panel",
+      "Stop button visible in control bar; pause button not visible",
+      "Information-dense panel with text labels, icons, and device names throughout",
+      "Well-crafted typography and hierarchical structure with divider lines",
+      "Explicit audio device provenance: shows exact microphone and speaker sources"
+    ],
+    "3323": [
+      "Minimal horizontal control bar: red indicator, pause, chat, settings, more, stop button",
+      "Recording timer (04:21) and waveform visualization visible on left",
+      "Single unified floating element (control bar) with time/waveform in context",
+      "Occupies minimal screen footprint—thin bar at top, time/waveform on left side",
+      "Duration (04:21 timer) and waveform clearly show active recording state and progress",
+      "Pause button (||) visible immediately next to record indicator; all controls in one place",
+      "Sparse, minimal design with clean spacing and icon arrangement",
+      "No explicit device information shown—only waveform indicates audio capture happening"
+    ]
+  },
+  "notes": "3323 excels at minimalism and focus—most criteria favor reduced surface fragmentation, minimal footprint, and clear recording state. C6E5 only wins on provenance visibility, showing explicit audio device sources. Both well-executed visually; C6E5 uses richer typography hierarchy, 3323 is simpler but equally clean."
+}

@@ -140,3 +140,77 @@ provenance_visibility    3/5   ■■■□·
 - no interaction-speed comparison 速さは比べていない
 - feature not visible in competitor capture != feature absent
 ```
+
+
+---
+
+# 標本 8 組・型 6 種（instance は平均して 1 票）
+
+```
+Sample 01  live_notes              SuperIntern 会議中の面     Astra 7 / 競合 1
+Sample 04  live_notes              SuperIntern ライブ要約     Astra 7 / 競合 0
+Sample 05  captions                SuperIntern 文字起こし検索 Astra 5 / 競合 2
+Sample 02  action_confirmation     VoiceOS Gmail 確認         Astra 1 / 競合 4
+Sample 03  action_confirmation     VoiceOS Slack 確認         Astra 2 / 競合 5
+Sample 06  meeting_controller      SuperIntern Control Bar    Astra 5 / 競合 2
+Sample 07  post_meeting            SuperIntern フォローアップ Astra 4 / 競合 2
+Sample 08  transcript_attribution  SuperIntern 話者分離       Astra 6 / 競合 1
+```
+
+## 軸別の勝率（型 6 種）
+
+```
+state_legibility         6/6   ■■■■■■
+information_hierarchy    5/6   ■■■■■□
+control_visibility       5/6   ■■■■■□
+provenance_visibility    4/6   ■■■■□□
+visual_density           3/6   ■■■□□·
+screen_occupation        2/6   ■■□□□·
+visual_craft             2/6   ■■□□□·
+surface_fragmentation    1/6   ■□····
+```
+
+## 型で揃えたら、弱点の場所が変わった
+
+標本 5 組（画面どうし）のときと比べると:
+
+```
+                        画面どうし  型どうし
+surface_fragmentation      3/5  →   1/6   ← 大きく下がった
+state_legibility           4/5  →   6/6
+information_hierarchy      3/5  →   5/6
+control_visibility         3/5  →   5/6
+```
+
+**`surface_fragmentation` が 1/6 まで落ちた。** 画面全体どうしを比べていたときは
+Astra が勝っていたが、**同じ型の小さな面どうしで比べると、ほとんど引き分けか負け**。
+
+Astra の強みは「大きな面にまとめている」ことであって、
+**小さな面そのものの作りではない**、と読める。
+
+## 強いところ・弱いところ
+
+```
+強い（型を揃えても勝つ）
+  state_legibility        6/6   いま何をしているかが読める
+  information_hierarchy   5/6   何が大事かが分かる
+  control_visibility      5/6   止める・進める道が見える
+  provenance_visibility   4/6   出所が見える
+
+弱い（型を揃えると負ける）
+  surface_fragmentation   1/6
+  screen_occupation       2/6
+  visual_craft            2/6
+```
+
+## action_confirmation の行について
+
+上の表の `action_confirmation` は、**別の型の面をぶつけた結果**であり、
+型どうしの比較にはなっていない。Astra に対応する面が存在しないため。
+
+```
+MISSING_ARCHETYPE: ACTION_CONFIRMATION
+```
+
+これは「負けた」ではなく「**無い**」。数字は参考値として残すが、
+勝率の解釈には使わない。

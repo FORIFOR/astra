@@ -1,82 +1,55 @@
 {
-  "n_samples": 5,
-  "samples": [
-    {
-      "label": "Sample 01",
-      "competitor": "superintern-meeting-only",
-      "astra": 7,
-      "comp": 1,
-      "judges": 3
-    },
-    {
-      "label": "Sample 02",
-      "competitor": "voiceos-agent-gmail",
-      "astra": 1,
-      "comp": 4,
-      "judges": 2
-    },
-    {
-      "label": "Sample 03",
-      "competitor": "voiceos-agent-slack",
-      "astra": 2,
-      "comp": 5,
-      "judges": 2
-    },
-    {
-      "label": "Sample 04",
-      "competitor": "superintern-summary",
-      "astra": 7,
-      "comp": 0,
-      "judges": 2
-    },
-    {
-      "label": "Sample 05",
-      "competitor": "superintern-find",
-      "astra": 5,
-      "comp": 2,
-      "judges": 2
-    }
-  ],
+  "archetypes": {
+    "live_notes": 2,
+    "captions": 1,
+    "action_confirmation": 2,
+    "meeting_controller": 1,
+    "post_meeting": 1,
+    "transcript_attribution": 1
+  },
   "per_axis": {
     "information_hierarchy": {
-      "astra": 3,
-      "competitor": 2,
+      "astra": 5,
+      "competitor": 1,
       "tie": 0
     },
     "surface_fragmentation": {
-      "astra": 3,
+      "astra": 1,
       "competitor": 1,
-      "tie": 1
+      "tie": 4
     },
     "screen_occupation": {
       "astra": 2,
-      "competitor": 2,
+      "competitor": 3,
       "tie": 1
     },
     "state_legibility": {
-      "astra": 4,
+      "astra": 6,
       "competitor": 0,
-      "tie": 1
+      "tie": 0
     },
     "control_visibility": {
-      "astra": 3,
+      "astra": 5,
       "competitor": 1,
-      "tie": 1
+      "tie": 0
     },
     "visual_density": {
-      "astra": 2,
+      "astra": 3,
       "competitor": 2,
       "tie": 1
     },
     "visual_craft": {
       "astra": 2,
       "competitor": 3,
-      "tie": 0
+      "tie": 1
     },
     "provenance_visibility": {
-      "astra": 3,
-      "competitor": 1,
-      "tie": 1
+      "astra": 4,
+      "competitor": 2,
+      "tie": 0
     }
-  }
+  },
+  "missing_archetype": [
+    "action_confirmation"
+  ]
 }

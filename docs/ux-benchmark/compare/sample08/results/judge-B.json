@@ -1,0 +1,30 @@
+{
+  "winners": {
+    "information_hierarchy": "962B",
+    "surface_fragmentation": "962B",
+    "screen_occupation": "78AE",
+    "state_legibility": "962B",
+    "control_visibility": "962B",
+    "visual_density": "962B",
+    "visual_craft": "962B",
+    "provenance_visibility": "962B"
+  },
+  "evidence": {
+    "78AE": [
+      "Blank white rounded rectangle",
+      "No content, controls, or hierarchy visible",
+      "Minimal screen footprint (roughly 50% of viewport)",
+      "Ambiguous state—could be loading or empty",
+      "No speaker, timestamp, or transcript information"
+    ],
+    "962B": [
+      "Floating control bar with playback and recording indicator (clear state)",
+      "Left and right panels with transcript organized by speaker (colored badges) and timestamp",
+      "Timestamped entries (03:53, 04:05, 04:18, etc.) with speaker names next to each line",
+      "Bottom action buttons (Summary, Questions, Decisions, Actions) clearly visible",
+      "Dense but well-organized—information grouped logically",
+      "Consistent typography, spacing, and color coding for speaker attribution"
+    ]
+  },
+  "notes": "78AE is an empty/loading state with minimal UI. 962B is a fully realized meeting transcript interface with strong speaker and timestamp visibility, clear controls, and coherent information hierarchy. 962B wins on all design axes except screen occupation."
+}
