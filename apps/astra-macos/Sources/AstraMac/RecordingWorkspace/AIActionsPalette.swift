@@ -35,7 +35,7 @@ struct AIActionsPalette: View {
                         Image(systemName: action.icon).font(.system(size: 10))
                             .foregroundStyle(Color.astraAccent)
                         Text(action.title)
-                            .font(.system(size: 11, weight: .medium))
+                            .font(.system(size: TypeScale.microSize, weight: .medium))
                             .lineLimit(1)
                             .minimumScaleFactor(0.9)
                             .foregroundStyle(Color.primary)

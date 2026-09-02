@@ -17,7 +17,7 @@ struct AIResultPanel: View {
                     Image(systemName: "sparkles").font(.system(size: 10))
                         .foregroundStyle(Color.astraAccent)
                     Text(state.aiRunning ? "会議の文字起こしを読んでいます…" : "AI の結果")
-                        .font(.system(size: 11, weight: .semibold))
+                        .font(.system(size: TypeScale.microSize, weight: .semibold))
                         .foregroundStyle(.secondary)
                     Spacer(minLength: 0)
                     if !state.aiResult.isEmpty {
@@ -34,7 +34,7 @@ struct AIResultPanel: View {
                 if !state.aiResult.isEmpty {
                     ScrollView {
                         Text(state.aiResult)
-                            .font(.system(size: 12))
+                            .font(.system(size: TypeScale.microSize))
                             .foregroundStyle(.primary)
                             .textSelection(.enabled)
                             .frame(maxWidth: .infinity, alignment: .leading)

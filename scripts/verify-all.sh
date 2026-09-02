@@ -21,6 +21,7 @@ run "permission JIT"             bash scripts/verify-permission-jit.sh
 run "no contradiction"           bash scripts/verify-no-contradiction.sh
 run "confirmation surface"       bash scripts/verify-confirmation.sh
 run "design tokens fresh"         node scripts/gen-design-tokens.mjs --check
+run "type scale (no literals)"    node scripts/lint-type-literals.mjs
 run "swift bindings fresh"        bash scripts/gen-swift-bindings.sh --check
 run "workspace fixture fresh"     node scripts/gen-workspace-fixture.mjs --check
 run "conventions"                 node scripts/check-conventions.mjs

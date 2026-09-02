@@ -4463,7 +4463,16 @@ enum SelfTest {
         guard got == goldenStr else {
             print("SELFTEST_FAIL shape mismatch\n got=\(got)\n want=\(goldenStr)"); exit(2)
         }
-        print("SELFTEST_OK shape: path matches shared fixture (\(d.count) segments)")
+        // 凹みの pill は幅を token で固定している。中身が token より広いと、唯一縮められる
+        // 時計が 0 幅に潰れて消える（250 のとき実際に起きた）。中身の実寸と token を突き合わせる。
+        let pill = NSHostingView(rootView: TaskDockView(state: RecordingWorkspaceState.shared).content
+            .environment(\.colorScheme, .dark))
+        let natural = pill.fittingSize.width.rounded(.up)
+        let token = CGFloat(Metrics.dockWidth)
+        guard natural <= token, token - natural <= 4 else {
+            print("SELFTEST_FAIL shape: taskDock の中身 \(natural)pt に対して token dockWidth は \(token)pt（tokens.json の taskDock.width と recordingWorkspace.notchWidth を中身に合わせること）"); exit(2)
+        }
+        print("SELFTEST_OK shape: path matches shared fixture (\(d.count) segments); taskDock content \(natural)pt fits dockWidth \(token)pt")
         exit(0)
     }
 

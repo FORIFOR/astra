@@ -41,6 +41,7 @@
     "gen:shortcuts": "node scripts/gen-shortcuts.mjs",
     "gen:swift-bindings": "./scripts/gen-swift-bindings.sh",
     "gen:workspace-fixture": "node scripts/gen-workspace-fixture.mjs",
+    "lint:type-literals": "node scripts/lint-type-literals.mjs",
     "smoke": "./scripts/smoke.sh",
     "test": "pnpm -r --no-bail run test",
     "test:acceptance": "./infra/db/with-test-db.sh pnpm --filter @astra/evals test",

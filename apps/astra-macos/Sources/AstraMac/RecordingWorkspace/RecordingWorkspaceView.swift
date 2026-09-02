@@ -125,7 +125,7 @@ struct RecordingWorkspaceView: View {
                          ? "AI が見ている資料 — まだありません"
                          : "AI が見ている資料 \(state.ragResults.count) 件")
                 }
-                .font(.system(size: 12, weight: .medium))
+                .font(.system(size: TypeScale.microSize, weight: .medium))
                 .foregroundStyle(Color.astraAccent)
                 .frame(height: Metrics.wsBottomBar - 12)
                 .padding(.horizontal, 14)
@@ -155,7 +155,7 @@ private struct RecordingStatusBar: View {
     var body: some View {
         HStack(spacing: 12) {
             Text(silent ? "\(state.heroText)（音声なし）" : state.heroText)
-                .font(.system(size: 15, weight: .semibold))
+                .font(.system(size: TypeScale.bodySize, weight: .semibold))
                 .foregroundStyle(Palette.text(dark))
             // 波形は「録れている」ことの小さな印にとどめる。
             Waveform(levels: silent ? Array(repeating: 0.04, count: state.audioLevels.count) : state.audioLevels)
@@ -216,13 +216,13 @@ private struct MeetingNotesCanvas: View {
                 if let removed = MeetingIntelligence.shared.lastRemoved {
                     HStack(spacing: 8) {
                         Text("「\(removed.text)」を消しました")
-                            .font(.system(size: 12))
+                            .font(.system(size: TypeScale.microSize))
                             .foregroundStyle(Palette.muted(dark))
                             .lineLimit(1)
                         ProbeButton(id: "canvasUndo",
                                     action: { MeetingIntelligence.shared.undoRemove() }) {
                             Text("元に戻す")
-                                .font(.system(size: 12, weight: .medium))
+                                .font(.system(size: TypeScale.microSize, weight: .medium))
                                 .foregroundStyle(Palette.accent(dark))
                                 .padding(.horizontal, 8).padding(.vertical, 4)
                         }
@@ -247,11 +247,11 @@ private struct MeetingNotesCanvas: View {
                     if !all.isEmpty {
                         Divider().overlay(Palette.border(dark)).padding(.top, 18)
                         Text("出典")
-                            .font(.system(size: 12, weight: .semibold))
+                            .font(.system(size: TypeScale.microSize, weight: .semibold))
                             .foregroundStyle(Palette.muted(dark))
                         ForEach(all) { it in
                             Text("\(it.speaker ?? "?") · \(it.timeLabel ?? "?") · 出所 ›")
-                                .font(.system(size: 11))
+                                .font(.system(size: TypeScale.captionSize))
                                 .foregroundStyle(Palette.muted(dark))
                         }
                     }
@@ -324,7 +324,7 @@ private struct MeetingNotesCanvas: View {
             }
             Spacer(minLength: 0)
         }
-        .font(.system(size: 11))
+        .font(.system(size: TypeScale.captionSize))
         .foregroundStyle(Palette.muted(dark))
         .padding(.leading, 47)
         }
@@ -357,7 +357,7 @@ private struct MeetingNotesCanvas: View {
                 Text(state.transcript.isEmpty
                      ? "文字起こしがまだありません。"
                      : "この時刻の文字起こしが見つかりません。")
-                    .font(.system(size: 12))
+                    .font(.system(size: TypeScale.microSize))
                     .foregroundStyle(Palette.muted(dark))
             } else {
                 VStack(alignment: .leading, spacing: 5) {
@@ -367,15 +367,15 @@ private struct MeetingNotesCanvas: View {
                         let isSource = abs(seg.at - (line.at ?? -1)) < 2
                         HStack(alignment: .firstTextBaseline, spacing: 8) {
                             Text(seg.timeLabel)
-                                .font(.system(size: 10, design: .monospaced))
+                                .font(.system(size: TypeScale.captionSize, design: .monospaced))
                                 .foregroundStyle(.tertiary)
-                                .frame(width: 34, alignment: .leading)
+                                .frame(width: 36, alignment: .leading)
                             Text(seg.speaker)
-                                .font(.system(size: 11, weight: .semibold))
+                                .font(.system(size: TypeScale.captionSize, weight: .semibold))
                                 .foregroundStyle(Palette.muted(dark))
                                 .frame(width: 44, alignment: .leading)
                             Text(seg.text)
-                                .font(.system(size: 12, weight: isSource ? .semibold : .regular))
+                                .font(.system(size: TypeScale.microSize, weight: isSource ? .semibold : .regular))
                                 .foregroundStyle(isSource ? Palette.text(dark) : Palette.muted(dark))
                                 .fixedSize(horizontal: false, vertical: true)
                             Spacer(minLength: 0)
@@ -389,7 +389,7 @@ private struct MeetingNotesCanvas: View {
             if editing == line.id {
                 TextField("直す", text: $editText)
                     .textFieldStyle(.plain)
-                    .font(.system(size: 13))
+                    .font(.system(size: TypeScale.bodySize))
                     .padding(8)
                     .background(RoundedRectangle(cornerRadius: 7).fill(Palette.surface(dark)))
                     .accessibilityIdentifier("canvasEditField")
@@ -398,12 +398,12 @@ private struct MeetingNotesCanvas: View {
                         MeetingIntelligence.shared.edit(line, to: editText)
                         editing = nil; openedItem = nil
                     }
-                    .font(.system(size: 12, weight: .medium))
+                    .font(.system(size: TypeScale.microSize, weight: .medium))
                     .foregroundStyle(Palette.accent(dark))
                     .frame(height: 26).padding(.horizontal, 10)
                     .buttonStyle(AstraControlStyle(radius: 6, base: 0.05))
                     Button("やめる") { editing = nil }
-                        .font(.system(size: 12))
+                        .font(.system(size: TypeScale.microSize))
                         .foregroundStyle(Palette.muted(dark))
                         .frame(height: 26).padding(.horizontal, 8)
                         .buttonStyle(AstraControlStyle(radius: 6, base: 0.0))
@@ -413,7 +413,7 @@ private struct MeetingNotesCanvas: View {
                 HStack(spacing: 8) {
                     ProbeButton(id: "canvasEdit",
                                 action: { editing = line.id; editText = line.text }) { Text("直す") }
-                        .font(.system(size: 12, weight: .medium))
+                        .font(.system(size: TypeScale.microSize, weight: .medium))
                         .foregroundStyle(Palette.accent(dark))
                         .frame(height: 26).padding(.horizontal, 10)
                         .buttonStyle(AstraControlStyle(radius: 6, base: 0.05))
@@ -421,7 +421,7 @@ private struct MeetingNotesCanvas: View {
                                 action: { MeetingIntelligence.shared.remove(line); openedItem = nil }) {
                         Text("これは違う")
                     }
-                    .font(.system(size: 12))
+                    .font(.system(size: TypeScale.microSize))
                     .foregroundStyle(Palette.muted(dark))
                     .frame(height: 26).padding(.horizontal, 8)
                     .buttonStyle(AstraControlStyle(radius: 6, base: 0.0))
@@ -453,27 +453,27 @@ private struct MeetingNotesCanvas: View {
     @ViewBuilder private func header(_ session: MeetingSession?) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(session?.title ?? store.state.meeting.detectedApp ?? "会議")
-                .font(.system(size: 24, weight: .semibold))
+                .font(.system(size: TypeScale.sectionTitleSize, weight: TypeScale.sectionTitleWeight))
                 .foregroundStyle(Palette.text(dark))
             HStack(spacing: 12) {
                 if let src = session?.source ?? store.state.meeting.detectedApp {
                     Label(src, systemImage: "video")
-                        .font(.system(size: 12)).foregroundStyle(Palette.muted(dark))
+                        .font(.system(size: TypeScale.microSize)).foregroundStyle(Palette.muted(dark))
                 }
                 if let n = session?.participantCount, n > 0 {
                     Label("\(n) 人", systemImage: "person.2")
-                        .font(.system(size: 12)).foregroundStyle(Palette.muted(dark))
+                        .font(.system(size: TypeScale.microSize)).foregroundStyle(Palette.muted(dark))
                 }
                 if let link = session?.calendarEventId, !link.isEmpty {
                     Label("予定から", systemImage: "calendar")
-                        .font(.system(size: 12)).foregroundStyle(Palette.muted(dark))
+                        .font(.system(size: TypeScale.microSize)).foregroundStyle(Palette.muted(dark))
                 }
                 // 何を聞いているのかを名前で言う。予定にもアプリにも紐付いていない
                 // 録音では、ここだけが「何に対して働いているか」を示す。
                 // 自動探索で選ばれた形（context 2.0 → 4.0、壊れ無し）。
                 if let l = listeningLabel {
                     Label(l, systemImage: "mic")
-                        .font(.system(size: 12)).foregroundStyle(Palette.muted(dark))
+                        .font(.system(size: TypeScale.microSize)).foregroundStyle(Palette.muted(dark))
                 }
             }
         }
@@ -484,10 +484,10 @@ private struct MeetingNotesCanvas: View {
         if let last = state.transcript.last {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Text(last.speaker)
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.system(size: TypeScale.microSize, weight: .semibold))
                     .foregroundStyle(Palette.accent(dark))
                 Text(last.text)
-                    .font(.system(size: 15))
+                    .font(.system(size: TypeScale.bodySize))
                     .foregroundStyle(last.interim ? Palette.muted(dark) : Palette.text(dark))
                     .lineLimit(2)
             }
@@ -496,11 +496,11 @@ private struct MeetingNotesCanvas: View {
             // 見出しが「音が届いていません」と言う横で、ここが「聞いています…」と
             // 言っていた。同じ画面の中で食い違うと、どちらも信じられなくなる。
             Label("まだ音が届いていません", systemImage: "waveform.slash")
-                .font(.system(size: 13))
+                .font(.system(size: TypeScale.microSize))
                 .foregroundStyle(Palette.danger(dark))
         } else {
             Label("聞いています…", systemImage: "waveform")
-                .font(.system(size: 13))
+                .font(.system(size: TypeScale.microSize))
                 .foregroundStyle(Palette.muted(dark))
         }
     }
@@ -519,7 +519,7 @@ private struct MeetingNotesCanvas: View {
                         Image(systemName: "star.fill").foregroundStyle(.yellow)
                     }
                     Text(title)
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(.system(size: TypeScale.microSize, weight: .semibold))
                         .foregroundStyle(Fixture.current == .decoration
                                          ? AnyShapeStyle(LinearGradient(colors: [.purple, .orange],
                                              startPoint: .leading, endPoint: .trailing))
@@ -530,7 +530,7 @@ private struct MeetingNotesCanvas: View {
                     }
                 }
                 Text(waiting)
-                    .font(.system(size: 14))
+                    .font(.system(size: TypeScale.secondarySize))
                     .foregroundStyle(Palette.muted(dark).opacity(0.7))
             }
         } else if !lines.isEmpty {
@@ -543,7 +543,7 @@ private struct MeetingNotesCanvas: View {
                         Image(systemName: "star.fill").foregroundStyle(.yellow)
                     }
                     Text(title)
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(.system(size: TypeScale.microSize, weight: .semibold))
                         .foregroundStyle(Fixture.current == .decoration
                                          ? AnyShapeStyle(LinearGradient(colors: [.purple, .orange],
                                              startPoint: .leading, endPoint: .trailing))
@@ -564,7 +564,7 @@ private struct MeetingNotesCanvas: View {
                         if Fixture.current != .noSource, Fixture.current != .ambiguousSource,
                            let t = line.timeLabel {
                             Text(t)
-                                .font(.system(size: 11, design: .monospaced))
+                                .font(.system(size: TypeScale.captionSize, design: .monospaced))
                                 .foregroundStyle(Palette.muted(dark))
                                 .frame(width: 38, alignment: .leading)
                         } else {
@@ -572,11 +572,11 @@ private struct MeetingNotesCanvas: View {
                         }
                         if Fixture.current != .noSource, let who = line.speaker {
                             Text(who)
-                                .font(.system(size: 12, weight: .semibold))
+                                .font(.system(size: TypeScale.microSize, weight: .semibold))
                                 .foregroundStyle(Palette.accent(dark))
                         }
                         Text(line.text)
-                            .font(.system(size: 16))
+                            .font(.system(size: TypeScale.bodySize))
                             .foregroundStyle(Palette.text(dark))
                             .fixedSize(horizontal: false, vertical: true)
                         Spacer(minLength: 0)
@@ -615,7 +615,7 @@ private struct AskAstraBar: View {
                 .foregroundStyle(Palette.accent(dark))
             TextField("この会議について聞く", text: $question)
                 .textFieldStyle(.plain)
-                .font(.system(size: 14))
+                .font(.system(size: TypeScale.secondarySize))
                 .foregroundStyle(Palette.text(dark))
                 .focused($focused)
                 .onSubmit(ask)

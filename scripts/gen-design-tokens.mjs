@@ -62,6 +62,7 @@ const FIELDS = [
   ['dockMeetingWidth', h.meetingWidth],
   ['dockMeetingHeight', h.meetingHeight],
   ['dockMeetingExpandedHeight', h.meetingExpandedHeight],
+  ['dockTitleSize', tokens.dockType.title],
   ['dockSpeechSize', tokens.dockType.speech],
   ['dockPrimarySize', tokens.dockType.primary],
   ['dockRowSize', tokens.dockType.row],

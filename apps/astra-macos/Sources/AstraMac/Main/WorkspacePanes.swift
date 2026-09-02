@@ -219,7 +219,7 @@ struct PluginsPane: View {
                     .fill(Color.astraAccent(dark).opacity(0.16))
                     .frame(width: 28, height: 28)
                     .overlay(Text(String(m.name.prefix(1)))
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(.system(size: TypeScale.secondarySize, weight: .semibold))
                         .foregroundStyle(Palette.accent(dark)))
                 VStack(alignment: .leading, spacing: 1) {
                     Text(m.name)

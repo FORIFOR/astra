@@ -40,10 +40,10 @@ struct TranscriptPanel: View {
                             ForEach(state.transcript) { seg in
                                 HStack(alignment: .firstTextBaseline, spacing: 8) {
                                     Text(seg.timeLabel)
-                                        .font(.system(size: 10, design: .monospaced))
+                                        .font(.system(size: TypeScale.captionSize, design: .monospaced))
                                         .foregroundStyle(.tertiary)
-                                        .frame(width: 34, alignment: .leading)
-                                    Text(seg.speaker).font(.system(size: 11, weight: .semibold))
+                                        .frame(width: 36, alignment: .leading)
+                                    Text(seg.speaker).font(.system(size: TypeScale.captionSize, weight: .semibold))
                                         .foregroundStyle(Color.astraAccent)
                                         .frame(width: 46, alignment: .leading)
                                         .lineLimit(1)
@@ -53,7 +53,7 @@ struct TranscriptPanel: View {
                                                 .frame(width: 5, height: 5)
                                                 .accessibilityLabel("確定前")
                                         }
-                                        Text(seg.text).font(.system(size: 12))
+                                        Text(seg.text).font(.system(size: TypeScale.microSize))
                                             .foregroundStyle(seg.interim ? .secondary : .primary)
                                             .fixedSize(horizontal: false, vertical: true)
                                     }
@@ -72,18 +72,18 @@ struct TranscriptPanel: View {
         case .translation:
             if state.translating { empty("翻訳中…") }
             else if state.translatedText.isEmpty { empty("「翻訳」を選ぶと文字起こしを訳します。") }
-            else { ScrollView { Text(state.translatedText).font(.system(size: 11)).frame(maxWidth: .infinity, alignment: .leading) } }
+            else { ScrollView { Text(state.translatedText).font(.system(size: TypeScale.microSize)).frame(maxWidth: .infinity, alignment: .leading) } }
         case .captions:
             VStack { Spacer()
                 Text(state.transcript.last?.text ?? "…")
-                    .font(.system(size: 16, weight: .medium)).multilineTextAlignment(.center)
+                    .font(.system(size: TypeScale.bodySize, weight: .medium)).multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
                 Spacer() }
         }
     }
 
     private func empty(_ s: String) -> some View {
-        Text(s).font(.system(size: 11)).foregroundStyle(.secondary)
+        Text(s).font(.system(size: TypeScale.captionSize)).foregroundStyle(.secondary)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 }

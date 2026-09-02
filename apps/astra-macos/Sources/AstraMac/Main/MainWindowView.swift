@@ -104,7 +104,7 @@ struct MainWindowView: View {
             .safeAreaInset(edge: .bottom) {
                 HStack(spacing: 8) {
                     Circle().fill(Color.astraAccent.opacity(0.2)).frame(width: 26, height: 26)
-                        .overlay(Text("U").font(.system(size: 12, weight: .semibold)))
+                        .overlay(Text("U").font(.system(size: TypeScale.microSize, weight: .semibold)))
                     Text("ui-check").font(.system(size: TypeScale.secondarySize))
                     Spacer()
                 }.padding(10)
@@ -180,13 +180,13 @@ private struct AgentActivityPane: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Agent Activity")
-                .font(.system(size: 11, weight: .semibold))
+                .font(.system(size: TypeScale.captionSize, weight: .semibold))
                 .foregroundStyle(Palette.muted(dark))
             if store.state.activeTask != nil {
                 TaskTimelineView()
             } else {
                 Text("いま動いている仕事はありません。")
-                    .font(.system(size: 12))
+                    .font(.system(size: TypeScale.microSize))
                     .foregroundStyle(Palette.muted(dark))
             }
             // 直近の出来事（§28 EventBus）。何が起きたかを追えるようにする。
@@ -194,7 +194,7 @@ private struct AgentActivityPane: View {
                 Divider().overlay(Palette.border(dark))
                 ForEach(Array(AstraEventBus.shared.recent.suffix(6).enumerated()), id: \.offset) { _, e in
                     Text(e.name)
-                        .font(.system(size: 10, design: .monospaced))
+                        .font(.system(size: TypeScale.captionSize, design: .monospaced))
                         .foregroundStyle(Palette.muted(dark))
                 }
             }
@@ -277,7 +277,7 @@ private struct AgentsPane: View {
                 }
                 // 実タスクが無い間は spec 構造 + 正直な空状態（架空タスクを作らない）。
                 Text("実行中の仕事はありません。Task Dock から「◯◯して」と頼むとここに出ます。")
-                    .font(.system(size: 12)).foregroundStyle(.secondary)
+                    .font(.system(size: TypeScale.microSize)).foregroundStyle(.secondary)
                 Spacer()
             }.padding(24)
         }
@@ -305,8 +305,8 @@ private struct LibraryPane: View {
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 200), spacing: 12)], spacing: 12) {
                 ForEach(Array(items.enumerated()), id: \.offset) { _, t in
                     VStack(alignment: .leading, spacing: 6) {
-                        Text(t).font(.system(size: 13, weight: .semibold))
-                        Text("資料").font(.system(size: 11)).foregroundStyle(.secondary)
+                        Text(t).font(.system(size: TypeScale.secondarySize, weight: .semibold))
+                        Text("資料").font(.system(size: TypeScale.captionSize)).foregroundStyle(.secondary)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(14)
@@ -369,9 +369,9 @@ private struct AppsPane: View {
         let apps = self.apps.isEmpty ? ["Gmail", "Google Calendar", "Finder"] : self.apps
         return ScrollView {
             VStack(alignment: .leading, spacing: 4) {
-                Text("できる仕事を増やす").font(.system(size: 16, weight: .semibold))
+                Text("できる仕事を増やす").font(.system(size: TypeScale.bodySize, weight: .semibold))
                 Text("Pack や Connector を追加すると、Astra ができる仕事が増えます。")
-                    .font(.system(size: 12)).foregroundStyle(.secondary)
+                    .font(.system(size: TypeScale.microSize)).foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 20).padding(.top, 16)
@@ -382,16 +382,16 @@ private struct AppsPane: View {
                     HStack(spacing: 10) {
                         RoundedRectangle(cornerRadius: 7).fill(Color.astraAccent.opacity(0.85))
                             .frame(width: 27, height: 27)
-                            .overlay(Text(String(a.prefix(1))).font(.system(size: 12, weight: .bold)).foregroundStyle(.white))
+                            .overlay(Text(String(a.prefix(1))).font(.system(size: TypeScale.microSize, weight: .bold)).foregroundStyle(.white))
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(a).font(.system(size: 12, weight: .semibold))
+                            Text(a).font(.system(size: TypeScale.microSize, weight: .semibold))
                             HStack(spacing: 4) {
                                 Image(systemName: st.icon).font(.system(size: 9))
-                                Text(st.label).font(.system(size: 10))
+                                Text(st.label).font(.system(size: TypeScale.captionSize))
                             }
                             .foregroundStyle(tint(st))
                             if let reason = st.reason {
-                                Text(reason).font(.system(size: 10)).foregroundStyle(.secondary)
+                                Text(reason).font(.system(size: TypeScale.captionSize)).foregroundStyle(.secondary)
                                     .fixedSize(horizontal: false, vertical: true)
                             }
                         }
@@ -408,13 +408,13 @@ private struct AppsPane: View {
                                     confirmLabel: "切断する")) else { return }
                                 connectors.connected.remove(a)
                             }
-                                .font(.system(size: 11))
+                                .font(.system(size: TypeScale.microSize))
                                 .foregroundStyle(.secondary)
                                 .frame(height: 28).padding(.horizontal, 8)
                                 .buttonStyle(AstraControlStyle(radius: 8, base: 0.0))
                         } else if connectors.canConnect(a) {
                             Button("接続") { _ = connectors.connect(a) }
-                                .font(.system(size: 11, weight: .medium))
+                                .font(.system(size: TypeScale.microSize, weight: .medium))
                                 .foregroundStyle(Color.astraAccent(dark))
                                 .frame(height: 28).padding(.horizontal, 8)
                                 .buttonStyle(AstraControlStyle(radius: 8, base: 0.0))

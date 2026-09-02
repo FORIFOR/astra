@@ -12,7 +12,7 @@ struct RAGDrawerView: View {
             HStack {
                 // 何の面かを日本語で言う（"RAG Context" は中身を説明していない）。
                 Label("AI が見ている資料", systemImage: "books.vertical")
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.system(size: TypeScale.microSize, weight: .semibold))
                 Spacer()
                 Button { state.ragOpen = false } label: { Image(systemName: "xmark") }
                     .buttonStyle(.plain)
@@ -31,7 +31,7 @@ struct RAGDrawerView: View {
             .padding(.bottom, 8)
             if state.ragResults.isEmpty {
                 Text("関連する文脈はまだありません。")
-                    .font(.system(size: 11)).foregroundStyle(.secondary)
+                    .font(.system(size: TypeScale.captionSize)).foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 14).padding(.bottom, 12)
             } else {
@@ -56,8 +56,8 @@ struct RAGDrawerView: View {
             Image(systemName: sourceIcon(item.source)).font(.system(size: 11))
                 .foregroundStyle(.secondary).frame(width: 16)
             VStack(alignment: .leading, spacing: 1) {
-                Text(item.title).font(.system(size: 11, weight: .medium)).lineLimit(1)
-                Text(item.reason).font(.system(size: 9)).foregroundStyle(.secondary).lineLimit(1)
+                Text(item.title).font(.system(size: TypeScale.microSize, weight: .medium)).lineLimit(1)
+                Text(item.reason).font(.system(size: TypeScale.captionSize)).foregroundStyle(.secondary).lineLimit(1)
             }
             Spacer()
             // 生の 0.45 は読み手にとって意味が無い。強さは棒で見せ、理由は左の 1 行に任せる。
@@ -87,7 +87,7 @@ struct RAGDrawerView: View {
                 Image(systemName: icon)
                 Text(title)
             }
-            .font(.system(size: 11, weight: .medium))
+            .font(.system(size: TypeScale.microSize, weight: .medium))
             .padding(.horizontal, 11)
             .frame(height: 28)
             .background(Capsule().fill(Color.black.opacity(0.05)))

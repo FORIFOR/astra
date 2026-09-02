@@ -8,10 +8,10 @@ enum Metrics {
     static let workspaceWidth: CGFloat = 1080
     static let workspaceHeight: CGFloat = 680
     static let workspaceRadius: CGFloat = 28
-    static let notchWidth: CGFloat = 328
+    static let notchWidth: CGFloat = 332
     static let notchDepth: CGFloat = 25
     static let notchShoulder: CGFloat = 30
-    static let dockWidth: CGFloat = 292
+    static let dockWidth: CGFloat = 296
     static let dockHeight: CGFloat = 42
     static let hudWidth: CGFloat = 220
     static let hudHeight: CGFloat = 44
@@ -38,6 +38,7 @@ enum Metrics {
     static let dockMeetingWidth: CGFloat = 820
     static let dockMeetingHeight: CGFloat = 76
     static let dockMeetingExpandedHeight: CGFloat = 460
+    static let dockTitleSize: CGFloat = 20
     static let dockSpeechSize: CGFloat = 18
     static let dockPrimarySize: CGFloat = 16
     static let dockRowSize: CGFloat = 15
@@ -146,6 +147,8 @@ enum TypeScale {
     static let secondaryWeight: Font.Weight = .regular
     static let microSize: CGFloat = 12
     static let microWeight: Font.Weight = .medium
+    static let captionSize: CGFloat = 11
+    static let captionWeight: Font.Weight = .regular
 }
 
 /// §17.3 余白・角丸（pt）。

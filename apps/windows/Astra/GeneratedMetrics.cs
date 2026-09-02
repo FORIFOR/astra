@@ -8,10 +8,10 @@ public static class Metrics
     public const double WorkspaceWidth = 1080;
     public const double WorkspaceHeight = 680;
     public const double WorkspaceRadius = 28;
-    public const double NotchWidth = 328;
+    public const double NotchWidth = 332;
     public const double NotchDepth = 25;
     public const double NotchShoulder = 30;
-    public const double DockWidth = 292;
+    public const double DockWidth = 296;
     public const double DockHeight = 42;
     public const double HudWidth = 220;
     public const double HudHeight = 44;
@@ -38,6 +38,7 @@ public static class Metrics
     public const double DockMeetingWidth = 820;
     public const double DockMeetingHeight = 76;
     public const double DockMeetingExpandedHeight = 460;
+    public const double DockTitleSize = 20;
     public const double DockSpeechSize = 18;
     public const double DockPrimarySize = 16;
     public const double DockRowSize = 15;
@@ -140,6 +141,8 @@ public static class TypeScale
     public const int SecondaryWeight = 400;
     public const double MicroSize = 12;
     public const int MicroWeight = 500;
+    public const double CaptionSize = 11;
+    public const int CaptionWeight = 400;
 }
 
 /// <summary>§17.3 余白・角丸（pt）。</summary>

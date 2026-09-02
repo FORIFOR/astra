@@ -20,7 +20,7 @@ struct RecordingToolPalette: View {
                         Image(systemName: tool.icon).font(.system(size: 12))
                         Text(tool.title)
                     }
-                    .font(.system(size: Metrics.dockRowSize, weight: selection == tool ? .semibold : .regular))
+                    .font(.system(size: TypeScale.secondarySize, weight: selection == tool ? .semibold : .regular))
                     .foregroundStyle(selection == tool ? Color.primary : Color.secondary)
                     .padding(.horizontal, 10)
                     // 小さい字でも押せる面を確保する（UI/UX 仕様 §16: hit area 28〜32pt）。

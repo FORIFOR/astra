@@ -16,9 +16,9 @@ struct RecordingHeroView: View {
             }
             // 見出しも合わせる。「録音中」だけだと、下のバナーと画面が食い違って見える。
             Text(silent ? "\(state.heroText)（音声なし）" : state.heroText)
-                .font(.system(size: 18, weight: .semibold))
+                .font(.system(size: TypeScale.cardTitleSize, weight: TypeScale.cardTitleWeight))
             Text(state.elapsedText)
-                .font(.system(size: 13, design: .monospaced))
+                .font(.system(size: TypeScale.secondarySize, design: .monospaced))
                 .foregroundStyle(.secondary)
             // 許可が無いときは平らにする（動いていると「録れている」と読めてしまう）。
             Waveform(levels: silent ? Array(repeating: 0.04, count: state.audioLevels.count) : state.audioLevels)

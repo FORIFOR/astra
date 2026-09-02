@@ -162,7 +162,7 @@ struct AppContextDock: View {
                 VStack(alignment: .leading, spacing: 8) {
                     if let document = summary.document {
                         Text(document)
-                            .font(.system(size: 20, weight: .semibold))
+                            .font(.system(size: S.type(Metrics.dockTitleSize), weight: .semibold))
                             .foregroundStyle(Palette.text(dark))
                             .lineLimit(1)
                     }
@@ -380,7 +380,7 @@ struct AgentDock: View {
     /// 仕事の名前は状態語と分けて、1 行の見出しにする。
     private var taskTitle: some View {
         Text(store.state.activeTask?.title ?? "実行中")
-            .font(.system(size: 20, weight: .semibold))
+            .font(.system(size: S.type(Metrics.dockTitleSize), weight: .semibold))
             .foregroundStyle(Palette.text(dark))
             .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -524,7 +524,7 @@ struct ConfirmationDock: View {
                             .foregroundStyle(Palette.accent(dark))
                     }
                     Text(app)
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(.system(size: S.type(Metrics.dockMetaSize), weight: .semibold))
                         .foregroundStyle(Palette.text(dark))
                 }
                 Spacer(minLength: 0)
@@ -532,7 +532,7 @@ struct ConfirmationDock: View {
 
             // ② 何が起きるか。
             Text(confirmation.title)
-                .font(.system(size: 19, weight: .semibold))
+                .font(.system(size: S.type(Metrics.dockTitleSize), weight: .semibold))
                 .tracking(-0.2)
                 .foregroundStyle(Palette.text(dark))
                 .fixedSize(horizontal: false, vertical: true)
@@ -546,7 +546,7 @@ struct ConfirmationDock: View {
                     Text(confirmation.risk.label)
                     Spacer(minLength: 0)
                 }
-                .font(.system(size: 10.5))
+                .font(.system(size: S.type(Metrics.dockLabelSize)))
                 .foregroundStyle(riskTint)
             }
 
@@ -631,7 +631,7 @@ struct ConfirmationDock: View {
             ForEach(confirmation.params, id: \.self) { p in
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
                     Text(p.label)
-                        .font(.system(size: 10.5))
+                        .font(.system(size: S.type(Metrics.dockLabelSize)))
                         .foregroundStyle(Palette.muted(dark).opacity(0.72))
                         .frame(width: 56, alignment: .leading)
                     Text(edited[p.label] ?? p.value)
@@ -684,7 +684,7 @@ struct ConfirmationDock: View {
                             .foregroundStyle(Palette.accent(dark))
                         Spacer(minLength: 0)
                     }
-                    .font(.system(size: 11))
+                    .font(.system(size: S.type(Metrics.dockLabelSize)))
                     .opacity(0.8)
                 }
                 .buttonStyle(AstraControlStyle(radius: 6, base: 0.0))
@@ -702,7 +702,7 @@ struct ConfirmationDock: View {
             ForEach(confirmation.params.filter { $0.editable }, id: \.self) { p in
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
                     Text(p.label)
-                        .font(.system(size: 11))
+                        .font(.system(size: S.type(Metrics.dockLabelSize)))
                         .foregroundStyle(Palette.muted(dark))
                         .frame(width: 56, alignment: .leading)
                     TextField(p.value, text: Binding(
@@ -874,7 +874,7 @@ private struct MeetingPanelBody: View {
                             // 字幕は話者名を出さず、直近の発言だけを大きく読ませる。
                             ForEach(recording.transcript.suffix(3)) { line in
                                 Text(line.text)
-                                    .font(.system(size: 20, weight: .medium))
+                                    .font(.system(size: S.type(Metrics.dockSpeechSize), weight: .medium))
                                     .foregroundStyle(line.interim ? Palette.muted(dark) : Palette.text(dark))
                                     .fixedSize(horizontal: false, vertical: true)
                                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -1021,7 +1021,7 @@ struct ResultDock: View {
                     .foregroundStyle(Palette.success(dark))
                 VStack(alignment: .leading, spacing: 1) {
                     Text(result.title)
-                        .font(.system(size: 18, weight: .semibold))
+                        .font(.system(size: S.type(Metrics.dockTitleSize), weight: .semibold))
                         .foregroundStyle(Palette.text(dark))
                         .lineLimit(1)
                     // Session の状態をそのまま出す。読み取り中は「何をしているか」を言う。
