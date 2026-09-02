@@ -73,6 +73,19 @@ final class MainNav: ObservableObject {
     /// 会議詳細で見せている会議の名前。
     var meetingTitle = "A社 新規提案"
 
+    /// 一覧から面を選ぶ。**開いていた 1 件は閉じる。**
+    ///
+    /// sidebar の選択は `section` を直に書いていたが、`detailContent` は `openSession` /
+    /// `meetingDetail` を `section` より先に見る。会議を 1 件開いたあとは sidebar の
+    /// どの行を押しても面が変わらず、詳細から出る道が無かった（採点者 2 名が
+    /// 「戻る・止める手段が見当たらない」、sessionshots も showSection で戻れず
+    /// `openSession = nil` を手で書いていた）。sidebar と `showSection` はここを通る。
+    func select(_ s: MainSection) {
+        openSession = nil
+        meetingDetail = false
+        section = s
+    }
+
     /// いま開いている面の見出し。表示はここから引く（画面側で別名を持たない）。
     /// ゲートもこれと実際の見出しを突き合わせる。
     ///
@@ -93,7 +106,8 @@ struct MainWindowView: View {
 
     var body: some View {
         NavigationSplitView {
-            List(MainSection.allCases, selection: $nav.section) { s in
+            List(MainSection.allCases,
+                 selection: Binding(get: { nav.section }, set: { nav.select($0) })) { s in
                 // 既定の 13pt のままで、他を大きくしたぶん相対的に小さく見えていた。
                 Label(s.title, systemImage: s.icon)
                     .font(.system(size: TypeScale.bodySize))
@@ -145,15 +159,23 @@ struct MainWindowView: View {
             } else if nav.meetingDetail {
                 MeetingArtifactView(
                     title: "A社 新規提案", duration: "42:18", participants: 3,
+                    onBack: { nav.meetingDetail = false },
                     summary: [MeetingCitation(number: 1, text: "先方は10月導入を希望。最大の懸念は初期費用。", transcriptTime: "14:18", speaker: "田中")],
                     decisions: [MeetingCitation(number: 2, text: "導入時期を10月で検討", transcriptTime: "14:22", speaker: "鈴木")],
                     actionItems: [MeetingCitation(number: 3, text: "伊藤 修正版見積を送付 明日", transcriptTime: "14:31", speaker: "伊藤")],
                     selected: MeetingCitation(number: 1, text: "初期費用が少し気になっています。", transcriptTime: "14:18", speaker: "田中"),
                     // タブに中身を渡す。渡さないと「押せるが何も出ない」に戻る。
+                    // 42 分の会議の文字起こしが 3 行では、面の下半分が空く（sample14 で
+                    // 2 名が「下半分が空」）。引用される 3 行を含む、前後の流れを載せる。
                     transcript: [
+                        MeetingCitation(number: nil, text: "本日はお時間ありがとうございます。前回の提案書 v3 をもとに進めます。", transcriptTime: "00:42", speaker: "あなた"),
+                        MeetingCitation(number: nil, text: "はい。社内では 10 月の導入で調整しています。", transcriptTime: "01:10", speaker: "田中"),
+                        MeetingCitation(number: nil, text: "初期費用の内訳をもう少し細かく見せてもらえますか。", transcriptTime: "13:05", speaker: "田中"),
+                        MeetingCitation(number: nil, text: "ライセンスと導入支援に分けてお出しします。", transcriptTime: "13:40", speaker: "伊藤"),
                         MeetingCitation(number: 1, text: "初期費用が少し気になっています。", transcriptTime: "14:18", speaker: "田中"),
                         MeetingCitation(number: 2, text: "10 月からでしたら枠を取れます。", transcriptTime: "14:22", speaker: "鈴木"),
                         MeetingCitation(number: 3, text: "修正版の見積を明日お送りします。", transcriptTime: "14:31", speaker: "伊藤"),
+                        MeetingCitation(number: nil, text: "では明日の見積を待って、社内で回します。", transcriptTime: "41:50", speaker: "田中"),
                     ],
                     relatedFiles: ["A社_提案書_v3.pdf", "見積_10月導入.xlsx"]
                 )

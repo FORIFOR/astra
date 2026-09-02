@@ -5,7 +5,9 @@ import SwiftUI
 /// 引用は「番号だけ」を出し、根拠で画面を埋めない（§1.2 Evidence on Demand）。
 struct MeetingCitation: Identifiable {
     let id = UUID()
-    let number: Int
+    /// 引用番号。要約・決定・アクションから引かれている発言だけが持つ。
+    /// 文字起こしの他の行は nil（番号が無いものに [0] を付けない）。
+    let number: Int?
     let text: String
     let transcriptTime: String   // jump 先の timestamp
     let speaker: String
@@ -18,6 +20,8 @@ struct MeetingArtifactView: View {
     var participants: Int
     /// 音声へ飛ぶ手当て。無いときはリンクを出さない（押して何も起きない状態を作らない）。
     var onAudioJump: ((String) -> Void)?
+    /// 一覧へ戻る。Library から開いた 1 件なので、出る道を面の中に持つ（`SessionDetailView` と同じ）。
+    var onBack: (() -> Void)?
     static let tabs = ["文字起こし", "録音", "関連ファイル", "根拠"]
     @State private var tab = MeetingArtifactView.tabs[0]
     var summary: [MeetingCitation]
@@ -54,7 +58,18 @@ struct MeetingArtifactView: View {
     var body: some View {
         HStack(alignment: .top, spacing: 0) {
             VStack(alignment: .leading, spacing: Space.largePadding) {
-                HStack {
+                HStack(spacing: 10) {
+                    if let back = onBack {
+                        Button(action: back) {
+                            Image(systemName: "chevron.left")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(Palette.muted(dark))
+                                .frame(width: 30, height: 30)
+                        }
+                        .buttonStyle(AstraControlStyle(radius: 8, base: 0.0))
+                        .help("一覧へ戻る")
+                        .accessibilityIdentifier("meetingBack")
+                    }
                     Text(title).font(.system(size: TypeScale.sectionTitleSize, weight: TypeScale.sectionTitleWeight))
                         .foregroundStyle(Palette.text(dark))
                     Spacer()
@@ -91,7 +106,7 @@ struct MeetingArtifactView: View {
             if let c = shown {   // AC-09: 引用 → transcript + timestamp を Inspector に
                 Divider().overlay(Palette.border(dark))
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("根拠 [\(c.number)]").font(.system(size: TypeScale.microSize, weight: .semibold))
+                    Text(c.number.map { "根拠 [\($0)]" } ?? "発言").font(.system(size: TypeScale.microSize, weight: .semibold))
                         .foregroundStyle(Palette.muted(dark))
                     HStack(spacing: 6) {
                         Text(c.transcriptTime).font(.system(size: TypeScale.microSize).monospaced())
@@ -198,7 +213,7 @@ struct MeetingArtifactView: View {
                     .padding(.vertical, 5)
                 }
                 .buttonStyle(AstraControlStyle(radius: 7, base: isShown(c) ? 0.08 : 0.0))
-                .accessibilityIdentifier("citation-\(c.number)")
+                .accessibilityIdentifier("citation-\(c.number.map(String.init) ?? c.transcriptTime)")
             }
         }
     }
@@ -215,7 +230,7 @@ struct MeetingArtifactView: View {
                     Text(c.text).font(.system(size: TypeScale.bodySize)).foregroundStyle(Palette.text(dark))
                     // 番号は**押せる**。以前はリンク色の Text で、押しても何も起きなかった。
                     Button { picked = c } label: {
-                        Text("[\(c.number)]")
+                        Text("[\(c.number ?? 0)]")
                             .font(.system(size: TypeScale.microSize, weight: .semibold))
                             .foregroundStyle(Palette.accent(dark))
                             .padding(.horizontal, 5)
@@ -223,7 +238,7 @@ struct MeetingArtifactView: View {
                     }
                     .buttonStyle(AstraControlStyle(radius: 6, base: isShown(c) ? 0.10 : 0.0))
                     .help("根拠になった発言を見る")
-                    .accessibilityIdentifier("citationRef-\(c.number)")
+                    .accessibilityIdentifier("citationRef-\(c.number ?? 0)")
                     Spacer()
                 }
             }

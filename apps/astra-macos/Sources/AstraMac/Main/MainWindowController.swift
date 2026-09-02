@@ -39,8 +39,7 @@ final class MainWindowController {
     func hide() { window?.orderOut(nil) }
 
     func showSection(_ section: MainSection) {
-        MainNav.shared.meetingDetail = false
-        MainNav.shared.section = section
+        MainNav.shared.select(section)
         show()
     }
 

@@ -948,6 +948,25 @@ enum SelfTest {
         }
         if let strip = titleStrip() { strips.append((detailTitle, strip)) } else { fail.append("\(detailTitle)=撮影不可") }
 
+        // 1 件を開いたあと、sidebar で別の面を選んだら**出られる**こと。
+        // sidebar は `section` を直に書いていて、`detailContent` は `openSession` /
+        // `meetingDetail` を先に見るので、会議を開いたあとは sidebar が効かなかった
+        // （sample14 の 2 名「戻る手段が見当たらない」）。sidebar と同じ `select` を通す。
+        MainNav.shared.select(.home)
+        settle(0.4)
+        if MainNav.shared.meetingDetail || MainNav.shared.title != MainSection.home.title {
+            fail.append("会議詳細から sidebar で Home へ出られない(title=\(MainNav.shared.title))")
+        }
+        MainNav.shared.select(.meetings)
+        MainNav.shared.openSession = "navtitle-open"
+        settle(0.6)   // 描き直しで sidebar が同じ値を書き戻して閉じてしまわないこと
+        if MainNav.shared.openSession == nil { fail.append("開いた Session が描き直しで閉じた") }
+        MainNav.shared.select(.tasks)
+        settle(0.4)
+        if MainNav.shared.openSession != nil || MainNav.shared.title != MainSection.tasks.title {
+            fail.append("Session から sidebar で Tasks へ出られない(title=\(MainNav.shared.title))")
+        }
+
         // 帯どうしが別の絵か。同じなら見出しが更新されていない。
         for i in strips.indices {
             for j in strips.indices where j > i {
@@ -962,7 +981,7 @@ enum SelfTest {
         }
         MainWindowController.shared.hide()
         if fail.isEmpty {
-            print("SELFTEST_OK navtitle: \(strips.count)面の見出しが状態と一致し、面ごとに実際に描き変わる")
+            print("SELFTEST_OK navtitle: \(strips.count)面の見出しが状態と一致し、面ごとに実際に描き変わる。1 件を開いても sidebar で出られる")
             exit(0)
         } else {
             print("SELFTEST_FAIL navtitle: \(fail.joined(separator: ", "))")
