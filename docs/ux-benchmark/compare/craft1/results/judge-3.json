@@ -1,0 +1,21 @@
+{
+  "rankings": {
+    "primary_action_salience": ["E597", "E740", "512A"],
+    "control_visibility": ["E597", "E740", "512A"],
+    "visual_craft": ["E597", "E740", "512A"],
+    "semantic_colour": ["E740", "E597", "512A"],
+    "overall": ["E740", "E597", "512A"]
+  },
+  "why": {
+    "primary_action_salience": "All three are equally effective. The solid-filled button vs. text-only controls create clear hierarchy and visual dominance in all variants.",
+    "control_visibility": "All three are identical: primary action button is visually prominent, cancel and edit are findable text actions with clear relative importance.",
+    "visual_craft": "All three have identical spacing rhythm, type hierarchy, button proportions, and optical balance. No meaningful differences.",
+    "semantic_colour": "E740 (orange) is most appropriate for a 'send' action to another app—orange conveys outgoing communication and positive forward motion. E597 and 512A use purple, which is more neutral and generic.",
+    "overall": "E740 wins on semantic color appropriateness. E597 and 512A are visually identical and tied; E740 edges ahead through better color semantics for the send action."
+  },
+  "differences": [
+    "E597: Purple primary button",
+    "E740: Orange/amber primary button; 'Edit' text is orange-tinted (not gray)",
+    "512A: Purple primary button (appears visually identical to E597)"
+  ]
+}

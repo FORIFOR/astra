@@ -485,6 +485,17 @@ private struct AgentDock: View {
 // MARK: - 6. Confirmation
 
 /// 確認は **Dock 自身が下へ伸びて**聞く。NSAlert も別窓も使わない。
+/// 造形の実験。**一度に全部変えない。** 段階ごとに比べる。
+///   ① 主たる操作の際立ち ② 字面の階層 ③ 行の揃い ④ 意味のある余白
+///   ⑤ ボタンの寸法 ⑥ 境界 ⑦ 角丸 ⑧ 影 ⑨ 図形の重さ
+/// いまは ① だけ。
+enum CraftVariant: String {
+    case base, b, c
+    static var current: CraftVariant {
+        CraftVariant(rawValue: (ProcessInfo.processInfo.environment["ASTRA_CRAFT_VARIANT"] ?? "base").lowercased()) ?? .base
+    }
+}
+
 private struct ConfirmationDock: View {
     @Environment(\.colorScheme) private var scheme
     private var dark: Bool { scheme == .dark }
@@ -497,6 +508,18 @@ private struct ConfirmationDock: View {
     private var riskTint: Color {
         confirmation.risk == .r3 ? Palette.danger(dark) : Palette.warning(dark)
     }
+
+    /// 主たる操作の色。**危ないときだけ危ない色**にする。
+    /// いまは r2（外へ出る）でも警告色で塗っており、「進んでよい操作」なのか
+    /// 「気をつけろ」なのかが色から読めない。外の製品の Send は brand 色で、
+    /// そちらのほうが「これが主たる操作だ」と分かりやすい、と採点者が言った。
+    private var primaryTint: Color {
+        if CraftVariant.current == .base { return riskTint }
+        return confirmation.risk == .r3 ? Palette.danger(dark) : Palette.accent(dark)
+    }
+    /// 主たる操作の周りの余白。C だけ広げる。
+    private var actionGap: CGFloat { CraftVariant.current == .c ? 14 : 8 }
+    private var actionTopGap: CGFloat { CraftVariant.current == .c ? 6 : 0 }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 9) {
@@ -527,7 +550,7 @@ private struct ConfirmationDock: View {
             Spacer(minLength: 0)
 
             // ⑥ 取消 / 直す / 実行。**主たる操作は 1 つだけ。**
-            HStack(spacing: 8) {
+            HStack(spacing: actionGap) {
                 Spacer(minLength: 0)
                 if editing {
                     Button("やめる") { editing = false; edited = [:] }
@@ -552,7 +575,8 @@ private struct ConfirmationDock: View {
                     if !confirmation.params.isEmpty || confirmation.preview != nil {
                         Button("Edit") { editing = true }
                             .font(.system(size: S.type(Metrics.dockRowSize)))
-                            .foregroundStyle(Palette.accent(dark))
+                            .foregroundStyle(CraftVariant.current == .base
+                                             ? Palette.accent(dark) : Palette.muted(dark))
                             .frame(height: 32).padding(.horizontal, 14)
                             .buttonStyle(AstraControlStyle(radius: 7, base: 0.0))
                             .accessibilityIdentifier("confirmEdit")
@@ -562,11 +586,12 @@ private struct ConfirmationDock: View {
                         .font(.system(size: S.type(Metrics.dockRowSize), weight: .semibold))
                         .foregroundStyle(.white)
                         .frame(height: 32).padding(.horizontal, 20)
-                        .background(RoundedRectangle(cornerRadius: 7, style: .continuous).fill(riskTint))
+                        .background(RoundedRectangle(cornerRadius: 7, style: .continuous).fill(primaryTint))
                         .buttonStyle(AstraControlStyle(radius: 7, base: 0.0, filled: false))
                         .accessibilityIdentifier("confirmProceed")
                 }
             }
+            .padding(.top, actionTopGap)
         }
         .padding(.horizontal, S.metric(Metrics.dockPadH) + 2)
         .padding(.vertical, 12)
