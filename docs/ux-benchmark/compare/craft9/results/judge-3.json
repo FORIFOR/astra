@@ -1,0 +1,17 @@
+{
+  "observations": {
+    "corner_order": "cannot tell",
+    "any_other_difference": "none",
+    "content_lost": "none"
+  },
+  "rankings": {
+    "visual_craft": ["cannot rank — all three appear visually identical"],
+    "coherence": ["cannot rank — all three appear visually identical"],
+    "overall": ["cannot rank — all three appear visually identical"]
+  },
+  "why": {
+    "visual_craft": "No distinguishable visual differences detected across the three images. Button corners, text, colors, layout, and all visual elements appear identical.",
+    "coherence": "All three variants appear to have consistent corner rounding between the amber button and card corners. Cannot assess differences in coherence when images appear identical.",
+    "overall": "The three variants appear to be identical. Without visual differences to evaluate, ranking is not possible."
+  }
+}
