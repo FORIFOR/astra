@@ -513,7 +513,7 @@ private struct ConfirmationDock: View {
                 if let app = confirmation.app {
                     if let icon = confirmation.appIcon {
                         Image(systemName: icon)
-                            .font(.system(size: 11, weight: .medium))
+                            .font(.system(size: 11, weight: ActionConfirmation.Glyph.infoWeight))
                             .foregroundStyle(Palette.accent(dark))
                     }
                     Text(app)
@@ -534,7 +534,8 @@ private struct ConfirmationDock: View {
             do {
                 HStack(spacing: 5) {
                     Image(systemName: "arrow.up.forward")
-                        .font(.system(size: 9, weight: .semibold))
+                        .font(.system(size: ActionConfirmation.Glyph.criticalSize,
+                                      weight: ActionConfirmation.Glyph.criticalWeight))
                     Text(confirmation.risk.label)
                     Spacer(minLength: 0)
                 }

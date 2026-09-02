@@ -1,5 +1,6 @@
 import AppKit
 import Foundation
+import SwiftUI
 
 // 仕様書 §5 / §15 / §16 / §21 / §25 のデータモデル。
 // ここは**モデルだけ**。engine は各 Module が持ち、状態は AstraStateStore が一箇所で持つ。
@@ -346,6 +347,33 @@ struct ActionConfirmation: Identifiable, Equatable {
 
     /// 中身が使える幅。左右の余白を引いたもの。
     static var contentWidth: CGFloat { Metrics.dockConfirmWidth - (Metrics.dockPadH + 2) * 2 }
+
+    /// 造形⑨ 図形の重さ。**役割の順に重くする。**
+    ///
+    /// ```text
+    /// 説明する図形   <  押せる図形  <  状態が重い図形
+    /// # どのアプリか    › 出所へ       ↗ 外部に出る
+    /// regular 11pt      semibold 8pt   bold 10pt
+    /// ```
+    ///
+    /// 直す前は medium < semibold = semibold で、**押せるものと危ないものが
+    /// 同じ重さ**だった。採点者の 1 人が画素の明るさで測っている:
+    ///
+    /// ```text
+    /// 直す前   # 20488  ≈  ↗ 20432   （0.3% 差。飾りと警告が同じ重さ）
+    /// 直した後 ↗ 23531  >  # 17633   （33% 差）
+    /// ```
+    ///
+    /// 3 人中 2 人はこの差を見分けられなかった（cannot tell）。それでも採るのは、
+    /// **直す前の並びが間違っていた**から。飾りの `#` と「外部に出る」が
+    /// 同じ重さなのは、見えるか見えないかとは別の話。
+    enum Glyph {
+        /// 説明する図形。いちばん軽い。
+        static let infoWeight: Font.Weight = .regular
+        /// 状態が重い図形。いちばん重い。
+        static let criticalWeight: Font.Weight = .bold
+        static let criticalSize: CGFloat = 10
+    }
 
     /// 面の高さ。**`ConfirmationDock` が縦に積むものを、そのまま足す。**
     ///

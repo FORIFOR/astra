@@ -1,0 +1,20 @@
+{"observations":{
+  "hash_weight":"2FC7 (confirmed at pixel level: B840's '#' covers 63px at avg intensity 325 vs 2FC7's 57px at avg intensity 309, within an identical 9x13 bbox; the diff is confined to the glyph itself — the adjacent 'Slack' text is byte-for-byte identical between the two images, so this is a real, isolated weight difference, not rendering noise. Confirmed visually in a 16x zoomed side-by-side crop: 2FC7's hash reads slightly more muted/thin at the stroke edges.)",
+  "arrow_weight":"cannot tell (pixel diff exists — 2FC7 shows marginally more coverage/intensity — but the diff is NOT isolated to the arrow glyph: it extends uniformly across the entire '外部に出る' text line too, and fully-opaque interior pixels of the kanji show the same peak color shifted by ~1px between the two images. That pattern matches a whole-line sub-pixel rendering/hinting shift, not a deliberate boldness edit to the arrow specifically. A 16x zoomed side-by-side crop of just the arrow glyph shows no visible boldness/thickness difference to the eye.)",
+  "icon_order":"B840: # ≈ ↗ > › (by total lit-pixel intensity: #=20488, ↗=20432 — a ~0.3% gap, effectively tied — both far above ›=4328). 2FC7: ↗ > # > › (↗=23531, #=17633, ›=4328 — a clear ~33% gap between ↗ and #). Caveat: the ↗ figures are the same ones flagged 'cannot tell' above, so the #/↗ ordering is more solid for B840's near-tie (driven by a confirmed real change) than for 2FC7's gap (partly confounded by the line-shift artifact). The › chevron is pixel-identical in both images (same 18px, same bbox, same intensity) so its bottom rank is certain.",
+  "content_lost":"None found. A full pixel-diff of both 560x229 images shows non-zero differences ONLY in two small bands: y7-17 (the '#' icon) and y58-74 (the '↗ 外部に出る' line). Every other pixel in the card — including the 出所 line, the '›' chevron, '#sales', 'あなた', the body text, and the buttons — is byte-identical between the two files. No text or element is present in one image and missing in the other; the '›' chevron the prompt asked about is visible and identical in both."
+},
+ "winners":{
+   "risk_legibility":"tie",
+   "icon_hierarchy":"2FC7",
+   "calmness":"tie",
+   "visual_craft":"2FC7",
+   "overall":"2FC7"
+ },
+ "why":{
+   "risk_legibility":"The ↗ arrow and the orange 'text = leaves your device' styling are effectively unchanged between the two (the tiny pixel diff there looks like a rendering-shift artifact, not a real boldness change), so nothing about how fast you'd notice the risk differs measurably.",
+   "icon_hierarchy":"Measured pixel-intensity shows B840's decorative '#' is about as heavy as its own '↗' warning icon (near-tie), while 2FC7's '#' is confirmed lighter than B840's — widening the gap so the warning icon reads clearly heavier than the decorative marker, which is the correct hierarchy.",
+   "calmness":"Outside that one icon, the two cards are pixel-identical, so overall calmness (spacing, color, copy) is indistinguishable.",
+   "visual_craft":"Only one confirmed, deliberate difference exists between the files: 2FC7's '#' is a touch lighter/thinner than B840's, which is a small but purposeful-looking refinement; everything else is identical so this is a marginal edge, not a decisive one.",
+   "overall":"2FC7 wins on the one confirmed, meaningful difference (lighter decorative hash improving icon hierarchy) with no confirmed regression elsewhere and no lost content, but the margin is small since almost the entire card is pixel-for-pixel the same file."
+ }}
