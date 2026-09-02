@@ -44,8 +44,9 @@ struct TranscriptPanel: View {
                                         .font(.system(size: TypeScale.captionSize, design: .monospaced))
                                         .foregroundStyle(.tertiary)
                                         .frame(width: 36, alignment: .leading)
+                                    // 話者は列の位置で分かる。accent は「まだ書き換わる行」の印に取っておく（craftL）。
                                     Text(seg.speaker).font(.system(size: TypeScale.captionSize, weight: .semibold))
-                                        .foregroundStyle(Color.astraAccent)
+                                        .foregroundStyle(.secondary)
                                         .frame(width: 46, alignment: .leading)
                                         .lineLimit(1)
                                     HStack(alignment: .firstTextBaseline, spacing: 4) {
