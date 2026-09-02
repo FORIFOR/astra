@@ -19,10 +19,13 @@ struct TaskDockView: View {
                 .background(VisualEffectView(material: .hudWindow).clipShape(Capsule()))
         }
         .overlay(Capsule().stroke(.white.opacity(0.1), lineWidth: 0.5))
-        // continuity-bad: 濃い影で浮かせ、別の窓のように見せる。
-        .shadow(color: .black.opacity(Fixture.current == .detached ? 0.6 : 0.27),
-                radius: Fixture.current == .detached ? 30 : 14,
-                y: Fixture.current == .detached ? 16 : 5)
+        // 造形⑧: 凹みに納まった pill は Workspace の一部（attached、影なし）。
+        // 影 0.27 / radius 14 で浮かせていたころは、白い面の上に**別のカード**が
+        // 載って見えた（sample18 の「上部の黒いバーが本体と別の窓に見える」、
+        // 2 名一致）。影を描くのは continuity-bad の fixture だけ。
+        .shadow(color: .black.opacity(Fixture.current == .detached ? 0.6 : 0),
+                radius: Fixture.current == .detached ? 30 : 0,
+                y: Fixture.current == .detached ? 16 : 0)
         .accessibilityIdentifier("taskDock")
     }
 

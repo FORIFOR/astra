@@ -446,15 +446,10 @@ struct AgentDock: View {
                 // 押せる範囲を label へ付ける。Button の外側に .frame を付けると
                 // 当たりは文字のままで、実寸は 29x16 だった（隣の openWorkspace は
                 // 178x28）。**止める操作がいちばん小さい**のは、あってはならない。
-                Button {
+                StopButton(label: "止める",
+                           font: .system(size: S.type(Metrics.dockMetaSize), weight: .medium)) {
                     AstraStateStore.shared.finishTask(.failed)
-                } label: {
-                    Text("Stop")
-                        .font(.system(size: S.type(Metrics.dockMetaSize), weight: .medium))
-                        .foregroundStyle(Palette.danger(dark))
-                        .frame(height: 28).padding(.horizontal, 10)
                 }
-                .buttonStyle(AstraControlStyle(radius: 7, base: 0.0))
                 .accessibilityIdentifier("stopAgent")
             }
             Spacer(minLength: 0)

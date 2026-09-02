@@ -52,12 +52,11 @@ struct RecordingNowCard: View {
                     .buttonStyle(AstraControlStyle(radius: 8, base: 0.05))
                     .accessibilityIdentifier("askFromHome")
                 Spacer(minLength: 0)
-                Button("Stop") { RecordingWorkspaceState.shared.stop() }
-                    .font(.system(size: S.type(TypeScale.secondarySize), weight: .semibold))
-                    .foregroundStyle(Palette.danger(dark))
-                    .frame(height: 32).padding(.horizontal, 16)
-                    .buttonStyle(AstraControlStyle(radius: 8, base: 0.06))
-                    .accessibilityIdentifier("stopFromHome")
+                StopButton(label: "止める",
+                           font: .system(size: S.type(TypeScale.secondarySize), weight: .semibold)) {
+                    RecordingWorkspaceState.shared.stop()
+                }
+                .accessibilityIdentifier("stopFromHome")
             }
         }
         .padding(S.metric(Space.cardPadding))
