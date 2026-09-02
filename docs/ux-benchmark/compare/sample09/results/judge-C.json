@@ -1,0 +1,31 @@
+{
+  "winners": {
+    "action_clarity": "C0FE",
+    "parameter_hierarchy": "AFF1",
+    "preview_readability": "C0FE",
+    "control_visibility": "AFF1",
+    "screen_occupation": "AFF1",
+    "visual_craft": "AFF1",
+    "error_prevention": "C0FE",
+    "provenance_visibility": "C0FE"
+  },
+  "evidence": {
+    "C0FE": [
+      "Bold header 'Slack 外部に出ます' (going outside) prominently marks consequence scope",
+      "Full message text visible, not truncated—shows exactly what will be sent",
+      "Explicit recipient (#sales), sender (you), and severity indicated upfront",
+      "Provenance metadata visible (出所 field with timestamp and person 'Tanaka 10:42')",
+      "Channel identifier prevents wrong-channel mistakes",
+      "Warning design prioritizes error prevention for risky external action"
+    ],
+    "AFF1": [
+      "Compact vertical layout uses substantially less screen space",
+      "Primary Send button (blue) positioned top-right, visually dominant",
+      "Clean parameter hierarchy: To, Subject clearly labeled and scannable",
+      "Edit button is secondary, gray, visually deprioritized",
+      "Message preview shows key destination fields at a glance",
+      "Button proportions well-balanced, less cramped than C0FE"
+    ]
+  },
+  "notes": "C0FE is risk-aware: the external-action warning and full content preview protect against mistakes when sharing outside. AFF1 prioritizes efficiency: compact, clear hierarchy, prominent primary action. Trade-off: C0FE's comprehensiveness vs. AFF1's lean UI."
+}

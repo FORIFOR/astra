@@ -490,56 +490,175 @@ private struct ConfirmationDock: View {
     private var dark: Bool { scheme == .dark }
     let confirmation: ActionConfirmation
 
+    /// その場で直しているか。**別の窓は開かない。** 同じ面の中で入れ替える。
+    @State private var editing = false
+    @State private var edited: [String: String] = [:]
+
     private var riskTint: Color {
         confirmation.risk == .r3 ? Palette.danger(dark) : Palette.warning(dark)
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 9) {
+            // ① どのアプリ / どこへ。**一番上で「何が起きるか」の宛先が分かる。**
             HStack(spacing: 6) {
-                Image(systemName: confirmation.risk == .r3 ? "exclamationmark.octagon.fill" : "arrow.up.forward")
-                    .font(.system(size: 9))
-                    .foregroundStyle(riskTint)
+                if let app = confirmation.app {
+                    if let icon = confirmation.appIcon {
+                        Image(systemName: icon)
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(Palette.accent(dark))
+                    }
+                    Text(app)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(Palette.text(dark))
+                }
                 DockLabel(text: confirmation.risk.label, tint: riskTint)
                 Spacer(minLength: 0)
             }
+
+            // ② 何が起きるか。
             Text(confirmation.title)
-                .font(.system(size: 20, weight: .semibold))
+                .font(.system(size: 18, weight: .semibold))
                 .foregroundStyle(Palette.text(dark))
                 .fixedSize(horizontal: false, vertical: true)
-            VStack(alignment: .leading, spacing: 3) {
-                ForEach(confirmation.details, id: \.self) { d in
-                    Text(d)
-                        .font(.system(size: S.type(Metrics.dockRowSize)))
-                        .foregroundStyle(Palette.muted(dark))
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-            }
+
+            if editing { editor } else { readOnly }
+
             Spacer(minLength: 0)
+
+            // ⑥ 取消 / 直す / 実行。**主たる操作は 1 つだけ。**
             HStack(spacing: 8) {
                 Spacer(minLength: 0)
-                Button("Cancel") { AstraStateStore.shared.resolveConfirmation(approved: false) }
-                    .font(.system(size: S.type(Metrics.dockRowSize)))
-                    .foregroundStyle(Palette.muted(dark))
-                    .frame(height: 34).padding(.horizontal, 18)
-                    .buttonStyle(AstraControlStyle(radius: 7, base: 0.0))
-                    .accessibilityIdentifier("confirmCancel")
-                // 外へ出る操作は、押す先が一目で分かる面にする。両方とも文字だけだと、
-                // 取り消しと実行が同じ重さに見えて、暗い地では色の差しか手がかりが無い。
-                Button(confirmation.confirmLabel) { AstraStateStore.shared.resolveConfirmation(approved: true) }
-                    .font(.system(size: S.type(Metrics.dockRowSize), weight: .semibold))
-                    .foregroundStyle(.white)
-                    .frame(height: 34).padding(.horizontal, 22)
-                    .background(RoundedRectangle(cornerRadius: 7, style: .continuous).fill(riskTint))
-                    .buttonStyle(AstraControlStyle(radius: 7, base: 0.0, filled: false))
-                    .accessibilityIdentifier("confirmProceed")
+                if editing {
+                    Button("やめる") { editing = false; edited = [:] }
+                        .font(.system(size: S.type(Metrics.dockRowSize)))
+                        .foregroundStyle(Palette.muted(dark))
+                        .frame(height: 32).padding(.horizontal, 14)
+                        .buttonStyle(AstraControlStyle(radius: 7, base: 0.0))
+                        .accessibilityIdentifier("confirmEditCancel")
+                    Button("done") { editing = false }
+                        .font(.system(size: S.type(Metrics.dockRowSize), weight: .semibold))
+                        .foregroundStyle(Palette.accent(dark))
+                        .frame(height: 32).padding(.horizontal, 18)
+                        .buttonStyle(AstraControlStyle(radius: 7, base: 0.05))
+                        .accessibilityIdentifier("confirmEditDone")
+                } else {
+                    Button("Cancel") { AstraStateStore.shared.resolveConfirmation(approved: false) }
+                        .font(.system(size: S.type(Metrics.dockRowSize)))
+                        .foregroundStyle(Palette.muted(dark))
+                        .frame(height: 32).padding(.horizontal, 14)
+                        .buttonStyle(AstraControlStyle(radius: 7, base: 0.0))
+                        .accessibilityIdentifier("confirmCancel")
+                    if !confirmation.params.isEmpty || confirmation.preview != nil {
+                        Button("Edit") { editing = true }
+                            .font(.system(size: S.type(Metrics.dockRowSize)))
+                            .foregroundStyle(Palette.accent(dark))
+                            .frame(height: 32).padding(.horizontal, 14)
+                            .buttonStyle(AstraControlStyle(radius: 7, base: 0.0))
+                            .accessibilityIdentifier("confirmEdit")
+                    }
+                    // 外へ出る操作は、押す先が一目で分かる面にする。
+                    Button(confirmation.confirmLabel) { AstraStateStore.shared.resolveConfirmation(approved: true) }
+                        .font(.system(size: S.type(Metrics.dockRowSize), weight: .semibold))
+                        .foregroundStyle(.white)
+                        .frame(height: 32).padding(.horizontal, 20)
+                        .background(RoundedRectangle(cornerRadius: 7, style: .continuous).fill(riskTint))
+                        .buttonStyle(AstraControlStyle(radius: 7, base: 0.0, filled: false))
+                        .accessibilityIdentifier("confirmProceed")
+                }
             }
         }
         .padding(.horizontal, S.metric(Metrics.dockPadH) + 2)
         .padding(.vertical, 12)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("dockConfirmation")
+    }
+
+    /// ③ 決定的な値 ④ 中身の下見 ⑤ 出所。
+    @ViewBuilder private var readOnly: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            ForEach(confirmation.params, id: \.self) { p in
+                HStack(alignment: .firstTextBaseline, spacing: 10) {
+                    Text(p.label)
+                        .font(.system(size: 11))
+                        .foregroundStyle(Palette.muted(dark))
+                        .frame(width: 56, alignment: .leading)
+                    Text(edited[p.label] ?? p.value)
+                        .font(.system(size: S.type(Metrics.dockRowSize)))
+                        .foregroundStyle(Palette.text(dark))
+                        .lineLimit(1)
+                    Spacer(minLength: 0)
+                }
+            }
+            if let preview = edited["__preview"] ?? confirmation.preview {
+                // 長ければ**ここだけ**流す。面ごと大きくしない。
+                ScrollView {
+                    Text(preview)
+                        .font(.system(size: S.type(Metrics.dockRowSize)))
+                        .foregroundStyle(Palette.muted(dark))
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .frame(maxHeight: 66)
+                .accessibilityIdentifier("confirmPreview")
+            }
+            ForEach(confirmation.details, id: \.self) { d in
+                Text(d)
+                    .font(.system(size: S.type(Metrics.dockRowSize)))
+                    .foregroundStyle(Palette.muted(dark))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            if let src = confirmation.source {
+                // ⑤ AI が作ったものなら、どこから来たかを出す。
+                Button {
+                    MainWindowController.shared.showSection(.meetings)
+                } label: {
+                    HStack(spacing: 5) {
+                        Text("出所").foregroundStyle(Palette.muted(dark))
+                        Text([src.title, src.speaker, src.time].compactMap { $0 }.joined(separator: " · "))
+                            .foregroundStyle(Palette.text(dark))
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 8, weight: .semibold))
+                            .foregroundStyle(Palette.accent(dark))
+                        Spacer(minLength: 0)
+                    }
+                    .font(.system(size: 11))
+                }
+                .buttonStyle(AstraControlStyle(radius: 6, base: 0.0))
+                .accessibilityIdentifier("confirmSource")
+            }
+        }
+    }
+
+    /// その場で直す。**別の窓を開かない。**
+    @ViewBuilder private var editor: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            ForEach(confirmation.params.filter { $0.editable }, id: \.self) { p in
+                HStack(alignment: .firstTextBaseline, spacing: 10) {
+                    Text(p.label)
+                        .font(.system(size: 11))
+                        .foregroundStyle(Palette.muted(dark))
+                        .frame(width: 56, alignment: .leading)
+                    TextField(p.value, text: Binding(
+                        get: { edited[p.label] ?? p.value },
+                        set: { edited[p.label] = $0 }))
+                        .textFieldStyle(.plain)
+                        .font(.system(size: S.type(Metrics.dockRowSize)))
+                        .padding(.horizontal, 7).padding(.vertical, 4)
+                        .background(RoundedRectangle(cornerRadius: 6).fill(Color.subtleFill(dark, 0.05)))
+                }
+            }
+            if let preview = confirmation.preview {
+                TextField(preview, text: Binding(
+                    get: { edited["__preview"] ?? preview },
+                    set: { edited["__preview"] = $0 }), axis: .vertical)
+                    .textFieldStyle(.plain)
+                    .lineLimit(3)
+                    .font(.system(size: S.type(Metrics.dockRowSize)))
+                    .padding(7)
+                    .background(RoundedRectangle(cornerRadius: 6).fill(Color.subtleFill(dark, 0.05)))
+                    .accessibilityIdentifier("confirmPreviewEdit")
+            }
+        }
     }
 }
 

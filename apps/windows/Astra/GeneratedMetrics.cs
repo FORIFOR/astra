@@ -32,7 +32,7 @@ public static class Metrics
     public const double DockAgentRowHeight = 36;
     public const double DockResultWidth = 520;
     public const double DockResultHeight = 150;
-    public const double DockConfirmWidth = 680;
+    public const double DockConfirmWidth = 560;
     public const double DockConfirmHeight = 176;
     public const double DockMeetingWidth = 820;
     public const double DockMeetingHeight = 76;

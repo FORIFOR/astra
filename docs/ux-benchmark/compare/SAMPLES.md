@@ -214,3 +214,51 @@ MISSING_ARCHETYPE: ACTION_CONFIRMATION
 
 これは「負けた」ではなく「**無い**」。数字は参考値として残すが、
 勝率の解釈には使わない。
+
+---
+
+# Sample 09 — Action Confirmation（同型比較）
+
+実装したあと、**確認カードどうしだけ**で比べた。作業面は混ぜていない。
+
+```
+軸                       Astra  VoiceOS  引分
+action_clarity             3       0      0
+parameter_hierarchy        2       1      0
+preview_readability        3       0      0
+control_visibility         1       1      1
+screen_occupation          1       1      1
+visual_craft               1       1      1
+error_prevention           3       0      0
+provenance_visibility      3       0      0
+
+Astra 5 / VoiceOS 0 / 引分 3
+```
+
+Judge の弁:
+
+> 「C0FE（Astra）は本文が全部見え、**どの会議の誰がいつ**から来たかを名指しし、
+>  外へ出る操作だと警告している」
+> 「AFF1（VoiceOS）は効率を優先し、本文は途中で切れている」
+
+## 引き分けた 3 つが次の課題
+
+```
+control_visibility   1-1-1   VoiceOS の Send は塗りつぶしの青で、より強い
+screen_occupation    1-1-1   560x286 対 500x200。まだ大きい
+visual_craft         1-1-1   ここは勝てていない
+```
+
+**`visual_craft` は引き分け止まり。** 型を揃えた 6 種で 2/6 だった弱点は、
+確認の面を足しても解消していない。造形は別途やる必要がある。
+
+## 何が効いたか
+
+VoiceOS の写しではない。**VoiceOS の強み（その用事だけに絞った小さい面）に、
+Astra の強み（なぜそれをするのか辿れる）を足した**結果:
+
+```
+error_prevention       3-0   外へ出る操作だと明示 ＋ 本文が全部見える
+provenance_visibility  3-0   出所 週次同期 · 田中 · 10:42 ›
+preview_readability    3-0   本文が切れない
+```

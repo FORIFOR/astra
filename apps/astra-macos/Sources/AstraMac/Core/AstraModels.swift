@@ -83,9 +83,12 @@ enum DockPresentation: Equatable {
             // 中身の行数から出す。固定だと 2 行の確認でも面の半分が空き、
             // 押してほしいボタンが遠くに離れて置かれていた。
             // 既定は説明 1 行ぶん。2 行目からは 1 行の高さだけ伸ばす。
-            return CGSize(width: Metrics.dockConfirmWidth,
-                          height: Metrics.dockConfirmHeight
-                              + CGFloat(max(0, confirmation.details.count - 1)) * (Metrics.dockRowSize + 7))
+            // 中身の行数から出す。固定だと 2 行の確認でも面の半分が空く。
+            // **上限を置く。** 決断のための面が作業面ほど大きくなると、
+            // 何を決めるのかが薄まる（外の製品に負けた理由がこれ）。
+            let h = Metrics.dockConfirmHeight
+                + CGFloat(max(0, confirmation.contentRows - 1)) * (Metrics.dockRowSize + 7)
+            return CGSize(width: Metrics.dockConfirmWidth, height: min(360, h))
         case .meeting(let panel):
             return CGSize(width: Metrics.dockMeetingWidth,
                           height: panel == nil ? Metrics.dockMeetingHeight : Metrics.dockMeetingExpandedHeight)
@@ -252,14 +255,56 @@ enum ActionRiskLevel: Int, Comparable {
 }
 
 /// §17 確認は AI の文章で聞かない。カードに出す。
+/// 実行の前に見せる面。**その決断に要るものだけ**を持つ。
+///
+/// 順番を変えられるようにしない。上から
+///   ① どのアプリ / どこへ  ② 何が起きるか  ③ 決定的な値
+///   ④ 中身の下見  ⑤ 出所  ⑥ 取消 / 直す / 実行
+/// 一番上で何が起きるか分かり、一番下でやる／やめる／直すが分かる。
+///
+/// 面の型としての比較で、外の製品に負けていた。理由は造形ではなく、
+/// **宛先も中身も出所も持っていなかった**こと。
 struct ActionConfirmation: Identifiable, Equatable {
+    /// 決定的な値の 1 行（宛先・件名・日時など）。
+    struct Param: Equatable, Hashable {
+        let label: String
+        var value: String
+        /// その場で直せるか。直せない値（送信元など）は false。
+        var editable: Bool = true
+    }
+    /// 出所。**AI が作ったものなら、どこから来たかを持つ。**
+    struct Source: Equatable {
+        let title: String
+        let speaker: String?
+        let time: String?
+    }
+
     let id = UUID()
-    /// 「何が起きるか」を結果の文で書く。「よろしいですか」とは書かない。
+    /// ① どのアプリ / どこへ。「Gmail」「Calendar」「#product-team」。
+    var app: String?
+    var appIcon: String?
+    /// ② 「何が起きるか」を結果の文で書く。「よろしいですか」とは書かない。
     let title: String
+    /// ③ 決定的な値。
+    var params: [Param] = []
+    /// ④ 中身の下見。長ければここだけ流す。
+    var preview: String?
+    /// ⑤ 出所。
+    var source: Source?
     let details: [String]
     let risk: ActionRiskLevel
     /// ボタンの文字も結果を書く（「送信する」「3件削除する」）。
     let confirmLabel: String
+
+    /// 面の高さは中身で決まる。**固定しない。**
+    var contentRows: Int {
+        var n = details.count
+        if app != nil { n += 1 }
+        n += params.count
+        if preview != nil { n += 2 }
+        if source != nil { n += 1 }
+        return n
+    }
 }
 
 // MARK: - §18 / §21 Meeting

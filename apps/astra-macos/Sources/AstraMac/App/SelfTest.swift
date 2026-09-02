@@ -414,10 +414,17 @@ enum SelfTest {
 
         // 6. Confirmation（requireConfirmation が Dock を展開する＝実遷移）
         shoot("07-confirmation", {
+            // 決断に要るものを全部持たせた形で撮る。宛先も中身も出所も無い
+            // 確認は、外の製品と同じ型として比べられない。
             store.requireConfirmation(ActionConfirmation(
-                title: "Send Slack message",
-                details: ["#sales", "明日の会議、資料を先に共有します。"],
-                risk: .r2, confirmLabel: "Send"))
+                app: "Slack", appIcon: "number",
+                title: "このメッセージを送りますか？",
+                params: [.init(label: "宛先", value: "#sales"),
+                         .init(label: "差出人", value: "あなた", editable: false)],
+                preview: "明日の会議、資料を先に共有します。10 月の導入時期の件も入れておきました。",
+                source: .init(title: "週次同期", speaker: "田中", time: "10:42"),
+                details: [],
+                risk: .r2, confirmLabel: "送る"))
         })
 
         // 7. Meeting: 録音中は Dock が録音コントローラになる。**窓は増えない。**
