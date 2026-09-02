@@ -93,13 +93,22 @@ def main() -> int:
         vals = sorted(g[0] for g in body_gaps)
         med = vals[len(vals) // 2]
         print(f"\n  中身の間の中央値 = {med:.1f}pt（操作の手前 {pos[-1][0]:.1f}pt は区切りとして除外）")
+        # 穴（中央値の 2 倍超）と、潰れ（中央値の半分未満）。
+        # 穴だけ見ていると、穴を埋めた拍子にどこかが潰れても気づけない。
+        # 実際そうなった: 本文と出所の間が 50pt → 4pt（中央値 10）。
         holes = [g for g in body_gaps if g[0] > med * 2]
+        crush = [g for g in body_gaps if g[0] < med / 2]
         if holes:
             print(f"  ✗ 穴が {len(holes)}（中央値の 2 倍を超える間）:")
             for g, x, y in holes:
                 print(f"      {g:6.1f}pt   {x} → {y}")
-        else:
-            print("  ✓ 穴は無い")
+        if crush:
+            print(f"  ✗ 潰れが {len(crush)}（中央値の半分に満たない間）:")
+            for g, x, y in crush:
+                print(f"      {g:6.1f}pt   {x} → {y}")
+        if not holes and not crush:
+            print("  ✓ 穴も潰れも無い")
+        holes += crush
     return 1 if holes else 0
 
 if __name__ == "__main__":

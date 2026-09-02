@@ -674,6 +674,9 @@ private struct ConfirmationDock: View {
                     .opacity(0.8)
                 }
                 .buttonStyle(AstraControlStyle(radius: 6, base: 0.0))
+                // 出所は値でも本文でもない。**一段離す。**
+                // 穴を埋めた拍子にここが 4pt まで潰れ、本文と地続きに見えていた。
+                .padding(.top, 5)
                 .accessibilityIdentifier("confirmSource")
             }
         }

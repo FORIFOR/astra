@@ -240,3 +240,63 @@ C を「背が高い」と言った。実際に高かったのは 3 枚とも同
 
 文字が全部出ていれば OCR の検査は通ってしまう。式と view がずれても
 何も欠けないので、ここを見ていなければ気づけない。
+
+## 採点は 2 回やった。1 回目は自分で矛盾した
+
+穴を埋めた面（224pt）と埋める前の面（286pt）を伏せて 3 人に見せた。
+1 回目（`compare/craft4`）は **before が勝った**。
+
+```
+spacing_rhythm        before 2 : after 0
+control_reachability  before 2 : after 0
+overall               before 2 : after 1
+```
+
+ところが理由を読むと、同じ画像について逆のことを書いていた。
+
+> Judge 2:「B71F はボタンが出所から**遠く**離されている」
+> Judge 3:「B71F はボタンが content に**近い**」
+
+実測は before 29.9pt → after 26.0pt。Judge 3 が正しく、Judge 2 は逆。
+決定的だった唯一の軸（control_reachability 2:0）は、**片方が事実を
+取り違えた票**で立っていた。Judge 1 は「pixel-for-pixel identical」と書き、
+50pt の帯そのものを見ていない。
+
+②「面積は目で測らない」と同じ形。**間隔も目で測らせてはいけない。**
+
+## 訊き方を変えたら揃った
+
+2 回目（`compare/craft5`）は、好みを訊く前に**観察**を訊いた。
+「どちらが大きいか」を答えさせ、**「分からない」を正解として許した**。
+
+```
+本文→出所 が大きいのは    3人中2人が before と回答（実測 50.0 vs 9.9pt、正解）
+出所→操作 が大きいのは    2人 same / 1人 before（実測 29.9 vs 27.9pt、ほぼ同じ）
+説明のつかない空き        3人中2人が before の本文と出所の間を指した
+中身の欠落                3人とも無し
+```
+
+そのうえでの好み:
+
+```
+visual_craft          after 2 : before 0
+spacing_rhythm        after 2 : before 1
+preview_readability   after 2 : before 0
+control_reachability  after 0 : before 0  （2人が tie）
+overall               after 2 : before 1
+```
+
+**好みを先に訊くと、理由が後から作られる。** 観察を先に置き、
+棄権を許すと、事実が揃い、結論もひっくり返った。
+`JUDGE_PROMPT.md` の型をこれに合わせる。
+
+## 潰れも見るようにした
+
+穴を埋めた拍子に、本文と出所の間が **4pt** まで潰れていた（中央値 10pt）。
+穴だけ見ていると気づけないので、`alignment.py` は
+**中央値の半分未満**も FAIL にする。出所に `.padding(.top, 5)` を入れて直した。
+
+```
+面の高さ    286pt → 229pt
+中身の間    4〜50pt → 7.9〜13.7pt（中央値 9.9、操作の手前 27.9 は区切り）
+```

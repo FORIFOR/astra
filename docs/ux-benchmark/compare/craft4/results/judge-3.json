@@ -1,0 +1,29 @@
+{
+  "winners": {
+    "visual_craft": "tie",
+    "spacing_rhythm": "9C3E",
+    "information_hierarchy": "tie",
+    "preview_readability": "tie",
+    "provenance_visibility": "tie",
+    "control_reachability": "9C3E",
+    "screen_occupation": "B71F",
+    "overall": "9C3E"
+  },
+  "why": {
+    "visual_craft": "Identical styling, typography, colors, and visual treatment throughout both variants.",
+    "spacing_rhythm": "9C3E has more generous vertical breathing room between content blocks, creating a clearer visual rhythm and hierarchy. B71F feels compressed with tighter gaps between the message preview, source info, and buttons.",
+    "information_hierarchy": "Both present information in the same order and visual weight. Channel, sender, message, and source are identically positioned and styled.",
+    "preview_readability": "Message preview text is equally legible in both; same font size and weight, same contrast against dark background.",
+    "provenance_visibility": "Source information (出所, timestamp, author) equally visible and prominent in both variants. Same positioning and styling.",
+    "control_reachability": "9C3E buttons sit further from the content block above, creating better finger reach and larger effective touch targets. B71F buttons are closer to the message block, reducing separation and making them feel cramped.",
+    "screen_occupation": "B71F is more vertically compact and efficient with screen space. 9C3E uses more vertical height due to generous spacing. B71F is better for space-constrained contexts.",
+    "overall": "9C3E provides a more comfortable, breathable experience with better visual rhythm and button accessibility, though at the cost of vertical footprint. B71F is efficient but feels tight."
+  },
+  "differences": [
+    "Vertical gap between message preview block and source/timestamp line: 9C3E has larger gap, B71F tighter",
+    "Vertical gap between source/timestamp line and buttons: 9C3E has larger gap, B71F tighter",
+    "Overall card height: 9C3E taller (~20-30px more), B71F more compact",
+    "Breathing room around button row: 9C3E has more padding, B71F has minimal padding"
+  ],
+  "content_lost": "No content is missing. Both variants contain identical text elements: title, external link label, channel tag, sender label, full message preview, source/timestamp info, and all three buttons (Cancel, Edit, 送る)."
+}

@@ -366,7 +366,7 @@ struct ActionConfirmation: Identifiable, Equatable {
         for p in params { stack(max(Self.line(10.5), Self.line(Metrics.dockRowSize))) ; _ = p }
         if preview != nil { stack(previewHeight(width: w)) }
         for d in details { stack(Self.box(d, size: Metrics.dockRowSize, width: w)) }
-        if source != nil { stack(Self.line(11)) }
+        if source != nil { stack(Self.line(11) + 5) }   // 出所は一段離す（view の padding と対）
 
         var h: CGFloat = 12 + 12                                    // 上下の余白
         h += (app != nil ? Self.line(12, .semibold) + gap : 0)      // ① どのアプリ
