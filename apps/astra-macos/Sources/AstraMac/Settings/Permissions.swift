@@ -6,7 +6,12 @@ import AppKit
 enum Permissions {
     enum State: String { case granted = "許可済み", denied = "拒否", notDetermined = "未確認", restricted = "制限" }
 
+    /// 検査用の上書き。**本番では nil。** 拒否された端末は手元に無いので、
+    /// 「拒否されたときに何が出るか」を測るにはここから拒否を作るしかない。
+    static var simulatedMicrophone: State?
+
     static var microphone: State {
+        if let s = simulatedMicrophone { return s }
         switch AVCaptureDevice.authorizationStatus(for: .audio) {
         case .authorized: return .granted
         case .denied: return .denied

@@ -1,0 +1,168 @@
+{
+  "artifacts" : [
+    "01-meeting.png",
+    "02-notes.png",
+    "03-workspace.png",
+    "04-ended.png",
+    "05-library.png",
+    "06-source.png",
+    "07-reopened.png"
+  ],
+  "errors" : [
+    "結果面から開いたのがその会議でない（open=一覧）",
+    "Library に決まったことの [1] が無い",
+    "読み戻したあと同じ発言に戻れない（）",
+    "文字起こしが保存されていない"
+  ],
+  "focusTheft" : 0,
+  "interactions" : 7,
+  "journey" : "JB",
+  "notMeasured" : [
+    "その時刻の音声へ戻る（再生が未実装。飾りは置かない判断）"
+  ],
+  "observations" : [
+    "全体の連続感（層 C）: 面は Dock → Workspace → Library の 3 枚。同じ id meeting-1788392753 が通ったか: false"
+  ],
+  "product" : "Astra",
+  "startedAt" : "2026-09-02T23:45:52Z",
+  "steps" : [
+    {
+      "front" : "com.apple.finder",
+      "ids" : {
+        "dock" : "meeting-1788392753",
+        "recording" : "meeting-1788392753",
+        "session" : "meeting-1788392753"
+      },
+      "interactions" : 1,
+      "keyWindow" : false,
+      "ms" : 1087,
+      "name" : "Meeting",
+      "surface" : {
+        "h" : 76,
+        "key" : false,
+        "w" : 820,
+        "x" : 550,
+        "y" : 1004
+      },
+      "transitionMs" : 0,
+      "windows" : 1
+    },
+    {
+      "front" : "com.apple.finder",
+      "ids" : {
+        "decision.at" : "642",
+        "decision.speaker" : "Ken"
+      },
+      "interactions" : 1,
+      "keyWindow" : false,
+      "ms" : 1140,
+      "name" : "Notes",
+      "surface" : {
+        "h" : 195,
+        "key" : false,
+        "w" : 820,
+        "x" : 550,
+        "y" : 885
+      },
+      "transitionMs" : 167,
+      "windows" : 1
+    },
+    {
+      "front" : "com.apple.finder",
+      "ids" : {
+        "session" : "meeting-1788392753",
+        "workspace" : "meeting-1788392753"
+      },
+      "interactions" : 1,
+      "keyWindow" : true,
+      "ms" : 1202,
+      "name" : "Workspace",
+      "surface" : {
+        "h" : 680,
+        "key" : true,
+        "w" : 1080,
+        "x" : 420,
+        "y" : 225
+      },
+      "transitionMs" : 53,
+      "windows" : 2
+    },
+    {
+      "front" : "com.apple.finder",
+      "ids" : {
+        "decisions" : "1",
+        "session" : "meeting-1788392753"
+      },
+      "interactions" : 1,
+      "keyWindow" : true,
+      "ms" : 2567,
+      "name" : "終える",
+      "surface" : {
+        "h" : 129,
+        "key" : true,
+        "w" : 520,
+        "x" : 700,
+        "y" : 951
+      },
+      "transitionMs" : 224,
+      "windows" : 1
+    },
+    {
+      "ids" : {
+        "opened" : "",
+        "session" : "meeting-1788392753"
+      },
+      "interactions" : 1,
+      "keyWindow" : false,
+      "ms" : 2020,
+      "name" : "Library",
+      "surface" : {
+        "h" : 820,
+        "key" : false,
+        "w" : 1240,
+        "x" : 340,
+        "y" : 192
+      },
+      "windows" : 2
+    },
+    {
+      "ids" : {
+        "shown" : "",
+        "want" : "Ken|10:42"
+      },
+      "interactions" : 1,
+      "keyWindow" : false,
+      "ms" : 637,
+      "name" : "Source",
+      "surface" : {
+        "h" : 820,
+        "key" : false,
+        "w" : 1240,
+        "x" : 340,
+        "y" : 192
+      },
+      "windows" : 2
+    },
+    {
+      "ids" : {
+        "shown" : "",
+        "transcriptRows" : "0"
+      },
+      "interactions" : 1,
+      "keyWindow" : false,
+      "ms" : 1881,
+      "name" : "読み戻す",
+      "surface" : {
+        "h" : 820,
+        "key" : false,
+        "w" : 1240,
+        "x" : 340,
+        "y" : 192
+      },
+      "windows" : 2
+    }
+  ],
+  "success" : false,
+  "totalMs" : 10538,
+  "windowsOpened" : 0
+}

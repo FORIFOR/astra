@@ -277,6 +277,25 @@ final class LocalStore {
         return out
     }
 
+    // MARK: - transcripts（会議 id で引く。Library から同じ発言へ戻るための正本）
+
+    /// その会議の確定行。`at` は録音開始からの秒。
+    func loadTranscript(meetingId: String) -> [TranscriptSegment] {
+        let sql = "SELECT speaker,text,at FROM transcripts WHERE meeting_id = ? ORDER BY at ASC"
+        var stmt: OpaquePointer?
+        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return [] }
+        defer { sqlite3_finalize(stmt) }
+        bind(stmt, 1, meetingId)
+        var out: [TranscriptSegment] = []
+        while sqlite3_step(stmt) == SQLITE_ROW {
+            let speaker = sqlite3_column_text(stmt, 0).map { String(cString: $0) } ?? ""
+            let text = sqlite3_column_text(stmt, 1).map { String(cString: $0) } ?? ""
+            out.append(TranscriptSegment(speaker: speaker, text: text, interim: false,
+                                         at: sqlite3_column_double(stmt, 2)))
+        }
+        return out
+    }
+
     // MARK: - context metadata（§25 本文は保存しない）
 
     func saveContextMetadata(_ fact: ContextFact) {

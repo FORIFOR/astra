@@ -30,6 +30,14 @@ enum UIProbe {
 
     /// いま出ている目印（調査用）。
     static var visible: [String] { actions.keys.sorted() }
+
+    /// 画面が**いま何を出しているか**（選ばれている引用など）。
+    /// 押す口ではなく、読む口。view が描くときに書き、消えるときに消す。
+    private static var facts: [String: String] = [:]
+    static func fact(_ id: String, _ value: String?) {
+        if let value { facts[id] = value } else { facts[id] = nil }
+    }
+    static func fact(_ id: String) -> String? { facts[id] }
 }
 
 /// 目印付きのボタン。押すと走るものは 1 本だけで、検査もそれを押す。

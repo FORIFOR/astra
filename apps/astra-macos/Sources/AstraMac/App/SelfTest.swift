@@ -1805,6 +1805,304 @@ enum SelfTest {
             recording.stop()
             rec.finish(success: st == .interrupted || st == .recording)
 
+        // ---- Journey Phase（画面ではなく時間軸）。層 A だけをここで測る。 ----
+        // 層 B（階層・状態・操作・文法）は各段の絵で盲検する。層 C は observe に残す。
+
+        case "JA":   // Task: Home → Listening → Running → Confirmation → Done
+            let dockWin = { JourneyRecorder.dockWindow() }
+            func dockName() -> String {
+                switch store.dock {
+                case .idle: return "idle"
+                case .listening: return "listening"
+                case .agent: return "agent"
+                case .confirmation: return "confirmation"
+                case .result: return "result"
+                case .thinking: return "thinking"
+                default: return "other"
+                }
+            }
+            MainWindowController.shared.showSection(.home)
+            WindowCoordinator.shared.showVoiceHUD(); settle(1.0)
+            rec.begin()
+            let windows0 = NSApp.windows.filter(\.isVisible).count
+            _ = rec.shot("01-home", window: dockWin())
+            rec.step("Home（Dock は待機）", interactions: 0, surface: dockWin())
+
+            // ② Listening。⌥Space と同じ入口。
+            let t1 = rec.transition { VoiceHUDState.shared.beginListening() }
+            settle(0.4)
+            _ = rec.shot("02-listening", window: dockWin())
+            // 逃げ道: マイクが開いている面で Esc が効くか。
+            var keys: [String: String] = [:]
+            if let w = dockWin() {
+                JourneyRecorder.press(JourneyRecorder.keyEsc, "\u{1b}", in: w); settle(0.4)
+                keys["esc"] = "listening→\(dockName())"
+                if case .listening = store.dock { rec.error("Listening で Esc が効かない（マイクが開いたまま）") }
+            }
+            rec.step("Listening", interactions: 1, transitionMs: t1, keys: keys, surface: dockWin())
+
+            // ③ Running。
+            VoiceHUDState.shared.beginListening(); settle(0.3)
+            let task = AgentTask(
+                id: UUID(), title: "リリース予定を Ken に送る", status: .running,
+                steps: [AgentStep(title: "予定を読む", tool: "calendar", state: .success),
+                        AgentStep(title: "文面を作る", tool: "compose", state: .running)],
+                startedAt: Date(), context: ContextBundle(items: []))
+            let t2 = rec.transition { store.startTask(task) }
+            settle(0.4)
+            _ = rec.shot("03-running", window: dockWin())
+            rec.step("Running", interactions: 0, transitionMs: t2,
+                     ids: ["task": task.id.uuidString], surface: dockWin())
+
+            // ④ Confirmation。**同じ面が伸びる**。窓は増えない。
+            let c = ActionConfirmation(
+                app: "Gmail", appIcon: "envelope",
+                title: "このメッセージを送りますか？",
+                params: [.init(label: "宛先", value: "ken@example.com"),
+                         .init(label: "件名", value: "リリース予定")],
+                preview: "明日 macOS 版を出します。",
+                source: .init(title: "週次同期", speaker: "Ken", time: "10:42"),
+                details: [], risk: .r2, confirmLabel: "送る")
+            var resolved: (id: UUID, approved: Bool)?
+            let token = AstraEventBus.shared.subscribe { e in
+                if case .confirmationResolved(let id, let approved) = e { resolved = (id, approved) }
+            }
+            let t3 = rec.transition { store.requireConfirmation(c) }
+            settle(0.5)
+            _ = rec.shot("04-confirmation", window: dockWin())
+            let windows4 = NSApp.windows.filter(\.isVisible).count
+            if windows4 > windows0 { rec.error("確認で窓が増えた（\(windows0)→\(windows4)）") }
+            keys = [:]
+            if let w = dockWin() {
+                // 鍵の安全: Return だけでは外へ出る操作を走らせない。
+                JourneyRecorder.press(JourneyRecorder.keyReturn, "\r", in: w); settle(0.4)
+                keys["return"] = resolved == nil ? "no-op" : (resolved!.approved ? "APPROVED" : "cancelled")
+                if let r = resolved, r.approved { rec.error("Return だけで送った") }
+                // ⌘Return で承認。
+                if resolved == nil {
+                    JourneyRecorder.press(JourneyRecorder.keyReturn, "\r", mods: .command, in: w); settle(0.5)
+                    keys["cmdReturn"] = resolved.map { $0.approved ? "approved" : "cancelled" } ?? "no-op"
+                }
+            }
+            let ok4 = resolved?.approved == true && resolved?.id == c.id
+            if !ok4 { rec.error("⌘Return で承認できない／別の確認が解決された") }
+            rec.step("Confirmation", interactions: 2, transitionMs: t3, keys: keys,
+                     ids: ["confirmation": c.id.uuidString,
+                           "resolved": resolved?.id.uuidString ?? "nil"], surface: dockWin())
+            AstraEventBus.shared.unsubscribe(token)
+
+            // ⑤ Done。結果面が残り、Esc で片付く。
+            let t4 = rec.transition { store.finishTask(.success) }
+            settle(0.5)
+            _ = rec.shot("05-done", window: dockWin())
+            keys = [:]
+            var isResult = false
+            if case .result = store.dock { isResult = true }
+            if !isResult { rec.error("終わったあとの面が result でない（\(dockName())）") }
+            if let w = dockWin() {
+                JourneyRecorder.press(JourneyRecorder.keyEsc, "\u{1b}", in: w); settle(0.4)
+                keys["esc"] = "result→\(dockName())"
+                if case .result = store.dock { rec.error("結果面で Esc が効かない") }
+            }
+            let windows5 = NSApp.windows.filter(\.isVisible).count
+            rec.step("Done", interactions: 1, transitionMs: t4, keys: keys, surface: dockWin())
+            if windows5 != windows0 { rec.error("終わったのに窓の数が戻らない（\(windows0)→\(windows5)）") }
+            rec.observe("体感の複雑さ（層 C）: 段は 5、面は 1 枚、増えた窓 \(rec.windowsOpened)")
+            rec.cannotMeasure("実際の声（STT は別 selftest）／実際の送信（外部サービス）")
+            rec.finish(success: rec.errors.isEmpty)
+
+        case "JB":   // Meeting: Meeting → Notes → Workspace → Library → Source
+            WindowCoordinator.shared.showVoiceHUD(); settle(0.6)
+            rec.begin()
+            // ① 会議を録る。Dock が録音コントローラになる。
+            let t1 = rec.transition { recording.start() }
+            settle(0.8)
+            let liveId = sessions.live?.id ?? ""
+            let dockId = { () -> String in
+                if case .meeting = store.dock { return store.state.meeting.meetingId ?? "" }
+                return ""
+            }()
+            if liveId.isEmpty { rec.error("録音が始まっていない") }
+            _ = rec.shot("01-meeting", window: JourneyRecorder.dockWindow())
+            rec.step("Meeting", interactions: 1, transitionMs: t1,
+                     ids: ["session": liveId, "dock": dockId, "recording": recording.currentMeetingId])
+
+            // ② Notes。同じ Dock の中で開く。実際の発言を入れて拾わせる。
+            let t2 = rec.transition { VoiceHUDState.shared.toggleMeetingPanel(.notes) }
+            recording.transcript = [
+                TranscriptSegment(speaker: "Sarah", text: "Windows はいつ出しますか。", interim: false, at: 630),
+                TranscriptSegment(speaker: "Ken", text: "macOS を先に出すことに決めました。", interim: false, at: 642),
+                TranscriptSegment(speaker: "Ken", text: "Windows は次の周で追います。", interim: false, at: 655),
+            ]
+            MeetingIntelligence.shared.ingest([
+                CanvasItem("macOS を先に出すことに決めました。", at: 642, speaker: "Ken"),
+                CanvasItem("オンボーディングを試作する", at: 861, speaker: "Sarah"),
+            ], force: true)
+            settle(0.8)
+            let canvas = store.state.meeting.canvas
+            let decision = canvas.decisions.first
+            if decision == nil { rec.error("決まったことが拾えていない") }
+            _ = rec.shot("02-notes", window: JourneyRecorder.dockWindow())
+            rec.step("Notes", interactions: 1, transitionMs: t2,
+                     ids: ["decision.speaker": decision?.speaker ?? "nil",
+                           "decision.at": decision.flatMap { $0.at }.map { String(Int($0)) } ?? "nil"])
+
+            // ③ Workspace。頼んだので窓は増えてよい。
+            let t3 = rec.transition { WindowCoordinator.shared.detachMeetingSurface() }
+            settle(1.0)
+            _ = rec.shot("03-workspace")
+            let wsIds = ["session": sessions.live?.id ?? "", "workspace": recording.currentMeetingId]
+            if wsIds["session"] != wsIds["workspace"] { rec.error("Workspace の会議 id が Session と違う") }
+            rec.step("Workspace", interactions: 1, opensWindow: true, transitionMs: t3, ids: wsIds)
+
+            // ④ 終える → Library。同じ 1 件が ready になる。
+            let before = sessions.sessions.count
+            // 読み取りは 4 段 × 0.45 秒（`finishProcessing`）。それを待つ。
+            let t4 = rec.transition { recording.stop() }
+            settle(2.2)
+            let ready = sessions.session(id: liveId)
+            if ready?.status != .ready { rec.error("終えたあと ready にならない（\(ready?.status.rawValue ?? "nil")）") }
+            if sessions.sessions.count != before { rec.error("終えたらカードが増えた") }
+            _ = rec.shot("04-ended", window: JourneyRecorder.dockWindow())
+            rec.step("終える", interactions: 1, transitionMs: t4, ids: ["session": liveId,
+                                                        "decisions": String(ready?.decisionCount ?? -1)])
+
+            // 結果面の「メモを開く」→ **その会議**が開くか。
+            var opened = false
+            if case .result(let r) = store.dock, let a = r.actions.first(where: { $0 == .openNotes }) {
+                opened = UIProbe.tap("result-\(a.rawValue)")
+            }
+            settle(1.0)
+            let openedId = MainNav.shared.openSession ?? ""
+            if !opened { rec.error("結果面に「開く」が無い／押せない") }
+            if openedId != liveId {
+                rec.error("結果面から開いたのがその会議でない（open=\(openedId.isEmpty ? "一覧" : openedId)）")
+                MainNav.shared.openSession = liveId
+                MainWindowController.shared.showSection(.meetings)
+                settle(0.8)
+            }
+            _ = rec.shot("05-library")
+            rec.step("Library", interactions: 1, opensWindow: true,
+                     ids: ["opened": openedId, "session": liveId])
+
+            // ⑤ Source。Decision [1] → Ken · 10:42 → 原文。
+            let tapped = UIProbe.tap("citationRef-1")
+            settle(0.6)
+            let shown = UIProbe.fact("meetingShown") ?? ""
+            let want = "\(decision?.speaker ?? "")|\(decision?.timeLabel ?? "")"
+            if !tapped { rec.error("Library に決まったことの [1] が無い") }
+            else if shown != want { rec.error("[1] を押して出た発言が違う（\(shown) ≠ \(want)）") }
+            _ = rec.shot("06-source")
+            rec.step("Source", interactions: 1, ids: ["shown": shown, "want": want])
+
+            // ⑥ 状態の連続: 読み戻して（再起動と同じ）もう一度同じ発言へ戻れるか。
+            MainNav.shared.select(.home)
+            recording.transcript = []
+            sessions.load(); settle(0.4)
+            MainNav.shared.openSession = liveId
+            MainWindowController.shared.showSection(.meetings); settle(0.8)
+            let tapped2 = UIProbe.tap("citationRef-1"); settle(0.6)
+            let shown2 = UIProbe.fact("meetingShown") ?? ""
+            if !tapped2 || shown2 != want { rec.error("読み戻したあと同じ発言に戻れない（\(shown2)）") }
+            let persisted = LocalStore.shared.loadTranscript(meetingId: liveId).count
+            if persisted == 0 { rec.error("文字起こしが保存されていない") }
+            _ = rec.shot("07-reopened")
+            rec.step("読み戻す", interactions: 1,
+                     ids: ["shown": shown2, "transcriptRows": String(persisted)])
+            rec.cannotMeasure("その時刻の音声へ戻る（再生が未実装。飾りは置かない判断）")
+            rec.observe("全体の連続感（層 C）: 面は Dock → Workspace → Library の 3 枚。同じ id \(liveId) が通ったか: \(rec.errors.isEmpty)")
+            rec.finish(success: rec.errors.isEmpty)
+
+        case "JC":   // Failure: 許可なし → 回復 / 落ちた → 再開
+            WindowCoordinator.shared.showVoiceHUD(); settle(0.6)
+            rec.begin()
+            // ① マイクが拒否されている端末で、始めるとどうなるか。
+            Permissions.simulatedMicrophone = .denied
+            defer { Permissions.simulatedMicrophone = nil }
+            let t1 = rec.transition { WindowCoordinator.shared.toggleRecording() }
+            settle(0.8)
+            _ = rec.shot("01-denied", window: JourneyRecorder.dockWindow())
+            var reason = "none"
+            if case .result(let r) = store.dock { reason = "dock:\(r.title)" }
+            else if recording.permissionIssue != nil { reason = "workspace-banner-only" }
+            let recovery = UIProbe.exists("result-openSettings")
+            if !reason.hasPrefix("dock:") { rec.error("拒否の理由が Dock に出ない（\(reason)）") }
+            if !recovery { rec.error("「設定を開く」が無い（行き止まり）") }
+            if recording.isRecording { rec.error("拒否なのに録音中になる") }
+            rec.step("マイク拒否", interactions: 1, transitionMs: t1,
+                     ids: ["reason": reason, "recovery": recovery ? "openSettings" : "none"])
+            store.dismissResult()
+            Permissions.simulatedMicrophone = nil
+            settle(0.3)
+
+            // ② 回復して始める。
+            recording.start(); settle(0.8)
+            let liveId = sessions.live?.id ?? ""
+            if liveId.isEmpty { rec.error("許可のあとに始められない") }
+            _ = rec.shot("02-recovered", window: JourneyRecorder.dockWindow())
+            rec.step("回復", interactions: 1, ids: ["session": liveId])
+
+            // ③ 共有中に Dock が消え、共有が終わったら**録音中でも**戻るか。
+            PresentationGuard.shared.apply(sharing: true); settle(0.6)
+            let hiddenWhileSharing = JourneyRecorder.dockWindow() == nil
+            PresentationGuard.shared.apply(sharing: false); settle(0.8)
+            let backAfterSharing = JourneyRecorder.dockWindow() != nil
+            if !hiddenWhileSharing { rec.observe("共有中も Dock が見えている（隠す方針なら要確認）") }
+            if !backAfterSharing { rec.error("共有が終わっても録音中の Dock が戻らない（Stop が押せない）") }
+            _ = rec.shot("03-after-sharing", window: JourneyRecorder.dockWindow())
+            rec.step("共有のあと", interactions: 0,
+                     ids: ["hiddenWhileSharing": String(hiddenWhileSharing),
+                           "backAfterSharing": String(backAfterSharing)])
+
+            // ④ 録音中の危険な操作（録音を捨てる）。確認は **1 面だけ**。
+            recording.transcript = [
+                TranscriptSegment(speaker: "Ken", text: "落ちる前の発言です。", interim: false, at: 12),
+            ]
+            let w0 = NSApp.windows.filter(\.isVisible).count
+            var surfaces = -1
+            var dockAnswerable = false
+            Timer.scheduledTimer(withTimeInterval: 0.7, repeats: false) { _ in
+                surfaces = NSApp.windows.filter(\.isVisible).count - w0
+                dockAnswerable = UIProbe.exists("confirmCancel")
+                _ = rec.shot("04-confirm", window: JourneyRecorder.dockWindow())
+                _ = UIProbe.tap("confirmCancel")
+                // 別の面が残っていたら、それも閉じる（残さないと 120 秒止まる）。
+                Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { _ in
+                    if UIProbe.exists("cardCancel") { _ = UIProbe.tap("cardCancel") }
+                }
+            }
+            let answered = Confirm.ask(ActionConfirmation(
+                app: "Astra", appIcon: "waveform",
+                title: "この録音を捨てますか？",
+                params: [], preview: "文字起こしと拾ったものも消えます。",
+                source: nil, details: [], risk: .r3, confirmLabel: "捨てる"))
+            settle(0.5)
+            if surfaces > 0 { rec.error("1 つの確認に面が \(surfaces + 1) 枚") }
+            if !dockAnswerable { rec.error("Dock の確認面で答えられない") }
+            if answered { rec.error("やめたのに実行された") }
+            if store.state.confirmation != nil { rec.error("答えたのに確認が残っている") }
+            rec.step("確認（やめる）", interactions: 1,
+                     ids: ["surfaces": String(surfaces + 1), "answered": String(answered)])
+
+            // ⑤ 落ちて再開。読み戻すと interrupted。開けて、中身が残っているか。
+            sessions.load(); settle(0.4)
+            let st = sessions.session(id: liveId)?.status
+            if st != .interrupted { rec.error("落ちた録音が interrupted でない（\(st?.rawValue ?? "nil")）") }
+            MainWindowController.shared.showSection(.home); settle(0.8)
+            _ = rec.shot("05-interrupted")
+            let cardOpens = UIProbe.exists("session-\(liveId)")
+            if !cardOpens { rec.error("落ちた録音のカードが開けない") }
+            else { _ = UIProbe.tap("session-\(liveId)"); settle(0.8) }
+            let rows = LocalStore.shared.loadTranscript(meetingId: liveId).count
+            if rows == 0 { rec.error("落ちた録音の文字起こしが残っていない") }
+            _ = rec.shot("06-resumed")
+            rec.step("落ちて再開", interactions: 1,
+                     ids: ["status": st?.rawValue ?? "nil", "transcriptRows": String(rows)])
+            rec.cannotMeasure("kill -9 を挟んだ全体（scripts/verify-recording-experience.sh）")
+            rec.cannotMeasure("実際の TCC 拒否（端末の許可は自動で変えない。simulatedMicrophone で作る）")
+            recording.stop()
+            rec.finish(success: rec.errors.isEmpty)
+
         default:
             // 声や他アプリが要るもの。**0 として数えない。**
             rec.begin()

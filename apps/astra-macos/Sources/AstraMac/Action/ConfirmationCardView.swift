@@ -45,18 +45,18 @@ struct ConfirmationCardView: View {
 
             HStack(spacing: 8) {
                 Spacer(minLength: 0)
-                Button("やめる") { onResolve(false) }
+                // 検査から押す口。Dock の確認面（confirmCancel / confirmProceed）と
+                // 別の id にする —— 同じ id で登録すると後勝ちで、どちらを押したか分からない。
+                ProbeButton(id: "cardCancel", action: { onResolve(false) }) { Text("やめる") }
                     .font(.system(size: 11))
                     .foregroundStyle(Palette.muted(dark))
                     .frame(height: 28).padding(.horizontal, 12)
                     .buttonStyle(AstraControlStyle(radius: 8, base: 0.0))
-                    .accessibilityIdentifier("confirmCancel")
-                Button(confirmation.confirmLabel) { onResolve(true) }
+                ProbeButton(id: "cardProceed", action: { onResolve(true) }) { Text(confirmation.confirmLabel) }
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(riskTint)
                     .frame(height: 28).padding(.horizontal, 14)
                     .buttonStyle(AstraControlStyle(radius: 8, base: 0.06))
-                    .accessibilityIdentifier("confirmProceed")
             }
         }
         .padding(16)

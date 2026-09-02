@@ -1,0 +1,114 @@
+{
+  "artifacts" : [
+    "01-denied.png",
+    "02-recovered.png",
+    "04-confirm.png",
+    "05-interrupted.png",
+    "06-resumed.png"
+  ],
+  "errors" : [
+    "拒否の理由が Dock に出ない（workspace-banner-only）",
+    "「設定を開く」が無い（行き止まり）",
+    "共有が終わっても録音中の Dock が戻らない（Stop が押せない）",
+    "1 つの確認に面が 2 枚",
+    "落ちた録音のカードが開けない",
+    "落ちた録音の文字起こしが残っていない"
+  ],
+  "focusTheft" : 1,
+  "interactions" : 4,
+  "journey" : "JC",
+  "notMeasured" : [
+    "kill -9 を挟んだ全体（scripts\/verify-recording-experience.sh）",
+    "実際の TCC 拒否（端末の許可は自動で変えない。simulatedMicrophone で作る）"
+  ],
+  "observations" : [
+
+  ],
+  "product" : "Astra",
+  "startedAt" : "2026-09-02T23:44:52Z",
+  "steps" : [
+    {
+      "front" : "com.apple.finder",
+      "ids" : {
+        "reason" : "workspace-banner-only",
+        "recovery" : "none"
+      },
+      "interactions" : 1,
+      "keyWindow" : false,
+      "ms" : 963,
+      "name" : "マイク拒否",
+      "surface" : {
+        "h" : 44,
+        "key" : false,
+        "w" : 220,
+        "x" : 850,
+        "y" : 1036
+      },
+      "transitionMs" : 0,
+      "windows" : 1
+    },
+    {
+      "front" : "com.apple.finder",
+      "ids" : {
+        "session" : "meeting-1788392693"
+      },
+      "interactions" : 1,
+      "keyWindow" : false,
+      "ms" : 1317,
+      "name" : "回復",
+      "surface" : {
+        "h" : 76,
+        "key" : false,
+        "w" : 820,
+        "x" : 550,
+        "y" : 1004
+      },
+      "windows" : 1
+    },
+    {
+      "front" : "com.apple.finder",
+      "ids" : {
+        "backAfterSharing" : "false",
+        "hiddenWhileSharing" : "true"
+      },
+      "interactions" : 0,
+      "keyWindow" : false,
+      "ms" : 1443,
+      "name" : "共有のあと",
+      "windows" : 0
+    },
+    {
+      "front" : "com.apple.finder",
+      "ids" : {
+        "answered" : "false",
+        "surfaces" : "2"
+      },
+      "interactions" : 1,
+      "keyWindow" : false,
+      "ms" : 1737,
+      "name" : "確認（やめる）",
+      "windows" : 0
+    },
+    {
+      "ids" : {
+        "status" : "interrupted",
+        "transcriptRows" : "0"
+      },
+      "interactions" : 1,
+      "keyWindow" : false,
+      "ms" : 1303,
+      "name" : "落ちて再開",
+      "surface" : {
+        "h" : 820,
+        "key" : false,
+        "w" : 1240,
+        "x" : 340,
+        "y" : 192
+      },
+      "windows" : 1
+    }
+  ],
+  "success" : false,
+  "totalMs" : 6788,
+  "windowsOpened" : 0
+}

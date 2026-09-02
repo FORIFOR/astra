@@ -41,9 +41,20 @@ struct SessionCard: View {
                     .stroke(session.isLive ? Color.recordingRed.opacity(0.35) : Color.hairline(dark)))
         )
         .contentShape(Rectangle())
-        .onTapGesture { if session.status == .ready { onOpen() } }
+        .onTapGesture { if canOpen { onOpen() } }
         .onReceive(timer) { tick = $0 }
         .accessibilityIdentifier("session-\(session.id)")
+        // 検査から「開けるか」を押す口。開けない状態では登録しない（押せたことにしない）。
+        .onAppear { syncProbe() }
+        .onChange(of: session.status) { _ in syncProbe() }
+        .onDisappear { UIProbe.unregister("session-\(session.id)") }
+    }
+
+    /// 開ける状態か。
+    private var canOpen: Bool { session.status == .ready }
+    private func syncProbe() {
+        if canOpen { UIProbe.register("session-\(session.id)", onOpen) }
+        else { UIProbe.unregister("session-\(session.id)") }
     }
 
     // MARK: - 上段

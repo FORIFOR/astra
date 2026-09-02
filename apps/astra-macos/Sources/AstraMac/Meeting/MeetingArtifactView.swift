@@ -140,6 +140,12 @@ struct MeetingArtifactView: View {
         }
         .background(Palette.canvas(dark))
         .accessibilityIdentifier("meetingArtifact")
+        // 検査が「いま右に何が出ているか」を読む口。speaker|time。
+        .onAppear { UIProbe.fact("meetingShown", shown.map { "\($0.speaker)|\($0.transcriptTime)" }) }
+        .onChange(of: picked?.id) { _ in
+            UIProbe.fact("meetingShown", shown.map { "\($0.speaker)|\($0.transcriptTime)" })
+        }
+        .onDisappear { UIProbe.fact("meetingShown", nil) }
     }
 
     /// 選んだタブの中身。持っていないものは、空欄ではなく理由を出す。
@@ -192,7 +198,8 @@ struct MeetingArtifactView: View {
     private func citationList(_ items: [MeetingCitation]) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             ForEach(items) { c in
-                Button { picked = c } label: {
+                ProbeButton(id: "citation-\(c.number.map(String.init) ?? c.transcriptTime)",
+                            action: { picked = c }) {
                     HStack(alignment: .firstTextBaseline, spacing: 8) {
                         Text(c.transcriptTime)
                             .font(.system(size: TypeScale.microSize, design: .monospaced))
@@ -214,7 +221,6 @@ struct MeetingArtifactView: View {
                     .padding(.vertical, 5)
                 }
                 .buttonStyle(AstraControlStyle(radius: 7, base: isShown(c) ? 0.08 : 0.0))
-                .accessibilityIdentifier("citation-\(c.number.map(String.init) ?? c.transcriptTime)")
             }
         }
     }
@@ -230,7 +236,7 @@ struct MeetingArtifactView: View {
                 HStack(alignment: .top, spacing: 6) {
                     Text(c.text).font(.system(size: TypeScale.bodySize)).foregroundStyle(Palette.text(dark))
                     // 番号は**押せる**。以前はリンク色の Text で、押しても何も起きなかった。
-                    Button { picked = c } label: {
+                    ProbeButton(id: "citationRef-\(c.number ?? 0)", action: { picked = c }) {
                         Text("[\(c.number ?? 0)]")
                             .font(.system(size: TypeScale.microSize, weight: .semibold))
                             .foregroundStyle(Palette.accent(dark))
@@ -239,7 +245,6 @@ struct MeetingArtifactView: View {
                     }
                     .buttonStyle(AstraControlStyle(radius: 6, base: isShown(c) ? 0.10 : 0.0))
                     .help("根拠になった発言を見る")
-                    .accessibilityIdentifier("citationRef-\(c.number ?? 0)")
                     Spacer()
                 }
             }

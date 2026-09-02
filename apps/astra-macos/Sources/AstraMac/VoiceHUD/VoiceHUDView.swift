@@ -584,12 +584,14 @@ struct ConfirmationDock: View {
                 } else {
                     // 「キャンセル」は 5 字で 102pt になり、主たる操作（96）より広くなる
                     // （造形⑤、`scripts/ux-auto/primary.py`）。逃げ道は主より狭く保つ。
-                    Button("やめる") { AstraStateStore.shared.resolveConfirmation(approved: false) }
+                    // 検査が押すのも同じ 1 本（`ProbeButton`）。
+                    ProbeButton(id: "confirmCancel", action: { AstraStateStore.shared.resolveConfirmation(approved: false) }) {
+                        Text("やめる")
+                    }
                         .font(.system(size: S.type(Metrics.dockRowSize)))
                         .foregroundStyle(Palette.muted(dark))
                         .frame(height: 32).padding(.horizontal, 14)
                         .buttonStyle(AstraControlStyle(radius: 7, base: 0.0))
-                        .accessibilityIdentifier("confirmCancel")
                     if !confirmation.params.isEmpty || confirmation.preview != nil {
                         Button("直す") { editing = true }
                             .font(.system(size: S.type(Metrics.dockRowSize)))
@@ -608,14 +610,15 @@ struct ConfirmationDock: View {
                     // 「送る」は 2 文字なので、padding だけ足しても 70pt にしかならず、
                     // 6 文字の Cancel（76pt）に負けていた（実測）。字数で重さが
                     // 決まってしまうので、最小幅で下から支える。
-                    Button(confirmation.confirmLabel) { AstraStateStore.shared.resolveConfirmation(approved: true) }
+                    ProbeButton(id: "confirmProceed", action: { AstraStateStore.shared.resolveConfirmation(approved: true) }) {
+                        Text(confirmation.confirmLabel)
+                    }
                         .font(.system(size: S.type(Metrics.dockRowSize), weight: .semibold))
                         .foregroundStyle(.white)
                         .frame(height: 32).padding(.horizontal, 20)
                         .frame(minWidth: S.metric(Metrics.dockConfirmPrimaryMinWidth))
                         .background(RoundedRectangle(cornerRadius: 7, style: .continuous).fill(riskTint))
                         .buttonStyle(AstraControlStyle(radius: 7, base: 0.0, filled: false))
-                        .accessibilityIdentifier("confirmProceed")
                 }
             }
         }
@@ -1054,12 +1057,14 @@ struct ResultDock: View {
             Spacer(minLength: 0)
             HStack(spacing: 6) {
                 ForEach(result.actions, id: \.self) { action in
-                    Button(action.title) { ResultActionRunner.run(action, title: result.title) }
+                    ProbeButton(id: "result-\(action.rawValue)",
+                                action: { ResultActionRunner.run(action, title: result.title) }) {
+                        Text(action.title)
+                    }
                         .font(.system(size: S.type(Metrics.dockRowSize), weight: .medium))
                         .foregroundStyle(Palette.text(dark))
                         .frame(height: 32).padding(.horizontal, 16)
                         .buttonStyle(AstraControlStyle(radius: 8, base: 0.07))
-                        .accessibilityIdentifier("result-\(action.rawValue)")
                 }
                 Spacer(minLength: 0)
                 Button { AstraStateStore.shared.dismissResult() } label: {

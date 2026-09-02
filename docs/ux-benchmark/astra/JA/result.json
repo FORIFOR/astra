@@ -1,0 +1,120 @@
+{
+  "artifacts" : [
+    "01-home.png",
+    "02-listening.png",
+    "03-running.png",
+    "04-confirmation.png",
+    "05-done.png"
+  ],
+  "errors" : [
+    "Listening で Esc が効かない（マイクが開いたまま）",
+    "結果面で Esc が効かない"
+  ],
+  "focusTheft" : 0,
+  "interactions" : 4,
+  "journey" : "JA",
+  "notMeasured" : [
+    "実際の声（STT は別 selftest）／実際の送信（外部サービス）"
+  ],
+  "observations" : [
+    "体感の複雑さ（層 C）: 段は 5、面は 1 枚、増えた窓 0"
+  ],
+  "product" : "Astra",
+  "startedAt" : "2026-09-02T23:44:20Z",
+  "steps" : [
+    {
+      "interactions" : 0,
+      "keyWindow" : false,
+      "ms" : 15,
+      "name" : "Home（Dock は待機）",
+      "surface" : {
+        "h" : 820,
+        "key" : false,
+        "w" : 1240,
+        "x" : 340,
+        "y" : 192
+      },
+      "windows" : 2
+    },
+    {
+      "interactions" : 1,
+      "keyWindow" : false,
+      "keys" : {
+        "esc" : "listening→listening"
+      },
+      "ms" : 1139,
+      "name" : "Listening",
+      "surface" : {
+        "h" : 820,
+        "key" : false,
+        "w" : 1240,
+        "x" : 340,
+        "y" : 192
+      },
+      "transitionMs" : 168,
+      "windows" : 2
+    },
+    {
+      "ids" : {
+        "task" : "CF1EBFFB-1D07-4B4D-8D42-B86C553B4D55"
+      },
+      "interactions" : 0,
+      "keyWindow" : false,
+      "ms" : 1075,
+      "name" : "Running",
+      "surface" : {
+        "h" : 820,
+        "key" : false,
+        "w" : 1240,
+        "x" : 340,
+        "y" : 192
+      },
+      "transitionMs" : 173,
+      "windows" : 2
+    },
+    {
+      "ids" : {
+        "confirmation" : "A4978B19-D117-4B15-BD9E-CB947769A28E",
+        "resolved" : "A4978B19-D117-4B15-BD9E-CB947769A28E"
+      },
+      "interactions" : 2,
+      "keyWindow" : false,
+      "keys" : {
+        "cmdReturn" : "approved",
+        "return" : "no-op"
+      },
+      "ms" : 1824,
+      "name" : "Confirmation",
+      "surface" : {
+        "h" : 820,
+        "key" : false,
+        "w" : 1240,
+        "x" : 340,
+        "y" : 192
+      },
+      "transitionMs" : 186,
+      "windows" : 2
+    },
+    {
+      "interactions" : 1,
+      "keyWindow" : false,
+      "keys" : {
+        "esc" : "result→result"
+      },
+      "ms" : 1237,
+      "name" : "Done",
+      "surface" : {
+        "h" : 820,
+        "key" : false,
+        "w" : 1240,
+        "x" : 340,
+        "y" : 192
+      },
+      "transitionMs" : 162,
+      "windows" : 2
+    }
+  ],
+  "success" : false,
+  "totalMs" : 5292,
+  "windowsOpened" : 0
+}
