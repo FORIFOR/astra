@@ -108,6 +108,14 @@ echo "$OUTGEO" | grep '^GEOMETRY ' || true; echo "$OUTGEO" | tail -1
 [[ "$OUTGEO" == *SELFTEST_OK* || "$OUTGEO" == *SELFTEST_SKIP* ]] || {
   echo "FAIL: UI geometry (2pt)" >&2; exit 1; }
 
+# 面は宣言した寸法（tokens.json）より大きくならない。screen_occupation は採点者に
+# 訊かず、6 状態の窓の実寸を token の上限と突き合わせる。geometry の基準は
+# --record で書き直せるが、この上限は token を変えない限り動かない。
+OUTOCC="$("$BIN" --selftest occupation || true)"
+echo "$OUTOCC" | grep '^OCCUPATION ' || true; echo "$OUTOCC" | tail -1
+[[ "$OUTOCC" == *SELFTEST_OK* || "$OUTOCC" == *SELFTEST_SKIP* ]] || {
+  echo "FAIL: screen occupation (token ceiling)" >&2; exit 1; }
+
 # 面がどれだけ空いているかを測り、基準より悪くなったら落とす（歯止め）。
 # 「良い UI」を目で言い合っても決まらないので数字にする。light だけで足りる。
 OUTD="$("$BIN" --selftest density "$SHOTS_BASE-light" "$ROOT/docs/evidence/density-baseline.json")"; echo "$OUTD" | tail -1

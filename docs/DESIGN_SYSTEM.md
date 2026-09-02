@@ -73,8 +73,30 @@ DS-01〜05（同 末尾、`docs/ux-benchmark/compare/SAMPLES.md` Sample 11〜16�
   `occupation.py` / `primary.py`）。輝度差 16/255 以下・白 10% の線は知覚の下。
 - ゲートは **壊して落ちるのを見てから** 入れる（type lint 76 → 0、shape 292 の潰れ、
   confirmflow 900x400）。
-- 2 名 panel は同じ絵で ±3 軸ぶれる（sample07 / 14）。1 型の数字を単独で読まない。
+- 2 名 panel は同じ絵で ±3 軸ぶれる（sample07 / 14 / 17）。1 型の数字を単独で読まない。
   競合素材は絵を見て有効か確かめる（sample08 / 15 は空のパネルだった）。
+  標本の切り抜きも絵を見て確かめる（sample13 は「録音中」が切れて波形が孤立していた）。
+
+## 7. 面は宣言した寸法より大きくならない（占有）
+
+- screen_occupation は採点者に訊かない。6 状態の窓の実寸を `tokens.json` の寸法と
+  突き合わせ、1pt を超えて上回ったら落とす（`--selftest occupation`、verify-all に含む）。
+  `geometry` の基準は `--record` で書き直せるが、この上限は token を変えない限り動かない。
+- 実測（2026-09-02、割合は 13 インチの最小画面 1440x900 に対して）:
+
+| 状態                  | 実寸     | 占有  | 上限（token）                |
+| --------------------- | -------- | ----- | ---------------------------- |
+| idle                  | 220x44   | 0.7%  | dockIdle 220x44              |
+| listening             | 600x79   | 3.7%  | dockListening 600x120        |
+| task dock（3 行）     | 720x271  | 15.1% | dockAgent 720 x (190 + 36·3) |
+| meeting bar           | 820x76   | 4.8%  | dockMeeting 820x76           |
+| meeting notes（展開） | 820x460  | 29.1% | dockMeetingExpanded 820x460  |
+| recording workspace   | 1080x680 | 56.7% | workspace 1080x680           |
+
+- 根拠: 採点者は面積を版面から**推論**する。craft3 で 3 名が「C は背が高い」と
+  言い、実寸は 3 枚とも同じ。sample11〜17 では 5 型中 3 型が cannot tell。
+  上限を 190 に下げて走らせると `03-task-dock 720x271 > 上限 720x190` で落ちる
+  （ゲートが効くことを先に見た）。
 
 ## いまの立ち位置（sample11〜16、有効 5 型）
 
@@ -84,6 +106,6 @@ fragmentation 3/4  control 3/5  density 2/4  occupation 1/5（3 型 cannot tell�
 action_confirmation  Astra 6 / VoiceOS 0 / 引分 1
 ```
 
-残っている課題は DS の外: post_meeting の戻る手段と fixture の量、
-meeting_controller の標本の切り抜き、transcript_attribution の競合素材、
-screen_occupation の寸法ゲート化。
+DS の外の課題のうち片付いたもの: post_meeting の戻る手段と fixture の量（547dd40）、
+meeting_controller の標本の切り抜き（sample17: 4/1/2、craft は引分）、
+screen_occupation の寸法ゲート化（§7）。残るのは transcript_attribution の競合素材。

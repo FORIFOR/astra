@@ -798,8 +798,12 @@ fixture の中身が 3 行で下半分が空（中身の量）。**DS-01〜03 �
 ## ここからの課題（DS の外）
 
 ```
-post_meeting         詳細画面に戻る手段が無い / fixture の中身が薄い
-meeting_controller   標本の切り抜きに「録音中」を含める（900x120 → 左端から）
-transcript_attribution  競合素材を取り直す
-screen_occupation    judge では測れない。寸法上限の selftest で見る
+post_meeting         詳細画面に戻る手段が無い / fixture の中身が薄い   → 547dd40（戻る chevron・sidebar で出られる・発言 8 行）
+meeting_controller   標本の切り抜きに「録音中」を含める（900x120 → 左端から） → sample17（Astra 4 / 競合 1 / 引分 2、craft 引分）
+transcript_attribution  競合素材を取り直す                              → 未
+screen_occupation    judge では測れない。寸法上限の selftest で見る     → --selftest occupation（DESIGN_SYSTEM §7）
 ```
+
+sample17 は競合画像が byte 一致なのに provenance と density が動いた。2 名 panel の
+±2〜3 軸の揺れは同じ絵でも出る。craft の opus 票は「文字と波形の高さが不揃い」で、
+画素では両方 y=79〜92 だったので棄却（観察が実測と矛盾した判定者は捨てる）。

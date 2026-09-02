@@ -38,6 +38,7 @@ enum SelfTest {
         case "axtree": axtree(); return true
         case "navtitle": navtitle(); return true
         case "geometry": geometryGate(args); return true
+        case "occupation": occupationGate(); return true
         case "focus": focusGate(); return true
         case "journey": journeyGate(args); return true
         case "idle-hold": idleHold(args); return true
@@ -1176,6 +1177,104 @@ enum SelfTest {
         }
     }
 
+    /// geometry / occupation が測る 6 状態。名前は正解画像（task-dock/）と揃える。
+    @MainActor
+    private static func geometryStates() -> [(String, () -> Void)] {
+        let store = AstraStateStore.shared
+        let recording = RecordingWorkspaceState.shared
+        return [
+            ("01-idle", { store.reset(); VoiceHUDState.shared.mode = .idle }),
+            ("02-listening", { store.reset(); VoiceHUDState.shared.mode = .listening(partial: "このページからタスクを作って…") }),
+            ("03-task-dock", {
+                store.reset()
+                store.startTask(AgentTask(
+                    id: UUID(), title: "週次ブリーフィングを作る", status: .running,
+                    steps: [AgentStep(title: "Calendar", tool: "calendar", state: .success),
+                            AgentStep(title: "Gmail", tool: "gmail", state: .running),
+                            AgentStep(title: "Notion", tool: "notion")],
+                    startedAt: Date(), context: ContextBundle(items: [])))
+            }),
+            ("04-meeting", {
+                store.reset(); store.meetingDetected(app: "Google Meet")
+                store.meetingStarted(id: "geometry-selftest")
+            }),
+            ("05-meeting-notes", { VoiceHUDState.shared.toggleMeetingPanel(.notes) }),
+            ("06-workspace", {
+                recording.loadDemo(ragOpen: false)
+                WindowCoordinator.shared.showRecordingWorkspace()
+            }),
+        ]
+    }
+
+    /// `--selftest occupation`: **面は宣言した寸法より大きくならない。**
+    ///
+    /// screen_occupation を採点者に訊くと、版面を見て面積を**推論**する
+    /// （craft3 で 3 人が「C は背が高い」と言い、実寸は 3 枚とも同じだった。
+    /// sample11〜17 では 5 型中 3 型が cannot tell）。面積は測るものなので、
+    /// 6 状態の窓の実寸を `shared/design/tokens.json` の寸法（`Metrics`）と
+    /// 突き合わせ、超えたら落とす。`geometry` の基準は `--record` で書き直せるが、
+    /// ここの上限は token を変えない限り動かない。
+    ///
+    /// 占有の割合は 1440x900（13 インチの最小の画面）に対して出す。
+    /// 数字は証拠として残す（Evidence A）。採点者の占有票は使わない。
+    @MainActor
+    private static func occupationGate() {
+        guard AXIsProcessTrusted() else {
+            print("SELFTEST_SKIP occupation: AX not trusted（実寸を読めない）"); exit(0)
+        }
+        _ = GlobalShortcut.shared.register(handler: {})
+        func settle(_ sec: Double) {
+            let until = Date().addingTimeInterval(sec)
+            while Date() < until { CFRunLoopRunInMode(.defaultMode, 0.05, true) }
+        }
+        let dockKey = "window:AstraPanel<VoiceTaskDockView>"
+        let workspaceKey = "window:AstraPanel<RecordingWorkspaceView>"
+        // 状態ごとの上限（token）。03 の agent は行数で伸びるので、出している 3 行ぶん。
+        let ceilings: [String: [(String, CGFloat, CGFloat)]] = [
+            "01-idle": [(dockKey, Metrics.dockIdleWidth, Metrics.dockIdleHeight)],
+            "02-listening": [(dockKey, Metrics.dockListeningWidth, Metrics.dockListeningHeight)],
+            "03-task-dock": [(dockKey, Metrics.dockAgentWidth, Metrics.dockAgentHeightBase + Metrics.dockAgentRowHeight * 3)],
+            "04-meeting": [(dockKey, Metrics.dockMeetingWidth, Metrics.dockMeetingHeight)],
+            "05-meeting-notes": [(dockKey, Metrics.dockMeetingWidth, Metrics.dockMeetingExpandedHeight)],
+            "06-workspace": [(dockKey, Metrics.dockMeetingWidth, Metrics.dockMeetingExpandedHeight),
+                             (workspaceKey, Metrics.workspaceWidth, Metrics.workspaceHeight)],
+        ]
+        let refW = 1440.0, refH = 900.0
+
+        AstraStateStore.shared.reset()
+        WindowCoordinator.shared.showVoiceHUD()
+        var fail: [String] = []
+        var measured = 0
+        for (name, present) in geometryStates() {
+            present()
+            settle(1.2)
+            guard let snap = UIGeometry.snapshot() else { fail.append("\(name): 実寸を読めない"); continue }
+            for (key, maxW, maxH) in ceilings[name] ?? [] {
+                guard let box = snap[key] else { fail.append("\(name): \(key) が出ていない"); continue }
+                measured += 1
+                let share = box.w * box.h / (refW * refH) * 100
+                let short = key.replacingOccurrences(of: "window:AstraPanel<", with: "").replacingOccurrences(of: ">", with: "")
+                print(String(format: "OCCUPATION %@ %@: %.0fx%.0fpt = %.1f%% of 1440x900（上限 %.0fx%.0f）",
+                             name, short, box.w, box.h, share, maxW, maxH))
+                // 0.5pt は AX の丸め。1pt を超えて上限より大きければ、面が育っている。
+                if box.w > Double(maxW) + 1 || box.h > Double(maxH) + 1 {
+                    fail.append(String(format: "%@ %@ %.0fx%.0f > 上限 %.0fx%.0f", name, short, box.w, box.h, maxW, maxH))
+                }
+            }
+        }
+        WindowCoordinator.shared.hideRecordingWorkspace()
+        WindowCoordinator.shared.hideVoiceHUD()
+        AstraStateStore.shared.reset()
+
+        if fail.isEmpty {
+            print("SELFTEST_OK occupation: \(measured)面の実寸が token の上限以内")
+            exit(0)
+        }
+        for f in fail { print("OCCUPATION FAIL \(f)") }
+        print("SELFTEST_FAIL occupation: \(fail.count)面が宣言した寸法より大きい")
+        exit(2)
+    }
+
     /// `--selftest geometry <reference-dir> [--record]`:
     /// **6 状態の実寸を pt で測り、基準と 2pt で突き合わせる。**
     ///
@@ -1205,32 +1304,8 @@ enum SelfTest {
         }
 
         let store = AstraStateStore.shared
-        let recording = RecordingWorkspaceState.shared
         WindowCoordinator.shared.showVoiceHUD()
-
-        // 6 状態。名前は正解画像（task-dock/）と揃える。
-        let states: [(String, () -> Void)] = [
-            ("01-idle", { store.reset(); VoiceHUDState.shared.mode = .idle }),
-            ("02-listening", { store.reset(); VoiceHUDState.shared.mode = .listening(partial: "このページからタスクを作って…") }),
-            ("03-task-dock", {
-                store.reset()
-                store.startTask(AgentTask(
-                    id: UUID(), title: "週次ブリーフィングを作る", status: .running,
-                    steps: [AgentStep(title: "Calendar", tool: "calendar", state: .success),
-                            AgentStep(title: "Gmail", tool: "gmail", state: .running),
-                            AgentStep(title: "Notion", tool: "notion")],
-                    startedAt: Date(), context: ContextBundle(items: [])))
-            }),
-            ("04-meeting", {
-                store.reset(); store.meetingDetected(app: "Google Meet")
-                store.meetingStarted(id: "geometry-selftest")
-            }),
-            ("05-meeting-notes", { VoiceHUDState.shared.toggleMeetingPanel(.notes) }),
-            ("06-workspace", {
-                recording.loadDemo(ragOpen: false)
-                WindowCoordinator.shared.showRecordingWorkspace()
-            }),
-        ]
+        let states = geometryStates()
 
         var problems: [(String, [String])] = []
         var recorded = 0
