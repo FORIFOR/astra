@@ -628,17 +628,27 @@ private struct ConfirmationDock: View {
                 }
             }
             if let preview = edited["__preview"] ?? confirmation.preview {
-                // 長ければ**ここだけ**流す。面ごと大きくしない。
-                ScrollView {
-                    Text(preview)
-                        .font(.system(size: S.type(Metrics.dockRowSize)))
-                        .lineSpacing(3)
-                        .foregroundStyle(Palette.muted(dark))
+                let body = Text(preview)
+                    .font(.system(size: S.type(Metrics.dockRowSize)))
+                    .lineSpacing(3)
+                    .foregroundStyle(Palette.muted(dark))
+                // 収まるなら流さない。ScrollView を置くだけで摘みが出て、
+                // 1 行の下見の右肩に**動かせそうな灰色の棒**が残る。
+                // 長いときだけ**ここだけ**流す。面ごと大きくしない。
+                if confirmation.previewOverflows {
+                    ScrollView {
+                        body
+                            .fixedSize(horizontal: false, vertical: true)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .frame(height: confirmation.previewHeight())
+                    .accessibilityIdentifier("confirmPreview")
+                } else {
+                    body
                         .fixedSize(horizontal: false, vertical: true)
                         .frame(maxWidth: .infinity, alignment: .leading)
+                        .accessibilityIdentifier("confirmPreview")
                 }
-                .frame(maxHeight: 66)
-                .accessibilityIdentifier("confirmPreview")
             }
             ForEach(confirmation.details, id: \.self) { d in
                 Text(d)

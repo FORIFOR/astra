@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 
 // 仕様書 §5 / §15 / §16 / §21 / §25 のデータモデル。
@@ -86,8 +87,7 @@ enum DockPresentation: Equatable {
             // 中身の行数から出す。固定だと 2 行の確認でも面の半分が空く。
             // **上限を置く。** 決断のための面が作業面ほど大きくなると、
             // 何を決めるのかが薄まる（外の製品に負けた理由がこれ）。
-            let h = Metrics.dockConfirmHeight
-                + CGFloat(max(0, confirmation.contentRows - 1)) * (Metrics.dockRowSize + 7)
+            let h = confirmation.surfaceHeight
             return CGSize(width: Metrics.dockConfirmWidth, height: min(360, h))
         case .meeting(let panel):
             return CGSize(width: Metrics.dockMeetingWidth,
@@ -297,13 +297,84 @@ struct ActionConfirmation: Identifiable, Equatable {
     let confirmLabel: String
 
     /// 面の高さは中身で決まる。**固定しない。**
+    ///
+    /// 下見はここに数えない。行数ではなく実寸で足す（`previewHeight`）。
     var contentRows: Int {
         var n = details.count
         if app != nil { n += 1 }
         n += params.count
-        if preview != nil { n += 2 }
         if source != nil { n += 1 }
         return n
+    }
+
+    /// 字の 1 行が占める高さ。数え間違いを避けるため font から取る。
+    private static func line(_ size: CGFloat, _ weight: NSFont.Weight = .regular) -> CGFloat {
+        let f = NSFont.systemFont(ofSize: size, weight: weight)
+        return ceil(f.ascender - f.descender + f.leading)
+    }
+
+    /// 折り返しを含めた高さ。
+    private static func box(_ text: String, size: CGFloat, weight: NSFont.Weight = .regular,
+                            width: CGFloat, lineSpacing: CGFloat = 0) -> CGFloat {
+        let para = NSMutableParagraphStyle()
+        para.lineSpacing = lineSpacing
+        return ceil((text as NSString).boundingRect(
+            with: CGSize(width: width, height: .greatestFiniteMagnitude),
+            options: [.usesLineFragmentOrigin, .usesFontLeading],
+            attributes: [.font: NSFont.systemFont(ofSize: size, weight: weight),
+                         .paragraphStyle: para]).height)
+    }
+
+    /// 下見の高さ。**中身で決まる。**
+    ///
+    /// `ScrollView` は差し出された高さを全部取る。`.frame(maxHeight: 66)` は
+    /// 上限であると同時に**下限**として働いていた。1 行の下見でも 66pt を占め、
+    /// さらに `contentRows` が別に 2 行ぶんを予約していたので、
+    /// 本文と出所の間に穴が空いた（`docs/ux-benchmark/auto/CRAFT.md` ③、実測 40pt）。
+    func previewHeight(width: CGFloat = ActionConfirmation.contentWidth) -> CGFloat {
+        guard let preview, !preview.isEmpty else { return 0 }
+        // 長ければ**そこだけ**流す。面ごと大きくしない。
+        return min(66, Self.box(preview, size: Metrics.dockRowSize, width: width, lineSpacing: 3))
+    }
+
+    /// 下見が 66pt に収まりきらないか。収まるなら `ScrollView` を置かない。
+    var previewOverflows: Bool {
+        guard let preview, !preview.isEmpty else { return false }
+        return Self.box(preview, size: Metrics.dockRowSize,
+                        width: Self.contentWidth, lineSpacing: 3) > 66
+    }
+
+    /// 中身が使える幅。左右の余白を引いたもの。
+    static var contentWidth: CGFloat { Metrics.dockConfirmWidth - (Metrics.dockPadH + 2) * 2 }
+
+    /// 面の高さ。**`ConfirmationDock` が縦に積むものを、そのまま足す。**
+    ///
+    /// もとは `176 + (行数-1) * 22` という推定式だった。基準の 176 が
+    /// 何を含むのか誰も言えないまま行数の数え方だけ変わっていったので、
+    /// 中身より 40pt 高い面ができ、余りが `Spacer` に吸われて
+    /// 出所とボタンの間に穴として出た（実測 57.5pt、他の段の間は 8〜12pt）。
+    ///
+    /// 積むものが変わったらここも変える。**式と view がずれたら、必ずどちらかが余る。**
+    var surfaceHeight: CGFloat {
+        let w = Self.contentWidth
+        let gap: CGFloat = 9        // 外側 VStack の spacing
+        let inner: CGFloat = 5      // readOnly VStack の spacing
+
+        var content: CGFloat = 0
+        var rows = 0
+        func stack(_ h: CGFloat) { content += h + (rows > 0 ? inner : 0); rows += 1 }
+        for p in params { stack(max(Self.line(10.5), Self.line(Metrics.dockRowSize))) ; _ = p }
+        if preview != nil { stack(previewHeight(width: w)) }
+        for d in details { stack(Self.box(d, size: Metrics.dockRowSize, width: w)) }
+        if source != nil { stack(Self.line(11)) }
+
+        var h: CGFloat = 12 + 12                                    // 上下の余白
+        h += (app != nil ? Self.line(12, .semibold) + gap : 0)      // ① どのアプリ
+        h += Self.box(title, size: 19, weight: .semibold, width: w) // ② 何が起きるか
+        h += gap + Self.line(10.5)                                  // 「外部に出る」の段
+        h += (rows > 0 ? gap + content : 0)                         // ③④⑤
+        h += gap + 32                                               // ⑥ 操作
+        return h
     }
 }
 

@@ -49,6 +49,18 @@ for ng in "文字起こし" "決まったこと" "最近の会議" "Library" "Pl
 done
 say "✓" "決断に不要なもの（履歴・会議ノート・sidebar）が無い"
 
+# ③ 行の揃い。**穴が空いていないか。**
+# 面の高さを推定式で出していたころ、中身より 40pt 高い面ができ、
+# 余りが Spacer に吸われて段の間に穴として出ていた。式と view がずれても
+# 文字は全部出るので、上の OCR だけでは通ってしまう。
+if python3 "$ROOT/scripts/ux-auto/alignment.py" "$shot" > "$OUT/align.txt" 2>&1; then
+  say "✓" "$(grep -m1 '中身の間の中央値' "$OUT/align.txt" | sed 's/^ *//')"
+else
+  say "✗" "段の間に穴がある"
+  sed -n '/穴が/,$p' "$OUT/align.txt" | sed 's/^/    /'
+  fail=1
+fi
+
 # 窓を増やしていないこと。
 wins=$(grep -c "窓" "$OUT/log.txt" 2>/dev/null || true)
 if grep -q "窓は常に1枚" "$OUT/log.txt"; then say "✓" "窓を増やしていない（同じ面が morph）"; else
