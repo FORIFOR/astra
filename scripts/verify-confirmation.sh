@@ -49,6 +49,18 @@ for ng in "文字起こし" "決まったこと" "最近の会議" "Library" "Pl
 done
 say "✓" "決断に不要なもの（履歴・会議ノート・sidebar）が無い"
 
+# ⑤ 主たる操作を、逃げ道より小さくしない。
+# 「送る」は 2 文字、Cancel は 6 文字。padding だけで決めると、
+# 字数で重さが決まってしまい、実測で Cancel 76pt > 送る 68pt になっていた。
+# 宣言値でも「墨 + padding」の推定でもなく、**描かれた矩形**を測る。
+if ! "$ROOT/scripts/ux-auto/primary.py" "$shot" > "$OUT/primary.txt" 2>&1; then
+  say "✗" "$(head -1 "$OUT/primary.txt")"
+  sed -n '2,$p' "$OUT/primary.txt" | sed 's/^/    /'
+  fail=1
+else
+  say "✓" "$(head -1 "$OUT/primary.txt")"
+fi
+
 # ③ 行の揃い。**穴が空いていないか。**
 # 面の高さを推定式で出していたころ、中身より 40pt 高い面ができ、
 # 余りが Spacer に吸われて段の間に穴として出ていた。式と view がずれても

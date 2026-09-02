@@ -347,3 +347,66 @@ revert。`Spacing` も消した。
 
 ※ Judge 2 は grouped で出所の `›` が消えていると書いたが、OCR は両方で
 `＞` を読んでいる。事実誤り。今回は revert なので結論に影響しない。
+
+---
+
+# ⑤ ボタンの寸法 — 採用
+
+実測から始めた。宣言値は「3 つとも高さ 32pt、左右の余白 14/14/20」。
+そこから出る**実際の当たり判定**は:
+
+```
+Cancel  76 x 32pt
+Edit    58 x 32pt
+送る    68 x 32pt   ← 主たる操作が、逃げ道より小さい
+```
+
+「送る」は 2 文字、Cancel は 6 文字。padding だけで大きさを決めると
+**字数で重さが決まる**。日本語の主たる操作は短くなりがちなので、
+padding 方式のままでは英語の逃げ道に負け続ける。
+
+`confirmPrimaryMinWidth: 96` を token に足して下から支えた（68 → 96pt）。
+
+## 目では見えない差だった
+
+3 人とも「before でも 送る が最も広い」と答えた。**実測では負けている。**
+Judge 1 は根拠まで書いていて、そこに理由がある:
+
+> 「送る の幅 68px に対し Cancel の**文字**は 45px」
+
+塗られた矩形と、文字の墨を比べている。**目は塗られた矩形を見るが、
+指が当たるのは押せる矩形のほう。** Cancel は塗りが無いだけで、
+実際には 76pt ぶん押せる。採点者に当たり判定は測れない。
+
+```
+primary_action_salience   after 1 : before 0  (tie 2)
+error_prevention          after 1 : before 0  (tie 2)
+control_visibility        after 0 : before 0  (tie 3)
+visual_craft              after 1 : before 1  (tie 1)
+overall                   after 1 : before 0  (tie 2)
+```
+
+負けは無い。採用。
+
+## ゲートにした ——「壊しても落ちない」を 1 回作った
+
+`scripts/ux-auto/primary.py`。塗られた矩形を `tools/ux-lab/rect` で画素から測り、
+逃げ道（塗りが無いので墨 + 左右 14pt）と比べる。
+
+最初の版はラベル名で逃げ道を拾っていた（`$2=="Cancel"`）。
+minWidth を 40 に落として試したら、OCR が `Cancell` と読んだ回に
+完全一致が外れ、より狭い Edit と比べて **PASS した**。
+壊しても落ちないゲートを作っていた。
+
+いまは**塗りと同じ高さの帯に居る文字を全部**逃げ道として数える。
+40 / 70 / 96 の 3 通りで確かめた。
+
+```
+minWidth=40   ✗ 主 68pt が逃げ道 76pt（Cancell）より小さい
+minWidth=70   ✗ 主 70pt が逃げ道 74pt（Cancel）より小さい
+minWidth=96   ✓ 主 96x32pt が逃げ道 76pt（Cancel）以上
+```
+
+※ Judge 2 は「after で出所の `›` が消えている」と書いた。④ でも同じことを
+書いており、2 回とも事実誤り。Judge 1 の画素差分が
+「違うのは操作の行だけ（x 309-517, y 192-224）」と示している。

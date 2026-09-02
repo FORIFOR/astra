@@ -1,0 +1,22 @@
+{
+  "observations": {
+    "widest_control": "8F41: 送る, C29D: 送る",
+    "primary_width": "cannot tell",
+    "row_balance": "8F41: balanced, C29D: balanced",
+    "content_lost": "none"
+  },
+  "winners": {
+    "primary_action_salience": "tie",
+    "error_prevention": "tie",
+    "control_visibility": "tie",
+    "visual_craft": "tie",
+    "overall": "tie"
+  },
+  "why": {
+    "primary_action_salience": "Both emphasize 送る equally as the widest and primary control",
+    "error_prevention": "Both provide equal Cancel and Edit affordances",
+    "control_visibility": "All three controls are equally visible and accessible in both variants",
+    "visual_craft": "Both cards are polished with identical styling and layout",
+    "overall": "The two images appear virtually identical in layout, styling, content, and control distribution. No meaningful differences detected."
+  }
+}

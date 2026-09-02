@@ -582,10 +582,16 @@ private struct ConfirmationDock: View {
                             .accessibilityIdentifier("confirmEdit")
                     }
                     // 外へ出る操作は、押す先が一目で分かる面にする。
+                    //
+                    // **主たる操作を、逃げ道より小さくしない。**
+                    // 「送る」は 2 文字なので、padding だけ足しても 70pt にしかならず、
+                    // 6 文字の Cancel（76pt）に負けていた（実測）。字数で重さが
+                    // 決まってしまうので、最小幅で下から支える。
                     Button(confirmation.confirmLabel) { AstraStateStore.shared.resolveConfirmation(approved: true) }
                         .font(.system(size: S.type(Metrics.dockRowSize), weight: .semibold))
                         .foregroundStyle(.white)
                         .frame(height: 32).padding(.horizontal, 20)
+                        .frame(minWidth: S.metric(Metrics.dockConfirmPrimaryMinWidth))
                         .background(RoundedRectangle(cornerRadius: 7, style: .continuous).fill(riskTint))
                         .buttonStyle(AstraControlStyle(radius: 7, base: 0.0, filled: false))
                         .accessibilityIdentifier("confirmProceed")

@@ -2,7 +2,7 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 OUT="$ROOT/.build/uxlab"; mkdir -p "$OUT"
-for t in ocr uxin winrect calm clicktest axpress motion framediff; do
+for t in ocr uxin winrect calm clicktest axpress motion framediff rect; do
   src="$ROOT/tools/ux-lab/$t.swift"
   if [ ! -x "$OUT/$t" ] || [ "$src" -nt "$OUT/$t" ]; then
     swiftc -O -o "$OUT/$t" "$src"

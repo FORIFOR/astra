@@ -58,6 +58,7 @@ const FIELDS = [
   ['dockResultHeight', h.resultHeight],
   ['dockConfirmWidth', h.confirmWidth],
   ['dockConfirmHeight', h.confirmHeight],
+  ['dockConfirmPrimaryMinWidth', h.confirmPrimaryMinWidth],
   ['dockMeetingWidth', h.meetingWidth],
   ['dockMeetingHeight', h.meetingHeight],
   ['dockMeetingExpandedHeight', h.meetingExpandedHeight],
