@@ -41,6 +41,7 @@ enum SelfTest {
         case "focus": focusGate(); return true
         case "journey": journeyGate(args); return true
         case "idle-hold": idleHold(args); return true
+        case "confirmflow": confirmFlow(); return true
         case "hold-meeting": holdMeeting(args); return true
         case "upgrade": upgradeGate(); return true
         case "update": updateCheck(); return true
@@ -1268,6 +1269,67 @@ enum SelfTest {
         fflush(stdout)
         DispatchQueue.main.asyncAfter(deadline: .now() + secs) { exit(0) }
         RunLoop.main.run()
+    }
+
+    /// `--selftest confirmflow`: **確認の面の受け入れ条件**を実際に動かして見る。
+    ///
+    /// 撮った絵だけでは、鍵盤の割り当ても、直してから戻れるかも分からない。
+    /// 「宣言してあるが効いていない」を避けるため、状態で確かめる。
+    @MainActor
+    static func confirmFlow() {
+        let store = AstraStateStore.shared
+        var fail: [String] = []
+        func settle(_ s: Double) {
+            let u = Date().addingTimeInterval(s)
+            while Date() < u { CFRunLoopRunInMode(.defaultMode, 0.05, true) }
+        }
+        WindowCoordinator.shared.showVoiceHUD()
+        settle(0.5)
+        let before = NSApp.windows.filter { $0.isVisible }.count
+        let frontBefore = NSWorkspace.shared.frontmostApplication?.localizedName
+
+        let c = ActionConfirmation(
+            app: "Gmail", appIcon: "envelope",
+            title: "このメッセージを送りますか？",
+            params: [.init(label: "宛先", value: "ken@example.com"),
+                     .init(label: "件名", value: "リリース予定")],
+            preview: "明日 macOS 版を出します。",
+            source: .init(title: "週次同期", speaker: "Ken", time: "10:42"),
+            details: [], risk: .r2, confirmLabel: "送る")
+        store.requireConfirmation(c)
+        settle(0.6)
+
+        // ① 窓を増やしていないか。**同じ面が morph する**のが条件。
+        let after = NSApp.windows.filter { $0.isVisible }.count
+        if after != before { fail.append("窓が \(before) → \(after) に増えた") }
+
+        // ② 焦点を奪っていないか。
+        let frontAfter = NSWorkspace.shared.frontmostApplication?.localizedName
+        if frontBefore != frontAfter { fail.append("前面が \(frontBefore ?? "?") → \(frontAfter ?? "?") に変わった") }
+
+        // ③ 面の大きさが決断向きか。
+        let size = store.dock.size()
+        if size.width > 620 { fail.append("幅 \(Int(size.width))pt（620 超）") }
+        if size.height > 360 { fail.append("高さ \(Int(size.height))pt（360 超）") }
+
+        // ④ 高さが中身で決まるか。**中身を減らして縮まなければ固定と同じ。**
+        let small = ActionConfirmation(app: "Gmail", title: "送りますか？",
+                                       details: [], risk: .r2, confirmLabel: "送る")
+        store.resolveConfirmation(approved: false); settle(0.2)
+        store.requireConfirmation(small); settle(0.3)
+        let smallSize = store.dock.size()
+        if !(smallSize.height < size.height) {
+            fail.append("中身を減らしても高さが変わらない（\(Int(size.height)) → \(Int(smallSize.height))）")
+        }
+
+        // ⑤ 取り消しで元へ戻るか。
+        store.resolveConfirmation(approved: false); settle(0.3)
+        if case .confirmation = store.dock { fail.append("取り消しても確認の面が残る") }
+
+        print(fail.isEmpty
+              ? "SELFTEST_OK confirmflow: 窓を増やさない・焦点を奪わない・\(Int(size.width))x\(Int(size.height))pt・高さは中身で決まる（\(Int(size.height))→\(Int(smallSize.height))）・取り消しで戻る"
+              : "SELFTEST_FAIL confirmflow: " + fail.joined(separator: " / "))
+        exit(fail.isEmpty ? 0 : 1)
     }
 
     /// `--selftest idle-hold <秒>`: **普段の姿のまま置いておく。**

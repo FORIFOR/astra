@@ -571,6 +571,20 @@ private struct ConfirmationDock: View {
         .padding(.horizontal, S.metric(Metrics.dockPadH) + 2)
         .padding(.vertical, 12)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        // Escape は取消。直している最中なら、直すのをやめて確認へ戻る。
+        // **逃げ道は常に同じ鍵**でないと、危ないときに手が止まる。
+        .onExitCommand {
+            if editing { editing = false; edited = [:] }
+            else { AstraStateStore.shared.resolveConfirmation(approved: false) }
+        }
+        // Return では実行しない。**押し慣れた鍵で外へ出る操作が走るのは危ない。**
+        // 実行は ⌘Return だけ。
+        .background(
+            Button("") { AstraStateStore.shared.resolveConfirmation(approved: true) }
+                .keyboardShortcut(.return, modifiers: .command)
+                .opacity(0)
+                .accessibilityHidden(true)
+        )
     }
 
     /// ③ 決定的な値 ④ 中身の下見 ⑤ 出所。

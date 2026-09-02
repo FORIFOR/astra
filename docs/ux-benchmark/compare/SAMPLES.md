@@ -262,3 +262,27 @@ error_prevention       3-0   外へ出る操作だと明示 ＋ 本文が全部�
 provenance_visibility  3-0   出所 週次同期 · 田中 · 10:42 ›
 preview_readability    3-0   本文が切れない
 ```
+
+## 受け入れ条件の残り（絵では分からない分）
+
+撮った絵で見られるのは階層と寸法まで。鍵盤の割り当ても、窓を増やしていないかも、
+高さが中身で決まるかも、絵には写らない。`--selftest confirmflow` で実際に動かす。
+
+```
+same NSPanel / new window 0     ✓ 窓の数が変わらないことを実測
+focus theft 0                   ✓ 前面のアプリが変わらないことを実測
+width <= 620pt                  ✓ 560
+height <= 360pt                 ✓ 286
+content-driven height           ✓ 中身を減らすと 286 → 176 に縮む
+Escape = Cancel                 ✓ 実装（直している最中なら、直すのをやめる）
+Return ≠ 破壊的な自動実行        ✓ Return には何も割り当てない
+Cmd+Return = 実行               ✓ 実装
+取り消しで元へ戻る              ✓ 実測
+app / consequence / params /
+preview / source / 3 つの操作    ✓ OCR で実測
+決断に不要なものが無い          ✓ OCR で実測
+```
+
+**この検査自体が落ちることを確かめた。** 面を 900x400 に広げると
+「幅 900pt（620 超）／高さ 400pt（360 超）／中身を減らしても高さが変わらない」
+の 3 点で落ちる。

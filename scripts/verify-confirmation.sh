@@ -54,5 +54,13 @@ wins=$(grep -c "窓" "$OUT/log.txt" 2>/dev/null || true)
 if grep -q "窓は常に1枚" "$OUT/log.txt"; then say "✓" "窓を増やしていない（同じ面が morph）"; else
   say "·" "窓の数は dock8 の出力で確認"; fi
 
+# 撮った絵では分からないもの（窓・焦点・高さが中身で決まるか・取り消し）は
+# 実際に動かして見る。宣言してあるが効いていない、を避ける。
+echo
+out="$("$BIN" --selftest confirmflow 2>&1 | tail -1)"
+pkill -9 -f AstraMac 2>/dev/null
+if echo "$out" | grep -q SELFTEST_OK; then say "✓" "${out#SELFTEST_OK confirmflow: }"
+else say "✗" "$out"; fail=1; fi
+
 echo
 if [ "$fail" = "0" ]; then echo "CONFIRMATION_GATE=PASS"; else echo "CONFIRMATION_GATE=FAIL"; exit 1; fi
