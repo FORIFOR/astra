@@ -98,14 +98,21 @@ DS-01〜05（同 末尾、`docs/ux-benchmark/compare/SAMPLES.md` Sample 11〜16�
   上限を 190 に下げて走らせると `03-task-dock 720x271 > 上限 720x190` で落ちる
   （ゲートが効くことを先に見た）。
 
-## いまの立ち位置（sample11〜16、有効 5 型）
+## いまの立ち位置（sample11〜18、6 型）
 
 ```
-visual_craft 3/5（前 2/6）  hierarchy 4/4  state 3/3  provenance 4/5
-fragmentation 3/4  control 3/5  density 2/4  occupation 1/5（3 型 cannot tell）
+visual_craft 4/6（前 2/6、raw 3/6）  hierarchy 5/5  state 3/3  provenance 5/6
+fragmentation 3/5  control 3/5  density 2/5  occupation → §7 の寸法ゲート
 action_confirmation  Astra 6 / VoiceOS 0 / 引分 1
 ```
 
-DS の外の課題のうち片付いたもの: post_meeting の戻る手段と fixture の量（547dd40）、
+sample11〜16 の時点は craft 3/5・hierarchy 4/4・provenance 4/5・fragmentation 3/4・
+density 2/4（`compare/aggregate.json` の履歴）。
+
+DS の外の課題は 4 つとも片付いた: post_meeting の戻る手段と fixture の量（547dd40）、
 meeting_controller の標本の切り抜き（sample17: 4/1/2、craft は引分）、
-screen_occupation の寸法ゲート化（§7）。残るのは transcript_attribution の競合素材。
+screen_occupation の寸法ゲート化（§7）、transcript_attribution の競合素材
+（sample18: 動画 webp の 30 コマ目。5 軸で Astra 3 / 競合 1 / 引分 1）。
+6 型を揃えた visual_craft は **Astra 4 / 競合 1 / 引分 1**（raw 3 / 2 / 1）。
+唯一残る負け筋は fragmentation の「上部の黒いバーが本体と別の窓に見える」で、
+これは造形⑧で選んだ側（凹みに食い込む Dock）。戻さない。

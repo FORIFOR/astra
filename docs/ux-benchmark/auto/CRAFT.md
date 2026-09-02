@@ -800,7 +800,7 @@ fixture の中身が 3 行で下半分が空（中身の量）。**DS-01〜03 �
 ```
 post_meeting         詳細画面に戻る手段が無い / fixture の中身が薄い   → 547dd40（戻る chevron・sidebar で出られる・発言 8 行）
 meeting_controller   標本の切り抜きに「録音中」を含める（900x120 → 左端から） → sample17（Astra 4 / 競合 1 / 引分 2、craft 引分）
-transcript_attribution  競合素材を取り直す                              → 未
+transcript_attribution  競合素材を取り直す                              → sample18（動画 webp の 30 コマ目。5 軸で Astra 3 / 競合 1 / 引分 1）
 screen_occupation    judge では測れない。寸法上限の selftest で見る     → --selftest occupation（DESIGN_SYSTEM §7）
 ```
 

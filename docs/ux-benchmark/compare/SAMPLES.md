@@ -420,3 +420,64 @@ density が「tie 2 票」→「競合 1 / tie 1」へ動いた。Sample 14 と�
 - 120px の帯なので、Astra 側は上のカードの始まりが写らず「空きが目立つ」（opus の density）
 - 面積は絵から測れない（sonnet: cannot tell）。占有は `--selftest occupation` で見る
 ```
+
+---
+
+# Sample 18: transcript_attribution の競合素材を取り直す（2026-09-02）
+
+Sample 08 / 15 の競合画像（`superintern/public/speaker-diarization.png`）が空の白い
+パネルだった理由が分かった。元の `speaker-diarization.webp`（v0.10 の公式ブログ、
+話者分離のデモ）は **53 コマの動画**で、`.png` はその 1 コマ目。中身が出るのは
+4 コマ目から。**30 コマ目**（You / Mike / Lisa の 3 行の時間軸と波形が揃う）を
+`speaker-diarization-frame30.png` として取り、Astra は今日の
+`04-recording-transcript`（Sample 15 の絵と同じ状態）で採点した。
+
+```
+Sample 18  transcript_attribution  SuperIntern 話者分離デモ（30 コマ目）
+  raw          Astra 4 / 競合 1 / 引分 2 / cannot tell 1
+  実測後       Astra 5 / 競合 1 / 引分 1 / cannot tell 1
+```
+
+## 軸別
+
+```
+information_hierarchy   D07B D07B   → Astra
+surface_fragmentation   4F2E 4F2E   → 競合（「上部の黒いバーが本体と別の窓に見える」「区画が多い」）
+screen_occupation       ct   ct     → cannot tell
+state_legibility        D07B D07B   → Astra ※素材限界
+control_visibility      D07B D07B   → Astra ※素材限界
+visual_density          tie  tie    → 引分
+visual_craft            4F2E D07B   → raw は割れて引分、**opus の観察を実測で棄却して Astra**
+provenance_visibility   D07B D07B   → Astra
+```
+
+## 集計に入れる軸と入れない軸
+
+競合画像は **デモの図**で、文字起こしの本文も操作も写っていない（sonnet:
+「単体の可視化コンポーネントに近く画面全体の文脈が読み取れない」）。
+「撮られた状態に見えないことを製品に無いと読まない」（`superintern/public/sources.md`）
+ので、**state_legibility / control_visibility / screen_occupation はこの型では
+数えない**。action_confirmation を共通 4 軸だけで数えたのと同じ扱い。
+集計に入れるのは hierarchy / fragmentation / density / craft / provenance の 5 軸。
+
+## visual_craft の opus 票を捨てた理由
+
+opus の弁は「右下 4 ボタンの左右で背景の濃さが違い」。4 つのボタンの塗りを
+画素で測ると **236 / 236 / 237 / 237**（RGB、文字を避けた 10x9 の平均）。
+同じ色。観察が実測と矛盾したのでこの軸の票を捨てる（Sample 17 と同じ規則）。
+残る sonnet の票は D07B。ただし sonnet の理由（「4F2E はバーの区間位置が
+やや不揃い」）は時間軸の図では区間がずれているのが正しいので、**弱い**。
+1 名の弱い理由で取った craft として読む。
+
+opus のもう 1 つの craft の弁「上部バーの被りも雑に見える」は、Task Dock が
+Workspace の凹みに食い込む造形⑧の設計そのもの。DS-04 で 3/3 で選んだ側なので
+戻さない。fragmentation の負けも同じ観察から来ている（2 名一致）。
+
+## 限界
+
+```
+- 競合はデモの図。製品の文字起こし画面ではない。話者分離の「表示」の比較であって
+  「面」の比較ではない
+- Astra の面は Workspace 全体（1080x680）、競合は 820x480 のカード。占有は測れない
+- craft は 1 名の票
+```

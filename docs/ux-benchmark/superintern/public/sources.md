@@ -7,6 +7,8 @@
 | `ai-canvas-live-summary.webp` | AI Canvas のライブ要約 | https://super-intern.com/blog/v0-14update/ai-canvas-live-summary.webp | 2026-09-02 | v0.14 | **OFFICIAL_PRODUCT_UI**。540x480 |
 | `control-bar.webp` | Control Bar + 設定 | https://super-intern.com/blog/v0-14update/control-bar.webp | 2026-09-02 | v0.14 | **OFFICIAL_PRODUCT_UI**。1226x790 |
 | `hero-videocall-mock.webp` | （参考） | https://super-intern.com/hero/meeting-window.webp | 2026-09-02 | — | **UI ではない**。hero の背景素材 |
+| `speaker-diarization.webp` | 話者分離のデモ | https://super-intern.com/en/blog/v0-10update（記事内画像） | 2026-09-02 | v0.10 | **53 コマの動画 webp**。`speaker-diarization.png` は 1 コマ目で、**空の白いパネル**（sample08 / 15 はこれを採点して無効になった）。中身が出るのは 4 コマ目以降 |
+| `speaker-diarization-frame30.png` | 話者分離のデモ（30 コマ目） | 同上 | 2026-09-02 | v0.10 | You / Mike / Lisa の 3 行の時間軸と波形。**デモの図で、文字起こしの本文は写っていない**。sample18 の競合側 |
 
 ## 公式ページに書いてあること（2026-09-02 取得・本文のみ）
 
