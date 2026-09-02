@@ -1,0 +1,6 @@
+live_notes: 4D6A astra-HEAD (docs/golden-screenshots/11-meeting-canvas.png)  8508 competitor (docs/ux-benchmark/compare/sample11/images/56B4.png)
+captions: 33F9 astra-HEAD (docs/golden-screenshots/04-recording-transcript.png)  A7A4 competitor (docs/ux-benchmark/compare/sample12/images/CF32.png)
+meeting_controller: 56B8 astra-HEAD (CROP)  0DD0 competitor (docs/ux-benchmark/compare/sample17/images/B41C.png)
+post_meeting: D2B3 astra-HEAD (docs/golden-screenshots/08-meeting-detail.png)  D040 competitor (docs/ux-benchmark/compare/sample19/images/9B47.png)
+transcript_attribution: 2667 astra-HEAD (docs/golden-screenshots/04-recording-transcript.png)  34DC competitor (docs/ux-benchmark/compare/sample18/images/4F2E.png)
+action_confirmation: 400A astra-HEAD (docs/golden-screenshots/task-dock/07-confirmation.png)  A366 competitor (docs/ux-benchmark/compare/sample16/images/6A26.png)

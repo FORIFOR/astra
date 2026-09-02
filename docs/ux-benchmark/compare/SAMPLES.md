@@ -538,3 +538,90 @@ sidebar + 本文 + inspector の 3 列（§7.1 の設計）。occupation は Ast
 - occupation は撮影方法の差が出ている。判定は残すが読み替えない
 - 2 名 panel の ±2〜3 軸の揺れは Sample 14 → 19 にも含まれうる
 ```
+
+---
+
+# Sample 20 — 磨きの 7 チケット後に、型 6 種をもう一度測る（2026-09-03）
+
+516720c（全面で日本語）・5d97f90（Meeting Notes を実寸で）・d9d9f36（右下 4 ボタン →
+入力欄の 3 chip）・0e08dcc（Home の復旧行を一段下げる）・da0bd80（PLAN/CONTEXT の見出し、
+面の中の影を外す）のあとの絵で、DS-05 と同じ 6 型・同じ 2 名・同じ問い。
+**競合画像は各型の直前の標本と byte 一致**（sample11/12/16/17/18/19 から複製）。
+Astra 側は 6 型とも直前の標本と画素が違う。
+
+```
+4D6A  astra-HEAD  docs/golden-screenshots/11-meeting-canvas.png        8508 = sample11/56B4
+33F9  astra-HEAD  docs/golden-screenshots/04-recording-transcript.png  A7A4 = sample12/CF32
+56B8  astra-HEAD  03-recording-workspace を x=0 から 1080x120           0DD0 = sample17/B41C
+D2B3  astra-HEAD  docs/golden-screenshots/08-meeting-detail.png        D040 = sample19/9B47
+2667  astra-HEAD  docs/golden-screenshots/04-recording-transcript.png  34DC = sample18/4F2E
+400A  astra-HEAD  docs/golden-screenshots/task-dock/07-confirmation.png A366 = sample16/6A26
+```
+
+```
+Sample 20  live_notes              Astra 7 / 競合 0 / 引分 0 / ct 1     （Sample 11: 7 / 0）
+           captions                Astra 6 / 競合 0 / 引分 1 / ct 1     （Sample 12: 7 / 0）
+           meeting_controller      Astra 4 / 競合 2 / 引分 1 / ct 1     （Sample 17: 4 / 1 / 2 / 1）
+           post_meeting            Astra 4 / 競合 2 / 引分 1 / ct 1 ※   （Sample 19: 4 / 2 / 2 / 0）
+           transcript_attribution  Astra 5 / 競合 3 / 引分 0 / ct 0     （Sample 18: 5 / 1 / 1 / 1）
+           action_confirmation     Astra 6 / 競合 0 / 引分 1 / ct 1     （Sample 16: 6 / 0 / 1）
+```
+
+※ post_meeting の screen_occupation は sonnet が票を D040 に入れながら弁で
+「画面に対する比率は cannot tell」と書いた。弁と票が矛盾する判定はその軸で捨て、
+opus の ct と合わせて cannot tell にした（raw は 競合 3）。
+
+## 軸別（有効 6 型、1 型 = 1 票。分母は軸を問うた型の数、tie / ct は勝ちに数えない）
+
+```
+                        live  cap   ctrl   post   attr  conf   Sample 20   DS-05 最終
+information_hierarchy   A     A     A      A      A     —      5/5         5/5
+state_legibility        A     A     A      tie·ct A     —      4/5         5/5  (post は 1 票)
+provenance_visibility   A     A     C¹     A      A     A      5/6         5/6  (ctrl ct)
+surface_fragmentation   A     A     A      C      C     —      3/5         3/5
+control_visibility      A¹    A     A¹     C¹     A     A      5/6         4/6  (ctrl・post tie)
+visual_density          A     tie   C¹     A¹     C¹    —      2/5         2/5  (post・attr tie)
+visual_craft            A     A     C/A    A      A     A      5/6         5/6  (ctrl 引分)
+screen_occupation       ct    ct    ct     ct     C¹    ct     0/6         1/6  (ctrl 1 票)
+```
+
+¹ = 1 票（もう 1 名が tie か ct）。A = Astra、C = 競合。DS-05 最終 = sample11/12/17/19/18/16。
+
+## 変わった軸と、変わらなかった軸
+
+```
+control_visibility   4/6 → 5/6   live と ctrl が tie → Astra 1 票。post は tie → 競合 1 票
+                                 （sonnet「D040 には検索・共有・メモ追加・Ask anything が同時に見える」）
+provenance           ctrl ct → 競合 1 票（opus「0DD0 はマイク/スピーカーの名前を出す。56B8 に出所が無い」）
+visual_craft         5/6 のまま。ctrl は opus が競合・sonnet が Astra で割れて引分（Sample 17 と同じ）
+transcript_attr      density が 引分 → 競合 1 票、occupation が ct → 競合 1 票（面の広さの弁）
+```
+
+craft の弁は自分に有利なので画素で 1 つ確かめた: captions/opus
+「33F9 は行の左端が揃い、時刻・話者・発言の 3 列が乱れていない」。
+`33F9.png` の右パネルの発言 3 行（y=245 / 287 / 308）の左端は **x=794 で全行一致**、
+左列の行も x=47 で揃っている。観察と矛盾しない。
+
+ctrl の opus craft 票「録音中 と波形が左下に孤立して他の要素と揃っていない」は
+Sample 17 で棄却した弁（文字と波形の高さ不揃い）とは別の主張で、120px の帯の中で
+ピルが中央・文字が左下にあるのは絵のとおり。棄却せず割れとして残す。
+
+## ここから言えること
+
+- 516720c〜da0bd80 の 5 コミットは **どの型も落としていない**。6 型の合計は
+  Astra 32 / 競合 7（DS-05 最終 33 / 4）。差分は ±2〜3 軸の panel 揺れの範囲で、
+  動いた軸の弁はどれも今回の変更（Notes の高さ・3 chip・復旧行・影・文言）を指していない。
+- 3 chip の弁は出ていない。control で live が Astra 1 票になった弁は
+  「赤い停止・一時停止・各行の『直す』」で、chip ではない。
+- 負けが固定している軸は 2 つ。**surface_fragmentation の post / attr**（sidebar +
+  本文 + inspector の 3 列、上に浮く Dock）と **screen_occupation**（窓だけ撮影 vs 壁紙の上の小窓。
+  judge では測れない。`--selftest occupation` で見る）。
+
+## 限界
+
+```
+- 同じ絵で ±2〜3 軸ぶれる panel なので、1 型の 1 票差は読まない
+- ctrl の帯は上のカードの始まりが写らない（Sample 17 と同じ限界）
+- 競合は DS-05 の素材のまま。取り直していない
+- 12 名分の弁は sample20/results/*.json、問いは sample20/prompts/*.md
+```

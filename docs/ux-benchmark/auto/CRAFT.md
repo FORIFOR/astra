@@ -75,7 +75,7 @@ overall                    b      c     base
 **色で割れた。** 採点者の言い分:
 
 > 「この面には『外部に出る』という札が amber で出ている。だから送るボタンも
->  amber だと、系として一貫する」
+> amber だと、系として一貫する」
 
 もっともなので、**色は変えず、争いのない部分だけ**採ることにした。
 
@@ -93,7 +93,7 @@ after 1 / before 3 → revert
 ```
 
 > 「取消（灰）・直す（強調）・実行（塗り）の 3 段があるほうが、
->  それぞれの重さが読める。両方を灰にすると 2 段になる」
+> それぞれの重さが読める。両方を灰にすると 2 段になる」
 
 **「目を引くものは 1 つだけ」という原則が、ここでは裏目に出た。**
 3 つの操作の**相対的な重さ**が読めるほうが、control_visibility は高い。
@@ -116,15 +116,15 @@ visual_craft は 6 種で 2/6 のまま。**次は ② 字面の階層**へ進�
 
 `docs/ux-benchmark/compare/craft3/`。3 案を伏せて 3 人（Sonnet×2 / Haiku×1）に採点させた。
 
-| 軸 | 1位 | 2位 | 3位 |
-| --- | --- | --- | --- |
-| role_legibility | **C** | A | B |
-| visual_craft | **C** | A | B |
-| information_hierarchy | **C** | A | B |
-| preview_readability | A | B | C |
-| provenance_visibility | A | B | C |
-| screen_occupation | A | B | C |
-| overall | **C** | A | B |
+| 軸                    | 1位   | 2位 | 3位 |
+| --------------------- | ----- | --- | --- |
+| role_legibility       | **C** | A   | B   |
+| visual_craft          | **C** | A   | B   |
+| information_hierarchy | **C** | A   | B   |
+| preview_readability   | A     | B   | C   |
+| provenance_visibility | A     | B   | C   |
+| screen_occupation     | A     | B   | C   |
+| overall               | **C** | A   | B   |
 
 下 3 軸の順位は採らなかった。理由は 2 つある。
 
@@ -148,13 +148,13 @@ B の変更（ラベル 11→10.5pt、濃度 0.72、出所 0.8）は**視認閾�
 
 ### 採用条件の照合
 
-| 条件 | 判定 |
-| --- | --- |
-| visual_craft 向上 | ✅ 3/3 一致で C |
-| information_hierarchy 低下なし | ✅ 向上 |
-| preview_readability 低下なし | ✅ 差が観測されない |
-| provenance_visibility 低下なし | ✅ 差が観測されない |
-| screen_occupation 増加なし | ✅ 実測 560x286 で同一 |
+| 条件                           | 判定                   |
+| ------------------------------ | ---------------------- |
+| visual_craft 向上              | ✅ 3/3 一致で C        |
+| information_hierarchy 低下なし | ✅ 向上                |
+| preview_readability 低下なし   | ✅ 差が観測されない    |
+| provenance_visibility 低下なし | ✅ 差が観測されない    |
+| screen_occupation 増加なし     | ✅ 実測 560x286 で同一 |
 
 C を既定にした（`VoiceHUDView.swift` の `TypeVariant` は削除）。
 CONFIRMATION_GATE = PASS（6 段すべて OCR で確認、560x286pt）。
@@ -665,17 +665,17 @@ hasShadow を持っていたら FAIL
 
 ## 採用 4 / revert 5
 
-| | 内容 | 結果 |
-| --- | --- | --- |
-| ① 際立ち | 実行=brand 色・直す=静かに | revert（control_visibility 0-3） |
-| ② 字面の階層 | 警告を題の下の独立した段へ | **採用**（visual_craft 3/3） |
-| ③ 行の揃い | 面の高さを推定式→実寸和 | **採用**（286→229pt） |
-| ④ 意味のある余白 | 群の中を詰め間を空ける | revert（tie 3） |
-| ⑤ ボタンの寸法 | 主たる操作に最小幅 96pt | **採用**（68→96pt） |
-| ⑥ 境界の線 | 中身と操作の間に白 10% | revert（3 人とも「線は無い」） |
-| ⑦ 角丸 | 柔らかく / 硬く | revert（2 人が cannot tell） |
-| ⑧ 影・奥行き | 接した面は浮かせない | **採用**（3/3、C 案は棄却） |
-| ⑨ 図形の重さ | 説明 < 押せる < 重い | **採用**（0.3% 差 → 33% 差） |
+|                  | 内容                       | 結果                             |
+| ---------------- | -------------------------- | -------------------------------- |
+| ① 際立ち         | 実行=brand 色・直す=静かに | revert（control_visibility 0-3） |
+| ② 字面の階層     | 警告を題の下の独立した段へ | **採用**（visual_craft 3/3）     |
+| ③ 行の揃い       | 面の高さを推定式→実寸和    | **採用**（286→229pt）            |
+| ④ 意味のある余白 | 群の中を詰め間を空ける     | revert（tie 3）                  |
+| ⑤ ボタンの寸法   | 主たる操作に最小幅 96pt    | **採用**（68→96pt）              |
+| ⑥ 境界の線       | 中身と操作の間に白 10%     | revert（3 人とも「線は無い」）   |
+| ⑦ 角丸           | 柔らかく / 硬く            | revert（2 人が cannot tell）     |
+| ⑧ 影・奥行き     | 接した面は浮かせない       | **採用**（3/3、C 案は棄却）      |
+| ⑨ 図形の重さ     | 説明 < 押せる < 重い       | **採用**（0.3% 差 → 33% 差）     |
 
 **採用されたものは全部、構造か寸法の誤りを直したもの。**
 飾りを足した ④⑥⑦ は 3 つとも動かなかった。
@@ -705,8 +705,8 @@ hasShadow を持っていたら FAIL
 
 > A「rounded card、**generous padding**、centered icon/button treatment が polished」
 > B「**elevated card**、rounded corners、**gradient dark surface**、**colorful brand icon**、
->    generous padding、**two clearly-chromed buttons**（filled + outlined）。
->    E7D5 は行が多く間隔が詰まっていて、Cancel/Edit は**ただの文字**」
+> generous padding、**two clearly-chromed buttons**（filled + outlined）。
+> E7D5 は行が多く間隔が詰まっていて、Cancel/Edit は**ただの文字**」
 > C「refined spacing、optical balance in button sizing、modern type hierarchy」
 
 挙がっているのは 5 つ。
@@ -750,13 +750,13 @@ surface composition / typographic rhythm / density / 素材感 —— であり�
 結びで「次はそこへ移る」と書いた先。部品ではなく規則を 4 つ決め、最後に
 型 6 種を測り直した。規則の正本は `docs/DESIGN_SYSTEM.md`。
 
-| | 規則 | 決め方 | 結果 |
-| --- | --- | --- | --- |
-| DS-01 surface composition | 面の高さ = 中身の実寸 + inset。推定式を持たない | 描いて測る（`DockContentMeasure`） | listening 120→71 / thinking 88→43 / result 150→122（DS-01 時点。DS-03 の padV 16 で listening は 79）。空きが面の 40〜60% を占めていた |
-| DS-02 typographic rhythm | 窓は `type` の 9 段、Dock は `dockType` の 6 段からしか取らない | lint（`lint-type-literals.mjs`、HEAD で 76 箇所落ちるのを見せてから 0） | Workspace の 9 段 → 6 段、Dock の題 18/19/20 → 20 |
-| DS-03 density | Dock の全状態の縁は `padH` / `padV`。縁は行間より広い | 実測（縁 12〜13 vs 行間 11.7 / 競合 20〜28 vs 9.5）→ 盲検 A/B（craft13） | padV 12→16。幅 520 は本文が折れて面積が減らず、測定で棄却 |
-| DS-04 素材感 | 地は平らな black 0.80。gradient は付けない | 盲検 3 名（craft14）、輝度差 10〜16/255 | 3 名とも A/B/C を cannot tell。不採用 |
-| DS-05 再採点 | — | sample11〜16、opus + sonnet、観察先行 | 下表 |
+|                           | 規則                                                            | 決め方                                                                   | 結果                                                                                                                                   |
+| ------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
+| DS-01 surface composition | 面の高さ = 中身の実寸 + inset。推定式を持たない                 | 描いて測る（`DockContentMeasure`）                                       | listening 120→71 / thinking 88→43 / result 150→122（DS-01 時点。DS-03 の padV 16 で listening は 79）。空きが面の 40〜60% を占めていた |
+| DS-02 typographic rhythm  | 窓は `type` の 9 段、Dock は `dockType` の 6 段からしか取らない | lint（`lint-type-literals.mjs`、HEAD で 76 箇所落ちるのを見せてから 0）  | Workspace の 9 段 → 6 段、Dock の題 18/19/20 → 20                                                                                      |
+| DS-03 density             | Dock の全状態の縁は `padH` / `padV`。縁は行間より広い           | 実測（縁 12〜13 vs 行間 11.7 / 競合 20〜28 vs 9.5）→ 盲検 A/B（craft13） | padV 12→16。幅 520 は本文が折れて面積が減らず、測定で棄却                                                                              |
+| DS-04 素材感              | 地は平らな black 0.80。gradient は付けない                      | 盲検 3 名（craft14）、輝度差 10〜16/255                                  | 3 名とも A/B/C を cannot tell。不採用                                                                                                  |
+| DS-05 再採点              | —                                                               | sample11〜16、opus + sonnet、観察先行                                    | 下表                                                                                                                                   |
 
 ## DS-05 の結果（有効 5 型、1 型 = 1 票）
 
@@ -807,3 +807,50 @@ screen_occupation    judge では測れない。寸法上限の selftest で見�
 sample17 は競合画像が byte 一致なのに provenance と density が動いた。2 名 panel の
 ±2〜3 軸の揺れは同じ絵でも出る。craft の opus 票は「文字と波形の高さが不揃い」で、
 画素では両方 y=79〜92 だったので棄却（観察が実測と矛盾した判定者は捨てる）。
+
+---
+
+# 磨きの 7 チケットのあと — 型 6 種で確かめた（Sample 20）
+
+DS-05 の結びで残した課題を 4 つ片付け（sample17/18/19）、そのあと機能を足さずに
+面を磨く 5 コミットを入れた。何を直したかと、それが 6 型の採点をどう動かしたか。
+
+| commit  | 直したこと                                                                             | 測った寸法                                |
+| ------- | -------------------------------------------------------------------------------------- | ----------------------------------------- |
+| 516720c | 全面で日本語に揃える                                                                   | —                                         |
+| 5d97f90 | Meeting Notes の面を `DockContentMeasure` の実寸にする（確認・結果と同じ規則）         | 4 件で 820x460 → 820x357                  |
+| d9d9f36 | Workspace 右下の 4 ボタンを消し、入力欄の中の 3 chip（要約 / 決定事項 / アクション）に | 面の空きが +2.3pt、density 基準を書き換え |
+| 0e08dcc | Home の復旧行を hairline の一段下に落とす（塗りを外す）                                | 06 +5.6pt / 12 +5.7pt、同上               |
+| da0bd80 | Agent Dock に PLAN / CONTEXT の見出し、面の中の影 3 箇所を外す                         | 03-task-dock 271 → 291（上限 298）        |
+
+## Sample 20 の結果（6 型、競合は DS-05 の素材と byte 一致）
+
+```
+                        DS-05 最終   Sample 20
+visual_craft               5/6   →      5/6    （ctrl は 2 回とも割れて引分）
+information_hierarchy      5/5   →      5/5
+state_legibility           5/5   →      4/5    （post が 1 票 → tie·ct）
+provenance_visibility      5/6   →      5/6    （ctrl が ct → 競合 1 票）
+surface_fragmentation      3/5   →      3/5
+control_visibility         4/6   →      5/6    （live・ctrl が tie → Astra 1 票、post が tie → 競合 1 票）
+visual_density             2/5   →      2/5
+screen_occupation          1/6   →      0/6    （judge では測れない軸。寸法は --selftest occupation）
+合計                      33/4   →     32/7
+```
+
+**5 コミットはどの型も落としていない。** 動いた軸の弁はどれも今回の変更（Notes の高さ・
+3 chip・復旧行・影・文言）を指しておらず、同じ絵で ±2〜3 軸ぶれる panel の範囲に収まる。
+craft の弁は画素で 1 つ確かめた（captions の発言 3 行の左端 x=794 で全行一致）。
+
+## 残っているもの
+
+```
+surface_fragmentation  post / attr で 2 名一致の負け。sidebar + 本文 + inspector の 3 列と、
+                       上に浮く Dock を「別の窓」と読まれる。§7.1 の構成そのもの
+screen_occupation      窓だけの撮影 vs 壁紙の上の小窓。judge には測れない。寸法ゲートで見る
+visual_density         Workspace の左カード下半分が空（attr / ctrl）。fixture の量ではなく面の高さ
+```
+
+飾りを足した回は一つもなく、面の高さ・段差・影の有無・文言だけを動かした。
+9 段と DS-01〜05 の結論 —— 飾って良くならず、構造と寸法で良くなる —— は、
+磨きの回でも崩れなかった。
