@@ -481,3 +481,60 @@ Workspace の凹みに食い込む造形⑧の設計そのもの。DS-04 で 3/3
 - Astra の面は Workspace 全体（1080x680）、競合は 820x480 のカード。占有は測れない
 - craft は 1 名の票
 ```
+
+# Sample 19 — post_meeting を 547dd40 の絵で採点し直す
+
+Sample 14 は 547dd40 より前の絵（戻る手段なし・発言 3 行）で採点していた。
+Astra 側だけ今日の `docs/golden-screenshots/08-meeting-detail.png`（1240x820）に
+替え、競合画像は Sample 14 の `A00B.png` と **byte 一致**、判定者も同じ 2 名。
+
+```
+C6E1  astra-ds5-547dd40       docs/golden-screenshots/08-meeting-detail.png
+9B47  superintern-followup    = sample14/images/A00B.png
+```
+
+## 軸別
+
+```
+                        opus  sonnet
+information_hierarchy   C6E1  C6E1   → Astra
+surface_fragmentation   9B47  9B47   → 競合（「左ナビ・中央・右の 3 列」2 名一致）
+screen_occupation       9B47  9B47   → 競合（「壁紙が残る小窓」対「端まで面が続く」）
+state_legibility        ct    C6E1   → Astra ※1 票。sonnet は選択行のハイライトを状態と読んだ
+control_visibility      tie   tie    → 引分（「どちらも戻る矢印とタブ」）
+visual_density          tie   tie    → 引分（「C6E1 は下部が空、9B47 は入力欄が本文を覆う」）
+visual_craft            C6E1  C6E1   → Astra（「時刻・話者・本文の列が揃っている」）
+provenance_visibility   C6E1  C6E1   → Astra
+```
+
+**Astra 4 / 競合 2 / 引分 2 / ct 0**（Sample 14 は 2 / 5 / 0 / 1）。
+
+## Sample 14 の弁がどうなったか
+
+```
+「1539 には信号ドット以外に戻る・止める手段が見当たらない」(sonnet)
+  → 「両者とも戻る矢印とタブ切替が見えており」(sonnet)。control は 競合 → 引分
+「右パネルの内容が上端に寄って余白が処理されていない」(opus, craft)
+  → 消えた。craft は 競合/tie → 2 名とも C6E1
+「下半分と右パネルの大部分が空で密度が薄い」(2 名)
+  → 「下部に大きな空白が残り」は残る(opus)。density は 競合 → 引分
+```
+
+craft の弁は自分に有利なので実測で確かめた: 文字起こし 8 行の左端は
+**x=295 で全行一致、行間 31px**（y=390〜620）。観察と矛盾しない。
+
+## 残る負け筋
+
+fragmentation と occupation はどちらも 2-0 で負け。fragmentation は
+sidebar + 本文 + inspector の 3 列（§7.1 の設計）。occupation は Astra が
+**窓だけの撮影**で競合が壁紙の上の小窓という素材の非対称で、2 名とも
+「C6E1 は端まで面が続く／比率は分からない」と書いた上で 9B47 に入れている。
+実寸は `--selftest occupation` で測る（DESIGN_SYSTEM §7）。
+
+## 限界
+
+```
+- state は 1 票、理由も弱い（選択行のハイライト ≠ 録音中/処理中）
+- occupation は撮影方法の差が出ている。判定は残すが読み替えない
+- 2 名 panel の ±2〜3 軸の揺れは Sample 14 → 19 にも含まれうる
+```

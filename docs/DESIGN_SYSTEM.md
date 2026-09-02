@@ -98,11 +98,11 @@ DS-01〜05（同 末尾、`docs/ux-benchmark/compare/SAMPLES.md` Sample 11〜16�
   上限を 190 に下げて走らせると `03-task-dock 720x271 > 上限 720x190` で落ちる
   （ゲートが効くことを先に見た）。
 
-## いまの立ち位置（sample11〜18、6 型）
+## いまの立ち位置（sample11〜19、6 型）
 
 ```
-visual_craft 4/6（前 2/6、raw 3/6）  hierarchy 5/5  state 3/3  provenance 5/6
-fragmentation 3/5  control 3/5  density 2/5  occupation → §7 の寸法ゲート
+visual_craft 5/6（前 2/6、raw 4/6）  hierarchy 5/5  state 4/4  provenance 5/6
+fragmentation 3/5  control 3/5（負け 0）  density 2/5（負け 1）  occupation → §7 の寸法ゲート
 action_confirmation  Astra 6 / VoiceOS 0 / 引分 1
 ```
 
@@ -113,6 +113,10 @@ DS の外の課題は 4 つとも片付いた: post_meeting の戻る手段と f
 meeting_controller の標本の切り抜き（sample17: 4/1/2、craft は引分）、
 screen_occupation の寸法ゲート化（§7）、transcript_attribution の競合素材
 （sample18: 動画 webp の 30 コマ目。5 軸で Astra 3 / 競合 1 / 引分 1）。
-6 型を揃えた visual_craft は **Astra 4 / 競合 1 / 引分 1**（raw 3 / 2 / 1）。
-唯一残る負け筋は fragmentation の「上部の黒いバーが本体と別の窓に見える」で、
-これは造形⑧で選んだ側（凹みに食い込む Dock）。戻さない。
+post_meeting は 547dd40 の絵で採点し直した（sample19: Astra 4 / 競合 2 / 引分 2、
+前は 2 / 5）。「戻る手段が無い」「右パネルが上端に寄る」は 2 名から消え、
+craft は 2 名一致で Astra（列の揃いは実測 x=295 で確認）。
+6 型を揃えた visual_craft は **Astra 5 / 競合 0 / 引分 1**（raw 4 / 1 / 1）。
+残る負け筋は 2 つ: fragmentation の「上部の黒いバーが本体と別の窓に見える」
+（造形⑧で選んだ側。戻さない）と、post_meeting の 3 列（§7.1 の設計）＋
+窓だけの撮影が壁紙の上の小窓に占有で負けること（素材の非対称。§7 で実寸を測る）。
