@@ -60,7 +60,7 @@ DS-01〜05（同 末尾、`docs/ux-benchmark/compare/SAMPLES.md` Sample 11〜16�
 
 ## 5. 図形と操作の重さは役割の順（造形⑤⑨）
 
-- 主たる操作: 塗り + `confirmPrimaryMinWidth` 96。副の操作（Cancel / Edit）は
+- 主たる操作: 塗り + `confirmPrimaryMinWidth` 96。副の操作（やめる / 直す）は
   文字だけ、枠を付けない。
 - 図形の重さ: 説明する図形 < 押せる図形 < 重い（警告）図形。飾りと警告が同じ
   重さにならない。

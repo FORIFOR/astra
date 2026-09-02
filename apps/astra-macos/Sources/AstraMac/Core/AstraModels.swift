@@ -47,8 +47,8 @@ enum DockPresentation: Equatable {
         case notes, captions, ask
         var title: String {
             switch self {
-            case .notes: return "Notes"
-            case .captions: return "Captions"
+            case .notes: return "メモ"
+            case .captions: return "字幕"
             case .ask: return "Ask Astra"
             }
         }

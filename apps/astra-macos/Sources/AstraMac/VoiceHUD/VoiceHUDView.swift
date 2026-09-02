@@ -337,6 +337,16 @@ struct AgentDock: View {
         .accessibilityIdentifier("dockAgent")
     }
 
+    /// 状態語。英語の rawValue をそのまま出していたので、面の中で言語が混ざっていた。
+    private func statusLabel(_ s: AgentRunState) -> String {
+        switch s {
+        case .pending: return "待機中"
+        case .running: return "作業中"
+        case .success: return "完了"
+        case .failed: return "止まりました"
+        }
+    }
+
     private var header: some View {
         HStack(spacing: 10) {
             AstraOrb(active: true)
@@ -346,7 +356,7 @@ struct AgentDock: View {
             Spacer(minLength: 0)
             if let task = store.state.activeTask {
                 // 何をしているか（状態語）と、どこまで進んだか。
-                Text(task.status == .running ? "Working" : task.status.rawValue.capitalized)
+                Text(statusLabel(task.status))
                     .font(.system(size: S.type(Metrics.dockMetaSize), weight: .medium))
                     .foregroundStyle(Palette.muted(dark))
                 // 待っている間、どれだけ待つのかが分かるように経過も出す。
@@ -458,7 +468,7 @@ struct AgentDock: View {
                 AstraStateStore.shared.workspaceOpened()
             } label: {
                 HStack(spacing: 5) {
-                    Text("Continue in Workspace")
+                    Text("作業画面で続ける")
                     Image(systemName: "arrow.up.right").font(.system(size: 10, weight: .semibold))
                 }
                 .font(.system(size: S.type(Metrics.dockMetaSize), weight: .medium))
@@ -571,14 +581,16 @@ struct ConfirmationDock: View {
                         .buttonStyle(AstraControlStyle(radius: 7, base: 0.05))
                         .accessibilityIdentifier("confirmEditDone")
                 } else {
-                    Button("Cancel") { AstraStateStore.shared.resolveConfirmation(approved: false) }
+                    // 「キャンセル」は 5 字で 102pt になり、主たる操作（96）より広くなる
+                    // （造形⑤、`scripts/ux-auto/primary.py`）。逃げ道は主より狭く保つ。
+                    Button("やめる") { AstraStateStore.shared.resolveConfirmation(approved: false) }
                         .font(.system(size: S.type(Metrics.dockRowSize)))
                         .foregroundStyle(Palette.muted(dark))
                         .frame(height: 32).padding(.horizontal, 14)
                         .buttonStyle(AstraControlStyle(radius: 7, base: 0.0))
                         .accessibilityIdentifier("confirmCancel")
                     if !confirmation.params.isEmpty || confirmation.preview != nil {
-                        Button("Edit") { editing = true }
+                        Button("直す") { editing = true }
                             .font(.system(size: S.type(Metrics.dockRowSize)))
                             // 「目を引くものは 1 つだけ」と考えて静かにしてみたが、
                             // 測ると control_visibility が 0-3 で落ちた。
@@ -815,12 +827,12 @@ private struct MeetingPanelBody: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 8) {
-                DockLabel(text: panel == .notes ? "Live Notes" : panel.title)
+                DockLabel(text: panel == .notes ? "ライブメモ" : panel.title)
                 Spacer(minLength: 0)
                 // 両方同時に見たいときだけ、大きな面へ出す（既定では出さない）。
                 Button { WindowCoordinator.shared.detachMeetingSurface() } label: {
                     HStack(spacing: 4) {
-                        Text("Open beside meeting")
+                        Text("会議の横に開く")
                         Image(systemName: "arrow.up.right").font(.system(size: 9, weight: .semibold))
                     }
                     .font(.system(size: S.type(Metrics.dockLabelSize), weight: .medium))
@@ -893,10 +905,10 @@ private struct MeetingPanelBody: View {
             } else {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 14) {
-                        notesGroup("Decisions", canvas.decisions)
-                        notesGroup("Concerns", canvas.concerns)
-                        notesGroup("Next Actions", canvas.actions)
-                        notesGroup("Questions", canvas.questions)
+                        notesGroup("決まったこと", canvas.decisions)
+                        notesGroup("懸念", canvas.concerns)
+                        notesGroup("やること", canvas.actions)
+                        notesGroup("質問", canvas.questions)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }

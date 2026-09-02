@@ -414,7 +414,7 @@ struct HomeView: View {
             } label: {
                 HStack(spacing: 5) {
                     Circle().fill(Color.recordingRed).frame(width: 7, height: 7)
-                    Text("Record").font(.system(size: S.type(TypeScale.secondarySize), weight: .medium))
+                    Text("録音").font(.system(size: S.type(TypeScale.secondarySize), weight: .medium))
                 }
                 .foregroundStyle(Palette.text(dark))
                 .frame(height: 30).padding(.horizontal, 12)

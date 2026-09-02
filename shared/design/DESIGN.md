@@ -95,8 +95,10 @@ Refero Styles の公開ページ（`styles.refero.design`、2026-09-03 取得）
   `recordingIndicator 12`、`recordingWorkspace.cornerRadius 28`、Dock `topRadius 10 / bottomRadius 18`。
 - weight: `.semibold` 72、`.medium` 52、`.bold` 2（`WorkSurfaceView:50` の ✓、
   `MainWindowView:407` のアバター頭文字）。tokens の `type.workspaceTitle.weight` 700。
-- 言語: 白の窓と Dock に英語ラベルが残る（Start recording / Recording now / Notes /
-  Captions / Open live notes / Continue in Workspace / Cancel / Edit）。「Ask Astra」は固有名で残す。
+- 言語: 文と操作は日本語（録音中 / ライブメモを開く / メモ / 字幕 / 作業画面で続ける /
+  やめる / 直す）。Linear 型の大文字ラベル（PLAN / CONTEXT / SOURCES / SUGGESTED）と
+  「Ask Astra」は固有の記号として英語のまま。Cancel は「キャンセル」だと 102pt で主操作 96pt
+  より広くなり造形⑤を割るので「やめる」。
 
 ## 4. 検証の手順（BEST-IN-CLASS_REFERENCE_GATE）
 

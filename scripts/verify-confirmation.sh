@@ -39,8 +39,8 @@ need "ますか"   "② 何が起きるか"
 need "宛先"     "③ 決定的な値"
 need "資料"     "④ 中身の下見"
 need "出所"     "⑤ 出所"
-need "Cancel"   "⑥ 取消"
-need "Edit"     "⑥ 直す"
+need "やめる"   "⑥ 取消"
+need "直す"     "⑥ 直す"
 need "送る"     "⑥ 実行"
 
 # 決断に要らないものを持ち込んでいないこと。
@@ -52,6 +52,7 @@ say "✓" "決断に不要なもの（履歴・会議ノート・sidebar）が�
 # ⑤ 主たる操作を、逃げ道より小さくしない。
 # 「送る」は 2 文字、Cancel は 6 文字。padding だけで決めると、
 # 字数で重さが決まってしまい、実測で Cancel 76pt > 送る 68pt になっていた。
+# 日本語化で「キャンセル」にすると 102pt で同じ落ち方をするので「やめる」。
 # 宣言値でも「墨 + padding」の推定でもなく、**描かれた矩形**を測る。
 if ! "$ROOT/scripts/ux-auto/primary.py" "$shot" > "$OUT/primary.txt" 2>&1; then
   say "✗" "$(head -1 "$OUT/primary.txt")"

@@ -201,7 +201,7 @@ private struct AgentActivityPane: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Agent Activity")
+            Text("エージェントの動き")
                 .font(.system(size: TypeScale.captionSize, weight: .semibold))
                 .foregroundStyle(Palette.muted(dark))
             if store.state.activeTask != nil {

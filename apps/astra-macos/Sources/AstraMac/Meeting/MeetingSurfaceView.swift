@@ -54,7 +54,7 @@ struct MeetingSurfaceView: View {
 
     private var notesPane: some View {
         VStack(alignment: .leading, spacing: Space.base) {
-            Text("Notes").font(.system(size: TypeScale.microSize, weight: .semibold)).foregroundStyle(Palette.muted(dark))
+            Text("メモ").font(.system(size: TypeScale.microSize, weight: .semibold)).foregroundStyle(Palette.muted(dark))
             ForEach(notes) { n in
                 Text(n.text).font(.system(size: TypeScale.bodySize)).foregroundStyle(Palette.text(dark))
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -79,7 +79,7 @@ struct MeetingSurfaceView: View {
 
     private var transcriptPane: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Transcript").font(.system(size: TypeScale.microSize, weight: .semibold)).foregroundStyle(Palette.muted(dark))
+            Text("文字起こし").font(.system(size: TypeScale.microSize, weight: .semibold)).foregroundStyle(Palette.muted(dark))
             ForEach(transcript) { l in
                 VStack(alignment: .leading, spacing: 1) {
                     HStack(spacing: 6) {

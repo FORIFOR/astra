@@ -19,11 +19,11 @@ struct SessionDetailView: View {
         var id: String { rawValue }
         var title: String {
             switch self {
-            case .overview: return "Overview"
-            case .transcript: return "Transcript"
-            case .notes: return "Notes"
-            case .actions: return "Actions"
-            case .decisions: return "Decisions"
+            case .overview: return "概要"
+            case .transcript: return "文字起こし"
+            case .notes: return "メモ"
+            case .actions: return "アクション"
+            case .decisions: return "決定事項"
             }
         }
     }

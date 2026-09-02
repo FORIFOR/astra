@@ -18,7 +18,7 @@ struct NewRecordingSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("New recording")
+            Text("新しい録音")
                 .font(.system(size: TypeScale.sectionTitleSize, weight: TypeScale.sectionTitleWeight))
                 .foregroundStyle(Palette.text(dark))
                 .padding(.bottom, 18)

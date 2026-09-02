@@ -164,7 +164,7 @@ struct MeetingsPane: View {
                                 subtitle: "録った会議。音声は端末から出ません。")
                 if sessions.recent.isEmpty {
                     WorkspaceEmpty(title: "録音した会議はまだありません。",
-                                   hint: "Home の Start recording か、予定の Record から始められます。")
+                                   hint: "Home の「録音を始める」か、予定の「録音」から始められます。")
                 } else {
                     ForEach(sessions.recent) { s in
                         SessionCard(session: s) {
