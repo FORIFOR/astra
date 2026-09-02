@@ -1,0 +1,3 @@
+{"winners":{"primary_action_salience":"A23D","control_visibility":"6A2E","visual_craft":"tie","error_prevention":"tie","overall":"tie"},
+ "differences":["The only visible difference is the color of the \"Edit\" label: in A23D it is neutral gray/white matching \"Cancel\"; in 6A2E it is blue/purple, visually distinct from \"Cancel\". Layout, spacing, text content, header, field rows, footer metadata, and the orange \"送る\" button are identical in both."],
+ "notes":"A23D keeps only one colored action (送る) for cleaner primary emphasis; 6A2E's colored Edit aids discoverability of that control but slightly dilutes the single-accent hierarchy."}

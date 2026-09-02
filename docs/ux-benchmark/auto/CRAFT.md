@@ -47,3 +47,65 @@ Cmd+Return   実行（明示）
 ## 目標
 
 外の製品を pixel で写さない。**Astra の白基調で、同等以上の完成度**にする。
+
+---
+
+# ① 主たる操作の際立ち — 1 周目は revert
+
+Confirmation を実験場に、3 案で比べた。
+
+```
+案      内容
+base    いまのまま（実行=警告色の塗り／直す=強調色／間隔 8）
+B       実行=brand 色／直す=静かに
+C       B ＋ 間隔 8→14、操作の上に余白 6
+```
+
+## 3 案の順位（Judge 3 体）
+
+```
+軸                        1 位   2 位   3 位
+primary_action_salience    c      b     base
+control_visibility         c      b     base
+visual_craft               b      c     base
+semantic_colour           base    b      c     ← 色だけ base が勝った
+overall                    b      c     base
+```
+
+**色で割れた。** 採点者の言い分:
+
+> 「この面には『外部に出る』という札が amber で出ている。だから送るボタンも
+>  amber だと、系として一貫する」
+
+もっともなので、**色は変えず、争いのない部分だけ**採ることにした。
+
+## 採ったつもりの分を before/after で測ったら、落ちた
+
+```
+軸                        after  before  引分
+primary_action_salience     2      1      0
+control_visibility          0      3      0     ← 落ちた
+visual_craft                1      1      1
+error_prevention            0      2      1
+overall                     0      1      2
+
+after 1 / before 3 → revert
+```
+
+> 「取消（灰）・直す（強調）・実行（塗り）の 3 段があるほうが、
+>  それぞれの重さが読める。両方を灰にすると 2 段になる」
+
+**「目を引くものは 1 つだけ」という原則が、ここでは裏目に出た。**
+3 つの操作の**相対的な重さ**が読めるほうが、control_visibility は高い。
+
+また、間隔を 8 → 14 に広げた分は **3 体中 2 体が「違いは Edit の色だけ」**と
+答えた。つまり見えていない。効かない変更だった。
+
+## この周の結論
+
+```
+① 主たる操作の際立ち   → 改善する案が見つからなかった。revert。
+```
+
+visual_craft は 6 種で 2/6 のまま。**次は ② 字面の階層**へ進む。
+色と際立ちは既に釣り合っている可能性があり、伸びしろは別の段階にある。
