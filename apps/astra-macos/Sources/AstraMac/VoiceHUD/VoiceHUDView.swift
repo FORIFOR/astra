@@ -748,7 +748,9 @@ struct ConfirmationDock: View {
 /// SuperIntern の control bar の考え方を Dock に吸収した。録音を始めた時点では
 /// controller だけが出て、Notes / Captions / Ask は押されたときにこの面の中身として開く。
 /// 両方同時に見たいときだけ、明示的に大きな面へ detach する。
-private struct MeetingDock: View {
+/// 録音中の Dock。上段はいつも同じ高さのコントローラ、下段は開いた 1 枚だけ。
+/// `DockContentMeasure` が `.notes` の高さを測るので `private` にしない。
+struct MeetingDock: View {
     @Environment(\.colorScheme) private var scheme
     private var dark: Bool { scheme == .dark }
     @ObservedObject private var store = AstraStateStore.shared
@@ -763,7 +765,7 @@ private struct MeetingDock: View {
                 Divider().overlay(Palette.border(dark))
                 MeetingPanelBody(panel: open)
                     .padding(.horizontal, S.metric(Metrics.dockPadH))
-                    .padding(.top, S.metric(Metrics.dockPadV))
+                    .padding(.vertical, S.metric(Metrics.dockPadV))
                 Spacer(minLength: 0)
             }
         }
@@ -903,6 +905,8 @@ private struct MeetingPanelBody: View {
                     .font(.system(size: S.type(Metrics.dockRowSize)))
                     .foregroundStyle(Palette.muted(dark))
             } else {
+                // 高さは中身で決まる（`DockContentMeasure`）。上限 460 に当たってからだけ scroll。
+                // 4 件のメモに 460pt の面を出すと、面の 6 割が空だった。
                 ScrollView {
                     VStack(alignment: .leading, spacing: 14) {
                         notesGroup("決まったこと", canvas.decisions)

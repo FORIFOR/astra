@@ -10,8 +10,10 @@ import SwiftUI
 /// 出所とボタンの間に穴が出る。式と view は必ずずれる。だから式を持たない。
 ///
 /// **Dock の面の高さの規則は 1 つ**: 中身の実寸 + 上下の inset（view 自身の padding）。
-/// 例外は 2 つだけ ——
-/// - `.meeting(panel:)` の展開面: 生きて増える一覧を scroll で見せる **固定**の高さ
+/// 例外は 3 つだけ ——
+/// - `.meeting(expanded: .captions)`: 生きて増える文字起こしを scroll で見せる **固定**の高さ
+///   （`.notes` は測る。**上限 460** に当たってからだけ scroll。`.ask` の答えは
+///   `RecordingWorkspaceState` にあって鍵に入らないので、いまは固定のまま）
 /// - `.confirmation`: 決断の面が作業面ほど大きくならないよう **上限 360**
 /// - `.idle` / `.appContext`（畳んだ棚）: Dynamic Island の寸法そのもの（token）
 ///
@@ -44,6 +46,7 @@ enum DockContentMeasure {
         case .contextDetail: body = AnyView(ContextDetailDock())
         case .quickActions: body = AnyView(QuickActionsDock())
         case .enteringRecording: body = AnyView(SimpleDock(icon: "record.circle", text: "録音を始めます…", tint: .recordingRed))
+        case .meeting(let panel) where panel == .notes: body = AnyView(MeetingDock(open: panel))
         case .idle, .appContext, .meeting: return nil
         }
         let key = Key(dock: dock, state: AstraStateStore.shared.state, width: width,

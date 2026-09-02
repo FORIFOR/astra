@@ -1198,7 +1198,15 @@ enum SelfTest {
                 store.reset(); store.meetingDetected(app: "Google Meet")
                 store.meetingStarted(id: "geometry-selftest")
             }),
-            ("05-meeting-notes", { VoiceHUDState.shared.toggleMeetingPanel(.notes) }),
+            ("05-meeting-notes", {
+                // shots の 09 と同じ 4 件。高さは中身で決まるので、空のまま測ると別の面になる。
+                store.updateCanvas(MeetingCanvas(
+                    decisions: ["導入時期は 10 月で行きます"],
+                    actions: ["見積は明日までにお願いします"],
+                    questions: ["誰が対応しますか？"],
+                    concerns: ["初期費用が心配です"], notes: []))
+                VoiceHUDState.shared.toggleMeetingPanel(.notes)
+            }),
             ("06-workspace", {
                 recording.loadDemo(ragOpen: false)
                 WindowCoordinator.shared.showRecordingWorkspace()

@@ -66,7 +66,7 @@ enum DockPresentation: Equatable {
     /// 幅は状態ごとの token。高さは **中身を描いて測る**（`DockContentMeasure`）。
     /// 固定値や式で持つと、中身より短ければ角が切れ、長ければ穴が出る。
     /// 固定なのは Dynamic Island そのもの（idle / 畳んだ棚）と、
-    /// 生きて増える一覧を scroll で見せる会議の展開面だけ。token の高さは
+    /// 生きて増える文字起こしを scroll で見せる会議の字幕面だけ。token の高さは
     /// 測れなかったときの fallback として残す。
     @MainActor func size(agentRows: Int = 0) -> CGSize {
         func measured(_ w: CGFloat, fallback: CGFloat) -> CGSize {
@@ -97,8 +97,14 @@ enum DockPresentation: Equatable {
             let s = measured(Metrics.dockConfirmWidth, fallback: Metrics.dockConfirmHeight)
             return CGSize(width: s.width, height: min(360, s.height))
         case .meeting(let panel):
-            return CGSize(width: Metrics.dockMeetingWidth,
-                          height: panel == nil ? Metrics.dockMeetingHeight : Metrics.dockMeetingExpandedHeight)
+            guard panel != nil else {
+                return CGSize(width: Metrics.dockMeetingWidth, height: Metrics.dockMeetingHeight)
+            }
+            // ライブメモは中身で決まり、字幕は固定（`DockContentMeasure` が nil を返す）。
+            // どちらも token の高さを **上限** にする。決断の面と同じ理由 —— 会議中の
+            // 補助面が作業面ほど大きくなると、会議そのものより目立つ。
+            let s = measured(Metrics.dockMeetingWidth, fallback: Metrics.dockMeetingExpandedHeight)
+            return CGSize(width: s.width, height: min(Metrics.dockMeetingExpandedHeight, s.height))
         case .result:
             return measured(Metrics.dockResultWidth, fallback: Metrics.dockResultHeight)
         case .contextDetail:
