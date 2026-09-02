@@ -662,6 +662,7 @@ struct RecordingSurface: View {
             .fill(Color.workspaceSurface(dark))
             .background(RecordingWorkspaceShape().fill(.ultraThinMaterial))
             .overlay(RecordingWorkspaceShape().stroke(Color.hairline(dark), lineWidth: 0.7))
-            .shadow(color: .black.opacity(dark ? 0.45 : 0.17), radius: 30, y: 13)
+            // 窓の影は `AstraPanel`（`hasShadow`）が 1 段ぶん持つ。ここにも 0.17/30 を
+            // 描いていたので実機では影が二重だった（撮影は窓の内側だけなので写らない）。
     }
 }

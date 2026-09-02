@@ -66,14 +66,14 @@ Refero Styles の公開ページ（`styles.refero.design`、2026-09-03 取得）
 
 影は **面の役割** で決まり、飾りには使わない。
 
-| 状態                                                              | elevation | 実装                                                                                                |
-| ----------------------------------------------------------------- | --------- | --------------------------------------------------------------------------------------------------- |
-| Compact Dock（idle / app-context）                                | 0         | `Elevation.attached`（`NSWindow.hasShadow = false`）                                                |
-| Expanded Dock（listening / agent / confirmation / meeting notes） | 0         | 同上。画面の縁に付属する面は浮かせない（造形⑧、3/3）                                                |
-| Recording Workspace（他アプリの上）                               | 1         | `AstraPanel` の `hasShadow = true`。いまは view も 0.17/30 を描いていて二重（§3）。目標は窓の影だけ |
-| Workspace の中の pill（TaskDock）                                 | 0         | 凹みに納まる面の一部。影 0（fcd050c）                                                               |
-| Main window（Home / Library）                                     | 1         | 通常の NSWindow                                                                                     |
-| 2                                                                 | 使わない  | 必要になったら理由を DS に書いてから                                                                |
+| 状態                                                              | elevation | 実装                                                                                                                  |
+| ----------------------------------------------------------------- | --------- | --------------------------------------------------------------------------------------------------------------------- |
+| Compact Dock（idle / app-context）                                | 0         | `Elevation.attached`（`NSWindow.hasShadow = false`）                                                                  |
+| Expanded Dock（listening / agent / confirmation / meeting notes） | 0         | 同上。画面の縁に付属する面は浮かせない（造形⑧、3/3）                                                                  |
+| Recording Workspace（他アプリの上）                               | 1         | `AstraPanel` の `hasShadow = true` だけ。view の 0.17/30 は二重だったので外した（§3）。中の札（文字起こし・資料）は 0 |
+| Workspace の中の pill（TaskDock）                                 | 0         | 凹みに納まる面の一部。影 0（fcd050c）                                                                                 |
+| Main window（Home / Library）                                     | 1         | 通常の NSWindow                                                                                                       |
+| 2                                                                 | 使わない  | 必要になったら理由を DS に書いてから                                                                                  |
 
 規則: **shadow を既定の階層表現にしない。** 面の中で要素を分けるのは hairline と字の重さ。
 `Elevation.swift` の enum 以外に影の出所を増やさない。
@@ -83,9 +83,10 @@ Refero Styles の公開ページ（`styles.refero.design`、2026-09-03 取得）
 修正の指示ではない。**仮説の材料**として列挙する。直すかどうかは §4 の手順で決める。
 
 - view に描いている影（`grep -rn "\.shadow(" Sources/AstraMac`）:
-  `RecordingWorkspaceView:663`（窓の外形、0.17/30）、`TranscriptPanel:19`（0.05/10）、
-  `RAGDrawerView:49`（0.10/16）、`ConfirmationCardView:69`（0.2/24）、
-  `HomeView:60`（sheet、0.22/40）、`AstraOrb:11`（accent の光。質感として意図）。
+  `ConfirmationCardView:69`（0.2/24）、`HomeView:60`（sheet、0.22/40）、
+  `AstraOrb:11`（accent の光。質感として意図）。
+  外したもの: `RecordingWorkspaceView`（窓の外形 0.17/30、`hasShadow` と二重）、
+  `TranscriptPanel`（0.05/10 = 13/255、知覚の下）、`RAGDrawerView`（0.10/16、面の中の区画）。
   `RecordingIndicatorView:37` と `IntentBarView:59` は呼び出し元が無い（6 型に出ない）。
   `ConfirmationCardView:69` は `ConfirmationPresenter` から。Dock の確認カードとは別物。
   `TaskDockView:26` は 0（fixture `.detached` のときだけ 0.6）。

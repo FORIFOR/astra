@@ -16,7 +16,8 @@ struct TranscriptPanel: View {
         .background(
             RoundedRectangle(cornerRadius: 12).fill(Color.cardSurface(dark))
                 .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.hairline(dark)))
-                .shadow(color: .black.opacity(0.05), radius: 10, y: 3)
+                // 影は無し。隣のノート面は hairline だけで、こちらだけ 0.05 の影を
+                // 持っていた（13/255 —— 知覚の下、DS-04）。面の中の札は線で分ける。
         )
         .accessibilityIdentifier("transcriptPanel")
     }

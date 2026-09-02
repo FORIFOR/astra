@@ -46,7 +46,8 @@ struct RAGDrawerView: View {
         .background(Color.cardSurface(dark))
         .clipShape(RoundedRectangle(cornerRadius: 14))
         .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.hairline(dark)))
-        .shadow(color: .black.opacity(0.1), radius: 16, y: 6)
+        // 影は無し。作業面の中で伸びる区画であって、浮いた別の面ではない
+        // （DESIGN.md §2: 面の中の区画は 0）。
         .accessibilityIdentifier("ragDrawer")
     }
 

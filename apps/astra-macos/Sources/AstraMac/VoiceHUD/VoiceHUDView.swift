@@ -400,8 +400,13 @@ struct AgentDock: View {
             .frame(maxWidth: .infinity, alignment: .leading)
     }
 
+    /// 段取り（PLAN）と、見ているもの（CONTEXT）を同じ型の見出しで分ける。
+    /// 以前は段取りに見出しが無く、下の SOURCES だけが見出しを持っていて、
+    /// 5 行の段取りが「見出しの無い表」に見えていた。
     private var steps: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        VStack(alignment: .leading, spacing: 6) {
+            DockLabel(text: "Plan")
+            VStack(alignment: .leading, spacing: 0) {
             ForEach(store.state.activeTask?.steps ?? []) { step in
                 HStack(spacing: 10) {
                     Image(systemName: icon(step.state))
@@ -423,27 +428,23 @@ struct AgentDock: View {
                 .frame(height: Metrics.dockAgentRowHeight)
                 .accessibilityIdentifier("step-\(step.tool)")
             }
+            }
         }
     }
 
+    /// 見ているもの。3 つの capsule（塗り + 線）で出していたが、ここで押せるものは
+    /// 無いので、押せそうな形を与えない。語を「·」で並べる（⑨ 図形の重さ）。
+    /// 名前は SOURCES から CONTEXT へ。結果の根拠（sources）ではなく、
+    /// いま Astra が見ている文脈だから。
     @ViewBuilder private var contextChips: some View {
         let items = store.state.context.items
         if !items.isEmpty {
             VStack(alignment: .leading, spacing: 6) {
-                DockLabel(text: "Sources")
-                HStack(spacing: 6) {
-                    ForEach(items) { item in
-                        Text(item.application)
-                            .font(.system(size: S.type(Metrics.dockMetaSize)))
-                            .foregroundStyle(Palette.text(dark))
-                            .padding(.horizontal, 10)
-                            .frame(height: 24)
-                            .background(
-                                Capsule().fill(Color.subtleFill(dark, 0.05))
-                                    .overlay(Capsule().stroke(Color.hairline(dark), lineWidth: 0.5)))
-                    }
-                    Spacer(minLength: 0)
-                }
+                DockLabel(text: "Context")
+                Text(items.map(\.application).joined(separator: " · "))
+                    .font(.system(size: S.type(Metrics.dockMetaSize)))
+                    .foregroundStyle(Palette.text(dark))
+                    .lineLimit(1)
             }
             .accessibilityIdentifier("agentContextChips")
         }
@@ -1092,7 +1093,7 @@ struct ContextDetailDock: View {
             HStack(spacing: 8) {
                 DockLabel(text: "Context")
                 Spacer(minLength: 0)
-                Text("\(store.state.context.items.count) sources available to Astra")
+                Text("Astra が見ているもの \(store.state.context.items.count) 件")
                     .font(.system(size: S.type(Metrics.dockMetaSize)))
                     .foregroundStyle(Palette.muted(dark))
                 Button { VoiceHUDState.shared.mode = .idle } label: {
