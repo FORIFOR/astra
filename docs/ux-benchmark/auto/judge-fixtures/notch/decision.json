@@ -1,0 +1,25 @@
+{
+  "target": "detached_overlay（Dock を消さずに直す）",
+  "candidates": {
+    "deep-notch": "凹みの深さ 25 → 50（Dock 42 を収める）",
+    "fitted-notch": "深さに加え、幅も Dock+肩に合わせる"
+  },
+  "result": {
+    "BASE": [
+      "YES",
+      "YES"
+    ],
+    "deep-notch": [
+      "YES",
+      "YES"
+    ],
+    "fitted-notch": [
+      "YES",
+      "YES"
+    ]
+  },
+  "adopted": null,
+  "why": "凹みの寸法では変わらなかった。Judge 全員が挙げる理由は寸法ではなく**素材**だった:「黒い pill が白い面の上に浮いている」「影がある」。凹みを深くしても、黒い塊が白い面に載っている構図は変わらない。",
+  "what_actually_moves_it": "in-header（浮遊をやめる）だけが 2/2 で反転した。shared-ground（地を共有）は 1/2 で部分的に効いた。**素材と影が主因**で、凹みの寸法は主因ではない。",
+  "next": "素材を変えずに直す道は、この 5 案では見つからなかった。残る選択肢は (a) 黒い素材をやめる（Astra の看板要素の変更）、(b) 会議の面では Dock を面の中へ入れる（ONE SURFACE の連続性と引き換え）、(c) 直さない。**いずれも設計の意思決定**で、自動探索の外。"
+}
