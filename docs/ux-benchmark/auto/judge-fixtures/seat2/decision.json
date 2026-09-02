@@ -1,0 +1,56 @@
+{
+  "target": "detached_overlay（一つの面に見えるか）",
+  "candidates": {
+    "shared-ground": "Dock を面と同じ地にする（黒い塊をやめる）",
+    "inset": "凹みに埋め込む（影と隙間を無くす）",
+    "in-header": "浮かせるのをやめ、操作を面の見出しへ入れる"
+  },
+  "result": {
+    "BASE": {
+      "one_surface": [
+        "NO",
+        "NO"
+      ],
+      "detached_overlay": [
+        "YES",
+        "YES"
+      ]
+    },
+    "shared-ground": {
+      "one_surface": [
+        "NO",
+        "YES"
+      ],
+      "detached_overlay": [
+        "YES",
+        "NO"
+      ]
+    },
+    "inset": {
+      "one_surface": [
+        "NO",
+        "NO"
+      ],
+      "detached_overlay": [
+        "YES",
+        "YES"
+      ]
+    },
+    "in-header": {
+      "one_surface": [
+        "YES",
+        "YES"
+      ],
+      "detached_overlay": [
+        "NO",
+        "NO"
+      ]
+    }
+  },
+  "adopted": null,
+  "why": "in-header だけが 2/2 で反転した。対照が取れたので detached_overlay は初めて弁別できる尺度になり、同時に 8/9 の観測が正しかったことも確定した。しかし採用しない: Task Dock は録音中だけの面ではなく、待機・Listening・Task・会議を貫く**同じ一つの面**として設計されている（ASTRA_UX_PRINCIPLES §2）。会議の面でだけ消すと、その連続性が切れる。**一つの軸を上げて別の軸を壊す**典型で、しかも壊れる側（ONE SURFACE の連続性）は静止画では測れない。",
+  "measurable_now": "detached_overlay は対照ができたので Evidence B の候補になった",
+  "next": "Dock を消さずに『枠からはみ出して見える』だけを直す案が要る。Judge の弁は一致して『白い面の枠から上へ突き出している』。凹みの形と Dock の高さの関係を見直すのが筋で、これは造形の設計判断。",
+  "judges": 2,
+  "condition": "1 枚 1 セッション"
+}

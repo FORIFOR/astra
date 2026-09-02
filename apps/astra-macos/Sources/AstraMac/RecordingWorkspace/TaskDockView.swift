@@ -3,6 +3,7 @@ import SwiftUI
 /// 上辺の凹みに食い込む録音コントローラ。● 04:21 ⏸ CC □ … ■
 struct TaskDockView: View {
     @ObservedObject var state: RecordingWorkspaceState
+    @Environment(\.colorScheme) private var scheme
 
     var body: some View {
         HStack(spacing: 10) {

@@ -61,7 +61,9 @@ struct RecordingWorkspaceView: View {
         ZStack(alignment: .top) {
             RecordingSurface()
             workspaceContent
-            TaskDockView(state: state).offset(y: 3)
+            TaskDockView(state: state)
+                .offset(x: Fixture.current == .detached ? -180 : 0,
+                        y: Fixture.current == .detached ? 34 : 3)
         }
         .frame(width: Metrics.workspaceWidth, height: Metrics.workspaceHeight)
         .animation(.easeOut(duration: Motion.drawerMs), value: state.ragOpen)
