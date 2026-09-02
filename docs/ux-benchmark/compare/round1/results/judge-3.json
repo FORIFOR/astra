@@ -1,0 +1,35 @@
+{
+  "winners": {
+    "information_hierarchy": "6ED7",
+    "surface_fragmentation": "6ED7",
+    "screen_occupation": "6ED7",
+    "state_legibility": "6ED7",
+    "control_visibility": "6ED7",
+    "visual_density": "6ED7",
+    "visual_craft": "6ED7",
+    "provenance_visibility": "6ED7"
+  },
+  "evidence": {
+    "6ED7": [
+      "Meeting title (08:34の会議) has clear, prominent visual hierarchy",
+      "Floating control bar at top is minimal and non-intrusive",
+      "Recording state visible with time indicator (00:02) and progress bar",
+      "Participant names (Ken, Sarah) clearly shown with timestamps throughout",
+      "Left panel shows structured transcript sections with clear attribution",
+      "Right panel shows threaded conversation view",
+      "Single cohesive interface focused entirely on note-taking",
+      "Clean whitespace and consistent alignment across layout"
+    ],
+    "8839": [
+      "Settings/configuration dialog overlays the main interface",
+      "Two separate windows visible with different visual treatments",
+      "Left sidebar menu creates additional visual density",
+      "Dark theme on right panel contrasts sharply with light settings dialog",
+      "Control elements are at bottom, less visible and accessible",
+      "Task items visible but harder to scan quickly",
+      "Multiple panels use inconsistent visual styles",
+      "Settings state dominates over note-taking focus"
+    ]
+  },
+  "notes": "6ED7 is a unified, focused note-taking interface with clear hierarchy and minimal fragmentation. 8839 overlays a settings dialog on top, creating multiple visual surfaces and reducing focus on the primary task."
+}

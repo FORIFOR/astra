@@ -1,0 +1,31 @@
+{"winners": {
+  "information_hierarchy": "6ED7",
+  "surface_fragmentation": "6ED7",
+  "screen_occupation": "6ED7",
+  "state_legibility": "6ED7",
+  "control_visibility": "6ED7",
+  "visual_density": "6ED7",
+  "visual_craft": "6ED7",
+  "provenance_visibility": "6ED7"
+},
+ "evidence": {
+  "8839": [
+    "Image is a composite of two separate screenshots joined by an arrow icon, implying a before/after flow rather than one screen",
+    "Left screenshot: macOS window with traffic-light buttons showing an 'Instructions' modal (title, description, a body textarea, and a 'Create' button) layered over a blurred meeting list behind it",
+    "Right screenshot: two visually separate floating panels — a 'Note' panel and, below/behind it, a 'Transcribe' panel — both floating over a blurred desktop-wallpaper background with no shared window frame connecting them",
+    "Note panel rows are tightly packed: a colored dot, a category label (e.g. 'UA review'), a person name (Steve/Lisa/Andy), and a date (5/1, 4/30, 4/25) with a short description line",
+    "Transcribe panel has a 'Transcribe ⌄' dropdown header, running transcript text, and small bottom-left icons ('...', a small 'II' pause-like glyph, and a red circular stop icon) with an unclear label fragment 'Enu'",
+    "No timer or explicit 'recording' state text is visible anywhere in the visible crop",
+    "No visible link or icon on note items for jumping to/verifying the source moment"
+  ],
+  "6ED7": [
+    "Single app window (Japanese UI) with one floating pill-shaped control bar docked at the top edge containing a record dot, pause button, comment icon, expand icon, '...' menu, and a red square stop button",
+    "Explicit live-state text '録音中 00:02' with a red dot and an animated dot trail, plus 'マイクと画面の音を聞いています' (listening to mic and screen audio)",
+    "Left column shows meeting title '08:34の会議', one live transcript line attributed to 'Ken', then clearly labeled sections '決まったこと' (decisions) and 'やること' (to-dos), each with a grey placeholder line when empty, and a 'メモ' (notes) section",
+    "Each memo item shows a colored speaker name (Ken, Sarah), a timestamp (10:42, 14:21), and inline text links '出所' (source) and '戻す' (undo) plus a chevron to expand",
+    "Right column has three tabs (文字起こし / 翻訳 / 字幕) and a transcript list with per-line timestamp + speaker name",
+    "Bottom has a chat input 'この会議について聞く' with a mic icon, four labeled action buttons (リアルタイム要約 / 質問する / 決定事項 / アクション), and a footer line 'AIが見ている資料 — まだありません'"
+  ]
+ },
+ "notes": "The clearest visible difference is structural: 6ED7 is one cohesive window with an explicit recording-state readout and per-item source/undo links, while 8839 is presented as two disconnected floating panels (Note + Transcribe) over a bare desktop background with no visible recording-state text or source-verification affordance on its note items."
+}

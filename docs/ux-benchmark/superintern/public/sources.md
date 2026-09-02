@@ -3,7 +3,10 @@
 | ファイル | 場面 | 出所 URL | 取得日 | 版 | 備考 |
 | --- | --- | --- | --- | --- | --- |
 | `hero-videocall-mock.webp` | hero の背景 | https://super-intern.com/hero/meeting-window.webp | 2026-09-02 | 版の表記なし | **SuperIntern の UI ではない。** ビデオ会議の作り物（「Weekly Sync」）。hero の背景素材 |
-| （UI の絵は未取得） | AI Canvas ほか | https://super-intern.com/en | 2026-09-02 | 版の表記なし | **画像として存在しない。** UI は HTML/CSS でページ上に描かれている |
+| `ai-canvas.webp` | Note + Transcribe + 設定窓 | https://super-intern.com/blog/_shared/en/ai-canvas.webp | 2026-09-02 | v0.14 の記事 | **OFFICIAL_PRODUCT_UI**。実 UI。1280x670 |
+| `ai-canvas-live-summary.webp` | AI Canvas のライブ要約 | https://super-intern.com/blog/v0-14update/ai-canvas-live-summary.webp | 2026-09-02 | v0.14 | **OFFICIAL_PRODUCT_UI**。540x480 |
+| `control-bar.webp` | Control Bar + 設定 | https://super-intern.com/blog/v0-14update/control-bar.webp | 2026-09-02 | v0.14 | **OFFICIAL_PRODUCT_UI**。1226x790 |
+| `hero-videocall-mock.webp` | （参考） | https://super-intern.com/hero/meeting-window.webp | 2026-09-02 | — | **UI ではない**。hero の背景素材 |
 
 ## 公式ページに書いてあること（2026-09-02 取得・本文のみ）
 
@@ -25,14 +28,27 @@
 - 「停止ボタン」で録音を終える
 - 会議のあと、整えた文字起こしが自動で作られる
 
-### なぜ UI の絵が取れないか
+### 取れた経緯
 
-公式ページの画像を全部数えたが、UI の静止画は 1 枚も無い。
-在るのはロゴ・連携先のアイコン・利用者の顔写真・hero の背景だけ。
-**AI Canvas は画像ではなく、ページ上に HTML/CSS で描かれている。**
-ダウンロードで取る対象が存在しない。
+公式トップの静的素材には UI の絵が無かった（ロゴ・連携先アイコン・顔写真・背景のみ）。
+**公式ブログの記事内画像**に実 UI があった。
 
-→ ブラウザで開いて撮るしかない。この環境ではブラウザ拡張が接続されていない。
+### 撮られている状態（絵から読めることだけ）
+
+- **Note** と **Transcribe** が**別々の浮遊パネル**として同時に出る。
+  それぞれに ✕ と掴む所がある
+- Note の中は表（項目・担当・日付・状況）と見出し（Situation / Actions）
+- Transcribe は発話が流れる。**話者名は見えない**
+- パネルの下端に Control Bar（⋯ ⏸ ⏹）
+- 別に設定の窓がある（Instructions / Dictionary / Language / Shortcuts …）
+- Control Bar を開くと Stealth mode / Dictionary / Language / Shortcuts /
+  Microphone / System Audio
+
+### 重要な但し書き
+
+**撮られた状態に見えないことを、製品に無いと読まない。**
+別の状態では出るかもしれない。判定は必ず
+「この公開素材のこの状態では見えない」までにする。
 
 ### 取れていないもの
 

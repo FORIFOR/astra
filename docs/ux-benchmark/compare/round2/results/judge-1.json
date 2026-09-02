@@ -1,0 +1,36 @@
+{"winners": {
+  "information_hierarchy": "EFDE",
+  "surface_fragmentation": "EFDE",
+  "screen_occupation": "EFDE",
+  "state_legibility": "EFDE",
+  "control_visibility": "EFDE",
+  "visual_density": "EFDE",
+  "visual_craft": "EFDE",
+  "provenance_visibility": "EFDE"
+},
+"evidence": {
+  "EFDE": [
+    "One consolidated light card with two columns (notes left, transcript right) plus a single small pill toolbar above it -- two surfaces total",
+    "Big bold header naming the meeting ('08:34 の会議') at the top-left of the card",
+    "Explicit state text: red dot + '録音中 00:02' (recording, timer) and 'マイクと画面の音を聞いています' (listening to mic and screen audio)",
+    "Top toolbar is a high-contrast black pill with clearly separated icon buttons (pause, comment, expand, more, red stop) sitting by itself, easy to spot",
+    "Notes are grouped under clear labeled sections: 決まったこと (decided), やること (to do), メモ (memo), each with placeholder text when empty rather than being blank",
+    "Each memo item carries a speaker name in color (Ken, Sarah), a timestamp (10:42, 14:21), and explicit '出所' (source) and '直す' (edit) links -- direct provenance/verification affordance",
+    "Transcript panel has its own tab switcher (文字起こし/翻訳/字幕) with timestamped, speaker-labeled lines",
+    "Bottom of the card has an ask-a-question input and a line stating what material the AI is currently referencing ('AI が見ている資料 — まだありません')",
+    "Consistent spacing, dividers, and alignment throughout; no overlapping elements"
+  ],
+  "1418": [
+    "At least four separate floating dark panels visible: a small top-left icon toolbar, a 'Note' panel, a 'Transcribe' panel, and a bottom control bar",
+    "The Transcribe panel visually overlaps and sits on top of the Note panel, cutting off the Note panel's 'Actions' section",
+    "Background behind the panels is a visible photo/desktop image, showing the panels float translucently over whatever the user is looking at",
+    "Note panel is a dense small-text table (status dot, task name, person, date) for four rows, then abruptly switches to a larger-font heading 'Discussion on Special Handling for Company A' with bullet sub-sections (Situation, Actions)",
+    "Each table row does show a person name and a date (e.g. Steve 5/1, Lisa 4/30, Andy 4/25, Andy 5/1), but the Situation/Actions bullets underneath have no visible per-line speaker or timestamp",
+    "No visible link or icon for 'view source' / verify on any note item",
+    "No explicit recording/state label text (e.g. no visible 'Recording' word or timer) -- only a red dot and small icons in the bottom bar suggest recording",
+    "Bottom control bar is small, dark-on-dark, tucked at the very edge of the frame: '...', a pause-like icon, and a red stop button",
+    "Drag-handle (dotted grip) icons are visible on panel headers, reinforcing that these are independently movable, separate floating windows"
+  ]
+},
+"notes": "EFDE presents as one coherent light card (notes + transcript + input) with a single separate toolbar pill, strong labeled sections, and per-item speaker/time/source links. 1418 is a set of translucent dark panels floating over the user's own screen, one of which visibly overlaps and truncates another, with denser/inconsistent text sizing and no per-line provenance links outside the top table."
+}

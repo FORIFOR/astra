@@ -2,7 +2,8 @@
 
 | ファイル | 場面 | 出所 URL | 取得日 | 版 | 備考 |
 | --- | --- | --- | --- | --- | --- |
-| （画像は未取得） | 公式トップ | https://www.voiceos.com/ja | 2026-09-02 | **版の表記なし** | 本文のみ取得。画面の絵は取れていない |
+| `agent-mode-send-message.png` | Agent Mode / Gmail の確認カード | https://www.voiceos.com/blogs/agent-mode-send-message.png | 2026-09-02 | 版の表記なし | **OFFICIAL_PRODUCT_UI**。1024x681。公式の caption が「VoiceOS Agent Mode showing a Gmail send confirmation card」と明記 |
+| `send-slack-message-by-voice-confirmation.png` | Agent Mode / Slack の確認カード | https://www.voiceos.com/blogs/send-slack-message-by-voice-confirmation.png | 2026-09-02 | 版の表記なし | **OFFICIAL_PRODUCT_UI**。1024x682 |
 
 ## 公式ページに書いてあること（2026-09-02 取得・本文のみ）
 
@@ -17,13 +18,22 @@
 - ファイルや文書を横断して探す
 - **起動は `fn` キー**
 
-### なぜ UI の絵が取れないか
+### 取れた経緯
 
-公式トップの画像を全部数えた（27 件）。**UI の静止画は 1 枚も無い。**
-在るのはロゴ、連携先アプリのアイコン 24 種、Y Combinator のロゴだけ。
-UI は動画で見せていると思われる。
+公式トップの静的素材には UI の絵が無かった（27 件すべてロゴかアイコン）。
+**公式ブログの記事内画像**に実 UI があった。
 
-→ ブラウザで開いて撮るしかない。この環境ではブラウザ拡張が接続されていない。
+### 撮られている状態（絵から読めることだけ）
+
+- notch の直下に**小さな確認カード**が 1 枚出る
+- カードの中: Gmail のアイコン、「Send this message?」、To / Subject /
+  Message Preview、**[Send] [Edit]**、右上に ✕
+- 背景のアプリ（Safari）は隠れていない
+- notch 自体に音声の波形が出ている
+
+### 重要な但し書き
+
+**撮られた状態に見えないことを、製品に無いと読まない。**
 
 ### 取れていないもの
 

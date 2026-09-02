@@ -1,0 +1,25 @@
+{"winners": {"information_hierarchy":"EFDE","surface_fragmentation":"EFDE","screen_occupation":"1418","state_legibility":"EFDE","control_visibility":"EFDE","visual_density":"tie","visual_craft":"EFDE","provenance_visibility":"EFDE"},
+ "evidence": {
+   "1418": [
+     "Two overlapping floating panels (a Note panel and a Transcribe panel) stacked on top of each other over a blurred wallpaper background",
+     "Note panel shows a timeline list with colored status dots, names (Steve, Lisa, Andy, Andy) and dates (5/1, 4/30, 4/25, 5/1) next to each item",
+     "Below the timeline, a text summary block ('Discussion on Special Handling for Company A' with a 'Situation' bullet list and an 'Actions' header cut off at the bottom)",
+     "Transcribe panel has a dropdown labeled 'Transcribe' and a block of running transcript text with no per-line speaker or timestamp labels shown",
+     "Bottom control bar uses small unlabeled icons only: an ellipsis, a pause/bars-style icon, and a red circular button",
+     "A separate small toolbar with icon buttons floats in the top-left corner, detached from the two main panels",
+     "Dark, semi-transparent panel surfaces over a colorful blurred desktop wallpaper, with wallpaper visible around and between the panels",
+     "No explicit recording-state text or elapsed timer is visible anywhere"
+   ],
+   "EFDE": [
+     "Single light-colored app surface split into a notes column (left) and a transcript column (right), rather than multiple separate panels",
+     "A separate floating pill-shaped control bar sits above the window with distinct icons: record dot, pause, comment, expand, ellipsis, and a red stop square",
+     "Explicit state text '録音中 00:02' (Recording 00:02) plus 'マイクと画面の音を聞いています' (listening to mic and screen audio)",
+     "Clear section headers 決まったこと (Decisions), やること (To-dos), メモ (Memos), with visible empty-state placeholder text ('...待っています') when a section has nothing yet",
+     "Each memo item shows a color-highlighted speaker name (Ken/Sarah), an exact timestamp, and explicit '出所' (source) and '直す' (edit) links beneath it",
+     "Right column has tabs for 文字起こし/翻訳/字幕 (Transcript/Translation/Subtitles) and a timestamped, speaker-labeled transcript list",
+     "Bottom row of labeled action buttons (リアルタイム要約, 質問する, 決定事項, アクション) plus a chat input box 'この会議について聞く'",
+     "Footer line 'AIが見ている資料 — まだありません' (materials the AI is looking at — none yet), a further transparency signal"
+   ]
+ },
+ "notes": "EFDE reads as one coherent window with explicit text for state (recording timer, mic status) and per-note provenance (source/edit links), while 1418 is two overlapping floating panels over a desktop background with denser text but only icon-only controls and no explicit state label or per-note source link."
+}

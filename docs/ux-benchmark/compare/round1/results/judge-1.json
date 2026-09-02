@@ -1,0 +1,24 @@
+{"winners": {"information_hierarchy":"6ED7","surface_fragmentation":"6ED7","screen_occupation":"8839","state_legibility":"6ED7","control_visibility":"6ED7","visual_density":"6ED7","visual_craft":"6ED7","provenance_visibility":"6ED7"},
+ "evidence": {
+   "6ED7": [
+     "Recording indicator '録音中 00:02' with a red dot and timer shown top-left",
+     "Floating control pill at top has pause, comment, fullscreen, more-options, and a red stop button",
+     "Each note item lists speaker name, timestamp, and explicit '出所' (source) and '直す' (edit) links, e.g. 'Ken · 10:42 · 出所 › · 直す'",
+     "Single window split into two panels: left running notes doc (決まったこと/やること/メモ sections) and right transcript list with speaker+timestamp per line",
+     "Bottom row of labeled action buttons: リアルタイム要約, 質問する, 決定事項, アクション",
+     "Bottom text-entry bar 'この会議について聞く' with a mic icon",
+     "Footer note 'AIが見ている資料 — まだありません' stating no reference materials yet",
+     "Only one small attached control pill floats outside the main window; otherwise one contiguous surface"
+   ],
+   "8839": [
+     "Image is a composite of two separate screenshots joined by an arrow, not one continuous screen",
+     "Left screenshot: an 'Instructions' settings dialog for customizing AI meeting-minutes templates, overlaid on a dimmed 'Upcoming' meetings list",
+     "Right screenshot: a 'Note' floating panel with colored status dots (yellow/green/red), a name, a date, and a short description per row, e.g. 'UA review Steve 5/1 Delayed due to the assigned designer being on leave'",
+     "Right screenshot: a separate 'Transcribe' floating panel positioned below the Note panel, showing live transcript text",
+     "Transcribe panel has small, unlabeled icons (pause bars, red stop circle, more-options) at its bottom edge",
+     "Both floating panels sit over a visible desktop wallpaper, with a small separate toolbar icon cluster floating at the top-left",
+     "The Note/Transcribe panels use a dark theme while the settings dialog on the left uses a light theme"
+   ]
+ },
+ "notes": "6ED7 is one cohesive document-like window with explicit recording state, prominent stop/pause controls, and per-item source links for provenance; 8839 is shown as two detached floating panels over an exposed desktop background, which occupies less screen space but reads as more fragmented and gives less explicit per-item source/verification for its AI notes."
+}
