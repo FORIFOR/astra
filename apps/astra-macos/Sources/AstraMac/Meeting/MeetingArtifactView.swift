@@ -198,9 +198,10 @@ struct MeetingArtifactView: View {
                             .font(.system(size: TypeScale.microSize, design: .monospaced))
                             .foregroundStyle(Palette.muted(dark))
                             .frame(width: 42, alignment: .leading)
+                        // 話者は位置で分かる。色は参照 [1][2][3] と選択行に取っておく（craftL）。
                         Text(c.speaker)
                             .font(.system(size: TypeScale.microSize, weight: .semibold))
-                            .foregroundStyle(Palette.accent(dark))
+                            .foregroundStyle(Palette.muted(dark))
                             .frame(width: 52, alignment: .leading)
                         Text(c.text)
                             .font(.system(size: TypeScale.secondarySize))

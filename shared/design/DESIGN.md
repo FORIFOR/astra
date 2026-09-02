@@ -147,6 +147,8 @@ cannot tell が多数なら変えない（craft ⑦ の角丸はこれで差し�
 - 主操作の彩度・寸法を上げる（craft ①、改善なし）
 - Dock 幅 520（本文が折れて面積が減らない。実測で棄却）
 - Task Dock pill の影で「浮かせる」（sample18 で別窓に見えた。fcd050c で 0）
+- 会議の詳細で要約 1 行だけを medium にする（craftL、3 名中 2 名 cannot tell。
+  段は色で立った）
 
 ## 6. 触らないもの
 

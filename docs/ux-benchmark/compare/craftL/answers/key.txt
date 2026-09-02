@@ -1,0 +1,8 @@
+j1 (opus):   1=C 2=B 3=A
+j2 (sonnet): 1=A 2=B 3=C   ← 観察 O2 が実測と矛盾（3 枚とも「青紫」）。棄却
+j3 (opus):   1=A 2=C 3=B
+j4 (opus):   1=B 2=C 3=A
+A  HEAD（要約 = body regular、表の話者 = accent）
+B  A + 要約の 1 行を TypeScale.primaryWeight（medium）
+C  B + 表の話者を Palette.muted（accent は参照 [n]・選択行・タブだけ）
+撮影: --selftest shots（light）、08-meeting-detail 1240x820 をそのまま渡した
