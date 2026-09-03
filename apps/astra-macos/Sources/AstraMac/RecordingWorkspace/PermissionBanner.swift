@@ -21,7 +21,7 @@ struct PermissionBanner: View {
                     .foregroundStyle(Color.primary)
                     .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 0)
-                Button("設定を開く") { issue.open() }
+                Button(Facts.resultOpenSettings) { issue.open() }
                     .font(.system(size: TypeScale.microSize, weight: .medium))
                     .foregroundStyle(Color.astraAccent(dark))
                     .frame(height: 28)          // §16 hit area

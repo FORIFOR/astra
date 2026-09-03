@@ -18,7 +18,7 @@ struct StartRecordingCard: View {
                 HStack(spacing: 12) {
                     Circle().fill(Color.recordingRed).frame(width: 10, height: 10)
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("録音を始める")
+                        Text(Facts.recordingStart)
                             .font(.system(size: TypeScale.cardTitleSize, weight: TypeScale.cardTitleWeight))
                             .foregroundStyle(Palette.text(dark))
                         Text("前回の設定でその場で録り始めます")

@@ -34,13 +34,13 @@ final class StatusBarController {
         menu.removeAllItems()
 
         // 設定が ⌘, 終了が ⌘Q を持つのに、いちばん開くものに割り当てが無かった。
-        let open = NSMenuItem(title: "Astra を開く", action: #selector(openMain), keyEquivalent: "o")
+        let open = NSMenuItem(title: Facts.menuOpen, action: #selector(openMain), keyEquivalent: "o")
         open.target = self
         menu.addItem(open)
 
         let recording = WindowCoordinator.shared.isRecording
         let rec = NSMenuItem(
-            title: recording ? "録音を停止" : "会議を録音",
+            title: recording ? Facts.recordingMenuStop : Facts.recordingMenuStart,
             action: #selector(toggleRecording),
             keyEquivalent: ""
         )
@@ -51,23 +51,23 @@ final class StatusBarController {
 
         // ショートカットは覚えていないと使えないので、ここに書いておく。
         // 実装は録音の開始 / 停止（長押しではない）。言っていることと違う案内は置かない。
-        let hint = NSMenuItem(title: "録音を開始 / 停止: \(GlobalShortcut.label())", action: nil, keyEquivalent: "")
+        let hint = NSMenuItem(title: "\(Facts.settingsShortcutRow): \(GlobalShortcut.label())", action: nil, keyEquivalent: "")
         hint.isEnabled = false
         menu.addItem(hint)
 
-        let settings = NSMenuItem(title: "設定…", action: #selector(openSettings), keyEquivalent: ",")
+        let settings = NSMenuItem(title: Facts.menuSettings, action: #selector(openSettings), keyEquivalent: ",")
         settings.target = self
         menu.addItem(settings)
 
         // 操作ガイドは GitHub Releases の固定 URL（版番号なしの PDF）。アプリに同梱しないので
         // 常に公開中の最新版が開く。オフラインではブラウザが失敗を出す（偽の面は出さない）。
-        let guide = NSMenuItem(title: "操作ガイド（PDF）", action: #selector(openGuide), keyEquivalent: "")
+        let guide = NSMenuItem(title: Facts.menuGuide, action: #selector(openGuide), keyEquivalent: "")
         guide.target = self
         menu.addItem(guide)
 
         menu.addItem(.separator())
 
-        let quit = NSMenuItem(title: "Astra を終了", action: #selector(quit), keyEquivalent: "q")
+        let quit = NSMenuItem(title: Facts.menuQuit, action: #selector(quit), keyEquivalent: "q")
         quit.target = self
         menu.addItem(quit)
     }

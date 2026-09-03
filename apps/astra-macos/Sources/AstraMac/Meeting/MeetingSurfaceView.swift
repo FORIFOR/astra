@@ -54,7 +54,7 @@ struct MeetingSurfaceView: View {
 
     private var notesPane: some View {
         VStack(alignment: .leading, spacing: Space.base) {
-            Text("メモ").font(.system(size: TypeScale.microSize, weight: .semibold)).foregroundStyle(Palette.muted(dark))
+            Text(Facts.meetingNotes).font(.system(size: TypeScale.microSize, weight: .semibold)).foregroundStyle(Palette.muted(dark))
             ForEach(notes) { n in
                 Text(n.text).font(.system(size: TypeScale.bodySize)).foregroundStyle(Palette.text(dark))
                     .frame(maxWidth: .infinity, alignment: .leading)

@@ -14,7 +14,7 @@ struct SettingsView: View {
 
             section("ショートカット") {
                 // 実際に登録しているグローバルショートカットを正として出す（GlobalShortcut）。
-                row("録音を開始 / 停止", GlobalShortcut.label())
+                row(Facts.settingsShortcutRow, GlobalShortcut.label())
             }
 
             // §10 Interface Size。文字だけでなく面・余白も一緒に動く。
@@ -28,13 +28,13 @@ struct SettingsView: View {
                 .pickerStyle(.segmented)
                 .accessibilityIdentifier("uiScale")
             }
-            section("許可（OS）") {
-                permissionRow("マイク", mic, request: { Permissions.requestMicrophone { _ in mic = Permissions.microphone } })
-                permissionRow("画面収録", screen, request: { Permissions.requestScreenRecording(); screen = Permissions.screenRecording })
-                permissionRow("アクセシビリティ", ax, request: { Permissions.openAccessibilitySettings() })
-                permissionRow("カレンダー", cal, request: { Permissions.requestCalendar { _ in cal = Permissions.calendar } })
+            section(Facts.settingsPermissionsSection) {
+                permissionRow(Facts.permissionMicrophone, mic, request: { Permissions.requestMicrophone { _ in mic = Permissions.microphone } })
+                permissionRow(Facts.permissionScreenRecording, screen, request: { Permissions.requestScreenRecording(); screen = Permissions.screenRecording })
+                permissionRow(Facts.permissionAccessibility, ax, request: { Permissions.openAccessibilitySettings() })
+                permissionRow(Facts.permissionCalendar, cal, request: { Permissions.requestCalendar { _ in cal = Permissions.calendar } })
                 // ⌥Space はこの許可が無いと黙って効かない。Home が空のときしか直す道が無かった。
-                permissionRow("入力監視（⌥Space）", input, request: {
+                permissionRow("\(Facts.permissionInputMonitoring)（\(GlobalShortcut.label())）", input, request: {
                     if !Permissions.requestInputMonitoring() { Permissions.openInputMonitoringSettings() }
                     input = Permissions.inputMonitoring
                 })
@@ -67,7 +67,7 @@ struct SettingsView: View {
             Text(state.rawValue).font(.system(size: 11))
                 .foregroundStyle(state == .granted ? .green : .secondary)
             if state != .granted {
-                Button("許可…", action: request).controlSize(.small)
+                Button(Facts.permissionRequest, action: request).controlSize(.small)
             }
         }
     }

@@ -15,7 +15,7 @@ struct RecordingHeroView: View {
                     .frame(width: 18, height: 18)
             }
             // 見出しも合わせる。「録音中」だけだと、下のバナーと画面が食い違って見える。
-            Text(silent ? "\(state.heroText)（音声なし）" : state.heroText)
+            Text(silent ? "\(state.heroText)\(Facts.recordingHeroSilentSuffix)" : state.heroText)
                 .font(.system(size: TypeScale.cardTitleSize, weight: TypeScale.cardTitleWeight))
             Text(state.elapsedText)
                 .font(.system(size: TypeScale.secondarySize, design: .monospaced))

@@ -155,7 +155,7 @@ private struct RecordingStatusBar: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            Text(silent ? "\(state.heroText)（音声なし）" : state.heroText)
+            Text(silent ? "\(state.heroText)\(Facts.recordingHeroSilentSuffix)" : state.heroText)
                 .font(.system(size: TypeScale.bodySize, weight: .semibold))
                 .foregroundStyle(Palette.text(dark))
             // 波形は「録れている」ことの小さな印にとどめる。
@@ -231,26 +231,26 @@ private struct MeetingNotesCanvas: View {
                     }
                     .padding(.vertical, 2)
                 }
-                group("決まったこと", canvas.decisions,
-                      waiting: "決まったことを待っています…")
-                group("やること", canvas.actions,
-                      waiting: "やることを待っています…")
-                if !canvas.questions.isEmpty { group("質問", canvas.questions, waiting: nil) }
-                if !canvas.concerns.isEmpty { group("懸念", canvas.concerns, waiting: nil) }
+                group(Facts.notesDecisions, canvas.decisions,
+                      waiting: "\(Facts.notesDecisions)を待っています…")
+                group(Facts.notesActions, canvas.actions,
+                      waiting: "\(Facts.notesActions)を待っています…")
+                if !canvas.questions.isEmpty { group(Facts.notesQuestions, canvas.questions, waiting: nil) }
+                if !canvas.concerns.isEmpty { group(Facts.notesConcerns, canvas.concerns, waiting: nil) }
                 // メモ。**描かないと、拾ったのに画面から消える。**
                 // 決定にも作業にも当てはまらない発言はここへ入るが、以前は
                 // どのグループにも出しておらず、黙って落ちていた。
-                if !canvas.notes.isEmpty { group("メモ", canvas.notes, waiting: nil) }
+                if !canvas.notes.isEmpty { group(Facts.meetingNotes, canvas.notes, waiting: nil) }
                 // wrong-hierarchy: 出所は在るが、どの項目のものか分からない場所に置く。
                 if Fixture.current == .wrongHierarchy {
                     let all = canvas.decisions + canvas.actions + canvas.notes
                     if !all.isEmpty {
                         Divider().overlay(Palette.border(dark)).padding(.top, 18)
-                        Text("出所")
+                        Text(Facts.sourceLabel)
                             .font(.system(size: TypeScale.microSize, weight: .semibold))
                             .foregroundStyle(Palette.muted(dark))
                         ForEach(all) { it in
-                            Text("\(it.speaker ?? "?") · \(it.timeLabel ?? "?") · 出所 ›")
+                            Text("\(it.speaker ?? "?") · \(it.timeLabel ?? "?") · \(Facts.sourceLabel) ›")
                                 .font(.system(size: TypeScale.captionSize))
                                 .foregroundStyle(Palette.muted(dark))
                         }
@@ -312,7 +312,7 @@ private struct MeetingNotesCanvas: View {
             default:
                 if let who = line.speaker { Text(who) }
                 if let t = line.timeLabel { Text("· \(t)") }
-                Text("· 出所 ›").foregroundStyle(Palette.accent(dark))
+                Text("· \(Facts.sourceLabel) ›").foregroundStyle(Palette.accent(dark))
                 // 訂正の道を、同じ 1 行に足す。面を増やさない。
                 //
                 // 検証済みの尺度（TRUST_AFFORDANCE = Evidence B、正答 97.5%）で
@@ -320,7 +320,7 @@ private struct MeetingNotesCanvas: View {
                 // 地の割合も 56.6% → 56.5% でほぼ動かない。
                 // 右端に置く案（鉛筆・囲みボタン）は to_fix 3/3 まで上がったが、
                 // どちらも `to_source` を 3/3 → 2/3 に落としたので採らなかった。
-                Text("· 直す").foregroundStyle(Palette.accent(dark))
+                Text("· \(Facts.confirmationEdit)").foregroundStyle(Palette.accent(dark))
             }
             Spacer(minLength: 0)
         }
@@ -387,14 +387,14 @@ private struct MeetingNotesCanvas: View {
             }
 
             if editing == line.id {
-                TextField("直す", text: $editText)
+                TextField(Facts.confirmationEdit, text: $editText)
                     .textFieldStyle(.plain)
                     .font(.system(size: TypeScale.bodySize))
                     .padding(8)
                     .background(RoundedRectangle(cornerRadius: 7).fill(Palette.surface(dark)))
                     .accessibilityIdentifier("canvasEditField")
                 HStack(spacing: 8) {
-                    Button("直す") {
+                    Button(Facts.confirmationEdit) {
                         MeetingIntelligence.shared.edit(line, to: editText)
                         editing = nil; openedItem = nil
                     }
@@ -402,7 +402,7 @@ private struct MeetingNotesCanvas: View {
                     .foregroundStyle(Palette.accent(dark))
                     .frame(height: 26).padding(.horizontal, 10)
                     .buttonStyle(AstraControlStyle(radius: 6, base: 0.05))
-                    Button("やめる") { editing = nil }
+                    Button(Facts.confirmationCancel) { editing = nil }
                         .font(.system(size: TypeScale.microSize))
                         .foregroundStyle(Palette.muted(dark))
                         .frame(height: 26).padding(.horizontal, 8)
@@ -412,7 +412,7 @@ private struct MeetingNotesCanvas: View {
             } else {
                 HStack(spacing: 8) {
                     ProbeButton(id: "canvasEdit",
-                                action: { editing = line.id; editText = line.text }) { Text("直す") }
+                                action: { editing = line.id; editText = line.text }) { Text(Facts.confirmationEdit) }
                         .font(.system(size: TypeScale.microSize, weight: .medium))
                         .foregroundStyle(Palette.accent(dark))
                         .frame(height: 26).padding(.horizontal, 10)
@@ -445,7 +445,7 @@ private struct MeetingNotesCanvas: View {
         let ch = RecordingRuntime.shared.listening
         if ch.isEmpty { return nil }
         var parts: [String] = []
-        if ch.contains(.localUser) { parts.append("マイク") }
+        if ch.contains(.localUser) { parts.append(Facts.permissionMicrophone) }
         if ch.contains(.remoteAudio) { parts.append("画面の音") }
         return parts.joined(separator: " と ") + " を聞いています"
     }
@@ -499,7 +499,7 @@ private struct MeetingNotesCanvas: View {
                 .font(.system(size: TypeScale.microSize))
                 .foregroundStyle(Palette.danger(dark))
         } else {
-            Label("聞いています…", systemImage: "waveform")
+            Label(Facts.listeningPlaceholder, systemImage: "waveform")
                 .font(.system(size: TypeScale.microSize))
                 .foregroundStyle(Palette.muted(dark))
         }

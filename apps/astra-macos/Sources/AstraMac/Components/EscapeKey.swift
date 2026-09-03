@@ -10,7 +10,7 @@ extension View {
     func escapeKey(_ action: @escaping () -> Void) -> some View {
         background(
             Button("", action: action)
-                .keyboardShortcut(.escape, modifiers: [])
+                .keyboardShortcut(UserShortcut.cancel.key, modifiers: UserShortcut.cancel.modifiers)
                 .opacity(0)
                 .accessibilityHidden(true)
         )

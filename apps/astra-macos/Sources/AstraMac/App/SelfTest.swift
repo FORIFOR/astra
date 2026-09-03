@@ -73,6 +73,7 @@ enum SelfTest {
         case "surfacemotion": SurfaceMotionGate.run(args); return true
         case "entry": entryPoints(); return true
         case "menutitles": menuTitles(); return true
+        case "facts": facts(); return true
         case "secret": secretMode(); return true
         case "recordbutton": recordButton(); return true
         case "session": sessionLifecycle(); return true
@@ -518,7 +519,7 @@ enum SelfTest {
                 preview: "明日の会議、資料を先に共有します。10 月の導入時期の件も入れておきました。",
                 source: .init(title: "週次同期", speaker: "田中", time: "10:42"),
                 details: [],
-                risk: .r2, confirmLabel: "送る"))
+                risk: .r2, confirmLabel: Facts.confirmationConfirmExample))
         })
 
         // 7. Meeting: 録音中は Dock が録音コントローラになる。**窓は増えない。**
@@ -739,6 +740,71 @@ enum SelfTest {
         }
         print("SELFTEST_OK menutitles: \(items.filter { !$0.separator }.count) 項目")
         exit(0)
+    }
+
+    /// `--selftest facts`: 利用者に見せる語の正本（`UserFacingFacts`）を書き出す。
+    /// `docs/guide/build.py` が `fact("key")` で引き、`scripts/verify-guide-facts.sh` が突き合わせる。
+    ///
+    /// 行: `LOCALE\t<locale>` / `FACT\t<key>\t<value>\t<protected 0/1>` / `SHORTCUT\t<key>\t<display>\t<badges>`。
+    /// ここで落とすもの: key の重複、許可名が 5 でない、鍵の表示と badge の食い違い、
+    /// 録音の見出しが Rust（astra-core の `hero_text`）と違う、メニューの題が facts と違う。
+    /// 値は literal なので OS の言語・時刻・設定に依らない。
+    @MainActor
+    private static func facts() {
+        var fail: [String] = []
+        let all = Facts.all
+        print("LOCALE\t\(Facts.locale)")
+        var seen = Set<String>()
+        for f in all {
+            if !seen.insert(f.key).inserted { fail.append("key が重複: \(f.key)") }
+            if f.value.isEmpty { fail.append("値が空: \(f.key)") }
+            if f.value.contains("\t") || f.value.contains("\n") { fail.append("値に tab/改行: \(f.key)") }
+            print("FACT\t\(f.key)\t\(f.value)\t\(f.protected ? 1 : 0)")
+        }
+        // 許可名は設定画面の 5 行と同じ数（PermissionCenter.Kind の 3 ではない）。
+        let permissions = all.filter { $0.key.hasPrefix("permission.") && $0.key != "permission.request" }
+        if permissions.count != Facts.permissionCount {
+            fail.append("許可名が \(permissions.count) 件（\(Facts.permissionCount) のはず）")
+        }
+        // 鍵: 実動作と表示が同じ定義から出ていること。
+        let shortcuts: [(String, UserShortcut, [String])] = [
+            ("shortcut.confirmation.proceed", UserShortcut.confirm, [UserShortcut.confirm.display]),
+            ("shortcut.escape", UserShortcut.cancel, [UserShortcut.cancel.display]),
+        ]
+        for (key, sc, badges) in shortcuts {
+            print("SHORTCUT\t\(key)\t\(sc.display)\t\(badges.joined(separator: " "))")
+            if sc.display != badges.joined() { fail.append("\(key): 表示 \(sc.display) と badge \(badges) が違う") }
+        }
+        let global = UserShortcut.globalRecordingBadges
+        print("SHORTCUT\tshortcut.recording.toggle\t\(GlobalShortcut.label())\t\(global.joined(separator: " "))")
+        if global.joined().lowercased() != GlobalShortcut.label().lowercased() {
+            fail.append("shortcut.recording.toggle: badge \(global) が label \(GlobalShortcut.label()) と違う")
+        }
+        if UserShortcut.confirm.display != "⌘↩" { fail.append("確認の鍵が ⌘↩ でない: \(UserShortcut.confirm.display)") }
+        if UserShortcut.cancel.display != "esc" { fail.append("逃げ道の鍵が esc でない: \(UserShortcut.cancel.display)") }
+        // 録音の見出しの正本は Rust。Swift の fact はそれを写しているだけなので、ずれたら落とす。
+        let rec = AstraCoreBridge.snapshot(elapsedMs: 0, isPaused: false, link: .online, pendingMs: 0).heroText
+        let paused = AstraCoreBridge.snapshot(elapsedMs: 0, isPaused: true, link: .online, pendingMs: 0).heroText
+        print("RUST\thero.recording\t\(rec)")
+        print("RUST\thero.paused\t\(paused)")
+        if rec != Facts.recordingHeroRecording { fail.append("recording.hero.recording=\(Facts.recordingHeroRecording) が Rust の \(rec) と違う") }
+        if paused != Facts.recordingHeroPaused { fail.append("recording.hero.paused=\(Facts.recordingHeroPaused) が Rust の \(paused) と違う") }
+        // メニューの題は NSMenu が正本（menutitles）。facts が同じ語を持っていること。
+        let titles = Set(StatusBarController.shared.menuItemTitles().map(\.title))
+        for (key, title) in [("menu.open", Facts.menuOpen), ("menu.settings", Facts.menuSettings),
+                             ("menu.guide", Facts.menuGuide), ("menu.quit", Facts.menuQuit)] {
+            if !titles.contains(title) { fail.append("\(key)=\(title) がメニューに無い: \(titles.sorted())") }
+        }
+        if !titles.contains(Facts.recordingMenuStart) && !titles.contains(Facts.recordingMenuStop) {
+            fail.append("recording.menu.* がメニューに無い")
+        }
+        if fail.isEmpty {
+            print("SELFTEST_OK facts: \(all.count) 件 / 許可 \(permissions.count) / 鍵 \(shortcuts.count + 1) / locale \(Facts.locale)")
+            exit(0)
+        }
+        for f in fail { print("  FAIL: \(f)") }
+        print("SELFTEST_FAIL facts")
+        exit(1)
     }
 
     /// `--selftest entry`: Main View への導線が**本当に開く**か。
@@ -1527,7 +1593,7 @@ enum SelfTest {
                      .init(label: "件名", value: "リリース予定")],
             preview: "明日 macOS 版を出します。",
             source: .init(title: "週次同期", speaker: "Ken", time: "10:42"),
-            details: [], risk: .r2, confirmLabel: "送る")
+            details: [], risk: .r2, confirmLabel: Facts.confirmationConfirmExample)
         store.requireConfirmation(c)
         settle(0.6)
 
@@ -1546,7 +1612,7 @@ enum SelfTest {
 
         // ④ 高さが中身で決まるか。**中身を減らして縮まなければ固定と同じ。**
         let small = ActionConfirmation(app: "Gmail", title: "送りますか？",
-                                       details: [], risk: .r2, confirmLabel: "送る")
+                                       details: [], risk: .r2, confirmLabel: Facts.confirmationConfirmExample)
         store.resolveConfirmation(approved: false); settle(0.2)
         store.requireConfirmation(small); settle(0.3)
         let smallSize = store.dock.size()
@@ -1886,7 +1952,7 @@ enum SelfTest {
                          .init(label: "件名", value: "リリース予定")],
                 preview: "明日 macOS 版を出します。",
                 source: .init(title: "週次同期", speaker: "Ken", time: "10:42"),
-                details: [], risk: .r2, confirmLabel: "送る")
+                details: [], risk: .r2, confirmLabel: Facts.confirmationConfirmExample)
             var resolved: (id: UUID, approved: Bool)?
             let token = AstraEventBus.shared.subscribe { e in
                 if case .confirmationResolved(let id, let approved) = e { resolved = (id, approved) }

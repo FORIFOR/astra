@@ -28,9 +28,9 @@ enum PermissionCenter {
         var reason: String {
             switch self {
             case .voice: return "声で頼むにはマイクが要ります。"
-            case .screenAsk: return "画面について答えるには画面の読み取りが要ります。"
+            case .screenAsk: return "画面について答えるには\(Facts.permissionScreenRecording)の許可が要ります。"
             case .control: return "入力欄へ書き込むにはアクセシビリティが要ります。"
-            case .meeting: return "会議を録るにはマイクと、相手の音声のために画面の読み取りが要ります。"
+            case .meeting: return "会議を録るには\(Facts.permissionMicrophone)と、相手の音声のために\(Facts.permissionScreenRecording)の許可が要ります。"
             }
         }
     }
@@ -48,9 +48,9 @@ enum PermissionCenter {
 
         var label: String {
             switch self {
-            case .microphone: return "マイク"
-            case .screenRecording: return "画面の読み取り"
-            case .accessibility: return "アクセシビリティ"
+            case .microphone: return Facts.permissionMicrophone
+            case .screenRecording: return Facts.permissionScreenRecording
+            case .accessibility: return Facts.permissionAccessibility
             }
         }
     }

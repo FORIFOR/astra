@@ -142,8 +142,8 @@ struct SessionCard: View {
                     if session.participantCount > 0 {
                         metric("person.2", "\(session.participantCount) 人")
                     }
-                    metric("arrow.right.circle", "やること \(session.actionCount)")
-                    metric("checkmark.circle", "決まったこと \(session.decisionCount)")
+                    metric("arrow.right.circle", "\(Facts.notesActions) \(session.actionCount)")
+                    metric("checkmark.circle", "\(Facts.notesDecisions) \(session.decisionCount)")
                     Spacer(minLength: 0)
                 }
             }
@@ -196,7 +196,7 @@ struct SessionCard: View {
             Spacer(minLength: 0)
 
             Menu {
-                Button("開く") { onOpen() }
+                Button(Facts.resultOpen) { onOpen() }
                 Button("タイトルをコピー") {
                     NSPasteboard.general.clearContents()
                     NSPasteboard.general.setString(session.title, forType: .string)

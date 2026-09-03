@@ -47,7 +47,7 @@ struct ConfirmationCardView: View {
                 Spacer(minLength: 0)
                 // 検査から押す口。Dock の確認面（confirmCancel / confirmProceed）と
                 // 別の id にする —— 同じ id で登録すると後勝ちで、どちらを押したか分からない。
-                ProbeButton(id: "cardCancel", action: { onResolve(false) }) { Text("やめる") }
+                ProbeButton(id: "cardCancel", action: { onResolve(false) }) { Text(Facts.confirmationCancel) }
                     .font(.system(size: 11))
                     .foregroundStyle(Palette.muted(dark))
                     .frame(height: 28).padding(.horizontal, 12)

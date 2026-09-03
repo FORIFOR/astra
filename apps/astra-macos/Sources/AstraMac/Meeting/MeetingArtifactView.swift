@@ -23,7 +23,7 @@ struct MeetingArtifactView: View {
     /// 一覧へ戻る。Library から開いた 1 件なので、出る道を面の中に持つ（`SessionDetailView` と同じ）。
     var onBack: (() -> Void)?
     /// 語は Dock / Workspace と同じ「出所」。面ごとに 根拠／出典 と言い換えない。
-    static let tabs = ["文字起こし", "録音", "関連ファイル", "出所"]
+    static let tabs = ["文字起こし", "録音", "関連ファイル", Facts.sourceLabel]
     @State private var tab = MeetingArtifactView.tabs[0]
     var summary: [MeetingCitation]
     var decisions: [MeetingCitation]
@@ -88,12 +88,12 @@ struct MeetingArtifactView: View {
                 }
                 // 画面の言語を揃える（ここだけ英語で、他は日本語だった）。
                 // 群の名前は Dock の Notes と同じ語（決まったこと／やること／質問／懸念／メモ）。
-                if !summary.isEmpty { section("要約", summary) }
-                section("決まったこと \(decisions.count)", decisions)
-                section("やること \(actionItems.count)", actionItems)
+                if !summary.isEmpty { section(Facts.notesSummary, summary) }
+                section("\(Facts.notesDecisions) \(decisions.count)", decisions)
+                section("\(Facts.notesActions) \(actionItems.count)", actionItems)
                 if !questions.isEmpty { section("質問 \(questions.count)", questions) }
                 if !concerns.isEmpty { section("懸念 \(concerns.count)", concerns) }
-                if !notes.isEmpty { section("メモ \(notes.count)", notes) }
+                if !notes.isEmpty { section("\(Facts.meetingNotes) \(notes.count)", notes) }
                 // 箱に入った Text で、押せそうに見えて押せなかった（実機で判明）。
                 // 実際に選べるボタンにし、いま見ている面を選択状態で示す。
                 HStack(spacing: 6) {
@@ -120,7 +120,7 @@ struct MeetingArtifactView: View {
             if let c = shown {   // AC-09: 引用 → transcript + timestamp を Inspector に
                 Divider().overlay(Palette.border(dark))
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(c.number.map { "出所 [\($0)]" } ?? "発言").font(.system(size: TypeScale.microSize, weight: .semibold))
+                    Text(c.number.map { "\(Facts.sourceLabel) [\($0)]" } ?? "発言").font(.system(size: TypeScale.microSize, weight: .semibold))
                         .foregroundStyle(Palette.muted(dark))
                     HStack(spacing: 6) {
                         Text(c.transcriptTime).font(.system(size: TypeScale.microSize).monospaced())

@@ -19,7 +19,7 @@ struct RecordingNowCard: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 10) {
                 Circle().fill(Color.recordingRed).frame(width: 9, height: 9)
-                Text("録音中")
+                Text(Facts.recordingHeroRecording)
                     .font(.system(size: S.type(TypeScale.microSize), weight: .semibold))
                     .foregroundStyle(Palette.muted(dark))
                 Spacer(minLength: 0)
@@ -39,7 +39,7 @@ struct RecordingNowCard: View {
             Waveform(levels: recording.audioLevels, awaitingInput: recording.awaitingAudio)
                 .frame(height: 22)
             HStack(spacing: 8) {
-                Button("ライブメモを開く") { VoiceHUDState.shared.toggleMeetingPanel(.notes) }
+                Button(Facts.meetingNotesOpen) { VoiceHUDState.shared.toggleMeetingPanel(.notes) }
                     .font(.system(size: S.type(TypeScale.secondarySize), weight: .medium))
                     .foregroundStyle(Palette.accent(dark))
                     .frame(height: 32).padding(.horizontal, 14)
@@ -52,7 +52,7 @@ struct RecordingNowCard: View {
                     .buttonStyle(AstraControlStyle(radius: 8, base: 0.05))
                     .accessibilityIdentifier("askFromHome")
                 Spacer(minLength: 0)
-                StopButton(label: "止める",
+                StopButton(label: Facts.recordingStop,
                            font: .system(size: S.type(TypeScale.secondarySize), weight: .semibold)) {
                     RecordingWorkspaceState.shared.stop()
                 }

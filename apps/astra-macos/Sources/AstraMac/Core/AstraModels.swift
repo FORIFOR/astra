@@ -47,7 +47,7 @@ enum DockPresentation: Equatable {
         case notes, captions, ask
         var title: String {
             switch self {
-            case .notes: return "メモ"
+            case .notes: return Facts.meetingNotes
             case .captions: return "字幕"
             case .ask: return "Ask Astra"
             }
@@ -135,11 +135,11 @@ struct AgentResult: Equatable {
 
         var title: String {
             switch self {
-            case .openWorkspace: return "開く"
-            case .openNotes: return "メモを開く"
+            case .openWorkspace: return Facts.resultOpen
+            case .openNotes: return "\(Facts.meetingNotes)を開く"
             case .ask: return "Ask Astra"
-            case .copy: return "コピー"
-            case .openSettings: return "設定を開く"
+            case .copy: return Facts.resultCopy
+            case .openSettings: return Facts.resultOpenSettings
             }
         }
     }

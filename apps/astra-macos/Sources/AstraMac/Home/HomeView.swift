@@ -140,7 +140,7 @@ struct HomeView: View {
                         // 判断を迫ることになる（Apple も、機能を使う瞬間まで
                         // 待つよう勧めている）。
                         if Permissions.inputMonitoring == .granted {
-                            Text("⌥Space でどこからでも始められます")
+                            Text("\(GlobalShortcut.label()) でどこからでも始められます")
                                 .font(.system(size: S.type(TypeScale.secondarySize)))
                                 .foregroundStyle(Palette.muted(dark))
                         } else {
@@ -192,7 +192,7 @@ struct HomeView: View {
     /// 本物の TextField にし、Enter で Voice HUD と同じ依頼経路へ送る。
     private var intentField: some View {
         HStack(spacing: 10) {
-            TextField("何を終わらせますか？", text: $intent)
+            TextField(Facts.homeIntentPlaceholder, text: $intent)
                 .textFieldStyle(.plain)
                 .font(.system(size: S.type(TypeScale.bodySize)))
                 .foregroundStyle(Palette.text(dark))
@@ -318,7 +318,7 @@ struct HomeView: View {
             }
             Spacer(minLength: 0)
             // 件数を出すだけで手が無いと、毎回同じ数を見せられるだけになる。
-            Button("続きから") { recoverPending() }
+            Button(Facts.recoveryResume) { recoverPending() }
                 .font(.system(size: S.type(TypeScale.secondarySize), weight: .medium))
                 .foregroundStyle(Palette.accent(dark))
                 .frame(height: 30).padding(.horizontal, 12)
@@ -326,7 +326,7 @@ struct HomeView: View {
                 .accessibilityIdentifier("recoverPending")
             // **捨てる道**。送り先が無ければ「続きから」は何もできないので、
             // これが無いと消せないお知らせを永久に見続けることになる。
-            Button("破棄") { discardPending() }
+            Button(Facts.recoveryDiscard) { discardPending() }
                 .font(.system(size: S.type(TypeScale.secondarySize)))
                 .foregroundStyle(Palette.muted(dark))
                 .frame(height: 30).padding(.horizontal, 10)

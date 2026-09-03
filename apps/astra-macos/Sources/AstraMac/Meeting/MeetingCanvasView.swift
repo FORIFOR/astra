@@ -13,10 +13,10 @@ struct MeetingCanvasView: View {
         let canvas = store.state.meeting.canvas
         if !canvas.isEmpty {
             VStack(alignment: .leading, spacing: 8) {
-                group("決まったこと", canvas.decisions, "checkmark.circle", Palette.success(dark))
-                group("やること", canvas.actions, "arrow.right.circle", Palette.accent(dark))
-                group("質問", canvas.questions, "questionmark.circle", Palette.muted(dark))
-                group("懸念", canvas.concerns, "exclamationmark.triangle", Palette.warning(dark))
+                group(Facts.notesDecisions, canvas.decisions, "checkmark.circle", Palette.success(dark))
+                group(Facts.notesActions, canvas.actions, "arrow.right.circle", Palette.accent(dark))
+                group(Facts.notesQuestions, canvas.questions, "questionmark.circle", Palette.muted(dark))
+                group(Facts.notesConcerns, canvas.concerns, "exclamationmark.triangle", Palette.warning(dark))
             }
             // 左列の幅に揃える。内容幅のままだと、隣の全高カードに対して浮いて見えた。
             .frame(maxWidth: .infinity, alignment: .leading)

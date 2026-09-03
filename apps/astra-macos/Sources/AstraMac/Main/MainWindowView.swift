@@ -6,12 +6,12 @@ enum MainSection: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     var title: String {
         switch self {
-        case .home: return "Home"
-        case .tasks: return "Tasks"
-        case .meetings: return "Meetings"
-        case .library: return "Library"
-        case .agents: return "Agents"
-        case .plugins: return "Plugins"
+        case .home: return Facts.navHome
+        case .tasks: return Facts.navTasks
+        case .meetings: return Facts.navMeetings
+        case .library: return Facts.navLibrary
+        case .agents: return Facts.navAgents
+        case .plugins: return Facts.navPlugins
         }
     }
     var icon: String {

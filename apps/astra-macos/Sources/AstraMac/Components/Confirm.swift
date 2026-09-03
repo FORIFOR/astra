@@ -46,7 +46,7 @@ enum Confirm {
     /// 旧入口。risk を持たない呼び出しが残っている間の橋渡しで、R3 として扱う。
     /// destructive を選んだら true。ボタンの並びは macOS の作法（右が既定＝安全側）。
     @MainActor
-    static func destructive(_ title: String, detail: String, confirm: String, cancel: String = "やめる") -> Bool {
+    static func destructive(_ title: String, detail: String, confirm: String, cancel: String = Facts.confirmationCancel) -> Bool {
         let alert = NSAlert()
         alert.alertStyle = .warning
         alert.messageText = title

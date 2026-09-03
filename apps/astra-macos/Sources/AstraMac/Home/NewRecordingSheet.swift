@@ -43,7 +43,7 @@ struct NewRecordingSheet: View {
 
             HStack(spacing: 10) {
                 Spacer(minLength: 0)
-                Button("やめる") { isPresented = false }
+                Button(Facts.confirmationCancel) { isPresented = false }
                     .font(.system(size: TypeScale.bodySize))
                     .foregroundStyle(Palette.muted(dark))
                     .frame(height: 36).padding(.horizontal, 18)
@@ -54,7 +54,7 @@ struct NewRecordingSheet: View {
                 } label: {
                     HStack(spacing: 7) {
                         Circle().fill(Color.recordingRed).frame(width: 8, height: 8)
-                        Text("録音を始める")
+                        Text(Facts.recordingStart)
                     }
                     .font(.system(size: TypeScale.bodySize, weight: .semibold))
                     .foregroundStyle(Palette.text(dark))

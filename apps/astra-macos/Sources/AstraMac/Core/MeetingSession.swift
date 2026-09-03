@@ -21,10 +21,10 @@ struct MeetingSession: Identifiable, Equatable {
         /// 「途中で終わっています」と同じ状態に見えなかった（Journey J-C）。
         var label: String {
             switch self {
-            case .recording: return "録音中"
+            case .recording: return Facts.recordingHeroRecording
             case .processing: return "会話を読み取っています…"
             case .ready: return "使えます"
-            case .interrupted: return "途中で終わっています"
+            case .interrupted: return Facts.sessionInterrupted
             case .failed: return "失敗しました"
             }
         }

@@ -100,10 +100,9 @@ private struct IdleDock: View {
             // 見るのは権限の preflight ではなく**実際に登録できたか**。
             // preflight が true でも登録に失敗することがある。
             if GlobalShortcut.shared.isRegistered {
-                KeyBadge("⌥")
-                KeyBadge("space")
+                ForEach(UserShortcut.globalRecordingBadges, id: \.self) { KeyBadge($0) }
             } else {
-                Text("クリック")
+                Text(Facts.hudClickHint)
                     .font(.system(size: S.type(Metrics.dockMetaSize)))
                     .foregroundStyle(Palette.muted(scheme == .dark))
             }
@@ -118,7 +117,7 @@ private struct IdleDock: View {
             AstraStateStore.shared.workspaceOpened()
         })
         .help(GlobalShortcut.shared.isRegistered
-              ? "クリックで操作、⌥Space でどこからでも、⌘クリックで Astra を開く"
+              ? "クリックで操作、\(GlobalShortcut.label()) でどこからでも、⌘クリックで Astra を開く"
               : "クリックで操作、⌘クリックで Astra を開く")
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("dockIdle")
@@ -170,7 +169,7 @@ struct AppContextDock: View {
                             .lineLimit(1)
                             .padding(.horizontal, 8)
                     }
-                    DockLabel(text: "Suggested")
+                    DockLabel(text: Facts.dockSuggested)
                         .padding(.horizontal, 8)
                     VStack(alignment: .leading, spacing: 1) {
                         ForEach(summary.suggestions, id: \.self) { s in
@@ -216,7 +215,7 @@ struct ListeningDock: View {
                 AstraOrb(active: true)
                 MiniWaveform()
                     .frame(width: 44, height: 16)
-                Text(partial.isEmpty ? "聞いています…" : partial)
+                Text(partial.isEmpty ? Facts.listeningPlaceholder : partial)
                     .font(.system(size: S.type(Metrics.dockSpeechSize)))
                     .foregroundStyle(partial.isEmpty ? Palette.muted(dark) : Palette.text(dark))
                     .lineLimit(1)
@@ -224,7 +223,7 @@ struct ListeningDock: View {
                 Spacer(minLength: 0)
                 // マイクが開いている面に逃げ道が**見えない**、と盲検の 2 名が同じ観察をした
                 // （journeys/panel1）。鍵は効いていても、書いていなければ無いのと同じ。
-                KeyBadge("esc")
+                KeyBadge(UserShortcut.cancel.display)
             }
             ContextStrip()
         }
@@ -410,7 +409,7 @@ struct AgentDock: View {
     /// 5 行の段取りが「見出しの無い表」に見えていた。
     private var steps: some View {
         VStack(alignment: .leading, spacing: 6) {
-            DockLabel(text: "Plan")
+            DockLabel(text: Facts.dockPlan)
             VStack(alignment: .leading, spacing: 0) {
             ForEach(store.state.activeTask?.steps ?? []) { step in
                 HStack(spacing: 10) {
@@ -445,7 +444,7 @@ struct AgentDock: View {
         let items = store.state.context.items
         if !items.isEmpty {
             VStack(alignment: .leading, spacing: 6) {
-                DockLabel(text: "Context")
+                DockLabel(text: Facts.dockContext)
                 Text(items.map(\.application).joined(separator: " · "))
                     .font(.system(size: S.type(Metrics.dockMetaSize)))
                     .foregroundStyle(Palette.text(dark))
@@ -462,7 +461,7 @@ struct AgentDock: View {
                 // 押せる範囲を label へ付ける。Button の外側に .frame を付けると
                 // 当たりは文字のままで、実寸は 29x16 だった（隣の openWorkspace は
                 // 178x28）。**止める操作がいちばん小さい**のは、あってはならない。
-                StopButton(label: "止める",
+                StopButton(label: Facts.taskStop,
                            font: .system(size: S.type(Metrics.dockMetaSize), weight: .medium)) {
                     AstraStateStore.shared.finishTask(.failed)
                 }
@@ -474,7 +473,7 @@ struct AgentDock: View {
                 AstraStateStore.shared.workspaceOpened()
             } label: {
                 HStack(spacing: 5) {
-                    Text("作業画面で続ける")
+                    Text(Facts.taskOpenWorkspace)
                     Image(systemName: "arrow.up.right").font(.system(size: 10, weight: .semibold))
                 }
                 .font(.system(size: S.type(Metrics.dockMetaSize), weight: .medium))
@@ -576,9 +575,9 @@ struct ConfirmationDock: View {
                 // journeys/panel1）。外へ出る面ほど、逃げ道と実行の鍵を先に見せる。
                 if !editing {
                     HStack(spacing: 4) {
-                        KeyBadge("esc")
-                        Text("やめる")
-                        KeyBadge("⌘↩").padding(.leading, 6)
+                        KeyBadge(UserShortcut.cancel.display)
+                        Text(Facts.confirmationCancel)
+                        KeyBadge(UserShortcut.confirm.display).padding(.leading, 6)
                         Text(confirmation.confirmLabel)
                     }
                     .font(.system(size: S.type(Metrics.dockLabelSize)))
@@ -586,13 +585,13 @@ struct ConfirmationDock: View {
                 }
                 Spacer(minLength: 0)
                 if editing {
-                    Button("やめる") { editing = false; edited = [:] }
+                    Button(Facts.confirmationCancel) { editing = false; edited = [:] }
                         .font(.system(size: S.type(Metrics.dockRowSize)))
                         .foregroundStyle(Palette.muted(dark))
                         .frame(height: 32).padding(.horizontal, 14)
                         .buttonStyle(AstraControlStyle(radius: 7, base: 0.0))
                         .accessibilityIdentifier("confirmEditCancel")
-                    Button("完了") { editing = false }
+                    Button(Facts.confirmationEditDone) { editing = false }
                         .font(.system(size: S.type(Metrics.dockRowSize), weight: .semibold))
                         .foregroundStyle(Palette.accent(dark))
                         .frame(height: 32).padding(.horizontal, 18)
@@ -603,14 +602,14 @@ struct ConfirmationDock: View {
                     // （造形⑤、`scripts/ux-auto/primary.py`）。逃げ道は主より狭く保つ。
                     // 検査が押すのも同じ 1 本（`ProbeButton`）。
                     ProbeButton(id: "confirmCancel", action: { AstraStateStore.shared.resolveConfirmation(approved: false) }) {
-                        Text("やめる")
+                        Text(Facts.confirmationCancel)
                     }
                         .font(.system(size: S.type(Metrics.dockRowSize)))
                         .foregroundStyle(Palette.muted(dark))
                         .frame(height: 32).padding(.horizontal, 14)
                         .buttonStyle(AstraControlStyle(radius: 7, base: 0.0))
                     if !confirmation.params.isEmpty || confirmation.preview != nil {
-                        Button("直す") { editing = true }
+                        Button(Facts.confirmationEdit) { editing = true }
                             .font(.system(size: S.type(Metrics.dockRowSize)))
                             // 「目を引くものは 1 つだけ」と考えて静かにしてみたが、
                             // 測ると control_visibility が 0-3 で落ちた。
@@ -652,7 +651,7 @@ struct ConfirmationDock: View {
         // 実行は ⌘Return だけ。
         .background(
             Button("") { AstraStateStore.shared.resolveConfirmation(approved: true) }
-                .keyboardShortcut(.return, modifiers: .command)
+                .keyboardShortcut(UserShortcut.confirm.key, modifiers: UserShortcut.confirm.modifiers)
                 .opacity(0)
                 .accessibilityHidden(true)
         )
@@ -709,7 +708,7 @@ struct ConfirmationDock: View {
                     MainWindowController.shared.showSection(.meetings)
                 } label: {
                     HStack(spacing: 5) {
-                        Text("出所").foregroundStyle(Palette.muted(dark))
+                        Text(Facts.sourceLabel).foregroundStyle(Palette.muted(dark))
                         Text([src.title, src.speaker, src.time].compactMap { $0 }.joined(separator: " · "))
                             .foregroundStyle(Palette.text(dark))
                         Image(systemName: "chevron.right")
@@ -800,7 +799,7 @@ struct MeetingDock: View {
             Circle().fill(recording.isPaused ? Color.secondary : Color.recordingRed)
                 .frame(width: 9, height: 9)
             VStack(alignment: .leading, spacing: 1) {
-                Text(store.state.meeting.detectedApp ?? "録音中")
+                Text(store.state.meeting.detectedApp ?? Facts.recordingHeroRecording)
                     .font(.system(size: S.type(Metrics.dockPrimarySize), weight: .semibold))
                     .foregroundStyle(Palette.text(dark))
                     .lineLimit(1)
@@ -850,12 +849,12 @@ private struct MeetingPanelBody: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 8) {
-                DockLabel(text: panel == .notes ? "ライブメモ" : panel.title)
+                DockLabel(text: panel == .notes ? Facts.meetingNotesPanelTitle : panel.title)
                 Spacer(minLength: 0)
                 // 両方同時に見たいときだけ、大きな面へ出す（既定では出さない）。
                 Button { WindowCoordinator.shared.detachMeetingSurface() } label: {
                     HStack(spacing: 4) {
-                        Text("会議の横に開く")
+                        Text(Facts.meetingDetach)
                         Image(systemName: "arrow.up.right").font(.system(size: 9, weight: .semibold))
                     }
                     .font(.system(size: S.type(Metrics.dockLabelSize), weight: .medium))
@@ -930,10 +929,10 @@ private struct MeetingPanelBody: View {
                 // 4 件のメモに 460pt の面を出すと、面の 6 割が空だった。
                 ScrollView {
                     VStack(alignment: .leading, spacing: 14) {
-                        notesGroup("決まったこと", canvas.decisions)
-                        notesGroup("懸念", canvas.concerns)
-                        notesGroup("やること", canvas.actions)
-                        notesGroup("質問", canvas.questions)
+                        notesGroup(Facts.notesDecisions, canvas.decisions)
+                        notesGroup(Facts.notesConcerns, canvas.concerns)
+                        notesGroup(Facts.notesActions, canvas.actions)
+                        notesGroup(Facts.notesQuestions, canvas.questions)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
@@ -1055,10 +1054,10 @@ struct ResultDock: View {
         case .processing: return "要約とやることを作っています…"
         case .ready:
             // 語は Notes と同じ（やること / 決まったこと）。面ごとに言い換えない。
-            return "やること \(s.actionCount) · 決まったこと \(s.decisionCount) · \(s.participantCount) 人"
-        case .interrupted: return "途中で終わっています"
+            return "\(Facts.notesActions) \(s.actionCount) · \(Facts.notesDecisions) \(s.decisionCount) · \(s.participantCount) 人"
+        case .interrupted: return Facts.sessionInterrupted
         case .failed: return "失敗しました"
-        case .recording: return "録音中"
+        case .recording: return Facts.recordingHeroRecording
         }
     }
 
@@ -1125,7 +1124,7 @@ struct ContextDetailDock: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 8) {
-                DockLabel(text: "Context")
+                DockLabel(text: Facts.dockContext)
                 Spacer(minLength: 0)
                 Text("Astra が見ているもの \(store.state.context.items.count) 件")
                     .font(.system(size: S.type(Metrics.dockMetaSize)))
@@ -1199,7 +1198,7 @@ struct QuickActionsDock: View {
         [
             Item(icon: "sparkles", title: "聞く") { state.beginListening() },
             Item(icon: "record.circle", title: "録音") { WindowCoordinator.shared.toggleRecording() },
-            Item(icon: "square.grid.2x2", title: "開く") { MainWindowController.shared.show() },
+            Item(icon: "square.grid.2x2", title: Facts.resultOpen) { MainWindowController.shared.show() },
         ]
     }
 
