@@ -59,6 +59,12 @@ final class StatusBarController {
         settings.target = self
         menu.addItem(settings)
 
+        // 操作ガイドは GitHub Releases の固定 URL（版番号なしの PDF）。アプリに同梱しないので
+        // 常に公開中の最新版が開く。オフラインではブラウザが失敗を出す（偽の面は出さない）。
+        let guide = NSMenuItem(title: "操作ガイド（PDF）", action: #selector(openGuide), keyEquivalent: "")
+        guide.target = self
+        menu.addItem(guide)
+
         menu.addItem(.separator())
 
         let quit = NSMenuItem(title: "Astra を終了", action: #selector(quit), keyEquivalent: "q")
@@ -75,6 +81,10 @@ final class StatusBarController {
     @objc private func openMain() { MainWindowController.shared.showSection(.home) }
     @objc private func toggleRecording() { WindowCoordinator.shared.toggleRecording() }
     @objc private func openSettings() { SettingsWindowController.shared.show() }
+    @objc private func openGuide() { NSWorkspace.shared.open(Self.guideURL) }
+
+    /// RELEASE.md §2.6 の「一般利用者へ案内する固定 URL」。版ごとの PDF は Releases の各版に別名で残る。
+    static let guideURL = URL(string: "https://github.com/FORIFOR/astra/releases/latest/download/Astra-guide-ja.pdf")!
     @objc private func quit() { NSApp.terminate(nil) }
 }
 

@@ -758,6 +758,13 @@ enum SelfTest {
             print("SELFTEST_FAIL entry: メニューに「Astra を開く」が無い"); exit(2)
         }
         if item.key.isEmpty { fail.append("「Astra を開く」にショートカットが無い") }
+        // 操作ガイドはアプリ内から辿れる（RELEASE.md §2.6 の固定 URL。版番号を含めない）。
+        if !StatusBarController.shared.menuItemTitles().contains(where: { $0.title.contains("ガイド") }) {
+            fail.append("メニューに「操作ガイド」が無い")
+        }
+        if StatusBarController.guideURL.lastPathComponent != "Astra-guide-ja.pdf" {
+            fail.append("操作ガイドの URL が固定名 Astra-guide-ja.pdf ではない: \(StatusBarController.guideURL)")
+        }
 
         // ② 実際に開く。
         MainWindowController.shared.showSection(.home)
