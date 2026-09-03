@@ -27,10 +27,10 @@ RELEASE_ARTIFACT_OK: 47 PASS / 0 SKIP / 0 FAIL（repo の外・まっさらな�
 sha256: `d57e977543ffc09072a919a82afa2c536ea205a6adc1d2a160229a931bcc3e44`
 appcast: `dist/feed/appcast.xml`（EdDSA 署名済み。0.1.0 → 0.1.1 の delta 16,450 bytes も同梱）
 
-**まだ公開していない。** GitHub Releases に `v0.1.1` を作り
-`Astra-0.1.1.zip` / `Astra0.1.1-0.1.0.delta` / `appcast.xml` を添えると、
-0.1.0 の利用者に自動更新が届く（feed は `releases/latest/download/appcast.xml` で固定）。
-公開は人の判断で行う。
+**公開済み**（2026-09-03、本人の指示で）: https://github.com/FORIFOR/astra/releases/tag/v0.1.1
+添付: `Astra-0.1.1.zip` / `Astra0.1.1-0.1.0.delta` / `appcast.xml`。
+公開後に `releases/latest/download/appcast.xml` を取り直して手元の appcast と一致、
+zip の sha256 も一致を確認した。0.1.0 の利用者には自動更新で届く。
 
 0.1.0（384b46a）からの変更 92 commit は画面の言葉と時間軸の直し:
 DS-01〜06 の造形規則、Craft Freeze、journey J-A/J-B/J-C（頼む・録る・断られる）を
