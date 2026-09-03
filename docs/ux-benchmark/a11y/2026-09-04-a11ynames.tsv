@@ -1,0 +1,166 @@
+A11Y_ENV	fullKeyboardAccess=false	macOS=Version 26.6.2 (Build 25G83)
+A11Y_SURFACE	dock-idle	controls=0	nameless=0	latinOnly=0	images=0	imagesNamed=0
+A11Y_SURFACE	dock-listening	controls=0	nameless=0	latinOnly=0	images=0	imagesNamed=0
+A11Y_SURFACE	dock-agent	controls=2	nameless=0	latinOnly=0	images=2	imagesNamed=2
+A11Y_CONTROL	dock-agent	AXButton	sub=	name=止める	id=stopAgent	frame=940,211,86x28	press=true
+A11Y_CONTROL	dock-agent	AXButton	sub=	name=作業画面で続ける	id=openWorkspace	frame=1488,211,132x28	press=true
+A11Y_SURFACE	dock-confirmation	controls=4	nameless=0	latinOnly=0	images=2	imagesNamed=2
+A11Y_CONTROL	dock-confirmation	AXButton	sub=	name=出所, 週次同期 · 田中 · 10:42	id=confirmSource	frame=1020,150,520x14	press=true
+A11Y_CONTROL	dock-confirmation	AXButton	sub=	name=やめる	id=confirmCancel	frame=1316,189,42x19	press=true
+A11Y_CONTROL	dock-confirmation	AXButton	sub=	name=直す	id=confirmEdit	frame=1394,189,28x19	press=true
+A11Y_CONTROL	dock-confirmation	AXButton	sub=	name=送る	id=confirmProceed	frame=1478,189,28x19	press=true
+A11Y_SURFACE	dock-meeting	controls=5	nameless=0	latinOnly=1	images=0	imagesNamed=0
+A11Y_CONTROL	dock-meeting	AXButton	sub=	name=メモ	id=meetingPanel-notes	frame=1320,23,68x30	press=true
+A11Y_CONTROL	dock-meeting	AXButton	sub=	name=字幕	id=meetingPanel-captions	frame=1400,23,70x30	press=true
+A11Y_CONTROL	dock-meeting	AXButton	sub=	name=Ask Astra	id=meetingPanel-ask	frame=1482,23,107x30	press=true
+A11Y_CONTROL	dock-meeting	AXButton	sub=	name=表示	id=secretToggle	frame=1601,23,32x30	press=true
+A11Y_CONTROL	dock-meeting	AXButton	sub=	name=録音を止める	id=stopRecording	frame=1645,26,25x25	press=true
+A11Y_RECORDING	found=true	names=録音を止める
+A11Y_SURFACE	workspace	controls=17	nameless=0	latinOnly=2	images=4	imagesNamed=4
+A11Y_CONTROL	workspace	AXButton	sub=	name=一時停止	id=recordingWorkspace	frame=1229,358,28x28	press=true
+A11Y_CONTROL	workspace	AXButton	sub=	name=キャプション	id=recordingWorkspace	frame=1267,358,28x28	press=true
+A11Y_CONTROL	workspace	AXButton	sub=	name=スキャン	id=recordingWorkspace	frame=1305,358,28x28	press=true
+A11Y_CONTROL	workspace	AXButton	sub=	name=さらに表示	id=recordingWorkspace	frame=1343,358,28x28	press=true
+A11Y_CONTROL	workspace	AXButton	sub=	name=録音を止める	id=recordingWorkspace	frame=1392,360,25x25	press=true
+A11Y_CONTROL	workspace	AXButton	sub=	name=文字起こし	id=recordingWorkspace	frame=1481,471,104x32	press=true
+A11Y_CONTROL	workspace	AXButton	sub=	name=翻訳	id=recordingWorkspace	frame=1587,471,66x32	press=true
+A11Y_CONTROL	workspace	AXButton	sub=	name=字幕	id=recordingWorkspace	frame=1655,471,66x32	press=true
+A11Y_CONTROL	workspace	AXTextField	sub=	name=この会議について聞く	id=recordingWorkspace	frame=799,767,740x17	press=false
+A11Y_CONTROL	workspace	AXButton	sub=	name=要約	id=recordingWorkspace	frame=1549,761,41x28	press=true
+A11Y_CONTROL	workspace	AXButton	sub=	name=決まったこと	id=recordingWorkspace	frame=1594,761,85x28	press=true
+A11Y_CONTROL	workspace	AXButton	sub=	name=やること	id=recordingWorkspace	frame=1683,761,63x28	press=true
+A11Y_CONTROL	workspace	AXButton	sub=	name=マイク	id=recordingWorkspace	frame=1756,761,28x28	press=true
+A11Y_CONTROL	workspace	AXButton	sub=	name=閉じる	id=recordingWorkspace	frame=1771,819,11x11	press=true
+A11Y_CONTROL	workspace	AXButton	sub=	name=ファイル	id=recordingWorkspace	frame=776,857,86x28	press=true
+A11Y_CONTROL	workspace	AXButton	sub=	name=Gmail	id=recordingWorkspace	frame=870,857,78x28	press=true
+A11Y_CONTROL	workspace	AXButton	sub=	name=Drive	id=recordingWorkspace	frame=956,857,76x28	press=true
+A11Y_TAB	workspace	step=1	role=AXGroup	name=	id=	moved=false	visible=no
+A11Y_TAB	workspace	step=2	role=AXGroup	name=	id=	moved=false	visible=no
+A11Y_TAB	workspace	step=3	role=AXGroup	name=	id=	moved=false	visible=no
+A11Y_TAB	workspace	step=4	role=AXGroup	name=	id=	moved=false	visible=no
+A11Y_TAB	workspace	step=5	role=AXGroup	name=	id=	moved=false	visible=no
+A11Y_TAB	workspace	step=6	role=AXGroup	name=	id=	moved=false	visible=no
+A11Y_TAB	workspace	step=7	role=AXGroup	name=	id=	moved=false	visible=no
+A11Y_TAB	workspace	step=8	role=AXTextField	name=この会議について聞く	id=recordingWorkspace	moved=true	visible=yes
+A11Y_TAB	workspace	step=9	role=AXGroup	name=	id=	moved=true	visible=yes
+A11Y_TAB	workspace	step=10	role=AXGroup	name=	id=	moved=false	visible=no
+A11Y_TAB	workspace	step=11	role=AXGroup	name=	id=	moved=false	visible=no
+A11Y_TAB	workspace	step=12	role=AXGroup	name=	id=	moved=false	visible=no
+A11Y_TAB	workspace	step=13	role=AXGroup	name=	id=	moved=false	visible=no
+A11Y_TAB	workspace	step=14	role=AXGroup	name=	id=	moved=false	visible=no
+A11Y_SURFACE	main-home	controls=15	nameless=0	latinOnly=3	images=2	imagesNamed=2
+A11Y_CONTROL	main-home	AXTextField	sub=	name=何を終わらせますか？	id=homeIntentField	frame=970,302,778x18	press=false
+A11Y_CONTROL	main-home	AXButton	sub=	name=マイク	id=homeIntentMic	frame=1758,297,28x28	press=true
+A11Y_CONTROL	main-home	AXButton	sub=	name=録音を始める, 前回の設定でその場で録り始めます	id=startRecording	frame=952,359,807x72	press=true
+A11Y_CONTROL	main-home	AXButton	sub=	name=下に移動	id=startRecordingOptions	frame=1760,365,44x60	press=true
+A11Y_CONTROL	main-home	AXButton	sub=	name=続きから	id=recoverableRecordings	frame=1666,473,52x17	press=true
+A11Y_CONTROL	main-home	AXButton	sub=	name=破棄	id=recoverableRecordings	frame=1750,473,26x17	press=true
+A11Y_CONTROL	main-home	AXMenuButton	sub=	name=自分だけ	id=session-meeting-1788449708	frame=970,653,51x15	press=true
+A11Y_CONTROL	main-home	AXMenuButton	sub=	name=プロジェクト無し	id=session-meeting-1788449708	frame=1027,653,95x15	press=true
+A11Y_CONTROL	main-home	AXMenuButton	sub=	name=さらに表示	id=session-meeting-1788449708	frame=1766,654,20x14	press=true
+A11Y_CONTROL	main-home	AXButton	sub=	name=Hide Sidebar	id=	frame=881,154,47x52	press=true
+A11Y_CONTROL	main-home	AXButton	sub=	name=sidebar.trailing	id=toggleActivity	frame=1848,154,48x52	press=true
+A11Y_CONTROL	main-home	AXButton	sub=AXCloseButton	name=	id=	frame=678,172,16x16	press=true
+A11Y_CONTROL	main-home	AXButton	sub=AXFullScreenButton	name=	id=	frame=724,172,16x16	press=true
+A11Y_CONTROL	main-home	AXButton	sub=AXMinimizeButton	name=	id=	frame=701,172,16x16	press=true
+A11Y_CONTROL	main-home	AXStaticText	sub=	name=Home	id=	frame=932,154,916x52	press=true
+A11Y_TAB	main-home	step=1	role=AXTextField	name=何を終わらせますか？	id=homeIntentField	moved=true	visible=yes
+A11Y_TAB	main-home	step=2	role=AXGroup	name=	id=	moved=true	visible=yes
+A11Y_TAB	main-home	step=3	role=AXGroup	name=	id=	moved=false	visible=no
+A11Y_TAB	main-home	step=4	role=AXGroup	name=	id=	moved=false	visible=no
+A11Y_TAB	main-home	step=5	role=AXGroup	name=	id=	moved=false	visible=no
+A11Y_TAB	main-home	step=6	role=AXGroup	name=	id=	moved=false	visible=no
+A11Y_TAB	main-home	step=7	role=AXOutline	name=Sidebar	id=	moved=true	visible=yes
+A11Y_TAB	main-home	step=8	role=AXTextField	name=何を終わらせますか？	id=homeIntentField	moved=true	visible=yes
+A11Y_TAB	main-home	step=9	role=AXGroup	name=	id=	moved=true	visible=yes
+A11Y_TAB	main-home	step=10	role=AXGroup	name=	id=	moved=false	visible=no
+A11Y_TAB	main-home	step=11	role=AXGroup	name=	id=	moved=false	visible=no
+A11Y_TAB	main-home	step=12	role=AXGroup	name=	id=	moved=false	visible=no
+A11Y_TAB	main-home	step=13	role=AXGroup	name=	id=	moved=false	visible=no
+A11Y_TAB	main-home	step=14	role=AXOutline	name=Sidebar	id=	moved=true	visible=yes
+A11Y_SURFACE	main-tasks	controls=6	nameless=0	latinOnly=3	images=0	imagesNamed=0
+A11Y_CONTROL	main-tasks	AXButton	sub=	name=Hide Sidebar	id=	frame=881,154,47x52	press=true
+A11Y_CONTROL	main-tasks	AXButton	sub=	name=sidebar.trailing	id=toggleActivity	frame=1848,154,48x52	press=true
+A11Y_CONTROL	main-tasks	AXButton	sub=AXCloseButton	name=	id=	frame=678,172,16x16	press=true
+A11Y_CONTROL	main-tasks	AXButton	sub=AXFullScreenButton	name=	id=	frame=724,172,16x16	press=true
+A11Y_CONTROL	main-tasks	AXButton	sub=AXMinimizeButton	name=	id=	frame=701,172,16x16	press=true
+A11Y_CONTROL	main-tasks	AXStaticText	sub=	name=Tasks	id=	frame=932,154,916x52	press=true
+A11Y_SURFACE	main-meetings	controls=9	nameless=0	latinOnly=3	images=1	imagesNamed=1
+A11Y_CONTROL	main-meetings	AXMenuButton	sub=	name=自分だけ	id=session-meeting-1788449708	frame=974,380,51x15	press=true
+A11Y_CONTROL	main-meetings	AXMenuButton	sub=	name=プロジェクト無し	id=session-meeting-1788449708	frame=1031,380,95x15	press=true
+A11Y_CONTROL	main-meetings	AXMenuButton	sub=	name=さらに表示	id=session-meeting-1788449708	frame=1762,381,20x14	press=true
+A11Y_CONTROL	main-meetings	AXButton	sub=	name=Hide Sidebar	id=	frame=881,154,47x52	press=true
+A11Y_CONTROL	main-meetings	AXButton	sub=	name=sidebar.trailing	id=toggleActivity	frame=1848,154,48x52	press=true
+A11Y_CONTROL	main-meetings	AXButton	sub=AXCloseButton	name=	id=	frame=678,172,16x16	press=true
+A11Y_CONTROL	main-meetings	AXButton	sub=AXFullScreenButton	name=	id=	frame=724,172,16x16	press=true
+A11Y_CONTROL	main-meetings	AXButton	sub=AXMinimizeButton	name=	id=	frame=701,172,16x16	press=true
+A11Y_CONTROL	main-meetings	AXStaticText	sub=	name=Meetings	id=	frame=932,154,916x52	press=true
+A11Y_SURFACE	main-library	controls=6	nameless=0	latinOnly=3	images=0	imagesNamed=0
+A11Y_CONTROL	main-library	AXButton	sub=	name=Hide Sidebar	id=	frame=881,154,47x52	press=true
+A11Y_CONTROL	main-library	AXButton	sub=	name=sidebar.trailing	id=toggleActivity	frame=1848,154,48x52	press=true
+A11Y_CONTROL	main-library	AXButton	sub=AXCloseButton	name=	id=	frame=678,172,16x16	press=true
+A11Y_CONTROL	main-library	AXButton	sub=AXFullScreenButton	name=	id=	frame=724,172,16x16	press=true
+A11Y_CONTROL	main-library	AXButton	sub=AXMinimizeButton	name=	id=	frame=701,172,16x16	press=true
+A11Y_CONTROL	main-library	AXStaticText	sub=	name=Library	id=	frame=932,154,916x52	press=true
+A11Y_SURFACE	main-agents	controls=6	nameless=0	latinOnly=3	images=0	imagesNamed=0
+A11Y_CONTROL	main-agents	AXButton	sub=	name=Hide Sidebar	id=	frame=881,154,47x52	press=true
+A11Y_CONTROL	main-agents	AXButton	sub=	name=sidebar.trailing	id=toggleActivity	frame=1848,154,48x52	press=true
+A11Y_CONTROL	main-agents	AXButton	sub=AXCloseButton	name=	id=	frame=678,172,16x16	press=true
+A11Y_CONTROL	main-agents	AXButton	sub=AXFullScreenButton	name=	id=	frame=724,172,16x16	press=true
+A11Y_CONTROL	main-agents	AXButton	sub=AXMinimizeButton	name=	id=	frame=701,172,16x16	press=true
+A11Y_CONTROL	main-agents	AXStaticText	sub=	name=Agents	id=	frame=932,154,916x52	press=true
+A11Y_SURFACE	main-plugins	controls=10	nameless=0	latinOnly=3	images=12	imagesNamed=12
+A11Y_CONTROL	main-plugins	AXButton	sub=AXIncrementArrow	name=	id=	frame=1883,206,0x0	press=true
+A11Y_CONTROL	main-plugins	AXButton	sub=AXDecrementArrow	name=	id=	frame=1883,206,0x0	press=true
+A11Y_CONTROL	main-plugins	AXButton	sub=AXIncrementPage	name=	id=	frame=1886,861,11x92	press=true
+A11Y_CONTROL	main-plugins	AXButton	sub=AXDecrementPage	name=	id=	frame=1886,209,11x0	press=true
+A11Y_CONTROL	main-plugins	AXButton	sub=	name=Hide Sidebar	id=	frame=881,154,47x52	press=true
+A11Y_CONTROL	main-plugins	AXButton	sub=	name=sidebar.trailing	id=toggleActivity	frame=1848,154,48x52	press=true
+A11Y_CONTROL	main-plugins	AXButton	sub=AXCloseButton	name=	id=	frame=678,172,16x16	press=true
+A11Y_CONTROL	main-plugins	AXButton	sub=AXFullScreenButton	name=	id=	frame=724,172,16x16	press=true
+A11Y_CONTROL	main-plugins	AXButton	sub=AXMinimizeButton	name=	id=	frame=701,172,16x16	press=true
+A11Y_CONTROL	main-plugins	AXStaticText	sub=	name=Plugins	id=	frame=932,154,916x52	press=true
+A11Y_SURFACE	main-meeting-detail	controls=22	nameless=0	latinOnly=5	images=0	imagesNamed=0
+A11Y_CONTROL	main-meeting-detail	AXButton	sub=	name=戻る	id=meetingArtifact	frame=946,224,30x30	press=true
+A11Y_CONTROL	main-meeting-detail	AXButton	sub=	name=[1]	id=meetingArtifact	frame=1275,299,25x24	press=true
+A11Y_CONTROL	main-meeting-detail	AXButton	sub=	name=[2]	id=meetingArtifact	frame=1105,368,26x24	press=true
+A11Y_CONTROL	main-meeting-detail	AXButton	sub=	name=[3]	id=meetingArtifact	frame=1138,437,27x24	press=true
+A11Y_CONTROL	main-meeting-detail	AXButton	sub=	name=文字起こし	id=meetingArtifact	frame=946,485,76x28	press=true
+A11Y_CONTROL	main-meeting-detail	AXButton	sub=	name=録音	id=meetingArtifact	frame=1028,485,43x28	press=true
+A11Y_CONTROL	main-meeting-detail	AXButton	sub=	name=関連ファイル	id=meetingArtifact	frame=1077,485,87x28	press=true
+A11Y_CONTROL	main-meeting-detail	AXButton	sub=	name=出所	id=meetingArtifact	frame=1170,485,43x28	press=true
+A11Y_CONTROL	main-meeting-detail	AXButton	sub=	name=00:42, あなた, 本日はお時間ありがとうございます。前回の提案書 v3 をもとに進めます。	id=meetingArtifact	frame=946,537,615x27	press=true
+A11Y_CONTROL	main-meeting-detail	AXButton	sub=	name=01:10, 田中, はい。社内では 10 月の導入で調整しています。	id=meetingArtifact	frame=946,568,615x27	press=true
+A11Y_CONTROL	main-meeting-detail	AXButton	sub=	name=13:05, 田中, 初期費用の内訳をもう少し細かく見せてもらえますか。	id=meetingArtifact	frame=946,599,615x27	press=true
+A11Y_CONTROL	main-meeting-detail	AXButton	sub=	name=13:40, 伊藤, ライセンスと導入支援に分けてお出しします。	id=meetingArtifact	frame=946,630,615x27	press=true
+A11Y_CONTROL	main-meeting-detail	AXButton	sub=	name=14:18, 田中, 初期費用が少し気になっています。	id=meetingArtifact	frame=946,661,615x27	press=true
+A11Y_CONTROL	main-meeting-detail	AXButton	sub=	name=14:22, 鈴木, 10 月からでしたら枠を取れます。	id=meetingArtifact	frame=946,692,615x27	press=true
+A11Y_CONTROL	main-meeting-detail	AXButton	sub=	name=14:31, 伊藤, 修正版の見積を明日お送りします。	id=meetingArtifact	frame=946,723,615x27	press=true
+A11Y_CONTROL	main-meeting-detail	AXButton	sub=	name=41:50, 田中, では明日の見積を待って、社内で回します。	id=meetingArtifact	frame=946,754,615x27	press=true
+A11Y_CONTROL	main-meeting-detail	AXButton	sub=	name=Hide Sidebar	id=	frame=881,154,47x52	press=true
+A11Y_CONTROL	main-meeting-detail	AXButton	sub=	name=sidebar.trailing	id=toggleActivity	frame=1848,154,48x52	press=true
+A11Y_CONTROL	main-meeting-detail	AXButton	sub=AXCloseButton	name=	id=	frame=678,172,16x16	press=true
+A11Y_CONTROL	main-meeting-detail	AXButton	sub=AXFullScreenButton	name=	id=	frame=724,172,16x16	press=true
+A11Y_CONTROL	main-meeting-detail	AXButton	sub=AXMinimizeButton	name=	id=	frame=701,172,16x16	press=true
+A11Y_CONTROL	main-meeting-detail	AXStaticText	sub=	name=A社 新規提案	id=	frame=932,154,916x52	press=true
+A11Y_SURFACE	settings	controls=6	nameless=0	latinOnly=3	images=0	imagesNamed=0
+A11Y_CONTROL	settings	AXRadioButton	sub=AXSegment	name=Compact	id=	frame=1074,423,97x24	press=true
+A11Y_CONTROL	settings	AXRadioButton	sub=AXSegment	name=Comfortable	id=	frame=1172,423,96x24	press=true
+A11Y_CONTROL	settings	AXRadioButton	sub=AXSegment	name=Large	id=	frame=1269,423,96x24	press=true
+A11Y_CONTROL	settings	AXButton	sub=AXCloseButton	name=	id=	frame=1058,262,16x16	press=true
+A11Y_CONTROL	settings	AXButton	sub=AXZoomButton	name=	id=	frame=1104,262,16x16	press=true
+A11Y_CONTROL	settings	AXButton	sub=AXMinimizeButton	name=	id=	frame=1081,262,16x16	press=true
+A11Y_TAB	settings	step=1	role=AXWindow	name=Astra 設定	id=	moved=false	visible=no
+A11Y_TAB	settings	step=2	role=AXWindow	name=Astra 設定	id=	moved=false	visible=no
+A11Y_TAB	settings	step=3	role=AXWindow	name=Astra 設定	id=	moved=false	visible=no
+A11Y_TAB	settings	step=4	role=AXWindow	name=Astra 設定	id=	moved=false	visible=no
+A11Y_TAB	settings	step=5	role=AXWindow	name=Astra 設定	id=	moved=false	visible=no
+A11Y_TAB	settings	step=6	role=AXWindow	name=Astra 設定	id=	moved=false	visible=no
+A11Y_TAB	settings	step=7	role=AXWindow	name=Astra 設定	id=	moved=false	visible=no
+A11Y_TAB	settings	step=8	role=AXWindow	name=Astra 設定	id=	moved=false	visible=no
+A11Y_TAB	settings	step=9	role=AXWindow	name=Astra 設定	id=	moved=false	visible=no
+A11Y_TAB	settings	step=10	role=AXWindow	name=Astra 設定	id=	moved=false	visible=no
+A11Y_TAB	settings	step=11	role=AXWindow	name=Astra 設定	id=	moved=false	visible=no
+A11Y_TAB	settings	step=12	role=AXWindow	name=Astra 設定	id=	moved=false	visible=no
+A11Y_TAB	settings	step=13	role=AXWindow	name=Astra 設定	id=	moved=false	visible=no
+A11Y_TAB	settings	step=14	role=AXWindow	name=Astra 設定	id=	moved=false	visible=no

@@ -66,6 +66,7 @@ enum SelfTest {
         case "fulllifecycle": fullLifecycle(args); return true
         case "e2e001": e2e001(args); return true
         case "shots": shots(args); return true
+        case "a11ynames": a11ynames(args); return true
         case "states": states(args); return true
         case "golden": golden(args); return true
         case "dock8": dock8(args); return true
@@ -4933,6 +4934,251 @@ enum SelfTest {
             print("SELFTEST_FAIL axtree: mainMiss=\(mainMiss) wsMiss=\(wsMiss) (main=\(mainTexts.count) ws=\(wsTexts.count))"); exit(2)
         }
         print("SELFTEST_OK axtree: Main \(mainWant.count)セクション + Workspace 統合サーフェス\(wsWant.count)件を実アクセシブル要素として検出 (main=\(mainTexts.count) ws=\(wsTexts.count))")
+        exit(0)
+    }
+
+    /// `--selftest a11ynames [outFile]`: 各面の**アクセシビリティ名と Tab 走査を測るだけ**（直さない）。
+    ///
+    /// `accessibilityLabel` の数と `Image(systemName:)` の数を比べても、名前が無い証明にはならない
+    /// —— Button の中身や親から名前が付くことがある。だから実 AX ツリーで、押せる要素ごとに
+    /// 「何と読まれるか」を記録する。Tab は本物の key event を送り、AX の focused element が
+    /// 動いたか・その動きが**画素として**見えたかを記す。閾値も判定も持たない。
+    /// 数字が出るまで UI を変えない（[[visual-judges-cannot-measure]] と同じ流儀）。
+    /// 測れないもの（AX 不可、撮影不可）は NOT_MEASURED と書き、FAIL にしない。
+    @MainActor
+    private static func a11ynames(_ args: [String]) {
+        guard AXIsProcessTrusted() else { print("SELFTEST_SKIP a11ynames: AX not trusted"); exit(0) }
+        let i = args.firstIndex(of: "--selftest")!
+        let outFile = args.count > i + 2 ? args[i + 2] : nil
+        NSApp.setActivationPolicy(.regular)
+        parkCursor()
+        // 行は stderr（検査の loop は stdout の先頭行で OK/SKIP を見る）。outFile には全部残す。
+        var lines: [String] = []
+        func emit(_ l: String) { FileHandle.standardError.write((l + "\n").data(using: .utf8)!); lines.append(l) }
+        func settle(_ s: Double) {
+            let until = Date().addingTimeInterval(s)
+            while Date() < until { CFRunLoopRunInMode(.defaultMode, 0.05, true) }
+        }
+        let app = AXUIElementCreateApplication(getpid())
+        func attr(_ el: AXUIElement, _ name: String) -> CFTypeRef? {
+            var v: CFTypeRef?
+            return AXUIElementCopyAttributeValue(el, name as CFString, &v) == .success ? v : nil
+        }
+        func str(_ el: AXUIElement, _ name: String) -> String? {
+            guard let v = attr(el, name) else { return nil }
+            if let s = v as? String { return s.trimmingCharacters(in: .whitespacesAndNewlines) }
+            if let n = v as? NSNumber { return n.stringValue }
+            return nil
+        }
+        func frame(_ el: AXUIElement) -> CGRect {
+            var r = CGRect.zero
+            if let p = attr(el, kAXPositionAttribute), CFGetTypeID(p) == AXValueGetTypeID() {
+                var pt = CGPoint.zero; AXValueGetValue(p as! AXValue, .cgPoint, &pt); r.origin = pt
+            }
+            if let z = attr(el, kAXSizeAttribute), CFGetTypeID(z) == AXValueGetTypeID() {
+                var sz = CGSize.zero; AXValueGetValue(z as! AXValue, .cgSize, &sz); r.size = sz
+            }
+            return r
+        }
+        func actions(_ el: AXUIElement) -> [String] {
+            var a: CFArray?
+            return AXUIElementCopyActionNames(el, &a) == .success ? ((a as? [String]) ?? []) : []
+        }
+        /// 読まれる名前。SwiftUI の accessibilityLabel は AXDescription、AppKit は AXTitle に出る。
+        /// 入力欄は placeholder が名前の代わりになる。
+        func name(_ el: AXUIElement, role: String) -> String {
+            for a in [kAXTitleAttribute, kAXDescriptionAttribute] {
+                if let s = str(el, a), !s.isEmpty { return s }
+            }
+            if role == kAXTextFieldRole || role == kAXTextAreaRole {
+                if let s = str(el, "AXPlaceholderValue"), !s.isEmpty { return s }
+            }
+            if let t = attr(el, kAXTitleUIElementAttribute), CFGetTypeID(t) == AXUIElementGetTypeID(),
+               let s = str(t as! AXUIElement, kAXValueAttribute), !s.isEmpty { return s }
+            // 押せる Text（onTapGesture）は AXStaticText のまま。読まれるのは AXValue。
+            if role == kAXStaticTextRole, let s = str(el, kAXValueAttribute), !s.isEmpty { return s }
+            return ""
+        }
+        struct Item { let role: String; let sub: String; let name: String; let id: String; let frame: CGRect; let pressable: Bool
+            /// 名前が無い、と数えてよいもの。閉じる/縮小/拡大ボタンやスクロールバーの矢印は
+            /// subrole から名前が付く（VoiceOver はそれを読む）ので除く。大きさ 0 の要素も除く。
+            var nameless: Bool { name.isEmpty && sub.isEmpty && frame.width > 0 && frame.height > 0 }
+        }
+        let controlRoles: Set<String> = [kAXButtonRole, kAXCheckBoxRole, kAXRadioButtonRole, kAXPopUpButtonRole,
+                                         kAXMenuButtonRole, "AXLink", kAXTextFieldRole, kAXTextAreaRole,
+                                         kAXSliderRole, kAXDisclosureTriangleRole, kAXComboBoxRole, kAXIncrementorRole]
+        func fmt(_ r: CGRect) -> String { "\(Int(r.minX)),\(Int(r.minY)),\(Int(r.width))x\(Int(r.height))" }
+
+        /// window 単位で AX を歩く。`titles` が空なら全部、あれば AXTitle がそれのものだけ。
+        func collect(windowTitles titles: [String]) -> (controls: [Item], images: [Item]) {
+            var controls: [Item] = [], images: [Item] = []
+            func walk(_ el: AXUIElement, _ depth: Int) {
+                if depth > 24 { return }
+                let role = str(el, kAXRoleAttribute) ?? ""
+                let acts = actions(el)
+                let pressable = acts.contains(kAXPressAction)
+                let sub = str(el, kAXSubroleAttribute) ?? ""
+                if controlRoles.contains(role) || pressable {
+                    controls.append(Item(role: role, sub: sub, name: name(el, role: role),
+                                         id: str(el, kAXIdentifierAttribute) ?? "", frame: frame(el), pressable: pressable))
+                } else if role == kAXImageRole {
+                    images.append(Item(role: role, sub: sub, name: name(el, role: role),
+                                       id: str(el, kAXIdentifierAttribute) ?? "", frame: frame(el), pressable: false))
+                }
+                if let kids = attr(el, kAXChildrenAttribute) as? [AXUIElement] {
+                    for k in kids { walk(k, depth + 1) }
+                }
+            }
+            if let wins = attr(app, kAXWindowsAttribute) as? [AXUIElement] {
+                for w in wins {
+                    let t = str(w, kAXTitleAttribute) ?? ""
+                    if titles.isEmpty || titles.contains(t) { walk(w, 1) }
+                }
+            }
+            return (controls, images)
+        }
+        func shot(_ win: NSWindow) -> [UInt8]? {
+            guard let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, CGWindowID(win.windowNumber),
+                                                   [.boundsIgnoreFraming, .nominalResolution]),
+                  cg.width > 4, cg.height > 4 else { return nil }
+            let rep = NSBitmapImageRep(cgImage: cg)
+            guard let data = rep.bitmapData else { return nil }
+            return Array(UnsafeBufferPointer(start: data, count: rep.bytesPerRow * rep.pixelsHigh))
+        }
+        func differs(_ a: [UInt8]?, _ b: [UInt8]?) -> Bool? {
+            guard let a, let b, a.count == b.count else { return nil }
+            for k in stride(from: 0, to: a.count, by: 4) where a[k] != b[k] || a[k+1] != b[k+1] || a[k+2] != b[k+2] { return true }
+            return false
+        }
+        func focused() -> (role: String, name: String, id: String)? {
+            guard let f = attr(app, kAXFocusedUIElementAttribute), CFGetTypeID(f) == AXUIElementGetTypeID() else { return nil }
+            let el = f as! AXUIElement
+            let role = str(el, kAXRoleAttribute) ?? ""
+            return (role, name(el, role: role), str(el, kAXIdentifierAttribute) ?? "")
+        }
+        /// Tab を本物の key event で送って、焦点がどこへ行くかと、それが見えるかを記す。
+        func tabWalk(_ surface: String, _ win: NSWindow, steps: Int = 14) -> (moved: Int, visible: Int, invisible: Int, unmeasured: Int) {
+            win.makeKeyAndOrderFront(nil); NSApp.activate(ignoringOtherApps: true); settle(0.4)
+            var prev = focused(); var before = shot(win)
+            var moved = 0, visible = 0, invisible = 0, unmeasured = 0
+            var seen: [String] = []
+            for step in 1...steps {
+                for down in [true, false] {
+                    guard let ev = NSEvent.keyEvent(with: down ? .keyDown : .keyUp, location: .zero, modifierFlags: [],
+                                                    timestamp: ProcessInfo.processInfo.systemUptime, windowNumber: win.windowNumber,
+                                                    context: nil, characters: "\t", charactersIgnoringModifiers: "\t",
+                                                    isARepeat: false, keyCode: 48) else { continue }
+                    NSApp.sendEvent(ev)
+                }
+                settle(0.25)
+                let now = focused(); let after = shot(win)
+                let didMove = (now?.role ?? "") + (now?.name ?? "") + (now?.id ?? "") != (prev?.role ?? "") + (prev?.name ?? "") + (prev?.id ?? "")
+                let vis = differs(before, after)
+                let visText = vis == nil ? "NOT_MEASURED" : (vis! ? "yes" : "no")
+                if didMove { moved += 1; if vis == nil { unmeasured += 1 } else if vis! { visible += 1 } else { invisible += 1 } }
+                let key = (now?.role ?? "-") + "|" + (now?.name ?? "")
+                emit("A11Y_TAB\t\(surface)\tstep=\(step)\trole=\(now?.role ?? "-")\tname=\(now?.name ?? "")\tid=\(now?.id ?? "")\tmoved=\(didMove)\tvisible=\(visText)")
+                if seen.contains(key) && didMove { /* 一周した */ }
+                seen.append(key)
+                prev = now; before = after
+            }
+            return (moved, visible, invisible, unmeasured)
+        }
+        func report(_ surface: String, titles: [String]) -> (controls: Int, nameless: Int) {
+            let r = collect(windowTitles: titles)
+            let nameless = r.controls.filter(\.nameless)
+            let latin = r.controls.filter { !$0.name.isEmpty && $0.name.unicodeScalars.allSatisfy { $0.isASCII } }
+            let imgNamed = r.images.filter { !$0.name.isEmpty }.count
+            emit("A11Y_SURFACE\t\(surface)\tcontrols=\(r.controls.count)\tnameless=\(nameless.count)\tlatinOnly=\(latin.count)\timages=\(r.images.count)\timagesNamed=\(imgNamed)")
+            for c in r.controls {
+                emit("A11Y_CONTROL\t\(surface)\t\(c.role)\tsub=\(c.sub)\tname=\(c.name)\tid=\(c.id)\tframe=\(fmt(c.frame))\tpress=\(c.pressable)")
+            }
+            return (r.controls.count, nameless.count)
+        }
+
+        let store = AstraStateStore.shared
+        let hud = VoiceHUDState.shared
+        let recording = RecordingWorkspaceState.shared
+        var totalControls = 0, totalNameless = 0
+        var tabSummary: [String] = []
+        // Tab がボタンにも止まるかは OS の「キーボードナビゲーション」次第。結果と一緒に記す。
+        let fka = NSApp.isFullKeyboardAccessEnabled
+        emit("A11Y_ENV\tfullKeyboardAccess=\(fka)\tmacOS=\(ProcessInfo.processInfo.operatingSystemVersionString)")
+        func add(_ r: (controls: Int, nameless: Int)) { totalControls += r.controls; totalNameless += r.nameless }
+
+        // Dock の姿（key にならない面なので Tab は測らない）
+        _ = GlobalShortcut.shared.register(handler: {})
+        hud.mode = .idle
+        WindowCoordinator.shared.showVoiceHUD(); settle(1.0)
+        add(report("dock-idle", titles: []))
+        hud.mode = .listening(partial: "このページからタスクを作って…"); settle(0.6)
+        add(report("dock-listening", titles: []))
+        store.startTask(AgentTask(
+            id: UUID(), title: "週次ブリーフィングを作る", status: .running,
+            steps: [AgentStep(title: "Calendar", tool: "calendar", detail: "明日 10:00", state: .success),
+                    AgentStep(title: "Notion", tool: "notion", detail: "Q3 Proposal を読んでいます", state: .running)],
+            startedAt: Date(), context: ContextBundle(items: [])))
+        settle(0.6)
+        add(report("dock-agent", titles: []))
+        store.finishTask(.success); settle(0.3)
+        _ = store.requireConfirmation(ActionConfirmation(
+            app: "Slack", appIcon: "number", title: "このメッセージを送りますか？",
+            params: [.init(label: "宛先", value: "#sales")],
+            preview: "明日の会議、資料を先に共有します。",
+            source: .init(title: "週次同期", speaker: "田中", time: "10:42"),
+            details: [], risk: .r2, confirmLabel: Facts.confirmationConfirmExample))
+        settle(0.6)
+        add(report("dock-confirmation", titles: []))
+        store.resolveConfirmation(approved: false)
+        recording.loadDemo(ragOpen: false)
+        store.meetingDetected(app: "Google Meet")
+        recording.start(); settle(0.8)
+        add(report("dock-meeting", titles: []))
+        // 録音中の名前: 「録音中」であることが AX 名として読めるか（Recording Accessible Name）
+        let rec = collect(windowTitles: [])
+        let recNames = (rec.controls + rec.images).map(\.name).filter { $0.contains("録音") || $0.lowercased().contains("recording") }
+        emit("A11Y_RECORDING\tfound=\(!recNames.isEmpty)\tnames=\(recNames.joined(separator: " / "))")
+        recording.stop(); store.reset(); hud.mode = .idle
+        WindowCoordinator.shared.hideVoiceHUD(); settle(0.4)
+
+        // Recording Workspace
+        recording.loadDemo(ragOpen: true); recording.selectedTool = .transcript
+        WindowCoordinator.shared.showRecordingWorkspace(); settle(1.0)
+        add(report("workspace", titles: []))
+        if let w = NSApp.windows.first(where: { $0.isVisible && $0.contentView is NSHostingView<RecordingWorkspaceView> }) {
+            let t = tabWalk("workspace", w); tabSummary.append("workspace moved=\(t.moved) visible=\(t.visible) invisible=\(t.invisible) unmeasured=\(t.unmeasured)")
+        } else { emit("A11Y_TAB\tworkspace\tNOT_MEASURED\t(window not found)") }
+        WindowCoordinator.shared.hideRecordingWorkspace(); settle(0.5)
+
+        // Main Window（AX の title は `.navigationTitle` で Home / Tasks … に変わるので、その時の title で引く）
+        MainWindowController.shared.show(); MainWindowController.shared.showSection(.home); settle(1.2)
+        let mainWin = NSApp.windows.first(where: { $0.isVisible && $0.contentView is NSHostingView<MainWindowView> })
+        func mainTitles() -> [String] { mainWin.map { [$0.title] } ?? [] }
+        add(report("main-home", titles: mainTitles()))
+        if let w = mainWin {
+            let t = tabWalk("main-home", w); tabSummary.append("main-home moved=\(t.moved) visible=\(t.visible) invisible=\(t.invisible) unmeasured=\(t.unmeasured)")
+        } else { emit("A11Y_TAB\tmain-home\tNOT_MEASURED\t(window not found)") }
+        for (name, sec) in [("main-tasks", MainSection.tasks), ("main-meetings", .meetings), ("main-library", .library),
+                            ("main-agents", .agents), ("main-plugins", .plugins)] {
+            MainWindowController.shared.showSection(sec); settle(0.6)
+            add(report(name, titles: mainTitles()))
+        }
+        MainWindowController.shared.showMeetingDetailPreview(); settle(0.8)
+        add(report("main-meeting-detail", titles: mainTitles()))
+        MainWindowController.shared.hide(); settle(0.3)
+
+        // Settings（5 つの許可の一覧）
+        SettingsWindowController.shared.show(); settle(1.0)
+        add(report("settings", titles: ["Astra 設定"]))
+        if let w = NSApp.windows.first(where: { $0.title == "Astra 設定" && $0.isVisible }) {
+            let t = tabWalk("settings", w); tabSummary.append("settings moved=\(t.moved) visible=\(t.visible) invisible=\(t.invisible) unmeasured=\(t.unmeasured)")
+            w.orderOut(nil)
+        }
+
+        if let outFile {
+            try? (lines.joined(separator: "\n") + "\n").write(toFile: outFile, atomically: true, encoding: .utf8)
+        }
+        print("SELFTEST_OK a11ynames: controls=\(totalControls) nameless=\(totalNameless) | tab(fullKeyboardAccess=\(fka)): \(tabSummary.joined(separator: "; ")) | 測っただけ（判定は持たない）")
         exit(0)
     }
 
