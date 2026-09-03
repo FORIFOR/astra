@@ -9,12 +9,13 @@ OS のどこからでも呼び出せる **Task Dock**。North Star は **Intent 
 
 ## ドキュメント
 
-| 文書                                                                                             | 役割                                            |
-| ------------------------------------------------------------------------------------------------ | ----------------------------------------------- |
-| [`docs/spec/new_ai_platform_design_spec_v0.1.md`](docs/spec/new_ai_platform_design_spec_v0.1.md) | **正本**（製品仕様 v0.1、凍結）                 |
-| [`docs/spec/astra_ui_ux_detailed_spec_v0.1.md`](docs/spec/astra_ui_ux_detailed_spec_v0.1.md)     | UI/UX 詳細仕様 v0.1（凍結。正本は同名 `.docx`） |
-| [`docs/spec/phase-0-implementation-spec.md`](docs/spec/phase-0-implementation-spec.md)           | Phase 0 実装仕様                                |
-| [`docs/adr/`](docs/adr/)                                                                         | 設計判断の記録                                  |
+| 文書                                                                                             | 役割                                                 |
+| ------------------------------------------------------------------------------------------------ | ---------------------------------------------------- |
+| [`docs/spec/new_ai_platform_design_spec_v0.1.md`](docs/spec/new_ai_platform_design_spec_v0.1.md) | **正本**（製品仕様 v0.1、凍結）                      |
+| [`docs/spec/astra_ui_ux_detailed_spec_v0.1.md`](docs/spec/astra_ui_ux_detailed_spec_v0.1.md)     | UI/UX 詳細仕様 v0.1（凍結。正本は同名 `.docx`）      |
+| [`docs/spec/phase-0-implementation-spec.md`](docs/spec/phase-0-implementation-spec.md)           | Phase 0 実装仕様                                     |
+| [`docs/adr/`](docs/adr/)                                                                         | 設計判断の記録                                       |
+| [`docs/guide/Astra-操作ガイド.pdf`](docs/guide/Astra-操作ガイド.pdf)                             | 利用者向け操作ガイド（`docs/guide/build.py` で生成） |
 
 ## 現在地
 
