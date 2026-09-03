@@ -75,7 +75,13 @@ final class StatusBarController {
     /// メニューの項目（題とショートカット）。導線の検査から読む。
     /// status item を出せない環境でも読めるよう、作り直して返す。
     func menuItemTitles() -> [(title: String, key: String)] {
-        buildMenu().items.map { ($0.title, $0.keyEquivalent) }
+        menuSnapshot().filter { !$0.separator }.map { ($0.title, $0.key) }
+    }
+
+    /// 区切りと押せるかも含めた写し。操作ガイド（docs/guide/build.py）がメニューの絵を
+    /// ここから描く——手で写した絵は 0.1.1 で実物とずれた（「音声入力 … 長押し」のまま）。
+    func menuSnapshot() -> [(title: String, key: String, separator: Bool, enabled: Bool)] {
+        buildMenu().items.map { ($0.title, $0.keyEquivalent, $0.isSeparatorItem, $0.isEnabled) }
     }
 
     @objc private func openMain() { MainWindowController.shared.showSection(.home) }

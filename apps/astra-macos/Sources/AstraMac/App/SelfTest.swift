@@ -72,6 +72,7 @@ enum SelfTest {
         case "dockanim": dockAnim(); return true
         case "surfacemotion": SurfaceMotionGate.run(args); return true
         case "entry": entryPoints(); return true
+        case "menutitles": menuTitles(); return true
         case "secret": secretMode(); return true
         case "recordbutton": recordButton(); return true
         case "session": sessionLifecycle(); return true
@@ -726,6 +727,19 @@ enum SelfTest {
         }
     }
 
+
+    /// `--selftest menutitles`: メニューバーのメニューをそのまま書き出す（docs/guide/build.py が読む）。
+    /// 行は `MENU\tsep` か `MENU\titem\t<enabled 0/1>\t<title>\t<keyEquivalent>`。
+    @MainActor
+    private static func menuTitles() {
+        let items = StatusBarController.shared.menuSnapshot()
+        for it in items {
+            if it.separator { print("MENU\tsep") }
+            else { print("MENU\titem\t\(it.enabled ? 1 : 0)\t\(it.title)\t\(it.key)") }
+        }
+        print("SELFTEST_OK menutitles: \(items.filter { !$0.separator }.count) 項目")
+        exit(0)
+    }
 
     /// `--selftest entry`: Main View への導線が**本当に開く**か。
     ///

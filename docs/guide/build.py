@@ -53,6 +53,26 @@ def img(k, w=None):
     st=f' style="max-width:{w}px"' if w else ''
     return f'<img src="data:image/png;base64,{imgs[k]}"{st} alt="">'
 
+# メニューバーのメニューの絵は、手で写さず**いまのアプリに言わせる**（0.1.1 の絵は
+# 「音声入力 … 長押し」のまま実物とずれていた）。先に swift build しておくこと。
+import html as _html, subprocess
+BIN=os.environ.get('ASTRA_GUIDE_BIN','apps/astra-macos/.build/debug/AstraMac')
+def menu_html():
+    if not os.path.exists(BIN): raise SystemExit(f'{BIN} が無い。先に swift build --package-path apps/astra-macos')
+    out=subprocess.run([BIN,'--selftest','menutitles'],capture_output=True,text=True,timeout=60).stdout
+    if 'SELFTEST_OK menutitles' not in out: raise SystemExit('menutitles が取れない:\n'+out)
+    rows=[]
+    for line in out.splitlines():
+        f=line.split('\t')
+        if f[0]!='MENU': continue
+        if f[1]=='sep': rows.append('<div class="sep"></div>'); continue
+        _,_,enabled,title,key=f
+        k=f' <span class="k">⌘{key.upper()}</span>' if key else ''
+        cls=' class="dim"' if enabled=='0' else ''
+        rows.append(f'<div{cls}>{_html.escape(title)}{k}</div>')
+    return '<div class="menu">\n '+'\n '.join(rows)+'\n</div>'
+MENU=menu_html()
+
 html=f'''<!doctype html><html lang="ja"><head><meta charset="utf-8">
 <title>Astra 操作ガイド</title>
 <style>
@@ -79,9 +99,9 @@ html=f'''<!doctype html><html lang="ja"><head><meta charset="utf-8">
  footer {{ color:#888; font-size:12px; margin-top:40px; border-top:1px solid #e5e5e5; padding-top:8px; }}
 </style></head><body>
 <h1>Astra 操作ガイド</h1>
-<p class="lead">会議を録って、要点をまとめて、頼みごとを片付ける Mac アプリです。覚えることは 3 つだけ。</p>
+<p class="lead">会議を録って、要点をまとめて、頼みごとを片付ける Mac アプリです。</p>
 
-<div class="tip"><b>はじめに覚える 3 つ</b><br>
+<div class="tip"><b>はじめに、これだけ覚えてください</b><br>
 ① 画面右上のメニューバーにある <b>波形アイコン</b> が Astra の入口です<br>
 ② <kbd>⌥ option</kbd> + <kbd>space</kbd> を押すと、いつでも <b>録音の開始 / 停止</b><br>
 ③ 何かをしてもらう前には、必ず <b>確認カード</b> が出ます。「送る」を押すまで外には出ません<br>
@@ -90,15 +110,7 @@ html=f'''<!doctype html><html lang="ja"><head><meta charset="utf-8">
 <h2><span>1</span>起動する・開く</h2>
 <div class="row"><div>
 <p>Astra は Dock（画面下のアイコン列）には出ません。<b>メニューバー右上の波形アイコン</b>をクリックするとメニューが開きます。</p>
-<div class="menu">
- <div>Astra を開く <span class="k">⌘O</span></div>
- <div>会議を録音</div>
- <div class="sep"></div>
- <div class="dim">音声入力: ⌥Space を長押し</div>
- <div>設定… <span class="k">⌘,</span></div>
- <div class="sep"></div>
- <div>Astra を終了 <span class="k">⌘Q</span></div>
-</div>
+{MENU}
 </div><div>
 <p><b>「Astra を開く」</b>で Home が出ます。左の一覧（Home / Tasks / Meetings / Library …）で画面を切り替えます。</p>
 <p>初回だけ、<b>設定…</b> から「許可（OS）」の 5 つ（マイク・画面収録・アクセシビリティ・カレンダー・入力監視）を「許可…」で有効にしてください。マイクを許可しないと録音は始まりません（→ 6）。入力監視が無いと <kbd>⌥</kbd>+<kbd>space</kbd> が効かず、黒いバーには「クリック」と出ます。</p>
