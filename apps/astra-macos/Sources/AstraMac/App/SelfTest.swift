@@ -524,15 +524,17 @@ enum SelfTest {
             store.resolveConfirmation(approved: false)
             store.finishTask(.success)
             recording.loadDemo(ragOpen: false)
+            store.meetingDetected(app: "Google Meet")
+            // **録音ボタンと同じ経路**を通す。Store を直接叩くと、ボタンが別のことを
+            // していても気づけない（実際に一度そうなっていた）。
+            recording.start()
+            // 開始は前の会議の Notes を消す（2 本目に 1 本目が混ざらないため）。
+            // 中身は**開始の後**に入れる。前に入れると空の Notes を撮ってしまう。
             store.updateCanvas(MeetingCanvas(
                 decisions: ["導入時期は 10 月で行きます"],
                 actions: ["見積は明日までにお願いします"],
                 questions: ["誰が対応しますか？"],
                 concerns: ["初期費用が心配です"], notes: []))
-            store.meetingDetected(app: "Google Meet")
-            // **録音ボタンと同じ経路**を通す。Store を直接叩くと、ボタンが別のことを
-            // していても気づけない（実際に一度そうなっていた）。
-            recording.start()
         })
         // 録音開始では窓を増やさない。Dock だけが録音コントローラになる。
         shoot("09-meeting-notes", { hud.toggleMeetingPanel(.notes) })

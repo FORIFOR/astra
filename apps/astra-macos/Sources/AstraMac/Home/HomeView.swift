@@ -95,7 +95,7 @@ struct HomeView: View {
                 }
 
                 if !attention.isEmpty {
-                    section("Upcoming")
+                    section("これからの予定")
                     ForEach(attention.prefix(3)) { a in
                         upcomingRow(a)
                     }
@@ -110,7 +110,7 @@ struct HomeView: View {
 
                 // 頼んだ仕事。**DB から読んでいたのに、どこにも出していなかった。**
                 if !recentTasks.isEmpty {
-                    section("Recent Work")
+                    section("最近の頼みごと")
                     ForEach(recentTasks.prefix(5)) { t in
                         taskRow(t)
                     }

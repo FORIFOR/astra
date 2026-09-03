@@ -16,13 +16,16 @@ struct MeetingSession: Identifiable, Equatable {
         case interrupted
         case failed
 
+        /// Home のカードに出る 1 行。Dock と同じ語で言う（面ごとに言い換えない）。
+        /// 「Interrupted recording」と英語だけ残っていて、Dock の
+        /// 「途中で終わっています」と同じ状態に見えなかった（Journey J-C）。
         var label: String {
             switch self {
-            case .recording: return "Recording"
-            case .processing: return "Analyzing conversation…"
-            case .ready: return "Ready"
-            case .interrupted: return "Interrupted recording"
-            case .failed: return "Failed"
+            case .recording: return "録音中"
+            case .processing: return "会話を読み取っています…"
+            case .ready: return "使えます"
+            case .interrupted: return "途中で終わっています"
+            case .failed: return "失敗しました"
             }
         }
     }
@@ -101,10 +104,10 @@ enum ProcessingStage: String, Equatable, CaseIterable {
 
     var label: String {
         switch self {
-        case .savingTranscript: return "Saving transcript…"
-        case .analyzing: return "Analyzing conversation…"
-        case .extractingActions: return "Extracting actions…"
-        case .preparingNotes: return "Preparing notes…"
+        case .savingTranscript: return "文字起こしを保存しています…"
+        case .analyzing: return "会話を読み取っています…"
+        case .extractingActions: return "やることを拾っています…"
+        case .preparingNotes: return "メモを整えています…"
         }
     }
 }

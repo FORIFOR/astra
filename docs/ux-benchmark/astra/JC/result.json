@@ -21,7 +21,7 @@
 
   ],
   "product" : "Astra",
-  "startedAt" : "2026-09-03T00:20:56Z",
+  "startedAt" : "2026-09-03T03:25:56Z",
   "steps" : [
     {
       "front" : "com.apple.finder",
@@ -31,33 +31,33 @@
       },
       "interactions" : 1,
       "keyWindow" : false,
-      "ms" : 1124,
+      "ms" : 1132,
       "name" : "マイク拒否",
       "surface" : {
         "h" : 129,
         "key" : false,
         "w" : 520,
-        "x" : 700,
-        "y" : 951
+        "x" : 1020,
+        "y" : 1311
       },
-      "transitionMs" : 182,
+      "transitionMs" : 172,
       "windows" : 1
     },
     {
       "front" : "com.apple.finder",
       "ids" : {
-        "session" : "meeting-1788394858"
+        "session" : "meeting-1788405958"
       },
       "interactions" : 1,
       "keyWindow" : false,
-      "ms" : 1314,
+      "ms" : 1393,
       "name" : "回復",
       "surface" : {
         "h" : 76,
         "key" : false,
         "w" : 820,
-        "x" : 550,
-        "y" : 1004
+        "x" : 870,
+        "y" : 1364
       },
       "windows" : 1
     },
@@ -69,14 +69,14 @@
       },
       "interactions" : 0,
       "keyWindow" : false,
-      "ms" : 1494,
+      "ms" : 1452,
       "name" : "共有のあと",
       "surface" : {
         "h" : 76,
         "key" : false,
         "w" : 820,
-        "x" : 550,
-        "y" : 1004
+        "x" : 870,
+        "y" : 1364
       },
       "windows" : 1
     },
@@ -88,14 +88,14 @@
       },
       "interactions" : 1,
       "keyWindow" : false,
-      "ms" : 1223,
+      "ms" : 1222,
       "name" : "確認（やめる）",
       "surface" : {
         "h" : 76,
         "key" : false,
         "w" : 820,
-        "x" : 550,
-        "y" : 1004
+        "x" : 870,
+        "y" : 1364
       },
       "windows" : 1
     },
@@ -106,19 +106,19 @@
       },
       "interactions" : 1,
       "keyWindow" : false,
-      "ms" : 2143,
+      "ms" : 2145,
       "name" : "落ちて再開",
       "surface" : {
         "h" : 820,
         "key" : false,
         "w" : 1240,
-        "x" : 340,
-        "y" : 192
+        "x" : 660,
+        "y" : 466
       },
       "windows" : 2
     }
   ],
   "success" : true,
-  "totalMs" : 7323,
+  "totalMs" : 7368,
   "windowsOpened" : 0
 }

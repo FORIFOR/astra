@@ -19,7 +19,7 @@
     "体感の複雑さ（層 C）: 段は 5、面は 1 枚、増えた窓 0"
   ],
   "product" : "Astra",
-  "startedAt" : "2026-09-03T00:20:38Z",
+  "startedAt" : "2026-09-03T03:25:38Z",
   "steps" : [
     {
       "interactions" : 0,
@@ -30,8 +30,8 @@
         "h" : 44,
         "key" : false,
         "w" : 220,
-        "x" : 850,
-        "y" : 1036
+        "x" : 1170,
+        "y" : 1396
       },
       "windows" : 2
     },
@@ -41,40 +41,40 @@
       "keys" : {
         "esc" : "listening→idle"
       },
-      "ms" : 1120,
+      "ms" : 1137,
       "name" : "Listening",
       "surface" : {
         "h" : 44,
         "key" : false,
         "w" : 220,
-        "x" : 850,
-        "y" : 1036
+        "x" : 1170,
+        "y" : 1396
       },
-      "transitionMs" : 169,
+      "transitionMs" : 170,
       "windows" : 2
     },
     {
       "ids" : {
-        "task" : "6E0866F9-782E-4DEE-968A-7358DDBFC44D"
+        "task" : "C2424218-A5D8-4A5F-8B4A-26D439F50B34"
       },
       "interactions" : 0,
       "keyWindow" : false,
-      "ms" : 1012,
+      "ms" : 1027,
       "name" : "Running",
       "surface" : {
         "h" : 255,
         "key" : false,
         "w" : 720,
-        "x" : 600,
-        "y" : 825
+        "x" : 920,
+        "y" : 1185
       },
       "transitionMs" : 167,
       "windows" : 2
     },
     {
       "ids" : {
-        "confirmation" : "7864EEF2-F796-4CC8-975E-7ABF0723B422",
-        "resolved" : "7864EEF2-F796-4CC8-975E-7ABF0723B422"
+        "confirmation" : "4BCC11C7-4B02-459D-9047-6072CC2A9FB4",
+        "resolved" : "4BCC11C7-4B02-459D-9047-6072CC2A9FB4"
       },
       "interactions" : 2,
       "keyWindow" : false,
@@ -82,16 +82,16 @@
         "cmdReturn" : "approved",
         "return" : "no-op"
       },
-      "ms" : 1838,
+      "ms" : 1592,
       "name" : "Confirmation",
       "surface" : {
         "h" : 44,
         "key" : false,
         "w" : 220,
-        "x" : 850,
-        "y" : 1036
+        "x" : 1170,
+        "y" : 1396
       },
-      "transitionMs" : 187,
+      "transitionMs" : 0,
       "windows" : 2
     },
     {
@@ -100,20 +100,20 @@
       "keys" : {
         "esc" : "result→idle"
       },
-      "ms" : 1214,
+      "ms" : 1233,
       "name" : "Done",
       "surface" : {
         "h" : 44,
         "key" : false,
         "w" : 220,
-        "x" : 850,
-        "y" : 1036
+        "x" : 1170,
+        "y" : 1396
       },
-      "transitionMs" : 165,
+      "transitionMs" : 166,
       "windows" : 2
     }
   ],
   "success" : true,
-  "totalMs" : 5200,
+  "totalMs" : 5004,
   "windowsOpened" : 0
 }

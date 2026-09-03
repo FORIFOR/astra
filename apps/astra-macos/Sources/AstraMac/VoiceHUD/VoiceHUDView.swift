@@ -572,6 +572,18 @@ struct ConfirmationDock: View {
 
             // ⑥ 取消 / 直す / 実行。**主たる操作は 1 つだけ。**
             HStack(spacing: 8) {
+                // 鍵は効いていても、書いていなければ無いのと同じ（Listening の esc と同じ理由、
+                // journeys/panel1）。外へ出る面ほど、逃げ道と実行の鍵を先に見せる。
+                if !editing {
+                    HStack(spacing: 4) {
+                        KeyBadge("esc")
+                        Text("やめる")
+                        KeyBadge("⌘↩").padding(.leading, 6)
+                        Text(confirmation.confirmLabel)
+                    }
+                    .font(.system(size: S.type(Metrics.dockLabelSize)))
+                    .foregroundStyle(Palette.muted(dark).opacity(0.72))
+                }
                 Spacer(minLength: 0)
                 if editing {
                     Button("やめる") { editing = false; edited = [:] }
@@ -580,7 +592,7 @@ struct ConfirmationDock: View {
                         .frame(height: 32).padding(.horizontal, 14)
                         .buttonStyle(AstraControlStyle(radius: 7, base: 0.0))
                         .accessibilityIdentifier("confirmEditCancel")
-                    Button("done") { editing = false }
+                    Button("完了") { editing = false }
                         .font(.system(size: S.type(Metrics.dockRowSize), weight: .semibold))
                         .foregroundStyle(Palette.accent(dark))
                         .frame(height: 32).padding(.horizontal, 18)
@@ -788,7 +800,7 @@ struct MeetingDock: View {
             Circle().fill(recording.isPaused ? Color.secondary : Color.recordingRed)
                 .frame(width: 9, height: 9)
             VStack(alignment: .leading, spacing: 1) {
-                Text(store.state.meeting.detectedApp ?? "Recording")
+                Text(store.state.meeting.detectedApp ?? "録音中")
                     .font(.system(size: S.type(Metrics.dockPrimarySize), weight: .semibold))
                     .foregroundStyle(Palette.text(dark))
                     .lineLimit(1)

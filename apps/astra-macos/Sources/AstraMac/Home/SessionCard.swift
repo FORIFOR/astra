@@ -95,10 +95,19 @@ struct SessionCard: View {
     /// recording / processing のときは簡潔に。
     private var statusLine: some View {
         // processing 中は段階を出す（spinner だけにしない）。
-        Text(session.processingStage?.label ?? session.status.label)
-            .font(.system(size: S.type(TypeScale.secondarySize)))
-            .foregroundStyle(session.status == .interrupted || session.status == .failed
-                             ? Palette.warning(dark) : Palette.muted(dark))
+        // 落ちた録音は開ける（確定した行はその場で保存してある）のに、
+        // 警告色の 1 行だけでは「壊れて開けない」に見える、と盲検の 2 名が言った
+        // （journeys/panel1）。開けるなら、開けると書く。
+        HStack(spacing: 6) {
+            Text(session.processingStage?.label ?? session.status.label)
+                .foregroundStyle(session.status == .interrupted || session.status == .failed
+                                 ? Palette.warning(dark) : Palette.muted(dark))
+            if session.status == .interrupted {
+                Text("· 開くと、確定した行までは見られます")
+                    .foregroundStyle(Palette.muted(dark))
+            }
+        }
+        .font(.system(size: S.type(TypeScale.secondarySize)))
     }
 
     /// ready のときだけ情報量を増やす。
