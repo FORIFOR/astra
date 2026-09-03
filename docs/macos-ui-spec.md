@@ -123,6 +123,15 @@ apps/astra-macos/.build/debug/AstraMac --selftest dockanim
 **その間ずっと上辺 Y が動かない**ことと、幅が滑らかに変わることを実測する
 （実測 185–196ms / 上辺の値は 1 種類）。
 
+```bash
+apps/astra-macos/.build/debug/AstraMac --selftest surfacemotion /tmp/astra-motion
+```
+
+`surfacemotion` は J-B の Meeting → Notes → Workspace を、状態を変えた瞬間から 60fps で
+自分の窓だけ撮る（同じ CGWindowID か・窓が増えていないか・前面が変わらないか・
+上辺と中心が 2pt 以内か・frame が抜けていないか・高さが逆行しないか・2 枚目の枠が
+動かないか）。記録と閾値は `docs/ux-benchmark/journeys/PHASE2-JOURNEY.md`。
+
 golden は `docs/golden-screenshots/task-dock/`（light）と `.../dark/`。
 
 ## レイアウトの正（tokens）

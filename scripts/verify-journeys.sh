@@ -22,6 +22,19 @@ for e in json.load(open(sys.argv[1]))['errors']: print('    -', e)
 PY
   fi
 done
+# J-B の「面が姿を変える途中」を 60fps で見る（Meeting → Notes → Workspace）。段の前後の
+# 静止画では、途中で窓が入れ替わる・上辺が揺れる・frame が抜けるのは写らない。
+# 撮るのは自分の窓だけ。frame は使い捨て、数字（result.json）だけ残す。
+pkill -9 -f AstraMac 2>/dev/null; sleep 0.5
+MOTION_TMP="$(mktemp -d)"
+motion="$("$BIN" --selftest surfacemotion "$MOTION_TMP" 2>&1)"
+echo "$motion" | grep -E '^  MOTION|^  NOT_MEASURED|^    \^|^SURFACE_CONTINUITY_MOTION|^PERCEIVED'
+if grep -q 'SURFACE_CONTINUITY_MOTION=PASS' <<<"$motion"; then
+  mkdir -p "$OUT/JB-motion" && cp "$MOTION_TMP/result.json" "$OUT/JB-motion/result.json"
+else
+  fail=1
+fi
+rm -rf "$MOTION_TMP"
 pkill -9 -f AstraMac 2>/dev/null
-[ $fail -eq 0 ] && echo "JOURNEYS_OK: 3 本とも最後まで通った"
+[ $fail -eq 0 ] && echo "JOURNEYS_OK: 3 本とも最後まで通った（J-B の遷移中も 60fps で連続）"
 exit $fail

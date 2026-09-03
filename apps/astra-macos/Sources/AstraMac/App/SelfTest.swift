@@ -70,6 +70,7 @@ enum SelfTest {
         case "golden": golden(args); return true
         case "dock8": dock8(args); return true
         case "dockanim": dockAnim(); return true
+        case "surfacemotion": SurfaceMotionGate.run(args); return true
         case "entry": entryPoints(); return true
         case "secret": secretMode(); return true
         case "recordbutton": recordButton(); return true

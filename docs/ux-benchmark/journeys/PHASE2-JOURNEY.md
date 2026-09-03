@@ -170,3 +170,61 @@ golden `02-voice-hud-listening` を撮り直し）。
 両版とも「別の面に来た」と読み、j1 は「別のアプリには見えない」。**分かれた**ので
 判定にせず記す。JC の「interrupted のカードが開けそうか」は両版とも「開けそう」
 （見た目は同じ。押せるかは層 A の `session-<id>` で見る）。
+
+## J-B の遷移中（2026-09-03、60fps 実測。`--selftest surfacemotion`）
+
+段の前後の絵は「面が 1 枚のまま」を言えるが、**途中**は言えない。0.1.1 の操作ガイドの
+評価で Dock → Notes → Workspace の連続が `SURFACE_CONTINUITY_MOTION = NOT_MEASURED` と
+された（30fps の絵 2 枚では 180–220ms の morph は 5〜6 枚にしかならない）。
+§4 の 5 行:
+
+```
+reference : v0.1.1 J-B Dock → Notes → Workspace のいまの振る舞い
+hypothesis: 同一 NSPanel と anchor を保つ morph は、一つの Surface として連続して見える
+measured  : 60fps window-only + CGWindowID / 窓の数 / 上辺 / 中心 / 寸法 / frame の連続
+candidates: A = いま。測定で欠陥が確認されるまで UI 候補を作らない
+gate      : Evidence A/B の失敗時のみ修正。measurement unavailable は FAIL にしない
+```
+
+測定器は `App/SurfaceMotionGate.swift`（`scripts/verify-journeys.sh` が JA/JB/JC の後に回す）。
+状態を変えた瞬間から 700ms、16.7ms 刻みで自分の窓だけを撮る
+（`CGWindowListCreateImage` を窓ごとに呼んで合成。画面は撮らない）。
+記録は `docs/ux-benchmark/astra/JB-motion/result.json`（tick ごとの id・枠・alpha・画素差）と
+最初の 16 frame の一覧（`T1-first16.png` / `T2-first16.png`）。
+
+### 層 A（debug 5 回・release 2 回、どの回も同じ判定）
+
+| 指標                          | 閾値 | T1 Meeting → Notes                       | T2 Notes → Workspace                                |
+| ----------------------------- | ---- | ---------------------------------------- | --------------------------------------------------- |
+| same CGWindowID               | 100% | **100%**（1 枚が伸びる）                 | **100%**（Dock は同じ id のまま）                   |
+| 宣言していない窓              | 0    | **0**（1 枚）                            | **0**（頼んだ 2 枚目だけ）                          |
+| focus theft                   | 0    | **0**                                    | **0**（前面のアプリは変わらない）                   |
+| 上辺の移動                    | ≤2pt | **0.0pt**                                | **0.0pt**                                           |
+| 中心の移動                    | ≤2pt | **0.0pt**                                | **0.0pt**                                           |
+| 面が撮れなかった frame        | 0    | **0**                                    | **0**                                               |
+| 高さの逆行                    | 0    | **0**（76→174 を 9 段で単調）            | —（Dock は 174 のまま）                             |
+| 1 frame の最大の高さ変化      | 参考 | 全変化の 0.40（最初の 1 tick が 76→115） | 0                                                   |
+| 2 枚目の枠の移動 / alpha 逆行 | 0    | —                                        | **0.0pt / 0**（1080x680 の中央、alpha は 0→1 単調） |
+| 実効 fps / 最大 tick 間隔     | 参考 | 54–60 / 23–35ms                          | 37–56 / 46–256ms（下に書く）                        |
+
+**SURFACE_CONTINUITY_MOTION = PASS**。Dock / Notes / Workspace には手を入れない。
+**PERCEIVED_SURFACE_CONTINUITY = NOT_MEASURED**（fixture validation を通した動画の判定者がいない）。
+
+### 層 C（記録のみ。閾値のある指標はどれも落ちていない）
+
+- T1 の伸びている間、中身が一度消える。`VoiceHUDView.contentVisible` が mode の変化で
+  0.12s かけて 0 になり、`dockResizeMs + dockContentDelayMs`（235ms）後に 0.12s で戻る。
+  実測では 100–300ms の間、面は暗い板だけ（frame f008–f017、輝度 0.1–0.3/255）。
+  「録音中」の見出しと 3 つのボタンは Meeting と Notes で同じ物なのに一緒に消える。
+  これは §Animation の規則（縮む途中に中身がはみ出さないため）の結果で、画素差は
+  1 frame あたり ≤ 9.3/255（跳ねではなく fade）。「別の面が載った」と感じるかは層 C。
+  直すなら「変わらない見出しは消さない」が候補だが、盲検で欠陥と出るまで作らない。
+- T2 は `detachMeetingSurface()` が 2 枚目を初めて作るとき main thread を止める。
+  cold（起動後の初回）: debug 188–256ms、release 246ms。warm: release 46ms。
+  止まっている間に 120ms の fade が進んでしまうので、cold では 2 枚目が 1 tick で
+  alpha 0 → 0.98 に飛ぶ（fade が見えない）。warm では 0 → 0.83 → 0.92 → 0.98 → 1 と
+  4 frame で見える。morph の欠陥ではなく初回生成の遅延。直すなら panel の先行生成だが、
+  閾値の指標ではないので記録に留める。
+- 測定器そのものの注意: 撮影で遅れた tick でも run loop を最低 1 回回さないと AppKit の
+  アニメーション timer が止まり、**測定器が製品の欠陥を作る**（初版はこれで alpha が
+  0 のまま 400ms 見えた）。60fps に届かない回は NOT_MEASURED として出し、FAIL にしない。
