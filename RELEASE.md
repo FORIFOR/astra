@@ -1,6 +1,6 @@
 # Release — Astra macOS
 
-版: **0.1.0**（`package.json` / `tauri.conf.json` / 両 `Cargo.toml` で一致。
+版: **0.1.1**（`package.json` / `tauri.conf.json` / 両 `Cargo.toml` で一致。
 `scripts/verify-release-consistency.sh` が見ている）
 
 **この文書の約束**: 確かめていないものを「確認済み」と書かない。
@@ -14,41 +14,35 @@
 Readiness = NOTARIZED
 ```
 
-**配れる。** 2026-08-31 に公証を通した（submission `d249bf4b-…` / status Accepted）。
+**0.1.1 は配れる形になっている。** 2026-09-03 に公証を通した
+（submission `bbc1db00-…` / status Accepted / staple 済み）。
 利用者が受け取る形——zip に quarantine の印が付いた状態——で実測:
 
 ```
-Astra.app: accepted
-source=Notarized Developer ID
+Gatekeeper: 受理・券あり（落としてきた状態でも、圏外でも開ける）
+RELEASE_ARTIFACT_OK: 47 PASS / 0 SKIP / 0 FAIL（repo の外・まっさらな置き場）
 ```
 
-ダブルクリックで開く。§0.5 の右クリック手順は要らない。
+配布物: `dist/Astra-0.1.1.zip` (9,679,166 bytes) / universal (arm64 + x86_64)
+sha256: `d57e977543ffc09072a919a82afa2c536ea205a6adc1d2a160229a931bcc3e44`
+appcast: `dist/feed/appcast.xml`（EdDSA 署名済み。0.1.0 → 0.1.1 の delta 16,450 bytes も同梱）
 
-**公開済み**: https://github.com/FORIFOR/astra/releases/tag/v0.1.0
-配布物: `Astra-0.1.0.zip` (9.2MB) / universal (arm64 + x86_64)
-sha256: `571a00271f8469036464333233ee285e27d19480a1c611b2c52661c49235310b`
+**まだ公開していない。** GitHub Releases に `v0.1.1` を作り
+`Astra-0.1.1.zip` / `Astra0.1.1-0.1.0.delta` / `appcast.xml` を添えると、
+0.1.0 の利用者に自動更新が届く（feed は `releases/latest/download/appcast.xml` で固定）。
+公開は人の判断で行う。
 
-自動更新も有効。feed は `releases/latest/download/appcast.xml` を指すので、
-**版が上がっても URL が変わらない**。次の版は新しいリリースに `appcast.xml` を
-添えるだけで既存の利用者に届く。
+0.1.0（384b46a）からの変更 92 commit は画面の言葉と時間軸の直し:
+DS-01〜06 の造形規則、Craft Freeze、journey J-A/J-B/J-C（頼む・録る・断られる）を
+最後まで通す検証、失敗時に袋小路を作らない直し（マイク拒否・共有中・強制終了）、
+一覧の状態語を日本語に（録音中 / 会話を読み取っています… / 使えます）。
 
-配布できる形まで作れているが、**公証（notarization）が済んでいないので配れない**。
-公証を通すには Apple ID と app 用パスワードが要り、これは私（アシスタント）が
-用意できるものではない。入れ方は §3。
-
-利用者が受け取る形（zip に quarantine の印が付いた状態）で実測した結果:
-
-```
-Astra.app: rejected
-source=Unnotarized Developer ID
-```
-
-印が付いていない状態で見ると Gatekeeper は甘くなるので、
-`verify-release-artifact.sh` は**印を付けてから**判定する。
+**前の版**: https://github.com/FORIFOR/astra/releases/tag/v0.1.0
+（`Astra-0.1.0.zip` sha256 `571a00271f8469036464333233ee285e27d19480a1c611b2c52661c49235310b`）
 
 | | 状態 |
 | --- | --- |
-| 版番号の一致 | ✅ 0.1.0 で 4 か所一致 |
+| 版番号の一致 | ✅ 0.1.1 で 4 か所一致（`verify-release-consistency.sh`） |
 | 自動ゲート | ✅ `pnpm verify:all` = VERIFY_ALL_OK |
 | 録音の E2E | ✅ `RECORDING_EXPERIENCE_OK` |
 | release ビルド | ✅ Rust も Swift も release |
