@@ -18,6 +18,14 @@ DS-01〜05（同 末尾、`docs/ux-benchmark/compare/SAMPLES.md` Sample 11〜16�
 解除は `CRAFT_FREEZE_OVERRIDE` の 3 条件が同時に成り立つときだけ:
 journey の失敗が起きている AND 原因が visual grammar に特定できる AND
 既存の構造・寸法・意味の修正では解決できない。「何となく直したい」では戻らない。
+再確認（2026-09-03、Journey 第 2 回）: 操作ガイド 10 面（Home / Meeting Dock / Notes /
+Workspace / Library / Listening / Running / Confirmation / Done / Recovery）を測定と盲検で
+見直し、**新しい FIX は 0**。VERIFY だった 2 つは実測で閉じた——Dock → Notes → Workspace は
+`--selftest surfacemotion` で同一 CGWindowID 100% / 上辺 0pt / 欠け frame 0（PASS、体感は
+NOT_MEASURED のまま）、Home の主入口は盲検 3 名が 3/3 で入力欄を指した。凍結の対象に
+Home の階層 / 確認面の寸法 / Library の accent / 主操作の強調 / Compact Meeting Mode を
+明示して加える。**測れていない主観（perceived）を理由に面を変えない。**
+Library / Running / Confirmation / Recovery は Astra らしさの核で、触るほど退行の危険が高い。
 次の段は面の局所ではなく、Home → Listening → Task Running → Confirmation → Done、
 Meeting → Notes → Workspace → Library → 出所の確認、という一連の遷移を一つの製品として
 見る（continuity / task-adaptive sizing / grammar・用語の一貫性 / provenance の連続 /
