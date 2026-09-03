@@ -124,9 +124,14 @@ struct AgentResult: Equatable {
     var sourceCount: Int? = nil
     /// 会議の結果なら、その会議。「メモを開く」は一覧ではなく**この 1 件**を開く。
     var sessionId: String? = nil
+    /// 2 行目に出す説明。無ければ Session の状態（会議）か件数（仕事）を出す。
+    /// 始められなかった理由はここに書く（「何ができないか」を先に）。
+    var detail: String? = nil
+    /// できなかった結果。印を ✓ にしない。
+    var failed: Bool = false
 
     enum Action: String, Equatable {
-        case openWorkspace, openNotes, ask, copy
+        case openWorkspace, openNotes, ask, copy, openSettings
 
         var title: String {
             switch self {
@@ -134,6 +139,7 @@ struct AgentResult: Equatable {
             case .openNotes: return "メモを開く"
             case .ask: return "Ask Astra"
             case .copy: return "コピー"
+            case .openSettings: return "設定を開く"
             }
         }
     }

@@ -50,8 +50,9 @@ struct SessionCard: View {
         .onDisappear { UIProbe.unregister("session-\(session.id)") }
     }
 
-    /// 開ける状態か。
-    private var canOpen: Bool { session.status == .ready }
+    /// 開ける状態か。落ちた録音も開ける —— 確定した行はその場で保存してあるので中身は残っている。
+    /// 行き止まりのカードにしない。
+    private var canOpen: Bool { session.status == .ready || session.status == .interrupted }
     private func syncProbe() {
         if canOpen { UIProbe.register("session-\(session.id)", onOpen) }
         else { UIProbe.unregister("session-\(session.id)") }

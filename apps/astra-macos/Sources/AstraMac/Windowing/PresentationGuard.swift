@@ -65,7 +65,9 @@ final class PresentationGuard: ObservableObject {
             case .moveToSecond:
                 WindowCoordinator.shared.showVoiceHUD()
             }
-        } else if AstraStateStore.shared.state.mode != .meeting {
+        } else {
+            // 共有が終わったら戻す。録音中こそ Stop の載った Dock が要る
+            // （以前は mode == .meeting の間は戻らず、Stop が押せなくなっていた）。
             WindowCoordinator.shared.showVoiceHUD()
         }
     }

@@ -2092,7 +2092,8 @@ enum SelfTest {
             let rows = LocalStore.shared.loadTranscript(meetingId: liveId).count
             if rows == 0 { rec.error("落ちた録音の文字起こしが残っていない") }
             _ = rec.shot("06-resumed")
-            rec.step("落ちて再開", interactions: 1,
+            // Home を開くのは頼まれた結果（窓が増えて当然）。
+            rec.step("落ちて再開", interactions: 1, opensWindow: true,
                      ids: ["status": st?.rawValue ?? "nil", "transcriptRows": String(rows)])
             rec.cannotMeasure("kill -9 を挟んだ全体（scripts/verify-recording-experience.sh）")
             rec.cannotMeasure("実際の TCC 拒否（端末の許可は自動で変えない。simulatedMicrophone で作る）")

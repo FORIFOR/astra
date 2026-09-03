@@ -219,6 +219,14 @@ final class RecordingWorkspaceState: ObservableObject {
             isRecording = false
             tickTimer?.invalidate(); tickTimer = nil
             pendingCalendarLink = nil
+            // 理由は Workspace のバナーだけに出ていた。Workspace は開いていないので、
+            // Home / Dock / ⌥Space から始めた人には**何も起きない**ように見えた。
+            // Dock の結果面に理由と、直しに行く道を出す。
+            AstraStateStore.shared.setDock(.result(AgentResult(
+                title: "録音を始められません",
+                actions: [.openSettings],
+                detail: "マイクが許可されていません。設定で Astra に許可すると始められます。",
+                failed: true)))
             return
         }
         // 未確認のまま進む場合（プロンプト待ち）は、録れていないことを画面に出す。

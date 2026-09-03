@@ -6,6 +6,7 @@ struct SettingsView: View {
     @State private var screen = Permissions.screenRecording
     @State private var ax = Permissions.accessibility
     @State private var cal = Permissions.calendar
+    @State private var input = Permissions.inputMonitoring
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -32,6 +33,11 @@ struct SettingsView: View {
                 permissionRow("画面収録", screen, request: { Permissions.requestScreenRecording(); screen = Permissions.screenRecording })
                 permissionRow("アクセシビリティ", ax, request: { Permissions.openAccessibilitySettings() })
                 permissionRow("カレンダー", cal, request: { Permissions.requestCalendar { _ in cal = Permissions.calendar } })
+                // ⌥Space はこの許可が無いと黙って効かない。Home が空のときしか直す道が無かった。
+                permissionRow("入力監視（⌥Space）", input, request: {
+                    if !Permissions.requestInputMonitoring() { Permissions.openInputMonitoringSettings() }
+                    input = Permissions.inputMonitoring
+                })
             }
 
             Text("ライブのマイク / 画面 / グローバル操作は、署名済みアプリで、上の許可をあなたが与えたときだけ動きます。")

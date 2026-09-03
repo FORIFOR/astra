@@ -50,7 +50,8 @@ final class StatusBarController {
         menu.addItem(.separator())
 
         // ショートカットは覚えていないと使えないので、ここに書いておく。
-        let hint = NSMenuItem(title: "音声入力: \(GlobalShortcut.label()) を長押し", action: nil, keyEquivalent: "")
+        // 実装は録音の開始 / 停止（長押しではない）。言っていることと違う案内は置かない。
+        let hint = NSMenuItem(title: "録音を開始 / 停止: \(GlobalShortcut.label())", action: nil, keyEquivalent: "")
         hint.isEnabled = false
         menu.addItem(hint)
 

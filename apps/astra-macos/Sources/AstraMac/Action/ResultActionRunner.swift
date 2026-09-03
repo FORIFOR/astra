@@ -23,6 +23,9 @@ enum ResultActionRunner {
         case .copy:
             NSPasteboard.general.clearContents()
             NSPasteboard.general.setString(title, forType: .string)
+        case .openSettings:
+            // 始められなかった理由はいまのところマイクだけ。OS の許可画面へ。
+            Permissions.openMicrophoneSettings()
         }
         store.dismissResult()
     }

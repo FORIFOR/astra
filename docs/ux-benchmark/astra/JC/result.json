@@ -2,19 +2,15 @@
   "artifacts" : [
     "01-denied.png",
     "02-recovered.png",
+    "03-after-sharing.png",
     "04-confirm.png",
     "05-interrupted.png",
     "06-resumed.png"
   ],
   "errors" : [
-    "拒否の理由が Dock に出ない（workspace-banner-only）",
-    "「設定を開く」が無い（行き止まり）",
-    "共有が終わっても録音中の Dock が戻らない（Stop が押せない）",
-    "1 つの確認に面が 2 枚",
-    "落ちた録音のカードが開けない",
-    "落ちた録音の文字起こしが残っていない"
+
   ],
-  "focusTheft" : 1,
+  "focusTheft" : 0,
   "interactions" : 4,
   "journey" : "JC",
   "notMeasured" : [
@@ -25,36 +21,36 @@
 
   ],
   "product" : "Astra",
-  "startedAt" : "2026-09-02T23:44:52Z",
+  "startedAt" : "2026-09-03T00:06:35Z",
   "steps" : [
     {
       "front" : "com.apple.finder",
       "ids" : {
-        "reason" : "workspace-banner-only",
-        "recovery" : "none"
+        "reason" : "dock:録音を始められません",
+        "recovery" : "openSettings"
       },
       "interactions" : 1,
       "keyWindow" : false,
-      "ms" : 963,
+      "ms" : 1123,
       "name" : "マイク拒否",
       "surface" : {
-        "h" : 44,
+        "h" : 129,
         "key" : false,
-        "w" : 220,
-        "x" : 850,
-        "y" : 1036
+        "w" : 520,
+        "x" : 700,
+        "y" : 951
       },
-      "transitionMs" : 0,
+      "transitionMs" : 176,
       "windows" : 1
     },
     {
       "front" : "com.apple.finder",
       "ids" : {
-        "session" : "meeting-1788392693"
+        "session" : "meeting-1788393997"
       },
       "interactions" : 1,
       "keyWindow" : false,
-      "ms" : 1317,
+      "ms" : 1309,
       "name" : "回復",
       "surface" : {
         "h" : 76,
@@ -68,35 +64,49 @@
     {
       "front" : "com.apple.finder",
       "ids" : {
-        "backAfterSharing" : "false",
+        "backAfterSharing" : "true",
         "hiddenWhileSharing" : "true"
       },
       "interactions" : 0,
       "keyWindow" : false,
-      "ms" : 1443,
+      "ms" : 1457,
       "name" : "共有のあと",
-      "windows" : 0
+      "surface" : {
+        "h" : 76,
+        "key" : false,
+        "w" : 820,
+        "x" : 550,
+        "y" : 1004
+      },
+      "windows" : 1
     },
     {
       "front" : "com.apple.finder",
       "ids" : {
         "answered" : "false",
-        "surfaces" : "2"
+        "surfaces" : "1"
       },
       "interactions" : 1,
       "keyWindow" : false,
-      "ms" : 1737,
+      "ms" : 1224,
       "name" : "確認（やめる）",
-      "windows" : 0
+      "surface" : {
+        "h" : 76,
+        "key" : false,
+        "w" : 820,
+        "x" : 550,
+        "y" : 1004
+      },
+      "windows" : 1
     },
     {
       "ids" : {
         "status" : "interrupted",
-        "transcriptRows" : "0"
+        "transcriptRows" : "1"
       },
       "interactions" : 1,
       "keyWindow" : false,
-      "ms" : 1303,
+      "ms" : 2124,
       "name" : "落ちて再開",
       "surface" : {
         "h" : 820,
@@ -105,10 +115,10 @@
         "x" : 340,
         "y" : 192
       },
-      "windows" : 1
+      "windows" : 2
     }
   ],
-  "success" : false,
-  "totalMs" : 6788,
+  "success" : true,
+  "totalMs" : 7257,
   "windowsOpened" : 0
 }

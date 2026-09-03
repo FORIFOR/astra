@@ -1031,6 +1031,7 @@ struct ResultDock: View {
 
     /// 直近の会議の状態を 1 行で。processing の間は spinner だけにしない。
     private var sessionLine: String {
+        if let d = result.detail { return d }
         guard let s = sessions.recent.first(where: { $0.title == result.title }) else {
             if let n = result.sourceCount, n > 0 { return "\(n) 件のソースから作成しました" }
             return "できました"
@@ -1049,9 +1050,10 @@ struct ResultDock: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 9) {
-                Image(systemName: "checkmark.circle.fill")
+                // できなかった結果に ✓ を付けない。
+                Image(systemName: result.failed ? "exclamationmark.triangle.fill" : "checkmark.circle.fill")
                     .font(.system(size: 13))
-                    .foregroundStyle(Palette.success(dark))
+                    .foregroundStyle(result.failed ? Palette.warning(dark) : Palette.success(dark))
                 VStack(alignment: .leading, spacing: 1) {
                     Text(result.title)
                         .font(.system(size: S.type(Metrics.dockTitleSize), weight: .semibold))
