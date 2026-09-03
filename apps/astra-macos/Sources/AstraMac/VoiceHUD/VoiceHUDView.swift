@@ -230,6 +230,8 @@ struct ListeningDock: View {
         // 120pt 固定だったころは 2 行 47pt の上下に 36pt ずつ空いていた。
         .padding(.vertical, S.metric(Metrics.dockPadV))
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+        // 逃げ道は確認面と同じ鍵。Esc で聞くのをやめる。
+        .escapeKey { VoiceHUDState.shared.cancelListening() }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("dockListening")
     }
@@ -627,7 +629,7 @@ struct ConfirmationDock: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         // Escape は取消。直している最中なら、直すのをやめて確認へ戻る。
         // **逃げ道は常に同じ鍵**でないと、危ないときに手が止まる。
-        .onExitCommand {
+        .escapeKey {
             if editing { editing = false; edited = [:] }
             else { AstraStateStore.shared.resolveConfirmation(approved: false) }
         }
@@ -1087,6 +1089,8 @@ struct ResultDock: View {
         .padding(.horizontal, S.metric(Metrics.dockPadH))
         .padding(.vertical, S.metric(Metrics.dockPadV))
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        // 済んだ面も同じ鍵で閉じる。
+        .escapeKey { AstraStateStore.shared.dismissResult() }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("dockResult")
     }

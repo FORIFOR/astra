@@ -112,6 +112,9 @@ final class WindowCoordinator {
         fadeOut(panel)
     }
 
+    /// Dock が画面に出ているか。確認を Dock 1 面で済ませられるかの判断に使う。
+    var isVoiceHUDVisible: Bool { hudPanel?.isVisible == true }
+
     /// Dock の大きさを状態に合わせる。**窓は増やさない**。
     ///
     /// 上辺の Y を固定したまま高さだけ変える。中央から上下へ広がると、

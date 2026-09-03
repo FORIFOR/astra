@@ -7,8 +7,7 @@
     "05-done.png"
   ],
   "errors" : [
-    "Listening で Esc が効かない（マイクが開いたまま）",
-    "結果面で Esc が効かない"
+
   ],
   "focusTheft" : 0,
   "interactions" : 4,
@@ -20,19 +19,19 @@
     "体感の複雑さ（層 C）: 段は 5、面は 1 枚、増えた窓 0"
   ],
   "product" : "Astra",
-  "startedAt" : "2026-09-02T23:44:20Z",
+  "startedAt" : "2026-09-03T00:03:07Z",
   "steps" : [
     {
       "interactions" : 0,
       "keyWindow" : false,
-      "ms" : 15,
+      "ms" : 13,
       "name" : "Home（Dock は待機）",
       "surface" : {
-        "h" : 820,
+        "h" : 44,
         "key" : false,
-        "w" : 1240,
-        "x" : 340,
-        "y" : 192
+        "w" : 220,
+        "x" : 850,
+        "y" : 1036
       },
       "windows" : 2
     },
@@ -40,42 +39,42 @@
       "interactions" : 1,
       "keyWindow" : false,
       "keys" : {
-        "esc" : "listening→listening"
+        "esc" : "listening→idle"
       },
-      "ms" : 1139,
+      "ms" : 1136,
       "name" : "Listening",
       "surface" : {
-        "h" : 820,
+        "h" : 44,
         "key" : false,
-        "w" : 1240,
-        "x" : 340,
-        "y" : 192
+        "w" : 220,
+        "x" : 850,
+        "y" : 1036
       },
-      "transitionMs" : 168,
+      "transitionMs" : 170,
       "windows" : 2
     },
     {
       "ids" : {
-        "task" : "CF1EBFFB-1D07-4B4D-8D42-B86C553B4D55"
+        "task" : "9E2240FF-0F99-4023-89DF-027F4D897F3B"
       },
       "interactions" : 0,
       "keyWindow" : false,
-      "ms" : 1075,
+      "ms" : 1065,
       "name" : "Running",
       "surface" : {
-        "h" : 820,
+        "h" : 255,
         "key" : false,
-        "w" : 1240,
-        "x" : 340,
-        "y" : 192
+        "w" : 720,
+        "x" : 600,
+        "y" : 825
       },
-      "transitionMs" : 173,
+      "transitionMs" : 167,
       "windows" : 2
     },
     {
       "ids" : {
-        "confirmation" : "A4978B19-D117-4B15-BD9E-CB947769A28E",
-        "resolved" : "A4978B19-D117-4B15-BD9E-CB947769A28E"
+        "confirmation" : "9380B605-DB66-4270-A7B9-388B2760E5A0",
+        "resolved" : "9380B605-DB66-4270-A7B9-388B2760E5A0"
       },
       "interactions" : 2,
       "keyWindow" : false,
@@ -83,38 +82,38 @@
         "cmdReturn" : "approved",
         "return" : "no-op"
       },
-      "ms" : 1824,
+      "ms" : 1837,
       "name" : "Confirmation",
       "surface" : {
-        "h" : 820,
+        "h" : 44,
         "key" : false,
-        "w" : 1240,
-        "x" : 340,
-        "y" : 192
+        "w" : 220,
+        "x" : 850,
+        "y" : 1036
       },
-      "transitionMs" : 186,
+      "transitionMs" : 184,
       "windows" : 2
     },
     {
       "interactions" : 1,
       "keyWindow" : false,
       "keys" : {
-        "esc" : "result→result"
+        "esc" : "result→idle"
       },
-      "ms" : 1237,
+      "ms" : 1212,
       "name" : "Done",
       "surface" : {
-        "h" : 820,
+        "h" : 44,
         "key" : false,
-        "w" : 1240,
-        "x" : 340,
-        "y" : 192
+        "w" : 220,
+        "x" : 850,
+        "y" : 1036
       },
-      "transitionMs" : 162,
+      "transitionMs" : 163,
       "windows" : 2
     }
   ],
-  "success" : false,
-  "totalMs" : 5292,
+  "success" : true,
+  "totalMs" : 5267,
   "windowsOpened" : 0
 }

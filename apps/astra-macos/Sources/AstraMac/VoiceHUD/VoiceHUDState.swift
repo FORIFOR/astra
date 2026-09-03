@@ -36,6 +36,12 @@ final class VoiceHUDState: ObservableObject {
         AstraEventBus.shared.publish(.voiceStarted)
     }
 
+    /// 聞くのをやめる（Esc）。マイクが開いている面に逃げ道の鍵が無いのは危ない。
+    func cancelListening() {
+        guard case .listening = mode else { return }
+        mode = .idle
+    }
+
     /// 認識の途中経過。**確定を待たずに** Dock へ出す（§Listening）。
     func updatePartial(_ text: String) {
         guard case .listening = mode else { return }

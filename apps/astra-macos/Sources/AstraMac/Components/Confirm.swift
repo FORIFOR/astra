@@ -13,9 +13,34 @@ enum Confirm {
         guard confirmation.risk.needsConfirmation else { return true }
         let store = AstraStateStore.shared
         store.requireConfirmation(confirmation)
+        // Dock が出ているなら、聞く面は Dock の 1 枚だけ。以前はここで modal panel も
+        // 出していて、Dock で答えても modal が 120 秒残った（1 つの判断に 2 つの面）。
+        if WindowCoordinator.shared.isVoiceHUDVisible {
+            return waitOnDock(store, confirmation)
+        }
         let approved = ConfirmationPresenter.present(confirmation)
         store.resolveConfirmation(approved: approved)
         return approved
+    }
+
+    /// Dock の確認面（`ConfirmationDock`）が答えるまで回す。答えは bus で受け取る。
+    /// 120 秒待って答えが無ければ取消（黙って実行しない）。
+    @MainActor
+    private static func waitOnDock(_ store: AstraStateStore, _ confirmation: ActionConfirmation) -> Bool {
+        var answer: Bool?
+        let bus = AstraEventBus.shared
+        let token = bus.subscribe { event in
+            if case .confirmationResolved(let id, let approved) = event, id == confirmation.id {
+                answer = approved
+            }
+        }
+        defer { bus.unsubscribe(token) }
+        let deadline = Date().addingTimeInterval(120)
+        while answer == nil, Date() < deadline {
+            CFRunLoopRunInMode(.defaultMode, 0.05, true)
+        }
+        if answer == nil { store.resolveConfirmation(approved: false) }
+        return answer ?? false
     }
 
     /// 旧入口。risk を持たない呼び出しが残っている間の橋渡しで、R3 として扱う。
