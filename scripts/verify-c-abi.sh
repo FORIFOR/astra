@@ -4,6 +4,8 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 CORE="$ROOT/core/astra-core"
+# 版は package.json 1 か所から取る（Cargo.toml と一致することは verify-release-consistency が見る）。
+VERSION="$(node -p "require('$ROOT/package.json').version")"
 cd "$CORE"; cargo build --quiet
 LIBDIR="$CORE/target/debug"
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
@@ -15,7 +17,7 @@ cat > "$TMP/t.c" <<'C'
 #include <sys/stat.h>
 int main(int argc, char** argv) {
     char* v = astra_core_version();
-    if (strcmp(v, "0.1.0") != 0) { printf("CABI_FAIL version=%s\n", v); return 2; }
+    if (strcmp(v, EXPECT_VERSION) != 0) { printf("CABI_FAIL version=%s (want %s)\n", v, EXPECT_VERSION); return 2; }
     astra_core_string_free(v);
 
     /* connector: PKCE (RFC 7636 test vector) + authorize URL */
@@ -88,7 +90,7 @@ int main(int argc, char** argv) {
 }
 C
 OUTDIR="$TMP/rec"; mkdir -p "$OUTDIR"
-clang "$TMP/t.c" -I "$CORE/include" -L "$LIBDIR" -lastra_core -o "$TMP/t"
+clang -DEXPECT_VERSION="\"$VERSION\"" "$TMP/t.c" -I "$CORE/include" -L "$LIBDIR" -lastra_core -o "$TMP/t"
 OUT="$("$TMP/t" "$OUTDIR")"
 echo "$OUT"
 [[ "$OUT" == CABI_OK* ]] || { echo "FAIL: C ABI round trip" >&2; exit 1; }

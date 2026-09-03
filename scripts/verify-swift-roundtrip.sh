@@ -11,12 +11,14 @@ cd "$CORE"; cargo build --quiet
 LIBDIR="$CORE/target/debug"
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
 
+VERSION="$(node -p "require('$ROOT/package.json').version")"
 cat > "$TMP/main.swift" <<'SWIFT'
 import Foundation
+let EXPECT_VERSION = "__VERSION__"
 
 // Rust (astra-core) を Swift から実際に呼ぶ。
 let version = astraCoreVersion()
-guard version == "0.1.0" else { fatalError("version round-trip failed: \(version)") }
+guard version == EXPECT_VERSION else { fatalError("version round-trip failed: \(version) (want \(EXPECT_VERSION))") }
 
 // 構造化入力 → Rust で派生 → 構造化結果
 let snap = recordingSnapshot(input: RecordingInput(
@@ -44,6 +46,7 @@ guard ranked.first?.id == "b" else { fatalError("context ranking round-trip fail
 
 print("ROUNDTRIP_OK version=\(version) elapsed=\(snap.elapsedLabel) hero=\(snap.heroText)")
 SWIFT
+sed -i '' "s/__VERSION__/$VERSION/" "$TMP/main.swift"
 
 swiftc \
   "$SWIFT/astra_core.swift" "$TMP/main.swift" \

@@ -5,6 +5,8 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 PKG="$ROOT/apps/astra-macos"
 APP="$PKG/build/Astra.app"
+# 版は package.json 1 か所から（release-macos.sh と同じ）。
+VERSION="$(node -p "require('$ROOT/package.json').version")"
 
 cd "$PKG"
 swift build -c release >/dev/null
@@ -25,7 +27,7 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>CFBundleIdentifier</key><string>com.astra.mac</string>
   <key>CFBundleExecutable</key><string>Astra</string>
   <key>CFBundlePackageType</key><string>APPL</string>
-  <key>CFBundleShortVersionString</key><string>0.1.0</string>
+  <key>CFBundleShortVersionString</key><string>$VERSION</string>
   <key>CFBundleVersion</key><string>1</string>
   <key>LSMinimumSystemVersion</key><string>14.0</string>
   <!-- overlay として Dock に出さない -->
