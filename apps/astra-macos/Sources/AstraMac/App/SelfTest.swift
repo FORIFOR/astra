@@ -4522,6 +4522,10 @@ enum SelfTest {
             while Date() < show { CFRunLoopRunInMode(.defaultMode, 0.05, true) }
             var winID: CGWindowID = 0
             var bw = 0, bh = 0
+            // 撮るのは**いま提示した window**。「いちばん大きい自 window」で選ぶと、直前に閉じた
+            // 面が消えかけ（縮小 + 白紙）のまま一覧に残っていて、そちらを撮って c4 で落ちることがある
+            // （verify-all で 3 回に 1 回ほど。Main が 1058x666/c4 と出るのがそれ）。
+            let own = CGWindowID(max(0, window.windowNumber))
             if let infos = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] {
                 var best = 0
                 for info in infos {
@@ -4530,7 +4534,9 @@ enum SelfTest {
                           let b = info[kCGWindowBounds as String] as? [String: Any],
                           let iw = b["Width"] as? CGFloat, let ih = b["Height"] as? CGFloat,
                           iw > 40, ih > 20 else { continue }   // HUD は 310x31 と低いので閾値を下げる
-                    if Int(iw * ih) > best { best = Int(iw * ih); winID = num; bw = Int(iw); bh = Int(ih) }
+                    if num == own { winID = num; bw = Int(iw); bh = Int(ih); break }
+                    // 番号が取れない（まだ載っていない）ときだけ、従来どおり最大の自 window。
+                    if own == 0, Int(iw * ih) > best { best = Int(iw * ih); winID = num; bw = Int(iw); bh = Int(ih) }
                 }
             }
             guard winID != 0,
