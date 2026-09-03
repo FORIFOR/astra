@@ -58,6 +58,17 @@ check() {
     [[ "$(tr -d ' ' <<<"$badges" | tr '[:upper:]' '[:lower:]')" == "$(tr '[:upper:]' '[:lower:]' <<<"$disp")" ]] \
       || { echo "  FAIL: 鍵 $key の badge($badges) が表示($disp) と違う"; fail=1; }
   done < <(grep $'^SHORTCUT\t' "$facts")
+  # アプリ側: 鍵の表示（⌥Space 等）を画面の文字列に直書きしていないか。正本は GlobalShortcut.label() /
+  # UserShortcut。直書きが残ると、割り当てを変えた日に画面とガイドが別々の鍵を言う。
+  # 対象は SHORTCUT の表示値そのもの。ログ（NSLog）とコメントは除く。
+  local src="$ROOT/apps/astra-macos/Sources/AstraMac"
+  while IFS=$'\t' read -r _ _ disp _; do
+    [[ "$disp" =~ [⌘⌥⌃⇧] ]] || continue   # esc のような素の語は他の語の一部と区別できない
+    local hit; hit=$(grep -rn --include='*.swift' -F "\"" "$src" \
+      | grep -F "$disp" | grep -v -E '^[^:]+:[0-9]+:\s*//|NSLog\(|/(Windowing/GlobalShortcut|App/UserFacingFacts|App/SelfTest)\.swift:' \
+      | grep -E "\"[^\"]*$disp[^\"]*\"" || true)
+    [[ -z "$hit" ]] || { echo "  FAIL: 鍵の表示 $disp を画面の文字列に直書き:"; sed 's/^/    /' <<<"$hit"; fail=1; }
+  done < <(grep $'^SHORTCUT\t' "$facts")
   # ガイドが引く key が facts に在るか / protected の語がガイドに文字で書かれていないか
   python3 - "$build" "$TMP/facts.tsv" <<'PY' || fail=1
 import re,sys

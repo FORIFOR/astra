@@ -149,7 +149,7 @@ struct HomeView: View {
                                 inputMonitoringAsked = true
                             } label: {
                                 HStack(spacing: 5) {
-                                    Text("⌥Space を使えるようにする")
+                                    Text("\(GlobalShortcut.label()) を使えるようにする")
                                     Image(systemName: "arrow.right")
                                         .font(.system(size: 10, weight: .semibold))
                                 }

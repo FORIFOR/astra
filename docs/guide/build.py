@@ -138,7 +138,7 @@ html=f'''<!doctype html><html lang="ja"><head><meta charset="utf-8">
 {MENU}
 </div><div>
 <p><b>「{fact("menu.open")}」</b>で {fact("nav.home")} が出ます。左の一覧（{fact("nav.home")} / {fact("nav.tasks")} / {fact("nav.meetings")} / {fact("nav.library")} …）で画面を切り替えます。</p>
-<p>初回だけ、<b>{fact("menu.settings")}</b> から「{fact("settings.permissionsSection")}」の 5 つ（{fact("permission.microphone")}・{fact("permission.screenRecording")}・{fact("permission.accessibility")}・{fact("permission.calendar")}・{fact("permission.inputMonitoring")}）を「{fact("permission.request")}」で有効にしてください。{fact("permission.microphone")}を許可しないと録音は始まりません（→ 6）。{fact("permission.inputMonitoring")}が無いと {shortcut("shortcut.recording.toggle")} が効かず、黒いバーには「{fact("hud.clickHint")}」と出ます。</p>
+<p>許可は、その機能を<b>初めて使うとき</b>に、要るものだけ聞かれます——初めて会議を録るとき{fact("permission.microphone")}と（相手の声のために）{fact("permission.screenRecording")}、{shortcut("shortcut.recording.toggle")} を使えるようにするとき{fact("permission.inputMonitoring")}、というように。先にまとめて設定する必要はありません。<b>{fact("menu.settings")}</b> の「{fact("settings.permissionsSection")}」に 5 つ（{fact("permission.microphone")}・{fact("permission.screenRecording")}・{fact("permission.accessibility")}・{fact("permission.calendar")}・{fact("permission.inputMonitoring")}）の一覧があり、いま許可されているかの確認と、あとからの許可はそこでできます。{fact("permission.microphone")}を許可しないと録音は始まりません（→ 6）。{fact("permission.inputMonitoring")}が無いと {shortcut("shortcut.recording.toggle")} が効かず、黒いバーには「{fact("hud.clickHint")}」と出ます。</p>
 </div></div>
 
 <h2><span>2</span>会議を記録する</h2>
