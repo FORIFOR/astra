@@ -222,6 +222,9 @@ struct ListeningDock: View {
                     .lineLimit(1)
                     .truncationMode(.head)
                 Spacer(minLength: 0)
+                // マイクが開いている面に逃げ道が**見えない**、と盲検の 2 名が同じ観察をした
+                // （journeys/panel1）。鍵は効いていても、書いていなければ無いのと同じ。
+                KeyBadge("esc")
             }
             ContextStrip()
         }

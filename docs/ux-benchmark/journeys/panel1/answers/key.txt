@@ -1,0 +1,3 @@
+JA: A=baseline(0306430) B=now
+JB: B=baseline(0306430) A=now
+JC: A=baseline(0306430) B=now

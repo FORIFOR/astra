@@ -19,7 +19,7 @@
     "体感の複雑さ（層 C）: 段は 5、面は 1 枚、増えた窓 0"
   ],
   "product" : "Astra",
-  "startedAt" : "2026-09-03T00:03:07Z",
+  "startedAt" : "2026-09-03T00:20:38Z",
   "steps" : [
     {
       "interactions" : 0,
@@ -41,7 +41,7 @@
       "keys" : {
         "esc" : "listening→idle"
       },
-      "ms" : 1136,
+      "ms" : 1120,
       "name" : "Listening",
       "surface" : {
         "h" : 44,
@@ -50,16 +50,16 @@
         "x" : 850,
         "y" : 1036
       },
-      "transitionMs" : 170,
+      "transitionMs" : 169,
       "windows" : 2
     },
     {
       "ids" : {
-        "task" : "9E2240FF-0F99-4023-89DF-027F4D897F3B"
+        "task" : "6E0866F9-782E-4DEE-968A-7358DDBFC44D"
       },
       "interactions" : 0,
       "keyWindow" : false,
-      "ms" : 1065,
+      "ms" : 1012,
       "name" : "Running",
       "surface" : {
         "h" : 255,
@@ -73,8 +73,8 @@
     },
     {
       "ids" : {
-        "confirmation" : "9380B605-DB66-4270-A7B9-388B2760E5A0",
-        "resolved" : "9380B605-DB66-4270-A7B9-388B2760E5A0"
+        "confirmation" : "7864EEF2-F796-4CC8-975E-7ABF0723B422",
+        "resolved" : "7864EEF2-F796-4CC8-975E-7ABF0723B422"
       },
       "interactions" : 2,
       "keyWindow" : false,
@@ -82,7 +82,7 @@
         "cmdReturn" : "approved",
         "return" : "no-op"
       },
-      "ms" : 1837,
+      "ms" : 1838,
       "name" : "Confirmation",
       "surface" : {
         "h" : 44,
@@ -91,7 +91,7 @@
         "x" : 850,
         "y" : 1036
       },
-      "transitionMs" : 184,
+      "transitionMs" : 187,
       "windows" : 2
     },
     {
@@ -100,7 +100,7 @@
       "keys" : {
         "esc" : "result→idle"
       },
-      "ms" : 1212,
+      "ms" : 1214,
       "name" : "Done",
       "surface" : {
         "h" : 44,
@@ -109,11 +109,11 @@
         "x" : 850,
         "y" : 1036
       },
-      "transitionMs" : 163,
+      "transitionMs" : 165,
       "windows" : 2
     }
   ],
   "success" : true,
-  "totalMs" : 5267,
+  "totalMs" : 5200,
   "windowsOpened" : 0
 }
