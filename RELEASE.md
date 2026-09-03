@@ -204,6 +204,31 @@ ASTRA_UPDATE_BASE=https://…/astra bash scripts/publish-update.sh
 
 ---
 
+## 2.6 公開の手順（GitHub Releases に置くもの）
+
+本人の「公開して」があってから。1 つの Release に **5 点**を添える:
+
+```sh
+python3 docs/guide/build.py                       # ~/Downloads/Astra-操作ガイド/ を作り直す
+cp ~/Downloads/Astra-操作ガイド/Astra-操作ガイド.pdf docs/guide/   # repo にも残す
+gh release create v<版> --title "Astra <版>" --notes-file <本文> \
+  dist/Astra-<版>.zip dist/feed/appcast.xml dist/feed/*.delta \
+  "<PDF>#Astra 操作ガイド (PDF, 日本語)"            # 名前は Astra-<版>-guide-ja.pdf にして渡す
+gh release upload v<版> "<PDF を Astra-guide-ja.pdf に複製したもの>"
+```
+
+| 添付 | 役割 |
+| --- | --- |
+| `Astra-<版>.zip` / `appcast.xml` / `*.delta` | アプリと自動更新。feed URL は `releases/latest/download/appcast.xml` で固定 |
+| `Astra-<版>-guide-ja.pdf` | **この版の**操作ガイド（監査・特定版の利用者向け） |
+| `Astra-guide-ja.pdf` | 版番号なしの同じ PDF。一般利用者へ案内する固定 URL はこれ: `https://github.com/FORIFOR/astra/releases/latest/download/Astra-guide-ja.pdf` |
+
+Release 本文には「入れ方」の後に「操作ガイド」の節を置き、上の固定 URL を貼る。
+日本語のファイル名で上げると GitHub が `Astra-.pdf` に削るので、ASCII 名にしてから渡す。
+公開後は `releases/latest/download/` から appcast・zip・PDF を取り直し、手元と一致を確かめる。
+
+---
+
 ## 3. 公証を通すには（人の手が要る）
 
 ```sh
