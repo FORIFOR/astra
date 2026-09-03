@@ -43,13 +43,16 @@ final class MainData: ObservableObject {
                 let library = (try? AstraCoreBridge.library(base, accessToken: tokens.accessToken)) ?? []
                 await MainActor.run {
                     self.apps = apps; self.library = library; self.connected = true
-                    // サインインを録音側にも渡す（AI 操作/翻訳/実会議が使えるようになる）。
+                    // サインインを AI 操作/翻訳/声の依頼に渡す。どれも人が押してから文面を送る。
                     RecordingWorkspaceState.shared.configureBackend(base: base, token: tokens.accessToken)
-                    RecordingRuntime.shared.configureBackend(base: base, accessToken: tokens.accessToken)
                     VoiceHUDState.shared.configureBackend(base: base, token: tokens.accessToken)
-                    // サインインしたので、前回落ちた録音があれば gateway へ送って片付ける（§3 recovery）。
-                    let recovered = RecoveryState.shared.recoverAll()
-                    if recovered > 0 { NSLog("astra: recovered %llu bytes of crashed recordings", recovered) }
+                    // 録音の自動 upload（会議作成→停止時に音声全体→落ちた録音の回収）は dev 専用。
+                    // 既定では録音は gateway を知らない。`RecordingRuntime.devAutoUploadEnabled`。
+                    if RecordingRuntime.devAutoUploadEnabled {
+                        RecordingRuntime.shared.configureBackend(base: base, accessToken: tokens.accessToken)
+                        let recovered = RecoveryState.shared.recoverAll()
+                        if recovered > 0 { NSLog("astra: recovered %llu bytes of crashed recordings", recovered) }
+                    }
                 }
             } catch {
                 NSLog("main data load failed: \(error)")

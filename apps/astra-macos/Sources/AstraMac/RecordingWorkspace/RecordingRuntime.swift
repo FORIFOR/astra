@@ -36,6 +36,10 @@ final class RecordingRuntime {
     private var mic: MicCapture?
     private var sysAudio: AnyObject?
     private var speech: SpeechTranscriber?
+    /// 文字起こしを頼まれたのに、この Mac ではオンデバイス STT が始められなかった。
+    /// **録音は続いている。**サーバへは落とさない（`SpeechTranscriber` 冒頭）。画面はこれを見て
+    /// 「文字起こしが出ない理由」を言う。黙って空のまま「聞いています」と出さない。
+    private(set) var transcriptionUnavailable = false
     private var paused = false
     /// 途中経過/確定の文字起こしを UI へ渡す（オンデバイス STT）。
     var onTranscript: ((String, Bool) -> Void)?
@@ -47,6 +51,20 @@ final class RecordingRuntime {
     private(set) var activeMeetingId: String = "adhoc"
     private var apiBase: String?
     private var accessToken: String?
+
+    /// 録音を gateway へ**自動で**送ってよいか。既定 OFF、dev 専用。
+    ///
+    /// gateway が到達可能なだけで会議を作り、停止時に音声全体を送っていた（`docs/privacy-egress.md`）。
+    /// 「確認して実行したものだけが外に出ます」と食い違う。release ビルドでは env に関わらず false
+    /// （`#if DEBUG` の外に道が無い）。dev で E2E を回すときだけ `ASTRA_DEV_AUTO_UPLOAD=1`。
+    /// selftest は `configureBackend` を自分で呼ぶので、この旗は本番の自動配線だけを止める。
+    static var devAutoUploadEnabled: Bool {
+        #if DEBUG
+        return ProcessInfo.processInfo.environment["ASTRA_DEV_AUTO_UPLOAD"] == "1"
+        #else
+        return false
+        #endif
+    }
 
     /// サインイン済みなら、実バックエンドの会議 id を使って録音する。
     func configureBackend(base: String, accessToken: String) {
@@ -79,6 +97,7 @@ final class RecordingRuntime {
         }
         self.session = session
         self.activeMeetingId = id
+        transcriptionUnavailable = false
         if transcribe, SpeechTranscriber.authorization == .authorized {
             let st = SpeechTranscriber()
             do {
@@ -96,7 +115,10 @@ final class RecordingRuntime {
                 }
                 self.speech = st
             } catch {
-                NSLog("on-device STT unavailable: \(error)")   // 許可が無ければ録音だけ続ける
+                // オンデバイス資産が無い / 認識器が無い。録音だけ続け、画面に理由を出す。
+                // ここで `requiresOnDeviceRecognition = false` にして取り直すことはしない。
+                transcriptionUnavailable = true
+                NSLog("on-device STT unavailable (recording continues, no server fallback): \(error)")
             }
         }
         if captureMic {
@@ -162,6 +184,7 @@ final class RecordingRuntime {
         speechStartedAt = nil
         mic?.stop(); mic = nil
         speech?.finish(); speech = nil
+        transcriptionUnavailable = false
         if #available(macOS 13.0, *), let sys = sysAudio as? SystemAudioCapture {
             Task { await sys.stop() }
         }

@@ -491,6 +491,12 @@ private struct MeetingNotesCanvas: View {
                     .foregroundStyle(last.interim ? Palette.muted(dark) : Palette.text(dark))
                     .lineLimit(2)
             }
+        } else if RecordingRuntime.shared.transcriptionUnavailable, state.isRecording {
+            // 音は届いていて録れているが、この Mac ではオンデバイス文字起こしが始められない。
+            // サーバへは出さない（`SpeechTranscriber`）。空のまま「聞いています」と言わず、理由を言う。
+            Label(Facts.transcriptionOnDeviceUnavailable, systemImage: "text.badge.xmark")
+                .font(.system(size: TypeScale.microSize))
+                .foregroundStyle(Palette.danger(dark))
         } else if RecordingRuntime.shared.listening.isEmpty, state.isRecording {
             // **音が来ていないのに「聞いています」と言わない。**
             // 見出しが「音が届いていません」と言う横で、ここが「聞いています…」と

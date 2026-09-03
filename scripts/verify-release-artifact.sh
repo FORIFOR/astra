@@ -120,7 +120,7 @@ FINAL="$(sqlite3 "$DB" "select status from meetings limit 1;" 2>/dev/null)"
 echo "== 全ゲート（repo の外から） =="
 PASS=0; SKIP=0; BAD=0; BADLIST=""
 for t in acceptance ax axtree breakpoints browser calendar connector connectorexchange \
-         connectorflow connectorstate dictation dockanim e2e001 entry files hudlifecycle \
+         connectorflow connectorstate dictation dockanim e2e001 egress entry files hudlifecycle \
          keychain lifecycle livemeeting livemic livescreen meetingiq navtitle panel pause \
          perf permissions presence rag record recordbutton screen screenshot secret session \
          sessionsync shortcut speech state storage sttrecognize sttstream sysaudio timer \

@@ -67,6 +67,7 @@ enum SelfTest {
         case "e2e001": e2e001(args); return true
         case "shots": shots(args); return true
         case "a11ynames": a11ynames(args); return true
+        case "egress": egress(); return true
         case "states": states(args); return true
         case "golden": golden(args); return true
         case "dock8": dock8(args); return true
@@ -3401,8 +3402,10 @@ enum SelfTest {
         if PermissionCenter.Capability.screenAsk.required != [.screenRecording] {
             fail.append("screenAsk が画面以外まで要求している")
         }
-        if Set(PermissionCenter.Capability.meeting.required) != [.microphone, .screenRecording] {
-            fail.append("meeting の要求が仕様と違う")
+        // 相手の声は本番経路でまだ取り込んでいない（captureSystemAudio は常に false）。使っていない目的で
+        // 画面収録を求めたら落ちる（`docs/privacy-egress.md`）。system audio を繋いだ日にここを変える。
+        if PermissionCenter.Capability.meeting.required != [.microphone] {
+            fail.append("meeting がマイク以外まで要求している（system audio は未接続）")
         }
         // 全機能の和集合を、どれか 1 機能が単独で要求してはいけない（＝初回一括の禁止）。
         let all = Set(PermissionCenter.Capability.allCases.flatMap(\.required))
@@ -4334,6 +4337,53 @@ enum SelfTest {
         exit(0)
     }
 
+    /// `--selftest egress`: 端末から出る道が、既定で閉じているかを**実行体で**確かめる（`docs/privacy-egress.md`）。
+    ///
+    /// ① 録音の自動 upload 旗は既定 OFF（env 無し）。② オンデバイス資産が無いロケールで
+    /// `start` が throw し `recognizeFile` が nil（サーバへ落ちない）。資産の無いロケールがこの Mac に
+    /// 無ければ NOT_MEASURED（静的検査は別に scripts/verify-privacy-egress.sh が持つ）。
+    /// ③ `.meeting` が求めるのはマイクだけ。
+    @MainActor
+    private static func egress() {
+        if ProcessInfo.processInfo.environment["ASTRA_DEV_AUTO_UPLOAD"] != nil {
+            print("SELFTEST_SKIP egress: ASTRA_DEV_AUTO_UPLOAD が立っている（既定の姿を測れない）"); exit(0)
+        }
+        var fail: [String] = []
+        if RecordingRuntime.devAutoUploadEnabled { fail.append("録音の自動 upload が env 無しで有効") }
+        if PermissionCenter.Capability.meeting.required != [.microphone] {
+            fail.append("meeting がマイク以外を求めている: \(PermissionCenter.Capability.meeting.required)")
+        }
+        var stt = "NOT_MEASURED"
+        if SpeechTranscriber.authorization == .authorized {
+            // 資産が無いロケールを 1 つ探す（supported だが on-device 非対応）。
+            if let id = SpeechTranscriber.localesWithoutOnDeviceAsset().first {
+                let st = SpeechTranscriber(localeId: id)
+                var code = 0
+                do { try st.start { _ in }; st.finish() } catch { code = (error as NSError).code }
+                if code != SpeechTranscriber.onDeviceUnavailableCode {
+                    fail.append("\(id) は資産が無いのに start が通った（サーバへ落ちている）")
+                }
+                let aiff = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("astra-egress-\(getpid()).aiff")
+                defer { try? FileManager.default.removeItem(at: aiff) }
+                let say = Process()
+                say.executableURL = URL(fileURLWithPath: "/usr/bin/say")
+                say.arguments = ["-v", "Samantha", "-o", aiff.path, "good morning"]
+                try? say.run(); say.waitUntilExit()
+                if say.terminationStatus == 0, let text = st.recognizeFile(aiff, timeout: 8), !text.isEmpty {
+                    fail.append("\(id) は資産が無いのに recognizeFile が文字を返した: \(text)")
+                }
+                stt = "\(id) start=code\(code) file=nil"
+            } else {
+                stt = "NOT_MEASURED(全ロケールに資産あり)"
+            }
+        }
+        guard fail.isEmpty else {
+            print("SELFTEST_FAIL egress: " + fail.joined(separator: " / ")); exit(2)
+        }
+        print("SELFTEST_OK egress: autoUpload=off meeting=[microphone] sttNoFallback=\(stt)")
+        exit(0)
+    }
+
     /// `--selftest speech`: オンデバイス STT(Apple Speech)の可用性・認可・ロケールを検証する。
     /// live 認識は音声認識許可(TCC)が要るが、認識器の用意と認可状態の読み取りは prompt 無しで確かめられる。
     @MainActor
@@ -4351,10 +4401,11 @@ enum SelfTest {
             appended = true
         } catch { startThrew = true }
         st.finish()
-        // 未認可なら start は throw（実データを捏造しない）。認可済みなら append まで到達。
-        let consistent = (auth == .authorized) ? appended : startThrew
-        guard consistent else { print("SELFTEST_FAIL speech auth=\(auth.rawValue) started=\(!startThrew) appended=\(appended)"); exit(2) }
-        print("SELFTEST_OK speech: auth=\(auth.rawValue) onDeviceCapable=\(onDevice) started=\(!startThrew) appendedFrames=\(appended)")
+        // 未認可なら start は throw（実データを捏造しない）。認可済みで on-device の資産があれば append まで到達。
+        // 認可済みでも資産が無ければ throw（サーバへ落とさない。`SpeechTranscriber` 冒頭）。
+        let consistent = (auth == .authorized && onDevice) ? appended : startThrew
+        guard consistent else { print("SELFTEST_FAIL speech auth=\(auth.rawValue) onDeviceCapable=\(onDevice) started=\(!startThrew) appended=\(appended)"); exit(2) }
+        print("SELFTEST_OK speech: auth=\(auth.rawValue) onDeviceCapable=\(onDevice) started=\(!startThrew) appendedFrames=\(appended) serverFallback=never")
         exit(0)
     }
 

@@ -138,7 +138,7 @@ html=f'''<!doctype html><html lang="ja"><head><meta charset="utf-8">
 {MENU}
 </div><div>
 <p><b>「{fact("menu.open")}」</b>で {fact("nav.home")} が出ます。左の一覧（{fact("nav.home")} / {fact("nav.tasks")} / {fact("nav.meetings")} / {fact("nav.library")} …）で画面を切り替えます。</p>
-<p>許可は、その機能を<b>初めて使うとき</b>に、要るものだけ聞かれます——初めて会議を録るとき{fact("permission.microphone")}と（相手の声のために）{fact("permission.screenRecording")}、{shortcut("shortcut.recording.toggle")} を使えるようにするとき{fact("permission.inputMonitoring")}、というように。先にまとめて設定する必要はありません。<b>{fact("menu.settings")}</b> の「{fact("settings.permissionsSection")}」に 5 つ（{fact("permission.microphone")}・{fact("permission.screenRecording")}・{fact("permission.accessibility")}・{fact("permission.calendar")}・{fact("permission.inputMonitoring")}）の一覧があり、いま許可されているかの確認と、あとからの許可はそこでできます。{fact("permission.microphone")}を許可しないと録音は始まりません（→ 6）。{fact("permission.inputMonitoring")}が無いと {shortcut("shortcut.recording.toggle")} が効かず、黒いバーには「{fact("hud.clickHint")}」と出ます。</p>
+<p>許可は、その機能を<b>初めて使うとき</b>に、要るものだけ聞かれます——初めて会議を録るとき{fact("permission.microphone")}、画面について聞くとき{fact("permission.screenRecording")}、{shortcut("shortcut.recording.toggle")} を使えるようにするとき{fact("permission.inputMonitoring")}、というように。先にまとめて設定する必要はありません。<b>{fact("menu.settings")}</b> の「{fact("settings.permissionsSection")}」に 5 つ（{fact("permission.microphone")}・{fact("permission.screenRecording")}・{fact("permission.accessibility")}・{fact("permission.calendar")}・{fact("permission.inputMonitoring")}）の一覧があり、いま許可されているかの確認と、あとからの許可はそこでできます。{fact("permission.microphone")}を許可しないと録音は始まりません（→ 6）。{fact("permission.inputMonitoring")}が無いと {shortcut("shortcut.recording.toggle")} が効かず、黒いバーには「{fact("hud.clickHint")}」と出ます。</p>
 </div></div>
 
 <h2><span>2</span>会議を記録する</h2>
@@ -201,6 +201,7 @@ html=f'''<!doctype html><html lang="ja"><head><meta charset="utf-8">
 <tr><th>こうなった</th><th>こうする</th></tr>
 <tr><td>「{fact("recording.cannotStart")}」と出る</td><td>{fact("permission.microphone")}の許可がありません。<b>{fact("result.openSettings")}</b> → {fact("permission.microphone")}を「{fact("permission.request")}」。許可すると、そのまま録れます<br>{img('denied', 420)}</td></tr>
 <tr><td>録音しているのに文字が出ない<br>「{fact("recording.hero.recording")}{fact("recording.hero.silentSuffix")}」と出る</td><td>録音の途中で{fact("permission.microphone")}が使えなくなっています。右上の <b>{fact("result.openSettings")}</b> → {fact("permission.microphone")}を「{fact("permission.request")}」<br>{img('nomic', 480)}</td></tr>
+<tr><td>「{fact("transcription.onDeviceUnavailable")}」と出る</td><td>この Mac には日本語のオンデバイス文字起こしの資産が入っていません。録音は続いていて、音声は残ります。Astra は音声を外のサーバへ送って文字にすることはしません（Mac の設定 → キーボード → 音声入力 で日本語を追加すると入ることがあります）</td></tr>
 <tr><td>{shortcut("shortcut.recording.toggle")} を押しても何も起きない<br>黒いバーに「{fact("hud.clickHint")}」と出ている</td><td>Astra の <b>{fact("menu.settings")} → {fact("permission.inputMonitoring")}（{fact("shortcut.recording.toggle")}）</b> の「{fact("permission.request")}」を押す。Mac の設定が開いたら Astra をオンにし、Astra を一度終了してから、また開く</td></tr>
 <tr><td>{fact("nav.home")} に「録りかけが N 件あります」と出る</td><td>前回、保存前に終わった録音です。<b>{fact("recovery.resume")}</b> で読み取り、いらなければ <b>{fact("recovery.discard")}</b></td></tr>
 <tr><td>会議のカードに「{fact("session.interrupted")}」と出る</td><td>録音の途中で Astra が止まった会議です。カードを押すと開き、<b>確定した行までは</b>文字起こしが残っています</td></tr>

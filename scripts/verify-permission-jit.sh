@@ -32,7 +32,7 @@ allowed=(
   "Settings/SettingsView.swift"               # 5 つの一覧。あとから見直す場所（一括の案内はしない）
   "Home/HomeView.swift"                       # ⌥Space を使えるようにする → 入力監視
   "VoiceHUD/VoiceHUDState.swift"              # 声で頼む → マイク
-  "RecordingWorkspace/RecordingWorkspaceState.swift"  # 会議を録る → マイク + 画面収録
+  "RecordingWorkspace/RecordingWorkspaceState.swift"  # 会議を録る → マイク（画面収録は system audio を繋いだときに）
 )
 while IFS= read -r line; do
   f="${line%%:*}"; rel="${f#$SRC/}"; ok=0

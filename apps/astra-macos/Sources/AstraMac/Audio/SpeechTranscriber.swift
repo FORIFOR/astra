@@ -8,6 +8,12 @@ import Speech
 /// (`requiresOnDeviceRecognition = true`)で、マイクの 16 kHz mono を途中経過/確定へ変える。
 /// live 認識は音声認識許可(TCC)が要る（署名 .app でユーザーが許可）。**許可・可用性・ロケールの確認は
 /// prompt 無しで読め**、headless で検証できる。
+///
+/// **黙ってサーバへ落とさない。**このロケールのオンデバイス資産が無い Mac では、以前は
+/// `requiresOnDeviceRecognition = supportsOnDeviceRecognition` で Apple のサーバ認識に切り替わり、
+/// 「音は端末から出しません」と言いながら音声が外へ出ていた（de-DE で実測、`docs/privacy-egress.md`）。
+/// いまは on-device が使えなければ `start` が throw し、録音だけが続く。クラウド文字起こしを
+/// 足すなら、「音声が外部へ送られます」と言う別の opt-in 機能として作る。ここで false にはしない。
 final class SpeechTranscriber {
     struct Live { let text: String; let isFinal: Bool }
 
@@ -32,6 +38,17 @@ final class SpeechTranscriber {
         }
     }
 
+    /// `start` / `recognizeFile` が「このロケールのオンデバイス資産が無い」で断ったときの code。
+    static let onDeviceUnavailableCode = 3
+
+    /// この Mac で認識器は在るがオンデバイス資産が無いロケール（検証が「落とさない」を確かめる材料）。
+    static func localesWithoutOnDeviceAsset() -> [String] {
+        SFSpeechRecognizer.supportedLocales().map(\.identifier).sorted().filter { id in
+            guard let r = SFSpeechRecognizer(locale: Locale(identifier: id)), r.isAvailable else { return false }
+            return !r.supportsOnDeviceRecognition
+        }
+    }
+
     /// オンデバイス認識が使えるか（可用性 + オンデバイス対応）。prompt を出さない。
     var canRunOnDevice: Bool {
         guard let recognizer, recognizer.isAvailable else { return false }
@@ -48,9 +65,13 @@ final class SpeechTranscriber {
             throw NSError(domain: "SpeechTranscriber", code: 2,
                           userInfo: [NSLocalizedDescriptionKey: "recognizer unavailable"])
         }
+        guard recognizer.supportsOnDeviceRecognition else {
+            throw NSError(domain: "SpeechTranscriber", code: Self.onDeviceUnavailableCode,
+                          userInfo: [NSLocalizedDescriptionKey: "on-device recognition unavailable for \(recognizer.locale.identifier)"])
+        }
         let req = SFSpeechAudioBufferRecognitionRequest()
         req.shouldReportPartialResults = true
-        req.requiresOnDeviceRecognition = recognizer.supportsOnDeviceRecognition
+        req.requiresOnDeviceRecognition = true   // 資産が無ければ error 102。false で再試行しない
         request = req
         task = recognizer.recognitionTask(with: req) { result, _ in
             guard let result else { return }
@@ -82,15 +103,16 @@ final class SpeechTranscriber {
     }
 
     /// 音声ファイルを 1 回で認識する（オンデバイス）。会議録音の後処理や検証に使う。
-    /// 許可が無い / 使えなければ nil。認識結果の確定文字列を返す。
+    /// 許可が無い / 使えなければ nil。**オンデバイス資産が無くても nil**（サーバへは出さない）。認識結果の確定文字列を返す。
     ///
     /// **重要**: `SFSpeechRecognitiontask` の完了は現在の run loop 経由で届くため、
     /// セマフォで待つとメインスレッドを塞いで callback が永遠に来ない（空文字になる）。
     /// ここでは run loop を回して待つ（メイン/バックグラウンドどちらから呼んでも成立する）。
     func recognizeFile(_ url: URL, timeout: TimeInterval = 20) -> String? {
-        guard Self.authorization == .authorized, let recognizer, recognizer.isAvailable else { return nil }
+        guard Self.authorization == .authorized, let recognizer, recognizer.isAvailable,
+              recognizer.supportsOnDeviceRecognition else { return nil }
         let req = SFSpeechURLRecognitionRequest(url: url)
-        req.requiresOnDeviceRecognition = recognizer.supportsOnDeviceRecognition
+        req.requiresOnDeviceRecognition = true
         let lock = NSLock()
         var latest = ""            // partial も貯める（isFinal が遅いことがある）
         var done = false

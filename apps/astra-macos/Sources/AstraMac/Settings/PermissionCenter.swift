@@ -21,7 +21,10 @@ enum PermissionCenter {
             case .voice: return [.microphone]
             case .screenAsk: return [.screenRecording]
             case .control: return [.accessibility]
-            case .meeting: return [.microphone, .screenRecording]
+            // 相手の声（system audio）は本番の録音経路でまだ取り込んでいない（`captureSystemAudio` は常に false）。
+            // 使っていない目的で画面収録を求めない。system audio を本当に繋いだときに、
+            // 「相手の声も記録する」の入口で画面収録を JIT で求める。
+            case .meeting: return [.microphone]
             }
         }
 
@@ -30,7 +33,7 @@ enum PermissionCenter {
             case .voice: return "声で頼むにはマイクが要ります。"
             case .screenAsk: return "画面について答えるには\(Facts.permissionScreenRecording)の許可が要ります。"
             case .control: return "入力欄へ書き込むにはアクセシビリティが要ります。"
-            case .meeting: return "会議を録るには\(Facts.permissionMicrophone)と、相手の音声のために\(Facts.permissionScreenRecording)の許可が要ります。"
+            case .meeting: return "会議を録るには\(Facts.permissionMicrophone)の許可が要ります。"
             }
         }
     }

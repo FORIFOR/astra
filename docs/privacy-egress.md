@@ -1,5 +1,9 @@
 # 何が Mac の外へ出るか（実装から読んだ一覧、2026-09-04）
 
+> **2026-09-04 に閉じた。**下の一覧は見つけた時点の姿。決定と、その後の姿は末尾「決めたこと」。
+> 守るのは `scripts/verify-privacy-egress.sh`（PRIVACY_EGRESS_GATE、verify-all に入っている）と
+> `--selftest egress`（実行体で、既定 OFF と「資産の無いロケールで throw」を確かめる）。
+
 取扱説明書の脚注は「録音した音声・文字起こし・鍵はこの Mac の中だけで扱われ、あなたが確認して
 実行したものだけが外に出ます」と言う。それが**どの条件で本当か**を、意図ではなく実装
 （呼び手と条件）で一覧にする。spec §22 の label（local-only / cloud-used / external-send）で分類する。
@@ -33,7 +37,7 @@ Astra のコードは後者の設定になる（`= recognizer.supportsOnDeviceRe
 Info.plist の `NSSpeechRecognitionUsageDescription` は「音は端末から出しません」と言っている
 （`scripts/release-macos.sh:132`）。**この 2 つは両立しない。**
 
-決めること（未決）: A = `requiresOnDeviceRecognition = true` を固定し、資産が無ければ
+決めること（→ A に決めた。末尾）: A = `requiresOnDeviceRecognition = true` を固定し、資産が無ければ
 「この Mac では日本語のオンデバイス文字起こしが使えません」と明示して録音だけ続ける
 （spec §21 "Meeting STT degraded: 録音は継続中"）。B = サーバ利用を許し、ガイドと UI で
 「必要な場合は Apple の音声認識を利用」と正確に表示する。
@@ -47,3 +51,26 @@ Info.plist の `NSSpeechRecognitionUsageDescription` は「音は端末から出
 （`Settings/PermissionCenter.swift:24,33`）。使わない許可を求めている。
 画面収録が実際に要るのは、Workspace の「スキャン」（`captureScreenshot()`）と画面について答える
 `.screenAsk` だけ。
+
+## 決めたこと（2026-09-04、本人の決定）
+
+1. **STT は黙ってクラウドへ落とさない。** `requiresOnDeviceRecognition = true` を固定
+   （`Audio/SpeechTranscriber.swift:74,115`）。資産が無いロケールでは `start` が code 3 で throw し
+   （`:68-69`）、`recognizeFile` は nil。**エラー後に false で取り直さない。**録音は続き、Workspace の
+   本文が「この Mac ではオンデバイス文字起こしを使えません。音声は保存されています」と言う
+   （`RecordingWorkspaceView.swift:494`、`Facts.transcriptionOnDeviceUnavailable`、ガイド §7 に行を足した）。
+   クラウド文字起こしを足すなら「音声が外部サービスへ送信されます」と言う別の opt-in 機能として作る。
+   実測: ar-SA（資産無し）で `start=code3 file=nil`（`--selftest egress`）。
+2. **録音の自動 upload は既定 OFF、dev 専用。** `MainData.load()` は録音側（`RecordingRuntime`）に
+   gateway を渡さない。渡すのは `RecordingRuntime.devAutoUploadEnabled`（`#if DEBUG` かつ
+   `ASTRA_DEV_AUTO_UPLOAD=1`）のときだけ（`Main/MainWindowView.swift:51`）。release ビルドには道が無い。
+   会議の作成・停止時の音声送信・落ちた録音の自動回収は、その旗の中でしか起きない。
+   selftest（e2e001 / recovery / fulllifecycle …）は `configureBackend` を自分で呼ぶので影響しない。
+   AI 操作・翻訳・声で頼む（文字を gateway へ送る）は人が押してから動くので残す。
+3. **`.meeting` はマイクだけ求める**（`Settings/PermissionCenter.swift`）。system audio は本番経路で
+   取り込んでいないので、画面収録を求める理由が無かった。本当に繋いだ日に「相手の声も記録する」の
+   入口で JIT で求める（Permission B は別途作らない）。ガイドの「（相手の声のために）画面収録」は消した。
+
+負例で確かめたこと（gate が落ちる）: `requiresOnDeviceRecognition = recognizer.supportsOnDeviceRecognition`
+に戻す → FAIL、`RecordingRuntime.shared.configureBackend` を旗の外へ出す → FAIL、
+`.meeting` に `.screenRecording` を戻す → FAIL。

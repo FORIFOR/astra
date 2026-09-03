@@ -40,6 +40,8 @@ enum UserFacingFacts {
     static let sourceLabel = "出所"
     static let homeIntentPlaceholder = "何を終わらせますか？"
     static let listeningPlaceholder = "聞いています…"
+    /// 録音は続いているが、この Mac ではオンデバイス STT の資産が無い。サーバへは落とさない（`SpeechTranscriber`）。
+    static let transcriptionOnDeviceUnavailable = "この Mac ではオンデバイス文字起こしを使えません。音声は保存されています"
     static let taskOpenWorkspace = "作業画面で続ける"
     /// 確認の実行ボタンは依頼ごとに**結果の語**（「切断する」「3 件を捨てる」）が入る
     /// （`ActionConfirmation.confirmLabel`）。固定の語ではない。これは demo と説明書が
@@ -127,6 +129,7 @@ enum UserFacingFacts {
             f("source.label", sourceLabel),
             f("home.intent.placeholder", homeIntentPlaceholder),
             f("listening.placeholder", listeningPlaceholder),
+            f("transcription.onDeviceUnavailable", transcriptionOnDeviceUnavailable),
             f("task.openWorkspace", taskOpenWorkspace),
             f("confirmation.confirm.example", confirmationConfirmExample, false),
             f("confirmation.cancel", confirmationCancel),

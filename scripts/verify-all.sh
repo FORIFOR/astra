@@ -18,6 +18,8 @@ run "TCC usage descriptions"     bash scripts/verify-usage-descriptions.sh
 run "release consistency"        bash scripts/verify-release-consistency.sh
 run "UI taste"                   bash scripts/verify-ui-taste.sh
 run "permission JIT"             bash scripts/verify-permission-jit.sh
+# 端末から出る道（Apple STT サーバ・録音の自動 upload・使っていない画面収録）が既定で閉じているか。
+run "privacy egress"             bash scripts/verify-privacy-egress.sh
 run "no contradiction"           bash scripts/verify-no-contradiction.sh
 run "confirmation surface"       bash scripts/verify-confirmation.sh
 run "screen terms (one word each)" bash scripts/lint-terms.sh
