@@ -71,6 +71,11 @@ enum UserFacingFacts {
     static let menuSettings = "設定…"
     static let menuGuide = "操作ガイド（PDF）"
     static let menuQuit = "Astra を終了"
+    static let menuCheckUpdates = "更新を確認…"
+    /// 更新を確認できない実行体（appcast / 公開鍵の無い swift build 等）で出す面。偽の「最新です」は出さない。
+    static let updateUnavailableTitle = "この Astra では更新を確認できません"
+    static let updateOpenReleases = "配布ページを開く"
+    static let updateClose = "閉じる"
 
     // MARK: ナビ・見出し
 
@@ -144,6 +149,10 @@ enum UserFacingFacts {
             f("menu.settings", menuSettings),
             f("menu.guide", menuGuide),
             f("menu.quit", menuQuit),
+            f("menu.checkUpdates", menuCheckUpdates),
+            f("update.unavailable.title", updateUnavailableTitle, false),
+            f("update.openReleases", updateOpenReleases, false),
+            f("update.close", updateClose, false),
             f("nav.home", navHome, false),
             f("nav.tasks", navTasks, false),
             f("nav.meetings", navMeetings, false),

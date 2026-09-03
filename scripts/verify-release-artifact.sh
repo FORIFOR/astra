@@ -124,7 +124,7 @@ for t in acceptance ax axtree breakpoints browser calendar connector connectorex
          keychain lifecycle livemeeting livemic livescreen meetingiq navtitle panel pause \
          perf permissions presence rag record recordbutton screen screenshot secret session \
          sessionsync shortcut speech state storage sttrecognize sttstream sysaudio timer \
-         uiscale vad waveform; do
+         uiscale update vad waveform; do
   OUT="$(cd "$WORK" && ASTRA_DATA_ROOT="$DATA" "$BIN" --selftest "$t" 2>&1 | tail -1)"
   case "$OUT" in
     SELFTEST_OK*) PASS=$((PASS+1));;

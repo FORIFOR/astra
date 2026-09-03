@@ -23,7 +23,7 @@ REQUIRED=(
   confirmation.confirm.example confirmation.cancel confirmation.edit
   recovery.resume recovery.discard session.interrupted
   nav.home nav.tasks nav.meetings nav.library nav.agents nav.plugins
-  menu.open menu.settings menu.guide menu.quit
+  menu.open menu.settings menu.guide menu.quit menu.checkUpdates
   recording.start recording.stop recording.menu.start recording.menu.stop recording.cannotStart
   recording.hero.recording recording.hero.paused recording.hero.silentSuffix
   meeting.notes meeting.notes.open meeting.detach notes.summary notes.decisions notes.actions source.label

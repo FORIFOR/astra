@@ -145,3 +145,7 @@ GUIDE_FACTS_GATE の「permission count 5」は **Settings 側を正本**にす�
   必須 key 欠け / 重複 key / 許可 ≠ 5 / 鍵の表示 ≠ badge / 知らない key / 保護語を文字で / 保護語と助詞 1 字違い /
   古い綴り（`録音の開始 / 停止`, `画面の読み取り`）/ guide build 失敗。`--selfcheck` は 3 つの書き戻し
   （一字違い・許可名を文字で・知らない key）が全部落ちることを毎回確かめる。
+- 追記（同日）: メニューに「更新を確認…」（`menu.checkUpdates`）。`SoftwareUpdate.checkNow()` は 0.1.1 まで呼び手が無く、
+  起動時の静かな確認しか無かった。確認できない実行体では灰色にせず、押すと理由と配布ページへの一手を出す
+  （`update.unavailable.title` / `update.openReleases` / `update.close`、ガイドは参照しない）。`entry` が導線と配線を、`update` が
+  「設定が無いのに確認したことにしない」を見る。`update` は verify-macos-recording と verify-release-artifact の両方の一覧に入れた。

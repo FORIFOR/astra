@@ -221,7 +221,7 @@ gh release upload v<版> "<PDF を Astra-guide-ja.pdf に複製したもの>"
 | --- | --- |
 | `Astra-<版>.zip` / `appcast.xml` / `*.delta` | アプリと自動更新。feed URL は `releases/latest/download/appcast.xml` で固定 |
 | `Astra-<版>-guide-ja.pdf` | **この版の**操作ガイド（監査・特定版の利用者向け） |
-| `Astra-guide-ja.pdf` | 版番号なしの同じ PDF。一般利用者へ案内する固定 URL はこれ: `https://github.com/FORIFOR/astra/releases/latest/download/Astra-guide-ja.pdf`。アプリのメニューバー「操作ガイド（PDF）」もこの URL を開く（`StatusBarController.guideURL`。名前を変えたら両方） |
+| `Astra-guide-ja.pdf` | 版番号なしの同じ PDF。一般利用者へ案内する固定 URL はこれ: `https://github.com/FORIFOR/astra/releases/latest/download/Astra-guide-ja.pdf`。アプリのメニューバー「操作ガイド（PDF）」もこの URL を開く（`StatusBarController.guideURL`。名前を変えたら両方）。同じメニューの「更新を確認…」は Sparkle の確認で、appcast の無い実行体では理由を出して `releases/latest` へ案内する |
 
 Release 本文には「入れ方」の後に「操作ガイド」の節を置き、上の固定 URL を貼る。
 日本語のファイル名で上げると GitHub が `Astra-.pdf` に削るので、ASCII 名にしてから渡す。

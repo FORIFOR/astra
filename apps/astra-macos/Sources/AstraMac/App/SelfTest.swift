@@ -792,7 +792,8 @@ enum SelfTest {
         // メニューの題は NSMenu が正本（menutitles）。facts が同じ語を持っていること。
         let titles = Set(StatusBarController.shared.menuItemTitles().map(\.title))
         for (key, title) in [("menu.open", Facts.menuOpen), ("menu.settings", Facts.menuSettings),
-                             ("menu.guide", Facts.menuGuide), ("menu.quit", Facts.menuQuit)] {
+                             ("menu.guide", Facts.menuGuide), ("menu.quit", Facts.menuQuit),
+                             ("menu.checkUpdates", Facts.menuCheckUpdates)] {
             if !titles.contains(title) { fail.append("\(key)=\(title) がメニューに無い: \(titles.sorted())") }
         }
         if !titles.contains(Facts.recordingMenuStart) && !titles.contains(Facts.recordingMenuStop) {
@@ -844,6 +845,14 @@ enum SelfTest {
         }
         if StatusBarController.guideURL.lastPathComponent != "Astra-guide-ja.pdf" {
             fail.append("操作ガイドの URL が固定名 Astra-guide-ja.pdf ではない: \(StatusBarController.guideURL)")
+        }
+        // 更新の確認はメニューから辿れる（SoftwareUpdate.checkNow() は 0.1.1 まで呼び手が無かった）。
+        if !StatusBarController.shared.menuItemTitles().contains(where: { $0.title == Facts.menuCheckUpdates }) {
+            fail.append("メニューに「\(Facts.menuCheckUpdates)」が無い")
+        }
+        // 押せる項目は全部 action と target を持つ（題だけの項目は行き止まり）。
+        for it in StatusBarController.shared.menuWiring() where !it.wired {
+            fail.append("「\(it.title)」は押せるのに何も起きない（action/target が無い）")
         }
 
         // ② 実際に開く。
@@ -1194,6 +1203,10 @@ enum SelfTest {
             // 設定が無い状態。ここで起動していたら、確かめていないのに確かめた顔をする。
             if started { fail.append("設定が無いのに更新の口が動いた") }
             if SoftwareUpdate.shared.isAvailable { fail.append("設定が無いのに利用可能を名乗る") }
+            // 「更新を確認…」を押しても、確かめたふりをせず理由を返す。
+            if (SoftwareUpdate.shared.checkNow() ?? "").isEmpty {
+                fail.append("設定が無いのに checkNow が確認したことにする")
+            }
         } else {
             if !started { fail.append("設定は揃っているのに動かない") }
         }

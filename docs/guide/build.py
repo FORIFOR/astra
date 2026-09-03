@@ -206,6 +206,7 @@ html=f'''<!doctype html><html lang="ja"><head><meta charset="utf-8">
 <tr><td>会議のカードに「{fact("session.interrupted")}」と出る</td><td>録音の途中で Astra が止まった会議です。カードを押すと開き、<b>確定した行までは</b>文字起こしが残っています</td></tr>
 <tr><td>画面共有中に Astra を見せたくない</td><td>黒いバーの <b>👁 目のアイコン</b> を押すと、共有画面や録画に Astra が映らなくなります（もう一度押すと戻る）</td></tr>
 <tr><td>Astra が見当たらない</td><td>メニューバー右上の波形アイコン → 「{fact("menu.open")}」</td></tr>
+<tr><td>新しい版があるか知りたい</td><td>メニューバーの波形アイコン → 「{fact("menu.checkUpdates")}」。新しい版があれば知らせが出て、入れるかどうかはあなたが決めます。起動時にも一度だけ静かに確かめています</td></tr>
 </table>
 
 <footer>Astra 操作ガイド（0.1.1 / 2026-09-03）· 画面は開発版の撮影です。文字や配置は今後変わることがあります。<br>

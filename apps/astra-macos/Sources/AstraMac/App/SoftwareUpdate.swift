@@ -51,10 +51,15 @@ final class SoftwareUpdate {
         return true
     }
 
-    /// 「更新を確認」から呼ぶ。設定が無いときは押せないようにしておくこと。
-    func checkNow() {
-        guard let controller else { return }
+    /// 「更新を確認…」から呼ぶ。確認できる実行体なら Sparkle に任せて nil を返す。
+    /// できない実行体（appcast / 公開鍵の無い swift build 等）では**理由**を返し、呼び手がそれを見せる。
+    /// 押せない灰色の項目にはしない——なぜ押せないかが利用者に分からず、配布版では押せる項目が
+    /// ガイドの絵（menutitles から描く）で灰色に写ってしまう。
+    @discardableResult
+    func checkNow() -> String? {
+        guard let controller else { return Self.misconfiguration() ?? "更新の口が起動していない" }
         controller.checkForUpdates(nil)
+        return nil
     }
 
     /// 設定が揃っていて、更新の確認ができる状態か。

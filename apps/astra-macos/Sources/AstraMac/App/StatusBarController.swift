@@ -65,6 +65,12 @@ final class StatusBarController {
         guide.target = self
         menu.addItem(guide)
 
+        // 自動更新は起動時に黙って見るだけだった（SoftwareUpdate.checkNow() に導線が無い、宣言だけの口）。
+        // 確認できない実行体では灰色にせず、押したら理由と配布ページへの一手を出す。
+        let update = NSMenuItem(title: Facts.menuCheckUpdates, action: #selector(checkUpdates), keyEquivalent: "")
+        update.target = self
+        menu.addItem(update)
+
         menu.addItem(.separator())
 
         let quit = NSMenuItem(title: Facts.menuQuit, action: #selector(quit), keyEquivalent: "q")
@@ -84,10 +90,29 @@ final class StatusBarController {
         buildMenu().items.map { ($0.title, $0.keyEquivalent, $0.isSeparatorItem, $0.isEnabled) }
     }
 
+    /// 押せる項目に action と target が付いているか（題だけ在って何も起きない項目を作らない）。
+    func menuWiring() -> [(title: String, wired: Bool)] {
+        buildMenu().items.filter { !$0.isSeparatorItem && $0.isEnabled }
+            .map { ($0.title, $0.action != nil && $0.target != nil) }
+    }
+
     @objc private func openMain() { MainWindowController.shared.showSection(.home) }
     @objc private func toggleRecording() { WindowCoordinator.shared.toggleRecording() }
     @objc private func openSettings() { SettingsWindowController.shared.show() }
     @objc private func openGuide() { NSWorkspace.shared.open(Self.guideURL) }
+    @objc private func checkUpdates() {
+        guard let reason = SoftwareUpdate.shared.checkNow() else { return }
+        let alert = NSAlert()
+        alert.messageText = Facts.updateUnavailableTitle
+        alert.informativeText = "\(reason)。新しい版は配布ページで確かめられます。"
+        alert.addButton(withTitle: Facts.updateOpenReleases)
+        alert.addButton(withTitle: Facts.updateClose)
+        NSApp.activate(ignoringOtherApps: true)
+        if alert.runModal() == .alertFirstButtonReturn { NSWorkspace.shared.open(Self.releasesURL) }
+    }
+
+    /// 配布ページ（RELEASE.md §2.6）。更新を確認できない実行体からの次の一手。
+    static let releasesURL = URL(string: "https://github.com/FORIFOR/astra/releases/latest")!
 
     /// RELEASE.md §2.6 の「一般利用者へ案内する固定 URL」。版ごとの PDF は Releases の各版に別名で残る。
     static let guideURL = URL(string: "https://github.com/FORIFOR/astra/releases/latest/download/Astra-guide-ja.pdf")!
