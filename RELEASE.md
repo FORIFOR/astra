@@ -209,7 +209,7 @@ ASTRA_UPDATE_BASE=https://…/astra bash scripts/publish-update.sh
 本人の「公開して」があってから。1 つの Release に **5 点**を添える:
 
 ```sh
-python3 docs/guide/build.py                       # ~/Downloads/Astra-操作ガイド/ を作り直す（メニューの絵は .build/debug の AstraMac に訊く。先に swift build）
+python3 docs/guide/build.py                       # ~/Downloads/Astra-操作ガイド/ を作り直す（メニューの絵と画面の語は .build/debug の AstraMac に訊く: --selftest menutitles / facts。先に swift build。写し違いは scripts/verify-guide-facts.sh が落とす）
 cp ~/Downloads/Astra-操作ガイド/Astra-操作ガイド.pdf docs/guide/   # repo にも残す
 gh release create v<版> --title "Astra <版>" --notes-file <本文> \
   dist/Astra-<版>.zip dist/feed/appcast.xml dist/feed/*.delta \

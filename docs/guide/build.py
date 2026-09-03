@@ -73,6 +73,31 @@ def menu_html():
     return '<div class="menu">\n '+'\n '.join(rows)+'\n</div>'
 MENU=menu_html()
 
+# 画面の語（押せる語・見出し・許可名・鍵）は手で写さない。`UserFacingFacts`（Swift）が正本で、
+# `--selftest facts` の `FACT\t<key>\t<value>\t<protected>` を引く。無い key は build を落とす。
+# protected の語をこのファイルに文字で書くと `scripts/verify-guide-facts.sh` が落とす。
+def load_facts():
+    out=subprocess.run([BIN,'--selftest','facts'],capture_output=True,text=True,timeout=60).stdout
+    if 'SELFTEST_OK facts' not in out: raise SystemExit('facts が取れない:\n'+out)
+    d={}
+    for line in out.splitlines():
+        f=line.split('\t')
+        if f[0]=='FACT': d[f[1]]=f[2]
+    return d
+FACTS=load_facts()
+USED_FACTS=set()
+def fact(key):
+    if key not in FACTS: raise SystemExit(f'ガイドが知らない fact を引いている: {key}')
+    USED_FACTS.add(key)
+    return _html.escape(FACTS[key])
+def shortcut(key, names=False):
+    """鍵の表示を修飾キー 1 つずつの <kbd> に分ける。names=True は初出用（記号に名前を添える）。"""
+    v=fact(key); mods=[]
+    while v and v[0] in '⌘⌥⌃⇧': mods.append(v[0]); v=v[1:]
+    name={'⌘':'⌘ command','⌥':'⌥ option','⌃':'⌃ control','⇧':'⇧ shift'}
+    parts=[(name[m] if names else m) for m in mods]+[v.lower() if v.isalpha() else v]
+    return '+'.join(f'<kbd>{p}</kbd>' for p in parts)
+
 html=f'''<!doctype html><html lang="ja"><head><meta charset="utf-8">
 <title>Astra 操作ガイド</title>
 <style>
@@ -103,90 +128,90 @@ html=f'''<!doctype html><html lang="ja"><head><meta charset="utf-8">
 
 <div class="tip"><b>はじめに、これだけ覚えてください</b><br>
 ① 画面右上のメニューバーにある <b>波形アイコン</b> が Astra の入口です<br>
-② <kbd>⌥ option</kbd> + <kbd>space</kbd> を押すと、いつでも <b>録音の開始 / 停止</b><br>
-③ 何かをしてもらう前には、必ず <b>確認カード</b> が出ます。「送る」を押すまで外には出ません<br>
-④ 困ったら <kbd>esc</kbd>。聞いている途中も、確認カードも、結果の表示も、同じ鍵でやめられます</div>
+② {shortcut("shortcut.recording.toggle", names=True)} を押すと、いつでも <b>{fact("settings.shortcutRow")}</b><br>
+③ 何かをしてもらう前には、必ず <b>確認カード</b> が出ます。実行のボタン（例:「{fact("confirmation.confirm.example")}」）を押すまで外には出ません<br>
+④ 困ったら {shortcut("shortcut.escape")}。聞いている途中も、確認カードも、結果の表示も、同じ鍵で取り消せます</div>
 
 <h2><span>1</span>起動する・開く</h2>
 <div class="row"><div>
 <p>Astra は Dock（画面下のアイコン列）には出ません。<b>メニューバー右上の波形アイコン</b>をクリックするとメニューが開きます。</p>
 {MENU}
 </div><div>
-<p><b>「Astra を開く」</b>で Home が出ます。左の一覧（Home / Tasks / Meetings / Library …）で画面を切り替えます。</p>
-<p>初回だけ、<b>設定…</b> から「許可（OS）」の 5 つ（マイク・画面収録・アクセシビリティ・カレンダー・入力監視）を「許可…」で有効にしてください。マイクを許可しないと録音は始まりません（→ 6）。入力監視が無いと <kbd>⌥</kbd>+<kbd>space</kbd> が効かず、黒いバーには「クリック」と出ます。</p>
+<p><b>「{fact("menu.open")}」</b>で {fact("nav.home")} が出ます。左の一覧（{fact("nav.home")} / {fact("nav.tasks")} / {fact("nav.meetings")} / {fact("nav.library")} …）で画面を切り替えます。</p>
+<p>初回だけ、<b>{fact("menu.settings")}</b> から「{fact("settings.permissionsSection")}」の 5 つ（{fact("permission.microphone")}・{fact("permission.screenRecording")}・{fact("permission.accessibility")}・{fact("permission.calendar")}・{fact("permission.inputMonitoring")}）を「{fact("permission.request")}」で有効にしてください。{fact("permission.microphone")}を許可しないと録音は始まりません（→ 6）。{fact("permission.inputMonitoring")}が無いと {shortcut("shortcut.recording.toggle")} が効かず、黒いバーには「{fact("hud.clickHint")}」と出ます。</p>
 </div></div>
 
-<h2><span>2</span>会議を録音する</h2>
+<h2><span>2</span>会議を記録する</h2>
 {img('home')}
 <ol>
-<li><span class="n">1</span><b>録音を始める</b> を押す（または <kbd>⌥</kbd>+<kbd>space</kbd>、メニューの「会議を録音」）</li>
+<li><span class="n">1</span><b>{fact("recording.start")}</b> を押す（または {shortcut("shortcut.recording.toggle")}、メニューの「{fact("recording.menu.start")}」）</li>
 <li>録音中は画面上部に小さな黒いバーが出ます。ここで止めたり、メモを見たりします</li>
 </ol>
 {img('bar')}
 <ol>
-<li><span class="n">1</span>赤い ■ で <b>停止</b>（<kbd>⌥</kbd>+<kbd>space</kbd> でも止まります）</li>
-<li><span class="n">2</span><b>メモ</b> を押すと、話している間に決まったこと・懸念・やること・質問が自動で並びます。面の高さは中身の量で決まります</li>
+<li><span class="n">1</span>赤い ■ を押すと止まります（{shortcut("shortcut.recording.toggle")} でも、メニューの「{fact("recording.menu.stop")}」でも）</li>
+<li><span class="n">2</span><b>{fact("meeting.notes")}</b> を押すと、話している間に{fact("notes.decisions")}・{fact("notes.concerns")}・{fact("notes.actions")}・{fact("notes.questions")}が自動で並びます。面の高さは中身の量で決まります</li>
 </ol>
 {img('notes', 620)}
-<p>Home に戻ると「録音中」のカードが出ています。ここの <b>止める</b> でも止められ、<b>ライブメモを開く</b> で上のメモが開きます。</p>
+<p>{fact("nav.home")} に戻ると「{fact("recording.hero.recording")}」のカードが出ています。ここの <b>{fact("recording.stop")}</b> でも止められ、<b>{fact("meeting.notes.open")}</b> で上のメモが開きます。</p>
 {img('recnow')}
 
 <h2 class="pb"><span>3</span>録音中に文字起こしを見る・質問する</h2>
-<p>メモの右上 <b>会議の横に開く ↗</b> を押すと、大きな作業画面が開きます。</p>
+<p>メモの右上 <b>{fact("meeting.detach")} ↗</b> を押すと、大きな作業画面が開きます。</p>
 {img('ws')}
 <ol>
 <li><span class="n">1</span>右側に <b>いつ・誰が・何を</b> 言ったかが流れます（翻訳・字幕にも切替可）</li>
 <li><span class="n">2</span>下の欄に「さっき決まった納期は？」のように書くと、この会議の内容から答えます</li>
-<li><span class="n">3</span>入力欄の右の <b>要約 / 決まったこと / やること</b> を押すと、書かなくてもその答えが出ます</li>
+<li><span class="n">3</span>入力欄の右の <b>{fact("notes.summary")} / {fact("notes.decisions")} / {fact("notes.actions")}</b> を押すと、書かなくてもその答えが出ます</li>
 </ol>
 
 <h2 class="pb"><span>4</span>終わった会議を見返す</h2>
-<p>左の <b>Library</b> → 会議を選ぶと、要約・決まったこと・やることが出ます。語は録音中のメモと同じです。</p>
+<p>左の <b>{fact("nav.library")}</b> → 会議を選ぶと、{fact("notes.summary")}・{fact("notes.decisions")}・{fact("notes.actions")}が出ます。語は録音中のメモと同じです。</p>
 {img('detail')}
 <ol>
 <li><span class="n">1</span>文末の <b>[1] [2]</b> を押すと…</li>
-<li><span class="n">2</span>右側に <b>出所</b>（その発言の時刻・話者・音声）が出ます。<b>AI の要約が正しいか、元の発言でその場で確かめられます</b></li>
+<li><span class="n">2</span>右側に <b>{fact("source.label")}</b>（その発言の時刻・話者・音声）が出ます。<b>AI の要約が正しいか、元の発言でその場で確かめられます</b></li>
 <li><span class="n">3</span>左上の <b>‹</b> で一覧へ戻ります</li>
 </ol>
 
 <h2 class="pb"><span>5</span>頼みごとをする</h2>
 {img('ask')}
 <ol>
-<li><span class="n">1</span>Home の「<b>何を終わらせますか？</b>」に、やってほしいことを書く（右端のマイクで声でも可）</li>
+<li><span class="n">1</span>{fact("nav.home")} の「<b>{fact("home.intent.placeholder")}</b>」に、やってほしいことを書く（右端の{fact("permission.microphone")}で声でも可）</li>
 </ol>
 {img('listen', 600)}
-<p>声で頼むときは「聞いています…」が出ている間に話します。やめるなら右端の <kbd>esc</kbd>。</p>
+<p>声で頼むときは「{fact("listening.placeholder")}」が出ている間に話します。取り消すなら右端の {shortcut("shortcut.escape")}。</p>
 {img('agent', 620)}
 <ol>
 <li>進み具合が一覧で見えます。✓ が終わったもの、● がいま作業中のもの</li>
-<li><span class="n">1</span>途中でやめたいときは <b>止める</b></li>
-<li><span class="n">2</span>詳しく見たいときは <b>作業画面で続ける</b></li>
+<li><span class="n">1</span>途中で止めたいときは <b>{fact("task.stop")}</b></li>
+<li><span class="n">2</span>詳しく見たいときは <b>{fact("task.openWorkspace")}</b></li>
 </ol>
-<div class="warn"><b>外に出るものは必ず確認されます。</b> メッセージ送信・メール・予定の登録など、あなた以外に届くものは、内容を見せてから「送る」を待ちます。</div>
+<div class="warn"><b>外に出るものは必ず確認されます。</b> メッセージ送信・メール・予定の登録など、あなた以外に届くものは、内容を見せてから実行のボタンが押されるのを待ちます。ボタンの字は、押すと何が起こるかそのまま（例:「{fact("confirmation.confirm.example")}」）。</div>
 {img('confirm', 560)}
 <ol>
-<li><span class="n">1</span>内容が良ければ <b>送る</b>。「出所」に、どの会議の発言から作ったかが書いてあります</li>
-<li><span class="n">2</span>やめるなら <b>やめる</b>（<kbd>esc</kbd>）、文面を変えるなら <b>直す</b>。送るのは <kbd>⌘</kbd>+<kbd>↩</kbd> でもできます。<kbd>↩</kbd> だけでは送りません（押し慣れた鍵で外に出ないように）</li>
+<li><span class="n">1</span>内容が良ければ実行のボタン（絵では <b>{fact("confirmation.confirm.example")}</b>）。「{fact("source.label")}」に、どの会議の発言から作ったかが書いてあります</li>
+<li><span class="n">2</span>取り消すなら <b>{fact("confirmation.cancel")}</b>（{shortcut("shortcut.escape")}）、文面を変えるなら <b>{fact("confirmation.edit")}</b>。実行は {shortcut("shortcut.confirmation.proceed")} でもできます。<kbd>↩</kbd> だけでは実行しません（押し慣れた鍵で外に出ないように）</li>
 </ol>
 {img('result', 520)}
-<p>終わると「N 件のソースから作成しました」と出ます。<b>開く</b> で結果を見る、<b>コピー</b> で貼り付け用に取り出せます。閉じるのは <kbd>esc</kbd> か ×。</p>
+<p>終わると「N 件のソースから作成しました」と出ます。<b>{fact("result.open")}</b> で結果を見る、<b>{fact("result.copy")}</b> で貼り付け用に取り出せます。閉じるのは {shortcut("shortcut.escape")} か ×。</p>
 
 <h2><span>6</span>困ったとき</h2>
 <table>
 <tr><th>こうなった</th><th>こうする</th></tr>
-<tr><td>「録音を始められません」と出る</td><td>マイクの許可がありません。<b>設定を開く</b> → マイクを「許可…」。許可すると、そのまま録れます<br>{img('denied', 420)}</td></tr>
-<tr><td>録音しているのに文字が出ない<br>「録音中（音声なし）」と出る</td><td>録音の途中でマイクが使えなくなっています。右上の <b>設定を開く</b> → マイクを「許可…」<br>{img('nomic', 480)}</td></tr>
-<tr><td><kbd>⌥</kbd>+<kbd>space</kbd> を押しても何も起きない<br>黒いバーに「クリック」と出ている</td><td>Astra の <b>設定… → 入力監視（⌥Space）</b> の「許可…」を押す。Mac の設定が開いたら Astra をオンにし、Astra を一度終了して開き直す</td></tr>
-<tr><td>Home に「録りかけが N 件あります」と出る</td><td>前回、保存前に終わった録音です。<b>続きから</b> で読み取り、いらなければ <b>破棄</b></td></tr>
-<tr><td>会議のカードに「途中で終わっています」と出る</td><td>録音の途中で Astra が終了した会議です。カードを押すと開き、<b>確定した行までは</b>文字起こしが残っています</td></tr>
+<tr><td>「{fact("recording.cannotStart")}」と出る</td><td>{fact("permission.microphone")}の許可がありません。<b>{fact("result.openSettings")}</b> → {fact("permission.microphone")}を「{fact("permission.request")}」。許可すると、そのまま録れます<br>{img('denied', 420)}</td></tr>
+<tr><td>録音しているのに文字が出ない<br>「{fact("recording.hero.recording")}{fact("recording.hero.silentSuffix")}」と出る</td><td>録音の途中で{fact("permission.microphone")}が使えなくなっています。右上の <b>{fact("result.openSettings")}</b> → {fact("permission.microphone")}を「{fact("permission.request")}」<br>{img('nomic', 480)}</td></tr>
+<tr><td>{shortcut("shortcut.recording.toggle")} を押しても何も起きない<br>黒いバーに「{fact("hud.clickHint")}」と出ている</td><td>Astra の <b>{fact("menu.settings")} → {fact("permission.inputMonitoring")}（{fact("shortcut.recording.toggle")}）</b> の「{fact("permission.request")}」を押す。Mac の設定が開いたら Astra をオンにし、Astra を一度終了してから、また開く</td></tr>
+<tr><td>{fact("nav.home")} に「録りかけが N 件あります」と出る</td><td>前回、保存前に終わった録音です。<b>{fact("recovery.resume")}</b> で読み取り、いらなければ <b>{fact("recovery.discard")}</b></td></tr>
+<tr><td>会議のカードに「{fact("session.interrupted")}」と出る</td><td>録音の途中で Astra が止まった会議です。カードを押すと開き、<b>確定した行までは</b>文字起こしが残っています</td></tr>
 <tr><td>画面共有中に Astra を見せたくない</td><td>黒いバーの <b>👁 目のアイコン</b> を押すと、共有画面や録画に Astra が映らなくなります（もう一度押すと戻る）</td></tr>
-<tr><td>Astra が見当たらない</td><td>メニューバー右上の波形アイコン → 「Astra を開く」</td></tr>
+<tr><td>Astra が見当たらない</td><td>メニューバー右上の波形アイコン → 「{fact("menu.open")}」</td></tr>
 </table>
 
 <footer>Astra 操作ガイド（0.1.1 / 2026-09-03）· 画面は開発版の撮影です。文字や配置は今後変わることがあります。<br>
-録音した音声・文字起こし・鍵はこの Mac の中だけで扱われ、あなたが「送る」を押したものだけが外に出ます。</footer>
+録音した音声・文字起こし・鍵はこの Mac の中だけで扱われ、あなたが確認して実行したものだけが外に出ます。</footer>
 </body></html>'''
 os.makedirs(OUT, exist_ok=True)
 open(OUT+'/Astra-操作ガイド.html','w').write(html)
-print('written', len(html)//1024, 'KB')
+print('written', len(html)//1024, 'KB', '/ facts used', len(USED_FACTS))
 

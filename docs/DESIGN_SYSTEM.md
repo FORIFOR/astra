@@ -167,6 +167,7 @@ recovery / keyboard safety / perceived complexity）。ここには **決まっ�
 | 気がかり | 懸念         | —                           |
 | その他   | メモ         | ノート                      |
 | 根拠     | 出所         | 出典 / 根拠                 |
+| 許可     | 画面収録     | 画面の読み取り（設定・OS と同じ語に寄せた） |
 
 - 出所の連続: 拾ったもの（決まったこと・やること…）は **[番号]** を持ち、番号は
   文字起こしの **誰の・何時の行** に結ばれる。番号の無い行に [0] を付けない
@@ -177,6 +178,12 @@ recovery / keyboard safety / perceived complexity）。ここには **決まっ�
 - 失敗は Dock の結果面に「何ができないか」と次の一手を出す。理由だけの面・
   開けないカード・戻らない Dock は行き止まりで、`journey JC` が落とす。
 - 根拠と経緯: `docs/ux-benchmark/journeys/PHASE2-JOURNEY.md`。
+- 押せる語・見出し・許可名・鍵の表示は `UserFacingFacts`（`App/UserFacingFacts.swift`）が正本で、
+  画面もメニューも `--selftest facts` もそこから引く。鍵は `UserShortcut`（⌘↩ / esc）と
+  `GlobalShortcut.label()`（⌥Space）が表示と実際の鍵を 1 つの定義で持つ。操作ガイド
+  （`docs/guide/build.py`）は `fact("key")` / `shortcut("key")` でしか画面の語を書けず、
+  `scripts/verify-guide-facts.sh`（verify-all に含む）が、写し違い（一字違い・古い綴り・
+  文字で書いた保護語・知らない key）を落とす。台帳は `docs/guide/FACTS.md`。
 
 ## いまの立ち位置（sample11〜19、6 型）
 

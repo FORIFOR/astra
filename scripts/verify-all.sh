@@ -21,6 +21,9 @@ run "permission JIT"             bash scripts/verify-permission-jit.sh
 run "no contradiction"           bash scripts/verify-no-contradiction.sh
 run "confirmation surface"       bash scripts/verify-confirmation.sh
 run "screen terms (one word each)" bash scripts/lint-terms.sh
+# 操作ガイドの語は、アプリが今表示している語（UserFacingFacts）からしか来ない。写し違いは落ちる。
+run "guide facts (app words only)" bash scripts/verify-guide-facts.sh
+run "guide facts selfcheck"        bash scripts/verify-guide-facts.sh --selfcheck
 run "design tokens fresh"         node scripts/gen-design-tokens.mjs --check
 run "type scale (no literals)"    node scripts/lint-type-literals.mjs
 run "swift bindings fresh"        bash scripts/gen-swift-bindings.sh --check

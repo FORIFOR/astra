@@ -127,3 +127,21 @@ GUIDE_FACTS_GATE の「permission count 5」は **Settings 側を正本**にす�
 - 保護語（build.py に literal で書いたら FAIL）の初期集合: 上表の **要** の表示文字列すべて + `録音の開始 / 停止`（乖離を再発させない）。
 - ガイド本文の L106 の「の」は実装ターンで `fact("settings.shortcutRow")` に置き換わり自然に直る（UI は触らない）。
 - UI 側の変更は「literal を定数参照へ置き換える」だけで、表示文字列は変えない（画面収録の統一を除く）。Craft Freeze の対象外。
+
+## 7. 実装した（2026-09-03）
+
+- 正本: `apps/astra-macos/Sources/AstraMac/App/UserFacingFacts.swift`（`Facts.*` 57 件、`UserShortcut`）。
+  上表の **要** の literal は全て `Facts.*` 参照へ置き換えた（表示文字列は不変。例外は下の 1 件）。
+- `--selftest facts`: `LOCALE / FACT / SHORTCUT / RUST` 行を吐き、重複 key・空値・許可数 ≠ 5・鍵の表示と badge の不一致・
+  Rust `hero_text` との不一致・menu fact が NSMenu に無い、のどれかで FAIL。
+- 鍵: `UserShortcut.confirm`（⌘↩）/ `.cancel`（esc）を `.keyboardShortcut` と `KeyBadge` の両方が読む。
+  ⌥Space は `GlobalShortcut.label()` から `UserShortcut.globalRecordingBadges` で badge を組む。⌘O / ⌘, / ⌘Q は menutitles のまま。
+- 許可名: **画面収録** に統一（`PermissionCenter.Kind.label` と reason 2 文）。`check()` の reason は selftest からしか
+  呼ばれないので、画面に出る絵は変わらない（golden 取り直し無し）。
+- 「送る」は `confirmation.confirm.example`（demo の値、protected ではない）。ガイド本文は「実行のボタン（例:「送る」）」。
+- `録音中 / 一時停止中` は Rust のまま。Swift の fact と `AstraCoreBridge.snapshot().heroText` を selftest で突き合わせる。
+- ガイド: `docs/guide/build.py` は `fact()` / `shortcut()` でしか画面の語を書けない（47 key を参照）。
+- 門: `scripts/verify-guide-facts.sh`（verify-all の "guide facts"）。FAIL 条件 = facts selftest 非 0 / locale ≠ ja-JP /
+  必須 key 欠け / 重複 key / 許可 ≠ 5 / 鍵の表示 ≠ badge / 知らない key / 保護語を文字で / 保護語と助詞 1 字違い /
+  古い綴り（`録音の開始 / 停止`, `画面の読み取り`）/ guide build 失敗。`--selfcheck` は 3 つの書き戻し
+  （一字違い・許可名を文字で・知らない key）が全部落ちることを毎回確かめる。
