@@ -15,7 +15,7 @@ struct MeetingCanvasView: View {
             VStack(alignment: .leading, spacing: 8) {
                 group("決まったこと", canvas.decisions, "checkmark.circle", Palette.success(dark))
                 group("やること", canvas.actions, "arrow.right.circle", Palette.accent(dark))
-                group("宿題", canvas.questions, "questionmark.circle", Palette.muted(dark))
+                group("質問", canvas.questions, "questionmark.circle", Palette.muted(dark))
                 group("懸念", canvas.concerns, "exclamationmark.triangle", Palette.warning(dark))
             }
             // 左列の幅に揃える。内容幅のままだと、隣の全高カードに対して浮いて見えた。

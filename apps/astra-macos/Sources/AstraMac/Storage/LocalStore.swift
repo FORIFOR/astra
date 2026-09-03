@@ -57,7 +57,7 @@ final class LocalStore {
     /// §24 のテーブル一式。画像・音声・本文の列は**意図的に無い**。
     static let tables = [
         "tasks", "conversations", "context_metadata",
-        "meetings", "transcripts", "artifacts", "plugin_permissions",
+        "meetings", "transcripts", "meeting_notes", "artifacts", "plugin_permissions",
     ]
 
     @discardableResult
@@ -87,6 +87,11 @@ final class LocalStore {
         CREATE TABLE IF NOT EXISTS transcripts (
           id TEXT PRIMARY KEY, meeting_id TEXT NOT NULL, speaker TEXT,
           text TEXT NOT NULL, at REAL NOT NULL);
+        -- 拾ったもの（決まったこと・やること・質問・懸念・メモ）。出所（誰が・いつ）ごと残す。
+        -- 止めたあとに Library から同じ発言へ戻るための正本。件数だけでは戻れない。
+        CREATE TABLE IF NOT EXISTS meeting_notes (
+          id TEXT PRIMARY KEY, meeting_id TEXT NOT NULL, kind TEXT NOT NULL,
+          text TEXT NOT NULL, speaker TEXT, at REAL, position INTEGER NOT NULL);
         -- 画像バイト列は入れない。参照だけ（§24 raw screenshot は保存しない）。
         CREATE TABLE IF NOT EXISTS artifacts (
           id TEXT PRIMARY KEY, meeting_id TEXT, kind TEXT NOT NULL,
@@ -278,6 +283,75 @@ final class LocalStore {
     }
 
     // MARK: - transcripts（会議 id で引く。Library から同じ発言へ戻るための正本）
+
+    /// 確定行を 1 つ書く。**確定のたびに書く**（止めたときにまとめて書くと、落ちたら全部消える）。
+    /// `index` は文字起こしの中の位置。同じ位置を書き直せば置き換わる。
+    func saveTranscriptRow(meetingId: String, index: Int, _ seg: TranscriptSegment) {
+        let sql = "INSERT OR REPLACE INTO transcripts (id,meeting_id,speaker,text,at) VALUES (?,?,?,?,?)"
+        var stmt: OpaquePointer?
+        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return }
+        bind(stmt, 1, "\(meetingId)#\(index)")
+        bind(stmt, 2, meetingId)
+        bind(stmt, 3, seg.speaker)
+        bind(stmt, 4, seg.text)
+        sqlite3_bind_double(stmt, 5, seg.at)
+        sqlite3_step(stmt)
+        sqlite3_finalize(stmt)
+    }
+
+    /// 拾ったものを丸ごと書き直す（抽出のたびに全体が変わるので、差分は取らない）。
+    func saveNotes(meetingId: String, _ canvas: MeetingCanvas) {
+        var del: OpaquePointer?
+        if sqlite3_prepare_v2(db, "DELETE FROM meeting_notes WHERE meeting_id = ?", -1, &del, nil) == SQLITE_OK {
+            bind(del, 1, meetingId); sqlite3_step(del)
+        }
+        sqlite3_finalize(del)
+        let groups: [(String, [CanvasItem])] = [
+            ("decision", canvas.decisions), ("action", canvas.actions),
+            ("question", canvas.questions), ("concern", canvas.concerns), ("note", canvas.notes),
+        ]
+        let sql = "INSERT INTO meeting_notes (id,meeting_id,kind,text,speaker,at,position) VALUES (?,?,?,?,?,?,?)"
+        for (kind, items) in groups {
+            for (i, item) in items.enumerated() {
+                var stmt: OpaquePointer?
+                guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { continue }
+                bind(stmt, 1, "\(meetingId)#\(kind)#\(i)")
+                bind(stmt, 2, meetingId)
+                bind(stmt, 3, kind)
+                bind(stmt, 4, item.text)
+                if let sp = item.speaker { bind(stmt, 5, sp) } else { sqlite3_bind_null(stmt, 5) }
+                if let at = item.at { sqlite3_bind_double(stmt, 6, at) } else { sqlite3_bind_null(stmt, 6) }
+                sqlite3_bind_int(stmt, 7, Int32(i))
+                sqlite3_step(stmt)
+                sqlite3_finalize(stmt)
+            }
+        }
+    }
+
+    /// その会議の拾ったもの。無ければ空の Canvas。
+    func loadNotes(meetingId: String) -> MeetingCanvas {
+        let sql = "SELECT kind,text,speaker,at FROM meeting_notes WHERE meeting_id = ? ORDER BY kind, position"
+        var stmt: OpaquePointer?
+        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return MeetingCanvas() }
+        defer { sqlite3_finalize(stmt) }
+        bind(stmt, 1, meetingId)
+        var out = MeetingCanvas()
+        while sqlite3_step(stmt) == SQLITE_ROW {
+            let kind = sqlite3_column_text(stmt, 0).map { String(cString: $0) } ?? ""
+            let text = sqlite3_column_text(stmt, 1).map { String(cString: $0) } ?? ""
+            let speaker = sqlite3_column_text(stmt, 2).map { String(cString: $0) }
+            let at: TimeInterval? = sqlite3_column_type(stmt, 3) == SQLITE_NULL ? nil : sqlite3_column_double(stmt, 3)
+            let item = CanvasItem(text, at: at, speaker: speaker)
+            switch kind {
+            case "decision": out.decisions.append(item)
+            case "action": out.actions.append(item)
+            case "question": out.questions.append(item)
+            case "concern": out.concerns.append(item)
+            default: out.notes.append(item)
+            }
+        }
+        return out
+    }
 
     /// その会議の確定行。`at` は録音開始からの秒。
     func loadTranscript(meetingId: String) -> [TranscriptSegment] {

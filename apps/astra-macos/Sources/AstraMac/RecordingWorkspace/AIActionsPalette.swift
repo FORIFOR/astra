@@ -20,8 +20,9 @@ struct AIActionsPalette: View {
     }
     private let actions = [
         Action(title: "要約", command: "リアルタイム要約"),
-        Action(title: "決定事項", command: "決定事項"),
-        Action(title: "アクション", command: "アクション"),
+        // 表示は Notes と同じ語。`command` は `runAIAction` の名前なので変えない。
+        Action(title: "決まったこと", command: "決定事項"),
+        Action(title: "やること", command: "アクション"),
     ]
 
     /// 文字起こしが無ければ、この 3 つは何も材料が無いまま走ることになる。

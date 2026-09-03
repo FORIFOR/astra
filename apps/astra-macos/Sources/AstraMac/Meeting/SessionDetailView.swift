@@ -1,153 +1,80 @@
 import SwiftUI
 
-/// 会議 1 件の中身。Home の Session Card から開く。
+/// 会議 1 件の中身。Home の Session Card と、結果面の「メモを開く」から開く。
 ///
-/// 今回は導線を通すのが目的なので、面は Overview / Transcript / Notes / Actions / Decisions の
-/// 5 つだけ。**新しい window は出さない**（Workspace の中で開く）。
+/// 面は `MeetingArtifactView` の 1 つだけ（標本と実データで別の面を持たない）。
+/// 中身は**開いた id のもの**を保存から読む。以前は「いまの録音」の値を
+/// 出していたので、古い会議を開くと直近の録音の中身が出ていた。
 struct SessionDetailView: View {
-    /// §10 Interface Size を変えたら描き直す（購読していないと変わらない）。
-    @ObservedObject private var uiScale = UIScale.shared
-    @Environment(\.colorScheme) private var scheme
-    private var dark: Bool { scheme == .dark }
     let session: MeetingSession
     @ObservedObject private var store = AstraStateStore.shared
     @ObservedObject private var recording = RecordingWorkspaceState.shared
-    @State private var tab: Tab = .overview
 
-    enum Tab: String, CaseIterable, Identifiable {
-        case overview, transcript, notes, actions, decisions
-        var id: String { rawValue }
-        var title: String {
-            switch self {
-            case .overview: return "概要"
-            case .transcript: return "文字起こし"
-            case .notes: return "メモ"
-            case .actions: return "アクション"
-            case .decisions: return "決定事項"
-            }
-        }
+    /// この会議がいま録っている／読み取っている最中か。そのときだけ生の値を出す。
+    private var isCurrent: Bool {
+        recording.currentMeetingId == session.id
+            && (session.status == .recording || session.status == .processing)
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            header
-            Divider().overlay(Palette.border(dark))
-            ScrollView {
-                content
-                    .padding(28)
-                    .frame(maxWidth: 900, alignment: .leading)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
-        }
-        .background(Palette.canvas(dark))
+        let transcript = isCurrent
+            ? recording.transcript.filter { !$0.interim }
+            : LocalStore.shared.loadTranscript(meetingId: session.id)
+        let canvas = isCurrent ? store.state.meeting.canvas : LocalStore.shared.loadNotes(meetingId: session.id)
+        let cites = SessionCitations(canvas: canvas, transcript: transcript, summary: session.summary)
+        MeetingArtifactView(
+            title: session.title,
+            duration: session.timeLabel(),
+            participants: session.participantCount,
+            onBack: { MainNav.shared.openSession = nil },
+            summary: cites.summary,
+            decisions: cites.decisions,
+            actionItems: cites.actions,
+            questions: cites.questions,
+            concerns: cites.concerns,
+            notes: cites.notes,
+            transcript: cites.transcript,
+            hasAudio: false)
         .accessibilityIdentifier("sessionDetail")
     }
+}
 
-    private var header: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack(spacing: 10) {
-                Button { MainNav.shared.openSession = nil } label: {
-                    Image(systemName: "chevron.left")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(Palette.muted(dark))
-                        .frame(width: 30, height: 30)
-                }
-                .buttonStyle(AstraControlStyle(radius: 8, base: 0.0))
-                .accessibilityIdentifier("sessionBack")
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(session.title)
-                        .font(.system(size: S.type(TypeScale.pageTitleSize), weight: TypeScale.pageTitleWeight))
-                        .foregroundStyle(Palette.text(dark))
-                    Text("\(session.timeLabel()) · \(session.visibility.label)"
-                         + (session.projectId.map { " · \($0)" } ?? ""))
-                        .font(.system(size: S.type(TypeScale.secondarySize)))
-                        .foregroundStyle(Palette.muted(dark))
-                }
-                Spacer(minLength: 0)
-            }
-            HStack(spacing: 4) {
-                ForEach(Tab.allCases) { t in
-                    Button { tab = t } label: {
-                        Text(t.title)
-                            .font(.system(size: S.type(TypeScale.secondarySize),
-                                          weight: tab == t ? .semibold : .regular))
-                            .foregroundStyle(tab == t ? Palette.text(dark) : Palette.muted(dark))
-                            .frame(height: 30).padding(.horizontal, 12)
-                    }
-                    .buttonStyle(AstraControlStyle(radius: 8, base: tab == t ? 0.06 : 0.0))
-                    .accessibilityIdentifier("sessionTab-\(t.rawValue)")
-                }
-                Spacer(minLength: 0)
-            }
+/// 拾ったものに引用番号を振り、文字起こしの行へ結ぶ。
+///
+/// 番号は 決まったこと → やること → 質問 → 懸念 → メモ の順。文字起こしの行は
+/// 「誰が・いつ」が一致する引用の番号を持つ（`MeetingArtifactView.isShown` と同じ鍵）。
+struct SessionCitations {
+    var summary: [MeetingCitation] = []
+    var decisions: [MeetingCitation] = []
+    var actions: [MeetingCitation] = []
+    var questions: [MeetingCitation] = []
+    var concerns: [MeetingCitation] = []
+    var notes: [MeetingCitation] = []
+    var transcript: [MeetingCitation] = []
+
+    init(canvas: MeetingCanvas, transcript rows: [TranscriptSegment], summary text: String?) {
+        var n = 0
+        func cite(_ item: CanvasItem) -> MeetingCitation {
+            n += 1
+            return MeetingCitation(number: n, text: item.text,
+                                   transcriptTime: item.timeLabel ?? "--:--",
+                                   speaker: item.speaker ?? "")
         }
-        .padding(.horizontal, 28)
-        .padding(.top, 20)
-        .padding(.bottom, 14)
-    }
-
-    @ViewBuilder private var content: some View {
-        let canvas = store.state.meeting.canvas
-        switch tab {
-        case .overview:
-            VStack(alignment: .leading, spacing: 14) {
-                if let summary = session.summary, !summary.isEmpty {
-                    Text(summary)
-                        .font(.system(size: S.type(TypeScale.bodySize)))
-                        .foregroundStyle(Palette.text(dark))
-                        .fixedSize(horizontal: false, vertical: true)
-                } else {
-                    Text("要約はまだありません。")
-                        .font(.system(size: S.type(TypeScale.bodySize)))
-                        .foregroundStyle(Palette.muted(dark))
-                }
-                HStack(spacing: 18) {
-                    stat("\(session.participantCount)", "participants")
-                    stat("\(session.actionCount)", "actions")
-                    stat("\(session.decisionCount)", "decisions")
-                    Spacer(minLength: 0)
-                }
-            }
-        case .transcript:
-            lines(recording.transcript.map { "\($0.speaker): \($0.text)" },
-                  empty: "文字起こしはまだありません。")
-        case .notes:
-            lines(canvas.notes.map(\.text), empty: "ノートはまだありません。")
-        case .actions:
-            lines(canvas.actions.map(\.text), empty: "やることはまだありません。")
-        case .decisions:
-            lines(canvas.decisions.map(\.text), empty: "決まったことはまだありません。")
+        decisions = canvas.decisions.map(cite)
+        actions = canvas.actions.map(cite)
+        questions = canvas.questions.map(cite)
+        concerns = canvas.concerns.map(cite)
+        notes = canvas.notes.map(cite)
+        let all = decisions + actions + questions + concerns + notes
+        // 要約が拾ったものの 1 件目と同じ文なら、要約としては出さない
+        // （同じ文が 2 段続けて出るだけで、要約ではない）。別の文のときだけ出す。
+        if let text, !text.isEmpty, !all.contains(where: { $0.text == text }) {
+            summary = [MeetingCitation(number: nil, text: text, transcriptTime: "", speaker: "")]
         }
-    }
-
-    private func stat(_ value: String, _ label: String) -> some View {
-        VStack(alignment: .leading, spacing: 1) {
-            Text(value)
-                .font(.system(size: S.type(TypeScale.sectionTitleSize), weight: .semibold))
-                .foregroundStyle(Palette.text(dark))
-            Text(label)
-                .font(.system(size: S.type(TypeScale.microSize)))
-                .foregroundStyle(Palette.muted(dark))
-        }
-    }
-
-    @ViewBuilder private func lines(_ items: [String], empty: String) -> some View {
-        if items.isEmpty {
-            Text(empty)
-                .font(.system(size: S.type(TypeScale.bodySize)))
-                .foregroundStyle(Palette.muted(dark))
-        } else {
-            VStack(alignment: .leading, spacing: 9) {
-                ForEach(items, id: \.self) { line in
-                    HStack(alignment: .firstTextBaseline, spacing: 9) {
-                        Text("·").foregroundStyle(Palette.muted(dark))
-                        Text(line)
-                            .font(.system(size: S.type(TypeScale.bodySize)))
-                            .foregroundStyle(Palette.text(dark))
-                            .fixedSize(horizontal: false, vertical: true)
-                        Spacer(minLength: 0)
-                    }
-                }
-            }
+        transcript = rows.map { r in
+            let hit = all.first { $0.transcriptTime == r.timeLabel && $0.speaker == r.speaker }
+            return MeetingCitation(number: hit?.number, text: r.text,
+                                   transcriptTime: r.timeLabel, speaker: r.speaker)
         }
     }
 }

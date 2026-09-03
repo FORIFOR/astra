@@ -955,6 +955,13 @@ private struct MeetingPanelBody: View {
                         } else {
                             Text("•").foregroundStyle(Palette.muted(dark))
                         }
+                        // 出所は「いつ・誰が」。Library と同じ 2 つを、ここでも落とさない
+                        // （時刻だけだと、Library で初めて話者が現れ、同じ発言と分からない）。
+                        if let who = line.speaker, !who.isEmpty {
+                            Text(who)
+                                .font(.system(size: S.type(Metrics.dockMetaSize), weight: .semibold))
+                                .foregroundStyle(Palette.muted(dark))
+                        }
                         Text(line.text)
                             .font(.system(size: S.type(Metrics.dockRowSize)))
                             .foregroundStyle(Palette.text(dark))
@@ -1027,9 +1034,10 @@ struct ResultDock: View {
             return "できました"
         }
         switch s.status {
-        case .processing: return "要約とアクションを作っています…"
+        case .processing: return "要約とやることを作っています…"
         case .ready:
-            return "アクション \(s.actionCount) · 決定事項 \(s.decisionCount) · \(s.participantCount) 人"
+            // 語は Notes と同じ（やること / 決まったこと）。面ごとに言い換えない。
+            return "やること \(s.actionCount) · 決まったこと \(s.decisionCount) · \(s.participantCount) 人"
         case .interrupted: return "途中で終わっています"
         case .failed: return "失敗しました"
         case .recording: return "録音中"
@@ -1058,7 +1066,7 @@ struct ResultDock: View {
             HStack(spacing: 6) {
                 ForEach(result.actions, id: \.self) { action in
                     ProbeButton(id: "result-\(action.rawValue)",
-                                action: { ResultActionRunner.run(action, title: result.title) }) {
+                                action: { ResultActionRunner.run(action, title: result.title, sessionId: result.sessionId) }) {
                         Text(action.title)
                     }
                         .font(.system(size: S.type(Metrics.dockRowSize), weight: .medium))

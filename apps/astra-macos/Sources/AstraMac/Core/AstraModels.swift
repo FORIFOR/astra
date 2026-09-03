@@ -122,6 +122,8 @@ struct AgentResult: Equatable {
     /// 何を読んで作ったか。「できました」だけでは、根拠の有無が読めない。
     /// 仕事の結果なら読んだ source の数、会議の結果なら nil（Session の状態を出す）。
     var sourceCount: Int? = nil
+    /// 会議の結果なら、その会議。「メモを開く」は一覧ではなく**この 1 件**を開く。
+    var sessionId: String? = nil
 
     enum Action: String, Equatable {
         case openWorkspace, openNotes, ask, copy
@@ -129,7 +131,7 @@ struct AgentResult: Equatable {
         var title: String {
             switch self {
             case .openWorkspace: return "開く"
-            case .openNotes: return "ノートを開く"
+            case .openNotes: return "メモを開く"
             case .ask: return "Ask Astra"
             case .copy: return "コピー"
             }

@@ -160,7 +160,7 @@ final class AstraStateStore: ObservableObject {
         // 停止しても巨大な modal は出さない。Dock が結果へ morph する。
         // 中身は Session を見る（Home のカードと同じもの）。
         if let id, let session = MeetingSessionStore.shared.session(id: id) {
-            setDock(.result(AgentResult(title: session.title, actions: [.openNotes, .ask])))
+            setDock(.result(AgentResult(title: session.title, actions: [.openNotes, .ask], sessionId: id)))
         } else {
             setDock(.idle)
         }
@@ -169,6 +169,9 @@ final class AstraStateStore: ObservableObject {
 
     func updateCanvas(_ canvas: MeetingCanvas) {
         state.meeting.canvas = canvas
+        // 拾うたびに会議 id で残す。止めたあとに件数だけ残るのでは、
+        // Library から「決まったこと [1] → 誰が・いつ → 原文」へ戻れない。
+        if let id = state.meeting.meetingId { LocalStore.shared.saveNotes(meetingId: id, canvas) }
     }
 
     // MARK: - Workspace

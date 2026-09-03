@@ -6,7 +6,7 @@ import AppKit
 /// View の中に閉じていると気づけないので、外に出して検査から同じ経路を通す。
 @MainActor
 enum ResultActionRunner {
-    static func run(_ action: AgentResult.Action, title: String) {
+    static func run(_ action: AgentResult.Action, title: String, sessionId: String? = nil) {
         let store = AstraStateStore.shared
         switch action {
         case .openWorkspace:
@@ -14,6 +14,8 @@ enum ResultActionRunner {
             store.workspaceOpened()
         case .openNotes:
             MainWindowController.shared.showSection(.meetings)
+            // 終わったばかりの会議が分かっているなら、一覧で探させずにその 1 件を開く。
+            if let sessionId { MainNav.shared.openSession = sessionId }
             store.workspaceOpened()
         case .ask:
             VoiceHUDState.shared.beginListening()

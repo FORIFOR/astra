@@ -22,11 +22,16 @@ struct MeetingArtifactView: View {
     var onAudioJump: ((String) -> Void)?
     /// 一覧へ戻る。Library から開いた 1 件なので、出る道を面の中に持つ（`SessionDetailView` と同じ）。
     var onBack: (() -> Void)?
-    static let tabs = ["文字起こし", "録音", "関連ファイル", "根拠"]
+    /// 語は Dock / Workspace と同じ「出所」。面ごとに 根拠／出典 と言い換えない。
+    static let tabs = ["文字起こし", "録音", "関連ファイル", "出所"]
     @State private var tab = MeetingArtifactView.tabs[0]
     var summary: [MeetingCitation]
     var decisions: [MeetingCitation]
     var actionItems: [MeetingCitation]
+    /// Dock の Notes と同じ 5 つの群。無い群は出さない（空の見出しを並べない）。
+    var questions: [MeetingCitation] = []
+    var concerns: [MeetingCitation] = []
+    var notes: [MeetingCitation] = []
     /// 引用番号を押した時に Inspector に出る内容（nil なら未選択）。
     var selected: MeetingCitation? = nil
     /// この会議の文字起こし。無ければ「まだ無い」と言う（タブだけ在って中身が無い状態を作らない）。
@@ -53,7 +58,12 @@ struct MeetingArtifactView: View {
     private var dark: Bool { scheme == .dark }
 
     /// 引用は 3 節にまたがるので、番号で引ける形にしておく。
-    private var allCitations: [MeetingCitation] { summary + decisions + actionItems }
+    private var allCitations: [MeetingCitation] {
+        // 要約は決まったこと／メモの 1 件目と同じ発言なので、出所の一覧では重ねない。
+        let body = decisions + actionItems + questions + concerns + notes
+        let extra = summary.filter { s in !body.contains { $0.transcriptTime == s.transcriptTime && $0.speaker == s.speaker } }
+        return extra + body
+    }
 
     var body: some View {
         HStack(alignment: .top, spacing: 0) {
@@ -77,9 +87,13 @@ struct MeetingArtifactView: View {
                         .font(.system(size: TypeScale.microSize)).foregroundStyle(Palette.muted(dark))
                 }
                 // 画面の言語を揃える（ここだけ英語で、他は日本語だった）。
-                section("要約", summary)
-                section("決定事項 \(decisions.count)", decisions)
-                section("アクション \(actionItems.count)", actionItems)
+                // 群の名前は Dock の Notes と同じ語（決まったこと／やること／質問／懸念／メモ）。
+                if !summary.isEmpty { section("要約", summary) }
+                section("決まったこと \(decisions.count)", decisions)
+                section("やること \(actionItems.count)", actionItems)
+                if !questions.isEmpty { section("質問 \(questions.count)", questions) }
+                if !concerns.isEmpty { section("懸念 \(concerns.count)", concerns) }
+                if !notes.isEmpty { section("メモ \(notes.count)", notes) }
                 // 箱に入った Text で、押せそうに見えて押せなかった（実機で判明）。
                 // 実際に選べるボタンにし、いま見ている面を選択状態で示す。
                 HStack(spacing: 6) {
@@ -106,7 +120,7 @@ struct MeetingArtifactView: View {
             if let c = shown {   // AC-09: 引用 → transcript + timestamp を Inspector に
                 Divider().overlay(Palette.border(dark))
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(c.number.map { "根拠 [\($0)]" } ?? "発言").font(.system(size: TypeScale.microSize, weight: .semibold))
+                    Text(c.number.map { "出所 [\($0)]" } ?? "発言").font(.system(size: TypeScale.microSize, weight: .semibold))
                         .foregroundStyle(Palette.muted(dark))
                     HStack(spacing: 6) {
                         Text(c.transcriptTime).font(.system(size: TypeScale.microSize).monospaced())
@@ -182,8 +196,8 @@ struct MeetingArtifactView: View {
                     }
                 }
             }
-        default:   // 根拠
-            if allCitations.isEmpty { emptyTab("根拠はまだありません。") }
+        default:   // 出所
+            if allCitations.isEmpty { emptyTab("出所はまだありません。") }
             else { citationList(allCitations) }
         }
     }
@@ -236,15 +250,18 @@ struct MeetingArtifactView: View {
                 HStack(alignment: .top, spacing: 6) {
                     Text(c.text).font(.system(size: TypeScale.bodySize)).foregroundStyle(Palette.text(dark))
                     // 番号は**押せる**。以前はリンク色の Text で、押しても何も起きなかった。
-                    ProbeButton(id: "citationRef-\(c.number ?? 0)", action: { picked = c }) {
-                        Text("[\(c.number ?? 0)]")
-                            .font(.system(size: TypeScale.microSize, weight: .semibold))
-                            .foregroundStyle(Palette.accent(dark))
-                            .padding(.horizontal, 5)
-                            .frame(height: 24)   // §16 hit area
+                    // 出所の無い行（発言に結べなかった要約）には番号を付けない。[0] は嘘になる。
+                    if let n = c.number {
+                        ProbeButton(id: "citationRef-\(n)", action: { picked = c }) {
+                            Text("[\(n)]")
+                                .font(.system(size: TypeScale.microSize, weight: .semibold))
+                                .foregroundStyle(Palette.accent(dark))
+                                .padding(.horizontal, 5)
+                                .frame(height: 24)   // §16 hit area
+                        }
+                        .buttonStyle(AstraControlStyle(radius: 6, base: isShown(c) ? 0.10 : 0.0))
+                        .help("出所の発言を見る")
                     }
-                    .buttonStyle(AstraControlStyle(radius: 6, base: isShown(c) ? 0.10 : 0.0))
-                    .help("根拠になった発言を見る")
                     Spacer()
                 }
             }

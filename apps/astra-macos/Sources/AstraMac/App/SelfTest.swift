@@ -1929,15 +1929,12 @@ enum SelfTest {
 
             // ② Notes。同じ Dock の中で開く。実際の発言を入れて拾わせる。
             let t2 = rec.transition { VoiceHUDState.shared.toggleMeetingPanel(.notes) }
-            recording.transcript = [
+            // 確定行は本番と同じ 1 本（保存 → 抽出）を通す。3 行で抽出が走る。
+            for seg in [
                 TranscriptSegment(speaker: "Sarah", text: "Windows はいつ出しますか。", interim: false, at: 630),
                 TranscriptSegment(speaker: "Ken", text: "macOS を先に出すことに決めました。", interim: false, at: 642),
                 TranscriptSegment(speaker: "Ken", text: "Windows は次の周で追います。", interim: false, at: 655),
-            ]
-            MeetingIntelligence.shared.ingest([
-                CanvasItem("macOS を先に出すことに決めました。", at: 642, speaker: "Ken"),
-                CanvasItem("オンボーディングを試作する", at: 861, speaker: "Sarah"),
-            ], force: true)
+            ] { recording.appendFinal(seg) }
             settle(0.8)
             let canvas = store.state.meeting.canvas
             let decision = canvas.decisions.first
@@ -1977,8 +1974,8 @@ enum SelfTest {
             if !opened { rec.error("結果面に「開く」が無い／押せない") }
             if openedId != liveId {
                 rec.error("結果面から開いたのがその会議でない（open=\(openedId.isEmpty ? "一覧" : openedId)）")
-                MainNav.shared.openSession = liveId
                 MainWindowController.shared.showSection(.meetings)
+                MainNav.shared.openSession = liveId
                 settle(0.8)
             }
             _ = rec.shot("05-library")
@@ -1999,8 +1996,9 @@ enum SelfTest {
             MainNav.shared.select(.home)
             recording.transcript = []
             sessions.load(); settle(0.4)
-            MainNav.shared.openSession = liveId
-            MainWindowController.shared.showSection(.meetings); settle(0.8)
+            // 一覧を出してから 1 件を開く（`showSection` は開いていた 1 件を閉じる）。
+            MainWindowController.shared.showSection(.meetings)
+            MainNav.shared.openSession = liveId; settle(0.8)
             let tapped2 = UIProbe.tap("citationRef-1"); settle(0.6)
             let shown2 = UIProbe.fact("meetingShown") ?? ""
             if !tapped2 || shown2 != want { rec.error("読み戻したあと同じ発言に戻れない（\(shown2)）") }
@@ -2055,9 +2053,7 @@ enum SelfTest {
                            "backAfterSharing": String(backAfterSharing)])
 
             // ④ 録音中の危険な操作（録音を捨てる）。確認は **1 面だけ**。
-            recording.transcript = [
-                TranscriptSegment(speaker: "Ken", text: "落ちる前の発言です。", interim: false, at: 12),
-            ]
+            recording.appendFinal(TranscriptSegment(speaker: "Ken", text: "落ちる前の発言です。", interim: false, at: 12))
             let w0 = NSApp.windows.filter(\.isVisible).count
             var surfaces = -1
             var dockAnswerable = false

@@ -171,6 +171,10 @@ final class RecordingWorkspaceState: ObservableObject {
 
     func start() {
         isRecording = true
+        // 前の会議を消す。消さないと 2 本目の録音に 1 本目の行が混ざる（`at` も衝突する）。
+        // 前の会議は確定のたびに保存してあるので、ここで失うものは無い。
+        transcript = []
+        AstraStateStore.shared.updateCanvas(MeetingCanvas())
         // 経過時間を実際に進める（一時停止中は止める）。以前は 0 のままだった。
         elapsedSeconds = 0
         tickTimer?.invalidate()
@@ -193,14 +197,7 @@ final class RecordingWorkspaceState: ObservableObject {
                     speaker: speaker, text: text, interim: !isFinal,
                     at: Double(self.elapsedSeconds)))
             }
-            self.refreshRag()
-            // §20 確定行が溜まったら**新しい分だけ**抽出する（全文を毎回投げない）。
-            if isFinal {
-                // 話者と時刻を落とさずに渡す。落とすと Canvas から発言に戻れない。
-                MeetingIntelligence.shared.ingest(
-                    self.transcript.filter { !$0.interim }
-                        .map { CanvasItem($0.text, at: $0.at, speaker: $0.speaker) })
-            }
+            if isFinal { self.didFinalizeLastRow() } else { self.refreshRag() }
         }
         // 波形を実マイクレベルで更新する（デモの固定値をやめてフラットから始める）。
         audioLevels = Array(repeating: 0.0, count: 12)
@@ -248,6 +245,29 @@ final class RecordingWorkspaceState: ObservableObject {
         // 大きな面を開き、Dock コントローラの経路を通っていなかった。
         AstraStateStore.shared.meetingStarted(id: session.id)
     }
+    /// 確定行を 1 つ足す。STT からも検査からも**この 1 本**を通る
+    /// （検査だけ `transcript` を直に書くと、保存と抽出を通らない姿を測ることになる）。
+    func appendFinal(_ seg: TranscriptSegment) {
+        transcript.append(TranscriptSegment(speaker: seg.speaker, text: seg.text, interim: false, at: seg.at))
+        didFinalizeLastRow()
+    }
+
+    /// 末尾の行が確定した。保存 → 検索の索引 → 抽出。
+    ///
+    /// 保存は**確定のたび**。止めたときにまとめて書くと、落ちたら全部消える。
+    private func didFinalizeLastRow() {
+        if let last = transcript.last, !last.interim {
+            LocalStore.shared.saveTranscriptRow(meetingId: currentMeetingId,
+                                                index: transcript.count - 1, last)
+        }
+        refreshRag()
+        // §20 確定行が溜まったら**新しい分だけ**抽出する（全文を毎回投げない）。
+        // 話者と時刻を落とさずに渡す。落とすと Canvas から発言に戻れない。
+        MeetingIntelligence.shared.ingest(
+            transcript.filter { !$0.interim }
+                .map { CanvasItem($0.text, at: $0.at, speaker: $0.speaker) })
+    }
+
     func stop() {
         isRecording = false
         permissionIssue = nil

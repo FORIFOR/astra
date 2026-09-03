@@ -20,6 +20,7 @@ run "UI taste"                   bash scripts/verify-ui-taste.sh
 run "permission JIT"             bash scripts/verify-permission-jit.sh
 run "no contradiction"           bash scripts/verify-no-contradiction.sh
 run "confirmation surface"       bash scripts/verify-confirmation.sh
+run "screen terms (one word each)" bash scripts/lint-terms.sh
 run "design tokens fresh"         node scripts/gen-design-tokens.mjs --check
 run "type scale (no literals)"    node scripts/lint-type-literals.mjs
 run "swift bindings fresh"        bash scripts/gen-swift-bindings.sh --check
@@ -35,6 +36,8 @@ run "macOS recording + live E2E"  bash scripts/verify-macos-recording.sh
 # 録音セッションの通し。**プロセスを跨いで** kill → 復元まで確かめる。
 # CI が緑でもここが通らなければ未達、という位置づけのゲート。
 run "recording experience E2E"    bash scripts/verify-recording-experience.sh
+# 3 本の Journey を時間軸で通す（窓・鍵・面・遷移・出所 id の連続。層 A）。
+run "journeys JA/JB/JC"           bash scripts/verify-journeys.sh
 run "macOS swift unit tests"      bash -c "cd apps/astra-macos && swift test 2>&1 | grep -E 'Executed [0-9]+ tests' | head -1"
 
 echo

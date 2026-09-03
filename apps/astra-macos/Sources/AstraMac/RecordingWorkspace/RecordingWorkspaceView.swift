@@ -235,7 +235,7 @@ private struct MeetingNotesCanvas: View {
                       waiting: "決まったことを待っています…")
                 group("やること", canvas.actions,
                       waiting: "やることを待っています…")
-                if !canvas.questions.isEmpty { group("宿題", canvas.questions, waiting: nil) }
+                if !canvas.questions.isEmpty { group("質問", canvas.questions, waiting: nil) }
                 if !canvas.concerns.isEmpty { group("懸念", canvas.concerns, waiting: nil) }
                 // メモ。**描かないと、拾ったのに画面から消える。**
                 // 決定にも作業にも当てはまらない発言はここへ入るが、以前は
@@ -246,7 +246,7 @@ private struct MeetingNotesCanvas: View {
                     let all = canvas.decisions + canvas.actions + canvas.notes
                     if !all.isEmpty {
                         Divider().overlay(Palette.border(dark)).padding(.top, 18)
-                        Text("出典")
+                        Text("出所")
                             .font(.system(size: TypeScale.microSize, weight: .semibold))
                             .foregroundStyle(Palette.muted(dark))
                         ForEach(all) { it in
