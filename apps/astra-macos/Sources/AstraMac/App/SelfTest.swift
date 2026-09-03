@@ -66,6 +66,7 @@ enum SelfTest {
         case "fulllifecycle": fullLifecycle(args); return true
         case "e2e001": e2e001(args); return true
         case "shots": shots(args); return true
+        case "sections": sections(args); return true
         case "a11ynames": a11ynames(args); return true
         case "egress": egress(); return true
         case "states": states(args); return true
@@ -1044,8 +1045,8 @@ enum SelfTest {
         }
         MainWindowController.shared.showMeetingDetailPreview()
         let detailTitle = MainNav.shared.title
-        // 詳細の見出しは、一覧("Meetings")と紛れない**その会議の名前**であること。
-        if detailTitle == "Meeting" || detailTitle == MainSection.meetings.title {
+        // 詳細の見出しは、一覧("Meetings" / "Library")と紛れない**その会議の名前**であること。
+        if detailTitle == "Meeting" || detailTitle == LibraryTab.meetings.title || detailTitle == MainSection.library.title {
             fail.append("会議詳細の見出しが一覧と紛れる(\(detailTitle))")
         }
         if let strip = titleStrip() { strips.append((detailTitle, strip)) } else { fail.append("\(detailTitle)=撮影不可") }
@@ -1059,14 +1060,14 @@ enum SelfTest {
         if MainNav.shared.meetingDetail || MainNav.shared.title != MainSection.home.title {
             fail.append("会議詳細から sidebar で Home へ出られない(title=\(MainNav.shared.title))")
         }
-        MainNav.shared.select(.meetings)
+        MainNav.shared.select(.library)
         MainNav.shared.openSession = "navtitle-open"
         settle(0.6)   // 描き直しで sidebar が同じ値を書き戻して閉じてしまわないこと
         if MainNav.shared.openSession == nil { fail.append("開いた Session が描き直しで閉じた") }
-        MainNav.shared.select(.tasks)
+        MainNav.shared.select(.work)
         settle(0.4)
-        if MainNav.shared.openSession != nil || MainNav.shared.title != MainSection.tasks.title {
-            fail.append("Session から sidebar で Tasks へ出られない(title=\(MainNav.shared.title))")
+        if MainNav.shared.openSession != nil || MainNav.shared.title != MainSection.work.title {
+            fail.append("Session から sidebar で Work へ出られない(title=\(MainNav.shared.title))")
         }
 
         // 帯どうしが別の絵か。同じなら見出しが更新されていない。
@@ -2079,7 +2080,7 @@ enum SelfTest {
             if !opened { rec.error("結果面に「開く」が無い／押せない") }
             if openedId != liveId {
                 rec.error("結果面から開いたのがその会議でない（open=\(openedId.isEmpty ? "一覧" : openedId)）")
-                MainWindowController.shared.showSection(.meetings)
+                MainWindowController.shared.showLibrary(.meetings)
                 MainNav.shared.openSession = liveId
                 settle(0.8)
             }
@@ -2102,7 +2103,7 @@ enum SelfTest {
             recording.transcript = []
             sessions.load(); settle(0.4)
             // 一覧を出してから 1 件を開く（`showSection` は開いていた 1 件を閉じる）。
-            MainWindowController.shared.showSection(.meetings)
+            MainWindowController.shared.showLibrary(.meetings)
             MainNav.shared.openSession = liveId; settle(0.8)
             let tapped2 = UIProbe.tap("citationRef-1"); settle(0.6)
             let shown2 = UIProbe.fact("meetingShown") ?? ""
@@ -2692,7 +2693,7 @@ enum SelfTest {
         report.append(realEvents.isEmpty ? "upcoming=差し込み(実カレンダーに予定なし)" : "upcoming=実カレンダー\(realEvents.count)件")
         // 一度別の面へ移してから戻し、onAppear を通す。
         step("11-upcoming", {
-            MainWindowController.shared.showSection(.tasks)
+            MainWindowController.shared.showSection(.work)
             settle(0.5)
             MainWindowController.shared.showSection(.home)
         })
@@ -5209,8 +5210,7 @@ enum SelfTest {
         if let w = mainWin {
             let t = tabWalk("main-home", w); tabSummary.append("main-home moved=\(t.moved) visible=\(t.visible) invisible=\(t.invisible) unmeasured=\(t.unmeasured)")
         } else { emit("A11Y_TAB\tmain-home\tNOT_MEASURED\t(window not found)") }
-        for (name, sec) in [("main-tasks", MainSection.tasks), ("main-meetings", .meetings), ("main-library", .library),
-                            ("main-agents", .agents), ("main-plugins", .plugins)] {
+        for (name, sec) in [("main-work", MainSection.work), ("main-library", .library), ("main-apps", .apps)] {
             MainWindowController.shared.showSection(sec); settle(0.6)
             add(report(name, titles: mainTitles()))
         }
@@ -5615,6 +5615,48 @@ enum SelfTest {
     /// 撮るのは自プロセスの窓だけ（デスクトップや他アプリを写さない）。geometry も同時に測り、
     /// 「窓が在るだけ」で PASS にしない。既定の出力先は /tmp/astra-shots。
     @MainActor
+    /// 4 面 + 中の 2 面ずつを Main Window だけ撮る（盲検 Blind Discovery の素材。実画面は撮らない）。
+    /// `--selftest sections <dir> [dark]`。
+    private static func sections(_ args: [String]) {
+        let i = args.firstIndex(of: "--selftest")!
+        let outDir = args.count > i + 2 ? args[i + 2] : "/tmp/astra-sections"
+        let dark = args.count > i + 3 && args[i + 3] == "dark"
+        try? FileManager.default.createDirectory(atPath: outDir, withIntermediateDirectories: true)
+        NSApp.setActivationPolicy(.regular)
+        NSApp.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
+        parkCursor()
+        func settle(_ s: Double) {
+            let until = Date().addingTimeInterval(s)
+            while Date() < until { CFRunLoopRunInMode(.defaultMode, 0.05, true) }
+        }
+        MainWindowController.shared.show(); settle(1.2)
+        guard let win = NSApp.windows.first(where: { $0.isVisible && $0.contentView is NSHostingView<MainWindowView> }) else {
+            print("SELFTEST_FAIL sections: Main Window が無い"); exit(1)
+        }
+        var shot: [String] = [], fail: [String] = []
+        func take(_ name: String, _ present: () -> Void) {
+            present(); settle(0.9)
+            let id = CGWindowID(max(0, win.windowNumber))
+            guard id != 0, let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, id, [.boundsIgnoreFraming, .bestResolution]),
+                  let png = NSBitmapImageRep(cgImage: cg).representation(using: .png, properties: [:]) else {
+                fail.append(name); return
+            }
+            try? png.write(to: URL(fileURLWithPath: "\(outDir)/\(name).png"))
+            shot.append(name)
+        }
+        take("home") { MainWindowController.shared.showSection(.home) }
+        take("work-tasks") { MainWindowController.shared.showWork(.tasks) }
+        take("work-agents") { MainWindowController.shared.showWork(.agents) }
+        take("library-meetings") { MainWindowController.shared.showLibrary(.meetings) }
+        take("library-files") { MainNav.shared.libraryTab = .files; MainWindowController.shared.showSection(.library) }
+        take("apps-plugins") { MainNav.shared.appsTab = .plugins; MainWindowController.shared.showSection(.apps) }
+        take("apps-connectors") { MainNav.shared.appsTab = .connectors; MainWindowController.shared.showSection(.apps) }
+        MainNav.shared.appsTab = .plugins; MainNav.shared.libraryTab = .meetings; MainNav.shared.workTab = .tasks
+        if fail.isEmpty { print("SELFTEST_OK sections: \(shot.count) 面 → \(outDir)"); exit(0) }
+        print("SELFTEST_FAIL sections: 撮れない \(fail)"); exit(1)
+    }
+
+    @MainActor
     private static func shots(_ args: [String]) {
         let i = args.firstIndex(of: "--selftest")!
         let outDir = args.count > i + 2 ? args[i + 2] : "/tmp/astra-shots"
@@ -5826,9 +5868,9 @@ enum SelfTest {
                        present: { MainWindowController.shared.showSection(.home) }), expW: nil, expH: nil, minColors: 8)
 
         // 07 apps: Main の Apps タブへ（accessibility 経由ではなく状態で切り替える）
-        MainWindowController.shared.showSection(.plugins)
+        MainWindowController.shared.showSection(.apps)
         record("07-apps", capture("07-apps", minW: 700, minH: 500,
-                       present: { MainWindowController.shared.showSection(.plugins) }), expW: nil, expH: nil, minColors: 8)
+                       present: { MainWindowController.shared.showSection(.apps) }), expW: nil, expH: nil, minColors: 8)
 
         // 08 meeting-detail: Library の会議詳細（MeetingArtifactView）
         MainWindowController.shared.showMeetingDetailPreview()

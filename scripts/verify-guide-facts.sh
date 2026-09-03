@@ -22,7 +22,7 @@ REQUIRED=(
   dock.plan dock.context dock.suggested
   confirmation.confirm.example confirmation.cancel confirmation.edit
   recovery.resume recovery.discard session.interrupted
-  nav.home nav.tasks nav.meetings nav.library nav.agents nav.plugins
+  nav.home nav.work nav.library nav.apps work.tasks work.agents library.meetings library.files apps.plugins apps.connectors
   menu.open menu.settings menu.guide menu.quit menu.checkUpdates
   recording.start recording.stop recording.menu.start recording.menu.stop recording.cannotStart
   recording.hero.recording recording.hero.paused recording.hero.silentSuffix

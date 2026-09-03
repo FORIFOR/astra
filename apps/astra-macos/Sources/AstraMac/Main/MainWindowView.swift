@@ -1,27 +1,65 @@
 import SwiftUI
 import AstraCore
 
+/// 左の 4 面。役割を 1 行で言えるものだけを上位に置く（2026-09-04、本人の決定）:
+///   Home    → 意図を入力する、最近の状態を見る
+///   Work    → いま動いている仕事（Tasks / Agents / 録音中の会議）
+///   Library → 終わった成果（過去の会議 / 資料 / 出所）
+///   Apps    → できる仕事を増やす（Plugins / Connectors）
+/// Tasks / Meetings / Agents / Plugins は消していない。親の下へ移した（`WorkTab` 等）。
 enum MainSection: String, CaseIterable, Identifiable {
-    case home, tasks, meetings, library, agents, plugins
+    case home, work, library, apps
     var id: String { rawValue }
     var title: String {
         switch self {
         case .home: return Facts.navHome
-        case .tasks: return Facts.navTasks
-        case .meetings: return Facts.navMeetings
+        case .work: return Facts.navWork
         case .library: return Facts.navLibrary
-        case .agents: return Facts.navAgents
-        case .plugins: return Facts.navPlugins
+        case .apps: return Facts.navApps
         }
     }
     var icon: String {
         switch self {
         case .home: return "house"
-        case .tasks: return "checklist"
-        case .meetings: return "waveform"
+        case .work: return "checklist"
         case .library: return "books.vertical"
-        case .agents: return "sparkles"
-        case .plugins: return "square.grid.2x2"
+        case .apps: return "square.grid.2x2"
+        }
+    }
+}
+
+/// Work の中の 2 面。
+enum WorkTab: String, CaseIterable, Identifiable {
+    case tasks, agents
+    var id: String { rawValue }
+    var title: String {
+        switch self {
+        case .tasks: return Facts.workTasks
+        case .agents: return Facts.workAgents
+        }
+    }
+}
+
+/// Library の中の 2 面。
+enum LibraryTab: String, CaseIterable, Identifiable {
+    case meetings, files
+    var id: String { rawValue }
+    var title: String {
+        switch self {
+        case .meetings: return Facts.libraryMeetings
+        case .files: return Facts.libraryFiles
+        }
+    }
+}
+
+/// Apps の中の 2 面。
+enum AppsTab: String, CaseIterable, Identifiable {
+    case plugins, connectors
+    var id: String { rawValue }
+    var title: String {
+        switch self {
+        case .plugins: return Facts.appsPlugins
+        case .connectors: return Facts.appsConnectors
         }
     }
 }
@@ -70,6 +108,10 @@ final class MainNav: ObservableObject {
     /// Home の Session Card から開いた会議（§8 Home → Session Detail の導線）。
     @Published var openSession: String?
     @Published var section: MainSection = .home
+    /// 各面の中の 2 面。撮影や外部導線から選べるように共有にする。
+    @Published var workTab: WorkTab = .tasks
+    @Published var libraryTab: LibraryTab = .meetings
+    @Published var appsTab: AppsTab = .plugins
     /// 会議詳細のプレビュー（Library から開いた状態を撮るため）。
     @Published var meetingDetail = false
 
@@ -185,11 +227,9 @@ struct MainWindowView: View {
             } else {
                 switch nav.section {
                 case .home: HomePane(recent: data.library)
-                case .tasks: TasksPane()
-                case .meetings: MeetingsPane()
+                case .work: WorkPane(apps: data.apps)
                 case .library: LibraryPane(titles: data.library)
-                case .agents: AgentsPane(apps: data.apps)
-                case .plugins: PluginsPane()
+                case .apps: AppsPane(apps: data.apps)
                 }
             }
         }
@@ -281,6 +321,91 @@ struct HomePane: View {
     }
 }
 
+/// 面の中の切り替え。AgentsPane / Library の chip と同じ形（新しい部品を増やさない）。
+private struct SubNav<Tab: CaseIterable & Identifiable & Hashable>: View where Tab.AllCases: RandomAccessCollection {
+    @Binding var selected: Tab
+    let title: (Tab) -> String
+    var body: some View {
+        HStack(spacing: 8) {
+            ForEach(Array(Tab.allCases)) { t in
+                Text(title(t))
+                    .font(.system(size: TypeScale.secondarySize, weight: selected == t ? .semibold : .regular))
+                    .padding(.horizontal, 10).padding(.vertical, 4)
+                    .background(Capsule().fill(selected == t ? Color.astraAccent.opacity(0.15) : Color.clear))
+                    .foregroundStyle(selected == t ? Color.astraAccent : Color.secondary)
+                    .contentShape(Capsule())
+                    .onTapGesture { selected = t }
+                    .accessibilityAddTraits(.isButton)
+                    .accessibilityIdentifier("subnav-\(t.id)")
+            }
+            Spacer()
+        }
+        .padding(.horizontal, 28).padding(.top, 16)
+    }
+}
+
+/// Work: いま動いている仕事。録音中の会議は Home と同じカードでここにも出る（別の状態を持たない）。
+private struct WorkPane: View {
+    let apps: [String]
+    @Environment(\.colorScheme) private var scheme
+    private var dark: Bool { scheme == .dark }
+    @ObservedObject private var nav = MainNav.shared
+    @ObservedObject private var sessions = MeetingSessionStore.shared
+    var body: some View {
+        VStack(spacing: 0) {
+            if let live = sessions.live {
+                RecordingNowCard(session: live)
+                    .padding(.horizontal, 28).padding(.top, 16)
+            }
+            SubNav(selected: $nav.workTab, title: { $0.title })
+            switch nav.workTab {
+            case .tasks: TasksPane()
+            case .agents: AgentsPane(apps: apps)
+            }
+        }
+        .background(Palette.canvas(dark))
+        .accessibilityIdentifier("workPane")
+    }
+}
+
+/// Library: 終わった成果。過去の会議と資料。
+private struct LibraryPane: View {
+    let titles: [String]
+    @Environment(\.colorScheme) private var scheme
+    private var dark: Bool { scheme == .dark }
+    @ObservedObject private var nav = MainNav.shared
+    var body: some View {
+        VStack(spacing: 0) {
+            SubNav(selected: $nav.libraryTab, title: { $0.title })
+            switch nav.libraryTab {
+            case .meetings: MeetingsPane()
+            case .files: FilesPane(titles: titles)
+            }
+        }
+        .background(Palette.canvas(dark))
+        .accessibilityIdentifier("libraryPane")
+    }
+}
+
+/// Apps: できる仕事を増やす。同梱 Plugins と外部サービスの Connectors。
+private struct AppsPane: View {
+    let apps: [String]
+    @Environment(\.colorScheme) private var scheme
+    private var dark: Bool { scheme == .dark }
+    @ObservedObject private var nav = MainNav.shared
+    var body: some View {
+        VStack(spacing: 0) {
+            SubNav(selected: $nav.appsTab, title: { $0.title })
+            switch nav.appsTab {
+            case .plugins: PluginsPane()
+            case .connectors: ConnectorsPane(apps: apps)
+            }
+        }
+        .background(Palette.canvas(dark))
+        .accessibilityIdentifier("appsPane")
+    }
+}
+
 /// §9 Work: 仕事単位で管理（Active/Waiting/Done/Failed/All）。Agent は詳細/管理者向けにのみ開示。
 private struct AgentsPane: View {
     let apps: [String]
@@ -309,13 +434,14 @@ private struct AgentsPane: View {
     }
 }
 
-private struct LibraryPane: View {
+private struct FilesPane: View {
     let titles: [String]
     @State private var typeFilter = "All"
-    private let types = ["All", "Meeting", "Report", "Document", "Image", "Video", "Other"] // §10.1
+    private let types = ["All", "Report", "Document", "Image", "Video", "Other"] // §10.1（会議は Meetings 面）
     var body: some View {
-        let items = titles.isEmpty ? ["（まだありません）"] : titles
-        return ScrollView {
+        ScrollView {
+            WorkspaceHeader(title: Facts.libraryFiles, subtitle: "会議以外の成果と資料。")
+                .padding(.horizontal, 28).padding(.top, 28)
             HStack(spacing: 6) { // §10.1 Type chips
                 ForEach(types, id: \.self) { t in
                     Text(t)
@@ -326,9 +452,15 @@ private struct LibraryPane: View {
                         .onTapGesture { typeFilter = t }
                 }
                 Spacer()
-            }.padding(.horizontal, 20).padding(.top, 16)
+            }.padding(.horizontal, 28).padding(.top, 16)
+            if titles.isEmpty {
+                // 架空の 1 枚を出さない。他の面と同じ空状態。
+                WorkspaceEmpty(title: "まだ資料はありません。",
+                               hint: "仕事の成果や会議の資料がここに残ります。")
+                    .padding(.horizontal, 28).padding(.top, 16)
+            }
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 200), spacing: 12)], spacing: 12) {
-                ForEach(Array(items.enumerated()), id: \.offset) { _, t in
+                ForEach(Array(titles.enumerated()), id: \.offset) { _, t in
                     VStack(alignment: .leading, spacing: 6) {
                         Text(t).font(.system(size: TypeScale.secondarySize, weight: .semibold))
                         Text("資料").font(.system(size: TypeScale.captionSize)).foregroundStyle(.secondary)
@@ -337,13 +469,13 @@ private struct LibraryPane: View {
                     .padding(14)
                     .background(RoundedRectangle(cornerRadius: 10).stroke(Color.black.opacity(0.08)))
                 }
-            }.padding(20)
+            }.padding(28)
         }
     }
 }
 
-/// §10 Apps: 「できる仕事を増やす場所」。接続状態は **色だけでなく文字でも**示す（§17）。
-private struct AppsPane: View {
+/// §10 Connectors: 外部サービスとの接続。接続状態は **色だけでなく文字でも**示す（§17）。
+private struct ConnectorsPane: View {
     let apps: [String]
     @ObservedObject private var connectors = ConnectorState.shared
     @Environment(\.colorScheme) private var scheme
@@ -393,13 +525,9 @@ private struct AppsPane: View {
     var body: some View {
         let apps = self.apps.isEmpty ? ["Gmail", "Google Calendar", "Finder"] : self.apps
         return ScrollView {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("できる仕事を増やす").font(.system(size: TypeScale.bodySize, weight: .semibold))
-                Text("Pack や Connector を追加すると、Astra ができる仕事が増えます。")
-                    .font(.system(size: TypeScale.microSize)).foregroundStyle(.secondary)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 20).padding(.top, 16)
+            WorkspaceHeader(title: Facts.appsConnectors,
+                            subtitle: "外部サービスとの接続。つなぐまで Astra はそのサービスを読みません。")
+                .padding(.horizontal, 28).padding(.top, 28)
 
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 260), spacing: 12)], spacing: 12) {
                 ForEach(apps, id: \.self) { a in
@@ -451,7 +579,7 @@ private struct AppsPane: View {
                     .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.hairline(dark)))
                     .accessibilityIdentifier("connector-\(a)")
                 }
-            }.padding(20)
+            }.padding(28)
         }
     }
 }

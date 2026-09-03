@@ -82,11 +82,16 @@ enum UserFacingFacts {
     // MARK: ナビ・見出し
 
     static let navHome = "Home"
-    static let navTasks = "Tasks"
-    static let navMeetings = "Meetings"
+    static let navWork = "Work"
     static let navLibrary = "Library"
-    static let navAgents = "Agents"
-    static let navPlugins = "Plugins"
+    static let navApps = "Apps"
+    /// 4 面の中の 2 面ずつ（Tasks / Meetings / Agents / Plugins は上位から親の下へ移した）。
+    static let workTasks = "Tasks"
+    static let workAgents = "Agents"
+    static let libraryMeetings = "Meetings"
+    static let libraryFiles = "Files"
+    static let appsPlugins = "Plugins"
+    static let appsConnectors = "Connectors"
     /// `DockLabel` が大文字にして出す（画面では PLAN / CONTEXT / SUGGESTED）。
     static let dockPlan = "Plan"
     static let dockContext = "Context"
@@ -157,11 +162,15 @@ enum UserFacingFacts {
             f("update.openReleases", updateOpenReleases, false),
             f("update.close", updateClose, false),
             f("nav.home", navHome, false),
-            f("nav.tasks", navTasks, false),
-            f("nav.meetings", navMeetings, false),
+            f("nav.work", navWork, false),
             f("nav.library", navLibrary, false),
-            f("nav.agents", navAgents, false),
-            f("nav.plugins", navPlugins, false),
+            f("nav.apps", navApps, false),
+            f("work.tasks", workTasks, false),
+            f("work.agents", workAgents, false),
+            f("library.meetings", libraryMeetings, false),
+            f("library.files", libraryFiles, false),
+            f("apps.plugins", appsPlugins, false),
+            f("apps.connectors", appsConnectors, false),
             f("dock.plan", dockPlan, false),
             f("dock.context", dockContext, false),
             f("dock.suggested", dockSuggested, false),

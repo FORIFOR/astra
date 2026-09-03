@@ -4,7 +4,8 @@ import AstraCore
 /// Workspace の中身。**実際にあるデータから描く**（架空の行を並べない）。
 ///
 /// 以前は Tasks / Meetings / Agents / Plugins が同じ 2 ペインの使い回しで、
-/// ナビだけ 6 本ある状態だった。ここでそれぞれの出所を分ける:
+/// ナビだけ 6 本ある状態だった。ここでそれぞれの出所を分ける
+/// （2026-09-04 からは Work / Library / Apps の中の面。`MainSection` 参照）:
 ///   Tasks    → SQLite の tasks（§23/§24）
 ///   Meetings → ディスクの会議 journal
 ///   Plugins  → 同梱 manifest（§27）
@@ -100,7 +101,7 @@ struct TasksPane: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                WorkspaceHeader(title: "Tasks",
+                WorkspaceHeader(title: Facts.workTasks,
                                 subtitle: "Astra に頼んだ仕事。UI を閉じても走り続けます。")
                 if tasks.isEmpty {
                     WorkspaceEmpty(title: "まだ頼んだ仕事はありません。",
@@ -160,7 +161,7 @@ struct MeetingsPane: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                WorkspaceHeader(title: "Meetings",
+                WorkspaceHeader(title: Facts.libraryMeetings,
                                 subtitle: "録った会議。音声は端末から出ません。")
                 if sessions.recent.isEmpty {
                     WorkspaceEmpty(title: "録音した会議はまだありません。",
@@ -192,7 +193,7 @@ struct PluginsPane: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                WorkspaceHeader(title: "Plugins",
+                WorkspaceHeader(title: Facts.appsPlugins,
                                 subtitle: "できる仕事を増やす。宣言しているだけでは動かず、許可した権限の中でだけ動きます。")
                 if runtime.manifests.isEmpty {
                     WorkspaceEmpty(title: "プラグインが見つかりません。",

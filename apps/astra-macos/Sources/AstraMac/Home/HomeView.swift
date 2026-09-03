@@ -185,7 +185,8 @@ struct HomeView: View {
 
     private func openDetail(_ session: MeetingSession) {
         MainNav.shared.openSession = session.id
-        MainNav.shared.section = .meetings
+        MainNav.shared.section = .library
+        MainNav.shared.libraryTab = .meetings   // sidebar で出たときに会議一覧へ戻れるように
     }
 
     /// 入力欄の見た目をして**入力できない**ラベルだった（実機で判明）。

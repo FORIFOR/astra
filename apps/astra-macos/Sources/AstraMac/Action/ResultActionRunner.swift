@@ -10,10 +10,10 @@ enum ResultActionRunner {
         let store = AstraStateStore.shared
         switch action {
         case .openWorkspace:
-            MainWindowController.shared.showSection(.tasks)
+            MainWindowController.shared.showWork(.tasks)
             store.workspaceOpened()
         case .openNotes:
-            MainWindowController.shared.showSection(.meetings)
+            MainWindowController.shared.showLibrary(.meetings)
             // 終わったばかりの会議が分かっているなら、一覧で探させずにその 1 件を開く。
             if let sessionId { MainNav.shared.openSession = sessionId }
             store.workspaceOpened()

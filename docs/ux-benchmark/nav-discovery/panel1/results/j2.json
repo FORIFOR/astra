@@ -1,0 +1,2 @@
+{"A":{"O1":["Home","Work","Library","Apps"],"Q1":{"pick":"Work","alt":[]},"Q2":{"pick":"Work","alt":["Home"]},"Q3":{"pick":"Library","alt":[]},"Q4":{"pick":"Apps","alt":[]}},
+ "B":{"O1":["Home","Tasks","Meetings","Library","Agents","Plugins"],"Q1":{"pick":"Tasks","alt":["Agents"]},"Q2":{"pick":"Tasks","alt":["Agents"]},"Q3":{"pick":"Meetings","alt":[]},"Q4":{"pick":"Plugins","alt":[]}}}

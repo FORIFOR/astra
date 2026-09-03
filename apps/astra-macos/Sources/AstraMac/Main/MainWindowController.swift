@@ -43,6 +43,18 @@ final class MainWindowController {
         show()
     }
 
+    /// Work の中の面まで指定して開く（結果の「開く」など、外からの導線）。
+    func showWork(_ tab: WorkTab) {
+        MainNav.shared.workTab = tab
+        showSection(.work)
+    }
+
+    /// Library の中の面まで指定して開く（会議の一覧 = Library → Meetings）。
+    func showLibrary(_ tab: LibraryTab) {
+        MainNav.shared.libraryTab = tab
+        showSection(.library)
+    }
+
     /// Library の会議詳細を開いた状態にする。
     func showMeetingDetailPreview() {
         MainNav.shared.section = .library

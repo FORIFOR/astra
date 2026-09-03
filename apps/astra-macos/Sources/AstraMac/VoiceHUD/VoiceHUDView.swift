@@ -705,7 +705,7 @@ struct ConfirmationDock: View {
             if let src = confirmation.source {
                 // ⑤ AI が作ったものなら、どこから来たかを出す。
                 Button {
-                    MainWindowController.shared.showSection(.meetings)
+                    MainWindowController.shared.showLibrary(.meetings)
                 } label: {
                     HStack(spacing: 5) {
                         Text(Facts.sourceLabel).foregroundStyle(Palette.muted(dark))

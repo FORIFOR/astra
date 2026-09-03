@@ -137,7 +137,7 @@ html=f'''<!doctype html><html lang="ja"><head><meta charset="utf-8">
 <p>Astra は Dock（画面下のアイコン列）には出ません。<b>メニューバー右上の波形アイコン</b>をクリックするとメニューが開きます。</p>
 {MENU}
 </div><div>
-<p><b>「{fact("menu.open")}」</b>で {fact("nav.home")} が出ます。左の一覧（{fact("nav.home")} / {fact("nav.tasks")} / {fact("nav.meetings")} / {fact("nav.library")} …）で画面を切り替えます。</p>
+<p><b>「{fact("menu.open")}」</b>で {fact("nav.home")} が出ます。左の一覧は 4 つ——{fact("nav.home")}（頼む・最近の状態）、{fact("nav.work")}（いま動いている仕事: {fact("work.tasks")} / {fact("work.agents")} / 録音中の会議）、{fact("nav.library")}（終わった成果: {fact("library.meetings")} / {fact("library.files")}）、{fact("nav.apps")}（できる仕事を増やす: {fact("apps.plugins")} / {fact("apps.connectors")}）。</p>
 <p>許可は、その機能を<b>初めて使うとき</b>に、要るものだけ聞かれます——初めて会議を録るとき{fact("permission.microphone")}、画面について聞くとき{fact("permission.screenRecording")}、{shortcut("shortcut.recording.toggle")} を使えるようにするとき{fact("permission.inputMonitoring")}、というように。先にまとめて設定する必要はありません。<b>{fact("menu.settings")}</b> の「{fact("settings.permissionsSection")}」に 5 つ（{fact("permission.microphone")}・{fact("permission.screenRecording")}・{fact("permission.accessibility")}・{fact("permission.calendar")}・{fact("permission.inputMonitoring")}）の一覧があり、いま許可されているかの確認と、あとからの許可はそこでできます。{fact("permission.microphone")}を許可しないと録音は始まりません（→ 6）。{fact("permission.inputMonitoring")}が無いと {shortcut("shortcut.recording.toggle")} が効かず、黒いバーには「{fact("hud.clickHint")}」と出ます。</p>
 </div></div>
 
@@ -166,7 +166,7 @@ html=f'''<!doctype html><html lang="ja"><head><meta charset="utf-8">
 </ol>
 
 <h2 class="pb"><span>4</span>終わった会議を見返す</h2>
-<p>左の <b>{fact("nav.library")}</b> → 会議を選ぶと、{fact("notes.summary")}・{fact("notes.decisions")}・{fact("notes.actions")}が出ます。語は録音中のメモと同じです。</p>
+<p>左の <b>{fact("nav.library")}</b> → {fact("library.meetings")} → 会議を選ぶと、{fact("notes.summary")}・{fact("notes.decisions")}・{fact("notes.actions")}が出ます。語は録音中のメモと同じです。</p>
 {img('detail')}
 <ol>
 <li><span class="n">1</span>文末の <b>[1] [2]</b> を押すと…</li>

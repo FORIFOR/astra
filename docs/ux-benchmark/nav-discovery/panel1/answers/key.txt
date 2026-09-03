@@ -1,0 +1,3 @@
+A = 4 タブ（Home / Work / Library / Apps、2026-09-04 の案。golden 06-main-home.png と同一）
+B = 6 タブ（Home / Tasks / Meetings / Library / Agents / Plugins、96a0405 までの golden 06-main-home.png）
+判定者には A / B の由来を伝えていない。
