@@ -30,7 +30,7 @@ FULL_KEYBOARD_ACCESS       NOT_MEASURED   → a11y/RUNBOOK.md §1
 VOICEOVER                  NOT_MEASURED   → a11y/RUNBOOK.md §2
 LIVE_TCC                   NOT_MEASURED   → 下 §A
 MEETING_CAPTURE_REALITY    NOT_MEASURED   → 下 §B（docs/privacy-egress.md にも同じ 4 行）
-FINAL_COMPETITIVE_GATE     PARTIAL        → 下 §C（公開素材 6 型は Sample 22 で済み、4 型は hands-on 素材待ち）
+FINAL_COMPETITIVE_GATE     PARTIAL        → 下 §C（9 型のうち 4 型は Sample 22 で済み、5 型は hands-on 素材待ち）
 RELEASE_ARTIFACT           PENDING        → 次の release で verify-release-artifact.sh（egress / calendarask / update）+「更新を確認…」
 ```
 
@@ -44,13 +44,18 @@ RELEASE_ARTIFACT           PENDING        → 次の release で verify-release-
 ```
 1 REAL_MEETING_GATE        実 Meet / Zoom で 自分＋相手の音声・字幕・Notes・停止・Recovery     → §B（+ JC の Recovery を実機で）  NOT_MEASURED
 2 ACCESSIBILITY_GATE       keyboard traversal / VoiceOver / focus order                      → a11y/RUNBOOK.md §1 §2            NOT_MEASURED
-3 FINAL_COMPETITIVE_GATE   最新 Astra で archetype ごとに VoiceOS / SuperIntern と同型比較      → §C                              PARTIAL（公開素材 6 型は済み、4 型は素材待ち）
+3 FINAL_COMPETITIVE_GATE   最新 Astra で archetype ごとに VoiceOS / SuperIntern と同型比較      → §C                              PARTIAL（9 型のうち 4 型は済み、5 型は素材待ち）
 ```
 
 ## §C FINAL_COMPETITIVE_GATE — 型ごとに 負ける / 同等 / 勝つ を確定する
 
-総合 1 票で決めない。公開素材で比べられる 6 型は Sample 22（`compare/SAMPLES.md`、HEAD 3b870ce の golden vs
-2026-09-02 取得の公式素材、2 名盲検、1 型 = 1 票）で測った。残る型は本人の hands-on 素材が来てから。
+総合 1 票で決めない。型は本人の定義どおり **9 つ**（Invocation / Listening / Task Running / Confirmation /
+Meeting Controller / Live Notes / Workspace / Library-Provenance / Recovery）。Sample 22 の標本 6 つは、
+このうち **4 型**に当たる——Captions と Transcript Attribution は Live Notes 型の**副標本**（Astra 側は
+どちらも同じ `04-recording-transcript.png`、競合側だけ SuperIntern の別素材）で、型としては数えない。
+post_meeting の標本が Library-Provenance 型。よって 4 型が済み、5 型が hands-on 素材待ち（4 + 5 = 9）。
+測ったのは Sample 22（`compare/SAMPLES.md`、HEAD 3b870ce の golden vs 2026-09-02 取得の公式素材、
+2 名盲検、1 標本 = 1 票）。
 
 ```
 FINAL_COMPETITIVE_GATE（2026-09-04、Sample 22）
@@ -61,8 +66,8 @@ FINAL_COMPETITIVE_GATE（2026-09-04、Sample 22）
   Meeting Controller      SPLIT            4 / 3 / 0 / 1（vs SuperIntern Control Bar）
                                            勝つ: 階層・状態・操作・面の数   負ける: 密度・行の揃い・入力機器名の表示
   Live Notes              WIN              6 / 0 / 1 / 1（vs SuperIntern AI Canvas）
-  Captions                WIN              7 / 0 / 0 / 1（vs SuperIntern Summary / Transcript 2 窓）
-  Transcript Attribution  WIN              5 / 2 / 1 / 0（vs SuperIntern 話者分離のデモ）負ける: 面の数・占有
+    └ 副標本 Captions       WIN            7 / 0 / 0 / 1（vs SuperIntern Summary / Transcript 2 窓）
+    └ 副標本 Transcript Attribution WIN    5 / 2 / 1 / 0（vs SuperIntern 話者分離のデモ）負ける: 面の数・占有
   Workspace               NOT_COMPARABLE   相応する大面積 UI が公開素材に無い       → superintern/handson
   Library / Provenance    SPLIT            post_meeting 2 / 3 / 2 / 1（vs SuperIntern 会議後）
                                            勝つ: 要約→決定→やること の階層、[n] → 出所   負ける: 1 窓のまとまり・操作の数・占有
@@ -78,7 +83,11 @@ FINAL_COMPETITIVE_GATE（2026-09-04、Sample 22）
   §B で system audio を繋ぐ日に要否が決まる。
 - craft は 5/6 → 3/6 に見えるが、動いた弁は画素で 2px 以内か、帯の透明部が黒く読まれた素材の限界
   （`compare/sample22/answers/craft-check.txt`）。CRAFT_FREEZE_OVERRIDE の根拠にならない。
-- NOT_COMPARABLE の 4 型は、`voiceos/metadata.yaml` / `superintern/metadata.yaml` の版・取得日つきで
+  ```
+  CRAFT_REGRESSION        NOT_SUPPORTED
+  CRAFT_FREEZE_OVERRIDE   NO
+  ```
+- NOT_COMPARABLE の 5 型は、`voiceos/metadata.yaml` / `superintern/metadata.yaml` の版・取得日つきで
   hands-on の画が置かれたら、同じ prompt 型（`compare/sample22/prompts/`）で 2 名盲検を足して埋める。
 
 ## §A LIVE_TCC — カレンダーの「理由 → 許可 → OS ダイアログ → 予定がその場に出る」

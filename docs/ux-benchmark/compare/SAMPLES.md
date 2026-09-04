@@ -752,8 +752,11 @@ system audio を繋ぐ日に、この行が本当に要るかが決まる（UI �
 
 ```
 - 同じ絵で ±2〜3 軸ぶれる panel。1 型の 1 票差は読まない（合計 30/8 と 32/7 は同じ範囲）
-- 公開素材が無い型は測っていない: Invocation / Listening / Task Running（VoiceOS）、
-  Workspace / Library / Recovery（相手なし）。本人の hands-on 取得（voiceos/handson、
+- 標本 6 つは本人の 9 型のうち 4 型（Live Notes・Meeting Controller・Confirmation・Library-Provenance）。
+  captions と transcript_attribution は Astra 側が同じ絵（04-recording-transcript.png）なので
+  Live Notes 型の副標本として扱い、型には数えない
+- 公開素材が無い 5 型は測っていない: Invocation / Listening / Task Running（VoiceOS）、
+  Workspace / Recovery（相手なし）。本人の hands-on 取得（voiceos/handson、
   superintern/handson、metadata.yaml に版と取得日）が来るまで NOT_COMPARABLE
 - 競合は 2026-09-02 取得の公式素材（SuperIntern v0.10 / v0.14 の記事、VoiceOS 版表記なし）のまま
 - ctrl の帯は透明部が黒く読まれる（craft-check.txt）。次に帯を作るなら机の背景を合成してから出す
