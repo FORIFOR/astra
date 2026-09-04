@@ -216,7 +216,10 @@ enum SelfTest {
         let i = args.firstIndex(of: "--selftest")!
         guard args.count > i + 3 else { print("SELFTEST_FAIL golden: 引数が足りない"); exit(2) }
         let goldenDir = args[i + 2], freshDir = args[i + 3]
-        let names = ["01-voice-hud-idle", "02-voice-hud-listening", "03-recording-workspace",
+        // 02b は「準備中…」（まだ取り込めていない正式な状態）。02 は取り込みが生きた姿。
+        // 番号は整理せず足すだけにする（rename の churn を避ける）。
+        let names = ["01-voice-hud-idle", "02-voice-hud-listening", "02b-voice-hud-preparing",
+                     "03-recording-workspace",
                      "04-recording-transcript", "05-recording-rag", "08-meeting-detail",
                      "09-permission-denied", "10-agent-timeline", "11-meeting-canvas"]
 
@@ -5853,6 +5856,17 @@ enum SelfTest {
         record("01-voice-hud-idle", capture("01-voice-hud-idle"),
                expW: idleSize.width, expH: idleSize.height, minColors: 4)
 
+        // 02b voice-hud-preparing（先に撮る）
+        //
+        // 「準備中…」は実装都合の一瞬ではなく**正式な状態**。まだ 1 サンプルも取り込めていない間は
+        // こう名乗る、という約束を絵で固定する。golden が無いと、赤い指示子が先に出る／
+        // 「聞いています…」が取り込み前に出る、といった state-truth の後退を画像で捕まえられない。
+        VoiceHUDState.shared.beginPreparingForShot()
+        VoiceHUDState.shared.mode = .listening(partial: "")
+        let preparingSize = AstraStateStore.shared.dock.size()
+        record("02b-voice-hud-preparing", capture("02b-voice-hud-preparing"),
+               expW: preparingSize.width, expH: preparingSize.height, minColors: 4)
+
         // 02 voice-hud-listening
         // 実マイクを開かない撮影なので、「取り込めている姿」を作ってから撮る。
         // これをしないと、撮るのは名乗る前の「準備中…」になり、実利用者が見る絵ではなくなる
@@ -5863,6 +5877,14 @@ enum SelfTest {
         let listeningSize = AstraStateStore.shared.dock.size()
         record("02-voice-hud-listening", capture("02-voice-hud-listening"),
                expW: listeningSize.width, expH: listeningSize.height, minColors: 4)
+        // PREPARING_VISUAL_GATE: 同じ窓・同じ寸法で、意味だけが違う 2 枚であること。
+        // 寸法が違えば「preparing だけ geometry が崩れた」を、同一なら「名乗りが変わっていない」を捕まえる。
+        if abs(preparingSize.width - listeningSize.width) > 2
+            || abs(preparingSize.height - listeningSize.height) > 2 {
+            failures.append("02b-preparing の寸法が listening と違う"
+                + "(\(Int(preparingSize.width))x\(Int(preparingSize.height))"
+                + " vs \(Int(listeningSize.width))x\(Int(listeningSize.height)))")
+        }
         VoiceHUDState.shared.mode = .idle
         WindowCoordinator.shared.hideVoiceHUD()
         settle(0.4)
@@ -6003,7 +6025,8 @@ enum SelfTest {
         print("SHOTS_DIR \(outDir)")
         for line in report { print("SHOT \(line)") }
         if failures.isEmpty {
-            print("SELFTEST_OK shots: 12面を実アプリで撮影・geometry OK・面どうしが別の絵")
+            // 枚数は数えて言う（固定で書くと、面を足したときに嘘になる。実際 12 のまま 13 枚撮っていた）。
+            print("SELFTEST_OK shots: \(report.count)面を実アプリで撮影・geometry OK・面どうしが別の絵")
             exit(0)
         } else {
             print("SELFTEST_FAIL shots: \(failures.joined(separator: ", "))")

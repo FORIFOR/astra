@@ -232,6 +232,38 @@ golden は 1 枚も動かない。`02-voice-hud-listening` は撮影前に `mark
 「取り込めている姿」を作ってから撮る（録音側で `markListening` を先に呼ぶのと同じ理由）。
 light / dark とも差分は `01-voice-hud-idle` のみで、これは入力監視が無い環境の既知の差。
 
+### PREPARING_VISUAL_GATE — 「準備中…」を絵で固定する（2026-09-05）
+
+`準備中…` は実装都合の一瞬ではなく**正式な状態**になった。状態の並びは:
+
+```
+Idle → Preparing「準備中…」→（最初の音声フレーム）→ Listening「聞いています…」→ Result / Ask / Dictation
+```
+
+絵で固定しないと、`準備中…` が消える・取り込み前に指示子が光る・`聞いています…` が早く出る・
+preparing だけ寸法が崩れる、といった state-truth の後退を画像側で捕まえられない。そこで golden を
+**追加**した（既存の番号は整理せず churn を避ける）:
+
+```
+PREPARING_VISUAL_GATE
+  01-voice-hud-idle            既存
+  02-voice-hud-listening       既存・取り込みが生きた姿（markVoiceCaptureLive 後に撮る）
+  02b-voice-hud-preparing      追加・まだ取り込めていない姿（beginPreparingForShot 後に撮る）
+
+  preparing fixture exists              PASS  light / dark 両方
+  listening fixture is capture-live     PASS  撮影前に markVoiceCaptureLive
+  preparing != listening semantically   PASS  文言が 準備中… / 聞いています…、orb は非 active / active
+  same window / same geometry           PASS  両方 600x79・dock.size() の差 ≤2pt（違えば shots が落ちる）
+  取り込み前に指示子が光る                0     orb は active:false（塗り 0.78・影 0.30/r3）
+  取り込み前に「聞いています…」            0     文言は listeningAwaitingAudio で切り替わる
+  golden light / dark                   PASS
+```
+
+負例で確かめた: `02b` の絵を `02`（聞いています…）の絵に差し替えると golden が 1.89% 違いで落ちる。
+つまり「取り込み前に聞いていますと名乗る」後退は画像で捕まる。orb だけの差も画素に出ている
+（左 10% の領域だけで差分 bbox が立つ）。造形は変えていない——いまの姿をそのまま固定しただけで、
+Craft Freeze は解いていない。
+
 ## WORLD_CLASS_UX_GATE — 世界一を数値で確かめる（2026-09-04、本人の定義）
 
 「美しさ」ではなく数値。各行は測定器を持つか、持つべき。archetype ごとに**その面の最強の相手**と戦わせる

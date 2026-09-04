@@ -32,6 +32,9 @@ final class VoiceHUDState: ObservableObject {
     /// （録音側の `markListening` と同じ役割）。
     func markVoiceCaptureLive() { listeningAwaitingAudio = false }
 
+    /// 検査・golden 用。「まだ取り込めていない姿（準備中…）」を作る。
+    func beginPreparingForShot() { listeningAwaitingAudio = true }
+
     private var apiBase: String?
     private var apiToken: String?
     private var conversationId: String?
