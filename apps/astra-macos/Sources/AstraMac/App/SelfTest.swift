@@ -1309,6 +1309,9 @@ enum SelfTest {
             ("04-meeting", {
                 store.reset(); store.meetingDetected(app: "Google Meet")
                 store.meetingStarted(id: "geometry-selftest")
+                // 基準は「録音中で音が届いている」姿。実マイクは開かないので、届いた姿を作る
+                // （これが無いと Dock は正しく「準備中…」になり、text:Google Meet が無いと落ちる）。
+                recording.markAudioLiveForShot()
             }),
             ("05-meeting-notes", {
                 // shots の 09 と同じ 4 件。高さは中身で決まるので、空のまま測ると別の面になる。

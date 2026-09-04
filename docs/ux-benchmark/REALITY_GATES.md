@@ -164,6 +164,37 @@ feedback<150ms 等）に入れた。録音・privacy・no-contradiction・pause�
 (b) 入力デバイスの buffer frame size を小さくする（capture 全体に影響する深い変更）のどちらか。今は測って記録だけ。
 speech → first transcript は音声認識の許可がこの責任プロセスに無いので測れない（本人のターミナル署名 .app で測る）。
 
+**本人のターミナル（全許可あり）での実測（2026-09-04 18:08、verify-all の live loop）:** 9 行すべて測れた。
+
+```
+INVOCATION_WORLD_CLASS_GATE（本人の Mac、入力監視・AX・音声認識すべて許可、経路 tap）
+  hotkey delivery（合成 ⌥Space → tap → isRecording）   32ms
+  shortcut → visible feedback                          38ms   < 100ms  PASS（cold 初回 162ms）
+  shortcut → microphone ready                         314ms   < 200ms  MISS（IO バッファ下限、回帰ではない）
+  speech end → processing state                        27ms   < 150ms  PASS
+  speech → first transcript（VAD 通過 → 最初の partial）  88ms   < 400ms  PASS
+  cancel latency (Esc)                                 13ms   < 100ms  PASS
+  focus theft / extra windows                          0 / 0           PASS
+  idle screen occupation                              0.47%  < 1%     PASS
+  → measured 9/9, worldClassMiss 1, regressions 0
+```
+
+同じ verify-all で **2 つの欠陥が見つかった（どちらも私の変更が原因、2026-09-05 に修正）**:
+
+1. `FAIL: macOS live invocation` — gate は `SELFTEST_OK` を出していたのに落ちた。live loop は
+   **stdout の先頭が `SELFTEST_` で始まるか**で判定する（PERF / VAD / A11Y_* は stderr に書く作法）。
+   `INVOCATION …` の診断行を stdout に先に出していたため。診断行は全部 stderr へ移した。
+2. `SELFTEST_FAIL geometry: 04/05/06 で text:Google Meet が無い / ずれた` — state truth の修正で、
+   音が届く前の Dock は「準備中…」になった。geometry の基準は「録音中で音が届いている姿」
+   （見出し = アプリ名）だが、その selftest は実マイクを開かないので `awaitingAudio` が true のまま
+   → 正しく「準備中…」を出し、基準と食い違った。`markAudioLiveForShot()`（録音側の `markListening` と
+   同じ役割）を 04-meeting の状態と `loadDemo` に入れ、基準どおり「届いている姿」で測るようにした。
+   準備中の姿は `02b` の golden が別に固定している。
+
+なお、この verify-all の結果を私は「journeys まで到達した」ことから緑と**推定して push した**が、
+verify-all は失敗しても止まらず最後まで走る。推定は誤りで、実際は `VERIFY_ALL_FAIL` だった。
+以後、本人の `VERIFY_ALL_OK` の表示そのものを確認するまで push しない。
+
 ### INVOCATION_AUDIO_TRUTH — 呼んで即話しても冒頭を失わないか
 
 本人の指摘: 大事なのは `mic ready < 200ms` そのものより「面が出た瞬間から安心して話せるか」。測定器は

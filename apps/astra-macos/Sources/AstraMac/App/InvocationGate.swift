@@ -44,6 +44,11 @@ enum InvocationGate {
 
     // MARK: - 観測の道具
 
+    /// 診断行は stderr へ。verify の live loop は **stdout の先頭が SELFTEST_ で始まるか**で判定する
+    /// （PERF / VAD / A11Y_* と同じ作法）。stdout に先に書くと、通っていても FAIL に数えられる
+    /// （実際そうなった: 本人の verify-all で "FAIL: macOS live invocation"）。
+    static func diag(_ s: String) { FileHandle.standardError.write(Data((s + "\n").utf8)) }
+
     static func settle(_ sec: Double) {
         let until = Date().addingTimeInterval(sec)
         while Date() < until { CFRunLoopRunInMode(.defaultMode, 0.05, true) }
@@ -168,14 +173,14 @@ enum InvocationGate {
         let offsets: [Double] = [0, 50, 100, 200]
         var anyLost = false
         var rows: [[String: Any]] = []
-        print(String(format: "INVOCATION_AUDIO_TRUTH loss window: 面から %.0fms・%@ から %.0fms（IO 最初のバッファまで）", lossWindowFromSurface, GlobalShortcut.label(), lossWindowFromShortcut))
+        diag(String(format: "INVOCATION_AUDIO_TRUTH loss window: 面から %.0fms・%@ から %.0fms（IO 最初のバッファまで）", lossWindowFromSurface, GlobalShortcut.label(), lossWindowFromShortcut))
         for off in offsets {
             let phonemeLost = off < lossWindowFromSurface
             // 「first word 全部」を失うのは、話し始め offset から語末（~300ms）までが窓に入るとき。
             let wordFullyLost = (off + 300) <= lossWindowFromSurface
             if phonemeLost { anyLost = true }
             rows.append(["offsetMs": off, "firstPhonemeLost": phonemeLost, "firstWordFullyLost": wordFullyLost])
-            print(String(format: "  +%.0fms で発話開始 → first phoneme lost=%@  first word fully lost=%@",
+            diag(String(format: "  +%.0fms で発話開始 → first phoneme lost=%@  first word fully lost=%@",
                          off, phonemeLost ? "1" : "0", wordFullyLost ? "1" : "0"))
         }
 
@@ -188,7 +193,7 @@ enum InvocationGate {
             try? say.run(); say.waitUntilExit(); settle(0.6)
             let after = RecordingRuntime.shared.recordedMs()
             acousticNote = "acoustic: say の前後で recordedMs \(before)→\(after)（loopback。増えていれば取り込みは生きている）"
-            print("  \(acousticNote)")
+            diag("  \(acousticNote)")
         }
 
         // ---- Listening の面（声で頼む）も同じ不変条件で見る。
@@ -215,7 +220,7 @@ enum InvocationGate {
         let micOpenDuringListening = RecordingRuntime.shared.voiceListening
         hud.cancelListening(); settle(0.5)
         let micClosedAfterCancel = !RecordingRuntime.shared.voiceListening
-        print("  listening truth: 取り込み開始=\(listenCaptured ? "\(Int(listenFirstFrameMs!))ms" : "しなかった")"
+        diag("  listening truth: 取り込み開始=\(listenCaptured ? "\(Int(listenFirstFrameMs!))ms" : "しなかった")"
             + "・名乗り=\(listenHeadlineAfter)・取り込み前に聞いていますと名乗った=\(listenClaimedLiveWhileDeaf ? "1" : "0")"
             + "・Listening 中にマイクが開いた=\(micOpenDuringListening ? "1" : "0")"
             + "・Esc で閉じた=\(micClosedAfterCancel ? "1" : "0")")
@@ -225,7 +230,7 @@ enum InvocationGate {
         settle(0.4)
         let headlineAfterLive = dockHeadline()
         let stuckPreparing = headlineAfterLive == Facts.recordingHeroPreparing
-        print("  state truth: 取り込み前の見出し=\(headlineWhileDeaf.sorted().joined(separator: "/"))・生きた後=\(headlineAfterLive)"
+        diag("  state truth: 取り込み前の見出し=\(headlineWhileDeaf.sorted().joined(separator: "/"))・生きた後=\(headlineAfterLive)"
             + "・取り込み前に録音中を名乗った=\(claimedLiveWhileDeaf ? "1" : "0")・生きた後も準備中のまま=\(stuckPreparing ? "1" : "0")")
 
         WindowCoordinator.shared.toggleRecording(); settle(0.5)
@@ -260,7 +265,7 @@ enum InvocationGate {
         if let data = try? JSONSerialization.data(withJSONObject: out, options: [.prettyPrinted, .sortedKeys]) {
             try? data.write(to: URL(fileURLWithPath: outDir).appendingPathComponent("result.json"))
         }
-        print("INVOCATION_AUDIO_TRUTH=\(verdict)（\(outDir)/result.json）")
+        diag("INVOCATION_AUDIO_TRUTH=\(verdict)（\(outDir)/result.json）")
         if !truthful {
             print("SELFTEST_FAIL invocationaudio: 取り込みが生きる前に録音中を名乗っている（state truth）")
             exit(1)
@@ -299,7 +304,7 @@ enum InvocationGate {
             if let value { v = unit == "ms" ? "\(Int(value.rounded()))ms" : String(format: unit == "%" ? "%.2f%%" : "%.0f", value) }
             else { v = "NOT_MEASURED" }
             let mark = pass.map { $0 ? "PASS" : "FAIL" } ?? "NOT_MEASURED"
-            print("INVOCATION \(name): \(v)  target \(target)  \(mark)\(note.isEmpty ? "" : "  （\(note)）")")
+            diag("INVOCATION \(name): \(v)  target \(target)  \(mark)\(note.isEmpty ? "" : "  （\(note)）")")
             if value == nil { result.notMeasured.append("\(name): \(note)") }
             if pass == false { worldClassFails.append(name) }
             if let value, let ceil = regressionCeiling[name], value > ceil {
@@ -497,7 +502,7 @@ enum InvocationGate {
             let endMs = ms { rt.end() }
             let rest = (t1.stateMs ?? 0) - beginMs
             let note = String(format: "RecordingRuntime.begin %.0fms（うち MicCapture.start %.0fms・SpeechTranscriber.start %.0fms、許可 %d）・end %.0fms・start() のそれ以外（store/Published）%.0fms", beginMs, micMs, sttMs, SpeechTranscriber.authorization.rawValue, endMs, rest)
-            print("INVOCATION breakdown of start(): \(note)")
+            diag("INVOCATION breakdown of start(): \(note)")
             result.observations.append("start() 内訳: \(note)")
         }
 
@@ -510,10 +515,10 @@ enum InvocationGate {
         if let data = try? JSONEncoder.pretty.encode(result) {
             try? data.write(to: URL(fileURLWithPath: outDir).appendingPathComponent("result.json"))
         }
-        print("INVOCATION_WORLD_CLASS_GATE=\(result.verdict) measured=\(measured)/\(result.lines.count) worldClassMiss=\(worldClassFails.count) regressions=\(regressions.count) notMeasured=\(result.notMeasured.count)")
-        for o in result.observations { print("  観察: \(o)") }
+        diag("INVOCATION_WORLD_CLASS_GATE=\(result.verdict) measured=\(measured)/\(result.lines.count) worldClassMiss=\(worldClassFails.count) regressions=\(regressions.count) notMeasured=\(result.notMeasured.count)")
+        for o in result.observations { diag("  観察: \(o)") }
         if !regressions.isEmpty {
-            for r in regressions { print("  回帰: \(r)") }
+            for r in regressions { diag("  回帰: \(r)") }
             print("SELFTEST_FAIL invocation: 回帰 \(regressions.count) 件")
             exit(1)
         }

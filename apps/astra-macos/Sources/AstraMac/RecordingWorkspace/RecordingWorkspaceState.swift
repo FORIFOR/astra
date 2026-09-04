@@ -102,8 +102,15 @@ final class RecordingWorkspaceState: ObservableObject {
     var heroText: String { snapshot.heroText }
 
     /// §17: 決定的な固定画面。
+    /// 検査・golden・geometry 用。実マイクを開けない撮影で「音が届いている姿」を作る
+    /// （`RecordingRuntime.markListening` / `VoiceHUDState.markVoiceCaptureLive` と同じ役割）。
+    /// これを呼ばないと Dock は正しく「準備中…」になり、基準（録音中の姿）と一致しない。
+    func markAudioLiveForShot() { awaitingAudio = false }
+
     func loadDemo(ragOpen: Bool) {
         isRecording = true
+        // §17 の固定画面は「録音中で音が届いている」姿。準備中の姿は 02b で別に固定する。
+        awaitingAudio = false
         isPaused = false
         elapsedSeconds = 4 * 60 + 21
         selectedTool = .transcript
