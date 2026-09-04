@@ -1,0 +1,45 @@
+{
+  "acoustic" : "acoustic: say の前後で recordedMs 0→0（loopback。増えていれば取り込みは生きている）",
+  "listeningTruth" : {
+    "captured" : true,
+    "claimedLiveWhileDeaf" : false,
+    "firstFrameMs" : 132.94899463653564,
+    "headlineAfterLive" : "聞いています…",
+    "micClosedAfterCancel" : true,
+    "micOpenDuringListening" : true
+  },
+  "lossWindowFromShortcutMs" : 128.28397750854492,
+  "lossWindowFromSurfaceMs" : 104.32600975036621,
+  "offsets" : [
+    {
+      "firstPhonemeLost" : true,
+      "firstWordFullyLost" : false,
+      "offsetMs" : 0
+    },
+    {
+      "firstPhonemeLost" : true,
+      "firstWordFullyLost" : false,
+      "offsetMs" : 50
+    },
+    {
+      "firstPhonemeLost" : true,
+      "firstWordFullyLost" : false,
+      "offsetMs" : 100
+    },
+    {
+      "firstPhonemeLost" : false,
+      "firstWordFullyLost" : false,
+      "offsetMs" : 200
+    }
+  ],
+  "startedAt" : "2026-09-04T17:36:22Z",
+  "stateTruth" : {
+    "claimedLiveWhileDeaf" : false,
+    "headlineAfterLive" : "録音中",
+    "headlineWhileDeaf" : [
+      "準備中…"
+    ],
+    "stuckPreparingAfterLive" : false
+  },
+  "verdict" : "PASS"
+}
