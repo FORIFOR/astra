@@ -14,6 +14,7 @@ enum PermissionCenter {
         case screenAsk      // 画面について聞く
         case control        // この Mac を操作する（dictation / グローバル操作）
         case meeting        // 会議を録る
+        case schedule       // 予定から録る（Home の「これからの予定」）
 
         /// この機能に**本当に要る**もの。ここに書いていないものは要求しない。
         var required: [Kind] {
@@ -25,6 +26,8 @@ enum PermissionCenter {
             // 使っていない目的で画面収録を求めない。system audio を本当に繋いだときに、
             // 「相手の声も記録する」の入口で画面収録を JIT で求める。
             case .meeting: return [.microphone]
+            // 予定を読むだけ。録音そのものは .meeting が別に求める（巻き込まない）。
+            case .schedule: return [.calendar]
             }
         }
 
@@ -34,18 +37,20 @@ enum PermissionCenter {
             case .screenAsk: return "画面について答えるには\(Facts.permissionScreenRecording)の許可が要ります。"
             case .control: return "入力欄へ書き込むにはアクセシビリティが要ります。"
             case .meeting: return "会議を録るには\(Facts.permissionMicrophone)の許可が要ります。"
+            case .schedule: return "これからの会議をここに出すには\(Facts.permissionCalendar)の許可が要ります。"
             }
         }
     }
 
     enum Kind: String {
-        case microphone, screenRecording, accessibility
+        case microphone, screenRecording, accessibility, calendar
 
         var state: Permissions.State {
             switch self {
             case .microphone: return Permissions.microphone
             case .screenRecording: return Permissions.screenRecording
             case .accessibility: return Permissions.accessibility
+            case .calendar: return Permissions.calendar
             }
         }
 
@@ -54,6 +59,7 @@ enum PermissionCenter {
             case .microphone: return Facts.permissionMicrophone
             case .screenRecording: return Facts.permissionScreenRecording
             case .accessibility: return Facts.permissionAccessibility
+            case .calendar: return Facts.permissionCalendar
             }
         }
     }
@@ -66,14 +72,18 @@ enum PermissionCenter {
     /// その機能に要るものだけを要求する。要求したものを返す（何も要らなければ空）。
     ///
     /// **他の機能の許可は絶対に触らない** —— それをやると「初回に一括」に戻る。
+    ///
+    /// `then` は OS の答えが返ったあとに main で呼ぶ（ダイアログで許した直後に画面を
+    /// 読み直すため）。設定アプリへ飛ぶだけの種類は、すぐ呼ぶ。
     @discardableResult
-    static func request(_ capability: Capability) -> [Kind] {
+    static func request(_ capability: Capability, then done: @escaping () -> Void = {}) -> [Kind] {
         let needed = missing(for: capability)
         for kind in needed {
             switch kind {
-            case .microphone: Permissions.requestMicrophone { _ in }
-            case .screenRecording: Permissions.requestScreenRecording()
-            case .accessibility: Permissions.openAccessibilitySettings()
+            case .microphone: Permissions.requestMicrophone { _ in done() }
+            case .screenRecording: Permissions.requestScreenRecording(); done()
+            case .accessibility: Permissions.openAccessibilitySettings(); done()
+            case .calendar: Permissions.requestCalendar { _ in done() }
             }
         }
         return needed

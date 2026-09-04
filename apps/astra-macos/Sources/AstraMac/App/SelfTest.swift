@@ -20,6 +20,7 @@ enum SelfTest {
         case "shortcut": shortcut(); return true
         case "sysaudio": sysaudio(); return true
         case "calendar": calendar(); return true
+        case "calendarask": calendarask(args); return true
         case "calendarlive": calendarlive(); return true
         case "screen": screen(); return true
         case "rag": rag(); return true
@@ -764,7 +765,7 @@ enum SelfTest {
             if f.value.contains("\t") || f.value.contains("\n") { fail.append("値に tab/改行: \(f.key)") }
             print("FACT\t\(f.key)\t\(f.value)\t\(f.protected ? 1 : 0)")
         }
-        // 許可名は設定画面の 5 行と同じ数（PermissionCenter.Kind の 3 ではない）。
+        // 許可名は設定画面の 5 行と同じ数（PermissionCenter.Kind の 4 ではない）。
         let permissions = all.filter { $0.key.hasPrefix("permission.") && $0.key != "permission.request" }
         if permissions.count != Facts.permissionCount {
             fail.append("許可名が \(permissions.count) 件（\(Facts.permissionCount) のはず）")
@@ -4181,6 +4182,84 @@ enum SelfTest {
         let consistent = (status == .granted) || events.isEmpty
         guard consistent else { print("SELFTEST_FAIL calendar status=\(status.rawValue) events=\(events.count)"); exit(2) }
         print("SELFTEST_OK calendar: status=\(status.rawValue) upcoming=\(events.count)")
+        exit(0)
+    }
+
+    /// `--selftest calendarask`: 予定を読む許可は **Home の「これからの予定」の場所で、理由と一緒に**求める
+    /// （spec §22 purpose-first）。開いた瞬間には求めない。確かめるのは 3 つ——
+    /// (1) `.schedule` が求めるのはカレンダーだけ（マイク等を巻き込まない）、
+    /// (2) 未確認のときだけ Home に `askCalendar` と理由の文が出る、(3) 許可済み・拒否では出ない
+    /// （拒否を何度も聞かない。再許可は設定の「権限」）。この Mac は許可済みなので `simulatedCalendar` で
+    /// 未確認・拒否を作る。AX が無ければ (1) だけ確かめて SKIP。
+    @MainActor
+    private static func calendarask(_ args: [String]) {
+        // 任意: `--selftest calendarask <out.png>` で未確認のときの Home を自窓だけ撮って残す（証拠用）。
+        let i = args.firstIndex(of: "--selftest")!
+        let outPNG = args.count > i + 2 ? args[i + 2] : nil
+        var fail: [String] = []
+        if PermissionCenter.Capability.schedule.required != [.calendar] {
+            fail.append("schedule がカレンダー以外まで要求している: \(PermissionCenter.Capability.schedule.required)")
+        }
+        if PermissionCenter.Capability.schedule.reason.isEmpty || !PermissionCenter.Capability.schedule.reason.contains(Facts.permissionCalendar) {
+            fail.append("schedule の理由にカレンダーの名が無い")
+        }
+        Permissions.simulatedCalendar = .notDetermined
+        if PermissionCenter.missing(for: .schedule) != [.calendar] { fail.append("未確認なのに不足に出ない") }
+        Permissions.simulatedCalendar = .granted
+        if !PermissionCenter.missing(for: .schedule).isEmpty { fail.append("許可済みなのに不足に出る") }
+        Permissions.simulatedCalendar = nil
+        guard fail.isEmpty else { print("SELFTEST_FAIL calendarask: \(fail)"); exit(2) }
+        guard AXIsProcessTrusted() else { print("SELFTEST_SKIP calendarask: mapping OK, AX not trusted"); exit(0) }
+
+        // Home を 1 枚出して、自プロセスの AX で識別子と文を集める。
+        HomePane.previewUpcoming = []
+        func homeTexts(_ state: Permissions.State, png: String? = nil) -> (ids: Set<String>, texts: Set<String>) {
+            Permissions.simulatedCalendar = state
+            let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 900, height: 600),
+                             styleMask: [.titled, .closable, .resizable], backing: .buffered, defer: false)
+            w.contentView = NSHostingView(rootView: MainWindowView())
+            if let s = NSScreen.main { w.setFrameOrigin(NSPoint(x: s.frame.midX - 450, y: s.frame.midY - 300)) }
+            w.makeKeyAndOrderFront(nil); NSApp.activate(ignoringOtherApps: true)
+            MainNav.shared.section = .home
+            let show = Date().addingTimeInterval(1.0)
+            while Date() < show { CFRunLoopRunInMode(.defaultMode, 0.05, true) }
+            let app = AXUIElementCreateApplication(getpid())
+            var ids = Set<String>(), texts = Set<String>()
+            func attr(_ el: AXUIElement, _ name: String) -> String? {
+                var v: CFTypeRef?
+                guard AXUIElementCopyAttributeValue(el, name as CFString, &v) == .success else { return nil }
+                if let s = v as? String, !s.isEmpty { return s }
+                return nil
+            }
+            func walk(_ el: AXUIElement, _ depth: Int) {
+                if depth > 24 { return }
+                if let id = attr(el, kAXIdentifierAttribute) { ids.insert(id) }
+                for a in ["AXTitle", "AXDescription", "AXValue"] { if let s = attr(el, a) { texts.insert(s) } }
+                var kids: CFTypeRef?
+                if AXUIElementCopyAttributeValue(el, kAXChildrenAttribute as CFString, &kids) == .success,
+                   let arr = kids as? [AXUIElement] { for k in arr { walk(k, depth + 1) } }
+            }
+            walk(app, 0)
+            if let png, let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, CGWindowID(w.windowNumber),
+                                                          [.boundsIgnoreFraming, .nominalResolution]) {
+                try? NSBitmapImageRep(cgImage: cg).representation(using: .png, properties: [:])?
+                    .write(to: URL(fileURLWithPath: png))
+            }
+            w.orderOut(nil); w.close()
+            Permissions.simulatedCalendar = nil
+            return (ids, texts)
+        }
+        let asked = homeTexts(.notDetermined, png: outPNG)
+        guard !asked.ids.isEmpty else { print("SELFTEST_SKIP calendarask: own-process AX tree empty in this context"); exit(0) }
+        if !asked.ids.contains("askCalendar") { fail.append("未確認なのに Home に askCalendar が無い") }
+        let reason = PermissionCenter.Capability.schedule.reason
+        if !asked.texts.contains(where: { $0.contains(reason) }) { fail.append("理由の文が画面に無い") }
+        for state in [Permissions.State.granted, .denied] {
+            let r = homeTexts(state)
+            if r.ids.contains("askCalendar") { fail.append("\(state.rawValue)なのに askCalendar が出る") }
+        }
+        guard fail.isEmpty else { print("SELFTEST_FAIL calendarask: \(fail)"); exit(2) }
+        print("SELFTEST_OK calendarask: schedule=[calendar] askCalendar shown only when notDetermined, with reason; hidden when granted/denied")
         exit(0)
     }
 

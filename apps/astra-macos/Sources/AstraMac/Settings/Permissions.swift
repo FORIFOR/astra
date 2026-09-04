@@ -71,7 +71,12 @@ enum Permissions {
         _ = CGRequestScreenCaptureAccess()
     }
 
+    /// 検査用の上書き（`simulatedMicrophone` と同じ）。**本番では nil。** この Mac は許可済みなので、
+    /// 「まだ聞いていないときに Home に何が出るか」を測るにはここから未確認を作るしかない。
+    static var simulatedCalendar: State?
+
     static var calendar: State {
+        if let s = simulatedCalendar { return s }
         switch CalendarAccess.status() {
         case .granted: return .granted
         case .denied: return .denied

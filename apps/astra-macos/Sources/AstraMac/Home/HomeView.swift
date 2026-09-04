@@ -21,6 +21,8 @@ struct HomeView: View {
     var greeting: String = HomeView.greetingForNow()
     var attention: [HomeAttention] = []
     var active: [HomeWork] = []
+    /// 予定を読む許可が下りた直後に呼ぶ（持ち主が予定を読み直す）。
+    var onCalendarGranted: () -> Void = {}
     private var dark: Bool { scheme == .dark }
     @State private var intent = ""
     /// 実データ。無ければその節ごと出さない。
@@ -31,6 +33,8 @@ struct HomeView: View {
     @State private var recoverNote = ""
     /// ⌥Space の許可を求めたあとか。求めた直後は、次にどこを見ればよいか言う。
     @State private var inputMonitoringAsked = false
+    /// 予定を読む許可の状態。開いた瞬間には求めない（下の calendarAskRow を押したときだけ）。
+    @State private var calendar: Permissions.State = Permissions.calendar
     @ObservedObject private var voice = VoiceHUDState.shared
     @ObservedObject private var store = AstraStateStore.shared
     @ObservedObject private var sessions = MeetingSessionStore.shared
@@ -99,6 +103,12 @@ struct HomeView: View {
                     ForEach(attention.prefix(3)) { a in
                         upcomingRow(a)
                     }
+                } else if calendar == .notDetermined {
+                    // 予定を読む許可は、**予定が出るその場所で、理由と一緒に**求める（spec §22 purpose-first）。
+                    // Home を開いた瞬間に OS のダイアログを出すと、何のための許可か分からないまま断られる。
+                    // 一度断られたらここには出さない（一覧と再許可は設定の「権限」にある）。
+                    section("これからの予定")
+                    calendarAskRow
                 }
 
                 if !sessions.recent.isEmpty {
@@ -424,6 +434,42 @@ struct HomeView: View {
             }
             .buttonStyle(AstraControlStyle(radius: 8, base: 0.05))
             .accessibilityIdentifier("record-\(a.title)")
+        }
+        .padding(S.metric(Space.cardPadding))
+        .background(RoundedRectangle(cornerRadius: Metrics.paletteRadius, style: .continuous).fill(Palette.surface(dark))
+            .overlay(RoundedRectangle(cornerRadius: Metrics.paletteRadius, style: .continuous).stroke(Palette.border(dark), lineWidth: 1)))
+    }
+
+    /// 予定を読む許可を求める行。upcomingRow と同じ形（予定が入る場所に、予定の代わりに置く）。
+    private var calendarAskRow: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "calendar").font(.system(size: 12)).foregroundStyle(Palette.muted(dark))
+            VStack(alignment: .leading, spacing: 2) {
+                Text("予定から録音を始める")
+                    .font(.system(size: S.type(TypeScale.cardTitleSize), weight: TypeScale.cardTitleWeight))
+                    .foregroundStyle(Palette.text(dark))
+                Text(PermissionCenter.Capability.schedule.reason)
+                    .font(.system(size: S.type(TypeScale.secondarySize))).foregroundStyle(Palette.muted(dark))
+            }
+            Spacer(minLength: 12)
+            Button {
+                // 予定を読む分だけ求める。マイクなど他の許可は巻き込まない。
+                PermissionCenter.request(.schedule) {
+                    calendar = Permissions.calendar
+                    if calendar == .granted { onCalendarGranted() }
+                }
+            } label: {
+                HStack(spacing: 5) {
+                    Text("\(Facts.permissionCalendar)を許可")
+                    Image(systemName: "arrow.right")
+                        .font(.system(size: 10, weight: .semibold))
+                }
+                .font(.system(size: S.type(TypeScale.secondarySize), weight: .medium))
+                .foregroundStyle(Palette.accent(dark))
+                .frame(height: 30).padding(.horizontal, 12)
+            }
+            .buttonStyle(AstraControlStyle(radius: 8, base: 0.05))
+            .accessibilityIdentifier("askCalendar")
         }
         .padding(S.metric(Space.cardPadding))
         .background(RoundedRectangle(cornerRadius: Metrics.paletteRadius, style: .continuous).fill(Palette.surface(dark))

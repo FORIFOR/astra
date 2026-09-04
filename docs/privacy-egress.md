@@ -92,3 +92,36 @@ MEETING_CAPTURE_REALITY
 繋いだ時点で `.meeting` の JIT に「相手の声も記録する」として 画面収録 を戻す（`verify-privacy-egress.sh` は
 `captureSystemAudio: true` と `.screenRecording` が**両方**あるときだけそれを PASS にする）。
 自分では実会議を開けないので、この 4 行は本人の実機で。
+
+## カレンダーは「予定が出る場所」で求める（CALENDAR_PURPOSE_FIRST、2026-09-04）
+
+決める前の状態: カレンダーの許可を求める場所は設定の「権限」の 1 行だけで（`Settings/SettingsView.swift:35`）、
+Home は `.onAppear` で黙って読み、未確認なら「これからの予定」の節ごと消えていた。求めてはいないが、
+**この機能があることを知る道が無い**（設定を開いた人だけが気づく）。spec §21「Permission missing:
+理由 + Connect」§22「利用直前に purpose-first」に対して、理由も入口も無かった。
+
+決めたこと:
+
+1. **求める場所は Home の「これからの予定」の場所**。未確認のときだけ、予定の代わりに
+   「予定から録音を始める — これからの会議をここに出すにはカレンダーの許可が要ります。[カレンダーを許可 →]」
+   の行を出す（`Home/HomeView.swift` `calendarAskRow`、識別子 `askCalendar`）。押したときだけ OS のダイアログ。
+   Home を開いた瞬間には出さない。
+2. **拒否されたら二度と聞かない。** 拒否・制限ではこの行を出さない。再許可は設定の「権限」から
+   （行はそのまま）。
+3. **予定を読む分だけ求める。** `PermissionCenter.Capability.schedule` は `[.calendar]` だけ。録音のマイクは
+   `.meeting` が録音開始で別に求める（巻き込まない）。
+4. 許可が下りたらその場で予定を読み直す（`HomePane.loadUpcoming`、`onCalendarGranted`）。
+
+gate（`--selftest calendarask`、`verify-macos-recording.sh` と `verify-release-artifact.sh` の一覧に入れた）:
+
+```
+CALENDAR_PURPOSE_FIRST
+  schedule.required == [calendar]         PASS
+  notDetermined → askCalendar + reason     PASS（自プロセス AX で識別子と文を確認）
+  granted / denied → askCalendar 無し      PASS
+  起動経路で求めていない                    PERMISSION_JIT_OK（HomeView は許可一覧に理由つきで載っている）
+```
+
+この Mac は許可済みなので、未確認・拒否は `Permissions.simulatedCalendar`（`simulatedMicrophone` と同じ型）で作る。
+**実 TCC ダイアログが出て、許可直後に予定が並ぶ**ところは署名 .app + 未確認の端末でしか確かめられない
+（`--selftest calendarlive` と同じ制約、NOT_MEASURED）。

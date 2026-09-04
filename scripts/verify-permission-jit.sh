@@ -30,7 +30,7 @@ grep -rn "Permissions\.request\|PermissionCenter\.request" "$SRC" \
 allowed=(
   "Settings/PermissionCenter.swift"           # 機能→要る許可の写像。要求はここを通す
   "Settings/SettingsView.swift"               # 5 つの一覧。あとから見直す場所（一括の案内はしない）
-  "Home/HomeView.swift"                       # ⌥Space を使えるようにする → 入力監視
+  "Home/HomeView.swift"                       # ⌥Space を使えるようにする → 入力監視 / 予定から録る → カレンダー（「これからの予定」の場所で）
   "VoiceHUD/VoiceHUDState.swift"              # 声で頼む → マイク
   "RecordingWorkspace/RecordingWorkspaceState.swift"  # 会議を録る → マイク（画面収録は system audio を繋いだときに）
 )

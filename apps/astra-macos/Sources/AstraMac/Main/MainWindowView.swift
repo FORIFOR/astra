@@ -280,7 +280,9 @@ struct HomePane: View {
         // §8 Home: greeting + intent・Attention（実カレンダー）・Active work（実 Library）。
         HomeView(
             attention: upcoming,
-            active: recent.prefix(3).map { HomeWork(title: $0, meta: "資料 · Library") }
+            active: recent.prefix(3).map { HomeWork(title: $0, meta: "資料 · Library") },
+            // 予定を読む許可は Home が求める（予定が出る場所で）。下りたらその場で読み直す。
+            onCalendarGranted: loadUpcoming
         )
         .onAppear(perform: loadUpcoming)
     }
@@ -293,7 +295,9 @@ struct HomePane: View {
         let fmt = DateFormatter(); fmt.dateFormat = "HH:mm"
         // 終日の予定（誕生日・祝日など）は会議ではない。ここに「録音を開始」を出すと
         // 押しても意味が無い導線になるので、時刻のある予定だけを Attention にする。
-        let timed = CalendarAccess.upcoming(hours: 24).filter { e in
+        // 許可の状態は Permissions を通して見る（検査用の上書きが効く場所はそこだけ）。
+        let events = Permissions.calendar == .granted ? CalendarAccess.upcoming(hours: 24) : []
+        let timed = events.filter { e in
             let duration = e.endEpoch - e.startEpoch
             return duration > 0 && duration < 20 * 3600
         }
