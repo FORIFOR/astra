@@ -19,6 +19,9 @@ coverage/
 
 # Swift (astra-macos)
 apps/astra-macos/.build/
+# SwiftPM / swiftc の出力。tools/ux-lab の実行体も scripts/ux-auto/build-tools.sh が
+# tools/ux-lab/*.swift から .build/uxlab/ へ作り直すので、追跡しない
+.build/
 
 # Rust shared core build output
 core/astra-core/target/
