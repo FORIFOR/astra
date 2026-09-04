@@ -36,6 +36,19 @@ apps/astra-macos/.build/debug/AstraMac --selftest golden docs/golden-screenshots
 つまり golden の失敗は**環境の許可**の問題で、UI の後退ではない。新しい `02b-voice-hud-preparing` も
 署名 .app 側の撮影と一致しているので、撮り直しは要らない。
 
+**2026-09-05 07:47、本人のターミナルで `VERIFY_ALL_OK: この環境で検証できる全ゲートが緑`**（HEAD `77dab2b`）。
+その run で本人の Mac が出した数字（全許可あり、経路 tap、画面 2560x1440）:
+
+```
+INVOCATION_WORLD_CLASS_GATE   measured 9/9, regressions 0
+  hotkey delivery 31ms / visible feedback 36ms / processing 38ms / speech→first transcript 91ms
+  cancel 23ms / focus theft 0 / extra windows 0 / idle occupation 0.26%
+  microphone ready 314ms（<200ms 未達、IO バッファ下限、回帰ではない）
+INVOCATION_AUDIO_TRUTH        PASS
+  窓 104ms・Listening の取り込み開始 157ms・取り込み前に名乗った 0・Esc で閉じた 1
+golden light / dark            10/10、geometry 6 状態 2pt 以内、density 13 面
+```
+
 ## 1. 署名済み .app を 1 本だけ作る
 
 TCC は**署名されたバンドル**に紐づく。ターミナルから実行体を直に叩くと責任プロセス（ターミナル）の
