@@ -207,13 +207,30 @@ INVOCATION_AUDIO_TRUTH（この Mac、2026-09-05、state truth 修正後）
 （録音 Dock は golden 9 枚に入っておらず、geometry は寸法だけを見る。light / dark とも差分は
 `01-voice-hud-idle` のみで、これは入力監視が無い環境で待機 HUD の案内が「クリック」になる既知の差）。
 
-**まだ残る、別の state truth 違反（未修正・要判断）:** `.listening` の面（`beginListening()`）は
-「聞いています…」と名乗るが、**マイクを開かず STT も動かさない**。`updatePartial` を呼ぶのは録音中の
-`RecordingRuntime` の STT だけで、`.voiceStarted` を受け取る実装も無い。入口は 4 つ
-（Home のマイク・Quick Actions「聞く」・Workspace・結果面の ask）。これは ~105ms の窓ではなく
-**恒久的に**「名乗るだけで取り込まない」状態で、[[declared-not-enforced]] と同じ型。直し方は
-(a) 実際に音声取り込み＋STT を繋ぐ（機能の実装）か (b) 取り込めないなら Listening を名乗らない、の二択で、
-どちらも製品判断が要る（golden `02-voice-hud-listening` も変わる）。本人の決定待ち。
+**`.listening` も同じ条件で閉じた（2026-09-05、本人の決定 = 実際に capture を繋ぐ）。**
+直す前の `beginListening()` は「聞いています…」と名乗りながら**マイクを開かず STT も動かしていなかった**
+（`updatePartial` を呼ぶのは録音中の STT だけ、`.voiceStarted` の受け手も無い）。入口は 4 つ
+（Home のマイク・Quick Actions「聞く」・Workspace・結果面の ask）で、~105ms の窓ではなく**恒久的**な
+[[declared-not-enforced]] 型だった。いまは `RecordingRuntime.beginVoiceListening()` が実際に取り込む:
+
+- 会議の録音とは別経路で、**`RecordingSession` を作らない**＝声の指示はディスクに残さない。
+- 文字起こしは `SpeechTranscriber`（オンデバイス固定）だけ。外へは出ない（`PRIVACY_EGRESS_GATE` は PASS のまま）。
+- 暖めてある同じ mic engine を使い回す。会議の録音中は二重に開かない（そのときは録音側の STT が partial を出す）。
+- 最初の音声フレームが来るまで見出しは `準備中…`・orb は光らせない。来てから `聞いています…`。
+- Esc（`cancelListening`）と発話確定（`speak`）でマイクを閉じる。
+
+```
+INVOCATION_AUDIO_TRUTH（この Mac、2026-09-05、Listening も実測）
+  Listening 中にマイクが開いた        1        （以前は 0＝名乗るだけ）
+  取り込み開始まで                   141ms
+  取り込み前に「聞いています」と名乗った 0      ← 不変条件
+  Esc でマイクが閉じた                1
+  → INVOCATION_AUDIO_TRUTH=PASS（録音 Dock と Listening の両方）
+```
+
+golden は 1 枚も動かない。`02-voice-hud-listening` は撮影前に `markVoiceCaptureLive()` で
+「取り込めている姿」を作ってから撮る（録音側で `markListening` を先に呼ぶのと同じ理由）。
+light / dark とも差分は `01-voice-hud-idle` のみで、これは入力監視が無い環境の既知の差。
 
 ## WORLD_CLASS_UX_GATE — 世界一を数値で確かめる（2026-09-04、本人の定義）
 

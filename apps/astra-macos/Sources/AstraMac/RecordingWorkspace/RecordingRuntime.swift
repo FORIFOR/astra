@@ -41,6 +41,10 @@ final class RecordingRuntime {
     private var micGeneration = 0
     private var sysAudio: AnyObject?
     private var speech: SpeechTranscriber?
+    /// Listening（声で頼む）の取り込み。録音とは別で、ディスクには残さない。
+    private var voiceSpeech: SpeechTranscriber?
+    private var voiceVad = VoiceActivityDetector()
+    private(set) var voiceListening = false
     /// 文字起こしを頼まれたのに、この Mac ではオンデバイス STT が始められなかった。
     /// **録音は続いている。**サーバへは落とさない（`SpeechTranscriber` 冒頭）。画面はこれを見て
     /// 「文字起こしが出ない理由」を言う。黙って空のまま「聞いています」と出さない。
@@ -196,6 +200,70 @@ final class RecordingRuntime {
     func prewarmMic() {
         guard Permissions.microphone == .granted else { return }
         micQueue.async { [micCapture] in micCapture.prewarm() }
+    }
+
+    // MARK: - 声で頼む（Listening）
+
+    /// Listening の取り込み。**会議の録音とは別物**で、`RecordingSession` を作らない
+    /// ＝ディスクに音声を残さない（声の指示は保存しない）。文字起こしは
+    /// `SpeechTranscriber`（オンデバイス固定）だけを通り、外へは出ない。
+    ///
+    /// 「聞いています」と名乗ってよいのは**最初の 1 フレームが届いてから**なので、
+    /// `onFirstFrame` を返す。返り値 false は「始められなかった」（録音中・許可なし）。
+    @discardableResult
+    func beginVoiceListening(onFirstFrame: @escaping () -> Void,
+                             onPartial: @escaping (String) -> Void,
+                             onFinal: @escaping (String) -> Void) -> Bool {
+        // 会議の録音中はマイクを二重に開かない。その間の partial は録音側の STT から流れる。
+        guard session == nil, !voiceListening else { return false }
+        guard Permissions.microphone == .granted else { return false }
+        voiceListening = true
+        voiceVad.reset()
+        var sawFirst = false
+
+        if SpeechTranscriber.authorization == .authorized {
+            let st = SpeechTranscriber()
+            do {
+                try st.start { live in
+                    DispatchQueue.main.async {
+                        if live.isFinal { onFinal(live.text) } else { onPartial(live.text) }
+                    }
+                }
+                voiceSpeech = st
+            } catch {
+                // オンデバイス資産が無い。取り込みは続けるが文字は出ない（サーバへは落とさない）。
+                NSLog("voice listening: on-device STT unavailable: \(error)")
+            }
+        }
+
+        let mic = micCapture
+        micGeneration += 1
+        let gen = micGeneration
+        micQueue.async { [weak self] in
+            do {
+                try mic.start { frame in
+                    guard let self, self.voiceListening else { return }
+                    if !sawFirst { sawFirst = true; DispatchQueue.main.async { onFirstFrame() } }
+                    if self.voiceVad.accept(frame) { self.voiceSpeech?.append(frame, sampleRate: 16_000) }
+                }
+            } catch {
+                NSLog("voice listening: mic unavailable: \(error)")
+            }
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { mic.stop(); return }
+                if !self.voiceListening || self.micGeneration != gen { self.micQueue.async { mic.stop() } }
+            }
+        }
+        return true
+    }
+
+    /// Listening をやめる。マイクは閉じる（開いたままにしない）。
+    func endVoiceListening() {
+        guard voiceListening else { return }
+        voiceListening = false
+        voiceSpeech?.finish(); voiceSpeech = nil
+        voiceVad.reset()
+        micQueue.async { [micCapture] in micCapture.stop(); micCapture.prewarm() }
     }
     func setPaused(_ paused: Bool) {
         self.paused = paused

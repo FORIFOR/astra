@@ -21,6 +21,17 @@ final class VoiceHUDState: ObservableObject {
     /// 直近の Agent 応答（HUD 下や通知に出す）。
     @Published var answer = ""
 
+    /// Listening と名乗る前の「まだ 1 サンプルも取り込めていない」状態。
+    ///
+    /// 以前はここが無く、`beginListening()` が**マイクを開かないまま**「聞いています…」と
+    /// 名乗っていた（取り込みも文字起こしも起きない＝宣言だけ）。いまは実際に取り込み、
+    /// 最初の音声フレームが届いてから名乗る。タイマーでは切り替えない。
+    @Published private(set) var listeningAwaitingAudio = true
+
+    /// 検査・golden 用。実マイクを開けない撮影で「取り込めている姿」を作る
+    /// （録音側の `markListening` と同じ役割）。
+    func markVoiceCaptureLive() { listeningAwaitingAudio = false }
+
     private var apiBase: String?
     private var apiToken: String?
     private var conversationId: String?
@@ -30,15 +41,30 @@ final class VoiceHUDState: ObservableObject {
     }
 
     /// 声を使い始める。§26 マイクだけを、この瞬間に要求する。
+    ///
+    /// **実際に取り込む。**面は先に出すが、見出しは最初の音声フレームが届くまで「準備中…」で、
+    /// 「聞いています…」と名乗るのはそれからにする（UI の意味と実装状態を一致させる）。
     func beginListening() {
         PermissionCenter.request(.voice)
+        listeningAwaitingAudio = true
         mode = .listening(partial: "")
         AstraEventBus.shared.publish(.voiceStarted)
+        let started = RecordingRuntime.shared.beginVoiceListening(
+            onFirstFrame: { [weak self] in self?.listeningAwaitingAudio = false },
+            onPartial: { [weak self] text in self?.updatePartial(text) },
+            onFinal: { [weak self] text in
+                guard let self, !text.isEmpty else { return }
+                self.speak(text)
+            })
+        // 会議の録音中は録音側の STT から partial が流れてくるので、そちらを正とする。
+        if !started, RecordingWorkspaceState.shared.isRecording { listeningAwaitingAudio = false }
     }
 
     /// 聞くのをやめる（Esc）。マイクが開いている面に逃げ道の鍵が無いのは危ない。
     func cancelListening() {
         guard case .listening = mode else { return }
+        RecordingRuntime.shared.endVoiceListening()
+        listeningAwaitingAudio = true
         mode = .idle
     }
 
@@ -100,6 +126,9 @@ final class VoiceHUDState: ObservableObject {
     /// 戻り値は「dictation として入れたか」。
     @discardableResult
     func speak(_ text: String) -> Bool {
+        // 聞き終えたらマイクを閉じる（開きっぱなしにしない）。
+        RecordingRuntime.shared.endVoiceListening()
+        listeningAwaitingAudio = true
         if Dictation.insert(text) {
             mode = .idle
             answer = ""

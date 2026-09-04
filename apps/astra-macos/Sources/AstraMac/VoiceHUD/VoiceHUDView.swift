@@ -207,15 +207,21 @@ struct ListeningDock: View {
     @Environment(\.colorScheme) private var scheme
     private var dark: Bool { scheme == .dark }
     @ObservedObject private var store = AstraStateStore.shared
+    @ObservedObject private var voice = VoiceHUDState.shared
     let partial: String
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 9) {
-                AstraOrb(active: true)
+                // 取り込みが生きるまでは光らせない（「聞いている」の合図なので）。
+                AstraOrb(active: !voice.listeningAwaitingAudio)
                 MiniWaveform()
                     .frame(width: 44, height: 16)
-                Text(partial.isEmpty ? Facts.listeningPlaceholder : partial)
+                // **取り込みが生きるまで「聞いています…」と名乗らない。**
+                // 切り替えるのは最初の音声フレームの到着（`listeningAwaitingAudio`）で、タイマーではない。
+                Text(partial.isEmpty
+                     ? (voice.listeningAwaitingAudio ? Facts.recordingHeroPreparing : Facts.listeningPlaceholder)
+                     : partial)
                     .font(.system(size: S.type(Metrics.dockSpeechSize)))
                     .foregroundStyle(partial.isEmpty ? Palette.muted(dark) : Palette.text(dark))
                     .lineLimit(1)

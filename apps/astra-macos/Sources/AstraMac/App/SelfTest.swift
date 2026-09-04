@@ -5854,6 +5854,10 @@ enum SelfTest {
                expW: idleSize.width, expH: idleSize.height, minColors: 4)
 
         // 02 voice-hud-listening
+        // 実マイクを開かない撮影なので、「取り込めている姿」を作ってから撮る。
+        // これをしないと、撮るのは名乗る前の「準備中…」になり、実利用者が見る絵ではなくなる
+        // （録音側で `markListening` を先に呼ぶのと同じ理由）。
+        VoiceHUDState.shared.markVoiceCaptureLive()
         VoiceHUDState.shared.mode = .listening(partial: "")
         // Dock は状態ごとに寸法が変わる。期待値も状態から引く（固定値で持たない）。
         let listeningSize = AstraStateStore.shared.dock.size()

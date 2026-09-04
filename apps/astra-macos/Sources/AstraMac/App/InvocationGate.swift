@@ -191,6 +191,36 @@ enum InvocationGate {
             print("  \(acousticNote)")
         }
 
+        // ---- Listening の面（声で頼む）も同じ不変条件で見る。
+        // 以前は `beginListening()` がマイクを開かないまま「聞いています…」と名乗っていた。
+        WindowCoordinator.shared.toggleRecording(); settle(1.0)   // 録音を止めてから（二重に開かない）
+        let hud = VoiceHUDState.shared
+        func listeningHeadline() -> String {
+            hud.listeningAwaitingAudio ? Facts.recordingHeroPreparing : Facts.listeningPlaceholder
+        }
+        var listenClaimedLiveWhileDeaf = false
+        var listenFirstFrameMs: Double?
+        let lt0 = Date()
+        hud.beginListening()
+        let lcap = lt0.addingTimeInterval(4)
+        while Date() < lcap, listenFirstFrameMs == nil {
+            CFRunLoopRunInMode(.defaultMode, 0.002, true)
+            if hud.listeningAwaitingAudio, listeningHeadline() != Facts.recordingHeroPreparing {
+                listenClaimedLiveWhileDeaf = true
+            }
+            if !hud.listeningAwaitingAudio { listenFirstFrameMs = Date().timeIntervalSince(lt0) * 1000 }
+        }
+        let listenHeadlineAfter = listeningHeadline()
+        let listenCaptured = listenFirstFrameMs != nil
+        let micOpenDuringListening = RecordingRuntime.shared.voiceListening
+        hud.cancelListening(); settle(0.5)
+        let micClosedAfterCancel = !RecordingRuntime.shared.voiceListening
+        print("  listening truth: 取り込み開始=\(listenCaptured ? "\(Int(listenFirstFrameMs!))ms" : "しなかった")"
+            + "・名乗り=\(listenHeadlineAfter)・取り込み前に聞いていますと名乗った=\(listenClaimedLiveWhileDeaf ? "1" : "0")"
+            + "・Listening 中にマイクが開いた=\(micOpenDuringListening ? "1" : "0")"
+            + "・Esc で閉じた=\(micClosedAfterCancel ? "1" : "0")")
+        WindowCoordinator.shared.toggleRecording(); settle(1.0)   // 以降の後始末のため録音へ戻す
+
         // 取り込みが生きた後は「準備中…」を名乗り続けない（逆向きの嘘も見る）。
         settle(0.4)
         let headlineAfterLive = dockHeadline()
@@ -203,7 +233,9 @@ enum InvocationGate {
         // 判定は「UI が名乗る状態と実装の状態が一致しているか」。
         // 物理的な窓（~105ms）は残るが、その間 UI は「録音中」と言わないので、
         // 「録音中と見えてから話した音」は落ちない。窓は証拠として併記する。
-        let truthful = !claimedLiveWhileDeaf && !stuckPreparing
+        // Listening も同じ条件で見る: 取り込む前に名乗らない・取り込めている・Esc で閉じる。
+        let listeningTruthful = !listenClaimedLiveWhileDeaf && listenCaptured && micClosedAfterCancel
+        let truthful = !claimedLiveWhileDeaf && !stuckPreparing && listeningTruthful
         let verdict = truthful ? "PASS" : "FAIL"
         let out: [String: Any] = [
             "startedAt": ISO8601DateFormatter().string(from: Date()),
@@ -215,6 +247,14 @@ enum InvocationGate {
                 "stuckPreparingAfterLive": stuckPreparing,
                 "headlineWhileDeaf": headlineWhileDeaf.sorted(),
                 "headlineAfterLive": headlineAfterLive,
+            ],
+            "listeningTruth": [
+                "captured": listenCaptured,
+                "firstFrameMs": listenFirstFrameMs ?? -1,
+                "claimedLiveWhileDeaf": listenClaimedLiveWhileDeaf,
+                "headlineAfterLive": listenHeadlineAfter,
+                "micOpenDuringListening": micOpenDuringListening,
+                "micClosedAfterCancel": micClosedAfterCancel,
             ],
         ]
         if let data = try? JSONSerialization.data(withJSONObject: out, options: [.prettyPrinted, .sortedKeys]) {
