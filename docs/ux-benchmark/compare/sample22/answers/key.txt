@@ -1,0 +1,6 @@
+live_notes: B40C astra-HEAD (docs/golden-screenshots/11-meeting-canvas.png)  FB3C competitor (= sample20/8508, byte-identical)
+captions: BBA5 astra-HEAD (docs/golden-screenshots/04-recording-transcript.png)  875C competitor (= sample20/A7A4, byte-identical)
+meeting_controller: C342 astra-HEAD (docs/golden-screenshots/03-recording-workspace.png を x=0 から 1080x120)  9D56 competitor (= sample20/0DD0, byte-identical)
+post_meeting: 20BC astra-HEAD (docs/golden-screenshots/08-meeting-detail.png)  20C4 competitor (= sample20/D040, byte-identical)
+transcript_attribution: F863 astra-HEAD (docs/golden-screenshots/04-recording-transcript.png)  A2E4 competitor (= sample20/34DC, byte-identical)
+action_confirmation: B0E7 astra-HEAD (docs/golden-screenshots/task-dock/07-confirmation.png)  4E91 competitor (= sample20/A366, byte-identical)

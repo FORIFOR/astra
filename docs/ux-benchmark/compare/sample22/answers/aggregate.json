@@ -1,0 +1,302 @@
+{
+ "live_notes": [
+  {
+   "axis": "information_hierarchy",
+   "opus": "A",
+   "sonnet": "A",
+   "result": "A"
+  },
+  {
+   "axis": "surface_fragmentation",
+   "opus": "A",
+   "sonnet": "A",
+   "result": "A"
+  },
+  {
+   "axis": "screen_occupation",
+   "opus": "ct",
+   "sonnet": "ct",
+   "result": "ct"
+  },
+  {
+   "axis": "state_legibility",
+   "opus": "A",
+   "sonnet": "A",
+   "result": "A"
+  },
+  {
+   "axis": "control_visibility",
+   "opus": "tie",
+   "sonnet": "tie",
+   "result": "tie"
+  },
+  {
+   "axis": "visual_density",
+   "opus": "A",
+   "sonnet": "A",
+   "result": "A"
+  },
+  {
+   "axis": "visual_craft",
+   "opus": "A",
+   "sonnet": "A",
+   "result": "A"
+  },
+  {
+   "axis": "provenance_visibility",
+   "opus": "A",
+   "sonnet": "A",
+   "result": "A"
+  }
+ ],
+ "captions": [
+  {
+   "axis": "information_hierarchy",
+   "opus": "A",
+   "sonnet": "A",
+   "result": "A"
+  },
+  {
+   "axis": "surface_fragmentation",
+   "opus": "A",
+   "sonnet": "A",
+   "result": "A"
+  },
+  {
+   "axis": "screen_occupation",
+   "opus": "ct",
+   "sonnet": "ct",
+   "result": "ct"
+  },
+  {
+   "axis": "state_legibility",
+   "opus": "A",
+   "sonnet": "A",
+   "result": "A"
+  },
+  {
+   "axis": "control_visibility",
+   "opus": "tie",
+   "sonnet": "A",
+   "result": "A1"
+  },
+  {
+   "axis": "visual_density",
+   "opus": "A",
+   "sonnet": "A",
+   "result": "A"
+  },
+  {
+   "axis": "visual_craft",
+   "opus": "A",
+   "sonnet": "tie",
+   "result": "A1"
+  },
+  {
+   "axis": "provenance_visibility",
+   "opus": "tie",
+   "sonnet": "A",
+   "result": "A1"
+  }
+ ],
+ "meeting_controller": [
+  {
+   "axis": "information_hierarchy",
+   "opus": "A",
+   "sonnet": "A",
+   "result": "A"
+  },
+  {
+   "axis": "surface_fragmentation",
+   "opus": "A",
+   "sonnet": "A",
+   "result": "A"
+  },
+  {
+   "axis": "screen_occupation",
+   "opus": "ct",
+   "sonnet": "ct",
+   "result": "ct"
+  },
+  {
+   "axis": "state_legibility",
+   "opus": "A",
+   "sonnet": "A",
+   "result": "A"
+  },
+  {
+   "axis": "control_visibility",
+   "opus": "A",
+   "sonnet": "A",
+   "result": "A"
+  },
+  {
+   "axis": "visual_density",
+   "opus": "C",
+   "sonnet": "C",
+   "result": "C"
+  },
+  {
+   "axis": "visual_craft",
+   "opus": "C",
+   "sonnet": "C",
+   "result": "C"
+  },
+  {
+   "axis": "provenance_visibility",
+   "opus": "C",
+   "sonnet": "ct",
+   "result": "C1"
+  }
+ ],
+ "post_meeting": [
+  {
+   "axis": "information_hierarchy",
+   "opus": "A",
+   "sonnet": "A",
+   "result": "A"
+  },
+  {
+   "axis": "surface_fragmentation",
+   "opus": "C",
+   "sonnet": "C",
+   "result": "C"
+  },
+  {
+   "axis": "screen_occupation",
+   "opus": "C",
+   "sonnet": "ct",
+   "result": "C1"
+  },
+  {
+   "axis": "state_legibility",
+   "opus": "ct",
+   "sonnet": "ct",
+   "result": "ct"
+  },
+  {
+   "axis": "control_visibility",
+   "opus": "tie",
+   "sonnet": "C",
+   "result": "C1"
+  },
+  {
+   "axis": "visual_density",
+   "opus": "C",
+   "sonnet": "A",
+   "result": "split"
+  },
+  {
+   "axis": "visual_craft",
+   "opus": "C",
+   "sonnet": "A",
+   "result": "split"
+  },
+  {
+   "axis": "provenance_visibility",
+   "opus": "A",
+   "sonnet": "A",
+   "result": "A"
+  }
+ ],
+ "transcript_attribution": [
+  {
+   "axis": "information_hierarchy",
+   "opus": "A",
+   "sonnet": "A",
+   "result": "A"
+  },
+  {
+   "axis": "surface_fragmentation",
+   "opus": "C",
+   "sonnet": "C",
+   "result": "C"
+  },
+  {
+   "axis": "screen_occupation",
+   "opus": "ct",
+   "sonnet": "C",
+   "result": "C1"
+  },
+  {
+   "axis": "state_legibility",
+   "opus": "A",
+   "sonnet": "A",
+   "result": "A"
+  },
+  {
+   "axis": "control_visibility",
+   "opus": "A",
+   "sonnet": "A",
+   "result": "A"
+  },
+  {
+   "axis": "visual_density",
+   "opus": "tie",
+   "sonnet": "A",
+   "result": "A1"
+  },
+  {
+   "axis": "visual_craft",
+   "opus": "tie",
+   "sonnet": "tie",
+   "result": "tie"
+  },
+  {
+   "axis": "provenance_visibility",
+   "opus": "A",
+   "sonnet": "A",
+   "result": "A"
+  }
+ ],
+ "action_confirmation": [
+  {
+   "axis": "action_clarity",
+   "opus": "tie",
+   "sonnet": "tie",
+   "result": "tie"
+  },
+  {
+   "axis": "parameter_hierarchy",
+   "opus": "A",
+   "sonnet": "tie",
+   "result": "A1"
+  },
+  {
+   "axis": "preview_readability",
+   "opus": "A",
+   "sonnet": "A",
+   "result": "A"
+  },
+  {
+   "axis": "control_visibility",
+   "opus": "A",
+   "sonnet": "A",
+   "result": "A"
+  },
+  {
+   "axis": "screen_occupation",
+   "opus": "ct",
+   "sonnet": "ct",
+   "result": "ct"
+  },
+  {
+   "axis": "visual_craft",
+   "opus": "A",
+   "sonnet": "A",
+   "result": "A"
+  },
+  {
+   "axis": "error_prevention",
+   "opus": "A",
+   "sonnet": "A",
+   "result": "A"
+  },
+  {
+   "axis": "provenance_visibility",
+   "opus": "A",
+   "sonnet": "A",
+   "result": "A"
+  }
+ ]
+}

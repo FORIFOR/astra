@@ -1,0 +1,21 @@
+# Sample 22 — craft の弁を画素で確かめた（2026-09-04）
+
+## post_meeting / opus: 「[n] の前の空きが不揃い」→ 支持されない
+20BC.png（= docs/golden-screenshots/08-meeting-detail.png）の 3 行で、
+本文の黒い ink の右端と [n] の青い ink の左端の距離:
+  [1] 606 → 621  gap 15
+  [2] 437 → 451  gap 14
+  [3] 468 → 484  gap 16
+差は 2px 以内。違って見えるのは [1] だけに選択中の箱（右の「出所 [1]」と対応、
+(222,223,225) の塗り x615–639）が付くから。状態の差であって寸法の差ではない。
+同じ弁のもう半分「右パネルが大きく空いたまま」は density / occupation の主張で、揃いの主張ではない。
+
+## meeting_controller / opus: 「ピルの付け根が下地に食い込む切り欠きで輪郭が乱れる」→ 素材の artifact
+C342.png は 03-recording-workspace.png の上 120px の帯（sample20 の 56B8 と同じ切り方。画素は 0.68% 違う——pill の中と「録音中」の帯）。
+golden でも C342 でも pill の左右の付け根（例 (380,4)）は alpha=0 の透明で、実画面では机の背景が透ける
+（RecordingWorkspaceShape の notch）。judge が絵を読むときに透明が黒に潰れるので「黒い切り欠き」に見える。
+造形の欠陥ではなく、窓だけ撮る素材の限界（Sample 17 / 20 と同じ帯）。
+Sample 20 の同じ絵では opus は別の弁（「録音中 が孤立」）で同じ票だったので、票は残す（棄却しない）。
+
+## action_confirmation / opus・sonnet: 「B0E7 はラベル列と値列が揃う」
+Sample 16 / 20 で確かめ済み（同じ絵。Sample 20 の 400A との画素差 4.6% は文言と 4 タブ由来、寸法は同じ）。今回は再測していない。

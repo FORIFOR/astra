@@ -1,0 +1,9 @@
+# Astra 側の絵が Sample 20 からどれだけ動いたか（ImageChops.difference、閾値 0、alpha 込み）
+# 競合側 6 枚は sample20 と md5 一致（sample20 → sample11/12/17/19/18/16 の複製）
+live_notes              B40C vs 4D6A  1080x680  9647 px  1.31%   bbox (23,12,1035,657)
+captions                BBA5 vs 33F9  1080x680  7652 px  1.04%   bbox (23,12,1035,657)
+meeting_controller      C342 vs 56B8  1080x120   880 px  0.68%   bbox (23,12,677,93)
+post_meeting            20BC vs D2B3  1240x820 20420 px  2.01%   bbox (18,72,960,620)   ← 4 タブ sidebar（7b2865d）
+transcript_attribution  F863 vs 2667  1080x680  7652 px  1.04%   bbox (23,12,1035,657)
+action_confirmation     B0E7 vs 400A   560x254  6568 px  4.62%   bbox (19,19,540,238)   ← 文言（500c53a）
+# 差分の出所は 3b870ce までの commit（文言 500c53a、4 タブ 7b2865d）。列の x を確かめたのは post_meeting の [n] 3 行だけ（craft-check.txt）

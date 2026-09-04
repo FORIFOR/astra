@@ -657,3 +657,106 @@ Library（結論を読む面）では話者の accent は結論と競合する�
 限界: 有効 3 名のうち sonnet は 1 名。j4（sonnet）は craftL の j2 と同じく色差そのものを見ていない。
 測定器では差があり（画素 −44%）、opus 2 名と sonnet 1 名は知覚し、sonnet 1 名は知覚しなかった、
 までに留める。
+
+---
+
+# Sample 22 — FINAL_COMPETITIVE_GATE の公開素材ぶん。凍結後の HEAD（3b870ce）で型 6 種を測り直す（2026-09-04）
+
+本人の指摘「変更後の総合競合 benchmark をまだ再実行していない」に対する再実行。Sample 20 のあと
+Astra 側で動いたのは 500c53a（文言）・7b2865d（4 タブ）・96a0405（privacy、絵は変わらない）・
+3b870ce（Calendar、Home だけ）。Sample 20 と**同じ 6 型・同じ問い・同じ 2 名（opus / sonnet、
+prompt と絵 2 枚しか見ない）**。競合 6 枚は sample20 と md5 一致（= DS-05 の素材のまま）。
+Astra 6 枚は golden（`docs/golden-screenshots`、verify-all 9/9 一致）から取り、Sample 20 との
+画素差は 0.7〜4.6%（`answers/diff-vs-sample20.txt`。文言と sidebar の項目）。
+
+```
+B40C  astra-HEAD  11-meeting-canvas.png                    FB3C = sample20/8508
+BBA5  astra-HEAD  04-recording-transcript.png              875C = sample20/A7A4
+C342  astra-HEAD  03-recording-workspace を x=0 から 1080x120  9D56 = sample20/0DD0
+20BC  astra-HEAD  08-meeting-detail.png                    20C4 = sample20/D040
+F863  astra-HEAD  04-recording-transcript.png              A2E4 = sample20/34DC
+B0E7  astra-HEAD  task-dock/07-confirmation.png            4E91 = sample20/A366
+```
+
+```
+Sample 22  live_notes              Astra 6 / 競合 0 / 引分 1 / ct 1     （Sample 20: 7 / 0 / 0 / 1）
+           captions                Astra 7 / 競合 0 / 引分 0 / ct 1     （Sample 20: 6 / 0 / 1 / 1）
+           meeting_controller      Astra 4 / 競合 3 / 引分 0 / ct 1     （Sample 20: 4 / 2 / 1 / 1）
+           post_meeting            Astra 2 / 競合 3 / 引分 2 / ct 1     （Sample 20: 4 / 2 / 1 / 1）
+           transcript_attribution  Astra 5 / 競合 2 / 引分 1 / ct 0     （Sample 20: 5 / 3 / 0 / 0）
+           action_confirmation     Astra 6 / 競合 0 / 引分 1 / ct 1     （Sample 20: 6 / 0 / 1 / 1）
+           合計                    Astra 30 / 競合 8 / 引分 5 / ct 5    （Sample 20: 32 / 7 / 4 / 5）
+```
+
+集計の規則は Sample 20 と同じ: 1 型 = 1 票、2 名が割れたら引分、tie / ct は勝ちに数えない。
+弁と票が矛盾する判定は無かった（占有で票を入れたのは post/opus「壁紙の上の小窓 vs 画像いっぱい」と
+attr/sonnet「カードの外に壁紙が見える」で、どちらも弁のとおり）。生の票は `sample22/answers/aggregate.json`。
+
+## 軸別（有効 6 型。¹ = 1 票、もう 1 名が tie / ct）
+
+```
+                        live  cap   ctrl   post   attr  conf   Sample 22   Sample 20
+information_hierarchy   A     A     A      A      A     —      5/5         5/5
+state_legibility        A     A     A      ct     A     —      4/5         4/5
+provenance_visibility   A     A¹    C¹     A      A     A      5/6         5/6
+surface_fragmentation   A     A     A      C      C     —      3/5         3/5
+control_visibility      tie   A¹    A      C¹     A     A      4/6         5/6
+visual_density          A     A     C      割れ    A¹    —      3/5         2/5
+visual_craft            A     A¹    C      割れ    tie   A      3/6         5/6
+screen_occupation       ct    ct    ct     C¹     C¹    ct     0/6         0/6
+```
+
+## 動いた軸と、その弁
+
+```
+visual_craft   5/6 → 3/6
+  ctrl  割れ → 競合   opus「ピルの付け根が下地に食い込む切り欠き」= 窓だけ撮った帯の透明部が
+                       黒に潰れて見えている（golden も C342 も alpha=0。craft-check.txt）。
+                       sonnet「録音中 がピルから離れて浮く」= Sample 17 で見た弁の再来
+  post  A → 割れ      opus「[n] の前の空きが不揃い」→ 画素では 15 / 14 / 16 px、差 2px 以内。
+                       違って見えるのは [1] だけ選択中の箱が付くから（状態の差）。sonnet は Astra
+  attr  A → tie       opus「カード下部が大きく空く」vs「A2E4 は解像感が粗い」で決められない。
+                       sonnet「粗さの有無を区別できない」
+control_visibility 5/6 → 4/6
+  live  A¹ → tie      2 名とも「FB3C にも Done と各窓の × がある」
+  post  tie → C¹      sonnet「20C4 は戻る・検索・共有・Ask anything・Follow-up が同時に見える」
+                       （Sample 20 と同じ弁）
+visual_density 2/5 → 3/5
+  cap   tie → A       opus「875C は箇条書きが下端の入力欄の裏に切れる」
+  attr  C¹ → A¹       sonnet「F863 は密度がちょうどよく、A2E4 は余白が多すぎる」
+```
+
+craft の 3 つはどれも **Sample 20 から動いた画素（文言・sidebar）を指していない**。ctrl の絵は
+pill の中と「録音中」の帯だけが 0.68% 違い、判定が変わった弁は帯の切り方の話。post の弁は測って
+2px 以内。つまり craft の落ちは 7b2865d / 500c53a の結果ではなく、panel の ±2〜3 軸の揺れと
+素材の限界（帯の透明部、窓だけ撮影）に収まる。凍結（DESIGN_SYSTEM §0）を解く根拠は出ていない。
+
+## 型ごとの結論（FINAL_COMPETITIVE_GATE の公開素材ぶん。REALITY_GATES.md に転記）
+
+```
+Live Notes            勝つ    6/8、負けた軸なし。競合（SuperIntern AI Canvas）は Note / Transcript が別窓で重なる
+Captions              勝つ    7/8、負けた軸なし。競合は 2 窓 + 検索欄が見出しに被る
+Action Confirmation   勝つ    6/8、負けた軸なし。本文が切れない・「外部に出る」・出所 ›・esc / ⌘⏎
+Transcript Attribution 勝つ   5/8。負けは fragmentation（浮くバー + 左右 + 入力欄）と occupation（窓だけ撮影）
+Meeting Controller    割れる  4 / 3。今の用事（録音中・04:21・停止・一時停止）は勝ち、
+                              行の揃い・密度・入力機器名（Microphone / System Audio）は SuperIntern Control Bar が勝つ
+Post-meeting          割れる  2 / 3 / 2。要約→決定→やること の階層と [n] → 出所 は勝ち、
+                              1 窓のまとまり・操作の数・占有は SuperIntern が勝ち、density / craft は 2 名が割れる
+```
+
+Meeting Controller の provenance 1 票（「Microphone: MacBook Air…」）は、`.meeting` をマイクだけに
+した今、Astra の帯には**出す入力機器が 1 つしか無い**ことと対応する。MEETING_CAPTURE_REALITY で
+system audio を繋ぐ日に、この行が本当に要るかが決まる（UI 案はまだ作らない）。
+
+## 限界
+
+```
+- 同じ絵で ±2〜3 軸ぶれる panel。1 型の 1 票差は読まない（合計 30/8 と 32/7 は同じ範囲）
+- 公開素材が無い型は測っていない: Invocation / Listening / Task Running（VoiceOS）、
+  Workspace / Library / Recovery（相手なし）。本人の hands-on 取得（voiceos/handson、
+  superintern/handson、metadata.yaml に版と取得日）が来るまで NOT_COMPARABLE
+- 競合は 2026-09-02 取得の公式素材（SuperIntern v0.10 / v0.14 の記事、VoiceOS 版表記なし）のまま
+- ctrl の帯は透明部が黒く読まれる（craft-check.txt）。次に帯を作るなら机の背景を合成してから出す
+- 12 名分の弁は sample22/results/*.json、問いは sample22/prompts/*.md、復号は answers/key.txt
+- captions/opus の JSON は observations の閉じ括弧が 1 つ欠けて届いたので、それだけ足した（票と弁は無改変）
+```
