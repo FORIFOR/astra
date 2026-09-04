@@ -5185,6 +5185,11 @@ enum SelfTest {
         recording.loadDemo(ragOpen: false)
         store.meetingDetected(app: "Google Meet")
         recording.start(); settle(0.8)
+        // 録音の立ち上がり（マイク + STT）は機械の忙しさで 0.8 秒を超えることがあり、そのとき
+        // dock-meeting が controls=0 / A11Y_RECORDING found=false で記録された（同じ build で再実行すると 5 / true）。
+        // 記録が環境の忙しさで変わらないよう、Dock に押せる要素が出るまで最長 3 秒待つ。
+        let dockDeadline = Date().addingTimeInterval(3)
+        while collect(windowTitles: []).controls.isEmpty && Date() < dockDeadline { settle(0.3) }
         add(report("dock-meeting", titles: []))
         // 録音中の名前: 「録音中」であることが AX 名として読めるか（Recording Accessible Name）
         let rec = collect(windowTitles: [])

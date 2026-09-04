@@ -37,3 +37,22 @@ Tab は本物の key event を送り、AX の focused element が動いたか、
     OFF では Tab で止まる先が無い）。
   - キーボードナビゲーション ON のときは **未測定**（OS 設定を検査が変えない）。
 - VoiceOver の実読み上げは未測定（AX 名の記録まで）。
+
+## 2026-09-04 の再測（`2026-09-04-a11ynames-4tab.tsv`、NAV 4 面 7b2865d のあと、同じ環境）
+
+| 面 | 押せる要素 | 名前なし | 英語だけの名前 |
+|---|---|---|---|
+| main work / library / apps | 8 / 11 / 12 | 0 | 5（Tasks / Agents / Meetings / Files / Plugins / Connectors の chip を含む） |
+
+- 中の面を切り替える chip（`SubNav`）は AXButton として名前つきで読まれる（Tasks / Agents …）。英語なのは
+  上位ナビ（Home / Work / Library / Apps）と同じ扱い（記録のみ）。
+- Tab の結果は前回と同じ（main-home 6 回動いて全部見える、workspace は 8 回目で入力欄、settings は動かない）。
+- 1 回だけ `dock-meeting` が controls=0 / `A11Y_RECORDING found=false` で記録された。同じ build で再実行すると
+  5 / true。録音の立ち上がりが 0.8 秒に収まらなかっただけなので、Dock に押せる要素が出るまで最長 3 秒待つ
+  ようにした（測定器の癖。製品の変化ではない）。
+
+## 測っていないもの（OS 設定を検査が変えないので、専用ユーザー / VM で人が行う）
+
+`RUNBOOK.md` に手順。結果は同じ形の TSV をこの dir に置く。
+- キーボードナビゲーション ON の Tab（`KEYBOARD_TRAVERSAL`）
+- VoiceOver の実読み上げ（`VOICEOVER`）

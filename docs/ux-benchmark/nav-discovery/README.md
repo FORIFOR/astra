@@ -31,3 +31,23 @@ Q1 は「いま Home を開いている」のに sidebar を押させたので�
   配布版の Home には出ないので、この alt は環境の癖。
 - 判断: 発見 4/4・Journey 無退行・B より悪くないので**変更は残す**。Q1 の「Work が候補に上がる」は
   記録のみ（B 案は作らない。欠陥として本人が扱うなら、その時に測定器を先に）。
+
+## ゲートの定義（2026-09-04、本人の決定で改めた）
+
+「alt を 1 つでも挙げたら迷った」は厳しすぎた（「新しい仕事を始める」で Work を思い浮かべるのは自然で、
+6 タブでも 0/3）。主ゲートと記録指標に分ける:
+
+```
+PRIMARY_DISCOVERY（主ゲート）
+  top-1 correct                >= 2/3 の判定者で正答が最初の選択
+  all evaluators find target   3/3 が対象を見つける（alt を含めてよい）
+  catastrophic wrong location  0（正答でも alt でもない場所を押す判定者が 0）
+  journey regression           0（verify-journeys.sh が success のまま）
+ALTERNATIVE_AMBIGUITY（記録指標。PASS/FAIL を持たない）
+  alt を挙げた判定者の数を問いごとに書く
+```
+
+panel2 の A をこの定義で読む: top-1 correct 4 問とも 3/3、find 3/3、catastrophic 0、journey 0 →
+**PRIMARY_DISCOVERY = PASS**。ALTERNATIVE_AMBIGUITY = Q1 3/3・Q2 2/3・Q3 2/3・Q4 0/3（記録）。
+
+判定（本人、2026-09-04）: NAV_4_TAB = ADOPT / NAV_DISCOVERY = PASS / NAV_AMBIGUITY = RECORDED。

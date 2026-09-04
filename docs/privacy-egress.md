@@ -74,3 +74,21 @@ Info.plist の `NSSpeechRecognitionUsageDescription` は「音は端末から出
 負例で確かめたこと（gate が落ちる）: `requiresOnDeviceRecognition = recognizer.supportsOnDeviceRecognition`
 に戻す → FAIL、`RecordingRuntime.shared.configureBackend` を旗の外へ出す → FAIL、
 `.meeting` に `.screenRecording` を戻す → FAIL。
+
+## 残す実機確認（Privacy とは別の gate: Meeting Capture Reality）
+
+`.meeting` をマイクだけにしたので、Privacy は PASS でも**会議の録れ方**は別に確かめる（本人の指示、2026-09-04）。
+実際の Meet / Zoom で、スピーカー再生の状態で 1 度録って次を見る:
+
+```
+MEETING_CAPTURE_REALITY
+  local mic                captured   （自分の声が文字起こしに出る）
+  remote speaker           captured   （相手の声がマイク経由で拾えている / 拾えていない）
+  system audio             captured   （いまは未接続なので NOT_CAPTURED が正直。繋いだら再測定）
+  screen permission        not required（録音開始で画面収録のダイアログが出ない）
+```
+
+相手の声が拾えないなら、それは system audio（ScreenCaptureKit / 仮想デバイス）を繋ぐ課題で、
+繋いだ時点で `.meeting` の JIT に「相手の声も記録する」として 画面収録 を戻す（`verify-privacy-egress.sh` は
+`captureSystemAudio: true` と `.screenRecording` が**両方**あるときだけそれを PASS にする）。
+自分では実会議を開けないので、この 4 行は本人の実機で。
