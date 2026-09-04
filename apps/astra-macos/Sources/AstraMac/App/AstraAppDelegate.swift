@@ -56,6 +56,9 @@ final class AstraAppDelegate: NSObject, NSApplicationDelegate {
             // 許可が無いこと自体は状態として持ち、画面がそれを見る。
             NSLog("astra: ⌥Space を登録できない（入力監視の許可が要る）")
         }
+        // マイクが許可済みなら engine だけ先に用意する（IO は始めない・求めない）。
+        // ⌥Space から音が届くまでを短くする（INVOCATION gate の実測）。
+        RecordingRuntime.shared.prewarmMic()
         // 前回落ちたまま残っている録音があれば知らせる（§3 meeting recovery）。
         let recoverable = RecordingRuntime.shared.recoverableMeetings()
         if !recoverable.isEmpty {

@@ -46,4 +46,12 @@ final class MicCapture {
         engine.inputNode.removeTap(onBus: 0)
         engine.stop()
     }
+
+    /// 起動を速くするため、資源だけ先に確保する。**IO は始めない・許可も求めない**
+    /// （呼ぶ側がマイク許可済みのときだけ呼ぶ）。実測: 新しい engine は start に 200〜770ms、
+    /// prepare 済みなら 77ms、止めた engine の再 start は 47〜170ms。最初のバッファは start の +100ms。
+    func prewarm() {
+        _ = engine.inputNode
+        engine.prepare()
+    }
 }

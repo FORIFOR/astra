@@ -75,6 +75,7 @@ enum SelfTest {
         case "dock8": dock8(args); return true
         case "dockanim": dockAnim(); return true
         case "surfacemotion": SurfaceMotionGate.run(args); return true
+        case "invocation": InvocationGate.run(args); return true
         case "entry": entryPoints(); return true
         case "menutitles": menuTitles(); return true
         case "facts": facts(); return true
@@ -4714,7 +4715,7 @@ enum SelfTest {
     }
 
     /// AIFF/任意の音声を 16kHz mono Float32 の配列へデコードする。
-    private static func decodeTo16kMonoF32(_ url: URL) -> [Float]? {
+    static func decodeTo16kMonoF32(_ url: URL) -> [Float]? {
         guard let file = try? AVAudioFile(forReading: url) else { return nil }
         let src = file.processingFormat
         guard let dst = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: 16_000,

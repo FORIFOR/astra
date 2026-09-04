@@ -142,7 +142,7 @@ for appearance in light dark; do
   [[ "$OUTD" == *SELFTEST_OK* ]] || { echo "$OUTD" >&2; echo "FAIL: Task Dock 8 states ($appearance)" >&2; exit 1; }
 done
 
-for t in screenshot waveform livemic livemeeting livescreen sttrecognize sttstream guishot axtree a11ynames calendarask egress navtitle recoveryui focus upgrade breakpoints dictation state presence perf storage meetingiq vad browser dockanim entry update secret recordbutton session uiscale acceptance sessionsync; do
+for t in screenshot waveform livemic livemeeting livescreen sttrecognize sttstream guishot axtree a11ynames calendarask egress navtitle recoveryui focus upgrade breakpoints dictation state presence perf storage meetingiq vad browser dockanim invocation entry update secret recordbutton session uiscale acceptance sessionsync; do
   # `set -e` の下で $(…) が非 0 で返ると echo の前に落ち、どの検査が何と言って落ちたかが
   # ログに残らない（"^ FAILED" だけ）。出力を必ず残してから判定する。
   OUT="$("$BIN" --selftest "$t")" || true

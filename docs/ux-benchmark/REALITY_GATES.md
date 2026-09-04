@@ -130,6 +130,78 @@ remote speaker が not なら、直すのは UI ではなく system audio（Scre
 繋いだ時点で `.meeting` の JIT に「相手の声も記録する」として画面収録を戻す（`verify-privacy-egress.sh` は
 `captureSystemAudio: true` と `.screenRecording` が両方あるときだけ PASS）。
 
+## §D INVOCATION_WORLD_CLASS_GATE — 呼んだ瞬間を ms で測る（2026-09-04）
+
+「⌥Space を押してから Astra が反応するまで」を層 A（直接計測）で測る。測定器は
+`--selftest invocation [outDir]`（`InvocationGate.swift`、`result.json` を残す）。本番と同じ経路
+（`GlobalShortcut` → `WindowCoordinator.toggleRecording()` → `RecordingWorkspaceState.start()`）を通す。
+初回 ⌥Space は音声 HAL・SwiftUI・panel の cold を通るので 1 回捨て、2 回目以降（steady-state）を測る。
+cold も別に記録する。この Mac（macOS 26.6.2、2026-09-04、責任プロセスに入力監視・音声認識の許可なし）:
+
+```
+INVOCATION_WORLD_CLASS_GATE（steady-state、5 回の代表値）
+  idle screen occupation        0.47%    < 1%      PASS   220x44pt / 1920x1080（1440x900 なら 0.75%）
+  shortcut → visible feedback   30–33ms  < 100ms   PASS   ← 直した（前は 180–410ms）。cold 初回も 57–61ms
+  shortcut → microphone ready    ~320ms  < 200ms   MISS   音声 IO の最初のバッファ ~100ms が下限。回帰ではない
+  speech end → processing state 21–64ms  < 150ms   PASS
+  cancel latency (Esc)          13–27ms  < 100ms   PASS
+  focus theft                   0        0         PASS
+  extra windows                 0        0         PASS
+  hotkey delivery               —                  NOT_MEASURED  入力監視なし（handler 直呼び。OS の受信を含まない）
+  speech → first transcript     —        < 400ms   NOT_MEASURED  音声認識の許可がこの責任プロセスに無い
+```
+
+直したこと（層 A の失敗 → 最小修正）: `visible feedback` は 180–410ms で基準外だった。原因は
+`MicCapture`（AVAudioEngine）の `start()` を主スレッドで待っていたこと（実測 60–170ms、cold は 200–770ms）。
+engine を裏の直列 queue で起動し、画面は先に変える（開くまでの数十 ms は既存の「まだ音が届いていません」が出る）。
+engine は録音のたびに作らず 1 台を使い回し、起動時に `prewarmMic()`（許可済みのときだけ `prepare()`。IO も要求も
+しない）で資源を用意する。結果 30–33ms（cold 初回も 57–61ms）。回帰ガード（`InvocationGate` の regressionCeiling、
+feedback<150ms 等）に入れた。録音・privacy・no-contradiction・pause・timer・sysaudio・JIT は緑のまま。
+
+`microphone ready` の ~320ms は世界最高の目標に未達だが**回帰ではない**（gate は build を落とさない）。
+下限は音声入力の最初の IO バッファ（この Mac で 4800 frames = 48kHz の 100ms）＋起動＋主スレッドへの hop。
+<200ms に届かせるには (a) マイクを常時開けておく（待機中に録音インジケータが点く＝privacy コスト、却下）か
+(b) 入力デバイスの buffer frame size を小さくする（capture 全体に影響する深い変更）のどちらか。今は測って記録だけ。
+speech → first transcript は音声認識の許可がこの責任プロセスに無いので測れない（本人のターミナル署名 .app で測る）。
+
+## WORLD_CLASS_UX_GATE — 世界一を数値で確かめる（2026-09-04、本人の定義）
+
+「美しさ」ではなく数値。各行は測定器を持つか、持つべき。archetype ごとに**その面の最強の相手**と戦わせる
+（平均的な競合ではなく）。
+
+```
+指標                          目標              いまの測定器 / 値
+Intent 開始まで               < 1s              §D visible feedback 30–33ms（PASS）
+Listening feedback            < 100ms           §D visible feedback（PASS）
+不要な focus theft            0                 §D / JA / surfacemotion = 0（PASS）
+通常操作の追加 window         0                 §D / JA / JB / JC windows+0（PASS）
+Stop 可能な Agent state       100%              JA Confirmation で ⌘⏎/esc（層 A）
+外部副作用前 Confirmation      100%             CONFIRMATION_GATE=PASS
+AI conclusion → Source        ≤ 1 click         JB Source 1 操作（PASS）
+Error → Recovery action       ≤ 1 click         JC マイク拒否→回復 1 操作（PASS）
+top-level navigation 発見      ≥ 95%            NAV 4 面盲検 発見 12/12（nav-discovery）
+keyboard-only core journeys   100%             ACCESSIBILITY_GATE（§2、人の実機、NOT_MEASURED）
+VoiceOver core journey        100%             ACCESSIBILITY_GATE（同上）
+idle occupation               < 1% screen       §D 0.47%（PASS）・occupation selftest
+task completion               主要競合以上       §C（型ごと）+ hands-on
+```
+
+archetype ごとの「最強の相手」（総合ではなく、その面で一番強い製品と戦う）:
+
+```
+Invocation        → Raycast / VoiceOS      （§D は自分の実測。相手は hands-on 素材待ち）
+Dictation         → Wispr Flow
+Meeting calmness  → Granola
+Post meeting      → Notion
+Screen context    → VoiceOS / Copilot Vision
+Confirmation / Provenance → Astra 自身の基準（§C で WIN / SPLIT）
+Agent execution   → 上位 Agent UI
+```
+
+出典は公開素材のみ・版と取得日を `*/metadata.yaml` に記録（既存の盲検規約と同じ）。「Astra が製品全体として
+上回った」とはまだ言わない。§C の 4 型（公開素材）は済み、5 型と WORLD_CLASS の人の実機分（keyboard / VoiceOver /
+実 Meet / 音声認識 latency）は本人の端末で埋める。
+
 ## 直すときの規則
 
 ```

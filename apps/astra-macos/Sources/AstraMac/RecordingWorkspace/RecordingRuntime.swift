@@ -33,7 +33,12 @@ final class RecordingRuntime {
         if Thread.isMainThread { listening.insert(ch) }
         else { DispatchQueue.main.async { self.listening.insert(ch) } }
     }
-    private var mic: MicCapture?
+    /// マイクは 1 台を使い回す（録音のたびに新しい engine を作ると起動が 200〜770ms かかる）。
+    /// start / stop はこの直列 queue でだけ触る（主スレッドを止めない・同時に触らない）。
+    private let micCapture = MicCapture()
+    private let micQueue = DispatchQueue(label: "astra.mic", qos: .userInitiated)
+    private var micActive = false
+    private var micGeneration = 0
     private var sysAudio: AnyObject?
     private var speech: SpeechTranscriber?
     /// 文字起こしを頼まれたのに、この Mac ではオンデバイス STT が始められなかった。
@@ -122,28 +127,40 @@ final class RecordingRuntime {
             }
         }
         if captureMic {
-            let mic = MicCapture()
-            do {
-                try mic.start { [weak self, weak session] frame in
-                    _ = session?.pushSamples(samples: frame, sampleRate: 16_000)
-                    // §12 VAD: 声が乗っているフレームだけ STT へ流す（無音を延々と認識させない）。
-                    // 一時停止中は文字起こしもしない（session 側は core が sample を捨てる）。
-                    if self?.paused != true, self?.vad.accept(frame) == true {
-                        self?.currentChannel = .localUser
-                        self?.markListening(.localUser)
-                        if self?.speechStartedAt == nil { self?.speechStartedAt = Date() }
-                        self?.speech?.append(frame, sampleRate: 16_000)
+            let mic = micCapture
+            // AVAudioEngine の起動を主スレッドで待つと、⌥Space から Dock が動くまでがそのぶん遅れる
+            // （実測 170〜520ms、基準 <100ms）。画面は先に変わり、マイクは裏で開く。
+            // 開くまでの数十 ms は「まだ音が届いていません」が出る（それが本当の姿）。
+            micGeneration += 1
+            let gen = micGeneration
+            micActive = true
+            micQueue.async { [weak self, weak session] in
+                do {
+                    try mic.start { frame in
+                        _ = session?.pushSamples(samples: frame, sampleRate: 16_000)
+                        // §12 VAD: 声が乗っているフレームだけ STT へ流す（無音を延々と認識させない）。
+                        // 一時停止中は文字起こしもしない（session 側は core が sample を捨てる）。
+                        if self?.paused != true, self?.vad.accept(frame) == true {
+                            self?.currentChannel = .localUser
+                            self?.markListening(.localUser)
+                            if self?.speechStartedAt == nil { self?.speechStartedAt = Date() }
+                            self?.speech?.append(frame, sampleRate: 16_000)
+                        }
+                        // 波形用の音量（peak）を出す。
+                        var peak: Float = 0
+                        for v in frame { let a = abs(v); if a > peak { peak = a } }
+                        let level = min(1, peak * 1.6)   // 見やすさのため少し持ち上げる
+                        DispatchQueue.main.async { self?.onLevel?(level) }
                     }
-                    // 波形用の音量（peak）を出す。
-                    var peak: Float = 0
-                    for v in frame { let a = abs(v); if a > peak { peak = a } }
-                    let level = min(1, peak * 1.6)   // 見やすさのため少し持ち上げる
-                    DispatchQueue.main.async { self?.onLevel?(level) }
+                } catch {
+                    // マイクが開けなくてもセッションは成り立たせる（サンプルは外から push できる）
+                    NSLog("mic capture unavailable: \(error)")
                 }
-                self.mic = mic
-            } catch {
-                // マイクが開けなくてもセッションは成り立たせる（サンプルは外から push できる）
-                NSLog("mic capture unavailable: \(error)")
+                // 開いている間に end() が来ていたら、いま止める（開きっぱなしにしない）。
+                DispatchQueue.main.async { [weak self] in
+                    guard let self else { mic.stop(); return }
+                    if !self.micActive || self.micGeneration != gen { self.micQueue.async { mic.stop() } }
+                }
             }
         }
         if captureSystemAudio, #available(macOS 13.0, *) {
@@ -173,6 +190,13 @@ final class RecordingRuntime {
 
     func snapshot() -> RecordingSnapshot? { session?.snapshot() }
     func recordedMs() -> UInt64 { session?.recordedMs() ?? 0 }
+
+    /// マイク engine を先に用意する（⌥Space → 音が届くまでを短くする）。
+    /// **許可済みのときだけ**。未確認なら何もしない（求めるのは録音を始める瞬間、§26）。
+    func prewarmMic() {
+        guard Permissions.microphone == .granted else { return }
+        micQueue.async { [micCapture] in micCapture.prewarm() }
+    }
     func setPaused(_ paused: Bool) {
         self.paused = paused
         session?.setPaused(paused: paused)
@@ -182,7 +206,11 @@ final class RecordingRuntime {
     func end() {
         vad.reset()
         speechStartedAt = nil
-        mic?.stop(); mic = nil
+        if micActive {
+            micActive = false
+            // 止めたあと次の録音のために資源だけ確保し直す（IO は始めない）。
+            micQueue.async { [micCapture] in micCapture.stop(); micCapture.prewarm() }
+        }
         speech?.finish(); speech = nil
         transcriptionUnavailable = false
         if #available(macOS 13.0, *), let sys = sysAudio as? SystemAudioCapture {
