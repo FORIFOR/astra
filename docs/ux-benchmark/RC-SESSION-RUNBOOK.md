@@ -21,6 +21,21 @@ gh run list --limit 1              # ci が success になるまで
 `01-voice-hud-idle` が落ちるのは、回した端末に**入力監視の許可が無い**とき（待機 HUD の案内が
 「⌥ space」ではなく「クリック」になる）。許可のあるターミナルで回せば通る。
 
+**2026-09-05 に切り分け済み。** 署名 .app（入力監視は許可済み。`--selftest shortcut` が
+`registered=true receivedSyntheticPress=true`）で撮り直すと **light / dark とも golden 10 面が一致**した:
+
+```bash
+open apps/astra-macos/.build/Astra.app --args --selftest shots /tmp/astra-rc/shots-light
+open apps/astra-macos/.build/Astra.app --args --selftest shots /tmp/astra-rc/shots-dark dark
+# 比較は画素演算だけなので許可の要らない実行体でよい
+apps/astra-macos/.build/debug/AstraMac --selftest golden docs/golden-screenshots      /tmp/astra-rc/shots-light
+apps/astra-macos/.build/debug/AstraMac --selftest golden docs/golden-screenshots/dark /tmp/astra-rc/shots-dark
+# → SELFTEST_OK golden: 10面が committed の golden と一致（両方）
+```
+
+つまり golden の失敗は**環境の許可**の問題で、UI の後退ではない。新しい `02b-voice-hud-preparing` も
+署名 .app 側の撮影と一致しているので、撮り直しは要らない。
+
 ## 1. 署名済み .app を 1 本だけ作る
 
 TCC は**署名されたバンドル**に紐づく。ターミナルから実行体を直に叩くと責任プロセス（ターミナル）の
