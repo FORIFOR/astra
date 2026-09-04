@@ -45,6 +45,7 @@ AI の内部思考を読ませない。**何をしているか・何をしたか
 ✓ Calendar を読んだ
 ○ 承認を待っている   [確認する]
 ```
+
 ではなく「予定を検討しています…」のような独り言を流さない。
 
 - 反例: 思考の実況。読んでも何も決められない
@@ -78,11 +79,11 @@ UI を変えるときは、その変更がどの原則に効くかを書く。
 定性評価（`docs/ux-benchmark/qualitative/`）の 10 軸は、この 6 原則を
 人が感じ取れるかを測るもの。原則 → 軸の対応:
 
-| 原則 | 効く軸 |
-| --- | --- |
-| 1 INVISIBLE UNTIL NEEDED | Calmness |
-| 2 ONE SURFACE | Continuity |
-| 3 ZERO BLANK STATE | Clarity / Hierarchy |
-| 4 SHOW ACTION, NOT THOUGHT | Trust / Control |
-| 5 VERIFIABLE | Trust / Context |
-| 6 CORRECTION AT THE POINT | Control / Efficiency |
+| 原則                       | 効く軸               |
+| -------------------------- | -------------------- |
+| 1 INVISIBLE UNTIL NEEDED   | Calmness             |
+| 2 ONE SURFACE              | Continuity           |
+| 3 ZERO BLANK STATE         | Clarity / Hierarchy  |
+| 4 SHOW ACTION, NOT THOUGHT | Trust / Control      |
+| 5 VERIFIABLE               | Trust / Context      |
+| 6 CORRECTION AT THE POINT  | Control / Efficiency |

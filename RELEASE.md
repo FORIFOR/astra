@@ -40,27 +40,27 @@ DS-01〜06 の造形規則、Craft Freeze、journey J-A/J-B/J-C（頼む・録�
 **前の版**: https://github.com/FORIFOR/astra/releases/tag/v0.1.0
 （`Astra-0.1.0.zip` sha256 `571a00271f8469036464333233ee285e27d19480a1c611b2c52661c49235310b`）
 
-| | 状態 |
-| --- | --- |
-| 版番号の一致 | ✅ 0.1.1 で 4 か所一致（`verify-release-consistency.sh`） |
-| 自動ゲート | ✅ `pnpm verify:all` = VERIFY_ALL_OK |
-| 録音の E2E | ✅ `RECORDING_EXPERIENCE_OK` |
-| release ビルド | ✅ Rust も Swift も release |
-| Developer ID 署名 | ✅ Shuhei Horio (6RR7572ZLU) |
-| hardened runtime | ✅ `flags=0x10000(runtime)` |
-| 外部 dylib への依存 | ✅ 無し（静的リンク） |
-| 同梱プラグイン | ✅ 12 件をバンドルへ。repo の外から起動して画面で確認 |
-| 初回起動 | ✅ 何も無い状態から DB を作って起動（`ASTRA_DATA_ROOT`） |
-| 署名済み .app の実動 | ✅ **配布物そのもの**で 47 ゲート PASS / 2 SKIP / 0 FAIL |
-| Gatekeeper の実測 | ✅ **落としてきた状態**で `accepted` / `Notarized Developer ID` |
-| **公証** | ✅ Accepted・staple 済み・quarantine 付きで Gatekeeper 受理 |
-| 自動更新 | ✅ Sparkle 2.9.6 を同梱・署名。設定が揃った状態で起動を確認 |
-| 更新の出し方 | ✅ `scripts/publish-update.sh`（appcast まで作る。上げはしない） |
-| Sparkle 署名鍵 | ✅ 作成済み・公開鍵は release-macos.sh の既定値 |
-| 配布先 | ✅ GitHub Releases（FORIFOR/astra） |
-| 自動更新 | ✅ 有効（appcast 署名済み・feed URL は版に依らず固定） |
-| 対応 CPU | ✅ Apple Silicon / Intel（universal） |
-| Windows | ❌ 別（`apps/windows`。CI で実ビルドまで） |
+|                      | 状態                                                             |
+| -------------------- | ---------------------------------------------------------------- |
+| 版番号の一致         | ✅ 0.1.1 で 4 か所一致（`verify-release-consistency.sh`）        |
+| 自動ゲート           | ✅ `pnpm verify:all` = VERIFY_ALL_OK                             |
+| 録音の E2E           | ✅ `RECORDING_EXPERIENCE_OK`                                     |
+| release ビルド       | ✅ Rust も Swift も release                                      |
+| Developer ID 署名    | ✅ Shuhei Horio (6RR7572ZLU)                                     |
+| hardened runtime     | ✅ `flags=0x10000(runtime)`                                      |
+| 外部 dylib への依存  | ✅ 無し（静的リンク）                                            |
+| 同梱プラグイン       | ✅ 12 件をバンドルへ。repo の外から起動して画面で確認            |
+| 初回起動             | ✅ 何も無い状態から DB を作って起動（`ASTRA_DATA_ROOT`）         |
+| 署名済み .app の実動 | ✅ **配布物そのもの**で 47 ゲート PASS / 2 SKIP / 0 FAIL         |
+| Gatekeeper の実測    | ✅ **落としてきた状態**で `accepted` / `Notarized Developer ID`  |
+| **公証**             | ✅ Accepted・staple 済み・quarantine 付きで Gatekeeper 受理      |
+| 自動更新             | ✅ Sparkle 2.9.6 を同梱・署名。設定が揃った状態で起動を確認      |
+| 更新の出し方         | ✅ `scripts/publish-update.sh`（appcast まで作る。上げはしない） |
+| Sparkle 署名鍵       | ✅ 作成済み・公開鍵は release-macos.sh の既定値                  |
+| 配布先               | ✅ GitHub Releases（FORIFOR/astra）                              |
+| 自動更新             | ✅ 有効（appcast 署名済み・feed URL は版に依らず固定）           |
+| 対応 CPU             | ✅ Apple Silicon / Intel（universal）                            |
+| Windows              | ❌ 別（`apps/windows`。CI で実ビルドまで）                       |
 
 ---
 
@@ -72,12 +72,12 @@ DS-01〜06 の造形規則、Craft Freeze、journey J-A/J-B/J-C（頼む・録�
 
 公開配布に合わせて入れたもの:
 
-| | |
-| --- | --- |
-| アイコン | ✅ 同梱（無いと Finder でも Dock でも空白になる） |
+|                 |                                                                                  |
+| --------------- | -------------------------------------------------------------------------------- |
+| アイコン        | ✅ 同梱（無いと Finder でも Dock でも空白になる）                                |
 | Dock に出さない | ✅ `LSUIElement`（常駐の Task Dock が入口。`main.swift` の `.accessory` と一致） |
-| 分類・著作権 | ✅ `LSApplicationCategoryType` / `NSHumanReadableCopyright` |
-| 記号 | ✅ 署名前に `strip -x` |
+| 分類・著作権    | ✅ `LSApplicationCategoryType` / `NSHumanReadableCopyright`                      |
+| 記号            | ✅ 署名前に `strip -x`                                                           |
 
 残る体裁の話: panic の位置文字列に、ビルドした人の絶対パスが 175 件残る。
 Rust 側は `--remap-path-prefix` で畳んでいるが、依存の C ソース（ring）は
@@ -217,11 +217,11 @@ gh release create v<版> --title "Astra <版>" --notes-file <本文> \
 gh release upload v<版> "<PDF を Astra-guide-ja.pdf に複製したもの>"
 ```
 
-| 添付 | 役割 |
-| --- | --- |
-| `Astra-<版>.zip` / `appcast.xml` / `*.delta` | アプリと自動更新。feed URL は `releases/latest/download/appcast.xml` で固定 |
-| `Astra-<版>-guide-ja.pdf` | **この版の**操作ガイド（監査・特定版の利用者向け） |
-| `Astra-guide-ja.pdf` | 版番号なしの同じ PDF。一般利用者へ案内する固定 URL はこれ: `https://github.com/FORIFOR/astra/releases/latest/download/Astra-guide-ja.pdf`。アプリのメニューバー「操作ガイド（PDF）」もこの URL を開く（`StatusBarController.guideURL`。名前を変えたら両方）。同じメニューの「更新を確認…」は Sparkle の確認で、appcast の無い実行体では理由を出して `releases/latest` へ案内する |
+| 添付                                         | 役割                                                                                                                                                                                                                                                                                                                                                                             |
+| -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Astra-<版>.zip` / `appcast.xml` / `*.delta` | アプリと自動更新。feed URL は `releases/latest/download/appcast.xml` で固定                                                                                                                                                                                                                                                                                                      |
+| `Astra-<版>-guide-ja.pdf`                    | **この版の**操作ガイド（監査・特定版の利用者向け）                                                                                                                                                                                                                                                                                                                               |
+| `Astra-guide-ja.pdf`                         | 版番号なしの同じ PDF。一般利用者へ案内する固定 URL はこれ: `https://github.com/FORIFOR/astra/releases/latest/download/Astra-guide-ja.pdf`。アプリのメニューバー「操作ガイド（PDF）」もこの URL を開く（`StatusBarController.guideURL`。名前を変えたら両方）。同じメニューの「更新を確認…」は Sparkle の確認で、appcast の無い実行体では理由を出して `releases/latest` へ案内する |
 
 Release 本文には「入れ方」の後に「操作ガイド」の節を置き、上の固定 URL を貼る。
 日本語のファイル名で上げると GitHub が `Astra-.pdf` に削るので、ASCII 名にしてから渡す。
@@ -255,7 +255,7 @@ xcrun notarytool store-credentials "astra-notary" \
    `ASTRA_UPDATE_BASE=https://github.com/FORIFOR/astra/releases/download/v<版>`
 2. ~~**Sparkle の署名鍵**~~ 作成済み（§2.5）。
 3. ~~**置き場所**~~ GitHub Releases に決定。
-3. **gateway の向き先**。`docs/production-readiness.md` の判定は
+4. **gateway の向き先**。`docs/production-readiness.md` の判定は
    Client ID を入れた状態のもの。配布ビルドがどこを向くかは未決。
 
 ---

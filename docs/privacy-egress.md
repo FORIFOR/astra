@@ -9,13 +9,13 @@
 （呼び手と条件）で一覧にする。spec §22 の label（local-only / cloud-used / external-send）で分類する。
 表示の文言はまだ変えていない（この一覧が正本になってから）。
 
-| 経路 | 出るもの | 出る条件 | 分類 | 根拠 |
-|---|---|---|---|---|
-| Apple の音声認識サーバ | **会議の音声** | `SFSpeechRecognizer(ja-JP).supportsOnDeviceRecognition == false` のとき。コードが `requiresOnDeviceRecognition` をその値にしているので、日本語のオンデバイス資産が無い Mac では**黙って**サーバ認識になる | cloud-used（利用者に見えない） | `Audio/SpeechTranscriber.swift:53,93`、呼び手 `RecordingWorkspace/RecordingRuntime.swift:82` |
-| gateway（`ASTRA_GATEWAY_URL`、既定 `http://127.0.0.1:3000`） | 開発サインイン（`main-<pid>@astra.local`）、`/v1/me`、会議の作成・終了、**録音した音声の全断片**（WS `/v1/meetings/:id/audio`）、落ちた録音の回復送信、声で頼んだ文（`/v1/conversations/:id/turns`）、タスク作成 | gateway に到達できるとき。Main window を開くと**自動で**サインインし、録音側にも渡す。配布版は既定が 127.0.0.1 なので、利用者が何か立てていない限り到達しない | cloud-used / external-send（gateway の先で何をするかは gateway 次第） | `Main/MainWindowView.swift:35-49`、`RecordingRuntime.swift:70-76,171-175,225-232`、`core/astra-core/src/api.rs:63,111,135,248,297,322,383` |
-| connector の OAuth | 認可コード往復（本文は出ない） | 利用者が接続操作をしたとき | external-send（本人操作） | `Context/ConnectorFlow.swift:9-14` |
-| Sparkle appcast（GitHub Releases） | 版・OS の情報 | 起動時 1 回、「更新を確認…」 | cloud-used | `App/SoftwareUpdate.swift` |
-| 配布ページ / ガイドの URL | なし（ブラウザを開くだけ） | 本人操作 | — | `App/StatusBarController.swift` |
+| 経路                                                         | 出るもの                                                                                                                                                                                                         | 出る条件                                                                                                                                                                                                  | 分類                                                                  | 根拠                                                                                                                                       |
+| ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Apple の音声認識サーバ                                       | **会議の音声**                                                                                                                                                                                                   | `SFSpeechRecognizer(ja-JP).supportsOnDeviceRecognition == false` のとき。コードが `requiresOnDeviceRecognition` をその値にしているので、日本語のオンデバイス資産が無い Mac では**黙って**サーバ認識になる | cloud-used（利用者に見えない）                                        | `Audio/SpeechTranscriber.swift:53,93`、呼び手 `RecordingWorkspace/RecordingRuntime.swift:82`                                               |
+| gateway（`ASTRA_GATEWAY_URL`、既定 `http://127.0.0.1:3000`） | 開発サインイン（`main-<pid>@astra.local`）、`/v1/me`、会議の作成・終了、**録音した音声の全断片**（WS `/v1/meetings/:id/audio`）、落ちた録音の回復送信、声で頼んだ文（`/v1/conversations/:id/turns`）、タスク作成 | gateway に到達できるとき。Main window を開くと**自動で**サインインし、録音側にも渡す。配布版は既定が 127.0.0.1 なので、利用者が何か立てていない限り到達しない                                             | cloud-used / external-send（gateway の先で何をするかは gateway 次第） | `Main/MainWindowView.swift:35-49`、`RecordingRuntime.swift:70-76,171-175,225-232`、`core/astra-core/src/api.rs:63,111,135,248,297,322,383` |
+| connector の OAuth                                           | 認可コード往復（本文は出ない）                                                                                                                                                                                   | 利用者が接続操作をしたとき                                                                                                                                                                                | external-send（本人操作）                                             | `Context/ConnectorFlow.swift:9-14`                                                                                                         |
+| Sparkle appcast（GitHub Releases）                           | 版・OS の情報                                                                                                                                                                                                    | 起動時 1 回、「更新を確認…」                                                                                                                                                                              | cloud-used                                                            | `App/SoftwareUpdate.swift`                                                                                                                 |
+| 配布ページ / ガイドの URL                                    | なし（ブラウザを開くだけ）                                                                                                                                                                                       | 本人操作                                                                                                                                                                                                  | —                                                                     | `App/StatusBarController.swift`                                                                                                            |
 
 ## Apple 音声認識の実測（この Mac、macOS 26.6.2、2026-09-04）
 
@@ -28,10 +28,10 @@ Mac（英語環境の Mac など）で Astra を使うと、この列に ja-JP �
 
 `say` で作った 2.75 秒の音声を de-DE（onDevice=false）で認識させた結果:
 
-| `requiresOnDeviceRecognition` | 結果 |
-|---|---|
-| true | 即座に error `Failed to access assets`（kLSRErrorDomain 102）。文字は出ない |
-| false | `Guten Morgen wie teuer die hat` が返る——資産が無いのに認識できた＝**サーバで認識している** |
+| `requiresOnDeviceRecognition` | 結果                                                                                        |
+| ----------------------------- | ------------------------------------------------------------------------------------------- |
+| true                          | 即座に error `Failed to access assets`（kLSRErrorDomain 102）。文字は出ない                 |
+| false                         | `Guten Morgen wie teuer die hat` が返る——資産が無いのに認識できた＝**サーバで認識している** |
 
 Astra のコードは後者の設定になる（`= recognizer.supportsOnDeviceRecognition`）。
 Info.plist の `NSSpeechRecognitionUsageDescription` は「音は端末から出しません」と言っている

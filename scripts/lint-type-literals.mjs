@@ -58,4 +58,6 @@ if (problems.length) {
   for (const p of problems) console.error('  ' + p);
   process.exit(1);
 }
-console.log(`TYPE_LITERALS_OK: 6 つの型の view に字の大きさの直書きは無い（${SCOPE.length} scope）`);
+console.log(
+  `TYPE_LITERALS_OK: 6 つの型の view に字の大きさの直書きは無い（${SCOPE.length} scope）`,
+);
