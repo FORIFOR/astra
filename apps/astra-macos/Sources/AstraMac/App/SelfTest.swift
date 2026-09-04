@@ -76,6 +76,7 @@ enum SelfTest {
         case "dockanim": dockAnim(); return true
         case "surfacemotion": SurfaceMotionGate.run(args); return true
         case "invocation": InvocationGate.run(args); return true
+        case "invocationaudio": InvocationGate.audioTruth(args); return true
         case "entry": entryPoints(); return true
         case "menutitles": menuTitles(); return true
         case "facts": facts(); return true

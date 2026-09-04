@@ -94,6 +94,105 @@ enum InvocationGate {
         return t
     }
 
+    // MARK: - INVOCATION_AUDIO_TRUTH（呼んで即話しても冒頭を失わないか）
+
+    /// `--selftest invocationaudio [outDir]`。「面が出た瞬間から安心して話せるか」を測る。
+    ///
+    /// マイクの取り込みは engine を start してから最初の IO バッファ（この Mac で ~100ms）まで
+    /// **1 サンプルも入らない**（start 前を貯める ring バッファは無い）。だから
+    /// 「面が出てから取り込みが生きるまで」= 冒頭が失われる窓。面が出た後 +0/+50/+100/+200ms に
+    /// 話し始めたとき、その時刻が窓の内なら冒頭は落ちる。窓を実測し、各 offset で落ちるかを出す。
+    ///
+    /// 実音響（スピーカ→マイク）でも確かめられる（`acoustic` 引数）。既定は off——loopback は音量・
+    /// 暗騒音に左右されるので、判定の本体は決定的な「取り込みが生きるまでの窓」にする。
+    static func audioTruth(_ args: [String]) {
+        let i = args.firstIndex(of: "--selftest")!
+        let outDir = args.count > i + 2 ? args[i + 2] : "/tmp/astra-invocation-audio"
+        try? FileManager.default.createDirectory(atPath: outDir, withIntermediateDirectories: true)
+
+        guard Permissions.microphone == .granted else {
+            print("SELFTEST_SKIP invocationaudio: マイク未許可（実 Mac + 許可でだけ測れる）"); exit(0)
+        }
+        RecordingRuntime.shared.markListening(.localUser)
+        _ = LocalStore.shared.open(); MeetingSessionStore.shared.load()
+        _ = GlobalShortcut.shared.register(handler: { WindowCoordinator.shared.toggleRecording() })
+        RecordingRuntime.shared.prewarmMic()
+        let recording = RecordingWorkspaceState.shared
+
+        WindowCoordinator.shared.showVoiceHUD(); settle(1.0)
+        // cold を 1 回捨てる（HAL 初期化を測らない）。
+        WindowCoordinator.shared.toggleRecording(); settle(1.2)
+        WindowCoordinator.shared.toggleRecording(); settle(1.2)
+
+        // 面が出た瞬間（Dock の枠が最初に動いた時刻）と、取り込みが生きた瞬間（awaitingAudio=false
+        // か recordedMs>0）を測る。
+        let base = dockWindow()?.frame
+        var surfaceShownAt: Date?
+        var captureLiveAt: Date?
+        let t0 = Date()
+        WindowCoordinator.shared.toggleRecording()
+        let cap = t0.addingTimeInterval(4)
+        while Date() < cap, captureLiveAt == nil {
+            CFRunLoopRunInMode(.defaultMode, 0.002, true)
+            if surfaceShownAt == nil, let f = dockWindow()?.frame, f != base { surfaceShownAt = Date() }
+            if captureLiveAt == nil, !recording.awaitingAudio || RecordingRuntime.shared.recordedMs() > 0 {
+                captureLiveAt = Date()
+            }
+        }
+        guard let shown = surfaceShownAt, let live = captureLiveAt else {
+            WindowCoordinator.shared.toggleRecording()
+            print("SELFTEST_FAIL invocationaudio: 面 \(surfaceShownAt != nil)・取り込み \(captureLiveAt != nil) を捉えられない"); exit(2)
+        }
+        let lossWindowFromSurface = live.timeIntervalSince(shown) * 1000
+        let lossWindowFromShortcut = live.timeIntervalSince(t0) * 1000
+
+        // 各 offset で冒頭が落ちるか。1 サンプルも pre-buffer が無いので、
+        // offset < 窓 なら落ちる。first word は概ね 300ms なので、窓が 300ms 以上なら
+        // 即話すと語ごと失う。
+        let offsets: [Double] = [0, 50, 100, 200]
+        var anyLost = false
+        var rows: [[String: Any]] = []
+        print(String(format: "INVOCATION_AUDIO_TRUTH loss window: 面から %.0fms・⌥Space から %.0fms（IO 最初のバッファまで）", lossWindowFromSurface, lossWindowFromShortcut))
+        for off in offsets {
+            let phonemeLost = off < lossWindowFromSurface
+            // 「first word 全部」を失うのは、話し始め offset から語末（~300ms）までが窓に入るとき。
+            let wordFullyLost = (off + 300) <= lossWindowFromSurface
+            if phonemeLost { anyLost = true }
+            rows.append(["offsetMs": off, "firstPhonemeLost": phonemeLost, "firstWordFullyLost": wordFullyLost])
+            print(String(format: "  +%.0fms で発話開始 → first phoneme lost=%@  first word fully lost=%@",
+                         off, phonemeLost ? "1" : "0", wordFullyLost ? "1" : "0"))
+        }
+
+        // 実音響の確認（任意）: say を面表示の直後に鳴らし、録音の journal が伸びたかを見る。
+        var acousticNote = "acoustic 未実施（引数 acoustic で有効。loopback は音量に依存）"
+        if args.contains("acoustic") {
+            let before = RecordingRuntime.shared.recordedMs()
+            let say = Process(); say.executableURL = URL(fileURLWithPath: "/usr/bin/say")
+            say.arguments = ["-v", "Samantha", "テスト テスト テスト"]
+            try? say.run(); say.waitUntilExit(); settle(0.6)
+            let after = RecordingRuntime.shared.recordedMs()
+            acousticNote = "acoustic: say の前後で recordedMs \(before)→\(after)（loopback。増えていれば取り込みは生きている）"
+            print("  \(acousticNote)")
+        }
+
+        WindowCoordinator.shared.toggleRecording(); settle(0.5)
+
+        let verdict = anyLost ? "FAIL" : "PASS"
+        let out: [String: Any] = [
+            "startedAt": ISO8601DateFormatter().string(from: Date()),
+            "lossWindowFromSurfaceMs": lossWindowFromSurface,
+            "lossWindowFromShortcutMs": lossWindowFromShortcut,
+            "offsets": rows, "acoustic": acousticNote, "verdict": verdict,
+        ]
+        if let data = try? JSONSerialization.data(withJSONObject: out, options: [.prettyPrinted, .sortedKeys]) {
+            try? data.write(to: URL(fileURLWithPath: outDir).appendingPathComponent("result.json"))
+        }
+        print("INVOCATION_AUDIO_TRUTH=\(verdict)（\(outDir)/result.json）")
+        // これは真実の測定。build は落とさない（本人が実機で見て、必要なら state 修正を入れる）。
+        print("SELFTEST_OK invocationaudio: \(verdict) — 窓 \(Int(lossWindowFromSurface))ms（\(anyLost ? "冒頭が落ちうる → state truth / capture 開始を直す" : "冒頭は残る")）")
+        exit(0)
+    }
+
     // MARK: - 本体
 
     static func run(_ args: [String]) {

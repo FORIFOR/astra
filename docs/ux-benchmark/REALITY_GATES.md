@@ -164,6 +164,31 @@ feedback<150ms 等）に入れた。録音・privacy・no-contradiction・pause�
 (b) 入力デバイスの buffer frame size を小さくする（capture 全体に影響する深い変更）のどちらか。今は測って記録だけ。
 speech → first transcript は音声認識の許可がこの責任プロセスに無いので測れない（本人のターミナル署名 .app で測る）。
 
+### INVOCATION_AUDIO_TRUTH — 呼んで即話しても冒頭を失わないか
+
+本人の指摘: 大事なのは `mic ready < 200ms` そのものより「面が出た瞬間から安心して話せるか」。測定器は
+`--selftest invocationaudio [outDir] [acoustic]`（`InvocationGate.audioTruth`）。マイクの取り込みは engine を
+start してから最初の IO バッファまで **1 サンプルも入らない**（start 前を貯める ring バッファは無い＝コードの事実）。
+だから「面が出てから取り込みが生きるまで」が冒頭を失う窓。この Mac（2026-09-04、mic 許可あり）で 2 回:
+
+```
+INVOCATION_AUDIO_TRUTH（この Mac、background job）
+  loss window（面から取り込みが生きるまで）   ~105ms（= IO 最初のバッファ 1 枚）
+  +0ms   に発話    first phoneme lost=1   first word fully lost=0
+  +50ms  に発話    first phoneme lost=1   first word fully lost=0
+  +100ms に発話    first phoneme lost=1   first word fully lost=0
+  +200ms に発話    first phoneme lost=0   first word fully lost=0
+  → 厳密には +0〜100ms で冒頭 ~105ms が欠ける（音素の頭）。語まるごとは一度も落ちない（窓 < 300ms）
+```
+
+窓は当初懸念した ~290ms ではなく **~105ms（IO バッファ 1 枚）**だった——`prewarmMic()` と engine 使い回しで
+起動が暖まっているため。人が「面を見てから話し始める」反応時間は普通 >200ms なので、実運用では冒頭は残る見込み。
+それでも厳密な基準（+0ms で phoneme lost=0）では FAIL。**判断は本人の実機（署名 .app + 実マイク、できれば
+`acoustic` で スピーカ→マイク loopback）で確定する。**もし実機でも冒頭が欠けるなら、直すのは造形ではなく
+**state truth**（取り込みが生きるまで録音ドットを「準備中」にする。いまは録音ドット＋経過秒が t=0 から動き、
+波形だけが `awaitingInput`（a11y「音の入力を待っています」）で薄い）か、capture 開始を面表示より前に出す局所修正。
+マイク常時 ON にはしない。窓が ~105ms（知覚の境目）なので、直すこと自体が体験を悪くしうる点も本人が見て決める。
+
 ## WORLD_CLASS_UX_GATE — 世界一を数値で確かめる（2026-09-04、本人の定義）
 
 「美しさ」ではなく数値。各行は測定器を持つか、持つべき。archetype ごとに**その面の最強の相手**と戦わせる
