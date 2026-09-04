@@ -66,6 +66,10 @@ enum UserFacingFacts {
     static let recordingHeroRecording = "録音中"
     static let recordingHeroPaused = "一時停止中"
     static let recordingHeroSilentSuffix = "（音声なし）"
+    /// 面は出たが、まだ 1 サンプルも取り込めていない間の見出し。
+    /// マイクは engine を start してから最初の IO バッファまで何も入らない（~105ms 実測）。
+    /// そこを「録音中」と名乗ると、その間に話した頭が落ちる。**取り込みが生きてから**名乗る。
+    static let recordingHeroPreparing = "準備中…"
 
     // MARK: メニュー
 
@@ -151,6 +155,7 @@ enum UserFacingFacts {
             f("settings.permissionsSection", settingsPermissionsSection),
             f("settings.shortcutRow", settingsShortcutRow),
             f("recording.hero.recording", recordingHeroRecording, false),
+            f("recording.hero.preparing", recordingHeroPreparing, false),
             f("recording.hero.paused", recordingHeroPaused, false),
             f("recording.hero.silentSuffix", recordingHeroSilentSuffix, false),
             f("menu.open", menuOpen),

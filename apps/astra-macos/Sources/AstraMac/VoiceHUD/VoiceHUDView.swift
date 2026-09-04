@@ -796,10 +796,16 @@ struct MeetingDock: View {
 
     private var controller: some View {
         HStack(spacing: 12) {
-            Circle().fill(recording.isPaused ? Color.secondary : Color.recordingRed)
+            // 取り込みが生きるまでは赤くしない。赤い点は「録れている」の意味なので、
+            // 最初の IO バッファが来る前に点けると、その間に話した頭が落ちたことに気づけない。
+            Circle().fill(recording.isPaused || recording.awaitingAudio ? Color.secondary : Color.recordingRed)
                 .frame(width: 9, height: 9)
             VStack(alignment: .leading, spacing: 1) {
-                Text(store.state.meeting.detectedApp ?? Facts.recordingHeroRecording)
+                // **実際に 1 サンプル入るまでは「準備中…」。**タイマーではなく
+                // 最初の音声フレームの到着（`awaitingAudio`）で切り替える。
+                Text(recording.awaitingAudio
+                     ? Facts.recordingHeroPreparing
+                     : (store.state.meeting.detectedApp ?? Facts.recordingHeroRecording))
                     .font(.system(size: S.type(Metrics.dockPrimarySize), weight: .semibold))
                     .foregroundStyle(Palette.text(dark))
                     .lineLimit(1)

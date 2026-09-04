@@ -129,12 +129,28 @@ enum InvocationGate {
         let base = dockWindow()?.frame
         var surfaceShownAt: Date?
         var captureLiveAt: Date?
+        // 面が出てから取り込みが生きるまでの間、Dock が「録れている」と名乗っていないか。
+        // 名乗り＝見出しが「準備中…」でない、あるいは録音ドットが赤い状態。
+        // 見出しは view と同じ式で引く（`awaitingAudio` が最初の音声フレームで倒れる）。
+        var claimedLiveWhileDeaf = false
+        var headlineWhileDeaf: Set<String> = []
+        func dockHeadline() -> String {
+            recording.awaitingAudio
+                ? Facts.recordingHeroPreparing
+                : (AstraStateStore.shared.state.meeting.detectedApp ?? Facts.recordingHeroRecording)
+        }
         let t0 = Date()
         WindowCoordinator.shared.toggleRecording()
         let cap = t0.addingTimeInterval(4)
         while Date() < cap, captureLiveAt == nil {
             CFRunLoopRunInMode(.defaultMode, 0.002, true)
             if surfaceShownAt == nil, let f = dockWindow()?.frame, f != base { surfaceShownAt = Date() }
+            let deaf = recording.awaitingAudio && RecordingRuntime.shared.recordedMs() == 0
+            if surfaceShownAt != nil, deaf {
+                let h = dockHeadline()
+                headlineWhileDeaf.insert(h)
+                if h != Facts.recordingHeroPreparing { claimedLiveWhileDeaf = true }
+            }
             if captureLiveAt == nil, !recording.awaitingAudio || RecordingRuntime.shared.recordedMs() > 0 {
                 captureLiveAt = Date()
             }
@@ -152,7 +168,7 @@ enum InvocationGate {
         let offsets: [Double] = [0, 50, 100, 200]
         var anyLost = false
         var rows: [[String: Any]] = []
-        print(String(format: "INVOCATION_AUDIO_TRUTH loss window: 面から %.0fms・⌥Space から %.0fms（IO 最初のバッファまで）", lossWindowFromSurface, lossWindowFromShortcut))
+        print(String(format: "INVOCATION_AUDIO_TRUTH loss window: 面から %.0fms・%@ から %.0fms（IO 最初のバッファまで）", lossWindowFromSurface, GlobalShortcut.label(), lossWindowFromShortcut))
         for off in offsets {
             let phonemeLost = off < lossWindowFromSurface
             // 「first word 全部」を失うのは、話し始め offset から語末（~300ms）までが窓に入るとき。
@@ -175,21 +191,43 @@ enum InvocationGate {
             print("  \(acousticNote)")
         }
 
+        // 取り込みが生きた後は「準備中…」を名乗り続けない（逆向きの嘘も見る）。
+        settle(0.4)
+        let headlineAfterLive = dockHeadline()
+        let stuckPreparing = headlineAfterLive == Facts.recordingHeroPreparing
+        print("  state truth: 取り込み前の見出し=\(headlineWhileDeaf.sorted().joined(separator: "/"))・生きた後=\(headlineAfterLive)"
+            + "・取り込み前に録音中を名乗った=\(claimedLiveWhileDeaf ? "1" : "0")・生きた後も準備中のまま=\(stuckPreparing ? "1" : "0")")
+
         WindowCoordinator.shared.toggleRecording(); settle(0.5)
 
-        let verdict = anyLost ? "FAIL" : "PASS"
+        // 判定は「UI が名乗る状態と実装の状態が一致しているか」。
+        // 物理的な窓（~105ms）は残るが、その間 UI は「録音中」と言わないので、
+        // 「録音中と見えてから話した音」は落ちない。窓は証拠として併記する。
+        let truthful = !claimedLiveWhileDeaf && !stuckPreparing
+        let verdict = truthful ? "PASS" : "FAIL"
         let out: [String: Any] = [
             "startedAt": ISO8601DateFormatter().string(from: Date()),
             "lossWindowFromSurfaceMs": lossWindowFromSurface,
             "lossWindowFromShortcutMs": lossWindowFromShortcut,
             "offsets": rows, "acoustic": acousticNote, "verdict": verdict,
+            "stateTruth": [
+                "claimedLiveWhileDeaf": claimedLiveWhileDeaf,
+                "stuckPreparingAfterLive": stuckPreparing,
+                "headlineWhileDeaf": headlineWhileDeaf.sorted(),
+                "headlineAfterLive": headlineAfterLive,
+            ],
         ]
         if let data = try? JSONSerialization.data(withJSONObject: out, options: [.prettyPrinted, .sortedKeys]) {
             try? data.write(to: URL(fileURLWithPath: outDir).appendingPathComponent("result.json"))
         }
         print("INVOCATION_AUDIO_TRUTH=\(verdict)（\(outDir)/result.json）")
-        // これは真実の測定。build は落とさない（本人が実機で見て、必要なら state 修正を入れる）。
-        print("SELFTEST_OK invocationaudio: \(verdict) — 窓 \(Int(lossWindowFromSurface))ms（\(anyLost ? "冒頭が落ちうる → state truth / capture 開始を直す" : "冒頭は残る")）")
+        if !truthful {
+            print("SELFTEST_FAIL invocationaudio: 取り込みが生きる前に録音中を名乗っている（state truth）")
+            exit(1)
+        }
+        print("SELFTEST_OK invocationaudio: \(verdict) — 物理の窓 \(Int(lossWindowFromSurface))ms は残るが、"
+            + "その間 UI は「\(Facts.recordingHeroPreparing)」で、録音中を名乗ってから話した音は落ちない"
+            + "（+0/+50/+100ms の生の欠けは \(anyLost ? "在り" : "無し")、記録値）")
         exit(0)
     }
 
@@ -306,7 +344,7 @@ enum InvocationGate {
         var t1 = observe(fire: fireShortcut, stateReached: { recording.isRecording })
         if registered, t1.stateMs == nil {
             // tap は登録できたが届かなかった。直接呼び直し、その旨を残す。
-            result.observations.append("合成 ⌥Space が tap に届かなかった（1.5s）。handler を直接呼んで続ける")
+            result.observations.append("合成 \(GlobalShortcut.label()) が tap に届かなかった（1.5s）。handler を直接呼んで続ける")
             hop = "direct(tap-miss)"
             t1 = observe(fire: { WindowCoordinator.shared.toggleRecording() }, stateReached: { recording.isRecording })
         }
@@ -316,9 +354,9 @@ enum InvocationGate {
             if Permissions.microphone != .granted {
                 print("SELFTEST_SKIP invocation: マイク未許可（実 Mac + 許可でだけ測れる）"); exit(0)
             }
-            print("SELFTEST_FAIL invocation: ⌥Space で録音が始まらない"); exit(2)
+            print("SELFTEST_FAIL invocation: \(GlobalShortcut.label()) で録音が始まらない"); exit(2)
         }
-        let hopNote = hop == "tap" ? "合成 ⌥Space → CGEventTap → handler（OS の受信を含む）"
+        let hopNote = hop == "tap" ? "合成 \(GlobalShortcut.label()) → CGEventTap → handler（OS の受信を含む）"
                                    : "入力監視なし: handler を直接呼んだ（OS の受信は含まない）"
         line("hotkey delivery", target: "—", value: hop == "tap" ? t1.stateMs : nil, unit: "ms",
              pass: hop == "tap" ? true : nil, note: hop == "tap" ? "tap → isRecording" : hopNote)
@@ -356,7 +394,7 @@ enum InvocationGate {
         let t2 = observe(fire: fireShortcut, stateReached: { !recording.isRecording })
         if registered, t2.stateMs == nil {
             WindowCoordinator.shared.toggleRecording(); settle(0.5)
-            result.observations.append("2 回目の合成 ⌥Space が届かなかった。直接止めた")
+            result.observations.append("2 回目の合成 \(GlobalShortcut.label()) が届かなかった。直接止めた")
         }
         line("speech end → processing state", target: "< 150ms", value: t2.firstFrameMs, unit: "ms",
              pass: t2.firstFrameMs.map { $0 < 150 },
