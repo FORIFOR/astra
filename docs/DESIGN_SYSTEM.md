@@ -26,6 +26,10 @@ NOT_MEASURED のまま）、Home の主入口は盲検 3 名が 3/3 で入力欄
 Home の階層 / 確認面の寸法 / Library の accent / 主操作の強調 / Compact Meeting Mode を
 明示して加える。**測れていない主観（perceived）を理由に面を変えない。**
 Library / Running / Confirmation / Recovery は Astra らしさの核で、触るほど退行の危険が高い。
+再確認（2026-09-04、P0 Privacy・NAV 4 タブ・Calendar purpose-first のあと）: **新しい FIX は 0、
+CRAFT_FREEZE_OVERRIDE は NO**。以後 UI の改善案は作らず、実機で未測定のもの（Full Keyboard Access /
+VoiceOver / 実 TCC / 実会議の録れ方）を閉じる。失敗が出たときだけ、Evidence A/B が取れるときだけ、
+最小修正（`docs/ux-benchmark/REALITY_GATES.md`）。
 次の段は面の局所ではなく、Home → Listening → Task Running → Confirmation → Done、
 Meeting → Notes → Workspace → Library → 出所の確認、という一連の遷移を一つの製品として
 見る（continuity / task-adaptive sizing / grammar・用語の一貫性 / provenance の連続 /
