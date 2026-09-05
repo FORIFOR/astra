@@ -22,6 +22,8 @@ apps/astra-macos/.build/debug/AstraMac --selftest shots /tmp/astra-shots
 | 07  | `07-apps.png`                 | Main / Apps            | 1040×680                             |
 | 08  | `08-meeting-detail.png`       | Meeting Detail         | 1040×680                             |
 | 09  | `09-permission-denied.png`    | マイク許可なしで録音中 | 920×590                              |
+| 03b | `03b-recording-paused.png`    | 一時停止中（pill の ▶）| 1080×680（Atlas meeting.paused）     |
+| 09b | `09b-stt-unavailable.png`     | オンデバイス STT 不可  | 1080×680（Atlas system.stt-unavailable）|
 
 `shots` は撮るだけでなく **geometry と非空白（色数）を検査**する。窓が在るだけでは PASS にしない。
 **light / dark の両方**を撮る（`--selftest shots <dir> [dark]`）。dark 版は `docs/golden-screenshots/dark/`。

@@ -1105,7 +1105,7 @@
         "light": "screens/recording.workspace.light.png",
         "dark": "screens/recording.workspace.dark.png"
       },
-      "appearance_policy": "fixed"
+      "appearance_policy": "adaptive"
     },
     {
       "id": "recording.transcript",
@@ -1158,7 +1158,7 @@
         "light": "screens/recording.transcript.light.png",
         "dark": "screens/recording.transcript.dark.png"
       },
-      "appearance_policy": "fixed"
+      "appearance_policy": "adaptive"
     },
     {
       "id": "recording.rag",
@@ -1213,7 +1213,7 @@
         "light": "screens/recording.rag.light.png",
         "dark": "screens/recording.rag.dark.png"
       },
-      "appearance_policy": "fixed"
+      "appearance_policy": "adaptive"
     },
     {
       "id": "recording.agent-timeline",
@@ -1266,7 +1266,7 @@
         "light": "screens/recording.agent-timeline.light.png",
         "dark": "screens/recording.agent-timeline.dark.png"
       },
-      "appearance_policy": "fixed"
+      "appearance_policy": "adaptive"
     },
     {
       "id": "recording.meeting-canvas",
@@ -1321,7 +1321,7 @@
         "light": "screens/recording.meeting-canvas.light.png",
         "dark": "screens/recording.meeting-canvas.dark.png"
       },
-      "appearance_policy": "fixed"
+      "appearance_policy": "adaptive"
     },
     {
       "id": "main.home",

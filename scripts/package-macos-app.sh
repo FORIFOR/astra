@@ -8,7 +8,7 @@ APP="$ROOT/apps/astra-macos/.build/Astra.app"
 ( cd "$ROOT/apps/astra-macos" && swift build -c release )
 rm -rf "$APP"; mkdir -p "$APP/Contents/MacOS"
 cp "$ROOT/apps/astra-macos/.build/release/AstraMac" "$APP/Contents/MacOS/AstraMac"
-cat > "$APP/Contents/Info.plist" <<'PLIST'
+cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
@@ -28,6 +28,12 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
   <key>NSAppleEventsUsageDescription</key><string>前面アプリの文脈（開いている書類名など）を読むために使います。</string>
   <key>NSCameraUsageDescription</key><string>使いません。</string>
   <key>NSCalendarsUsageDescription</key><string>会議の予定を文脈として読むために、カレンダーを使います。</string>
+  <!-- 自動更新（Sparkle）。release-macos.sh と同じ鍵と配布先。これが無いと SoftwareUpdate は起動せず、
+       UI Atlas の system.update-available / up-to-date（sysshots）を撮れない。
+       検証用の .app なので、起動時の自動チェックは切る（hands-on gate の途中で更新の窓を出さない）。 -->
+  <key>SUFeedURL</key><string>${ASTRA_UPDATE_FEED:-https://github.com/FORIFOR/astra/releases/latest/download/appcast.xml}</string>
+  <key>SUPublicEDKey</key><string>${ASTRA_UPDATE_PUBKEY:-b61dWnFNEdpzAWG/V5SMb4bZGrqgzJwMDAcuw/564cs=}</string>
+  <key>SUEnableAutomaticChecks</key><false/>
 </dict></plist>
 PLIST
 # Sparkle を同梱する。**入れないと起動できない**（実行体が @rpath/Sparkle.framework を要求し、

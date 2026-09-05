@@ -11,7 +11,7 @@
 
 | 種類       | 置き場所                                                 | 何を保証するか     |
 | ---------- | -------------------------------------------------------- | ------------------ |
-| 正解画像   | `docs/golden-screenshots/task-dock/`（13面・light/dark） | 見た目             |
+| 正解画像   | `docs/golden-screenshots/task-dock/`（18面・light/dark） | 見た目             |
 | **実寸**   | `docs/golden-screenshots/geometry/`（6状態・JSON）       | 位置・寸法（pt）   |
 | 密度の基準 | `docs/evidence/density-baseline.json`                    | 空きすぎていないか |
 
