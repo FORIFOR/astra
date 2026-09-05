@@ -35,12 +35,18 @@ atlas, work, out, batch = sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4]
 m = json.load(open(os.path.join(atlas, "manifest.json"), encoding="utf-8"))
 req = [s for s in m["screens"] if s.get("required") and (s.get("image") or {}).get("light")]
 key, ids = {}, set()
+# 途中で落ちた run を続けられるように、鍵が既にあればそれを使う（judge-*.json の ID と食い違わないため）。
+prev = os.path.join(out, "key.json")
+if os.path.exists(prev):
+    key = json.load(open(prev, encoding="utf-8"))["key"]
+    ids = set(key)
 for s in req:
+    if s["id"] in key.values():
+        continue
     while True:
         i = secrets.token_hex(2).upper()
         if i not in ids: ids.add(i); break
     key[i] = s["id"]
-    shutil.copyfile(os.path.join(atlas, s["image"]["light"]), os.path.join(work, "img", i + ".png")) if os.path.isdir(os.path.join(work, "img")) else None
 os.makedirs(os.path.join(work, "img"), exist_ok=True)
 for i, sid in key.items():
     s = next(x for x in req if x["id"] == sid)
@@ -85,6 +91,8 @@ for p in "$WORK"/prompt-*.md; do
   # 3 model は互いに独立なので同時に回す（直列だと 33 回で 3 時間かかった）。
   # 組（batch）も ASTRA_JUDGE_PARALLEL 組まで同時に。judge は網の待ちが主で CPU をほぼ使わない。
   for model in $MODELS; do
+    # 済んでいる judge は飛ばす（メモリ不足で OS に落とされた run の続きを回せるように）。
+    if [[ -s "$OUT/judge-$tag-$model.json" ]]; then echo "JUDGE_DONE $model $tag (resume)"; continue; fi
     bash "$ROOT/scripts/ux-auto/judge.sh" "$model" "$WORK/img" "$p" "$OUT/judge-$tag-$model.json" &
   done
   running=$((running+1))

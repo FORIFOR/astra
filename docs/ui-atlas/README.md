@@ -1,14 +1,14 @@
-# Astra UI Atlas — Visual Release Book (RC d94306b)
+# Astra UI Atlas — Visual Release Book (RC 7d8c993)
 
 取扱説明書ではない。**全 UI を RC .app の実画像で 1 画面 1 ページに固定し、ページ単位で KEEP / FIX / NOT_ENOUGH_EVIDENCE を出す**ための資料。
 画像は署名済み RC .app が `--selftest` で描いたものだけ。モック・Figma・別ビルドは入れない。
 
 ```
-RC SHA            d94306b
-RC exe sha256     fa6e814e853f34f110d258a4ed052a0f1ca83e06080793ef7aa1214a2f232f6d
-RC built          2026-09-06T00:00:17+09:00   captured 2026-09-06T00:00:18+09:00
+RC SHA            7d8c993
+RC exe sha256     5fcf460feea3669497be1e334816b02107dc3b7c0c2d2531404c763ff067cad1
+RC built          2026-09-06T00:57:17+09:00   captured 2026-09-06T00:57:18+09:00
 codesign          com.astra.desktop / 6RR7572ZLU
-required screens  61   with RC image 61   NO_CAPTURE_PATH 0
+required screens  62   with RC image 62   NO_CAPTURE_PATH 0
 strips            5 / 5
 light == dark     19 面（voice.idle, voice.preparing, voice.listening, voice.thinking, voice.context, voice.context-expanded, voice.quick-actions, dock.running, dock.context-detail, dock.confirmation, dock.confirmation-edit, dock.result, dock.result-failed, meeting.controller, meeting.preparing, meeting.paused, meeting.notes, meeting.captions, meeting.ask）
 appearance_policy fixed 20 面 / 違反 0（なし）
@@ -84,6 +84,7 @@ appearance_policy fixed 20 面 / 違反 0（なし）
 | `system.interrupted-journey` | Journey C — Interrupted | CAPTURED | [png](screens/system.interrupted-journey.light.png) | — |
 | `system.resumed` | Journey C — Resumed | CAPTURED | [png](screens/system.resumed.light.png) | — |
 | `system.stt-unavailable` | System — On-device STT unavailable | CAPTURED | [png](screens/system.stt-unavailable.light.png) | [png](screens/system.stt-unavailable.dark.png) |
+| `system.speech-permission` | System — Speech recognition denied | CAPTURED | [png](screens/system.speech-permission.light.png) | [png](screens/system.speech-permission.dark.png) |
 | `system.calendar-permission` | System — Calendar permission (purpose-first) | CAPTURED | [png](screens/system.calendar-permission.light.png) | [png](screens/system.calendar-permission.dark.png) |
 | `system.accessibility-permission` | System — Input Monitoring（⌥Space）/ Accessibility | CAPTURED | [png](screens/system.accessibility-permission.light.png) | [png](screens/system.accessibility-permission.dark.png) |
 | `system.update-available` | System — Update available | CAPTURED | [png](screens/system.update-available.light.png) | [png](screens/system.update-available.dark.png) |
