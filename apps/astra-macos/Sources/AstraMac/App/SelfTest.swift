@@ -560,7 +560,11 @@ enum SelfTest {
             // していても気づけない（実際に一度そうなっていた）。
             recording.start()
             // 実マイクを開けない撮影でも「録音中」の姿にする（音が届いた姿。準備中は 08a で別に撮る）。
+            // 届いている経路も shots と同じに仕込む。仕込まないと、開いた録音面（10-workspace）が
+            // 最初のフレーム前の「まだ音が届いていません」で写る（RC で実際にそうなった）。
             recording.markAudioLiveForShot()
+            RecordingRuntime.shared.markListening(.localUser)
+            RecordingRuntime.shared.markListening(.remoteAudio)
             // 開始は前の会議の Notes を消す（2 本目に 1 本目が混ざらないため）。
             // 中身は**開始の後**に入れる。前に入れると空の Notes を撮ってしまう。
             store.updateCanvas(MeetingCanvas(
