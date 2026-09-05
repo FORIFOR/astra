@@ -43,10 +43,13 @@ struct PermissionBanner: View {
 /// 録音を成り立たなくしている許可。message は「何ができないか」を先に言う。
 struct PermissionIssue {
     let message: String
+    /// この許可が無いことで**届かなくなる経路**。見出し・本文はこれを `listening` から引いて組む
+    /// （hero の「（音声なし）」と同じ真実を見る。マイク拒否でも画面の音が生きていれば、それは言う）。
+    let channel: SpeakerChannel?
     let open: () -> Void
 
     static var microphoneDenied: PermissionIssue {
-        PermissionIssue(message: "マイクの許可が無いため、音声が記録されていません。") {
+        PermissionIssue(message: "マイクの許可が無いため、音声が記録されていません。", channel: .localUser) {
             Permissions.openMicrophoneSettings()
         }
     }

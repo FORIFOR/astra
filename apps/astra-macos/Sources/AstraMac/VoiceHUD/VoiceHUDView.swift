@@ -907,6 +907,13 @@ private struct MeetingPanelBody: View {
         .accessibilityIdentifier("meetingPanelBody")
     }
 
+    /// 字幕・文字起こしがまだ空のとき。翻訳タブの「まだ訳すものがありません。」と同じ姿。
+    private var captionsEmptyLine: some View {
+        Text(Facts.captionsEmpty)
+            .font(.system(size: S.type(Metrics.dockRowSize)))
+            .foregroundStyle(Palette.muted(dark))
+    }
+
     @ViewBuilder private var content: some View {
         switch panel {
         case .captions:
@@ -923,6 +930,8 @@ private struct MeetingPanelBody: View {
                     VStack(alignment: .leading, spacing: 9) {
                         switch recording.selectedTool {
                         case .transcript:
+                            // 空のまま黙らない。メモ（`.notes`）・翻訳と同じ 1 行を出す。
+                            if recording.transcript.isEmpty { captionsEmptyLine }
                             ForEach(recording.transcript.suffix(8)) { line in
                                 captionLine(speaker: line.speaker, text: line.text, interim: line.interim)
                             }
@@ -943,6 +952,7 @@ private struct MeetingPanelBody: View {
                             }
                         case .captions:
                             // 字幕は話者名を出さず、直近の発言だけを大きく読ませる。
+                            if recording.transcript.isEmpty { captionsEmptyLine }
                             ForEach(recording.transcript.suffix(3)) { line in
                                 Text(line.text)
                                     .font(.system(size: S.type(Metrics.dockSpeechSize), weight: .medium))

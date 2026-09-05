@@ -40,6 +40,10 @@ enum UserFacingFacts {
     static let sourceLabel = "出所"
     static let homeIntentPlaceholder = "何を終わらせますか？"
     static let listeningPlaceholder = "聞いています…"
+    /// Dock の字幕・文字起こしがまだ空のとき。メモ・翻訳と同じく「何も無いことを隠さない」。
+    static let captionsEmpty = "まだ発言がありません。聞こえたらここに流れます。"
+    /// 新しい録音の Project が空のとき。隣の「自分だけ」と同じ言葉で（「None」だけ英語だった）。
+    static let projectNone = "なし"
     /// 録音は続いているが、この Mac ではオンデバイス STT の資産が無い。サーバへは落とさない（`SpeechTranscriber`）。
     static let transcriptionOnDeviceUnavailable = "この Mac ではオンデバイス文字起こしを使えません。音声は保存されています"
     static let taskOpenWorkspace = "作業画面で続ける"
@@ -138,6 +142,8 @@ enum UserFacingFacts {
             f("source.label", sourceLabel),
             f("home.intent.placeholder", homeIntentPlaceholder),
             f("listening.placeholder", listeningPlaceholder),
+            f("captions.empty", captionsEmpty, false),
+            f("sheet.project.none", projectNone, false),
             f("transcription.onDeviceUnavailable", transcriptionOnDeviceUnavailable),
             f("task.openWorkspace", taskOpenWorkspace),
             f("confirmation.confirm.example", confirmationConfirmExample, false),

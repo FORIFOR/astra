@@ -430,8 +430,9 @@ private struct AgentsPane: View {
                     Spacer()
                 }
                 // 実タスクが無い間は spec 構造 + 正直な空状態（架空タスクを作らない）。
-                Text("実行中の仕事はありません。Task Dock から「◯◯して」と頼むとここに出ます。")
-                    .font(.system(size: TypeScale.microSize)).foregroundStyle(.secondary)
+                // 空状態の姿は Tasks / Meetings / Files と同じ部品（Atlas F4: ここだけ左寄せ 1 行だった）。
+                WorkspaceEmpty(title: "実行中の仕事はありません。",
+                               hint: "Task Dock から「◯◯して」と頼むとここに出ます。")
                 Spacer()
             }.padding(24)
         }
@@ -495,18 +496,28 @@ private struct ConnectorsPane: View {
             case .permissionRequired: return "設定が必要"
             }
         }
-        /// 止まっている理由を必ず添える。「設定が必要」だけでは何をすればいいか分からない。
-        var reason: String? {
-            switch self {
-            case .permissionRequired: return "接続に使う client ID がまだ設定されていません"
-            case .connected, .disconnected: return nil
-            }
-        }
         var icon: String {
             switch self {
             case .connected: return "checkmark.circle.fill"
             case .disconnected: return "circle"
             case .permissionRequired: return "exclamationmark.triangle.fill"
+            }
+        }
+    }
+
+    /// 止まっている理由か、つなぐと何ができるかを**必ず**添える。
+    /// 「設定が必要」だけでは何をすればいいか分からない。理由行の無いカードだけ背が低く、
+    /// 1 行に並ぶカードの下端が段違いだった（Atlas F3）。レイアウトではなく文で揃える。
+    private func reason(_ app: String, _ st: ConnState) -> String {
+        switch st {
+        case .permissionRequired: return "接続に使う client ID がまだ設定されていません"
+        case .connected: return "Astra がこのサービスを読めます"
+        case .disconnected:
+            switch app {
+            case "Finder": return "つなぐと、この Mac のファイルを探せます"
+            case "Gmail": return "つなぐと、メールを読めます"
+            case "Google Calendar": return "つなぐと、予定を読めます"
+            default: return "つなぐまで Astra は読みません"
             }
         }
     }
@@ -547,10 +558,8 @@ private struct ConnectorsPane: View {
                                 Text(st.label).font(.system(size: TypeScale.captionSize))
                             }
                             .foregroundStyle(tint(st))
-                            if let reason = st.reason {
-                                Text(reason).font(.system(size: TypeScale.captionSize)).foregroundStyle(.secondary)
-                                    .fixedSize(horizontal: false, vertical: true)
-                            }
+                            Text(reason(a, st)).font(.system(size: TypeScale.captionSize)).foregroundStyle(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
                         }
                         Spacer(minLength: 0)
                         // 繋げるものだけ操作を出す。繋げないものに操作を出して失敗させない。

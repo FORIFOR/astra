@@ -24,7 +24,8 @@ struct NewRecordingSheet: View {
                 .padding(.bottom, 18)
 
             row("Microphone", value: micName, ok: Permissions.microphone == .granted)
-            row("System Audio", value: systemAudio ? "On" : "Off",
+            // 値はトグルが言う。「On」の文字で同じことを二度言わない（Atlas F5）。
+            row("System Audio", value: Permissions.screenRecording == .granted ? "" : "許可が要ります",
                 ok: Permissions.screenRecording == .granted) {
                 Toggle("", isOn: $systemAudio).labelsHidden().toggleStyle(.switch)
             }
@@ -35,9 +36,9 @@ struct NewRecordingSheet: View {
                     visibilityRaw = (MeetingSession.Visibility.allCases.first { $0.label == label } ?? .mySpace).rawValue
                 }), options: MeetingSession.Visibility.allCases.map(\.label))
             picker("Project", selection: Binding(
-                get: { project.isEmpty ? "None" : project },
-                set: { project = $0 == "None" ? "" : $0 }),
-                options: ["None"] + Projects.all())
+                get: { project.isEmpty ? Facts.projectNone : project },
+                set: { project = $0 == Facts.projectNone ? "" : $0 }),
+                options: [Facts.projectNone] + Projects.all())
 
             Spacer(minLength: 0)
 

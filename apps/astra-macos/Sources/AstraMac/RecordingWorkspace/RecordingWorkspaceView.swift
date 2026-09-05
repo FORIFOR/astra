@@ -151,7 +151,7 @@ private struct RecordingStatusBar: View {
     @ObservedObject var state: RecordingWorkspaceState
     @ObservedObject private var store = AstraStateStore.shared
 
-    private var silent: Bool { state.permissionIssue != nil }
+    private var silent: Bool { state.silent }
 
     var body: some View {
         HStack(spacing: 12) {
@@ -441,8 +441,11 @@ private struct MeetingNotesCanvas: View {
     /// 音が来ていないことは**本文（liveLine）が言う**ので、ここでは言わない。
     /// 見出しと本文が同じことを二重に言い、片方が赤字で、同じ画面に
     /// 「音が届いていません」「まだ音が届いていません」が並んでいた。
+    /// 見出し・本文・hero は同じ真実（`RecordingWorkspaceState.liveChannels`）から組む（Atlas F2）。
+    private var liveChannels: Set<SpeakerChannel> { state.liveChannels }
+
     private var listeningLabel: String? {
-        let ch = RecordingRuntime.shared.listening
+        let ch = liveChannels
         if ch.isEmpty { return nil }
         var parts: [String] = []
         if ch.contains(.localUser) { parts.append(Facts.permissionMicrophone) }
@@ -497,7 +500,11 @@ private struct MeetingNotesCanvas: View {
             Label(Facts.transcriptionOnDeviceUnavailable, systemImage: "text.badge.xmark")
                 .font(.system(size: TypeScale.microSize))
                 .foregroundStyle(Palette.danger(dark))
-        } else if RecordingRuntime.shared.listening.isEmpty, state.isRecording {
+        } else if liveChannels.isEmpty, state.permissionIssue != nil {
+            // 許可が無くて何も届いていない。理由は banner と transcript が既に言っている。
+            // ここで三度目を言わず、「聞いています…」とも言わない。
+            EmptyView()
+        } else if liveChannels.isEmpty, state.isRecording {
             // **音が来ていないのに「聞いています」と言わない。**
             // 見出しが「音が届いていません」と言う横で、ここが「聞いています…」と
             // 言っていた。同じ画面の中で食い違うと、どちらも信じられなくなる。

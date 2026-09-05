@@ -101,11 +101,27 @@ final class RecordingWorkspaceState: ObservableObject {
     var elapsedText: String { snapshot.elapsedLabel }
     var heroText: String { snapshot.heroText }
 
+    /// **実際に届いている経路**から、許可が無い経路を引いたもの。
+    /// hero の「（音声なし）」、見出しの「〜を聞いています」、本文の「聞いています…」は
+    /// 全部これから組む。以前は hero が `permissionIssue` を、見出しと本文が `listening` を見ていて、
+    /// マイク拒否のとき同じ面で「音声なし」と「聞いています」が並んだ（Atlas F2）。
+    /// マイクが拒否でも画面の音が届いていれば、それは言う（隠さない）。
+    var liveChannels: Set<SpeakerChannel> {
+        var ch = RecordingRuntime.shared.listening
+        if let denied = permissionIssue?.channel { ch.remove(denied) }
+        return ch
+    }
+    /// 許可が無くて**何も届いていない**。主役が元気に動くと画面が嘘をつく。
+    var silent: Bool { permissionIssue != nil && liveChannels.isEmpty }
+
     /// §17: 決定的な固定画面。
     /// 検査・golden・geometry 用。実マイクを開けない撮影で「音が届いている姿」を作る
     /// （`RecordingRuntime.markListening` / `VoiceHUDState.markVoiceCaptureLive` と同じ役割）。
     /// これを呼ばないと Dock は正しく「準備中…」になり、基準（録音中の姿）と一致しない。
     func markAudioLiveForShot() { awaitingAudio = false }
+    /// 同じく固定画面用: 「準備中…」（音がまだ届いていない）の姿を作る。
+    /// `VoiceHUDState.beginPreparingForShot` の録音側。Atlas の meeting.preparing はこれで撮る。
+    func beginPreparingForShot() { awaitingAudio = true }
 
     func loadDemo(ragOpen: Bool) {
         isRecording = true

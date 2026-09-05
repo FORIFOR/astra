@@ -5964,6 +5964,9 @@ enum SelfTest {
         // 「録音中」と出ているのに無音、が一番高くつく壊れ方なので必ず撮る。
         state.ragOpen = false
         state.permissionIssue = .microphoneDenied
+        // 許可が無く、**何も届いていない**姿（一番高くつく壊れ方）。届いている経路を空にする。
+        // 空にしないと「画面の音を聞いています」が正しく出て、それは別の状態の絵になる。
+        RecordingRuntime.shared.resetListening()
         // 聞けていないのに文字起こしが並んでいる絵を「正しい」として残さない。
         // デモの transcript が載ったままだったので、「音声が記録されていません」の
         // すぐ隣で 3 人が喋っている画面をゲートが通していた。
@@ -5973,6 +5976,8 @@ enum SelfTest {
         record("09-permission-denied", capture("09-permission-denied"),
                expW: Metrics.workspaceWidth, expH: Metrics.workspaceHeight, minColors: 12)
         state.permissionIssue = nil
+        RecordingRuntime.shared.markListening(.localUser)
+        RecordingRuntime.shared.markListening(.remoteAudio)
         WindowCoordinator.shared.hideRecordingWorkspace()
         settle(0.5)
 

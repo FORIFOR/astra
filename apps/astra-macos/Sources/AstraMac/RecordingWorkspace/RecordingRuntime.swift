@@ -33,6 +33,16 @@ final class RecordingRuntime {
         if Thread.isMainThread { listening.insert(ch) }
         else { DispatchQueue.main.async { self.listening.insert(ch) } }
     }
+    /// 録音を始める瞬間に「届いている経路」を空にする。前の録音で届いていた事実は、
+    /// 次の録音の証拠にならない（以前は消えず、2 回目から最初の 1 フレーム前に
+    /// 「聞いています」と名乗っていた）。検査もここを通る（`shots` 09）。
+    func resetListening() {
+        if Thread.isMainThread { listening = [] }
+        else { DispatchQueue.main.async { self.listening = [] } }
+    }
+    /// §17 固定画面用: 「この Mac ではオンデバイス文字起こしを使えません」の姿を作る。
+    /// 本番はオンデバイス STT の起動失敗だけがここを立てる（`begin`）。
+    func markTranscriptionUnavailableForShot() { transcriptionUnavailable = true }
     /// マイクは 1 台を使い回す（録音のたびに新しい engine を作ると起動が 200〜770ms かかる）。
     /// start / stop はこの直列 queue でだけ触る（主スレッドを止めない・同時に触らない）。
     private let micCapture = MicCapture()
@@ -107,6 +117,7 @@ final class RecordingRuntime {
         self.session = session
         self.activeMeetingId = id
         transcriptionUnavailable = false
+        resetListening()
         if transcribe, SpeechTranscriber.authorization == .authorized {
             let st = SpeechTranscriber()
             do {

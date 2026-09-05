@@ -5,7 +5,8 @@ struct RecordingHeroView: View {
     @ObservedObject var state: RecordingWorkspaceState
 
     /// 音が入っていないとき、主役だけ元気に動いていると画面が嘘をつく。
-    private var silent: Bool { state.permissionIssue != nil }
+    /// 許可が無くても画面の音が届いていれば silent ではない（`RecordingWorkspaceState.silent`）。
+    private var silent: Bool { state.silent }
 
     var body: some View {
         VStack(spacing: 12) {
