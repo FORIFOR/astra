@@ -37,3 +37,26 @@ j3 haiku は無効（F-diff を same と答え、8A57 の観察に画像に無�
 - 直すなら（本人の判断待ち）: T1 で **変わらない見出し（録音中・メモ・字幕・Ask Astra）を morph 中に
   消さない**。`VoiceHUDView.contentVisible` が mode 変化で全体を 0 にしているのを、変わる部分だけに
   限る。Motion の規則（`dockContentDelayMs`）と `dockanim` gate に触るので、Craft Freeze の外か内かは本人が決める。
+
+## 修正後の再判定（2026-09-05、本人の「直してください」の後）
+
+修正: `.meeting` → `.meeting` の遷移で全体 fade を掛けず、開閉する板だけを同じ間合いで出す（見出しは消さない）。
+同じ prompt・同じ fixture、本物 2 本だけ修正後の frame（`surfacemotion` 再撮影）で作り直した。修正前の絵は
+`images/before-fix/` に残してある。判定者は新規 4 名、fixture 検証を通った **3 名**（k1 opus / k3 fable / k4 opus）で集計。
+k2 sonnet は無効（F-jump を「位置は変わらず文字だけ変わった」と読んで continuous、観察に画像に無い文字）。
+
+| | k1 opus | k3 fable | k4 opus | 数（修正前） |
+| --- | --- | --- | --- | --- |
+| **T1 meeting→notes** feel | continuous | continuous | continuous | continuous **3 / 3**（1 / 3） |
+| T1 vanish | cannot tell（コマ 1） | none | cannot tell（コマ 1） | 「真っ黒」の観察 0 / 3（3 / 3） |
+| T1 top_edge | fixed | cannot tell | fixed | fixed 2 / 3 |
+| T2 notes→workspace feel | continuous | switched | continuous | continuous 2 / 3（1 / 3） |
+| T2 second_surface | yes-first-stays | yes-first-stays | yes-first-stays | **first-stays 3 / 3** |
+| T2 top_edge | fixed | fixed | fixed | **fixed 3 / 3** |
+
+**T1 は PASS。** 3 名とも「同じ見出しが残ったまま下に足されていく」と観察し、修正前に 3 名全員が書いた
+「コマ 3 で全面が真っ黒」は誰も書かなくなった。層 A の contentΔmax も 9.3 → 5.1 / frame。
+残る層 C はコマ 1（最初の 1 tick、窓が中身より低く見出しが上で切れる）で、2 名が vanish を「cannot tell」と
+した理由。欠陥の信号としては弱い（「切り替わった」とは誰も読まない）ので記録に留める。
+T2 は変えていない。k3 は修正前の fable と同じく「新しい面が一度に開く」を switched と読むが、
+1 枚目が残る・上辺不動は 3 / 3 で設計どおり。

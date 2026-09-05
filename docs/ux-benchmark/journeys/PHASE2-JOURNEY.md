@@ -213,7 +213,13 @@ fixture 検証（同じ面が伸びる / 別の面に替わる / 跳ぶ、の 3 
 T1 meeting→notes は「同じ面が広がった」1 / 3、3 名全員が「コマ 3 で全面が真っ黒、コマ 2 も板が沈む」を観察。
 下の層 C に書いてある**中身が 100–300ms 消える fade が、知覚では「別物が載った」に読まれる**（Evidence B）。
 T2 notes→workspace は 3 名とも「1 枚目はそのまま・上辺は不動・その下に 2 枚目が開いた」で設計どおり。
-直すなら「変わらない見出しは消さない」（本人の判断待ち。Motion の規則と `dockanim` gate に触る）。
+本人の指示「直してください」（2026-09-05）で直した: **会議 Dock の中で板（メモ / 字幕 / Ask）が開閉するだけの
+遷移（`.meeting` → `.meeting`）では、`VoiceHUDView.contentVisible` の全体 fade を掛けない。** 開閉する板の側
+（`MeetingDock` の Divider + `MeetingPanelBody`）だけが、同じ間合い（`dockResizeMs + dockContentDelayMs` 後に 0.12s）
+で現れる。見出し（録音中・メモ・字幕・Ask Astra・停止）は消えない。トークンも寸法も変えていない。
+層 A の再測: T1 contentΔmax 9.3 → 5.1 / frame、上辺 0.0pt、窓 +0、`dockanim` OK。
+残る層 C: 最初の 1 tick だけ、窓（76pt）が中身（174pt）より低く、見出しが上で切れて見える
+（撮影のコマ 1。判定者は「cannot tell」と読んだ）。
 
 ### 層 C（記録のみ。閾値のある指標はどれも落ちていない）
 

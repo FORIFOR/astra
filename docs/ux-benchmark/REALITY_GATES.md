@@ -335,6 +335,14 @@ Agent execution   → 上位 Agent UI
 上回った」とはまだ言わない。§C の 4 型（公開素材）は済み、5 型と WORLD_CLASS の人の実機分（keyboard / VoiceOver /
 実 Meet / 音声認識 latency）は本人の端末で埋める。
 
+## §E PERCEIVED_SURFACE_CONTINUITY — 「同じ面に感じるか」を盲検で（2026-09-05）
+
+層 A（`surfacemotion`）は通っていたが、層 B（fixture 検証つき盲検 3 名、`journeys/perceived/`）で
+T1 meeting→notes が 1 / 3 しか「同じ面が広がった」と読まれず、3 名全員が「コマ 3 で全面が真っ黒」を観察した。
+原因は morph 中に中身全体を消す fade。本人の「直してください」で、`.meeting` の中で板が開閉するだけの遷移は
+見出しを消さず、開閉する板だけを同じ間合いで出すように直した（トークン・寸法は不変）。再判定は T1 3 / 3 continuous、
+「真っ黒」の観察 0 / 3。T2 は 1 枚目が残る・上辺不動が 3 / 3（設計どおり）。詳細は `journeys/perceived/answers/aggregate.md`。
+
 ## 直すときの規則
 
 ```

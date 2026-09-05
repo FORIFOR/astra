@@ -244,7 +244,7 @@ LIVE_TCC                        NOT_MEASURED   §5  TCC リセットは本人が
 WORLD_CLASS 残り 3 型            NOT_COMPARABLE §6  Listening / Task Running / Recovery は公開素材が無く hands-on が要る
                                                     （Invocation は vs Raycast WIN、Workspace は vs Granola WIN / vs Notion SPLIT、Sample 23）
 VERIFY_ALL                      PASS           §0  2026-09-05 07:47 本人のターミナルで VERIFY_ALL_OK
-PERCEIVED_SURFACE_CONTINUITY    T1 FAIL        journeys/perceived/（層 B。T1 の中身 fade が「別物」に読まれる。修正は本人の判断）
+PERCEIVED_SURFACE_CONTINUITY    PASS           journeys/perceived/（層 B。T1 は修正後 3/3 continuous、T2 は 1 枚目が残る 3/3）
 ```
 
 上の NOT_MEASURED / FAIL が残る限り **NO-GO**。「十分良いので出す」という判断はしない。

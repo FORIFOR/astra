@@ -41,8 +41,13 @@ struct VoiceTaskDockView: View {
         // 各 View は `@Environment(\.colorScheme)` を見ているので、ここで一括して切り替わる。
         .environment(\.colorScheme, .dark)
         .frame(width: size.width, height: size.height)
-        .onChange(of: store.dock) { _, _ in
+        .onChange(of: store.dock) { old, new in
             guard !reduceMotion else { return }
+            // 会議 Dock の中で板（メモ / 字幕 / Ask）が開閉するだけのときは、変わらない見出し
+            // （録音中・メモ・字幕・Ask Astra・停止）を消さない。全体を消すと、盲検 3 名全員が
+            // 「途中で全面が真っ黒」と観察し、2 名が「別物が載った」と読んだ（journeys/perceived）。
+            // 開閉する板の側だけが MeetingDock の中で同じ間合いで fade する。
+            if case .meeting = old, case .meeting = new { return }
             // 面のリサイズが終わる少し後に中身を戻す（§Animation 40–70ms）。
             contentVisible = false
             DispatchQueue.main.asyncAfter(deadline: .now() + Motion.dockResizeMs + Motion.dockContentDelayMs) {
@@ -782,22 +787,42 @@ struct MeetingDock: View {
     @ObservedObject private var store = AstraStateStore.shared
     @ObservedObject private var recording = RecordingWorkspaceState.shared
     @ObservedObject private var secret = SecretMode.shared
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let open: DockPresentation.MeetingPanel?
+    /// 開く板だけを、面が伸び終わってから出す（見出しは消さない）。
+    @State private var bodyVisible = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             controller
             if let open {
-                Divider().overlay(Palette.border(dark))
-                MeetingPanelBody(panel: open)
-                    .padding(.horizontal, S.metric(Metrics.dockPadH))
-                    .padding(.vertical, S.metric(Metrics.dockPadV))
+                Group {
+                    Divider().overlay(Palette.border(dark))
+                    MeetingPanelBody(panel: open)
+                        .padding(.horizontal, S.metric(Metrics.dockPadH))
+                        .padding(.vertical, S.metric(Metrics.dockPadV))
+                }
+                .opacity(bodyVisible || reduceMotion ? 1 : 0)
+                .animation(reduceMotion ? nil : .easeOut(duration: 0.12), value: bodyVisible)
                 Spacer(minLength: 0)
             }
+        }
+        .onAppear { if open != nil { revealBody() } }
+        .onChange(of: open) { _, new in
+            if new == nil { bodyVisible = false } else { revealBody() }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("dockMeeting")
+    }
+
+    /// 面のリサイズが終わる少し後に板を出す（全体 fade と同じ間合い。§Animation 40–70ms）。
+    private func revealBody() {
+        if reduceMotion { bodyVisible = true; return }
+        bodyVisible = false
+        DispatchQueue.main.asyncAfter(deadline: .now() + Motion.dockResizeMs + Motion.dockContentDelayMs) {
+            bodyVisible = true
+        }
     }
 
     private var controller: some View {
