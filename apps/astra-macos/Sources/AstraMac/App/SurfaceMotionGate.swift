@@ -66,6 +66,8 @@ enum SurfaceMotionGate {
         let targetFps = 60
         var transitions: [Transition] = []
         var notMeasured: [String] = []
+        /// 測れない項目ではなく、別の層で測っているものの所在。
+        var observations: [String] = []
         var pass = false
     }
 
@@ -304,7 +306,9 @@ enum SurfaceMotionGate {
         settle(0.4)
         recording.stop(); settle(0.5)
 
-        result.notMeasured.append("PERCEIVED_SURFACE_CONTINUITY: 「同じ面に感じるか」は fixture validation を通した判定者がいないので測っていない")
+        // 「同じ面に感じるか」はこの selftest（層 A）では測れない。層 B の盲検
+        // （fixture 検証を通した判定者、`journeys/perceived/`）で測る。ここでは場所だけ示す。
+        result.observations.append("PERCEIVED_SURFACE_CONTINUITY: この selftest は層 A だけ。層 B の盲検は docs/ux-benchmark/journeys/perceived/answers/aggregate.md")
         // 60fps に届かないのは測定器の都合。製品の失敗にはしない（別に記す）。
         for t in result.transitions where t.effectiveFps < 50 {
             result.notMeasured.append(String(format: "%@: 実効 %.0ffps（60 に届かない。frame pacing は参考値）", t.name, t.effectiveFps))
@@ -325,8 +329,9 @@ enum SurfaceMotionGate {
             for v in t.verdict { print("    ^ \(v)") }
         }
         for n in result.notMeasured { print("  NOT_MEASURED \(n)") }
+        for o in result.observations { print("  SEE \(o)") }
         print("SURFACE_CONTINUITY_MOTION=\(result.pass ? "PASS" : "FAIL")")
-        print("PERCEIVED_SURFACE_CONTINUITY=NOT_MEASURED")
+        print("PERCEIVED_SURFACE_CONTINUITY=LAYER_B（この selftest では測らない。判定は journeys/perceived/answers/aggregate.md）")
         if result.pass {
             print("SELFTEST_OK surfacemotion: 2 遷移とも同じ窓 id・上辺と中心は 2pt 以内・抜け 0（60fps window-only）")
             exit(0)
