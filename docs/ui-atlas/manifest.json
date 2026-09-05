@@ -1,7 +1,7 @@
 {
-  "$comment": "UI Atlas の正本。画面の一覧と説明はここに書く。image / sha256 / size / rc は scripts/ui-atlas/build.py が RC の撮影結果から埋める（手で書かない）。capture が null の画面は RC .app に描かせる経路が無い。モックや Figma で埋めてはいけない。required のまま置いて UI_ATLAS_GATE を落とす。 appearance_policy: fixed は Dock / HUD（OS の外観に関わらず同じ ambient surface。light == dark が仕様）、adaptive は Main / Workspace（light != dark が仕様）。gate が両方向を確かめる。",
+  "$comment": "UI Atlas の正本。画面の一覧と説明はここに書く。image / sha256 / size / rc は scripts/ui-atlas/build.py が RC の撮影結果から埋める（手で書かない）。capture が null の画面は RC .app に描かせる経路が無い。モックや Figma で埋めてはいけない。required のまま置いて UI_ATLAS_GATE を落とす。 appearance_policy: fixed は Dock / HUD（OS の外観に関わらず同じ ambient surface。light == dark が仕様）、adaptive は Main / Workspace（light != dark が仕様）。gate が両方向を確かめる。 reality の AUTOMATION_MISSING は「人が要るから測っていない」ではなく「測定器がまだ無い」。人を呼ばず測定器を作る（HUMAN_INTERVENTION=0、scripts/ideal-release-gate.sh）。",
   "rc": {
-    "sha": "7948bff",
+    "sha": "6321a3f",
     "app": "apps/astra-macos/.build/Astra.app",
     "exe_sha256": "2be75265f3bc9d3fb03ab7cf8bc56fb2a77289a1e7c84506ce69e844cc1772ed",
     "built": "2026-09-05T22:32:27+09:00",
@@ -725,7 +725,7 @@
           "dark"
         ]
       },
-      "status": "PENDING_CAPTURE",
+      "status": "CAPTURED",
       "note": "finishTask(.failed) が結果面を出す（以前は idle に戻って黙って消えていた）。どこで止まったか（失敗した段と detail）を 2 行目に言う。",
       "trigger": "実行が失敗した / 止まった。",
       "meaning": "何が失敗したか、次に何ができるか。",
@@ -922,7 +922,7 @@
           "dark"
         ]
       },
-      "status": "PENDING_CAPTURE",
+      "status": "CAPTURE_MISSING:light,dark",
       "note": "Dock のコントローラに一時停止 / 再開の手と「一時停止中」の見出しを足した（2026-09-05）。録音面の pill と同じ togglePause を通る。録音面の姿は recording.paused（optional）。",
       "trigger": "Pause。",
       "meaning": "録音を止めている（音は入らない）。再開できる。",
@@ -943,26 +943,12 @@
       "appearance_policy": "fixed",
       "captured": {
         "exe_sha256": "2be75265f3bc9d3fb03ab7cf8bc56fb2a77289a1e7c84506ce69e844cc1772ed",
-        "selftest": "shots",
+        "selftest": "dock8",
         "at": "2026-09-05T22:32:27+09:00"
       },
       "image": {
-        "sha256": {
-          "light": "b45bf2c7eceefe33552d190b3c934b908a0deb09673be25257d7d19529493d94",
-          "dark": "482c32a3dbc86405bf518897458d52e371c60cab5a21dfd048bb64de09af22fd"
-        },
-        "size": {
-          "light": {
-            "w": 1080,
-            "h": 680
-          },
-          "dark": {
-            "w": 1080,
-            "h": 680
-          }
-        },
-        "light": "screens/meeting.paused.light.png",
-        "dark": "screens/meeting.paused.dark.png"
+        "sha256": {},
+        "size": {}
       }
     },
     {
@@ -994,10 +980,31 @@
       "window": "Workspace（録音面）",
       "invariant": "見出しが「一時停止中」、点は灰。",
       "appearance_policy": "adaptive",
-      "status": "PENDING_CAPTURE",
-      "image": null,
-      "source": null,
-      "captured": null
+      "status": "CAPTURED",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "2be75265f3bc9d3fb03ab7cf8bc56fb2a77289a1e7c84506ce69e844cc1772ed",
+        "selftest": "shots",
+        "at": "2026-09-05T22:32:27+09:00"
+      },
+      "image": {
+        "sha256": {
+          "light": "b45bf2c7eceefe33552d190b3c934b908a0deb09673be25257d7d19529493d94",
+          "dark": "482c32a3dbc86405bf518897458d52e371c60cab5a21dfd048bb64de09af22fd"
+        },
+        "size": {
+          "light": {
+            "w": 1080,
+            "h": 680
+          },
+          "dark": {
+            "w": 1080,
+            "h": 680
+          }
+        },
+        "light": "screens/recording.paused.light.png",
+        "dark": "screens/recording.paused.dark.png"
+      }
     },
     {
       "id": "meeting.notes",
@@ -3037,7 +3044,7 @@
           "dark"
         ]
       },
-      "status": "PENDING_CAPTURE",
+      "status": "CAPTURED",
       "note": "録音面の 1 行と Dock の字幕 / 文字起こしの空状態に、理由と直しに行く道を出す。",
       "trigger": "STT モデルが無い / 初期化に失敗。",
       "meaning": "録音はできるが文字にならないことを、録る前に言う。",
@@ -3201,7 +3208,7 @@
           "dark"
         ]
       },
-      "status": "PENDING_CAPTURE",
+      "status": "CAPTURED",
       "note": "本物の Sparkle の窓。capture-rc.sh が 127.0.0.1 の http で配る appcast（版 999.0.0）を読ませる。バンドルが ja.lproj を持つので Sparkle の窓も日本語。",
       "trigger": "メニュー「更新を確認…」/ 自動。",
       "meaning": "新しい版があること、何が変わるか、入れるか。",
@@ -3305,7 +3312,7 @@
           "dark"
         ]
       },
-      "status": "PENDING_CAPTURE",
+      "status": "CAPTURED",
       "note": "Home の行が失敗した段の理由を言い、同じ入口（AI 操作）でやり直せる。",
       "trigger": "依頼が失敗した。",
       "meaning": "何が失敗して、次に何ができるか。",
@@ -3359,7 +3366,7 @@
           "dark"
         ]
       },
-      "status": "PENDING_CAPTURE",
+      "status": "CAPTURED",
       "note": "各行に「何のために要るか」（PermissionCenter.Capability.reason）を添えた。窓は 460×500。予定と ⌥Space を未確認にして「許可…」の在る姿を残す。",
       "trigger": "⌘, / メニュー。",
       "meaning": "OS 許可の現状と、ショートカット。",
@@ -3800,8 +3807,8 @@
   "reality": [
     {
       "gate": "REAL_MEETING",
-      "status": "NOT_MEASURED",
-      "where": "docs/ux-benchmark/RC-SESSION-RUNBOOK.md §3",
+      "status": "AUTOMATION_MISSING",
+      "where": "scripts/reality/run-real-meeting.sh（2 台自動: PC B が Playwright で Meet に入り固定 WAV を流す）",
       "rows": [
         "local voice",
         "remote voice",
@@ -3818,8 +3825,8 @@
     },
     {
       "gate": "ACCESSIBILITY",
-      "status": "NOT_MEASURED",
-      "where": "docs/ux-benchmark/RC-SESSION-RUNBOOK.md §4 / a11y/RUNBOOK.md",
+      "status": "AUTOMATION_MISSING",
+      "where": "scripts/reality/run-fka.sh + run-voiceover.sh（CGEvent で Tab / VoiceOver 実起動、AX の role/title/value を証拠に）",
       "rows": [
         "VoiceOver A-D",
         "FKA A-D",
@@ -3832,8 +3839,8 @@
     },
     {
       "gate": "LIVE_TCC",
-      "status": "NOT_MEASURED",
-      "where": "docs/ux-benchmark/RC-SESSION-RUNBOOK.md §5",
+      "status": "AUTOMATION_MISSING",
+      "where": "scripts/reality/run-live-tcc.sh（tccutil reset → 実ダイアログ自動押下 → 拒否 UI → 設定で ON → 復帰）",
       "rows": [
         "microphone",
         "screen recording",
@@ -3844,8 +3851,8 @@
     },
     {
       "gate": "WORLD_CLASS hands-on",
-      "status": "NOT_COMPARABLE",
-      "where": "docs/ux-benchmark/RC-SESSION-RUNBOOK.md §6",
+      "status": "AUTOMATION_MISSING",
+      "where": "scripts/reality/run-competitors.sh（競合実 UI を同条件で撮り、3 judge の盲検へ）",
       "rows": [
         "Listening",
         "Task Running",
@@ -3855,8 +3862,8 @@
   ],
   "summary": {
     "required": 61,
-    "required_captured": 61,
-    "required_missing": 0,
+    "required_captured": 60,
+    "required_missing": 1,
     "strips_required": 5,
     "strips_captured": 5,
     "strips_missing": 0,
@@ -3898,6 +3905,7 @@
         "dock.entering-recording",
         "meeting.controller",
         "meeting.preparing",
+        "meeting.paused",
         "meeting.notes",
         "meeting.captions",
         "meeting.ask"

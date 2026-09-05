@@ -40,6 +40,9 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>SUEnableAutomaticChecks</key><false/>
 </dict></plist>
 PLIST
+# ja.lproj に実体を置く（中身の無い lproj は localization として数えられない）。Sparkle は
+# メインバンドルの言語に合わせて自分の窓を出す。
+printf 'CFBundleName = "Astra";\n' > "$APP/Contents/Resources/ja.lproj/InfoPlist.strings"
 # Sparkle を同梱する。**入れないと起動できない**（実行体が @rpath/Sparkle.framework を要求し、
 # dyld が "Library not loaded" で落とす）。Sparkle を入れた後もこの台本は更新されておらず、
 # ここで作った .app は起動即クラッシュしていた —— TCC を要る検証が全部できない状態だった。

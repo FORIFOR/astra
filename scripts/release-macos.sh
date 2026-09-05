@@ -147,6 +147,9 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>SUAutomaticallyUpdate</key><false/>
 </dict></plist>
 PLIST
+# ja.lproj に実体を置く（中身の無い lproj は localization として数えられない）。Sparkle は
+# メインバンドルの言語に合わせて自分の窓を出す。
+printf 'CFBundleName = "Astra";\n' > "$APP/Contents/Resources/ja.lproj/InfoPlist.strings"
 
 # hardened runtime で要る権利だけ。付けすぎると審査で不利になるうえ、
 # 「何ができるアプリか」の説明にもならない。

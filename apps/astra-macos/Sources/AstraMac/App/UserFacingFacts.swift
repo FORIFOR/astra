@@ -166,7 +166,7 @@ enum UserFacingFacts {
             f("recovery.discard", recoveryDiscard),
             f("result.retry", resultRetry),
             f("transcription.recoveryHint", transcriptionRecoveryHint, false),
-            f("permission.inputMonitoring.reason", permissionInputMonitoringReason, false),
+            f("settings.inputMonitoringReason", permissionInputMonitoringReason, false),
             f("recording.pause", recordingPause),
             f("recording.resume", recordingResume),
             f("session.interrupted", sessionInterrupted),
