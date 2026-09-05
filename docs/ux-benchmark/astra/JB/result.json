@@ -18,21 +18,21 @@
     "その時刻の音声へ戻る（再生が未実装。飾りは置かない判断）"
   ],
   "observations" : [
-    "全体の連続感（層 C）: 面は Dock → Workspace → Library の 3 枚。同じ id meeting-1788405946 が通ったか: true"
+    "全体の連続感（層 C）: 面は Dock → Workspace → Library の 3 枚。同じ id meeting-1788615814 が通ったか: true"
   ],
   "product" : "Astra",
-  "startedAt" : "2026-09-03T03:25:45Z",
+  "startedAt" : "2026-09-05T13:43:33Z",
   "steps" : [
     {
       "front" : "com.apple.finder",
       "ids" : {
-        "dock" : "meeting-1788405946",
-        "recording" : "meeting-1788405946",
-        "session" : "meeting-1788405946"
+        "dock" : "meeting-1788615814",
+        "recording" : "meeting-1788615814",
+        "session" : "meeting-1788615814"
       },
       "interactions" : 1,
       "keyWindow" : false,
-      "ms" : 1143,
+      "ms" : 1021,
       "name" : "Meeting",
       "surface" : {
         "h" : 76,
@@ -52,7 +52,7 @@
       },
       "interactions" : 1,
       "keyWindow" : false,
-      "ms" : 1143,
+      "ms" : 1176,
       "name" : "Notes",
       "surface" : {
         "h" : 195,
@@ -61,18 +61,18 @@
         "x" : 870,
         "y" : 1245
       },
-      "transitionMs" : 166,
+      "transitionMs" : 173,
       "windows" : 1
     },
     {
       "front" : "com.apple.finder",
       "ids" : {
-        "session" : "meeting-1788405946",
-        "workspace" : "meeting-1788405946"
+        "session" : "meeting-1788615814",
+        "workspace" : "meeting-1788615814"
       },
       "interactions" : 1,
       "keyWindow" : true,
-      "ms" : 1203,
+      "ms" : 1262,
       "name" : "Workspace",
       "surface" : {
         "h" : 680,
@@ -81,18 +81,18 @@
         "x" : 740,
         "y" : 412
       },
-      "transitionMs" : 57,
+      "transitionMs" : 94,
       "windows" : 2
     },
     {
       "front" : "com.apple.finder",
       "ids" : {
         "decisions" : "1",
-        "session" : "meeting-1788405946"
+        "session" : "meeting-1788615814"
       },
       "interactions" : 1,
       "keyWindow" : true,
-      "ms" : 2559,
+      "ms" : 2556,
       "name" : "終える",
       "surface" : {
         "h" : 129,
@@ -101,17 +101,17 @@
         "x" : 1020,
         "y" : 1311
       },
-      "transitionMs" : 188,
+      "transitionMs" : 218,
       "windows" : 1
     },
     {
       "ids" : {
-        "opened" : "meeting-1788405946",
-        "session" : "meeting-1788405946"
+        "opened" : "meeting-1788615814",
+        "session" : "meeting-1788615814"
       },
       "interactions" : 1,
       "keyWindow" : false,
-      "ms" : 1249,
+      "ms" : 1642,
       "name" : "Library",
       "surface" : {
         "h" : 820,
@@ -129,7 +129,7 @@
       },
       "interactions" : 1,
       "keyWindow" : false,
-      "ms" : 644,
+      "ms" : 640,
       "name" : "Source",
       "surface" : {
         "h" : 820,
@@ -147,7 +147,7 @@
       },
       "interactions" : 1,
       "keyWindow" : false,
-      "ms" : 2004,
+      "ms" : 1886,
       "name" : "読み戻す",
       "surface" : {
         "h" : 820,
@@ -160,6 +160,6 @@
     }
   ],
   "success" : true,
-  "totalMs" : 9949,
+  "totalMs" : 10186,
   "windowsOpened" : 0
 }
