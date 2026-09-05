@@ -67,7 +67,7 @@ Info.plist の `NSSpeechRecognitionUsageDescription` は「音は端末から出
    会議の作成・停止時の音声送信・落ちた録音の自動回収は、その旗の中でしか起きない。
    selftest（e2e001 / recovery / fulllifecycle …）は `configureBackend` を自分で呼ぶので影響しない。
    AI 操作・翻訳・声で頼む（文字を gateway へ送る）は人が押してから動くので残す。
-3. **`.meeting` はマイクだけ求める**（`Settings/PermissionCenter.swift`）。system audio は本番経路で
+3. **`.meeting` はマイクと音声認識（Apple Speech、手元で完結し端末から出ない）だけ求める**（`Settings/PermissionCenter.swift`）。system audio は本番経路で
    取り込んでいないので、画面収録を求める理由が無かった。本当に繋いだ日に「相手の声も記録する」の
    入口で JIT で求める（Permission B は別途作らない）。ガイドの「（相手の声のために）画面収録」は消した。
 
@@ -77,7 +77,7 @@ Info.plist の `NSSpeechRecognitionUsageDescription` は「音は端末から出
 
 ## 残す実機確認（Privacy とは別の gate: Meeting Capture Reality）
 
-`.meeting` をマイクだけにしたので、Privacy は PASS でも**会議の録れ方**は別に確かめる（本人の指示、2026-09-04）。
+`.meeting` をマイクと音声認識だけにしたので、Privacy は PASS でも**会議の録れ方**は別に確かめる（本人の指示、2026-09-04。音声認識は 2026-09-06 に追加: 求めずにいたので初回は文字起こしが動かなかった）。
 実際の Meet / Zoom で、スピーカー再生の状態で 1 度録って次を見る:
 
 ```

@@ -14,6 +14,8 @@ MODEL="${1:?model}"; SANDBOX="${2:?sandbox dir}"; PROMPT="${3:?prompt file}"; OU
 [[ -f "$PROMPT" ]] || { echo "FAIL: prompt が無い: $PROMPT" >&2; exit 1; }
 command -v claude >/dev/null || { echo "AUTOMATION_MISSING: claude CLI が無い" >&2; exit 2; }
 mkdir -p "$(dirname "$OUT")"
+OUT="$(cd "$(dirname "$OUT")" && pwd)/$(basename "$OUT")"   # 箱へ cd するので絶対パスに
+PROMPT="$(cd "$(dirname "$PROMPT")" && pwd)/$(basename "$PROMPT")"
 RAW="$OUT.raw.json"
 # 箱の外を見せない。cwd を箱にし、許すのは Read だけ。prompt は stdin で渡す（引数長の上限を避ける）。
 # JSON が壊れて返ることがある（実測: haiku が途中で切れた）。壊れていたら 1 回だけ呼び直す。

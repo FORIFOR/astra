@@ -3514,8 +3514,9 @@ enum SelfTest {
         }
         // 相手の声は本番経路でまだ取り込んでいない（captureSystemAudio は常に false）。使っていない目的で
         // 画面収録を求めたら落ちる（`docs/privacy-egress.md`）。system audio を繋いだ日にここを変える。
-        if PermissionCenter.Capability.meeting.required != [.microphone] {
-            fail.append("meeting がマイク以外まで要求している（system audio は未接続）")
+        // 音声認識（Apple Speech、手元）は端末から出ない。画面収録は system audio を繋ぐまで求めない。
+        if PermissionCenter.Capability.meeting.required != [.microphone, .speechRecognition] {
+            fail.append("meeting がマイクと音声認識以外まで要求している（system audio は未接続）")
         }
         // 全機能の和集合を、どれか 1 機能が単独で要求してはいけない（＝初回一括の禁止）。
         let all = Set(PermissionCenter.Capability.allCases.flatMap(\.required))
@@ -4538,8 +4539,8 @@ enum SelfTest {
         }
         var fail: [String] = []
         if RecordingRuntime.devAutoUploadEnabled { fail.append("録音の自動 upload が env 無しで有効") }
-        if PermissionCenter.Capability.meeting.required != [.microphone] {
-            fail.append("meeting がマイク以外を求めている: \(PermissionCenter.Capability.meeting.required)")
+        if PermissionCenter.Capability.meeting.required != [.microphone, .speechRecognition] {
+            fail.append("meeting がマイクと音声認識以外を求めている: \(PermissionCenter.Capability.meeting.required)")
         }
         var stt = "NOT_MEASURED"
         if SpeechTranscriber.authorization == .authorized {

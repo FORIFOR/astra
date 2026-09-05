@@ -25,6 +25,8 @@ WORK="$(mktemp -d)"
 OCR="$ROOT/.build/uxlab/ocr"
 [[ -x "$OCR" ]] || bash "$ROOT/scripts/ux-auto/build-tools.sh" >/dev/null
 mkdir -p "$OUT"
+# judge は箱（別ディレクトリ）の中で走るので、出力先は絶対パスに。相対のままだと judge が黙って落ちた（実測）。
+OUT="$(cd "$OUT" && pwd)"
 
 # 1. 箱を作る（乱数 ID、鍵は箱の外）。
 python3 - "$ATLAS" "$WORK" "$OUT" "$BATCH" <<'PY'

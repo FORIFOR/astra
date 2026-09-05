@@ -127,7 +127,8 @@ else
   mark 17 NOT_REQUESTED "同上" "distributed artifact tests"
 fi
 # 18 ガイド生成（golden から。文は fact() だけ）
-guide() { ASTRA_GUIDE_OUT="$WORK/guide/Astra-操作ガイド" ASTRA_GUIDE_BIN="$BIN" python3 docs/guide/build.py && ls "$WORK/guide/" && echo GUIDE_BUILT; }
+# ガイドの絵は RC が撮った shots（Atlas と同じ素材）から。
+guide() { ASTRA_GUIDE_CLEAN_SHOTS="$ATLAS_OUT/shots-light" ASTRA_GUIDE_OUT="$WORK/guide/Astra-操作ガイド" ASTRA_GUIDE_BIN="$BIN" python3 docs/guide/build.py && ls "$WORK/guide/" && echo GUIDE_BUILT; }
 step 18 "guide generation" "GUIDE_BUILT" guide
 # 19 ガイド ↔ 実行体の一致
 step 19 "guide ↔ binary parity" "GUIDE_FACTS_OK" bash scripts/verify-guide-facts.sh

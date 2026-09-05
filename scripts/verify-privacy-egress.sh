@@ -64,7 +64,8 @@ fi
 pc="$SRC/Settings/PermissionCenter.swift"
 meeting_line=$(grep -n "case \.meeting: return \[" "$pc" || true)
 sysaudio_on=$(prod "captureSystemAudio: *true" || true)
-if grep -q "case \.meeting: return \[\.microphone\]$" <<<"$meeting_line" && [ -z "$sysaudio_on" ]; then
+# 音声認識（Apple Speech）は手元で完結し端末から出ない。求めてよいのはマイクと音声認識だけ。
+if grep -q "case \.meeting: return \[\.microphone, \.speechRecognition\]$" <<<"$meeting_line" && [ -z "$sysaudio_on" ]; then
   row "meeting unused screen permission" "0"
 elif [ -n "$sysaudio_on" ] && grep -q "screenRecording" <<<"$meeting_line"; then
   row "meeting unused screen permission" "0 (system audio 接続済み)"
