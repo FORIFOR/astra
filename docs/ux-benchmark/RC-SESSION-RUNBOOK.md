@@ -234,6 +234,22 @@ INVOCATION_AUDIO_TRUTH（signed .app、/tmp/astra-rc/invocation/result.json）
 この台本だけ更新されていなかった）。署名 .app が起動しない＝TCC の要る検証が全部できない状態だったので、
 `release-macos.sh` と同じ手順で同梱＋内側から署名し、最後に「起動するか」を台本自身が確かめるようにした。
 
+## RC 凍結（2026-09-05 15:5x、本人の指示）
+
+```
+RC SHA / tree        349007f（origin/main と同じ）
+RC .app              apps/astra-macos/.build/Astra.app  built 2026-09-05 12:44（349007f の commit 12:48 より前、間に source 変更なし）
+exe sha256           390b36331def9178…  codesign valid  com.astra.desktop / 6RR7572ZLU
+INVOCATION           PASS      PERCEIVED_CONTINUITY  PASS
+CI                   GREEN     golden 10/10           audio truth PASS
+UI craft             FREEZE    RELEASE                NO-GO
+保留                 857b68c（surfacemotion の診断文言だけ。gate も挙動も変えない。push しない）
+```
+
+**この .app を作り直さない。** REAL_MEETING → ACCESSIBILITY 4 本 → LIVE_TCC → hands-on 3 型
+（Listening / Task Running / Recovery）を同じ RC で通す。FAIL が出た場合だけ:
+その 1 箇所を直す → verify-all → CI GREEN → 新 RC を 1 回だけ作る → 失敗 gate と影響 gate だけ再実行。
+
 ## いま埋まっていない欄（2026-09-05 時点）
 
 ```
