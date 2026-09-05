@@ -1,0 +1,21 @@
+{
+  "$comment": "REAL_MEETING の固定台本と期待値。PC B（bot）はこの lines を毎回同じ声で流し、判定は Astra の transcript / notes をこれと突き合わせる。人は喋らない。",
+  "lines": [
+    {"speaker": "A", "voice": "Eddy", "text": "今日は Astra の macOS 版を先にリリースします。"},
+    {"speaker": "B", "voice": "Flo",  "text": "了解です。Windows 版は次のスプリントに回しましょう。"},
+    {"speaker": "A", "voice": "Eddy", "text": "山田さんは金曜日までにテスト結果を共有してください。"},
+    {"speaker": "B", "voice": "Flo",  "text": "わかりました。金曜日までに共有します。"}
+  ],
+  "expected": {
+    "decisions": [
+      {"keywords": ["macOS", "先に"], "label": "macOS 版を先にリリース"},
+      {"keywords": ["Windows", "次のスプリント"], "label": "Windows 版は次のスプリント"}
+    ],
+    "actions": [
+      {"keywords": ["山田", "金曜"], "label": "山田: テスト結果を金曜日までに共有"}
+    ],
+    "transcript_similarity_min": 0.55,
+    "pause_leakage_max": 0,
+    "source_jump_tolerance_s": 5
+  }
+}

@@ -85,6 +85,7 @@ enum SelfTest {
         case "session": sessionLifecycle(); return true
         case "sessionshots": sessionShots(args); return true
         case "sysshots": sysShots(args); return true
+        case "realmeeting": realMeeting(args); return true
         case "uiscale": uiScale(); return true
         case "acceptance": acceptance(); return true
         case "sessionsync": sessionSync(); return true

@@ -71,7 +71,8 @@ final class MeetingIntelligence {
             let item = CanvasItem(trimmed, at: line.at, speaker: line.speaker)
             if t.contains("？") || t.contains("?") {
                 out.questions.append(item)
-            } else if ["決定", "決めま", "確定", "で行き", "にしま"].contains(where: t.contains) {
+            // 「〜を先に出す」「〜に回しましょう」も決めたこと（REAL_MEETING の台本で 0/2 だった）。
+            } else if ["決定", "決めま", "確定", "で行き", "にしま", "先に", "しましょう"].contains(where: t.contains) {
                 out.decisions.append(item)
             } else if ["まで", "お願い", "対応し", "送り", "作成し", "担当"].contains(where: t.contains) {
                 out.actions.append(item)

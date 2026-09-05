@@ -2,25 +2,31 @@
   "meetingPanel-ask" : {
     "h" : 30,
     "w" : 107,
-    "x" : 612,
+    "x" : 568,
     "y" : 23
   },
   "meetingPanel-captions" : {
     "h" : 30,
     "w" : 70,
-    "x" : 530,
+    "x" : 486,
     "y" : 23
   },
   "meetingPanel-notes" : {
     "h" : 30,
     "w" : 68,
-    "x" : 450,
+    "x" : 406,
+    "y" : 23
+  },
+  "pauseRecording" : {
+    "h" : 30,
+    "w" : 32,
+    "x" : 731,
     "y" : 23
   },
   "secretToggle" : {
     "h" : 30,
     "w" : 32,
-    "x" : 731,
+    "x" : 687,
     "y" : 23
   },
   "stopRecording" : {

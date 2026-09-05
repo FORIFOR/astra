@@ -1,0 +1,13 @@
+{
+  "name": "@astra/meet-bot",
+  "private": true,
+  "type": "module",
+  "description": "REAL_MEETING の相手役。人の代わりに Google Meet へ入り、固定 WAV を仮想マイクへ流す。",
+  "scripts": {
+    "corpus": "bash make-corpus.sh /tmp/astra-real-meeting/corpus",
+    "join": "node join.mjs /tmp/astra-real-meeting/corpus /tmp/astra-real-meeting/bot"
+  },
+  "devDependencies": {
+    "playwright": "^1.47.0"
+  }
+}
