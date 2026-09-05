@@ -19,7 +19,7 @@ struct SettingsView: View {
             }
 
             // §10 Interface Size。文字だけでなく面・余白も一緒に動く。
-            section("Interface Size") {
+            section("表示の大きさ") {
                 Picker("", selection: Binding(
                     get: { UIScale.shared.size },
                     set: { UIScale.shared.set($0) })) {

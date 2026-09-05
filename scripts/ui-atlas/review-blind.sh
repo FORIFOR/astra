@@ -66,7 +66,9 @@ prompt_head = """あなたは、デスクトップの AI アシスタント製�
 
 - KEEP: この画面はそのまま出せる（世界の一線級のデスクトップ製品と並べて見劣りしない）
 - FIX: 直すべき具体的な欠陥が**絵から**言える（何が・どこが・なぜ）。主観の好みだけなら FIX と言わない
-- NOT_ENOUGH_EVIDENCE: 1 枚の静止画では判断できない（動き・音・前後の画面が要る）
+- NOT_ENOUGH_EVIDENCE: 1 枚の静止画では判断できない（動き・音・前後の画面が要る）。
+  小さな面（メニューバー下の pill など、文字が 1〜3 語）は**見えているものが全て**です。文字が読めるなら
+  KEEP か FIX を出してください。NOT_ENOUGH_EVIDENCE は文字が読めない・画像が欠けているときだけ。
 
 評価軸: hierarchy / density / alignment / typography / contrast / state legibility / primary-action clarity / screen occupation / consistency / trust-provenance / error-recovery clarity。FIX のときは axis を必ず 1 つ以上書く。
 

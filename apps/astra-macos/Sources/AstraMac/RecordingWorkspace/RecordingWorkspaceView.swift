@@ -515,6 +515,12 @@ private struct MeetingNotesCanvas: View {
             // 許可が無くて何も届いていない。理由は banner と transcript が既に言っている。
             // ここで三度目を言わず、「聞いています…」とも言わない。
             EmptyView()
+        } else if let issue = state.permissionIssue, issue.channel == nil {
+            // 音は届いているが文字にできない（音声認識の許可が無い）。
+            // 「聞いています…」は文字起こしが動いていると読める。止まっている事実をここで言う（盲検 3/3）。
+            Label("音は録れています。文字起こしは止まっています", systemImage: "text.badge.xmark")
+                .font(.system(size: TypeScale.microSize))
+                .foregroundStyle(Palette.warning(dark))
         } else if liveChannels.isEmpty, state.isRecording {
             // **音が来ていないのに「聞いています」と言わない。**
             // 見出しが「音が届いていません」と言う横で、ここが「聞いています…」と

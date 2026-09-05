@@ -2733,7 +2733,9 @@ enum SelfTest {
 
         // 2 録音中: 開始した瞬間に Home へ出る
         step("02-recording", {
-            sessions.begin(id: "shot-1", title: "Product Weekly", source: "Google Meet")
+            // 42 分前に始めた会議。0 分の会議に要約と 5 人が付くと、表示が壊れて見える（盲検）。
+            sessions.begin(id: "shot-1", title: "Q4 移行計画の打ち合わせ", source: "Google Meet",
+                           now: Date().addingTimeInterval(-42 * 60))
         })
         guard let liveId = sessions.live?.id else {
             print("SELFTEST_FAIL sessionshots: 録音中の Session が無い"); exit(2)

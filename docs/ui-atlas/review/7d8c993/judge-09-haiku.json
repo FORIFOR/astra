@@ -1,0 +1,142 @@
+{
+  "pages": {
+    "CAA8": {
+      "visible_text": [
+        "録音中",
+        "04:21",
+        "会議",
+        "OAuth だけ確認お願いします",
+        "決まったこと",
+        "やること",
+        "文字起こし",
+        "翻訳",
+        "字幕",
+        "田中"
+      ],
+      "observation": {
+        "happening": "Real-time meeting transcription in progress with dual-panel layout",
+        "most_important": "Active recording with clear decision items and action items separated in list format; transcript with speaker names and timestamps on right side",
+        "next_action": "Review transcript, export summary, or end recording session",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "D672": {
+      "visible_text": [
+        "Plugins",
+        "Connectors",
+        "Architecture",
+        "Google Calendar",
+        "Care Support",
+        "EHR Assist",
+        "General Assistant",
+        "astra · 0.1.0",
+        "artifacts.read",
+        "calendar.write"
+      ],
+      "observation": {
+        "happening": "Plugin/app marketplace with grid layout showing available integrations",
+        "most_important": "Each plugin card displays name, version, capabilities (permission tags), and enabled status via checkmark badge",
+        "next_action": "Install plugins or view plugin details",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "D673": {
+      "visible_text": [
+        "Home",
+        "こんばんは",
+        "何を終わらせますか？",
+        "録音を始める",
+        "予定から録音を始める",
+        "カレンダーを許可",
+        "Space でどこからでも始められます"
+      ],
+      "observation": {
+        "happening": "Welcome/onboarding screen with greeting and action options for starting recording",
+        "most_important": "Clear primary action (start recording) with secondary option (schedule recording from calendar); explanation of keyboard shortcut",
+        "next_action": "User starts recording or grants calendar permission",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "D901": {
+      "visible_text": [
+        "Notion",
+        "Q3 Product Roadmap",
+        "SUGGESTED",
+        "Summarize page",
+        "Extract action items",
+        "Find unresolved decisions",
+        "Ask about this page"
+      ],
+      "observation": {
+        "happening": "Floating dark card showing AI-suggested actions for viewed content (Notion page)",
+        "most_important": "Quick action menu with four templated suggestions; minimal UI appropriate for overlay",
+        "next_action": "Select suggested action or dismiss",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "D96E": {
+      "visible_text": [
+        "AI が探している資料",
+        "ファイル",
+        "Gmail",
+        "Drive",
+        "マイク と 画面の音 を聞いています",
+        "OAuth だけ確認お願いします",
+        "新しい・このプロジェクト"
+      ],
+      "observation": {
+        "happening": "Meeting interface with side drawer showing 'Resources AI is looking for' with tab-based filtering (File/Gmail/Drive)",
+        "most_important": "Context-aware resource panel discovered during meeting; items listed with colored progress bars on right",
+        "next_action": "Review resources or close panel",
+        "anomalies": [
+          "Progress bars on resource items lack labels—unclear whether indicating load state, relevance score, or priority"
+        ]
+      },
+      "verdict": "FIX",
+      "concerns": [
+        {
+          "axis": "state legibility",
+          "what": "Progress bars on resource cards have no visible label or legend explaining their meaning",
+          "where": "Right edge of each resource item in 'AI が探している資料' overlay panel"
+        }
+      ],
+      "confidence": "medium"
+    },
+    "E149": {
+      "visible_text": [
+        "この Mac ではオンデバイス文字起こしを使えません",
+        "音声は保存されています",
+        "認定を開く（音声入力）",
+        "まだ発話がありません",
+        "AI が探している資料 — まだありません"
+      ],
+      "observation": {
+        "happening": "Meeting interface with system limitation error displayed prominently at top",
+        "most_important": "Red banner clearly states on-device transcription unavailable on this Mac, confirms audio is still being saved, offers recovery action (open settings)",
+        "next_action": "User clicks settings link or accepts limitation and continues meeting",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    }
+  },
+  "_judge": {
+    "model": "haiku",
+    "cost_usd": 0.0643634,
+    "turns": 7,
+    "duration_ms": 40508
+  }
+}

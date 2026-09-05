@@ -1,0 +1,174 @@
+{
+  "pages": {
+    "0073": {
+      "visible_text": [
+        "Google Meet",
+        "00:02",
+        "メモ",
+        "学禄",
+        "Ask Astra",
+        "文字起こし",
+        "翻訳",
+        "田中",
+        "初期費用が心配です",
+        "導入時期は10月で行きます",
+        "見積は明日までにお願いします",
+        "鈴木"
+      ],
+      "observation": {
+        "happening": "Active Google Meet call with Japanese conversation showing speaker names and their statements on a transcript panel.",
+        "most_important": "Dark-theme interface clearly shows meeting participants (田中, 鈴木) with their timestamped comments organized in a readable layout.",
+        "next_action": "User can expand sections or interact with the meeting controls visible at the top.",
+        "anomalies": [
+          "No anomalies detected"
+        ]
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "04DA": {
+      "visible_text": [
+        "Home",
+        "Work",
+        "Library",
+        "Apps",
+        "こんばんは",
+        "何を終わらせますか？",
+        "録音を始める",
+        "Product Weekly",
+        "10:00 Google Meet",
+        "A社商談",
+        "13:30 Zoom",
+        "落ちた会議"
+      ],
+      "observation": {
+        "happening": "Home screen of desktop AI assistant showing greeting, voice input prompt, upcoming meetings, and recent activity feed.",
+        "most_important": "Clear hierarchy with sidebar navigation, prominent greeting/question prompt, and structured agenda items with meeting details below.",
+        "next_action": "User can type a task query, start voice recording, or click on scheduled meetings.",
+        "anomalies": [
+          "No anomalies detected"
+        ]
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "0743": {
+      "visible_text": [
+        "04:21",
+        "録音中",
+        "会議",
+        "マイクと画面の音を聞いています",
+        "決まったこと",
+        "やること",
+        "文字起こし",
+        "翻訳",
+        "字幕",
+        "田中",
+        "それでは9月12日に出しましょう",
+        "あなた",
+        "了解しました"
+      ],
+      "observation": {
+        "happening": "Active meeting recording at 04:21 with left panel showing meeting structure (decisions/action items) and right panel showing live transcription with speaker names and timestamps.",
+        "most_important": "Dual-pane layout clearly separates meeting summary (left) from real-time transcript (right); recording status prominently displayed at top.",
+        "next_action": "Continue listening to meeting or navigate between sections (decisions/action items shown as expandable).",
+        "anomalies": [
+          "No anomalies detected"
+        ]
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "090E": {
+      "visible_text": [
+        "04:21",
+        "録音中",
+        "会議",
+        "鈴木",
+        "OAuth だけ確認お願いします",
+        "決まったこと",
+        "やること",
+        "文字起こし",
+        "翻訳",
+        "字幕",
+        "AI が見ている資料 5件"
+      ],
+      "observation": {
+        "happening": "Same meeting as 0743, showing left panel with single speaker statement highlighted, right panel showing partial transcript, metadata indicator at bottom showing AI tracking 5 materials.",
+        "most_important": "Shows how the AI assistant surfaces specific speaker statements and associated context (materials being tracked).",
+        "next_action": "User can expand transcript items or view associated materials.",
+        "anomalies": [
+          "No anomalies detected"
+        ]
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "0AC0": {
+      "visible_text": [
+        "04:21",
+        "録音中",
+        "会議",
+        "マイクと画面の音を聞いています",
+        "決まったこと",
+        "04:22",
+        "田中",
+        "導入時期は10月で行きます",
+        "やること",
+        "04:48",
+        "あなた",
+        "見積は明日までにお願いします",
+        "質問",
+        "05:01",
+        "鈴木",
+        "誰が対応しますか？"
+      ],
+      "observation": {
+        "happening": "Meeting transcript has been parsed and categorized into sections: Decisions (決まったこと), Action Items (やること), Questions (質問), Concerns (懸念). Each item shows timestamp, speaker name, and statement.",
+        "most_important": "AI has automatically extracted and organized conversational content into logical categories with proper temporal and speaker attribution.",
+        "next_action": "User can interact with individual items or collapse categories.",
+        "anomalies": [
+          "No anomalies detected"
+        ]
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "0D0E": {
+      "visible_text": [
+        "Library",
+        "Meetings",
+        "Files",
+        "Meetings",
+        "録った会議。音声は端末から出ません。",
+        "録音した会議はまだありません。",
+        "Home",
+        "「録音を始める」",
+        "予定",
+        "「録音」"
+      ],
+      "observation": {
+        "happening": "Library view showing Meetings tab (empty state) with explanatory text about recorded meetings and instructions for starting to record.",
+        "most_important": "Empty state provides clear, helpful guidance with clickable reference to where user should go to start recording (Home's 「録音を始める」or scheduled meeting's 「録音」).",
+        "next_action": "User follows the provided instructions to navigate to Home or a scheduled meeting to begin recording.",
+        "anomalies": [
+          "No anomalies detected"
+        ]
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    }
+  },
+  "_judge": {
+    "model": "haiku",
+    "cost_usd": 0.0784839,
+    "turns": 7,
+    "duration_ms": 73483
+  }
+}

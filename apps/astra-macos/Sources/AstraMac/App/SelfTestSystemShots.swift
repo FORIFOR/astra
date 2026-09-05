@@ -127,8 +127,8 @@ extension SelfTest {
             skipped.append("update-available: 配布先と公開鍵の入った .app と ASTRA_SELFTEST_FEED_URL（http）が要る")
         }
 
-        // 4 更新を確かめられない。Astra 自身の alert。理由は実行体の事実（揃っていれば「口が起動していない」）。
-        let reason = SoftwareUpdate.misconfiguration() ?? "更新の口が起動していない"
+        // 4 更新を確かめられない。Astra 自身の alert。理由は実行体の事実（揃っていれば「確認が起動していない」）。
+        let reason = SoftwareUpdate.misconfiguration() ?? "更新の確認が起動していません"
         armShot("update-unavailable", timeout: 6, isAlertSized)
         StatusBarController.presentUpdateUnavailable(reason: reason)
         settle(0.6)

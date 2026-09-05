@@ -58,7 +58,9 @@ struct RAGDrawerView: View {
                 .foregroundStyle(.secondary).frame(width: 16)
             VStack(alignment: .leading, spacing: 1) {
                 Text(item.title).font(.system(size: TypeScale.microSize, weight: .medium)).lineLimit(1)
-                Text(item.reason).font(.system(size: TypeScale.captionSize)).foregroundStyle(.secondary).lineLimit(1)
+                // 出所を先に言う。文字起こしと同じ文が「資料」として並ぶ理由が、出所無しでは読めない（盲検 3/3）。
+                Text("\(sourceName(item.source)) · \(item.reason)")
+                    .font(.system(size: TypeScale.captionSize)).foregroundStyle(.secondary).lineLimit(1)
             }
             Spacer()
             // 生の 0.45 は読み手にとって意味が無い。強さは棒で見せ、理由は左の 1 行に任せる。
@@ -71,6 +73,15 @@ struct RAGDrawerView: View {
                 .accessibilityLabel("関連の強さ \(Int(item.score * 100)) パーセント")
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func sourceName(_ s: ContextSource) -> String {
+        switch s {
+        case .meeting: return "この会議の発言"
+        case .library: return "ライブラリ"
+        case .message: return "選択中の文"
+        case .web: return "Web"
+        }
     }
 
     private func sourceIcon(_ s: ContextSource) -> String {

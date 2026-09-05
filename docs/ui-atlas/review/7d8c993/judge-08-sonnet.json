@@ -1,0 +1,206 @@
+{
+  "pages": {
+    "BD25": {
+      "visible_text": [
+        "録音中",
+        "00:02",
+        "メモ",
+        "字幕",
+        "Ask Astra"
+      ],
+      "observation": {
+        "happening": "A thin floating HUD bar shows an active recording in progress, 2 seconds in, with quick-action icons on the right.",
+        "most_important": "録音中 status with elapsed timer, and the red stop button to end the recording.",
+        "next_action": "Click メモ/字幕/Ask Astra to open those panels, or use the unlabeled eye/pause/stop icons to view, pause, or stop.",
+        "anomalies": [
+          "メモ, 字幕, Ask Astra carry text labels but the eye, pause, and stop icons next to them do not, with no divider marking the two groups",
+          "large unexplained horizontal gap between the timer group and the icon cluster"
+        ]
+      },
+      "verdict": "FIX",
+      "concerns": [
+        {
+          "axis": "consistency",
+          "what": "Three controls have text labels and three don't, with no visual separator explaining the split",
+          "where": "icon row, right two-thirds of the bar"
+        }
+      ],
+      "confidence": "medium"
+    },
+    "BF54": {
+      "visible_text": [
+        "A社 新規提案",
+        "42:18・3人",
+        "要約",
+        "決まったこと1",
+        "やること1",
+        "文字起こし",
+        "出所",
+        "田中",
+        "伊藤",
+        "鈴木",
+        "あなた",
+        "ui-check"
+      ],
+      "observation": {
+        "happening": "Viewing a saved meeting's summary and transcript, with citation [1] selected and its source excerpt shown in a right-hand panel; the matching transcript row is highlighted.",
+        "most_important": "The summary bullets (要約/決まったこと/やること) each linking via [1][2][3] to specific transcript moments.",
+        "next_action": "Click [2] or [3] to view other citations, switch to 録音/関連ファイル/出所 tabs, or scroll the transcript.",
+        "anomalies": [
+          "the right source panel displays only 4 short lines of text but the panel itself is tall and wide, leaving a large blank area below with nothing else in it",
+          "録音 tab sits next to 文字起こし but no audio player or waveform is visible anywhere on screen"
+        ]
+      },
+      "verdict": "FIX",
+      "concerns": [
+        {
+          "axis": "screen occupation",
+          "what": "Citation/source panel uses a small fraction of its allotted space, leaving most of it empty with no fallback content",
+          "where": "right-hand panel"
+        }
+      ],
+      "confidence": "medium"
+    },
+    "C682": {
+      "visible_text": [
+        "Work",
+        "Tasks",
+        "Agents",
+        "まだ頼んだ仕事はありません。",
+        "Task Dock から話しかけると、ここに履歴が残ります。",
+        "ui-check"
+      ],
+      "observation": {
+        "happening": "An empty state for the 'Tasks' tab, indicating no background tasks have been assigned to the AI agent yet.",
+        "most_important": "The explanatory line telling the user tasks get logged here after being requested via 'Task Dock'.",
+        "next_action": "None available on this screen itself — no button; user must locate 'Task Dock' elsewhere.",
+        "anomalies": [
+          "no call-to-action button or link on an empty state screen",
+          "'Task Dock' is referenced by name but isn't visible anywhere in this screenshot",
+          "large unused blank area filling most of the screen below the two lines of text"
+        ]
+      },
+      "verdict": "FIX",
+      "concerns": [
+        {
+          "axis": "primary-action clarity",
+          "what": "Empty state gives no actionable control, only text referencing a feature not shown on screen",
+          "where": "center content area, below 'Tasks' heading"
+        },
+        {
+          "axis": "screen occupation",
+          "what": "Roughly 80% of the vertical space is empty with no content or illustration",
+          "where": "below the two lines of body text"
+        }
+      ],
+      "confidence": "high"
+    },
+    "C704": {
+      "visible_text": [
+        "Slack",
+        "このメッセージを送りますか?",
+        "外部に出る",
+        "宛先",
+        "#sales",
+        "差出人",
+        "あなた",
+        "出所",
+        "週次同期・田中・10:42",
+        "やめる",
+        "直す",
+        "送る"
+      ],
+      "observation": {
+        "happening": "A confirmation dialog intercepts an AI agent's attempt to send a message to Slack channel #sales, showing the draft text and its source before sending.",
+        "most_important": "The message content to be sent and the '外部に出る' (going external) warning next to the destination.",
+        "next_action": "Click 送る to send, 直す to edit, or やめる to cancel.",
+        "anomalies": [
+          "keyboard-shortcut hints are shown for やめる (esc) and 送る (⌘↵) but not for 直す, breaking the pattern across the three actions",
+          "'外部に出る' warning is small orange text set apart from the 宛先 field it modifies rather than attached to it"
+        ]
+      },
+      "verdict": "FIX",
+      "concerns": [
+        {
+          "axis": "consistency",
+          "what": "Only 2 of 3 action buttons show a keyboard-shortcut hint, making it unclear if 直す has one",
+          "where": "bottom row of the dialog"
+        }
+      ],
+      "confidence": "medium"
+    },
+    "CA26": {
+      "visible_text": [
+        "録音中",
+        "00:00",
+        "メモ",
+        "字幕",
+        "Ask Astra"
+      ],
+      "observation": {
+        "happening": "Same floating recording HUD bar as BD25, but at the very start of a recording (00:00 elapsed).",
+        "most_important": "録音中 status with timer just starting, and the red stop button.",
+        "next_action": "Click メモ/字幕/Ask Astra, or use the unlabeled eye/pause/stop icons.",
+        "anomalies": [
+          "same label asymmetry as BD25: three labeled icons, three unlabeled, no divider between groups",
+          "identical layout/spacing to BD25 despite different timer digit count, suggesting a fixed-width gap rather than content-driven spacing"
+        ]
+      },
+      "verdict": "FIX",
+      "concerns": [
+        {
+          "axis": "consistency",
+          "what": "Three controls have text labels and three don't, with no visual separator explaining the split",
+          "where": "icon row, right two-thirds of the bar"
+        }
+      ],
+      "confidence": "medium"
+    },
+    "CAA7": {
+      "visible_text": [
+        "04:21",
+        "会議",
+        "録音中",
+        "鈴木",
+        "OAuth だけ確認お願いします。",
+        "決まったこと",
+        "やること",
+        "文字起こし",
+        "翻訳",
+        "字幕",
+        "この会議について聞く",
+        "AI が見ている資料 3件"
+      ],
+      "observation": {
+        "happening": "A live meeting is being recorded (04:21 elapsed) with a real-time transcript on the right; the left panel's 決まったこと and やること sections are still placeholders awaiting AI-generated content.",
+        "most_important": "The floating recording control bar at top and the live transcript feed, plus the note that AI is referencing 3 resource files.",
+        "next_action": "Type/speak into 'この会議について聞く', click 要約/決まったこと/やること chips, or pause/stop via the floating bar.",
+        "anomalies": [
+          "the floating recording bar visually overlaps the top edge of the main panel beneath it instead of being docked inline, unlike the flatter styling of the rest of the window",
+          "the same utterance ('OAuth だけ確認お願いします。', spoken by 鈴木) appears in both the left panel and the right transcript panel",
+          "left column has a large empty area below the two waiting placeholders"
+        ]
+      },
+      "verdict": "FIX",
+      "concerns": [
+        {
+          "axis": "consistency",
+          "what": "Floating overlay bar breaks from the flat panel styling used everywhere else on screen",
+          "where": "top of the window, overlapping the 会議 panel border"
+        },
+        {
+          "axis": "hierarchy",
+          "what": "Same transcript line shown in two places with no clear indication of which is authoritative",
+          "where": "left panel vs. right transcript list, timestamp 04:18/鈴木"
+        }
+      ],
+      "confidence": "medium"
+    }
+  },
+  "_judge": {
+    "model": "sonnet",
+    "cost_usd": 0.16832419999999998,
+    "turns": 7,
+    "duration_ms": 89258
+  }
+}

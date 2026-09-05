@@ -109,9 +109,10 @@ final class StatusBarController {
     static func presentUpdateUnavailable(reason: String) {
         let alert = NSAlert()
         alert.messageText = Facts.updateUnavailableTitle
-        // 利用者の言葉で言う。内向きの理由（SUFeedURL 等）は括弧の中。いまの版を必ず言う（盲検で「何を確かめればよいか分からない」）。
+        // 利用者の言葉で言う。事実 / 理由 / いまの版 / 次の一手 を 1 行ずつ（1 つの塊にすると要点が取れない、盲検 3/3）。
+        // 内向きの理由（SUFeedURL 等）は「理由:」の行に閉じ込める。
         let version = SoftwareUpdate.currentVersion ?? "不明"
-        alert.informativeText = "この Astra は更新を自動で確かめる設定を持たずに作られています（\(reason)）。いまの版は \(version) です。新しい版は配布ページで確かめられます。"
+        alert.informativeText = "この Astra は、更新を自動で確かめる設定を持たずに作られています。\n理由: \(reason)\nいまの版: \(version)\n新しい版は配布ページで確かめられます。"
         alert.addButton(withTitle: Facts.updateOpenReleases)
         alert.addButton(withTitle: Facts.updateClose)
         NSApp.activate(ignoringOtherApps: true)

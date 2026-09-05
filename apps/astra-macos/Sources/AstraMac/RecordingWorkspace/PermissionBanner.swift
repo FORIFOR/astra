@@ -53,7 +53,7 @@ struct PermissionIssue {
 
     static var microphoneDenied: PermissionIssue {
         PermissionIssue(message: "マイクの許可が無いため、音声が記録されていません。", channel: .localUser,
-                        transcriptHint: "マイクが使えないので、聞き取れていません。") {
+                        transcriptHint: "「設定を開く」でマイクを許可すると、ここに文字起こしが並びます。") {
             Permissions.openMicrophoneSettings()
         }
     }
@@ -61,7 +61,7 @@ struct PermissionIssue {
     /// 以前はこの状態を何も言わず、文字起こしが黙って空だった（REAL_MEETING の実マイク経路で発見）。
     static var speechDenied: PermissionIssue {
         PermissionIssue(message: "音声認識の許可が無いため、文字にできません。録音は続いています。", channel: nil,
-                        transcriptHint: "音声認識の許可が無いので、文字にできません。") {
+                        transcriptHint: "「設定を開く」で音声認識を許可すると、ここに文字起こしが並びます。") {
             Permissions.openSpeechRecognitionSettings()
         }
     }

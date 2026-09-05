@@ -53,7 +53,7 @@ enum UserFacingFacts {
     static let confirmationConfirmExample = "送る"
     static let confirmationCancel = "やめる"
     static let confirmationEdit = "直す"
-    static let confirmationEditDone = "完了"
+    static let confirmationEditDone = "直し終える"
     static let resultOpen = "開く"
     static let resultCopy = "コピー"
     static let resultOpenSettings = "設定を開く"

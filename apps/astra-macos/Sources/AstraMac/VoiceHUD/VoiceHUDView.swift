@@ -1150,7 +1150,8 @@ struct ResultDock: View {
                     // Session の状態をそのまま出す。読み取り中は「何をしているか」を言う。
                     Text(sessionLine)
                         .font(.system(size: S.type(Metrics.dockMetaSize)))
-                        .foregroundStyle(Palette.muted(dark))
+                        // 失敗の理由は補足ではなく本文。灰にすると題より読めない（盲検 3/3）。
+                        .foregroundStyle(result.failed ? Palette.text(dark) : Palette.muted(dark))
                 }
                 Spacer(minLength: 0)
             }

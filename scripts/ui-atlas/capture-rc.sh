@@ -46,13 +46,14 @@ write_appcast() {  # $1 = path, $2 = version
 <item><title>Astra $2</title>
 <sparkle:version>$2</sparkle:version><sparkle:shortVersionString>$2</sparkle:shortVersionString>
 <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-<description><![CDATA[<p>UI Atlas 用の appcast。入れ替えには使わない。</p>]]></description>
+<description><![CDATA[<p>会議中の一時停止、音声認識の許可の案内、失敗した作業のやり直し、更新の案内の日本語化。</p>]]></description>
 <pubDate>Fri, 05 Sep 2026 12:00:00 +0900</pubDate>
 <enclosure url="https://example.invalid/Astra-$2.zip" length="1" type="application/octet-stream" sparkle:edSignature="AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="/>
 </item></channel></rss>
 XML
 }
-write_appcast "$OUT/appcast-available.xml" "999.0.0"
+# 版は「いまの版の次」。999.0.0 のような現実に無い番号は、窓の中の文と釣り合わない（盲検 3/3）。
+write_appcast "$OUT/appcast-available.xml" "1.0.1"
 FEED_PORT="${ASTRA_ATLAS_FEED_PORT:-18765}"
 if lsof -nP -iTCP:"$FEED_PORT" -sTCP:LISTEN >/dev/null 2>&1; then
   echo "FAIL: port $FEED_PORT が使われている（ASTRA_ATLAS_FEED_PORT で変える）" >&2; exit 1

@@ -102,7 +102,16 @@ missing 09 "Automated VoiceOver"                scripts/reality/run-voiceover.sh
 missing 10 "Automated LIVE TCC"                 scripts/reality/run-live-tcc.sh
 missing 11 "Competitor capture (3 archetypes)"  scripts/reality/run-competitors.sh
 # 12 盲検 vision review（3 model、観察を先に、visible_text を OCR で照合）
-step 12 "blind multimodel review" "VISUAL_IDEAL_GATE=PASS" env ASTRA_JUDGE_PARALLEL=3 bash scripts/ui-atlas/review-blind.sh "docs/ui-atlas/review/$SHA"
+# review は途中で OS に落とされても続きから回せる（済んだ judge を再利用）。3 回まで。
+review() {
+  local i
+  for i in 1 2 3; do
+    ASTRA_JUDGE_PARALLEL=1 bash scripts/ui-atlas/review-blind.sh "docs/ui-atlas/review/$SHA" && return 0
+    echo "review attempt $i did not finish; resuming"
+  done
+  return 1
+}
+step 12 "blind multimodel review" "VISUAL_IDEAL_GATE=PASS" review
 # 13 privacy egress
 step 13 "privacy egress" "PRIVACY_EGRESS_GATE=PASS" bash scripts/verify-privacy-egress.sh
 # 14 recovery（録音 → kill -9 → interrupted → 続きから ready）
