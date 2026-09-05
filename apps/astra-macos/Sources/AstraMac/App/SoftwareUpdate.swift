@@ -74,6 +74,8 @@ final class SoftwareUpdate {
 
     /// 設定が揃っていて、更新の確認ができる状態か。
     var isAvailable: Bool { controller != nil }
+    /// Sparkle がいま確認を受け付けるか（起動直後・確認の途中は false）。検査が待つために使う。
+    var canCheckForUpdates: Bool { controller?.updater.canCheckForUpdates ?? false }
 }
 
 /// 検査用: appcast の場所を差し替える（`SoftwareUpdate.feedOverride`）。
@@ -81,4 +83,10 @@ private final class SparkleFeedOverride: NSObject, SPUUpdaterDelegate {
     var feed: String
     init(feed: String) { self.feed = feed }
     func feedURLString(for updater: SPUUpdater) -> String? { feed }
+    // 検査のあいだだけ、Sparkle が何を決めたかを stdout に言う（窓が出ない理由を絵の外で読むため）。
+    func updater(_ updater: SPUUpdater, didFindValidUpdate item: SUAppcastItem) { print("SPARKLE found \(item.displayVersionString)") }
+    func updaterDidNotFindUpdate(_ updater: SPUUpdater, error: any Error) { print("SPARKLE none: \(error)") }
+    func updater(_ updater: SPUUpdater, didAbortWithError error: any Error) { print("SPARKLE abort: \(error)") }
+    func updater(_ updater: SPUUpdater, didFinishUpdateCycleFor updateCheck: SPUUpdateCheck, error: (any Error)?) { print("SPARKLE cycle end \(updateCheck.rawValue) \(error.map { "\($0)" } ?? "ok")") }
+    func updater(_ updater: SPUUpdater, failedToDownloadUpdate item: SUAppcastItem, error: any Error) { print("SPARKLE download failed: \(error)") }
 }

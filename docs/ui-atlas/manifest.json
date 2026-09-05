@@ -2961,7 +2961,7 @@
         ]
       },
       "status": "PENDING_CAPTURE",
-      "note": "本物の Sparkle の窓。capture-rc.sh が置く appcast（版 999.0.0）を ASTRA_SELFTEST_FEED_URL で読ませる。配布先と公開鍵の無い実行体では撮れない（SKIP → CAPTURE_MISSING）。",
+      "note": "本物の Sparkle の窓。capture-rc.sh が 127.0.0.1 の http で配る appcast（版 999.0.0）を ASTRA_SELFTEST_FEED_URL で読ませる。file:// は Sparkle が拒む。配布先と公開鍵の無い実行体では撮れない（SKIP → CAPTURE_MISSING）。",
       "trigger": "メニュー「更新を確認…」/ 自動。",
       "meaning": "新しい版があること、何が変わるか、入れるか。",
       "primary": "更新する",
@@ -2990,12 +2990,12 @@
         ]
       },
       "status": "PENDING_CAPTURE",
-      "note": "Astra 自身の alert。理由は実行体の事実（SoftwareUpdate.misconfiguration）。",
+      "note": "Astra 自身の alert。理由は実行体の事実（SoftwareUpdate.misconfiguration）。Sparkle の「最新です」は同じプロセスで 2 度目の確認が捨てられるため Atlas では撮らない。",
       "trigger": "更新を確認…",
       "meaning": "最新である / 確かめられない、を区別して言う。",
       "primary": "OK",
       "secondary": "—",
-      "states": "misconfigured（この実行体で確かめられない）。up-to-date は Sparkle の alert（update-up-to-date、optional）",
+      "states": "misconfigured（この実行体で確かめられない）",
       "keys": "—",
       "privacy": "—",
       "prev": [],
@@ -3003,37 +3003,6 @@
       "window": "Sparkle window / alert",
       "invariant": "確かめていないのに「最新」と言わない。",
       "source": null,
-      "appearance_policy": "adaptive"
-    },
-    {
-      "id": "system.update-up-to-date",
-      "group": "system",
-      "title": "System — Up to date（Sparkle）",
-      "required": false,
-      "capture": {
-        "selftest": "sysshots",
-        "file": "update-up-to-date.png",
-        "appearances": [
-          "light",
-          "dark"
-        ]
-      },
-      "status": "PENDING_CAPTURE",
-      "note": "capture-rc.sh が置く appcast（版 0.0.1）を ASTRA_SELFTEST_FEED_URL_LATEST で読ませる。",
-      "trigger": "更新を確認…（新しい版が無い）",
-      "meaning": "確かめた上で「最新です」と言う。",
-      "primary": "OK",
-      "secondary": "—",
-      "states": "Sparkle: no update found",
-      "keys": "Return → OK",
-      "privacy": "—",
-      "prev": [],
-      "next": [],
-      "window": "Sparkle alert",
-      "invariant": "確かめていないのに「最新」と言わない。",
-      "source": null,
-      "image": null,
-      "captured": null,
       "appearance_policy": "adaptive"
     },
     {

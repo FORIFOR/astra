@@ -34,9 +34,10 @@ json.dump({"app": os.path.abspath(app), "exe_sha256": h, "built": mtime,
 print(f"RC exe {h[:16]}… built {mtime}")
 PY
 
-# Sparkle の 2 面（update-available / up-to-date）用の appcast。鍵の検証と手順は本物のまま、
+# Sparkle の面（update-available）用の appcast。鍵の検証と手順は本物のまま、
 # 差し替えるのは appcast の場所だけ（`SoftwareUpdate` の ASTRA_SELFTEST_FEED_URL）。
 # 入れ替えには使わない（enclosure は存在しない場所、署名は 0 埋め）。
+# Sparkle は file:// を拒む（http か https）ので、127.0.0.1 で配る。
 write_appcast() {  # $1 = path, $2 = version
   cat > "$1" <<XML
 <?xml version="1.0" encoding="utf-8"?>
@@ -52,7 +53,15 @@ write_appcast() {  # $1 = path, $2 = version
 XML
 }
 write_appcast "$OUT/appcast-available.xml" "999.0.0"
-write_appcast "$OUT/appcast-latest.xml" "0.0.1"
+FEED_PORT="${ASTRA_ATLAS_FEED_PORT:-18765}"
+if lsof -nP -iTCP:"$FEED_PORT" -sTCP:LISTEN >/dev/null 2>&1; then
+  echo "FAIL: port $FEED_PORT が使われている（ASTRA_ATLAS_FEED_PORT で変える）" >&2; exit 1
+fi
+python3 -m http.server "$FEED_PORT" --bind 127.0.0.1 --directory "$OUT" >/dev/null 2>&1 &
+FEED_PID=$!
+trap 'kill "$FEED_PID" 2>/dev/null' EXIT
+sleep 1
+curl -sf -o /dev/null "http://127.0.0.1:$FEED_PORT/appcast-available.xml" || { echo "FAIL: appcast を配れない" >&2; exit 1; }
 
 EXTRA_ENV=()
 run() {
@@ -63,7 +72,7 @@ run() {
   fi
   local data="$OUT/data-root/$sub"; mkdir -p "$data"
   echo "▶ $*  →  $sub"
-  open -W --env "ASTRA_DATA_ROOT=$data" "${EXTRA_ENV[@]}" "$APP" --args --selftest "$@"
+  open -W --env "ASTRA_DATA_ROOT=$data" ${EXTRA_ENV[@]+"${EXTRA_ENV[@]}"} "$APP" --args --selftest "$@"
   echo "  $(ls "$OUT/$sub" 2>/dev/null | grep -c '\.png$') png"
 }
 
@@ -77,8 +86,7 @@ run sections-light  sections     "$OUT/sections-light"
 run sections-dark   sections     "$OUT/sections-dark" dark
 run states-light    states       "$OUT/states-light"
 run states-dark     states       "$OUT/states-dark" dark
-EXTRA_ENV=(--env "ASTRA_SELFTEST_FEED_URL=file://$OUT/appcast-available.xml"
-           --env "ASTRA_SELFTEST_FEED_URL_LATEST=file://$OUT/appcast-latest.xml")
+EXTRA_ENV=(--env "ASTRA_SELFTEST_FEED_URL=http://127.0.0.1:$FEED_PORT/appcast-available.xml")
 run sys-light       sysshots     "$OUT/sys-light"
 run sys-dark        sysshots     "$OUT/sys-dark" dark
 EXTRA_ENV=()

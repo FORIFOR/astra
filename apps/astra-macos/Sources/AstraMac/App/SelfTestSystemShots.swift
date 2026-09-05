@@ -6,11 +6,13 @@ import SwiftUI
 /// UI Atlas の 6 群（System）のうち、Main / Dock の外にある面はここで撮る:
 ///   settings-permissions   ⌘, の設定窓（OS 許可の現状と ⌥Space）
 ///   update-unavailable     「更新を確認…」を確かめられない実行体で出す alert（Astra 自身の面）
-///   update-available       Sparkle の「新しい版があります」（`ASTRA_SELFTEST_FEED_URL` の appcast）
-///   update-up-to-date      Sparkle の「最新です」（`ASTRA_SELFTEST_FEED_URL_LATEST`）
+///   update-available       Sparkle の「新しい版があります」（`ASTRA_SELFTEST_FEED_URL` の appcast。http か https。
+///                          file:// は Sparkle が拒む。capture-rc.sh が 127.0.0.1 で配る）
 ///
-/// Sparkle の 2 面は、配布先と公開鍵の入った .app でだけ撮れる。無い実行体では SKIP と言う
+/// Sparkle の面は、配布先と公開鍵の入った .app でだけ撮れる。無い実行体では SKIP と言う
 /// （黙って通さない。撮れなかった面は Atlas で CAPTURE_MISSING になる）。
+/// 「最新です」は撮らない: 同じプロセスで 2 度目の確認を Sparkle が黙って捨てるので、
+/// 撮れるのは 1 セッション 1 面まで（実測。file:// のときは誤りの alert を「最新です」として撮っていた）。
 extension SelfTest {
     @MainActor
     static func sysShots(_ args: [String]) {
@@ -40,6 +42,7 @@ extension SelfTest {
         var report: [String] = []
         var failures: [String] = []
         var skipped: [String] = []
+        var notes: [String] = []
 
         /// いま出ている窓を書く。どの窓を撮ったかは寸法で言う（絵と付き合わせられるように）。
         func write(_ name: String, _ win: Win) -> Bool {
@@ -98,40 +101,41 @@ extension SelfTest {
         Permissions.simulatedInputMonitoring = nil
         settle(0.5)
 
-        // 2 更新を確かめられない。Astra 自身の alert。理由は実行体の事実（揃っていれば「口が起動していない」）。
+        // 3 Sparkle の 2 面。差し替えた appcast を**本物の Sparkle** に読ませ、その窓を撮る。
+        let env = ProcessInfo.processInfo.environment
+        if let feed = env["ASTRA_SELFTEST_FEED_URL"], !feed.isEmpty, SoftwareUpdate.shared.startIfConfigured() {
+            SoftwareUpdate.shared.setSelfTestFeed(feed)
+            // 起動後の 1 回目の確認は Sparkle が窓を出さずに終える（実測: 2〜6 秒待っても同じ。2 回目は出る）。
+            // 1 回目を捨て、Sparkle が確認を受け付ける状態に戻るまで待ってから本番の確認を頼む。
+            let t0 = Date()
+            SoftwareUpdate.shared.checkNow()
+            settle(1.0)
+            while !SoftwareUpdate.shared.canCheckForUpdates, Date().timeIntervalSince(t0) < 40 { settle(0.25) }
+            notes.append("sparkle-warmup \(Int(Date().timeIntervalSince(t0) * 1000))ms canCheck=\(SoftwareUpdate.shared.canCheckForUpdates)")
+            SoftwareUpdate.shared.checkNow()
+            // 「新しい版があります」: Sparkle の窓（modal ではない）。alert より大きい。
+            // Sparkle の窓は alert より大きいが、失敗したときは alert（260 幅）が出る。どちらも撮って絵で言う。
+            shoot("update-available", timeout: 25) { $0.w >= 220 && $0.w < 900 && $0.h >= 90 }
+            // 「あとで」に相当する閉じ方（performClose → Sparkle が remind-later として片付ける）。
+            // close() では窓が残り、次の確認が始まらなかった（実測: 同じ窓をもう一度撮っていた）。
+            for w in NSApp.windows where w.isVisible && w.title != "Astra 設定" && w.frame.width >= 220 && w.frame.width < 900 {
+                w.performClose(nil)
+            }
+            let t1 = Date()
+            while !SoftwareUpdate.shared.canCheckForUpdates, Date().timeIntervalSince(t1) < 15 { settle(0.25) }
+        } else {
+            skipped.append("update-available: 配布先と公開鍵の入った .app と ASTRA_SELFTEST_FEED_URL（http）が要る")
+        }
+
+        // 4 更新を確かめられない。Astra 自身の alert。理由は実行体の事実（揃っていれば「口が起動していない」）。
         let reason = SoftwareUpdate.misconfiguration() ?? "更新の口が起動していない"
         armShot("update-unavailable", timeout: 6, isAlertSized)
         StatusBarController.presentUpdateUnavailable(reason: reason)
         settle(0.6)
 
-        // 3 Sparkle の 2 面。差し替えた appcast を**本物の Sparkle** に読ませ、その窓を撮る。
-        let env = ProcessInfo.processInfo.environment
-        if let feed = env["ASTRA_SELFTEST_FEED_URL"], !feed.isEmpty, SoftwareUpdate.shared.startIfConfigured() {
-            SoftwareUpdate.shared.setSelfTestFeed(feed)
-            SoftwareUpdate.shared.checkNow()
-            // 「新しい版があります」: Sparkle の窓（modal ではない）。alert より大きい。
-            shoot("update-available", timeout: 25) { $0.w >= 380 && $0.w < 900 && $0.h >= 160 }
-            for w in NSApp.windows where w.isVisible && w.title != "Astra 設定" && w.frame.width >= 220 && w.frame.width < 900 {
-                w.close()
-            }
-            settle(1.0)
-            if let latest = env["ASTRA_SELFTEST_FEED_URL_LATEST"], !latest.isEmpty {
-                SoftwareUpdate.shared.setSelfTestFeed(latest)
-                armShot("update-up-to-date", timeout: 25, isAlertSized)
-                SoftwareUpdate.shared.checkNow()
-                let until = Date().addingTimeInterval(26)
-                while Date() < until, !report.contains(where: { $0.hasPrefix("update-up-to-date") }),
-                      !failures.contains(where: { $0.hasPrefix("update-up-to-date") }) { settle(0.25) }
-                for w in NSApp.windows where w.isVisible && w.title != "Astra 設定" && w.frame.width >= 220 && w.frame.width < 900 {
-                    w.close()
-                }
-            }
-        } else {
-            skipped.append("update-available / update-up-to-date: 配布先と公開鍵の入った .app と ASTRA_SELFTEST_FEED_URL が要る")
-        }
-
         print("SYSSHOTS_DIR \(outDir)")
         for line in report { print("SYSSHOT \(line)") }
+        for n in notes { print("SYSSHOT_NOTE \(n)") }
         for s in skipped { print("SYSSHOT_SKIP \(s)") }
         if failures.isEmpty {
             print("SELFTEST_OK sysshots: \(report.count) 面を RC に描かせて撮影"
