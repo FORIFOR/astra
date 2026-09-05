@@ -118,10 +118,12 @@ final class RecordingWorkspaceState: ObservableObject {
     /// 検査・golden・geometry 用。実マイクを開けない撮影で「音が届いている姿」を作る
     /// （`RecordingRuntime.markListening` / `VoiceHUDState.markVoiceCaptureLive` と同じ役割）。
     /// これを呼ばないと Dock は正しく「準備中…」になり、基準（録音中の姿）と一致しない。
-    func markAudioLiveForShot() { awaitingAudio = false }
+    func markAudioLiveForShot() { holdPreparingForShot = false; awaitingAudio = false }
     /// 同じく固定画面用: 「準備中…」（音がまだ届いていない）の姿を作る。
     /// `VoiceHUDState.beginPreparingForShot` の録音側。Atlas の meeting.preparing はこれで撮る。
-    func beginPreparingForShot() { awaitingAudio = true }
+    /// 実マイクが動いている撮影では level が届くたびに「準備中…」が消えるので、撮り終わるまで止める。
+    func beginPreparingForShot() { holdPreparingForShot = true; awaitingAudio = true }
+    private var holdPreparingForShot = false
 
     func loadDemo(ragOpen: Bool) {
         isRecording = true
@@ -226,7 +228,7 @@ final class RecordingWorkspaceState: ObservableObject {
         audioLevels = Array(repeating: 0.0, count: 12)
         awaitingAudio = true
         RecordingRuntime.shared.onLevel = { [weak self] level in
-            guard let self else { return }
+            guard let self, !self.holdPreparingForShot else { return }
             self.awaitingAudio = false
             self.audioLevels.removeFirst()
             self.audioLevels.append(CGFloat(level))

@@ -102,6 +102,11 @@ final class StatusBarController {
     @objc private func openGuide() { NSWorkspace.shared.open(Self.guideURL) }
     @objc private func checkUpdates() {
         guard let reason = SoftwareUpdate.shared.checkNow() else { return }
+        Self.presentUpdateUnavailable(reason: reason)
+    }
+
+    /// 更新を確かめられない理由を出す。メニューと検査（Atlas system.update-unavailable）が同じ面を通る。
+    static func presentUpdateUnavailable(reason: String) {
         let alert = NSAlert()
         alert.messageText = Facts.updateUnavailableTitle
         alert.informativeText = "\(reason)。新しい版は配布ページで確かめられます。"

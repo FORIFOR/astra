@@ -283,6 +283,50 @@ enum SurfaceMotionGate {
         let recording = RecordingWorkspaceState.shared
 
         WindowCoordinator.shared.showVoiceHUD(); settle(0.6)
+
+        // ⓪ Idle → Preparing → Listening: ⌥Space の直後。面は先に出て、見出しは最初の音声フレームまで
+        //    「準備中…」。実マイクを開く（本番と同じ経路）。窓は 1 枚のまま、上辺は動かない。
+        let t0 = observe("T0-idle-to-listening", expectedWindows: 1, outDir: outDir) {
+            VoiceHUDState.shared.beginListening()
+        }
+        result.transitions.append(t0)
+        settle(0.4)
+        VoiceHUDState.shared.cancelListening(); settle(0.5)
+
+        // ③ Dock → Running: 頼んだ直後、同じ面が実行中の姿へ**下に**伸びる（幅は変えない）。
+        let t3 = observe("T3-dock-to-running", expectedWindows: 1, outDir: outDir) {
+            AstraStateStore.shared.startTask(AgentTask(
+                id: UUID(), title: "週次ブリーフィングを作る", status: .running,
+                steps: [
+                    AgentStep(title: "Calendar", tool: "calendar", detail: "明日 10:00 / 田中さん", state: .success),
+                    AgentStep(title: "Gmail", tool: "gmail", detail: "直近 12 通を読んだ", state: .success),
+                    AgentStep(title: "Notion", tool: "notion", detail: "Q3 Proposal を読んでいます", state: .running),
+                    AgentStep(title: "Web", tool: "web", detail: "先方の最新情報を調べる"),
+                    AgentStep(title: "Briefing", tool: "agent", detail: "資料をまとめる"),
+                ],
+                startedAt: Date(), context: AstraStateStore.shared.state.context))
+        }
+        result.transitions.append(t3)
+        settle(0.4)
+
+        // ④ Running → Confirmation: 外へ出る直前、同じ面が決断の姿になる。
+        let t4 = observe("T4-running-to-confirmation", expectedWindows: 1, outDir: outDir) {
+            AstraStateStore.shared.requireConfirmation(ActionConfirmation(
+                app: "Slack", appIcon: "number",
+                title: "このメッセージを送りますか？",
+                params: [.init(label: "宛先", value: "#sales"),
+                         .init(label: "差出人", value: "あなた", editable: false)],
+                preview: "明日の会議、資料を先に共有します。10 月の導入時期の件も入れておきました。",
+                source: .init(title: "週次同期", speaker: "田中", time: "10:42"),
+                details: [], risk: .r2, confirmLabel: Facts.confirmationConfirmExample))
+        }
+        result.transitions.append(t4)
+        settle(0.4)
+        AstraStateStore.shared.resolveConfirmation(approved: false)
+        AstraStateStore.shared.finishTask(.success)
+        AstraStateStore.shared.dismissResult()
+        settle(0.5)
+
         recording.start(); settle(0.8)
         guard MeetingSessionStore.shared.live != nil else {
             print("SELFTEST_FAIL surfacemotion: 録音が始まっていない"); exit(2)
@@ -333,7 +377,7 @@ enum SurfaceMotionGate {
         print("SURFACE_CONTINUITY_MOTION=\(result.pass ? "PASS" : "FAIL")")
         print("PERCEIVED_SURFACE_CONTINUITY=LAYER_B（この selftest では測らない。判定は journeys/perceived/answers/aggregate.md）")
         if result.pass {
-            print("SELFTEST_OK surfacemotion: 2 遷移とも同じ窓 id・上辺と中心は 2pt 以内・抜け 0（60fps window-only）")
+            print("SELFTEST_OK surfacemotion: \(result.transitions.count) 遷移とも同じ窓 id・上辺と中心は 2pt 以内・抜け 0（60fps window-only）")
             exit(0)
         } else {
             print("SELFTEST_FAIL surfacemotion: \(result.transitions.flatMap(\.verdict).joined(separator: ", "))")

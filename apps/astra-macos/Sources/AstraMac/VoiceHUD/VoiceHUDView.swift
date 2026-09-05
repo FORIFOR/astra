@@ -620,7 +620,8 @@ struct ConfirmationDock: View {
                         .frame(height: 32).padding(.horizontal, 14)
                         .buttonStyle(AstraControlStyle(radius: 7, base: 0.0))
                     if !confirmation.params.isEmpty || confirmation.preview != nil {
-                        Button(Facts.confirmationEdit) { editing = true }
+                        // 検査から押せる目印付き（Atlas dock.confirmation-edit）。走るものは 1 本。
+                        ProbeButton(id: "confirmEdit", action: { editing = true }) { Text(Facts.confirmationEdit) }
                             .font(.system(size: S.type(Metrics.dockRowSize)))
                             // 「目を引くものは 1 つだけ」と考えて静かにしてみたが、
                             // 測ると control_visibility が 0-3 で落ちた。
@@ -629,7 +630,6 @@ struct ConfirmationDock: View {
                             .foregroundStyle(Palette.accent(dark))
                             .frame(height: 32).padding(.horizontal, 14)
                             .buttonStyle(AstraControlStyle(radius: 7, base: 0.0))
-                            .accessibilityIdentifier("confirmEdit")
                     }
                     // 外へ出る操作は、押す先が一目で分かる面にする。
                     //

@@ -42,7 +42,7 @@ final class RecordingRuntime {
     }
     /// §17 固定画面用: 「この Mac ではオンデバイス文字起こしを使えません」の姿を作る。
     /// 本番はオンデバイス STT の起動失敗だけがここを立てる（`begin`）。
-    func markTranscriptionUnavailableForShot() { transcriptionUnavailable = true }
+    func setTranscriptionUnavailableForShot(_ on: Bool) { transcriptionUnavailable = on }
     /// マイクは 1 台を使い回す（録音のたびに新しい engine を作ると起動が 200〜770ms かかる）。
     /// start / stop はこの直列 queue でだけ触る（主スレッドを止めない・同時に触らない）。
     private let micCapture = MicCapture()

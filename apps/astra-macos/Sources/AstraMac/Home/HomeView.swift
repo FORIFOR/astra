@@ -190,7 +190,12 @@ struct HomeView: View {
         .background(Palette.canvas(dark))
         .accessibilityIdentifier("homeView")
         }
-        .onAppear(perform: loadReal)
+        .onAppear {
+            loadReal()
+            // 許可の状態は開くたびに読み直す。設定で許可して戻ってきても、
+            // 予定を求める行が古い状態（初回に読んだ値）のままだった。
+            calendar = Permissions.calendar
+        }
     }
 
     private func openDetail(_ session: MeetingSession) {

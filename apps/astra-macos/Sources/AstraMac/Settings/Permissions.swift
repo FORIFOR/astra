@@ -9,6 +9,10 @@ enum Permissions {
     /// 検査用の上書き。**本番では nil。** 拒否された端末は手元に無いので、
     /// 「拒否されたときに何が出るか」を測るにはここから拒否を作るしかない。
     static var simulatedMicrophone: State?
+    /// 同じく検査用。**本番では nil。** この Mac は許可済みなので、「⌥Space が効かないとき Home が
+    /// 何を言うか」「設定の『許可…』が在る姿」はここから未確認を作るしかない。
+    static var simulatedInputMonitoring: State?
+    static var simulatedAccessibility: State?
 
     static var microphone: State {
         if let s = simulatedMicrophone { return s }
@@ -31,7 +35,8 @@ enum Permissions {
     }
 
     static var accessibility: State {
-        AXIsProcessTrusted() ? .granted : .notDetermined
+        if let s = simulatedAccessibility { return s }
+        return AXIsProcessTrusted() ? .granted : .notDetermined
     }
 
     static func openAccessibilitySettings() {
@@ -47,7 +52,8 @@ enum Permissions {
     /// **イベントが 1 つも届かない**（黙って効かないショートカットになる）。
     /// 実際、Accessibility は許可済みのままショートカットだけが動かない状態を踏んだ。
     static var inputMonitoring: State {
-        CGPreflightListenEventAccess() ? .granted : .notDetermined
+        if let s = simulatedInputMonitoring { return s }
+        return CGPreflightListenEventAccess() ? .granted : .notDetermined
     }
 
     /// 許可を求める。初回は OS のダイアログが出る。

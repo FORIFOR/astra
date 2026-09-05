@@ -8,6 +8,7 @@
 #   stale screenshots                0      （manifest に無い png / sha256 が合わない png）
 #   unknown/manual mock              0      （source が RC 以外）
 #   golden hash mismatch             0      （shots 10 面を committed golden と画素比較。debug 実行体が要る）
+#   appearance policy honoured       0 違反 （fixed = Dock/HUD は light == dark、adaptive = Main/Workspace は light != dark）
 #
 # 1 つでも欠けたら UI_ATLAS_GATE=FAIL（exit 1）。.app や debug 実行体がこの機械に無い行は
 # NOT_VERIFIABLE とし、PASS にはしない。
@@ -59,6 +60,17 @@ if exe.exists():
     row("image belongs to RC (.app on disk)", same, f"{rc['app']} exe {sha(exe)[:16]}… vs manifest {str(rc.get('exe_sha256'))[:16]}…")
 else:
     row("image belongs to RC (.app on disk)", None, f"{rc['app']} がこの機械に無い → NOT_VERIFIABLE")
+
+# appearance_policy: 「同じなのは欠陥か」を毎回議論しない。manifest の意味を両方向で確かめる。
+pol_bad = []
+for s in m["screens"]:
+    img = s.get("image") or {}
+    if img.get("light") and img.get("dark"):
+        same = img["sha256"]["light"] == img["sha256"]["dark"]
+        pol = s.get("appearance_policy", "adaptive")
+        if pol == "fixed" and not same: pol_bad.append(f"{s['id']} (fixed but light!=dark)")
+        if pol == "adaptive" and same: pol_bad.append(f"{s['id']} (adaptive but light==dark)")
+row("appearance policy honoured", not pol_bad, str(pol_bad or 0))
 
 # strips
 st_req = [s for s in m["strips"] if s.get("required")]

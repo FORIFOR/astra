@@ -84,6 +84,7 @@ enum SelfTest {
         case "recordbutton": recordButton(); return true
         case "session": sessionLifecycle(); return true
         case "sessionshots": sessionShots(args); return true
+        case "sysshots": sysShots(args); return true
         case "uiscale": uiScale(); return true
         case "acceptance": acceptance(); return true
         case "sessionsync": sessionSync(); return true
@@ -475,6 +476,10 @@ enum SelfTest {
         // 1. Idle / Presence
         shoot("01-idle", { hud.mode = .idle })
 
+        // 1'. Quick Actions: Dock 本体を押す。窓は増やさず Dock 自身が姿を変える。
+        shoot("01b-quick-actions", { hud.toggleQuickActions() })
+        hud.mode = .idle
+
         // 2. App Context（実際の解決器が返す形と同じ構造で遷移させる）
         let notion = AppContextSummary(
             app: "Notion", document: "Q3 Product Roadmap",
@@ -516,6 +521,15 @@ enum SelfTest {
         // 5''. 終わった直後（CleanShot 型）。finishTask が結果面へ遷移させる＝実遷移。
         shoot("06c-result", { store.finishTask(.success) })
 
+        // 5-3. できなかったとき（Error / Recovery）。本番で失敗の結果面を作る経路と同じ形
+        // （マイク拒否 → 理由と、直しに行く道。`RecordingWorkspaceState.start`）。✓ を付けず、黙って消えない。
+        shoot("06d-result-failed", {
+            store.setDock(.result(AgentResult(
+                title: Facts.recordingCannotStart, actions: [.openSettings],
+                detail: "マイクが許可されていません。設定で Astra に許可すると始められます。",
+                failed: true)))
+        })
+
         // 6. Confirmation（requireConfirmation が Dock を展開する＝実遷移）
         shoot("07-confirmation", {
             // 決断に要るものを全部持たせた形で撮る。宛先も中身も出所も無い
@@ -531,6 +545,11 @@ enum SelfTest {
                 risk: .r2, confirmLabel: Facts.confirmationConfirmExample))
         })
 
+        // 6'. 「直す」: 宛先と本文をその場で書き換える。面は増えず、同じ面が編集の姿になる。
+        shoot("07b-confirmation-edit", {
+            if !UIProbe.tap("confirmEdit") { failures.append("07b=「直す」が押せない（confirmEdit が出ていない）") }
+        })
+
         // 7. Meeting: 録音中は Dock が録音コントローラになる。**窓は増えない。**
         shoot("08-meeting", {
             store.resolveConfirmation(approved: false)
@@ -540,6 +559,8 @@ enum SelfTest {
             // **録音ボタンと同じ経路**を通す。Store を直接叩くと、ボタンが別のことを
             // していても気づけない（実際に一度そうなっていた）。
             recording.start()
+            // 実マイクを開けない撮影でも「録音中」の姿にする（音が届いた姿。準備中は 08a で別に撮る）。
+            recording.markAudioLiveForShot()
             // 開始は前の会議の Notes を消す（2 本目に 1 本目が混ざらないため）。
             // 中身は**開始の後**に入れる。前に入れると空の Notes を撮ってしまう。
             store.updateCanvas(MeetingCanvas(
@@ -548,30 +569,29 @@ enum SelfTest {
                 questions: ["誰が対応しますか？"],
                 concerns: ["初期費用が心配です"], notes: []))
         })
+        // 7'. 開始直後、まだ 1 フレームも届いていない: 「録音中」と名乗らず「準備中…」。
+        shoot("08a-meeting-preparing", { recording.beginPreparingForShot() })
+        recording.markAudioLiveForShot()
         // 録音開始では窓を増やさない。Dock だけが録音コントローラになる。
         shoot("09-meeting-notes", { hud.toggleMeetingPanel(.notes) })
         shoot("09b-meeting-captions", { hud.toggleMeetingPanel(.captions) })
+        // 7''. Ask Astra: 同じ板に問いの欄が開く。
+        shoot("09c-meeting-ask", { hud.toggleMeetingPanel(.ask) })
 
-        // 8. Full Workspace（Dock は静かなまま、Workspace が開く）
-        store.meetingEnded()
-        hud.mode = .idle
+        // 8. Full Workspace（Dock は静かなまま、録音中に 2 枚目として開く）
+        //
+        // 以前は meetingEnded() のあと Main Window（1240 幅）を「workspace」として撮っていた（Atlas E1）。
+        // 撮るのは「会議の横に開く」で出る 1080x680 の録音面で、Dock の見出しはそのまま残る（T2 と同じ遷移）。
+        hud.toggleMeetingPanel(.ask)   // 開いていた板を閉じる（同じ板をもう一度）
         WindowCoordinator.shared.syncDockPanels()
-        MainWindowController.shared.show()
-        store.workspaceOpened()
-        // 窓が出るまで待つ。固定待ちだと、忙しいときに Dock を拾ってしまう（実際に起きた）。
+        WindowCoordinator.shared.detachMeetingSurface()
         var workspaceWindow: (id: CGWindowID, x: CGFloat, y: CGFloat, w: CGFloat, h: CGFloat)?
         let wsDeadline = Date().addingTimeInterval(8)
         repeat {
             settle(0.25)
-            // 録音面（1080x680）がフェードアウト中に引っかかると、撮る頃には消えている。
-            // Main は必ずそれより広いので、幅で区別する。
-            workspaceWindow = windows().first { $0.w > Metrics.workspaceWidth && $0.h >= 640 }
+            workspaceWindow = windows().first { abs($0.w - Metrics.workspaceWidth) <= 2 && $0.h >= 640 }
         } while workspaceWindow == nil && Date() < wsDeadline
-        settle(0.6)
-        // 撮る直前にもう一度確かめる（待っている間に消えていることがある）。
-        if let found = workspaceWindow, !windows().contains(where: { $0.id == found.id }) {
-            workspaceWindow = windows().first { $0.w > Metrics.workspaceWidth && $0.h >= 640 }
-        }
+        settle(0.8)
         if let big = workspaceWindow,
            let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, big.id, [.boundsIgnoreFraming, .bestResolution]) {
             let rep = NSBitmapImageRep(cgImage: cg)
@@ -579,10 +599,16 @@ enum SelfTest {
                 try? png.write(to: URL(fileURLWithPath: "\(outDir)/10-workspace.png"))
             }
             report.append("10-workspace \(Int(big.w))x\(Int(big.h))")
-            if big.w < 700 { failures.append("workspace が小さすぎる") }
+            // Dock の見出しがそのまま残っているか（録音面を開いても Dock は消えない）。
+            let dockStill = windows().contains { $0.h < 400 && abs($0.w - Metrics.dockMeetingWidth) <= 2 }
+            if !dockStill { failures.append("10-workspace=録音面を開いたら Dock が消えた") }
         } else {
             failures.append("10-workspace=撮影不可")
         }
+        WindowCoordinator.shared.hideRecordingWorkspace()
+        store.meetingEnded()
+        hud.mode = .idle
+        WindowCoordinator.shared.syncDockPanels()
 
         // Astra を menu bar utility に見せない。**小さすぎたら FAIL**。
         // Idle だけは小さく保ち、使い始めたら主役の大きさへ展開する。
@@ -634,7 +660,7 @@ enum SelfTest {
         print("DOCK8_DIR \(outDir)")
         for line in report { print("DOCK8 \(line)") }
         if failures.isEmpty {
-            print("SELFTEST_OK dock8: 8状態を実遷移で撮影・top anchor 固定・窓は常に1枚・idle \(Int(Metrics.dockIdleWidth))pt→agent \(Int(Metrics.dockAgentWidth))pt")
+            print("SELFTEST_OK dock8: \(report.count)状態を実遷移で撮影・top anchor 固定・窓は常に1枚・idle \(Int(Metrics.dockIdleWidth))pt→agent \(Int(Metrics.dockAgentWidth))pt")
             exit(0)
         } else {
             print("SELFTEST_FAIL dock8: \(failures.joined(separator: ", "))")
@@ -2664,6 +2690,28 @@ enum SelfTest {
         // 1 Home idle（会議も予定も無い）
         step("01-home-idle", {})
 
+        // 14 ⌥Space の許可（Input Monitoring）が無いとき。Home の空状態が「使えるようにする」と言う。
+        //    予定も会議も無い姿でだけ出るので、何も作る前のここで撮る（検査用の上書き。本番では nil）。
+        let savedPreview = HomePane.previewUpcoming
+        HomePane.previewUpcoming = []
+        Permissions.simulatedInputMonitoring = .notDetermined
+        Permissions.simulatedCalendar = .denied
+        step("14-input-monitoring", {
+            MainWindowController.shared.showSection(.work); settle(0.4)
+            MainWindowController.shared.showSection(.home)
+        })
+        // 13 予定を読む許可は、予定が出るその場所で理由と一緒に求める（purpose-first）。
+        Permissions.simulatedInputMonitoring = nil
+        Permissions.simulatedCalendar = .notDetermined
+        step("13-calendar-permission", {
+            MainWindowController.shared.showSection(.work); settle(0.4)
+            MainWindowController.shared.showSection(.home)
+        })
+        Permissions.simulatedCalendar = nil
+        HomePane.previewUpcoming = savedPreview
+        MainWindowController.shared.showSection(.work); settle(0.4)
+        MainWindowController.shared.showSection(.home); settle(0.6)
+
         // 2 録音中: 開始した瞬間に Home へ出る
         step("02-recording", {
             sessions.begin(id: "shot-1", title: "Product Weekly", source: "Google Meet")
@@ -2677,9 +2725,29 @@ enum SelfTest {
 
         // 4 ready
         step("04-ready", {
+            // 件数だけでなく中身も書く。Home のカードが「やること 3 · 決まったこと 2」と言い、開いた detail が
+            // 0 / 0 では同じ id が矛盾する（Atlas E2）。本番の finishProcessing は canvas の件数を
+            // markReady に渡すので、fixture も同じ canvas から数える。
+            let canvas = MeetingCanvas(
+                decisions: [CanvasItem("Q4 は移行計画を先に進める", at: 312, speaker: "田中"),
+                            CanvasItem("Phase 1 は 10 月に始める", at: 1450, speaker: "あなた")],
+                actions: [CanvasItem("移行計画の草案を来週までに出す", at: 348, speaker: "田中"),
+                          CanvasItem("トレーニング費用を見積もる", at: 902, speaker: "鈴木"),
+                          CanvasItem("Phase 1 の体制表を作る", at: 1502, speaker: "あなた")],
+                questions: [], concerns: [], notes: [])
+            LocalStore.shared.saveNotes(meetingId: liveId, canvas)
+            let rows: [TranscriptSegment] = [
+                TranscriptSegment(speaker: "あなた", text: "今日は Q4 の移行計画と、トレーニングのコストを詰めます。", interim: false, at: 40),
+                TranscriptSegment(speaker: "田中", text: "Q4 は移行計画を先に進める", interim: false, at: 312),
+                TranscriptSegment(speaker: "田中", text: "移行計画の草案を来週までに出す", interim: false, at: 348),
+                TranscriptSegment(speaker: "鈴木", text: "トレーニング費用を見積もる", interim: false, at: 902),
+                TranscriptSegment(speaker: "あなた", text: "Phase 1 は 10 月に始める", interim: false, at: 1450),
+                TranscriptSegment(speaker: "あなた", text: "Phase 1 の体制表を作る", interim: false, at: 1502),
+            ]
+            for (n, row) in rows.enumerated() { LocalStore.shared.saveTranscriptRow(meetingId: liveId, index: n, row) }
             sessions.markReady(id: liveId,
                                summary: "Q4 移行計画とトレーニングコストを議論。10 月から Phase 1 開始で合意。",
-                               actions: 3, decisions: 2, participants: 5)
+                               actions: canvas.actions.count, decisions: canvas.decisions.count, participants: 5)
         })
 
         // 5 保存先と project を付けた姿
@@ -2738,6 +2806,19 @@ enum SelfTest {
         if sessions.session(id: "shot-2")?.status != .interrupted { failures.append("interrupted になっていない") }
 
         sessions.reset()
+
+        // 15 頼みごとが失敗した（黙らない）。Home の「最近の頼みごと」に、どこで止まったかの印で残る。
+        //    会議カードの下に隠れないよう、会議を消したあとのここで撮る。
+        LocalStore.shared.save(AgentTask(
+            id: UUID(), title: "先方へ見積の返信を送る", status: .failed,
+            steps: [AgentStep(title: "Gmail", tool: "gmail", detail: "下書きを作った", state: .success),
+                    AgentStep(title: "送信", tool: "gmail", detail: "接続が切れた", state: .failed)],
+            startedAt: Date(), context: AstraStateStore.shared.state.context))
+        step("15-generic-failure", {
+            MainWindowController.shared.showSection(.work); settle(0.4)
+            MainWindowController.shared.showSection(.home)
+        })
+
         print("SESSIONSHOTS_DIR \(outDir)")
         for line in report { print("SESSIONSHOT \(line)") }
         if failures.isEmpty {
@@ -5899,6 +5980,14 @@ enum SelfTest {
         record("03-recording-workspace", capture("03-recording-workspace"),
                expW: Metrics.workspaceWidth, expH: Metrics.workspaceHeight, minColors: 12)
 
+        // 03b recording-paused: 一時停止。主役の点が灰になり、見出しが「一時停止中」になる。
+        // 一時停止の手は録音面の pill にある（Dock は点だけ）。Atlas meeting.paused はここで撮る。
+        state.isPaused = true
+        settle(0.3)
+        record("03b-recording-paused", capture("03b-recording-paused"),
+               expW: Metrics.workspaceWidth, expH: Metrics.workspaceHeight, minColors: 12)
+        state.isPaused = false
+
         // 04 recording-transcript（会話が伸びた Transcript）
         //
         // ここは `selectedTool = .transcript` を置き直すだけだった。だが loadDemo が
@@ -5978,6 +6067,16 @@ enum SelfTest {
         state.permissionIssue = nil
         RecordingRuntime.shared.markListening(.localUser)
         RecordingRuntime.shared.markListening(.remoteAudio)
+
+        // 09b stt-unavailable: 音は届いて録れているが、この Mac ではオンデバイス文字起こしが始められない。
+        // 黙って空の文字起こしにせず、理由を言う（サーバへは出さない）。
+        RecordingRuntime.shared.setTranscriptionUnavailableForShot(true)
+        state.transcript = []
+        state.refreshRag()
+        settle(0.3)
+        record("09b-stt-unavailable", capture("09b-stt-unavailable"),
+               expW: Metrics.workspaceWidth, expH: Metrics.workspaceHeight, minColors: 12)
+        RecordingRuntime.shared.setTranscriptionUnavailableForShot(false)
         WindowCoordinator.shared.hideRecordingWorkspace()
         settle(0.5)
 

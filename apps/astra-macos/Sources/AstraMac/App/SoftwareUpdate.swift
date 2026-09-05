@@ -19,6 +19,16 @@ final class SoftwareUpdate {
 
     private var controller: SPUStandardUpdaterController?
 
+    /// 検査用の差し替え口（`ASTRA_SELFTEST_FEED_URL`）。**本番では nil。**
+    /// Atlas の system.update-available / up-to-date を**本物の Sparkle の窓**で撮るためだけにある。
+    /// 差し替えるのは appcast の場所だけで、鍵の検証と入れ替えの手順は本番と同じ。
+    private let feedOverride: SparkleFeedOverride? = {
+        guard let f = ProcessInfo.processInfo.environment["ASTRA_SELFTEST_FEED_URL"], !f.isEmpty else { return nil }
+        return SparkleFeedOverride(feed: f)
+    }()
+    /// 検査の途中で appcast を替える（「新しい版がある」→「最新です」）。差し替え口が無ければ何もしない。
+    func setSelfTestFeed(_ url: String) { feedOverride?.feed = url }
+
     /// いま動いている版。バンドル外（`swift build` の実行体）では nil。
     static var currentVersion: String? {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
@@ -47,7 +57,7 @@ final class SoftwareUpdate {
         guard Self.misconfiguration() == nil else { return false }
         // 落としてくるのは利用者が決める。起動直後に勝手に入れ替えない。
         controller = SPUStandardUpdaterController(
-            startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
+            startingUpdater: true, updaterDelegate: feedOverride, userDriverDelegate: nil)
         return true
     }
 
@@ -64,4 +74,11 @@ final class SoftwareUpdate {
 
     /// 設定が揃っていて、更新の確認ができる状態か。
     var isAvailable: Bool { controller != nil }
+}
+
+/// 検査用: appcast の場所を差し替える（`SoftwareUpdate.feedOverride`）。
+private final class SparkleFeedOverride: NSObject, SPUUpdaterDelegate {
+    var feed: String
+    init(feed: String) { self.feed = feed }
+    func feedURLString(for updater: SPUUpdater) -> String? { feed }
 }

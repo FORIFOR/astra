@@ -37,6 +37,7 @@ CAPTURE_DIR = {  # selftest 名 → capture 側のディレクトリ（light, da
     "sessionshots": ("session-light", "session-dark"),
     "sections": ("sections-light", "sections-dark"),
     "states": ("states-light", "states-dark"),
+    "sysshots": ("sys-light", "sys-dark"),
 }
 STRIP_TARGETS_MS = [0, 50, 100, 200, None]  # None = final
 DESCRIPTION_FIELDS = ["trigger", "meaning", "primary", "secondary", "states", "keys", "privacy", "window", "invariant"]
@@ -234,7 +235,7 @@ def write_html(m: dict, summary: dict) -> None:
 <tr><th>reality gates</th><td>{', '.join(f"{r['gate']} = {r['status']}" for r in m['reality'])}</td></tr>
 </table>
 <h2 style="margin-top:22px">Appearance-invariant screens（light と dark の sha256 が同じ）</h2>
-<p class="kv">{esc(", ".join(summary["appearance_invariant"]) or "なし")}<br>Dock は外観に関わらず同じ絵を描く設計かどうかを、ここで判断する（DESIGN_SYSTEM.md）。</p></div>
+<p class="kv">{esc(", ".join(summary["appearance_invariant"]) or "なし")}<br>Dock / HUD は <code>appearance_policy: fixed</code>（OS の外観に関わらず同じ ambient surface。同じなのは仕様）。Main / Workspace は <code>adaptive</code>（違うのが仕様）。両方向の違反: <b class="{'ok' if not summary['appearance_policy']['violations'] else 'ng'}">{esc(", ".join(summary["appearance_policy"]["violations"]) or "0")}</b></p></div>
 <div class="page"><h2>Contact sheet</h2><img src="contact-sheet.png" style="max-width:100%;border:1px solid #d2d2d7"></div>""")
     # 画面
     for s in m["screens"]:
@@ -256,6 +257,8 @@ def write_html(m: dict, summary: dict) -> None:
                 ("Privacy / external side effect", s.get("privacy")),
                 ("前の画面", ", ".join(s.get("prev") or []) or "—"), ("次の画面", ", ".join(s.get("next") or []) or "—"),
                 ("Window / One Surface", s.get("window")), ("Truth invariant", s.get("invariant")),
+                ("Appearance policy", s.get("appearance_policy", "adaptive")),
+                ("Note", s.get("note") or "—"),
                 ("Source", s.get("source") or "—"), ("RC SHA", rc["sha"])]
         parts.append("<table>" + "".join(f"<tr><th>{esc(k)}</th><td>{esc(v)}</td></tr>" for k, v in rows) + "</table>")
         parts.append('<div class="kv">評価軸: Hierarchy · Density · Alignment · Typography · Contrast · State legibility · Primary-action clarity · Screen occupation · Surface continuity · Calmness · Consistency · Trust/provenance · Error recovery clarity · Competitive polish &nbsp;&nbsp;→&nbsp; <b>KEEP / FIX / NOT_ENOUGH_EVIDENCE</b></div></div>')
@@ -325,6 +328,7 @@ def write_readme(m: dict, summary: dict) -> None:
              f"required screens  {summary['required']}   with RC image {summary['required_captured']}   NO_CAPTURE_PATH {summary['required_missing']}",
              f"strips            {summary['strips_captured']} / {summary['strips_required']}",
              f"light == dark     {len(summary['appearance_invariant'])} 面（{', '.join(summary['appearance_invariant']) or 'なし'}）",
+             f"appearance_policy fixed {len(summary['appearance_policy']['fixed'])} 面 / 違反 {len(summary['appearance_policy']['violations'])}（{', '.join(summary['appearance_policy']['violations']) or 'なし'}）",
              "```", "",
              "| ファイル | 中身 |", "|---|---|",
              "| `Astra-UI-Atlas.pdf` | 1 画面 1 ページ。表紙に集計、末尾に strip と reality gate |",
@@ -392,6 +396,23 @@ def main() -> int:
         s["id"] for s in m["screens"]
         if (s.get("image") or {}).get("light") and (s.get("image") or {}).get("dark")
         and s["image"]["sha256"]["light"] == s["image"]["sha256"]["dark"]]
+    # appearance_policy: fixed（Dock / HUD。light == dark が仕様）と adaptive（Main / Workspace。light != dark が仕様）。
+    # 「同じなのは欠陥か」を毎回議論しないために、manifest が意味を持ち、build が両方向の違反を数える。
+    violations = []
+    for s in m["screens"]:
+        img = s.get("image") or {}
+        if not (img.get("light") and img.get("dark")):
+            continue
+        same = img["sha256"]["light"] == img["sha256"]["dark"]
+        pol = s.get("appearance_policy", "adaptive")
+        if pol == "fixed" and not same:
+            violations.append(f"{s['id']} (fixed なのに light != dark)")
+        if pol == "adaptive" and same:
+            violations.append(f"{s['id']} (adaptive なのに light == dark)")
+    summary["appearance_policy"] = {
+        "fixed": [s["id"] for s in m["screens"] if s.get("appearance_policy") == "fixed"],
+        "violations": violations,
+    }
     m["summary"] = summary
     MANIFEST.write_text(json.dumps(m, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     write_html(m, summary)

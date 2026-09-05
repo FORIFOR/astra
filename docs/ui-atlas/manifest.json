@@ -1,5 +1,5 @@
 {
-  "$comment": "UI Atlas の正本。画面の一覧と説明はここに書く。image / sha256 / size / rc は scripts/ui-atlas/build.py が RC の撮影結果から埋める（手で書かない）。capture が null の画面は RC .app に描かせる経路が無い。モックや Figma で埋めてはいけない。required のまま置いて UI_ATLAS_GATE を落とす。",
+  "$comment": "UI Atlas の正本。画面の一覧と説明はここに書く。image / sha256 / size / rc は scripts/ui-atlas/build.py が RC の撮影結果から埋める（手で書かない）。capture が null の画面は RC .app に描かせる経路が無い。モックや Figma で埋めてはいけない。required のまま置いて UI_ATLAS_GATE を落とす。 appearance_policy: fixed は Dock / HUD（OS の外観に関わらず同じ ambient surface。light == dark が仕様）、adaptive は Main / Workspace（light != dark が仕様）。gate が両方向を確かめる。",
   "rc": {
     "sha": "349007f",
     "app": "apps/astra-macos/.build/Astra.app",
@@ -97,7 +97,8 @@
         },
         "light": "screens/voice.idle.light.png",
         "dark": "screens/voice.idle.dark.png"
-      }
+      },
+      "appearance_policy": "fixed"
     },
     {
       "id": "voice.preparing",
@@ -151,7 +152,8 @@
         },
         "light": "screens/voice.preparing.light.png",
         "dark": "screens/voice.preparing.dark.png"
-      }
+      },
+      "appearance_policy": "fixed"
     },
     {
       "id": "voice.listening",
@@ -205,7 +207,8 @@
         },
         "light": "screens/voice.listening.light.png",
         "dark": "screens/voice.listening.dark.png"
-      }
+      },
+      "appearance_policy": "fixed"
     },
     {
       "id": "voice.thinking",
@@ -260,7 +263,8 @@
         },
         "light": "screens/voice.thinking.light.png",
         "dark": "screens/voice.thinking.dark.png"
-      }
+      },
+      "appearance_policy": "fixed"
     },
     {
       "id": "voice.context",
@@ -315,7 +319,8 @@
         },
         "light": "screens/voice.context.light.png",
         "dark": "screens/voice.context.dark.png"
-      }
+      },
+      "appearance_policy": "fixed"
     },
     {
       "id": "voice.context-expanded",
@@ -369,15 +374,23 @@
         },
         "light": "screens/voice.context-expanded.light.png",
         "dark": "screens/voice.context-expanded.dark.png"
-      }
+      },
+      "appearance_policy": "fixed"
     },
     {
       "id": "voice.quick-actions",
       "group": "ambient",
       "title": "Voice HUD — Quick actions",
       "required": true,
-      "capture": null,
-      "status": "NO_CAPTURE_PATH",
+      "capture": {
+        "selftest": "dock8",
+        "file": "01b-quick-actions.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "status": "PENDING_CAPTURE",
       "note": "DockPresentation.quickActions は実装にあるが、RC .app にこの面を撮らせる selftest が無い。次 RC で dock8 に 1 面足す（test code のみ）。",
       "trigger": "Idle で quick actions を切り替える。",
       "meaning": "よく使う依頼を並べる。",
@@ -394,7 +407,8 @@
       ],
       "window": "Dock（1 枚）",
       "invariant": "—",
-      "source": null
+      "source": null,
+      "appearance_policy": "fixed"
     },
     {
       "id": "dock.running",
@@ -449,7 +463,8 @@
         },
         "light": "screens/dock.running.light.png",
         "dark": "screens/dock.running.dark.png"
-      }
+      },
+      "appearance_policy": "fixed"
     },
     {
       "id": "dock.context-detail",
@@ -503,7 +518,8 @@
         },
         "light": "screens/dock.context-detail.light.png",
         "dark": "screens/dock.context-detail.dark.png"
-      }
+      },
+      "appearance_policy": "fixed"
     },
     {
       "id": "dock.confirmation",
@@ -558,16 +574,24 @@
         },
         "light": "screens/dock.confirmation.light.png",
         "dark": "screens/dock.confirmation.dark.png"
-      }
+      },
+      "appearance_policy": "fixed"
     },
     {
       "id": "dock.confirmation-edit",
       "group": "dock",
       "title": "Task Dock — Edit confirmation",
       "required": true,
-      "capture": null,
-      "status": "NO_CAPTURE_PATH",
-      "note": "「直す」（Facts.confirmationEdit）で本文を編集する姿。--selftest confirmflow は挙動だけで png を書かない。次 RC で dock8 に 1 面足す。",
+      "capture": {
+        "selftest": "dock8",
+        "file": "07b-confirmation-edit.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "status": "PENDING_CAPTURE",
+      "note": "「直す」は検査から押せる目印付き（ProbeButton confirmEdit）。走るものは画面と同じ 1 本。",
       "trigger": "Confirmation で「直す」。",
       "meaning": "送る前に本文を書き換える。",
       "primary": "完了",
@@ -583,7 +607,8 @@
       ],
       "window": "Dock（1 枚）",
       "invariant": "—",
-      "source": null
+      "source": null,
+      "appearance_policy": "fixed"
     },
     {
       "id": "dock.result",
@@ -638,19 +663,27 @@
         },
         "light": "screens/dock.result.light.png",
         "dark": "screens/dock.result.dark.png"
-      }
+      },
+      "appearance_policy": "fixed"
     },
     {
       "id": "dock.result-failed",
       "group": "dock",
       "title": "Task Dock — Error / Recovery",
       "required": true,
-      "capture": null,
-      "status": "NO_CAPTURE_PATH",
-      "note": "AgentResult .failed（「失敗しました」「止まりました」）の姿。dock8 は success しか撮らない。次 RC で dock8 に .failed を 1 面足す。",
+      "capture": {
+        "selftest": "dock8",
+        "file": "06d-result-failed.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "status": "PENDING_CAPTURE",
+      "note": "本番で失敗の結果面を作る経路（マイク拒否 → RecordingWorkspaceState.start）と同じ形で描く。「やり直す」という操作は無い。失敗の理由と、直しに行く道を出す。",
       "trigger": "実行が失敗した / 止まった。",
       "meaning": "何が失敗したか、次に何ができるか。",
-      "primary": "やり直す",
+      "primary": "設定を開く（直しに行く道）",
       "secondary": "閉じる",
       "states": "result(failed)",
       "keys": "Esc → 閉じる。",
@@ -663,7 +696,8 @@
       ],
       "window": "Dock（1 枚）",
       "invariant": "黙って消えない。理由を返す。",
-      "source": null
+      "source": null,
+      "appearance_policy": "fixed"
     },
     {
       "id": "dock.entering-recording",
@@ -688,7 +722,8 @@
       ],
       "window": "Dock（1 枚）",
       "invariant": "—",
-      "source": null
+      "source": null,
+      "appearance_policy": "fixed"
     },
     {
       "id": "meeting.controller",
@@ -746,16 +781,24 @@
         },
         "light": "screens/meeting.controller.light.png",
         "dark": "screens/meeting.controller.dark.png"
-      }
+      },
+      "appearance_policy": "fixed"
     },
     {
       "id": "meeting.preparing",
       "group": "meeting",
       "title": "Meeting — Recording preparing",
       "required": true,
-      "capture": null,
-      "status": "NO_CAPTURE_PATH",
-      "note": "録音を始めた直後、最初の音声フレームが届くまで Dock は「準備中…」を出す（state truth fix）。dock8 / geometry は markAudioLiveForShot() で届いた姿にしてから撮るので、この面の png は無い。次 RC で dock8 に markAudioLiveForShot 前の 1 面を足す。",
+      "capture": {
+        "selftest": "dock8",
+        "file": "08a-meeting-preparing.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "status": "PENDING_CAPTURE",
+      "note": "RecordingWorkspaceState.beginPreparingForShot で「まだ 1 フレームも届いていない」姿を固定する（実マイクの level で消えないよう撮り終わるまで止める）。",
       "trigger": "「録音を始める」直後。",
       "meaning": "マイクを開いている。まだ録れていない。",
       "primary": "（待つ）",
@@ -771,19 +814,27 @@
       ],
       "window": "Dock（1 枚）",
       "invariant": "「録音中」と名乗らない（stuckPreparingAfterLive = false も同時に）。",
-      "source": null
+      "source": null,
+      "appearance_policy": "fixed"
     },
     {
       "id": "meeting.paused",
       "group": "meeting",
       "title": "Meeting — Paused",
       "required": true,
-      "capture": null,
-      "status": "NO_CAPTURE_PATH",
-      "note": "--selftest pause は一時停止で音が止まることを確かめるが png を書かない。次 RC で dock8 に paused を 1 面足す。",
+      "capture": {
+        "selftest": "shots",
+        "file": "03b-recording-paused.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "status": "PENDING_CAPTURE",
+      "note": "Dock のコントローラには一時停止の操作も「一時停止中」の語も無い（点だけ）。Dock で止めたい／止まっていると分かりたいなら製品側の FIX 候補。",
       "trigger": "Pause。",
       "meaning": "録音を止めている（音は入らない）。再開できる。",
-      "primary": "再開",
+      "primary": "再開（pill の ▶）",
       "secondary": "停止",
       "states": "meeting（paused）",
       "keys": "—",
@@ -794,9 +845,10 @@
       "next": [
         "meeting.controller"
       ],
-      "window": "Dock（1 枚）",
+      "window": "Workspace（録音面）。Dock は点が灰になるだけで、一時停止の手は録音面の pill にある",
       "invariant": "一時停止中は文字起こしが増えない。",
-      "source": null
+      "source": null,
+      "appearance_policy": "adaptive"
     },
     {
       "id": "meeting.notes",
@@ -851,7 +903,8 @@
         },
         "light": "screens/meeting.notes.light.png",
         "dark": "screens/meeting.notes.dark.png"
-      }
+      },
+      "appearance_policy": "fixed"
     },
     {
       "id": "meeting.captions",
@@ -905,15 +958,23 @@
         },
         "light": "screens/meeting.captions.light.png",
         "dark": "screens/meeting.captions.dark.png"
-      }
+      },
+      "appearance_policy": "fixed"
     },
     {
       "id": "meeting.ask",
       "group": "meeting",
       "title": "Meeting — Ask Astra",
       "required": true,
-      "capture": null,
-      "status": "NO_CAPTURE_PATH",
+      "capture": {
+        "selftest": "dock8",
+        "file": "09c-meeting-ask.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "status": "PENDING_CAPTURE",
       "note": "MeetingPanel.ask（AskInDockField）は実装と geometry（meetingPanel-ask）にあるが、dock8 は notes / captions しか撮らない。次 RC で dock8 に 1 面足す。",
       "trigger": "controller の「Ask Astra」。",
       "meaning": "会議の内容について、その場で訊く。",
@@ -930,7 +991,8 @@
       ],
       "window": "Dock（1 枚）",
       "invariant": "—",
-      "source": null
+      "source": null,
+      "appearance_policy": "fixed"
     },
     {
       "id": "meeting.workspace",
@@ -986,7 +1048,8 @@
         },
         "light": "screens/meeting.workspace.light.png",
         "dark": "screens/meeting.workspace.dark.png"
-      }
+      },
+      "appearance_policy": "adaptive"
     },
     {
       "id": "recording.workspace",
@@ -1041,7 +1104,8 @@
         },
         "light": "screens/recording.workspace.light.png",
         "dark": "screens/recording.workspace.dark.png"
-      }
+      },
+      "appearance_policy": "fixed"
     },
     {
       "id": "recording.transcript",
@@ -1093,7 +1157,8 @@
         },
         "light": "screens/recording.transcript.light.png",
         "dark": "screens/recording.transcript.dark.png"
-      }
+      },
+      "appearance_policy": "fixed"
     },
     {
       "id": "recording.rag",
@@ -1147,7 +1212,8 @@
         },
         "light": "screens/recording.rag.light.png",
         "dark": "screens/recording.rag.dark.png"
-      }
+      },
+      "appearance_policy": "fixed"
     },
     {
       "id": "recording.agent-timeline",
@@ -1199,7 +1265,8 @@
         },
         "light": "screens/recording.agent-timeline.light.png",
         "dark": "screens/recording.agent-timeline.dark.png"
-      }
+      },
+      "appearance_policy": "fixed"
     },
     {
       "id": "recording.meeting-canvas",
@@ -1253,7 +1320,8 @@
         },
         "light": "screens/recording.meeting-canvas.light.png",
         "dark": "screens/recording.meeting-canvas.dark.png"
-      }
+      },
+      "appearance_policy": "fixed"
     },
     {
       "id": "main.home",
@@ -1307,7 +1375,8 @@
         },
         "light": "screens/main.home.light.png",
         "dark": "screens/main.home.dark.png"
-      }
+      },
+      "appearance_policy": "adaptive"
     },
     {
       "id": "main.home-recording-now",
@@ -1361,7 +1430,8 @@
         },
         "light": "screens/main.home-recording-now.light.png",
         "dark": "screens/main.home-recording-now.dark.png"
-      }
+      },
+      "appearance_policy": "adaptive"
     },
     {
       "id": "main.home-upcoming",
@@ -1415,7 +1485,8 @@
         },
         "light": "screens/main.home-upcoming.light.png",
         "dark": "screens/main.home-upcoming.dark.png"
-      }
+      },
+      "appearance_policy": "adaptive"
     },
     {
       "id": "main.new-recording-sheet",
@@ -1469,7 +1540,8 @@
         },
         "light": "screens/main.new-recording-sheet.light.png",
         "dark": "screens/main.new-recording-sheet.dark.png"
-      }
+      },
+      "appearance_policy": "adaptive"
     },
     {
       "id": "main.work-tasks",
@@ -1523,7 +1595,8 @@
         },
         "light": "screens/main.work-tasks.light.png",
         "dark": "screens/main.work-tasks.dark.png"
-      }
+      },
+      "appearance_policy": "adaptive"
     },
     {
       "id": "main.work-agents",
@@ -1575,7 +1648,8 @@
         },
         "light": "screens/main.work-agents.light.png",
         "dark": "screens/main.work-agents.dark.png"
-      }
+      },
+      "appearance_policy": "adaptive"
     },
     {
       "id": "main.library-meetings",
@@ -1629,7 +1703,8 @@
         },
         "light": "screens/main.library-meetings.light.png",
         "dark": "screens/main.library-meetings.dark.png"
-      }
+      },
+      "appearance_policy": "adaptive"
     },
     {
       "id": "main.library-files",
@@ -1681,7 +1756,8 @@
         },
         "light": "screens/main.library-files.light.png",
         "dark": "screens/main.library-files.dark.png"
-      }
+      },
+      "appearance_policy": "adaptive"
     },
     {
       "id": "main.apps-plugins",
@@ -1735,7 +1811,8 @@
         },
         "light": "screens/main.apps-plugins.light.png",
         "dark": "screens/main.apps-plugins.dark.png"
-      }
+      },
+      "appearance_policy": "adaptive"
     },
     {
       "id": "main.apps-connectors",
@@ -1787,7 +1864,8 @@
         },
         "light": "screens/main.apps-connectors.light.png",
         "dark": "screens/main.apps-connectors.dark.png"
-      }
+      },
+      "appearance_policy": "adaptive"
     },
     {
       "id": "main.scale-compact",
@@ -1839,7 +1917,8 @@
         },
         "light": "screens/main.scale-compact.light.png",
         "dark": "screens/main.scale-compact.dark.png"
-      }
+      },
+      "appearance_policy": "adaptive"
     },
     {
       "id": "main.scale-comfortable",
@@ -1891,7 +1970,8 @@
         },
         "light": "screens/main.scale-comfortable.light.png",
         "dark": "screens/main.scale-comfortable.dark.png"
-      }
+      },
+      "appearance_policy": "adaptive"
     },
     {
       "id": "main.scale-large",
@@ -1943,7 +2023,8 @@
         },
         "light": "screens/main.scale-large.light.png",
         "dark": "screens/main.scale-large.dark.png"
-      }
+      },
+      "appearance_policy": "adaptive"
     },
     {
       "id": "session.recording",
@@ -1997,7 +2078,8 @@
         },
         "light": "screens/session.recording.light.png",
         "dark": "screens/session.recording.dark.png"
-      }
+      },
+      "appearance_policy": "adaptive"
     },
     {
       "id": "session.processing",
@@ -2051,7 +2133,8 @@
         },
         "light": "screens/session.processing.light.png",
         "dark": "screens/session.processing.dark.png"
-      }
+      },
+      "appearance_policy": "adaptive"
     },
     {
       "id": "session.ready",
@@ -2105,7 +2188,8 @@
         },
         "light": "screens/session.ready.light.png",
         "dark": "screens/session.ready.dark.png"
-      }
+      },
+      "appearance_policy": "adaptive"
     },
     {
       "id": "session.project",
@@ -2159,7 +2243,8 @@
         },
         "light": "screens/session.project.light.png",
         "dark": "screens/session.project.dark.png"
-      }
+      },
+      "appearance_policy": "adaptive"
     },
     {
       "id": "session.detail",
@@ -2213,7 +2298,8 @@
         },
         "light": "screens/session.detail.light.png",
         "dark": "screens/session.detail.dark.png"
-      }
+      },
+      "appearance_policy": "adaptive"
     },
     {
       "id": "provenance.meeting-detail",
@@ -2267,7 +2353,8 @@
         },
         "light": "screens/provenance.meeting-detail.light.png",
         "dark": "screens/provenance.meeting-detail.dark.png"
-      }
+      },
+      "appearance_policy": "adaptive"
     },
     {
       "id": "provenance.library-after-end",
@@ -2315,7 +2402,8 @@
           }
         },
         "light": "screens/provenance.library-after-end.light.png"
-      }
+      },
+      "appearance_policy": "adaptive"
     },
     {
       "id": "provenance.source",
@@ -2363,7 +2451,8 @@
           }
         },
         "light": "screens/provenance.source.light.png"
-      }
+      },
+      "appearance_policy": "adaptive"
     },
     {
       "id": "provenance.reopened",
@@ -2409,7 +2498,8 @@
           }
         },
         "light": "screens/provenance.reopened.light.png"
-      }
+      },
+      "appearance_policy": "adaptive"
     },
     {
       "id": "system.mic-denied",
@@ -2463,7 +2553,8 @@
         },
         "light": "screens/system.mic-denied.light.png",
         "dark": "screens/system.mic-denied.dark.png"
-      }
+      },
+      "appearance_policy": "adaptive"
     },
     {
       "id": "system.mic-recovered",
@@ -2511,7 +2602,8 @@
           }
         },
         "light": "screens/system.mic-recovered.light.png"
-      }
+      },
+      "appearance_policy": "adaptive"
     },
     {
       "id": "system.after-sharing",
@@ -2557,7 +2649,8 @@
           }
         },
         "light": "screens/system.after-sharing.light.png"
-      }
+      },
+      "appearance_policy": "adaptive"
     },
     {
       "id": "system.confirm-cancel",
@@ -2605,7 +2698,8 @@
           }
         },
         "light": "screens/system.confirm-cancel.light.png"
-      }
+      },
+      "appearance_policy": "adaptive"
     },
     {
       "id": "system.interrupted",
@@ -2659,7 +2753,8 @@
         },
         "light": "screens/system.interrupted.light.png",
         "dark": "screens/system.interrupted.dark.png"
-      }
+      },
+      "appearance_policy": "adaptive"
     },
     {
       "id": "system.interrupted-journey",
@@ -2705,7 +2800,8 @@
           }
         },
         "light": "screens/system.interrupted-journey.light.png"
-      }
+      },
+      "appearance_policy": "adaptive"
     },
     {
       "id": "system.resumed",
@@ -2753,39 +2849,55 @@
           }
         },
         "light": "screens/system.resumed.light.png"
-      }
+      },
+      "appearance_policy": "adaptive"
     },
     {
       "id": "system.stt-unavailable",
       "group": "system",
       "title": "System — On-device STT unavailable",
       "required": true,
-      "capture": null,
-      "status": "NO_CAPTURE_PATH",
-      "note": "端末内 STT が無い / 落ちたときの面。この状態を作って撮る selftest が RC に無い。次 RC で足す（test code のみ）。",
+      "capture": {
+        "selftest": "shots",
+        "file": "09b-stt-unavailable.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "status": "PENDING_CAPTURE",
+      "note": "いま画面が言うのは録音面の 1 行だけ。「STT を入れる」導線は画面に無い（製品側の FIX 候補）。",
       "trigger": "STT モデルが無い / 初期化に失敗。",
       "meaning": "録音はできるが文字にならないことを、録る前に言う。",
-      "primary": "STT を入れる（install-local-stt）",
-      "secondary": "文字起こし無しで録る",
-      "states": "—",
+      "primary": "録音は続く（音声は保存される）",
+      "secondary": "STT を入れる（scripts/install-local-stt、画面の外）",
+      "states": "RecordingRuntime.transcriptionUnavailable = true（録音中）",
       "keys": "—",
       "privacy": "外へ送って代替しない。",
       "prev": [
         "meeting.controller"
       ],
       "next": [],
-      "window": "Dock / Main",
+      "window": "Workspace（録音面）。Dock / Main には出ない",
       "invariant": "黙って空の文字起こしにしない。",
-      "source": null
+      "source": null,
+      "appearance_policy": "adaptive"
     },
     {
       "id": "system.calendar-permission",
       "group": "system",
       "title": "System — Calendar permission (purpose-first)",
       "required": true,
-      "capture": null,
-      "status": "NO_CAPTURE_PATH",
-      "note": "PermissionCenter .schedule「これからの会議をここに出すにはカレンダーの許可が要ります。」。--selftest calendarask は AX で文を確かめるが png を書かない。次 RC で sessionshots に simulatedCalendar=notDetermined の Home を 1 面足す。",
+      "capture": {
+        "selftest": "sessionshots",
+        "file": "13-calendar-permission.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "status": "PENDING_CAPTURE",
+      "note": "Permissions.simulatedCalendar = notDetermined、予定の差し込み無し。Home は開くたびに許可の状態を読み直す（以前は初回の値のままだった）。",
       "trigger": "Home が予定を出そうとした（未確認）。",
       "meaning": "理由を先に言ってから求める。",
       "primary": "許可…",
@@ -2801,39 +2913,55 @@
       ],
       "window": "Main Window",
       "invariant": "許可直後にその場で予定が並ぶ（LIVE_TCC）。",
-      "source": null
+      "source": null,
+      "appearance_policy": "adaptive"
     },
     {
       "id": "system.accessibility-permission",
       "group": "system",
-      "title": "System — Accessibility / Input Monitoring",
+      "title": "System — Input Monitoring（⌥Space）/ Accessibility",
       "required": true,
-      "capture": null,
-      "status": "NO_CAPTURE_PATH",
-      "note": "PermissionCenter .control「入力欄へ書き込むにはアクセシビリティが要ります。」と、Input Monitoring 無しの Idle 案内（「クリック」）。撮る selftest が無い。次 RC で足す。",
+      "capture": {
+        "selftest": "sessionshots",
+        "file": "14-input-monitoring.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "status": "PENDING_CAPTURE",
+      "note": "アクセシビリティ（入力欄へ書く）の許可を求める面は無い。Capability.control.reason の文はあるが、どの view も読んでいない（製品側の FIX 候補）。",
       "trigger": "入力欄へ書こうとした / ⌥Space が拾えない。",
       "meaning": "何のために要るかを先に言う。",
-      "primary": "許可…",
-      "secondary": "やめる",
-      "states": "notDetermined / denied",
+      "primary": "⌥Space を使えるようにする（許可を求める）",
+      "secondary": "（そのまま使う）",
+      "states": "Permissions.inputMonitoring = notDetermined",
       "keys": "—",
       "privacy": "purpose-first。",
       "prev": [
         "dock.confirmation"
       ],
       "next": [],
-      "window": "Dock",
+      "window": "Main Window（Home の空状態）。Dock は登録できないとき「クリック」案内に変わる",
       "invariant": "—",
-      "source": null
+      "source": null,
+      "appearance_policy": "adaptive"
     },
     {
       "id": "system.update-available",
       "group": "system",
       "title": "System — Update available",
       "required": true,
-      "capture": null,
-      "status": "NO_CAPTURE_PATH",
-      "note": "Sparkle の更新ダイアログ。--selftest update は設定の欠けを見るだけ。配布版の「更新を確認…」3 点は astra-release-state で pending。実 appcast を当てて撮る（次 RC）。",
+      "capture": {
+        "selftest": "sysshots",
+        "file": "update-available.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "status": "PENDING_CAPTURE",
+      "note": "本物の Sparkle の窓。capture-rc.sh が置く appcast（版 999.0.0）を ASTRA_SELFTEST_FEED_URL で読ませる。配布先と公開鍵の無い実行体では撮れない（SKIP → CAPTURE_MISSING）。",
       "trigger": "メニュー「更新を確認…」/ 自動。",
       "meaning": "新しい版があること、何が変わるか、入れるか。",
       "primary": "更新する",
@@ -2845,60 +2973,115 @@
       "next": [],
       "window": "Sparkle window",
       "invariant": "SUFeedURL / SUPublicEDKey が揃っていないときは「確かめていない」と言う。",
-      "source": null
+      "source": null,
+      "appearance_policy": "adaptive"
     },
     {
       "id": "system.update-unavailable",
       "group": "system",
       "title": "System — Up to date / cannot check",
       "required": true,
-      "capture": null,
-      "status": "NO_CAPTURE_PATH",
-      "note": "同上。「最新です」と「更新の口が起動していない」（SoftwareUpdate.misconfiguration）の 2 つを撮る。",
+      "capture": {
+        "selftest": "sysshots",
+        "file": "update-unavailable.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "status": "PENDING_CAPTURE",
+      "note": "Astra 自身の alert。理由は実行体の事実（SoftwareUpdate.misconfiguration）。",
       "trigger": "更新を確認…",
       "meaning": "最新である / 確かめられない、を区別して言う。",
       "primary": "OK",
       "secondary": "—",
-      "states": "up-to-date / misconfigured",
+      "states": "misconfigured（この実行体で確かめられない）。up-to-date は Sparkle の alert（update-up-to-date、optional）",
       "keys": "—",
       "privacy": "—",
       "prev": [],
       "next": [],
       "window": "Sparkle window / alert",
       "invariant": "確かめていないのに「最新」と言わない。",
-      "source": null
+      "source": null,
+      "appearance_policy": "adaptive"
+    },
+    {
+      "id": "system.update-up-to-date",
+      "group": "system",
+      "title": "System — Up to date（Sparkle）",
+      "required": false,
+      "capture": {
+        "selftest": "sysshots",
+        "file": "update-up-to-date.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "status": "PENDING_CAPTURE",
+      "note": "capture-rc.sh が置く appcast（版 0.0.1）を ASTRA_SELFTEST_FEED_URL_LATEST で読ませる。",
+      "trigger": "更新を確認…（新しい版が無い）",
+      "meaning": "確かめた上で「最新です」と言う。",
+      "primary": "OK",
+      "secondary": "—",
+      "states": "Sparkle: no update found",
+      "keys": "Return → OK",
+      "privacy": "—",
+      "prev": [],
+      "next": [],
+      "window": "Sparkle alert",
+      "invariant": "確かめていないのに「最新」と言わない。",
+      "source": null,
+      "image": null,
+      "captured": null,
+      "appearance_policy": "adaptive"
     },
     {
       "id": "system.generic-failure",
       "group": "system",
       "title": "System — Generic action failure",
       "required": true,
-      "capture": null,
-      "status": "NO_CAPTURE_PATH",
-      "note": "Home の依頼（「依頼の途中と結果をその場に返す」）が失敗したときの面と、録りかけ送出失敗の理由表示（HomeView「送れなかったときは黙らずに理由を返す」）。撮る selftest が無い。",
+      "capture": {
+        "selftest": "sessionshots",
+        "file": "15-generic-failure.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "status": "PENDING_CAPTURE",
+      "note": "行は印と 1/2 で止まった場所を言うが、理由の文と「やり直す」は無い（製品側の FIX 候補）。",
       "trigger": "依頼が失敗した。",
       "meaning": "何が失敗して、次に何ができるか。",
-      "primary": "やり直す",
-      "secondary": "閉じる",
-      "states": "failed",
+      "primary": "どこで止まったかを読む（段の印と件数）",
+      "secondary": "Task Dock で頼み直す",
+      "states": "AgentTask.status = failed（LocalStore）",
       "keys": "—",
       "privacy": "—",
       "prev": [
         "main.home"
       ],
       "next": [],
-      "window": "Main Window",
+      "window": "Main Window（Home の「最近の頼みごと」）",
       "invariant": "黙らない。",
-      "source": null
+      "source": null,
+      "appearance_policy": "adaptive"
     },
     {
       "id": "settings.permissions",
       "group": "system",
       "title": "Settings — 許可（OS）/ shortcuts",
       "required": true,
-      "capture": null,
-      "status": "NO_CAPTURE_PATH",
-      "note": "SettingsView（許可（OS）セクション、録音を開始 / 停止 の shortcut 行）。撮る selftest が無い。次 RC で sections に settings を 1 面足す。",
+      "capture": {
+        "selftest": "sysshots",
+        "file": "settings-permissions.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "status": "PENDING_CAPTURE",
+      "note": "予定と ⌥Space を未確認にして「許可…」の在る姿を残す（検査用の上書き）。各行に理由の文は無い（manifest の privacy 欄と食い違うので製品側の FIX 候補）。",
       "trigger": "⌘, / メニュー。",
       "meaning": "OS 許可の現状と、ショートカット。",
       "primary": "許可…",
@@ -2912,7 +3095,8 @@
       "next": [],
       "window": "Settings window",
       "invariant": "—",
-      "source": null
+      "source": null,
+      "appearance_policy": "adaptive"
     },
     {
       "id": "components.neutral",
@@ -2963,7 +3147,8 @@
         },
         "light": "screens/components.neutral.light.png",
         "dark": "screens/components.neutral.dark.png"
-      }
+      },
+      "appearance_policy": "adaptive"
     },
     {
       "id": "components.hover",
@@ -3014,7 +3199,8 @@
         },
         "light": "screens/components.hover.light.png",
         "dark": "screens/components.hover.dark.png"
-      }
+      },
+      "appearance_policy": "adaptive"
     },
     {
       "id": "components.focus",
@@ -3065,7 +3251,8 @@
         },
         "light": "screens/components.focus.light.png",
         "dark": "screens/components.focus.dark.png"
-      }
+      },
+      "appearance_policy": "adaptive"
     },
     {
       "id": "components.pressed",
@@ -3116,7 +3303,8 @@
         },
         "light": "screens/components.pressed.light.png",
         "dark": "screens/components.pressed.dark.png"
-      }
+      },
+      "appearance_policy": "adaptive"
     }
   ],
   "strips": [
@@ -3124,25 +3312,34 @@
       "id": "strip.idle-preparing-listening",
       "title": "Idle → Preparing → Listening",
       "required": true,
-      "capture": null,
-      "status": "NO_CAPTURE_PATH",
-      "note": "--selftest invocation / invocationaudio は ms を測るが frame を書かない。60fps で frame を残す観測は surfacemotion の T1 / T2 だけ。次 RC で SurfaceMotionGate に T0 を足す。"
+      "capture": {
+        "selftest": "surfacemotion",
+        "dir": "T0-idle-to-listening",
+        "result_key": "T0-idle-to-listening"
+      },
+      "status": "PENDING_CAPTURE"
     },
     {
       "id": "strip.dock-running",
       "title": "Dock → Running",
       "required": true,
-      "capture": null,
-      "status": "NO_CAPTURE_PATH",
-      "note": "dockanim は Presence→Listening の上辺 Y を測るが frame を書かない。次 RC で SurfaceMotionGate に足す。"
+      "capture": {
+        "selftest": "surfacemotion",
+        "dir": "T3-dock-to-running",
+        "result_key": "T3-dock-to-running"
+      },
+      "status": "PENDING_CAPTURE"
     },
     {
       "id": "strip.running-confirmation",
       "title": "Running → Confirmation",
       "required": true,
-      "capture": null,
-      "status": "NO_CAPTURE_PATH",
-      "note": "同上。"
+      "capture": {
+        "selftest": "surfacemotion",
+        "dir": "T4-running-to-confirmation",
+        "result_key": "T4-running-to-confirmation"
+      },
+      "status": "PENDING_CAPTURE"
     },
     {
       "id": "strip.controller-notes",

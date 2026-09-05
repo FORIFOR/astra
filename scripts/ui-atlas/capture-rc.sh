@@ -34,6 +34,27 @@ json.dump({"app": os.path.abspath(app), "exe_sha256": h, "built": mtime,
 print(f"RC exe {h[:16]}… built {mtime}")
 PY
 
+# Sparkle の 2 面（update-available / up-to-date）用の appcast。鍵の検証と手順は本物のまま、
+# 差し替えるのは appcast の場所だけ（`SoftwareUpdate` の ASTRA_SELFTEST_FEED_URL）。
+# 入れ替えには使わない（enclosure は存在しない場所、署名は 0 埋め）。
+write_appcast() {  # $1 = path, $2 = version
+  cat > "$1" <<XML
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+<channel><title>Astra (UI Atlas)</title>
+<item><title>Astra $2</title>
+<sparkle:version>$2</sparkle:version><sparkle:shortVersionString>$2</sparkle:shortVersionString>
+<sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+<description><![CDATA[<p>UI Atlas 用の appcast。入れ替えには使わない。</p>]]></description>
+<pubDate>Fri, 05 Sep 2026 12:00:00 +0900</pubDate>
+<enclosure url="https://example.invalid/Astra-$2.zip" length="1" type="application/octet-stream" sparkle:edSignature="AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="/>
+</item></channel></rss>
+XML
+}
+write_appcast "$OUT/appcast-available.xml" "999.0.0"
+write_appcast "$OUT/appcast-latest.xml" "0.0.1"
+
+EXTRA_ENV=()
 run() {
   local sub="$1"; shift
   if pgrep -x AstraMac >/dev/null; then
@@ -42,7 +63,7 @@ run() {
   fi
   local data="$OUT/data-root/$sub"; mkdir -p "$data"
   echo "▶ $*  →  $sub"
-  open -W --env "ASTRA_DATA_ROOT=$data" "$APP" --args --selftest "$@"
+  open -W --env "ASTRA_DATA_ROOT=$data" "${EXTRA_ENV[@]}" "$APP" --args --selftest "$@"
   echo "  $(ls "$OUT/$sub" 2>/dev/null | grep -c '\.png$') png"
 }
 
@@ -56,6 +77,11 @@ run sections-light  sections     "$OUT/sections-light"
 run sections-dark   sections     "$OUT/sections-dark" dark
 run states-light    states       "$OUT/states-light"
 run states-dark     states       "$OUT/states-dark" dark
+EXTRA_ENV=(--env "ASTRA_SELFTEST_FEED_URL=file://$OUT/appcast-available.xml"
+           --env "ASTRA_SELFTEST_FEED_URL_LATEST=file://$OUT/appcast-latest.xml")
+run sys-light       sysshots     "$OUT/sys-light"
+run sys-dark        sysshots     "$OUT/sys-dark" dark
+EXTRA_ENV=()
 for j in JA JB JC; do
   run "journey-$j"  journey "$j" "$OUT/journey-$j"
 done
