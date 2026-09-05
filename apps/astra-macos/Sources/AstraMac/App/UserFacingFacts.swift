@@ -59,6 +59,15 @@ enum UserFacingFacts {
     static let resultOpenSettings = "設定を開く"
     static let recoveryResume = "続きから"
     static let recoveryDiscard = "破棄"
+    /// できなかった頼みごとを、同じ入口でもう一度。黙って消える代わりに出す道。
+    static let resultRetry = "やり直す"
+    /// オンデバイス文字起こしが使えないときの直し方（システム設定 > キーボード > 音声入力）。
+    static let transcriptionRecoveryHint = "システム設定の音声入力で日本語を入れると使えます"
+    /// 設定の「入力監視」行に添える理由（他の 4 行は PermissionCenter の reason）。
+    static let permissionInputMonitoringReason = "⌥Space をどこからでも効かせるには入力監視が要ります。"
+    /// Dock の会議コントローラの一時停止 / 再開。
+    static let recordingPause = "一時停止"
+    static let recordingResume = "再開"
     static let sessionInterrupted = "途中で終わっています"
     static let hudClickHint = "クリック"
     static let permissionRequest = "許可…"
@@ -155,6 +164,11 @@ enum UserFacingFacts {
             f("result.openSettings", resultOpenSettings),
             f("recovery.resume", recoveryResume),
             f("recovery.discard", recoveryDiscard),
+            f("result.retry", resultRetry),
+            f("transcription.recoveryHint", transcriptionRecoveryHint, false),
+            f("permission.inputMonitoring.reason", permissionInputMonitoringReason, false),
+            f("recording.pause", recordingPause),
+            f("recording.resume", recordingResume),
             f("session.interrupted", sessionInterrupted),
             f("hud.clickHint", hudClickHint, false),
             f("permission.request", permissionRequest),

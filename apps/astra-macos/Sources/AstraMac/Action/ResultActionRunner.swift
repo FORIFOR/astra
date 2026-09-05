@@ -26,6 +26,10 @@ enum ResultActionRunner {
         case .openSettings:
             // 始められなかった理由はいまのところマイクだけ。OS の許可画面へ。
             Permissions.openMicrophoneSettings()
+        case .retry:
+            // 同じ入口（AI 操作）でもう一度。走り出せば Dock は実行中の姿になり、走り出せなければ結果面を残す。
+            RecordingWorkspaceState.shared.runAIAction(title)
+            return
         }
         store.dismissResult()
     }

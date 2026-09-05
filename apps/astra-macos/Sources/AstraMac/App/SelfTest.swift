@@ -524,10 +524,14 @@ enum SelfTest {
         // 5-3. できなかったとき（Error / Recovery）。本番で失敗の結果面を作る経路と同じ形
         // （マイク拒否 → 理由と、直しに行く道。`RecordingWorkspaceState.start`）。✓ を付けず、黙って消えない。
         shoot("06d-result-failed", {
-            store.setDock(.result(AgentResult(
-                title: Facts.recordingCannotStart, actions: [.openSettings],
-                detail: "マイクが許可されていません。設定で Astra に許可すると始められます。",
-                failed: true)))
+            // 本番と同じ経路: 段が失敗 → finishTask(.failed) が結果面（理由 + やり直す）を出す。
+            store.startTask(AgentTask(
+                id: UUID(), title: "先方へ見積の返信を送る", status: .running,
+                steps: [AgentStep(title: "Gmail", tool: "gmail", detail: "下書きを作った", state: .success),
+                        AgentStep(title: "送信", tool: "gmail", detail: "接続が切れた", state: .running)],
+                startedAt: Date(), context: store.state.context))
+            if let last = store.state.activeTask?.steps.last { store.updateStep(last.id, to: .failed) }
+            store.finishTask(.failed)
         })
 
         // 6. Confirmation（requireConfirmation が Dock を展開する＝実遷移）
@@ -576,6 +580,9 @@ enum SelfTest {
         // 7'. 開始直後、まだ 1 フレームも届いていない: 「録音中」と名乗らず「準備中…」。
         shoot("08a-meeting-preparing", { recording.beginPreparingForShot() })
         recording.markAudioLiveForShot()
+        // 7''. 一時停止: Dock の見出しが「一時停止中」、点は灰、▶ で再開。
+        shoot("08b-meeting-paused", { recording.togglePause() })
+        recording.togglePause()
         // 録音開始では窓を増やさない。Dock だけが録音コントローラになる。
         shoot("09-meeting-notes", { hud.toggleMeetingPanel(.notes) })
         shoot("09b-meeting-captions", { hud.toggleMeetingPanel(.captions) })

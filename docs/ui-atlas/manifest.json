@@ -725,11 +725,11 @@
           "dark"
         ]
       },
-      "status": "CAPTURED",
-      "note": "本番で失敗の結果面を作る経路（マイク拒否 → RecordingWorkspaceState.start）と同じ形で描く。「やり直す」という操作は無い。失敗の理由と、直しに行く道を出す。",
+      "status": "PENDING_CAPTURE",
+      "note": "finishTask(.failed) が結果面を出す（以前は idle に戻って黙って消えていた）。どこで止まったか（失敗した段と detail）を 2 行目に言う。",
       "trigger": "実行が失敗した / 止まった。",
       "meaning": "何が失敗したか、次に何ができるか。",
-      "primary": "設定を開く（直しに行く道）",
+      "primary": "やり直す（同じ入口でもう一度）",
       "secondary": "閉じる",
       "states": "result(failed)",
       "keys": "Esc → 閉じる。",
@@ -915,18 +915,18 @@
       "title": "Meeting — Paused",
       "required": true,
       "capture": {
-        "selftest": "shots",
-        "file": "03b-recording-paused.png",
+        "selftest": "dock8",
+        "file": "08b-meeting-paused.png",
         "appearances": [
           "light",
           "dark"
         ]
       },
-      "status": "CAPTURED",
-      "note": "Dock のコントローラには一時停止の操作も「一時停止中」の語も無い（点だけ）。Dock で止めたい／止まっていると分かりたいなら製品側の FIX 候補。",
+      "status": "PENDING_CAPTURE",
+      "note": "Dock のコントローラに一時停止 / 再開の手と「一時停止中」の見出しを足した（2026-09-05）。録音面の pill と同じ togglePause を通る。録音面の姿は recording.paused（optional）。",
       "trigger": "Pause。",
       "meaning": "録音を止めている（音は入らない）。再開できる。",
-      "primary": "再開（pill の ▶）",
+      "primary": "再開（▶）",
       "secondary": "停止",
       "states": "meeting（paused）",
       "keys": "—",
@@ -937,10 +937,10 @@
       "next": [
         "meeting.controller"
       ],
-      "window": "Workspace（録音面）。Dock は点が灰になるだけで、一時停止の手は録音面の pill にある",
+      "window": "Dock（1 枚）",
       "invariant": "一時停止中は文字起こしが増えない。",
       "source": "RC",
-      "appearance_policy": "adaptive",
+      "appearance_policy": "fixed",
       "captured": {
         "exe_sha256": "2be75265f3bc9d3fb03ab7cf8bc56fb2a77289a1e7c84506ce69e844cc1772ed",
         "selftest": "shots",
@@ -964,6 +964,40 @@
         "light": "screens/meeting.paused.light.png",
         "dark": "screens/meeting.paused.dark.png"
       }
+    },
+    {
+      "id": "recording.paused",
+      "group": "meeting",
+      "title": "Recording Workspace — Paused",
+      "required": false,
+      "capture": {
+        "selftest": "shots",
+        "file": "03b-recording-paused.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "録音面の pill の一時停止。",
+      "meaning": "止まっている間は文字起こしが増えない。",
+      "primary": "再開（pill の ▶）",
+      "secondary": "停止",
+      "states": "isPaused = true",
+      "keys": "—",
+      "privacy": "—",
+      "prev": [
+        "recording.workspace"
+      ],
+      "next": [
+        "recording.workspace"
+      ],
+      "window": "Workspace（録音面）",
+      "invariant": "見出しが「一時停止中」、点は灰。",
+      "appearance_policy": "adaptive",
+      "status": "PENDING_CAPTURE",
+      "image": null,
+      "source": null,
+      "captured": null
     },
     {
       "id": "meeting.notes",
@@ -3003,12 +3037,12 @@
           "dark"
         ]
       },
-      "status": "CAPTURED",
-      "note": "いま画面が言うのは録音面の 1 行だけ。「STT を入れる」導線は画面に無い（製品側の FIX 候補）。",
+      "status": "PENDING_CAPTURE",
+      "note": "録音面の 1 行と Dock の字幕 / 文字起こしの空状態に、理由と直しに行く道を出す。",
       "trigger": "STT モデルが無い / 初期化に失敗。",
       "meaning": "録音はできるが文字にならないことを、録る前に言う。",
-      "primary": "録音は続く（音声は保存される）",
-      "secondary": "STT を入れる（scripts/install-local-stt、画面の外）",
+      "primary": "設定を開く（システム設定 > キーボード > 音声入力）",
+      "secondary": "録音は続く（音声は保存される）",
       "states": "RecordingRuntime.transcriptionUnavailable = true（録音中）",
       "keys": "—",
       "privacy": "外へ送って代替しない。",
@@ -3167,8 +3201,8 @@
           "dark"
         ]
       },
-      "status": "CAPTURED",
-      "note": "本物の Sparkle の窓。capture-rc.sh が 127.0.0.1 の http で配る appcast（版 999.0.0）を ASTRA_SELFTEST_FEED_URL で読ませる。file:// は Sparkle が拒む。配布先と公開鍵の無い実行体では撮れない（SKIP → CAPTURE_MISSING）。",
+      "status": "PENDING_CAPTURE",
+      "note": "本物の Sparkle の窓。capture-rc.sh が 127.0.0.1 の http で配る appcast（版 999.0.0）を読ませる。バンドルが ja.lproj を持つので Sparkle の窓も日本語。",
       "trigger": "メニュー「更新を確認…」/ 自動。",
       "meaning": "新しい版があること、何が変わるか、入れるか。",
       "primary": "更新する",
@@ -3271,12 +3305,12 @@
           "dark"
         ]
       },
-      "status": "CAPTURED",
-      "note": "行は印と 1/2 で止まった場所を言うが、理由の文と「やり直す」は無い（製品側の FIX 候補）。",
+      "status": "PENDING_CAPTURE",
+      "note": "Home の行が失敗した段の理由を言い、同じ入口（AI 操作）でやり直せる。",
       "trigger": "依頼が失敗した。",
       "meaning": "何が失敗して、次に何ができるか。",
-      "primary": "どこで止まったかを読む（段の印と件数）",
-      "secondary": "Task Dock で頼み直す",
+      "primary": "やり直す（行の中）",
+      "secondary": "どこで止まったかを読む（失敗した段の文）",
       "states": "AgentTask.status = failed（LocalStore）",
       "keys": "—",
       "privacy": "—",
@@ -3325,8 +3359,8 @@
           "dark"
         ]
       },
-      "status": "CAPTURED",
-      "note": "予定と ⌥Space を未確認にして「許可…」の在る姿を残す（検査用の上書き）。各行に理由の文は無い（manifest の privacy 欄と食い違うので製品側の FIX 候補）。",
+      "status": "PENDING_CAPTURE",
+      "note": "各行に「何のために要るか」（PermissionCenter.Capability.reason）を添えた。窓は 460×500。予定と ⌥Space を未確認にして「許可…」の在る姿を残す。",
       "trigger": "⌘, / メニュー。",
       "meaning": "OS 許可の現状と、ショートカット。",
       "primary": "許可…",

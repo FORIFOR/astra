@@ -360,27 +360,46 @@ struct HomeView: View {
 
     /// 頼んだ仕事 1 件。いつ・どこまで・どうなったか。
     private func taskRow(_ t: AgentTask) -> some View {
-        HStack(spacing: 10) {
-            Image(systemName: taskIcon(t.status))
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(taskTint(t.status))
-                .frame(width: 14)
-            Text(t.title)
-                .font(.system(size: S.type(TypeScale.bodySize)))
-                .foregroundStyle(Palette.text(dark))
-                .lineLimit(1)
-            Spacer(minLength: 12)
-            if !t.steps.isEmpty {
-                Text("\(t.steps.filter { $0.state == .success }.count)/\(t.steps.count)")
-                    .font(.system(size: S.type(TypeScale.microSize), design: .monospaced))
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 10) {
+                Image(systemName: taskIcon(t.status))
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(taskTint(t.status))
+                    .frame(width: 14)
+                Text(t.title)
+                    .font(.system(size: S.type(TypeScale.bodySize)))
+                    .foregroundStyle(Palette.text(dark))
+                    .lineLimit(1)
+                Spacer(minLength: 12)
+                if !t.steps.isEmpty {
+                    Text("\(t.steps.filter { $0.state == .success }.count)/\(t.steps.count)")
+                        .font(.system(size: S.type(TypeScale.microSize), design: .monospaced))
+                        .foregroundStyle(Palette.muted(dark))
+                }
+                Text(t.startedAt.formatted(date: .omitted, time: .shortened))
+                    .font(.system(size: S.type(TypeScale.microSize)))
                     .foregroundStyle(Palette.muted(dark))
+                if t.status == .failed {
+                    // 印だけで終わらない。同じ入口でやり直す道を行の中に置く（Atlas system.generic-failure）。
+                    ProbeButton(id: "retryTask-\(t.title)", action: { RecordingWorkspaceState.shared.runAIAction(t.title) }) {
+                        Text(Facts.resultRetry)
+                    }
+                    .font(.system(size: S.type(TypeScale.secondarySize), weight: .medium))
+                    .foregroundStyle(Palette.accent(dark))
+                    .frame(height: 26).padding(.horizontal, 10)
+                    .buttonStyle(AstraControlStyle(radius: 7, base: 0.0))
+                }
             }
-            Text(t.startedAt.formatted(date: .omitted, time: .shortened))
-                .font(.system(size: S.type(TypeScale.microSize)))
-                .foregroundStyle(Palette.muted(dark))
+            if let reason = t.failureReason {
+                Text(reason)
+                    .font(.system(size: S.type(TypeScale.microSize)))
+                    .foregroundStyle(Palette.warning(dark))
+                    .padding(.leading, 24)
+            }
         }
         .padding(.horizontal, S.metric(Space.cardPadding))
-        .frame(height: 40)
+        .padding(.vertical, t.status == .failed ? 8 : 0)
+        .frame(minHeight: 40)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 10, style: .continuous)

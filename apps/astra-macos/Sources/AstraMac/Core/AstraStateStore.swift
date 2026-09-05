@@ -105,7 +105,9 @@ final class AstraStateStore: ObservableObject {
             setDock(.result(AgentResult(title: task.title, actions: [.openWorkspace, .copy],
                                         sourceCount: task.steps.filter { $0.state == .success }.count)))
         } else {
-            setDock(.idle)
+            // できなかったときも黙って消えない。どこで止まったかと、やり直す道を出す（Atlas dock.result-failed）。
+            setDock(.result(AgentResult(title: task.title, actions: [.retry],
+                                        detail: task.failureReason ?? "途中で止まりました", failed: true)))
         }
     }
 

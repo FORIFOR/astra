@@ -34,6 +34,13 @@ enum Permissions {
         }
     }
 
+    /// オンデバイス文字起こし（Apple Speech）は、音声入力の言語を入れると使える。その設定へ。
+    static func openDictationSettings() {
+        if let url = URL(string: "x-apple.systempreferences:com.apple.Keyboard-Settings.extension?Dictation") {
+            NSWorkspace.shared.open(url)
+        }
+    }
+
     static var accessibility: State {
         if let s = simulatedAccessibility { return s }
         return AXIsProcessTrusted() ? .granted : .notDetermined

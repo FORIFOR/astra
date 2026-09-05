@@ -834,8 +834,9 @@ struct MeetingDock: View {
             VStack(alignment: .leading, spacing: 1) {
                 // **実際に 1 サンプル入るまでは「準備中…」。**タイマーではなく
                 // 最初の音声フレームの到着（`awaitingAudio`）で切り替える。
-                Text(recording.awaitingAudio
-                     ? Facts.recordingHeroPreparing
+                // 一時停止中は見出しでもそう言う（点が灰になるだけでは、止まっていると分からなかった）。
+                Text(recording.isPaused ? Facts.recordingHeroPaused
+                     : recording.awaitingAudio ? Facts.recordingHeroPreparing
                      : (store.state.meeting.detectedApp ?? Facts.recordingHeroRecording))
                     .font(.system(size: S.type(Metrics.dockPrimarySize), weight: .semibold))
                     .foregroundStyle(Palette.text(dark))
@@ -869,6 +870,16 @@ struct MeetingDock: View {
             .buttonStyle(AstraControlStyle(radius: 8, base: secret.isOn ? 0.07 : 0.0))
             .help(secret.isOn ? "画面共有に映りません" : "画面共有に映ります")
             .accessibilityIdentifier("secretToggle")
+            // 一時停止 / 再開。手は録音面の pill にしか無く、Dock からは止められなかった（Atlas meeting.paused）。
+            ProbeButton(id: "pauseRecording", action: { recording.togglePause() }) {
+                Image(systemName: recording.isPaused ? "play.fill" : "pause.fill")
+                    .font(.system(size: 12))
+                    .foregroundStyle(recording.isPaused ? Palette.accent(dark) : Palette.muted(dark))
+                    .frame(width: 32, height: 30)
+            }
+            .buttonStyle(AstraControlStyle(radius: 8, base: recording.isPaused ? 0.07 : 0.0))
+            .help(recording.isPaused ? Facts.recordingResume : Facts.recordingPause)
+            .accessibilityLabel(recording.isPaused ? Facts.recordingResume : Facts.recordingPause)
             StopRecordingButton { WindowCoordinator.shared.toggleRecording() }
         }
         .padding(.horizontal, S.metric(Metrics.dockPadH))
@@ -909,9 +920,25 @@ private struct MeetingPanelBody: View {
 
     /// 字幕・文字起こしがまだ空のとき。翻訳タブの「まだ訳すものがありません。」と同じ姿。
     private var captionsEmptyLine: some View {
-        Text(Facts.captionsEmpty)
-            .font(.system(size: S.type(Metrics.dockRowSize)))
-            .foregroundStyle(Palette.muted(dark))
+        VStack(alignment: .leading, spacing: 8) {
+            if RecordingRuntime.shared.transcriptionUnavailable {
+                // 黙って空にしない。理由と、直しに行く道（Atlas system.stt-unavailable）。
+                Label(Facts.transcriptionOnDeviceUnavailable, systemImage: "text.badge.xmark")
+                    .font(.system(size: S.type(Metrics.dockRowSize)))
+                    .foregroundStyle(Palette.danger(dark))
+                ProbeButton(id: "openDictationSettings", action: { Permissions.openDictationSettings() }) {
+                    Text("\(Facts.resultOpenSettings)（音声入力）")
+                }
+                .font(.system(size: S.type(Metrics.dockRowSize), weight: .medium))
+                .foregroundStyle(Palette.accent(dark))
+                .frame(height: 30).padding(.horizontal, 10)
+                .buttonStyle(AstraControlStyle(radius: 8, base: 0.0))
+            } else {
+                Text(Facts.captionsEmpty)
+                    .font(.system(size: S.type(Metrics.dockRowSize)))
+                    .foregroundStyle(Palette.muted(dark))
+            }
+        }
     }
 
     @ViewBuilder private var content: some View {

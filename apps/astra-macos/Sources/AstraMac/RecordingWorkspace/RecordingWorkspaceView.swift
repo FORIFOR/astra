@@ -497,9 +497,20 @@ private struct MeetingNotesCanvas: View {
         } else if RecordingRuntime.shared.transcriptionUnavailable, state.isRecording {
             // 音は届いていて録れているが、この Mac ではオンデバイス文字起こしが始められない。
             // サーバへは出さない（`SpeechTranscriber`）。空のまま「聞いています」と言わず、理由を言う。
-            Label(Facts.transcriptionOnDeviceUnavailable, systemImage: "text.badge.xmark")
-                .font(.system(size: TypeScale.microSize))
-                .foregroundStyle(Palette.danger(dark))
+            HStack(spacing: 10) {
+                Label(Facts.transcriptionOnDeviceUnavailable, systemImage: "text.badge.xmark")
+                    .font(.system(size: TypeScale.microSize))
+                    .foregroundStyle(Palette.danger(dark))
+                // 理由だけで終わらない。直しに行く道を同じ行に置く（Atlas system.stt-unavailable）。
+                ProbeButton(id: "openDictationSettings", action: { Permissions.openDictationSettings() }) {
+                    Text("\(Facts.resultOpenSettings)（音声入力）")
+                }
+                .font(.system(size: TypeScale.microSize, weight: .medium))
+                .foregroundStyle(Palette.accent(dark))
+                .frame(height: 24).padding(.horizontal, 8)
+                .buttonStyle(AstraControlStyle(radius: 6, base: 0.0))
+                .help(Facts.transcriptionRecoveryHint)
+            }
         } else if liveChannels.isEmpty, state.permissionIssue != nil {
             // 許可が無くて何も届いていない。理由は banner と transcript が既に言っている。
             // ここで三度目を言わず、「聞いています…」とも言わない。

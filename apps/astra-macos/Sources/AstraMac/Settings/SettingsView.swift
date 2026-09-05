@@ -29,12 +29,18 @@ struct SettingsView: View {
                 .accessibilityIdentifier("uiScale")
             }
             section(Facts.settingsPermissionsSection) {
-                permissionRow(Facts.permissionMicrophone, mic, request: { Permissions.requestMicrophone { _ in mic = Permissions.microphone } })
-                permissionRow(Facts.permissionScreenRecording, screen, request: { Permissions.requestScreenRecording(); screen = Permissions.screenRecording })
-                permissionRow(Facts.permissionAccessibility, ax, request: { Permissions.openAccessibilitySettings() })
-                permissionRow(Facts.permissionCalendar, cal, request: { Permissions.requestCalendar { _ in cal = Permissions.calendar } })
+                // 各行に「何のために要るか」を添える。名前と状態だけでは、許すかどうかを決められない。
+                permissionRow(Facts.permissionMicrophone, mic, reason: PermissionCenter.Capability.meeting.reason,
+                              request: { Permissions.requestMicrophone { _ in mic = Permissions.microphone } })
+                permissionRow(Facts.permissionScreenRecording, screen, reason: PermissionCenter.Capability.screenAsk.reason,
+                              request: { Permissions.requestScreenRecording(); screen = Permissions.screenRecording })
+                permissionRow(Facts.permissionAccessibility, ax, reason: PermissionCenter.Capability.control.reason,
+                              request: { Permissions.openAccessibilitySettings() })
+                permissionRow(Facts.permissionCalendar, cal, reason: PermissionCenter.Capability.schedule.reason,
+                              request: { Permissions.requestCalendar { _ in cal = Permissions.calendar } })
                 // ⌥Space はこの許可が無いと黙って効かない。Home が空のときしか直す道が無かった。
-                permissionRow("\(Facts.permissionInputMonitoring)（\(GlobalShortcut.label())）", input, request: {
+                permissionRow("\(Facts.permissionInputMonitoring)（\(GlobalShortcut.label())）", input,
+                              reason: Facts.permissionInputMonitoringReason, request: {
                     if !Permissions.requestInputMonitoring() { Permissions.openInputMonitoringSettings() }
                     input = Permissions.inputMonitoring
                 })
@@ -45,7 +51,7 @@ struct SettingsView: View {
             Spacer()
         }
         .padding(24)
-        .frame(width: 460, height: 420)
+        .frame(width: 460, height: 500)
     }
 
     private func section<C: View>(_ title: String, @ViewBuilder _ content: () -> C) -> some View {
@@ -60,9 +66,13 @@ struct SettingsView: View {
             Text(value).font(.system(size: 11, design: .monospaced)).foregroundStyle(.secondary) }
     }
 
-    private func permissionRow(_ label: String, _ state: Permissions.State, request: @escaping () -> Void) -> some View {
-        HStack {
-            Text(label).font(.system(size: 12))
+    private func permissionRow(_ label: String, _ state: Permissions.State, reason: String,
+                               request: @escaping () -> Void) -> some View {
+        HStack(alignment: .firstTextBaseline) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(label).font(.system(size: 12))
+                Text(reason).font(.system(size: 10)).foregroundStyle(.secondary)
+            }
             Spacer()
             Text(state.rawValue).font(.system(size: 11))
                 .foregroundStyle(state == .granted ? .green : .secondary)

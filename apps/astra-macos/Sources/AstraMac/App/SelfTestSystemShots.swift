@@ -95,7 +95,7 @@ extension SelfTest {
         Permissions.simulatedCalendar = .notDetermined
         Permissions.simulatedInputMonitoring = .notDetermined
         SettingsWindowController.shared.show()
-        shoot("settings-permissions") { $0.w >= 440 && $0.w <= 480 && $0.h >= 380 && $0.h <= 470 }
+        shoot("settings-permissions") { $0.w >= 440 && $0.w <= 480 && $0.h >= 380 && $0.h <= 560 }
         NSApp.windows.first { $0.title == "Astra 設定" }?.orderOut(nil)
         Permissions.simulatedCalendar = nil
         Permissions.simulatedInputMonitoring = nil

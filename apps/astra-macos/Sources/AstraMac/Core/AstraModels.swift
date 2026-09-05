@@ -131,7 +131,7 @@ struct AgentResult: Equatable {
     var failed: Bool = false
 
     enum Action: String, Equatable {
-        case openWorkspace, openNotes, ask, copy, openSettings
+        case openWorkspace, openNotes, ask, copy, openSettings, retry
 
         var title: String {
             switch self {
@@ -140,6 +140,7 @@ struct AgentResult: Equatable {
             case .ask: return "Ask Astra"
             case .copy: return Facts.resultCopy
             case .openSettings: return Facts.resultOpenSettings
+            case .retry: return Facts.resultRetry
             }
         }
     }
@@ -246,6 +247,13 @@ struct AgentTask: Identifiable, Equatable {
     let title: String
     var status: AgentRunState
     var steps: [AgentStep]
+
+    /// できなかったとき、どこで止まったか。「黙って消えない」ための 1 文。
+    var failureReason: String? {
+        guard status == .failed else { return nil }
+        guard let step = steps.first(where: { $0.state == .failed }) else { return "途中で止まりました" }
+        return step.detail.isEmpty ? "「\(step.title)」で止まりました" : "「\(step.title)」で止まりました · \(step.detail)"
+    }
     var startedAt: Date
     var context: ContextBundle
 }

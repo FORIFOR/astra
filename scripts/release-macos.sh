@@ -68,7 +68,7 @@ if otool -L "$BIN" | grep -q "astra_core.*dylib"; then
 fi
 
 echo "== bundle =="
-rm -rf "$APP"; mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
+rm -rf "$APP"; mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources/ja.lproj"
 cp "$BIN" "$APP/Contents/MacOS/AstraMac"
 
 # 両アーキ入っているか。片方だけだと、その CPU の人は起動できない。
@@ -121,6 +121,10 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>CFBundleShortVersionString</key><string>${VERSION}</string>
   <key>CFBundleVersion</key><string>${VERSION}</string>
   <key>LSMinimumSystemVersion</key><string>14.0</string>
+  <!-- 画面は日本語。Sparkle は**アプリの**言語に合わせて自分の窓を出すので、
+       ja.lproj を持たないと更新の窓だけ英語になった（Atlas system.update-available）。 -->
+  <key>CFBundleDevelopmentRegion</key><string>ja</string>
+  <key>CFBundleLocalizations</key><array><string>ja</string></array>
   <key>NSHighResolutionCapable</key><true/>
   <key>CFBundleIconFile</key><string>AppIcon</string>
   <!-- Dock アイコンは出さない（常駐の Task Dock が入口）。 -->

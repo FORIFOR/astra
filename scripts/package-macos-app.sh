@@ -6,7 +6,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 IDENTITY="${ASTRA_SIGN_IDENTITY:-Apple Development}"   # security find-identity -v -p codesigning で確認
 APP="$ROOT/apps/astra-macos/.build/Astra.app"
 ( cd "$ROOT/apps/astra-macos" && swift build -c release )
-rm -rf "$APP"; mkdir -p "$APP/Contents/MacOS"
+rm -rf "$APP"; mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources/ja.lproj"
 cp "$ROOT/apps/astra-macos/.build/release/AstraMac" "$APP/Contents/MacOS/AstraMac"
 cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
@@ -19,6 +19,10 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>CFBundleShortVersionString</key><string>1.0</string>
   <key>CFBundleVersion</key><string>1</string>
   <key>LSMinimumSystemVersion</key><string>14.0</string>
+  <!-- 画面は日本語。Sparkle は**アプリの**言語に合わせて自分の窓を出すので、
+       ja.lproj を持たないと更新の窓だけ英語になった（Atlas system.update-available）。 -->
+  <key>CFBundleDevelopmentRegion</key><string>ja</string>
+  <key>CFBundleLocalizations</key><array><string>ja</string></array>
   <key>NSCalendarsFullAccessUsageDescription</key><string>会議の予定を文脈として読むために、カレンダーを使います。読み取りは手元で行い、外部には送りません。</string>
   <!-- 用途説明が無い権限を要求すると、OS がプロセスを**落とす**
        （TCC crashing due to privacy violation）。実際に録音開始でそうなった。
