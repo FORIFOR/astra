@@ -1,17 +1,17 @@
-# Astra UI Atlas — Visual Release Book (RC 7948bff)
+# Astra UI Atlas — Visual Release Book (RC d94306b)
 
 取扱説明書ではない。**全 UI を RC .app の実画像で 1 画面 1 ページに固定し、ページ単位で KEEP / FIX / NOT_ENOUGH_EVIDENCE を出す**ための資料。
 画像は署名済み RC .app が `--selftest` で描いたものだけ。モック・Figma・別ビルドは入れない。
 
 ```
-RC SHA            7948bff
-RC exe sha256     2be75265f3bc9d3fb03ab7cf8bc56fb2a77289a1e7c84506ce69e844cc1772ed
-RC built          2026-09-05T22:32:27+09:00   captured 2026-09-05T22:32:27+09:00
+RC SHA            d94306b
+RC exe sha256     fa6e814e853f34f110d258a4ed052a0f1ca83e06080793ef7aa1214a2f232f6d
+RC built          2026-09-06T00:00:17+09:00   captured 2026-09-06T00:00:18+09:00
 codesign          com.astra.desktop / 6RR7572ZLU
 required screens  61   with RC image 61   NO_CAPTURE_PATH 0
 strips            5 / 5
-light == dark     18 面（voice.idle, voice.preparing, voice.listening, voice.thinking, voice.context, voice.context-expanded, voice.quick-actions, dock.running, dock.context-detail, dock.confirmation, dock.confirmation-edit, dock.result, dock.result-failed, meeting.controller, meeting.preparing, meeting.notes, meeting.captions, meeting.ask）
-appearance_policy fixed 19 面 / 違反 0（なし）
+light == dark     19 面（voice.idle, voice.preparing, voice.listening, voice.thinking, voice.context, voice.context-expanded, voice.quick-actions, dock.running, dock.context-detail, dock.confirmation, dock.confirmation-edit, dock.result, dock.result-failed, meeting.controller, meeting.preparing, meeting.paused, meeting.notes, meeting.captions, meeting.ask）
+appearance_policy fixed 20 面 / 違反 0（なし）
 ```
 
 | ファイル | 中身 |
@@ -44,6 +44,7 @@ appearance_policy fixed 19 面 / 違反 0（なし）
 | `meeting.controller` | Meeting — Controller (recording active) | CAPTURED | [png](screens/meeting.controller.light.png) | [png](screens/meeting.controller.dark.png) |
 | `meeting.preparing` | Meeting — Recording preparing | CAPTURED | [png](screens/meeting.preparing.light.png) | [png](screens/meeting.preparing.dark.png) |
 | `meeting.paused` | Meeting — Paused | CAPTURED | [png](screens/meeting.paused.light.png) | [png](screens/meeting.paused.dark.png) |
+| `recording.paused` | Recording Workspace — Paused | CAPTURED | [png](screens/recording.paused.light.png) | [png](screens/recording.paused.dark.png) |
 | `meeting.notes` | Meeting — Live Notes | CAPTURED | [png](screens/meeting.notes.light.png) | [png](screens/meeting.notes.dark.png) |
 | `meeting.captions` | Meeting — Captions | CAPTURED | [png](screens/meeting.captions.light.png) | [png](screens/meeting.captions.dark.png) |
 | `meeting.ask` | Meeting — Ask Astra | CAPTURED | [png](screens/meeting.ask.light.png) | [png](screens/meeting.ask.dark.png) |
@@ -108,10 +109,10 @@ appearance_policy fixed 19 面 / 違反 0（なし）
 
 | gate | status | where |
 |---|---|---|
-| REAL_MEETING | NOT_MEASURED | `docs/ux-benchmark/RC-SESSION-RUNBOOK.md §3` |
-| ACCESSIBILITY | NOT_MEASURED | `docs/ux-benchmark/RC-SESSION-RUNBOOK.md §4 / a11y/RUNBOOK.md` |
-| LIVE_TCC | NOT_MEASURED | `docs/ux-benchmark/RC-SESSION-RUNBOOK.md §5` |
-| WORLD_CLASS hands-on | NOT_COMPARABLE | `docs/ux-benchmark/RC-SESSION-RUNBOOK.md §6` |
+| REAL_MEETING | AUTOMATION_MISSING | `scripts/reality/run-real-meeting.sh（2 台自動: PC B が Playwright で Meet に入り固定 WAV を流す）` |
+| ACCESSIBILITY | AUTOMATION_MISSING | `scripts/reality/run-fka.sh + run-voiceover.sh（CGEvent で Tab / VoiceOver 実起動、AX の role/title/value を証拠に）` |
+| LIVE_TCC | AUTOMATION_MISSING | `scripts/reality/run-live-tcc.sh（tccutil reset → 実ダイアログ自動押下 → 拒否 UI → 設定で ON → 復帰）` |
+| WORLD_CLASS hands-on | AUTOMATION_MISSING | `scripts/reality/run-competitors.sh（競合実 UI を同条件で撮り、3 judge の盲検へ）` |
 
 ## 作り直し方
 
