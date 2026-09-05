@@ -1,16 +1,17 @@
-# Astra UI Atlas — Visual Release Book (RC 349007f)
+# Astra UI Atlas — Visual Release Book (RC 7948bff)
 
 取扱説明書ではない。**全 UI を RC .app の実画像で 1 画面 1 ページに固定し、ページ単位で KEEP / FIX / NOT_ENOUGH_EVIDENCE を出す**ための資料。
 画像は署名済み RC .app が `--selftest` で描いたものだけ。モック・Figma・別ビルドは入れない。
 
 ```
-RC SHA            349007f
-RC exe sha256     390b36331def91786ec9addfc842ad25a89b58f576a596914a020e00bdc37c87
-RC built          2026-09-05T12:44:01+09:00   captured 2026-09-05T19:14:32+09:00
+RC SHA            7948bff
+RC exe sha256     2be75265f3bc9d3fb03ab7cf8bc56fb2a77289a1e7c84506ce69e844cc1772ed
+RC built          2026-09-05T22:32:27+09:00   captured 2026-09-05T22:32:27+09:00
 codesign          com.astra.desktop / 6RR7572ZLU
-required screens  61   with RC image 48   NO_CAPTURE_PATH 13
-strips            2 / 5
-light == dark     13 面（voice.idle, voice.preparing, voice.listening, voice.thinking, voice.context, voice.context-expanded, dock.running, dock.context-detail, dock.confirmation, dock.result, meeting.controller, meeting.notes, meeting.captions）
+required screens  61   with RC image 61   NO_CAPTURE_PATH 0
+strips            5 / 5
+light == dark     18 面（voice.idle, voice.preparing, voice.listening, voice.thinking, voice.context, voice.context-expanded, voice.quick-actions, dock.running, dock.context-detail, dock.confirmation, dock.confirmation-edit, dock.result, dock.result-failed, meeting.controller, meeting.preparing, meeting.notes, meeting.captions, meeting.ask）
+appearance_policy fixed 19 面 / 違反 0（なし）
 ```
 
 | ファイル | 中身 |
@@ -32,20 +33,20 @@ light == dark     13 面（voice.idle, voice.preparing, voice.listening, voice.t
 | `voice.thinking` | Voice HUD — Thinking | CAPTURED | [png](screens/voice.thinking.light.png) | [png](screens/voice.thinking.dark.png) |
 | `voice.context` | Voice HUD — Context detected (compact) | CAPTURED | [png](screens/voice.context.light.png) | [png](screens/voice.context.dark.png) |
 | `voice.context-expanded` | Voice HUD — Context expanded | CAPTURED | [png](screens/voice.context-expanded.light.png) | [png](screens/voice.context-expanded.dark.png) |
-| `voice.quick-actions` | Voice HUD — Quick actions | NO_CAPTURE_PATH | — | — |
+| `voice.quick-actions` | Voice HUD — Quick actions | CAPTURED | [png](screens/voice.quick-actions.light.png) | [png](screens/voice.quick-actions.dark.png) |
 | `dock.running` | Task Dock — Running (agent steps) | CAPTURED | [png](screens/dock.running.light.png) | [png](screens/dock.running.dark.png) |
 | `dock.context-detail` | Task Dock — Context detail | CAPTURED | [png](screens/dock.context-detail.light.png) | [png](screens/dock.context-detail.dark.png) |
 | `dock.confirmation` | Task Dock — Confirmation (before side effect) | CAPTURED | [png](screens/dock.confirmation.light.png) | [png](screens/dock.confirmation.dark.png) |
-| `dock.confirmation-edit` | Task Dock — Edit confirmation | NO_CAPTURE_PATH | — | — |
+| `dock.confirmation-edit` | Task Dock — Edit confirmation | CAPTURED | [png](screens/dock.confirmation-edit.light.png) | [png](screens/dock.confirmation-edit.dark.png) |
 | `dock.result` | Task Dock — Done / Result | CAPTURED | [png](screens/dock.result.light.png) | [png](screens/dock.result.dark.png) |
-| `dock.result-failed` | Task Dock — Error / Recovery | NO_CAPTURE_PATH | — | — |
+| `dock.result-failed` | Task Dock — Error / Recovery | CAPTURED | [png](screens/dock.result-failed.light.png) | [png](screens/dock.result-failed.dark.png) |
 | `dock.entering-recording` | Task Dock — Entering recording | NO_CAPTURE_PATH | — | — |
 | `meeting.controller` | Meeting — Controller (recording active) | CAPTURED | [png](screens/meeting.controller.light.png) | [png](screens/meeting.controller.dark.png) |
-| `meeting.preparing` | Meeting — Recording preparing | NO_CAPTURE_PATH | — | — |
-| `meeting.paused` | Meeting — Paused | NO_CAPTURE_PATH | — | — |
+| `meeting.preparing` | Meeting — Recording preparing | CAPTURED | [png](screens/meeting.preparing.light.png) | [png](screens/meeting.preparing.dark.png) |
+| `meeting.paused` | Meeting — Paused | CAPTURED | [png](screens/meeting.paused.light.png) | [png](screens/meeting.paused.dark.png) |
 | `meeting.notes` | Meeting — Live Notes | CAPTURED | [png](screens/meeting.notes.light.png) | [png](screens/meeting.notes.dark.png) |
 | `meeting.captions` | Meeting — Captions | CAPTURED | [png](screens/meeting.captions.light.png) | [png](screens/meeting.captions.dark.png) |
-| `meeting.ask` | Meeting — Ask Astra | NO_CAPTURE_PATH | — | — |
+| `meeting.ask` | Meeting — Ask Astra | CAPTURED | [png](screens/meeting.ask.light.png) | [png](screens/meeting.ask.dark.png) |
 | `meeting.workspace` | Meeting — Expanded Workspace | CAPTURED | [png](screens/meeting.workspace.light.png) | [png](screens/meeting.workspace.dark.png) |
 | `recording.workspace` | Recording Workspace — Overview | CAPTURED | [png](screens/recording.workspace.light.png) | [png](screens/recording.workspace.dark.png) |
 | `recording.transcript` | Recording Workspace — Long transcript | CAPTURED | [png](screens/recording.transcript.light.png) | [png](screens/recording.transcript.dark.png) |
@@ -81,13 +82,13 @@ light == dark     13 面（voice.idle, voice.preparing, voice.listening, voice.t
 | `system.interrupted` | System — Interrupted recording (Home) | CAPTURED | [png](screens/system.interrupted.light.png) | [png](screens/system.interrupted.dark.png) |
 | `system.interrupted-journey` | Journey C — Interrupted | CAPTURED | [png](screens/system.interrupted-journey.light.png) | — |
 | `system.resumed` | Journey C — Resumed | CAPTURED | [png](screens/system.resumed.light.png) | — |
-| `system.stt-unavailable` | System — On-device STT unavailable | NO_CAPTURE_PATH | — | — |
-| `system.calendar-permission` | System — Calendar permission (purpose-first) | NO_CAPTURE_PATH | — | — |
-| `system.accessibility-permission` | System — Accessibility / Input Monitoring | NO_CAPTURE_PATH | — | — |
-| `system.update-available` | System — Update available | NO_CAPTURE_PATH | — | — |
-| `system.update-unavailable` | System — Up to date / cannot check | NO_CAPTURE_PATH | — | — |
-| `system.generic-failure` | System — Generic action failure | NO_CAPTURE_PATH | — | — |
-| `settings.permissions` | Settings — 許可（OS）/ shortcuts | NO_CAPTURE_PATH | — | — |
+| `system.stt-unavailable` | System — On-device STT unavailable | CAPTURED | [png](screens/system.stt-unavailable.light.png) | [png](screens/system.stt-unavailable.dark.png) |
+| `system.calendar-permission` | System — Calendar permission (purpose-first) | CAPTURED | [png](screens/system.calendar-permission.light.png) | [png](screens/system.calendar-permission.dark.png) |
+| `system.accessibility-permission` | System — Input Monitoring（⌥Space）/ Accessibility | CAPTURED | [png](screens/system.accessibility-permission.light.png) | [png](screens/system.accessibility-permission.dark.png) |
+| `system.update-available` | System — Update available | CAPTURED | [png](screens/system.update-available.light.png) | [png](screens/system.update-available.dark.png) |
+| `system.update-unavailable` | System — Up to date / cannot check | CAPTURED | [png](screens/system.update-unavailable.light.png) | [png](screens/system.update-unavailable.dark.png) |
+| `system.generic-failure` | System — Generic action failure | CAPTURED | [png](screens/system.generic-failure.light.png) | [png](screens/system.generic-failure.dark.png) |
+| `settings.permissions` | Settings — 許可（OS）/ shortcuts | CAPTURED | [png](screens/settings.permissions.light.png) | [png](screens/settings.permissions.dark.png) |
 | `components.neutral` | Control — neutral | CAPTURED | [png](screens/components.neutral.light.png) | [png](screens/components.neutral.dark.png) |
 | `components.hover` | Control — hover | CAPTURED | [png](screens/components.hover.light.png) | [png](screens/components.hover.dark.png) |
 | `components.focus` | Control — focus | CAPTURED | [png](screens/components.focus.light.png) | [png](screens/components.focus.dark.png) |
@@ -97,9 +98,9 @@ light == dark     13 面（voice.idle, voice.preparing, voice.listening, voice.t
 
 | id | title | status | top edge drift | center drift | window creation | focus theft |
 |---|---|---|---|---|---|---|
-| `strip.idle-preparing-listening` | Idle → Preparing → Listening | NO_CAPTURE_PATH | — | — | — | — |
-| `strip.dock-running` | Dock → Running | NO_CAPTURE_PATH | — | — | — | — |
-| `strip.running-confirmation` | Running → Confirmation | NO_CAPTURE_PATH | — | — | — | — |
+| `strip.idle-preparing-listening` | Idle → Preparing → Listening | CAPTURED | 0 | 0.5 | 0 | 0 |
+| `strip.dock-running` | Dock → Running | CAPTURED | 0 | 0.5 | 0 | 0 |
+| `strip.running-confirmation` | Running → Confirmation | CAPTURED | 0 | 0.5 | 0 | 0 |
 | `strip.controller-notes` | Meeting Controller → Notes | CAPTURED | 0 | 0 | 0 | 0 |
 | `strip.notes-workspace` | Notes → Workspace | CAPTURED | 0 | 0 | 0 | 0 |
 
