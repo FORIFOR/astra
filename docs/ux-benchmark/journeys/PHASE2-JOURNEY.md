@@ -208,7 +208,12 @@ gate      : Evidence A/B の失敗時のみ修正。measurement unavailable は 
 | 実効 fps / 最大 tick 間隔     | 参考 | 54–60 / 23–35ms                          | 37–56 / 46–256ms（下に書く）                        |
 
 **SURFACE_CONTINUITY_MOTION = PASS**。Dock / Notes / Workspace には手を入れない。
-**PERCEIVED_SURFACE_CONTINUITY = NOT_MEASURED**（fixture validation を通した動画の判定者がいない）。
+**PERCEIVED_SURFACE_CONTINUITY = 測った（2026-09-05、`journeys/perceived/`）。T1 は FAIL、T2 は設計どおり。**
+fixture 検証（同じ面が伸びる / 別の面に替わる / 跳ぶ、の 3 本）を通った 3 名（opus / sonnet / fable、haiku は無効）で、
+T1 meeting→notes は「同じ面が広がった」1 / 3、3 名全員が「コマ 3 で全面が真っ黒、コマ 2 も板が沈む」を観察。
+下の層 C に書いてある**中身が 100–300ms 消える fade が、知覚では「別物が載った」に読まれる**（Evidence B）。
+T2 notes→workspace は 3 名とも「1 枚目はそのまま・上辺は不動・その下に 2 枚目が開いた」で設計どおり。
+直すなら「変わらない見出しは消さない」（本人の判断待ち。Motion の規則と `dockanim` gate に触る）。
 
 ### 層 C（記録のみ。閾値のある指標はどれも落ちていない）
 

@@ -1,0 +1,12 @@
+# Notion の取得記録。公開素材（公式サイト・公式ヘルプ）だけ。出所と取得日は public/sources.md。
+product: Notion
+version: ""            # 公式素材に版の表記なし（Notion は Mac app 4.7.0 以降とヘルプに記述）
+captured_at: "2026-09-05"
+os: ""
+resolution: ""
+scale: ""
+source: official       # official | public | live
+scenario: ""
+notes: |
+  hands-on ではない。公式ページ・公式ヘルプに掲載された製品 UI の画像だけ。
+  撮られた状態に見えないことを、製品に無いと読まない。

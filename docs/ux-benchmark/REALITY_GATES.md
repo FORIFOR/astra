@@ -44,7 +44,7 @@ RELEASE_ARTIFACT           PENDING        → 次の release で verify-release-
 ```
 1 REAL_MEETING_GATE        実 Meet / Zoom で 自分＋相手の音声・字幕・Notes・停止・Recovery     → §B（+ JC の Recovery を実機で）  NOT_MEASURED
 2 ACCESSIBILITY_GATE       keyboard traversal / VoiceOver / focus order                      → a11y/RUNBOOK.md §1 §2            NOT_MEASURED
-3 FINAL_COMPETITIVE_GATE   最新 Astra で archetype ごとに VoiceOS / SuperIntern と同型比較      → §C                              PARTIAL（9 型のうち 4 型は済み、5 型は素材待ち）
+3 FINAL_COMPETITIVE_GATE   最新 Astra で archetype ごとに最強の相手と同型比較                  → §C                              PARTIAL（9 型のうち 6 型は済み〔公開素材〕、Listening / Task Running / Recovery は hands-on 待ち）
 ```
 
 ## §C FINAL_COMPETITIVE_GATE — 型ごとに 負ける / 同等 / 勝つ を確定する
@@ -58,17 +58,19 @@ post_meeting の標本が Library-Provenance 型。よって 4 型が済み、5 
 2 名盲検、1 標本 = 1 票）。
 
 ```
-FINAL_COMPETITIVE_GATE（2026-09-04、Sample 22）
-  Invocation              NOT_COMPARABLE   VoiceOS の起動・傾聴の公開 UI が無い   → voiceos/handson  V01 / V02
-  Listening               NOT_COMPARABLE   同上                                  → voiceos/handson  V02
-  Task Running            NOT_COMPARABLE   VoiceOS Agent 実行中の公開 UI が無い   → voiceos/handson  V06.mp4
+FINAL_COMPETITIVE_GATE（2026-09-04、Sample 22 ＋ 2026-09-05、Sample 23）
+  Invocation              WIN (public)     3 / 1 / 2 / 2（vs Raycast 起動窓、Sample 23）負け: provenance（文脈が空の golden）
+                                           VoiceOS の起動・傾聴の公開 UI は無いまま  → voiceos/handson  V01 / V02 で補強
+  Listening               NOT_COMPARABLE   VoiceOS / Wispr Flow とも公開 UI が無い  → voiceos/handson  V02、wispr hands-on
+  Task Running            NOT_COMPARABLE   VoiceOS / Raycast とも「実行中」の公開 UI が無い → voiceos/handson  V06.mp4
   Confirmation            WIN              6 / 0 / 1 / 1（vs VoiceOS Gmail card）本文が切れない・外部警告・出所・esc / ⌘⏎
   Meeting Controller      SPLIT            4 / 3 / 0 / 1（vs SuperIntern Control Bar）
                                            勝つ: 階層・状態・操作・面の数   負ける: 密度・行の揃い・入力機器名の表示
   Live Notes              WIN              6 / 0 / 1 / 1（vs SuperIntern AI Canvas）
     └ 副標本 Captions       WIN            7 / 0 / 0 / 1（vs SuperIntern Summary / Transcript 2 窓）
     └ 副標本 Transcript Attribution WIN    5 / 2 / 1 / 0（vs SuperIntern 話者分離のデモ）負ける: 面の数・占有
-  Workspace               NOT_COMPARABLE   相応する大面積 UI が公開素材に無い       → superintern/handson
+  Workspace               WIN / SPLIT (public)  vs Granola 5 / 0 / 0 / 1 / 2 = WIN、vs Notion 2 / 1 / 1 / 1 / 3 = SPLIT（Sample 23）
+                                           負け: surface_fragmentation（Notion の 1 枚の文書 vs 4 ブロック。凍結の固定軸）
   Library / Provenance    SPLIT            post_meeting 2 / 3 / 2 / 1（vs SuperIntern 会議後）
                                            勝つ: 要約→決定→やること の階層、[n] → 出所   負ける: 1 窓のまとまり・操作の数・占有
   Recovery                NOT_COMPARABLE   どちらの製品にも公開素材が無い          → handson（落ちて再開の画）

@@ -765,3 +765,52 @@ system audio を繋ぐ日に、この行が本当に要るかが決まる（UI �
 - 12 名分の弁は sample22/results/*.json、問いは sample22/prompts/*.md、復号は answers/key.txt
 - captions/opus の JSON は observations の閉じ括弧が 1 つ欠けて届いたので、それだけ足した（票と弁は無改変）
 ```
+
+# Sample 23 — 残り 5 型のうち公開素材で戦える 2 型（2026-09-05）
+
+Sample 22 で NOT_COMPARABLE だった 5 型（Invocation / Listening / Task Running / Workspace / Recovery）を、
+本人が決めた「その面で最強の相手」に対して、**公式の公開素材があるものだけ**盲検にかけた。
+素材の出所と取得日は `raycast/public/sources.md` `granola/public/sources.md` `notion/public/sources.md`。
+Astra 側は HEAD `77dab2b` の golden。判定者は新規の opus + sonnet、画像だけ、観察を先に、tie / cannot tell 可、
+1 標本 = 1 票、割れたら split。軸は Sample 22 の live_notes 型と同じ 8 軸。
+
+| 標本 | Astra | 相手 | A | C | tie | ct | split | 判定 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| invocation | 02-voice-hud-listening | Raycast 起動窓（File Search 使用中） | 3 | 1 | 2 | 0 | 2 | **WIN** |
+| workspace_granola | 03-recording-workspace | Granola 会議中のノート窓 + 録音ピル | 5 | 0 | 0 | 1 | 2 | **WIN** |
+| workspace_notion | 03-recording-workspace | Notion AI Meeting Notes 録音中 | 2 | 1 | 1 | 1 | 3 | **SPLIT** |
+
+軸ごと:
+
+| 軸 | invocation | workspace_granola | workspace_notion |
+| --- | --- | --- | --- |
+| information_hierarchy | A A | A A | A C → split |
+| surface_fragmentation | A tie → split | ct A → split | **C C** |
+| screen_occupation | A A | ct ct | ct ct |
+| state_legibility | A A | A A | A A |
+| control_visibility | tie tie | A A | A C → split |
+| visual_density | tie A → split | A A | tie tie |
+| visual_craft | tie tie | C tie → split | C A → split |
+| provenance_visibility | **C C** | A A | A A |
+
+負けた軸の中身（2 名一致のものだけ）:
+
+- **invocation / provenance**: Raycast は `Path ~/Documents/rycst/` など出所の行が見え、Astra の Listening は
+  「見えている文脈はありません」と書いてある（golden は文脈が空の状態で撮っている）。**素材の状態の差**で、
+  文脈がある状態の golden を撮れば変わりうる。discoverability / safety の敗北ではない。
+- **workspace_notion / surface_fragmentation**: Notion は 1 枚の文書に帯とタブが載るだけ、Astra は
+  浮いたバー・左カード・右パネル・入力欄の 4 つに見える。Sample 20 / 22 と同じ固定の負け軸で、凍結の対象。
+
+本人の判定ルール（重大敗北 0 / discoverability 敗北 0 / safety・trust 敗北 0）に照らして、
+**修正の引き金になる敗北は無い**。Astra が一貫して勝つのは state_legibility（3 標本とも 2 名一致）と
+provenance（会議面 2 標本とも 2 名一致）。
+
+限界:
+
+- Raycast の画像は公式トップの宣伝画像で、右端が切れ、左上に装飾の帯がある（prompt で注記）。
+  ホットキー直後の空の root 窓の公式画像は無い。
+- Granola の画像はビデオ会議の窓が合成の演出（prompt で「別アプリ」と注記）。judge 2 名とも指示どおり除外して見た。
+- Notion の画像はヘルプの赤い矢印つき（注記）。製品ページの画像はモック（lorem ipsum）で使わなかった。
+- **Listening（Wispr Flow の Flow Bar / VoiceOS の傾聴）、Task Running（Raycast / VoiceOS の実行中）、
+  Recovery（SuperIntern）は公式の公開素材が無く、引き続き NOT_COMPARABLE（hands-on 待ち）。**
+  Raycast の `quick-ai-web-search.png` は回答カードで「実行中」の面ではないので Task Running に使わなかった。

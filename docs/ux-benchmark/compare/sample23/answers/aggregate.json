@@ -1,0 +1,152 @@
+{
+ "invocation": [
+  {
+   "axis": "information_hierarchy",
+   "opus": "A",
+   "sonnet": "A",
+   "result": "A"
+  },
+  {
+   "axis": "surface_fragmentation",
+   "opus": "A",
+   "sonnet": "tie",
+   "result": "split"
+  },
+  {
+   "axis": "screen_occupation",
+   "opus": "A",
+   "sonnet": "A",
+   "result": "A"
+  },
+  {
+   "axis": "state_legibility",
+   "opus": "A",
+   "sonnet": "A",
+   "result": "A"
+  },
+  {
+   "axis": "control_visibility",
+   "opus": "tie",
+   "sonnet": "tie",
+   "result": "tie"
+  },
+  {
+   "axis": "visual_density",
+   "opus": "tie",
+   "sonnet": "A",
+   "result": "split"
+  },
+  {
+   "axis": "visual_craft",
+   "opus": "tie",
+   "sonnet": "tie",
+   "result": "tie"
+  },
+  {
+   "axis": "provenance_visibility",
+   "opus": "C",
+   "sonnet": "C",
+   "result": "C"
+  }
+ ],
+ "workspace_granola": [
+  {
+   "axis": "information_hierarchy",
+   "opus": "A",
+   "sonnet": "A",
+   "result": "A"
+  },
+  {
+   "axis": "surface_fragmentation",
+   "opus": "ct",
+   "sonnet": "A",
+   "result": "split"
+  },
+  {
+   "axis": "screen_occupation",
+   "opus": "ct",
+   "sonnet": "ct",
+   "result": "ct"
+  },
+  {
+   "axis": "state_legibility",
+   "opus": "A",
+   "sonnet": "A",
+   "result": "A"
+  },
+  {
+   "axis": "control_visibility",
+   "opus": "A",
+   "sonnet": "A",
+   "result": "A"
+  },
+  {
+   "axis": "visual_density",
+   "opus": "A",
+   "sonnet": "A",
+   "result": "A"
+  },
+  {
+   "axis": "visual_craft",
+   "opus": "C",
+   "sonnet": "tie",
+   "result": "split"
+  },
+  {
+   "axis": "provenance_visibility",
+   "opus": "A",
+   "sonnet": "A",
+   "result": "A"
+  }
+ ],
+ "workspace_notion": [
+  {
+   "axis": "information_hierarchy",
+   "opus": "A",
+   "sonnet": "C",
+   "result": "split"
+  },
+  {
+   "axis": "surface_fragmentation",
+   "opus": "C",
+   "sonnet": "C",
+   "result": "C"
+  },
+  {
+   "axis": "screen_occupation",
+   "opus": "ct",
+   "sonnet": "ct",
+   "result": "ct"
+  },
+  {
+   "axis": "state_legibility",
+   "opus": "A",
+   "sonnet": "A",
+   "result": "A"
+  },
+  {
+   "axis": "control_visibility",
+   "opus": "A",
+   "sonnet": "C",
+   "result": "split"
+  },
+  {
+   "axis": "visual_density",
+   "opus": "tie",
+   "sonnet": "tie",
+   "result": "tie"
+  },
+  {
+   "axis": "visual_craft",
+   "opus": "C",
+   "sonnet": "A",
+   "result": "split"
+  },
+  {
+   "axis": "provenance_visibility",
+   "opus": "A",
+   "sonnet": "A",
+   "result": "A"
+  }
+ ]
+}

@@ -1,0 +1,3 @@
+invocation: 8F7C astra-HEAD (docs/golden-screenshots/02-voice-hud-listening.png)  105B competitor (docs/ux-benchmark/raycast/public/file-search.png)
+workspace_granola: 3077 astra-HEAD (docs/golden-screenshots/03-recording-workspace.png)  E388 competitor (docs/ux-benchmark/granola/public/feature-humans.png)
+workspace_notion: 643D astra-HEAD (docs/golden-screenshots/03-recording-workspace.png)  ABC4 competitor (docs/ux-benchmark/notion/public/ai-meeting-notes-collab.png)

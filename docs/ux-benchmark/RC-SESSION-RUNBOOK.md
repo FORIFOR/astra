@@ -241,8 +241,10 @@ INVOCATION                      PASS           §2  署名 .app で実測（上�
 REAL_MEETING                    NOT_MEASURED   §3  相手のいる実会議が要る
 ACCESSIBILITY                   NOT_MEASURED   §4  FKA / VoiceOver を人が操作する
 LIVE_TCC                        NOT_MEASURED   §5  TCC リセットは本人が行う
-WORLD_CLASS 残り 5 型            NOT_COMPARABLE §6  hands-on 素材が要る
-VERIFY_ALL                      NOT_MEASURED   §0  許可のあるターミナルで
+WORLD_CLASS 残り 3 型            NOT_COMPARABLE §6  Listening / Task Running / Recovery は公開素材が無く hands-on が要る
+                                                    （Invocation は vs Raycast WIN、Workspace は vs Granola WIN / vs Notion SPLIT、Sample 23）
+VERIFY_ALL                      PASS           §0  2026-09-05 07:47 本人のターミナルで VERIFY_ALL_OK
+PERCEIVED_SURFACE_CONTINUITY    T1 FAIL        journeys/perceived/（層 B。T1 の中身 fade が「別物」に読まれる。修正は本人の判断）
 ```
 
-この 5 つが空である限り **NO-GO**。「十分良いので出す」という判断はしない。
+上の NOT_MEASURED / FAIL が残る限り **NO-GO**。「十分良いので出す」という判断はしない。
