@@ -16,9 +16,11 @@ command -v claude >/dev/null || { echo "AUTOMATION_MISSING: claude CLI が無い
 mkdir -p "$(dirname "$OUT")"
 RAW="$OUT.raw.json"
 # 箱の外を見せない。cwd を箱にし、許すのは Read だけ。prompt は stdin で渡す（引数長の上限を避ける）。
-( cd "$SANDBOX" && claude -p --model "$MODEL" --allowedTools "Read" --output-format json \
-    < "$PROMPT" > "$RAW" 2>"$OUT.stderr" ) || { echo "FAIL: judge($MODEL) が落ちた: $(tail -2 "$OUT.stderr" | tr '\n' ' ')" >&2; exit 1; }
-python3 - "$RAW" "$OUT" "$MODEL" <<'PY'
+# JSON が壊れて返ることがある（実測: haiku が途中で切れた）。壊れていたら 1 回だけ呼び直す。
+for attempt in 1 2; do
+  ( cd "$SANDBOX" && claude -p --model "$MODEL" --allowedTools "Read" --output-format json \
+      < "$PROMPT" > "$RAW" 2>"$OUT.stderr" ) || { echo "FAIL: judge($MODEL) が落ちた: $(tail -2 "$OUT.stderr" | tr '\n' ' ')" >&2; continue; }
+  if python3 - "$RAW" "$OUT" "$MODEL" <<'PY'
 import json, re, sys
 raw, out, model = sys.argv[1:4]
 d = json.load(open(raw, encoding="utf-8"))
@@ -35,3 +37,7 @@ j["_judge"] = {"model": model, "cost_usd": d.get("total_cost_usd"), "turns": d.g
 json.dump(j, open(out, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
 print(f"JUDGE_OK {model} → {out} (${d.get('total_cost_usd', 0):.3f}, {d.get('num_turns')} turns)")
 PY
+  then exit 0; fi
+  echo "  retry judge($MODEL) attempt $attempt failed" >&2
+done
+exit 1

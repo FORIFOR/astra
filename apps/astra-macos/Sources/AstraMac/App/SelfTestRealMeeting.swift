@@ -101,10 +101,16 @@ extension SelfTest {
 
         // ⑤ 停止 → ready → Library の 1 件 → 出所。
         let transcript = recording.transcript.filter { !$0.interim }.map { ["speaker": $0.speaker, "text": $0.text, "at": $0.at] as [String: Any] }
+        // 止める前に読む（止めると session が無くなり recordedMs が 0 になる）。
+        let listening = Array(RecordingRuntime.shared.listening).map(\.rawValue).sorted()
+        let sttUnavailable = RecordingRuntime.shared.transcriptionUnavailable
+        let recordedMs = RecordingRuntime.shared.recordedMs()
         recording.stop(); settle(2.5)
         let ready = sessions.session(id: liveId)
         let canvas = LocalStore.shared.loadNotes(meetingId: liveId)
         let persistedT = LocalStore.shared.loadTranscript(meetingId: liveId)
+        // 判定に使う文字起こしは**保存されたもの**（止めた瞬間に確定した行も入る。止める前の写しでは 0 行だった）。
+        let transcriptSaved = persistedT.map { ["speaker": $0.speaker, "text": $0.text, "at": $0.at] as [String: Any] }
         MainWindowController.shared.showLibrary(.meetings); MainNav.shared.openSession = liveId; settle(1.0)
         if MainNav.shared.openSession != liveId { errors.append("Library でその 1 件が開かない") }
         lap("library")
@@ -113,13 +119,20 @@ extension SelfTest {
         }
         let result: [String: Any] = [
             "liveId": liveId, "detected": detected, "mode": simulate ? "simulate" : "audio",
-            "transcript": transcript,
+            "transcript": transcriptSaved.isEmpty ? transcript : transcriptSaved,
+            "transcriptLiveRows": transcript.count,
             "decisions": items(canvas.decisions), "actions": items(canvas.actions),
             "questions": items(canvas.questions), "concerns": items(canvas.concerns),
             "pauseLeak": pauseLeak, "resumed": resumed, "resumeRows": resumeRows,
             "libraryStatus": ready?.status.rawValue ?? "nil",
             "persisted": ["transcript": persistedT.count, "decisions": canvas.decisions.count, "actions": canvas.actions.count],
             "timings": timings, "errors": errors,
+            // 0 行のとき、音が来ていないのか STT が動いていないのかを言えるように。
+            "listening": listening,
+            "transcriptionUnavailable": sttUnavailable,
+            "speechAuthorization": String(describing: SpeechTranscriber.authorization.rawValue),
+            "microphone": Permissions.microphone.rawValue,
+            "recordedMs": recordedMs,
         ]
         if let data = try? JSONSerialization.data(withJSONObject: result, options: [.prettyPrinted, .sortedKeys]) {
             try? data.write(to: URL(fileURLWithPath: "\(outDir)/result.json"))

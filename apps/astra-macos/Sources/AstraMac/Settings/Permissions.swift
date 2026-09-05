@@ -41,6 +41,26 @@ enum Permissions {
         }
     }
 
+    /// 音声認識（Apple Speech、手元の文字起こし）。マイクとは**別の許可**。
+    static var simulatedSpeechRecognition: State?
+    static var speechRecognition: State {
+        if let s = simulatedSpeechRecognition { return s }
+        switch SpeechTranscriber.authorization {
+        case .authorized: return .granted
+        case .denied: return .denied
+        case .restricted: return .restricted
+        default: return .notDetermined
+        }
+    }
+    static func requestSpeechRecognition(_ done: @escaping (Bool) -> Void) {
+        SpeechTranscriber.requestAuthorization(done)
+    }
+    static func openSpeechRecognitionSettings() {
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_SpeechRecognition") {
+            NSWorkspace.shared.open(url)
+        }
+    }
+
     static var accessibility: State {
         if let s = simulatedAccessibility { return s }
         return AXIsProcessTrusted() ? .granted : .notDetermined

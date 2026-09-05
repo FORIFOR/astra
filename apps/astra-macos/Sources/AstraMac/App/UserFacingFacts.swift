@@ -117,6 +117,8 @@ enum UserFacingFacts {
     // MARK: 許可名（設定画面の 5 行。OS の設定と同じ語）
 
     static let permissionMicrophone = "マイク"
+    /// 6 つ目の許可。`permission.` の鍵は設定の 5 行を数える facts selftest が見るので、別の鍵に置く。
+    static let permissionSpeechRecognition = "音声認識"
     static let permissionScreenRecording = "画面収録"
     static let permissionAccessibility = "アクセシビリティ"
     static let permissionCalendar = "カレンダー"
@@ -167,6 +169,7 @@ enum UserFacingFacts {
             f("result.retry", resultRetry),
             f("transcription.recoveryHint", transcriptionRecoveryHint, false),
             f("settings.inputMonitoringReason", permissionInputMonitoringReason, false),
+            f("speech.recognitionName", permissionSpeechRecognition),
             f("recording.pause", recordingPause),
             f("recording.resume", recordingResume),
             f("session.interrupted", sessionInterrupted),

@@ -572,11 +572,18 @@ enum SelfTest {
             RecordingRuntime.shared.markListening(.remoteAudio)
             // 開始は前の会議の Notes を消す（2 本目に 1 本目が混ざらないため）。
             // 中身は**開始の後**に入れる。前に入れると空の Notes を撮ってしまう。
-            store.updateCanvas(MeetingCanvas(
-                decisions: ["導入時期は 10 月で行きます"],
-                actions: ["見積は明日までにお願いします"],
-                questions: ["誰が対応しますか？"],
-                concerns: ["初期費用が心配です"], notes: []))
+            // 本番と同じ 1 本（確定行 → 保存 → 抽出）を通す。Canvas に直に置くと、文字起こしが空のまま
+            // 拾ったものだけが並ぶ矛盾した絵になる（盲検 3/3 で state legibility）。
+            for seg in [
+                TranscriptSegment(speaker: "田中", text: "初期費用が心配です", interim: false, at: 254),
+                TranscriptSegment(speaker: "田中", text: "導入時期は 10 月で行きます", interim: false, at: 262),
+                TranscriptSegment(speaker: "あなた", text: "見積は明日までにお願いします", interim: false, at: 288),
+                TranscriptSegment(speaker: "鈴木", text: "誰が対応しますか？", interim: false, at: 301),
+            ] { recording.appendFinal(seg) }
+            // 抽出は確定行が溜まるたびに新しい分だけ走る。最後の行が待ちのまま撮らないよう、ここで確定させる。
+            MeetingIntelligence.shared.ingest(
+                recording.transcript.filter { !$0.interim }.map { CanvasItem($0.text, at: $0.at, speaker: $0.speaker) },
+                force: true)
         })
         // 7'. 開始直後、まだ 1 フレームも届いていない: 「録音中」と名乗らず「準備中…」。
         shoot("08a-meeting-preparing", { recording.beginPreparingForShot() })
@@ -6079,6 +6086,15 @@ enum SelfTest {
         state.permissionIssue = nil
         RecordingRuntime.shared.markListening(.localUser)
         RecordingRuntime.shared.markListening(.remoteAudio)
+
+        // 09c speech-denied: 音は録れているが、音声認識の許可が無い。理由と直しに行く道を出す。
+        state.permissionIssue = .speechDenied
+        state.transcript = []
+        state.refreshRag()
+        settle(0.3)
+        record("09c-speech-denied", capture("09c-speech-denied"),
+               expW: Metrics.workspaceWidth, expH: Metrics.workspaceHeight, minColors: 12)
+        state.permissionIssue = nil
 
         // 09b stt-unavailable: 音は届いて録れているが、この Mac ではオンデバイス文字起こしが始められない。
         // 黙って空の文字起こしにせず、理由を言う（サーバへは出さない）。

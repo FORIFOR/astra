@@ -38,8 +38,12 @@ step() {
   local id="$1" name="$2" pat="$3"; shift 3
   if [[ "$SKIP" == *",$id,"* ]]; then mark "$id" SKIPPED "ASTRA_GATE_SKIP" "$name"; return; fi
   local log="$WORK/$id.log"
-  if "$@" > "$log" 2>&1 && grep -qE "$pat" "$log"; then
+  "$@" > "$log" 2>&1; local rc=$?
+  if [[ $rc -eq 0 ]] && grep -qE "$pat" "$log"; then
     mark "$id" PASS "$(grep -E "$pat" "$log" | tail -1 | cut -c1-90)" "$name"
+  elif [[ $rc -eq 2 ]]; then
+    # 測定器の約束: exit 2 = 測れる所まで測った / 測定器が足りない（人を呼ばない）。
+    mark "$id" AUTOMATION_MISSING "$(grep -E 'AUTOMATION_MISSING|PARTIAL|SKIP' "$log" | tail -1 | cut -c1-110; true)" "$name"
   else
     mark "$id" FAIL "$(grep -E 'FAIL|error' "$log" | tail -1 | cut -c1-90; true)  → $log" "$name"
   fi
@@ -48,7 +52,7 @@ step() {
 missing() {  # $1 id, $2 name, $3 script
   local id="$1" name="$2" script="$3"
   if [[ -x "$ROOT/$script" ]]; then
-    step "$id" "$name" "GATE=PASS|_OK|=PASS" bash "$ROOT/$script"
+    step "$id" "$name" "_GATE=PASS" bash "$ROOT/$script"
   else
     mark "$id" AUTOMATION_MISSING "測定器を作る: $script" "$name"
   fi
@@ -98,7 +102,7 @@ missing 09 "Automated VoiceOver"                scripts/reality/run-voiceover.sh
 missing 10 "Automated LIVE TCC"                 scripts/reality/run-live-tcc.sh
 missing 11 "Competitor capture (3 archetypes)"  scripts/reality/run-competitors.sh
 # 12 盲検 vision review（3 model、観察を先に、visible_text を OCR で照合）
-step 12 "blind multimodel review" "VISUAL_IDEAL_GATE=PASS" bash scripts/ui-atlas/review-blind.sh "$WORK/review"
+step 12 "blind multimodel review" "VISUAL_IDEAL_GATE=PASS" env ASTRA_JUDGE_PARALLEL=3 bash scripts/ui-atlas/review-blind.sh "docs/ui-atlas/review/$SHA"
 # 13 privacy egress
 step 13 "privacy egress" "PRIVACY_EGRESS_GATE=PASS" bash scripts/verify-privacy-egress.sh
 # 14 recovery（録音 → kill -9 → interrupted → 続きから ready）

@@ -114,6 +114,16 @@ final class RecordingWorkspaceState: ObservableObject {
     /// 許可が無くて**何も届いていない**。主役が元気に動くと画面が嘘をつく。
     var silent: Bool { permissionIssue != nil && liveChannels.isEmpty }
 
+    /// 音声認識の許可が無ければそう言う（マイクの問題が無いときだけ。マイク拒否のほうが先）。
+    /// 許可の答えが遅れて来たときにも呼ぶ（JIT のダイアログのあと）。
+    func refreshSpeechPermission() {
+        guard isRecording else { return }
+        let denied = Permissions.speechRecognition == .denied || Permissions.speechRecognition == .restricted
+        if permissionIssue?.channel == .localUser { return }          // マイク拒否が出ている
+        if denied { permissionIssue = .speechDenied }
+        else if permissionIssue != nil, permissionIssue?.channel == nil { permissionIssue = nil }
+    }
+
     /// §17: 決定的な固定画面。
     /// 検査・golden・geometry 用。実マイクを開けない撮影で「音が届いている姿」を作る
     /// （`RecordingRuntime.markListening` / `VoiceHUDState.markVoiceCaptureLive` と同じ役割）。
@@ -236,7 +246,10 @@ final class RecordingWorkspaceState: ObservableObject {
         // 実ランタイム: マイク → astra-core → ディスク断片（許可があればライブ取り込み + 手元 STT）
         MeetingIntelligence.shared.reset()
         // §26 会議に要るものだけを、始めるこの瞬間に要求する（起動時に一括で聞かない）。
-        PermissionCenter.request(.meeting)
+        PermissionCenter.request(.meeting) {
+            RecordingRuntime.shared.speechAuthorizationChanged()
+            RecordingWorkspaceState.shared.refreshSpeechPermission()
+        }
         // マイクが**拒否**されているなら録音状態にしない。
         // 「録音中」と出しながら無音を録るのが一番高くつく壊れ方なので、始めない。
         if Permissions.microphone == .denied || Permissions.microphone == .restricted {
@@ -256,6 +269,7 @@ final class RecordingWorkspaceState: ObservableObject {
         }
         // 未確認のまま進む場合（プロンプト待ち）は、録れていないことを画面に出す。
         permissionIssue = Permissions.microphone == .granted ? nil : .microphoneDenied
+        refreshSpeechPermission()
         let localId = "meeting-\(Int(Date().timeIntervalSince1970))"
         RecordingRuntime.shared.begin(meetingId: localId)
         // スクショ等は実際に journal を作った id に合わせる（サインイン時は gateway id）。

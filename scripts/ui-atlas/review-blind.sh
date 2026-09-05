@@ -75,15 +75,20 @@ print(f"REVIEW_SANDBOX {len(order)} images, {len(batches)} batches of {batch}")
 PY
 
 # 2. judge を回す（箱は img/ だけ。prompt は箱の外から stdin で渡す）。
-n=0
+n=0; running=0
 for p in "$WORK"/prompt-*.md; do
   n=$((n+1)); tag="$(printf '%02d' "$n")"
   # 試運転用: ASTRA_JUDGE_LIMIT_BATCHES=1 で最初の 1 組だけ回す（gate ではない）。
   if [[ -n "${ASTRA_JUDGE_LIMIT_BATCHES:-}" && $n -gt ${ASTRA_JUDGE_LIMIT_BATCHES} ]]; then break; fi
+  # 3 model は互いに独立なので同時に回す（直列だと 33 回で 3 時間かかった）。
+  # 組（batch）も ASTRA_JUDGE_PARALLEL 組まで同時に。judge は網の待ちが主で CPU をほぼ使わない。
   for model in $MODELS; do
-    bash "$ROOT/scripts/ux-auto/judge.sh" "$model" "$WORK/img" "$p" "$OUT/judge-$tag-$model.json" || true
+    bash "$ROOT/scripts/ux-auto/judge.sh" "$model" "$WORK/img" "$p" "$OUT/judge-$tag-$model.json" &
   done
+  running=$((running+1))
+  if [[ $running -ge ${ASTRA_JUDGE_PARALLEL:-3} ]]; then wait; running=0; fi
 done
+wait
 
 # 3. OCR で照合し、集計する。
 python3 - "$ATLAS" "$OUT" "$WORK/img" "$OCR" "$RC" <<'PY'
@@ -91,13 +96,22 @@ import json, os, re, subprocess, sys, unicodedata, glob
 atlas, out, imgdir, ocr_bin, rc = sys.argv[1:6]
 key = json.load(open(os.path.join(out, "key.json"), encoding="utf-8"))["key"]
 def norm(s): return re.sub(r"[\s　:：・…\.\-‐―]+", "", unicodedata.normalize("NFKC", s).lower())
-ocr = {}
+ocr, ocr_tokens = {}, {}
+from PIL import Image
+import tempfile
 for i in key:
     try:
-        txt = subprocess.run([ocr_bin, os.path.join(imgdir, i + ".png")], capture_output=True, text=True, timeout=60).stdout
-        ocr[i] = norm("".join(l.split("\t", 1)[1] for l in txt.splitlines() if "\t" in l))
+        src = os.path.join(imgdir, i + ".png")
+        # Dock の小さな面（高さ < 200px）は等倍だと OCR が「メモ」「字幕」を落とす（実測）。3 倍に拡大して読む。
+        im = Image.open(src)
+        if im.height < 200:
+            tmp = os.path.join(tempfile.gettempdir(), f"atlas-ocr-{i}.png")
+            im.resize((im.width * 3, im.height * 3), Image.LANCZOS).save(tmp); src = tmp
+        txt = subprocess.run([ocr_bin, src], capture_output=True, text=True, timeout=60).stdout
+        toks = [l.split("\t", 1)[1] for l in txt.splitlines() if "\t" in l]
+        ocr[i] = norm("".join(toks)); ocr_tokens[i] = len(toks)
     except Exception:
-        ocr[i] = ""
+        ocr[i] = ""; ocr_tokens[i] = 0
 MIN_MATCH = 0.6
 pages = {i: [] for i in key}       # id -> [(model, verdict, concerns, confidence, valid, why)]
 for f in sorted(glob.glob(os.path.join(out, "judge-*.json"))):
@@ -109,7 +123,9 @@ for f in sorted(glob.glob(os.path.join(out, "judge-*.json"))):
         vt = [t for t in page.get("visible_text", []) if norm(t)]
         hit = sum(1 for t in vt if norm(t) in ocr.get(i, ""))
         ratio = hit / len(vt) if vt else 0
-        valid = len(vt) >= 3 and ratio >= MIN_MATCH
+        # 画面の文字が 3 つも無い面（Idle の Dock 等）では、読めた分が全部合っていれば有効。
+        need = min(3, max(1, ocr_tokens.get(i, 0)))
+        valid = len(vt) >= need and ratio >= MIN_MATCH
         why = "" if valid else f"照合 {hit}/{len(vt)}（画面に無い文字）"
         pages[i].append((model, page.get("verdict", ""), page.get("concerns", []), page.get("confidence", ""), valid, why))
 rows, fix, nee, keep = [], [], [], []
@@ -143,4 +159,5 @@ for r in rows:
 open(os.path.join(out, "review.md"), "w", encoding="utf-8").write("\n".join(lines) + "\n")
 print(f"VISUAL_IDEAL_GATE={result['gate']}  KEEP {len(keep)} FIX_CANDIDATE {len(fix)} NOT_ENOUGH_EVIDENCE {len(nee)} → {os.path.relpath(out)}")
 PY
+rm -f "$OUT"/*.raw.json "$OUT"/*.stderr
 rm -rf "$WORK"

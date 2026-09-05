@@ -45,6 +45,8 @@ case "$mode" in
     SwitchAudioSource -t input -s "BlackHole 2ch" >/dev/null
     SwitchAudioSource -t output -s "BlackHole 2ch" >/dev/null
     open --env "ASTRA_DATA_ROOT=$data" "$APP" --args --selftest realmeeting "$OUT/astra" force "seconds=40"
+    # 初回は音声認識（Apple Speech）の許可ダイアログが出る。人が押さない。機械が「OK」を押す。
+    bash "$ROOT/scripts/reality/tcc-dialog.sh" allow 12 | sed 's/^/  tcc: /' &
     sleep 6   # 検出 + 録音開始 + Notes を開くまで
     n=0
     while IFS=$'\t' read -r speaker text wav; do
@@ -55,6 +57,7 @@ case "$mode" in
     ;;
   meet)
     open --env "ASTRA_DATA_ROOT=$data" "$APP" --args --selftest realmeeting "$OUT/astra" "seconds=60"
+    bash "$ROOT/scripts/reality/tcc-dialog.sh" allow 15 | sed 's/^/  tcc: /' &
     ( cd "$ROOT/tools/meet-bot" && node join.mjs "$OUT/corpus" "$OUT/bot" ) || { echo "FAIL: meet bot"; exit 1; }
     while pgrep -x AstraMac >/dev/null; do sleep 1; done
     ;;

@@ -21,12 +21,13 @@ struct PermissionBanner: View {
                     .foregroundStyle(Color.primary)
                     .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 0)
+                // この面でいちばん要る操作。文字だけのリンクでは警告の重さと釣り合わなかった（盲検 3/3）。
                 Button(Facts.resultOpenSettings) { issue.open() }
-                    .font(.system(size: TypeScale.microSize, weight: .medium))
+                    .font(.system(size: TypeScale.secondarySize, weight: .semibold))
                     .foregroundStyle(Color.astraAccent(dark))
-                    .frame(height: 28)          // §16 hit area
-                    .padding(.horizontal, 8)
-                    .buttonStyle(AstraControlStyle(radius: 8, base: 0.0))
+                    .frame(height: 30)          // §16 hit area
+                    .padding(.horizontal, 12)
+                    .buttonStyle(AstraControlStyle(radius: 8, base: 0.10))
                     .accessibilityIdentifier("permissionOpenSettings")
             }
             .padding(.horizontal, 12)
@@ -46,11 +47,22 @@ struct PermissionIssue {
     /// この許可が無いことで**届かなくなる経路**。見出し・本文はこれを `listening` から引いて組む
     /// （hero の「（音声なし）」と同じ真実を見る。マイク拒否でも画面の音が生きていれば、それは言う）。
     let channel: SpeakerChannel?
+    /// 文字起こしの欄が空のときに言う理由（「まだ発話がありません」と言わない）。
+    let transcriptHint: String
     let open: () -> Void
 
     static var microphoneDenied: PermissionIssue {
-        PermissionIssue(message: "マイクの許可が無いため、音声が記録されていません。", channel: .localUser) {
+        PermissionIssue(message: "マイクの許可が無いため、音声が記録されていません。", channel: .localUser,
+                        transcriptHint: "マイクが使えないので、聞き取れていません。") {
             Permissions.openMicrophoneSettings()
+        }
+    }
+    /// 音声認識（Apple Speech）だけが拒否された。音は録れているので経路は引かない。
+    /// 以前はこの状態を何も言わず、文字起こしが黙って空だった（REAL_MEETING の実マイク経路で発見）。
+    static var speechDenied: PermissionIssue {
+        PermissionIssue(message: "音声認識の許可が無いため、文字にできません。録音は続いています。", channel: nil,
+                        transcriptHint: "音声認識の許可が無いので、文字にできません。") {
+            Permissions.openSpeechRecognitionSettings()
         }
     }
 }

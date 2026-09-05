@@ -66,7 +66,8 @@ struct NewRecordingSheet: View {
             }
         }
         .padding(26)
-        .frame(width: 620, height: 400)
+        // 5 行 + ボタン列で収まる高さ。400 では下半分が空いていた（盲検 3/3 で density）。
+        .frame(width: 620, height: 330)
         .background(SheetSurface())
         .accessibilityIdentifier("newRecordingSheet")
     }
@@ -99,8 +100,9 @@ struct NewRecordingSheet: View {
             Text(value)
                 .font(.system(size: TypeScale.bodySize))
                 .foregroundStyle(ok ? Palette.text(dark) : Palette.warning(dark))
-            Spacer(minLength: 0)
+            // 操作はどの行も同じ列（ラベルの右）に置く。右端に離すと列が 2 本になる（盲検 3/3 で alignment）。
             trailing()
+            Spacer(minLength: 0)
         }
         .frame(height: 44)
     }
@@ -116,7 +118,8 @@ struct NewRecordingSheet: View {
             }
             .labelsHidden()
             .pickerStyle(.menu)
-            .fixedSize()
+            // 3 つのプルダウンを同じ幅にして 1 本の列に揃える。
+            .frame(width: 220, alignment: .leading)
             .accessibilityIdentifier("sheet-\(title)")
             Spacer(minLength: 0)
         }

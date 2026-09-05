@@ -62,6 +62,41 @@ final class RecordingRuntime {
     private var paused = false
     /// 途中経過/確定の文字起こしを UI へ渡す（オンデバイス STT）。
     var onTranscript: ((String, Bool) -> Void)?
+    /// この録音で文字起こしを頼まれているか（許可の答えが遅れて来たときに始めるため）。
+    private var speechWanted = false
+
+    /// オンデバイス STT を始める。録音の開始時、または音声認識の許可が下りた瞬間に呼ぶ。
+    private func startSpeech() {
+        guard speech == nil, session != nil else { return }
+        let st = SpeechTranscriber()
+        do {
+            try st.start { [weak self] live in
+                // §12 partial は final を待たずに UI へ。出るまでの時間を実測しておく。
+                let started = self?.speechStartedAt
+                let channel = self?.currentChannel ?? .localUser
+                DispatchQueue.main.async {
+                    if let started { self?.lastPartialLatencyMs = Date().timeIntervalSince(started) * 1000 }
+                    self?.lastTranscriptChannel = channel
+                    self?.onTranscript?(live.text, live.isFinal)
+                    // Dock が listening のときは、そこにも途中経過を出す。
+                    if !live.isFinal { VoiceHUDState.shared.updatePartial(live.text) }
+                }
+            }
+            self.speech = st
+        } catch {
+            // オンデバイス資産が無い / 認識器が無い。録音だけ続け、画面に理由を出す。
+            // ここで `requiresOnDeviceRecognition = false` にして取り直すことはしない。
+            transcriptionUnavailable = true
+            NSLog("on-device STT unavailable (recording continues, no server fallback): \(error)")
+        }
+    }
+
+    /// 音声認識の許可の答えが来た（会議の許可要求の完了。求めるのは PermissionCenter だけ）。録音中で、
+    /// 文字起こしを頼まれていて、まだ始まっていなければ、ここから始める。
+    func speechAuthorizationChanged() {
+        guard speechWanted, speech == nil, SpeechTranscriber.authorization == .authorized else { return }
+        startSpeech()
+    }
     /// マイクの音量（0..1）を UI（波形）へ渡す。
     var onLevel: ((Float) -> Void)?
     /// 実 gateway に作った会議（サインイン時のみ）。無ければローカル録音だけ。
@@ -118,29 +153,13 @@ final class RecordingRuntime {
         self.activeMeetingId = id
         transcriptionUnavailable = false
         resetListening()
+        speechWanted = transcribe
         if transcribe, SpeechTranscriber.authorization == .authorized {
-            let st = SpeechTranscriber()
-            do {
-                try st.start { [weak self] live in
-                    // §12 partial は final を待たずに UI へ。出るまでの時間を実測しておく。
-                    let started = self?.speechStartedAt
-                    let channel = self?.currentChannel ?? .localUser
-                    DispatchQueue.main.async {
-                        if let started { self?.lastPartialLatencyMs = Date().timeIntervalSince(started) * 1000 }
-                        self?.lastTranscriptChannel = channel
-                        self?.onTranscript?(live.text, live.isFinal)
-                        // Dock が listening のときは、そこにも途中経過を出す。
-                        if !live.isFinal { VoiceHUDState.shared.updatePartial(live.text) }
-                    }
-                }
-                self.speech = st
-            } catch {
-                // オンデバイス資産が無い / 認識器が無い。録音だけ続け、画面に理由を出す。
-                // ここで `requiresOnDeviceRecognition = false` にして取り直すことはしない。
-                transcriptionUnavailable = true
-                NSLog("on-device STT unavailable (recording continues, no server fallback): \(error)")
-            }
+            startSpeech()
         }
+        // 未確認なら、許可の答えが来てから始める（`speechAuthorizationChanged`）。以前は答えを待たず
+        // 「認可済みのときだけ」で、初回は**誰も音声認識を求めていなかった**ので、文字起こしが一度も
+        // 動かなかった（REAL_MEETING の実マイク経路で 0 行。音は 45 秒届いていた）。
         if captureMic {
             let mic = micCapture
             // AVAudioEngine の起動を主スレッドで待つと、⌥Space から Dock が動くまでがそのぶん遅れる

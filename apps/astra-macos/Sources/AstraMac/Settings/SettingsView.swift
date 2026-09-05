@@ -7,6 +7,7 @@ struct SettingsView: View {
     @State private var ax = Permissions.accessibility
     @State private var cal = Permissions.calendar
     @State private var input = Permissions.inputMonitoring
+    @State private var speech = Permissions.speechRecognition
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -36,6 +37,8 @@ struct SettingsView: View {
                               request: { Permissions.requestScreenRecording(); screen = Permissions.screenRecording })
                 permissionRow(Facts.permissionAccessibility, ax, reason: PermissionCenter.Capability.control.reason,
                               request: { Permissions.openAccessibilitySettings() })
+                permissionRow(Facts.permissionSpeechRecognition, speech, reason: "会議を手元で文字にするには\(Facts.permissionSpeechRecognition)の許可が要ります。",
+                              request: { Permissions.requestSpeechRecognition { _ in speech = Permissions.speechRecognition } })
                 permissionRow(Facts.permissionCalendar, cal, reason: PermissionCenter.Capability.schedule.reason,
                               request: { Permissions.requestCalendar { _ in cal = Permissions.calendar } })
                 // ⌥Space はこの許可が無いと黙って効かない。Home が空のときしか直す道が無かった。
@@ -51,7 +54,7 @@ struct SettingsView: View {
             Spacer()
         }
         .padding(24)
-        .frame(width: 460, height: 500)
+        .frame(width: 460, height: 540)
     }
 
     private func section<C: View>(_ title: String, @ViewBuilder _ content: () -> C) -> some View {

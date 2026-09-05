@@ -1,0 +1,134 @@
+{
+  "pages": {
+    "057C": {
+      "visible_text": [
+        "考えています",
+        "..."
+      ],
+      "observation": {
+        "happening": "Interim processing indicator - AI is thinking",
+        "most_important": "User feedback that computation is ongoing; transaction not stuck",
+        "next_action": "Wait for result",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "08BC": {
+      "visible_text": [
+        "00:03の会議",
+        "決まったこと1",
+        "macOSを先に出すことに決めました",
+        "やることと0",
+        "メモ2",
+        "Windowsはいつ出しますか",
+        "Ken",
+        "Sarah",
+        "出所"
+      ],
+      "observation": {
+        "happening": "Meeting transcript showing decisions, open items, and notes with participant names and timestamps",
+        "most_important": "Structured meeting record with categorized content (decisions, todos, notes) and full conversation history visible",
+        "next_action": "Read decisions, respond to open questions, add notes",
+        "anomalies": [
+          "Numbered suffix notation (決まったこと1, やることと0, メモ2) uses non-leading-position numbers; vertical space between sections varies"
+        ]
+      },
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "concerns": [],
+      "confidence": "medium"
+    },
+    "0CA1": {
+      "visible_text": [
+        "録音中",
+        "00:00",
+        "メモ",
+        "字幕",
+        "Ask Astra",
+        "⏸",
+        "⏹"
+      ],
+      "observation": {
+        "happening": "Active recording control bar during meeting/conversation capture",
+        "most_important": "Recording state and elapsed time clearly visible; action buttons for captions, notes, and AI features accessible",
+        "next_action": "Pause recording, add memo, or enable subtitles",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "0FE4": {
+      "visible_text": [
+        "Google Meet",
+        "00:00",
+        "メモ",
+        "字幕",
+        "Ask Astra",
+        "⏸",
+        "⏹"
+      ],
+      "observation": {
+        "happening": "Google Meet active session control strip with recording controls",
+        "most_important": "Platform identity and session state evident; integrated action buttons for notes and captions",
+        "next_action": "Control meeting recording or access features",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "11BC": {
+      "visible_text": [
+        "Slack",
+        "このメッセージを送ります か？",
+        "外部に出る",
+        "#sales",
+        "あなた",
+        "明日の会議、資料を先に共有します",
+        "やめる",
+        "直す",
+        "送る"
+      ],
+      "observation": {
+        "happening": "Message confirmation dialog for Slack with full message context preview",
+        "most_important": "User about to send message to #sales; message body, channel, and timestamp visible for verification",
+        "next_action": "Send, edit, or cancel message",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "1409": {
+      "visible_text": [
+        "Home",
+        "こんばんは",
+        "何を終わらせますか？",
+        "録音を始める",
+        "Product Weekly",
+        "10:00",
+        "Google Meet",
+        "A社商談",
+        "13:30",
+        "Zoom"
+      ],
+      "observation": {
+        "happening": "Home dashboard displaying greeting, task-entry prompt, upcoming meetings, and meeting history",
+        "most_important": "Clear entry point for user task input; agenda and meeting schedule visible at a glance",
+        "next_action": "Enter task, start recording, or select meeting",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    }
+  },
+  "_judge": {
+    "model": "haiku",
+    "cost_usd": 0.0597827,
+    "turns": 7,
+    "duration_ms": 48499
+  }
+}

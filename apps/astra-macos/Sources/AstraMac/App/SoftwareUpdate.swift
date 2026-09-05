@@ -67,7 +67,7 @@ final class SoftwareUpdate {
     /// ガイドの絵（menutitles から描く）で灰色に写ってしまう。
     @discardableResult
     func checkNow() -> String? {
-        guard let controller else { return Self.misconfiguration() ?? "更新の口が起動していない" }
+        guard let controller else { return Self.misconfiguration() ?? "更新の確認が起動していません" }
         controller.checkForUpdates(nil)
         return nil
     }

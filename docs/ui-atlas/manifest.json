@@ -3100,6 +3100,41 @@
       }
     },
     {
+      "id": "system.speech-permission",
+      "group": "system",
+      "title": "System — Speech recognition denied",
+      "required": true,
+      "capture": {
+        "selftest": "shots",
+        "file": "09c-speech-denied.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "録音を始めた瞬間に音声認識（Apple Speech）の許可を求め、断られた。",
+      "meaning": "音は録れている。文字にはできない。理由と直しに行く道が出る。",
+      "primary": "設定を開く（音声認識）",
+      "secondary": "録音は続く",
+      "states": "permissionIssue = speechDenied",
+      "keys": "—",
+      "privacy": "音声認識はこの Mac の中（サーバへは出さない）。求めるのは録音を始めた瞬間だけ。",
+      "prev": [
+        "recording.workspace"
+      ],
+      "next": [
+        "recording.workspace"
+      ],
+      "window": "Workspace（録音面）",
+      "invariant": "黙って空の文字起こしにしない。「まだ発話がありません」と言わない。",
+      "appearance_policy": "adaptive",
+      "status": "PENDING_CAPTURE",
+      "image": null,
+      "source": null,
+      "captured": null,
+      "note": "REAL_MEETING の実マイク経路で発見: 音声認識の許可を誰も求めておらず、初回は文字起こしが一度も動かなかった。PermissionCenter の .meeting に音声認識を足し、拒否ならこの面。"
+    },
+    {
       "id": "system.calendar-permission",
       "group": "system",
       "title": "System — Calendar permission (purpose-first)",
