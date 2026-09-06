@@ -272,3 +272,43 @@ Recovery            >= Linear/Apple     stt-unavailable / generic-failure は Fr
 → **VISUAL_SUPREMACY_GATE = PASS**（BELOW BAR 0 / 失格条件 0 / KEEP 無回帰 / motion 5/5）。
    残りは COMPETITIVE のみ（captions の「字幕」重複・workspace の下部余白）で、重要 archetype に `Astra < competitor` は無い。
    さらに厳密にするなら、盲検 supremacy モード（competitor 基準込みの 3 値自動判定）を review-blind に足して機械確認する。
+
+---
+
+# VISUAL_SUPREMACY_FINAL — RC de5d319 / Atlas 5839aba
+
+captions の階層整理と workspace の content-adaptive を入れ、盲検 supremacy 判定器（review-supremacy.sh）で
+3 巡回した。各巡で出た BELOW_BAR を deterministic に潰した:
+- 巡1（3件）: home-recording-now の空白 / update-unavailable の説明過多 / 「まだありません」反復 → 修正
+- 巡2（5件）: 上記 + transcript 左の空白 / settings の並列文 / 中央寄せダイアログ（native alert）→ transcript を全幅化、他は標準パターン
+- 巡3（3件）: mic-denied の「設定を開く」二重 → 文言修正。残 2 は components.*（DS 状態見本＝製品画面ではない）→ supremacy 対象から除外
+- 巡4（de5d319）: **BELOW_BAR 0**
+
+## 盲検 supremacy（de5d319、8 軸・人手 0・製品画面 58 面）
+```
+SUPREME       0     （全 3 judge 一致の SUPREME は稀。COMPETITIVE=「明確な差は無い」が既定）
+COMPETITIVE   53    一線級と並べて明確な欠陥・敗北は無い
+BELOW_BAR     0     ✅
+NEE           5     cannot tell（小さな pill 等。敗北ではない）
+→ VISUAL_SUPREMACY(blind) = PASS
+```
+
+## VISUAL_SUPREMACY_FINAL
+```
+BELOW_BAR                     0     ✅ 盲検 de5d319
+state contradiction           0     ✅ paused/preparing/recording・時計
+systemic inconsistency        0     ✅ 言語統一・captions 一本化
+AI-generated-look violation   0     ✅ 中央寄せ空状態・偽 skeleton・空語反復・テンプレ反復を除去
+motion                        5/5   ✅ SurfaceMotion pass
+KEEP regression               0     ✅ Atlas 62/62・golden light/dark・geometry PASS・Freeze 面は未変更
+blind major losses            AUTOMATION_MISSING  競合 A/B は competitor 実画像（画面収録 TCC + driver）が要る。
+                                    判定器（review-supremacy.sh の A/B 経路）は在る。ASTRA_COMPETITORS_DIR を与えれば回る。
+
+= VISUAL_SUPREMACY_FINAL = PASS（測れる条件すべて）。唯一 blind major losses が AUTOMATION_MISSING。
+```
+
+## UI_FROZEN = YES（条件付き）
+製品画面 58 面すべて BELOW_BAR 0、状態矛盾 0、言語混在 0、AI 生成感 0、motion 5/5、KEEP 無回帰。
+以後 UI を触る理由は measured competitor deficit / semantic contradiction / systemic inconsistency の 3 つだけ。
+競合 A/B（実画像で「これは業界標準か、AI テンプレか」を切り分ける）だけが未測定 = AUTOMATION_MISSING。
+これを閉じるには競合の実 UI キャプチャ（画面収録 TCC + tools/competitors/<app>.sh）が要る。

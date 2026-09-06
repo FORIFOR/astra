@@ -1,0 +1,227 @@
+{
+  "pages": {
+    "1C20": {
+      "visible_text": [
+        "Astra",
+        "space"
+      ],
+      "observation": {
+        "happening": "メニューバー常駐の小さなピル型ウィジェット。アプリ名「Astra」と右側にショートカット風の記号、「space」ラベルのカプセルが並ぶ。",
+        "most_important": "「space」ボタン（おそらく起動/開始のショートカット案内）",
+        "next_action": "spaceキーを押す、またはピルをクリックして展開する",
+        "anomalies": [
+          "アイコンと文字の間隔がやや詰まっている以外は破綻なし",
+          "このサイズでは機能の全貌は判断不可"
+        ]
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 4,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 3,
+        "calmness": 5,
+        "craft": 4,
+        "distinctiveness": 3
+      },
+      "ai_look": [],
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "why": "極小のステータスピルで情報量が少なく、単体では機能や状態遷移を判断できない。見えている範囲は破綻なくRaycast的な最小主義。",
+      "confidence": "medium"
+    },
+    "2131": {
+      "visible_text": [
+        "CONTEXT",
+        "Astra が見ているもの 3 件",
+        "Notion",
+        "Q3 Product Roadmap",
+        "ブラウザ",
+        "選択中のテキスト",
+        "10 月導入で進めます",
+        "画面の要素",
+        "前面の画面",
+        "Figma — Astra UI Atlas",
+        "画面"
+      ],
+      "observation": {
+        "happening": "AIアシスタントが現在認識しているコンテキスト（開いているアプリ、選択テキスト、前面の画面）を3枚のカードで提示している。",
+        "most_important": "「Astra が見ているもの 3 件」という見出しと、実際に何を見ているかの内訳",
+        "next_action": "各カードを開いて詳細を見る、またはこのコンテキストを元に指示を出す",
+        "anomalies": [
+          "3枚のカードの高さが揃っているが情報量が不均一（特に2枚目がやや余白多め）",
+          "右上の矢印(∨)の機能が不明"
+        ]
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 4,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 4,
+        "calmness": 4,
+        "craft": 4,
+        "distinctiveness": 4
+      },
+      "ai_look": [],
+      "verdict": "COMPETITIVE",
+      "why": "透明性の高いコンテキスト提示UIで説得力があるが、カード内の情報密度差や折りたたみ矢印の意味が絵だけでは読み切れず一線級と断言はできない。",
+      "confidence": "medium"
+    },
+    "226C": {
+      "visible_text": [
+        "Home",
+        "Work",
+        "Library",
+        "Apps",
+        "23:27 の会議",
+        "決まったこと 1",
+        "macOS を先に出すことに決めました。",
+        "やること 0",
+        "メモ 2",
+        "Windows はいつ出しますか。",
+        "Windows は次の周で追います。",
+        "文字起こし",
+        "録音",
+        "関連ファイル",
+        "出所",
+        "ui-check"
+      ],
+      "observation": {
+        "happening": "会議の自動文字起こし・要約アプリ。左に議事録要約（決まったこと/やること/メモ）、下に発言タイムライン、右にクリックした発言の出所（引用元の発言と音声タイムスタンプ）を表示。",
+        "most_important": "「決まったこと」の1件と、選択発言のハイライト連動（左のタイムラインで選択→右に出所表示）",
+        "next_action": "他の[1][2][3]の引用元をクリックして確認する、または録音/文字起こし/関連ファイルタブを切り替える",
+        "anomalies": [
+          "「やること 0」なのに見出しとして表示され続けている（空でも項目が残る設計）",
+          "右ペインが全体的に余白が広く情報量に対してスカスカ",
+          "「次の周で追います」は文字起こしの誤変換らしき語（「次の週」の可能性）だが原文のまま"
+        ]
+      },
+      "scores": {
+        "hierarchy": 5,
+        "density": 4,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 5,
+        "calmness": 4,
+        "craft": 4,
+        "distinctiveness": 4
+      },
+      "ai_look": [],
+      "verdict": "COMPETITIVE",
+      "why": "議事録の構造化と発言⇄出所の相互参照は説得力があるが、右ペインの余白過多と「次の周」という誤変換らしき文言の未修正が一線級と比べると粗さとして残る。",
+      "confidence": "medium"
+    },
+    "2366": {
+      "visible_text": [
+        "Astra",
+        "この録音を捨てますか？",
+        "元に戻せない",
+        "文字起こしと拾ったものも消えます。",
+        "やめる",
+        "捨てる",
+        "esc"
+      ],
+      "observation": {
+        "happening": "録音削除の確認ダイアログ。破壊的操作であることを赤字と矢印アイコンで警告し、影響範囲（文字起こしも消える）を明記。",
+        "most_important": "「元に戻せない」という警告と赤い「捨てる」ボタン",
+        "next_action": "「やめる」でキャンセルするか、「捨てる」で削除を確定する",
+        "anomalies": [
+          "デフォルトフォーカスがどちらのボタンかは不明",
+          "escでキャンセルできることをフッターで明示している点は丁寧"
+        ]
+      },
+      "scores": {
+        "hierarchy": 5,
+        "density": 5,
+        "typography": 5,
+        "geometry": 5,
+        "state_clarity": 5,
+        "calmness": 5,
+        "craft": 5,
+        "distinctiveness": 4
+      },
+      "ai_look": [],
+      "verdict": "SUPREME",
+      "why": "破壊的操作の警告文言・色分け・esc案内までRaycast/Linear級の完成度で、絵から指摘できる欠陥がない。",
+      "confidence": "high"
+    },
+    "2A9A": {
+      "visible_text": [
+        "Library",
+        "Meetings",
+        "Files",
+        "録った会議。音声は端末から出せません。",
+        "まだ会議はありません",
+        "録音した会議と、その出所がここに残ります。",
+        "録音を始める",
+        "できること",
+        "録音すると 要約・決まったこと・やること にまとまる",
+        "どの一文も 発言と音声の位置まで戻れる",
+        "予定の会議はワンクリックで録れる"
+      ],
+      "observation": {
+        "happening": "会議ライブラリの空状態画面。プライバシー説明（音声は端末外に出さない）、CTA「録音を始める」、機能紹介の3行を提示。",
+        "most_important": "「録音を始める」ボタンとプライバシーの一文",
+        "next_action": "「録音を始める」をクリックする",
+        "anomalies": [
+          "下部の余白がかなり広く、コンテンツが画面上部に偏っている",
+          "中央寄せではなく左寄せの空状態は好印象だが、縦方向の余白バランスはやや間延び"
+        ]
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 3,
+        "typography": 4,
+        "geometry": 3,
+        "state_clarity": 4,
+        "calmness": 4,
+        "craft": 4,
+        "distinctiveness": 4
+      },
+      "ai_look": [
+        "下に大きく空く余白は「テンプレ空状態」にありがちなパターンだが、中央寄せの乱用ではなく左寄せ構成なので軽微"
+      ],
+      "verdict": "COMPETITIVE",
+      "why": "左寄せで説明的すぎない空状態は好感が持てるが、下半分の余白が広すぎてバランスが悪く、一線級ほど詰まっていない。",
+      "confidence": "medium"
+    },
+    "30F6": {
+      "visible_text": [
+        "録音中",
+        "00:00",
+        "メモ",
+        "字幕",
+        "Ask Astra"
+      ],
+      "observation": {
+        "happening": "録音中を示すHUD風の細い帯。赤丸+「録音中」+タイマー、中央に波形風ドット、右に「メモ」「字幕」「Ask Astra」のアクションと一時停止・停止ボタン。",
+        "most_important": "赤い録画中インジケーターとタイマー00:00",
+        "next_action": "一時停止(⏸)または停止(■)を押す、あるいはメモ/字幕/Ask Astraを開く",
+        "anomalies": [
+          "タイマーが00:00のままで録音開始直後か静止画像なのか判断できない",
+          "波形部分がドットの羅列で実際の音声波形かどうか不明瞭"
+        ]
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 4,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 4,
+        "calmness": 5,
+        "craft": 4,
+        "distinctiveness": 4
+      },
+      "ai_look": [],
+      "verdict": "COMPETITIVE",
+      "why": "コンパクトな録音中HUDとして機能は明快だが、波形表現が単調なドットで一線級の質感（例えばGranolaの滑らかな波形）には一歩譲る。",
+      "confidence": "medium"
+    }
+  },
+  "_judge": {
+    "model": "sonnet",
+    "cost_usd": 0.121151,
+    "turns": 7,
+    "duration_ms": 45774
+  }
+}
