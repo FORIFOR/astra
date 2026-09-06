@@ -97,6 +97,12 @@ invocation() { "$BIN" --selftest invocation; "$BIN" --selftest invocationaudio; 
 step 06 "Invocation acoustic" "SELFTEST_OK invocationaudio" invocation
 # 06b スクショの自動コンテキスト（撮った瞬間に会話の文脈になる。撮っただけでは外部へ出さない）
 step 06b "Screenshot auto-context" "SCREENSHOT_CONTEXT_GATE=PASS" "$BIN" --selftest screenshotcontext
+# 06c 画像の行き先を偽らない（撮っただけ 0 / gateway に画素 0 / cloud なら「質問したときだけ送る」と開示）
+step 06c "Screenshot egress truth" "SCREENSHOT_EGRESS_TRUTH=PASS" "$BIN" --selftest screenshotegress
+# 06d 実 gateway + 実 worker + 実 Claude Code CLI + 実 PNG（画像の中にしか無い nonce を答える）
+step 06d "Screenshot real E2E (nonce)" "SCREENSHOT_E2E=PASS" bash scripts/reality/run-screenshot-e2e.sh
+# 06e TCC を含む verify-all の無人実行。人を呼ばない: 無ければ AUTOMATION_MISSING
+missing 06e "Unattended verify-all (TCC)" scripts/reality/run-unattended-verify.sh
 # 07-11 実機の残り。測定器が無い段は AUTOMATION_MISSING（人を呼ばない）。
 missing 07 "Automated Real Meeting (2 machines)" scripts/reality/run-real-meeting.sh
 missing 08 "Automated Full Keyboard Access"     scripts/reality/run-fka.sh

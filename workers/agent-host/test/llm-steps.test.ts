@@ -238,8 +238,16 @@ describe('answering about a screenshot that stayed on this device', () => {
     expect(toolsFor('llm.answer', { images: [shot] }, located(true))).toEqual(['Read']);
     expect(toolsFor('llm.answer', { images: [shot] }, located(false))).toEqual([]);
     expect(toolsFor('llm.answer', {}, [])).toEqual([]);
-    // 画像があっても、文章をこねるだけの呼び出しには渡さない
-    expect(toolsFor('llm.compose', { images: [shot] }, located(true))).toEqual([]);
+    // 画像について書く（compose）ときも読める。要約や分解には渡さない。
+    expect(toolsFor('llm.compose', { images: [shot] }, located(true))).toEqual(['Read']);
+    expect(toolsFor('llm.decompose', { images: [shot] }, located(true))).toEqual([]);
+    expect(
+      promptFor(
+        'llm.compose',
+        { instruction: 'この画面の説明を書いて', images: [shot] },
+        located(true),
+      ),
+    ).toContain('/data/visual-context/shot-1.png');
   });
 
   it('says the image is missing rather than letting the model pretend it saw it', () => {

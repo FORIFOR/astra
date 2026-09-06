@@ -114,7 +114,7 @@ private struct IdleDock: View {
             }
             .padding(.horizontal, S.metric(Metrics.dockPadH))
             .frame(maxHeight: .infinity)
-            .help("そのまま「これ何？」と聞いてください · \(shot.ageLabel())")
+            .help("そのまま「これ何？」と聞いてください · \(shot.ageLabel()) · \(VisualEgressPolicy.current.disclosure)")
             .accessibilityIdentifier("screenshotContextChip")
         } else if let shot = visual.recent.first {
             // トーストが下がったあとは、小さな chip だけ残す（会話は途切れない）。
@@ -130,6 +130,7 @@ private struct IdleDock: View {
             .frame(maxHeight: .infinity)
             .contentShape(Rectangle())
             .onTapGesture { VoiceHUDState.shared.toggleQuickActions() }
+            .help("そのまま聞いてください · \(VisualEgressPolicy.current.disclosure)")
             .accessibilityIdentifier("screenshotContextChipSmall")
         } else {
         HStack(spacing: 7) {

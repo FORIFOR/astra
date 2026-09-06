@@ -76,6 +76,21 @@ describe.skipIf(!url)('asking about a screenshot just taken', () => {
     expect(res.json<{ needs_clarification: boolean }>().needs_clarification).toBe(false);
   });
 
+  it('refuses pixels: an attachment carrying image data is a 400, not silently stripped', async () => {
+    const res = await turn(await startConversation(), {
+      text: 'これ何？',
+      attachments: [
+        {
+          id: 'a1b2c3d4-0000-7000-8000-000000000002',
+          kind: 'screenshot',
+          label: 'x',
+          data: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+        },
+      ],
+    });
+    expect(res.statusCode).toBe(400);
+  });
+
   it('refuses an attachment id that could become a path on the device', async () => {
     const res = await turn(await startConversation(), {
       text: 'これ何？',

@@ -83,13 +83,16 @@ export type Turn = z.infer<typeof Turn>;
  * 端末で走るモデル呼び出しがそこから読む（鍵も画像も端末から出さない）。
  * 撮っただけでは送られない。利用者が「これ何？」と尋ねた turn にだけ付く。
  */
-export const TurnAttachment = z.object({
-  /** 端末側の受け渡しファイル名になる。パス区切りを含めない。 */
-  id: z.string().regex(/^[A-Za-z0-9-]{1,64}$/),
-  kind: z.enum(['screenshot', 'clipboard_image']),
-  /** 「スクリーンショット（たった今）」など。指示語の解決と提示に使う。 */
-  label: z.string().min(1).max(200),
-});
+export const TurnAttachment = z
+  .object({
+    /** 端末側の受け渡しファイル名になる。パス区切りを含めない。 */
+    id: z.string().regex(/^[A-Za-z0-9-]{1,64}$/),
+    kind: z.enum(['screenshot', 'clipboard_image']),
+    /** 「スクリーンショット（たった今）」など。指示語の解決と提示に使う。 */
+    label: z.string().min(1).max(200),
+  })
+  // **画素を受け取らない。**data / bytes / url など、この 3 つ以外の項目が来たら 400（黙って捨てない）。
+  .strict();
 export type TurnAttachment = z.infer<typeof TurnAttachment>;
 
 export const SendTurnRequest = z.object({

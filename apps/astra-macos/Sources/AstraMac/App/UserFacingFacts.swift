@@ -91,6 +91,12 @@ enum UserFacingFacts {
     static let menuGuide = "操作ガイド（PDF）"
     /// Guided Setup: 右下のアバターが System Settings の操作対象を案内する。
     static let menuGuidedSetup = "権限の設定を案内…"
+
+    // MARK: スクショ自動コンテキスト（画像の行き先を偽らない）
+    /// cloud のモデルで見るとき。「画像は端末から出ない」とは言わない。{provider} はモデルの名前。
+    static let screenshotEgressCloud = "質問したときだけ、その画像を {provider} へ送ります"
+    /// 端末内のモデルで見るとき。
+    static let screenshotEgressLocal = "画像は端末の外へ送りません"
     static let menuQuit = "Astra を終了"
     static let menuCheckUpdates = "更新を確認…"
     /// 更新を確認できない実行体（appcast / 公開鍵の無い swift build 等）で出す面。偽の「最新です」は出さない。
@@ -138,6 +144,9 @@ enum UserFacingFacts {
         func f(_ k: String, _ v: String, _ p: Bool = true) -> Fact { Fact(key: k, value: v, protected: p) }
         return [
             f("recording.start", recordingStart),
+            f("menu.guidedSetup", menuGuidedSetup),
+            f("screenshot.egress.cloud", screenshotEgressCloud),
+            f("screenshot.egress.local", screenshotEgressLocal),
             f("recording.menu.start", recordingMenuStart),
             f("recording.menu.stop", recordingMenuStop),
             f("recording.stop", recordingStop, false),

@@ -60,7 +60,8 @@ export function toolsFor(
   args: Record<string, unknown>,
   images: readonly LocatedImage[] = locateImages(imageRefsOf(args['images'])),
 ): readonly string[] {
-  if (tool === 'llm.answer' && images.some((image) => image.present)) return ['Read'];
+  if ((tool === 'llm.answer' || tool === 'llm.compose') && images.some((image) => image.present))
+    return ['Read'];
   return TOOLS_FOR[tool];
 }
 
@@ -141,6 +142,7 @@ export function promptFor(
         json('{"text": "…"}'),
         '',
         ...(args['context'] ? [`前提: ${String(args['context'])}`, ''] : []),
+        ...imageLines(images),
         `指示: ${String(args['instruction'] ?? '')}`,
       ].join('\n');
 

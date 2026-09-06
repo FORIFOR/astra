@@ -6,6 +6,7 @@
  * DB を要るこちらは別ファイルにしてある。計画は task を作る時点で確定させ、
  * workflow へ持ち込む（D-40）。
  */
+import { stepApplies, type StepCondition } from '@astra/contracts';
 import type { StepComplianceProfile, TaskPlan, TaskStep } from './plan.js';
 
 /** `plugin:<pluginId>:<agentId>` の形。ここ以外で組み立てない。 */
@@ -52,6 +53,8 @@ export interface InstalledAgent {
       readonly message: string;
       readonly risk?: TaskStep['risk'];
       readonly applies: boolean;
+      /** 宣言された条件。あれば task の入力で評価する（`applies` より優先）。 */
+      readonly condition?: StepCondition;
     }[];
   };
   /** 実体ファイルから読んだ skill。無ければ null。 */
@@ -124,7 +127,10 @@ export function planInstalledAgent(
   const source: PlannedStep[] = agent.workflow
     ? agent.workflow.steps
         // 条件に合わない step は載せない。載せてから飛ばすと、進捗が嘘になる。
-        .filter((s) => s.applies)
+        // 条件は**ここで**入力に対して評価する（registry は入力を知らない）。
+        .filter((s) =>
+          s.condition ? stepApplies(s.condition, { input, previous: null }) : s.applies,
+        )
         .flatMap((s) => {
           const tool = byId.get(s.tool);
           // 宣言に無い tool は使わせない（D-42）

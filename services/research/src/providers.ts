@@ -86,8 +86,12 @@ export interface LanguageModel {
     attachments?: readonly VisualAttachment[],
   ): Promise<string>;
 
-  /** 文章を書く。下書きまでで、送りはしない。 */
-  compose(instruction: string, context?: string): Promise<string>;
+  /** 文章を書く。下書きまでで、送りはしない。画像（端末内）について書くときは attachments。 */
+  compose(
+    instruction: string,
+    context?: string,
+    attachments?: readonly VisualAttachment[],
+  ): Promise<string>;
 
   /**
    * 意味の矛盾を見つける。

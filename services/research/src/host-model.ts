@@ -133,10 +133,17 @@ export class HostLanguageModel implements LanguageModel {
     return textOf(result, 'answer');
   }
 
-  async compose(instruction: string, context?: string): Promise<string> {
+  async compose(
+    instruction: string,
+    context?: string,
+    attachments?: readonly VisualAttachment[],
+  ): Promise<string> {
     const result = await this.#ask('llm.compose', {
       instruction,
       ...(context ? { context } : {}),
+      ...(attachments && attachments.length > 0
+        ? { images: attachments.map((a) => ({ id: a.id, kind: a.kind, label: a.label })) }
+        : {}),
     });
     return textOf(result, 'text');
   }

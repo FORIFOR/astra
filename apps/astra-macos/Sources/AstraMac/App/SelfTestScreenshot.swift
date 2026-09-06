@@ -157,12 +157,66 @@ extension SelfTest {
         check(store.recent.count == 2, "完成後に二重に取り込んだ (recent=\(store.recent.count))")
         svc.stop()
 
+        // 11) 受け渡し場所（キャッシュ）の規律: TTL 30 分 / 20 件 / 200MB / 起動時掃除 / 会話を閉じたら消す /
+        //     別の会話の画像は添えない / store の知らない artifact は添えない / id は正規パスの中だけ。
+        store.reset()
+        let now = Date()
+        func entry(_ name: String, age: TimeInterval, bytes: Int) -> HandoverCache.Entry {
+            HandoverCache.Entry(url: handover.appendingPathComponent(name), bytes: bytes, modified: now.addingTimeInterval(-age))
+        }
+        let fresh = (0..<5).map { entry("f\($0).png", age: Double($0) * 60, bytes: 1_000) }
+        let stale = [entry("old.png", age: 31 * 60, bytes: 1_000)]
+        check(HandoverCache.plan(fresh + stale, now: now).map(\.lastPathComponent) == ["old.png"], "TTL 30 分を超えたものだけが消えない")
+        let many = (0..<25).map { entry("m\($0).png", age: Double($0), bytes: 10) }
+        check(HandoverCache.plan(many, now: now).count == 5, "20 件を超えた古いものが消えない (\(HandoverCache.plan(many, now: now).count))")
+        let heavy = (0..<4).map { entry("h\($0).png", age: Double($0), bytes: 60 * 1024 * 1024) }
+        let heavyDoomed = HandoverCache.plan(heavy, now: now)
+        check(heavyDoomed.map(\.lastPathComponent) == ["h3.png"], "200MB を超えた分が古い方から消えない (\(heavyDoomed.map(\.lastPathComponent)))")
+        // 起動時掃除: 実ファイルで。
+        try? FileManager.default.createDirectory(at: handover, withIntermediateDirectories: true)
+        let staleURL = handover.appendingPathComponent("stale.png")
+        try? Data([1, 2, 3]).write(to: staleURL)
+        try? FileManager.default.setAttributes([.modificationDate: now.addingTimeInterval(-40 * 60)], ofItemAtPath: staleURL.path)
+        let keptURL = handover.appendingPathComponent("kept.png")
+        try? Data([1, 2, 3]).write(to: keptURL)
+        HandoverCache.cleanup(directory: handover, now: now)
+        check(!FileManager.default.fileExists(atPath: staleURL.path) && FileManager.default.fileExists(atPath: keptURL.path), "起動時掃除が期限切れだけを消さない")
+        try? FileManager.default.removeItem(at: keptURL)
+        // 会話 A で撮って添える → 会話 B に切り替わると A の写しは消え、A の画像は B から添えられない。
+        store.bind(conversationID: "conv-A")
+        let a1 = writePNG("a1.png", w: 200, h: 120)
+        svc.ingestFile(url: a1, dir: dir)
+        let aArt = store.recent.first!
+        let aAtt = store.attach([aArt])
+        check(aAtt.count == 1 && handoverFiles().count == 1, "会話 A で添えられない")
+        store.bind(conversationID: "conv-B")
+        check(handoverFiles().isEmpty, "会話を閉じても写しが残る (\(handoverFiles()))")
+        check(!store.recent.contains { $0.id == aArt.id }, "閉じた会話の画像が文脈に残る")
+        check(store.attach([aArt]).isEmpty, "別の会話の画像を添えられてしまう")
+        // store の知らない artifact（外から作ったもの）は添えない。
+        let foreign = VisualContextArtifact(id: UUID(), conversationID: "conv-B", imageURL: a1, capturedAt: now, sourceApp: nil,
+                                            sourceWindow: nil, pixelSize: CGSize(width: 200, height: 120), confidence: 1, kind: .screenshot, state: .available)
+        check(store.attach([foreign]).isEmpty && handoverFiles().isEmpty, "store の知らない artifact を添えてしまう")
+        // id は受け渡し場所の中の正規パスにしかならない（path traversal 0）。
+        for bad in ["../../etc/passwd", "..", "x/y", "ABC", "", "a1b2c3-../x"] {
+            check(VisualContextStore.canonicalHandoverURL(id: bad, directory: handover) == nil, "不正な id がパスになる: \(bad)")
+        }
+        let good = VisualContextStore.canonicalHandoverURL(id: "0a1b2c3d-0000-4000-8000-000000000001", directory: handover)
+        check(good?.deletingLastPathComponent().resolvingSymlinksInPath().path == handover.resolvingSymlinksInPath().path, "正規 id が受け渡し場所の中を指さない")
+        // 期限切れは読めない: TTL を過ぎた添付の写しは purge で消える。
+        let b1 = writePNG("b1.png", w: 200, h: 120)
+        svc.ingestFile(url: b1, dir: dir)
+        _ = store.attach(store.recent)
+        check(handoverFiles().count == 1, "添えた写しが無い")
+        store.purgeExpired(now: now.addingTimeInterval(31 * 60))
+        check(handoverFiles().isEmpty && store.recent.isEmpty, "期限切れの写しが読める状態で残る (\(handoverFiles()))")
+
         try? FileManager.default.removeItem(at: dir)
         store.reset()
         VisualContextStore.handoverDirectoryOverride = nil
 
         if fail.isEmpty {
-            print("SCREENSHOT_CONTEXT_GATE=PASS  検知<\(Int(latencyMs))ms・監視経路\(Int(watchMs))ms・会話紐付け・参照解決(これ/さっきの/2枚/3枚/さっきのと今の)・二重0・部分0・窓0・focus0・質問前に画像が動かない・受け渡し=添付時のみ・外す1操作")
+            print("SCREENSHOT_CONTEXT_GATE=PASS  検知<\(Int(latencyMs))ms・監視経路\(Int(watchMs))ms・会話紐付け・参照解決(これ/さっきの/2枚/3枚/さっきのと今の)・二重0・部分0・窓0・focus0・質問前に画像が動かない・受け渡し=添付時のみ・外す1操作・TTL30分/20件/200MB/起動時掃除・会話閉じで削除・別会話0・path traversal 0・期限切れ可読0")
             exit(0)
         } else {
             print("SCREENSHOT_CONTEXT_GATE=FAIL  " + fail.joined(separator: " / "))
@@ -203,5 +257,161 @@ extension SelfTest {
         try? png?.write(to: URL(fileURLWithPath: out))
         print("SCREENSHOT_SHOT_OK \(out)")
         exit(0)
+    }
+}
+
+
+// MARK: - SCREENSHOT_EGRESS_TRUTH
+
+extension SelfTest {
+    /// `--selftest screenshotegress`: 画像がどこまで行くかを偽らない。
+    ///
+    ///   capture_only_egress             = 0   撮っただけでは受け渡しも送信も起きない
+    ///   gateway_receives_pixels         = 0   gateway へ行く添付は id / kind / label の 3 文字列だけ
+    ///   local_vision_provider_egress    = 0   端末内モデルの方針では「送らない」と言う
+    ///   cloud_vision_provider_disclosed = PASS cloud のモデルで見るときは「質問したときだけ送る」と UI で言う
+    ///   unasked_screenshot_upload       = 0   参照表現でない質問では画像が動かない
+    @MainActor
+    static func screenshotEgressGate() {
+        var fail: [String] = []
+        func check(_ ok: Bool, _ msg: String) { if !ok { fail.append(msg) } }
+        let store = VisualContextStore.shared
+        let svc = ScreenshotDetectionService.shared
+        store.reset()
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("astra-egress-\(getpid())", isDirectory: true)
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let handover = dir.appendingPathComponent("handover", isDirectory: true)
+        VisualContextStore.handoverDirectoryOverride = handover
+        func handoverFiles() -> [String] { ((try? FileManager.default.contentsOfDirectory(atPath: handover.path)) ?? []) }
+        func png(_ name: String) -> URL {
+            let img = NSImage(size: NSSize(width: 300, height: 200))
+            img.lockFocus(); NSColor.systemTeal.setFill(); NSRect(x: 0, y: 0, width: 300, height: 200).fill(); img.unlockFocus()
+            let url = dir.appendingPathComponent(name)
+            try? NSBitmapImageRep(data: img.tiffRepresentation!)!.representation(using: .png, properties: [:])!.write(to: url)
+            return url
+        }
+
+        // capture_only_egress = 0
+        store.bind(conversationID: "conv-e")
+        for i in 0..<3 { svc.ingestFile(url: png("スクリーンショット \(i).png"), dir: dir) }
+        check(store.recent.count == 3, "3 枚撮れていない (\(store.recent.count))")
+        check(handoverFiles().isEmpty, "撮っただけで受け渡し場所に写しができた (\(handoverFiles()))")
+        check(store.attachCount == 0, "撮っただけで attach が起きた")
+
+        // unasked_screenshot_upload = 0: 参照表現でない質問では何も動かない
+        let none = VisualReferenceResolver.resolve(text: "今日の天気は？", recent: store.recent).images
+        _ = store.attach(none)
+        check(none.isEmpty && store.attachCount == 0 && handoverFiles().isEmpty, "参照でない質問で画像が動いた")
+
+        // gateway_receives_pixels = 0: 添付は id / kind / label の 3 文字列だけ。画素も base64 も無い。
+        let these = VisualReferenceResolver.resolve(text: "これ何？", recent: store.recent).images
+        let atts = store.attach(these)
+        check(atts.count == 1, "「これ」で 1 枚添えられない (\(atts.count))")
+        let fields = Mirror(reflecting: atts[0]).children.map { ($0.label ?? "", type(of: $0.value)) }
+        check(fields.map(\.0) == ["id", "kind", "label"], "gateway へ渡す添付の項目が id/kind/label でない: \(fields.map(\.0))")
+        check(fields.allSatisfy { $0.1 == String.self }, "添付に文字列でない項目がある")
+        check(atts.allSatisfy { $0.id.count <= 64 && $0.label.count <= 200 && $0.kind.count <= 32 }, "添付の文字列が長すぎる（画素を混ぜている疑い）")
+        check(handoverFiles().count == 1, "質問で 1 枚だけ写す (\(handoverFiles()))")
+
+        // provider egress truth
+        check(!VisualEgressPolicy.localVision.sendsPixelsOffDevice, "端末内モデルの方針が「送る」になっている")
+        check(VisualEgressPolicy.localVision.disclosure == Facts.screenshotEgressLocal, "端末内の文言が Facts と違う")
+        let cloud = VisualEgressPolicy.cloudVision(provider: "Claude")
+        check(cloud.sendsPixelsOffDevice, "cloud の方針が「送らない」になっている（偽り）")
+        check(cloud.disclosure.contains("Claude") && cloud.disclosure.contains("質問したときだけ"), "cloud の開示文が「質問したときだけ…へ送ります」でない: \(cloud.disclosure)")
+        check(!cloud.disclosure.contains("出ません") && !cloud.disclosure.contains("出ない"), "cloud なのに「出ない」と言っている")
+        // 既定は cloud（端末内で画像を見るモデルはまだ無い。「出ない」と決して言わない）。
+        check(VisualEgressPolicy.current == cloud, "既定の方針が cloud(Claude) でない: \(VisualEgressPolicy.current)")
+        check(Facts.all.contains { $0.key == "screenshot.egress.cloud" } && Facts.all.contains { $0.key == "screenshot.egress.local" }, "開示文が Facts に無い")
+
+        try? FileManager.default.removeItem(at: dir)
+        store.reset()
+        VisualContextStore.handoverDirectoryOverride = nil
+        if fail.isEmpty {
+            print("SCREENSHOT_EGRESS_TRUTH=PASS capture_only_egress=0 gateway_receives_pixels=0 local_vision_provider_egress=0 cloud_vision_provider_disclosed=PASS unasked_screenshot_upload=0 policy=\(VisualEgressPolicy.current)")
+            exit(0)
+        }
+        print("SCREENSHOT_EGRESS_TRUTH=FAIL " + fail.joined(separator: " / ")); exit(2)
+    }
+}
+
+// MARK: - 実 gateway + 実 worker + 実 Claude Code CLI の E2E（画像の中にしか無い nonce を答えさせる）
+
+extension SelfTest {
+    /// `--selftest screenshote2e <base> --email <email> [--out <dir>]`
+    ///
+    /// 画像の中にしか無い nonce（`ERROR CODE: VX-xxxx`）を描いた PNG を「撮った」ことにし、
+    /// 「この画像のエラーコードは？」を実 gateway へ送り、端末の worker が Claude Code CLI で PNG を読んで
+    /// 返した答えに nonce が入っているかを機械で確かめる。prompt や file の有無ではなく、**画像を本当に読んだ**ことの証拠。
+    /// gateway / worker は `scripts/reality/run-screenshot-e2e.sh` が立てる。
+    @MainActor
+    static func screenshotE2E(_ args: [String]) {
+        func arg(_ name: String) -> String? { args.firstIndex(of: name).flatMap { $0 + 1 < args.count ? args[$0 + 1] : nil } }
+        let i = args.firstIndex(of: "--selftest")!
+        let base = args.count > i + 2 && !args[i + 2].hasPrefix("--") ? args[i + 2] : "http://127.0.0.1:3399"
+        let email = arg("--email") ?? "screenshot-e2e@astra.local"
+        let outDir = arg("--out") ?? "/tmp/astra-screenshot-e2e"
+        try? FileManager.default.createDirectory(atPath: outDir, withIntermediateDirectories: true)
+        guard AstraCoreBridge.reachable(base) else { print("SCREENSHOT_E2E=SKIP gateway unreachable at \(base)"); exit(0) }
+
+        // 画像の中にしか無い nonce。
+        let nonce = String(UUID().uuidString.replacingOccurrences(of: "-", with: "").prefix(6)).uppercased()
+        let code = "VX-\(nonce)"
+        let shotDir = FileManager.default.temporaryDirectory.appendingPathComponent("astra-e2e-shots-\(getpid())", isDirectory: true)
+        try? FileManager.default.createDirectory(at: shotDir, withIntermediateDirectories: true)
+        let shot = shotDir.appendingPathComponent("スクリーンショット 2026-09-07 e2e.png")
+        let img = NSImage(size: NSSize(width: 900, height: 420))
+        img.lockFocus()
+        NSColor.white.setFill(); NSRect(x: 0, y: 0, width: 900, height: 420).fill()
+        let lines = ["ASTRA VISUAL TEST", "ERROR CODE: \(code)", "Button: Retry upload"]
+        for (n, line) in lines.enumerated() {
+            let attrs: [NSAttributedString.Key: Any] = [.font: NSFont.boldSystemFont(ofSize: 44), .foregroundColor: NSColor.black]
+            (line as NSString).draw(at: NSPoint(x: 40, y: 320 - CGFloat(n) * 110), withAttributes: attrs)
+        }
+        img.unlockFocus()
+        try? NSBitmapImageRep(data: img.tiffRepresentation!)!.representation(using: .png, properties: [:])!.write(to: shot)
+        try? FileManager.default.copyItem(at: shot, to: URL(fileURLWithPath: "\(outDir)/fixture.png"))
+
+        let store = VisualContextStore.shared
+        let svc = ScreenshotDetectionService.shared
+        store.reset()
+        func handoverFiles() -> [String] { ((try? FileManager.default.contentsOfDirectory(atPath: VisualContextStore.handoverDirectory.path)) ?? []).filter { $0.hasSuffix(".png") } }
+        let handoverBefore = handoverFiles().count
+        svc.ingestFile(url: shot, dir: shotDir)
+        guard store.recent.count == 1 else { print("SCREENSHOT_E2E=FAIL fixture not ingested"); exit(2) }
+        // 撮っただけでは受け渡し場所に増えない。
+        guard handoverFiles().count == handoverBefore, store.attachCount == 0 else { print("SCREENSHOT_E2E=FAIL capture-only egress"); exit(2) }
+
+        do {
+            let tokens = try AstraCoreBridge.devSignIn(base, email: email, displayName: "E2E")
+            let conv = try AstraCoreBridge.startConversation(base, accessToken: tokens.accessToken)
+            store.bind(conversationID: conv)
+            let question = "この画像のエラーコードは？ コードだけを答えて"
+            let resolved = VisualReferenceResolver.resolve(text: question, recent: store.recent).images
+            guard resolved.count == 1 else { print("SCREENSHOT_E2E=FAIL 「この画像」が解けない"); exit(2) }
+            let attachments = store.attach(resolved)
+            guard attachments.count == 1, handoverFiles().count == handoverBefore + 1 else { print("SCREENSHOT_E2E=FAIL attach"); exit(2) }
+            print("SCREENSHOT_E2E attach id=\(attachments[0].id) handover=\(VisualContextStore.handoverDirectory.path)")
+            let t0 = Date()
+            let outcome = try AstraCoreBridge.sendTurn(base, accessToken: tokens.accessToken, conversationId: conv, text: question, attachments: attachments)
+            print("SCREENSHOT_E2E turn task=\(outcome.taskId) clarification=\(outcome.needsClarification) notice=\(outcome.notice)")
+            guard !outcome.needsClarification else { print("SCREENSHOT_E2E=FAIL gateway asked back: \(outcome.answer)"); exit(2) }
+            guard !outcome.taskId.isEmpty else { print("SCREENSHOT_E2E=FAIL no task started: \(outcome.notice)"); exit(2) }
+            let reply = try VoiceHUDState.followUp(outcome, base: base, token: tokens.accessToken, waitMs: 300_000)
+            let secs = Int(Date().timeIntervalSince(t0))
+            let preview = reply.text.replacingOccurrences(of: "\n", with: " ").prefix(160)
+            try? reply.text.write(toFile: "\(outDir)/answer.txt", atomically: true, encoding: .utf8)
+            store.markRecent(resolved)
+            store.reset()
+            try? FileManager.default.removeItem(at: shotDir)
+            if reply.settled, reply.text.uppercased().contains(code) {
+                print("SCREENSHOT_E2E=PASS nonce=\(code) task=\(outcome.taskId) \(secs)s answer=\"\(preview)\"")
+                exit(0)
+            }
+            print("SCREENSHOT_E2E=FAIL nonce=\(code) settled=\(reply.settled) \(secs)s answer=\"\(preview)\"")
+            exit(2)
+        } catch {
+            print("SCREENSHOT_E2E=FAIL error=\(error)"); exit(3)
+        }
     }
 }

@@ -14,6 +14,7 @@ import {
   PluginCatalogEntry,
   PolicyDocument,
   WorkflowFile,
+  type StepCondition,
   compareSemver,
   isCompatible,
   sha256Hex,
@@ -655,7 +656,9 @@ export class PluginRegistryService {
     version: string,
     manifest: PluginManifest,
     agentId: string,
-  ): Promise<{ steps: { tool: string; message: string; applies: boolean }[] } | null> {
+  ): Promise<{
+    steps: { tool: string; message: string; applies: boolean; condition: StepCondition }[];
+  } | null> {
     for (const path of manifest.workflows) {
       const content = await this.asset(pluginId, version, path);
       if (!content) continue;
@@ -673,8 +676,11 @@ export class PluginRegistryService {
         steps: workflow.steps.map((step) => ({
           tool: step.tool,
           message: step.message,
-          // 条件は task を作る時点で評価する（計画は確定させる。D-40）
+          // 条件は task を作る時点で評価する（計画は確定させる。D-40）。
+          // ここでは入力を知らないので条件を**そのまま運ぶ**。評価は planInstalledAgent。
+          // 以前は applies: true 固定で、条件は宣言だけで効いていなかった。
           applies: true,
+          condition: step.condition,
         })),
       };
     }

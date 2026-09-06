@@ -101,7 +101,11 @@ export function generalExecutors(model: LanguageModel): Record<string, Executor>
         if (!instruction) throw new Error('there is nothing to write');
 
         const context = value(input, step, 'context') ?? undefined;
-        const text = await model.compose(instruction, context);
+        const attachments = attachmentsOf(input, step);
+        const text =
+          attachments.length > 0
+            ? await model.compose(instruction, context, attachments)
+            : await model.compose(instruction, context);
 
         return {
           result: { composed: true },

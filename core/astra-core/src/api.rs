@@ -162,6 +162,29 @@ pub fn api_reachable(base_url: String) -> bool {
 mod tests {
     use super::*;
 
+    /// SCREENSHOT_EGRESS_TRUTH: gateway へ行く turn に画素が無い。添付は id / kind / label だけ。
+    #[test]
+    fn turn_body_carries_ids_and_labels_but_never_pixels() {
+        let atts = vec![TurnAttachment {
+            id: "0a1b2c3d-0000-4000-8000-000000000001".into(),
+            kind: "screenshot".into(),
+            label: "スクリーンショット（たった今）".into(),
+        }];
+        let body = turn_body("これ何？", &atts);
+        let obj = body.as_object().expect("object");
+        let mut keys: Vec<&String> = obj.keys().collect();
+        keys.sort();
+        assert_eq!(keys, vec!["attachments", "interrupt", "modality", "text"]);
+        let att = body["attachments"][0].as_object().expect("attachment object");
+        let mut att_keys: Vec<&String> = att.keys().collect();
+        att_keys.sort();
+        assert_eq!(att_keys, vec!["id", "kind", "label"]);
+        for (_, v) in att { assert!(v.is_string(), "attachment fields are short strings, never bytes"); }
+        let serialized = body.to_string();
+        assert!(serialized.len() < 512, "a turn with an attachment stays tiny: {} bytes", serialized.len());
+        assert!(!serialized.contains("data:image") && !serialized.contains("base64"));
+    }
+
     fn gateway() -> Option<String> {
         std::env::var("ASTRA_GATEWAY_URL").ok().filter(|s| !s.is_empty())
     }
@@ -342,6 +365,16 @@ pub fn api_send_turn(
     api_send_turn_with_attachments(base_url, access_token, conversation_id, text, Vec::new())
 }
 
+/// turn の本文。**画素はここに無い。**添付は id / kind / label の 3 つだけ（検査で固定する）。
+pub fn turn_body(text: &str, attachments: &[TurnAttachment]) -> serde_json::Value {
+    serde_json::json!({
+        "text": text,
+        "modality": "text",
+        "interrupt": true,
+        "attachments": attachments,
+    })
+}
+
 /// 依頼を送る。端末内の画像を添えるとき（「これ何？」）はこちら。撮っただけでは呼ばない。
 #[uniffi::export]
 pub fn api_send_turn_with_attachments(
@@ -367,12 +400,7 @@ pub fn api_send_turn_with_attachments(
         conversation_id
     ))
     .set("Authorization", &format!("Bearer {access_token}"))
-    .send_json(ureq::json!({
-        "text": text,
-        "modality": "text",
-        "interrupt": true,
-        "attachments": attachments,
-    }))
+    .send_json(turn_body(&text, &attachments))
     .map_err(map_transport)?
     .into_json()
     .map_err(|e| ApiError::Decode { message: e.to_string() })?;

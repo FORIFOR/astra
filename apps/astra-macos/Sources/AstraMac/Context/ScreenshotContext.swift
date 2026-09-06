@@ -7,16 +7,88 @@ import ImageIO
 /// スクショを撮った瞬間に、それを**直近の会話コンテキスト**として自動で持つ。
 ///
 /// 体験は「⌘⇧4 で撮る → 『これ何？』」だけ。保存先を開く・ドラッグ・貼り付け・添付はゼロ。
-/// 撮っただけでは外部へ出さない（`AVAILABLE_AS_CONTEXT` まで）。利用者が参照表現で尋ねた瞬間だけ
+/// 撮っただけでは何も送らない（`AVAILABLE_AS_CONTEXT` まで）。利用者が参照表現で尋ねた瞬間だけ
 /// 推論対象になる（`ATTACHED_TO_TURN`）。検知後に**新しいチャットは作らない**——現在の会話に紐付ける。
 ///
-/// 関連: [[astra-device-boundary]]（鍵も画像も端末から勝手に出さない）。
+/// **画像の行き先（egress の真実）** — `VisualEgressPolicy`:
+///   - 撮っただけ: 送信 0
+///   - 質問した: gateway へ行くのは id / kind / label だけ（画素 0）。端末の worker が受け渡し場所から読む
+///   - その worker が cloud のモデル（Claude Code = 利用者の Claude）で見るなら、**その瞬間にその画像だけ**が
+///     そのプロバイダへ送られる。端末内モデルなら送信 0。「画像は端末から出ない」とは言わない。
+///
+/// 関連: [[astra-device-boundary]]。
 
 // MARK: - 種類と状態機械
 
 enum VisualKind: String, Equatable {
     case screenshot          // スクショ保存先に書かれた画像
     case clipboardImage      // ⌃⌘⇧4 等でクリップボードへ来た画像（確実にスクショとは限らない）
+}
+
+/// 質問した画像がどこまで行くか。**見せる文言はここから**（Facts に登録済み）。
+/// 端末内で画像を見るモデルはまだ無いので、既定は cloud（安全側: 「出ない」とは決して言わない）。
+enum VisualEgressPolicy: Equatable {
+    case localVision
+    case cloudVision(provider: String)
+
+    static var current: VisualEgressPolicy {
+        ProcessInfo.processInfo.environment["ASTRA_LOCAL_VISION"] == "1" ? .localVision : .cloudVision(provider: "Claude")
+    }
+
+    /// 質問したときに画像が端末の外へ出るか。
+    var sendsPixelsOffDevice: Bool { if case .cloudVision = self { return true } else { return false } }
+
+    var disclosure: String {
+        switch self {
+        case .localVision: return Facts.screenshotEgressLocal
+        case .cloudVision(let provider): return Facts.screenshotEgressCloud.replacingOccurrences(of: "{provider}", with: provider)
+        }
+    }
+}
+
+/// 受け渡し場所（キャッシュ）の掃除。**決定的**: 期限切れ → 件数の上限 → 総量の上限 の順に古いものから消す。
+enum HandoverCache {
+    static let ttl: TimeInterval = 30 * 60
+    static let maxCount = 20
+    static let maxBytes: Int = 200 * 1024 * 1024
+
+    struct Entry: Equatable {
+        let url: URL
+        let bytes: Int
+        let modified: Date
+    }
+
+    /// 消すべきもの（古い順）。
+    static func plan(_ entries: [Entry], now: Date = Date(), ttl: TimeInterval = ttl,
+                     maxCount: Int = maxCount, maxBytes: Int = maxBytes) -> [URL] {
+        var doomed: [URL] = []
+        var kept = entries.sorted { $0.modified > $1.modified }   // 新しい順
+        let expired = kept.filter { now.timeIntervalSince($0.modified) > ttl }
+        doomed += expired.map(\.url)
+        kept.removeAll { now.timeIntervalSince($0.modified) > ttl }
+        while kept.count > maxCount, let last = kept.popLast() { doomed.append(last.url) }
+        var total = kept.reduce(0) { $0 + $1.bytes }
+        while total > maxBytes, let last = kept.popLast() { doomed.append(last.url); total -= last.bytes }
+        return doomed
+    }
+
+    static func entries(in directory: URL) -> [Entry] {
+        let fm = FileManager.default
+        let items = (try? fm.contentsOfDirectory(at: directory, includingPropertiesForKeys: [.fileSizeKey, .contentModificationDateKey],
+                                                 options: [.skipsHiddenFiles])) ?? []
+        return items.filter { $0.pathExtension.lowercased() == "png" }.compactMap { url in
+            let v = try? url.resourceValues(forKeys: [.fileSizeKey, .contentModificationDateKey])
+            return Entry(url: url, bytes: v?.fileSize ?? 0, modified: v?.contentModificationDate ?? .distantPast)
+        }
+    }
+
+    /// 起動時と添付のたびに呼ぶ。消した数を返す。
+    @discardableResult
+    static func cleanup(directory: URL, now: Date = Date()) -> Int {
+        let doomed = plan(entries(in: directory), now: now)
+        for url in doomed { try? FileManager.default.removeItem(at: url) }
+        return doomed.count
+    }
 }
 
 /// IDLE → CANDIDATE → VALIDATED → AVAILABLE_AS_CONTEXT → ATTACHED_TO_TURN → RECENT_CONTEXT → EXPIRED
@@ -146,26 +218,58 @@ final class VisualContextStore: ObservableObject {
     private var ingestedKeys: Set<String> = []
     /// 連続撮影を 1 group にまとめる窓（0〜15 秒）。
     static let groupWindow: TimeInterval = 15
-    /// RECENT のまま「さっき」で呼べる寿命。
-    static let ttl: TimeInterval = 10 * 60
+    /// RECENT のまま「さっき」で呼べる寿命（受け渡しの TTL と同じ 30 分）。
+    static let ttl: TimeInterval = HandoverCache.ttl
     private var toastTimer: Timer?
+    /// 検査用: 質問で画像が動いた回数（撮っただけでは 0 のまま）。
+    private(set) var attachCount = 0
 
-    /// 端末内の受け渡し場所。質問に添えた瞬間だけ `<id>.png` を写し、worker（端末で走る
-    /// モデル呼び出し）がここから読む。cloud へは id とラベルしか行かない。
-    /// 置き場所は `LocalStore.dataRoot`（ASTRA_DATA_ROOT → Application Support/Astra）と同じ規約。
+    /// 端末内の受け渡し場所（**キャッシュ**。質問用の一時コンテキストで、永続領域ではない）。
+    /// 質問に添えた瞬間だけ `<id>.png` を写し、端末の worker がここから読む。cloud へは id とラベルしか行かない。
+    /// 置き場所は worker（`visual-context.ts`）と同じ規約:
+    ///   `ASTRA_VISUAL_CONTEXT_DIR` → `ASTRA_DATA_ROOT/VisualContext` → `~/Library/Caches/Astra/VisualContext`
     static var handoverDirectoryOverride: URL?
     static var handoverDirectory: URL {
-        handoverDirectoryOverride ?? LocalStore.dataRoot.appendingPathComponent("visual-context", isDirectory: true)
+        if let o = handoverDirectoryOverride { return o }
+        let env = ProcessInfo.processInfo.environment
+        if let dir = env["ASTRA_VISUAL_CONTEXT_DIR"], !dir.isEmpty { return URL(fileURLWithPath: dir, isDirectory: true) }
+        if let root = env["ASTRA_DATA_ROOT"], !root.isEmpty {
+            return URL(fileURLWithPath: root, isDirectory: true).appendingPathComponent("VisualContext", isDirectory: true)
+        }
+        let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+        return caches.appendingPathComponent("Astra", isDirectory: true).appendingPathComponent("VisualContext", isDirectory: true)
+    }
+
+    /// id → 受け渡し場所の中の正規パス。**store が知っている id だけ**をここに通す（任意の文字列を path にしない）。
+    /// 標準化した結果が受け渡し場所の外を指すなら nil。
+    nonisolated static func canonicalHandoverURL(id: String, directory: URL) -> URL? {
+        guard id.range(of: "^[a-f0-9-]{1,64}$", options: .regularExpression) != nil else { return nil }
+        let dir = directory.standardizedFileURL.resolvingSymlinksInPath()
+        let url = dir.appendingPathComponent("\(id).png").standardizedFileURL.resolvingSymlinksInPath()
+        guard url.deletingLastPathComponent().path == dir.path else { return nil }
+        return url
     }
     func handoverURL(_ id: UUID) -> URL {
-        Self.handoverDirectory.appendingPathComponent("\(id.uuidString.lowercased()).png")
+        Self.canonicalHandoverURL(id: id.uuidString.lowercased(), directory: Self.handoverDirectory)
+            ?? Self.handoverDirectory.appendingPathComponent("\(id.uuidString.lowercased()).png")
     }
 
     func bind(conversationID: String?) {
+        // 会話が変わった = 前の会話は閉じた。その会話の受け渡し写しは消す（他の会話から再利用させない）。
+        if let previous = self.conversationID, let new = conversationID, previous != new {
+            closeConversation(previous)
+        }
         self.conversationID = conversationID
         for i in recent.indices where recent[i].conversationID == nil {
             recent[i].conversationID = conversationID
         }
+    }
+
+    /// 会話を閉じる: その会話に紐付いた画像を文脈から外し、受け渡し写しを消す。
+    func closeConversation(_ id: String) {
+        let gone = recent.filter { $0.conversationID == id }
+        gone.forEach(cleanup)
+        recent.removeAll { $0.conversationID == id }
     }
 
     /// 検知が拾った 1 枚を登録する。二重・期限切れを弾き、現在の会話へ付ける。**ここでは外部へ出さない。**
@@ -225,17 +329,25 @@ final class VisualContextStore: ObservableObject {
 
     /// 質問に添える。**ここが端末内で画像が動く唯一の瞬間**: `visual-context/<id>.png` へ写し、
     /// API へ渡す id とラベルを返す。撮っただけでは呼ばれない。写せなかった枚は添えない（見たふりをさせない）。
-    func attach(_ arts: [VisualContextArtifact]) -> [TurnAttachment] {
-        guard !arts.isEmpty else { return [] }
+    func attach(_ arts: [VisualContextArtifact], now: Date = Date()) -> [TurnAttachment] {
+        purgeExpired(now: now)
+        // **store が知っていて、この会話のものだけ。** 外から持ち込まれた artifact や、別の会話の画像は添えない。
+        let trusted = arts.filter { art in
+            recent.contains { $0.id == art.id } && (art.conversationID == nil || art.conversationID == conversationID)
+        }
+        guard !trusted.isEmpty else { return [] }
         try? FileManager.default.createDirectory(at: Self.handoverDirectory, withIntermediateDirectories: true)
-        let newestFirst = arts.sorted { $0.capturedAt > $1.capturedAt }
+        let newestFirst = trusted.sorted { $0.capturedAt > $1.capturedAt }
         var out: [TurnAttachment] = []
         for (i, art) in newestFirst.enumerated() {
-            guard Self.writePNG(from: art.imageURL, to: handoverURL(art.id)) else { continue }
+            guard let dst = Self.canonicalHandoverURL(id: art.id.uuidString.lowercased(), directory: Self.handoverDirectory),
+                  Self.writePNG(from: art.imageURL, to: dst) else { continue }
             out.append(TurnAttachment(id: art.id.uuidString.lowercased(), kind: art.apiKind,
                                       label: Self.attachmentLabel(art, position: i)))
         }
+        if !out.isEmpty { attachCount += 1 }
         markAttached(newestFirst)
+        HandoverCache.cleanup(directory: Self.handoverDirectory, now: now)
         return out
     }
 
@@ -277,7 +389,7 @@ final class VisualContextStore: ObservableObject {
     /// 検査・リセット用。
     func reset() {
         recent.forEach(cleanup)
-        recent = []; ingestedKeys = []; justCaptured = nil; conversationID = nil
+        recent = []; ingestedKeys = []; justCaptured = nil; conversationID = nil; attachCount = 0
     }
 }
 

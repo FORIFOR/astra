@@ -125,3 +125,21 @@ CALENDAR_PURPOSE_FIRST
 この Mac は許可済みなので、未確認・拒否は `Permissions.simulatedCalendar`（`simulatedMicrophone` と同じ型）で作る。
 **実 TCC ダイアログが出て、許可直後に予定が並ぶ**ところは署名 .app + 未確認の端末でしか確かめられない
 （`--selftest calendarlive` と同じ制約、NOT_MEASURED）。
+
+## スクリーンショット（SCREENSHOT_EGRESS_TRUTH、2026-09-07）
+
+「⌘⇧4 → 『これ何？』」で画像がどこまで行くか。**「画像は端末から出ない」とは言わない。**
+守るのは `--selftest screenshotegress`（SCREENSHOT_EGRESS_TRUTH）、`core/astra-core` の
+`turn_body_carries_ids_and_labels_but_never_pixels`、gateway の `conversations-screenshot.integration.test.ts`
+（`data` 等を持つ添付は 400）、実経路は `scripts/reality/run-screenshot-e2e.sh`。
+
+| 段階                           | 出るもの                                                       | 行き先                                        | 分類          | 根拠                                                                                             |
+| ------------------------------ | -------------------------------------------------------------- | --------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------ |
+| 撮っただけ                     | **なし**（受け渡し場所にも写さない）                           | —                                             | local-only    | `Context/ScreenshotContext.swift` `attachCount==0`、gate capture_only_egress=0                   |
+| 参照表現で尋ねた               | 添付の **id / kind / label** の 3 文字列（画素 0）             | gateway `/v1/conversations/:id/turns`         | cloud-used    | `core/astra-core/src/api.rs` `turn_body`、contracts `TurnAttachment.strict()`                    |
+| 同上（端末内）                 | `<id>.png` の写しを `~/Library/Caches/Astra/VisualContext/` へ | 端末の worker（`workers/agent-host`）が Read  | local-only    | `visual-context.ts` 正規パス検査、TTL 30 分 / 20 件 / 200MB                                      |
+| worker が cloud のモデルで見る | **その画像だけ**（Claude Code CLI が Read した画素）           | 利用者自身の Claude（Claude Code のログイン） | external-send | `llm-steps.ts` `toolsFor` は画像が在るときだけ `Read`。UI の開示は `Facts.screenshotEgressCloud` |
+| worker が端末内モデルで見る    | なし                                                           | —                                             | local-only    | `VisualEgressPolicy.localVision`（端末内で画像を見るモデルはまだ無い）                           |
+
+UI の開示（chip の help）: 「質問したときだけ、その画像を Claude へ送ります」。既定の方針は cloud で、
+端末内モデルが繋がるまで「出ません」は出ない（`VisualEgressPolicy.current`）。

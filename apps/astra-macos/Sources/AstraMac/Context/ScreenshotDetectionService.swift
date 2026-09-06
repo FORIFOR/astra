@@ -86,6 +86,8 @@ final class ScreenshotDetectionService {
     func start(directory: URL? = nil) {
         guard !running else { return }
         running = true
+        // 起動時の掃除: 前回の受け渡し写し（30 分 / 20 件 / 200MB を超えたもの）を消す。
+        HandoverCache.cleanup(directory: VisualContextStore.handoverDirectory)
         let dir = directory ?? ScreenshotClassifier.screenshotDirectory()
         knownBefore = Self.imageNames(in: dir)   // 既存ファイルは「新規」に数えない
         let watcher = ScreenshotFolderWatcher { [weak self] dir in
