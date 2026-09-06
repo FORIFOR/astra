@@ -1,0 +1,163 @@
+{
+  "pages": {
+    "37EE": {
+      "visible_text": [
+        "録音中",
+        "00:02",
+        "メモ",
+        "字幕",
+        "Ask Astra",
+        "red recording indicator",
+        "waveform visualization",
+        "play/pause controls",
+        "stop button"
+      ],
+      "observation": {
+        "happening": "Recording interface showing an active meeting/audio capture session with elapsed time counter",
+        "most_important": "Red recording indicator + 00:02 timer clearly signals active recording state",
+        "next_action": "User can pause, stop, or access memo/subtitle/Ask Astra features from floating control bar",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "40B9": {
+      "visible_text": [
+        "録音中",
+        "04:21",
+        "会議",
+        "マイクと画面の音を聞いています",
+        "伊藤",
+        "承知しました",
+        "要議を遠します",
+        "決まったこと",
+        "やること",
+        "文字起こし",
+        "翻訳",
+        "字幕",
+        "田中",
+        "あなた",
+        "鈴木",
+        "AI が見ている資料 5 件"
+      ],
+      "observation": {
+        "happening": "Active meeting in progress with real-time transcription visible. Left panel shows meeting notes organized by decision type (decided items, action items). Right panel displays timestamped transcript with speaker names.",
+        "most_important": "Two-column layout clearly separates note-taking view (left) from detailed transcript (right); speaker attribution visible with timestamps",
+        "next_action": "User can review decisions/actions from left panel or examine full transcript on right; can toggle transcription view modes via buttons at top",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "4C15": {
+      "visible_text": [
+        "録音中",
+        "04:21",
+        "会議",
+        "マイクと画面の音を聞いています",
+        "鈴木",
+        "誰が対応しますか?",
+        "決まったこと",
+        "導入時期は10月で行きます",
+        "やること",
+        "見積は明日までにお願いします",
+        "質問",
+        "誰が対応しますか?",
+        "初期費用のみ配です"
+      ],
+      "observation": {
+        "happening": "Same meeting interface as 40B9 but showing different conversation content. Left panel displays expandable sections (decided items, action items, questions); each section contains timestamped entries with speaker attribution and expand/collapse arrows.",
+        "most_important": "Hierarchical collapsible structure for meeting notes with clear section categorization and time-based entries",
+        "next_action": "User can expand collapsed sections to see full context of discussion items; transcript panel on right shows parallel detail view",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "4D0A": {
+      "visible_text": [
+        "Astra",
+        "週次ブリーフィングを作る",
+        "作業中",
+        "00:00",
+        "50%",
+        "PLAN",
+        "Calendar",
+        "Gmail",
+        "Notion",
+        "Web",
+        "Briefing",
+        "CONTEXT",
+        "Notion・Selection・Screen",
+        "止める",
+        "作業画面で続ける"
+      ],
+      "observation": {
+        "happening": "AI task planning assistant (Astra) showing an active weekly briefing task at 50% completion. Displaying task breakdown with two main sections: PLAN (listing sub-tasks like Calendar, Gmail, Notion, Web, Briefing) and CONTEXT (showing source information).",
+        "most_important": "Task progress visualization (50% bar), clear task hierarchy with PLAN/CONTEXT sections, action buttons (Stop/Continue) at bottom",
+        "next_action": "User can stop the current task or continue working on it in the work screen via primary action buttons",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "5692": {
+      "visible_text": [
+        "録音中",
+        "04:21",
+        "会議",
+        "マイクと画面の音を聞いています",
+        "鈴木",
+        "OAuth だけ確認お願いします",
+        "決まったこと",
+        "やること",
+        "リアルタイム要約",
+        "Zoom",
+        "会話を用意する",
+        "文字起こしを読む",
+        "音をまとめる",
+        "AI が見ている資料"
+      ],
+      "observation": {
+        "happening": "Meeting interface with real-time summary panel open on right. Left side shows standard meeting note structure; right panel displays summary format options (Zoom selected as service, with radio button choices for conversation mode, transcription reading, or speech summarization).",
+        "most_important": "Real-time summary option panel with clear radio button selection state; visual distinction between checked (會話を用意する) and selected (文字起こしを読む) options",
+        "next_action": "User can switch between summary display modes via radio buttons or return to main transcript view",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "56A1": {
+      "visible_text": [
+        "Google Meet",
+        "05:15",
+        "メモ",
+        "字幕",
+        "Ask Astra",
+        "会議の概要に聞く",
+        "ASK ASTRA",
+        "この会議について聞く"
+      ],
+      "observation": {
+        "happening": "Google Meet control bar with integrated Ask Astra AI assistant. Dark theme control bar showing elapsed meeting time (05:15) and buttons for notes/subtitles/Ask Astra. Below the main controls is an ASK ASTRA section with a prompt field to ask about the meeting.",
+        "most_important": "Ask Astra prompt field is clearly visible as primary action in dark panel; meeting time and standard controls are accessible in header",
+        "next_action": "User can type a question about the meeting in the 'この会議について聞く' (Ask about this meeting) field or use standard meeting controls",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    }
+  },
+  "_judge": {
+    "model": "haiku",
+    "cost_usd": 0.059309799999999996,
+    "turns": 7,
+    "duration_ms": 54233
+  }
+}

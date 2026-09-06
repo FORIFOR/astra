@@ -1,0 +1,123 @@
+{
+  "pages": {
+    "25C7": {
+      "visible_text": [
+        "準備中...",
+        "見ていない欠所はあります",
+        "ESC"
+      ],
+      "observation": {
+        "happening": "Dark status banner displaying preparation/loading state with Japanese text indicating incomplete areas",
+        "most_important": "User is informed that system is preparing and some blind spots exist",
+        "next_action": "Wait for preparation to complete or press ESC to dismiss",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "3059": {
+      "visible_text": [
+        "Home",
+        "Work",
+        "Library",
+        "Apps",
+        "11:12 の会議",
+        "決まったこと 1",
+        "macOS を先に出す",
+        "Windows はいつ出しますか",
+        "文字紀どし",
+        "請負",
+        "10:30 Sarah",
+        "10:42 Ken"
+      ],
+      "observation": {
+        "happening": "Meeting notes interface showing a structured view of decisions, action items, and discussion timeline for '11:12 の会議' (meeting at 11:12)",
+        "most_important": "Clear three-section layout: decided items (決まったこと), action items (やること), and discussion notes (メモ) with chronological timeline of comments below",
+        "next_action": "User can review decisions, add notes, or expand sections to see more details",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "32F6": {
+      "visible_text": [
+        "Notion"
+      ],
+      "observation": {
+        "happening": "Minimal service header/title bar for Notion integration with dropdown toggle",
+        "most_important": "Identifier showing this is a Notion widget or service connector",
+        "next_action": "Likely click to expand/collapse or access Notion options",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "3480": {
+      "visible_text": [
+        "Google Meet",
+        "05:12",
+        "メモ",
+        "字幕",
+        "Ask Astra"
+      ],
+      "observation": {
+        "happening": "Active Google Meet session header showing elapsed time 05:12 and toolbar with note-taking, caption, AI assistant, and media control buttons",
+        "most_important": "Meeting is in progress; user has quick access to note, caption, Ask Astra, and recording controls via compact toolbar",
+        "next_action": "User can enable captions, take notes, ask AI assistant, or manage recording",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "3540": {
+      "visible_text": [
+        "Home",
+        "こんにちは",
+        "何を終わらせますか?",
+        "録音を始める",
+        "前回の設定で",
+        "まだ何もありません",
+        "\\Spaceを使えるようにする"
+      ],
+      "observation": {
+        "happening": "Home screen greeting user with input prompt for recording task. Displays primary action button (red 'Start recording'), status message ('Nothing yet'), and setup suggestion for Space feature",
+        "most_important": "Clear call-to-action: 'Start recording' with supporting context that previous settings will be applied automatically",
+        "next_action": "User can click the red 'Start recording' button or type a task to finish, or enable Space feature via link",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "36EF": {
+      "visible_text": [
+        "Astra",
+        "この録音を捨てますか？",
+        "去年説なし",
+        "文字起こしと始ったものも消えます",
+        "やめる",
+        "直す",
+        "捨てる"
+      ],
+      "observation": {
+        "happening": "Destructive action confirmation dialog asking user to confirm discarding a recording. Warning text explains that transcription and related items will also be deleted",
+        "most_important": "High-stakes decision: user must confirm data loss. Red warning indicator and clear consequence statement prevent accidental deletion",
+        "next_action": "User chooses to cancel (やめる), fix/redo (直す), or confirm discard (捨てる)",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    }
+  },
+  "_judge": {
+    "model": "haiku",
+    "cost_usd": 0.047684199999999996,
+    "turns": 7,
+    "duration_ms": 33323
+  }
+}
