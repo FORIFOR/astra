@@ -918,7 +918,10 @@ private struct MeetingPanelBody: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 8) {
-                DockLabel(text: panel == .notes ? Facts.meetingNotesPanelTitle : panel.title)
+                // captions は controller のタブ名（字幕）と重複するのでパネル見出しを出さない。
+                if panel != .captions {
+                    DockLabel(text: panel == .notes ? Facts.meetingNotesPanelTitle : panel.title)
+                }
                 Spacer(minLength: 0)
                 // 両方同時に見たいときだけ、大きな面へ出す（既定では出さない）。
                 Button { WindowCoordinator.shared.detachMeetingSurface() } label: {
@@ -981,7 +984,7 @@ private struct MeetingPanelBody: View {
                             // 空のまま黙らない。メモ（`.notes`）・翻訳と同じ 1 行を出す。
                             if recording.transcript.isEmpty { captionsEmptyLine }
                             ForEach(recording.transcript.suffix(8)) { line in
-                                captionLine(speaker: line.speaker, text: line.text, interim: line.interim)
+                                captionLine(speaker: line.speaker, at: line.timeLabel, text: line.text, interim: line.interim)
                             }
                         case .translation:
                             if recording.translating {
@@ -1038,11 +1041,16 @@ private struct MeetingPanelBody: View {
         }
     }
 
-    private func captionLine(speaker: String, text: String, interim: Bool) -> some View {
+    private func captionLine(speaker: String, at: String, text: String, interim: Bool) -> some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(speaker)
-                .font(.system(size: S.type(Metrics.dockMetaSize), weight: .semibold))
-                .foregroundStyle(Palette.accent(dark))
+            HStack(spacing: 6) {
+                Text(speaker)
+                    .font(.system(size: S.type(Metrics.dockMetaSize), weight: .semibold))
+                    .foregroundStyle(Palette.accent(dark))
+                Text(at)   // 話者 · 時刻。どこで言われたかが分かると、後から音に戻れる。
+                    .font(.system(size: S.type(Metrics.dockMetaSize), design: .monospaced))
+                    .foregroundStyle(Palette.muted(dark))
+            }
             Text(text)
                 .font(.system(size: S.type(Metrics.dockRowSize)))
                 .foregroundStyle(interim ? Palette.muted(dark) : Palette.text(dark))

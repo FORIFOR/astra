@@ -9,9 +9,10 @@ enum RecordingTool: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     var title: String {
         switch self {
-        case .transcript: return "文字起こし"
+        // controller のタブが「字幕」（機能）。パネル内はその**表示モード**なので、字幕を繰り返さない。
+        case .transcript: return "原文"
         case .translation: return "翻訳"
-        case .captions: return "字幕"
+        case .captions: return "ライブ"
         }
     }
     /// ⌘1 / ⌘2 / ⌘3 で切り替える（マウス無しでも右列を操作できるように）。

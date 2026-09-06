@@ -56,6 +56,11 @@ enum Fixture: String {
 /// 生ログは消さずに右へ控えさせ、`[ノート|文字起こし]` で入れ替えられる。
 struct RecordingWorkspaceView: View {
     @StateObject private var state = RecordingWorkspaceState.shared
+    @ObservedObject private var store = AstraStateStore.shared
+
+    // 抽出がまだ 0 件の間は、空のノート列のために場所を予約せず、生ログ（transcript）を主役にする。
+    // 最初の決定/やることが出た瞬間、右列が畳まりノート列が広がる（content-adaptive、morph）。
+    private var canvasEmpty: Bool { store.state.meeting.canvas.isEmpty }
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -90,11 +95,12 @@ struct RecordingWorkspaceView: View {
                 // 右: 生ログと AI の答え。脇に控えさせる（消しはしない）。
                 // AI に頼む操作は下の Ask 入力の横（`AIActionsPalette`）。
                 RecordingSideRail(state: state)
-                    .frame(width: Metrics.wsRightColumn)
+                    .frame(width: canvasEmpty ? 560 : Metrics.wsRightColumn)
             }
             .padding(.horizontal, Metrics.wsGutter)
             .padding(.top, 10)
             .frame(maxHeight: .infinity)
+            .animation(.easeOut(duration: Motion.drawerMs), value: canvasEmpty)
 
             AskAstraBar(state: state)
                 .padding(.horizontal, Metrics.wsGutter)
@@ -545,31 +551,18 @@ private struct MeetingNotesCanvas: View {
 
     @ViewBuilder private func group(_ title: String, _ lines: [CanvasItem],
                                     waiting: String?) -> some View {
-        if lines.isEmpty, let waiting {
-            // 何も無いことを隠さない。**偽の skeleton は置かない。**
-            VStack(alignment: .leading, spacing: 7) {
-                HStack(spacing: 6) {
-                    // decoration: 意味を持たない飾りを足す
-                    if Fixture.current == .decoration {
-                        Image(systemName: "sparkles")
-                            .foregroundStyle(LinearGradient(colors: [.purple, .pink],
-                                                            startPoint: .leading, endPoint: .trailing))
-                        Image(systemName: "star.fill").foregroundStyle(.yellow)
-                    }
-                    Text(title)
-                        .font(.system(size: TypeScale.microSize, weight: .semibold))
-                        .foregroundStyle(Fixture.current == .decoration
-                                         ? AnyShapeStyle(LinearGradient(colors: [.purple, .orange],
-                                             startPoint: .leading, endPoint: .trailing))
-                                         : AnyShapeStyle(Palette.muted(dark)))
-                        .tracking(0.4)
-                    if Fixture.current == .decoration {
-                        Image(systemName: "flame.fill").foregroundStyle(.orange)
-                    }
-                }
-                Text(waiting)
-                    .font(.system(size: TypeScale.secondarySize))
-                    .foregroundStyle(Palette.muted(dark).opacity(0.7))
+        if lines.isEmpty, waiting != nil {
+            // **空の情報構造のために場所を予約しない。** 1 行に畳む（内容が出たら場所を与える）。
+            // 大きな空箱・偽 skeleton は置かない。「決まったこと · まだありません」の 1 行だけ。
+            HStack(spacing: 6) {
+                Text(title)
+                    .font(.system(size: TypeScale.microSize, weight: .semibold))
+                    .foregroundStyle(Palette.muted(dark))
+                    .tracking(0.4)
+                Text("· まだありません")
+                    .font(.system(size: TypeScale.microSize))
+                    .foregroundStyle(Palette.muted(dark).opacity(0.6))
+                Spacer(minLength: 0)
             }
         } else if !lines.isEmpty {
             VStack(alignment: .leading, spacing: 7) {
