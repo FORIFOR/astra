@@ -490,12 +490,13 @@ enum SelfTest {
 
         // 3. Listening（partial transcript が主役）
         store.updateContext([
-            ContextFact(source: .screenVision, application: "Screen", sensitivity: .workspace,
-                        summary: "画面", capturedAt: Date(), expiresAt: Date().addingTimeInterval(60)),
+            // カード本文はカテゴリ名の反復（「画面 画面」）ではなく、実際に見ている中身を出す。
             ContextFact(source: .browserDOM, application: "Notion", sensitivity: .workspace,
                         summary: "Q3 Product Roadmap", capturedAt: Date(), expiresAt: Date().addingTimeInterval(60)),
-            ContextFact(source: .accessibility, application: "Selection", sensitivity: .personal,
-                        summary: "選択", capturedAt: Date(), expiresAt: Date().addingTimeInterval(60)),
+            ContextFact(source: .accessibility, application: "選択中のテキスト", sensitivity: .personal,
+                        summary: "「10 月導入で進めます」", capturedAt: Date(), expiresAt: Date().addingTimeInterval(60)),
+            ContextFact(source: .screenVision, application: "前面の画面", sensitivity: .workspace,
+                        summary: "Figma — Astra UI Atlas", capturedAt: Date(), expiresAt: Date().addingTimeInterval(60)),
         ])
         shoot("04-listening", { hud.mode = .listening(partial: "このページからタスクを作って…") })
 

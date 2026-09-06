@@ -92,7 +92,8 @@ private struct IdleDock: View {
     @Environment(\.colorScheme) private var scheme
     var body: some View {
         HStack(spacing: 7) {
-            AstraOrb()
+            // idle は静的な声のマーク（署名）。活動波形にはしない（「聞いている」と誤読させない）。
+            AstraVoiceMark()
             Text("Astra")
                 .font(.system(size: S.type(Metrics.dockPrimarySize), weight: .medium))
                 .foregroundStyle(Palette.muted(scheme == .dark))

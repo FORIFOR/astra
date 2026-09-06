@@ -264,12 +264,16 @@ struct PluginsPane: View {
     private func pluginCard(_ m: PluginManifest) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 9) {
+                // 全カードが同じ青灰のタイルに見えないよう、名前から安定した色相を振る
+                // （頭文字は同じでも、格子として区別が付く）。
+                let hue = Double(abs(m.id.hashValue) % 360) / 360.0
+                let avatar = Color(hue: hue, saturation: 0.5, brightness: dark ? 0.85 : 0.62)
                 RoundedRectangle(cornerRadius: 7, style: .continuous)
-                    .fill(Color.astraAccent(dark).opacity(0.16))
+                    .fill(avatar.opacity(0.18))
                     .frame(width: 28, height: 28)
                     .overlay(Text(String(m.name.prefix(1)))
                         .font(.system(size: TypeScale.secondarySize, weight: .semibold))
-                        .foregroundStyle(Palette.accent(dark)))
+                        .foregroundStyle(avatar))
                 VStack(alignment: .leading, spacing: 1) {
                     Text(m.name)
                         .font(.system(size: TypeScale.cardTitleSize, weight: TypeScale.cardTitleWeight))
