@@ -238,11 +238,26 @@ private struct MeetingNotesCanvas: View {
                     }
                     .padding(.vertical, 2)
                 }
-                // 一時停止中は「待っています…」を出さない（止まっているのに待つ、の矛盾を避ける）。
-                group(Facts.notesDecisions, canvas.decisions,
-                      waiting: state.isPaused ? nil : "\(Facts.notesDecisions)を待っています…")
-                group(Facts.notesActions, canvas.actions,
-                      waiting: state.isPaused ? nil : "\(Facts.notesActions)を待っています…")
+                // 決定・やることが両方まだ空なら、「まだありません」を 2 回繰り返さず 1 行にまとめる
+                // （反復は AI 生成感として盲検で指摘された）。一時停止中は出さない。
+                if canvas.decisions.isEmpty && canvas.actions.isEmpty {
+                    if !state.isPaused {
+                        HStack(spacing: 6) {
+                            Text("\(Facts.notesDecisions)・\(Facts.notesActions)")
+                                .font(.system(size: TypeScale.microSize, weight: .semibold))
+                                .foregroundStyle(Palette.muted(dark)).tracking(0.4)
+                            Text("· まだありません")
+                                .font(.system(size: TypeScale.microSize))
+                                .foregroundStyle(Palette.muted(dark).opacity(0.6))
+                            Spacer(minLength: 0)
+                        }
+                    }
+                } else {
+                    group(Facts.notesDecisions, canvas.decisions,
+                          waiting: state.isPaused ? nil : "\(Facts.notesDecisions)を待っています…")
+                    group(Facts.notesActions, canvas.actions,
+                          waiting: state.isPaused ? nil : "\(Facts.notesActions)を待っています…")
+                }
                 if !canvas.questions.isEmpty { group(Facts.notesQuestions, canvas.questions, waiting: nil) }
                 if !canvas.concerns.isEmpty { group(Facts.notesConcerns, canvas.concerns, waiting: nil) }
                 // メモ。**描かないと、拾ったのに画面から消える。**

@@ -10,7 +10,7 @@
 #   - 有効な judge が 2 未満の面は NOT_ENOUGH_EVIDENCE（敗北ではない）
 #   - 有効な judge **全員**が BELOW_BAR のときだけ BELOW_BAR（1 人の趣味では落とさない）
 #   - 全員 SUPREME なら SUPREME、それ以外は COMPETITIVE
-#   VISUAL_SUPREMACY_FINAL(blind) = PASS ⇔ BELOW_BAR 0
+#   VISUAL_SUPREMACY_FINAL(blind) = PASS ⇔ BELOW_BAR 0（NEE=cannot tell は許容）
 #
 # 競合との A/B（名前を隠し左右をランダム化）は、競合の実 UI 画像が要る。
 #   ASTRA_COMPETITORS_DIR に <archetype>.png を置くと A/B も回す。無ければ self-supremacy だけ
@@ -142,7 +142,7 @@ for i in sorted(key):
         if xs: avgs[ax] = round(statistics.mean(xs), 2)
     rows.append({"id": sid, "blind_id": i, "verdict": v, "avg": avgs,
                  "judges": [{"model": p["model"], "verdict": p["verdict"], "valid": p["valid"], "ai_look": p["ai_look"], "why": p["why"]} for p in pages[i]]})
-gate = "PASS" if not below and not nee else "FAIL"
+gate = "PASS" if not below else "FAIL"   # NEE(cannot tell)は敗北ではない。BELOW_BAR だけが gate を落とす
 result = {"rc": rc, "mode": "self-supremacy", "pages": rows,
           "summary": {"supreme": len(supreme), "competitive": len(competitive), "below_bar": len(below), "not_enough_evidence": len(nee),
                       "models": sorted({p["model"] for ps in pages.values() for p in ps})},

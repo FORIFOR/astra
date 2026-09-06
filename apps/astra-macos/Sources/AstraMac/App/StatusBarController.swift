@@ -113,7 +113,7 @@ final class StatusBarController {
         // （4 行が同じ見た目で並ぶと、どれが理由でどれが状態か切り分けられない、盲検 2/2）。
         let version = SoftwareUpdate.currentVersion ?? "不明"
         NSLog("update unavailable: \(reason)")
-        alert.informativeText = "この Astra（版 \(version)）は、更新を自動で確かめる設定を持たずに作られています。\n\n新しい版は配布ページで確かめられます。"
+        alert.informativeText = "この版は \(version) です。新しい版は配布ページで確かめられます。"
         alert.addButton(withTitle: Facts.updateOpenReleases)
         alert.addButton(withTitle: Facts.updateClose)
         NSApp.activate(ignoringOtherApps: true)

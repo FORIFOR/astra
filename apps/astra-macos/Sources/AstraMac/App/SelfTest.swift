@@ -6150,6 +6150,20 @@ enum SelfTest {
         // つまりボタンより下の層を叩いていたので Session が生まれず、
         // **録音が写っていない Home** を「recording-now」として撮って緑にしていた。
         // ボタンと同じ入口を通す。
+        // 実際の利用者の Home は空ではない。録音カードの下に最近の会議が続く（下部の大きな空白を作らない）。
+        let rnStore = MeetingSessionStore.shared
+        // begin → beginProcessing(endedAt を入れる) → markReady の順で通す。
+        // beginProcessing を挟まないと endedAt が nil のままで、経過が「今 - 開始」になり 120 分等の嘘になる。
+        let rn1s = Date().addingTimeInterval(-2 * 3600)
+        rnStore.begin(id: "rn-recent-1", title: "Q4 移行計画の打ち合わせ", source: "Google Meet", now: rn1s)
+        rnStore.beginProcessing(id: "rn-recent-1", now: rn1s.addingTimeInterval(42 * 60))
+        rnStore.markReady(id: "rn-recent-1", summary: "Q4 移行計画とトレーニングコストを議論。10 月から Phase 1 開始で合意。",
+                          actions: 3, decisions: 2, participants: 5, now: rn1s.addingTimeInterval(42 * 60))
+        let rn2s = Date().addingTimeInterval(-26 * 3600)
+        rnStore.begin(id: "rn-recent-2", title: "A 社 商談", source: "Zoom", now: rn2s)
+        rnStore.beginProcessing(id: "rn-recent-2", now: rn2s.addingTimeInterval(31 * 60))
+        rnStore.markReady(id: "rn-recent-2", summary: "見積の前提と初期費用を確認。稟議は今週中。",
+                          actions: 2, decisions: 1, participants: 3, now: rn2s.addingTimeInterval(31 * 60))
         AstraStateStore.shared.meetingDetected(app: "Google Meet")
         state.start()
         MainWindowController.shared.showSection(.home)
