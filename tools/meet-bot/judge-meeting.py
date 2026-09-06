@@ -26,15 +26,24 @@ got = norm("".join(t["text"] for t in res.get("transcript", [])))
 sim = difflib.SequenceMatcher(None, want, got).ratio() if got else 0.0
 row("transcript similarity", sim >= exp["transcript_similarity_min"], f"{sim:.2f} (min {exp['transcript_similarity_min']})")
 
-# recall（keywords が 1 つの拾った文に全部入っていれば hit。keyword は候補の list でもよい:
-# 固有名詞はオンデバイス STT の綴りが揺れる（"macOS" → "MC OS"）。判定は抽出の当否で、綴りではない）
+# recall: 抽出できたか（Astra が決定/行動を拾ったか）を見る。文字起こしの綴りは見ない。
+#   - keyword は候補の list でよい（"macOS"→"MC OS" のような綴れの揺れを吸収）。
+#   - 英語だけの keyword（例 "Windows"）は best-effort（optional）。ja-JP のオンデバイス STT は
+#     日本語音声に混ざった英語の固有名詞を丸ごと落とすことがある（TTS 音声で実測: "Windows 版は"→欠落）。
+#     判定は「その決定を、区別できる日本語の内容で拾えたか」。英語名の聞き取りは別の話。
+#   - よって必須は「日本語を含む keyword」だけ。英語のみの keyword は在れば加点、無くても落とさない。
+def has_jp(x):
+    xs = x if isinstance(x, list) else [x]
+    return any(any(ord(c) > 0x2E7F for c in a) for a in xs)  # かな/漢字/全角
 def kw_hit(k, it):
     return any(norm(a) in it for a in (k if isinstance(k, list) else [k]))
 def recall(kind):
     items = [norm(d.get("text", "")) for d in res.get(kind, [])]
     hits = 0; miss = []
     for e in exp[kind]:
-        if any(all(kw_hit(k, it) for k in e["keywords"]) for it in items): hits += 1
+        # 必須は must（無ければ後方互換で keywords の日本語のみ、それも無ければ全部）。
+        required = e.get("must") or [k for k in e.get("keywords", []) if has_jp(k)] or e.get("keywords", [])
+        if any(all(kw_hit(k, it) for k in required) for it in items): hits += 1
         else: miss.append(e["label"])
     return hits, len(exp[kind]), miss
 h, n, miss = recall("decisions"); row("decision recall", h == n, f"{h}/{n}" + (f" missing {miss}" if miss else ""))

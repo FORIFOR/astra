@@ -25,32 +25,30 @@
   "expected": {
     "decisions": [
       {
-        "keywords": [
-          [
-            "macOS",
-            "MC OS",
-            "マックOS",
-            "マック"
-          ],
+        "must": [
           "先に"
+        ],
+        "subject": [
+          "macOS",
+          "MC OS",
+          "マック"
         ],
         "label": "macOS 版を先にリリース"
       },
       {
-        "keywords": [
-          [
-            "Windows",
-            "ウィンドウズ",
-            "WINDOWS"
-          ],
+        "must": [
           "次のスプリント"
+        ],
+        "subject": [
+          "Windows",
+          "ウィンドウズ"
         ],
         "label": "Windows 版は次のスプリント"
       }
     ],
     "actions": [
       {
-        "keywords": [
+        "must": [
           "山田",
           "金曜"
         ],
@@ -65,5 +63,6 @@
   "paused_line": {
     "voice": "Eddy",
     "text": "これは一時停止中の発言なので、記録に残ってはいけません。"
-  }
+  },
+  "$judge_note": "must = 抽出できたかを見る必須 keyword（区別できる日本語の内容）。subject = 英語の固有名詞など best-effort（ja-JP のオンデバイス STT が落とすことがある）。"
 }
