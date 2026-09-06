@@ -1,0 +1,185 @@
+{
+  "pages": {
+    "4584": {
+      "visible_text": [
+        "Home",
+        "おはようございます",
+        "何を終わらせますか？",
+        "録音を始める",
+        "前回の設定でその場で録り始めます",
+        "まだ何もありません",
+        "Space でここからでも始められます"
+      ],
+      "observation": {
+        "happening": "Home screen displaying greeting with empty state and single primary action (start recording)",
+        "most_important": "Clear entry point with onboarding guidance; app ready to begin recording",
+        "next_action": "Start recording or navigate to Work/Library/Apps sections",
+        "anomalies": [
+          "Large white space below fold",
+          "minimal visual content"
+        ]
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "4A18": {
+      "visible_text": [
+        "Astra 設定",
+        "設定",
+        "ショートカット",
+        "表示の大きさ",
+        "Compact",
+        "Comfortable",
+        "Large",
+        "許可 (OS)",
+        "マイク",
+        "画面に関連する",
+        "アクセシビリティ",
+        "音声認識",
+        "カレンダー",
+        "入力機能 (Space)"
+      ],
+      "observation": {
+        "happening": "Settings modal with display size options and permission explanations",
+        "most_important": "Comfortable size selected; permission requirements clearly listed but text-heavy",
+        "next_action": "Grant permissions or adjust display size",
+        "anomalies": [
+          "Dense paragraph-style permission descriptions",
+          "weak visual separation between permission categories",
+          "long explanatory text runs together"
+        ]
+      },
+      "verdict": "FIX",
+      "concerns": [
+        {
+          "axis": "hierarchy",
+          "what": "Permission categories (マイク, アクセシビリティ, 音声認識, カレンダー) lack visual distinction; descriptions are prose-like paragraphs rather than scannable bullets",
+          "where": "Lower half of settings panel"
+        },
+        {
+          "axis": "density",
+          "what": "Permission explanations are long and wrap multiple lines, creating visual fatigue and making it hard to distinguish which permission grants which capability",
+          "where": "Permission section below size selector"
+        }
+      ],
+      "confidence": "high"
+    },
+    "4E41": {
+      "visible_text": [
+        "Home",
+        "おはようございます",
+        "何を終わらせますか？",
+        "録音を始める",
+        "これからの予定",
+        "Product Weekly",
+        "10:00 Google Meet",
+        "A社 商談",
+        "13:30 Zoom",
+        "最近の会議",
+        "落ちた会議"
+      ],
+      "observation": {
+        "happening": "Home screen populated with upcoming meetings and recent meeting history",
+        "most_important": "Calendar integration showing structured meeting data (time + platform) alongside action prompts",
+        "next_action": "Start recording, navigate to a meeting, or review recent sessions",
+        "anomalies": [
+          "Scrollbar visible on right indicating more content below"
+        ]
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "505B": {
+      "visible_text": [
+        "Library",
+        "Meetings",
+        "Files",
+        "Meetings",
+        "録った会議。音声は購未から出ません。",
+        "録音した会議はまだありません。",
+        "Home の『録音を始める』か、予定の『録音』から始められます。"
+      ],
+      "observation": {
+        "happening": "Library section with Meetings tab active, showing empty state",
+        "most_important": "Clear empty state messaging with actionable guidance on how to start recording",
+        "next_action": "Navigate to Home to begin recording or check scheduled meetings",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "5646": {
+      "visible_text": [
+        "10:24 の会議",
+        "今日・1分未満・2人",
+        "決まったこと 1",
+        "macOS を先に出すことに決めました。[1]",
+        "やること 0",
+        "メモ 2",
+        "Windows はいつ出しますか。[2]",
+        "文字起こし",
+        "録音",
+        "関連ファイル",
+        "出席"
+      ],
+      "observation": {
+        "happening": "Meeting detail view with transcription, decisions, action items, and side panel showing chat/attendees",
+        "most_important": "Three-column layout integrating meeting metadata, decision tracking, and live chat transcript",
+        "next_action": "Review decisions, open related files, switch transcript tabs",
+        "anomalies": [
+          "Right panel is narrow and content appears compressed",
+          "visual hierarchy weak between section headers (決まったこと, やること, メモ)",
+          "numbered reference citations [1], [2], [3] add visual complexity"
+        ]
+      },
+      "verdict": "FIX",
+      "concerns": [
+        {
+          "axis": "hierarchy",
+          "what": "Section headers (決まったこと, やること, メモ) are not visually distinct from content; typography scale and weight do not clearly separate structure from detail",
+          "where": "Left column showing decisions and items"
+        },
+        {
+          "axis": "density",
+          "what": "Three-column layout compresses right panel; chat transcript and attendee list compete for space and are cramped",
+          "where": "Right-side panel with chat and attendance information"
+        }
+      ],
+      "confidence": "high"
+    },
+    "56C1": {
+      "visible_text": [
+        "Home",
+        "記録中",
+        "42:01",
+        "Q4 移行計画の打ち合わせ",
+        "Google Meet・Product",
+        "ライブメモを開く",
+        "Ask Astra",
+        "止める",
+        "何を終わらせますか？",
+        "これからの予定"
+      ],
+      "observation": {
+        "happening": "Active recording banner overlaid on home screen, showing elapsed time and meeting title",
+        "most_important": "Real-time recording state is immediately visible with elapsed time and quick-access controls (notes, Ask Astra, stop)",
+        "next_action": "Stop recording, open live notes, ask AI questions, or let meeting continue",
+        "anomalies": [
+          "Pink/red banner partially obscures content below"
+        ]
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    }
+  },
+  "_judge": {
+    "model": "haiku",
+    "cost_usd": 0.0616815,
+    "turns": 7,
+    "duration_ms": 44760
+  }
+}

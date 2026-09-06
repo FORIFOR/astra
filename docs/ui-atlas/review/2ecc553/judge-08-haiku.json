@@ -1,0 +1,146 @@
+{
+  "pages": {
+    "AE1F": {
+      "visible_text": [
+        "10:22 の会議",
+        "Google Meet",
+        "マイクと画面の音を聞いています",
+        "決まったこと",
+        "やること",
+        "質問",
+        "懸念",
+        "文字起こし",
+        "翻訳",
+        "字幕",
+        "AI が見ている資料 4 件"
+      ],
+      "observation": {
+        "happening": "Desktop application displaying a recorded Google Meet call with structured conversation analysis. Floating control bar at top shows recording playback at 00:04. Left panel organizes conversation segments by category (decisions/actions/questions/concerns). Right panel shows full transcript with timestamps and speakers.",
+        "most_important": "Meeting transcription interface with clear categorization of discussion topics into actionable segments (decisions made, things to do, questions, concerns). System is analyzing and structuring unstructured conversation into structured meeting notes.",
+        "next_action": "User can review organized meeting segments, read full transcript, and access full transcription/translation/subtitle features.",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "B5F6": {
+      "visible_text": [
+        "会議",
+        "マイクと画面の音を聞いています",
+        "決まったこと",
+        "決まったこことを待っています",
+        "やること",
+        "やることを待っています",
+        "OAuth だけ確認お願いします",
+        "それでは 9 月 12 日に出しましょう",
+        "了承しました",
+        "AI が見ている資料 3 件"
+      ],
+      "observation": {
+        "happening": "Same meeting transcription interface at a later point in conversation. Main content area shows placeholder text ('...を待っています' = waiting for...) indicating system is waiting for new content to categorize. Transcript entries visible on right show ongoing conversation between participants.",
+        "most_important": "Interface shows appropriate loading/waiting state with placeholder text. System is actively listening to ongoing meeting and waiting for new segments to categorize.",
+        "next_action": "System will populate decisions/actions sections as new items are identified from conversation.",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "B625": {
+      "visible_text": [
+        "考えています..."
+      ],
+      "observation": {
+        "happening": "System is in processing/thinking state. Dark rounded container with white text centered in the frame.",
+        "most_important": "Clear thinking state indicator during system processing.",
+        "next_action": "Wait for processing to complete.",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "BDC8": {
+      "visible_text": [
+        "Home",
+        "Work",
+        "Library",
+        "Apps",
+        "ui-check",
+        "10:24 の会議",
+        "決まったこと",
+        "やること",
+        "メモ",
+        "macOS を先に出すことに決めました",
+        "Windows はいつ出しますか",
+        "Windows は次の周で追います",
+        "文字起こし",
+        "議論",
+        "関連ファイル",
+        "出所",
+        "Sarah",
+        "Ken"
+      ],
+      "observation": {
+        "happening": "Full application window showing completed meeting analysis. Three-column layout: left sidebar navigation, center panel with structured meeting notes organized by category (decisions/actions/notes with numbered references), and right panel showing source attribution for decision [1] pointing to Ken at 10:42.",
+        "most_important": "Meeting minutes interface with clear structural organization and reference system. Shows decisions made (with macOS release decision), pending actions (empty section), notes/questions (Windows release timing - 2 items), and links decision content to source speakers via [1], [2], [3] reference numbers.",
+        "next_action": "User can click on action buttons (transcription, discussion, related files, sources) or review transcript entries below summary sections.",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "C138": {
+      "visible_text": [
+        "録音中",
+        "00:00",
+        "メモ",
+        "字幕",
+        "Ask Astra"
+      ],
+      "observation": {
+        "happening": "Recording control bar/header showing active recording state with timer at 00:00. Dark background with red record indicator dot on left. Multiple control buttons arranged horizontally: note (メモ), subtitle (字幕), Ask Astra feature, eye icon, pause button, and prominent red record button.",
+        "most_important": "Recording session header with clear 'recording' status indication via red dot and label. Timer shows 00:00. Quick access to recording-related controls.",
+        "next_action": "User can access notes, subtitles, or Ask Astra feature; pause or manage recording.",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "C430": {
+      "visible_text": [
+        "Home",
+        "Work",
+        "Library",
+        "Apps",
+        "ui-check",
+        "録音中",
+        "10:21 の会議",
+        "Google Meet",
+        "ライブメモを開く",
+        "Ask Astra",
+        "止める",
+        "00:01",
+        "何を終わらせますか"
+      ],
+      "observation": {
+        "happening": "Home/dashboard screen showing active meeting recording session in a prominent card. Card displays: red recording indicator dot, meeting title '10:21 の会議', source (Google Meet), animated waveform visualization indicating active recording, two action buttons (Open live notes in blue, Ask Astra), and red Stop button (止める) with elapsed time 00:01. Below card is user input field for questions.",
+        "most_important": "Dashboard card clearly communicates active recording with visual and textual indicators. Red Stop button is prominent primary action. Waveform animation provides real-time visual feedback of recording activity.",
+        "next_action": "User can stop recording, open live notes, ask questions, or interact with Ask Astra feature.",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    }
+  },
+  "_judge": {
+    "model": "haiku",
+    "cost_usd": 0.0579374,
+    "turns": 7,
+    "duration_ms": 47680
+  }
+}

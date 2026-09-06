@@ -1,0 +1,149 @@
+{
+  "pages": {
+    "9095": {
+      "visible_text": [
+        "新しいバージョンのAstraが入手できます！",
+        "Astra 1.0が入手できます（使用中のバージョンは1.0です）。今すぐダウンロードしますか？",
+        "この版で変わること",
+        "会議中に録音を一時停止・再開できます",
+        "音声認識の許可が無いとき、何が起まっていているか画面が言います。",
+        "実施した作業は、その後で「やり直す」から続けられます。",
+        "直したこと",
+        "会議の発話が、区切りごとに文字をじしい標されるようになりました。",
+        "このバージョンはスキップ",
+        "アップデートをインストール"
+      ],
+      "observation": {
+        "happening": "Software update notification dialog asking user to download Astra 1.0. Shows version changelog with three main improvements: meeting recording pause/resume, audio recognition feedback, and transcript improvements.",
+        "most_important": "Clear update prompt with tangible feature benefits listed. Two action buttons with strong contrast (blue primary action vs gray secondary).",
+        "next_action": "User clicks 'インストール' to proceed with update or 'スキップ' to dismiss",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "95CD": {
+      "visible_text": [
+        "録音中",
+        "04:21",
+        "会議",
+        "OAuth だけ確認お願いします。",
+        "決まったこと",
+        "やること",
+        "文字起こし",
+        "翻訳",
+        "字幕",
+        "この会議について聞く",
+        "AI が聞いている質問３件"
+      ],
+      "observation": {
+        "happening": "Real-time meeting transcription interface with active recording (04:21). Shows dual-panel layout: left panel with meeting notes (decisions/todos), right panel with live transcript. Top bar contains recording controls (pause, message, refresh, menu buttons).",
+        "most_important": "Active recording indicator with elapsed time prominent at top. Live transcription feed on right with speaker names and timestamps. Left panel organizes meeting outcomes by category (決まったこと/やること).",
+        "next_action": "Continue recording or interact with transcription (translate, add captions, ask AI questions about meeting)",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "994B": {
+      "visible_text": [
+        "10:24 の会議",
+        "今日・1分未満・2人",
+        "決まったこと 1",
+        "macOS を先に出すことに決めました。",
+        "やること 0",
+        "メモ 2",
+        "Windows はいつ出しますか。",
+        "文字起こし",
+        "録音",
+        "関連ファイル",
+        "出所"
+      ],
+      "observation": {
+        "happening": "Meeting detail view showing structured summary of '10:24 の会議'. Left sidebar has main navigation. Central panel displays meeting metadata (duration, participants), organized sections for decisions/todos/notes with inline reference links, and tabbed content area below for transcript/recording/files.",
+        "most_important": "Clear hierarchical organization of meeting outcomes by type (決まったこと/やること/メモ). Reference numbers allow cross-linking between notes and transcript. Metadata shows meeting context immediately.",
+        "next_action": "View full transcript, listen to recording, or access related files via tabs",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "9C03": {
+      "visible_text": [
+        "Home",
+        "おはようございます",
+        "何を終わらせますか？",
+        "録音を始める",
+        "前回の設定でその場で録り始めます",
+        "これからの予定",
+        "Product Weekly",
+        "10:00 Google Meet",
+        "A社 商談",
+        "13:30 Zoom",
+        "最近の課みこと",
+        "先方へ見積の返信を送る"
+      ],
+      "observation": {
+        "happening": "Personalized home screen greeting user with time-of-day appropriate message. Shows input field for task entry, quick recording action, scheduled meetings with times and platforms, and recent tasks with status indicators.",
+        "most_important": "Clear information hierarchy: greeting → input field → quick action → upcoming events → recent tasks. Red dot indicators on meeting rows for recording capability. Task status clearly marked.",
+        "next_action": "Enter a task, start recording, or click on a scheduled meeting",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "9D1D": {
+      "visible_text": [
+        "Work",
+        "Tasks",
+        "Agents",
+        "Active",
+        "Waiting",
+        "Done",
+        "Failed",
+        "All",
+        "実行中の仕事はありません。",
+        "Task Dock から「〇〇して」と願むところに出ます。"
+      ],
+      "observation": {
+        "happening": "Work section showing Agents tab selected. Displays status filter buttons (Active/Waiting/Done/Failed/All) with empty state message. Instructional text explains that tasks appear when users interact with Task Dock.",
+        "most_important": "Empty state design with clear guidance on how to populate the view. Filter options visible and accessible. Instructions prevent user confusion about feature absence.",
+        "next_action": "Switch tabs to Tasks, change filters, or create tasks via Task Dock",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "9DF4": {
+      "visible_text": [
+        "Work",
+        "Tasks",
+        "Agents",
+        "Tasks",
+        "Astra に頼んだ仕事、UI を閉じても走り続けます。",
+        "まだ頼んだ仕事はありません。",
+        "Task Dock から話しかけると、ここに履歴が残ります。"
+      ],
+      "observation": {
+        "happening": "Work section showing Tasks tab selected. Empty state displayed with two explanatory messages: one about task persistence even when UI is closed, another explaining how to create tasks via Task Dock.",
+        "most_important": "Empty state with educational content about feature behavior (tasks persist background execution). Clear path to action (Task Dock interaction). Sets proper expectations for user.",
+        "next_action": "Use Task Dock to create and delegate tasks",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    }
+  },
+  "_judge": {
+    "model": "haiku",
+    "cost_usd": 0.06294829999999998,
+    "turns": 7,
+    "duration_ms": 50034
+  }
+}
