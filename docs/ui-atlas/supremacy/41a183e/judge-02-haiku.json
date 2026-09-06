@@ -1,0 +1,213 @@
+{
+  "pages": {
+    "0D3E": {
+      "visible_text": [
+        "Home",
+        "Work",
+        "Library",
+        "Apps",
+        "録音中",
+        "22:56 の会議",
+        "Google Meet · Product",
+        "Ask Astra",
+        "止める",
+        "何を終わらせますか?",
+        "Q4 移行計画の打ち合わせ",
+        "A 社 商談"
+      ],
+      "observation": {
+        "happening": "Active meeting dashboard showing live recording status with quick action buttons (Ask Astra, stop recording) and recent meeting list below.",
+        "most_important": "Recording state is prominently signaled via red indicator and status text, with clear call-to-action card containing meeting details.",
+        "next_action": "User can stop recording, ask Astra for help, or click into recent meetings for notes/details.",
+        "anomalies": [
+          "Metadata rows (participant count, decisions) are compact but readable",
+          "Pink card background creates visual weight relative to list items below"
+        ]
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 4,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 5,
+        "calmness": 3,
+        "craft": 4,
+        "distinctiveness": 3
+      },
+      "ai_look": [],
+      "verdict": "COMPETITIVE",
+      "why": "Solid productivity dashboard with clear recording state and well-structured content hierarchy. However, follows familiar patterns from Notion/Linear without distinctive visual voice.",
+      "confidence": "high"
+    },
+    "117A": {
+      "visible_text": [
+        "録音中",
+        "会議",
+        "マイク と 画面の音 を 聞いています",
+        "原文",
+        "翻訳",
+        "ライブ",
+        "03:53",
+        "04:05",
+        "04:18",
+        "リアルタイム書約",
+        "Zoom",
+        "会議を用意する"
+      ],
+      "observation": {
+        "happening": "Live meeting transcript interface with waveform indicator showing active recording. Transcript displayed in main area with timestamps and speaker markers, real-time summary options below.",
+        "most_important": "Active transcription state is clear; transcript provides immediate read access with speaker attribution and timing context.",
+        "next_action": "Read/review transcript, select real-time summarization options (Zoom platform selected), or trigger document generation actions.",
+        "anomalies": [
+          "Left sidebar slightly darker than main content area",
+          "Vertical spacing between transcript section and summary section could be tighter",
+          "Radio button selection for summary type is somewhat buried in options area"
+        ]
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 4,
+        "typography": 4,
+        "geometry": 3,
+        "state_clarity": 4,
+        "calmness": 4,
+        "craft": 4,
+        "distinctiveness": 2
+      },
+      "ai_look": [
+        "Summary section template feels slightly generic with checkbox/radio patterns"
+      ],
+      "verdict": "COMPETITIVE",
+      "why": "Professional transcription interface with good separation of concerns (recording, transcript, actions). Design is clean but closely mirrors Google Meet's transcript UI without differentiation.",
+      "confidence": "high"
+    },
+    "11CB": {
+      "visible_text": [
+        "週次ブリーフィングを作る",
+        "2 件のリースから作成しました",
+        "開く",
+        "コピー"
+      ],
+      "observation": {
+        "happening": "Success notification toast confirming completion of weekly briefing creation from two resources.",
+        "most_important": "Confirms action succeeded; green indicator + clear title communicates success instantly. Two immediate next-action buttons provided.",
+        "next_action": "Open the created briefing or copy it to clipboard.",
+        "anomalies": []
+      },
+      "scores": {
+        "hierarchy": 5,
+        "density": 5,
+        "typography": 4,
+        "geometry": 5,
+        "state_clarity": 5,
+        "calmness": 5,
+        "craft": 5,
+        "distinctiveness": 4
+      },
+      "ai_look": [],
+      "verdict": "SUPREME",
+      "why": "Perfect notification design: minimal, clear, purposeful. Green success indicator, concise title, context line, two relevant action buttons, and close affordance. No defects. Follows Apple/macOS notification pattern with mastery.",
+      "confidence": "high"
+    },
+    "13BF": {
+      "visible_text": [
+        "先方へ見積の返信を送る",
+        "下書き",
+        "を送去しました。操錯が切れた",
+        "やり直す"
+      ],
+      "observation": {
+        "happening": "Warning/error toast notification indicating failure when sending a quote reply draft.",
+        "most_important": "Error state is marked with warning indicator, but the subtitle text is corrupted or incomprehensible.",
+        "next_action": "User can retry the action via 'やり直す' button, but the actual error reason is unclear.",
+        "anomalies": [
+          "Subtitle text 'を送去しました。操錯が切れた' contains garbled/uninterpretable characters; likely encoding issue or poorly generated error message",
+          "Error message does not clearly explain what went wrong"
+        ]
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 4,
+        "typography": 2,
+        "geometry": 4,
+        "state_clarity": 2,
+        "calmness": 2,
+        "craft": 2,
+        "distinctiveness": 2
+      },
+      "ai_look": [
+        "Subtitle appears to be output from translation layer or text generation with encoding artifacts"
+      ],
+      "verdict": "BELOW_BAR",
+      "why": "Critical defect: subtitle text is corrupted/garbled, making the error message unintelligible. Users cannot understand why the action failed or whether retrying will succeed. This breaks the primary function of error communication. Text artifacts suggest either encoding failure or poor AI-generated error message.",
+      "confidence": "high"
+    },
+    "2089": {
+      "visible_text": [
+        "聞いています...",
+        "ESC"
+      ],
+      "observation": {
+        "happening": "Minimal status indicator showing active voice listening/transcription mode with keyboard escape hint.",
+        "most_important": "Listening state communicated with waveform icon and status text. ESC provides immediate dismiss affordance.",
+        "next_action": "Continue speaking or press ESC to exit listening mode.",
+        "anomalies": []
+      },
+      "scores": {
+        "hierarchy": 5,
+        "density": 5,
+        "typography": 4,
+        "geometry": 5,
+        "state_clarity": 5,
+        "calmness": 5,
+        "craft": 5,
+        "distinctiveness": 4
+      },
+      "ai_look": [],
+      "verdict": "SUPREME",
+      "why": "Exemplary minimalist design. Communicates active listening state with maximum clarity using minimal visual elements. Waveform metaphor is intuitive, ESC hint adds accessibility without clutter. Rivals system-level voice input UI from iOS/macOS. Zero defects.",
+      "confidence": "high"
+    },
+    "2491": {
+      "visible_text": [
+        "準備中...",
+        "00:01",
+        "メモ",
+        "字幕",
+        "Ask Astra",
+        "eye icon",
+        "pause",
+        "record button"
+      ],
+      "observation": {
+        "happening": "Meeting control bar showing preparation state with elapsed time counter (00:01) and quick-access action buttons (notes, captions, AI assistant, visibility toggle, playback controls, recording).",
+        "most_important": "Preparation status with time counter on left; right-aligned action buttons provide quick access to key features without menu navigation.",
+        "next_action": "Wait for preparation to complete, or immediately access notes, captions, AI assistant, or recording controls.",
+        "anomalies": [
+          "Slightly dense button arrangement but all labels are legible",
+          "Icon meanings are clear from labels and context"
+        ]
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 4,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 5,
+        "calmness": 3,
+        "craft": 4,
+        "distinctiveness": 2
+      },
+      "ai_look": [],
+      "verdict": "COMPETITIVE",
+      "why": "Functional control bar with clear state indication and well-organized action buttons. Layout follows standard video-call UI patterns (Zoom, Meet) but lacks distinctive voice. Solid but predictable design.",
+      "confidence": "high"
+    }
+  },
+  "_judge": {
+    "model": "haiku",
+    "cost_usd": 0.061257500000000006,
+    "turns": 7,
+    "duration_ms": 62375
+  }
+}

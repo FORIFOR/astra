@@ -1,0 +1,227 @@
+{
+  "pages": {
+    "C858": {
+      "visible_text": [
+        "Home",
+        "Work",
+        "Library",
+        "Apps",
+        "22:59 の会議",
+        "決まったこと 0",
+        "やること 0",
+        "文字起こし",
+        "議書",
+        "関連ファイル",
+        "出所",
+        "00:12 Ken",
+        "落ちる前の雑言です。"
+      ],
+      "observation": {
+        "happening": "Meeting notes detail view showing transcript with metadata panels and tabs for transcript/notes/attachments/sources",
+        "most_important": "Clear hierarchical presentation of meeting data; tabs for filtering view types; minimal clutter with abundant white space",
+        "next_action": "Select transcript items or switch between tabs to navigate",
+        "anomalies": [
+          "Substantial empty space below single transcript entry suggests either sparse demo data or oversized container proportions"
+        ]
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 2,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 4,
+        "calmness": 5,
+        "craft": 4,
+        "distinctiveness": 3
+      },
+      "ai_look": [],
+      "verdict": "COMPETITIVE",
+      "why": "Polished, functional macOS app with clear structure and excellent whitespace. Navigation is evident, typography is clean, but the design lacks distinctive character—it's a safe, well-executed implementation without surprising detail or visual personality.",
+      "confidence": "high"
+    },
+    "CF92": {
+      "visible_text": [
+        "Google Meet",
+        "05:20",
+        "ライブメモ",
+        "決まったこと",
+        "04:22 田中",
+        "導入時期は 10 月下で行きます",
+        "獲合",
+        "04:14 田中",
+        "初期費用が必要です",
+        "やること",
+        "04:48",
+        "質問",
+        "05:01 鈴木"
+      ],
+      "observation": {
+        "happening": "Google Meet meeting transcript overlay showing structured notes by category (decisions, action items, questions) with timestamps and speaker names",
+        "most_important": "Dark-theme transcript with readable text; categorized sections; timestamps anchor each entry to meeting timeline",
+        "next_action": "Review transcript, open full meeting, interact with categories",
+        "anomalies": [
+          "No visual distinction between category headings and entries other than text color; line spacing could clarify sections more"
+        ]
+      },
+      "scores": {
+        "hierarchy": 3,
+        "density": 3,
+        "typography": 3,
+        "geometry": 3,
+        "state_clarity": 4,
+        "calmness": 4,
+        "craft": 3,
+        "distinctiveness": 2
+      },
+      "ai_look": [],
+      "verdict": "COMPETITIVE",
+      "why": "Functional Google Meet interface for meeting notes. Readable and purpose-clear but typographically basic. Lacks visual sophistication—spacing and weight hierarchy could be stronger. Standard implementation without memorable detail.",
+      "confidence": "high"
+    },
+    "D2BC": {
+      "visible_text": [
+        "Home",
+        "こんばんは",
+        "何を終わらせますか?",
+        "新しい録音",
+        "マイク",
+        "MacBook Microphone",
+        "画面の音",
+        "テンプレート",
+        "会議メモ",
+        "保存先",
+        "自分だけ",
+        "プロジェクト",
+        "なし",
+        "やめる",
+        "録音を始める"
+      ],
+      "observation": {
+        "happening": "Modal dialog for configuring a new recording session with microphone/screen audio selection, template choice, save location, and project assignment",
+        "most_important": "Modal is cleanly centered with well-organized settings; toggle for screen audio is prominent; dropdowns for templating and save behavior",
+        "next_action": "Adjust settings and click 'Start Recording' or cancel",
+        "anomalies": [
+          "None apparent—modal proportions, spacing, and control placement are intentional"
+        ]
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 3,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 5,
+        "calmness": 4,
+        "craft": 4,
+        "distinctiveness": 3
+      },
+      "ai_look": [],
+      "verdict": "COMPETITIVE",
+      "why": "Well-designed recording configuration modal. Settings are logically grouped, labels are clear, and the visual hierarchy guides focus. Polished execution but follows conventional modal patterns—no distinctive design language or unexpected detail.",
+      "confidence": "high"
+    },
+    "D3CB": {
+      "visible_text": [
+        "Home",
+        "録音中",
+        "42:01",
+        "Q4 移行計画の打ち合わせ",
+        "Google Meet · Product",
+        "ライブメモを開く",
+        "Ask Astra",
+        "止める",
+        "何を終わらせますか?",
+        "これからの予定"
+      ],
+      "observation": {
+        "happening": "Active recording state displayed with real-time counter (42:01), meeting title, action buttons to open live memo or stop recording, agenda below",
+        "most_important": "Red recording indicator with dot at top left immediately signals active state; time counter is prominent; calls-to-action are clear and accessible",
+        "next_action": "Continue meeting, open memo, or stop recording",
+        "anomalies": [
+          "None—every element has clear purpose and placement"
+        ]
+      },
+      "scores": {
+        "hierarchy": 5,
+        "density": 3,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 5,
+        "calmness": 5,
+        "craft": 5,
+        "distinctiveness": 4
+      },
+      "ai_look": [],
+      "verdict": "SUPREME",
+      "why": "Exemplary state communication. The recording indicator is prominent without being jarring; time counter is legible and well-placed; call-to-action buttons are immediate. The layout is calm despite showing active work. Craft is evident in spacing, alignment, and color choice. This demonstrates thoughtful design rather than template application.",
+      "confidence": "high"
+    },
+    "D9DF": {
+      "visible_text": [
+        "考えています..."
+      ],
+      "observation": {
+        "happening": "Small loading/thinking state indicator overlay with minimal text and rounded container",
+        "most_important": "Conveys processing state clearly with single, actionable message",
+        "next_action": "Wait for processing to complete",
+        "anomalies": [
+          "Cannot fully assess design system or broader context from single loading toast"
+        ]
+      },
+      "scores": {
+        "hierarchy": 3,
+        "density": 5,
+        "typography": 3,
+        "geometry": 5,
+        "state_clarity": 5,
+        "calmness": 5,
+        "craft": 4,
+        "distinctiveness": 3
+      },
+      "ai_look": [],
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "why": "Minimal loading indicator with appropriate restraint and clarity. Cannot evaluate system-wide coherence, motion, or interaction pattern from this single frame. Execution is clean but too small a surface to make broader design assessment.",
+      "confidence": "medium"
+    },
+    "E3C0": {
+      "visible_text": [
+        "Notion",
+        "Q3 Product Roadmap",
+        "SUGGESTED",
+        "ページを要約",
+        "やることを抽出",
+        "未来の決定を探す",
+        "このページに質問"
+      ],
+      "observation": {
+        "happening": "Notion sidebar showing a page with AI-generated suggested actions (summarize, extract tasks, find decisions, ask questions)",
+        "most_important": "Section header 'SUGGESTED' clearly marks AI prompts; each action is icon + text pair; calm dark presentation",
+        "next_action": "Click a suggested action or navigate to page content",
+        "anomalies": [
+          "Suggested actions feel generic—could be from any AI system; no Notion-specific personality evident"
+        ]
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 3,
+        "typography": 3,
+        "geometry": 4,
+        "state_clarity": 4,
+        "calmness": 5,
+        "craft": 3,
+        "distinctiveness": 2
+      },
+      "ai_look": [
+        "Generic AI-prompt suggestions without tailored language or context; standard icon+text pill pattern common in AI assistants"
+      ],
+      "verdict": "COMPETITIVE",
+      "why": "Functional Notion sidebar with suggested AI actions. Clear hierarchy and calm presentation, but the suggested actions lack specificity or contextual language that would distinguish this experience. Reads as template-generated prompts rather than considered interaction design.",
+      "confidence": "high"
+    }
+  },
+  "_judge": {
+    "model": "haiku",
+    "cost_usd": 0.06399679999999999,
+    "turns": 7,
+    "duration_ms": 59988
+  }
+}
