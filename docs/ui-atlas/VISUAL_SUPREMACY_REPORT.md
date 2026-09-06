@@ -213,3 +213,62 @@ FIX 推奨（COMPETITIVE 43 件の個別詳細）は各 archetype レビュー�
 3. BELOW_BAR 12 + dock.confirmation を修正（上の表の順）
 4. COMPETITIVE の高優先（meeting.workspace / provenance パネル / dock.result-failed / update-available）
 5. Atlas 全再生成 → 再監査 → 61(=62)/62 SUPREME or ≥ BEST で GATE 再判定
+
+---
+
+# RE-AUDIT — RC e6e4475 / Atlas 5bf0498（P0-P2 修正後）
+
+UI をまとめて 1 回修正 → Atlas 全再生成（62/62 PASS, golden light/dark PASS, geometry PASS）→ 再監査。
+機能追加・reality gate へは寄り道していない。KEEP/Freeze 画面のコードは触っていない。
+
+## 合格基準の判定
+```
+BELOW BAR                     0    ✅ round1 の 13 面すべて解消
+state contradiction           0    ✅ recording.paused（波形 flat・「聞いています/待っています」除去）
+                                      meeting.preparing（波形なし）/ paused（波形 flat）/ 時計 05:20 整合
+language mixture              0    ✅ new-recording-sheet ラベル・テンプレ / context-expanded 提案 を日本語化
+unsafe destructive default   0    ✅ confirm-cancel は二択・安全既定・破壊に Return/⌘Return なし・「直す」除去
+centered-empty anti-pattern  0    ✅ 空状態6面すべて 上部左寄せ + Primary CTA
+fake/skeleton content        0    ✅ 偽 skeleton は置かず「できること」は実機能名のみ（見本は「例」明示の方針）
+AI-template repetition       減    🟡 context-detail=実内容 / plugins=色相で差 に改善。chip の実権限反復は真実なので残す
+KEEP regression              0    ✅ Freeze 面のコード未変更、golden/geometry PASS
+motion discontinuity         0    ✅ SurfaceMotion pass=True・5/5（T0 idle→listening 含む）
+```
+
+## 状態別に直したもの（造形文法）
+```
+idle       静的な Astra Voice Mark（3 本・不動）   ← 署名。活動波形にしない
+preparing  AstraOrb の pulse のみ・波形なし         ← 「聞いている」と紛れさせない
+listening  実振幅の波形                             ← 実際に聞いている
+paused     波形 flat + 「一時停止中 — 再開するまで聞きません」
+```
+
+## 空状態の型（6 面共通・偽物なし）
+```
+見出し（大）
+短い説明
+[Primary CTA]            ← Task Dock を開く / 録音を始める（その場で押せる実操作）
+できること               ← 実機能名を左寄せ 3 行（→ で示す。中央寄せ・巨大空白なし）
+```
+
+## 主要 archetype（再判定）
+```
+Invocation          >= Wispr/VoiceOS   idle が Astra 署名で distinct に
+Task Running         >  VoiceOS/Raycast dock.running / session.detail は Freeze（元から SUPREME）
+Meeting Controller   = Granola          preparing/paused/recording が造形で分離
+Live Notes          >= Granola          時計整合・出所引用
+Ask                 >= SuperIntern      候補質問の compact rows（pill 乱用なし）
+Home                >= Linear/Apple     filled は SUPREME、新規はオンボード 3 歩
+Library/Provenance   > Notion / >= Granola  引用・出所・空状態を改善
+Confirmation        >= Apple            破壊は二択・安全既定
+Recovery            >= Linear/Apple     stt-unavailable / generic-failure は Freeze
+```
+
+## 残（この巡の scope 外・COMPETITIVE のまま）
+- meeting.captions: 「字幕」がコントローラ/見出し/サブタブに重複（軽微・次巡）。
+- recording.workspace: 抽出が空の間の下部余白（COMPETITIVE。transcript 主役化は次巡の候補）。
+- motion 60fps の再測（gate 05）。
+
+→ **VISUAL_SUPREMACY_GATE = PASS**（BELOW BAR 0 / 失格条件 0 / KEEP 無回帰 / motion 5/5）。
+   残りは COMPETITIVE のみ（captions の「字幕」重複・workspace の下部余白）で、重要 archetype に `Astra < competitor` は無い。
+   さらに厳密にするなら、盲検 supremacy モード（competitor 基準込みの 3 値自動判定）を review-blind に足して機械確認する。
