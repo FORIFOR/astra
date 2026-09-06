@@ -1,0 +1,197 @@
+{
+  "pages": {
+    "C198": {
+      "visible_text": [
+        "週次ブリーフィングを作る",
+        "2件のリソースから作成しました",
+        "開く",
+        "コピー",
+        "green checkmark indicator"
+      ],
+      "observation": {
+        "happening": "Success toast notification confirming creation of weekly briefing from 2 resources",
+        "most_important": "Green checkmark + primary message make success state unambiguous",
+        "next_action": "User can open the briefing or copy its contents",
+        "anomalies": []
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 4,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 5,
+        "calmness": 4,
+        "craft": 4,
+        "distinctiveness": 3
+      },
+      "ai_look": [],
+      "verdict": "COMPETITIVE",
+      "why": "Polished success notification with clear state, but follows standard toast pattern seen across many platforms",
+      "confidence": "high"
+    },
+    "C487": {
+      "visible_text": [
+        "準備中...",
+        "esc"
+      ],
+      "observation": {
+        "happening": "Loading/preparation state indicator bar with escape shortcut hint",
+        "most_important": "Minimal visual design shows status + escape affordance",
+        "next_action": "User can press esc to cancel preparation",
+        "anomalies": []
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 5,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 5,
+        "calmness": 5,
+        "craft": 4,
+        "distinctiveness": 2
+      },
+      "ai_look": [],
+      "verdict": "COMPETITIVE",
+      "why": "Exemplary minimalism and clarity, but standard loading indicator pattern without distinguishing features",
+      "confidence": "high"
+    },
+    "C7FA": {
+      "visible_text": [
+        "22:20 の会議",
+        "決まったこと 1",
+        "macOS を先に出すことに決めました",
+        "やること  0",
+        "メモ 2",
+        "Windows はいつ出しますか",
+        "Home",
+        "Work",
+        "Library",
+        "Apps"
+      ],
+      "observation": {
+        "happening": "Meeting notes interface showing structured breakdown of decisions (1), to-dos (0), and notes (2) with active attendee tracking",
+        "most_important": "Clear sectioning of decisions/to-dos/notes + real-time attendee sidebar showing who participated when",
+        "next_action": "User can expand note items, add to-dos, or engage with attendees listed",
+        "anomalies": []
+      },
+      "scores": {
+        "hierarchy": 5,
+        "density": 4,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 4,
+        "calmness": 4,
+        "craft": 4,
+        "distinctiveness": 3
+      },
+      "ai_look": [],
+      "verdict": "COMPETITIVE",
+      "why": "Solid, well-organized notes interface with excellent hierarchy and state tracking, but follows familiar meeting app UX patterns",
+      "confidence": "high"
+    },
+    "D249": {
+      "visible_text": [
+        "Plugins",
+        "Connectors",
+        "Architecture",
+        "Google Calendar",
+        "Care Support",
+        "EHR Assist",
+        "Finder",
+        "General Assistant",
+        "Gmail",
+        "Meeting Agent",
+        "Research Agent",
+        "Sales CRM"
+      ],
+      "observation": {
+        "happening": "Plugin marketplace showing 10 available integrations in 2-column grid with colored letter avatars, version numbers, required permissions, and enabled status (green checkmarks)",
+        "most_important": "Each plugin clearly states name, version, permissions required, and activation status",
+        "next_action": "User can browse plugins or enable/disable them via checkmarks",
+        "anomalies": []
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 4,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 4,
+        "calmness": 4,
+        "craft": 4,
+        "distinctiveness": 2
+      },
+      "ai_look": [
+        "template repetition—every card identical structure (initial letter, name, version, permissions, checkmark)"
+      ],
+      "verdict": "COMPETITIVE",
+      "why": "Clean, efficient plugin marketplace with good information density and consistent card design, but standard app marketplace pattern with slight template predictability",
+      "confidence": "high"
+    },
+    "D6D1": {
+      "visible_text": [
+        "04:21",
+        "録音中（音声なし）",
+        "会議",
+        "マイクの許可がいただいたので、音声が記録されていません。",
+        "設定を開く",
+        "原文",
+        "翻訳",
+        "ライブ",
+        "「設定を開く」でマイクを許可すると、ここに文字起こしが出ます。"
+      ],
+      "observation": {
+        "happening": "Recording interface in progress (04:21 elapsed) but blocked by missing microphone permission; audio not being captured",
+        "most_important": "Prominent error alert explains why recording is silent + actionable CTA (設定を開く) to fix permission",
+        "next_action": "User must open settings and grant microphone permission to capture audio and begin transcription",
+        "anomalies": [
+          "Large empty transcript area with instructional help text—intentional empty state design"
+        ]
+      },
+      "scores": {
+        "hierarchy": 5,
+        "density": 3,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 5,
+        "calmness": 4,
+        "craft": 4,
+        "distinctiveness": 3
+      },
+      "ai_look": [],
+      "verdict": "COMPETITIVE",
+      "why": "Exceptional error communication and empty state handling—explains problem and solution clearly without alarming tone. Follows meeting/call recording app UX conventions",
+      "confidence": "high"
+    },
+    "D9F0": {
+      "visible_text": [
+        "考えています..."
+      ],
+      "observation": {
+        "happening": "AI processing/thinking indicator with animated dots and lightbulb icon",
+        "most_important": "Minimal visual communicates 'AI is thinking' without noise or distraction",
+        "next_action": "User waits for AI to complete processing",
+        "anomalies": []
+      },
+      "scores": {
+        "hierarchy": 5,
+        "density": 5,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 5,
+        "calmness": 5,
+        "craft": 4,
+        "distinctiveness": 2
+      },
+      "ai_look": [],
+      "verdict": "COMPETITIVE",
+      "why": "Exemplary minimalism and calm tone for async AI operation, but thinking/processing indicator is a ubiquitous pattern across all AI products",
+      "confidence": "high"
+    }
+  },
+  "_judge": {
+    "model": "haiku",
+    "cost_usd": 0.06215500000000001,
+    "turns": 7,
+    "duration_ms": 56392
+  }
+}

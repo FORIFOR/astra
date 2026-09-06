@@ -1,0 +1,215 @@
+{
+  "pages": {
+    "DAFB": {
+      "visible_text": [
+        "Home",
+        "Work",
+        "Library",
+        "Apps",
+        "こんばんは",
+        "何を終わらせますか？",
+        "録音を始める",
+        "Product Weekly",
+        "A社 商談",
+        "Q4移行計画の打ち合わせ"
+      ],
+      "observation": {
+        "happening": "Japanese productivity/meeting management dashboard showing upcoming calendar events and recent meetings with recording capabilities",
+        "most_important": "Clear hierarchical layout with navigation sidebar, greeting, actionable sections (start recording, scheduled meetings, recent meetings), and real-time recording indicators",
+        "next_action": "User can initiate recording, view upcoming meetings via calendar, or access meeting transcriptions",
+        "anomalies": [
+          "Scrollbar visible on right edge suggests content below fold"
+        ]
+      },
+      "scores": {
+        "hierarchy": 5,
+        "density": 4,
+        "typography": 5,
+        "geometry": 5,
+        "state_clarity": 5,
+        "calmness": 5,
+        "craft": 5,
+        "distinctiveness": 4
+      },
+      "ai_look": [],
+      "verdict": "COMPETITIVE",
+      "why": "High-quality execution of productivity app conventions. Hierarchy is clear, typography excellent, whitespace intentional and calm. All states are unambiguous. However, the design doesn't break new ground — it executes established patterns flawlessly rather than being distinctive or pushing boundaries.",
+      "confidence": "high"
+    },
+    "E65B": {
+      "visible_text": [
+        "Home",
+        "Work",
+        "Library",
+        "Apps",
+        "こんばんは",
+        "Product Weekly",
+        "A社 商談",
+        "Q4移行計画の打ち合わせ",
+        "5人",
+        "やること",
+        "決まったこと"
+      ],
+      "observation": {
+        "happening": "Same dashboard layout as DAFB, but the Q4 meeting card is now expanded to show full details including meeting summary, participant count (5人), action items (やること 3), and decisions (決まったこと 2)",
+        "most_important": "Expansion state is handled cleanly — card extends, content flows naturally, no layout shifts or jarring transitions visible",
+        "next_action": "User can collapse card or interact with action items and decisions",
+        "anomalies": []
+      },
+      "scores": {
+        "hierarchy": 5,
+        "density": 4,
+        "typography": 5,
+        "geometry": 5,
+        "state_clarity": 5,
+        "calmness": 5,
+        "craft": 5,
+        "distinctiveness": 4
+      },
+      "ai_look": [],
+      "verdict": "COMPETITIVE",
+      "why": "Seamless state transition from DAFB. The expanded card maintains visual hierarchy and readability. No new defects introduced. Same quality as parent state — excellent execution but not distinctive.",
+      "confidence": "high"
+    },
+    "E74B": {
+      "visible_text": [
+        "新しいバージョンのAstraが入手できます！",
+        "Astra 1.0が入手できます",
+        "この版で変わること",
+        "会議中に録音を一時停止・再開できます",
+        "直したこと",
+        "このバージョンはスキップ",
+        "アップデートをインストール"
+      ],
+      "observation": {
+        "happening": "Software update dialog showing new version availability with changelog. Modal window with macOS traffic light buttons (red/yellow/green). Two main sections describing changes and fixes.",
+        "most_important": "Clear version narrative (1.0 is available) with prominent blue CTA button. Two-column action pair: skip (low-salience) vs install (high-salience)",
+        "next_action": "User skips version or installs update immediately",
+        "anomalies": []
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 4,
+        "typography": 5,
+        "geometry": 5,
+        "state_clarity": 5,
+        "calmness": 5,
+        "craft": 5,
+        "distinctiveness": 3
+      },
+      "ai_look": [],
+      "verdict": "COMPETITIVE",
+      "why": "Standard software update dialog executed with polish. All elements are clear and in their expected places. Button hierarchy (skip vs install) is appropriate. However, this is an archetypal pattern — no distinctive innovation or delight.",
+      "confidence": "high"
+    },
+    "EA24": {
+      "visible_text": [
+        "04:21",
+        "録音中",
+        "会議",
+        "読木",
+        "OAuth だけ確認お願いします。",
+        "原文",
+        "翻訳",
+        "ライブ",
+        "要約",
+        "決まったこと",
+        "AI が見ている資料 3件"
+      ],
+      "observation": {
+        "happening": "Active meeting transcription interface with dual-pane split: left shows meeting summary and recording state with waveform, right shows live transcript with timestamps and speaker names. Floating control bar at top shows recording time (04:21) with transport controls.",
+        "most_important": "Real-time meeting transcription with clear speaker attribution. Waveform indicates active recording. Dense information density is maintainable due to clear visual structure and tabs (Original/Translation/Live).",
+        "next_action": "User can view summary, decisions, actions, review transcript history, or interact with meeting content",
+        "anomalies": []
+      },
+      "scores": {
+        "hierarchy": 5,
+        "density": 5,
+        "typography": 5,
+        "geometry": 5,
+        "state_clarity": 5,
+        "calmness": 4,
+        "craft": 5,
+        "distinctiveness": 4
+      },
+      "ai_look": [],
+      "verdict": "COMPETITIVE",
+      "why": "Excellent implementation of a complex dual-pane transcription interface. Information density is high but remains scannable through careful visual hierarchy. Recording controls are intuitive. However, meeting transcription UI is becoming a standard pattern in modern productivity tools — well executed but not distinctive.",
+      "confidence": "high"
+    },
+    "EB4D": {
+      "visible_text": [
+        "04:21",
+        "録音中",
+        "会議",
+        "マイクと画面の音を聞いています",
+        "この Mac ではオンデバイス文字起こしを使えません。",
+        "音声は保存されています",
+        "設定を開く（音声入力）",
+        "まだ案話がありません。",
+        "AI が見ている資料 — まだありません"
+      ],
+      "observation": {
+        "happening": "Same transcription interface as EA24, but displaying error state. Red warning banner on left panel explains that on-device transcription is unavailable on this Mac, though audio is being saved. Right panel shows empty state (no transcript yet). Quick action link to open settings.",
+        "most_important": "Error state is clearly communicated with recovery path. System gracefully degrades (saves audio) while offering fix. No ambiguity about what's wrong or what to do.",
+        "next_action": "User opens settings to enable transcription OR continues recording with audio saved for later processing",
+        "anomalies": [
+          "Right pane shows significant empty space due to lack of transcript data — creates visual imbalance, though semantically correct"
+        ]
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 3,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 5,
+        "calmness": 3,
+        "craft": 4,
+        "distinctiveness": 4
+      },
+      "ai_look": [],
+      "verdict": "COMPETITIVE",
+      "why": "Thoughtful error state handling with clear messaging and actionable recovery path. However, the empty-state imbalance (sparse right pane) and red warning visual tension reduce overall calm. The approach is professional and correct, but the visual result is slightly less polished than EA24's flowing state.",
+      "confidence": "high"
+    },
+    "F02F": {
+      "visible_text": [
+        "Home",
+        "Work",
+        "Library",
+        "Apps",
+        "こんばんは",
+        "落ちた会議",
+        "会話中で終わっています・開くと、確定した行までは見られます",
+        "プロジェクト無し",
+        "Q4移行計画の打ち合わせ"
+      ],
+      "observation": {
+        "happening": "Productivity dashboard (same as DAFB/E65B) now displaying a new section 'dropped meeting' (落ちた会議) with red triangle warning indicator. Section explains that conversation is still ongoing but opening the meeting shows only confirmed content. Below this is the full Q4 meeting card in expanded state. Scrollbar visible on right.",
+        "most_important": "New dropped-call state is clearly signaled with warning triangle icon and contextual explanatory text. Visual distinction is immediate without being jarring. User understands both problem and what content is safe to access.",
+        "next_action": "User can open dropped meeting (with caveat about content freshness) or interact with other meeting below",
+        "anomalies": []
+      },
+      "scores": {
+        "hierarchy": 5,
+        "density": 4,
+        "typography": 5,
+        "geometry": 5,
+        "state_clarity": 5,
+        "calmness": 4,
+        "craft": 5,
+        "distinctiveness": 4
+      },
+      "ai_look": [],
+      "verdict": "COMPETITIVE",
+      "why": "Excellent handling of the dropped-meeting edge case. Warning is prominent without being alarmist, and the explanatory text contextualizes what's safe to access. Maintains the calm, clean aesthetic of the parent dashboard. However, this is a well-executed edge case rather than a distinctive innovation.",
+      "confidence": "high"
+    }
+  },
+  "_judge": {
+    "model": "haiku",
+    "cost_usd": 0.07383719999999999,
+    "turns": 7,
+    "duration_ms": 79047
+  }
+}

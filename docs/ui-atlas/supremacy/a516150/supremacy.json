@@ -1,0 +1,2577 @@
+{
+  "rc": "a516150",
+  "mode": "self-supremacy",
+  "pages": [
+    {
+      "id": "main.work-tasks",
+      "blind_id": "0206",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 3.67,
+        "density": 3,
+        "typography": 4,
+        "geometry": 3.67,
+        "state_clarity": 4,
+        "calmness": 4.67,
+        "craft": 3.67,
+        "distinctiveness": 3
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "Clean, well-executed empty state with clear hierarchy and helpful guidance. Good use of whitespace and typography. However, follows standard empty-state patterns without distinctive visual or interaction innovation."
+        },
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "同じ内容を言い直す説明文の二重化（見出し直下の説明＋空状態の説明）",
+            "「できること」の矢印付き 3 項目という典型的な空状態テンプレ",
+            "紫青の塗りつぶし CTA が唯一の彩度アクセント"
+          ],
+          "why": "タブ名と H1 が同語で重複し、説明文も同義反復。さらに空状態の中身が画面左上の狭い領域に固まり、画面の大半が意味のない空白として残るため、一線級の空状態設計（Linear/Raycast）と比べて構図と情報の重複が明確な欠陥として絵から言える。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "説明文の反復（似た文を2箇所で言い直す空語気味の冗長さ）",
+            "下部の余白が意図か手抜きか判別しづらい"
+          ],
+          "why": "サイドバー・タイポグラフィ・CTA階層は整っているが、コピーの重複と説明のつかない下部余白が一線級との差になっている。"
+        }
+      ]
+    },
+    {
+      "id": "system.mic-recovered",
+      "blind_id": "11B3",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 3.5,
+        "density": 5,
+        "typography": 3.5,
+        "geometry": 4,
+        "state_clarity": 3.5,
+        "calmness": 4,
+        "craft": 4,
+        "distinctiveness": 3
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "Highly functional and compact recording control bar with good visual hierarchy for quick actions. Dark background and red recording state are clear. However, it follows conventional control-bar patterns with no distinctive visual or interaction design."
+        },
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": false,
+          "ai_look": [
+            "等間隔ドットで波形を模した装飾（音に反応していない見た目）"
+          ],
+          "why": "録音中を主張しながらタイマーが 00:00、波形も均一ドットで状態が噛み合っていない。加えて目アイコンのみ無ラベルで、ラベル付き 3 項目との整合が崩れている。バー自体の質は悪くないが、状態表示の矛盾は絵から言える欠陥。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "極めてコンパクトで実用的なHUDだが、ラベルの有無が要素ごとにバラつきアイコンの意味が一部推測に頼る。"
+        }
+      ]
+    },
+    {
+      "id": "system.generic-failure",
+      "blind_id": "12D5",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4.33,
+        "density": 4,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 3.33,
+        "calmness": 4.33,
+        "craft": 4,
+        "distinctiveness": 3
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "Well-designed home screen with strong greeting-based interaction model, excellent section hierarchy, and comfortable whitespace. Clear visual grouping and welcoming tone. Lacks distinctive visual treatment; follows common home-screen conventions (greeting + input + upcoming events + recent tasks)."
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "カードの角丸と高さが全行ほぼ同一で、重要度差が形に現れていない"
+          ],
+          "why": "情報の並び（今すぐ→予定→直近の結果）は素直で、失敗理由が「送信」で止まりましたと具体的に書かれている点は強い。ただし「こんばんは」と 10:00/13:30 の未来予定が矛盾して見え、最も注意が要る失敗行が最下段で最も弱く扱われている。欠陥というより一線級との差。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "同一画面に「録音を始める」導線を3種類重複配置する網羅志向"
+          ],
+          "why": "情報設計は良好だが、録音開始の主導線が3重に分散しており、一線級アプリが徹底する『主要アクションは1つ』の原則から外れる。"
+        }
+      ]
+    },
+    {
+      "id": "provenance.meeting-detail",
+      "blind_id": "1B26",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4.67,
+        "density": 3.67,
+        "typography": 4.33,
+        "geometry": 4,
+        "state_clarity": 4.67,
+        "calmness": 4.33,
+        "craft": 4,
+        "distinctiveness": 4.33
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "Excellent information architecture for meeting notes: executive summary, categorized decisions/actions, and detailed transcript create clear hierarchy. Reference markers are thoughtful UX. Design is polished and well-organized, but the overall layout pattern (summary + transcript) is not novel in modern meeting-recording products."
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "要約→脚注→該当発話→音声時刻という出所の連鎖が一本通っており、ハイライト行と右パネルの対応も一致していて説得力がある。等幅タイムコードと本文の対比も良い。惜しいのは脚注の左端が行ごとに揃っていない点と、右パネルの大部分が空きのまま残る点。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "右サイドパネルが内容量に対して余白過多で、可変幅でなく固定パネルを敷いただけに見える"
+          ],
+          "why": "要約から発言への出所トレーサビリティは秀逸で差別化要素になっているが、右パネルの余白過多と件数表記の曖昧さが一線級との差。"
+        }
+      ]
+    },
+    {
+      "id": "meeting.workspace",
+      "blind_id": "2629",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 3.67,
+        "density": 3,
+        "typography": 3.67,
+        "geometry": 3.33,
+        "state_clarity": 3.33,
+        "calmness": 2.33,
+        "craft": 3.33,
+        "distinctiveness": 3.67
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "Real-time AI categorization (Decided/Actions/Questions/Concerns) may leverage AI summaries, adding distinctive but somewhat visually noisy feature"
+          ],
+          "why": "Well-designed for complexity, with thoughtful information organization despite density. Real-time categorization and transcript modes are distinctive features. However, the interface complexity — multiple competing panels, collapsible sections, action suggestions, and auxiliary information — sacrifices elegance and calmness. Good functional design, but not serene."
+        },
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "各行に同じ形の「出所 › 直す」を機械的に反復",
+            "決まったこと/やること/質問/懸念という 4 分類の網羅的テンプレ反復"
+          ],
+          "why": "話者と時刻が 1 行内で二重表示されて密度を無駄に食い、抽出行の並びが時系列にも重要度にも従っていない。さらに右下カードの「送信 ×」という失敗状態に理由も回復手段も無く、画面上で最も重い異常が最も弱く扱われている。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "黒いフローティングピルと白いカードパネルという異なる2つのコンテナ言語が同一画面に混在（部品を後から継ぎ足した印象）",
+            "分類カードとトランスクリプトの内容重複という網羅志向"
+          ],
+          "why": "通話中に静かに背後で動くはずのオーバーレイが4ゾーン同時に主張し密度過多。加えて失敗ステップの回復導線が同一タスクの別画面と一致しておらず、状態設計に矛盾がある。"
+        }
+      ]
+    },
+    {
+      "id": "settings.permissions",
+      "blind_id": "2ED7",
+      "verdict": "BELOW_BAR",
+      "avg": {
+        "hierarchy": 4,
+        "density": 3.67,
+        "typography": 3.33,
+        "geometry": 3.67,
+        "state_clarity": 3.67,
+        "calmness": 4.33,
+        "craft": 3,
+        "distinctiveness": 2.33
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "Explanatory text shows clear signs of AI generation or poor machine translation — awkward phrasing, grammatical errors, incomplete sentences with ellipsis.",
+            "Feels like explanatory copy was auto-generated without human review."
+          ],
+          "why": "While layout and organization are competent and standard-quality for a settings panel, the explanatory text quality is noticeably poor. Grammatical errors, unclear phrasing, and AI-generated-feeling copy create friction and reduce craft quality. The **visible text defects** (malformed Japanese, truncation, unclear instructions) are observable **defects from the image itself**, not speculation. This violates basic quality standards for user-facing UI copy."
+        },
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "各許可項目に 1 行の理由説明を機械的に付与した反復パターン"
+          ],
+          "why": "マイク行の説明が右端で切れている明確な craft 欠陥があり、さらに最上部で ⌥Space を主要ショートカットとして提示しながら、それを成立させる入力監視が未確認のままで警告も紐付けも無い。設定画面としての状態整合が絵から崩れて見える。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [],
+          "why": "マイク権限の説明文が文中で物理的に切れているのは絵から直接言える具体的な欠陥で、設定画面としての完成度を欠く。"
+        }
+      ]
+    },
+    {
+      "id": "recording.rag",
+      "blind_id": "35A8",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4,
+        "density": 3.67,
+        "typography": 4,
+        "geometry": 3.67,
+        "state_clarity": 3.67,
+        "calmness": 3.67,
+        "craft": 3.67,
+        "distinctiveness": 3.33
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "Solid execution with clear information hierarchy and thoughtful two-panel layout. Recording state is obvious, materials integration is smart. However, design follows standard meeting UI patterns without distinctive visual moments. No flaws, but not breakthrough design."
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "根拠バーが数値も凡例もない装飾的スコア表示になっている",
+            "「この会議の発言・新しい・このプロジェクト」というメタ語の反復"
+          ],
+          "why": "録音中の状態表示と出所提示は一線級に近いが、サマリ枠の広い空白、上端に食い込むフローティングバー、凡例のないスコアバーが仕上げの差として残る。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "ラベルの無い謎の色付きメーター(資料パネル右端の横棒)が装飾的パディングに見える"
+          ],
+          "why": "録音HUD・原文パネル・資料パネルの三層構成は実在の会議アシスタント製品(Granola系)並みに整っているが、左右パネルの内容重複とラベル無しメーターが階層と状態の読みやすさを削いでいる。"
+        }
+      ]
+    },
+    {
+      "id": "provenance.library-after-end",
+      "blind_id": "366D",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4.5,
+        "density": 3.5,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 4,
+        "calmness": 4.5,
+        "craft": 4,
+        "distinctiveness": 3
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "Excellent information architecture and state clarity. Meeting structure (decided/action/memo counts) is immediately graspable. Clean tab navigation and transcript layout. However, uses standard SaaS patterns for tabs, sections, and sidebar layout. Well-executed but not visually distinctive."
+        },
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": false,
+          "ai_look": [
+            "空のセクション見出しをテンプレ的に並べる（やること 0 が空のまま残る）",
+            "サイドバー英語・本文日本語のテンプレ混在"
+          ],
+          "why": "「1 分未満」の会議なのに文字起こしは 10:30〜10:55 にまたがるという絵の中の矛盾があり、加えて「やること 0」が空見出しのまま放置され、下 2/3 が空白。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "余白を活かした落ち着いたレイアウトで決定事項の可視化は良いが、タブの選択状態表現が弱く、一線級ほどの状態明瞭さがない。"
+        }
+      ]
+    },
+    {
+      "id": "main.new-recording-sheet",
+      "blind_id": "48F8",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 3.67,
+        "density": 3.33,
+        "typography": 3.67,
+        "geometry": 3.33,
+        "state_clarity": 3.33,
+        "calmness": 4,
+        "craft": 3.33,
+        "distinctiveness": 3
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "Well-crafted modal with good spatial hierarchy and calm presentation. Settings are clearly organized with appropriate control types. However, follows standard modal dialog pattern. No distinctive design choices, but execution is solid and UX is clear."
+        },
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "ネイティブ風セレクトと独自ボタンの混在で、系統が揃っていない",
+            "ラベル＋コントロールの機械的な 5 行反復"
+          ],
+          "why": "主アクション「録音を始める」が灰色で無効に見え、キャンセルとの優先関係が絵から逆に読める。加えてマイク行だけコントロール性が無く、セレクト幅も不揃い。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "ラベル左・値右の整った設定フォームでトグル状態も明快だが、可変項目が並ぶだけの構成で一線級と並べると装飾・独自性の面で差がある。"
+        }
+      ]
+    },
+    {
+      "id": "dock.running",
+      "blind_id": "4D35",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4.33,
+        "density": 4.67,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 3,
+        "calmness": 3.67,
+        "craft": 4.33,
+        "distinctiveness": 4
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "Thoughtful agent task interface with good status indicators (✓ ● ○) and context display. Information-dense but intentional. However, progress calculation is opaque (50% without visual representation), and dark theme combined with density reduces 'calmness'. Design is somewhat distinctive for agent interfaces but not exceptional in execution."
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "小さな面積に計画・状態・文脈・出口を過不足なく収めた密度は一線級だが、50% 進行と 00:00 の同時表示という状態の噛み合わなさが差になる。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "チェックリスト形式の進捗表示は非常に完成度が高くRaycast級のクラフトだが、経過時間00:00と『作業中』表記の食い違い、50%という数値の根拠が読み取れない点が状態明瞭さを下げている。"
+        }
+      ]
+    },
+    {
+      "id": "system.calendar-permission",
+      "blind_id": "51ED",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4,
+        "density": 2.33,
+        "typography": 4,
+        "geometry": 3.67,
+        "state_clarity": 4,
+        "calmness": 4.67,
+        "craft": 3.67,
+        "distinctiveness": 3
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "Excellent empty state design with strong clarity and welcoming calmness. Information is well-organized and scanning is effortless. However, messaging contains some redundancy, and the design follows standard onboarding patterns. Not distinctive, but execution is thoughtful."
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "「はじめに」で機能を 3 行そのまま説明する説明過多の空状態",
+            "各行の ↳ 記号が装飾として反復されるだけで意味を持たない"
+          ],
+          "why": "空状態で許可という具体的な一手を出せているのは良いが、空状態の見出しが二重になり、どのセクションが空なのか対応が曖昧で、説明 3 行がテンプレ的。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "矢印(↳)付き箇条書きのオンボーディングTipsが後の画像(5214)の『できること』とほぼ同一パターンで使い回されており、テンプレート反復に見える"
+          ],
+          "why": "余白を活かした落ち着いた空状態だが、下半分が特に何もない広い余白になっており、一線級ほどの作り込み(イラストや具体例)は見られない。"
+        }
+      ]
+    },
+    {
+      "id": "main.work-agents",
+      "blind_id": "5214",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 3.33,
+        "density": 2,
+        "typography": 3.67,
+        "geometry": 3.67,
+        "state_clarity": 3.33,
+        "calmness": 4.33,
+        "craft": 3.67,
+        "distinctiveness": 2.33
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "Good empty state design with helpful explanation of agent persistence. Calm and spacious. However, the filter bar presence in empty state is slightly odd UX, and design is quite standard. Less distinctive than other screens in the product."
+        },
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "中央寄せではないものの、空状態＋主ボタン＋「できること」3 行という定型の反復（51ED とほぼ同じ型）",
+            "淡い紫の pill を選択状態として二段重ねる"
+          ],
+          "why": "空状態の主 CTA が「Task Dock を開く」で空の解消につながらず、フィルタに件数も無いため他タブを見るべきかも判断できない。二段の似たタブで階層も崩れている。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "中央寄せ見出し+説明文+単一CTA+矢印箇条書きTipsという構成が51EDの空状態と同型で、アプリ内で空状態テンプレートが反復されている"
+          ],
+          "why": "空状態自体は破綻していないが、二段のタブ/フィルタで階層と選択状態がやや曖昧で、空状態テンプレートの反復感もあり一線級との差がある。"
+        }
+      ]
+    },
+    {
+      "id": "meeting.ask",
+      "blind_id": "54ED",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4,
+        "density": 3,
+        "typography": 3.67,
+        "geometry": 4,
+        "state_clarity": 3.33,
+        "calmness": 4,
+        "craft": 3.67,
+        "distinctiveness": 2.67
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "機能的で実装品質は高い。ダークモードのカラーパレット、タイポグラフィの階層は洗練されている。ただし、Raycast や Linear などの一線級のツールと並べると、UI パターンが Google の標準デザイン言語に寄りすぎており、独自の視覚的個性に欠ける。警告やエラー状態を見ていないため、完全な評価には全フローが必要"
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "「よく聞くこと」の下に矢印付きの定型質問を 3 行並べる構成は、AI 機能の空状態テンプレとして頻出",
+            "Ask Astra ラベルにきらめきアイコン＋紫という、AI 機能の定番配色"
+          ],
+          "why": "ヘッダの情報構成と入力欄の作りは一線級に近いが、コンテンツが上 1/3 に固まり下半分が用途不明の空白で、パネルの高さが正当化されていない。Granola や Raycast なら過去の質問履歴か直近の要約でその領域を埋める。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "矢印(↳)付き提案リストは他製品にも頻出するテンプレ的パターン"
+          ],
+          "why": "Meet純正ツールバーとの統合は丁寧だが、提案リスト自体はRead.ai/Fireflies等と同型で差別化は薄い。実データが無いので機能の強さは判定不可。"
+        }
+      ]
+    },
+    {
+      "id": "system.resumed",
+      "blind_id": "56F3",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 3.33,
+        "density": 2,
+        "typography": 3.33,
+        "geometry": 2.67,
+        "state_clarity": 3,
+        "calmness": 4,
+        "craft": 2.67,
+        "distinctiveness": 2
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "「決まったこと 0 / やること 0」の表示が単調。タイポグラフィのバリエーションで数値と分類を区別しているが、視覚的には平坦"
+          ],
+          "why": "実装品質は高く、情報設計は明確。白背景、十分な余白、読みやすいタイプで『落ち着き』の評価は 5。しかし視覚的な個性がない。Notion や Linear のような一線級のツールと比べると、UI パターンが SaaS テンプレートの標準形から外れていない。カラーはニュートラルで、カード型・グリッド型のレイアウトも教科書的。動作状態（選択中のタブの視覚的フィードバック）の観察が必要だが、1 枚では完全には判定できない"
+        },
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "同じ見出しを 2 段（ウィンドウバーと本文）に反復するテンプレ構造",
+            "0 件でも見出しだけ機械的に列挙する空状態の扱い"
+          ],
+          "why": "タイトルの二重表示、話者列の不揃い、0 件セクションを空見出しのまま積む扱い、サイドバー英語と本文日本語の混在が絵から確認でき、内容が 1 行しか無い画面の大半が説明のつかない空白になっている。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "内容量に対してレイアウトが追従せず、下部が未調整のまま広大な空白になっている典型的な作り込み不足"
+          ],
+          "why": "短い会議という正当な理由はあるが、それに対するレイアウト側のフォロー（余白の吸収、補助メッセージ、イラスト等）が皆無で、絵から見て未完成に見える。"
+        }
+      ]
+    },
+    {
+      "id": "system.speech-permission",
+      "blind_id": "5784",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4,
+        "density": 3,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 5,
+        "calmness": 4,
+        "craft": 4,
+        "distinctiveness": 3.5
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": false,
+          "ai_look": [],
+          "why": "エラー状態の表示は非常に明確。アイコン、背景色、テキストの組み合わせで状態を伝えている。state_clarity は 5。ただし、一線級のアプリ（Apple の設定や Figma）と比べると、警告パネルのデザインが機械的・単調。背景色や枠線の組み合わせは Google Material Design の定型パターンに従っており、視覚的な洗練度が劣る。エラー解決後のトランジションが見えないため、完全評価には動き・モーションが必要"
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "警告バーと空状態で同じ説明を繰り返す説明過多"
+          ],
+          "why": "劣化状態の説明が一線級。録音は続いている／文字起こしだけ止まっている、を左ペイン・警告バー・空状態で一貫して言い、復旧動作が 1 つに絞られている。ただし同一説明の三重化と右ペインの大きな空枠で、Linear や Granola の同種画面より冗長。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "権限エラーの原因・影響範囲・対処法を明確に伝え、無効ボタンの状態管理も正確。一線級と並べるとフローティングツールバーの浮遊感がやや粗い。"
+        }
+      ]
+    },
+    {
+      "id": "main.library-files",
+      "blind_id": "59AD",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4.33,
+        "density": 2.67,
+        "typography": 3.67,
+        "geometry": 3,
+        "state_clarity": 4,
+        "calmness": 4.33,
+        "craft": 3.67,
+        "distinctiveness": 2.67
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "『できること』リストがやや説明過多。一行目『会議の要約やレポートが成果物として残る』は冗長。ただし、ユーザー教育の観点では機能している"
+          ],
+          "why": "エンプティステートの設計は一線級。階層（ヘッダー→説明→ボタン→機能リスト）が明確で、文体も親切。カラムなし・中央寄せのレイアウトは標準的だが、実装は堅牢。Craft は 5。ただし、実データが表示された状態を見ていないため、全フローの評価は NOT_ENOUGH_EVIDENCE に近い。エンプティステート単体では一線級に見えるが、遷移後の状態・相互作用がどうなるかで判定が変わる可能性がある"
+        },
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "空状態に「できること」を矢印付き 3 行で並べる定型（54ED と同じ型の反復）",
+            "中身 0 件でもフィルタ pill を一式並べる無意味な pill",
+            "見出し＋一文説明＋青ボタン＋箇条書き、というテンプレ的な空状態レイアウト"
+          ],
+          "why": "0 件の画面に 6 個のフィルタ pill が有効状態で並ぶという状態矛盾が絵から言え、タブ名と見出しの重複、英日混在、他画面と同型の「できること」3 行反復というテンプレ感が重なる。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "「できること」の矢印(↳)箇条書きが54EDの「よく聞くこと」と同一パターンで使い回されており、テンプレ反復感がある"
+          ],
+          "why": "メッセージ自体は明快だが、NotionやLinearの空状態のように余白を中央寄せやイラストで処理しておらず、絵から見て未調整な余白が具体的欠陥として残る。"
+        }
+      ]
+    },
+    {
+      "id": "voice.context",
+      "blind_id": "5D8C",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 2,
+        "density": 2,
+        "typography": 2.33,
+        "geometry": 2.67,
+        "state_clarity": 2,
+        "calmness": 3,
+        "craft": 2,
+        "distinctiveness": 1.33
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "NOT_ENOUGH_EVIDENCE",
+          "valid": true,
+          "ai_look": [],
+          "why": "画像が極めて小さく、Notion のロゴとテキストのみ視認可能。UI 要素、レイアウト、カラー、相互作用がまったく見えない。どの画面か不明。採点対象外。"
+        },
+        {
+          "model": "opus",
+          "verdict": "NOT_ENOUGH_EVIDENCE",
+          "valid": true,
+          "ai_look": [
+            "紫のひし形アイコンという汎用的な連携ソース表現"
+          ],
+          "why": "折りたたみ行 1 本のみで、展開後の中身も前後の文脈も見えない。読める文字は Notion のみで、これだけでは品質の良否を判定できない。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "見えている範囲では欠陥のない標準的なコンボボックスだが、汎用的な部品で他製品との差別化要素は無い。"
+        }
+      ]
+    },
+    {
+      "id": "components.neutral",
+      "blind_id": "671A",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4.67,
+        "density": 3.33,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 4.33,
+        "calmness": 4.33,
+        "craft": 4,
+        "distinctiveness": 3
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "『AI が見ている資料 3 件』は説明的だが、『見ている』という表現が若干曖昧。件数を数値で示すだけでよく、冗長な感がある"
+          ],
+          "why": "チャット風の会話ログは実装が堅牢で、参加者・時刻・発言の情報設計は明確。Typography は 3 と低めだが、これは参加者名のサイズが小さいため。全体的には一線級の水準だが、視覚的な個性がない。参加者を色分けしたり、アバター / ステータスインジケーターを導入したりすれば distinctiveness が上がるが、現状は SaaS チャット UI の定型形。モーション・ホバー状態が見えないため、完全評価には相互作用が必要"
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "最新発言を大きく、履歴を右に小さく、という視線設計が明確で、録音中の状態表示と操作が静かにまとまっている。ただし左ペインの大きな空白と「会議」という無名タイトル、話者色の区別の弱さで、Granola の同種画面と並べると詰め切れていない。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "話者色分け・タイムスタンプ・有効/無効ボタンの整合性など完成度は高いが、デュアルペイン会議文字起こしUI自体はOtter/Fireflies/Fathomと同型で独自性は限定的。"
+        }
+      ]
+    },
+    {
+      "id": "voice.quick-actions",
+      "blind_id": "69C9",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 2.33,
+        "density": 4,
+        "typography": 3,
+        "geometry": 3,
+        "state_clarity": 2.33,
+        "calmness": 4.33,
+        "craft": 3,
+        "distinctiveness": 2.33
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "NOT_ENOUGH_EVIDENCE",
+          "valid": true,
+          "ai_look": [],
+          "why": "Strip is too small (220×44px) to evaluate typography, hierarchy, or craft adequately. Icon-only design limits visibility of intentional choices."
+        },
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "動詞 3 つを等価に並べただけのテンプレ構成",
+            "アイコンが意味を担っておらず装飾的（きらめきアイコンの汎用使用）"
+          ],
+          "why": "3 ボタンの間隔が不均等で中心軸が取れておらず、録音という主要かつ状態を持つ操作が他と同格に見える。今どの状態かも絵から読めない。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "アイコン+ラベルを横並びで等間隔反復しただけの汎用ピル",
+            "差別化要素がなくテンプレ的"
+          ],
+          "why": "破綻はないが、状態表現の欠如と没個性さで一線級には届かない最小限のコントロールバー。"
+        }
+      ]
+    },
+    {
+      "id": "components.pressed",
+      "blind_id": "6C5D",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4,
+        "density": 3.33,
+        "typography": 4,
+        "geometry": 3.67,
+        "state_clarity": 3.67,
+        "calmness": 4,
+        "craft": 3.67,
+        "distinctiveness": 3
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "floating AI feature button at bottom reads as an addition rather than thoughtfully integrated"
+          ],
+          "why": "Solid, functional design with clear information architecture. Left-right structure works but secondary features feel appended. Lacks the integration polish of SUPREME tier."
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "下部の「要約 / 決まったこと / やること」pill が説明的で、左ペインの見出しと語が重複",
+            "左カードが実質空なのに枠だけ大きく確保されている"
+          ],
+          "why": "録音状態・時刻・話者が一貫して読め、二ペイン構成も破綻していない。ただし左ペインの空白量と、同一語の重複配置が一線級と比べて詰め切れていない。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "全体は清潔で構成も明快だが、左パネルの広い空白がAIノートの価値提案（自動抽出）に対して弱く見える。"
+        }
+      ]
+    },
+    {
+      "id": "meeting.captions",
+      "blind_id": "6D65",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 3.67,
+        "density": 3.33,
+        "typography": 3.67,
+        "geometry": 4,
+        "state_clarity": 4,
+        "calmness": 3.67,
+        "craft": 3.67,
+        "distinctiveness": 3
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "Dark mode + feature-adding design pattern suggests modern AI-assisted tool rather than core Google design"
+          ],
+          "why": "Functional interface with good tab organization. Dark mode aesthetic is trendy but sacrifices readability for large text content. Missing the ergonomic polish of premium products."
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "タブ行が二段重ねでテンプレ的",
+            "「Ask ○○」という汎用 AI 呼び出しラベル"
+          ],
+          "why": "録音源（Google Meet）・経過時間・話者時刻が明快で読み負荷は低い。一方でタブ階層の二重化、下半分の空白、言語混在が一線級との差として残る。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "破綻のない実務的な実装だが、Otter/Fireflies/Fathom等と並ぶと同種のダーク字幕パネルで差別化に乏しい。"
+        }
+      ]
+    },
+    {
+      "id": "dock.confirmation-edit",
+      "blind_id": "6E5D",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4,
+        "density": 4.33,
+        "typography": 4.33,
+        "geometry": 4,
+        "state_clarity": 3,
+        "calmness": 4.33,
+        "craft": 3.67,
+        "distinctiveness": 3.33
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "SUPREME",
+          "valid": true,
+          "ai_look": [],
+          "why": "Perfect confirmation dialog: clear hierarchy (question → content → actions), excellent typography with appropriate size differentiation, impeccable geometry with proper padding and centering. Safety-critical warning is prominent without being alarming. No wasted space, no confusion."
+        },
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "和語に言い換えた結果、動作が曖昧になったボタン文言（「直し終える」）",
+            "見出しが疑問文なのに選択肢が対応しないテンプレ的確認ダイアログ"
+          ],
+          "why": "外部送信という不可逆操作の確認画面で、既定ボタンの文言が問いと対応せず、押した結果が絵から判定できない。状態明快さが要点の画面としては欠陥。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "ダイアログの問いとボタン文言が呼応しておらず、コピーが最後まで整合されていないAI組立て特有の粗さ"
+          ],
+          "why": "外部への不可逆な送信をゲートするダイアログなのに、確認ボタンの文言『直し終える』が『送りますか?』という問いに直接答えておらず、実行内容が文面から確定できない具体的な状態不明瞭の欠陥がある。"
+        }
+      ]
+    },
+    {
+      "id": "components.focus",
+      "blind_id": "703B",
+      "verdict": "BELOW_BAR",
+      "avg": {
+        "hierarchy": 2.67,
+        "density": 3.33,
+        "typography": 4,
+        "geometry": 3,
+        "state_clarity": 1.33,
+        "calmness": 2,
+        "craft": 2.33,
+        "distinctiveness": 2.67
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "multiple simultaneous focus outlines read as UI kit demonstration",
+            "exhaustive-feature-showcase aesthetic typical of AI exploration mocks"
+          ],
+          "why": "The multiple simultaneous blue focus outlines violate interaction design conventions and create visual confusion. This pattern doesn't exist in real usage and suggests either a documentation screenshot or AI-generated mockup showing 'all possible actions.' Legible but violates clarity and craft standards for focused, intentional UIs."
+        },
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "全操作要素へ一律に同じ強調を付ける機械的な処理",
+            "状態表現の意味を考えずテンプレ適用した印象"
+          ],
+          "why": "フォーカス（あるいは選択）表示が同時多発しており、どこが現在位置か絵から矛盾なく読めない。状態明快さの破綻が具体的に指摘できる。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "全インタラクティブ要素のヒットボックスを一括表示したようなデバッグオーバーレイに見え、実際の単一フォーカスUIの挙動を理解していない生成物の兆候"
+          ],
+          "why": "相互排他のはずの複数タブ・複数ボタンが同時にフォーカス/選択状態として描画されており、実際のUIでは起こり得ない状態矛盾が絵から直接読み取れる。"
+        }
+      ]
+    },
+    {
+      "id": "session.detail",
+      "blind_id": "705A",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 5,
+        "density": 4,
+        "typography": 4.33,
+        "geometry": 4,
+        "state_clarity": 4.33,
+        "calmness": 5,
+        "craft": 4.33,
+        "distinctiveness": 3.67
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "SUPREME",
+          "valid": true,
+          "ai_look": [],
+          "why": "Exceptional design execution. Hierarchy is crystal-clear: progressive disclosure from summary through decisions/actions to detail. Bracketed reference numbers linking actions to transcript timestamps show thoughtful, intentional design for traceability. Typography scales appropriately. Geometry uses whitespace effectively without clutter. No AI-generated feel—this is skilled, purposeful UX."
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "サイドバーが Home / Work / Library / Apps という汎用テンプレ名詞の羅列"
+          ],
+          "why": "要約→決定→タスク→根拠という階層が明快で、出典番号が実際の発話ログと照合できる点は一線級に近い。ただし発話行の左端不揃い、タイトル重複、日英混在が細部の差として残る。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "要約→決定→やること→文字起こしという階層と引用リンクによる裏付けは一線級の完成度だが、パターン自体はGranola等と近似しており、かつ『ui-check』というテスト用ユーザー名がプロダクション感を削いでいる。"
+        }
+      ]
+    },
+    {
+      "id": "meeting.preparing",
+      "blind_id": "782F",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 3.5,
+        "density": 4,
+        "typography": 3.5,
+        "geometry": 4,
+        "state_clarity": 2.5,
+        "calmness": 4,
+        "craft": 3.5,
+        "distinctiveness": 3
+      },
+      "judges": [
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "「準備中…」という状態語が具体的な進捗を何も伝えていない"
+          ],
+          "why": "準備中と表示しながら経過時間が進み、灰ドット（非アクティブ）と赤い停止ボタン（アクティブ）が同居する。状態の読み取りが絵の中で矛盾している。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "ネイティブ風の最小HUDとして仕上がりは良いが、ラベルとタイマー/ボタンの状態整合がこの一枚だけでは完全には読み切れず、一線級と並べたときの確信度がやや下がる。"
+        }
+      ]
+    },
+    {
+      "id": "main.home",
+      "blind_id": "7B4E",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 3.5,
+        "density": 2.5,
+        "typography": 4,
+        "geometry": 3.5,
+        "state_clarity": 3.5,
+        "calmness": 4,
+        "craft": 3.5,
+        "distinctiveness": 3
+      },
+      "judges": [
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "「はじめに」3 行が説明過多で、機能の言い換えに近い",
+            "空状態が上寄せの説明テキストだけで構成され、テンプレ的"
+          ],
+          "why": "ナビが英語・本文が日本語の混在が絵から明確に読め、さらに画面下半分が使途不明の空白として残り、空状態が広さを支えていない。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "矢印付きの3行オンボーディングTipsが均一なテンプレート感を持つ",
+            "検索バー＋クイックスタートカード＋空状態という構成はAIアシスタント系アプリで頻出のパターン"
+          ],
+          "why": "タイポグラフィと階層は整っているが、下部の余白過多とテンプレート的なオンボーディング構成が一線級との差になっている。"
+        }
+      ]
+    },
+    {
+      "id": "system.after-sharing",
+      "blind_id": "7F99",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "avg": {
+        "hierarchy": 4,
+        "density": 4,
+        "typography": 3,
+        "geometry": 4,
+        "state_clarity": 5,
+        "calmness": 4,
+        "craft": 4,
+        "distinctiveness": 3
+      },
+      "judges": [
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": false,
+          "ai_look": [
+            "等間隔の飾り波形が「録音っぽさ」の記号として置かれているだけに見える"
+          ],
+          "why": "録音中の状態表現は明快で密度も良いが、反応しない見た目の波形・中央の空洞・日英混在という、一線級と並べたときの差が残る。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "ラベル・アニメーション・タイマー・赤ボタンが一致し状態は明快だが、視覚的個性に乏しく汎用的なユーティリティバーの域を出ない。"
+        }
+      ]
+    },
+    {
+      "id": "system.update-unavailable",
+      "blind_id": "8A93",
+      "verdict": "BELOW_BAR",
+      "avg": {
+        "hierarchy": 3.5,
+        "density": 3,
+        "typography": 3.5,
+        "geometry": 3,
+        "state_clarity": 4,
+        "calmness": 3.5,
+        "craft": 2,
+        "distinctiveness": 2
+      },
+      "judges": [
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "中央寄せ・アイコン・見出し・説明・2ボタンという既製ダイアログのテンプレそのまま",
+            "汎用の青い塗りつぶしボタンに依存"
+          ],
+          "why": "アプリアイコンがプレースホルダのまま出荷状態のダイアログに見え、主ボタンの青も他画面のアクセントと不一致。仕上がりの欠陥が絵から言える。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "汎用グリッドアイコンが未完成/デフォルト画像のまま出荷されたような印象を与える"
+          ],
+          "why": "メッセージ自体は明快だが、ユーザー向けダイアログに未調整のプレースホルダーアイコンが残っており、一線級製品では出荷前に必ず差し替えられる箇所が絵から具体的に指摘できる欠陥。"
+        }
+      ]
+    },
+    {
+      "id": "voice.listening",
+      "blind_id": "8BE6",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "avg": {},
+      "judges": [
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": false,
+          "ai_look": [],
+          "why": "状態と離脱手段は明快で静かだが、右側の広い空白の用途が読めず、確定手段も示されない分だけ一線級に届かない。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": false,
+          "ai_look": [],
+          "why": "Raycast的な最小HUDとして機能・状態表現は非常に明快だが、ブランド上の個性が薄く汎用的なダークピルの域を出ない。"
+        }
+      ]
+    },
+    {
+      "id": "voice.idle",
+      "blind_id": "8D0D",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 3,
+        "density": 4.5,
+        "typography": 3.5,
+        "geometry": 4,
+        "state_clarity": 3.5,
+        "calmness": 5,
+        "craft": 4,
+        "distinctiveness": 3
+      },
+      "judges": [
+        {
+          "model": "opus",
+          "verdict": "NOT_ENOUGH_EVIDENCE",
+          "valid": true,
+          "ai_look": [],
+          "why": "読める要素は製品名とキーヒントのみで、これが常駐チップか呼び出し前の予告表示か、前後の遷移が無いと妥当性を判断できない。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "情報量は最小限だが、ブランド名とショートカットが一目で読み取れ機能的に破綻はない。ただし極めて簡素で差別化要素に乏しい。"
+        }
+      ]
+    },
+    {
+      "id": "dock.result-failed",
+      "blind_id": "92C5",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "avg": {
+        "hierarchy": 3,
+        "density": 4,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 2,
+        "calmness": 4,
+        "craft": 2,
+        "distinctiveness": 2
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": false,
+          "ai_look": [],
+          "why": "標準的で丁寧なエラーモーダル。視覚階層と状態表示は明確だが、特に革新的ではない"
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": false,
+          "ai_look": [],
+          "why": "失敗の場所（「送信」で止まった）と理由（接続が切れた）を短文で言い切り、復帰導線が一つだけという判断は一線級。ただし「やり直す」行の当たり判定が視覚的に曖昧で、閉じる × が下段右端にある配置は Linear/Raycast のトーストと比べると詰めが甘い。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [],
+          "why": "主要アクション「やり直す」にボタンとしての視覚的アフォーダンスが無く、失敗トーストとしては機能するが操作可能性の伝達が絵から見て弱い"
+        }
+      ]
+    },
+    {
+      "id": "session.ready",
+      "blind_id": "986C",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 3.67,
+        "density": 3.67,
+        "typography": 4.33,
+        "geometry": 4,
+        "state_clarity": 3.33,
+        "calmness": 4.33,
+        "craft": 3.67,
+        "distinctiveness": 3
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "情報整理が完璧すぎて、やや「テンプレート感」がある"
+          ],
+          "why": "高品質で整理が良い、フォントウェイトと色が役割を明確に示すが、革新性に欠ける。落ち着きは一線級"
+        },
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "挨拶大見出し＋検索風プレースホルダ（「何を終わらせますか？」）という定番ホームの型",
+            "「これからの予定」「最近の会議」が全て同じ角丸・同じ影の白カードで、情報の重みの差がカードでは表現されていない"
+          ],
+          "why": "「こんばんは」と 10:00/13:30 の“これからの予定”という時刻矛盾が絵から言える。加えて下部の大きな空きと、Home ラベルの二重表示、同一行に混在する無色/青の 2 種ラベルの意味不明さが重なり、一線級のホームとしては状態の整合が弱い。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "全体的に整った落ち着いたホーム画面だが、即時アクションと予定行の視覚的差別化が弱く一線級と比べるとやや埋没する"
+        }
+      ]
+    },
+    {
+      "id": "dock.context-detail",
+      "blind_id": "9953",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4,
+        "density": 4,
+        "typography": 4,
+        "geometry": 3.33,
+        "state_clarity": 4,
+        "calmness": 4,
+        "craft": 3.67,
+        "distinctiveness": 4
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "コンテキスト表示という独自設計で distinctiveness が高く、状態明確性も優れているが、タイル幾何学が若干未調整"
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "「AI が今どこを見ているか」を件数と具体名で開示する設計は説得力があり、独自性もある。ただし 3 枚目の折り返しでカード内の 3 層グリッドが崩れ、下端メタが揃わない点と、1 枚目だけ色が違う理由が読み取れない点が一線級との差。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "コンテキスト透明性という差別化された機能を簡潔に見せているが、インタラクション可能性の手がかりが乏しく一線級と断言するには材料不足"
+        }
+      ]
+    },
+    {
+      "id": "system.confirm-cancel",
+      "blind_id": "9963",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4.5,
+        "density": 5,
+        "typography": 4.5,
+        "geometry": 4,
+        "state_clarity": 5,
+        "calmness": 4,
+        "craft": 4.5,
+        "distinctiveness": 3.5
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "BELOW_BAR",
+          "valid": false,
+          "ai_look": [
+            "「定長終了」のテキスト不自然さ。AI 生成またはテキストカット"
+          ],
+          "why": "定長終了が意味不明で、ユーザーが現在の状態を確実に理解できない。破壊的アクション前のモーダルとして state_clarity 不足が致命的"
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "取り消し不能と消える対象を先に言い、esc も出す確認としては良質で、文言も短く自然。ただし破壊側だけが塗りボタンで最も強調されており、既定の視線誘導が危険な方に向いている点が一線級（安全側を強調する Apple/Linear 流）との差。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "SUPREME",
+          "valid": true,
+          "ai_look": [],
+          "why": "破壊的操作の結果・不可逆性・キーボード操作（esc）まで明示しており、一線級プロダクトの削除確認ダイアログと並べても遜色ない"
+        }
+      ]
+    },
+    {
+      "id": "meeting.notes",
+      "blind_id": "9D30",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4.67,
+        "density": 3.67,
+        "typography": 4.33,
+        "geometry": 3.67,
+        "state_clarity": 4.33,
+        "calmness": 3.67,
+        "craft": 4,
+        "distinctiveness": 4.33
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "SUPREME",
+          "valid": true,
+          "ai_look": [],
+          "why": "完璧な実装。ライブ記録の UX が優れ、セクション分類は論理的で実用的。フォント・色・配置のすべてが調和。リアルタイム状態が一目瞭然"
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "録音状態・経過時間・分類済みライブメモが一目で読め、等幅時刻＋話者＋発言の行組みは Granola と並べても見劣りしない。時刻が昇順でない並びと、ラベルの無い目アイコンの意味不明さだけが引っかかる。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "話者付きライブ構造化メモという価値の高い機能だが、上部ツールバーのタブ/アイコン表現が不統一で一線級の仕上げには一歩届かない"
+        }
+      ]
+    },
+    {
+      "id": "main.apps-connectors",
+      "blind_id": "9D5D",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 3.67,
+        "density": 3,
+        "typography": 3.67,
+        "geometry": 3.33,
+        "state_clarity": 2.67,
+        "calmness": 3.33,
+        "craft": 2.33,
+        "distinctiveness": 2.33
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "句読点の不自然さ（AI テキスト生成の可能性）",
+            "下部空白が未調整"
+          ],
+          "why": "設定状態は明確に示されているが、テキスト精度が落ち、レイアウト下部の大きな空白がクラフト感を減じている。実装は標準的"
+        },
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "3 枚の同一角丸・同一影カードを機械的に横並びしただけのテンプレ反復",
+            "実装都合の文言（client ID がまだ設定されていません）をそのままユーザー向け説明に出している"
+          ],
+          "why": "未設定が主状態なのに接続へ進むボタンがカードに無く、次の一手が絵から言えない。加えて下 2/3 の広い空白、Gmail と Google Calendar の同一アイコン、日本語文中に生の「client ID」が出る言語混在が重なり、設定画面としての完成度が一線級に届かない。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [],
+          "why": "内部実装用語「client ID」がユーザー向け画面にそのまま露出し、かつ2/3のコネクタがエラー状態なのに是正アクションが画面から見えないという具体的な欠陥がある"
+        }
+      ]
+    },
+    {
+      "id": "meeting.controller",
+      "blind_id": "9D5E",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4,
+        "density": 4,
+        "typography": 3.67,
+        "geometry": 4,
+        "state_clarity": 3.67,
+        "calmness": 4.33,
+        "craft": 3.67,
+        "distinctiveness": 3
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "機能的で完成度は高いが、Google製品の標準的なデザイン言語に留まり、個性や意外性が欠ける。LinearやAppleと並べると、やや保守的に見える"
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "「Ask Astra」のキラキラ（✨）アイコンは AI 機能の定番表現で、やや既視感がある"
+          ],
+          "why": "録音中の3情報（何を・どれだけ・止める手段）が一列で読め、停止だけ赤で分離されている点は一線級。ただし波形が均一点線で生きておらず、目アイコンだけ無ラベルという詰めの甘さが残る。欠陥というより差。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "コンパクトで機能的だが、同一行内でアイコン+ラベルとアイコン単独が混在しクリック対象の一貫性がやや弱い。"
+        }
+      ]
+    },
+    {
+      "id": "dock.confirmation",
+      "blind_id": "A733",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4.33,
+        "density": 4,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 4,
+        "calmness": 4,
+        "craft": 3.67,
+        "distinctiveness": 3
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "安全性と情報の明確さが優先されており、機能設計としては優れている。ただし、ダイアログ表現自体は業界標準的で、FigmaなどのプレミアムUIと比べると個性が少ない"
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "外部送信という非可逆操作に対し、警告・宛先・本文全文・出所を1画面で出し、既定を「送る」に置きつつ「直す」を用意した判断は上質。落とすのは、キーヒント（esc / ⌘⏎）とボタンの対応が視覚的に結ばれていない一点。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [],
+          "why": "「外部に出る」という重要な警告要素が、何を警告しているのか視覚的に紐付けられておらず宙に浮いた表記になっている点は絵から言える具体的な階層上の欠陥。"
+        }
+      ]
+    },
+    {
+      "id": "main.home-upcoming",
+      "blind_id": "AC25",
+      "verdict": "BELOW_BAR",
+      "avg": {
+        "hierarchy": 4,
+        "density": 2.33,
+        "typography": 4,
+        "geometry": 3.67,
+        "state_clarity": 3,
+        "calmness": 4.33,
+        "craft": 3.33,
+        "distinctiveness": 2.67
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "中央寄せ・余白を多用した空状態の表現",
+            "テンプレート的なカード構成",
+            "セクションラベルの反復"
+          ],
+          "why": "余白設計が過度で、情報密度が低すぎる。高級デスクトップアプリ（Notionの密度、Raycastの効率性）と比べると、スペースの使い方が非効率。『何を終わらせますか？』というテンプレート的なプロンプトも、個別性に欠ける"
+        },
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "「何を終わらせますか？」という汎用プロンプト入力欄をホーム最上段に置く構図はAI製品のテンプレ反復",
+            "全カードが同じ角丸・同じ白・同じ影で、重要度差がカードの形に出ていない"
+          ],
+          "why": "絵から言える欠陥が2つ。(1) 夜の挨拶と日付なしの 10:00 予定、かつ同日 42 分の会議が「最近」に入っており、時間軸が矛盾して読める。(2) ナビだけ英語で本文が日本語という言語混在。レイアウト自体は静かで悪くないが、時間を扱う製品で時間表示が曖昧なのは差ではなく欠陥。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [],
+          "why": "説明のつかない広大な空白領域がウィンドウ下半分に残っており、コンテンツ密度と画面設計のバランスが崩れている。"
+        }
+      ]
+    },
+    {
+      "id": "session.recording",
+      "blind_id": "B496",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4.33,
+        "density": 3,
+        "typography": 4,
+        "geometry": 3.67,
+        "state_clarity": 3.67,
+        "calmness": 3.33,
+        "craft": 3.33,
+        "distinctiveness": 3
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "機能の流れと情報の優先順位が適切。ただし、AC25と同じプロダクト内での使い分けが明らかで、このスクリーンのみでは個性が判断しづらい。素材としては一線級だが、全体の美学としては標準的"
+        },
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "録音中カードの構成（バッジ＋タイトル＋波形＋停止）は定型で、赤面塗り以外に固有の判断が見えない"
+          ],
+          "why": "録音中という排他的なはずの状態で、下の予定行の「録音」ボタンが無効化も文言変更もされておらず状態が矛盾して見える。加えて隣接する2アクションの押せる表現が青リンク/黒текстで不揃い、画面下部が大きく空く。いずれも絵から指摘できる。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "録音中ステートの視覚的な差別化（色・タイマー）は明確だが、バナー内外の空白の多さがまだ気になる。"
+        }
+      ]
+    },
+    {
+      "id": "recording.meeting-canvas",
+      "blind_id": "B5D4",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4,
+        "density": 3.67,
+        "typography": 3.67,
+        "geometry": 3.67,
+        "state_clarity": 3.67,
+        "calmness": 3,
+        "craft": 3.67,
+        "distinctiveness": 3.67
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "SUPREME",
+          "valid": true,
+          "ai_look": [],
+          "why": "Googleの高度な音声認識と自動分類、翻訳機能が統合された実装。情報密度が高く、3列レイアウトで各要素が役割を果たしている。LinearのタイムラインやAppleの多機能統合と並べても、一線級の完成度。誤認識はあるものの、実装の野心的さと実用性の両立が見られる"
+        },
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "決まったこと／やること／質問／懸念 という4分類の機械的な反復。各ブロックが同じ形・同じ行数で、内容の重みの差が形に出ていない",
+            "同一発言をライブ行・質問カード・原文の3か所に出す説明過多",
+            "小見出し＋時刻＋話者＋出所＋直す というメタ情報の常時露出が、読ませたい本文より目立つ"
+          ],
+          "why": "同じ発言が画面内に3回、同じ話者・時刻が1項目に2回出ており、情報の重複が絵から明確に数えられる。さらに左カラムの時刻が昇順でも降順でもなく、タイトルが「会議」のままで、右パネルは4行で下2/3が空。会議中に一目で読ませる画面としては密度と秩序が破綻している。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "自動構造化ノートという強い機能を持つが、右パネルとの内容重複や情報密度の高さが一線級と比べるとやや荒さを感じさせる。"
+        }
+      ]
+    },
+    {
+      "id": "meeting.paused",
+      "blind_id": "BF38",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4,
+        "density": 4,
+        "typography": 3.67,
+        "geometry": 4,
+        "state_clarity": 4,
+        "calmness": 4.33,
+        "craft": 3.67,
+        "distinctiveness": 3
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "停止状態の表現は明確で、ダークテーマの落ち着きも高い。ただし、9D5Eとの連続性の中で特別な個性は見当たらない。状態の違いは色（赤）で区別されているが、ポジションの変化（再開ボタンの位置変更等）もあれば、より高い確実性が生まれる"
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "色・文言・アイコンの3系統で一時停止を示し、レイアウトが録音中と1pxもずれずに入れ替わっている点は良い。ただし状態文言がソース名を置き換えてしまい「何を録っていたか」が消える。欠陥というより、録音中と情報量が非対称になる差。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "9D5Eと同系統の軽微なアイコン/ラベル不統一があり、タイマー表示の意味もこの1枚だけでは確定できない。"
+        }
+      ]
+    },
+    {
+      "id": "dock.result",
+      "blind_id": "C198",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4,
+        "density": 4,
+        "typography": 4,
+        "geometry": 3.67,
+        "state_clarity": 4.67,
+        "calmness": 4.33,
+        "craft": 3.67,
+        "distinctiveness": 3
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "Polished success notification with clear state, but follows standard toast pattern seen across many platforms"
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "「2 件のソースから作成しました」という、結果そのものより手続きを説明する副文"
+          ],
+          "why": "完了状態・根拠・次の行動が短い日本語で過不足なく出ており、通知としての情報設計は良い。ただし2つのアクションの間隔と下方向の余白配分が整っておらず、×だけ表現形式が違うなど、仕上げが一線級のトーストに一歩届かない。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "ダークカード+緑チェックの完了トーストは類似AIツールで頻出するパターン"
+          ],
+          "why": "簡潔で読みやすい完了通知として機能は完璧だが、他の一線級プロダクトのトーストと並べても際立つ個性はない。"
+        }
+      ]
+    },
+    {
+      "id": "voice.preparing",
+      "blind_id": "C487",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "avg": {},
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": false,
+          "ai_look": [],
+          "why": "Exemplary minimalism and clarity, but standard loading indicator pattern without distinguishing features"
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": false,
+          "ai_look": [
+            "「準備中...」という、何を準備しているか言わない空語的な進行表現"
+          ],
+          "why": "抑制の効いた1行バーで、esc の逃げ道が常時見えているのは良い。ただし「準備中...」だけでは何が起きるのかが分からず、残り時間も進捗も無いため、Raycast 級のローディング表現と比べると情報が薄い。欠陥ではなく差。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": false,
+          "ai_look": [
+            "「準備中...」+ドットの汎用ローディング表現、個性なし"
+          ],
+          "why": "最小限のHUD的ローディングバーとして破綻はないが、情報量が乏しく判断材料が薄い。"
+        }
+      ]
+    },
+    {
+      "id": "provenance.reopened",
+      "blind_id": "C7FA",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4.33,
+        "density": 3,
+        "typography": 4,
+        "geometry": 3.67,
+        "state_clarity": 3.67,
+        "calmness": 4,
+        "craft": 3.67,
+        "distinctiveness": 3.33
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "Solid, well-organized notes interface with excellent hierarchy and state tracking, but follows familiar meeting app UX patterns"
+        },
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "「やること 0」のように、中身が無くてもセクションを機械的に3つ並べるテンプレ反復",
+            "タブが4つ並ぶが、選択中以外に中身の予告が無い定型構成"
+          ],
+          "why": "出典番号と文字起こしのハイライト連動という核は強いが、絵から欠陥が言える。同じ出典番号が枠付きと枠無しの2表現に割れており、「やること 0」は空の見出しが放置され、画面下半分と右パネル大半が空白のまま、さらにウィンドウタイトルと見出しが同語で重複している。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "情報構造と引用トレーサビリティは実用的で丁寧だが、右パネルの余白過多と見出し重複がGranola等の一線級と比べると詰めの甘さを感じさせる。"
+        }
+      ]
+    },
+    {
+      "id": "main.apps-plugins",
+      "blind_id": "D249",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 3.67,
+        "density": 3.67,
+        "typography": 4,
+        "geometry": 3.33,
+        "state_clarity": 3.33,
+        "calmness": 3.67,
+        "craft": 3.67,
+        "distinctiveness": 2.67
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "template repetition—every card identical structure (initial letter, name, version, permissions, checkmark)"
+          ],
+          "why": "Clean, efficient plugin marketplace with good information density and consistent card design, but standard app marketplace pattern with slight template predictability"
+        },
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "全カードが同一角丸・同一レイアウトで機械的に反復",
+            "頭文字だけの正方形アイコンが全カードに並ぶ量産感",
+            "「できる仕事を増やす。宣言しているだけでは動かず…」という説明過多のリード文",
+            "Architecture / Care Support / General Assistant / Research Agent という、中身の想像がつかない汎用名の羅列"
+          ],
+          "why": "権限をチップで前面に出す方針は良いが、絵から欠陥が言える。緑チェックが全カード一律で状態の識別に機能しておらず、「この Mac の中だけで動きます」が一部にしか無いため残りの扱いが不明、その差でカード高さと下端が列間でずれ、説明文の有無もカードごとにばらつく。権限画面としては状態の曖昧さが致命的。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "カードの色分けアバターと均一な角丸カードグリッドは拡張機能マーケットプレイスの定番パターン"
+          ],
+          "why": "権限の可視化とカード設計は整っており実用的だが、注記表示の基準が画面から不明で、レイアウト自体も汎用的なプラグイン一覧を出ない。"
+        }
+      ]
+    },
+    {
+      "id": "system.mic-denied",
+      "blind_id": "D6D1",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4,
+        "density": 3,
+        "typography": 3.67,
+        "geometry": 3.67,
+        "state_clarity": 4,
+        "calmness": 3.67,
+        "craft": 3.67,
+        "distinctiveness": 3
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "Exceptional error communication and empty state handling—explains problem and solution clearly without alarming tone. Follows meeting/call recording app UX conventions"
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "空領域が3か所（左カード・右枠・最下部）で「まだありません」を繰り返しており、同じ空語が反復している"
+          ],
+          "why": "権限欠落という失敗状態の扱いが際立って誠実で、タイトル・警告バー・空状態の案内文がすべて同じ一つの復旧行動に収束している点は一線級。一方で 04:21 が進み続ける録音表示は「無音のまま時間だけ溜まる」不安を残し、空枠3つが画面の大半を占める密度の薄さが、Granola のような完成品と並べたときの弱点になる。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "空状態メッセージ「まだありません」の反復"
+          ],
+          "why": "録音が進行している見た目のまま実データが失われ続ける状態を、控えめなバナーだけで済ませているのは状態矛盾であり、一線級の会議アプリなら録音を止めるかモーダルで強くブロックするはず。"
+        }
+      ]
+    },
+    {
+      "id": "voice.thinking",
+      "blind_id": "D9F0",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 3.67,
+        "density": 4,
+        "typography": 3.67,
+        "geometry": 3.67,
+        "state_clarity": 3.67,
+        "calmness": 4.67,
+        "craft": 3.33,
+        "distinctiveness": 2
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "Exemplary minimalism and calm tone for async AI operation, but thinking/processing indicator is a ubiquitous pattern across all AI products"
+        },
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "きらめき（スパークル）アイコン＋「考えています...」という、AI 製品の最も定型的な待機表現",
+            "何を考えているかを言わない空語"
+          ],
+          "why": "1行の待機バーとして静かではあるが、絵から欠陥が言える。中断手段が無く、進捗も対象も示されない。同じ製品の C487 では同型バーに esc が出ていることから、待機表示の逃げ道が状態によって欠落しており一貫していない。スパークル＋「考えています...」も最も既視感の強い定型。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "スパークルアイコン+「考えています...」は生成AIツールの定番ローディング表現"
+          ],
+          "why": "シンプルなHUD的ローディング表示として機能するが、情報が乏しく個性もない汎用パターン。"
+        }
+      ]
+    },
+    {
+      "id": "session.processing",
+      "blind_id": "DAFB",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4.33,
+        "density": 3.67,
+        "typography": 4.33,
+        "geometry": 4.33,
+        "state_clarity": 3.67,
+        "calmness": 4.67,
+        "craft": 4.33,
+        "distinctiveness": 3
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "High-quality execution of productivity app conventions. Hierarchy is clear, typography excellent, whitespace intentional and calm. All states are unambiguous. However, the design doesn't break new ground — it executes established patterns flawlessly rather than being distinctive or pushing boundaries."
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "カードが全部同じ角丸・同じ白・同じ影で、予定と履歴という性質の違う情報が同じ器に入っている",
+            "「何を終わらせますか？」という汎用アシスタント風プレースホルダ"
+          ],
+          "why": "情報の並び順と余白は落ち着いていて出せる水準。ただし処理中状態が進行度も取り消しも示さず、下部の広い空白とカード1枚だけの「最近の会議」で画面が痩せて見える点が、一線級と並べたときの差。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "全カードが同じ角丸・同じ余白で反復",
+            "pillタグ(自分だけ/Product)が定型的"
+          ],
+          "why": "視覚的には整っているが赤アクセント以外に個性がなく、下部の説明のつかない余白と処理中状態の表現が弱い。"
+        }
+      ]
+    },
+    {
+      "id": "session.project",
+      "blind_id": "E65B",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4.33,
+        "density": 4,
+        "typography": 4.33,
+        "geometry": 4.33,
+        "state_clarity": 4,
+        "calmness": 4.67,
+        "craft": 4.33,
+        "distinctiveness": 3
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "Seamless state transition from DAFB. The expanded card maintains visual hierarchy and readability. No new defects introduced. Same quality as parent state — excellent execution but not distinctive."
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "「5 人 / やること 3 / 決まったこと 2」の等間隔アイコン＋数字の並びが、指標を並べただけのテンプレに見える"
+          ],
+          "why": "完了状態の情報量が適切で、要約→指標→メタの流れは読める。ただし公開範囲がラベルなのか操作なのか判別できず、下部の空白も埋まっていないため一線級には一歩届かない。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "同じpill/タグ表現の反復",
+            "アイコンの意味論が曖昧なまま反復使用"
+          ],
+          "why": "情報は揃っているが完了ステータスと公開範囲変更の視覚的重みが不足している。"
+        }
+      ]
+    },
+    {
+      "id": "system.update-available",
+      "blind_id": "E74B",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4,
+        "density": 3.67,
+        "typography": 4.33,
+        "geometry": 3.67,
+        "state_clarity": 4.33,
+        "calmness": 4.67,
+        "craft": 3.67,
+        "distinctiveness": 2.33
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "Standard software update dialog executed with polish. All elements are clear and in their expected places. Button hierarchy (skip vs install) is appropriate. However, this is an archetypal pattern — no distinctive innovation or delight."
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "「！」付きの宣伝調タイトルと、その直後に同じ内容を繰り返す本文"
+          ],
+          "why": "更新内容が機能名の羅列でなく利用者の言葉で書かれているのは良質で、既定ボタンも安全側。ただしアイコンが仮置きに見え、見出しと本文の余白差が弱く、標準ダイアログの域を出ない。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "変更理由まで説明する冗長な変更履歴の文体がAI生成的",
+            "汎用プレースホルダー風アプリアイコン"
+          ],
+          "why": "アイコンのブランド不在と、通常の変更履歴らしくない説明過多な文体という具体的な粗が絵から言える。"
+        }
+      ]
+    },
+    {
+      "id": "components.hover",
+      "blind_id": "EA24",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4,
+        "density": 3.33,
+        "typography": 4.33,
+        "geometry": 4,
+        "state_clarity": 3.67,
+        "calmness": 4,
+        "craft": 4,
+        "distinctiveness": 3.33
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "Excellent implementation of a complex dual-pane transcription interface. Information density is high but remains scannable through careful visual hierarchy. Recording controls are intuitive. However, meeting transcription UI is becoming a standard pattern in modern productivity tools — well executed but not distinctive."
+        },
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "「要約 / 決まったこと / やること」の等幅ボタン三連が定型のAI操作セットに見える",
+            "左ペインの大きな空白を埋めないまま見出しだけ置いている"
+          ],
+          "why": "左ペインが画面の半分を占めながら中身は1行で、下部の大半が説明のつかない空白。さらに同じ発話が左右に重複し、「まだありません」と同名ボタンが同居していて、録音中に何を見る面なのかが絵から定まらない。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "最新発言を二重表示する構成が意図的というより埋め草的"
+          ],
+          "why": "レイアウトは機能的だが、決定事項の抽出が発言内容に対して遅延しているように見える不整合がある(処理遅延の可能性もあり断定はしない)。"
+        }
+      ]
+    },
+    {
+      "id": "system.stt-unavailable",
+      "blind_id": "EB4D",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4,
+        "density": 2.33,
+        "typography": 3.67,
+        "geometry": 3.67,
+        "state_clarity": 4.33,
+        "calmness": 3.67,
+        "craft": 3.67,
+        "distinctiveness": 3.33
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "Thoughtful error state handling with clear messaging and actionable recovery path. However, the empty-state imbalance (sparse right pane) and red warning visual tension reduce overall calm. The approach is professional and correct, but the visual result is slightly less polished than EA24's flowing state."
+        },
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "空状態でも三連ボタンとタブ列をそのまま並べ、淡くしただけで済ませている"
+          ],
+          "why": "劣化の説明の仕方（止まったものと続いているものの切り分け＋復旧リンク）は一線級の考え方だが、赤字の折り返しに復旧リンクが噛み合わず行が崩れ、使えないはずのタブ列は通常表示、空リンクが青のまま、と絵から言える不整合が複数ある。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "異なる状態のはずのモックで経過時間が完全一致しており、テンプレートで組んだ疑いがある"
+          ],
+          "why": "原因説明と復旧導線がある点は良いが、モックらしさと曖昧なアイコンが減点材料。"
+        }
+      ]
+    },
+    {
+      "id": "system.interrupted",
+      "blind_id": "F02F",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4.33,
+        "density": 4,
+        "typography": 4.33,
+        "geometry": 4.33,
+        "state_clarity": 4.33,
+        "calmness": 3.67,
+        "craft": 4,
+        "distinctiveness": 3.33
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "Excellent handling of the dropped-meeting edge case. Warning is prominent without being alarmist, and the explanatory text contextualizes what's safe to access. Maintains the calm, clean aesthetic of the parent dashboard. However, this is a well-executed edge case rather than a distinctive innovation."
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "失敗カードも成功カードもまったく同じ角丸・同じ白の器で、深刻さの差が色1点でしか出ていない"
+          ],
+          "why": "障害後にも「何が残っているか」を先に言う設計は誠実で、一覧としての密度も良い。ただし復旧操作が絵の中に無く、会議名が失われたまま「落ちた会議」と表示される点で、一線級の後始末には一歩足りない。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "空値をそのままラベル表示する「プロジェクト無し」はAI生成UIにありがちな未処理の空状態"
+          ],
+          "why": "空値がそのままUIラベルとして漏れて表示されている具体的な粗、および下端でカードが見切れる曖昧なスクロール表現が絵から確認できる。"
+        }
+      ]
+    },
+    {
+      "id": "recording.agent-timeline",
+      "blind_id": "F162",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4,
+        "density": 3,
+        "typography": 4,
+        "geometry": 3.33,
+        "state_clarity": 4.33,
+        "calmness": 4,
+        "craft": 3.67,
+        "distinctiveness": 3.33
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "Functional dual-pane layout with clear recording state and transcript access. However, alignment between panels is uneven, and the left panel wastes vertical space, reducing visual sophistication. Standard meeting-recording UX pattern."
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "『会話を用意する / 文字起こしを読む / 答えをまとめる』という 3 段チェックリストが、実際の進捗というより演出的な段階表示に見える",
+            "下部の『要約 / 決まったこと / やること』ピルがテンプレ的な定型 3 点セット"
+          ],
+          "why": "録音中という状態、経過時間、最新発言、次の操作が一目で読める点は強い。ただし左右パネルとも下半分が空で構図が崩れ、タブとライブ字幕の役割重複、上部バーの重なりが一線級と比べた弱さ。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "録音・文字起こし・要約の3系統情報を破綻なく整理できているが、右パネル中央の空白余白と左パネルの見出し結合表記がGranola等の一線級と比べると詰めが甘い。"
+        }
+      ]
+    },
+    {
+      "id": "system.accessibility-permission",
+      "blind_id": "F168",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 3.67,
+        "density": 2.33,
+        "typography": 4,
+        "geometry": 3.67,
+        "state_clarity": 3.33,
+        "calmness": 4.67,
+        "craft": 3.67,
+        "distinctiveness": 3
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "center-aligned empty state with generous whitespace; standard pattern"
+          ],
+          "why": "Well-executed empty state with clear affordances and welcoming tone. Good visual hierarchy and breathing room. However, follows conventional empty-state template (heading + description + CTA) without distinctive character or layout innovation."
+        },
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "『はじめに』の説明 3 行が体言止めの定型反復で、製品説明文がそのまま UI に残っている",
+            "中央寄せではないものの、空状態を説明テキストで埋める典型パターン"
+          ],
+          "why": "空状態の設計が弱い。『まだ何もありません』が何の空かを指さず、見出し扱いもカード扱いもされないまま宙に浮き、その下に画面の大半の空白が残る。サイドバー英語と本文日本語の混在も絵から確認できる。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "矢印(↪)付き箇条書きのオンボーディングTipsリストは他画面(F265)にも同型で再登場しており、テンプレ反復気味"
+          ],
+          "why": "余白と静けさは良いが、下半分が完全に空でコンテンツ密度の設計判断が説明不足に見える。"
+        }
+      ]
+    },
+    {
+      "id": "voice.context-expanded",
+      "blind_id": "F206",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4.33,
+        "density": 4,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 3.67,
+        "calmness": 4.33,
+        "craft": 4,
+        "distinctiveness": 3.33
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "SUPREME",
+          "valid": true,
+          "ai_look": [],
+          "why": "Polished, purposeful dark-mode popup with minimal visual noise and clear action hierarchy. Notion's signature aesthetic—confident typography, dark background reducing distraction, precise spacing. No wasted elements; every component serves a function. Recognizable brand excellence."
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "同一アイコンの 4 行反復というテンプレ的な提案リスト",
+            "『SUGGESTED』という空語ラベル"
+          ],
+          "why": "対象と選択肢が短く明快で、密度と静けさは良い。ただし英語ラベルと日本語項目の混在、全行同一アイコンで差が付かない点が一線級との差。断片パネルとしては読めるものを判定した。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "NOT_ENOUGH_EVIDENCE",
+          "valid": true,
+          "ai_look": [],
+          "why": "パネル自体の作りは整っているが、選択状態やホバー時の反応、閉じ方が絵から分からず単体画像では品質の最終判断ができない。"
+        }
+      ]
+    },
+    {
+      "id": "provenance.source",
+      "blind_id": "F24F",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 5,
+        "density": 3.67,
+        "typography": 4.33,
+        "geometry": 4.33,
+        "state_clarity": 5,
+        "calmness": 4,
+        "craft": 4.67,
+        "distinctiveness": 3.67
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "Excellent information hierarchy and clear speaker/timestamp structure with thoughtful reference linking. However, the layout is conventional for transcript UIs—a standard vertical list with timestamps and names. Design is polished but lacks distinctive visual character or innovation."
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "『決まったこと / やること / メモ』の定型 3 分割"
+          ],
+          "why": "引用番号→出所→文字起こし行のハイライトという連結が絵の中で成立しており、この製品の核が明確。減点は下半分の大きな空白、タイトルの二重表示、タブ『出所』と右パネルの概念重複、言語混在。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "SUPREME",
+          "valid": true,
+          "ai_look": [],
+          "why": "要約行から発言・音声位置まで戻れる引用リンクの実装と選択状態のハイライトが一貫しており、破綻や不自然な空状態もない。"
+        }
+      ]
+    },
+    {
+      "id": "main.library-meetings",
+      "blind_id": "F265",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 3.33,
+        "density": 2.33,
+        "typography": 3.67,
+        "geometry": 3.67,
+        "state_clarity": 4,
+        "calmness": 4.33,
+        "craft": 3.67,
+        "distinctiveness": 2.33
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "center-aligned empty state pattern; standard capability list + CTA layout"
+          ],
+          "why": "Effective empty state communicating value proposition with clear CTA. Good calmness and state clarity. However, design follows ubiquitous empty-state template without differentiation: heading + feature bullets + centered button. No distinctive layout or visual approach."
+        },
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "別画面と同型の『はじめに / できること』3 行リストの使い回し",
+            "空状態を説明文で埋める定型",
+            "同語のタブ名と見出しの重複というテンプレ生成っぽい冗長"
+          ],
+          "why": "タブ名と大見出しが同一語で重複し、その直下にほぼ同格の太見出しが続いて階層が二段崩れている。加えて他画面と同じ 3 行説明の反復と、画面大半の空白。欠陥として絵から指摘できる。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "矢印付き3項目の「できること」リストがF168の「はじめに」リストとほぼ同型で、複数画面にテンプレ的に反復されている"
+          ],
+          "why": "空状態自体は明快で静かだが、録音開始アクションの見た目が画面ごとに異なり一貫性に疑問が残る。"
+        }
+      ]
+    },
+    {
+      "id": "main.home-recording-now",
+      "blind_id": "F56B",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4.67,
+        "density": 3.67,
+        "typography": 4.33,
+        "geometry": 4,
+        "state_clarity": 4.33,
+        "calmness": 3.67,
+        "craft": 4,
+        "distinctiveness": 3.67
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "card-based layout with slight generic UI feel; meeting cards follow common pattern"
+          ],
+          "why": "Well-designed card interface with clear active-recording prominence and meeting metadata display. State is unambiguous (recording indicator + timer). However, design relies on conventional card patterns and horizontal-list layout—no distinctive visual treatment or layout innovation that would separate it from standard productivity apps."
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "各カード下段の『人数 / やること / 決まったこと』アイコン付きメタ行が定型反復"
+          ],
+          "why": "進行中→入力→履歴という縦の優先順位が明確で、赤い面を録音中にだけ使う判断も良い。減点は非アクティブ風のクロームと録音中という内容の不一致、隣接する 2 つのアクションで押せる見え方が揃っていないこと、波形の作り込みの粗さ。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "情報密度と実データを伴うカード表現は一線級だが、「プロジェクト無し」タグの視覚的曖昧さと二系統のアクセントカラー併存が減点材料。"
+        }
+      ]
+    },
+    {
+      "id": "recording.transcript",
+      "blind_id": "F5BB",
+      "verdict": "BELOW_BAR",
+      "avg": {
+        "hierarchy": 4,
+        "density": 2.5,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 2,
+        "calmness": 4,
+        "craft": 3,
+        "distinctiveness": 2.5
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": false,
+          "ai_look": [
+            "テンプレート的な2カラムレイアウト",
+            "ジェネリックなタブデザイン",
+            "色数が限定的（グレー・ブルーのみ）",
+            "装飾がミニマルで没個性的"
+          ],
+          "why": "機能性（AI翻訳・要約、リアルタイムトランスクリプション）は優れているが、日本語認識エラーの未修正表示、セクション区切りの曖昧さ、左パネルの余白活用の弱さにより、クラフト品質に差がある。一線級製品（Google Meet、Notion等）と並べるとポリッシュが劣る。"
+        },
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "左ペイン下部が「まだありません」一行だけで巨大な空白として残る、典型的な埋まらない空状態",
+            "「要約」「決まったこと」「やること」という機能名を並べただけの pill 群（押した結果がどこに出るか画面から読めない）",
+            "『AI が見ている資料 5 件』というアシスタント自己言及ラベル",
+            "左右カードとも同一の角丸・同一の白カード扱いで、役割差がスタイルに現れていない"
+          ],
+          "why": "経過時間 04:21 に対し文字起こし最終行が 05:37 と、同一画面内で状態が矛盾している。加えて左ペインの大半が「まだありません」だけの空白として放置され、録音が 4 分以上進んだ画面としては情報量が持たない。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "浮遊ピル型ツールバーが本体と間延びして浮いている(意味のない余白)",
+            "グレー基調+同系色の汎用ノートアプリテンプレート感",
+            "会話が進んでも要約側の状態が更新されない=中身の伴わない空状態"
+          ],
+          "why": "画面から読み取れる具体的な状態矛盾がある: 文字起こし側に明確な意思決定発言が存在するのに、要約欄が「まだありません」のまま止まっている。これはGranola等の一線級ノートアプリでは許容されない同期バグに見える。"
+        }
+      ]
+    },
+    {
+      "id": "recording.workspace",
+      "blind_id": "FE0E",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4,
+        "density": 1.5,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 3,
+        "calmness": 4,
+        "craft": 3,
+        "distinctiveness": 2
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "NOT_ENOUGH_EVIDENCE",
+          "valid": false,
+          "ai_look": [
+            "テンプレート的な2カラムレイアウト",
+            "ジェネリックなタブデザイン",
+            "色数が限定的（グレー・ブルーのみ）",
+            "状態遷移の視覚的フィードバックが曖昧"
+          ],
+          "why": "左パネル表示内容の変更（発言者切り替え、資料数減少）が見られるが、1枚のスクリーンショットでは UI 更新の意図・ロジック・インタラクション完全性が判定できない。動作フロー（何をトリガーに表示が変わるのか）を確認する必要があります。ただし F5BB との比較から推測すれば、動的な状態管理の可能性があり、これが state_clarity スコアを低下させています。"
+        },
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "画面の 7 割が空白なのに、その空白に何も語らせていない（「まだありません」の薄いグレー一行だけ）",
+            "左右カードが同角丸・同枠線・同白背景で、内容量に関係なく同じ器を使い回している",
+            "機能名だけの pill 3 連（要約 / 決まったこと / やること）",
+            "『AI が見ている資料 3 件』という自己言及ラベル"
+          ],
+          "why": "同一デザインの F5BB と比べても情報が 3 行しかなく、画面の大半が空白のまま。空状態の設計（次に何が起きるか、どれくらい待つか）が「まだありません」以上に語られておらず、初期状態の弱さが絵から明確に言える。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "浮遊ピル型ツールバーの間延びした配置",
+            "汎用グレー/薄紫のノートアプリ配色でブランド差別化が弱い",
+            "空状態(・まだありません)がこの時点では妥当だが表現が素っ気ない"
+          ],
+          "why": "この時点では状態表示に矛盾はなく機能もクリアだが、密度が低く視覚的な個性に欠けるため一線級と並べると見劣りする。欠陥とまでは言えない。"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "supreme": 0,
+    "competitive": 53,
+    "below_bar": 5,
+    "not_enough_evidence": 4,
+    "models": [
+      "haiku",
+      "opus",
+      "sonnet"
+    ]
+  },
+  "gate": "FAIL",
+  "ab_competitor": "AUTOMATION_MISSING: 競合の実 UI 画像（ASTRA_COMPETITORS_DIR）が無い。画面収録 TCC と driver が要る"
+}

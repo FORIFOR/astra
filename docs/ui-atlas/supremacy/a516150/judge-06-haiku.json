@@ -1,0 +1,212 @@
+{
+  "pages": {
+    "92C5": {
+      "visible_text": [
+        "先方八見積の返信を送る",
+        "送信を上手くました・返信が切れた",
+        "やり直す",
+        "X"
+      ],
+      "observation": {
+        "happening": "エラー状態のダークモーダルが表示。ユーザーアクション失敗を通知",
+        "most_important": "再試行オプションとキャンセルの明確な選択肢提供",
+        "next_action": "やり直す か キャンセル（X）を選択",
+        "anomalies": []
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 4,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 4,
+        "calmness": 3,
+        "craft": 4,
+        "distinctiveness": 3
+      },
+      "ai_look": [],
+      "verdict": "COMPETITIVE",
+      "why": "標準的で丁寧なエラーモーダル。視覚階層と状態表示は明確だが、特に革新的ではない",
+      "confidence": "high"
+    },
+    "986C": {
+      "visible_text": [
+        "こんばんは",
+        "何を終わらせますか？",
+        "録音を始める",
+        "これからの予定",
+        "Product Weekly",
+        "最近の会議",
+        "Q4移行計画の打ち合わせ"
+      ],
+      "observation": {
+        "happening": "AI アシスタント型ホームダッシュボード。グリーティング、音声記録機能、カレンダー統合、最近の会議を表示",
+        "most_important": "ユーザーのタスク完了と今後のスケジュールへのクイックアクセス",
+        "next_action": "質問に回答するか「録音を始める」を選択",
+        "anomalies": []
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 4,
+        "typography": 5,
+        "geometry": 4,
+        "state_clarity": 4,
+        "calmness": 5,
+        "craft": 4,
+        "distinctiveness": 3
+      },
+      "ai_look": [
+        "情報整理が完璧すぎて、やや「テンプレート感」がある"
+      ],
+      "verdict": "COMPETITIVE",
+      "why": "高品質で整理が良い、フォントウェイトと色が役割を明確に示すが、革新性に欠ける。落ち着きは一線級",
+      "confidence": "high"
+    },
+    "9953": {
+      "visible_text": [
+        "CONTEXT",
+        "Astra が見ているもの 3 件",
+        "Notion",
+        "Q3 Product Roadmap",
+        "選択中のテキスト",
+        "前回の画面",
+        "Figma"
+      ],
+      "observation": {
+        "happening": "AI（Astra）が現在参照している 3 つのコンテキスト（ドキュメント・テキスト・Figma）を横並びカードで表示",
+        "most_important": "AI の情報ソースの透明性をユーザーに示す独自ウィジェット",
+        "next_action": "コンテキストを確認するか、ソースを変更する",
+        "anomalies": [
+          "タイル間の高さや角丸が若干不均等に見える"
+        ]
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 4,
+        "typography": 4,
+        "geometry": 3,
+        "state_clarity": 5,
+        "calmness": 4,
+        "craft": 4,
+        "distinctiveness": 4
+      },
+      "ai_look": [],
+      "verdict": "COMPETITIVE",
+      "why": "コンテキスト表示という独自設計で distinctiveness が高く、状態明確性も優れているが、タイル幾何学が若干未調整",
+      "confidence": "high"
+    },
+    "9963": {
+      "visible_text": [
+        "Astra",
+        "この録音を捨てますか？",
+        "定長終了",
+        "文字起こしと捨ったものも消えます。",
+        "ESC",
+        "やめる",
+        "捨てる"
+      ],
+      "observation": {
+        "happening": "破壊的アクション（削除）の確認ダイアログ表示",
+        "most_important": "ユーザーへの最後の警告とアクション取消オプション",
+        "next_action": "削除を確定するか、キャンセルする",
+        "anomalies": [
+          "「定長終了」というテキストが不明確・意味不明。切れているか誤記の可能性"
+        ]
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 4,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 3,
+        "calmness": 2,
+        "craft": 3,
+        "distinctiveness": 3
+      },
+      "ai_look": [
+        "「定長終了」のテキスト不自然さ。AI 生成またはテキストカット"
+      ],
+      "verdict": "BELOW_BAR",
+      "why": "定長終了が意味不明で、ユーザーが現在の状態を確実に理解できない。破壊的アクション前のモーダルとして state_clarity 不足が致命的",
+      "confidence": "high"
+    },
+    "9D30": {
+      "visible_text": [
+        "Google Meet",
+        "05:20",
+        "メモ",
+        "字幕",
+        "Ask Astra",
+        "ライブメモ",
+        "決まったこと",
+        "やること",
+        "質問"
+      ],
+      "observation": {
+        "happening": "Google Meet 中にリアルタイムで会議内容を記録・分類。セクション：決まったこと / やること / 質問に自動分別",
+        "most_important": "会議の動的な記録と自動分類。話者・時刻・内容が明確に紐付け",
+        "next_action": "メモを確認するか Ask Astra で質問",
+        "anomalies": []
+      },
+      "scores": {
+        "hierarchy": 5,
+        "density": 4,
+        "typography": 5,
+        "geometry": 4,
+        "state_clarity": 5,
+        "calmness": 4,
+        "craft": 5,
+        "distinctiveness": 4
+      },
+      "ai_look": [],
+      "verdict": "SUPREME",
+      "why": "完璧な実装。ライブ記録の UX が優れ、セクション分類は論理的で実用的。フォント・色・配置のすべてが調和。リアルタイム状態が一目瞭然",
+      "confidence": "high"
+    },
+    "9D5D": {
+      "visible_text": [
+        "Apps",
+        "Plugins",
+        "Connectors",
+        "外部サービスとの接続",
+        "つなくまで Astra はそのサービスを読みません",
+        "Gmail",
+        "設定が必要",
+        "Google Calendar",
+        "Finder",
+        "本端末"
+      ],
+      "observation": {
+        "happening": "Astra のコネクタ設定画面。Gmail・Google Calendar は設定未完了（赤）、Finder は本端末接続（グレー）",
+        "most_important": "各外部サービスの接続状態の可視化と設定呼び出し",
+        "next_action": "Gmail または Google Calendar をクリックして設定を完了",
+        "anomalies": [
+          "句読点位置が不自然（「つなくまで」vs「つなぐまで」不明確）",
+          "下部に大きな空白。レイアウトバランスが欠ける"
+        ]
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 3,
+        "typography": 4,
+        "geometry": 3,
+        "state_clarity": 4,
+        "calmness": 4,
+        "craft": 3,
+        "distinctiveness": 3
+      },
+      "ai_look": [
+        "句読点の不自然さ（AI テキスト生成の可能性）",
+        "下部空白が未調整"
+      ],
+      "verdict": "COMPETITIVE",
+      "why": "設定状態は明確に示されているが、テキスト精度が落ち、レイアウト下部の大きな空白がクラフト感を減じている。実装は標準的",
+      "confidence": "high"
+    }
+  },
+  "_judge": {
+    "model": "haiku",
+    "cost_usd": 0.07376690000000001,
+    "turns": 7,
+    "duration_ms": 81744
+  }
+}
