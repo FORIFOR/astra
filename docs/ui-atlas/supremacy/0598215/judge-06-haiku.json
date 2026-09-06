@@ -1,0 +1,234 @@
+{
+  "pages": {
+    "7AF3": {
+      "visible_text": [
+        "Slack",
+        "このメッセージを送りますか？",
+        "外部に出る",
+        "#sales",
+        "あなた",
+        "明日の会議、資料を先に共有します。10月の導入期間の件も入れておきました。",
+        "斎宮間・田中・10:42",
+        "やめる",
+        "直す",
+        "送る"
+      ],
+      "observation": {
+        "happening": "Message confirmation dialog before sending to Slack channel",
+        "most_important": "User is about to send a message about tomorrow's meeting and October rollout; content is visible for review before commit",
+        "next_action": "User can cancel, edit, or confirm send",
+        "anomalies": []
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 3,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 5,
+        "calmness": 4,
+        "craft": 4,
+        "distinctiveness": 3
+      },
+      "ai_look": [],
+      "verdict": "COMPETITIVE",
+      "why": "Well-executed Slack dialog with clear hierarchy and perfect state clarity. Follows Slack's established patterns without adding distinctive value. Solid but not outstanding.",
+      "confidence": "high"
+    },
+    "80CC": {
+      "visible_text": [
+        "Google Meet",
+        "05:22",
+        "メモ",
+        "字幕",
+        "Ask Astra",
+        "会議の機に閉く",
+        "ASK ASTRA",
+        "この会議について聞く",
+        "よく聞くこと",
+        "決まったことは？",
+        "私のやることは？",
+        "反対意見や懸念は？"
+      ],
+      "observation": {
+        "happening": "Video call in progress with AI assistant sidebar showing contextual meeting questions",
+        "most_important": "Ask Astra integrates meeting-aware queries directly into the call interface with suggested prompts for decisions/actions/concerns",
+        "next_action": "User can click suggested questions or type own query to AI assistant",
+        "anomalies": []
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 3,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 4,
+        "calmness": 4,
+        "craft": 4,
+        "distinctiveness": 3
+      },
+      "ai_look": [
+        "Purple/blue accent color on Ask Astra button is typical AI UI affordance"
+      ],
+      "verdict": "COMPETITIVE",
+      "why": "Clean integration of AI feature into existing Meet UI. Feature is valuable but aesthetic and layout follow Google's standard playbook. Restrained use of color and hierarchy is well-done but not distinctive.",
+      "confidence": "high"
+    },
+    "8233": {
+      "visible_text": [
+        "04:21",
+        "録音中",
+        "原文",
+        "翻訳",
+        "ライブ",
+        "会議",
+        "マイクと画面の音を聞いています",
+        "このMacではオンディバイス文字起こしを使えません。音声は保存されています",
+        "設定を開く（音声入力）",
+        "決まったこと",
+        "やること",
+        "この会議について聞く",
+        "AI が見ている資料 — まだありません"
+      ],
+      "observation": {
+        "happening": "Recording in progress with real-time transcription, translation, and AI-powered meeting analysis across multiple panels",
+        "most_important": "Three-panel layout managing recording status, transcription modes (original/translation/live), and AI-extracted meeting intelligence (decisions/actions/questions)",
+        "next_action": "Review AI insights, read transcript, adjust transcription settings, or continue meeting",
+        "anomalies": [
+          "Empty state 'AI が見ている資料 — まだありません' is handled gracefully"
+        ]
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 3,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 4,
+        "calmness": 4,
+        "craft": 4,
+        "distinctiveness": 3
+      },
+      "ai_look": [
+        "Structured auto-extraction of decisions/actions follows typical AI summarization UI patterns",
+        "Empty state messaging is conventional for AI-powered features"
+      ],
+      "verdict": "COMPETITIVE",
+      "why": "Manages complex simultaneous processes (recording, transcription, translation, AI analysis) with good information architecture. Clean execution but follows Google's established design language. No defects, solid but not innovative.",
+      "confidence": "high"
+    },
+    "8430": {
+      "visible_text": [
+        "Home",
+        "Work",
+        "Library",
+        "Apps",
+        "こんばんは",
+        "何を終わらせますか？",
+        "録音を始める",
+        "前回の設定でその場で録り始めます",
+        "これからの予定",
+        "Product Weekly",
+        "10:00 Google Meet",
+        "A社商談",
+        "13:30 Zoom",
+        "最近の懸念ごと",
+        "先方へ見積の返信を送る"
+      ],
+      "observation": {
+        "happening": "Personal workspace dashboard combining greeting, quick action for recording, upcoming meetings with recording badges, and pending follow-up tasks",
+        "most_important": "Unified home view prioritizing human actions (finish what, record, upcoming, concerns) over information listing",
+        "next_action": "User can complete tasks, start recording, jump to meetings, or navigate to other sections",
+        "anomalies": []
+      },
+      "scores": {
+        "hierarchy": 5,
+        "density": 3,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 5,
+        "calmness": 4,
+        "craft": 5,
+        "distinctiveness": 3
+      },
+      "ai_look": [],
+      "verdict": "COMPETITIVE",
+      "why": "Exceptional hierarchy and state clarity with polished execution. Personal greeting and action-focused layout is thoughtful. Follows Google Material Design without breaking new ground. Quality is high (Notion/Apple level) but within established patterns.",
+      "confidence": "high"
+    },
+    "85C6": {
+      "visible_text": [
+        "21:40 の会議",
+        "今日・1分未満・2人",
+        "決まったこと1",
+        "macOSを先に出すことに決めました。[1]",
+        "やること0",
+        "メモ2",
+        "Windowsはいつ出しますか。[2]",
+        "Windowsは次の周で追います。[3]",
+        "文字起こし",
+        "議論",
+        "関連ファイル",
+        "出所",
+        "10:30 Sarah",
+        "10:42 Ken",
+        "10:55 Ken"
+      ],
+      "observation": {
+        "happening": "Post-meeting view displaying structured meeting intelligence: title, attendees, extracted decisions/actions/notes, and transcript with speaker timestamps",
+        "most_important": "Numbered references link extracted decisions directly to their supporting discussion segments in the transcript",
+        "next_action": "Review decisions, check assigned actions, read full transcript, access related files",
+        "anomalies": []
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 4,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 5,
+        "calmness": 4,
+        "craft": 4,
+        "distinctiveness": 3
+      },
+      "ai_look": [
+        "Auto-structured meeting intelligence (decisions/actions/notes) is typical AI summarization UI",
+        "Numbered reference system linking structure to transcript source is AI-extraction pattern"
+      ],
+      "verdict": "COMPETITIVE",
+      "why": "Advanced meeting intelligence with clean implementation and excellent state clarity. The reference numbering system is thoughtful. Feature set is powerful but UI follows standard product patterns. No defects but not visually or functionally distinctive.",
+      "confidence": "high"
+    },
+    "89C0": {
+      "visible_text": [
+        "録音中",
+        "00:02",
+        "メモ",
+        "字幕",
+        "Ask Astra"
+      ],
+      "observation": {
+        "happening": "Minimal recording status bar showing elapsed time and quick-access action buttons",
+        "most_important": "Unobtrusive but complete status display with immediate access to notes, subtitles, and AI features",
+        "next_action": "User can interact with features or continue call uninterrupted",
+        "anomalies": []
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 5,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 5,
+        "calmness": 4,
+        "craft": 5,
+        "distinctiveness": 4
+      },
+      "ai_look": [],
+      "verdict": "SUPREME",
+      "why": "Exemplary minimal design. Recording status is crystal clear, functions are organized efficiently, visual presentation is unobtrusive yet complete. Comparable to Apple's status indicators. Zero defects. Purposeful and elegant.",
+      "confidence": "high"
+    }
+  },
+  "_judge": {
+    "model": "haiku",
+    "cost_usd": 0.0658718,
+    "turns": 7,
+    "duration_ms": 62484
+  }
+}

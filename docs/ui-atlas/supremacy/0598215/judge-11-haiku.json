@@ -1,0 +1,78 @@
+{
+  "pages": {
+    "FBBE": {
+      "visible_text": [
+        "Google Meet",
+        "05:20",
+        "ライブメモ",
+        "会議の間に開く",
+        "決まったこと",
+        "04:22 田中 導入時期は10月下行きます",
+        "概要",
+        "04:14 初期費用が6配です",
+        "やること",
+        "04:48 あなた 見積は明日までにお願いします",
+        "質問",
+        "05:01 鈴木 誰が対応しますか？"
+      ],
+      "observation": {
+        "happening": "Active Google Meet recording with live transcript organized into semantic sections (Live notes, Decisions, Overview, Tasks, Questions). Japanese language conversation showing meeting participants contributing at different timestamps.",
+        "most_important": "Multi-section categorization of conversation with timestamped speaker attribution and semantic grouping (decisions vs. questions vs. tasks)",
+        "next_action": "Review categorized notes, access meeting controls (captions, Ask Astra, mute), or expand conversation view",
+        "anomalies": [
+          "Left edge has inconsistent alignment due to natural timestamp/speaker name variation",
+          "Section header 'ライブメモ' in top left appears as functional label rather than visual hierarchy marker"
+        ]
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 3,
+        "typography": 4,
+        "geometry": 3,
+        "state_clarity": 4,
+        "calmness": 3,
+        "craft": 3,
+        "distinctiveness": 3
+      },
+      "ai_look": [],
+      "verdict": "COMPETITIVE",
+      "why": "Solid functional design with clear semantic categorization and good contrast. However, lacks refinement in spacing consistency and visual polish expected of category leaders. Transcript section feels utilitarian rather than crafted.",
+      "confidence": "high"
+    },
+    "FD1D": {
+      "visible_text": [
+        "録音中",
+        "00:00",
+        "メモ",
+        "字幕",
+        "Ask Astra"
+      ],
+      "observation": {
+        "happening": "Google Meet header bar showing recording status. Red live indicator and 00:00 timer at left; right side shows action buttons (captions, Ask Astra, eye, pause, stop recording).",
+        "most_important": "Recording state is immediately and unambiguously clear via color (red dot) and text ('録音中' = Recording)",
+        "next_action": "Control meeting state via buttons: toggle captions, access Astra, mute, or stop recording",
+        "anomalies": []
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 5,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 5,
+        "calmness": 5,
+        "craft": 4,
+        "distinctiveness": 3
+      },
+      "ai_look": [],
+      "verdict": "COMPETITIVE",
+      "why": "Header bar execution is extremely polished with excellent minimalism and state clarity. However, as a header component alone, assessment is limited — verdict reflects execution quality rather than full product evaluation. No defects visible; design is clean and intentional.",
+      "confidence": "medium"
+    }
+  },
+  "_judge": {
+    "model": "haiku",
+    "cost_usd": 0.0543353,
+    "turns": 4,
+    "duration_ms": 56503
+  }
+}
