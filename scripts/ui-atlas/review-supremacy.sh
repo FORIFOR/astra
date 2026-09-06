@@ -34,7 +34,9 @@ python3 - "$ATLAS" "$WORK" "$OUT" "$BATCH" <<'PY'
 import json, os, secrets, shutil, sys
 atlas, work, out, batch = sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4])
 m = json.load(open(os.path.join(atlas, "manifest.json"), encoding="utf-8"))
-req = [s for s in m["screens"] if s.get("required") and (s.get("image") or {}).get("light")]
+# components.*（neutral/hover/focus/pressed）は DS の状態見本で、利用者が「製品画面」として選ぶものではない。
+# supremacy（一線級と並べて選べるか）の対象は製品画面。DS 参照は review-blind の KEEP/FIX には残すが、ここでは外す。
+req = [s for s in m["screens"] if s.get("required") and (s.get("image") or {}).get("light") and not s["id"].startswith("components.")]
 key, ids = {}, set()
 prev = os.path.join(out, "key.json")
 if os.path.exists(prev):
