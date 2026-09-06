@@ -89,13 +89,15 @@ struct RecordingWorkspaceView: View {
 
             HStack(alignment: .top, spacing: Metrics.wsColumnGap) {
                 // 主列: 書かれていくノート。会議のあとに読み返すのはこちら。
+                // 抽出が空の間はノート列に場所を予約しない。ノートを細くし（大きな空白を作らない）、
+                // 生ログ（transcript）を主役として広げる。最初の抽出でノートが広がり右が畳まる（morph）。
                 MeetingNotesCanvas(state: state)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .frame(maxWidth: canvasEmpty ? 300 : .infinity, maxHeight: .infinity, alignment: .topLeading)
 
-                // 右: 生ログと AI の答え。脇に控えさせる（消しはしない）。
-                // AI に頼む操作は下の Ask 入力の横（`AIActionsPalette`）。
+                // 右: 生ログと AI の答え。抽出が空の間は主役（広い）、出たら脇に控える（320）。
                 RecordingSideRail(state: state)
-                    .frame(width: canvasEmpty ? 560 : Metrics.wsRightColumn)
+                    .frame(minWidth: Metrics.wsRightColumn,
+                           maxWidth: canvasEmpty ? .infinity : Metrics.wsRightColumn, maxHeight: .infinity)
             }
             .padding(.horizontal, Metrics.wsGutter)
             .padding(.top, 10)
