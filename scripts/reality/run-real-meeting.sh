@@ -40,19 +40,38 @@ case "$mode" in
   audio)
     # Astra の入力を BlackHole に、再生の出力も BlackHole に。終わったら戻す。
     prev_in="$(SwitchAudioSource -c -t input)"; prev_out="$(SwitchAudioSource -c -t output)"
+    # 前の run が途中で落ちて BlackHole のままなら、それを「元」にしない（実マイクへ戻す）。
+    [[ "$prev_in" == "BlackHole 2ch" ]] && prev_in="$(SwitchAudioSource -a -t input | grep -v BlackHole | head -1)"
+    [[ "$prev_out" == "BlackHole 2ch" ]] && prev_out="$(SwitchAudioSource -a -t output | grep -v BlackHole | head -1)"
     restore() { SwitchAudioSource -t input -s "$prev_in" >/dev/null 2>&1; SwitchAudioSource -t output -s "$prev_out" >/dev/null 2>&1; }
     trap restore EXIT
     SwitchAudioSource -t input -s "BlackHole 2ch" >/dev/null
     SwitchAudioSource -t output -s "BlackHole 2ch" >/dev/null
-    open --env "ASTRA_DATA_ROOT=$data" "$APP" --args --selftest realmeeting "$OUT/astra" force "seconds=40"
+    # 台本の進みは cue（pause / resume / stop）で Astra に伝え、Astra の state（recording / paused）を待つ。
+    # 固定秒で待つと一時停止の窓と声が噛み合わず、「漏れ 0」が何も測っていなかった。
+    CUE="$OUT/cue"; STATE="$OUT/astra/state"; rm -f "$CUE" "$STATE"
+    open --env "ASTRA_DATA_ROOT=$data" "$APP" --args --selftest realmeeting "$OUT/astra" force "seconds=60" "cue=$CUE"
     # 初回は音声認識（Apple Speech）の許可ダイアログが出る。人が押さない。機械が「OK」を押す。
     bash "$ROOT/scripts/reality/tcc-dialog.sh" allow 12 | sed 's/^/  tcc: /' &
-    sleep 6   # 検出 + 録音開始 + Notes を開くまで
-    n=0
-    while IFS=$'\t' read -r speaker text wav; do
-      afplay "$OUT/corpus/$wav"; sleep 1.2; n=$((n+1))
-      [[ $n -eq 2 ]] && sleep 6   # 一時停止の窓（bot と同じ）
-    done < "$OUT/corpus/lines.tsv"
+    wait_state() {  # $1 = recording | paused
+      local n=0
+      while [[ "$(cat "$STATE" 2>/dev/null)" != "$1" ]]; do
+        sleep 0.5; n=$((n+1)); [[ $n -gt 80 ]] && { echo "FAIL: Astra が $1 にならない"; return 1; }
+      done
+      return 0   # while の最後の [[ ]] が 1 を返し、それが関数の値になっていた
+    }
+    play() { afplay "$OUT/corpus/$1"; sleep 1.6; }   # 発話のあと utteranceGap より長く黙る
+    wait_state recording || exit 1
+    sleep 1
+    play 01-A.wav; play 02-B.wav
+    echo pause > "$CUE"; wait_state paused || exit 1
+    echo "  paused: playing the line that must not be recorded"
+    afplay "$OUT/corpus/paused.wav"; sleep 1.6
+    echo resume > "$CUE"; wait_state recording || exit 1
+    sleep 0.5
+    play 03-A.wav; play 04-B.wav
+    sleep 1
+    echo stop > "$CUE"
     while pgrep -x AstraMac >/dev/null; do sleep 1; done
     ;;
   meet)

@@ -64,6 +64,9 @@ final class RecordingRuntime {
     var onTranscript: ((String, Bool) -> Void)?
     /// この録音で文字起こしを頼まれているか（許可の答えが遅れて来たときに始めるため）。
     private var speechWanted = false
+    /// 診断: 確定した発話の数 / 受け取った partial の数（REAL_MEETING の result.json）。録音中だけ意味を持つ。
+    var sttFinals: Int { speech?.finalsEmitted ?? 0 }
+    var sttPartials: Int { speech?.partialsSeen ?? 0 }
 
     /// オンデバイス STT を始める。録音の開始時、または音声認識の許可が下りた瞬間に呼ぶ。
     private func startSpeech() {

@@ -83,7 +83,8 @@ struct MeetingArtifactView: View {
                     Text(title).font(.system(size: TypeScale.sectionTitleSize, weight: TypeScale.sectionTitleWeight))
                         .foregroundStyle(Palette.text(dark))
                     Spacer()
-                    Text("\(duration) · \(participants) 人")
+                    // 人数が取れていない会議に「0 人」と書かない（発言があるのに 0 人は壊れて見える）。
+                    Text(participants > 0 ? "\(duration) · \(participants) 人" : duration)
                         .font(.system(size: TypeScale.microSize)).foregroundStyle(Palette.muted(dark))
                 }
                 // 画面の言語を揃える（ここだけ英語で、他は日本語だった）。

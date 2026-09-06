@@ -18,5 +18,12 @@ for n, l in enumerate(lines, 1):
     os.remove(aiff)
     tsv.append(f"{l['speaker']}\t{l['text']}\t{os.path.basename(wav)}")
 open(os.path.join(out, "lines.tsv"), "w", encoding="utf-8").write("\n".join(tsv) + "\n")
+# 止まっている間に流す声。lines.tsv には入れない（判定の台本ではなく、残ってはいけない声）。
+p = json.load(open(fx, encoding="utf-8")).get("paused_line")
+if p:
+    aiff = os.path.join(out, "paused.aiff"); wav = os.path.join(out, "paused.wav")
+    subprocess.run(["say", "-v", p["voice"], "-o", aiff, p["text"]], check=True)
+    subprocess.run(["afconvert", "-f", "WAVE", "-d", "LEI16@16000", "-c", "1", aiff, wav], check=True)
+    os.remove(aiff)
 print(f"CORPUS_OK {len(lines)} lines → {out}")
 PY

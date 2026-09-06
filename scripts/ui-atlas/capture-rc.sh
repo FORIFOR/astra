@@ -46,7 +46,7 @@ write_appcast() {  # $1 = path, $2 = version
 <item><title>Astra $2</title>
 <sparkle:version>$2</sparkle:version><sparkle:shortVersionString>$2</sparkle:shortVersionString>
 <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-<description><![CDATA[<p>会議中の一時停止、音声認識の許可の案内、失敗した作業のやり直し、更新の案内の日本語化。</p>]]></description>
+<description><![CDATA[<h3>この版で変わること</h3><ul><li>会議中に録音を一時停止・再開できます（Task Dock の ⏸）。</li><li>音声認識の許可が無いとき、何が止まっていて何が続いているかを画面が言います。</li><li>失敗した作業は、その場で「やり直す」から続けられます。</li><li>「更新を確認…」の案内が日本語になりました。</li></ul><h3>直したこと</h3><ul><li>会議の発話が、区切りごとに文字起こしへ確定されるようになりました。</li><li>設定の「許可」に、なぜ要るかの説明が付きました。</li></ul>]]></description>
 <pubDate>Fri, 05 Sep 2026 12:00:00 +0900</pubDate>
 <enclosure url="https://example.invalid/Astra-$2.zip" length="1" type="application/octet-stream" sparkle:edSignature="AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="/>
 </item></channel></rss>

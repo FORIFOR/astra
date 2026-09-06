@@ -1,7 +1,11 @@
 import AppKit
 import SwiftUI
 
-/// `--selftest realmeeting <outDir> [simulate] [force] [seconds=N]`
+/// `--selftest realmeeting <outDir> [simulate] [force] [seconds=N] [cue=<file>]`
+///
+/// `cue=` があるときは、台本を流す script（scripts/reality/run-real-meeting.sh）が書く 1 語
+/// （pause / resume / stop）で進み、こちらは `<outDir>/state`（recording / paused）を返す。
+/// 固定秒で待つと、一時停止の窓と台本の声が噛み合わず「漏れ 0」が何も測っていなかった。
 ///
 /// REAL_MEETING の Astra 側。**人が相手をしない**会議を、検出 → 録音 → Notes / Captions / Ask →
 /// 一時停止（漏れ 0）→ 再開 → 停止 → Library → 出所の順で通し、判定に要るものを `result.json` に書く。
@@ -18,10 +22,22 @@ extension SelfTest {
         let simulate = args.contains("simulate")
         let force = args.contains("force")
         let seconds = Double(args.first { $0.hasPrefix("seconds=") }?.dropFirst(8) ?? "") ?? 40
+        let cuePath = args.first { $0.hasPrefix("cue=") }.map { String($0.dropFirst(4)) }
         try? FileManager.default.createDirectory(atPath: outDir, withIntermediateDirectories: true)
         func settle(_ s: Double) {
             let until = Date().addingTimeInterval(s)
             while Date() < until { CFRunLoopRunInMode(.defaultMode, 0.05, true) }
+        }
+        func writeState(_ s: String) { try? s.write(toFile: "\(outDir)/state", atomically: true, encoding: .utf8) }
+        func waitCue(_ want: String, timeout: TimeInterval) -> Bool {
+            guard let cuePath else { return false }
+            let deadline = Date().addingTimeInterval(timeout)
+            while Date() < deadline {
+                if let s = try? String(contentsOfFile: cuePath, encoding: .utf8),
+                   s.trimmingCharacters(in: .whitespacesAndNewlines) == want { return true }
+                settle(0.2)
+            }
+            return false
         }
         var timings: [String: Int] = [:]
         var errors: [String] = []
@@ -56,6 +72,7 @@ extension SelfTest {
             print("SELFTEST_FAIL realmeeting: 録音が始まっていない"); exit(2)
         }
         lap("recording")
+        writeState("recording")
         VoiceHUDState.shared.toggleMeetingPanel(.notes); settle(0.4)
 
         // ③ 発言を待つ（audio）／入れる（simulate）。
@@ -70,6 +87,8 @@ extension SelfTest {
                 at += 12
                 settle(0.3)
             }
+        } else if cuePath != nil {
+            if !waitCue("pause", timeout: seconds) { errors.append("cue pause が \(Int(seconds)) 秒来ない") }
         } else {
             let deadline = Date().addingTimeInterval(seconds)
             while Date() < deadline { settle(0.5) }
@@ -80,12 +99,18 @@ extension SelfTest {
         VoiceHUDState.shared.toggleMeetingPanel(.ask); settle(0.2)
 
         // ④ 一時停止。止まっている間に確定行が増えたら漏れ。
-        let beforePause = recording.transcript.filter { !$0.interim }.count
         recording.togglePause(); settle(0.3)
         if !recording.isPaused { errors.append("一時停止にならない") }
+        // 止める直前まで言っていた発話は、止めたあと utteranceGap で確定する。それは漏れではない。
+        settle(SpeechTranscriber.utteranceGap + 0.5)
+        let beforePause = recording.transcript.filter { !$0.interim }.count
+        writeState("paused")
         if simulate {
             // 止まっている間に入れようとしても増えないのが仕様なら、ここで入れる。増えたら漏れ。
             settle(2.0)
+        } else if cuePath != nil {
+            // script が止まっている間の声を流し、resume の cue を書く。
+            if !waitCue("resume", timeout: 30) { errors.append("cue resume が来ない") }
         } else {
             settle(6.0)
         }
@@ -93,8 +118,12 @@ extension SelfTest {
         let pauseLeak = max(0, duringPause - beforePause)
         recording.togglePause(); settle(0.5)
         let resumed = !recording.isPaused
+        writeState("recording")
         if simulate {
             recording.appendFinal(TranscriptSegment(speaker: "B", text: "再開後の発言です。", interim: false, at: 90)); settle(0.3)
+        } else if cuePath != nil {
+            if !waitCue("stop", timeout: seconds) { errors.append("cue stop が来ない") }
+            settle(SpeechTranscriber.utteranceGap + 0.5)
         } else { settle(6.0) }
         let resumeRows = recording.transcript.filter { !$0.interim }.count - duringPause
         lap("paused")
@@ -105,6 +134,8 @@ extension SelfTest {
         let listening = Array(RecordingRuntime.shared.listening).map(\.rawValue).sorted()
         let sttUnavailable = RecordingRuntime.shared.transcriptionUnavailable
         let recordedMs = RecordingRuntime.shared.recordedMs()
+        let sttFinals = RecordingRuntime.shared.sttFinals
+        let sttPartials = RecordingRuntime.shared.sttPartials
         recording.stop(); settle(2.5)
         let ready = sessions.session(id: liveId)
         let canvas = LocalStore.shared.loadNotes(meetingId: liveId)
@@ -133,6 +164,7 @@ extension SelfTest {
             "speechAuthorization": String(describing: SpeechTranscriber.authorization.rawValue),
             "microphone": Permissions.microphone.rawValue,
             "recordedMs": recordedMs,
+            "sttFinals": sttFinals, "sttPartials": sttPartials,
         ]
         if let data = try? JSONSerialization.data(withJSONObject: result, options: [.prettyPrinted, .sortedKeys]) {
             try? data.write(to: URL(fileURLWithPath: "\(outDir)/result.json"))

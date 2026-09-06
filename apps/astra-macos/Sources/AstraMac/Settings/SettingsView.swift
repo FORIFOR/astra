@@ -74,7 +74,8 @@ struct SettingsView: View {
         HStack(alignment: .firstTextBaseline) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(label).font(.system(size: 12))
-                Text(reason).font(.system(size: 10)).foregroundStyle(.secondary)
+                // 理由は補足ではなく、許可を出すかを決める材料。薄い灰では読めない（盲検 3/3）。
+                Text(reason).font(.system(size: 11)).foregroundStyle(.primary).opacity(0.78)
             }
             Spacer()
             Text(state.rawValue).font(.system(size: 11))

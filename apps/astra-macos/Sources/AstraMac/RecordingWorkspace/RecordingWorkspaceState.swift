@@ -319,12 +319,13 @@ final class RecordingWorkspaceState: ObservableObject {
         isRecording = false
         permissionIssue = nil
         tickTimer?.invalidate(); tickTimer = nil
-        // 溜まっていた確定行を抽出してから終える。抽出は 3 行ごとに走るので、短い会議は一度も
+        // 先に終える: 言いかけていた最後の発話は end() の中で確定行になる（SpeechTranscriber.finish）。
+        RecordingRuntime.shared.end()   // 断片を確定（回復候補として残る）
+        // 溜まっていた確定行を抽出してから processing へ。抽出は 3 行ごとに走るので、短い会議は一度も
         // 抽出されず「決まったこと 0」のまま ready になっていた（REAL_MEETING の実マイク経路で発見）。
         MeetingIntelligence.shared.ingest(
             transcript.filter { !$0.interim }.map { CanvasItem($0.text, at: $0.at, speaker: $0.speaker) },
             force: true)
-        RecordingRuntime.shared.end()   // 断片を確定（回復候補として残る）
         // §1 同じ Session が processing へ。新しいカードは作らない。
         let id = currentMeetingId
         MeetingSessionStore.shared.beginProcessing(id: id)

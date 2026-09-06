@@ -26,19 +26,33 @@ got = norm("".join(t["text"] for t in res.get("transcript", [])))
 sim = difflib.SequenceMatcher(None, want, got).ratio() if got else 0.0
 row("transcript similarity", sim >= exp["transcript_similarity_min"], f"{sim:.2f} (min {exp['transcript_similarity_min']})")
 
-# recall（keywords が 1 つの拾った文に全部入っていれば hit）
+# recall（keywords が 1 つの拾った文に全部入っていれば hit。keyword は候補の list でもよい:
+# 固有名詞はオンデバイス STT の綴りが揺れる（"macOS" → "MC OS"）。判定は抽出の当否で、綴りではない）
+def kw_hit(k, it):
+    return any(norm(a) in it for a in (k if isinstance(k, list) else [k]))
 def recall(kind):
     items = [norm(d.get("text", "")) for d in res.get(kind, [])]
     hits = 0; miss = []
     for e in exp[kind]:
-        if any(all(norm(k) in it for k in e["keywords"]) for it in items): hits += 1
+        if any(all(kw_hit(k, it) for k in e["keywords"]) for it in items): hits += 1
         else: miss.append(e["label"])
     return hits, len(exp[kind]), miss
 h, n, miss = recall("decisions"); row("decision recall", h == n, f"{h}/{n}" + (f" missing {miss}" if miss else ""))
 h, n, miss = recall("actions");   row("action recall",   h == n, f"{h}/{n}" + (f" missing {miss}" if miss else ""))
 
-row("pause leakage", res.get("pauseLeak", 99) <= exp["pause_leakage_max"], f"{res.get('pauseLeak')} rows arrived while paused")
-row("resume works", res.get("resumeRows", 0) >= 0 and res.get("resumed") is True, f"resumed={res.get('resumed')} rows after resume={res.get('resumeRows')}")
+# 漏れ: 止まっている間に増えた行数と、止まっている間に流した声（paused_line）が transcript に無いこと。
+paused = (fx.get("paused_line") or {}).get("text")
+leaked_text = False
+if paused:
+    p = norm(paused)
+    leaked_text = any(difflib.SequenceMatcher(None, p, norm(t.get("text", ""))).ratio() >= 0.5
+                      for t in res.get("transcript", []))
+row("pause leakage", res.get("pauseLeak", 99) <= exp["pause_leakage_max"] and not leaked_text,
+    f"{res.get('pauseLeak')} rows arrived while paused; paused line in transcript={leaked_text}")
+# 再開: audio では再開後の 2 発話が行になること（0 でも通る判定は何も見ていない）。
+need = exp.get("resume_rows_min_audio", 1) if res.get("mode") == "audio" else 0
+row("resume works", res.get("resumeRows", 0) >= need and res.get("resumed") is True,
+    f"resumed={res.get('resumed')} rows after resume={res.get('resumeRows')} (min {need})")
 row("Library persisted", res.get("libraryStatus") == "ready" and (res.get("persisted") or {}).get("transcript", 0) > 0,
     f"status={res.get('libraryStatus')} persisted={res.get('persisted')}")
 tol = exp["source_jump_tolerance_s"]

@@ -79,12 +79,14 @@ struct MeetingSession: Identifiable, Equatable {
     /// 「今日 · 42 分」。録音中は経過を出す。
     /// 画面の言葉は日本語で揃える。英語と混ざると、どちらも読み飛ばされる。
     func timeLabel(now: Date = Date()) -> String {
-        let minutes = Int((endedAt?.timeIntervalSince(startedAt) ?? now.timeIntervalSince(startedAt)) / 60)
+        let seconds = endedAt?.timeIntervalSince(startedAt) ?? now.timeIntervalSince(startedAt)
+        let minutes = Int(seconds / 60)
         let cal = Calendar.current
         let day = cal.isDateInToday(startedAt) ? "今日"
             : cal.isDateInYesterday(startedAt) ? "昨日"
             : MeetingSession.dayFormatter.string(from: startedAt)
-        return "\(day) · \(minutes) 分"
+        // 「0 分」は発言があるのに壊れて見える。1 分未満はそう言う。
+        return minutes < 1 ? "\(day) · 1 分未満" : "\(day) · \(minutes) 分"
     }
 
     /// 録音中の経過（00:00）。

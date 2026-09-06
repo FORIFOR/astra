@@ -22,6 +22,39 @@ final class SpeechTranscriber {
     private var task: SFSpeechRecognitionTask?
     private let format: AVAudioFormat
 
+    // **発話の区切りは自分で付ける。**
+    // 1 本の request を会議のあいだ流し続けると、Apple の認識器は途中で isFinal を返さず、partial の全文を
+    // 出し続ける（区切りは request の終わりだけ）。しかも無音のあとに partial が新しい発話から始まり直す
+    // ことがあり、前の発話の文は消える。REAL_MEETING（BlackHole + 固定 WAV）で 4 発話のうち最後の 1 つしか
+    // 残らなかった（2026-09-06、RC 3c1e93a）。
+    //
+    // 区切りの合図は**音の無音**（VAD を通った frame が `utteranceGap` 来ない）。文字が変わらないことを合図に
+    // すると、認識器の partial が遅れているだけの途中で閉じ、まだ処理していない音を捨てる（「了解です。Windows 版は
+    // 次の…」の「Windows 版は」が消えた）。閉じるときは endAudio で認識器に最後まで処理させ、その final を待って
+    // から確定する。次の発話の request は先に開いておくので、その間の音は落ちない。
+    private var onEvent: ((Live) -> Void)?
+    private var generation = 0            // 取り直した古い task の結果を見分けるため
+    private var lastText = ""
+    private var lastChange = Date()
+    private var segmentStartedAt = Date()
+    private var lastAudioAt = Date()      // VAD を通った音が最後に来た時刻（マイクのスレッドから書く）
+    private var gapTimer: Timer?
+    private let requestLock = NSLock()    // append / lastAudioAt はマイクのスレッドから来る
+    private struct Closing { let gen: Int; var text: String; let since: Date; let task: SFSpeechRecognitionTask? }
+    /// 閉じている途中の前の発話。認識器の final を待つ（`closeTimeout` を超えたら手元の文で確定）。
+    private var closing: Closing?
+    /// 前の発話を閉じている間に届いた次の発話の partial（順番を守るため、確定のあとに流す）。
+    private var pendingPartial: String?
+    /// 音がこの秒数来なければ、その発話は終わったとみなして閉じる。
+    static let utteranceGap: TimeInterval = 0.9
+    /// 閉じた request の final を待つ上限。
+    static let closeTimeout: TimeInterval = 1.5
+    /// 1 本の request の上限（連続認識は 1 分前後で止まる。切れる前に取り直す）。
+    static let requestMaxSeconds: TimeInterval = 50
+    /// 診断: この録音で確定した発話の数 / 受け取った partial の数。
+    private(set) var finalsEmitted = 0
+    private(set) var partialsSeen = 0
+
     init(localeId: String = "ja-JP") {
         recognizer = SFSpeechRecognizer(locale: Locale(identifier: localeId))
         format = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: 16_000,
@@ -69,19 +102,97 @@ final class SpeechTranscriber {
             throw NSError(domain: "SpeechTranscriber", code: Self.onDeviceUnavailableCode,
                           userInfo: [NSLocalizedDescriptionKey: "on-device recognition unavailable for \(recognizer.locale.identifier)"])
         }
+        self.onEvent = onEvent
+        openRequest()
+        // 区切りの見張り。認識器の callback は main queue（SFSpeechRecognizer.queue の既定）なので、ここも main で回す。
+        let t = Timer(timeInterval: 0.25, repeats: true) { [weak self] _ in self?.tick() }
+        RunLoop.main.add(t, forMode: .common)
+        gapTimer = t
+    }
+
+    /// 新しい request / task を開く。古い task の結果は generation で見分ける。
+    private func openRequest() {
+        guard let recognizer else { return }
         let req = SFSpeechAudioBufferRecognitionRequest()
         req.shouldReportPartialResults = true
         req.requiresOnDeviceRecognition = true   // 資産が無ければ error 102。false で再試行しない
-        request = req
-        task = recognizer.recognitionTask(with: req) { result, _ in
-            guard let result else { return }
-            onEvent(Live(text: result.bestTranscription.formattedString,
-                         isFinal: result.isFinal))
+        generation += 1
+        let gen = generation
+        requestLock.lock(); request = req; requestLock.unlock()
+        lastText = ""; lastChange = Date(); segmentStartedAt = Date()
+        task = recognizer.recognitionTask(with: req) { [weak self] result, _ in
+            guard let self, let result else { return }
+            let text = result.bestTranscription.formattedString
+            if let c = self.closing, c.gen == gen {
+                // 閉じている前の発話。認識器が最後まで処理した文で確定する。
+                if !text.isEmpty { self.closing?.text = text }
+                if result.isFinal { self.finishClosing() }
+                return
+            }
+            guard gen == self.generation else { return }
+            self.partialsSeen += 1
+            if text != self.lastText { self.lastText = text; self.lastChange = Date() }
+            if result.isFinal {
+                // 認識器が自分で終えた（request の上限など）。手元の文で確定して取り直す。
+                self.emitFinal(text)
+                self.reopen()
+            } else if self.closing != nil {
+                self.pendingPartial = text
+            } else {
+                self.onEvent?(Live(text: text, isFinal: false))
+            }
         }
     }
 
-    /// マイクの 16 kHz mono f32 フレームを渡す。
+    private func emitFinal(_ text: String) {
+        guard !text.isEmpty else { return }
+        finalsEmitted += 1
+        onEvent?(Live(text: text, isFinal: true))
+    }
+
+    private func tick() {
+        let now = Date()
+        if let c = closing, now.timeIntervalSince(c.since) >= Self.closeTimeout {
+            finishClosing()   // final が来ない。手元の文で確定する。
+        }
+        guard closing == nil, !lastText.isEmpty else { return }
+        requestLock.lock(); let audioAt = lastAudioAt; requestLock.unlock()
+        if now.timeIntervalSince(audioAt) >= Self.utteranceGap
+            || now.timeIntervalSince(segmentStartedAt) >= Self.requestMaxSeconds {
+            beginClose(reopen: true)
+        }
+    }
+
+    /// いまの発話を閉じ始める。認識器には endAudio で最後まで処理させる（cancel は残りの音を捨てる）。
+    private func beginClose(reopen: Bool) {
+        requestLock.lock(); let old = request; request = nil; requestLock.unlock()
+        closing = Closing(gen: generation, text: lastText, since: Date(), task: task)
+        old?.endAudio()
+        task = nil
+        lastText = ""
+        if reopen { openRequest() }
+    }
+
+    private func finishClosing() {
+        guard let c = closing else { return }
+        closing = nil
+        c.task?.cancel()
+        emitFinal(c.text)
+        if let p = pendingPartial { pendingPartial = nil; onEvent?(Live(text: p, isFinal: false)) }
+    }
+
+    /// 認識器が自分で終えた request を取り直す。
+    private func reopen() {
+        requestLock.lock(); let old = request; request = nil; requestLock.unlock()
+        old?.endAudio(); task?.cancel(); task = nil
+        lastText = ""
+        guard onEvent != nil else { return }
+        openRequest()
+    }
+
+    /// マイクの 16 kHz mono f32 フレームを渡す（VAD を通った、声の乗った frame だけ）。
     func append(_ frames: [Float], sampleRate: Double = 16_000) {
+        requestLock.lock(); let request = request; lastAudioAt = Date(); requestLock.unlock()
         guard let request, !frames.isEmpty,
               let buffer = AVAudioPCMBuffer(pcmFormat: format,
                                             frameCapacity: AVAudioFrameCount(frames.count))
@@ -96,9 +207,18 @@ final class SpeechTranscriber {
     }
 
     func finish() {
-        request?.endAudio()
-        task?.finish()
-        request = nil
+        gapTimer?.invalidate(); gapTimer = nil
+        // 止めた瞬間の発話も、認識器に最後まで処理させてから確定する（途中で切ると末尾が欠ける:
+        // 「共有します」が「共有しま」で残った）。待つのは closeTimeout まで。
+        if closing == nil, !lastText.isEmpty { beginClose(reopen: false) }
+        let deadline = Date().addingTimeInterval(Self.closeTimeout)
+        while closing != nil, Date() < deadline { CFRunLoopRunInMode(.defaultMode, 0.05, true) }
+        if closing != nil { finishClosing() }
+        onEvent = nil
+        generation += 1
+        requestLock.lock(); let req = request; request = nil; requestLock.unlock()
+        req?.endAudio()
+        task?.cancel()
         task = nil
     }
 
