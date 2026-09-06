@@ -22,9 +22,9 @@ struct RecordingHeroView: View {
                 .font(.system(size: TypeScale.secondarySize, design: .monospaced))
                 .foregroundStyle(.secondary)
             // 許可が無いときは平らにする（動いていると「録れている」と読めてしまう）。
-            Waveform(levels: silent ? Array(repeating: 0.04, count: state.audioLevels.count) : state.audioLevels)
+            Waveform(levels: (state.isPaused || silent) ? [] : state.audioLevels, awaitingInput: silent)
                 .frame(width: 180, height: 30)
-                .opacity(silent ? 0.45 : 1)
+                .opacity((state.isPaused || silent) ? 0.5 : 1)
         }
         .accessibilityIdentifier("recordingHero")
     }

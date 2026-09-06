@@ -159,7 +159,8 @@ private struct RecordingStatusBar: View {
                 .font(.system(size: TypeScale.bodySize, weight: .semibold))
                 .foregroundStyle(Palette.text(dark))
             // 波形は「録れている」ことの小さな印にとどめる。
-            Waveform(levels: silent ? Array(repeating: 0.04, count: state.audioLevels.count) : state.audioLevels)
+            // 一時停止は平坦、無音は細線、録音中は実振幅（状態を造形でも分ける）。
+            Waveform(levels: (state.isPaused || silent) ? [] : state.audioLevels, awaitingInput: silent)
                 .frame(width: 60, height: 16)
                 .opacity(silent ? 0.4 : 1)
             Spacer(minLength: 0)
@@ -231,10 +232,11 @@ private struct MeetingNotesCanvas: View {
                     }
                     .padding(.vertical, 2)
                 }
+                // 一時停止中は「待っています…」を出さない（止まっているのに待つ、の矛盾を避ける）。
                 group(Facts.notesDecisions, canvas.decisions,
-                      waiting: "\(Facts.notesDecisions)を待っています…")
+                      waiting: state.isPaused ? nil : "\(Facts.notesDecisions)を待っています…")
                 group(Facts.notesActions, canvas.actions,
-                      waiting: "\(Facts.notesActions)を待っています…")
+                      waiting: state.isPaused ? nil : "\(Facts.notesActions)を待っています…")
                 if !canvas.questions.isEmpty { group(Facts.notesQuestions, canvas.questions, waiting: nil) }
                 if !canvas.concerns.isEmpty { group(Facts.notesConcerns, canvas.concerns, waiting: nil) }
                 // メモ。**描かないと、拾ったのに画面から消える。**
@@ -445,6 +447,7 @@ private struct MeetingNotesCanvas: View {
     private var liveChannels: Set<SpeakerChannel> { state.liveChannels }
 
     private var listeningLabel: String? {
+        if state.isPaused { return nil }   // 止まっているのに「聞いています」と言わない
         let ch = liveChannels
         if ch.isEmpty { return nil }
         var parts: [String] = []
@@ -484,7 +487,12 @@ private struct MeetingNotesCanvas: View {
 
     /// いま聞こえていること。ここが動いていれば「聞いている」と分かる。
     @ViewBuilder private var liveLine: some View {
-        if let last = state.transcript.last {
+        if state.isPaused {
+            // 一時停止中は「聞いています/待っています」と言わず、止まっている事実だけを言う。
+            Label("一時停止中 — 再開するまで聞きません", systemImage: "pause.fill")
+                .font(.system(size: TypeScale.microSize))
+                .foregroundStyle(Palette.muted(dark))
+        } else if let last = state.transcript.last {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Text(last.speaker)
                     .font(.system(size: TypeScale.microSize, weight: .semibold))

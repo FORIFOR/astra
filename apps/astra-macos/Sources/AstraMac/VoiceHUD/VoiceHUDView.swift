@@ -220,8 +220,11 @@ struct ListeningDock: View {
             HStack(spacing: 9) {
                 // 取り込みが生きるまでは光らせない（「聞いている」の合図なので）。
                 AstraOrb(active: !voice.listeningAwaitingAudio)
-                MiniWaveform()
-                    .frame(width: 44, height: 16)
+                // 準備中は波形を出さず、AstraOrb の pulse だけ（「聞いている」と紛れさせない）。
+                if !voice.listeningAwaitingAudio {
+                    MiniWaveform()
+                        .frame(width: 44, height: 16)
+                }
                 // **取り込みが生きるまで「聞いています…」と名乗らない。**
                 // 切り替えるのは最初の音声フレームの到着（`listeningAwaitingAudio`）で、タイマーではない。
                 Text(partial.isEmpty
@@ -845,8 +848,12 @@ struct MeetingDock: View {
                     .font(.system(size: S.type(Metrics.dockMetaSize), design: .monospaced))
                     .foregroundStyle(Palette.muted(dark))
             }
-            Waveform(levels: recording.audioLevels, awaitingInput: recording.awaitingAudio)
-                .frame(width: 56, height: 16)
+            // 状態を造形でも分ける: 準備中=波形を出さない / 一時停止=平坦 / 録音中=実振幅。
+            if !recording.awaitingAudio {
+                Waveform(levels: recording.isPaused ? [] : recording.audioLevels, awaitingInput: false)
+                    .frame(width: 56, height: 16)
+                    .opacity(recording.isPaused ? 0.5 : 1)
+            }
             Spacer(minLength: 0)
             ForEach(DockPresentation.MeetingPanel.allCases, id: \.self) { panel in
                 Button { VoiceHUDState.shared.toggleMeetingPanel(panel) } label: {
