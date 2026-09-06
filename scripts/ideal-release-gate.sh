@@ -95,6 +95,8 @@ step 05 "SurfaceMotion 5/5" "SURFACE_CONTINUITY_MOTION=PASS" motion
 # 06 Invocation（ms と音の真実）
 invocation() { "$BIN" --selftest invocation; "$BIN" --selftest invocationaudio; }
 step 06 "Invocation acoustic" "SELFTEST_OK invocationaudio" invocation
+# 06b スクショの自動コンテキスト（撮った瞬間に会話の文脈になる。撮っただけでは外部へ出さない）
+step 06b "Screenshot auto-context" "SCREENSHOT_CONTEXT_GATE=PASS" "$BIN" --selftest screenshotcontext
 # 07-11 実機の残り。測定器が無い段は AUTOMATION_MISSING（人を呼ばない）。
 missing 07 "Automated Real Meeting (2 machines)" scripts/reality/run-real-meeting.sh
 missing 08 "Automated Full Keyboard Access"     scripts/reality/run-fka.sh
