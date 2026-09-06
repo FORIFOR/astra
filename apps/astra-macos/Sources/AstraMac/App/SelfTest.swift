@@ -580,6 +580,9 @@ enum SelfTest {
                 TranscriptSegment(speaker: "あなた", text: "見積は明日までにお願いします", interim: false, at: 288),
                 TranscriptSegment(speaker: "鈴木", text: "誰が対応しますか？", interim: false, at: 301),
             ] { recording.appendFinal(seg) }
+            // 経過時計は最後の発言（05:01）以降にする。start() で 0 に戻るため、明示しないと
+            // 「00:01 なのにメモは 04:14〜05:01」という矛盾した絵になる（盲検で指摘）。
+            recording.elapsedSeconds = 5 * 60 + 12
             // 抽出は確定行が溜まるたびに新しい分だけ走る。最後の行が待ちのまま撮らないよう、ここで確定させる。
             MeetingIntelligence.shared.ingest(
                 recording.transcript.filter { !$0.interim }.map { CanvasItem($0.text, at: $0.at, speaker: $0.speaker) },
@@ -6061,15 +6064,24 @@ enum SelfTest {
 
         // 11 meeting-canvas: §21 会議中に溜まる構造データが画面に出るか。
         // 拾った行には出所（いつ・誰が）が付く。付かない絵を golden に残さない。
+        // **時刻は経過（04:21）以下で、右の文字起こしの実在する行を指す。**抽出項目の時刻が経過より
+        // 後だったり、対応する発言が transcript に無いと、「出所 ›」の裏が取れず矛盾して見える（盲検で毎回指摘）。
+        RecordingWorkspaceState.shared.transcript = [
+            TranscriptSegment(speaker: "田中", text: "初期費用が心配です", interim: false, at: 168),
+            TranscriptSegment(speaker: "田中", text: "導入時期は 10 月で行きます", interim: false, at: 205),
+            TranscriptSegment(speaker: "あなた", text: "見積は明日までにお願いします", interim: false, at: 228),
+            TranscriptSegment(speaker: "鈴木", text: "誰が対応しますか？", interim: false, at: 244),
+        ]
         AstraStateStore.shared.updateCanvas(MeetingCanvas(
-            decisions: [CanvasItem("導入時期は 10 月で行きます", at: 262, speaker: "田中")],
-            actions: [CanvasItem("見積は明日までにお願いします", at: 288, speaker: "あなた")],
-            questions: [CanvasItem("誰が対応しますか？", at: 301, speaker: "鈴木")],
-            concerns: [CanvasItem("初期費用が心配です", at: 254, speaker: "田中")],
+            decisions: [CanvasItem("導入時期は 10 月で行きます", at: 205, speaker: "田中")],
+            actions: [CanvasItem("見積は明日までにお願いします", at: 228, speaker: "あなた")],
+            questions: [CanvasItem("誰が対応しますか？", at: 244, speaker: "鈴木")],
+            concerns: [CanvasItem("初期費用が心配です", at: 168, speaker: "田中")],
             notes: []))
         record("11-meeting-canvas", capture("11-meeting-canvas"),
                expW: Metrics.workspaceWidth, expH: Metrics.workspaceHeight, minColors: 12)
         AstraStateStore.shared.reset()
+        RecordingWorkspaceState.shared.transcript = []   // 上で入れた行を次の面へ持ち越さない
 
         // 09 permission-denied: 許可が無いまま録り続けていることが画面に出るか。
         // 「録音中」と出ているのに無音、が一番高くつく壊れ方なので必ず撮る。
