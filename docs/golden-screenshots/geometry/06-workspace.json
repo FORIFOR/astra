@@ -2,19 +2,19 @@
   "meetingPanel-ask" : {
     "h" : 30,
     "w" : 107,
-    "x" : 568,
+    "x" : 551,
     "y" : 23
   },
   "meetingPanel-captions" : {
     "h" : 30,
     "w" : 70,
-    "x" : 486,
+    "x" : 469,
     "y" : 23
   },
   "meetingPanel-notes" : {
     "h" : 30,
     "w" : 68,
-    "x" : 406,
+    "x" : 389,
     "y" : 23
   },
   "meetingPanelBody" : {

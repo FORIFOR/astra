@@ -860,6 +860,8 @@ struct MeetingDock: View {
                 .buttonStyle(AstraControlStyle(radius: 8, base: open == panel ? 0.07 : 0.0))
                 .accessibilityIdentifier("meetingPanel-\(panel.rawValue)")
             }
+            // ここから先はアイコンだけのモード/操作。板タブ（ラベル付き）と種類が違うので仕切る。
+            Divider().frame(height: 18).padding(.horizontal, 2)
             // シークレット: 画面共有・録画に Astra を映さない。会議中こそ要る。
             Button { SecretMode.shared.toggle() } label: {
                 Image(systemName: secret.isOn ? "eye.slash.fill" : "eye")

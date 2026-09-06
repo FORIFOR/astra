@@ -132,7 +132,7 @@ final class RecordingWorkspaceState: ObservableObject {
     /// 同じく固定画面用: 「準備中…」（音がまだ届いていない）の姿を作る。
     /// `VoiceHUDState.beginPreparingForShot` の録音側。Atlas の meeting.preparing はこれで撮る。
     /// 実マイクが動いている撮影では level が届くたびに「準備中…」が消えるので、撮り終わるまで止める。
-    func beginPreparingForShot() { holdPreparingForShot = true; awaitingAudio = true }
+    func beginPreparingForShot() { holdPreparingForShot = true; awaitingAudio = true; elapsedSeconds = 0 }
     private var holdPreparingForShot = false
 
     func loadDemo(ragOpen: Bool) {
