@@ -126,3 +126,46 @@ describe('with no model connected', () => {
     ).rejects.toThrow(/no language model is connected/);
   });
 });
+
+describe('answering about a screenshot the person just took', () => {
+  it('hands the attachments to the model by id — pixels never come through here', async () => {
+    const answer = vi.fn().mockResolvedValue('画面の説明です。');
+    const executors = generalExecutors(model({ answer }));
+    await executors['general.answer']!.execute(
+      {
+        ...task,
+        input: {
+          question: 'これ何？',
+          attachments: [
+            { id: 'shot-1', kind: 'screenshot', label: 'スクリーンショット（たった今）' },
+          ],
+        },
+      },
+      { toolId: 'general.answer', args: {} },
+    );
+    expect(answer).toHaveBeenCalledWith('これ何？', undefined, [
+      { id: 'shot-1', kind: 'screenshot', label: 'スクリーンショット（たった今）' },
+    ]);
+  });
+
+  it('drops attachments whose id could reach outside the hand-over folder', async () => {
+    const answer = vi.fn().mockResolvedValue('ok');
+    const executors = generalExecutors(model({ answer }));
+    await executors['general.answer']!.execute(
+      {
+        ...task,
+        input: {
+          question: 'q',
+          attachments: [
+            { id: '../etc/passwd', kind: 'screenshot', label: 'x' },
+            { id: 'ok-1', kind: 'unknown', label: 'x' },
+            { id: 'ok-2', kind: 'clipboard_image', label: '' },
+          ],
+        },
+      },
+      { toolId: 'general.answer', args: {} },
+    );
+    // 形の合うものが無ければ、添付無しとして問う（見たふりをしない）
+    expect(answer).toHaveBeenCalledWith('q', undefined);
+  });
+});

@@ -75,11 +75,30 @@ export const Turn = z.object({
 });
 export type Turn = z.infer<typeof Turn>;
 
+/**
+ * 発話に添えた、端末にある画像（スクショ / クリップボード画像）。
+ *
+ * **画素はここを通らない。**cloud が持つのは id とラベルだけで、
+ * 実体は端末の受け渡し場所（`visual-context/<id>.png`）にあり、
+ * 端末で走るモデル呼び出しがそこから読む（鍵も画像も端末から出さない）。
+ * 撮っただけでは送られない。利用者が「これ何？」と尋ねた turn にだけ付く。
+ */
+export const TurnAttachment = z.object({
+  /** 端末側の受け渡しファイル名になる。パス区切りを含めない。 */
+  id: z.string().regex(/^[A-Za-z0-9-]{1,64}$/),
+  kind: z.enum(['screenshot', 'clipboard_image']),
+  /** 「スクリーンショット（たった今）」など。指示語の解決と提示に使う。 */
+  label: z.string().min(1).max(200),
+});
+export type TurnAttachment = z.infer<typeof TurnAttachment>;
+
 export const SendTurnRequest = z.object({
   text: z.string().min(1).max(8_000),
   modality: Modality.default('text'),
   /** 直前の応答を打ち切るか。voice の barge-in はこれ（§7.2）。 */
   interrupt: z.boolean().default(true),
+  /** この turn に添えた端末内の画像。新しい順。 */
+  attachments: z.array(TurnAttachment).max(3).default([]),
   /**
    * いま見ているもの。正本 §6「ユーザーに説明し直させない」。
    *

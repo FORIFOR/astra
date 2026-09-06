@@ -19,15 +19,30 @@ extension SelfTest {
         let dir = FileManager.default.temporaryDirectory
             .appendingPathComponent("astra-sc-gate-\(getpid())", isDirectory: true)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        // 受け渡し場所も検査用に隔離する（利用者の Application Support を汚さない）。
+        let handover = dir.appendingPathComponent("handover", isDirectory: true)
+        VisualContextStore.handoverDirectoryOverride = handover
+        func handoverFiles() -> [String] {
+            ((try? FileManager.default.contentsOfDirectory(atPath: handover.path)) ?? []).filter { $0.hasSuffix(".png") }
+        }
+        func settle(_ s: Double) { let u = Date().addingTimeInterval(s); while Date() < u { CFRunLoopRunInMode(.defaultMode, 0.02, true) } }
+        func waitUntil(_ limit: Double, _ cond: () -> Bool) -> Bool {
+            let u = Date().addingTimeInterval(limit)
+            while Date() < u { if cond() { return true }; CFRunLoopRunInMode(.defaultMode, 0.01, true) }
+            return cond()
+        }
 
-        // 有効な PNG を書く。
+        // 有効な PNG を作る（描画は 1 回で速く。遅延の測定に描画時間を混ぜない）。
+        func pngData(w: Int, h: Int) -> Data {
+            let img = NSImage(size: NSSize(width: w, height: h))
+            img.lockFocus(); NSColor(red: 0.2, green: 0.4, blue: 0.9, alpha: 1).setFill()
+            NSRect(x: 0, y: 0, width: w, height: h).fill(); img.unlockFocus()
+            let rep = NSBitmapImageRep(data: img.tiffRepresentation!)!
+            return rep.representation(using: .png, properties: [:])!
+        }
         func writePNG(_ name: String, w: Int, h: Int) -> URL {
             let url = dir.appendingPathComponent(name)
-            let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: w, pixelsHigh: h,
-                                       bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
-                                       colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0)!
-            for x in 0..<w { for y in 0..<h { rep.setColor(.init(red: 0.2, green: 0.4, blue: 0.9, alpha: 1), atX: x, y: y) } }
-            try? rep.representation(using: .png, properties: [:])?.write(to: url)
+            try? pngData(w: w, h: h).write(to: url)
             return url
         }
 
@@ -88,20 +103,66 @@ extension SelfTest {
         check(VisualReferenceResolver.isReferential("このエラーどうすればいい？"), "参照表現を参照でないと判定")
         check(!VisualReferenceResolver.isReferential("会議を録音して"), "非参照を参照と誤判定")
 
-        // 8) 質問で添付 → attached（このときだけ推論対象）。手動添付は不要。
-        store.markAttached([recent.first!])
-        check(store.recent.first?.state == .attached, "添付後に attached にならない")
+        // 7b) 「さっきの」だけなら 1 つ前。「さっき撮ったやつ」で 1 枚しか無ければそれ。
+        let prevOnly = VisualReferenceResolver.resolve(text: "さっきのは何だった？", recent: recent).images
+        check(prevOnly.count == 1 && prevOnly.first?.id == recent[1].id, "「さっきの」が 1 つ前を指さない")
+        let onlyOne = VisualReferenceResolver.resolve(text: "さっき撮ったやつ見て", recent: [recent[0]]).images
+        check(onlyOne.count == 1 && onlyOne.first?.id == recent[0].id, "1 枚しか無いとき「さっき」がそれを指さない")
 
-        // 9) コンテキストから外すのは 1 操作。
+        // 8) 質問で添える → attached（このときだけ画像が動く）。手動添付は不要。
+        //    撮っただけの段階では受け渡し場所に何も無い（= 質問前に画像が動かない）。
+        check(handoverFiles().isEmpty, "質問前に受け渡し場所へ画像が写された (\(handoverFiles()))")
+        let toAttach = Array(recent.prefix(2))
+        let attachments = store.attach(toAttach)
+        check(attachments.count == 2, "添付が 2 件にならない (\(attachments.count))")
+        check(attachments.first?.label == "クリップボードの画像（たった今）", "添付ラベルが違う (\(attachments.first?.label ?? ""))")
+        check(attachments.last?.label == "スクリーンショット（1 つ前）", "2 枚目のラベルが違う (\(attachments.last?.label ?? ""))")
+        check(attachments.allSatisfy { $0.id.range(of: "^[a-z0-9-]{1,64}$", options: .regularExpression) != nil }, "添付 id がファイル名として不正")
+        check(Set(handoverFiles()) == Set(attachments.map { "\($0.id).png" }), "受け渡し場所の写しが添付と一致しない (\(handoverFiles()))")
+        check(store.recent.first?.state == .attached, "添付後に attached にならない")
+        // 応答が終わったら recent（しばらく「さっきの」で呼べる）。
+        store.markRecent(toAttach)
+        check(store.recent.first?.state == .recent, "応答後に recent にならない")
+
+        // 9) コンテキストから外すのは 1 操作。端末に残した写しも消える。
         let removeId = store.recent.first!.id
         store.remove(removeId)
         check(!store.recent.contains { $0.id == removeId }, "1 操作で外せない")
+        check(!handoverFiles().contains("\(removeId.uuidString.lowercased()).png"), "外しても写しが残る")
+
+        // 10) 実際の監視経路（フォルダを見張る → 書かれた → 安定 → 登録）で遅延と部分ファイルを測る。
+        store.reset()
+        let watched = dir.appendingPathComponent("watched", isDirectory: true)
+        try? FileManager.default.createDirectory(at: watched, withIntermediateDirectories: true)
+        svc.stop(); svc.start(directory: watched)
+        settle(0.1)
+        let keyBefore = NSApp.keyWindow; let activeBefore = NSApp.isActive
+        let firstPNG = pngData(w: 380, h: 260)
+        let tw0 = Date()   // 書かれた瞬間から測る（macOS の screencapture が書き終えた時点に相当）
+        try? firstPNG.write(to: watched.appendingPathComponent("スクリーンショット 2026-09-07 1.png"))
+        let seen = waitUntil(1.5) { store.recent.count == 1 }
+        let watchMs = Date().timeIntervalSince(tw0) * 1000
+        check(seen, "監視経路で標準スクショを検知できない")
+        check(watchMs < 300, "監視経路の検知が遅い \(Int(watchMs))ms")
+        check(NSApp.keyWindow === keyBefore && NSApp.isActive == activeBefore, "検知で focus が動いた")
+        // 部分ファイル: 前半だけ書いて 120ms 止め、その後に残りを書く。途中で取り込まれず、完成後に 1 回だけ取り込む。
+        let full = pngData(w: 360, h: 240)
+        let partial = watched.appendingPathComponent("スクリーンショット 2026-09-07 2.png")
+        FileManager.default.createFile(atPath: partial.path, contents: full.prefix(full.count / 2))
+        settle(0.12)
+        check(store.recent.count == 1, "書き込み途中の PNG を取り込んだ")
+        let fh = try! FileHandle(forWritingTo: partial); fh.seekToEndOfFile(); fh.write(full.suffix(from: full.count / 2)); try? fh.close()
+        check(waitUntil(2.5) { store.recent.count == 2 }, "完成した PNG を取り込めない (recent=\(store.recent.count))")
+        settle(0.3)
+        check(store.recent.count == 2, "完成後に二重に取り込んだ (recent=\(store.recent.count))")
+        svc.stop()
 
         try? FileManager.default.removeItem(at: dir)
         store.reset()
+        VisualContextStore.handoverDirectoryOverride = nil
 
         if fail.isEmpty {
-            print("SCREENSHOT_CONTEXT_GATE=PASS  検知<\(Int(latencyMs))ms・会話紐付け・参照解決・二重0・部分0・窓0・質問前egress0・外す1操作")
+            print("SCREENSHOT_CONTEXT_GATE=PASS  検知<\(Int(latencyMs))ms・監視経路\(Int(watchMs))ms・会話紐付け・参照解決(これ/さっきの/2枚/3枚/さっきのと今の)・二重0・部分0・窓0・focus0・質問前に画像が動かない・受け渡し=添付時のみ・外す1操作")
             exit(0)
         } else {
             print("SCREENSHOT_CONTEXT_GATE=FAIL  " + fail.joined(separator: " / "))

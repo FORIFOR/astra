@@ -16,6 +16,7 @@ import {
 } from '@astra/contracts';
 import { ClaudeCodeCli, ClaudeCodeError, CLAUDE_CODE_RECOVERY } from './claude-code.js';
 import type { HostStep, StepOutcome } from './connector-steps.js';
+import { imageRefsOf, locateImages, type LocatedImage } from './visual-context.js';
 
 /** 端末で答えられるもの。 */
 export const LLM_TOOLS = [
@@ -48,12 +49,32 @@ const TOOLS_FOR: Readonly<Record<LlmTool, readonly string[]>> = {
 export type LlmTool = (typeof LLM_TOOLS)[number];
 
 /**
+ * この呼び出しで使ってよい道具。
+ *
+ * 問いに端末内の画像が添えてあるときだけ、**読むこと**を許す。
+ * 画像は `visual-context/` にあり、モデルはそこを Read して見る。
+ * 画像の無い問いに Read を渡す理由は無い。
+ */
+export function toolsFor(
+  tool: LlmTool,
+  args: Record<string, unknown>,
+  images: readonly LocatedImage[] = locateImages(imageRefsOf(args['images'])),
+): readonly string[] {
+  if (tool === 'llm.answer' && images.some((image) => image.present)) return ['Read'];
+  return TOOLS_FOR[tool];
+}
+
+/**
  * 何をどんな形で返してほしいか。
  *
  * **形を先に決めて渡す。**あとから直すのは無理で、
  * 読めない返事は捨てるしかない（捨てると仕事が進まない）。
  */
-export function promptFor(tool: LlmTool, args: Record<string, unknown>): string {
+export function promptFor(
+  tool: LlmTool,
+  args: Record<string, unknown>,
+  images: readonly LocatedImage[] = locateImages(imageRefsOf(args['images'])),
+): string {
   const json = (shape: string): string =>
     `JSON だけを返してください。説明や前置きは書かないでください。形式: ${shape}`;
 
@@ -109,6 +130,7 @@ export function promptFor(tool: LlmTool, args: Record<string, unknown>): string 
         json('{"answer": "…"}'),
         '',
         ...(args['context'] ? [`前提: ${String(args['context'])}`, ''] : []),
+        ...imageLines(images),
         `問い: ${String(args['question'] ?? '')}`,
       ].join('\n');
 
@@ -164,6 +186,33 @@ export function promptFor(tool: LlmTool, args: Record<string, unknown>): string 
         `主張:\n${listOf(args['claims'])}`,
       ].join('\n');
   }
+}
+
+/**
+ * 添えられた画像を、端末内のパスで示す。
+ *
+ * **在るものだけ「見てから答えて」と言う。**無いものは無いと伝え、
+ * 見たふりをさせない（「これ」が指す画像が届いていないなら、そう答えるべき）。
+ */
+function imageLines(images: readonly LocatedImage[]): string[] {
+  if (images.length === 0) return [];
+  const present = images.filter((image) => image.present);
+  const missing = images.filter((image) => !image.present);
+  return [
+    ...(present.length > 0
+      ? [
+          '利用者は、問いの中の「これ」「この画面」「さっきの」で、次の画像（端末内のスクリーンショット）を指しています。',
+          '答える前に、Read で各画像を開いて内容を確かめてください。',
+          ...present.map((image) => `- ${image.label}: ${image.path}`),
+        ]
+      : []),
+    ...(missing.length > 0
+      ? [
+          `次の画像は端末に見当たりませんでした（${missing.map((i) => i.label).join('、')}）。見えないものについては、見えなかったと答えてください。`,
+        ]
+      : []),
+    '',
+  ];
 }
 
 /** 会議の記録を、id つきで並べる。id を落とすと引用が作れない。 */
@@ -264,7 +313,11 @@ export class LlmRuntime {
 
     try {
       const tool = step.toolId as LlmTool;
-      return { ok: true, result: await ask(promptFor(tool, step.args), TOOLS_FOR[tool]) };
+      const images = locateImages(imageRefsOf(step.args['images']));
+      return {
+        ok: true,
+        result: await ask(promptFor(tool, step.args, images), toolsFor(tool, step.args, images)),
+      };
     } catch (error) {
       if (error instanceof ClaudeCodeError) {
         if (error.reason === 'not_installed' || error.reason === 'not_signed_in') {

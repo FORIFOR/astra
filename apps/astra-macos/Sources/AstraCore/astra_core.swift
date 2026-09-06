@@ -1786,6 +1786,108 @@ public func FfiConverterTypeTokens_lower(_ value: Tokens) -> RustBuffer {
 
 
 /**
+ * この turn に添えた端末内の画像（スクショ / クリップボード画像）。
+ *
+ * **画素はここを通らない。**cloud へ渡すのは id とラベルだけで、実体は端末の
+ * `visual-context/<id>.png` にあり、端末で走るモデル呼び出しがそこから読む。
+ */
+public struct TurnAttachment {
+    /**
+     * 端末側の受け渡しファイル名になる（`[A-Za-z0-9-]{1,64}`）。
+     */
+    public var id: String
+    /**
+     * "screenshot" | "clipboard_image"
+     */
+    public var kind: String
+    /**
+     * 「スクリーンショット（たった今）」など。指示語の解決に使う。
+     */
+    public var label: String
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * 端末側の受け渡しファイル名になる（`[A-Za-z0-9-]{1,64}`）。
+         */id: String, 
+        /**
+         * "screenshot" | "clipboard_image"
+         */kind: String, 
+        /**
+         * 「スクリーンショット（たった今）」など。指示語の解決に使う。
+         */label: String) {
+        self.id = id
+        self.kind = kind
+        self.label = label
+    }
+}
+
+#if compiler(>=6)
+extension TurnAttachment: Sendable {}
+#endif
+
+
+extension TurnAttachment: Equatable, Hashable {
+    public static func ==(lhs: TurnAttachment, rhs: TurnAttachment) -> Bool {
+        if lhs.id != rhs.id {
+            return false
+        }
+        if lhs.kind != rhs.kind {
+            return false
+        }
+        if lhs.label != rhs.label {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+        hasher.combine(kind)
+        hasher.combine(label)
+    }
+}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeTurnAttachment: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TurnAttachment {
+        return
+            try TurnAttachment(
+                id: FfiConverterString.read(from: &buf), 
+                kind: FfiConverterString.read(from: &buf), 
+                label: FfiConverterString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: TurnAttachment, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.id, into: &buf)
+        FfiConverterString.write(value.kind, into: &buf)
+        FfiConverterString.write(value.label, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTurnAttachment_lift(_ buf: RustBuffer) throws -> TurnAttachment {
+    return try FfiConverterTypeTurnAttachment.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTurnAttachment_lower(_ value: TurnAttachment) -> RustBuffer {
+    return FfiConverterTypeTurnAttachment.lower(value)
+}
+
+
+/**
  * 依頼を送る（POST /v1/conversations/:id/turns）。Agent が仕事を起こしたら task_id。
  */
 public struct TurnOutcome {
@@ -2510,6 +2612,31 @@ fileprivate struct FfiConverterSequenceTypeRecoverableMeeting: FfiConverterRustB
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterSequenceTypeTurnAttachment: FfiConverterRustBuffer {
+    typealias SwiftType = [TurnAttachment]
+
+    public static func write(_ value: [TurnAttachment], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeTurnAttachment.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [TurnAttachment] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [TurnAttachment]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeTurnAttachment.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterDictionaryStringString: FfiConverterRustBuffer {
     public static func write(_ value: [String: String], into buf: inout [UInt8]) {
         let len = Int32(value.count)
@@ -2656,6 +2783,20 @@ public func apiSendTurn(baseUrl: String, accessToken: String, conversationId: St
         FfiConverterString.lower(accessToken),
         FfiConverterString.lower(conversationId),
         FfiConverterString.lower(text),$0
+    )
+})
+}
+/**
+ * 依頼を送る。端末内の画像を添えるとき（「これ何？」）はこちら。撮っただけでは呼ばない。
+ */
+public func apiSendTurnWithAttachments(baseUrl: String, accessToken: String, conversationId: String, text: String, attachments: [TurnAttachment])throws  -> TurnOutcome  {
+    return try  FfiConverterTypeTurnOutcome_lift(try rustCallWithError(FfiConverterTypeApiError_lift) {
+    uniffi_astra_core_fn_func_api_send_turn_with_attachments(
+        FfiConverterString.lower(baseUrl),
+        FfiConverterString.lower(accessToken),
+        FfiConverterString.lower(conversationId),
+        FfiConverterString.lower(text),
+        FfiConverterSequenceTypeTurnAttachment.lower(attachments),$0
     )
 })
 }
@@ -2896,6 +3037,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_astra_core_checksum_func_api_send_turn() != 50231) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_astra_core_checksum_func_api_send_turn_with_attachments() != 34022) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_astra_core_checksum_func_api_start_conversation() != 27882) {

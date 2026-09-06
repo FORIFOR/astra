@@ -44,6 +44,20 @@ export interface ExtractedClaim {
   readonly supportText: string;
 }
 
+/**
+ * 問いに添えられた端末内の画像（スクショ等）。id とラベルだけ。
+ *
+ * **画素はここに無い。**実体は端末の受け渡し場所にあり、端末で走る
+ * モデル呼び出しが読む。cloud で動く実装（Anthropic API / 代役）は
+ * 画像を見られないので、この引数を黙って無視してよい —— ただし
+ * 見たふりはしない。
+ */
+export interface VisualAttachment {
+  readonly id: string;
+  readonly kind: 'screenshot' | 'clipboard_image';
+  readonly label: string;
+}
+
 export interface LanguageModel {
   readonly name: string;
   readonly isStandIn: boolean;
@@ -66,7 +80,11 @@ export interface LanguageModel {
    * 調査と違い、根拠を集めない。**知らないことは知らないと言う**のは
    * 呼び出し側では強制できないので、指示の側で頼む。
    */
-  answer(question: string, context?: string): Promise<string>;
+  answer(
+    question: string,
+    context?: string,
+    attachments?: readonly VisualAttachment[],
+  ): Promise<string>;
 
   /** 文章を書く。下書きまでで、送りはしない。 */
   compose(instruction: string, context?: string): Promise<string>;

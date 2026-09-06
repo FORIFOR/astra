@@ -1,3 +1,4 @@
+import AstraCore
 import SwiftUI
 
 /// 上部 Voice OS ピルの状態。idle は静か、listening は声を拾っている、thinking は Agent に問い合わせ中。
@@ -147,10 +148,10 @@ final class VoiceHUDState: ObservableObject {
             answer = "サインインすると使えます。"; mode = .idle; return
         }
         // スクショの自動コンテキスト: 参照表現（「これ」「さっき」「この 2 枚」等）なら直近スクショを
-        // この会話へ添付する。**新しいチャットは作らない。**外部へ出るのはこの瞬間だけ（撮っただけでは出さない）。
+        // この会話へ添える。**新しいチャットは作らない。**画像が動くのはこの瞬間だけ（撮っただけでは動かない）:
+        // 端末内の受け渡し場所へ写し、cloud へは id とラベルだけ。画素は端末で走るモデル呼び出しが読む。
         let attached = VisualReferenceResolver.resolve(text: text, recent: VisualContextStore.shared.recent).images
-        VisualContextStore.shared.markAttached(attached)
-        let imagePaths = attached.map { $0.imageURL.path }
+        let attachments = VisualContextStore.shared.attach(attached)
         mode = .thinking; answer = ""
         Task.detached { [weak self] in
             do {
@@ -161,16 +162,48 @@ final class VoiceHUDState: ObservableObject {
                     await MainActor.run { self?.conversationId = conv }
                 }
                 await MainActor.run { VisualContextStore.shared.bind(conversationID: conv) }
-                // 画像は添付済み（imagePaths）。モデルへ画素を渡す口は core(sendTurn) の拡張で繋ぐ（backend seam）。
-                _ = imagePaths
-                let outcome = try AstraCoreBridge.sendTurn(base, accessToken: token, conversationId: conv, text: text)
-                let reply = !outcome.answer.isEmpty ? outcome.answer
-                    : !outcome.notice.isEmpty ? outcome.notice
-                    : outcome.needsClarification ? "もう少し詳しく教えてください。" : "(応答なし)"
-                await MainActor.run { self?.answer = reply; self?.mode = .idle }
+                let outcome = try AstraCoreBridge.sendTurn(base, accessToken: token, conversationId: conv,
+                                                           text: text, attachments: attachments)
+                let reply = try Self.followUp(outcome, base: base, token: token, waitMs: 12_000)
+                await MainActor.run {
+                    self?.answer = reply.text; self?.mode = .idle
+                    if reply.settled { VisualContextStore.shared.markRecent(attached) }
+                }
+                // 12 秒で終わらない仕事は、裏で待ち続けて届いたら差し替える（Dock は idle に戻す）。
+                if !reply.settled, !outcome.taskId.isEmpty {
+                    let later = try Self.followUp(outcome, base: base, token: token, waitMs: 120_000)
+                    await MainActor.run {
+                        if later.settled { self?.answer = later.text; VisualContextStore.shared.markRecent(attached) }
+                    }
+                }
             } catch {
                 await MainActor.run { self?.answer = "失敗しました: \(error)"; self?.mode = .idle }
             }
         }
+    }
+
+    /// turn の結果を、人に見せる文にする。
+    ///
+    /// gateway は chat lane を **仕事（task）として始める**ので、202 の時点では答えが無い。
+    /// 以前はここで「(応答なし)」と出していた —— 仕事は動いているのに、答えが Dock に届かなかった。
+    /// task_id があれば完了を待ち、成果物の本文を答えとして返す。`settled` は「もう変わらない」。
+    nonisolated static func followUp(_ outcome: TurnOutcome, base: String, token: String, waitMs: UInt64) throws
+        -> (text: String, settled: Bool) {
+        if !outcome.answer.isEmpty { return (outcome.answer, true) }
+        if outcome.needsClarification { return ("もう少し詳しく教えてください。", true) }
+        if !outcome.taskId.isEmpty {
+            let done = try AstraCoreBridge.waitTask(base, accessToken: token, taskId: outcome.taskId, timeoutMs: waitMs)
+            switch done.status {
+            case "COMPLETED":
+                guard !done.resultArtifactId.isEmpty else { return ("終わりました。", true) }
+                let body = try AstraCoreBridge.artifactContent(base, accessToken: token, artifactId: done.resultArtifactId)
+                return (body.isEmpty ? "終わりました。" : body, true)
+            case "FAILED": return ("できませんでした。", true)
+            case "CANCELLED": return ("取り消されました。", true)
+            default: return ("まだ考えています。届いたらここに出します。", false)
+            }
+        }
+        if !outcome.notice.isEmpty { return (outcome.notice, true) }
+        return ("(応答なし)", true)
     }
 }

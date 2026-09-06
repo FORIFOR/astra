@@ -11,7 +11,7 @@
  *   - **根拠を集めない仕事だと分かるように書く。**調査とは別のもの
  *   - **書くのは下書きまで。**送るのは人の操作
  */
-import type { LanguageModel } from './providers.js';
+import type { LanguageModel, VisualAttachment } from './providers.js';
 
 interface TaskLike {
   readonly taskId: string;
@@ -40,6 +40,30 @@ function value(input: TaskLike, step: StepLike, key: string): string | null {
   return typeof fromTask === 'string' && fromTask.trim().length > 0 ? fromTask : null;
 }
 
+/**
+ * 問いに添えられた端末内の画像。step か task のどちらかに入っている。
+ *
+ * 形が違うものは**捨てる**。id はそのまま端末のファイル名になるので、
+ * パス区切りを含むものを通さない。
+ */
+function attachmentsOf(input: TaskLike, step: StepLike): VisualAttachment[] {
+  const raw = Array.isArray(step.args['attachments'])
+    ? step.args['attachments']
+    : Array.isArray(input.input['attachments'])
+      ? input.input['attachments']
+      : [];
+  return raw.flatMap((item): VisualAttachment[] => {
+    const row = item as Record<string, unknown> | null;
+    const id = row?.['id'];
+    const kind = row?.['kind'];
+    const label = row?.['label'];
+    if (typeof id !== 'string' || !/^[A-Za-z0-9-]{1,64}$/.test(id)) return [];
+    if (kind !== 'screenshot' && kind !== 'clipboard_image') return [];
+    if (typeof label !== 'string' || label.trim().length === 0) return [];
+    return [{ id, kind, label }];
+  });
+}
+
 /** 題名。長い依頼をそのまま題にしない。 */
 function titleOf(text: string): string {
   const firstLine = text.split('\n')[0]!.trim();
@@ -56,7 +80,12 @@ export function generalExecutors(model: LanguageModel): Record<string, Executor>
           throw new Error('there is nothing to answer');
         }
         const context = value(input, step, 'context') ?? undefined;
-        const answer = await model.answer(question, context);
+        const attachments = attachmentsOf(input, step);
+        // 添付が無ければ、これまで通りの形で呼ぶ（cloud 実装は第 3 引数を知らなくてよい）。
+        const answer =
+          attachments.length > 0
+            ? await model.answer(question, context, attachments)
+            : await model.answer(question, context);
 
         return {
           result: { answered: true },

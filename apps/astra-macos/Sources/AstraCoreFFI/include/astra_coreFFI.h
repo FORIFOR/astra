@@ -356,6 +356,11 @@ int8_t uniffi_astra_core_fn_func_api_reachable(RustBuffer base_url, RustCallStat
 RustBuffer uniffi_astra_core_fn_func_api_send_turn(RustBuffer base_url, RustBuffer access_token, RustBuffer conversation_id, RustBuffer text, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_SEND_TURN_WITH_ATTACHMENTS
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_SEND_TURN_WITH_ATTACHMENTS
+RustBuffer uniffi_astra_core_fn_func_api_send_turn_with_attachments(RustBuffer base_url, RustBuffer access_token, RustBuffer conversation_id, RustBuffer text, RustBuffer attachments, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_START_CONVERSATION
 #define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_START_CONVERSATION
 RustBuffer uniffi_astra_core_fn_func_api_start_conversation(RustBuffer base_url, RustBuffer access_token, RustCallStatus *_Nonnull out_status
@@ -780,6 +785,12 @@ uint16_t uniffi_astra_core_checksum_func_api_reachable(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_SEND_TURN
 #define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_SEND_TURN
 uint16_t uniffi_astra_core_checksum_func_api_send_turn(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_SEND_TURN_WITH_ATTACHMENTS
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_SEND_TURN_WITH_ATTACHMENTS
+uint16_t uniffi_astra_core_checksum_func_api_send_turn_with_attachments(void
     
 );
 #endif

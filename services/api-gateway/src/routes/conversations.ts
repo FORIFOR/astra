@@ -4,7 +4,12 @@
  * ここが Task Dock の入口になる。**Lane は返さない。**
  * 利用者に見せないものを API で配ると、いずれ画面に出る。
  */
-import { SendTurnRequest, StartConversationRequest, type Referent } from '@astra/contracts';
+import {
+  SendTurnRequest,
+  StartConversationRequest,
+  type Referent,
+  type TurnAttachment,
+} from '@astra/contracts';
 import type { ConversationService } from '@astra/service-conversation';
 import {
   clarificationFor,
@@ -134,8 +139,12 @@ export function registerConversationRoutes(app: App, deps: ConversationRouteDeps
 
       const resolutions = resolveReferences(body.text, {
         referents: state.referents as Referent[],
-        // いま見ているもの。会話に出ていなくても「この◯◯」は解ける（正本 §6）
-        contextLabels: body.context_referents.map((r) => r.label),
+        // いま見ているもの。会話に出ていなくても「この◯◯」は解ける（正本 §6）。
+        // 撮ったばかりのスクショも「見ているもの」。「これ何？」はそれで解ける。
+        contextLabels: [
+          ...body.context_referents.map((r) => r.label),
+          ...body.attachments.map((a) => a.label),
+        ],
       });
       const clarification = clarificationFor(resolutions);
 
@@ -169,7 +178,15 @@ export function registerConversationRoutes(app: App, deps: ConversationRouteDeps
        * Home で頼んでも、Composer で頼んでも、Dock で頼んでも、
        * 会話に行が増えるだけで仕事は現れず、Dock は 10 秒待って諦めていた。
        */
-      const started = await startWork(deps, principal, id, body.text, decision.lane, turn.id);
+      const started = await startWork(
+        deps,
+        principal,
+        id,
+        body.text,
+        decision.lane,
+        turn.id,
+        body.attachments,
+      );
 
       // Lane は返さない。利用者に見せないものを API で配らない。
       return reply.status(202).send({
@@ -244,12 +261,18 @@ async function startWork(
   text: string,
   lane: string,
   turnId: string,
+  attachments: readonly TurnAttachment[] = [],
 ): Promise<{ taskId: string | null; notice: string | null }> {
   const request =
     lane === 'chat'
       ? {
           kind: agentKindFor('com.astra.general', 'assistant'),
-          input: { question: text, message: text },
+          // 添付は id とラベルだけ。画素は端末に残り、端末のモデル呼び出しが読む。
+          input: {
+            question: text,
+            message: text,
+            ...(attachments.length > 0 ? { attachments: [...attachments] } : {}),
+          },
         }
       : lane === 'research'
         ? { kind: 'research', input: { question: text } }

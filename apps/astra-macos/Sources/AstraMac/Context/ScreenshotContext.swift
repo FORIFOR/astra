@@ -1,5 +1,8 @@
 import AppKit
+import AstraCore
+import CoreServices
 import Foundation
+import ImageIO
 
 /// スクショを撮った瞬間に、それを**直近の会話コンテキスト**として自動で持つ。
 ///
@@ -39,6 +42,9 @@ struct VisualContextArtifact: Identifiable, Equatable {
     var kind: VisualKind
     var state: VisualContextState
 
+    /// API へ渡す種類（contracts の TurnAttachment.kind と同じ語）。
+    var apiKind: String { kind == .clipboardImage ? "clipboard_image" : "screenshot" }
+
     /// 「たった今」「1 分前」。UI の chip に出す。
     func ageLabel(_ now: Date = Date()) -> String {
         let s = Int(now.timeIntervalSince(capturedAt))
@@ -72,7 +78,11 @@ enum ScreenshotClassifier {
         let ext = url.pathExtension.lowercased()
         guard imageExts.contains(ext) else { return (0, .zero, now) }
         // 前提: 実際に読める画像で、寸法が妥当。満たさなければ確度 0。
-        guard let src = CGImageSourceCreateWithURL(url as CFURL, nil),
+        // **ヘッダが読めるだけでは足りない。**書き込み途中の PNG も IHDR は先頭にあるので寸法は取れる。
+        // 末尾（PNG の IEND / JPEG の FFD9）まで来ていて、ImageIO が complete と言うものだけを画像と見なす。
+        guard isCompleteImageFile(url),
+              let src = CGImageSourceCreateWithURL(url as CFURL, nil),
+              CGImageSourceGetStatusAtIndex(src, 0) == .statusComplete,
               let props = CGImageSourceCopyPropertiesAtIndex(src, 0, nil) as? [CFString: Any],
               let w = props[kCGImagePropertyPixelWidth] as? CGFloat,
               let h = props[kCGImagePropertyPixelHeight] as? CGFloat,
@@ -84,12 +94,37 @@ enum ScreenshotClassifier {
         var score = 0.4   // 読める妥当な画像（前提を満たした）
         if now.timeIntervalSince(created) <= 2.0 { score += 0.25 }   // 直近 2 秒
         if inScreenshotDir { score += 0.25 }                          // 保存先に作られた
+        if isSpotlightScreenCapture(url) { score += 0.25 }           // OS が「画面収録」と印している
         // ファイル名の慣例は**弱い証拠**だけ（単独では 0.8 に届かせない）。
         let name = url.lastPathComponent.lowercased()
         if name.contains("screenshot") || name.hasPrefix("スクリーンショット") || name.hasPrefix("cleanshot") {
             score += 0.10
         }
         return (min(1.0, score), size, created)
+    }
+
+    /// ファイルの末尾が来ているか。PNG は IEND チャンク（末尾 8 バイト固定）、JPEG は EOI（FFD9）。
+    /// HEIC は末尾の印が無いので ImageIO の status に任せる。
+    static func isCompleteImageFile(_ url: URL) -> Bool {
+        guard let fh = try? FileHandle(forReadingFrom: url) else { return false }
+        defer { try? fh.close() }
+        let end = fh.seekToEndOfFile()
+        guard end >= 8 else { return false }
+        fh.seek(toFileOffset: end - 8)
+        let tail = [UInt8](fh.readData(ofLength: 8))
+        switch url.pathExtension.lowercased() {
+        case "png":  return tail == [0x49, 0x45, 0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82]   // "IEND" + CRC
+        case "jpg", "jpeg": return tail.suffix(2) == [0xFF, 0xD9]
+        default: return true
+        }
+    }
+
+    /// Spotlight の `kMDItemIsScreenCapture`。macOS の ⌘⇧3/4/5 はこれを付ける。
+    /// 付いていれば強い証拠。付いていない（索引前・他ツール）ことは反証にしない。
+    static func isSpotlightScreenCapture(_ url: URL) -> Bool {
+        guard let item = MDItemCreateWithURL(kCFAllocatorDefault, url as CFURL),
+              let value = MDItemCopyAttribute(item, "kMDItemIsScreenCapture" as CFString) else { return false }
+        return (value as? Bool) ?? false
     }
 }
 
@@ -114,6 +149,17 @@ final class VisualContextStore: ObservableObject {
     /// RECENT のまま「さっき」で呼べる寿命。
     static let ttl: TimeInterval = 10 * 60
     private var toastTimer: Timer?
+
+    /// 端末内の受け渡し場所。質問に添えた瞬間だけ `<id>.png` を写し、worker（端末で走る
+    /// モデル呼び出し）がここから読む。cloud へは id とラベルしか行かない。
+    /// 置き場所は `LocalStore.dataRoot`（ASTRA_DATA_ROOT → Application Support/Astra）と同じ規約。
+    static var handoverDirectoryOverride: URL?
+    static var handoverDirectory: URL {
+        handoverDirectoryOverride ?? LocalStore.dataRoot.appendingPathComponent("visual-context", isDirectory: true)
+    }
+    func handoverURL(_ id: UUID) -> URL {
+        Self.handoverDirectory.appendingPathComponent("\(id.uuidString.lowercased()).png")
+    }
 
     func bind(conversationID: String?) {
         self.conversationID = conversationID
@@ -147,9 +193,17 @@ final class VisualContextStore: ObservableObject {
         return art
     }
 
-    /// TTL 切れを落とす。
+    /// TTL 切れを落とす（受け渡しファイル・クリップボードの一時ファイルも消す）。
     func purgeExpired(now: Date = Date()) {
+        let expired = recent.filter { now.timeIntervalSince($0.capturedAt) > Self.ttl }
+        expired.forEach(cleanup)
         recent.removeAll { now.timeIntervalSince($0.capturedAt) > Self.ttl }
+    }
+
+    /// 端末に残した写しを消す。元のスクショ（利用者のファイル）には触らない。
+    private func cleanup(_ art: VisualContextArtifact) {
+        try? FileManager.default.removeItem(at: handoverURL(art.id))
+        if art.kind == .clipboardImage { try? FileManager.default.removeItem(at: art.imageURL) }
     }
 
     /// 直近の連続撮影グループ（0〜15 秒以内に固まって撮ったもの、新しい順）。
@@ -169,11 +223,62 @@ final class VisualContextStore: ObservableObject {
         for i in recent.indices where ids.contains(recent[i].id) { recent[i].state = .attached }
     }
 
-    /// コンテキストから外す（≤1 操作）。
-    func remove(_ id: UUID) { recent.removeAll { $0.id == id } }
+    /// 質問に添える。**ここが端末内で画像が動く唯一の瞬間**: `visual-context/<id>.png` へ写し、
+    /// API へ渡す id とラベルを返す。撮っただけでは呼ばれない。写せなかった枚は添えない（見たふりをさせない）。
+    func attach(_ arts: [VisualContextArtifact]) -> [TurnAttachment] {
+        guard !arts.isEmpty else { return [] }
+        try? FileManager.default.createDirectory(at: Self.handoverDirectory, withIntermediateDirectories: true)
+        let newestFirst = arts.sorted { $0.capturedAt > $1.capturedAt }
+        var out: [TurnAttachment] = []
+        for (i, art) in newestFirst.enumerated() {
+            guard Self.writePNG(from: art.imageURL, to: handoverURL(art.id)) else { continue }
+            out.append(TurnAttachment(id: art.id.uuidString.lowercased(), kind: art.apiKind,
+                                      label: Self.attachmentLabel(art, position: i)))
+        }
+        markAttached(newestFirst)
+        return out
+    }
+
+    /// 「スクリーンショット（たった今）」「スクリーンショット（1 つ前）」。gateway の指示語解決と、
+    /// 端末のモデル呼び出しへの提示に使う。
+    static func attachmentLabel(_ art: VisualContextArtifact, position: Int) -> String {
+        let noun = art.kind == .clipboardImage ? "クリップボードの画像" : "スクリーンショット"
+        let when = position == 0 ? "たった今" : "\(position) つ前"
+        return "\(noun)（\(when)）"
+    }
+
+    /// 画像を PNG として写す（元が JPEG/HEIC でも worker は .png を読む）。
+    static func writePNG(from src: URL, to dst: URL) -> Bool {
+        if src.pathExtension.lowercased() == "png" {
+            try? FileManager.default.removeItem(at: dst)
+            return (try? FileManager.default.copyItem(at: src, to: dst)) != nil
+        }
+        guard let source = CGImageSourceCreateWithURL(src as CFURL, nil),
+              let image = CGImageSourceCreateImageAtIndex(source, 0, nil),
+              let dest = CGImageDestinationCreateWithURL(dst as CFURL, "public.png" as CFString, 1, nil) else { return false }
+        CGImageDestinationAddImage(dest, image, nil)
+        return CGImageDestinationFinalize(dest)
+    }
+
+    /// 応答が終わった。attached → recent（しばらくは「さっきの」で呼べる）。
+    func markRecent(_ arts: [VisualContextArtifact]) {
+        let ids = Set(arts.map(\.id))
+        for i in recent.indices where ids.contains(recent[i].id) && recent[i].state == .attached {
+            recent[i].state = .recent
+        }
+    }
+
+    /// コンテキストから外す（≤1 操作）。端末に残した写しも消す。
+    func remove(_ id: UUID) {
+        recent.filter { $0.id == id }.forEach(cleanup)
+        recent.removeAll { $0.id == id }
+    }
 
     /// 検査・リセット用。
-    func reset() { recent = []; ingestedKeys = []; justCaptured = nil; conversationID = nil }
+    func reset() {
+        recent.forEach(cleanup)
+        recent = []; ingestedKeys = []; justCaptured = nil; conversationID = nil
+    }
 }
 
 // MARK: - 参照表現の解決
@@ -182,11 +287,13 @@ final class VisualContextStore: ObservableObject {
 enum VisualReferenceResolver {
     /// 単数の参照表現（→ 最新 1 枚）。
     static let singular = ["これ", "ここ", "この画面", "このエラー", "この写真", "この画像",
-                           "今の", "いまの", "さっき", "さっきの", "先ほど", "スクショ",
-                           "スクリーンショット", "画像を", "画面を"]
+                           "今の", "いまの", "スクショ", "スクリーンショット", "画像を", "画面を"]
+    /// 1 つ前を指す表現（→ 2 枚あれば前の 1 枚、1 枚しか無ければそれ）。
+    static let previous = ["さっき", "先ほど", "前の", "ひとつ前", "一つ前"]
     /// 参照表現かどうか（画像の有無に依らず、文だけで判定）。
     static func isReferential(_ text: String) -> Bool {
-        mentionsAny(text, singular) || wantsTwo(text) || wantsThree(text) || wantsPrevAndNow(text)
+        mentionsAny(text, singular) || mentionsAny(text, previous)
+            || wantsTwo(text) || wantsThree(text) || wantsPrevAndNow(text)
     }
 
     private static func mentionsAny(_ text: String, _ words: [String]) -> Bool {
@@ -209,7 +316,14 @@ enum VisualReferenceResolver {
         }
         if wantsThree(text) { let g = Array(sorted.prefix(3)); return Resolution(images: g, referential: g) }
         if wantsTwo(text) { let g = Array(sorted.prefix(2)); return Resolution(images: g, referential: g) }
-        if mentionsAny(text, singular) { return Resolution(images: [sorted[0]], referential: [sorted[0]]) }
+        // 「さっきの」だけなら 1 つ前。1 枚しか無ければそれを指す（「さっき撮ったやつ」）。
+        if mentionsAny(text, previous), !mentionsAny(text, ["今の", "いまの", "これ"]) {
+            let p = sorted.count >= 2 ? sorted[1] : sorted[0]
+            return Resolution(images: [p], referential: [p])
+        }
+        if mentionsAny(text, singular) || mentionsAny(text, previous) {
+            return Resolution(images: [sorted[0]], referential: [sorted[0]])
+        }
         return Resolution(images: [], referential: [])
     }
 }

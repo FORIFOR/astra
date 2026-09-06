@@ -45,8 +45,13 @@ enum AstraCoreBridge {
     static func startConversation(_ baseUrl: String, accessToken: String) throws -> String {
         try apiStartConversation(baseUrl: baseUrl, accessToken: accessToken)
     }
-    static func sendTurn(_ baseUrl: String, accessToken: String, conversationId: String, text: String) throws -> TurnOutcome {
-        try apiSendTurn(baseUrl: baseUrl, accessToken: accessToken, conversationId: conversationId, text: text)
+    /// 依頼を送る。`attachments` は端末内の画像の id とラベルだけ（画素は端末に残る）。
+    static func sendTurn(_ baseUrl: String, accessToken: String, conversationId: String, text: String,
+                         attachments: [TurnAttachment] = []) throws -> TurnOutcome {
+        attachments.isEmpty
+            ? try apiSendTurn(baseUrl: baseUrl, accessToken: accessToken, conversationId: conversationId, text: text)
+            : try apiSendTurnWithAttachments(baseUrl: baseUrl, accessToken: accessToken, conversationId: conversationId,
+                                             text: text, attachments: attachments)
     }
     static func pluginCatalog(_ baseUrl: String, accessToken: String) throws -> [String] {
         try apiPluginCatalog(baseUrl: baseUrl, accessToken: accessToken)

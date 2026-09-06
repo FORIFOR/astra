@@ -318,12 +318,38 @@ pub struct TurnOutcome {
     pub notice: String,
 }
 
+/// この turn に添えた端末内の画像（スクショ / クリップボード画像）。
+///
+/// **画素はここを通らない。**cloud へ渡すのは id とラベルだけで、実体は端末の
+/// `visual-context/<id>.png` にあり、端末で走るモデル呼び出しがそこから読む。
+#[derive(uniffi::Record, Clone, Debug, serde::Serialize)]
+pub struct TurnAttachment {
+    /// 端末側の受け渡しファイル名になる（`[A-Za-z0-9-]{1,64}`）。
+    pub id: String,
+    /// "screenshot" | "clipboard_image"
+    pub kind: String,
+    /// 「スクリーンショット（たった今）」など。指示語の解決に使う。
+    pub label: String,
+}
+
 #[uniffi::export]
 pub fn api_send_turn(
     base_url: String,
     access_token: String,
     conversation_id: String,
     text: String,
+) -> Result<TurnOutcome, ApiError> {
+    api_send_turn_with_attachments(base_url, access_token, conversation_id, text, Vec::new())
+}
+
+/// 依頼を送る。端末内の画像を添えるとき（「これ何？」）はこちら。撮っただけでは呼ばない。
+#[uniffi::export]
+pub fn api_send_turn_with_attachments(
+    base_url: String,
+    access_token: String,
+    conversation_id: String,
+    text: String,
+    attachments: Vec<TurnAttachment>,
 ) -> Result<TurnOutcome, ApiError> {
     #[derive(Deserialize)]
     struct Resp {
@@ -341,7 +367,12 @@ pub fn api_send_turn(
         conversation_id
     ))
     .set("Authorization", &format!("Bearer {access_token}"))
-    .send_json(ureq::json!({ "text": text, "modality": "text", "interrupt": true }))
+    .send_json(ureq::json!({
+        "text": text,
+        "modality": "text",
+        "interrupt": true,
+        "attachments": attachments,
+    }))
     .map_err(map_transport)?
     .into_json()
     .map_err(|e| ApiError::Decode { message: e.to_string() })?;

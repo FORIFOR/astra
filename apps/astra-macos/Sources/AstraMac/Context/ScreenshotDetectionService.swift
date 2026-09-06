@@ -82,10 +82,11 @@ final class ScreenshotDetectionService {
     private var running = false
 
     /// 起動時に呼ぶ。保存先を監視し、クリップボード画像も拾う。
-    func start() {
+    /// `directory` は検査用（実運用は設定された保存先）。
+    func start(directory: URL? = nil) {
         guard !running else { return }
         running = true
-        let dir = ScreenshotClassifier.screenshotDirectory()
+        let dir = directory ?? ScreenshotClassifier.screenshotDirectory()
         knownBefore = Self.imageNames(in: dir)   // 既存ファイルは「新規」に数えない
         let watcher = ScreenshotFolderWatcher { [weak self] dir in
             // watcher は専用 queue。ストアは main で触る。
@@ -107,7 +108,8 @@ final class ScreenshotDetectionService {
 
     private static func imageNames(in dir: URL) -> Set<String> {
         let items = (try? FileManager.default.contentsOfDirectory(atPath: dir.path)) ?? []
-        return Set(items.filter { ScreenshotClassifier.imageExts.contains(($0 as NSString).pathExtension.lowercased()) })
+        // 隠しファイル（書き込み途中の一時名など）は拾わない。
+        return Set(items.filter { !$0.hasPrefix(".") && ScreenshotClassifier.imageExts.contains(($0 as NSString).pathExtension.lowercased()) })
     }
 
     /// フォルダに来た変化を見て、直近数秒の新しい画像だけを拾う。
@@ -123,16 +125,15 @@ final class ScreenshotDetectionService {
     }
 
     /// size(t0) と 50ms 後の size(t1) が同じになったら「安定」とみなして読む。
+    /// 安定していても**画像として読めなければ**まだ途中（PNG の末尾が来ていない）。
+    /// フォルダの監視は中身の追記では鳴らないので、ここで読めるまで待ち直す（最大 ~2s）。
     private func waitStableThenIngest(url: URL, dir: URL, attempt: Int = 0) {
         let s0 = fileSize(url)
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
             guard let self else { return }
             let s1 = self.fileSize(url)
-            if s0 == s1 && s1 > 0 {
-                self.ingestFile(url: url, dir: dir)
-            } else if attempt < 40 {   // 最大 ~2s 待つ
-                self.waitStableThenIngest(url: url, dir: dir, attempt: attempt + 1)
-            }
+            if s0 == s1 && s1 > 0 && self.ingestFile(url: url, dir: dir) { return }
+            if attempt < 40 { self.waitStableThenIngest(url: url, dir: dir, attempt: attempt + 1) }
         }
     }
 
@@ -141,14 +142,19 @@ final class ScreenshotDetectionService {
     }
 
     /// ファイルを分類して、確度が高ければ会話コンテキストに登録する。**ここでは外部へ出さない。**
-    func ingestFile(url: URL, dir: URL, now: Date = Date()) {
+    /// 戻り値は「画像として読めたか」（登録したか、または既に登録済みで二重を弾いたか）。
+    /// 読めなければ false で、呼び出し側が待ち直す。
+    @discardableResult
+    func ingestFile(url: URL, dir: URL, now: Date = Date()) -> Bool {
         let inDir = url.deletingLastPathComponent().standardizedFileURL == dir.standardizedFileURL
         let (conf, size, created) = ScreenshotClassifier.confidence(url: url, inScreenshotDir: inDir, now: now)
-        guard conf >= 0.8 else { return }
+        guard size.width > 0 else { return false }     // まだ読めない（途中・壊れている・小さすぎる）
+        guard conf >= 0.8 else { return true }         // 読めたがスクショらしくない: 待ち直さない
         let front = NSWorkspace.shared.frontmostApplication?.localizedName
         VisualContextStore.shared.ingest(
             url: url, kind: .screenshot, confidence: conf, pixelSize: size,
             capturedAt: created, app: front, window: nil, now: now)
+        return true
     }
 
     /// クリップボードの画像。確実にスクショとは限らないので kind を分ける（体験は同じ）。

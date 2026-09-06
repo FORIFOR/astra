@@ -10,7 +10,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { NO_MODEL_MESSAGE, type LanguageModelOption } from '@astra/contracts';
 import { ClaudeCodeCli, ClaudeCodeError, type RunResult } from '../src/claude-code.js';
-import { LlmRuntime, promptFor } from '../src/llm-steps.js';
+import { LlmRuntime, promptFor, toolsFor } from '../src/llm-steps.js';
 import type { HostStep } from '../src/connector-steps.js';
 
 const step = (over: Partial<HostStep> = {}): HostStep => ({
@@ -214,5 +214,61 @@ describe('what the device asks the model', () => {
     expect(promptFor('llm.synthesize', { question: 'q', claims: [] })).toContain(
       '主張に無いことを足さない',
     );
+  });
+});
+
+describe('answering about a screenshot that stayed on this device', () => {
+  const shot = {
+    id: 'shot-1',
+    kind: 'screenshot',
+    label: 'スクリーンショット（たった今）',
+  } as const;
+  const located = (present: boolean) => [
+    { ...shot, path: '/data/visual-context/shot-1.png', present },
+  ];
+
+  it('tells the model where the image is and to read it before answering', () => {
+    const prompt = promptFor('llm.answer', { question: 'これ何？', images: [shot] }, located(true));
+    expect(prompt).toContain('/data/visual-context/shot-1.png');
+    expect(prompt).toContain('Read');
+    expect(prompt).toContain('問い: これ何？');
+  });
+
+  it('lets the model read only when an image is actually there', () => {
+    expect(toolsFor('llm.answer', { images: [shot] }, located(true))).toEqual(['Read']);
+    expect(toolsFor('llm.answer', { images: [shot] }, located(false))).toEqual([]);
+    expect(toolsFor('llm.answer', {}, [])).toEqual([]);
+    // 画像があっても、文章をこねるだけの呼び出しには渡さない
+    expect(toolsFor('llm.compose', { images: [shot] }, located(true))).toEqual([]);
+  });
+
+  it('says the image is missing rather than letting the model pretend it saw it', () => {
+    const prompt = promptFor(
+      'llm.answer',
+      { question: 'これ何？', images: [shot] },
+      located(false),
+    );
+    expect(prompt).toContain('見当たりませんでした');
+    expect(prompt).not.toContain('Read で各画像');
+  });
+
+  it('runs the step with the image path and Read when the file exists', async () => {
+    const seen: { prompt: string; tools: readonly string[] }[] = [];
+    const runtime = new LlmRuntime({
+      claudeCode: cliReturning({ stdout: '2.0.14' }),
+      askWith: {
+        claude_code: async (prompt, tools) => {
+          seen.push({ prompt, tools });
+          return { answer: 'ok' };
+        },
+      },
+    });
+    const outcome = await runtime.run(
+      step({ toolId: 'llm.answer', args: { question: 'これ何？', images: [shot] } }),
+    );
+    expect(outcome.ok).toBe(true);
+    // 実体の有無は端末のフォルダで決まる。この試験機には無いので、無いと伝え Read は渡さない。
+    expect(seen[0]!.tools).toEqual([]);
+    expect(seen[0]!.prompt).toContain('見当たりませんでした');
   });
 });
