@@ -10,11 +10,11 @@ struct NewRecordingSheet: View {
     @Binding var isPresented: Bool
 
     @AppStorage("astra.recording.systemAudio") private var systemAudio = true
-    @AppStorage("astra.recording.template") private var template = "Meeting Notes"
+    @AppStorage("astra.recording.template") private var template = "会議メモ"
     @AppStorage("astra.recording.visibility") private var visibilityRaw = MeetingSession.Visibility.mySpace.rawValue
     @AppStorage("astra.recording.project") private var project = ""
 
-    private let templates = ["Meeting Notes", "1:1", "Interview", "Standup"]
+    private let templates = ["会議メモ", "1on1", "インタビュー", "朝会"]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -23,19 +23,19 @@ struct NewRecordingSheet: View {
                 .foregroundStyle(Palette.text(dark))
                 .padding(.bottom, 18)
 
-            row("Microphone", value: micName, ok: Permissions.microphone == .granted)
+            row("マイク", value: micName, ok: Permissions.microphone == .granted)
             // 値はトグルが言う。「On」の文字で同じことを二度言わない（Atlas F5）。
-            row("System Audio", value: Permissions.screenRecording == .granted ? "" : "許可が要ります",
+            row("画面の音", value: Permissions.screenRecording == .granted ? "" : "許可が要ります",
                 ok: Permissions.screenRecording == .granted) {
                 Toggle("", isOn: $systemAudio).labelsHidden().toggleStyle(.switch)
             }
-            picker("Template", selection: $template, options: templates)
-            picker("Save to", selection: Binding(
+            picker("テンプレート", selection: $template, options: templates)
+            picker("保存先", selection: Binding(
                 get: { MeetingSession.Visibility(rawValue: visibilityRaw)?.label ?? "自分だけ" },
                 set: { label in
                     visibilityRaw = (MeetingSession.Visibility.allCases.first { $0.label == label } ?? .mySpace).rawValue
                 }), options: MeetingSession.Visibility.allCases.map(\.label))
-            picker("Project", selection: Binding(
+            picker("プロジェクト", selection: Binding(
                 get: { project.isEmpty ? Facts.projectNone : project },
                 set: { project = $0 == Facts.projectNone ? "" : $0 }),
                 options: [Facts.projectNone] + Projects.all())

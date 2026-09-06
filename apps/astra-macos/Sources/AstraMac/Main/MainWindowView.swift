@@ -431,8 +431,13 @@ private struct AgentsPane: View {
                 }
                 // 実タスクが無い間は spec 構造 + 正直な空状態（架空タスクを作らない）。
                 // 空状態の姿は Tasks / Meetings / Files と同じ部品（Atlas F4: ここだけ左寄せ 1 行だった）。
-                WorkspaceEmpty(title: "実行中の仕事はありません。",
-                               hint: "Task Dock から「◯◯して」と頼むとここに出ます。")
+                WorkspaceEmpty(title: "実行中の仕事はありません",
+                               hint: "Astra に頼んだ仕事は、UI を閉じても走り続けます。",
+                               primaryLabel: "Task Dock を開く",
+                               primaryAction: { WindowCoordinator.shared.showVoiceHUD() },
+                               canDo: ["⌥Space で「◯◯して」と頼む",
+                                       "Active / Waiting / Done で状態を追う",
+                                       "失敗した仕事はその場でやり直す"])
                 Spacer()
             }.padding(24)
         }
@@ -460,8 +465,13 @@ private struct FilesPane: View {
             }.padding(.horizontal, 28).padding(.top, 16)
             if titles.isEmpty {
                 // 架空の 1 枚を出さない。他の面と同じ空状態。
-                WorkspaceEmpty(title: "まだ資料はありません。",
-                               hint: "仕事の成果や会議の資料がここに残ります。")
+                WorkspaceEmpty(title: "まだ資料はありません",
+                               hint: "仕事の成果や会議の資料がここに残ります。",
+                               primaryLabel: "録音を始める",
+                               primaryAction: { NewRecordingSheetOpener.shared.open() },
+                               canDo: ["会議の要約やレポートが成果物として残る",
+                                       "種類（レポート/文書/画像…）で絞り込める",
+                                       "元になった会議・発言へ戻れる"])
                     .padding(.horizontal, 28).padding(.top, 16)
             }
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 200), spacing: 12)], spacing: 12) {

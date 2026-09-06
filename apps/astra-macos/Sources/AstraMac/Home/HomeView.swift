@@ -175,6 +175,24 @@ struct HomeView: View {
                                     .foregroundStyle(Palette.muted(dark))
                             }
                         }
+                        // オンボード: いま実際にできることを 3 つだけ（偽データは置かない）。
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("はじめに")
+                                .font(.system(size: S.type(TypeScale.microSize), weight: .semibold))
+                                .foregroundStyle(Palette.muted(dark))
+                            ForEach(["会議を録ると 要約・決まったこと・やること にまとまる",
+                                     "「◯◯して」と頼むと Astra が手順を踏んで進める",
+                                     "どの結果も 発言・音声・資料の出所まで戻れる"], id: \.self) { row in
+                                HStack(spacing: 8) {
+                                    Image(systemName: "arrow.turn.down.right")
+                                        .font(.system(size: 11)).foregroundStyle(Palette.muted(dark))
+                                    Text(row)
+                                        .font(.system(size: S.type(TypeScale.secondarySize)))
+                                        .foregroundStyle(Palette.text(dark))
+                                }
+                            }
+                        }
+                        .padding(.top, 6)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }

@@ -179,7 +179,12 @@ struct AppContextDock: View {
                     VStack(alignment: .leading, spacing: 1) {
                         ForEach(summary.suggestions, id: \.self) { s in
                             Button { VoiceHUDState.shared.runSuggestion(s) } label: {
-                                HStack(spacing: 0) {
+                                HStack(spacing: 8) {
+                                    // 押せる行だと分かるよう、各行に控えめなアイコン（Raycast の作法）。
+                                    Image(systemName: "arrow.turn.down.right")
+                                        .font(.system(size: 11))
+                                        .foregroundStyle(Palette.muted(dark))
+                                        .frame(width: 14)
                                     Text(s)
                                         .font(.system(size: S.type(Metrics.dockRowSize)))
                                         .foregroundStyle(Palette.text(dark))
@@ -588,11 +593,13 @@ struct ConfirmationDock: View {
                 // 鍵は効いていても、書いていなければ無いのと同じ（Listening の esc と同じ理由、
                 // journeys/panel1）。外へ出る面ほど、逃げ道と実行の鍵を先に見せる。
                 if !editing {
+                    // 語はボタンだけに置く。ここは鍵記号だけ（「やめる」がヒントとボタンで二重だった）。
+                    // 破壊操作（r3）は鍵で実行させないので、実行の鍵ヒントも出さない。
                     HStack(spacing: 4) {
                         KeyBadge(UserShortcut.cancel.display)
-                        Text(Facts.confirmationCancel)
-                        KeyBadge(UserShortcut.confirm.display).padding(.leading, 6)
-                        Text(confirmation.confirmLabel)
+                        if confirmation.risk != .r3 {
+                            KeyBadge(UserShortcut.confirm.display).padding(.leading, 6)
+                        }
                     }
                     .font(.system(size: S.type(Metrics.dockLabelSize)))
                     .foregroundStyle(Palette.muted(dark).opacity(0.72))
@@ -622,8 +629,9 @@ struct ConfirmationDock: View {
                         .foregroundStyle(Palette.muted(dark))
                         .frame(height: 32).padding(.horizontal, 14)
                         .buttonStyle(AstraControlStyle(radius: 7, base: 0.0))
-                    if !confirmation.params.isEmpty || confirmation.preview != nil {
+                    if confirmation.risk != .r3, !confirmation.params.isEmpty || confirmation.preview != nil {
                         // 検査から押せる目印付き（Atlas dock.confirmation-edit）。走るものは 1 本。
+                        // 破壊（r3・捨てる等）は二択にする。「直す」は出さない。
                         ProbeButton(id: "confirmEdit", action: { editing = true }) { Text(Facts.confirmationEdit) }
                             .font(.system(size: S.type(Metrics.dockRowSize)))
                             // 「目を引くものは 1 つだけ」と考えて静かにしてみたが、
@@ -662,12 +670,16 @@ struct ConfirmationDock: View {
             else { AstraStateStore.shared.resolveConfirmation(approved: false) }
         }
         // Return では実行しない。**押し慣れた鍵で外へ出る操作が走るのは危ない。**
-        // 実行は ⌘Return だけ。
+        // 実行は ⌘Return だけ。**さらに破壊（r3・元に戻せない）は鍵で実行させない**（既定は安全側=やめる）。
         .background(
-            Button("") { AstraStateStore.shared.resolveConfirmation(approved: true) }
-                .keyboardShortcut(UserShortcut.confirm.key, modifiers: UserShortcut.confirm.modifiers)
-                .opacity(0)
-                .accessibilityHidden(true)
+            Group {
+                if confirmation.risk != .r3 {
+                    Button("") { AstraStateStore.shared.resolveConfirmation(approved: true) }
+                        .keyboardShortcut(UserShortcut.confirm.key, modifiers: UserShortcut.confirm.modifiers)
+                        .opacity(0)
+                        .accessibilityHidden(true)
+                }
+            }
         )
     }
 
@@ -1106,6 +1118,29 @@ private struct AskInDockField: View {
                     .font(.system(size: S.type(Metrics.dockRowSize)))
                     .foregroundStyle(Palette.text(dark))
                     .fixedSize(horizontal: false, vertical: true)
+            } else {
+                // 空欄 + 巨大な余白にしない。左寄せの compact な候補行で「何を聞けるか」を示す
+                // （pill を 4 つ並べる AI 製品の見た目は避ける）。
+                VStack(alignment: .leading, spacing: 7) {
+                    Text("よく聞くこと")
+                        .font(.system(size: S.type(Metrics.dockMetaSize), weight: .semibold))
+                        .foregroundStyle(Palette.muted(dark))
+                    ForEach(["決まったことは？", "私のやることは？", "反対意見や懸念は？"], id: \.self) { q in
+                        Button { question = q; ask() } label: {
+                            HStack(spacing: 8) {
+                                Image(systemName: "arrow.turn.down.right")
+                                    .font(.system(size: 11)).foregroundStyle(Palette.muted(dark))
+                                Text(q)
+                                    .font(.system(size: S.type(Metrics.dockRowSize)))
+                                    .foregroundStyle(Palette.text(dark))
+                                Spacer(minLength: 0)
+                            }
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityIdentifier("askSuggestion-\(q)")
+                    }
+                }
+                .padding(.top, 2)
             }
         }
     }

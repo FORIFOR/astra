@@ -29,22 +29,60 @@ struct WorkspaceHeader: View {
 }
 
 /// 空のときに「壊れている」ではなく「まだ何もない」と読ませる。
+///
+/// **中央寄せの 2 行 + 巨大な空白はやめた**（盲検で「AI 生成感」の典型と指摘）。
+/// 見出し → 説明 → 押せる主操作 → 「できること」の実機能 2〜3 行 を、上部に左寄せで置く。
+/// **偽の skeleton は置かない**。見本を出すときは「例」と明示する（ここでは実機能名だけを出す）。
 struct WorkspaceEmpty: View {
     @Environment(\.colorScheme) private var scheme
+    private var dark: Bool { scheme == .dark }
     let title: String
     let hint: String
+    var primaryLabel: String? = nil
+    var primaryAction: (() -> Void)? = nil
+    /// 「できること」= いま実際にある機能の名前だけ（偽データ・偽 skeleton は禁止）。
+    var canDo: [String] = []
 
     var body: some View {
-        VStack(spacing: 6) {
-            Text(title)
-                .font(.system(size: TypeScale.bodySize))
-                .foregroundStyle(Palette.text(scheme == .dark))
-            Text(hint)
-                .font(.system(size: TypeScale.secondarySize))
-                .foregroundStyle(Palette.muted(scheme == .dark))
+        VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text(title)
+                    .font(.system(size: TypeScale.sectionTitleSize, weight: .semibold))
+                    .foregroundStyle(Palette.text(dark))
+                Text(hint)
+                    .font(.system(size: TypeScale.secondarySize))
+                    .foregroundStyle(Palette.muted(dark))
+            }
+            if let primaryLabel, let primaryAction {
+                Button(primaryLabel, action: primaryAction)
+                    .font(.system(size: TypeScale.bodySize, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .frame(height: 36).padding(.horizontal, 18)
+                    .background(Capsule().fill(Palette.accent(dark)))
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("emptyPrimary")
+            }
+            if !canDo.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("できること")
+                        .font(.system(size: TypeScale.microSize, weight: .semibold))
+                        .foregroundStyle(Palette.muted(dark))
+                    ForEach(canDo, id: \.self) { row in
+                        HStack(spacing: 8) {
+                            Image(systemName: "arrow.turn.down.right")
+                                .font(.system(size: 11)).foregroundStyle(Palette.muted(dark))
+                            Text(row)
+                                .font(.system(size: TypeScale.secondarySize))
+                                .foregroundStyle(Palette.text(dark))
+                        }
+                    }
+                }
+            }
         }
-        .frame(maxWidth: .infinity, alignment: .center)
-        .padding(.vertical, 48)
+        // 垂直中央にしない。上から 1/3 に左寄せで固定する。
+        .frame(maxWidth: 460, alignment: .leading)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .padding(.top, 8)
     }
 }
 
@@ -104,8 +142,13 @@ struct TasksPane: View {
                 WorkspaceHeader(title: Facts.workTasks,
                                 subtitle: "Astra に頼んだ仕事。UI を閉じても走り続けます。")
                 if tasks.isEmpty {
-                    WorkspaceEmpty(title: "まだ頼んだ仕事はありません。",
-                                   hint: "Task Dock から話しかけると、ここに履歴が残ります。")
+                    WorkspaceEmpty(title: "まだ仕事はありません",
+                                   hint: "Astra に頼んだ仕事はここにまとまります。",
+                                   primaryLabel: "Task Dock を開く",
+                                   primaryAction: { WindowCoordinator.shared.showVoiceHUD() },
+                                   canDo: ["⌥Space でどこからでも依頼する",
+                                           "進行中の仕事の途中経過を見る",
+                                           "完了した結果とその出所へ戻る"])
                 } else {
                     ForEach(tasks) { task in
                         WorkspaceRow(icon: icon(task.status), tint: tint(task.status),
@@ -164,8 +207,13 @@ struct MeetingsPane: View {
                 WorkspaceHeader(title: Facts.libraryMeetings,
                                 subtitle: "録った会議。音声は端末から出ません。")
                 if sessions.recent.isEmpty {
-                    WorkspaceEmpty(title: "録音した会議はまだありません。",
-                                   hint: "Home の「録音を始める」か、予定の「録音」から始められます。")
+                    WorkspaceEmpty(title: "まだ会議はありません",
+                                   hint: "録音した会議と、その出所がここに残ります。",
+                                   primaryLabel: "録音を始める",
+                                   primaryAction: { NewRecordingSheetOpener.shared.open() },
+                                   canDo: ["録音すると 要約・決まったこと・やること にまとまる",
+                                           "どの一文も 発言と音声の位置まで戻れる",
+                                           "予定の会議はワンクリックで録れる"])
                 } else {
                     ForEach(sessions.recent) { s in
                         SessionCard(session: s) {
