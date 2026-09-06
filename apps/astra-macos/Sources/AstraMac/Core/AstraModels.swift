@@ -74,6 +74,10 @@ enum DockPresentation: Equatable {
         }
         switch self {
         case .idle:
+            // スクショを撮った一瞬だけ、idle Dock が横広の「見ています」トーストに変わる（窓は増やさない）。
+            if VisualContextStore.shared.justCaptured != nil {
+                return CGSize(width: Metrics.dockListeningWidth, height: 56)
+            }
             return CGSize(width: Metrics.dockIdleWidth, height: Metrics.dockIdleHeight)
         case .appContext:
             return CGSize(width: Metrics.dockContextWidth, height: Metrics.dockContextHeight)

@@ -45,6 +45,8 @@ final class AstraAppDelegate: NSObject, NSApplicationDelegate {
                 MeetingDetector.refresh()
             }
         }
+        // スクショを撮った瞬間、それを直近の会話コンテキストとして自動で持つ（保存先 + クリップボード監視）。
+        ScreenshotDetectionService.shared.start()
         // §22 画面共有が始まったら Astra を出さない。
         PresentationGuard.shared.start()
         // グローバル音声ショートカット（⌥Space）で録音を出し入れする。

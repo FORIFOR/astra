@@ -146,6 +146,11 @@ final class VoiceHUDState: ObservableObject {
         guard let base = apiBase, let token = apiToken else {
             answer = "サインインすると使えます。"; mode = .idle; return
         }
+        // スクショの自動コンテキスト: 参照表現（「これ」「さっき」「この 2 枚」等）なら直近スクショを
+        // この会話へ添付する。**新しいチャットは作らない。**外部へ出るのはこの瞬間だけ（撮っただけでは出さない）。
+        let attached = VisualReferenceResolver.resolve(text: text, recent: VisualContextStore.shared.recent).images
+        VisualContextStore.shared.markAttached(attached)
+        let imagePaths = attached.map { $0.imageURL.path }
         mode = .thinking; answer = ""
         Task.detached { [weak self] in
             do {
@@ -155,6 +160,9 @@ final class VoiceHUDState: ObservableObject {
                     conv = try AstraCoreBridge.startConversation(base, accessToken: token)
                     await MainActor.run { self?.conversationId = conv }
                 }
+                await MainActor.run { VisualContextStore.shared.bind(conversationID: conv) }
+                // 画像は添付済み（imagePaths）。モデルへ画素を渡す口は core(sendTurn) の拡張で繋ぐ（backend seam）。
+                _ = imagePaths
                 let outcome = try AstraCoreBridge.sendTurn(base, accessToken: token, conversationId: conv, text: text)
                 let reply = !outcome.answer.isEmpty ? outcome.answer
                     : !outcome.notice.isEmpty ? outcome.notice

@@ -90,7 +90,48 @@ typealias VoiceHUDView = VoiceTaskDockView
 /// いちばん静かな姿。名前も説明も出さない。押すと開く。
 private struct IdleDock: View {
     @Environment(\.colorScheme) private var scheme
+    @ObservedObject private var visual = VisualContextStore.shared
     var body: some View {
+        // スクショを撮った瞬間だけ、idle Dock がそのまま「見ています」に変わる（**新しい窓は作らない**）。
+        if let shot = visual.justCaptured {
+            HStack(spacing: 8) {
+                Image(systemName: "rectangle.dashed.badge.record")
+                    .font(.system(size: 13)).foregroundStyle(Palette.accent(scheme == .dark))
+                // 短い 1 行にして narrow な idle 幅でも切れないようにする（横広に開いたときは余裕を持って読める）。
+                Text(shot.kind == .clipboardImage ? "画像を見ています" : "スクショを見ています")
+                    .font(.system(size: S.type(Metrics.dockPrimarySize), weight: .medium))
+                    .foregroundStyle(Palette.text(scheme == .dark))
+                    .lineLimit(1).fixedSize()
+                Text("そのまま聞いてください")
+                    .font(.system(size: S.type(Metrics.dockMetaSize)))
+                    .foregroundStyle(Palette.muted(scheme == .dark))
+                    .lineLimit(1)
+                Spacer(minLength: 0)
+                Button { VisualContextStore.shared.remove(shot.id) } label: {
+                    Image(systemName: "xmark").font(.system(size: 10)).foregroundStyle(Palette.muted(scheme == .dark))
+                }.buttonStyle(AstraControlStyle(radius: 6, base: 0.0))
+                    .accessibilityIdentifier("dismissScreenshot")
+            }
+            .padding(.horizontal, S.metric(Metrics.dockPadH))
+            .frame(maxHeight: .infinity)
+            .help("そのまま「これ何？」と聞いてください · \(shot.ageLabel())")
+            .accessibilityIdentifier("screenshotContextChip")
+        } else if let shot = visual.recent.first {
+            // トーストが下がったあとは、小さな chip だけ残す（会話は途切れない）。
+            HStack(spacing: 7) {
+                Image(systemName: "photo").font(.system(size: 12)).foregroundStyle(Palette.muted(scheme == .dark))
+                Text(shot.kind == .clipboardImage ? "画像" : "スクショ")
+                    .font(.system(size: S.type(Metrics.dockPrimarySize), weight: .medium))
+                    .foregroundStyle(Palette.muted(scheme == .dark))
+                Spacer(minLength: 0)
+                ForEach(UserShortcut.globalRecordingBadges, id: \.self) { KeyBadge($0) }
+            }
+            .padding(.horizontal, S.metric(Metrics.dockPadH))
+            .frame(maxHeight: .infinity)
+            .contentShape(Rectangle())
+            .onTapGesture { VoiceHUDState.shared.toggleQuickActions() }
+            .accessibilityIdentifier("screenshotContextChipSmall")
+        } else {
         HStack(spacing: 7) {
             // idle は静的な声のマーク（署名）。活動波形にはしない（「聞いている」と誤読させない）。
             AstraVoiceMark()
@@ -127,6 +168,7 @@ private struct IdleDock: View {
               : "クリックで操作、⌘クリックで Astra を開く")
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("dockIdle")
+        }   // else（スクショ chip でないとき = 通常の idle）
     }
 }
 

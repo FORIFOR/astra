@@ -41,6 +41,8 @@ enum SelfTest {
         case "geometry": geometryGate(args); return true
         case "occupation": occupationGate(); return true
         case "focus": focusGate(); return true
+        case "screenshotcontext": screenshotContextGate(); return true
+        case "screenshotshot": screenshotShot(args); return true
         case "journey": journeyGate(args); return true
         case "idle-hold": idleHold(args); return true
         case "confirmflow": confirmFlow(); return true
