@@ -266,34 +266,33 @@ struct ContextStrip: View {
     @ObservedObject private var store = AstraStateStore.shared
 
     var body: some View {
-        HStack(spacing: 12) {
-            ForEach(store.state.context.items) { item in
-                HStack(spacing: 4) {
-                    // 色を増やさない。印は形（✓）で伝え、色は orb だけに持たせる。
-                    Image(systemName: "checkmark")
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(Palette.muted(dark))
-                    Text(item.application)
-                        .font(.system(size: S.type(Metrics.dockMetaSize)))
-                        .foregroundStyle(Palette.text(dark))
+        // 文脈が無いときは下段を**出さない**（「見えている文脈はありません」の否定文を出すと冷たく、
+        // 情報量も 0。preparing/listening が 1 行に畳まれる）。文脈があるときだけ棚を出す。
+        if store.state.context.items.isEmpty {
+            EmptyView()
+        } else {
+            HStack(spacing: 12) {
+                ForEach(store.state.context.items) { item in
+                    HStack(spacing: 4) {
+                        // 色を増やさない。印は形（✓）で伝え、色は orb だけに持たせる。
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(Palette.muted(dark))
+                        Text(item.application)
+                            .font(.system(size: S.type(Metrics.dockMetaSize)))
+                            .foregroundStyle(Palette.text(dark))
+                    }
                 }
-            }
-            if store.state.context.items.isEmpty {
-                Text("見えている文脈はありません")
-                    .font(.system(size: S.type(Metrics.dockMetaSize)))
-                    .foregroundStyle(Palette.muted(dark))
-            }
-            if !store.state.context.items.isEmpty {
                 Image(systemName: "chevron.down")
                     .font(.system(size: 8, weight: .semibold))
                     .foregroundStyle(Palette.muted(dark))
+                Spacer(minLength: 0)
             }
-            Spacer(minLength: 0)
+            .contentShape(Rectangle())
+            // Dropover の作法。棚を押すと、棚そのものが詳細へ広がる。
+            .onTapGesture { VoiceHUDState.shared.mode = .contextDetail }
+            .accessibilityIdentifier("contextStrip")
         }
-        .contentShape(Rectangle())
-        // Dropover の作法。棚を押すと、棚そのものが詳細へ広がる。
-        .onTapGesture { VoiceHUDState.shared.mode = .contextDetail }
-        .accessibilityIdentifier("contextStrip")
     }
 }
 

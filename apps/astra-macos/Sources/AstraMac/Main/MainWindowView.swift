@@ -435,7 +435,7 @@ private struct AgentsPane: View {
                                hint: "Astra に頼んだ仕事は、UI を閉じても走り続けます。",
                                primaryLabel: "Task Dock を開く",
                                primaryAction: { WindowCoordinator.shared.showVoiceHUD() },
-                               canDo: ["⌥Space で「◯◯して」と頼む",
+                               canDo: ["\(GlobalShortcut.label()) で「◯◯して」と頼む",
                                        "Active / Waiting / Done で状態を追う",
                                        "失敗した仕事はその場でやり直す"])
                 Spacer()

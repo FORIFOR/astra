@@ -146,7 +146,7 @@ struct TasksPane: View {
                                    hint: "Astra に頼んだ仕事はここにまとまります。",
                                    primaryLabel: "Task Dock を開く",
                                    primaryAction: { WindowCoordinator.shared.showVoiceHUD() },
-                                   canDo: ["⌥Space でどこからでも依頼する",
+                                   canDo: ["\(GlobalShortcut.label()) でどこからでも依頼する",
                                            "進行中の仕事の途中経過を見る",
                                            "完了した結果とその出所へ戻る"])
                 } else {
