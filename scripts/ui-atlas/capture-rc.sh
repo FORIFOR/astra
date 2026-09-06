@@ -12,6 +12,9 @@
 set -euo pipefail
 APP="${1:?Astra.app のパス}"
 OUT="${2:?出力先}"
+# `open` はアプリを cwd=/ で起こすので、selftest に渡す出力先は絶対パスでないと /docs/... に化けて
+# 1 枚も書けない（相対で渡すと全 selftest が 0 png になる、2026-09-06 に踏んだ）。
+mkdir -p "$OUT"; OUT="$(cd "$OUT" && pwd)"
 EXE="$APP/Contents/MacOS/AstraMac"
 [[ -x "$EXE" ]] || { echo "FAIL: $EXE が無い" >&2; exit 1; }
 codesign -v "$APP" 2>/dev/null || { echo "FAIL: $APP の署名が無効" >&2; exit 1; }
