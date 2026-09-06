@@ -49,7 +49,7 @@ let package = Package(
         ),
         .testTarget(
             name: "AstraMacTests",
-            dependencies: ["AstraCore"],
+            dependencies: ["AstraCore", "AstraMac"],
             path: "Tests/AstraMacTests"
         ),
     ]

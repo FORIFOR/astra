@@ -89,6 +89,8 @@ enum UserFacingFacts {
     static let menuOpen = "Astra を開く"
     static let menuSettings = "設定…"
     static let menuGuide = "操作ガイド（PDF）"
+    /// Guided Setup: 右下のアバターが System Settings の操作対象を案内する。
+    static let menuGuidedSetup = "権限の設定を案内…"
     static let menuQuit = "Astra を終了"
     static let menuCheckUpdates = "更新を確認…"
     /// 更新を確認できない実行体（appcast / 公開鍵の無い swift build 等）で出す面。偽の「最新です」は出さない。

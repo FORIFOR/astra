@@ -104,6 +104,13 @@ enum Permissions {
         _ = CGRequestScreenCaptureAccess()
     }
 
+    /// 「画面収録とシステムオーディオ録音」の設定面へ。Guided Setup がここで Astra 行を案内する。
+    static func openScreenRecordingSettings() {
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
+            NSWorkspace.shared.open(url)
+        }
+    }
+
     /// 検査用の上書き（`simulatedMicrophone` と同じ）。**本番では nil。** この Mac は許可済みなので、
     /// 「まだ聞いていないときに Home に何が出るか」を測るにはここから未確認を作るしかない。
     static var simulatedCalendar: State?

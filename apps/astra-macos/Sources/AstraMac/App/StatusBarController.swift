@@ -65,6 +65,11 @@ final class StatusBarController {
         guide.target = self
         menu.addItem(guide)
 
+        // Guided Setup。権限は変えず、右下のアバターが System Settings の対象を案内する。
+        let guided = NSMenuItem(title: Facts.menuGuidedSetup, action: #selector(startGuidedSetup), keyEquivalent: "")
+        guided.target = self
+        menu.addItem(guided)
+
         // 自動更新は起動時に黙って見るだけだった（SoftwareUpdate.checkNow() に導線が無い、宣言だけの口）。
         // 確認できない実行体では灰色にせず、押したら理由と配布ページへの一手を出す。
         let update = NSMenuItem(title: Facts.menuCheckUpdates, action: #selector(checkUpdates), keyEquivalent: "")
@@ -100,6 +105,7 @@ final class StatusBarController {
     @objc private func toggleRecording() { WindowCoordinator.shared.toggleRecording() }
     @objc private func openSettings() { SettingsWindowController.shared.show() }
     @objc private func openGuide() { NSWorkspace.shared.open(Self.guideURL) }
+    @objc private func startGuidedSetup() { PermissionGuideCoordinator.shared.start() }
     @objc private func checkUpdates() {
         guard let reason = SoftwareUpdate.shared.checkNow() else { return }
         Self.presentUpdateUnavailable(reason: reason)

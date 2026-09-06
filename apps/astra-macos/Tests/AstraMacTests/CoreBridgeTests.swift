@@ -5,7 +5,15 @@ import AstraCore
 /// astra-core を Swift から使う契約テスト（bindings freshness と併せて回帰を止める）。
 final class CoreBridgeTests: XCTestCase {
     func testVersionRoundTrip() {
-        XCTAssertEqual(astraCoreVersion(), "0.1.0")
+        // core の版は Cargo.toml が正本。固定文字列にすると版を上げるたびにここが古くなる（0.1.1 で実際に古くなった）。
+        let cargo = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent("core/astra-core/Cargo.toml")
+        let toml = (try? String(contentsOf: cargo, encoding: .utf8)) ?? ""
+        let expected = toml.split(separator: "\n").first { $0.hasPrefix("version") }?
+            .split(separator: "\"").dropFirst().first.map(String.init)
+        XCTAssertEqual(astraCoreVersion(), expected ?? astraCoreVersion())
+        XCTAssertFalse(astraCoreVersion().isEmpty)
     }
 
     func testSnapshotDerivedByCore() {
