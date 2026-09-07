@@ -493,12 +493,16 @@ extension SelfTest {
         img.lockFocus()
         NSColor(calibratedWhite: 0.97, alpha: 1).setFill(); NSRect(x: 0, y: 0, width: 800, height: 500).fill()
         NSColor(calibratedWhite: 0.86, alpha: 1).setFill(); NSRect(x: 0, y: 452, width: 800, height: 48).fill()
-        for (i, c) in [NSColor.systemRed, NSColor.systemYellow, NSColor.systemGreen].enumerated() {
-            c.setFill(); NSBezierPath(ovalIn: NSRect(x: 16 + CGFloat(i) * 20, y: 470, width: 12, height: 12)).fill()
+        // 固定の RGB で描く。system 色は外観（light / dark）で値が変わり、fixed の面（light == dark）が割れる（実測）。
+        let lights: [(CGFloat, CGFloat, CGFloat)] = [(1.0, 0.38, 0.35), (1.0, 0.74, 0.18), (0.16, 0.78, 0.30)]
+        for (i, c) in lights.enumerated() {
+            NSColor(calibratedRed: c.0, green: c.1, blue: c.2, alpha: 1).setFill()
+            NSBezierPath(ovalIn: NSRect(x: 16 + CGFloat(i) * 20, y: 470, width: 12, height: 12)).fill()
         }
         NSColor(calibratedWhite: 0.30, alpha: 1).setFill()
         for (i, w) in [520, 610, 440, 580, 360].enumerated() { NSRect(x: 60, y: 380 - CGFloat(i) * 46, width: CGFloat(w), height: 14).fill() }
-        NSColor.systemBlue.setFill(); NSBezierPath(roundedRect: NSRect(x: 60, y: 90, width: 160, height: 40), xRadius: 8, yRadius: 8).fill()
+        NSColor(calibratedRed: 0.0, green: 0.48, blue: 1.0, alpha: 1).setFill()
+        NSBezierPath(roundedRect: NSRect(x: 60, y: 90, width: 160, height: 40), xRadius: 8, yRadius: 8).fill()
         img.unlockFocus()
         let url = tmp.appendingPathComponent("スクリーンショット 2026-09-07 atlas.png")
         try? NSBitmapImageRep(data: img.tiffRepresentation!)!.representation(using: .png, properties: [:])!.write(to: url)
