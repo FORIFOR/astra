@@ -9,6 +9,11 @@
 export type StepRisk =
   'READ' | 'REVERSIBLE_WRITE' | 'EXTERNAL_COMMIT' | 'DESTRUCTIVE' | 'REGULATED' | 'FINANCIAL';
 
+/** 応答が失われても外部では完了している可能性がある操作は自動再実行しない。 */
+export function requiresSingleAttempt(step: { readonly risk: StepRisk }): boolean {
+  return step.risk !== 'READ' && step.risk !== 'REVERSIBLE_WRITE';
+}
+
 /** contracts の ComplianceProfile と同じ値。ここは import できない（冒頭の注意）。 */
 export type StepComplianceProfile =
   'GENERAL' | 'ENTERPRISE' | 'REGULATED_HEALTH' | 'CARE' | 'FINANCIAL';

@@ -428,21 +428,49 @@ describe.skipIf(!url)('reply in context and meeting brief', () => {
   });
 
   it('sending is a separate approved task, never started by the draft', async () => {
+    const payload = {
+      source: 'gmail',
+      to: ['tanaka@mti.example'],
+      subject: 'Re: MOPITA SITE_ID の件',
+      body: 'ご連絡ありがとうございます。',
+      in_reply_to: 'g1',
+      thread_id: 'th-mopita',
+    };
     const res = await app.inject({
       method: 'POST',
       url: '/v1/work/reply/send',
       headers: auth,
-      payload: {
-        source: 'gmail',
-        to: ['tanaka@mti.example'],
-        subject: 'Re: MOPITA SITE_ID の件',
-        body: 'ご連絡ありがとうございます。',
-        in_reply_to: 'g1',
-        thread_id: 'th-mopita',
-      },
+      payload,
     });
     expect(res.statusCode).toBe(202);
     const taskId = res.json<{ task_id: string }>().task_id;
+    // 同じ要求の再送だけを同一taskへ戻す。同じ長さの編集や宛先変更は別の確認が必要。
+    const retry = await app.inject({
+      method: 'POST',
+      url: '/v1/work/reply/send',
+      headers: auth,
+      payload,
+    });
+    expect(retry.statusCode).toBe(202);
+    expect(retry.json<{ task_id: string }>().task_id).toBe(taskId);
+    const changedIds = new Set([taskId]);
+    for (const edit of [
+      { body: payload.body.replace('。', '！') },
+      { to: ['sato@example.com'] },
+      { source: 'outlook_mail' },
+      { thread_id: 'th-quote' },
+    ]) {
+      const changed = await app.inject({
+        method: 'POST',
+        url: '/v1/work/reply/send',
+        headers: auth,
+        payload: { ...payload, ...edit },
+      });
+      expect(changed.statusCode).toBe(202);
+      const changedId = changed.json<{ task_id: string }>().task_id;
+      expect(changedIds.has(changedId)).toBe(false);
+      changedIds.add(changedId);
+    }
     const tenantId = (await app.inject({ method: 'GET', url: '/v1/me', headers: auth })).json<{
       tenant: { id: string };
     }>().tenant.id;

@@ -21,7 +21,7 @@ import { approvalTtlMs, evaluate, isApprovalUsable, type ActionContext } from '@
 import type { PolicyDocument } from '@astra/contracts';
 import type { LibraryService } from '@astra/service-library';
 import { appendEvent, type EventPublisher } from './events.js';
-import { approvalSummaryFor, type TaskStep } from './plan.js';
+import { approvalSummaryFor, requiresSingleAttempt, type TaskStep } from './plan.js';
 import type {
   ArtifactSpec,
   RequestedApproval,
@@ -567,6 +567,21 @@ export function createTaskActivities(deps: ActivityDeps): TaskActivities {
          */
         if (isHostOfflineError(error)) {
           throw ApplicationFailure.nonRetryable(messageOfCause(error), HostOfflineError.TYPE);
+        }
+
+        // 送信先が受け付けた後に応答だけ失われる場合がある。
+        // 代替connector / browser / screenで試すことも二重実行になる。
+        if (requiresSingleAttempt(step)) {
+          try {
+            await executor?.onFailure?.(input, step, error);
+          } catch {
+            // 元の操作の失敗を保持する。
+          }
+          throw ApplicationFailure.nonRetryable(
+            messageOfCause(error),
+            'ExternalActionFailed',
+            '自動でやり直していません。再実行する前に、実行先の履歴を確認してください。',
+          );
         }
 
         /*

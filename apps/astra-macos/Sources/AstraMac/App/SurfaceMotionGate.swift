@@ -327,7 +327,9 @@ enum SurfaceMotionGate {
         AstraStateStore.shared.dismissResult()
         settle(0.5)
 
-        recording.start(); settle(0.8)
+        // Motion sampling is a window-continuity check; use the disk-only
+        // recording path so a raw debug executable does not invoke macOS TCC.
+        recording.start(captureMic: false, transcribe: false, requestPermissions: false); settle(0.8)
         guard MeetingSessionStore.shared.live != nil else {
             print("SELFTEST_FAIL surfacemotion: 録音が始まっていない"); exit(2)
         }

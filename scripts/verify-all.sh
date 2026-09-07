@@ -43,7 +43,7 @@ run "macOS recording + live E2E"  bash scripts/verify-macos-recording.sh
 run "recording experience E2E"    bash scripts/verify-recording-experience.sh
 # 3 本の Journey を時間軸で通す（窓・鍵・面・遷移・出所 id の連続。層 A）。
 run "journeys JA/JB/JC"           bash scripts/verify-journeys.sh
-run "macOS swift unit tests"      bash -c "cd apps/astra-macos && swift test 2>&1 | grep -E 'Executed [0-9]+ tests' | head -1"
+run "macOS swift unit tests"      bash -c 'cd apps/astra-macos || exit; out=$(swift test 2>&1); st=$?; echo "$out" | grep -E "Executed [0-9]+ tests" | head -1; if [ "$st" -ne 0 ]; then tail -40 <<<"$out"; fi; exit "$st"'
 
 echo
 if [[ $fail -eq 0 ]]; then echo "VERIFY_ALL_OK: この環境で検証できる全ゲートが緑"; else echo "VERIFY_ALL_FAIL"; exit 1; fi

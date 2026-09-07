@@ -17,7 +17,7 @@ OUT="${ASTRA_DAILY_OUT:-/tmp/astra-daily-work-gate}"
 mkdir -p "$OUT"
 BIN="$ROOT/apps/astra-macos/.build/debug/AstraMac"
 declare -a ROWS=(); fail=0; missing=0
-row() { ROWS+=("$1|$2|$3|$4"); }
+row() { ROWS+=("$1|$2|$3|$4"); case "$3" in ''|FAIL*) fail=1;; esac; }
 run() { local name="$1"; shift; "$@" >"$OUT/$name.log" 2>&1; echo $?; }
 
 wm=$(run world-model pnpm --filter @astra/service-world-model exec vitest run test/work.test.ts)
@@ -25,6 +25,8 @@ gw=$(run gateway ./infra/db/with-test-db.sh pnpm --filter ./services/api-gateway
 acc=$(run acceptance pnpm exec vitest run evals/actions/connectors/acceptance.test.ts)
 wk=$(run worker pnpm --filter @astra/worker-agent-host test)
 ui=1; if [ -x "$BIN" ]; then "$BIN" --selftest workcontext >"$OUT/ui.out" 2>"$OUT/ui.err"; ui=$?; fi
+# 行を作る command substitution から親の fail は変更できない。
+for rc in "$wm" "$gw" "$acc" "$wk" "$ui"; do [ "$rc" = 0 ] || fail=1; done
 uiv() { grep "^WORK_CONTEXT_UI	$1=" "$OUT/ui.err" 2>/dev/null | head -1 | cut -f2 | cut -d= -f2; }
 first_ms="$(grep -o 'FIRST_VALUE_MS=[0-9]*' "$OUT/gateway.log" | head -1 | cut -d= -f2)"
 ok() { [ "$1" = 0 ] && echo PASS || { fail=1; echo FAIL; }; }
@@ -65,6 +67,6 @@ row Calmness "extra window" "$(uiv extra_window)" "selftest: 窓の数 不変"
   printf '%-12s %-38s %-22s %s\n' group row result evidence
   for r in "${ROWS[@]}"; do IFS='|' read -r g a b c <<<"$r"; printf '%-12s %-38s %-22s %s\n' "$g" "$a" "$b" "$c"; done
   echo "HUMAN_INTERVENTION=0"
-  if [ "$fail" != 0 ]; then echo "DAILY_WORK_GATE=FAIL"; elif [ "$missing" != 0 ]; then echo "DAILY_WORK_GATE=PASS_OFFLINE (Connect <= 2 min は live harness 待ち)"; else echo "DAILY_WORK_GATE=PASS"; fi
+  if [ "$fail" != 0 ]; then echo "DAILY_WORK_GATE=FAIL"; else echo "DAILY_WORK_GATE=PASS_OFFLINE (Connect <= 2 min は live harness 待ち)"; fi
 } | tee "$OUT/report.txt"
 exit "$fail"

@@ -67,6 +67,7 @@ interface Harness {
   batches: WorkArtifactBatch[];
   asked: HostStep[];
   attempts: { source: WorkSource; attempt: WorkSyncAttempt }[];
+  sleeps: number[];
 }
 
 function harness(
@@ -80,12 +81,14 @@ function harness(
     state?: WorkSyncState[];
     /** push を落とす（cloud が受け取れなかった）。 */
     pushFails?: boolean;
+    backoffMs?: number;
   } = {},
 ): Harness {
   const urls: string[] = [];
   const batches: WorkArtifactBatch[] = [];
   const asked: HostStep[] = [];
   const attempts: { source: WorkSource; attempt: WorkSyncAttempt }[] = [];
+  const sleeps: number[] = [];
   const fetch = (async (url: string) => {
     urls.push(url);
     const route = options.routes?.(url) ?? defaultRoutes(url);
@@ -120,6 +123,10 @@ function harness(
     : undefined;
   const loop = new WorkSyncLoop({
     connectors: runtime,
+    ...(options.backoffMs === undefined ? {} : { backoffMs: options.backoffMs }),
+    sleep: async (ms) => {
+      sleeps.push(ms);
+    },
     ...(llm ? { llm } : {}),
     push: async (batch) => {
       if (options.pushFails) throw new Error('POST /v1/work/artifacts failed with 503');
@@ -131,7 +138,7 @@ function harness(
     },
     now: () => NOW,
   });
-  return { loop, urls, batches, asked, attempts };
+  return { loop, urls, batches, asked, attempts, sleeps };
 }
 
 function defaultRoutes(url: string): { status?: number; body: unknown } {
@@ -402,6 +409,57 @@ describe('syncing work context from the device', () => {
       { source: 'gmail', attempt: { ok: false, error: expect.stringContaining('boom') } },
     ]);
   });
+
+  // 暫定: 既存のprovider障害注入を使う。実identityで同じmatrixが動いたらLive試験へ移す。
+  it('waits before retrying a rate-limited read and commits the cursor only after success', async () => {
+    let requestCount = 0;
+    const h = harness({
+      connected: ['com.astra.gmail/gmail'],
+      granted: GOOGLE_GRANTS,
+      backoffMs: 20,
+      routes: (url) => {
+        const fail = requestCount < 2;
+        requestCount += 1;
+        return fail
+          ? { status: 429, body: { error: { message: 'rate limited' } } }
+          : defaultRoutes(url);
+      },
+    });
+    expect(h.loop.cursors.has('gmail')).toBe(false);
+    const report = await h.loop.syncOnce();
+    expect(report.outcomes[0]).toMatchObject({ source: 'gmail', status: 'synced' });
+    expect(h.sleeps).toEqual([20]);
+    expect(
+      h.urls.filter((url) => url.includes('gmail.googleapis.com')).length,
+    ).toBeGreaterThanOrEqual(4);
+    expect(h.loop.cursors.has('gmail')).toBe(true);
+    expect(h.attempts).toHaveLength(0);
+  });
+
+  for (const [status, attempts] of [
+    [401, 1],
+    [429, 2],
+  ] as const) {
+    it(`bounds ${status} retries and preserves other connectors`, async () => {
+      const h = harness({
+        connected: ['com.astra.gmail/gmail', 'com.astra.google-calendar/google-calendar'],
+        granted: GOOGLE_GRANTS,
+        backoffMs: 20,
+        routes: (url) =>
+          url.includes('gmail.googleapis.com')
+            ? { status, body: { error: { message: `status ${status}` } } }
+            : defaultRoutes(url),
+      });
+      const report = await h.loop.syncOnce();
+      expect(report.outcomes[0]).toMatchObject({ source: 'gmail', status: 'failed' });
+      expect(report.outcomes[1]).toMatchObject({ source: 'google_calendar', status: 'synced' });
+      expect(h.urls.filter((url) => url.includes('gmail.googleapis.com'))).toHaveLength(
+        attempts * 2,
+      );
+      expect(h.loop.cursors.has('gmail')).toBe(false);
+      expect(h.batches.map((batch) => batch.source)).toEqual(['google_calendar']);
+    });
+  }
 
   it('resumes from the cursor the cloud kept, instead of re-reading 14 days', async () => {
     const kept = new Date(NOW.getTime() - 2 * 3_600_000).toISOString();

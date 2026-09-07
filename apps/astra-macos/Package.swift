@@ -45,7 +45,16 @@ let package = Package(
         .executableTarget(
             name: "AstraMac",
             dependencies: ["AstraCore", "Sparkle"],
-            path: "Sources/AstraMac"
+            path: "Sources/AstraMac",
+            // CLI selftestにもTCCの用途説明が必要。ないと権限拒否ではなくOSがSIGABRTで終了する。
+            // releaseは署名バンドルのInfo.plistを使う。
+            linkerSettings: [
+                .unsafeFlags([
+                    "-Xlinker", "-sectcreate", "-Xlinker", "__TEXT", "-Xlinker", "__info_plist",
+                    "-Xlinker", URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+                        .appendingPathComponent("Support/SelfTest-Info.plist").path,
+                ], .when(configuration: .debug))
+            ]
         ),
         .testTarget(
             name: "AstraMacTests",

@@ -13,7 +13,7 @@ import {
   setHandler,
   workflowInfo,
 } from '@temporalio/workflow';
-import { planTask, type TaskPlan } from './plan.js';
+import { planTask, requiresSingleAttempt, type TaskPlan } from './plan.js';
 
 /**
  * 端末が落ちたときの失敗種別。
@@ -61,6 +61,14 @@ const tools = proxyActivities<TaskActivities>({
       'ToolNotImplemented',
     ],
   },
+});
+
+// Activity timeout / worker kill は executeStep の catch を通らない。
+// この層でも再試行を止め、受付済みの送信を再実行しない。
+const singleAttemptTools = proxyActivities<TaskActivities>({
+  startToCloseTimeout: '5 minutes',
+  heartbeatTimeout: '30 seconds',
+  retry: { maximumAttempts: 1 },
 });
 
 export interface TaskWorkflowInput {
@@ -275,7 +283,8 @@ export async function TaskWorkflow(input: TaskWorkflowInput): Promise<TaskResult
   async function runStepWaitingForHost(step: TaskPlan['steps'][number]): Promise<unknown> {
     for (let round = 0; ; round += 1) {
       try {
-        return await tools.executeStep(input, step);
+        const executor = requiresSingleAttempt(step) ? singleAttemptTools : tools;
+        return await executor.executeStep(input, step);
       } catch (error) {
         if (!isHostOffline(error) || round >= MAX_HOST_WAIT_ROUNDS) throw error;
 

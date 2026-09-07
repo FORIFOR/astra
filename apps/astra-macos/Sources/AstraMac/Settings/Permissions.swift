@@ -25,6 +25,10 @@ enum Permissions {
     }
 
     static func requestMicrophone(_ done: @escaping (Bool) -> Void) {
+        if let simulatedMicrophone {
+            DispatchQueue.main.async { done(simulatedMicrophone == .granted) }
+            return
+        }
         AVCaptureDevice.requestAccess(for: .audio) { ok in DispatchQueue.main.async { done(ok) } }
     }
 
@@ -53,6 +57,10 @@ enum Permissions {
         }
     }
     static func requestSpeechRecognition(_ done: @escaping (Bool) -> Void) {
+        if let simulatedSpeechRecognition {
+            DispatchQueue.main.async { done(simulatedSpeechRecognition == .granted) }
+            return
+        }
         SpeechTranscriber.requestAuthorization(done)
     }
     static func openSpeechRecognitionSettings() {

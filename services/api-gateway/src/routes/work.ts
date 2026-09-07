@@ -13,6 +13,7 @@
  * Astra 自身の task と会議も同じ artifact として混ぜる（cross-source）。
  */
 import {
+  canonicalSha256,
   PersonalizationUpdate,
   SendReplyRequest,
   WorkArtifactBatch,
@@ -215,6 +216,7 @@ export function registerWorkRoutes(app: App, deps: WorkRouteDeps): void {
         },
       });
     }
+    const replyFingerprint = await canonicalSha256(body);
     const { task } = await deps.tasks.create({
       tenantId: p.tenantId,
       userId: p.userId,
@@ -230,7 +232,7 @@ export function registerWorkRoutes(app: App, deps: WorkRouteDeps): void {
           thread_id: body.thread_id,
         },
       },
-      idempotencyKey: `reply:${p.userId}:${body.in_reply_to ?? body.subject}:${String(body.body.length)}`,
+      idempotencyKey: `reply:${p.userId}:${replyFingerprint}`,
     });
     return reply.status(202).send({ task_id: task.id });
   });

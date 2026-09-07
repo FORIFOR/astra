@@ -13,7 +13,7 @@ cd "$ROOT"
 OUT="${ASTRA_RB_OUT:-/tmp/astra-reply-brief-gate}"; mkdir -p "$OUT"
 BIN="$ROOT/apps/astra-macos/.build/debug/AstraMac"
 declare -a ROWS=(); fail=0
-row() { ROWS+=("$1|$2|$3|$4"); }
+row() { ROWS+=("$1|$2|$3|$4"); case "$3" in ''|FAIL*) fail=1;; esac; }
 run() { local name="$1"; shift; "$@" >"$OUT/$name.log" 2>&1; echo $?; }
 ok() { [ "$1" = 0 ] && echo PASS || { fail=1; echo FAIL; }; }
 wm=$(run world-model pnpm --filter @astra/service-world-model exec vitest run test/reply-brief.test.ts)
@@ -61,7 +61,8 @@ row BRIEF "every factual statement sourced" "$(bv every_fact_sourced)" "world-mo
 row BRIEF "brief available before meeting" "$(bv brief_available_before_meeting)" "Home の「次の会議」行（$(bv row_height_pt)pt）→ 準備する（$(bv open_height_pt)pt）"
 row BRIEF "suggested questions" "$(bv suggested_questions) (1..3)" "理由 + 出所つき、規則"
 row BRIEF "focus theft / new window" "$(bv focus_theft) / $(bv new_window)" "selftest"
-[ "$r" = 0 ] || fail=1; [ "$b" = 0 ] || fail=1
+# $(ok ...) 内の代入では失敗が親へ伝わらない。全コマンドを集約する。
+for rc in "$wm" "$wk" "$cn" "$gw" "$r" "$b"; do [ "$rc" = 0 ] || fail=1; done
 {
   echo "REPLY_BRIEF_GATE $(date +%Y-%m-%dT%H:%M:%S%z) $(git rev-parse --short HEAD)"
   printf '%-6s %-34s %-14s %s\n' gate row result evidence

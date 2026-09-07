@@ -1627,15 +1627,12 @@ enum SelfTest {
         let i = args.firstIndex(of: "--selftest")
         let secs = Double(i.map { args.count > $0 + 2 ? args[$0 + 2] : "" } ?? "") ?? 300
         _ = GlobalShortcut.shared.register(handler: { WindowCoordinator.shared.toggleRecording() })
-        // **ここでは音の経路を作らない。** `silent` は音ゼロの状態を作る口で、
-        // ここで「音が来ている」ことにすると、矛盾の検査が条件を通らなくなる
-        // （実際、一度そうなって歯止めが素通りした）。
-        RecordingWorkspaceState.shared.start()
-
-        // `silent` は**音も発話も無い**状態で置く。矛盾（「聞いています…」と
+        // `silent` は**音も発話も無い**状態で置く。合成のディスク経路だけを
+        // 起動し、raw debug executable が macOS TCC を呼ばないようにする。
         // 「音が届いていません」が同時に出る）が起きるのはここだけなので、
         // これが無いと歯止めが素通りする（実際、壊しても落ちなかった）。
         if args.contains("silent") {
+            RecordingWorkspaceState.shared.start(captureMic: false, transcribe: false, requestPermissions: false)
             WindowCoordinator.shared.showRecordingWorkspace()
             print("HOLD_MEETING \(secs)s silent")
             fflush(stdout)
@@ -1643,6 +1640,8 @@ enum SelfTest {
             RunLoop.main.run()
             return
         }
+
+        RecordingWorkspaceState.shared.start()
 
         RecordingWorkspaceState.shared.transcript = [
             TranscriptSegment(speaker: "Sarah", text: "Windows はいつ出しますか。", interim: false, at: 630),
@@ -2096,7 +2095,9 @@ enum SelfTest {
             WindowCoordinator.shared.showVoiceHUD(); settle(0.6)
             rec.begin()
             // ① 会議を録る。Dock が録音コントローラになる。
-            let t1 = rec.transition { recording.start() }
+            let t1 = rec.transition {
+                recording.start(captureMic: false, transcribe: false, requestPermissions: false)
+            }
             settle(0.8)
             let liveId = sessions.live?.id ?? ""
             let dockId = { () -> String in
@@ -2197,7 +2198,11 @@ enum SelfTest {
             rec.begin()
             // ① マイクが拒否されている端末で、始めるとどうなるか。
             Permissions.simulatedMicrophone = .denied
-            defer { Permissions.simulatedMicrophone = nil }
+            Permissions.simulatedSpeechRecognition = .denied
+            defer {
+                Permissions.simulatedMicrophone = nil
+                Permissions.simulatedSpeechRecognition = nil
+            }
             let t1 = rec.transition { WindowCoordinator.shared.toggleRecording() }
             settle(0.8)
             _ = rec.shot("01-denied", window: JourneyRecorder.dockWindow())
@@ -2215,7 +2220,7 @@ enum SelfTest {
             settle(0.3)
 
             // ② 回復して始める。
-            recording.start(); settle(0.8)
+            recording.start(captureMic: false, transcribe: false, requestPermissions: false); settle(0.8)
             let liveId = sessions.live?.id ?? ""
             if liveId.isEmpty { rec.error("許可のあとに始められない") }
             _ = rec.shot("02-recovered", window: JourneyRecorder.dockWindow())
@@ -2672,7 +2677,7 @@ enum SelfTest {
             NSApp.activate(ignoringOtherApps: true)
             MainWindowController.shared.orderFront()
             settle(0.8)
-            guard let win = found else {
+            guard let win = found ?? windows().first(where: { $0.w >= 900 && $0.h >= 600 }) else {
                 FileHandle.standardError.write(Data("SESSIONSHOT \(name) 窓一覧: \(windows().map { "\(Int($0.w))x\(Int($0.h))" })\n".utf8))
                 return false
             }
@@ -3215,7 +3220,11 @@ enum SelfTest {
         switch leg {
         case "record":
             sessions.load()
-            recording.start()
+            // This self-test verifies durable session recovery across processes;
+            // use the disk-only path so a raw debug executable never asks macOS
+            // TCC for microphone or speech access. Remove these switches when a
+            // signed live fault-injection harness replaces this test.
+            recording.start(captureMic: false, transcribe: false, requestPermissions: false)
             guard let id = sessions.live?.id else { print("RECORDLEG_FAIL 録音が始まらない"); exit(2) }
             // DB に status=recording が**停止前に**在ることを、この場で確かめる。
             let onDisk = LocalStore.shared.loadSessions().first { $0.id == id }
@@ -5696,7 +5705,9 @@ enum SelfTest {
     private static func timer() {
         WindowCoordinator.headless = true   // window を出さない
         let state = RecordingWorkspaceState.shared
-        state.start()
+        // Timer behavior does not require hardware capture; keep this headless
+        // check independent of macOS TCC.
+        state.start(captureMic: false, transcribe: false, requestPermissions: false)
         RunLoop.current.run(until: Date().addingTimeInterval(2.4))
         let running = state.elapsedSeconds
         state.togglePause()                 // 一時停止
@@ -6206,7 +6217,10 @@ enum SelfTest {
         rnStore.markReady(id: "rn-recent-2", summary: "見積の前提と初期費用を確認。稟議は今週中。",
                           actions: 2, decisions: 1, participants: 3, now: rn2s.addingTimeInterval(31 * 60))
         AstraStateStore.shared.meetingDetected(app: "Google Meet")
-        state.start()
+        // The visual fixture needs a live Session/Home card, not a hardware
+        // permission check. Keep it on the disk-only path; live microphone
+        // behavior is covered by the signed recording gate.
+        state.start(captureMic: false, transcribe: false, requestPermissions: false)
         MainWindowController.shared.showSection(.home)
         settle(0.5)
         record("12-recording-now", capture("12-recording-now", minW: 700, minH: 500,
@@ -6278,7 +6292,10 @@ enum SelfTest {
         // gateway が無くても E2E-001 の骨（HUD→dictation→会議→保存→HUD 復帰と**窓の排他**）は通す。
         // 仕様 P0-9 / ERR-001「ネット切断でもローカル録音は続く」を同時に確かめることになる。
         let online = AstraCoreBridge.reachable(base)
-        guard Permissions.microphone == .granted else { print("SELFTEST_SKIP e2e001: mic not granted"); exit(0) }
+        let synthetic = ProcessInfo.processInfo.environment["ASTRA_E2E_SYNTHETIC"] == "1"
+        if !synthetic {
+            guard Permissions.microphone == .granted else { print("SELFTEST_SKIP e2e001: mic not granted"); exit(0) }
+        }
 
         var steps: [String] = []
         func settle(_ seconds: Double) {
@@ -6363,7 +6380,11 @@ enum SelfTest {
             //
             // 録音は**窓を増やさない**。Dock がそのまま録音コントローラになり、
             // 大きな面は押されるまで開かない（以前はここで Workspace が出ることを見ていた）。
-            WindowCoordinator.shared.toggleRecording()
+            if synthetic {
+                state.start(captureMic: false, transcribe: false, requestPermissions: false)
+            } else {
+                WindowCoordinator.shared.toggleRecording()
+            }
             settle(1.2)
             wins = onScreenWindowSizes()
             let controllerUp = wins.contains { near($0.w, Metrics.dockMeetingWidth) && near($0.h, Metrics.dockMeetingHeight) }
@@ -6378,10 +6399,13 @@ enum SelfTest {
             steps.append("③録音コントローラへ(窓は増えない)")
 
             // ---- ④ HEAR: 実マイクで録る（5 秒断片が閉じる長さ）。
-            settle(6.0)
+            if synthetic {
+                RecordingRuntime.shared.push(Array(repeating: Float(0.02), count: 80_000), sampleRate: 16_000)
+            }
+            settle(synthetic ? 0.5 : 6.0)
             let recordedMs = RecordingRuntime.shared.recordedMs()
             guard recordedMs > 0 else { print("SELFTEST_FAIL e2e001 ④録音: recordedMs=0"); exit(5) }
-            steps.append("④実録音\(recordedMs)ms")
+            steps.append(synthetic ? "④合成音源\(recordedMs)ms（実マイク未検証）" : "④実録音\(recordedMs)ms")
 
             // ---- ⑤ Transcript が増える（発話を実 state へ流す。partial→final の増加を測る）。
             let before = state.transcript.count

@@ -208,7 +208,10 @@ final class RecordingWorkspaceState: ObservableObject {
         }
     }
 
-    func start() {
+    /// Start a recording. The optional switches are used only by the headless
+    /// crash-recovery self-test, which must exercise the disk/session path
+    /// without asking macOS TCC for microphone or speech access.
+    func start(captureMic: Bool = true, transcribe: Bool = true, requestPermissions: Bool = true) {
         isRecording = true
         // 前の会議を消す。消さないと 2 本目の録音に 1 本目の行が混ざる（`at` も衝突する）。
         // 前の会議は確定のたびに保存してあるので、ここで失うものは無い。
@@ -250,13 +253,15 @@ final class RecordingWorkspaceState: ObservableObject {
         // 実ランタイム: マイク → astra-core → ディスク断片（許可があればライブ取り込み + 手元 STT）
         MeetingIntelligence.shared.reset()
         // §26 会議に要るものだけを、始めるこの瞬間に要求する（起動時に一括で聞かない）。
-        PermissionCenter.request(.meeting) {
-            RecordingRuntime.shared.speechAuthorizationChanged()
-            RecordingWorkspaceState.shared.refreshSpeechPermission()
+        if requestPermissions {
+            PermissionCenter.request(.meeting) {
+                RecordingRuntime.shared.speechAuthorizationChanged()
+                RecordingWorkspaceState.shared.refreshSpeechPermission()
+            }
         }
         // マイクが**拒否**されているなら録音状態にしない。
         // 「録音中」と出しながら無音を録るのが一番高くつく壊れ方なので、始めない。
-        if Permissions.microphone == .denied || Permissions.microphone == .restricted {
+        if captureMic && (Permissions.microphone == .denied || Permissions.microphone == .restricted) {
             permissionIssue = .microphoneDenied
             isRecording = false
             tickTimer?.invalidate(); tickTimer = nil
@@ -272,10 +277,10 @@ final class RecordingWorkspaceState: ObservableObject {
             return
         }
         // 未確認のまま進む場合（プロンプト待ち）は、録れていないことを画面に出す。
-        permissionIssue = Permissions.microphone == .granted ? nil : .microphoneDenied
-        refreshSpeechPermission()
+        permissionIssue = captureMic && Permissions.microphone != .granted ? .microphoneDenied : nil
+        if requestPermissions { refreshSpeechPermission() }
         let localId = "meeting-\(Int(Date().timeIntervalSince1970))"
-        RecordingRuntime.shared.begin(meetingId: localId)
+        RecordingRuntime.shared.begin(meetingId: localId, captureMic: captureMic, transcribe: transcribe)
         // スクショ等は実際に journal を作った id に合わせる（サインイン時は gateway id）。
         currentMeetingId = RecordingRuntime.shared.activeMeetingId
         // §1 録音を始めたこの瞬間に Session を作って保存する。

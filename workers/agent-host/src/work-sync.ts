@@ -20,6 +20,7 @@ import {
   type WorkSyncState,
 } from '@astra/contracts';
 import {
+  ConnectorError,
   fromGmail,
   fromGoogleCalendar,
   fromOutlookCalendar,
@@ -65,6 +66,9 @@ export interface WorkSyncDeps {
   readonly lookaheadDays?: number;
   /** 1 回の同期で LLM に頼む上限。 */
   readonly maxClassifications?: number;
+  /** 混み合い（429）/ 時間切れのときに一度だけ待ってやり直す間隔。 */
+  readonly backoffMs?: number;
+  readonly sleep?: (ms: number) => Promise<void>;
   readonly onError?: (source: WorkSource, error: Error) => void;
 }
 
@@ -164,7 +168,7 @@ export class WorkSyncLoop {
       if (!this.#deps.connectors.granted(key).includes(permission)) {
         return { source, status: 'not_granted', artifacts: 0, classified: 0 };
       }
-      const { artifacts, cursor } = await fetch();
+      const { artifacts, cursor } = await this.#withBackoff(fetch);
       const { items, classified } = await this.#classify(artifacts);
       /*
        * 順番: fetch → normalize → upsert → cursor。
@@ -193,6 +197,25 @@ export class WorkSyncLoop {
   }
 
   // ------------------------------------------------------------ sources
+
+  /** 読む操作だけを一度待って再試行する。pushや外部送信には使わない。 */
+  async #withBackoff<T>(read: () => Promise<T>): Promise<T> {
+    try {
+      return await read();
+    } catch (error) {
+      if (
+        !(error instanceof ConnectorError) ||
+        !['rate_limited', 'timed_out'].includes(error.reason)
+      )
+        throw error;
+      const delay = this.#deps.backoffMs ?? 1_000;
+      const sleep =
+        this.#deps.sleep ??
+        ((ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms)));
+      await sleep(delay);
+      return read();
+    }
+  }
 
   #since(source: WorkSource, now: Date): Date {
     const cursor = this.#cursors.get(source);
