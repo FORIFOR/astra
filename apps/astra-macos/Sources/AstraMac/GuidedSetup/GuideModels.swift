@@ -248,7 +248,7 @@ enum AvatarState: Equatable {
 /// 右下に置くアバターの寸法。visibleFrame 基準で右 24pt・下 24pt。
 enum AvatarLayout {
     static let inset: CGFloat = 24
-    static let avatarSize: CGFloat = 64
+    static let avatarSize: CGFloat = 60
     static let bubbleMaxWidth: CGFloat = 260
 
     /// アバター窓の frame（吹き出しを含む全体）。右下に寄せる。

@@ -164,6 +164,7 @@ private struct IdleDock: View {
                     .lineLimit(1)
             }
             Spacer(minLength: 0)
+            // ⌥space の鍵は置かない: 320pt では 2 行目（出所）が切れる。聞く手段は idle の Dock と ⌥Space そのもの。
             if let dismiss {
                 Button { VisualContextStore.shared.remove(dismiss) } label: {
                     Image(systemName: "xmark").font(.system(size: 10)).foregroundStyle(Palette.muted(scheme == .dark))

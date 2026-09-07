@@ -15,7 +15,8 @@ struct AvatarHUDView: View {
             if !model.message.isEmpty { bubble }
             avatar
         }
-        .padding(6)
+        // 輪（1.5pt）が窓の縁で切れないだけの余白（盲検: 「丸が枠の縁で切り落とされている」）。
+        .padding(9)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("guideAvatar")
     }
