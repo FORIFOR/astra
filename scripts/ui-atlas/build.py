@@ -38,6 +38,8 @@ CAPTURE_DIR = {  # selftest 名 → capture 側のディレクトリ（light, da
     "sections": ("sections-light", "sections-dark"),
     "states": ("states-light", "states-dark"),
     "sysshots": ("sys-light", "sys-dark"),
+    "guidedshots": ("guided-light", "guided-dark"),
+    "screenshotshots": ("screenshot-light", "screenshot-dark"),
 }
 STRIP_TARGETS_MS = [0, 50, 100, 200, None]  # None = final
 DESCRIPTION_FIELDS = ["trigger", "meaning", "primary", "secondary", "states", "keys", "privacy", "window", "invariant"]

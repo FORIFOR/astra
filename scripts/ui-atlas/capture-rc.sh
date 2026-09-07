@@ -93,6 +93,13 @@ run states-dark     states       "$OUT/states-dark" dark
 EXTRA_ENV=(--env "ASTRA_SELFTEST_FEED_URL=http://127.0.0.1:$FEED_PORT/appcast-available.xml")
 run sys-light       sysshots     "$OUT/sys-light"
 run sys-dark        sysshots     "$OUT/sys-dark" dark
+# スクショ自動コンテキストの Dock 面（認識の一瞬 / 出所 chip）。
+run screenshot-light screenshotshots "$OUT/screenshot-light"
+run screenshot-dark  screenshotshots "$OUT/screenshot-dark" dark
+# Guided Setup（右下アバター + System Settings の対象）。実 System Settings を開く。権限は変えない。
+# 合成の 3 面（target-found / target-highlighted / repositioned）は System Settings が OS の外観のままなので light だけ。
+run guided-light     guidedshots  "$OUT/guided-light" --simulate-not-granted
+run guided-dark      guidedshots  "$OUT/guided-dark" dark --simulate-not-granted
 EXTRA_ENV=()
 for j in JA JB JC; do
   run "journey-$j"  journey "$j" "$OUT/journey-$j"

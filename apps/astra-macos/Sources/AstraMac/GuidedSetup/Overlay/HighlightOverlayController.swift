@@ -8,6 +8,7 @@ final class HighlightOverlayController {
 
     var isVisible: Bool { panel?.isVisible == true }
     var frame: CGRect? { panel?.frame }
+    var window: NSWindow? { panel }
     var panelIgnoresMouse: Bool? { panel?.ignoresMouseEvents }
 
     func show(around target: CGRect) {

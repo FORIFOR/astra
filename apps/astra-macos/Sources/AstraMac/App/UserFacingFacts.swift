@@ -97,6 +97,14 @@ enum UserFacingFacts {
     static let screenshotEgressCloud = "質問したときだけ、その画像を {provider} へ送ります"
     /// 端末内のモデルで見るとき。
     static let screenshotEgressLocal = "画像は端末の外へ送りません"
+    /// 検知の一瞬（〜1 秒）だけ Dock に出す 2 行目（1 行目は chip の名）。窓は増やさない・focus は奪わない。
+    static let screenshotDetected = "認識しました · そのまま聞いてください"
+    /// chip の名。以降は「· たった今」などの短い出所だけを添える。
+    static let screenshotChip = "スクリーンショット"
+    /// 質問で添えたあとの compact provenance（cloud）。{provider} はモデルの名前。
+    static let screenshotSentCompact = "{provider} に送信"
+    /// 初回だけ明示する（以降は compact）。
+    static let screenshotSentFirst = "質問したときだけ {provider} に送信"
     static let menuQuit = "Astra を終了"
     static let menuCheckUpdates = "更新を確認…"
     /// 更新を確認できない実行体（appcast / 公開鍵の無い swift build 等）で出す面。偽の「最新です」は出さない。
@@ -147,6 +155,10 @@ enum UserFacingFacts {
             f("menu.guidedSetup", menuGuidedSetup),
             f("screenshot.egress.cloud", screenshotEgressCloud),
             f("screenshot.egress.local", screenshotEgressLocal),
+            f("screenshot.detected", screenshotDetected),
+            f("screenshot.chip", screenshotChip),
+            f("screenshot.sent.compact", screenshotSentCompact),
+            f("screenshot.sent.first", screenshotSentFirst),
             f("recording.menu.start", recordingMenuStart),
             f("recording.menu.stop", recordingMenuStop),
             f("recording.stop", recordingStop, false),

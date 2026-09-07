@@ -45,6 +45,8 @@ enum SelfTest {
         case "screenshotegress": screenshotEgressGate(); return true
         case "screenshote2e": screenshotE2E(args); return true
         case "guidedsetup": guidedSetupGate(args); return true
+        case "guidedshots": guidedShots(args); return true
+        case "screenshotshots": screenshotShots(args); return true
         case "screenshotshot": screenshotShot(args); return true
         case "journey": journeyGate(args); return true
         case "idle-hold": idleHold(args); return true

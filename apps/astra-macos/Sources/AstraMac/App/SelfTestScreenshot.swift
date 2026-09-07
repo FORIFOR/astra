@@ -203,6 +203,41 @@ extension SelfTest {
         }
         let good = VisualContextStore.canonicalHandoverURL(id: "0a1b2c3d-0000-4000-8000-000000000001", directory: handover)
         check(good?.deletingLastPathComponent().resolvingSymlinksInPath().path == handover.resolvingSymlinksInPath().path, "正規 id が受け渡し場所の中を指さない")
+        // 受け渡し場所と写しの権限: 場所は 0700、写しは 0600（利用者だけ）。写しは普通のファイル。
+        let hb = writePNG("hb.png", w: 200, h: 120)
+        svc.ingestFile(url: hb, dir: dir)
+        let hbAtt = store.attach(store.recent)
+        check(hbAtt.count == 1, "権限検査用の添付ができない")
+        let dirPerm = (try? FileManager.default.attributesOfItem(atPath: handover.path))?[.posixPermissions] as? Int
+        check(dirPerm == 0o700, "受け渡し場所の権限が 0700 でない (\(dirPerm.map { String($0, radix: 8) } ?? "nil"))")
+        if let name = handoverFiles().first {
+            let f = handover.appendingPathComponent(name)
+            let perm = (try? FileManager.default.attributesOfItem(atPath: f.path))?[.posixPermissions] as? Int
+            check(perm == 0o600, "写しの権限が 0600 でない (\(perm.map { String($0, radix: 8) } ?? "nil"))")
+            let v = try? f.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey])
+            check(v?.isRegularFile == true && v?.isSymbolicLink != true, "写しが普通のファイルでない")
+        }
+        // symlink は辿らない: 写す先に外を指すリンクを置いても、リンク先は書き換わらず、リンクは普通のファイルに置き換わる。
+        store.reset()
+        let outside = dir.appendingPathComponent("outside.txt")
+        try? "secret".write(to: outside, atomically: true, encoding: .utf8)
+        let sl = writePNG("sl.png", w: 200, h: 120)
+        svc.ingestFile(url: sl, dir: dir)
+        if let art = store.recent.first {
+            let target = handover.appendingPathComponent("\(art.id.uuidString.lowercased()).png")
+            try? FileManager.default.createSymbolicLink(at: target, withDestinationURL: outside)
+            let refused = store.attach([art])
+            check(refused.isEmpty, "写す先が symlink なのに添えた（外へ書く道）")
+            check((try? String(contentsOf: outside, encoding: .utf8)) == "secret", "symlink を辿って外のファイルを書き換えた")
+            try? FileManager.default.removeItem(at: target)
+        }
+        // 掃除は symlink を数えない・消さない（受け渡し場所のものではない）。
+        let stray = handover.appendingPathComponent("stray.png")
+        try? FileManager.default.createSymbolicLink(at: stray, withDestinationURL: outside)
+        check(!HandoverCache.entries(in: handover).contains { $0.url.lastPathComponent == "stray.png" }, "掃除が symlink を数えた")
+        try? FileManager.default.removeItem(at: stray)
+        store.reset()
+
         // 期限切れは読めない: TTL を過ぎた添付の写しは purge で消える。
         let b1 = writePNG("b1.png", w: 200, h: 120)
         svc.ingestFile(url: b1, dir: dir)
@@ -216,7 +251,7 @@ extension SelfTest {
         VisualContextStore.handoverDirectoryOverride = nil
 
         if fail.isEmpty {
-            print("SCREENSHOT_CONTEXT_GATE=PASS  検知<\(Int(latencyMs))ms・監視経路\(Int(watchMs))ms・会話紐付け・参照解決(これ/さっきの/2枚/3枚/さっきのと今の)・二重0・部分0・窓0・focus0・質問前に画像が動かない・受け渡し=添付時のみ・外す1操作・TTL30分/20件/200MB/起動時掃除・会話閉じで削除・別会話0・path traversal 0・期限切れ可読0")
+            print("SCREENSHOT_CONTEXT_GATE=PASS  検知<\(Int(latencyMs))ms・監視経路\(Int(watchMs))ms・会話紐付け・参照解決(これ/さっきの/2枚/3枚/さっきのと今の)・二重0・部分0・窓0・focus0・質問前に画像が動かない・受け渡し=添付時のみ・外す1操作・TTL30分/20件/200MB/起動時掃除・会話閉じで削除・別会話0・path traversal 0・期限切れ可読0・0700/0600・symlink拒否・regular only")
             exit(0)
         } else {
             print("SCREENSHOT_CONTEXT_GATE=FAIL  " + fail.joined(separator: " / "))
@@ -413,5 +448,66 @@ extension SelfTest {
         } catch {
             print("SCREENSHOT_E2E=FAIL error=\(error)"); exit(3)
         }
+    }
+}
+
+
+// MARK: - Atlas: screenshot.detected / screenshot.attached-cloud（`--selftest screenshotshots <outDir> [dark]`）
+
+extension SelfTest {
+    /// Dock の 2 面を RC に描かせて撮る。窓は Dock 1 枚だけ。
+    ///   screenshot-detected.png        認識した一瞬（〜1 秒）の「スクリーンショットを認識しました」
+    ///   screenshot-chip.png            その後の compact な出所「スクリーンショット · たった今」
+    ///   screenshot-attached-cloud.png  質問で添えたあと（初回）「質問したときだけ Claude に送信」
+    ///   screenshot-attached-compact.png 2 回目以降「Claude に送信」
+    @MainActor
+    static func screenshotShots(_ args: [String]) {
+        let i = args.firstIndex(of: "--selftest")!
+        let outDir = args.count > i + 2 ? args[i + 2] : "/tmp/astra-screenshot-shots"
+        let dark = args.count > i + 3 && args[i + 3] == "dark"
+        try? FileManager.default.createDirectory(atPath: outDir, withIntermediateDirectories: true)
+        NSApp.setActivationPolicy(.regular)
+        NSApp.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
+        func settle(_ s: Double) { let u = Date().addingTimeInterval(s); while Date() < u { CFRunLoopRunInMode(.defaultMode, 0.05, true) } }
+        var report: [String] = []
+        func shoot(_ name: String) {
+            // 大きさは showVoiceHUD が状態から直に置く（dock8 と同じ作法。animator は selftest の run loop では進まない）。
+            WindowCoordinator.shared.showVoiceHUD(); settle(0.45)
+            guard let win = NSApp.windows.first(where: { $0.isVisible && $0.frame.width > 100 }),
+                  let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, CGWindowID(win.windowNumber), [.boundsIgnoreFraming, .bestResolution]),
+                  let png = NSBitmapImageRep(cgImage: cg).representation(using: .png, properties: [:]) else { report.append("\(name) MISSING"); return }
+            try? png.write(to: URL(fileURLWithPath: "\(outDir)/\(name).png"))
+            let want = AstraStateStore.shared.dock.size()
+            report.append("\(name) \(Int(win.frame.width))x\(Int(win.frame.height)) want=\(Int(want.width))x\(Int(want.height)) dock=\(AstraStateStore.shared.dock) headless=\(WindowCoordinator.headless)")
+        }
+        let tmp = FileManager.default.temporaryDirectory.appendingPathComponent("astra-scshots-\(getpid())", isDirectory: true)
+        try? FileManager.default.createDirectory(at: tmp, withIntermediateDirectories: true)
+        VisualContextStore.handoverDirectoryOverride = tmp.appendingPathComponent("handover", isDirectory: true)
+        VisualContextStore.disclosedOverride = false
+        let store = VisualContextStore.shared
+        store.reset(); store.bind(conversationID: "atlas")
+        WindowCoordinator.shared.showVoiceHUD(); settle(0.5)
+
+        let img = NSImage(size: NSSize(width: 800, height: 500))
+        img.lockFocus(); NSColor(calibratedWhite: 0.92, alpha: 1).setFill(); NSRect(x: 0, y: 0, width: 800, height: 500).fill(); img.unlockFocus()
+        let url = tmp.appendingPathComponent("スクリーンショット 2026-09-07 atlas.png")
+        try? NSBitmapImageRep(data: img.tiffRepresentation!)!.representation(using: .png, properties: [:])!.write(to: url)
+        // 1) 認識の一瞬（トーストは 1 秒。撮り終わるまで justCaptured を留める）
+        store.ingest(url: url, kind: .screenshot, confidence: 0.95, pixelSize: CGSize(width: 800, height: 500), capturedAt: Date(), app: "Figma", window: nil)
+        shoot("screenshot-detected")
+        // 2) その後の chip
+        store.justCaptured = nil
+        shoot("screenshot-chip")
+        // 3) 質問で添えたあと（初回: 明示）
+        _ = store.attach(store.recent)
+        shoot("screenshot-attached-cloud")
+        // 4) 2 回目以降（compact）
+        _ = store.attach(store.recent)
+        shoot("screenshot-attached-compact")
+
+        store.reset(); VisualContextStore.disclosedOverride = nil; VisualContextStore.handoverDirectoryOverride = nil
+        try? FileManager.default.removeItem(at: tmp)
+        print("SELFTEST_OK screenshotshots: " + report.joined(separator: ", "))
+        exit(0)
     }
 }

@@ -23,6 +23,8 @@ struct VoiceTaskDockView: View {
     @ObservedObject private var uiScale = UIScale.shared
     @ObservedObject private var store = AstraStateStore.shared
     @ObservedObject private var state = VoiceHUDState.shared
+    /// スクショの chip で idle の幅が変わる。購読していないと `size` が古いまま、窓が 220 のまま中身が切れる（実測）。
+    @ObservedObject private var visual = VisualContextStore.shared
     @Environment(\.colorScheme) private var scheme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private var dark: Bool { scheme == .dark }
@@ -92,46 +94,19 @@ private struct IdleDock: View {
     @Environment(\.colorScheme) private var scheme
     @ObservedObject private var visual = VisualContextStore.shared
     var body: some View {
-        // スクショを撮った瞬間だけ、idle Dock がそのまま「見ています」に変わる（**新しい窓は作らない**）。
+        // スクショを認識した瞬間（〜1 秒）と、その後の小さな出所。文脈 chip（voice.context）と同じ 2 行の形。**新しい窓は作らない**。
         if let shot = visual.justCaptured {
-            HStack(spacing: 8) {
-                Image(systemName: "rectangle.dashed.badge.record")
-                    .font(.system(size: 13)).foregroundStyle(Palette.accent(scheme == .dark))
-                // 短い 1 行にして narrow な idle 幅でも切れないようにする（横広に開いたときは余裕を持って読める）。
-                Text(shot.kind == .clipboardImage ? "画像を見ています" : "スクショを見ています")
-                    .font(.system(size: S.type(Metrics.dockPrimarySize), weight: .medium))
-                    .foregroundStyle(Palette.text(scheme == .dark))
-                    .lineLimit(1).fixedSize()
-                Text("そのまま聞いてください")
-                    .font(.system(size: S.type(Metrics.dockMetaSize)))
-                    .foregroundStyle(Palette.muted(scheme == .dark))
-                    .lineLimit(1)
-                Spacer(minLength: 0)
-                Button { VisualContextStore.shared.remove(shot.id) } label: {
-                    Image(systemName: "xmark").font(.system(size: 10)).foregroundStyle(Palette.muted(scheme == .dark))
-                }.buttonStyle(AstraControlStyle(radius: 6, base: 0.0))
-                    .accessibilityIdentifier("dismissScreenshot")
-            }
-            .padding(.horizontal, S.metric(Metrics.dockPadH))
-            .frame(maxHeight: .infinity)
-            .help("そのまま「これ何？」と聞いてください · \(shot.ageLabel()) · \(VisualEgressPolicy.current.disclosure)")
-            .accessibilityIdentifier("screenshotContextChip")
+            screenshotChip(icon: "rectangle.dashed.badge.record", tint: Palette.accent(scheme == .dark),
+                           meta: Facts.screenshotDetected, dismiss: nil, id: "screenshotContextChip")
+                .help("そのまま「これ何？」と聞いてください · \(VisualEgressPolicy.current.disclosure)")
         } else if let shot = visual.recent.first {
-            // トーストが下がったあとは、小さな chip だけ残す（会話は途切れない）。
-            HStack(spacing: 7) {
-                Image(systemName: "photo").font(.system(size: 12)).foregroundStyle(Palette.muted(scheme == .dark))
-                Text(shot.kind == .clipboardImage ? "画像" : "スクショ")
-                    .font(.system(size: S.type(Metrics.dockPrimarySize), weight: .medium))
-                    .foregroundStyle(Palette.muted(scheme == .dark))
-                Spacer(minLength: 0)
-                ForEach(UserShortcut.globalRecordingBadges, id: \.self) { KeyBadge($0) }
-            }
-            .padding(.horizontal, S.metric(Metrics.dockPadH))
-            .frame(maxHeight: .infinity)
-            .contentShape(Rectangle())
-            .onTapGesture { VoiceHUDState.shared.toggleQuickActions() }
-            .help("そのまま聞いてください · \(VisualEgressPolicy.current.disclosure)")
-            .accessibilityIdentifier("screenshotContextChipSmall")
+            // 質問で添えたあとは出所（初回「質問したときだけ Claude に送信」、以降「Claude に送信 · たった今」）。
+            screenshotChip(icon: "photo", tint: Palette.muted(scheme == .dark),
+                           meta: visual.lastProvenance.map { $0.contains("質問") ? $0 : "\($0) · \(shot.ageLabel())" } ?? shot.ageLabel(),
+                           dismiss: shot.id, id: "screenshotContextChipSmall")
+                .contentShape(Rectangle())
+                .onTapGesture { VoiceHUDState.shared.toggleQuickActions() }
+                .help("そのまま聞いてください · \(VisualEgressPolicy.current.disclosure)")
         } else {
         HStack(spacing: 7) {
             // idle は静的な声のマーク（署名）。活動波形にはしない（「聞いている」と誤読させない）。
@@ -170,6 +145,34 @@ private struct IdleDock: View {
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("dockIdle")
         }   // else（スクショ chip でないとき = 通常の idle）
+    }
+
+    /// 1 行目は「スクリーンショット」、2 行目は出所や状態（voice.context の app 名 + 要約と同じ配分）。
+    private func screenshotChip(icon: String, tint: Color, meta: String, dismiss: UUID?, id: String) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: icon).font(.system(size: 14)).foregroundStyle(tint).frame(width: 18)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(Facts.screenshotChip)
+                    .font(.system(size: S.type(Metrics.dockPrimarySize), weight: .medium))
+                    .foregroundStyle(Palette.text(scheme == .dark))
+                    .lineLimit(1)
+                Text(meta)
+                    .font(.system(size: S.type(Metrics.dockMetaSize)))
+                    .foregroundStyle(Palette.muted(scheme == .dark))
+                    .lineLimit(1)
+            }
+            Spacer(minLength: 0)
+            if let dismiss {
+                Button { VisualContextStore.shared.remove(dismiss) } label: {
+                    Image(systemName: "xmark").font(.system(size: 10)).foregroundStyle(Palette.muted(scheme == .dark))
+                }.buttonStyle(AstraControlStyle(radius: 6, base: 0.0))
+                    .accessibilityIdentifier("dismissScreenshot")
+            }
+        }
+        .padding(.horizontal, S.metric(Metrics.dockPadH))
+        .frame(maxHeight: .infinity)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier(id)
     }
 }
 

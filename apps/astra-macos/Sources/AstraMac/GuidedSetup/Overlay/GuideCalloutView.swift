@@ -20,12 +20,13 @@ struct GuideCalloutView: View {
     var body: some View {
         HStack(spacing: 8) {
             Image(systemName: arrow).font(.system(size: 13, weight: .semibold)).foregroundStyle(Palette.accent(dark))
+            // 1 行に固定する。折り返すと、測った大きさと窓の大きさがずれて（42→58pt）吹き出しが対象に掛かった（実測）。
+            // 文言は短い（「Astra をオンにしてください」）ので 1 行で足りる。
             Text(message)
                 .font(.system(size: S.type(13), weight: .medium))
                 .foregroundStyle(Palette.text(dark))
-                .lineLimit(2)
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: 300, alignment: .leading)
+                .lineLimit(1)
+                .fixedSize()
         }
         .padding(.horizontal, 12).padding(.vertical, 9)
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))

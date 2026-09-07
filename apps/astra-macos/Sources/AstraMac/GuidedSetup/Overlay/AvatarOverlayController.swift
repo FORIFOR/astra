@@ -34,10 +34,13 @@ final class AvatarOverlayController {
     }
 
     /// 吹き出しの長さで窓の大きさが変わる。右下に寄せ直す。
+    /// 大きさは**毎回新しく測る**。窓の中の hosting view の fittingSize は前の文言の大きさを返すことがあり、
+    /// 短い文言（「設定できました ✓」）の吹き出しが前の幅いっぱいに伸びた（実測）。
     func relayout(on screen: NSScreen) {
-        guard let panel, let host = panel.contentView else { return }
-        let fit = host.fittingSize
-        let size = NSSize(width: max(AvatarLayout.avatarSize + 8, fit.width), height: max(AvatarLayout.avatarSize + 8, fit.height))
+        guard let panel else { return }
+        let probe = NSHostingView(rootView: AvatarHUDView(model: model))
+        let fit = probe.fittingSize
+        let size = NSSize(width: max(AvatarLayout.avatarSize + 8, fit.width.rounded(.up)), height: max(AvatarLayout.avatarSize + 8, fit.height.rounded(.up)))
         panel.setFrame(AvatarLayout.frame(size: size, in: screen.visibleFrame), display: true)
     }
 

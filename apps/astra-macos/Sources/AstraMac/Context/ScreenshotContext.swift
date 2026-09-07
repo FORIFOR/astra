@@ -44,6 +44,16 @@ enum VisualEgressPolicy: Equatable {
         case .cloudVision(let provider): return Facts.screenshotEgressCloud.replacingOccurrences(of: "{provider}", with: provider)
         }
     }
+
+    /// 質問で添えたあとの chip の出所。初回は「質問したときだけ {provider} に送信」、以降は「{provider} に送信」。
+    /// 端末内モデルなら出さない（送っていないものを送ったと言わない）。
+    func provenance(firstTime: Bool) -> String? {
+        switch self {
+        case .localVision: return nil
+        case .cloudVision(let provider):
+            return (firstTime ? Facts.screenshotSentFirst : Facts.screenshotSentCompact).replacingOccurrences(of: "{provider}", with: provider)
+        }
+    }
 }
 
 /// 受け渡し場所（キャッシュ）の掃除。**決定的**: 期限切れ → 件数の上限 → 総量の上限 の順に古いものから消す。
@@ -77,9 +87,18 @@ enum HandoverCache {
         let items = (try? fm.contentsOfDirectory(at: directory, includingPropertiesForKeys: [.fileSizeKey, .contentModificationDateKey],
                                                  options: [.skipsHiddenFiles])) ?? []
         return items.filter { $0.pathExtension.lowercased() == "png" }.compactMap { url in
-            let v = try? url.resourceValues(forKeys: [.fileSizeKey, .contentModificationDateKey])
+            let v = try? url.resourceValues(forKeys: [.fileSizeKey, .contentModificationDateKey, .isRegularFileKey, .isSymbolicLinkKey])
+            // 普通のファイルだけを数える。symlink や特殊ファイルは受け渡し場所のものではない（消しもしない: 触らない）。
+            guard v?.isSymbolicLink != true, v?.isRegularFile == true else { return nil }
             return Entry(url: url, bytes: v?.fileSize ?? 0, modified: v?.contentModificationDate ?? .distantPast)
         }
+    }
+
+    /// 受け渡し場所は利用者だけが読める（0700）。作ったときと、写すたびに確かめる。
+    static func ensureDirectory(_ directory: URL) {
+        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true,
+                                                 attributes: [.posixPermissions: 0o700])
+        try? FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: directory.path)
     }
 
     /// 起動時と添付のたびに呼ぶ。消した数を返す。
@@ -223,6 +242,18 @@ final class VisualContextStore: ObservableObject {
     private var toastTimer: Timer?
     /// 検査用: 質問で画像が動いた回数（撮っただけでは 0 のまま）。
     private(set) var attachCount = 0
+    /// 検知の一瞬のトースト（〜1 秒）。窓は増やさない。
+    static let toastSeconds: TimeInterval = 1.0
+    /// 「質問したときだけ {provider} に送信」を明示するのは初回だけ。以降は compact。
+    static let disclosedKey = "astra.screenshot.egressDisclosed"
+    /// 検査用の上書き（nil なら UserDefaults）。
+    static var disclosedOverride: Bool?
+    static var egressDisclosed: Bool {
+        get { disclosedOverride ?? UserDefaults.standard.bool(forKey: disclosedKey) }
+        set { if disclosedOverride != nil { disclosedOverride = newValue } else { UserDefaults.standard.set(newValue, forKey: disclosedKey) } }
+    }
+    /// 直近の質問で添えた枚数と、そのときの出所文（chip が読む）。
+    @Published private(set) var lastProvenance: String?
 
     /// 端末内の受け渡し場所（**キャッシュ**。質問用の一時コンテキストで、永続領域ではない）。
     /// 質問に添えた瞬間だけ `<id>.png` を写し、端末の worker がここから読む。cloud へは id とラベルしか行かない。
@@ -290,7 +321,7 @@ final class VisualContextStore: ObservableObject {
         justCaptured = art
         WindowCoordinator.shared.syncDockPanels()   // idle Dock を横広トーストへ
         toastTimer?.invalidate()
-        toastTimer = Timer.scheduledTimer(withTimeInterval: 2.2, repeats: false) { [weak self] _ in
+        toastTimer = Timer.scheduledTimer(withTimeInterval: Self.toastSeconds, repeats: false) { [weak self] _ in
             Task { @MainActor in self?.justCaptured = nil; WindowCoordinator.shared.syncDockPanels() }
         }
         art.state = .available
@@ -336,7 +367,7 @@ final class VisualContextStore: ObservableObject {
             recent.contains { $0.id == art.id } && (art.conversationID == nil || art.conversationID == conversationID)
         }
         guard !trusted.isEmpty else { return [] }
-        try? FileManager.default.createDirectory(at: Self.handoverDirectory, withIntermediateDirectories: true)
+        HandoverCache.ensureDirectory(Self.handoverDirectory)
         let newestFirst = trusted.sorted { $0.capturedAt > $1.capturedAt }
         var out: [TurnAttachment] = []
         for (i, art) in newestFirst.enumerated() {
@@ -345,7 +376,13 @@ final class VisualContextStore: ObservableObject {
             out.append(TurnAttachment(id: art.id.uuidString.lowercased(), kind: art.apiKind,
                                       label: Self.attachmentLabel(art, position: i)))
         }
-        if !out.isEmpty { attachCount += 1 }
+        if !out.isEmpty {
+            attachCount += 1
+            // 出所を chip に。初回だけ明示、以降は compact（毎回 privacy 説明が主役にならない）。
+            lastProvenance = VisualEgressPolicy.current.provenance(firstTime: !Self.egressDisclosed)
+            Self.egressDisclosed = true
+            WindowCoordinator.shared.syncDockPanels()
+        }
         markAttached(newestFirst)
         HandoverCache.cleanup(directory: Self.handoverDirectory, now: now)
         return out
@@ -360,16 +397,28 @@ final class VisualContextStore: ObservableObject {
     }
 
     /// 画像を PNG として写す（元が JPEG/HEIC でも worker は .png を読む）。
+    /// 写す先に何かあれば（symlink を含めて）先に消す —— **リンクを辿って外へ書かない**。写しは 0600。
     static func writePNG(from src: URL, to dst: URL) -> Bool {
-        if src.pathExtension.lowercased() == "png" {
-            try? FileManager.default.removeItem(at: dst)
-            return (try? FileManager.default.copyItem(at: src, to: dst)) != nil
+        if let attrs = try? FileManager.default.attributesOfItem(atPath: dst.path) {
+            _ = attrs
+            try? FileManager.default.removeItem(at: dst)   // removeItem はリンクそのものを消す（先は触らない）
         }
-        guard let source = CGImageSourceCreateWithURL(src as CFURL, nil),
-              let image = CGImageSourceCreateImageAtIndex(source, 0, nil),
-              let dest = CGImageDestinationCreateWithURL(dst as CFURL, "public.png" as CFString, 1, nil) else { return false }
-        CGImageDestinationAddImage(dest, image, nil)
-        return CGImageDestinationFinalize(dest)
+        let ok: Bool
+        if src.pathExtension.lowercased() == "png" {
+            ok = (try? FileManager.default.copyItem(at: src, to: dst)) != nil
+        } else {
+            guard let source = CGImageSourceCreateWithURL(src as CFURL, nil),
+                  let image = CGImageSourceCreateImageAtIndex(source, 0, nil),
+                  let dest = CGImageDestinationCreateWithURL(dst as CFURL, "public.png" as CFString, 1, nil) else { return false }
+            CGImageDestinationAddImage(dest, image, nil)
+            ok = CGImageDestinationFinalize(dest)
+        }
+        guard ok else { return false }
+        // 普通のファイルとして書けたことを確かめる（symlink や特殊ファイルに化けていない）。
+        let v = try? dst.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey])
+        guard v?.isRegularFile == true, v?.isSymbolicLink != true else { try? FileManager.default.removeItem(at: dst); return false }
+        try? FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: dst.path)
+        return true
     }
 
     /// 応答が終わった。attached → recent（しばらくは「さっきの」で呼べる）。
@@ -389,7 +438,7 @@ final class VisualContextStore: ObservableObject {
     /// 検査・リセット用。
     func reset() {
         recent.forEach(cleanup)
-        recent = []; ingestedKeys = []; justCaptured = nil; conversationID = nil; attachCount = 0
+        recent = []; ingestedKeys = []; justCaptured = nil; conversationID = nil; attachCount = 0; lastProvenance = nil
     }
 }
 

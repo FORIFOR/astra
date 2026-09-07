@@ -32,7 +32,8 @@ final class GuideOverlayStack: GuideOverlaying {
     func showGuide(message: String, at anchor: GuideAnchor) {
         let screen = NSScreen.screens.first { $0.frame.intersects(anchor.rect) } ?? avatarScreen
         highlight.show(around: anchor.rect)
-        callout.show(message: message, near: anchor.rect, screen: screen)
+        // 対象の**横**に置く。上下に置くと隣の行のスイッチを隠して、どの行かを誤読させる（実測: AnyDesk の行を覆った）。
+        callout.show(message: message, near: anchor.rect, screen: screen, preferred: .right)
         // 対象の画面へアバターも寄せる（別画面で案内が見えないのを避ける）。
         avatar.relayout(on: screen)
     }

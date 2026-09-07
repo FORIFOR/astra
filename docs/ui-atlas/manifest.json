@@ -434,6 +434,68 @@
       }
     },
     {
+      "id": "screenshot.detected",
+      "title": "Screenshot — Recognized (1 s)",
+      "group": "ambient",
+      "required": true,
+      "appearance_policy": "fixed",
+      "trigger": "⌘⇧4 / ⌘⇧3 / ⌃⌘⇧4 で撮った。保存先（または clipboard）を Astra が検知した（監視経路 ~55ms）。",
+      "meaning": "「スクリーンショット / 認識しました · そのまま聞いてください」を idle Dock が 1 秒だけ出す。窓は増えない。focus は動かない。",
+      "primary": "そのまま「これ何？」と聞く（添付・保存先・ドラッグは要らない）",
+      "secondary": "× で文脈から外す（1 操作）",
+      "states": "idle + justCaptured（1 秒で chip へ）",
+      "keys": "⌥Space → 聞く。Esc → 閉じる。",
+      "privacy": "撮っただけでは何も送らない。質問したときだけ、その画像を Claude（利用者の Claude Code）へ送る。gateway には id とラベルだけ。",
+      "window": "Dock（1 枚、320×52）",
+      "invariant": "推測位置に何も出さない。1 秒で消え、chip だけ残る。新しい窓 0、focus theft 0。",
+      "prev": [
+        "voice.idle"
+      ],
+      "next": [
+        "screenshot.attached-cloud"
+      ],
+      "capture": {
+        "selftest": "screenshotshots",
+        "file": "screenshot-detected.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "status": null
+    },
+    {
+      "id": "screenshot.attached-cloud",
+      "title": "Screenshot — Attached (cloud provenance, first time)",
+      "group": "ambient",
+      "required": true,
+      "appearance_policy": "fixed",
+      "trigger": "「これ何？」と聞いた。直近のスクショが質問に添えられた（初回）。",
+      "meaning": "「スクリーンショット / 質問したときだけ Claude に送信」。画像がどこへ行くかを、初回だけ明示する（以降は「Claude に送信 · たった今」の compact）。",
+      "primary": "そのまま答えを待つ",
+      "secondary": "× で文脈から外す",
+      "states": "idle + recent(attached) + lastProvenance",
+      "keys": "⌥Space → 続けて聞く。",
+      "privacy": "撮っただけでは何も送らない。質問したときだけ、その画像を Claude（利用者の Claude Code）へ送る。gateway には id とラベルだけ。 端末内モデルなら「画像は端末の外へ送りません」。",
+      "window": "Dock（1 枚、320×52）",
+      "invariant": "「画像は端末から出ない」とは言わない。大きな説明カードや警告ダイアログにしない（高頻度操作）。",
+      "prev": [
+        "screenshot.detected"
+      ],
+      "next": [
+        "voice.thinking"
+      ],
+      "capture": {
+        "selftest": "screenshotshots",
+        "file": "screenshot-attached-cloud.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "status": null
+    },
+    {
       "id": "dock.running",
       "group": "dock",
       "title": "Task Dock — Running (agent steps)",
@@ -3476,6 +3538,213 @@
         "light": "screens/settings.permissions.light.png",
         "dark": "screens/settings.permissions.dark.png"
       }
+    },
+    {
+      "id": "guided-setup.intro",
+      "title": "Guided Setup — Intro",
+      "group": "system",
+      "required": true,
+      "appearance_policy": "adaptive",
+      "trigger": "メニューバー「権限の設定を案内…」。または機能が権限を要した瞬間。",
+      "meaning": "右下（visibleFrame の右 24pt・下 24pt）に Astra のアバターと短い吹き出し「画面収録を使うため、1 つ設定してください」。",
+      "primary": "そのまま待つ（System Settings が開く）",
+      "secondary": "× で案内をやめる",
+      "states": "screenCaptureIntro",
+      "keys": "なし（キーボード操作は System Settings 側）。",
+      "privacy": "権限は変えない・求めない。案内するだけ。",
+      "window": "FloatingPanel（アバター 1 枚、nonactivating、key/main にならない）",
+      "invariant": "System Settings を書き換えない。全画面の透明窓を作らない。",
+      "prev": [],
+      "next": [
+        "guided-setup.target-found"
+      ],
+      "capture": {
+        "selftest": "guidedshots",
+        "file": "guided-setup-intro.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "status": null
+    },
+    {
+      "id": "guided-setup.target-found",
+      "title": "Guided Setup — Target found (System Settings + highlight + callout)",
+      "group": "system",
+      "required": true,
+      "appearance_policy": "adaptive",
+      "trigger": "System Settings の「画面収録とシステムオーディオ録音」が開き、AX で Astra 行のスイッチ（identifier `<App>_Toggle`）を特定した。",
+      "meaning": "対象のスイッチだけを角丸で囲い、その**横**に「← Astra をオンにしてください」。上下に置くと隣の行のスイッチを隠すので横に置く。",
+      "primary": "Astra のスイッチをオンにする（System Settings をそのまま操作できる）",
+      "secondary": "× で案内をやめる",
+      "states": "guidingScreenCapture → waitingScreenCapture",
+      "keys": "System Settings のキーボード操作はそのまま効く（Astra の窓は mouse を通す）。",
+      "privacy": "権限は変えない。付与は CGPreflightScreenCaptureAccess で検知する。",
+      "window": "FloatingPanel × 2（ハイライト / 吹き出し。ignoresMouseEvents = true）+ Apple の System Settings 窓（合成）",
+      "invariant": "固定座標 0。見つからなければ推測位置に出さない。highlight ⊇ target、bubble ∩ toggle = ∅（GUIDED_SETUP_GEOMETRY）。",
+      "prev": [
+        "guided-setup.intro"
+      ],
+      "next": [
+        "guided-setup.target-highlighted",
+        "guided-setup.granted"
+      ],
+      "capture": {
+        "selftest": "guidedshots",
+        "file": "guided-setup-target-found.png",
+        "appearances": [
+          "light"
+        ]
+      },
+      "status": null,
+      "note": "System Settings の窓は Apple のもの。Astra が描いたのはハイライトと吹き出しの 2 窓だけ。dark は System Settings が OS の外観のままなので撮らない。"
+    },
+    {
+      "id": "guided-setup.target-highlighted",
+      "title": "Guided Setup — Target highlighted (detail)",
+      "group": "system",
+      "required": true,
+      "appearance_policy": "adaptive",
+      "trigger": "同上（対象の周りを 2 倍で切り出し）。",
+      "meaning": "対象行のスイッチとハイライト、吹き出しの矢印の関係を近くで見る。",
+      "primary": "Astra のスイッチをオンにする",
+      "secondary": "—",
+      "states": "guidingScreenCapture",
+      "keys": "—",
+      "privacy": "権限は変えない。",
+      "window": "FloatingPanel × 2 + System Settings の一部",
+      "invariant": "吹き出しがスイッチを隠さない。対象行を誤認させない。",
+      "prev": [
+        "guided-setup.target-found"
+      ],
+      "next": [],
+      "capture": {
+        "selftest": "guidedshots",
+        "file": "guided-setup-target-highlighted.png",
+        "appearances": [
+          "light"
+        ]
+      },
+      "status": null,
+      "note": "target-found の切り出し（同じ capture）。"
+    },
+    {
+      "id": "guided-setup.repositioned",
+      "title": "Guided Setup — Follows the window (repositioned)",
+      "group": "system",
+      "required": true,
+      "appearance_policy": "adaptive",
+      "trigger": "利用者が System Settings の窓をドラッグした（selftest は CGEvent で実ドラッグ）。",
+      "meaning": "AXObserver の出来事で対象を取り直し、ハイライトと吹き出しが新しい位置へ付いて行く。polling しない。",
+      "primary": "Astra のスイッチをオンにする",
+      "secondary": "—",
+      "states": "waitingScreenCapture（追従）",
+      "keys": "—",
+      "privacy": "権限は変えない。",
+      "window": "FloatingPanel × 2 + System Settings",
+      "invariant": "画面端では吹き出しを画面内に clamp。マルチディスプレイでは対象の画面に置く。",
+      "prev": [
+        "guided-setup.target-found"
+      ],
+      "next": [],
+      "capture": {
+        "selftest": "guidedshots",
+        "file": "guided-setup-repositioned.png",
+        "appearances": [
+          "light"
+        ]
+      },
+      "status": null
+    },
+    {
+      "id": "guided-setup.target-missing",
+      "title": "Guided Setup — Target missing (generic fallback)",
+      "group": "system",
+      "required": true,
+      "appearance_policy": "adaptive",
+      "trigger": "System Settings は開いたが、AX で Astra 行が見つからない（一覧に未追加・OS 更新で構造が変わった・AX 未許可）。",
+      "meaning": "ハイライトも吹き出しも出さず、アバターの吹き出しだけ「設定画面で Astra をオンにしてください」。推測位置に出さない。",
+      "primary": "設定画面で Astra を探してオンにする",
+      "secondary": "× で案内をやめる",
+      "states": "waitingScreenCapture（anchor = nil）",
+      "keys": "—",
+      "privacy": "権限は変えない。",
+      "window": "FloatingPanel（アバター 1 枚）",
+      "invariant": "confidence が無いときに近い行を当てない（0 candidates → generic fallback に固定）。",
+      "prev": [
+        "guided-setup.intro"
+      ],
+      "next": [],
+      "capture": {
+        "selftest": "guidedshots",
+        "file": "guided-setup-target-missing.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "status": null
+    },
+    {
+      "id": "guided-setup.granted",
+      "title": "Guided Setup — Granted",
+      "group": "system",
+      "required": true,
+      "appearance_policy": "adaptive",
+      "trigger": "利用者がスイッチをオンにした。OS API（CGPreflightScreenCaptureAccess / AXIsProcessTrusted / AVCaptureDevice）が許可を返した。",
+      "meaning": "ハイライトと吹き出しが消え、アバターが success「設定できました ✓」。次の権限があれば続き、無ければ「すべて設定できました ✓」。",
+      "primary": "何もしなくてよい（自動で次へ）",
+      "secondary": "—",
+      "states": "granted → 次の intro / completed",
+      "keys": "—",
+      "privacy": "権限を読むだけ（変えない）。",
+      "window": "FloatingPanel（アバター 1 枚）",
+      "invariant": "付与は OS API で確かめる（画面の見た目で判定しない）。",
+      "prev": [
+        "guided-setup.target-found"
+      ],
+      "next": [
+        "voice.idle"
+      ],
+      "capture": {
+        "selftest": "guidedshots",
+        "file": "guided-setup-granted.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "status": null
+    },
+    {
+      "id": "guided-setup.denied",
+      "title": "Guided Setup — Could not open settings (warning)",
+      "group": "system",
+      "required": true,
+      "appearance_policy": "adaptive",
+      "trigger": "System Settings が 15 秒たっても現れない（開けない）。",
+      "meaning": "アバターが warning「設定画面を開けませんでした。システム設定から Astra をオンにしてください」。黙って消えない。",
+      "primary": "システム設定を自分で開いて Astra をオンにする",
+      "secondary": "× で案内をやめる",
+      "states": "failed(設定画面を開けませんでした)",
+      "keys": "—",
+      "privacy": "権限は変えない。",
+      "window": "FloatingPanel（アバター 1 枚）",
+      "invariant": "失敗を成功に見せない。やり直す道を 1 つ示す。",
+      "prev": [
+        "guided-setup.intro"
+      ],
+      "next": [],
+      "capture": {
+        "selftest": "guidedshots",
+        "file": "guided-setup-denied.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "status": null
     },
     {
       "id": "components.neutral",
