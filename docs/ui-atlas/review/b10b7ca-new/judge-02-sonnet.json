@@ -1,0 +1,119 @@
+{
+  "pages": {
+    "C9E7": {
+      "visible_text": [
+        "画面収録を設定できました",
+        "×"
+      ],
+      "observation": {
+        "happening": "画面の右上あたりに小さなトースト通知が表示され、緑のチェックマークとともに完了メッセージが出ている。",
+        "most_important": "「画面収録を設定できました」という完了ステータスと、右上の×で閉じられること。",
+        "next_action": "×をクリックしてトーストを閉じる以外、この静止画からできる操作はない。",
+        "anomalies": [
+          "文字以外の情報（アイコン以外）がなく、何のアプリ/コンテキストの完了通知かは示されていない"
+        ]
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "CA27": {
+      "visible_text": [
+        "画面収録とシステムオーディオ録音",
+        "Shuhei Horio",
+        "Apple Account",
+        "iCloudストレージが残りわずかです",
+        "2.1.260",
+        "AnyDesk",
+        "AstraDbg",
+        "ChatGPT",
+        "Claude",
+        "Codex Computer Use",
+        "DeepNote Desktop",
+        "Google Chrome",
+        "OBS",
+        "VoiceOS",
+        "「+」から Astra を追加してください"
+      ],
+      "observation": {
+        "happening": "macOSのシステム設定「プライバシーとセキュリティ」→「画面収録とシステムオーディオ録音」画面。各アプリごとにトグルで許可/不許可が並んでいる。",
+        "most_important": "ほとんどのアプリがオン（青トグル）で、VoiceOSのみオフになっている。リスト最上部に「2.1.260」という項目がある。",
+        "next_action": "各トグルの切り替え、または左下の「+」からアプリを追加できる。",
+        "anomalies": [
+          "リスト最上部の項目名が「2.1.260」というバージョン番号のような文字列で、アプリ名として意味を持たない",
+          "画面下部のヒント文が「Astra を追加してください」となっているが、リストにある実際の項目名は「AstraDbg」で表記が一致していない"
+        ]
+      },
+      "verdict": "FIX",
+      "concerns": [
+        {
+          "axis": "trust-provenance",
+          "what": "アプリ一覧の先頭項目がバージョン番号らしき「2.1.260」という文字列で表示されており、どのアプリの許可設定か利用者が識別できない",
+          "where": "アプリリスト最上部の1行目"
+        },
+        {
+          "axis": "consistency",
+          "what": "下部ヒントの「Astra」とリスト項目「AstraDbg」で名称が一致しておらず、同一アプリを指しているのか判断できない",
+          "where": "画面下部のツールチップ文言とリスト内「AstraDbg」行"
+        }
+      ],
+      "confidence": "medium"
+    },
+    "CC32": {
+      "visible_text": [
+        "スクリーンショット",
+        "質問したときだけ Claude に送信",
+        "×"
+      ],
+      "observation": {
+        "happening": "ダークカラーの小さな通知ピルが表示され、スクリーンショット機能に関する状態を伝えている。",
+        "most_important": "「質問したときだけ Claude に送信」という、プライバシーに関わる送信条件の説明。",
+        "next_action": "×で通知を閉じる以外の操作は見えない。",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "E229": {
+      "visible_text": [
+        "画面収録とシステムオーディオ録音",
+        "Shuhei Horio",
+        "Apple Account",
+        "iCloudストレージが残りわずかです",
+        "2.1.260",
+        "AnyDesk",
+        "AstraDbg",
+        "オンです・再起動すると使えます",
+        "ChatGPT",
+        "Claude",
+        "Codex Computer Use",
+        "OBS",
+        "VoiceOS"
+      ],
+      "observation": {
+        "happening": "CA27と同じmacOSシステム設定画面で、AstraDbg行のトグルにフォーカスが当たり、「オンです・再起動すると使えます」というツールチップが表示されている状態。",
+        "most_important": "AstraDbgの許可はオンになったが、再起動しないと反映されないという注記。",
+        "next_action": "システムやアプリを再起動して設定を反映させる、または他のトグルを操作する。",
+        "anomalies": [
+          "ここでもリスト最上部に「2.1.260」というバージョン番号のような項目名が残っている"
+        ]
+      },
+      "verdict": "FIX",
+      "concerns": [
+        {
+          "axis": "trust-provenance",
+          "what": "アプリ一覧の先頭項目が「2.1.260」というバージョン番号のような文字列のままで、どのアプリかを利用者が識別できない",
+          "where": "アプリリスト最上部の1行目"
+        }
+      ],
+      "confidence": "medium"
+    }
+  },
+  "_judge": {
+    "model": "sonnet",
+    "cost_usd": 0.1417732,
+    "turns": 5,
+    "duration_ms": 47795
+  }
+}

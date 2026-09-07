@@ -1,13 +1,13 @@
 {
   "$comment": "UI Atlas の正本。画面の一覧と説明はここに書く。image / sha256 / size / rc は scripts/ui-atlas/build.py が RC の撮影結果から埋める（手で書かない）。capture が null の画面は RC .app に描かせる経路が無い。モックや Figma で埋めてはいけない。required のまま置いて UI_ATLAS_GATE を落とす。 appearance_policy: fixed は Dock / HUD（OS の外観に関わらず同じ ambient surface。light == dark が仕様）、adaptive は Main / Workspace（light != dark が仕様）。gate が両方向を確かめる。 reality の AUTOMATION_MISSING は「人が要るから測っていない」ではなく「測定器がまだ無い」。人を呼ばず測定器を作る（HUMAN_INTERVENTION=0、scripts/ideal-release-gate.sh）。",
   "rc": {
-    "sha": "b10b7ca",
+    "sha": "32b96f1",
     "app": "apps/astra-macos/.build/Astra.app",
-    "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
-    "built": "2026-09-07T10:45:49+09:00",
+    "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
+    "built": "2026-09-07T10:58:17+09:00",
     "codesign_identifier": "com.astra.desktop",
     "team": "6RR7572ZLU",
-    "captured_at": "2026-09-07T10:45:50+09:00"
+    "captured_at": "2026-09-07T11:02:55+09:00"
   },
   "groups": [
     {
@@ -75,9 +75,9 @@
       "invariant": "recording indicator = OFF。「聞いています…」を出さない。",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "shots",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "appearance_policy": "fixed",
@@ -130,9 +130,9 @@
       "invariant": "この状態で「聞いています…」を表示してはいけない（INVOCATION_AUDIO_TRUTH: claimedLiveWhileDeaf = false）。",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "shots",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "appearance_policy": "fixed",
@@ -185,9 +185,9 @@
       "invariant": "「聞いています…」表示中は captureLive == true。",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "shots",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "appearance_policy": "fixed",
@@ -241,9 +241,9 @@
       "invariant": "実行はまだ始まっていない（外部への副作用ゼロ）。",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "dock8",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "appearance_policy": "fixed",
@@ -297,9 +297,9 @@
       "invariant": "文脈の出どころ（screen / browser DOM）と機微度が読める。",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "dock8",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "appearance_policy": "fixed",
@@ -352,9 +352,9 @@
       "invariant": "上辺 Y は動かない。",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "dock8",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "appearance_policy": "fixed",
@@ -410,9 +410,9 @@
       "source": "RC",
       "appearance_policy": "fixed",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "dock8",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "image": {
         "sha256": {
@@ -465,9 +465,9 @@
       "status": "CAPTURED",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "screenshotshots",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "image": {
         "sha256": {
@@ -520,9 +520,9 @@
       "status": "CAPTURED",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "screenshotshots",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "image": {
         "sha256": {
@@ -574,9 +574,9 @@
       "invariant": "窓は常に 1 枚。上辺 Y 固定。",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "dock8",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "appearance_policy": "fixed",
@@ -629,9 +629,9 @@
       "invariant": "出どころが空なら「無し」と言う（作らない）。",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "dock8",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "appearance_policy": "fixed",
@@ -685,9 +685,9 @@
       "invariant": "risk と宛先が読める。既定は実行しない側。",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "dock8",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "appearance_policy": "fixed",
@@ -743,9 +743,9 @@
       "source": "RC",
       "appearance_policy": "fixed",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "dock8",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "image": {
         "sha256": {
@@ -797,9 +797,9 @@
       "invariant": "結果面からも Main View が開く（--selftest entry）。",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "dock8",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "appearance_policy": "fixed",
@@ -855,9 +855,9 @@
       "source": "RC",
       "appearance_policy": "fixed",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "dock8",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "image": {
         "sha256": {
@@ -938,9 +938,9 @@
       "invariant": "「録音中」は最初の音声フレームが届いてから。届く前は「準備中…」。",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "dock8",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "appearance_policy": "fixed",
@@ -996,9 +996,9 @@
       "source": "RC",
       "appearance_policy": "fixed",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "dock8",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "image": {
         "sha256": {
@@ -1052,9 +1052,9 @@
       "source": "RC",
       "appearance_policy": "fixed",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "dock8",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "image": {
         "sha256": {
@@ -1107,9 +1107,9 @@
       "status": "CAPTURED",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "shots",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "image": {
         "sha256": {
@@ -1161,9 +1161,9 @@
       "invariant": "見出し（録音中・メモ・字幕・Ask・停止）は板が開いても残る（349007f）。",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "dock8",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "appearance_policy": "fixed",
@@ -1216,9 +1216,9 @@
       "invariant": "字幕は話者と時刻が付く。",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "dock8",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "appearance_policy": "fixed",
@@ -1274,9 +1274,9 @@
       "source": "RC",
       "appearance_policy": "fixed",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "dock8",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "image": {
         "sha256": {
@@ -1329,16 +1329,16 @@
       "invariant": "Dock の見出しはそのまま残る。",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "dock8",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "appearance_policy": "adaptive",
       "image": {
         "sha256": {
-          "light": "68f6437078a0ce19dbb08d07d678293289ab63f12021064aad4702c7af8db729",
-          "dark": "05d86f522dade752ea0858e4d4c268221be60753d4b9974d2b2d93e201fe8fd2"
+          "light": "2a6e3fa77cdbc7f57903548ed81fd241056a7622de405919f206293927f84c44",
+          "dark": "ef4c7585656a377c25b525965b76a1d8606542077d029055ce4e8e7af1a32f8e"
         },
         "size": {
           "light": {
@@ -1385,9 +1385,9 @@
       "invariant": "—",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "shots",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "appearance_policy": "adaptive",
@@ -1438,9 +1438,9 @@
       "invariant": "末尾に追従する。",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "shots",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "appearance_policy": "adaptive",
@@ -1493,9 +1493,9 @@
       "invariant": "—",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "shots",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "appearance_policy": "adaptive",
@@ -1546,9 +1546,9 @@
       "invariant": "—",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "shots",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "appearance_policy": "adaptive",
@@ -1601,16 +1601,16 @@
       "invariant": "—",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "shots",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "appearance_policy": "adaptive",
       "image": {
         "sha256": {
-          "light": "6e0cdf8057ea234ebb1705ce0b9e32080cfb1c388cbcb517277a1650c82a3023",
-          "dark": "da11865884e286ff26eb6c1e3ecedd77824b8d50e2a1d6110f22aed8a28ff979"
+          "light": "eec8c3fedeea4070f0313847848e0581c4a37b267fe096ed8134aaa67aa9b75d",
+          "dark": "99ed10ed42b95e3232ea7b056689175a1dcbba93fa4789573bcaa77155d91b46"
         },
         "size": {
           "light": {
@@ -1656,16 +1656,16 @@
       "invariant": "sidebar は Home / Work / Library / Apps の 4 つ。",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "sections",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "appearance_policy": "adaptive",
       "image": {
         "sha256": {
-          "light": "9b1fd74d35c1b79ca7058681ed952e705469b5b77bc0102b2e59ae86e1458c49",
-          "dark": "87221b63ded4154947bd71b3ea944c8330d3bd6b4593e67329d89abda9c0391d"
+          "light": "a66eec9020e6f765aa68b8f1493d92673249a882a3d08fcfc6aa927daa26bab1",
+          "dark": "7b86f6bcea4ac23ba7981796a3588ae099b7c00aaa92e6546ad6f08f81d4105b"
         },
         "size": {
           "light": {
@@ -1711,16 +1711,16 @@
       "invariant": "Dock と同じ状態を言う（矛盾しない）。",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "shots",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "appearance_policy": "adaptive",
       "image": {
         "sha256": {
-          "light": "c901b4b80ce652ff993534f33a68bf97a5fb4c1f03cab7b2397e90036096708f",
-          "dark": "910e36a172351fee6803b7e0ee44fda11b822e11ca7dac972d9585ee6c74f94a"
+          "light": "056f400e2a18d76e903a90517c8e2b40830916668c771e7f05929a3f7596b91c",
+          "dark": "45087fc92d957b2040b188cf7ba4ad6743c5425fc8dd2d658964fc8d4546743c"
         },
         "size": {
           "light": {
@@ -1766,16 +1766,16 @@
       "invariant": "—",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "sessionshots",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "appearance_policy": "adaptive",
       "image": {
         "sha256": {
-          "light": "c2a662667a5f3b149ef279c3f5284277cb4b6b71ed2be659c353a94aad137ba3",
-          "dark": "e3de0cc60217826f4843b9d6b68e18e3946d3eb2065de382b8d3c465aa91c88e"
+          "light": "592f33a8c072c1a48468ad27f5f7ac765340b2dae7ed631a429ef62874efa2db",
+          "dark": "452efc8b3f7a789467ade47deb75087a18daa88507ffe2eb64c7d97ef0ac2d19"
         },
         "size": {
           "light": {
@@ -1821,16 +1821,16 @@
       "invariant": "前回の設定が既定。",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "sessionshots",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "appearance_policy": "adaptive",
       "image": {
         "sha256": {
-          "light": "6338af374805c694cc85d46fe7e1e123922f49619f4ae854c213a3195f083578",
-          "dark": "b48fde7709a0dec7e9de5a9d81c877aecdd6729edff2ae418d38565cd9020279"
+          "light": "9473e89c7cc260fc1a36fe5d1ac70d35f244a0151273ae60a63c0f77ecef34d8",
+          "dark": "8fc9627119dacaffaad2fdc36fa99c0ca4ebe65794bc80742ec9e184dcd35d5d"
         },
         "size": {
           "light": {
@@ -1876,9 +1876,9 @@
       "invariant": "見出しが状態と一致（--selftest navtitle）。",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "sections",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "appearance_policy": "adaptive",
@@ -1929,9 +1929,9 @@
       "invariant": "—",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "sections",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "appearance_policy": "adaptive",
@@ -1984,9 +1984,9 @@
       "invariant": "1 件を開いても sidebar で出られる。",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "sections",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "appearance_policy": "adaptive",
@@ -2037,9 +2037,9 @@
       "invariant": "—",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "sections",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "appearance_policy": "adaptive",
@@ -2092,16 +2092,16 @@
       "invariant": "—",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "sections",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "appearance_policy": "adaptive",
       "image": {
         "sha256": {
-          "light": "56285a1b08577edc60ef1891d1752520ee0609a0c0c1a1374c92498a6f49b9e9",
-          "dark": "b6e0cee64cf09d4f48997c55ad59d2ae44cc1a94cc62e5b25a2ec99f2038e7ae"
+          "light": "514bbc5450dff6329969af6997d8249cb14c22f545584784d98d695b24e65026",
+          "dark": "c5318c0fa564570668b8883dbb9b8ab32c441d8f6a9c2d15464a688eb00db738"
         },
         "size": {
           "light": {
@@ -2145,9 +2145,9 @@
       "invariant": "接続状態を偽らない（--selftest connectorstate）。",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "sections",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "appearance_policy": "adaptive",
@@ -2198,16 +2198,16 @@
       "invariant": "—",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "sessionshots",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "appearance_policy": "adaptive",
       "image": {
         "sha256": {
-          "light": "4ff1c945e70cb2602e901896e4d54f381cdfd8eb5d4f09babb1ecf094fff6f1a",
-          "dark": "6c0d49aeb2903808ce82db2bce3252c8a0f2a8040d34300bb2f868033d8cfa48"
+          "light": "1072891b1bab2b54e0e872e3c570a9343491d38dba693a2ea431c4e3d85d7bc0",
+          "dark": "4bbd58ad164103358bf5154b39a1a72382b535833b0e661b8fab2712992ec259"
         },
         "size": {
           "light": {
@@ -2251,16 +2251,16 @@
       "invariant": "—",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "sessionshots",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "appearance_policy": "adaptive",
       "image": {
         "sha256": {
-          "light": "c2a662667a5f3b149ef279c3f5284277cb4b6b71ed2be659c353a94aad137ba3",
-          "dark": "e3de0cc60217826f4843b9d6b68e18e3946d3eb2065de382b8d3c465aa91c88e"
+          "light": "592f33a8c072c1a48468ad27f5f7ac765340b2dae7ed631a429ef62874efa2db",
+          "dark": "452efc8b3f7a789467ade47deb75087a18daa88507ffe2eb64c7d97ef0ac2d19"
         },
         "size": {
           "light": {
@@ -2304,16 +2304,16 @@
       "invariant": "—",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "sessionshots",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "appearance_policy": "adaptive",
       "image": {
         "sha256": {
-          "light": "100d90312c720d19d2ff1c23412b4d31d0f4ac02c40861158c26e96dd1874cbb",
-          "dark": "e2e36162a8b947aaf08fca8e4c2ff0def7564fd21ee3523787d763a45b5772e6"
+          "light": "beb413986267d7fa86f7e73341d957cfbf14146d16fb006d2d4407701f1eb710",
+          "dark": "2edb82c16f620d91fcf4dbd84f72ad4c2bf2afec1341e132d0654b1ede65c8a0"
         },
         "size": {
           "light": {
@@ -2359,9 +2359,9 @@
       "invariant": "同じ id が姿を変える（別カードにならない）。",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "sessionshots",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "appearance_policy": "adaptive",
@@ -2414,16 +2414,16 @@
       "invariant": "勝手に ready にしない。",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "sessionshots",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "appearance_policy": "adaptive",
       "image": {
         "sha256": {
-          "light": "f39703311adda990f94d100c8f3c26bb714e8d5e6b350a5dc9131765c4dd844d",
-          "dark": "252f9d283891244ae6a7289b349c4af19d630ff869c44f9228fd1e942b0bb0dc"
+          "light": "b5ba3dbb38304ca97dde0747d176b627c1574d5f513b7783e87abd791400ac30",
+          "dark": "aa5c83c8ee0843d81fa0e8799a54090293dc863619c29aadaa51ae49721f01ce"
         },
         "size": {
           "light": {
@@ -2469,16 +2469,16 @@
       "invariant": "—",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "sessionshots",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "appearance_policy": "adaptive",
       "image": {
         "sha256": {
-          "light": "fc668e2f37e74f1e1a9d5348f8890b05e712f31c9e7a5498772b68c1da30f9d1",
-          "dark": "2e4e89c370ab6b4a1b71a7820190f773b04e74047b98f27c4742421337146643"
+          "light": "08f8bb54f9a7b45f4356bb789998fadf60ea62e907ed746a3cabb40b522406f9",
+          "dark": "adb8c8eb35b95571a2ebf966b4ded96827619796370441b55f7d7e7e63e8cce1"
         },
         "size": {
           "light": {
@@ -2524,16 +2524,16 @@
       "invariant": "—",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "sessionshots",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "appearance_policy": "adaptive",
       "image": {
         "sha256": {
-          "light": "c2a662667a5f3b149ef279c3f5284277cb4b6b71ed2be659c353a94aad137ba3",
-          "dark": "e3de0cc60217826f4843b9d6b68e18e3946d3eb2065de382b8d3c465aa91c88e"
+          "light": "592f33a8c072c1a48468ad27f5f7ac765340b2dae7ed631a429ef62874efa2db",
+          "dark": "452efc8b3f7a789467ade47deb75087a18daa88507ffe2eb64c7d97ef0ac2d19"
         },
         "size": {
           "light": {
@@ -2579,9 +2579,9 @@
       "invariant": "sidebar で出られる。",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "sessionshots",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "appearance_policy": "adaptive",
@@ -2634,9 +2634,9 @@
       "invariant": "決定には出典がある。",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "shots",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "appearance_policy": "adaptive",
@@ -2689,15 +2689,15 @@
       "invariant": "終えた直後に見つかる。",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "journey",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "appearance_policy": "adaptive",
       "image": {
         "sha256": {
-          "light": "a9d3c71a907f1f2a09148354a313faf5c352b0b8d3dd00b31c0281920a9b99f5"
+          "light": "5412a2e2ea8221c1de28ec0424081706666658d9d405aef221fc417ced6441c3"
         },
         "size": {
           "light": {
@@ -2738,15 +2738,15 @@
       "invariant": "音声の jump は静止画で区別できない。REAL_MEETING の Source jump 行で確かめる。",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "journey",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "appearance_policy": "adaptive",
       "image": {
         "sha256": {
-          "light": "b534fcf0120a87556c6f76ae907ad95c51f0aa1c91b7ee085f73060f79fc9f9f"
+          "light": "7d652ae20ab18c2e43ac639924ac3c036762f42b0452d2100a0d2eeb04494561"
         },
         "size": {
           "light": {
@@ -2785,15 +2785,15 @@
       "invariant": "—",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "journey",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "appearance_policy": "adaptive",
       "image": {
         "sha256": {
-          "light": "ef981f8a799b5cb0251ecde40b575480086b31222b11f04d93e8ebe4381f6fe5"
+          "light": "12677217501b36832a0746cb1e7af856ad5ea15a7ed49c9363d5a92b614587d3"
         },
         "size": {
           "light": {
@@ -2834,9 +2834,9 @@
       "invariant": "起動時に一括で求めない。理由が先に読める。",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "shots",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "appearance_policy": "adaptive",
@@ -2889,9 +2889,9 @@
       "invariant": "再起動を求めない。",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "journey",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "appearance_policy": "adaptive",
@@ -2936,9 +2936,9 @@
       "invariant": "—",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "journey",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "appearance_policy": "adaptive",
@@ -2985,9 +2985,9 @@
       "invariant": "—",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "journey",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "appearance_policy": "adaptive",
@@ -3034,16 +3034,16 @@
       "invariant": "勝手に ready にしない。直近の録りかけは予定より先に出す。",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "sessionshots",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "appearance_policy": "adaptive",
       "image": {
         "sha256": {
-          "light": "cd6d6f19ebdd35cd4c2a9b631a22af5117ea5fe3cc8b4e18486a91d2767d83e8",
-          "dark": "ec94801fe899876709a5394897a2ad716183bda5dc30386d1d08282a30b52f51"
+          "light": "c9eb7e4e7b4afc0812f7a43fefe9c77848ef46c17b90a7bfe7cf2f6a4589eff0",
+          "dark": "9c8e21af5346743220572eac3e5d06f2267b5b5bcdef56755a8cd619bcebb8dc"
         },
         "size": {
           "light": {
@@ -3087,15 +3087,15 @@
       "invariant": "—",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "journey",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "appearance_policy": "adaptive",
       "image": {
         "sha256": {
-          "light": "11053392fea86ef4fd25a033a4f5269a12f28c1181f4f93dfd513b54b52096be"
+          "light": "9305cc7aaa5b6dd96d8a8e9da3dc4ee2b53e975ae34e069c9fb727e9a9f932b8"
         },
         "size": {
           "light": {
@@ -3136,15 +3136,15 @@
       "invariant": "—",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "journey",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "appearance_policy": "adaptive",
       "image": {
         "sha256": {
-          "light": "727c95a42b193f7c56893a6096987ede180a7b1439530e44934c908b4ea50505"
+          "light": "2113a49249e5008f6aeb94e9bd69e1422d15265760df25e424596f032bb748f3"
         },
         "size": {
           "light": {
@@ -3186,9 +3186,9 @@
       "source": "RC",
       "appearance_policy": "adaptive",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "shots",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "image": {
         "sha256": {
@@ -3241,9 +3241,9 @@
       "status": "CAPTURED",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "shots",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "note": "REAL_MEETING の実マイク経路で発見: 音声認識の許可を誰も求めておらず、初回は文字起こしが一度も動かなかった。PermissionCenter の .meeting に音声認識を足し、拒否ならこの面。",
       "image": {
@@ -3298,14 +3298,14 @@
       "source": "RC",
       "appearance_policy": "adaptive",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "sessionshots",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "image": {
         "sha256": {
-          "light": "41dc676fc95329a0a306f22e0b975d2981f42ccfc5e37726255dd1297e133465",
-          "dark": "db7f77f60a67d79bc77eaf439f97df9cb35efd6d7876c9de1c609645475653d7"
+          "light": "88c34b3e1464161534338c8b482d5df809494ee73234acf30956a73a592d7925",
+          "dark": "d7662fc149aa1a3ca1294db628a9ceb7d8545785d44bb7929cbe7f8f89e3b4c0"
         },
         "size": {
           "light": {
@@ -3352,14 +3352,14 @@
       "source": "RC",
       "appearance_policy": "adaptive",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "sessionshots",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "image": {
         "sha256": {
-          "light": "b6747805d0dba08d262c889efc2a756a372bde0088be80d0ee3a63e20d37672a",
-          "dark": "c40acf67546e3028d3d6d287b7a8e8a66fc5fbf94e31498b67ffbc1e40953a98"
+          "light": "77d238f5bc47313539b78f9772210d3afd12470fb78212f0b59ecd4de2709bbc",
+          "dark": "414757f969710229ab06b7f05e19b72ae100ec6ab6f84beb9b61f18cd2842006"
         },
         "size": {
           "light": {
@@ -3404,9 +3404,9 @@
       "source": "RC",
       "appearance_policy": "adaptive",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "sysshots",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "image": {
         "sha256": {
@@ -3456,9 +3456,9 @@
       "source": "RC",
       "appearance_policy": "adaptive",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "sysshots",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "image": {
         "sha256": {
@@ -3510,14 +3510,14 @@
       "source": "RC",
       "appearance_policy": "adaptive",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "sessionshots",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "image": {
         "sha256": {
-          "light": "9165ba967d72994bce6c2e931686a391337654c425ca62e0975a38099afd4ab8",
-          "dark": "b85f803438fd197773d6c8712b5be6a8a0fb99805a2d18a43cb07466e26bf1de"
+          "light": "b34f72393254d3669500d3a661eeabb626e07fa7872e420dc4c5ff887f122ccb",
+          "dark": "d751f7a1e13e2fc0b30f4d812d7fd56fd5340f1b80b72e342ff65fe3e069d3c5"
         },
         "size": {
           "light": {
@@ -3564,9 +3564,9 @@
       "source": "RC",
       "appearance_policy": "adaptive",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "sysshots",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "image": {
         "sha256": {
@@ -3617,23 +3617,23 @@
       "status": "CAPTURED",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "guidedshots",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "image": {
         "sha256": {
-          "light": "2ee92fd227abc62a3f8a20a373b456bea0eb593303bec03332cca7b6249d9544",
-          "dark": "3d7c040bc42cf88490c4fcfd4397961adf618881cf83a0656096454a7a7d0ab2"
+          "light": "aa991dacaad5d936307f0d78b98765cccae403c6134a08c00e5197975f69d006",
+          "dark": "a779c16c9ed5db17ed4766599b3acc6377656c5744a9bef39516fe562df8f771"
         },
         "size": {
           "light": {
-            "w": 393,
-            "h": 72
+            "w": 527,
+            "h": 76
           },
           "dark": {
-            "w": 393,
-            "h": 72
+            "w": 527,
+            "h": 76
           }
         },
         "light": "screens/guided-setup.intro.light.png",
@@ -3673,13 +3673,14 @@
       "note": "System Settings の窓は Apple のもの。Astra が描いたのはハイライトと吹き出しの 2 窓だけ。dark は System Settings が OS の外観のままなので撮らない。 盲検 review の対象外（Apple の窓が大半で、judge が OS の一覧まで採点する）。Astra が描いた部分の盲検は guided-setup.target-highlighted で、幾何は GUIDED_SETUP_GEOMETRY で見る。",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "guidedshots",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
+      "blind_review": false,
       "image": {
         "sha256": {
-          "light": "29d85800d6ffe1f70c728b3d3736f703857465d90f8a819b3e80f42a203c996b"
+          "light": "04c3387138ad6c97816ac30648f7edcc314398cc33883bff78bb025c5b2a2cd9"
         },
         "size": {
           "light": {
@@ -3688,8 +3689,7 @@
           }
         },
         "light": "screens/guided-setup.target-found.light.png"
-      },
-      "blind_review": false
+      }
     },
     {
       "id": "guided-setup.target-add",
@@ -3723,10 +3723,11 @@
       "note": "System Settings の窓は Apple のもの。一覧の他の行（第三者アプリ）はこの Mac の環境で、Astra のものではない。 盲検 review の対象外（Apple の窓が大半で、judge が OS の一覧まで採点する）。Astra が描いた部分の盲検は guided-setup.target-highlighted で、幾何は GUIDED_SETUP_GEOMETRY で見る。",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "guidedshots",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
+      "blind_review": false,
       "image": {
         "sha256": {
           "light": "aefa46ec4fc931a1d95d10887912e31907dc844afab58cc93c946d691753461d"
@@ -3738,8 +3739,7 @@
           }
         },
         "light": "screens/guided-setup.target-add.light.png"
-      },
-      "blind_review": false
+      }
     },
     {
       "id": "guided-setup.target-highlighted",
@@ -3771,17 +3771,17 @@
       "note": "target-found の切り出し（同じ capture）。",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "guidedshots",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "image": {
         "sha256": {
-          "light": "71b040430f4cb5890cff5a312a27fa857696df437d840e9c56ecf5043ec4411d"
+          "light": "0f8303361415dc9dc3830ece4cc484f762cb676561cd0e06633ffcd85ffde23e"
         },
         "size": {
           "light": {
-            "w": 548,
+            "w": 538,
             "h": 134
           }
         },
@@ -3817,13 +3817,15 @@
       "status": "CAPTURED",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "guidedshots",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
+      "blind_review": false,
+      "note": "盲検 review の対象外（Apple の窓が大半で、judge が OS の一覧まで採点する）。Astra が描いた部分の盲検は guided-setup.target-highlighted で、幾何は GUIDED_SETUP_GEOMETRY で見る。",
       "image": {
         "sha256": {
-          "light": "f1b959f0794216c4470c23ebbe27262516bb90235ac1cfd00f3a453b0a997589"
+          "light": "04c3387138ad6c97816ac30648f7edcc314398cc33883bff78bb025c5b2a2cd9"
         },
         "size": {
           "light": {
@@ -3832,9 +3834,7 @@
           }
         },
         "light": "screens/guided-setup.repositioned.light.png"
-      },
-      "blind_review": false,
-      "note": "盲検 review の対象外（Apple の窓が大半で、judge が OS の一覧まで採点する）。Astra が描いた部分の盲検は guided-setup.target-highlighted で、幾何は GUIDED_SETUP_GEOMETRY で見る。"
+      }
     },
     {
       "id": "guided-setup.target-missing",
@@ -3866,23 +3866,23 @@
       "status": "CAPTURED",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "guidedshots",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "image": {
         "sha256": {
-          "light": "e1ed6790288ac5df6f1742fac29a972fba15573bcc82175b50dd2db9a7dd28f1",
-          "dark": "f764ea45a79f0d09ff877be255a35747834c361cc93ca835df8a6afa2592365d"
+          "light": "8e2a584aeb882047d7399a3e1d6740347480069c26fb83d742ad9abe21d07e4b",
+          "dark": "ce455b2cebfb7d09d313c5171d1136a5b4f80ea2aee09de12ae86a102f08b1fa"
         },
         "size": {
           "light": {
-            "w": 483,
-            "h": 72
+            "w": 487,
+            "h": 76
           },
           "dark": {
-            "w": 483,
-            "h": 72
+            "w": 487,
+            "h": 76
           }
         },
         "light": "screens/guided-setup.target-missing.light.png",
@@ -3921,23 +3921,23 @@
       "status": "CAPTURED",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "guidedshots",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "image": {
         "sha256": {
-          "light": "f79d7412b1bd4703328987db7a629a8b6fc1be2fc83667e70f0b2b634231a923",
-          "dark": "2090c8f31e98ca8b9b7ab58b5a0f642020d37e10de1bb6aaf2d13869a155811c"
+          "light": "f30d88504db215a07c96aa7b47b889833840a87f1aa362f9016cd747832bbc74",
+          "dark": "0a38d4d3f23b152d147139540df10f75f7818ca81b07caeac98ab4991e5c52d3"
         },
         "size": {
           "light": {
-            "w": 278,
-            "h": 72
+            "w": 282,
+            "h": 76
           },
           "dark": {
-            "w": 278,
-            "h": 72
+            "w": 282,
+            "h": 76
           }
         },
         "light": "screens/guided-setup.granted.light.png",
@@ -3974,23 +3974,23 @@
       "status": "CAPTURED",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "guidedshots",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "image": {
         "sha256": {
-          "light": "814799a22e46bee15a81a9b60d3e9ee17e9401b8d31388204fa53cedf8806a75",
-          "dark": "eb7b129f00d741d2a0f5065a30eb581b3947891d5c3c936e14afc28e672256b0"
+          "light": "aa0e84371e3ceaebe74eccc1c8d58903b3bae974066ab0a3cb522fe7eaa982f0",
+          "dark": "1544328f0dca9b43d226a8fc5e1b650a877a5d6e527109f355a797f224590bc9"
         },
         "size": {
           "light": {
-            "w": 420,
-            "h": 72
+            "w": 391,
+            "h": 76
           },
           "dark": {
-            "w": 420,
-            "h": 72
+            "w": 391,
+            "h": 76
           }
         },
         "light": "screens/guided-setup.denied.light.png",
@@ -4024,9 +4024,9 @@
       "invariant": "—",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "states",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "appearance_policy": "adaptive",
@@ -4076,9 +4076,9 @@
       "invariant": "neutral と画素が違う。",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "states",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "appearance_policy": "adaptive",
@@ -4128,9 +4128,9 @@
       "invariant": "focus ring が見える（ACCESSIBILITY）。",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "states",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "appearance_policy": "adaptive",
@@ -4180,9 +4180,9 @@
       "invariant": "neutral と画素が違う。",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "states",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "appearance_policy": "adaptive",
@@ -4218,16 +4218,16 @@
       },
       "status": "CAPTURED",
       "frames_ms": [
-        103,
+        137,
         201,
-        701
+        700
       ],
-      "sha256": "7942517d50dcc14ce2d8bb32508fb77e2763b271c08897223ae4b168f03ace42",
+      "sha256": "b5ad85f1f64246b4d8fa42997757951bb02102b173429b87aea9b9428539bec9",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "surfacemotion",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "image": "strips/strip.idle-preparing-listening.png",
       "measured": {
@@ -4235,9 +4235,9 @@
         "center_drift_pt": 0.5,
         "window_creation": 0,
         "focus_theft": 0,
-        "effective_fps": 51.4,
-        "frames": 37,
-        "max_gap_ms": 103.5,
+        "effective_fps": 45.7,
+        "frames": 33,
+        "max_gap_ms": 136.9,
         "same_dock_id_pct": 100,
         "missing_surface_frames": 0,
         "expected_windows": 1
@@ -4254,18 +4254,18 @@
       },
       "status": "CAPTURED",
       "frames_ms": [
-        45,
-        52,
-        101,
+        44,
+        51,
+        100,
         201,
-        700
+        701
       ],
-      "sha256": "64f61b3f811316fae7f1811bda92c2f59221f97e2286b98660b4a8ca26e6eb40",
+      "sha256": "92d9253cd36434a303cbe8c7464e2258a98f9ced709c3638b5fb3e8664d293ef",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "surfacemotion",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "image": "strips/strip.dock-running.png",
       "measured": {
@@ -4275,7 +4275,7 @@
         "focus_theft": 0,
         "effective_fps": 57.1,
         "frames": 41,
-        "max_gap_ms": 44.6,
+        "max_gap_ms": 43.7,
         "same_dock_id_pct": 100,
         "missing_surface_frames": 0,
         "expected_windows": 1
@@ -4292,17 +4292,17 @@
       },
       "status": "CAPTURED",
       "frames_ms": [
-        62,
+        47,
         101,
         200,
         700
       ],
-      "sha256": "0a2a9eb7217ba0b40630029ee5843d421e43d4bfc0f62b3ba9c23c6d1aa7626b",
+      "sha256": "a2ce2abc6bc2439435efe4c5c51c46d0b459048845a7f36ec66fbb6f793a9af3",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "surfacemotion",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "image": "strips/strip.running-confirmation.png",
       "measured": {
@@ -4310,9 +4310,9 @@
         "center_drift_pt": 0.5,
         "window_creation": 0,
         "focus_theft": 0,
-        "effective_fps": 54.3,
-        "frames": 39,
-        "max_gap_ms": 61.7,
+        "effective_fps": 55.7,
+        "frames": 40,
+        "max_gap_ms": 47.0,
         "same_dock_id_pct": 100,
         "missing_surface_frames": 0,
         "expected_windows": 1
@@ -4328,18 +4328,17 @@
         "result_key": "T1-meeting-to-notes"
       },
       "frames_ms": [
-        27,
-        51,
+        39,
         101,
-        206,
-        701
+        201,
+        700
       ],
-      "sha256": "92000a8326de802fae27efba3add7cb74e569a23ac32fc53e7e3606951d476a4",
+      "sha256": "15d4647bb505256578c212fcab1767cdf472d996b8679f0b70de593702fb97ee",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "surfacemotion",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "image": "strips/strip.controller-notes.png",
@@ -4348,9 +4347,9 @@
         "center_drift_pt": 0,
         "window_creation": 0,
         "focus_theft": 0,
-        "effective_fps": 57.1,
-        "frames": 41,
-        "max_gap_ms": 27.1,
+        "effective_fps": 55.7,
+        "frames": 40,
+        "max_gap_ms": 39.2,
         "same_dock_id_pct": 100,
         "missing_surface_frames": 0,
         "expected_windows": 1
@@ -4366,17 +4365,16 @@
         "result_key": "T2-notes-to-workspace"
       },
       "frames_ms": [
-        75,
-        102,
-        200,
+        86,
+        201,
         701
       ],
-      "sha256": "97347d7f080aced7d85c59dad6b4d6617b413d943d7ba69ae5f1ec3428451b04",
+      "sha256": "a3881630bb4675c0bfc590fe95a1df3d7143f26d41fec16fbb16733591a8912e",
       "source": "RC",
       "captured": {
-        "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
+        "exe_sha256": "74ba9e8d00efb147265672ce379a5ea275f6bc653316d807325a479cea1d90bf",
         "selftest": "surfacemotion",
-        "at": "2026-09-07T10:45:50+09:00"
+        "at": "2026-09-07T11:02:55+09:00"
       },
       "status": "CAPTURED",
       "image": "strips/strip.notes-workspace.png",
@@ -4385,9 +4383,9 @@
         "center_drift_pt": 0,
         "window_creation": 0,
         "focus_theft": 0,
-        "effective_fps": 52.8,
-        "frames": 38,
-        "max_gap_ms": 75.0,
+        "effective_fps": 40.0,
+        "frames": 29,
+        "max_gap_ms": 86.4,
         "same_dock_id_pct": 100,
         "missing_surface_frames": 0,
         "expected_windows": 2

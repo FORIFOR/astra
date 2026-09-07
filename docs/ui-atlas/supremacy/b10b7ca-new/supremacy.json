@@ -1,0 +1,419 @@
+{
+  "rc": "b10b7ca",
+  "mode": "self-supremacy",
+  "pages": [
+    {
+      "id": "screenshot.attached-cloud",
+      "blind_id": "0EF4",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4.33,
+        "density": 4,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 3.67,
+        "calmness": 4.33,
+        "craft": 3.67,
+        "distinctiveness": 2.67
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "Functional and well-designed toast with clear hierarchy, but follows standard notification patterns without distinctive character."
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "二行構成・暗色カード・閉じるのみという抑制は一線級に近い。ただしアイコンの描画品質と垂直中心のずれ、×のヒット領域が見えない点で、Raycast の同種トーストと並べると仕上げが一段落ちる。ai っぽさは無い。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "ネイティブなダークトーストとして仕上げは良いが、他社製品でも見るごく一般的なパターンで独自性が薄い。欠陥と言えるほどの破綻は無い。"
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.target-highlighted",
+      "blind_id": "1751",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 3,
+        "density": 3.33,
+        "typography": 3.33,
+        "geometry": 2.67,
+        "state_clarity": 3,
+        "calmness": 3,
+        "craft": 2.67,
+        "distinctiveness": 2
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "Standard toggle list pattern, well-executed but common in system settings UI. Missing context of full screen limits assessment."
+        },
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "OS 標準 UI の上に自前の紫ハイライトを重ねる、出自の混ざった見た目"
+          ],
+          "why": "他アプリ（macOS システム設定）の画面に自前のバルーンと紫枠を重ねており、行の内容を覆い、閉じる手段も見えない。切り出し左端の赤バッジも文脈と噛み合わず、絵として整合していない。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [],
+          "why": "赤バッジが画面内で何にも接続されず浮いて見え、ツールチップも指示先が視覚的に曖昧。クロップの影響の可能性はあるが、この画像単体では状態把握を阻害する具体的な欠陥として現れている。"
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.intro",
+      "blind_id": "2B9C",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 3,
+        "density": 3.5,
+        "typography": 3,
+        "geometry": 2.5,
+        "state_clarity": 2.5,
+        "calmness": 3.5,
+        "craft": 2.5,
+        "distinctiveness": 2
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": false,
+          "ai_look": [
+            "centered pill button pattern",
+            "rounded circular icon placement"
+          ],
+          "why": "Clear error communication with good CTA, but modal structure and button styling are standard patterns without differentiation."
+        },
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "淡紫の円という汎用アクセントだけで個性を出そうとしている",
+            "指示を文章で説明するだけでボタンにしていない"
+          ],
+          "why": "ユーザーにやらせたい操作が明確なのに実行ボタンが無く文章任せ。さらに『Astra』と一覧側の『AstraDbg』で名前が食い違い、折り返しと右の空きも整っていない。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "メッセージ自体は簡潔で読みやすいが、アイコンと文面の対応が弱く、設定へ導く具体的な導線（ボタン等）が画像内に見当たらない点が一線級との差。"
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.target-add",
+      "blind_id": "46A5",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4,
+        "density": 3.5,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 3.5,
+        "calmness": 4,
+        "craft": 3.5,
+        "distinctiveness": 3
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "SUPREME",
+          "valid": true,
+          "ai_look": [],
+          "why": "Authentic native macOS system UI with perfect hierarchy, typography, geometry, and state clarity. Professional execution with no defects. Sidebar navigation clear, toggle states apparent, spacing appropriate throughout."
+        },
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": false,
+          "ai_look": [
+            "紫の円ハイライト＋短い指示文という、汎用オンボーディングの型をそのまま置いた印象"
+          ],
+          "why": "同じ画面内に『AstraDbg』がオン状態で並んでいるのに『「+」から Astra を追加してください』と出ており、状態と指示が矛盾する。加えてツールチップが画像下端で切れ、指し示す尾も無い。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [],
+          "why": "『2.1.260』という生のバージョン文字列がアプリ名として表示される不具合、および既に追加済み・ONのAstraDbgに対し『+から追加してください』と矛盾した案内をしている点は、絵から直接読み取れる具体的な欠陥。"
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.denied",
+      "blind_id": "4946",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4,
+        "density": 4,
+        "typography": 4,
+        "geometry": 3.67,
+        "state_clarity": 4,
+        "calmness": 3,
+        "craft": 3.67,
+        "distinctiveness": 2.33
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "Error handling is clear and user-friendly with proper CTA, but follows standard toast notification pattern without distinctive design elements."
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "リンク色 pill ボタンという既製の型"
+          ],
+          "why": "失敗を隠さず、その場で代替操作を出す設計は正しい。ただし原因が無い、アイコンとバルーンの間の空きが説明できない、pill の余白が緩いなど、一線級と並べると詰めが甘い。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "エラー通知として簡潔でクラフトは良いが、原因説明が無く『なぜ失敗したか』が伝わらない点が一線級ツールとの差。"
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.repositioned",
+      "blind_id": "75BB",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4,
+        "density": 3.5,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 4,
+        "calmness": 3.5,
+        "craft": 3.5,
+        "distinctiveness": 3
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "SUPREME",
+          "valid": true,
+          "ai_look": [],
+          "why": "Authentic macOS UI with thoughtful contextual tooltip implementation. Perfect native styling, clear hierarchy, and helpful state messaging that adds useful context without overwhelming. Indistinguishable from professional system UI."
+        },
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": false,
+          "ai_look": [
+            "OS 画面に紫ハイライトを重ねる汎用コーチマークの型"
+          ],
+          "why": "『オンです』と言いながら当のトグルが他行の明確なオン表示と見えが違い、状態表示と文言が噛み合わない。さらにバルーンが行を覆い、閉じる手段も無く、何を再起動するかも書かれていない。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [],
+          "why": "ツールチップの文言自体はトグルのON状態と整合しており46A5より状態説明は明確だが、『2.1.260』という生のバージョン文字列がアプリ名としてリストに残る不具合は依然として絵から確認できる具体的欠陥。"
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.target-found",
+      "blind_id": "77C0",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4.67,
+        "density": 4,
+        "typography": 4.33,
+        "geometry": 4,
+        "state_clarity": 3,
+        "calmness": 4,
+        "craft": 4,
+        "distinctiveness": 2.33
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "Polished macOS system UI with excellent typography and clear state indication, but follows standard Apple settings patterns without distinctive treatment. Sidebar proportion slightly compromises balance."
+        },
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "OS 標準 UI の上に、OS には無い紫アクセントの枠と吹き出しを重ねており、ホスト UI と語彙が合っていない",
+            "吹き出しが説明文だけで操作を持たない“言いっぱなしの注釈”になっている"
+          ],
+          "why": "絵の中で状態が矛盾している。吹き出しは「オンです」と断言する一方、その指し示すトグル自体は他の ON 行（青・ノブ右）と明確に違う白＝OFF 表示。ユーザーが最も知りたい「今オンなのか」を、コピーとコントロールが逆に答えている。加えて先頭行の「2.1.260」という名前不明アプリ、閉じ方の分からない吹き出しが craft を下げる。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [],
+          "why": "パネル自体はAppleネイティブUIで完成度は高いが、そこに表示されているアプリ名「2.1.260」「AstraDbg」は内部ビルド/デバッグ識別子がそのままユーザー向け権限画面に漏れている具体的な欠陥。一線級の製品はGA前にこの命名を隠す。"
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.granted",
+      "blind_id": "AEDE",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "avg": {},
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": false,
+          "ai_look": [],
+          "why": "Well-executed success notification with clear icon and readable text, but is a standard toast pattern that appears across most applications. Minimal visual distinction."
+        },
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": false,
+          "ai_look": [
+            "成功＝緑の丸チェックという最も既製の記号を、サイズ過大で貼り付けている",
+            "テキストは一文の報告のみで、成功に伴う次の一手を持たない"
+          ],
+          "why": "幾何と仕上げが絵から崩れている。チェックバッジがトーストの外形からはみ出して右端で切れ、ピルとの重なり部分の縁が欠けており、一線級の製品が許さない合成の粗さ。文言も結果だけで、直前の画面が要求していた再起動との接続が示されない。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": false,
+          "ai_look": [],
+          "why": "最小限で落ち着いたトースト自体は一線級に近いが、チェック円がピルから切り離されて浮いて見える配置が絵から言える弱さで、SUPREMEには届かない。"
+        }
+      ]
+    },
+    {
+      "id": "screenshot.detected",
+      "blind_id": "F22B",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 3.33,
+        "density": 4.33,
+        "typography": 3.33,
+        "geometry": 3.67,
+        "state_clarity": 3.33,
+        "calmness": 4,
+        "craft": 3,
+        "distinctiveness": 2.67
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "Text line breaking and spacing suggests less careful typography refinement",
+            "Awkward phrase construction with unexplained line break"
+          ],
+          "why": "The text spacing and line break ('その / まま') creates unnatural reading flow and suggests lower typographic refinement. Hierarchy between primary and secondary message is unclear. Violates basic typography principles seen in SUPREME-tier products."
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "サムネイルが実データではなくプレースホルダ図形のまま",
+            "中黒でつなぐ短文テンプレが他画面と同型で反復している"
+          ],
+          "why": "暗色ピル・二段テキスト・左サムネイルという構成は落ち着いており、密度も文字組みも破綻していない。ただしサムネイルが実プレビューでなく抽象図形で、取り込み内容を確認できない点と、取り消し手段が無い点が一線級との差。欠陥というより弱さの範囲。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [],
+          "why": "アイコンとテキストの意味的な結びつきが絵から見て取れず、一目で状態を理解させる一線級のアイコン運用に欠けている。"
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.target-missing",
+      "blind_id": "FB3E",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 3.67,
+        "density": 3.67,
+        "typography": 3.67,
+        "geometry": 3,
+        "state_clarity": 3.67,
+        "calmness": 3.67,
+        "craft": 3.33,
+        "distinctiveness": 2.33
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "Clean, well-proportioned notification with clear call-to-action and good affordance (blue button). However, right-side icon is not clearly integrated into message hierarchy, creating minor cognitive friction. Follows standard notification patterns."
+        },
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "淡紫の pill 型ボタンという既製アクセントに依存している",
+            "円形アイコンが意味を持たない装飾バッジに見える"
+          ],
+          "why": "絵から幾何の欠陥が言える。右の円アイコンがバナー外形を突き破って右端で切れており、AEDE と同じ合成の粗さが繰り返されている。加えて主要導線であるはずの「システム設定を開く」が淡紫地に淡紫文字でコントラストが弱く、隣接する × と競っている。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "権限エラーからの復帰導線（開くボタン付き）は明快で実用的だが、丸いアイコンの浮き配置はAEDEと共通の軽微な弱さで一線級とは差がある。"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "supreme": 0,
+    "competitive": 9,
+    "below_bar": 0,
+    "not_enough_evidence": 1,
+    "models": [
+      "haiku",
+      "opus",
+      "sonnet"
+    ]
+  },
+  "gate": "PASS",
+  "ab_competitor": "AUTOMATION_MISSING: 競合の実 UI 画像（ASTRA_COMPETITORS_DIR）が無い。画面収録 TCC と driver が要る"
+}

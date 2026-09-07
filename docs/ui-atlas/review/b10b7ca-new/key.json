@@ -1,0 +1,27 @@
+{
+  "key": {
+    "4DAD": "screenshot.detected",
+    "CC32": "screenshot.attached-cloud",
+    "6172": "guided-setup.intro",
+    "6AE4": "guided-setup.target-found",
+    "CA27": "guided-setup.target-add",
+    "36AE": "guided-setup.target-highlighted",
+    "E229": "guided-setup.repositioned",
+    "586C": "guided-setup.target-missing",
+    "C9E7": "guided-setup.granted",
+    "1566": "guided-setup.denied"
+  },
+  "order": [
+    "1566",
+    "36AE",
+    "4DAD",
+    "586C",
+    "6172",
+    "6AE4",
+    "C9E7",
+    "CA27",
+    "CC32",
+    "E229"
+  ],
+  "batch": 6
+}
