@@ -98,8 +98,10 @@ run screenshot-light screenshotshots "$OUT/screenshot-light"
 run screenshot-dark  screenshotshots "$OUT/screenshot-dark" dark
 # Guided Setup（右下アバター + System Settings の対象）。実 System Settings を開く。権限は変えない。
 # 合成の 3 面（target-found / target-highlighted / repositioned）は System Settings が OS の外観のままなので light だけ。
-run guided-light     guidedshots  "$OUT/guided-light" --simulate-not-granted
-run guided-dark      guidedshots  "$OUT/guided-dark" dark --simulate-not-granted
+# 一覧に出る Astra の名前はこの Mac の TCC 次第（配布版は "Astra"、dev バンドルは "AstraDbg"）。無ければ target-found は撮れず
+# CAPTURE_MISSING になる（撮れたふりはしない）。ASTRA_ATLAS_GUIDE_APP_NAME で指す。
+run guided-light     guidedshots  "$OUT/guided-light" --simulate-not-granted --app-name "${ASTRA_ATLAS_GUIDE_APP_NAME:-Astra}"
+run guided-dark      guidedshots  "$OUT/guided-dark" dark --simulate-not-granted --app-name "${ASTRA_ATLAS_GUIDE_APP_NAME:-Astra}"
 EXTRA_ENV=()
 for j in JA JB JC; do
   run "journey-$j"  journey "$j" "$OUT/journey-$j"

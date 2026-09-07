@@ -186,8 +186,40 @@ extension SelfTest {
                 report.append("anchor not found: \(coordinator.lastLocateReason ?? "?")")
             }
             coordinator.stop()
+
+            // target-add: 一覧に無いアプリを案内するとき（RC がまだ画面収録を求めていない Mac がこれ）。「+」の**下**に吹き出し。
+            // 名前を「一覧に無いもの」に固定して、この経路を確実に通す（見えるものは全部本物: 「+」も「−」も Apple の窓）。
+            var depsAdd = deps
+            depsAdd.appNames = ["Astra"]   // 案内の文言に出す名前。一覧の照合には次の行で当たらない名前を使う。
+            let cAdd = PermissionGuideCoordinator(dependencies: depsAdd)
+            SystemSettingsAnchorLocator.rowNameOverrideForShots = "__astra_not_listed__"
+            cAdd.start(order: [.screenCapture])
+            let dAdd = Date().addingTimeInterval(10)
+            while Date() < dAdd, cAdd.anchor?.match.node.role != (kAXButtonRole as String) { settle(0.2) }
+            // 上書きは撮り終えるまで戻さない。先に戻すと次の取り直しで行が見つかり、窓が作り直される途中を撮る（実測: not capturable）。
+            defer { SystemSettingsAnchorLocator.rowNameOverrideForShots = nil }
+            if let a = cAdd.anchor, let pid = AXElementService.shared.pid(ofBundle: SystemSettingsAnchorLocator.bundleID) {
+                settle(0.4)
+                let overlaysA = [overlay.callout.window, overlay.highlight.window].compactMap { $0 }
+                if let cg = composite(settingsPID: pid, overlays: overlaysA) { write("guided-setup-target-add", cg) }
+                // 幾何: 吹き出しが「−」（隣のボタン）を隠さない。
+                let bubble = overlay.callout.frame ?? .zero
+                var minus: CGRect?
+                if let tree = AXElementService.shared.applicationTree(pid: pid, maxDepth: 14, maxNodes: 6000) {
+                    let r = SystemSettingsAnchorLocator(tree: AXElementService.shared).locate(selectors: [AXSelector(role: kAXButtonRole as String, descriptionAny: ["削除", "Remove"])], in: tree)
+                    minus = r.anchor?.rect
+                }
+                geometry["add"] = ["plus": rectDict(a.rect), "bubble": rectDict(bubble), "placement": overlay.callout.placement.map { "\($0)" } ?? "-",
+                                   "minus": minus.map(rectDict) as Any, "bubble_overlaps_minus": minus.map { bubble.intersects($0) } as Any]
+                if let m = minus, bubble.intersects(m) { geometryFail.append("add: bubble overlaps the − button") }
+                if bubble.intersects(a.rect) { geometryFail.append("add: bubble overlaps the + button") }
+            } else {
+                skipped.append("guided-setup-target-add"); report.append("add anchor not found: \(cAdd.lastLocateReason ?? "?")")
+            }
+            cAdd.stop()
+            SystemSettingsAnchorLocator.rowNameOverrideForShots = nil
         } else {
-            skipped += ["guided-setup-target-found", "guided-setup-target-highlighted", "guided-setup-repositioned"]
+            skipped += ["guided-setup-target-found", "guided-setup-target-highlighted", "guided-setup-repositioned", "guided-setup-target-add"]
             report.append("AX not trusted")
         }
 

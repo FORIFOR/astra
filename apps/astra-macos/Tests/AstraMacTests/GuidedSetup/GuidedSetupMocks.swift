@@ -58,8 +58,14 @@ final class MockOverlay: GuideOverlaying {
     func showAvatar(state: AvatarState, message: String, onClose: @escaping () -> Void) {
         avatarVisible = true; avatarState = state; avatarMessage = message; self.onClose = onClose; log.append("avatar:\(state)")
     }
-    func updateAvatar(state: AvatarState, message: String) { avatarState = state; avatarMessage = message; log.append("avatar:\(state)") }
-    func showGuide(message: String, at anchor: GuideAnchor) { guideVisible = true; guideMessage = message; guideAnchor = anchor; log.append("guide") }
+    var avatarAction: String?
+    var guidePlacement: GuidePlacement?
+    func updateAvatar(state: AvatarState, message: String, action: (title: String, run: () -> Void)?) {
+        avatarState = state; avatarMessage = message; avatarAction = action?.title; log.append("avatar:\(state)")
+    }
+    func showGuide(message: String, at anchor: GuideAnchor, preferred: GuidePlacement) {
+        guideVisible = true; guideMessage = message; guideAnchor = anchor; guidePlacement = preferred; log.append("guide")
+    }
     func hideGuide() { guideVisible = false; guideMessage = nil; guideAnchor = nil; log.append("hideGuide") }
     func hideAll() { hideGuide(); avatarVisible = false; log.append("hideAll") }
     var visiblePanelCount: Int { (avatarVisible ? 1 : 0) + (guideVisible ? 2 : 0) }
@@ -107,6 +113,7 @@ struct Harness {
             openSettings: { p.opened.append($0) }, settingsPID: { box.value ? 4242 : nil })
         deps.successDwell = 0
         deps.fallbackInterval = 0          // 検査では timer を使わず tick() を直接呼ぶ
+        deps.appNames = ["Astra"]          // 検査は xctest の中で走るので、バンドル名から取らない
         deps.after = { _, block in block() } // 即時
         permissions = p; self.tree = t; observer = o; overlay = v
         coordinator = PermissionGuideCoordinator(dependencies: deps)

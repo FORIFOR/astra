@@ -145,6 +145,19 @@ struct AXElementSnapshot: Equatable {
 
     /// app 直下の窓（追従のため、窓の移動・リサイズを要素レベルでも受ける）。
     var windows: [AXElementSnapshot] { children.filter { $0.role == kAXWindowRole as String } }
+
+    /// 一覧の行の名前。System Settings の行は identifier `<App>_Toggle` / `<App>_Title` に名前を持つ。
+    /// ボタン（「+」）など名前の無いものは nil。
+    var displayName: String? {
+        if let id = identifier {
+            for suffix in ["_Toggle", "_Title"] where id.hasSuffix(suffix) { return String(id.dropLast(suffix.count)) }
+        }
+        if role == kAXCheckBoxRole as String || role == "AXSwitch" || role == kAXStaticTextRole as String {
+            if let t = title, !t.isEmpty { return t }
+            if role == kAXStaticTextRole as String, let v = value, !v.isEmpty { return v }
+        }
+        return nil
+    }
 }
 
 struct AXMatch: Equatable {
@@ -234,7 +247,7 @@ enum AvatarState: Equatable {
 /// 右下に置くアバターの寸法。visibleFrame 基準で右 24pt・下 24pt。
 enum AvatarLayout {
     static let inset: CGFloat = 24
-    static let avatarSize: CGFloat = 68
+    static let avatarSize: CGFloat = 64
     static let bubbleMaxWidth: CGFloat = 260
 
     /// アバター窓の frame（吹き出しを含む全体）。右下に寄せる。

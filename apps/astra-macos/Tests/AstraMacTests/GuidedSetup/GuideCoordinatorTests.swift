@@ -49,7 +49,7 @@ final class GuideCoordinatorTests: XCTestCase {
         stack.showAvatar(state: .guiding, message: "案内", onClose: {})
         let anchor = GuideAnchor(rect: CGRect(x: 200, y: 200, width: 40, height: 20),
                                  match: AXMatch(node: AXElementSnapshot(role: "AXCheckBox", title: "Astra"), selectorRank: 0))
-        stack.showGuide(message: "Astra をオンにしてください", at: anchor)
+        stack.showGuide(message: "Astra をオンにしてください", at: anchor, preferred: .right)
         XCTAssertEqual(stack.visiblePanelCount, 3)
         XCTAssertTrue(stack.avatar.isVisible)
         stack.hideAll()
@@ -65,6 +65,7 @@ final class GuideCoordinatorTests: XCTestCase {
         XCTAssertFalse(h.overlay.guideVisible, "推測位置には出さない")
         XCTAssertNil(h.coordinator.anchor)
         XCTAssertEqual(h.overlay.avatarMessage, PermissionGuideCoordinator.messageGeneralTurnOn)
+        XCTAssertEqual(h.overlay.avatarAction, PermissionGuideCoordinator.actionOpenSettings, "文章だけで放り出さない")
         XCTAssertTrue(h.coordinator.lastLocateReason?.hasPrefix("no match") == true)
         // AX を辿れない（未許可）ときも同じ。
         h.tree.isTrusted = false
@@ -78,7 +79,8 @@ final class GuideCoordinatorTests: XCTestCase {
                         tree: settingsTree(withAstra: false, withAdd: true))
         h.coordinator.start(); h.coordinator.tick()
         XCTAssertTrue(h.overlay.guideVisible)
-        XCTAssertEqual(h.overlay.guideMessage, PermissionGuideCoordinator.calloutAdd)
+        XCTAssertEqual(h.overlay.guideMessage, PermissionGuideCoordinator.calloutAdd(for: "Astra"))
+        XCTAssertEqual(h.overlay.guidePlacement, .below, "「+」は下に置く（横は「−」を隠す）")
     }
 
     func testGuideFollowsWhenSystemSettingsMoves() {

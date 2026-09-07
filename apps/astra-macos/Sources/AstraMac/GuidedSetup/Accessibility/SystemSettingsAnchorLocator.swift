@@ -25,8 +25,10 @@ final class SystemSettingsAnchorLocator {
     /// 実機の System Settings では行のスイッチは **title が空**で、`<アプリ名>_Toggle` という identifier を持つ
     /// （`AXCheckBox` / subrole `AXSwitch`）。名前の静的テキストは `<アプリ名>_Title` で本文は value。
     /// 名前は複数候補（表示名 / バンドル名 / 実行体名）で探す。文字列 1 個に依存しない。
+    /// 撮影用: 行の照合に使う名前を差し替える（一覧に無い名前にすると「+」の経路を確実に通せる）。**本番では nil。**
+    static var rowNameOverrideForShots: String?
     static func astraRowSelectors(appNames: [String] = ["Astra"]) -> [AXSelector] {
-        let names = appNames.filter { !$0.isEmpty }
+        let names = (rowNameOverrideForShots.map { [$0] } ?? appNames).filter { !$0.isEmpty }
         return [
             AXSelector(role: kAXCheckBoxRole as String, identifierAny: names.map { "\($0)_Toggle" }),
             AXSelector(role: kAXCheckBoxRole as String, titleAny: names),

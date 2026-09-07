@@ -16,6 +16,7 @@ final class AvatarOverlayController {
     func show(on screen: NSScreen, state: AvatarState, message: String, onClose: @escaping () -> Void) {
         model.state = state
         model.message = message
+        model.action = nil
         model.onClose = onClose
         if panel == nil {
             let view = AvatarHUDView(model: model)
@@ -27,9 +28,10 @@ final class AvatarOverlayController {
         panel?.orderFrontRegardless()
     }
 
-    func update(state: AvatarState, message: String, screen: NSScreen? = nil) {
+    func update(state: AvatarState, message: String, action: AvatarHUDModel.Action? = nil, screen: NSScreen? = nil) {
         model.state = state
         model.message = message
+        model.action = action
         if let screen = screen ?? panel?.screen ?? NSScreen.main { relayout(on: screen) }
     }
 

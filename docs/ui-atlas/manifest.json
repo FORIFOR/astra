@@ -3647,7 +3647,7 @@
       "required": true,
       "appearance_policy": "adaptive",
       "trigger": "System Settings の「画面収録とシステムオーディオ録音」が開き、AX で Astra 行のスイッチ（identifier `<App>_Toggle`）を特定した。",
-      "meaning": "対象のスイッチだけを角丸で囲い、その**横**に「← Astra をオンにしてください」。上下に置くと隣の行のスイッチを隠すので横に置く。",
+      "meaning": "対象の行のスイッチだけを角丸で囲い、その**横**に「← <行の名前> をオンにしてください」。吹き出しは見つけた行の名前で言う（一覧の名前と別名で呼ばない）。上下に置くと隣の行のスイッチを隠すので横に置く。",
       "primary": "Astra のスイッチをオンにする（System Settings をそのまま操作できる）",
       "secondary": "× で案内をやめる",
       "states": "guidingScreenCapture → waitingScreenCapture",
@@ -3689,6 +3689,37 @@
         },
         "light": "screens/guided-setup.target-found.light.png"
       }
+    },
+    {
+      "id": "guided-setup.target-add",
+      "title": "Guided Setup — Astra not listed yet (add with +)",
+      "group": "system",
+      "required": true,
+      "appearance_policy": "adaptive",
+      "trigger": "System Settings の「画面収録とシステムオーディオ録音」に Astra の行がまだ無い（画面収録を一度も求めていない Mac）。",
+      "meaning": "「+」だけを囲い、その**下**に「「+」から Astra を追加してください」。横に置くと隣の「−」を隠す（盲検 3/3）。",
+      "primary": "「+」で Astra を追加し、スイッチをオンにする",
+      "secondary": "× で案内をやめる",
+      "states": "guidingScreenCapture → waitingScreenCapture（anchor = + ボタン）",
+      "keys": "System Settings のキーボード操作はそのまま効く。",
+      "privacy": "権限は変えない。",
+      "window": "FloatingPanel × 2 + System Settings（合成）",
+      "invariant": "吹き出しが「+」「−」のどちらも隠さない（GUIDED_SETUP_GEOMETRY: bubble ∩ minus = ∅）。行が現れたら行の案内に切り替わる。",
+      "prev": [
+        "guided-setup.intro"
+      ],
+      "next": [
+        "guided-setup.target-found"
+      ],
+      "capture": {
+        "selftest": "guidedshots",
+        "file": "guided-setup-target-add.png",
+        "appearances": [
+          "light"
+        ]
+      },
+      "status": null,
+      "note": "System Settings の窓は Apple のもの。一覧の他の行（第三者アプリ）はこの Mac の環境で、Astra のものではない。"
     },
     {
       "id": "guided-setup.target-highlighted",

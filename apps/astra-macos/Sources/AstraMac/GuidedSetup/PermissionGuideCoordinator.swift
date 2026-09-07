@@ -111,7 +111,7 @@ final class PermissionGuideCoordinator: ObservableObject {
     private func advance() {
         guard let next = plan.next else {
             set(.completed)
-            deps.overlay.updateAvatar(state: .success, message: Self.messageAllDone)
+            deps.overlay.updateAvatar(state: .success, message: Self.messageAllDone, action: nil)
             stopFallback()
             observer?.stop(); observer = nil
             deps.after(deps.successDwell * 2) { [weak self] in
@@ -131,7 +131,7 @@ final class PermissionGuideCoordinator: ObservableObject {
     }
 
     private func beginAccessibility() {
-        deps.overlay.updateAvatar(state: .guiding, message: Self.messageAccessibility)
+        deps.overlay.updateAvatar(state: .guiding, message: Self.messageAccessibility, action: openSettingsAction(.accessibility))
         if deps.permissions.promptAccessibility() { granted(.accessibility); return }
         // 許可が無い間は AX を辿れないので、設定面を開いて一般ガイドだけ出す（推測位置には出さない）。
         deps.openSettings(.accessibility)
@@ -140,7 +140,7 @@ final class PermissionGuideCoordinator: ObservableObject {
     }
 
     private func beginScreenCapture() {
-        deps.overlay.updateAvatar(state: .guiding, message: Self.messageScreenCapture)
+        deps.overlay.updateAvatar(state: .guiding, message: Self.messageScreenCapture, action: openSettingsAction(.screenCapture))
         if deps.permissions.requestScreenCapture() { granted(.screenCapture); return }
         set(.openingScreenSettings)
         deps.openSettings(.screenCapture)
@@ -150,7 +150,7 @@ final class PermissionGuideCoordinator: ObservableObject {
     }
 
     private func beginMicrophone() {
-        deps.overlay.updateAvatar(state: .guiding, message: Self.messageMicrophone)
+        deps.overlay.updateAvatar(state: .guiding, message: Self.messageMicrophone, action: nil)
         switch deps.permissions.state(of: .microphone) {
         case .granted: granted(.microphone)
         case .notDetermined:
@@ -167,7 +167,7 @@ final class PermissionGuideCoordinator: ObservableObject {
 
     private func guideMicrophoneInSettings() {
         deps.openSettings(.microphone)
-        deps.overlay.updateAvatar(state: .guiding, message: Self.messageMicrophoneSettings)
+        deps.overlay.updateAvatar(state: .guiding, message: Self.messageMicrophoneSettings, action: openSettingsAction(.microphone))
         settingsWaitStarted = deps.now()
         locateAndShow(selectors: SystemSettingsAnchorLocator.astraRowSelectors(appNames: deps.appNames),
                       message: Self.calloutTurnOn, fallback: Self.messageGeneralTurnOn)
@@ -180,7 +180,7 @@ final class PermissionGuideCoordinator: ObservableObject {
         guard deps.settingsPID() != nil else {
             if let started = settingsWaitStarted, deps.now().timeIntervalSince(started) > deps.settingsLaunchTimeout {
                 set(.failed("設定画面を開けませんでした"))
-                deps.overlay.updateAvatar(state: .warning, message: Self.messageSettingsFailed)
+                deps.overlay.updateAvatar(state: .warning, message: Self.messageSettingsFailed, action: openSettingsAction(.screenCapture))
                 stopFallback()
             }
             return
@@ -192,13 +192,17 @@ final class PermissionGuideCoordinator: ObservableObject {
             } else { return }
         }
         set(.guidingScreenCapture)
-        // Astra 行 → 無ければ「+」→ 無ければ一般ガイド。
-        let row = SystemSettingsAnchorLocator.astraRowSelectors(appNames: deps.appNames)
-        if !locateAndShow(selectors: row, message: Self.calloutTurnOn, fallback: nil) {
-            locateAndShow(selectors: SystemSettingsAnchorLocator.addButtonSelectors,
-                          message: Self.calloutAdd, fallback: Self.messageGeneralTurnOn)
-        }
+        locateScreenCaptureTargets()
         set(.waitingScreenCapture)
+    }
+
+    /// Astra 行 → 無ければ「+」→ 無ければ一般ガイド。**1 回の取り直しで 1 回だけ描く**
+    /// （行が無いときに「消して→+ を描く」を毎回すると、AX の出来事ごとに吹き出しが点滅した）。
+    private func locateScreenCaptureTargets() {
+        locateAndShow(candidates: [
+            (SystemSettingsAnchorLocator.astraRowSelectors(appNames: deps.appNames), Self.calloutTurnOn),
+            (SystemSettingsAnchorLocator.addButtonSelectors, Self.calloutAdd),
+        ], fallback: Self.messageGeneralTurnOn)
     }
 
     /// System Settings の AX 木が読める状態か（起動直後は app 要素だけで子が無い）。AX 未許可なら読めないので true 扱い
@@ -211,22 +215,46 @@ final class PermissionGuideCoordinator: ObservableObject {
     /// 対象を探して案内を出す。見つかれば true。見つからなければ fallback の一般ガイドだけ（推測位置に出さない）。
     @discardableResult
     private func locateAndShow(selectors: [AXSelector], message: String, fallback: String?) -> Bool {
-        let result = locator.locate(.accessibilityElement(bundleID: SystemSettingsAnchorLocator.bundleID, selectors: selectors))
+        locateAndShow(candidates: [(selectors, message)], fallback: fallback)
+    }
+
+    /// 候補を優先順に試し、最初に見つかったものを描く。全部外れたときだけ案内を消して一般ガイドにする。
+    @discardableResult
+    private func locateAndShow(candidates: [([AXSelector], String)], fallback: String?) -> Bool {
+        var result = SystemSettingsAnchorLocator.Result(anchor: nil, appTree: nil, reason: nil)
+        var message = ""
+        for (selectors, msg) in candidates {
+            result = locator.locate(.accessibilityElement(bundleID: SystemSettingsAnchorLocator.bundleID, selectors: selectors))
+            message = msg
+            if result.anchor != nil { break }
+        }
         lastLocateReason = result.reason
         let windows = (result.appTree?.windows ?? []).compactMap(\.element)
         if let found = result.anchor {
             anchor = found
             // 一般ガイド（fallback）を出していたなら、対象が見つかった時点で手順の文言へ戻す。
-            if let permission = state.permission { deps.overlay.updateAvatar(state: .guiding, message: Self.introMessage(for: permission)) }
-            deps.overlay.showGuide(message: message, at: found)
+            if let permission = state.permission {
+                deps.overlay.updateAvatar(state: .guiding, message: Self.introMessage(for: permission), action: openSettingsAction(permission))
+            }
+            // 吹き出しは見つけたものの名前で言う（一覧の行が「AstraDbg」なら「AstraDbg をオンにしてください」。別名で呼ぶと誤読させる）。
+            let named = message.replacingOccurrences(of: "{app}", with: found.match.node.displayName ?? deps.appNames.first ?? "Astra")
+            let preferred: GuidePlacement = found.match.node.role == (kAXButtonRole as String) ? .below : .right
+            deps.overlay.showGuide(message: named, at: found, preferred: preferred)
             watchSettings(elements: [found.match.node.element].compactMap { $0 } + windows)
             return true
         }
         anchor = nil
         deps.overlay.hideGuide()
-        if let fallback { deps.overlay.updateAvatar(state: .guiding, message: fallback) }
+        if let fallback, let permission = state.permission {
+            deps.overlay.updateAvatar(state: .guiding, message: fallback, action: openSettingsAction(permission))
+        }
         watchSettings(elements: windows)
         return false
+    }
+
+    /// 吹き出しの操作子: 文章で放り出さず、押せば設定画面へ行ける。
+    private func openSettingsAction(_ permission: GuidePermission) -> (title: String, run: () -> Void) {
+        (Self.actionOpenSettings, { [weak self] in self?.deps.openSettings(permission) })
     }
 
     // MARK: - 出来事
@@ -255,13 +283,7 @@ final class PermissionGuideCoordinator: ObservableObject {
     private func relocateNow() {
         switch state {
         case .waitingScreenCapture, .guidingScreenCapture:
-            if deps.settingsPID() != nil {
-                let row = SystemSettingsAnchorLocator.astraRowSelectors(appNames: deps.appNames)
-                if !locateAndShow(selectors: row, message: Self.calloutTurnOn, fallback: nil) {
-                    locateAndShow(selectors: SystemSettingsAnchorLocator.addButtonSelectors,
-                                  message: Self.calloutAdd, fallback: Self.messageGeneralTurnOn)
-                }
-            }
+            if deps.settingsPID() != nil { locateScreenCaptureTargets() }
         case .waitingMicrophone:
             locateAndShow(selectors: SystemSettingsAnchorLocator.astraRowSelectors(appNames: deps.appNames),
                           message: Self.calloutTurnOn, fallback: Self.messageGeneralTurnOn)
@@ -290,7 +312,7 @@ final class PermissionGuideCoordinator: ObservableObject {
         deps.overlay.hideGuide()
         observer?.stop(); observer = nil
         stopFallback()
-        deps.overlay.updateAvatar(state: .success, message: Self.messageDone)
+        deps.overlay.updateAvatar(state: .success, message: Self.messageDone, action: nil)
         deps.after(deps.successDwell) { [weak self] in
             guard let self, !self.state.isTerminal else { return }
             self.advance()
@@ -366,15 +388,21 @@ final class PermissionGuideCoordinator: ObservableObject {
         }
     }
 
+    // 盲検で直した文言: 「1 つ設定してください」は何を直すか言っていない（3/3 FIX）。対象と場所を言い切る。
+    // 成功の ✓ は丸だけに描く（文にもあると二重で、OCR は「く」と読む）。失敗は短く、操作子（システム設定を開く）を添える。
     static let messageIntro = "使う機能の設定をいっしょに済ませます"
-    static let messageAccessibility = "この Mac を操作するため、アクセシビリティを 1 つ設定してください"
-    static let messageScreenCapture = "画面収録を使うため、1 つ設定してください"
+    static let messageAccessibility = "この Mac を操作するため、システム設定で Astra をオンにしてください"
+    static let messageScreenCapture = "画面収録を使うため、システム設定で Astra をオンにしてください"
     static let messageMicrophone = "声で頼むため、マイクを許可してください"
-    static let messageMicrophoneSettings = "設定画面でマイクの Astra をオンにしてください"
+    static let messageMicrophoneSettings = "マイクの設定で Astra をオンにしてください"
     static let messageGeneralTurnOn = "設定画面で Astra をオンにしてください"
-    static let messageSettingsFailed = "設定画面を開けませんでした。システム設定から Astra をオンにしてください"
-    static let messageDone = "設定できました ✓"
-    static let messageAllDone = "すべて設定できました ✓"
-    static let calloutTurnOn = "Astra をオンにしてください"
-    static let calloutAdd = "「+」から Astra を追加してください"
+    static let messageSettingsFailed = "設定画面を開けませんでした"
+    static let messageDone = "設定できました"
+    static let messageAllDone = "すべて設定できました"
+    static let actionOpenSettings = "システム設定を開く"
+    /// `{app}` は見つけた行の名前に置き換える。
+    static let calloutTurnOn = "{app} をオンにしてください"
+    static let calloutAdd = "「+」から {app} を追加してください"
+    static func calloutTurnOn(for app: String) -> String { calloutTurnOn.replacingOccurrences(of: "{app}", with: app) }
+    static func calloutAdd(for app: String) -> String { calloutAdd.replacingOccurrences(of: "{app}", with: app) }
 }
