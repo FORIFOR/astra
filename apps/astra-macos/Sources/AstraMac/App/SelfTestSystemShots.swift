@@ -63,6 +63,9 @@ extension SelfTest {
             var found: Win?
             repeat { settle(0.25); found = windows().first(where: match) } while found == nil && Date() < deadline
             settle(dwell)
+            // 待っている間に窓が作り直されることがある（Sparkle は notes を読み終えると窓を差し替える。
+            // 古い id で撮ると nil = 「撮影不可 窓一覧 [619x402]」）。撮る直前に取り直す。
+            found = windows().first(where: match) ?? found
             guard let w = found, write(name, w) else {
                 failures.append("\(name)=撮影不可 窓一覧 \(windows().map { "\(Int($0.w))x\(Int($0.h))" })")
                 return false
