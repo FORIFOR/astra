@@ -13,3 +13,32 @@ export {
   type MemoryVerdict,
 } from './memory.js';
 export { buildBrief, type BriefInput, type MeetingLike, type TaskLike } from './brief.js';
+export { extractDeadline, type ExtractedDeadline } from './work/deadline.js';
+export {
+  pressure,
+  rankPressure,
+  WEIGHTS,
+  DEADLINE_TAU_DAYS,
+  type PressureInput,
+  type PressureResult,
+} from './work/pressure.js';
+export {
+  buildWorkContext,
+  clusterProjects,
+  owedItems,
+  waitingItems,
+  weekLoad,
+  personKey,
+  titleTokens,
+  cleanTitle,
+  type BuildInput,
+  type ProjectCluster,
+} from './work/graph.js';
+export {
+  deriveProfile,
+  applyUpdate,
+  EMPTY_PERSONALIZATION,
+  type StoredPersonalization,
+} from './work/personalization.js';
+export { selectInjection, injectionText, type InjectionInput } from './work/injection.js';
+export { ruleSemantic } from './work/semantic.js';

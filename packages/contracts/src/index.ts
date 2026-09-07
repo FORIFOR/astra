@@ -31,6 +31,7 @@ export * from './language-model.js';
 export * from './mcp.js';
 export * from './domain.js';
 export * from './world.js';
+export * from './work.js';
 export * from './conversation.js';
 export * from './onboarding.js';
 export * from './workflow.js';

@@ -69,6 +69,8 @@ export const PERMISSION_SCOPES = [
   'code.execute',
   'crm.read',
   'crm.write',
+  /** To Do / Planner のタスクを読む（Microsoft Graph `Tasks.Read`）。書かない。 */
+  'tasks.read',
 ] as const;
 
 /**
@@ -128,6 +130,7 @@ export const PERMISSION_SCOPE_LABEL: Readonly<Record<(typeof PERMISSION_SCOPES)[
     'code.execute': 'コードを実行する',
     'crm.read': 'CRM を読む',
     'crm.write': 'CRM に書く',
+    'tasks.read': 'タスク（To Do）を読む',
   };
 
 export const PermissionScope = z.enum(PERMISSION_SCOPES);
