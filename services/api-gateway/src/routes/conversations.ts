@@ -19,6 +19,7 @@ import {
 } from '@astra/service-conversation';
 import { agentKindFor, type TaskService } from '@astra/service-task';
 import type { Redis } from 'ioredis';
+import { injectionText, type WorkContextService } from '@astra/service-world-model';
 import type { App } from '../fastify.js';
 import { parseLastEventId, pollingWaker, pumpEventStream, redisWaker } from './sse.js';
 import { requirePrincipal } from '../auth/middleware.js';
@@ -28,6 +29,8 @@ export interface ConversationRouteDeps {
   readonly tasks: TaskService;
   readonly redis: Redis | null;
   readonly ssePollIntervalMs?: number;
+  /** Work Context。chat lane の問いに、関連する案件だけを `<work_context>` として添える（正本 §6、上限つき）。 */
+  readonly work?: WorkContextService;
 }
 
 export function registerConversationRoutes(app: App, deps: ConversationRouteDeps): void {
@@ -178,6 +181,14 @@ export function registerConversationRoutes(app: App, deps: ConversationRouteDeps
        * Home で頼んでも、Composer で頼んでも、Dock で頼んでも、
        * 会話に行が増えるだけで仕事は現れず、Dock は 10 秒待って諦めていた。
        */
+      // 全データは渡さない。仕事の状況を聞く問いにだけ、関連する上位 3 件までを添える。取れなければ添えない。
+      const workContext =
+        deps.work && decision.lane === 'chat'
+          ? await deps.work
+              .context(principal.tenantId, principal.userId)
+              .then((ctx) => injectionText({ question: body.text, context: ctx }))
+              .catch(() => '')
+          : '';
       const started = await startWork(
         deps,
         principal,
@@ -186,6 +197,7 @@ export function registerConversationRoutes(app: App, deps: ConversationRouteDeps
         decision.lane,
         turn.id,
         body.attachments,
+        workContext,
       );
 
       // Lane は返さない。利用者に見せないものを API で配らない。
@@ -262,16 +274,19 @@ async function startWork(
   lane: string,
   turnId: string,
   attachments: readonly TurnAttachment[] = [],
+  workContext = '',
 ): Promise<{ taskId: string | null; notice: string | null }> {
   const request =
     lane === 'chat'
       ? {
           kind: agentKindFor('com.astra.general', 'assistant'),
           // 添付は id とラベルだけ。画素は端末に残り、端末のモデル呼び出しが読む。
+          // context は Work Graph から選んだ関連分だけ（無ければ付けない）。
           input: {
             question: text,
             message: text,
             ...(attachments.length > 0 ? { attachments: [...attachments] } : {}),
+            ...(workContext ? { context: workContext } : {}),
           },
         }
       : lane === 'research'

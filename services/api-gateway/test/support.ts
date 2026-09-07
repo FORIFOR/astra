@@ -8,8 +8,9 @@ import { createDb, type DbConfig, type DbHandle } from '@astra/db';
 import { createLogger } from '@astra/telemetry';
 import { FsObjectStore, LibraryService } from '@astra/service-library';
 import { ConversationService } from '@astra/service-conversation';
+import { WorkContextService, WorldModelService } from '@astra/service-world-model';
 import { InMemoryTaskRuntime, TaskService } from '@astra/service-task';
-import { PluginRegistryService } from '@astra/service-plugin-registry';
+import { PluginRegistryService, agentResolver } from '@astra/service-plugin-registry';
 import type { DataSourceResolver } from '@astra/service-plugin-registry';
 import { ShareService } from '@astra/service-share';
 import { ResearchLedgerService } from '@astra/service-research';
@@ -95,13 +96,18 @@ export async function makeTestApp(options: MakeAppOptions): Promise<TestApp> {
   const storeRoot = await mkdtemp(path.join(tmpdir(), 'astra-gw-'));
   const library = new LibraryService(db, new FsObjectStore(storeRoot));
   const runtime = new InMemoryTaskRuntime();
-  const tasks = new TaskService(db, runtime);
+  const registry = new PluginRegistryService({ db, coreVersion: '0.1.0' });
+  // install した plugin の agent を task にできるように、本番と同じ resolver を渡す
+  // （渡さないと chat lane の General Assistant が「unknown task kind」で始まらず、試験がそれを見逃す）。
+  const tasks = new TaskService(db, runtime, agentResolver(registry));
   // 会話経路も本番同様に積む。積まないと conversation の HTTP 契約を試験が見逃す。
   const conversations = new ConversationService({ db });
-  const registry = new PluginRegistryService({ db, coreVersion: '0.1.0' });
   const shares = new ShareService({ db, library, shareHost: 'http://localhost:1430' });
   const meetings = new MeetingService({ db, publisher: { async publish() {} } });
   const recordings = new MemoryRecordingStore();
+  // Work Context も本番同様に積む（Home の面と chat lane の注入を試験が見る）。
+  const world = new WorldModelService({ db });
+  const work = new WorkContextService({ db, world });
   if (options.seedPlugins) {
     await registry.seedBuiltins(
       fileURLToPath(new URL('../../../plugins/builtin', import.meta.url)),
@@ -150,6 +156,8 @@ export async function makeTestApp(options: MakeAppOptions): Promise<TestApp> {
       recordings,
       ...(options.script ? { transcriber: new ScriptedStreamingTranscriber(options.script) } : {}),
     },
+    world,
+    work,
     ...(options.bridge === undefined ? {} : { bridge: options.bridge }),
     // テストは待ちたくないので短く回す
     ssePollIntervalMs: 20,

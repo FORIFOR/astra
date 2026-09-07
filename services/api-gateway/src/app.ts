@@ -36,7 +36,8 @@ import { registerConversationRoutes } from './routes/conversations.js';
 import { registerOnboardingRoutes } from './routes/onboarding.js';
 import { registerVoiceRoutes, type VoiceRouteDeps } from './routes/voice.js';
 import type { ConversationService } from '@astra/service-conversation';
-import type { WorldModelService } from '@astra/service-world-model';
+import type { WorkContextService, WorldModelService } from '@astra/service-world-model';
+import { registerWorkRoutes } from './routes/work.js';
 import type { ConnectionService, DataSourceResolver } from '@astra/service-plugin-registry';
 import {
   registerMeetingAudioRoute,
@@ -72,6 +73,8 @@ export interface AppDeps {
   readonly domain?: DomainRouteDeps;
   /** 「今日気にすべきこと」を組む先（Phase 6 §4）。 */
   readonly world?: WorldModelService;
+  /** Work Context / Personalization（正本 §6・§10）。無ければ route も注入も生えない。 */
+  readonly work?: WorkContextService;
   /** Conversation Engine。Task Dock の入口（Phase 7 §3）。 */
   readonly conversations?: ConversationService;
   /** connector の接続状態（正本 §2.4・§21）。 */
@@ -167,9 +170,17 @@ export function buildApp(deps: AppDeps): App {
       conversations: deps.conversations,
       tasks: deps.tasks,
       redis: deps.redis,
+      ...(deps.work ? { work: deps.work } : {}),
       ...(deps.ssePollIntervalMs === undefined
         ? {}
         : { ssePollIntervalMs: deps.ssePollIntervalMs }),
+    });
+  }
+  if (deps.work) {
+    registerWorkRoutes(app, {
+      work: deps.work,
+      tasks: deps.tasks,
+      ...(deps.meetings ? { meetings: deps.meetings.meetings } : {}),
     });
   }
   if (deps.world) {

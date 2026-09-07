@@ -1,0 +1,244 @@
+/**
+ * Work Context の HTTP 契約（WORK_CONTEXT_GATE の cloud 側）。
+ *   ./infra/db/with-test-db.sh pnpm --filter @astra/service-api-gateway test
+ *
+ * 見るのは:
+ *   - 端末の worker が push した artifact から、案件・待ち・返すもの・週の負荷が組まれ、全部に出所がある
+ *   - 訂正は 1 操作、推測の停止も 1 操作
+ *   - chat lane の問いに `<work_context>` が添えられる（仕事の問いだけ、上限つき）。無関係な問いには添えない
+ *   - メール全文は受け取らない（抜粋の上限 500 字）
+ */
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { type TokenResponse, uuidv7 } from '@astra/contracts';
+import { makeTestApp, makeTokens, testDbConfig, type TestApp } from './support.js';
+import type { App } from '../src/fastify.js';
+
+const url = process.env['TEST_DATABASE_URL'];
+const identityUrl = process.env['TEST_IDENTITY_DATABASE_URL'];
+
+const batch = {
+  source: 'gmail',
+  cursor: 'history-42',
+  artifacts: [
+    {
+      id: 'g1',
+      source: 'gmail',
+      kind: 'email',
+      title: 'Re: MOPITA SITE_ID の件',
+      body_excerpt: 'SITE_ID は明日までにお送りします',
+      people: [{ name: 'MTI 田中', email: 'tanaka@mti.example', role: 'from' }],
+      direction: 'inbound',
+      occurred_at: '2026-09-06T05:21:00.000Z',
+      thread_id: 'th-mopita',
+      project_hint: 'MOPITA連携',
+      provenance: {
+        source: 'gmail',
+        external_id: 'g1',
+        label: 'MTI からの返信',
+        observed_at: '2026-09-06T05:21:00.000Z',
+      },
+      semantic: {
+        category: 'info',
+        project: 'MOPITA連携',
+        waiting_on: 'MTI',
+        request: 'SITE_ID を受領する',
+        confidence: 0.9,
+        extracted_by: 'llm',
+      },
+    },
+    {
+      id: 'g2',
+      source: 'gmail',
+      kind: 'email',
+      title: '【○○社】見積のご確認',
+      body_excerpt: '9/9 までにご返信ください',
+      people: [{ name: '佐藤', email: 'sato@example.com', role: 'from' }],
+      direction: 'inbound',
+      occurred_at: '2026-09-05T00:30:00.000Z',
+      thread_id: 'th-quote',
+      provenance: {
+        source: 'gmail',
+        external_id: 'g2',
+        label: '見積のご確認',
+        observed_at: '2026-09-05T00:30:00.000Z',
+      },
+      semantic: {
+        category: 'request_to_me',
+        project: '○○社 提案',
+        request: '見積に返信する',
+        due: '2026-09-09T09:00:00.000Z',
+        confidence: 0.9,
+        extracted_by: 'llm',
+      },
+    },
+  ],
+};
+
+describe.skipIf(!url)('work context over HTTP', () => {
+  let harness: TestApp;
+  let app: App;
+  let auth: { authorization: string };
+
+  beforeAll(async () => {
+    const tokens = await makeTokens();
+    harness = await makeTestApp({
+      dbConfig: testDbConfig(url!, identityUrl),
+      tokens,
+      seedPlugins: true,
+    });
+    app = harness.app;
+    const issued = await app.inject({
+      method: 'POST',
+      url: '/v1/auth/dev/token',
+      payload: { email: `w-${uuidv7()}@example.com`, display_name: 'W' },
+    });
+    auth = { authorization: `Bearer ${issued.json<TokenResponse>().access_token}` };
+    // chat lane は General Assistant の仕事になる。この tenant に入れておく（入っていないと task が始まらない）。
+    await app.inject({
+      method: 'POST',
+      url: '/v1/plugins/com.astra.general/install',
+      headers: auth,
+      payload: { version: '0.1.0', granted_scopes: ['artifacts.read', 'artifacts.write'] },
+    });
+  });
+  afterAll(async () => {
+    await harness?.close();
+  });
+
+  it('accepts a normalized batch from the device and refuses a full mail body', async () => {
+    const ok = await app.inject({
+      method: 'POST',
+      url: '/v1/work/artifacts',
+      headers: auth,
+      payload: batch,
+    });
+    expect(ok.statusCode).toBe(202);
+    expect(ok.json<{ accepted: number }>().accepted).toBe(2);
+    const tooLong = {
+      ...batch,
+      artifacts: [{ ...batch.artifacts[1], id: 'g3', body_excerpt: 'x'.repeat(501) }],
+    };
+    expect(
+      (
+        await app.inject({
+          method: 'POST',
+          url: '/v1/work/artifacts',
+          headers: auth,
+          payload: tooLong,
+        })
+      ).statusCode,
+    ).toBe(400);
+    const sync = await app.inject({ method: 'GET', url: '/v1/work/sync', headers: auth });
+    expect(sync.json<{ items: { source: string; cursor: string }[] }>().items[0]).toMatchObject({
+      source: 'gmail',
+      cursor: 'history-42',
+    });
+  });
+
+  it('builds the context with a source behind every inference, and opens the evidence', async () => {
+    const res = await app.inject({ method: 'GET', url: '/v1/work/context', headers: auth });
+    expect(res.statusCode).toBe(200);
+    const ctx = res.json<{
+      priorities: { id: string; project: string; sources: unknown[]; factors: unknown[] }[];
+      waiting_on: { who: string }[];
+      owed: { to: string }[];
+      week: { deadlines: number };
+    }>();
+    expect(ctx.priorities.map((p) => p.project)).toEqual(
+      expect.arrayContaining(['MOPITA連携', '○○社 提案']),
+    );
+    for (const p of ctx.priorities) {
+      expect(p.sources.length).toBeGreaterThan(0);
+      expect(p.factors).toHaveLength(7);
+    }
+    expect(ctx.waiting_on.map((w) => w.who)).toEqual(['MTI']);
+    expect(ctx.owed.map((o) => o.to)).toEqual(['佐藤']);
+    const ev = await app.inject({
+      method: 'GET',
+      url: `/v1/work/evidence/${encodeURIComponent(ctx.priorities[0]!.id)}`,
+      headers: auth,
+    });
+    expect(ev.json<{ items: { id: string }[] }>().items.length).toBeGreaterThan(0);
+  });
+
+  it('adds the work context to a work question only, bounded, and never to an unrelated one', async () => {
+    const conv = (
+      await app.inject({ method: 'POST', url: '/v1/conversations', headers: auth, payload: {} })
+    ).json<{ id: string }>().id;
+    const ask = async (text: string) => {
+      const res = await app.inject({
+        method: 'POST',
+        url: `/v1/conversations/${conv}/turns`,
+        headers: auth,
+        payload: { text },
+      });
+      const taskId = res.json<{ task_id: string | null }>().task_id;
+      if (!taskId)
+        return {
+          statusCode: res.statusCode,
+          context: null,
+          notice: res.json<{ notice: string | null }>().notice,
+        };
+      const task = await harness.tasks.get(
+        (await app.inject({ method: 'GET', url: '/v1/me', headers: auth })).json<{
+          tenant: { id: string };
+        }>().tenant.id,
+        taskId,
+      );
+      return {
+        statusCode: res.statusCode,
+        context: (task.input as { context?: string }).context ?? null,
+        notice: null,
+      };
+    };
+    const work = await ask('今日何を優先すべき？');
+    expect(work.statusCode).toBe(202);
+    expect(work.context).toContain('<work_context>');
+    expect(work.context).toContain('MOPITA連携');
+    expect(work.context!.length).toBeLessThanOrEqual(1_200);
+    const unrelated = await ask('社内報の文章を書いて');
+    expect(unrelated.statusCode).toBe(202);
+    expect(unrelated.context).toBeNull();
+  });
+
+  it('takes a correction in one call, and stops all inference in one call', async () => {
+    const before = (
+      await app.inject({ method: 'GET', url: '/v1/work/context', headers: auth })
+    ).json<{ priorities: { id: string; project: string }[] }>();
+    const mopita = before.priorities.find((p) => p.project === 'MOPITA連携')!;
+    expect(
+      (
+        await app.inject({
+          method: 'POST',
+          url: '/v1/work/corrections',
+          headers: auth,
+          payload: { item_id: mopita.id, action: 'not_priority' },
+        })
+      ).statusCode,
+    ).toBe(204);
+    const after = (
+      await app.inject({ method: 'GET', url: '/v1/work/context', headers: auth })
+    ).json<{ priorities: { project: string }[] }>();
+    expect(after.priorities.map((p) => p.project)).not.toContain('MOPITA連携');
+
+    const profile = (
+      await app.inject({ method: 'GET', url: '/v1/personalization', headers: auth })
+    ).json<{
+      inference_enabled: boolean;
+      frequent_entities: { label: string; status: string }[];
+    }>();
+    expect(profile.inference_enabled).toBe(true);
+    expect(profile.frequent_entities.every((t) => t.status === 'observed')).toBe(true);
+    const off = await app.inject({
+      method: 'PUT',
+      url: '/v1/personalization',
+      headers: auth,
+      payload: { inference_enabled: false },
+    });
+    expect(off.json<{ inference_enabled: boolean }>().inference_enabled).toBe(false);
+    const silent = (
+      await app.inject({ method: 'GET', url: '/v1/work/context', headers: auth })
+    ).json<{ priorities: unknown[]; inference_enabled: boolean }>();
+    expect(silent).toMatchObject({ inference_enabled: false, priorities: [] });
+  });
+});
