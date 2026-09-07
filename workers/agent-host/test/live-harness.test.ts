@@ -11,7 +11,14 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import type { WorkContext } from '@astra/contracts';
 import { FileSecretStore, keychainFor } from '../src/keychain.js';
-import { checkLiveExpectations, liveFixture } from '../src/live-fixture.js';
+import type { MeetingBrief } from '@astra/contracts';
+import {
+  checkBrief,
+  checkHome,
+  checkReply,
+  liveFixture,
+  syntheticMeetingArtifacts,
+} from '../src/live-fixture.js';
 
 describe('file secret store (harness only)', () => {
   it('round-trips values in a 0600 file and is chosen only when asked for', async () => {
@@ -37,16 +44,31 @@ describe('live fixture and expectations', () => {
   const f = liveFixture(now, 'WC1234');
 
   it('tags everything with the nonce and uses relative dates', () => {
+    expect(f.project).toBe('ACME-WC1234');
     expect(f.mailA.subject).toContain('WC1234');
+    expect(f.mailA.body).toContain('コード WC1234');
     expect(f.mailB.subject).toContain('WC1234');
-    expect(f.meeting.subject).toContain('WC1234');
-    expect(f.task.title).toContain('WC1234');
+    expect(f.meeting2.subject).toContain('WC1234');
     expect(new Date(f.deadlineIso).getTime()).toBeGreaterThan(now.getTime());
-    expect(new Date(f.meeting.startIso).getTime()).toBeGreaterThan(now.getTime());
-    expect(f.mailA.body).toMatch(/までに見積をください/);
+    expect(new Date(f.meeting1.startedAt).getTime()).toBeLessThan(now.getTime());
+    expect(new Date(f.meeting2.startIso).getTime()).toBeGreaterThan(now.getTime());
   });
 
-  it('passes on the expected graph and names what is missing otherwise', () => {
+  it('builds meeting 1 outcomes with the same stable ids the real finalize would', () => {
+    const arts = syntheticMeetingArtifacts(f, now.toISOString());
+    expect(arts.map((a) => a.id)).toEqual([
+      'meeting:live-WC1234',
+      'meeting:live-WC1234:decision:seg-1',
+      'meeting:live-WC1234:action:seg-2',
+    ]);
+    expect(arts[2]!.due_at).toBe(f.deadlineIso);
+    expect(arts[2]!.origin?.speaker).toBe('自分');
+    expect(syntheticMeetingArtifacts(f, now.toISOString()).map((a) => a.id)).toEqual(
+      arts.map((a) => a.id),
+    );
+  });
+
+  it('checks Home, reply and the next brief without judgement, naming what is missing', () => {
     const src = {
       source: 'gmail' as const,
       external_id: 'm1',
@@ -66,43 +88,64 @@ describe('live fixture and expectations', () => {
           score: 0.71,
           due_at: f.deadlineIso,
           waiting_on: null,
-          lines: ['Example Client からの返信待ち', `明日 15:00 顧客定例`],
+          lines: ['ACME からの返信待ち'],
           counts: { gmail: 2 },
           factors: [],
           sources: [src],
         },
       ],
       waiting_on: [],
-      owed: [
-        {
-          id: 'owed:m1',
-          to: 'Example Client',
-          what: '見積を送る',
-          due_at: f.deadlineIso,
-          project: f.project,
-          sources: [src],
-        },
-      ],
+      owed: [],
       week: { meeting_hours: 1, deadlines: 1, unanswered: 2, waiting: 0 },
       sources: { gmail: 2 } as WorkContext['sources'],
     };
-    const rows = checkLiveExpectations(good, f, now);
+    expect(checkHome(good, f, now).every((r) => r.ok)).toBe(true);
     expect(
-      rows.every((r) => r.ok),
-      rows.map((r) => `${r.row}:${r.detail}`).join(' | '),
-    ).toBe(true);
+      checkHome({ ...good, priorities: [] }, f, now)
+        .filter((r) => !r.ok)
+        .map((r) => r.row),
+    ).toEqual(['project nonce found', 'deadline found', 'pressure HIGH', 'provenance']);
 
-    const bad: WorkContext = { ...good, priorities: [], owed: [] };
-    const failing = checkLiveExpectations(bad, f, now)
-      .filter((r) => !r.ok)
-      .map((r) => r.row);
-    expect(failing).toEqual([
-      'project',
-      'deadline',
-      'self_waiting',
-      'meeting',
-      'pressure',
-      'provenance',
+    const reply = checkReply(
+      {
+        target: { subject: f.mailA.subject, thread_id: 't' },
+        context: `案件: ${f.project}`,
+        draft: 'ありがとうございます',
+        sinkHit: true,
+      },
+      f,
+    );
+    expect(reply.every((r) => r.ok)).toBe(true);
+    const leaked = checkReply(
+      {
+        target: { subject: f.mailA.subject, thread_id: 't' },
+        context: `案件: ${f.project} MOPITA`,
+        draft: 'x',
+        sinkHit: false,
+      },
+      f,
+    );
+    expect(leaked.filter((r) => !r.ok).map((r) => r.row)).toEqual([
+      'no other-project context',
+      'test sink receives nonce',
     ]);
+
+    const brief: MeetingBrief = {
+      event_id: 'ev',
+      title: f.meeting2.subject,
+      starts_at: f.meeting2.startIso,
+      project: f.project,
+      previous: [
+        { text: `決定: ${f.meeting1.decision}`, sources: [src] },
+        { text: `やること: ${f.meeting1.action}`, sources: [src] },
+      ],
+      since_last_meeting: [{ text: '1 件のメールが届いています', sources: [src] }],
+      open_items: [],
+      suggested_questions: [{ question: 'q', reason: 'r', sources: [src], extracted_by: 'rule' }],
+      provenance: [src],
+      generated_at: now.toISOString(),
+    };
+    expect(checkBrief(brief, f).every((r) => r.ok)).toBe(true);
+    expect(checkBrief(null, f)[0]!.ok).toBe(false);
   });
 });

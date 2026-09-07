@@ -188,3 +188,67 @@ Mail.app は AX の窓の題名（= 件名）、Gmail はタブの題名（件�
 
 会議中の Notes → 会議後の決定 / やること → Work Graph へ戻す経路は、会議の bundle（決定 / やること）を artifact として
 `localArtifacts` に流すところが未接続（brief の「前回」は decision / action_item の artifact を読むので、そこが繋がれば閉じる）。
+
+## 2026-09-07 夜（最後の 3 束）— 会議ループ / Outlook 返信 / 無人 live 閉ループ
+
+`scripts/reality/run-work-context-release-gate.sh`（RC fa031a0）:
+
+```text
+Offline
+  WORK_CONTEXT_GATE              PASS_OFFLINE
+  DAILY_WORK_GATE                PASS_OFFLINE
+  REPLY_IN_CONTEXT_GATE          PASS_OFFLINE
+  MEETING_BRIEF_GATE             PASS_OFFLINE
+  MEETING_WORK_LOOP_GATE         PASS
+  OUTLOOK_REPLY_GATE             PASS_OFFLINE
+Live
+  GOOGLE_DAILY_WORK_LIVE         AUTOMATION_MISSING
+  MICROSOFT_DAILY_WORK_LIVE      AUTOMATION_MISSING
+Trust
+  read-only first PASS · JIT write permission PASS · external confirmation 100% · source provenance 100%
+  fabricated deadline/item 0 / 0 · cross-project contamination 0
+Automation
+  live gate human intervention   0（identity を一度 provisioning したあと）
+WORK_CONTEXT_RELEASE_GATE = NOT_YET（offline 全 PASS、live は identity 待ち）
+```
+
+### MEETING_WORK_LOOP_GATE = PASS（ac05721）
+
+`meeting.bundle` → `MeetingArtifactSink`（task worker が `meetingArtifacts()` → `work.ingest`）。id は安定
+`meeting:<meetingId>:decision|action:<segmentId>`。Recovery・再 finalize・Live Notes の修正は同じ id の revision（件数は増えない、試験）。
+artifact は `origin`（会議・発言・話者・時刻・文字起こし / 音源・observed | inferred | confirmed）と、話者の言葉の出所を持つ。
+引用の無い claim は流さない。次の brief の「前回」に決定とやることが出て、Home はやることの期限で優先を並べる。
+
+| row                           | 結果 |     | row                                    | 結果        |
+| ----------------------------- | ---- | --- | -------------------------------------- | ----------- |
+| real meeting bundle finalized | PASS |     | speaker/timestamp provenance           | 100%        |
+| decision → localArtifacts     | PASS |     | audio/transcript source                | 100%        |
+| action → localArtifacts       | PASS |     | Work Graph updated                     | PASS        |
+| stable id / duplicate         | 0    |     | next brief sees decision / open action | PASS / PASS |
+| recovery duplicate            | 0    |     | Home priority reflects action          | PASS        |
+
+### OUTLOOK_REPLY_GATE = PASS_OFFLINE（fa031a0）
+
+`outlook-actions`（grants email.send → `Mail.Send` + offline_access、purpose 必須）と `outlook.mail.reply`
+（EXTERNAL_COMMIT、確認）。connector は `POST /me/messages/{id}/reply { comment }`（202、Sent Items にも残る）。scope か承認が無ければ
+網に出ない。worker は読む tool を読む接続の鍵だけで、reply は outlook-actions で。端末は draft.source で接続先を選び、
+接続後は確認へ戻る（自動送信 0、selftest で送信回数を数える）。
+
+| row                        | 結果 |     | row                      | 結果 |
+| -------------------------- | ---- | --- | ------------------------ | ---- |
+| draft with Mail.Read only  | PASS |     | edited text = sent text  | PASS |
+| Mail.Send before send      | 0    |     | correct provider message | PASS |
+| purpose-first JIT          | PASS |     | wrong-thread             | 0    |
+| OAuth completion auto-send | 0    |     | Graph reply 202          | PASS |
+| confirmation               | 100% |     |                          |      |
+
+### DAILY_WORK_LIVE（無人の閉ループ、identity 待ち）
+
+`ASTRA_LIVE_PROVIDER=google|microsoft ./scripts/reality/run-work-context-live.sh`:
+credentials（`ASTRA_TEST_GOOGLE_*` / `ASTRA_TEST_MS_*`、sink は既定で identity 自身）→ 使い捨て DB + gateway + task worker + agent-host（Claude Code CLI）
+→ fixture（案件 ACME-<nonce>、Mail A「<dl> までに見積をください。コード <nonce>」、Mail B「導入日は社内確認中です」、会議 2 = 明日 15:00）
+→ 読む接続だけで同期 → 会議 1 の結論（決定「Standard プランで提案する」/ やること「見積を <dl> までに送る」）を publisher の形で投入
+→ Home（案件 nonce / 期限 / pressure HIGH）→ 「これ返して」（実 draft、ACME だけ、別案件 0）→ 承認（harness が押す）→ sink へ実送信
+→ 次の brief（前回の決定 / 開いているやること / その後のメール / 出所 100% / 捏造 0）→ 掃除。GOOGLE / MICROSOFT は別々に回し、
+両方 PASS で `WORK_CONTEXT_LIVE_GATE = PASS`。**identity の provisioning は 1 回きりの人手で、以後は人手 0。**この Mac には無い。
+会議 1 は音声ではなく bundle（publisher と同じ形）で投入する。音声 → bundle → sink の実経路は `service.db.test.ts` が見る。

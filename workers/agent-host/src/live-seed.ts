@@ -1,14 +1,14 @@
 /**
- * WORK_CONTEXT_LIVE_GATE: 専用テスト identity に fixture を投入し、トークンを harness 用のファイルストアに置く。
+ * DAILY_WORK_LIVE: 専用テスト identity に fixture を投入し、トークンを harness 用のファイルストアに置く。
  *
- *   ASTRA_SECRET_STORE_FILE=… ASTRA_TEST_GOOGLE_CLIENT_ID=… ASTRA_TEST_GOOGLE_REFRESH_TOKEN=… \
- *   ASTRA_TEST_MICROSOFT_CLIENT_ID=… ASTRA_TEST_MICROSOFT_REFRESH_TOKEN=… \
+ *   ASTRA_LIVE_PROVIDER=google|microsoft ASTRA_SECRET_STORE_FILE=… \
+ *   ASTRA_TEST_GOOGLE_CLIENT_ID=… ASTRA_TEST_GOOGLE_REFRESH_TOKEN=… （または ASTRA_TEST_MS_*）\
  *   pnpm exec tsx workers/agent-host/src/live-seed.ts <nonce> [--cleanup <seeded.json>]
  *
  * **本人のアカウントは触らない。**refresh token は事前に用意した専用 identity のもの。
- * 投入は provider の API そのもの（Gmail messages.insert / Calendar events.insert /
- * Graph inbox messages / events / todo tasks）。同期と同じ経路は使わない — 同期が読む側で、
- * こちらは書く側。書いた id は seeded.json に残し、終わったら消す。
+ * 投入は provider の API そのもの（Gmail messages.insert / Calendar events.insert / Graph inbox messages / events）。
+ * 同期と同じ経路は使わない — 同期が読む側で、こちらは書く側。書いた id は seeded.json に残し、終わったら消す。
+ * 「これ返して」の送り先（sink）は既定で identity 自身（自分宛に返す）。`ASTRA_TEST_GMAIL_SINK` / `ASTRA_TEST_OUTLOOK_SINK` で変えられる。
  */
 import { readFile, writeFile } from 'node:fs/promises';
 import { providerConfig, refresh, TokenStore } from '@astra/oauth';
@@ -16,8 +16,13 @@ import { FileSecretStore } from './keychain.js';
 import { liveFixture, type LiveFixture } from './live-fixture.js';
 
 interface Seeded {
-  google?: { messages: string[]; events: string[] };
-  microsoft?: { messages: string[]; events: string[]; tasks: { listId: string; id: string }[] };
+  provider: 'google' | 'microsoft';
+  fixture: LiveFixture;
+  /** 自分（identity）のアドレス。返信の sink の既定。 */
+  self: string;
+  sink: string;
+  messages: string[];
+  events: string[];
 }
 
 const env = process.env;
@@ -38,11 +43,16 @@ async function json<T>(
   return (text ? JSON.parse(text) : {}) as T;
 }
 
-function rfc822(f: { subject: string; body: string; from: string }, to: string): string {
+function rfc822(
+  f: { subject: string; body: string; from: string },
+  to: string,
+  date: Date,
+): string {
   const raw = [
     `From: ${f.from}`,
     `To: ${to}`,
     `Subject: ${f.subject}`,
+    `Date: ${date.toUTCString()}`,
     'Content-Type: text/plain; charset=UTF-8',
     '',
     f.body,
@@ -50,15 +60,20 @@ function rfc822(f: { subject: string; body: string; from: string }, to: string):
   return Buffer.from(raw, 'utf8').toString('base64url');
 }
 
-async function accessToken(
+export async function liveAccessToken(
   provider: 'google' | 'microsoft',
   scopes: string[],
 ): Promise<{ access: string; refreshToken: string }> {
-  const upper = provider.toUpperCase();
-  const clientId = env[`ASTRA_TEST_${upper}_CLIENT_ID`];
-  const refreshToken = env[`ASTRA_TEST_${upper}_REFRESH_TOKEN`];
+  const key = provider === 'google' ? 'GOOGLE' : 'MS';
+  const clientId =
+    env[`ASTRA_TEST_${key}_CLIENT_ID`] ?? env[`ASTRA_TEST_${provider.toUpperCase()}_CLIENT_ID`];
+  const refreshToken =
+    env[`ASTRA_TEST_${key}_REFRESH_TOKEN`] ??
+    env[`ASTRA_TEST_${provider.toUpperCase()}_REFRESH_TOKEN`];
   if (!clientId || !refreshToken) throw new Error(`${provider}: test identity not provisioned`);
-  const config = providerConfig(provider, scopes, { [`ASTRA_OAUTH_${upper}_CLIENT_ID`]: clientId });
+  const config = providerConfig(provider, scopes, {
+    [`ASTRA_OAUTH_${provider.toUpperCase()}_CLIENT_ID`]: clientId,
+  });
   if (!config) throw new Error(`${provider}: no provider config`);
   const tokens = await refresh(
     { ...config, redirectUri: 'http://127.0.0.1:0/callback' },
@@ -68,29 +83,41 @@ async function accessToken(
   return { access: tokens.accessToken, refreshToken };
 }
 
-async function seedGoogle(
-  f: LiveFixture,
-  store: TokenStore,
-): Promise<NonNullable<Seeded['google']>> {
-  const seedScopes = [
-    'https://www.googleapis.com/auth/gmail.insert',
-    'https://www.googleapis.com/auth/gmail.readonly',
-    'https://www.googleapis.com/auth/calendar.events',
-  ];
-  const { access, refreshToken } = await accessToken('google', seedScopes);
+const GOOGLE_SEED_SCOPES = [
+  'https://www.googleapis.com/auth/gmail.insert',
+  'https://www.googleapis.com/auth/gmail.readonly',
+  'https://www.googleapis.com/auth/gmail.modify',
+  'https://www.googleapis.com/auth/gmail.send',
+  'https://www.googleapis.com/auth/calendar.events',
+];
+const MICROSOFT_SEED_SCOPES = [
+  'Mail.ReadWrite',
+  'Mail.Send',
+  'Calendars.ReadWrite',
+  'Tasks.ReadWrite',
+  'offline_access',
+];
+
+async function seedGoogle(f: LiveFixture, store: TokenStore, now: Date): Promise<Seeded> {
+  const { access, refreshToken } = await liveAccessToken('google', GOOGLE_SEED_SCOPES);
   const me = await json<{ emailAddress: string }>(
     'https://gmail.googleapis.com/gmail/v1/users/me/profile',
     access,
     { method: 'GET' },
   );
+  const sink = env['ASTRA_TEST_GMAIL_SINK'] ?? me.emailAddress;
   const messages: string[] = [];
-  for (const mail of [f.mailA, f.mailB]) {
+  // Mail A は会議の前（2 日前）、Mail B は会議のあと（いま）。返信先（From）は sink。
+  for (const [mail, date] of [
+    [{ ...f.mailA, from: sink }, new Date(now.getTime() - 2 * 86_400_000)],
+    [{ ...f.mailB, from: sink }, now],
+  ] as const) {
     const inserted = await json<{ id: string }>(
-      'https://gmail.googleapis.com/gmail/v1/users/me/messages?internalDateSource=receivedTime',
+      'https://gmail.googleapis.com/gmail/v1/users/me/messages?internalDateSource=dateHeader',
       access,
       {
         method: 'POST',
-        body: { raw: rfc822(mail, me.emailAddress), labelIds: ['INBOX', 'UNREAD'] },
+        body: { raw: rfc822(mail, me.emailAddress, date), labelIds: ['INBOX', 'UNREAD'] },
       },
     );
     messages.push(inserted.id);
@@ -101,33 +128,57 @@ async function seedGoogle(
     {
       method: 'POST',
       body: {
-        summary: f.meeting.subject,
-        start: { dateTime: f.meeting.startIso },
-        end: { dateTime: f.meeting.endIso },
+        summary: f.meeting2.subject,
+        start: { dateTime: f.meeting2.startIso },
+        end: { dateTime: f.meeting2.endIso },
       },
     },
   );
-  // 同期が読む側のトークン（読む接続だけ）。値はファイルストアにだけ置く。
-  const readOnly = {
+  // 同期が読む側のトークン。読む接続と送る接続を両方置く（送るのは承認と確認のあと）。値はファイルストアにだけ。
+  const set = (scopes: string[]) => ({
     accessToken: access,
     refreshToken,
     expiresAt: null,
-    grantedScopes: seedScopes,
+    grantedScopes: scopes,
     tokenType: 'Bearer',
     idToken: null,
+  });
+  await store.save(
+    'com.astra.gmail',
+    'gmail',
+    set(['https://www.googleapis.com/auth/gmail.readonly']),
+  );
+  await store.save(
+    'com.astra.gmail',
+    'gmail-actions',
+    set([
+      'https://www.googleapis.com/auth/gmail.modify',
+      'https://www.googleapis.com/auth/gmail.send',
+    ]),
+  );
+  await store.save(
+    'com.astra.google-calendar',
+    'google-calendar',
+    set(['https://www.googleapis.com/auth/calendar.readonly']),
+  );
+  return {
+    provider: 'google',
+    fixture: f,
+    self: me.emailAddress,
+    sink,
+    messages,
+    events: [event.id],
   };
-  await store.save('com.astra.gmail', 'gmail', readOnly);
-  await store.save('com.astra.google-calendar', 'google-calendar', readOnly);
-  return { messages, events: [event.id] };
 }
 
-async function seedMicrosoft(
-  f: LiveFixture,
-  store: TokenStore,
-): Promise<NonNullable<Seeded['microsoft']>> {
-  const seedScopes = ['Mail.ReadWrite', 'Calendars.ReadWrite', 'Tasks.ReadWrite', 'offline_access'];
-  const { access, refreshToken } = await accessToken('microsoft', seedScopes);
+async function seedMicrosoft(f: LiveFixture, store: TokenStore, _now: Date): Promise<Seeded> {
+  const { access, refreshToken } = await liveAccessToken('microsoft', MICROSOFT_SEED_SCOPES);
   const base = 'https://graph.microsoft.com/v1.0';
+  const me = await json<{ mail?: string; userPrincipalName: string }>(`${base}/me`, access, {
+    method: 'GET',
+  });
+  const self = me.mail ?? me.userPrincipalName;
+  const sink = env['ASTRA_TEST_OUTLOOK_SINK'] ?? self;
   const messages: string[] = [];
   for (const mail of [f.mailA, f.mailB]) {
     const created = await json<{ id: string }>(`${base}/me/mailFolders/inbox/messages`, access, {
@@ -135,7 +186,8 @@ async function seedMicrosoft(
       body: {
         subject: mail.subject,
         body: { contentType: 'text', content: mail.body },
-        from: { emailAddress: { address: mail.from, name: 'Example Client' } },
+        from: { emailAddress: { address: sink, name: 'ACME' } },
+        toRecipients: [{ emailAddress: { address: self } }],
         isRead: false,
       },
     });
@@ -144,70 +196,46 @@ async function seedMicrosoft(
   const event = await json<{ id: string }>(`${base}/me/events`, access, {
     method: 'POST',
     body: {
-      subject: f.meeting.subject,
-      start: { dateTime: f.meeting.startIso, timeZone: 'UTC' },
-      end: { dateTime: f.meeting.endIso, timeZone: 'UTC' },
+      subject: f.meeting2.subject,
+      start: { dateTime: f.meeting2.startIso, timeZone: 'UTC' },
+      end: { dateTime: f.meeting2.endIso, timeZone: 'UTC' },
     },
   });
-  const lists = await json<{ value: { id: string; displayName: string }[] }>(
-    `${base}/me/todo/lists`,
-    access,
-    { method: 'GET' },
-  );
-  const list = lists.value[0];
-  if (!list) throw new Error('microsoft: no To Do list');
-  const task = await json<{ id: string }>(`${base}/me/todo/lists/${list.id}/tasks`, access, {
-    method: 'POST',
-    body: {
-      title: f.task.title,
-      dueDateTime: { dateTime: f.task.dueIso.replace('Z', ''), timeZone: 'UTC' },
-      importance: 'high',
-    },
-  });
-  const readOnly = {
+  const set = (scopes: string[]) => ({
     accessToken: access,
     refreshToken,
     expiresAt: null,
-    grantedScopes: seedScopes,
+    grantedScopes: scopes,
     tokenType: 'Bearer',
     idToken: null,
-  };
-  await store.save('com.astra.outlook', 'outlook', readOnly);
-  await store.save('com.astra.microsoft-todo', 'microsoft-todo', readOnly);
-  return { messages, events: [event.id], tasks: [{ listId: list.id, id: task.id }] };
+  });
+  await store.save(
+    'com.astra.outlook',
+    'outlook',
+    set(['Mail.Read', 'Calendars.Read', 'offline_access']),
+  );
+  await store.save('com.astra.outlook', 'outlook-actions', set(['Mail.Send', 'offline_access']));
+  return { provider: 'microsoft', fixture: f, self, sink, messages, events: [event.id] };
 }
 
 async function cleanup(seeded: Seeded): Promise<void> {
-  if (seeded.google) {
-    const { access } = await accessToken('google', [
-      'https://www.googleapis.com/auth/gmail.modify',
-      'https://www.googleapis.com/auth/calendar.events',
-    ]);
-    for (const id of seeded.google.messages)
+  if (seeded.provider === 'google') {
+    const { access } = await liveAccessToken('google', GOOGLE_SEED_SCOPES);
+    for (const id of seeded.messages)
       await json(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${id}/trash`, access, {
         method: 'POST',
       }).catch(() => undefined);
-    for (const id of seeded.google.events)
+    for (const id of seeded.events)
       await json(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${id}`, access, {
         method: 'DELETE',
       }).catch(() => undefined);
-  }
-  if (seeded.microsoft) {
-    const { access } = await accessToken('microsoft', [
-      'Mail.ReadWrite',
-      'Calendars.ReadWrite',
-      'Tasks.ReadWrite',
-      'offline_access',
-    ]);
+  } else {
+    const { access } = await liveAccessToken('microsoft', MICROSOFT_SEED_SCOPES);
     const base = 'https://graph.microsoft.com/v1.0';
-    for (const id of seeded.microsoft.messages)
+    for (const id of seeded.messages)
       await json(`${base}/me/messages/${id}`, access, { method: 'DELETE' }).catch(() => undefined);
-    for (const id of seeded.microsoft.events)
+    for (const id of seeded.events)
       await json(`${base}/me/events/${id}`, access, { method: 'DELETE' }).catch(() => undefined);
-    for (const t of seeded.microsoft.tasks)
-      await json(`${base}/me/todo/lists/${t.listId}/tasks/${t.id}`, access, {
-        method: 'DELETE',
-      }).catch(() => undefined);
   }
 }
 
@@ -219,27 +247,24 @@ async function main(): Promise<void> {
     return;
   }
   if (!nonce) throw new Error('usage: live-seed.ts <nonce> [--cleanup seeded.json]');
+  const provider = env['ASTRA_LIVE_PROVIDER'] === 'microsoft' ? 'microsoft' : 'google';
   const storePath = env['ASTRA_SECRET_STORE_FILE'];
   if (!storePath) throw new Error('ASTRA_SECRET_STORE_FILE is required (never the login keychain)');
   const store = new TokenStore(new FileSecretStore(storePath));
-  const fixture = liveFixture(new Date(), nonce);
-  const seeded: Seeded = {};
-  const providers: string[] = [];
-  if (env['ASTRA_TEST_GOOGLE_REFRESH_TOKEN']) {
-    seeded.google = await seedGoogle(fixture, store);
-    providers.push('google');
-  }
-  if (env['ASTRA_TEST_MICROSOFT_REFRESH_TOKEN']) {
-    seeded.microsoft = await seedMicrosoft(fixture, store);
-    providers.push('microsoft');
-  }
-  if (providers.length === 0) throw new Error('no test identity provisioned');
+  const now = new Date();
+  const fixture = liveFixture(now, nonce);
+  const seeded =
+    provider === 'google'
+      ? await seedGoogle(fixture, store, now)
+      : await seedMicrosoft(fixture, store, now);
   const out = env['ASTRA_LIVE_SEEDED_FILE'] ?? 'seeded.json';
-  await writeFile(out, JSON.stringify({ ...seeded, fixture }, null, 2));
-  console.log(`LIVE_SEED ok providers=${providers.join(',')} → ${out}`);
+  await writeFile(out, JSON.stringify(seeded, null, 2));
+  console.log(`LIVE_SEED ok provider=${provider} sink=${seeded.sink} → ${out}`);
 }
 
-main().catch((error: unknown) => {
-  console.error(`LIVE_SEED=FAIL ${error instanceof Error ? error.message : String(error)}`);
-  process.exit(1);
-});
+if (process.argv[1]?.endsWith('live-seed.ts') || process.argv[1]?.endsWith('live-seed.js')) {
+  main().catch((error: unknown) => {
+    console.error(`LIVE_SEED=FAIL ${error instanceof Error ? error.message : String(error)}`);
+    process.exit(1);
+  });
+}
