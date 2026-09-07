@@ -1,0 +1,203 @@
+{
+  "pages": {
+    "3072": {
+      "visible_text": [
+        "設定画面を開けませんでした",
+        "プライバシーとセキュリティ",
+        "画面収録",
+        "もう一度開く",
+        "×"
+      ],
+      "observation": {
+        "happening": "A macOS-style warning toast reports that opening the system settings deep-link failed, with a breadcrumb showing the intended destination and a retry button.",
+        "most_important": "The retry button \"もう一度開く\" — the only recovery path offered.",
+        "next_action": "Click \"もう一度開く\" to retry, or dismiss with ×.",
+        "anomalies": [
+          "A separate circular waveform/bar-chart icon floats to the right of the toast with a visible gap, unclear if it belongs to the same component",
+          "The breadcrumb separator between the two settings-path labels is very thin/low-contrast"
+        ]
+      },
+      "scores": {
+        "hierarchy": 3,
+        "density": 4,
+        "typography": 3,
+        "geometry": 2,
+        "state_clarity": 3,
+        "calmness": 4,
+        "craft": 3,
+        "distinctiveness": 2
+      },
+      "ai_look": [
+        "disconnected circular badge with no label reads like a leftover placeholder element"
+      ],
+      "verdict": "BELOW_BAR",
+      "why": "The floating circular icon is compositionally disconnected from the toast body (visible gap, no clear grouping) — a concrete geometry defect visible in the image.",
+      "confidence": "medium"
+    },
+    "3680": {
+      "visible_text": [
+        "スクリーンショット",
+        "質問したときだけ",
+        "Claude に送信",
+        "×"
+      ],
+      "observation": {
+        "happening": "A dark toast confirms a screenshot was captured and reassures that it's only sent to Claude when the user asks.",
+        "most_important": "The privacy reassurance subtext about when the screenshot is sent.",
+        "next_action": "Dismiss via ×; otherwise passive confirmation.",
+        "anomalies": []
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 4,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 4,
+        "calmness": 5,
+        "craft": 4,
+        "distinctiveness": 3
+      },
+      "ai_look": [],
+      "verdict": "COMPETITIVE",
+      "why": "Clean, well-balanced dark toast with consistent padding and clear icon/title/subtitle/close alignment, but it's a simple single-purpose notification without a distinguishing detail that pushes it to top tier.",
+      "confidence": "medium"
+    },
+    "3A79": {
+      "visible_text": [
+        "Astra を自動で見つけられません",
+        "画面収録の一覧で",
+        "Astra をオンにしてください",
+        "システム設定を開く",
+        "×"
+      ],
+      "observation": {
+        "happening": "A warning toast states the app couldn't auto-detect \"Astra\" in the screen-recording permission list and instructs manual enabling.",
+        "most_important": "The blue \"システム設定を開く\" CTA button.",
+        "next_action": "Click the button to open System Settings, or dismiss.",
+        "anomalies": [
+          "Same detached circular waveform icon floating to the right with a gap, as in 3072",
+          "Button label sits tight against the pill edges"
+        ]
+      },
+      "scores": {
+        "hierarchy": 3,
+        "density": 4,
+        "typography": 3,
+        "geometry": 2,
+        "state_clarity": 3,
+        "calmness": 4,
+        "craft": 3,
+        "distinctiveness": 2
+      },
+      "ai_look": [
+        "same detached circular badge pattern repeated across variants, suggesting a reused templated component without refined icon placement"
+      ],
+      "verdict": "BELOW_BAR",
+      "why": "Repeats the same disconnected-icon composition flaw seen in 3072, directly visible in the image.",
+      "confidence": "medium"
+    },
+    "3E91": {
+      "visible_text": [
+        "1",
+        "AnyDesk",
+        "AstraDbg",
+        "AstraDbg を再起動すると使えます",
+        "ChatGPT"
+      ],
+      "observation": {
+        "happening": "Native macOS System Settings Screen Recording panel with a custom coaching tooltip pointing at the just-toggled AstraDbg row, telling the user to restart the app.",
+        "most_important": "The tooltip \"AstraDbgを再起動すると使えます\" indicating the toggle needs a restart to take effect.",
+        "next_action": "Restart AstraDbg for the permission to apply.",
+        "anomalies": [
+          "A red \"1\" badge is cropped at the top-left corner, only partially visible",
+          "The blue focus ring around the row and the tooltip border use slightly different blue tones"
+        ]
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 4,
+        "typography": 3,
+        "geometry": 3,
+        "state_clarity": 4,
+        "calmness": 3,
+        "craft": 3,
+        "distinctiveness": 2
+      },
+      "ai_look": [],
+      "verdict": "COMPETITIVE",
+      "why": "Leverages native macOS chrome for a high baseline, and the coaching tooltip is functionally sound, but the cropped badge and mismatched blue tones keep it short of fully polished.",
+      "confidence": "medium"
+    },
+    "91BE": {
+      "visible_text": [
+        "画面収録が未許可です",
+        "システム設定で",
+        "Astra をオンにしてください",
+        "システム設定を開く",
+        "×"
+      ],
+      "observation": {
+        "happening": "A warning toast states screen recording permission isn't granted and instructs enabling Astra in System Settings.",
+        "most_important": "The CTA button \"システム設定を開く\".",
+        "next_action": "Click the button to jump to System Settings, or dismiss.",
+        "anomalies": [
+          "Identical detached circular icon to the right again",
+          "Near-identical to 3072 and 3A79 in structure — three overlapping failure-state toasts rather than one consolidated design"
+        ]
+      },
+      "scores": {
+        "hierarchy": 3,
+        "density": 4,
+        "typography": 3,
+        "geometry": 2,
+        "state_clarity": 3,
+        "calmness": 4,
+        "craft": 3,
+        "distinctiveness": 2
+      },
+      "ai_look": [
+        "templated repetition across near-duplicate error toasts instead of one consolidated state"
+      ],
+      "verdict": "BELOW_BAR",
+      "why": "Same recurring detached-icon geometry flaw, plus redundant near-duplicate messaging visible once compared against the other toasts in this set.",
+      "confidence": "medium"
+    },
+    "AF8F": {
+      "visible_text": [
+        "画面収録を設定できました",
+        "×"
+      ],
+      "observation": {
+        "happening": "A success toast confirms screen recording was configured.",
+        "most_important": "The checkmark plus confirmation text as the terminal success state.",
+        "next_action": "Dismiss via ×; no further action required.",
+        "anomalies": [
+          "Circular icon to the right again present (teal-toned this time), still with a visible gap from the toast body",
+          "No subtext under the title, unlike the warning variants, leaving proportionally more empty space"
+        ]
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 3,
+        "typography": 3,
+        "geometry": 3,
+        "state_clarity": 4,
+        "calmness": 5,
+        "craft": 3,
+        "distinctiveness": 2
+      },
+      "ai_look": [
+        "reuses the same floating circular badge across every state regardless of relevance"
+      ],
+      "verdict": "COMPETITIVE",
+      "why": "The cleanest of the toast family — single line, clear success state — but still carries the unexplained separate circle badge and a generic toast look, keeping it below top tier.",
+      "confidence": "medium"
+    }
+  },
+  "_judge": {
+    "model": "sonnet",
+    "cost_usd": 0.1750278,
+    "turns": 7,
+    "duration_ms": 76234
+  }
+}

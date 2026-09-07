@@ -1,0 +1,21 @@
+{
+  "key": {
+    "ABBC": "screenshot.detected",
+    "9905": "screenshot.attached-cloud",
+    "0681": "guided-setup.intro",
+    "E00C": "guided-setup.target-highlighted",
+    "3EB0": "guided-setup.target-missing",
+    "FEDB": "guided-setup.granted",
+    "31D7": "guided-setup.denied"
+  },
+  "order": [
+    "0681",
+    "31D7",
+    "3EB0",
+    "9905",
+    "ABBC",
+    "E00C",
+    "FEDB"
+  ],
+  "batch": 6
+}

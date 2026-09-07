@@ -1,0 +1,126 @@
+{
+  "pages": {
+    "0681": {
+      "visible_text": [
+        "画面取録が未許可です",
+        "システム設定を開く",
+        "Astra をオンにしてください",
+        "×"
+      ],
+      "observation": {
+        "happening": "Permission denial notification for screen recording",
+        "most_important": "Screen recording is not authorized; user must grant permission",
+        "next_action": "Open system settings or enable Astra",
+        "anomalies": [
+          "Dual CTAs (system settings vs Astra toggle) may create ambiguity about which action is primary"
+        ]
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "31D7": {
+      "visible_text": [
+        "設定画面を開けませんでした",
+        "プライバシーとセキュリティ画面取録",
+        "もう一度開く",
+        "⚠",
+        "×"
+      ],
+      "observation": {
+        "happening": "Settings screen open failure notification",
+        "most_important": "Failed to open settings screen; likely related to privacy/security recording permissions",
+        "next_action": "Retry opening settings or dismiss",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "3EB0": {
+      "visible_text": [
+        "Astra を自動で見つけられません",
+        "ネットワークの一覧で Astra をオンにしてください",
+        "システム設定を開く",
+        "×"
+      ],
+      "observation": {
+        "happening": "Astra device discovery failure notification",
+        "most_important": "Cannot automatically detect Astra; user must manually enable it in network settings",
+        "next_action": "Find Astra in network list or open system settings",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "9905": {
+      "visible_text": [
+        "スクリーンショット",
+        "質問したときだけ Claude に送信"
+      ],
+      "observation": {
+        "happening": "Toast notification explaining screenshot handling policy",
+        "most_important": "Screenshots are only sent to Claude when user requests",
+        "next_action": "None; informational feedback",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "ABBC": {
+      "visible_text": [
+        "スクリーンショット",
+        "認識しました。その主要機能です"
+      ],
+      "observation": {
+        "happening": "Acknowledgment toast confirming understanding of feature",
+        "most_important": "System confirms feature recognition",
+        "next_action": "None; informational feedback",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "E00C": {
+      "visible_text": [
+        "AnyDesk",
+        "AstraDbg",
+        "ChatGPT",
+        "AstraDbg を再起動すると使えます",
+        "1"
+      ],
+      "observation": {
+        "happening": "Feature/service toggle list showing three integrations with enable/disable switches",
+        "most_important": "Three services can be toggled on/off; AstraDbg requires restart after changes",
+        "next_action": "Toggle services as needed, restart if AstraDbg is changed",
+        "anomalies": [
+          "Red badge with '1' appears on left side with no visible explanation",
+          "AstraDbg has explanatory text about restart requirement, but ChatGPT has no explanation text—inconsistent information density across items"
+        ]
+      },
+      "verdict": "FIX",
+      "concerns": [
+        {
+          "axis": "state legibility",
+          "what": "Red badge with number '1' is unexplained—unclear if it indicates errors, notifications, or prerequisites",
+          "where": "Left side of the service list"
+        },
+        {
+          "axis": "consistency",
+          "what": "Only AstraDbg has explanatory text about restart requirement; ChatGPT and AnyDesk lack any description, creating uneven information hierarchy",
+          "where": "Item-level text across the three services"
+        }
+      ],
+      "confidence": "high"
+    }
+  },
+  "_judge": {
+    "model": "haiku",
+    "cost_usd": 0.052017999999999995,
+    "turns": 7,
+    "duration_ms": 37155
+  }
+}

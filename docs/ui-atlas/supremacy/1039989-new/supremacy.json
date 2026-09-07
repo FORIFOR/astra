@@ -1,0 +1,307 @@
+{
+  "rc": "1039989",
+  "mode": "self-supremacy",
+  "pages": [
+    {
+      "id": "guided-setup.denied",
+      "blind_id": "3072",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 3.67,
+        "density": 3.67,
+        "typography": 3.67,
+        "geometry": 2.67,
+        "state_clarity": 3,
+        "calmness": 3.33,
+        "craft": 3,
+        "distinctiveness": 2.33
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "Icon choice feels arbitrary rather than semantically motivated"
+          ],
+          "why": "Functional error toast with clear action hierarchy, but the levels icon contradicts error state semantics and creates visual noise. Warning triangle + levels icon feels like mismatched icon pairing."
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "失敗の事実・原因の在り処・回復操作が一行ずつ整理され、余計な装飾が無い。ただしオーブとピルの構造的関係とリング色の意味が絵から説明できず、設定パスが導線化されていない点で一線級には一歩届かない。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "disconnected circular badge with no label reads like a leftover placeholder element"
+          ],
+          "why": "The floating circular icon is compositionally disconnected from the toast body (visible gap, no clear grouping) — a concrete geometry defect visible in the image."
+        }
+      ]
+    },
+    {
+      "id": "screenshot.attached-cloud",
+      "blind_id": "3680",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4,
+        "density": 4.33,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 4,
+        "calmness": 4.67,
+        "craft": 3.67,
+        "distinctiveness": 2.67
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "SUPREME",
+          "valid": true,
+          "ai_look": [],
+          "why": "Exemplary minimal notification. Zero wasted space, dark neutral tone, informative hierarchy, calm presentation. Text reads naturally (not over-explained). Appropriate icon. Only lacks distinctiveness but that's acceptable for system notifications."
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "送信条件を先回りして書く判断は良く、文言も短い。ただし添付チップなのに中身が確認できない汎用アイコンで、取り消し以外の操作が無いため、同種の一線級プロダクトと並べると情報の裏取りが弱い。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "Clean, well-balanced dark toast with consistent padding and clear icon/title/subtitle/close alignment, but it's a simple single-purpose notification without a distinguishing detail that pushes it to top tier."
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.target-missing",
+      "blind_id": "3A79",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 3.67,
+        "density": 3.67,
+        "typography": 3.33,
+        "geometry": 2.67,
+        "state_clarity": 3,
+        "calmness": 3.67,
+        "craft": 2.67,
+        "distinctiveness": 2.33
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "Levels icon reuse across unrelated error types feels systematic but unexplained"
+          ],
+          "why": "Clear instruction and action button, but the levels icon appears inconsistently across different error types, creating uncertainty about its semantic meaning. Icon should reinforce message intent, not create visual ambiguity."
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "失敗と次操作は一目で通るが、同じ語の強調が行ごとに揺れ、見出しがユーザー視点でなく実装視点の言い回しになっている。欠陥ではないが一線級の文言設計とは差がある。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "same detached circular badge pattern repeated across variants, suggesting a reused templated component without refined icon placement"
+          ],
+          "why": "Repeats the same disconnected-icon composition flaw seen in 3072, directly visible in the image."
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.target-highlighted",
+      "blind_id": "3E91",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 3.33,
+        "density": 4,
+        "typography": 3.33,
+        "geometry": 2.67,
+        "state_clarity": 3.33,
+        "calmness": 3,
+        "craft": 2.67,
+        "distinctiveness": 2
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "Unexplained badge feels like leftover notification indicator or design system artifact"
+          ],
+          "why": "Toggle states are clear and switches work visually, but the red badge creates visual tension without communicating its purpose. The 'restart required' state for AstraDbg is handled well with secondary text, but badge integration feels incomplete."
+        },
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [],
+          "why": "デバッグ名らしい『AstraDbg』とプレースホルダ状のアイコンがそのまま出ており、吹き出しは対象行に重なって行の情報を隠したうえ、指示（再起動）を実行する手段も閉じる手段も画面上に無い。絵から言える欠陥が複数ある。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "Leverages native macOS chrome for a high baseline, and the coaching tooltip is functionally sound, but the cropped badge and mismatched blue tones keep it short of fully polished."
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.intro",
+      "blind_id": "91BE",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4,
+        "density": 3.67,
+        "typography": 3.67,
+        "geometry": 3,
+        "state_clarity": 3.33,
+        "calmness": 3.67,
+        "craft": 3,
+        "distinctiveness": 2.33
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "Repeated levels icon across all error types creates unresolved design language question"
+          ],
+          "why": "Clear error message and action path, but the levels icon feels semantically wrong for screen recording permissions. Same icon recurrence across 3072, 3A79, and 91BE suggests either intentional system-level notification styling or design system misconfiguration."
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "状態・理由・操作が二行＋一ボタンに収まり、無駄が無く落ち着いている。ただし右のオーブとの構造関係が説明できず、同系統の他通知と先頭アイコンの有無が揃っていない点で完璧とは言えない。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "templated repetition across near-duplicate error toasts instead of one consolidated state"
+          ],
+          "why": "Same recurring detached-icon geometry flaw, plus redundant near-duplicate messaging visible once compared against the other toasts in this set."
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.granted",
+      "blind_id": "AF8F",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4,
+        "density": 3.5,
+        "typography": 3.5,
+        "geometry": 3,
+        "state_clarity": 4.5,
+        "calmness": 5,
+        "craft": 3.5,
+        "distinctiveness": 2.5
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "SUPREME",
+          "valid": false,
+          "ai_look": [],
+          "why": "Exemplary success notification. Single clear message, green checkmark instantly communicates success, teal circle is calming and positive. Minimal density, perfect geometry, zero visual noise. The levels icon here works because success state is unambiguous. Only limitation is lack of distinctiveness, but appropriate for system notifications."
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "成功トーストとして短く静かで、色とアイコンで状態が即座に読める。ただし完了後の次の一手が無く、オーブのリング色変化という独自の合図が凡例なしで成立している点が弱い。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "reuses the same floating circular badge across every state regardless of relevance"
+          ],
+          "why": "The cleanest of the toast family — single line, clear success state — but still carries the unexplained separate circle badge and a generic toast look, keeping it below top tier."
+        }
+      ]
+    },
+    {
+      "id": "screenshot.detected",
+      "blind_id": "CE5A",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4,
+        "density": 4,
+        "typography": 3.67,
+        "geometry": 4,
+        "state_clarity": 3.67,
+        "calmness": 4.33,
+        "craft": 3.67,
+        "distinctiveness": 2.67
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "State clarity は完璧で、日本語テキストも自然。全体的に洗練された標準的な macOS トースト UI。ただし distinctiveness が低い——トースト型ポップアップはデザイン界で一般的であり、Raycast・Linear・Notion などの一線級製品と並べると、デザイン言語の深さや工夫が浅い。欠陥ではなく、テンプレート感による『弱い点』。"
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "「認識しました・そのまま聞けます」という、機能を言い換えただけの説明過多な副文",
+            "中身の情報（何のスクショか、いつ、どのアプリか）が無く、汎用アイコン＋汎用文言で成立してしまうテンプレ感"
+          ],
+          "why": "2行の主従が明確で、余白・角丸・彩度の抑え方は落ち着いており出せる水準。ただし一線級と比べると、アイコンが汎用的で固有性が乏しく、副文が状態の説明に留まって「次にどこで聞くのか」を示さない点、右側の大きな空きを活かせていない点が弱い。絵から言える明確な欠陥ではなく差の範囲。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "アイコンと文言の対応が弱く、既製アイコンを流用しただけに見える",
+            "汎用的なダークトースト通知で、他の多くのアプリのデフォルトスタイルと区別がつきにくい"
+          ],
+          "why": "レイアウト・階層・余白は破綻なく整っており実用に足るが、アイコンが概念と結びつきにくく、装飾やタイポグラフィにも一線級と言えるほどの個性がない。明確な欠陥とまでは言えないため BELOW_BAR ではないが、一線級と並べると弱さが出る。"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "supreme": 0,
+    "competitive": 7,
+    "below_bar": 0,
+    "not_enough_evidence": 0,
+    "models": [
+      "haiku",
+      "opus",
+      "sonnet"
+    ]
+  },
+  "gate": "PASS",
+  "ab_competitor": "AUTOMATION_MISSING: 競合の実 UI 画像（ASTRA_COMPETITORS_DIR）が無い。画面収録 TCC と driver が要る"
+}
