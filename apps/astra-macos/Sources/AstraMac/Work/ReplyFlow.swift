@@ -57,7 +57,8 @@ final class ReplyFlow: ObservableObject {
             .receive(on: RunLoop.main)
             .sink { [weak self] status in
                 guard let self, let draft = self.pendingDraft else { return }
-                if status["com.astra.gmail#gmail-actions"] == .connected {
+                let (pluginId, connectorId) = Self.actionsConnection(for: draft.source)
+                if status["\(pluginId)#\(connectorId)"] == .connected {
                     self.pendingDraft = nil
                     self.present(draft)
                 }
@@ -66,6 +67,13 @@ final class ReplyFlow: ObservableObject {
     }
 
     func configureBackend(base: String, token: String) { self.base = base; self.token = token }
+
+    /// 送り元ごとの「送る接続」。Gmail は gmail-actions、Outlook は outlook-actions（Mail.Send だけ）。
+    static func actionsConnection(for source: String) -> (pluginId: String, connectorId: String) {
+        source == "outlook_mail" ? ("com.astra.outlook", "outlook-actions") : ("com.astra.gmail", "gmail-actions")
+    }
+
+    static func providerLabel(for source: String) -> String { source == "outlook_mail" ? "Outlook" : "Gmail" }
 
     /// cloud の返事（ReplyDraftMeta の JSON）と成果物の本文から下書きを組む。
     static func draft(replyJson: String, body: String) -> Draft? {
@@ -105,7 +113,7 @@ final class ReplyFlow: ObservableObject {
     func present(_ draft: Draft) -> Outcome {
         presentedCount += 1
         let confirmation = ActionConfirmation(
-            app: "Gmail", appIcon: nil,
+            app: Self.providerLabel(for: draft.source), appIcon: nil,
             title: "\(draft.toName)\(Facts.replyTitleSuffix)",
             params: [
                 .init(label: "宛先", value: draft.toEmail ?? draft.toName, editable: false),
@@ -133,11 +141,12 @@ final class ReplyFlow: ObservableObject {
         switch outcome {
         case .needsConnection(let pluginId, let connectorId):
             pendingDraft = draft
-            let purpose = ConnectorState.shared.actionsSource(pluginId: pluginId, connectorId: connectorId)?.purpose
-                ?? "返事を下書きし、承認したメールを送り、受信箱を整理する"
+            let source = ConnectorState.shared.actionsSource(pluginId: pluginId, connectorId: connectorId)
+            let purpose = source?.purpose ?? "確認した返信を送信するため"
+            let label = source.map { "\($0.name)（送る）" } ?? Self.providerLabel(for: draft.source)
             let ask = ActionConfirmation(
-                app: "Gmail", appIcon: nil,
-                title: Facts.replyConnectNeeded,
+                app: Self.providerLabel(for: draft.source), appIcon: nil,
+                title: "送るには「\(label)」の接続が要ります",
                 params: [], preview: nil, source: nil,
                 details: [purpose, "同意画面で許可すると、この確認に戻ります。自動では送りません。"],
                 risk: .r2, confirmLabel: Facts.replyConnect)
@@ -194,7 +203,8 @@ final class ReplyFlow: ObservableObject {
             case "FAILED":
                 let task = try? AstraCoreBridge.taskGet(base, accessToken: token, taskId: taskId)
                 if let task, task.contains("connector.not_connected") {
-                    return .needsConnection(pluginId: "com.astra.gmail", connectorId: "gmail-actions")
+                    let c = Self.actionsConnection(for: draft.source)
+                    return .needsConnection(pluginId: c.pluginId, connectorId: c.connectorId)
                 }
                 return .failed(approved ? "端末で送れませんでした。" : "承認を受け取れませんでした。")
             default: return .failed("送信の結果を確かめられませんでした。")

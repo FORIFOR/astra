@@ -15,8 +15,10 @@ execution_surfaces: [local]
 permissions:
   - email.read
   - calendar.read
+  - email.send
 jobs:
   - メールと予定を読んで、今の仕事の文脈（Work Context）に写す
+  - 確認した返信を送る
 data_accessed:
   - Outlook の受信箱・送信済みの件名・差出人・宛先・冒頭の抜粋（本文は取らない）
   - 予定の題名・時間・参加者・場所・会議リンク
@@ -32,6 +34,17 @@ connectors:
       - Mail.Read
       - Calendars.Read
       - offline_access
+  # 送る接続。「これ返して」の [送る] で初めて、理由を見せてから求める（JIT）。
+  # 既存メッセージへの返信は delegated の Mail.Send だけで足りる（Mail.ReadWrite は要らない）。
+  - id: outlook-actions
+    auth: oauth2
+    provider: microsoft
+    grants:
+      - email.send
+    purpose: 確認した返信を Outlook から送信するため
+    scopes:
+      - Mail.Send
+      - offline_access
 tools:
   - id: outlook.mail.search
     surface: local
@@ -42,6 +55,10 @@ tools:
   - id: outlook.calendar.list_events
     surface: local
     risk: READ
+  - id: outlook.mail.reply
+    surface: local
+    risk: EXTERNAL_COMMIT
+    requires_confirmation: true
 agents: []
 dashboards: []
 policies: []

@@ -199,11 +199,19 @@ export function registerWorkRoutes(app: App, deps: WorkRouteDeps): void {
   app.post('/v1/work/reply/send', async (request, reply) => {
     const p = requirePrincipal();
     const body = SendReplyRequest.parse(request.body ?? {});
-    if (body.source !== 'gmail') {
+    if (body.source !== 'gmail' && body.source !== 'outlook_mail') {
       return reply.status(409).send({
         error: {
           code: 'connector.unsupported',
-          message: 'いまは Gmail の返信だけ送れます。Outlook からの送信はまだです。',
+          message: 'この送り元からはまだ送れません（Gmail / Outlook から送れます）。',
+        },
+      });
+    }
+    if (body.source === 'outlook_mail' && !body.in_reply_to) {
+      return reply.status(400).send({
+        error: {
+          code: 'common.validation_failed',
+          message: 'Outlook の返信には相手のメッセージ id が要ります。',
         },
       });
     }
@@ -214,6 +222,7 @@ export function registerWorkRoutes(app: App, deps: WorkRouteDeps): void {
         kind: 'mail.send',
         title: `返信: ${body.subject}`,
         input: {
+          source: body.source,
           to: body.to,
           subject: body.subject,
           body: body.body,

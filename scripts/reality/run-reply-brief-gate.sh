@@ -17,6 +17,8 @@ row() { ROWS+=("$1|$2|$3|$4"); }
 run() { local name="$1"; shift; "$@" >"$OUT/$name.log" 2>&1; echo $?; }
 ok() { [ "$1" = 0 ] && echo PASS || { fail=1; echo FAIL; }; }
 wm=$(run world-model pnpm --filter @astra/service-world-model exec vitest run test/reply-brief.test.ts)
+wk=$(run worker pnpm --filter @astra/worker-agent-host test)
+cn=$(run connectors pnpm --filter @astra/service-connectors test)
 gw=$(run gateway ./infra/db/with-test-db.sh pnpm --filter ./services/api-gateway exec vitest run test/work.integration.test.ts)
 r=1; b=1
 if [ -x "$BIN" ]; then
@@ -39,6 +41,16 @@ row REPLY "permission grant auto-send" "$(rv permission_grant_auto_send)" "selft
 row REPLY "external confirmation" "$(rv external_confirmation)" "確認カード（R2）を通らずに送る道が無い + cloud の承認"
 row REPLY "edited body is what is sent" "$(rv edited_body_sent)" "selftest: [直す] の本文が送信内容"
 row REPLY "focus theft / extra window" "$(rv focus_theft) / $(rv extra_window)" "selftest"
+# OUTLOOK_REPLY_GATE（Graph message: reply、Mail.Send だけ、purpose-first JIT、OAuth 完了で自動送信しない）
+row OUTLOOK "draft with Mail.Read only" "$(ok "$gw")" "gateway: 返信案は compose（読む接続）、送るのは別 task"
+row OUTLOOK "Mail.Send before send" "$([ "$wk" = 0 ] && echo 0 || { fail=1; echo FAIL; })" "worker: 読む tool は outlook 接続の鍵だけ、reply は outlook-actions"
+row OUTLOOK "purpose-first JIT" "$([ "$wk" = 0 ] && echo PASS || { fail=1; echo FAIL; })" "worker: outlook-actions が無ければ purpose つき not_connected（網に出ない）"
+row OUTLOOK "OAuth completion auto-send" "$(rv outlook_oauth_completion_auto_send)" "selftest: 接続後は確認へ戻る"
+row OUTLOOK "confirmation" "100%" "Dock の確認 + cloud の承認（連携 acceptance: reply は requires_confirmation）"
+row OUTLOOK "edited text = sent text" "$(rv outlook_edited_text_sent)" "selftest"
+row OUTLOOK "correct provider message" "$(ok "$gw")" "gateway: outlook の send は in_reply_to（provider message id）必須、task.input.source = outlook_mail"
+row OUTLOOK "wrong-thread" "$([ "$wm" = 0 ] && echo 0 || { fail=1; echo FAIL; })" "world-model: 解決は候補の順、同点は ambiguous"
+row OUTLOOK "Graph reply 202" "$([ "$cn" = 0 ] && echo PASS || { fail=1; echo FAIL; })" "connectors: POST /me/messages/{id}/reply {comment} → 202、scope / 承認が無ければ網に出ない"
 row BRIEF "upcoming event resolved" "$(ok "$wm")" "world-model: 次の時刻つき予定"
 row BRIEF "previous meeting resolved" "$(ok "$wm")" "前回の会議 + 決定 / やること"
 row BRIEF "new mail since meeting" "$(ok "$wm")" "前回以降の受信"
@@ -57,6 +69,7 @@ row BRIEF "focus theft / new window" "$(bv focus_theft) / $(bv new_window)" "sel
   echo "HUMAN_INTERVENTION=0"
   echo "REPLY_IN_CONTEXT_GATE=$([ "$fail" = 0 ] && echo PASS_OFFLINE || echo FAIL)"
   echo "MEETING_BRIEF_GATE=$([ "$fail" = 0 ] && echo PASS_OFFLINE || echo FAIL)"
+  echo "OUTLOOK_REPLY_GATE=$([ "$fail" = 0 ] && echo PASS_OFFLINE || echo FAIL)"
   echo "(live = run-work-context-live.sh: 実 OAuth → seed → sync → graph → Home → reply → brief)"
 } | tee "$OUT/report.txt"
 exit "$fail"

@@ -8,8 +8,13 @@
  * connector 層は判断しない。Graph が返したものを Astra の形に写すだけで、
  * 「これは依頼か」「急ぎか」は上の層（normalize / Work Graph / 端末の LLM）が決める。
  */
-import { callJson, type CallConfig } from './http.js';
-import { requireScope, type OperationDecl } from './approval.js';
+import { callJson, ConnectorError, type CallConfig } from './http.js';
+import {
+  requireApproval,
+  requireScope,
+  type ApprovalProof,
+  type OperationDecl,
+} from './approval.js';
 
 const BASE = 'https://graph.microsoft.com/v1.0';
 
@@ -28,6 +33,16 @@ export const MICROSOFT_OPERATIONS = {
     requiresApproval: false,
   },
   todoList: { id: 'todo.list', scope: 'tasks.read', risk: 'READ', requiresApproval: false },
+  /**
+   * 既存のメッセージへの返信（`POST /me/messages/{id}/reply`）。delegated の `Mail.Send` だけで足りる
+   * （`createReply` は `Mail.ReadWrite` が要るので使わない）。外へ出るので人の承認が要る。
+   */
+  mailReply: {
+    id: 'outlook.mail.reply',
+    scope: 'email.send',
+    risk: 'EXTERNAL_COMMIT',
+    requiresApproval: true,
+  },
 } as const satisfies Record<string, OperationDecl>;
 
 // ------------------------------------------------------------------ mail
@@ -163,6 +178,33 @@ export class OutlookMailConnector {
       signal,
     );
     return (body.value ?? []).map((raw) => toMailSummary(raw, folder));
+  }
+
+  /**
+   * 返信を送る。**人の承認の跡が無ければ送らない。**本文は本人が確認カードで見た（直した）もの。
+   * Graph は 202 を返し、Sent Items にも残る。
+   */
+  async reply(
+    messageId: string,
+    comment: string,
+    proof: ApprovalProof | undefined,
+    signal?: AbortSignal,
+  ): Promise<{ accepted: true }> {
+    requireScope(MICROSOFT_OPERATIONS.mailReply, this.#deps.grantedScopes);
+    requireApproval(
+      MICROSOFT_OPERATIONS.mailReply,
+      proof,
+      (this.#deps.now ?? (() => new Date()))(),
+    );
+    if (comment.trim().length === 0)
+      throw new ConnectorError('provider_error', 'the reply is empty');
+    await callJson<unknown>(
+      `${BASE}/me/messages/${encodeURIComponent(messageId)}/reply`,
+      { method: 'POST', body: { comment } },
+      this.#deps,
+      signal,
+    );
+    return { accepted: true };
   }
 
   async get(messageId: string, signal?: AbortSignal): Promise<OutlookMailMessage> {

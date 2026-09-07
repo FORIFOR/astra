@@ -107,6 +107,37 @@ extension SelfTest {
         row("jit_send_permission", "PASS")
         row("external_confirmation", "100%")
 
+        // 2d. Outlook の下書きは outlook-actions を求め、接続後も自動では送らない（Gmail と同じ形）
+        sent.removeAll(); connectAsked = 0; state = 0
+        let outlookMeta = meta.replacingOccurrences(of: "\"source\":\"gmail\"", with: "\"source\":\"outlook_mail\"")
+            .replacingOccurrences(of: "\"artifact_id\":\"gmail:m1\"", with: "\"artifact_id\":\"outlook_mail:AAMk1\"")
+            .replacingOccurrences(of: "\"external_id\":\"m1\"", with: "\"external_id\":\"AAMk1\"")
+        guard let outlookDraft = ReplyFlow.draft(replyJson: outlookMeta, body: "ご連絡ありがとうございます。") else {
+            print("SELFTEST_FAIL replyflow: Outlook の返信案を組めない"); exit(1)
+        }
+        check(outlookDraft.source == "outlook_mail" && outlookDraft.inReplyTo == "AAMk1", "Outlook の返信先（provider message id）")
+        var askedFor: (String, String)?
+        flow.connector = { p, c in connectAsked += 1; askedFor = (p, c); return true }
+        flow.sender = { d in
+            state += 1
+            if state == 1 { let c = ReplyFlow.actionsConnection(for: d.source); return .needsConnection(pluginId: c.pluginId, connectorId: c.connectorId) }
+            sent.append(d); return .sent(taskId: "t3")
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { AstraStateStore.shared.resolveConfirmation(approved: true) }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { AstraStateStore.shared.resolveConfirmation(approved: true) }
+        let o1 = flow.present(outlookDraft)
+        check(o1 == .needsConnection(pluginId: "com.astra.outlook", connectorId: "outlook-actions"), "Outlook の送る接続を求めない \(o1)")
+        check(askedFor?.0 == "com.astra.outlook" && askedFor?.1 == "outlook-actions", "Outlook の接続先が違う")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { AstraStateStore.shared.resolveConfirmation(approved: false) }
+        ConnectorState.shared.installActionsStatus(pluginId: "com.astra.outlook", connectorId: "outlook-actions", .connected)
+        settleRunLoop(1.2)
+        check(sent.isEmpty && flow.pendingDraft == nil, "Outlook: 接続しただけで送った / 確認へ戻らない")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { AstraStateStore.shared.resolveConfirmation(approved: true, edits: ["__preview": "直した Outlook 本文"]) }
+        let o2 = flow.present(outlookDraft)
+        check(o2 == .sent(taskId: "t3") && sent.last?.body == "直した Outlook 本文", "Outlook: 2 回目の送るで直した本文が送られない")
+        row("outlook_oauth_completion_auto_send", "0")
+        row("outlook_edited_text_sent", "PASS")
+
         // 3. 静かさ
         settleRunLoop(0.3)
         check(NSApp.windows.filter { $0.isVisible }.count == windowsBefore, "窓が増えた")

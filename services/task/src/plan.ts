@@ -251,6 +251,27 @@ function planMailSend(input: Record<string, unknown>): TaskPlan {
   if (to.length === 0 || !subject || !body) {
     throw new UnknownTaskKindError('mail.send needs to, subject and body');
   }
+  const source = typeof input['source'] === 'string' ? input['source'] : 'gmail';
+  const inReplyTo = typeof input['in_reply_to'] === 'string' ? input['in_reply_to'] : null;
+  if (source === 'outlook_mail') {
+    // Outlook は既存メッセージへの返信（Graph の message: reply）。相手のメッセージ id が要る。
+    if (!inReplyTo)
+      throw new UnknownTaskKindError('outlook reply needs the message id to reply to');
+    return {
+      steps: [
+        {
+          index: 0,
+          toolId: 'outlook.mail.reply',
+          risk: 'EXTERNAL_COMMIT',
+          surface: 'local',
+          requiresConfirmation: true,
+          message: `${to.join(', ')} に返信を送ります`,
+          args: { message_id: inReplyTo, comment: body, to, subject, count: to.length },
+        },
+      ],
+      artifact: { type: 'DOCUMENT', title: `返信: ${subject}`, mimeType: 'text/markdown' },
+    };
+  }
   return {
     steps: [
       {

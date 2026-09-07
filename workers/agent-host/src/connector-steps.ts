@@ -98,6 +98,13 @@ export const CONNECTORS = {
     label: 'Outlook（読むだけ）',
     purpose: 'メールと予定を読む',
   },
+  'outlook-actions': {
+    pluginId: 'com.astra.outlook',
+    connectorId: 'outlook-actions',
+    provider: 'microsoft',
+    label: 'Outlook（返信を送る）',
+    purpose: '確認した返信を Outlook から送信する',
+  },
   'microsoft-todo': {
     pluginId: 'com.astra.microsoft-todo',
     connectorId: 'microsoft-todo',
@@ -121,6 +128,7 @@ export const TOOL_CONNECTOR: Readonly<Record<string, ConnectorKey>> = {
   'outlook.mail.search': 'outlook',
   'outlook.mail.read': 'outlook',
   'outlook.calendar.list_events': 'outlook',
+  'outlook.mail.reply': 'outlook-actions',
   'todo.list_tasks': 'microsoft-todo',
 };
 
@@ -257,6 +265,13 @@ export class ConnectorRuntime {
           { timeMin: requireString(args, 'time_min'), timeMax: requireString(args, 'time_max') },
           signal,
         );
+      case 'outlook.mail.reply':
+        return this.outlookMailActions().reply(
+          requireString(args, 'message_id'),
+          requireString(args, 'comment'),
+          step.approval ?? undefined,
+          signal,
+        );
       case 'todo.list_tasks':
         return this.todo().list(
           { ...(args['include_completed'] === true ? { includeCompleted: true } : {}) },
@@ -288,6 +303,11 @@ export class ConnectorRuntime {
 
   outlookMail(): OutlookMailConnector {
     return new OutlookMailConnector(this.#microsoftDeps('outlook'));
+  }
+
+  /** 送る接続。無ければ `not_connected`（送る前に理由を見せて求める）。 */
+  outlookMailActions(): OutlookMailConnector {
+    return new OutlookMailConnector(this.#microsoftDeps('outlook-actions'));
   }
 
   outlookCalendar(): OutlookCalendarConnector {

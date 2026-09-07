@@ -133,6 +133,61 @@ describe('running a connector step on the device', () => {
     expect(reads).toEqual(['com.astra.gmail/gmail']);
   });
 
+  it('routes an Outlook reply to the actions connection, and asks for it with its purpose when absent', async () => {
+    const store = memoryStore({ 'com.astra.outlook/outlook': tokenSet() });
+    const sent: Sent[] = [];
+    const fetch = (async (url: string, init: RequestInit) => {
+      const headers = init.headers as Record<string, string>;
+      sent.push({
+        url,
+        authorization: headers?.['authorization'],
+        body: init.body ? JSON.parse(init.body as string) : undefined,
+      });
+      return new Response('', { status: 202 });
+    }) as unknown as typeof globalThis.fetch;
+    const r = new ConnectorRuntime({
+      secrets: store,
+      credentialRefFor: (pluginId, connectorId) => `keychain:${pluginId}/${connectorId}`,
+      grantedScopes: (pluginId) =>
+        pluginId === 'com.astra.outlook' ? ['email.read', 'calendar.read', 'email.send'] : [],
+      fetch,
+      now: () => new Date('2026-08-27T00:00:00.000Z'),
+    });
+    expect(r.handles('outlook.mail.reply')).toBe(true);
+    const missing = await r.run(
+      step({
+        toolId: 'outlook.mail.reply',
+        args: { message_id: 'AAMk1', comment: 'ok' },
+        approval: approved('outlook.mail.reply'),
+      }),
+    );
+    expect(missing.ok).toBe(false);
+    expect(missing.error!.code).toBe('connector.not_connected');
+    expect(missing.error!.message).toContain('Outlook（返信を送る）');
+    expect(sent).toEqual([]);
+    await store.set('com.astra.outlook/outlook-actions', tokenSet({ accessToken: 'ms-actions' }));
+    const ok = await r.run(
+      step({
+        toolId: 'outlook.mail.reply',
+        args: { message_id: 'AAMk1', comment: 'ok' },
+        approval: approved('outlook.mail.reply'),
+      }),
+    );
+    expect(ok.ok).toBe(true);
+    expect(sent[0]!.url).toBe('https://graph.microsoft.com/v1.0/me/messages/AAMk1/reply');
+    expect(sent[0]!.authorization).toBe('Bearer ms-actions');
+    // 承認が無ければ、接続があっても送らない
+    const unapproved = await r.run(
+      step({
+        toolId: 'outlook.mail.reply',
+        args: { message_id: 'AAMk1', comment: 'ok' },
+        approval: null,
+      }),
+    );
+    expect(unapproved.error!.code).toBe('connector.approval_required');
+    expect(sent).toHaveLength(1);
+  });
+
   it('asks for the actions connection, with its purpose, before sending — and sends nothing', async () => {
     const store = memoryStore({ 'com.astra.gmail/gmail': tokenSet() });
     const { runtime: r, sent } = runtime(store);

@@ -64,12 +64,20 @@ for p in plugins/builtin/outlook/plugin.yaml plugins/builtin/microsoft-todo/plug
   if python3 - "$p" <<'PY'; then :; else ro=0; fi
 import sys, yaml
 m = yaml.safe_load(open(sys.argv[1]))
-bad = [x for x in m.get("permissions", []) if not x.endswith(".read")]
-bad += [t["id"] for t in m.get("tools", []) if t.get("risk") != "READ"]
+# 読む接続（Work Context が使うもの）は .read だけ。書く許可は別の接続（purpose 必須）にだけあってよい。
+conns = m.get("connectors", [])
+read = [c for c in conns if all(g.endswith(".read") for g in c.get("grants", []))]
+bad = [] if read else ["no read-only connection"]
+for c in conns:
+    if any(not g.endswith(".read") for g in c.get("grants", [])) and not c.get("purpose"):
+        bad.append(f"{c['id']}: write connection without purpose")
+for t in m.get("tools", []):
+    if t.get("risk") != "READ" and not t.get("requires_confirmation"):
+        bad.append(f"{t['id']}: write tool without confirmation")
 sys.exit(1 if bad else 0)
 PY
 done
-row "read_only_default" "$([ "$ro" = 1 ] && echo PASS || echo FAIL)" "outlook / microsoft-todo: permissions は *.read、tools は READ だけ"
+row "read_only_default" "$([ "$ro" = 1 ] && echo PASS || echo FAIL)" "outlook / microsoft-todo: 読む接続は *.read だけ、書く接続は purpose つき、書く tool は確認つき"
 [ "$ro" = 1 ] || fail=1
 
 # read-only first (Google): 読む接続に書く scope が無く、書く許可は理由つきの別の接続にある

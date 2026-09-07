@@ -454,13 +454,40 @@ describe.skipIf(!url)('reply in context and meeting brief', () => {
       headers: auth,
     });
     expect(approvals.statusCode).toBe(200);
-    // Outlook からはまだ送れない、と言う（黙って Gmail 経由にしない）
-    const outlook = await app.inject({
+    // Outlook は既存メッセージへの返信（相手のメッセージ id が要る）。別 task で承認つき
+    const outlookNoId = await app.inject({
       method: 'POST',
       url: '/v1/work/reply/send',
       headers: auth,
       payload: { source: 'outlook_mail', to: ['a@example.com'], subject: 's', body: 'b' },
     });
-    expect(outlook.statusCode).toBe(409);
+    expect(outlookNoId.statusCode).toBe(400);
+    const outlook = await app.inject({
+      method: 'POST',
+      url: '/v1/work/reply/send',
+      headers: auth,
+      payload: {
+        source: 'outlook_mail',
+        to: ['a@example.com'],
+        subject: 's',
+        body: 'b',
+        in_reply_to: 'AAMk1',
+      },
+    });
+    expect(outlook.statusCode).toBe(202);
+    const outlookTask = await harness.tasks.get(
+      tenantId,
+      outlook.json<{ task_id: string }>().task_id,
+    );
+    expect(outlookTask.kind).toBe('mail.send');
+    expect((outlookTask.input as { source: string }).source).toBe('outlook_mail');
+    // 他の送り元は断る
+    const other = await app.inject({
+      method: 'POST',
+      url: '/v1/work/reply/send',
+      headers: auth,
+      payload: { source: 'microsoft_todo', to: ['a@example.com'], subject: 's', body: 'b' },
+    });
+    expect(other.statusCode).toBe(409);
   });
 });

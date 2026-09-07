@@ -107,6 +107,64 @@ describe('OutlookMailConnector', () => {
     expect(message.bodyIsHtml).toBe(true);
   });
 
+  it("replies only with Mail.Send, only with a person's approval, and posts comment to message: reply (202)", async () => {
+    const proof = {
+      approvalId: 'ap-1',
+      operationId: 'outlook.mail.reply',
+      decision: 'APPROVED' as const,
+      decidedBy: 'user-1',
+      decidedAt: '2026-09-07T00:00:00.000Z',
+      expiresAt: '2099-01-01T00:00:00.000Z',
+    };
+    // scope が無ければ網に出ない
+    const noScope = fakeFetch(() => ({ status: 202, body: {} }));
+    const readOnly = new OutlookMailConnector({
+      token,
+      fetch: noScope.fetch,
+      grantedScopes: ['email.read'],
+    });
+    await expect(readOnly.reply('AAMk1', 'ありがとうございます', proof)).rejects.toMatchObject({
+      reason: 'insufficient_scope',
+    });
+    expect(noScope.calls).toEqual([]);
+    // 承認が無ければ網に出ない
+    const noProof = fakeFetch(() => ({ status: 202, body: {} }));
+    const sender = new OutlookMailConnector({
+      token,
+      fetch: noProof.fetch,
+      grantedScopes: ['email.read', 'email.send'],
+    });
+    await expect(sender.reply('AAMk1', 'ありがとうございます', undefined)).rejects.toMatchObject({
+      name: 'ApprovalRequired',
+    });
+    expect(noProof.calls).toEqual([]);
+    // 承認つきなら message: reply に comment を送る（Graph は 202、本文無し）
+    const calls: { url: string; method: string; body: unknown }[] = [];
+    const fetch = (async (url: string, init: RequestInit) => {
+      calls.push({
+        url,
+        method: init.method ?? 'GET',
+        body: init.body ? JSON.parse(init.body as string) : undefined,
+      });
+      return new Response('', { status: 202 });
+    }) as unknown as typeof globalThis.fetch;
+    const ok = new OutlookMailConnector({
+      token,
+      fetch,
+      grantedScopes: ['email.read', 'email.send'],
+    });
+    await expect(ok.reply('AAMk1', 'ご連絡ありがとうございます。', proof)).resolves.toEqual({
+      accepted: true,
+    });
+    expect(calls).toEqual([
+      {
+        url: 'https://graph.microsoft.com/v1.0/me/messages/AAMk1/reply',
+        method: 'POST',
+        body: { comment: 'ご連絡ありがとうございます。' },
+      },
+    ]);
+  });
+
   it('maps Graph failures to the shared reasons', async () => {
     const { fetch } = fakeFetch(() => ({
       status: 401,

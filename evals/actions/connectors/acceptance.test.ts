@@ -17,8 +17,11 @@ import { EXTERNAL_SEND_SCOPES, PERMISSION_SCOPES, riskRank } from '@astra/contra
 import {
   CALENDAR_OPERATIONS,
   GMAIL_OPERATIONS,
+  MICROSOFT_OPERATIONS,
   googleScopesFor,
+  microsoftScopesFor,
   permissionsFromGoogleScopes,
+  permissionsFromMicrosoftScopes,
   type OperationDecl,
 } from '@astra/service-connectors';
 import { CONNECTORS, TOOL_CONNECTOR } from '@astra/worker-agent-host';
@@ -44,6 +47,13 @@ const GMAIL_TOOLS: Record<string, OperationDecl> = {
   'mail.trash': GMAIL_OPERATIONS.trash,
 };
 
+const OUTLOOK_TOOLS: Record<string, OperationDecl> = {
+  'outlook.mail.search': MICROSOFT_OPERATIONS.mailList,
+  'outlook.mail.read': MICROSOFT_OPERATIONS.mailGet,
+  'outlook.calendar.list_events': MICROSOFT_OPERATIONS.calendarList,
+  'outlook.mail.reply': MICROSOFT_OPERATIONS.mailReply,
+};
+
 const CALENDAR_TOOLS: Record<string, OperationDecl> = {
   'calendar.list_events': CALENDAR_OPERATIONS.list,
   'calendar.get_event': CALENDAR_OPERATIONS.get,
@@ -51,9 +61,10 @@ const CALENDAR_TOOLS: Record<string, OperationDecl> = {
 };
 
 describe('the connector manifests match what is implemented', () => {
-  for (const [name, tools] of [
-    ['gmail', GMAIL_TOOLS],
-    ['calendar', CALENDAR_TOOLS],
+  for (const [name, tools, scopesFor, readBack] of [
+    ['gmail', GMAIL_TOOLS, googleScopesFor, permissionsFromGoogleScopes],
+    ['calendar', CALENDAR_TOOLS, googleScopesFor, permissionsFromGoogleScopes],
+    ['outlook', OUTLOOK_TOOLS, microsoftScopesFor, permissionsFromMicrosoftScopes],
   ] as const) {
     it(`${name}: declares no tool that does not exist`, async () => {
       const declared = (await manifest(name)).tools.map((t) => t.id).sort();
@@ -91,7 +102,7 @@ describe('the connector manifests match what is implemented', () => {
     it(`${name}: each connection asks the provider for exactly the scopes its grants need`, async () => {
       // 同意は接続（capability）ごと。接続が要求する scope は、その接続が与える許可の分だけ。
       for (const c of (await manifest(name)).connectors) {
-        expect(c.scopes.slice().sort(), c.id).toEqual(googleScopesFor(c.grants as never));
+        expect(c.scopes.slice().sort(), c.id).toEqual(scopesFor(c.grants as never));
       }
     });
 
@@ -106,12 +117,13 @@ describe('the connector manifests match what is implemented', () => {
       // 許したはずの操作が動かない、あるいはその逆になる。
       const m = await manifest(name);
       for (const c of m.connectors) {
-        const granted = googleScopesFor(c.grants as never).join(' ');
-        const readBack = permissionsFromGoogleScopes(granted);
+        const granted = scopesFor(c.grants as never).join(' ');
+        const readBackPermissions = readBack(granted);
         // 与えると言った許可は全部読み戻せる。Google の広い scope（modify ⊇ readonly）が
         // 余分に含む分は plugin の許可の中に収まる（宣言に無い許可は生まれない）。
-        for (const g of c.grants) expect(readBack, c.id).toContain(g);
-        for (const p of readBack) expect(m.permissions, `${c.id} reads back ${p}`).toContain(p);
+        for (const g of c.grants) expect(readBackPermissions, c.id).toContain(g);
+        for (const p of readBackPermissions)
+          expect(m.permissions, `${c.id} reads back ${p}`).toContain(p);
       }
     });
   }
@@ -124,11 +136,13 @@ describe('the connector manifests match what is implemented', () => {
    * 書く tool は書く接続に、読む tool は読む接続に結ばれている。
    */
   describe('read-only first (GOOGLE_READ_ONLY_FIRST)', () => {
-    const WRITE_SCOPE = /(modify|send|compose|calendar\.events|calendar$|mail\.google\.com)/;
+    const WRITE_SCOPE =
+      /(modify|send|compose|calendar\.events|calendar$|mail\.google\.com|Mail\.Send|ReadWrite)/;
 
     for (const [name, readId, actionsId] of [
       ['gmail', 'gmail', 'gmail-actions'],
       ['calendar', 'google-calendar', 'google-calendar-actions'],
+      ['outlook', 'outlook', 'outlook-actions'],
     ] as const) {
       it(`${name}: the read connection holds no write scope`, async () => {
         const read = (await manifest(name)).connectors.find((c) => c.id === readId)!;
@@ -147,8 +161,8 @@ describe('the connector manifests match what is implemented', () => {
 
     it('binds read tools to read connections and write tools to actions connections', () => {
       for (const [toolId, key] of Object.entries(TOOL_CONNECTOR)) {
-        const risk = { ...GMAIL_TOOLS, ...CALENDAR_TOOLS }[toolId]?.risk;
-        if (!risk) continue; // Microsoft 側は読む tool しか無い
+        const risk = { ...GMAIL_TOOLS, ...CALENDAR_TOOLS, ...OUTLOOK_TOOLS }[toolId]?.risk;
+        if (!risk) continue; // To Do は読む tool しか無い
         if (risk === 'READ') expect(key, toolId).not.toMatch(/-actions$/);
         else expect(key, toolId).toMatch(/-actions$/);
       }
