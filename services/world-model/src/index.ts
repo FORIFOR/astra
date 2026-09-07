@@ -42,4 +42,4 @@ export {
 } from './work/personalization.js';
 export { selectInjection, injectionText, type InjectionInput } from './work/injection.js';
 export { ruleSemantic } from './work/semantic.js';
-export { WorkContextService, type WorkContextDeps, type SyncState } from './work/service.js';
+export { WorkContextService, type WorkContextDeps } from './work/service.js';

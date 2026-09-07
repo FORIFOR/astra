@@ -87,12 +87,14 @@ describe.skipIf(!url)('WorkContextService', () => {
     const first = await work.ingest(tenantId, userId, {
       source: 'gmail',
       cursor: 'h-1',
+      watermark: null,
       artifacts: [art('m1'), art('m2')],
     });
     expect(first.accepted).toBe(2);
     const again = await work.ingest(tenantId, userId, {
       source: 'gmail',
       cursor: 'h-2',
+      watermark: null,
       artifacts: [art('m1')],
     });
     expect(again.accepted).toBe(1); // upsert（同じ id は増えない）
@@ -136,5 +138,47 @@ describe.skipIf(!url)('WorkContextService', () => {
 
   it('keeps tenants apart', async () => {
     expect(await work.artifacts(otherTenant, userId)).toEqual([]);
+  });
+
+  it('advances the cursor only with the artifacts, never ahead of them, and keeps failures apart', async () => {
+    // 途中の batch（cursor null）は前の cursor を動かさない。watermark は後ろへ戻らない。
+    await work.ingest(tenantId, userId, {
+      source: 'outlook_mail',
+      cursor: 'c-1',
+      watermark: '2026-09-06T00:00:00.000Z',
+      artifacts: [art('o1')],
+    });
+    await work.ingest(tenantId, userId, {
+      source: 'outlook_mail',
+      cursor: null,
+      watermark: '2026-09-05T00:00:00.000Z',
+      artifacts: [art('o2')],
+    });
+    let state = (await work.syncState(tenantId, userId)).find((s) => s.source === 'outlook_mail')!;
+    expect(state.cursor).toBe('c-1');
+    expect(state.watermark).toBe('2026-09-06T00:00:00.000Z');
+    expect(state.last_error).toBeNull();
+    expect(state.schema_version).toBe(1);
+
+    // 失敗は理由だけ残り、cursor も成功時刻も動かない
+    const before = state.last_synced_at;
+    await work.recordAttempt(tenantId, userId, 'outlook_mail', {
+      ok: false,
+      error: 'rate_limited',
+    });
+    state = (await work.syncState(tenantId, userId)).find((s) => s.source === 'outlook_mail')!;
+    expect(state.cursor).toBe('c-1');
+    expect(state.last_error).toBe('rate_limited');
+    expect(state.last_synced_at).toBe(before);
+    expect(state.last_attempt_at).not.toBeNull();
+
+    // 一度も成功していない source は失敗だけを持つ（成功時刻を捏造しない）
+    await work.recordAttempt(tenantId, userId, 'microsoft_todo', { ok: false, error: 'boom' });
+    const fresh = (await work.syncState(tenantId, userId)).find(
+      (s) => s.source === 'microsoft_todo',
+    )!;
+    expect(fresh.cursor).toBeNull();
+    expect(fresh.last_synced_at).toBeNull();
+    expect(fresh.last_error).toBe('boom');
   });
 });

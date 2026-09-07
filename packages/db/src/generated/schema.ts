@@ -607,11 +607,33 @@ export interface WorkProfiles {
 
 export interface WorkSyncState {
   artifact_count: Generated<number>;
+  /**
+   * 続きの位置（source ごとの形。メールは最後に見た時刻の ISO）。artifact の upsert と同じ transaction でだけ進む
+   */
   cursor: string | null;
-  last_synced_at: Generated<Timestamp>;
+  /**
+   * 最後に試した時刻（失敗も含む）
+   */
+  last_attempt_at: Timestamp | null;
+  /**
+   * 最後の失敗の理由。成功したら消す
+   */
+  last_error: string | null;
+  /**
+   * 最後に成功した時刻
+   */
+  last_synced_at: Timestamp | null;
+  /**
+   * 正規化の版。上がったら cursor を捨てて読み直す
+   */
+  schema_version: Generated<number>;
   source: string;
   tenant_id: string;
   user_id: string;
+  /**
+   * 取り込んだ artifact の occurred_at の最大。cursor とは別に、どこまで見えているかの事実
+   */
+  watermark: Timestamp | null;
 }
 
 export interface WorldEdges {

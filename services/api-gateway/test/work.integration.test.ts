@@ -132,7 +132,35 @@ describe.skipIf(!url)('work context over HTTP', () => {
     expect(sync.json<{ items: { source: string; cursor: string }[] }>().items[0]).toMatchObject({
       source: 'gmail',
       cursor: 'history-42',
+      last_error: null,
+      schema_version: 1,
     });
+
+    // 失敗の記録: 理由は残るが cursor は動かない（端末は同じ続きから読み直す）
+    const failed = await app.inject({
+      method: 'POST',
+      url: '/v1/work/sync/gmail/attempt',
+      headers: auth,
+      payload: { ok: false, error: 'token_expired' },
+    });
+    expect(failed.statusCode).toBe(204);
+    const after = await app.inject({ method: 'GET', url: '/v1/work/sync', headers: auth });
+    expect(after.json<{ items: unknown[] }>().items[0]).toMatchObject({
+      source: 'gmail',
+      cursor: 'history-42',
+      last_error: 'token_expired',
+    });
+    // 知らない source は受けない
+    expect(
+      (
+        await app.inject({
+          method: 'POST',
+          url: '/v1/work/sync/nonsense/attempt',
+          headers: auth,
+          payload: { ok: false, error: 'x' },
+        })
+      ).statusCode,
+    ).toBe(400);
   });
 
   it('builds the context with a source behind every inference, and opens the evidence', async () => {

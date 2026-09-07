@@ -10,7 +10,12 @@
  *   - 1 つの source が落ちても他は進む
  */
 import { describe, expect, it } from 'vitest';
-import type { WorkArtifactBatch } from '@astra/contracts';
+import type {
+  WorkArtifactBatch,
+  WorkSource,
+  WorkSyncAttempt,
+  WorkSyncState,
+} from '@astra/contracts';
 import type { SecretStore } from '@astra/oauth';
 import { ConnectorRuntime, type HostStep, type StepOutcome } from '../src/connector-steps.js';
 import { WorkSyncLoop, semanticFrom } from '../src/work-sync.js';
@@ -61,6 +66,7 @@ interface Harness {
   urls: string[];
   batches: WorkArtifactBatch[];
   asked: HostStep[];
+  attempts: { source: WorkSource; attempt: WorkSyncAttempt }[];
 }
 
 function harness(
@@ -70,11 +76,16 @@ function harness(
     llm?: (step: HostStep) => StepOutcome;
     routes?: (url: string) => { status?: number; body: unknown };
     onSecretRead?: (key: string) => void;
+    /** cloud に残っている続き。 */
+    state?: WorkSyncState[];
+    /** push を落とす（cloud が受け取れなかった）。 */
+    pushFails?: boolean;
   } = {},
 ): Harness {
   const urls: string[] = [];
   const batches: WorkArtifactBatch[] = [];
   const asked: HostStep[] = [];
+  const attempts: { source: WorkSource; attempt: WorkSyncAttempt }[] = [];
   const fetch = (async (url: string) => {
     urls.push(url);
     const route = options.routes?.(url) ?? defaultRoutes(url);
@@ -111,11 +122,16 @@ function harness(
     connectors: runtime,
     ...(llm ? { llm } : {}),
     push: async (batch) => {
+      if (options.pushFails) throw new Error('POST /v1/work/artifacts failed with 503');
       batches.push(batch);
+    },
+    ...(options.state ? { loadState: async () => options.state! } : {}),
+    attempt: async (source, attempt) => {
+      attempts.push({ source, attempt });
     },
     now: () => NOW,
   });
-  return { loop, urls, batches, asked };
+  return { loop, urls, batches, asked, attempts };
 }
 
 function defaultRoutes(url: string): { status?: number; body: unknown } {
@@ -380,7 +396,53 @@ describe('syncing work context from the device', () => {
     expect(report.outcomes[0]).toMatchObject({ source: 'gmail', status: 'failed' });
     expect(report.outcomes[1]).toMatchObject({ source: 'google_calendar', status: 'synced' });
     expect(h.batches.map((b) => b.source)).toEqual(['google_calendar']);
-    // 落ちた source の cursor は進めない
+    // 落ちた source の cursor は進めない。失敗は理由つきで cloud に残す
     expect(h.loop.cursors.has('gmail')).toBe(false);
+    expect(h.attempts).toEqual([
+      { source: 'gmail', attempt: { ok: false, error: expect.stringContaining('boom') } },
+    ]);
+  });
+
+  it('resumes from the cursor the cloud kept, instead of re-reading 14 days', async () => {
+    const kept = new Date(NOW.getTime() - 2 * 3_600_000).toISOString();
+    const h = harness({
+      connected: ['com.astra.gmail/gmail'],
+      granted: GOOGLE_GRANTS,
+      state: [
+        {
+          source: 'gmail',
+          cursor: kept,
+          watermark: kept,
+          last_synced_at: kept,
+          last_attempt_at: kept,
+          last_error: null,
+          artifact_count: 10,
+          schema_version: 1,
+        },
+      ],
+    });
+    await h.loop.syncOnce();
+    const listing = h.urls.find((u) => u.includes('/messages?'))!;
+    const after = Number(new URL(listing).searchParams.get('q')!.replace('after:', ''));
+    expect(after).toBe(Math.floor(Date.parse(kept) / 1000) - 1);
+  });
+
+  it('sends the cursor and the watermark with the artifacts, and does not advance when the cloud refuses', async () => {
+    const h = harness({ connected: ['com.astra.gmail/gmail'], granted: GOOGLE_GRANTS });
+    await h.loop.syncOnce();
+    const batch = h.batches.find((b) => b.source === 'gmail')!;
+    expect(batch.cursor).not.toBeNull();
+    expect(batch.watermark).toBe(new Date(NOW.getTime() - 3_600_000).toISOString());
+
+    const refused = harness({
+      connected: ['com.astra.gmail/gmail'],
+      granted: GOOGLE_GRANTS,
+      pushFails: true,
+    });
+    const report = await refused.loop.syncOnce();
+    expect(report.outcomes[0]).toMatchObject({ source: 'gmail', status: 'failed' });
+    // cloud が受け取っていないものを「読んだ」ことにしない
+    expect(refused.loop.cursors.has('gmail')).toBe(false);
+    expect(refused.attempts[0]!.attempt.ok).toBe(false);
   });
 });

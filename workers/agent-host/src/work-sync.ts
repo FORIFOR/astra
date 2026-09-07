@@ -16,6 +16,8 @@ import {
   type WorkArtifact,
   type WorkArtifactBatch,
   type WorkSource,
+  type WorkSyncAttempt,
+  type WorkSyncState,
 } from '@astra/contracts';
 import {
   fromGmail,
@@ -45,8 +47,15 @@ export interface WorkSyncReport {
 
 export interface WorkSyncDeps {
   readonly connectors: ConnectorRuntime;
-  /** cloud へ渡す（`POST /v1/work/artifacts`）。 */
+  /** cloud へ渡す（`POST /v1/work/artifacts`）。artifact の upsert と cursor は cloud が同じ transaction で進める。 */
   readonly push: (batch: WorkArtifactBatch) => Promise<void>;
+  /**
+   * 続きの位置を cloud から読む（`GET /v1/work/sync`）。**最初の 1 回だけ。**
+   * 無ければ process 内から始める（再起動のたびに 14 日分を読み直していたのを、ここで止める）。
+   */
+  readonly loadState?: () => Promise<readonly WorkSyncState[]>;
+  /** 失敗を残す（`POST /v1/work/sync/:source/attempt`）。cursor は動かさない。 */
+  readonly attempt?: (source: WorkSource, attempt: WorkSyncAttempt) => Promise<void>;
   /** 端末の LLM。無ければ意味を付けない。 */
   readonly llm?: StepRunner;
   readonly now?: () => Date;
@@ -68,8 +77,12 @@ const DAY_MS = 86_400_000;
 
 export class WorkSyncLoop {
   readonly #deps: WorkSyncDeps;
-  /** source ごとの続き（メールは最後に見た時刻）。process が生きている間だけ。 */
+  /**
+   * source ごとの続き（メールは最後に見た時刻）。正本は cloud の `work_sync_state`。
+   * ここは写しで、push が成功したときだけ進む（cloud 側も upsert と同じ transaction でだけ進める）。
+   */
   readonly #cursors = new Map<WorkSource, string>();
+  #resumed = false;
   /** 既に LLM に頼んだ artifact。同じメールを毎回聞き直さない。 */
   readonly #classified = new Map<string, WorkSemantic | null>();
   #timer: ReturnType<typeof setTimeout> | null = null;
@@ -94,6 +107,7 @@ export class WorkSyncLoop {
   }
 
   async #run(): Promise<WorkSyncReport> {
+    await this.#resume();
     const now = (this.#deps.now ?? (() => new Date()))();
     const ctx: NormalizeContext = { observedAt: now.toISOString() };
     const outcomes: SourceOutcome[] = [];
@@ -119,6 +133,22 @@ export class WorkSyncLoop {
     return { at: ctx.observedAt, outcomes };
   }
 
+  /** cloud に残した続きから始める。読めなければ（初回・未接続）そのまま最初から。 */
+  async #resume(): Promise<void> {
+    if (this.#resumed || !this.#deps.loadState) return;
+    try {
+      for (const state of await this.#deps.loadState()) {
+        if (state.cursor && !this.#cursors.has(state.source)) {
+          this.#cursors.set(state.source, state.cursor);
+        }
+      }
+      this.#resumed = true;
+    } catch (error) {
+      // 続きが読めないのは、読み直しの理由にはなっても止める理由にはならない。次の周でまた試す。
+      this.#deps.onError?.('gmail', error instanceof Error ? error : new Error(String(error)));
+    }
+  }
+
   async #source(
     source: WorkSource,
     key: Parameters<ConnectorRuntime['connected']>[0],
@@ -136,14 +166,28 @@ export class WorkSyncLoop {
       }
       const { artifacts, cursor } = await fetch();
       const { items, classified } = await this.#classify(artifacts);
-      // 500 件ずつ（契約の上限）。0 件でも 1 回送る — 同期した事実は残す。
+      /*
+       * 順番: fetch → normalize → upsert → cursor。
+       * 500 件ずつ（契約の上限）送り、**cursor は最後の 1 回にだけ付ける**。途中の batch に付けると、
+       * 後ろの batch が落ちたとき cloud の cursor だけが先へ行き、その範囲が二度と読まれない。
+       * 0 件でも 1 回送る — 同期した事実（last_synced_at）は残す。
+       */
+      const watermark = latestOccurredAt(items);
       const chunks = items.length === 0 ? [[]] : chunk(items, 500);
-      for (const artifacts of chunks) await this.#deps.push({ source, cursor, artifacts });
+      for (const [i, artifacts] of chunks.entries()) {
+        const last = i === chunks.length - 1;
+        await this.#deps.push({ source, cursor: last ? cursor : null, watermark, artifacts });
+      }
+      // push がすべて成功してから、手元の写しを進める。
       if (cursor) this.#cursors.set(source, cursor);
       return { source, status: 'synced', artifacts: items.length, classified };
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error));
       this.#deps.onError?.(source, err);
+      // 失敗を cloud にも残す（理由つき）。cursor は動かない。残せなくても同期の結果は変えない。
+      await this.#deps
+        .attempt?.(source, { ok: false, error: err.message.slice(0, 500) })
+        .catch(() => undefined);
       return { source, status: 'failed', artifacts: 0, classified: 0, error: err.message };
     }
   }
@@ -350,6 +394,16 @@ function chunk<T>(items: readonly T[], size: number): T[][] {
   const out: T[][] = [];
   for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size));
   return out;
+}
+
+/** 見えた occurred_at の最大（watermark）。無ければ null。 */
+function latestOccurredAt(artifacts: readonly WorkArtifact[]): string | null {
+  let max: number | null = null;
+  for (const a of artifacts) {
+    const t = Date.parse(a.occurred_at);
+    if (Number.isFinite(t) && (max === null || t > max)) max = t;
+  }
+  return max === null ? null : new Date(max).toISOString();
 }
 
 /** 一番新しい occurred_at。何も無ければ元の since を続きにする。 */

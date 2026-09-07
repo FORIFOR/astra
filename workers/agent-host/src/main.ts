@@ -16,6 +16,7 @@ import { httpStepTransport } from './step-transport.js';
 import { ClaudeCodeCli } from './claude-code.js';
 import { LlmRuntime } from './llm-steps.js';
 import { CompositeRunner } from './runner.js';
+import type { WorkSyncState } from '@astra/contracts';
 import { DEFAULT_SYNC_INTERVAL_MS, WorkSyncLoop } from './work-sync.js';
 
 async function main(): Promise<void> {
@@ -128,18 +129,26 @@ async function main(): Promise<void> {
    * 繋いであるサービスだけを読み、**抜粋にして**cloud へ渡す。
    * 意味づけは端末の LLM。`ASTRA_WORK_SYNC=off` で止められる。
    */
+  const cloud = async (path: string, method: string, body?: unknown): Promise<unknown> => {
+    const response = await fetch(`${baseUrl}${path}`, {
+      method,
+      headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+      ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+    });
+    if (!response.ok) throw new Error(`${method} ${path} failed with ${String(response.status)}`);
+    return response.status === 204 ? null : ((await response.json()) as unknown);
+  };
   const workSync = new WorkSyncLoop({
     connectors: runtime,
     llm,
     push: async (batch) => {
-      const response = await fetch(`${baseUrl}/v1/work/artifacts`, {
-        method: 'POST',
-        headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
-        body: JSON.stringify(batch),
-      });
-      if (!response.ok) {
-        throw new Error(`POST /v1/work/artifacts failed with ${String(response.status)}`);
-      }
+      await cloud('/v1/work/artifacts', 'POST', batch);
+    },
+    // 続きは cloud の work_sync_state から（再起動しても 14 日分を読み直さない）。
+    loadState: async () =>
+      ((await cloud('/v1/work/sync', 'GET')) as { items: WorkSyncState[] }).items,
+    attempt: async (source, attempt) => {
+      await cloud(`/v1/work/sync/${source}/attempt`, 'POST', attempt);
     },
     onError: (source, error) =>
       logger.warn({ source, err: error.message }, 'work context sync failed for a source'),

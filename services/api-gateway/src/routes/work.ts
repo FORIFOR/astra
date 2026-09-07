@@ -5,7 +5,8 @@
  *   GET  /v1/work/evidence/:itemId   その item の出所（artifact そのもの。抜粋だけ、全文は無い）
  *   POST /v1/work/corrections        本人の訂正（1 操作）
  *   POST /v1/work/artifacts          端末の worker からの取り込み（正規化済み。全文は来ない）
- *   GET  /v1/work/sync               source ごとの同期位置
+ *   GET  /v1/work/sync               source ごとの同期位置（端末はここから続きを読む）
+ *   POST /v1/work/sync/:source/attempt  同期の試み（失敗の理由。cursor は動かさない）
  *   GET  /v1/personalization         Astra が今あなたについて使っている情報
  *   PUT  /v1/personalization         確認・使わない・全体の停止
  *
@@ -15,6 +16,8 @@ import {
   PersonalizationUpdate,
   WorkArtifactBatch,
   WorkCorrection,
+  WorkSource,
+  WorkSyncAttempt,
   type WorkArtifact,
 } from '@astra/contracts';
 import type { TaskService } from '@astra/service-task';
@@ -35,17 +38,15 @@ export async function localArtifacts(
   tenantId: string,
 ): Promise<WorkArtifact[]> {
   const out: WorkArtifact[] = [];
-  const tasks = await deps.tasks
-    .list(tenantId, 50)
-    .catch(() => ({
-      items: [] as {
-        id: string;
-        title: string | null;
-        status: string;
-        updated_at: string;
-        created_at?: string;
-      }[],
-    }));
+  const tasks = await deps.tasks.list(tenantId, 50).catch(() => ({
+    items: [] as {
+      id: string;
+      title: string | null;
+      status: string;
+      updated_at: string;
+      created_at?: string;
+    }[],
+  }));
   for (const t of tasks.items) {
     if (!t.title) continue;
     const open = !['COMPLETED', 'FAILED', 'CANCELLED'].includes(t.status);
@@ -141,6 +142,20 @@ export function registerWorkRoutes(app: App, deps: WorkRouteDeps): void {
     const p = requirePrincipal();
     return { items: await deps.work.syncState(p.tenantId, p.userId) };
   });
+
+  app.post<{ Params: { source: string } }>(
+    '/v1/work/sync/:source/attempt',
+    async (request, reply) => {
+      const p = requirePrincipal();
+      await deps.work.recordAttempt(
+        p.tenantId,
+        p.userId,
+        WorkSource.parse(request.params.source),
+        WorkSyncAttempt.parse(request.body ?? {}),
+      );
+      return reply.status(204).send();
+    },
+  );
 
   app.get('/v1/personalization', async () => {
     const p = requirePrincipal();

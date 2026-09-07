@@ -126,13 +126,44 @@ export const WorkArtifact = z.object({
 });
 export type WorkArtifact = z.infer<typeof WorkArtifact>;
 
-/** 端末から cloud へ渡す 1 回分。 */
+/**
+ * 端末から cloud へ渡す 1 回分。
+ *
+ * `cursor` は **この batch で読み終えた範囲の続き**。null なら「まだ途中」で、cloud は前の cursor を
+ * 動かさない（500 件ずつ分けて送るとき、最後の 1 回にだけ付ける）。artifact の upsert と同じ
+ * transaction でだけ進む — 先に cursor を書かない。
+ */
 export const WorkArtifactBatch = z.object({
   source: WorkSource,
   cursor: z.string().max(500).nullable().default(null),
+  /** 取り込んだ artifact の occurred_at の最大（どこまで見えているかの事実）。 */
+  watermark: Timestamp.nullable().default(null),
   artifacts: z.array(WorkArtifact).max(500),
 });
 export type WorkArtifactBatch = z.infer<typeof WorkArtifactBatch>;
+
+/** 同期の試み（失敗も残す）。成功は batch の取り込みそのものが記録する。 */
+export const WorkSyncAttempt = z.object({
+  ok: z.boolean(),
+  error: z.string().max(500).nullable().default(null),
+});
+export type WorkSyncAttempt = z.infer<typeof WorkSyncAttempt>;
+
+/** source ごとの同期位置。端末はここから続きを読む（再起動しても 14 日分を読み直さない）。 */
+export const WorkSyncState = z.object({
+  source: WorkSource,
+  cursor: z.string().nullable(),
+  watermark: Timestamp.nullable(),
+  last_synced_at: Timestamp.nullable(),
+  last_attempt_at: Timestamp.nullable(),
+  last_error: z.string().nullable(),
+  artifact_count: z.number().int().nonnegative(),
+  schema_version: z.number().int().positive(),
+});
+export type WorkSyncState = z.infer<typeof WorkSyncState>;
+
+/** 正規化の版。上げると cloud の cursor が捨てられ、端末は読み直す。 */
+export const WORK_SYNC_SCHEMA_VERSION = 1;
 
 // ---------------------------------------------------------------- pressure
 

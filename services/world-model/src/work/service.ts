@@ -9,6 +9,7 @@
  */
 import {
   uuidv7,
+  WORK_SYNC_SCHEMA_VERSION,
   WorkArtifact,
   type PersonalizationProfile,
   type PersonalizationUpdate,
@@ -16,8 +17,11 @@ import {
   type WorkContext,
   type WorkCorrection,
   type WorkSource,
+  type WorkSyncAttempt,
+  type WorkSyncState,
 } from '@astra/contracts';
 import { withTenant, type DbHandle } from '@astra/db';
+import { sql } from 'kysely';
 import { buildWorkContext, clusterProjects } from './graph.js';
 import {
   applyUpdate,
@@ -34,13 +38,6 @@ export interface WorkContextDeps {
   readonly now?: () => Date;
   /** 何日分を見るか。 */
   readonly horizonDays?: number;
-}
-
-export interface SyncState {
-  readonly source: WorkSource;
-  readonly cursor: string | null;
-  readonly last_synced_at: string;
-  readonly artifact_count: number;
 }
 
 export class WorkContextService {
@@ -93,6 +90,12 @@ export class WorkContextService {
           .executeTakeFirst();
         if (res.numInsertedOrUpdatedRows && res.numInsertedOrUpdatedRows > 0n) accepted += 1;
       }
+      /*
+       * cursor は artifact の upsert と**同じ transaction**で進む（先に書かない）。
+       * batch.cursor が null なら「まだ途中」— 前の cursor を動かさない。
+       * watermark は見えた occurred_at の最大で、後ろへは戻さない。
+       */
+      const watermark = batch.watermark ? new Date(batch.watermark) : null;
       await tx
         .insertInto('work_sync_state')
         .values({
@@ -100,14 +103,24 @@ export class WorkContextService {
           user_id: userId,
           source: batch.source,
           cursor: batch.cursor,
+          watermark,
           last_synced_at: at,
+          last_attempt_at: at,
+          last_error: null,
           artifact_count: batch.artifacts.length,
+          schema_version: WORK_SYNC_SCHEMA_VERSION,
         })
         .onConflict((oc) =>
           oc.columns(['tenant_id', 'user_id', 'source']).doUpdateSet((eb) => ({
-            cursor: batch.cursor,
+            cursor: batch.cursor ?? eb.ref('work_sync_state.cursor'),
+            watermark: watermark
+              ? sql<Date | null>`greatest(coalesce(${eb.ref('work_sync_state.watermark')}, ${watermark}), ${watermark})`
+              : eb.ref('work_sync_state.watermark'),
             last_synced_at: at,
+            last_attempt_at: at,
+            last_error: null,
             artifact_count: eb('work_sync_state.artifact_count', '+', batch.artifacts.length),
+            schema_version: WORK_SYNC_SCHEMA_VERSION,
           })),
         )
         .execute();
@@ -143,7 +156,7 @@ export class WorkContextService {
     );
   }
 
-  async syncState(tenantId: string, userId: string): Promise<SyncState[]> {
+  async syncState(tenantId: string, userId: string): Promise<WorkSyncState[]> {
     const rows = await withTenant(this.#db, tenantId, (tx) =>
       tx
         .selectFrom('work_sync_state')
@@ -154,10 +167,51 @@ export class WorkContextService {
     );
     return rows.map((r) => ({
       source: r.source as WorkSource,
-      cursor: r.cursor,
-      last_synced_at: toIso(r.last_synced_at),
+      // 正規化の版が上がっていたら、続きは無い（読み直す）。古い cursor で欠けを作らない。
+      cursor: r.schema_version === WORK_SYNC_SCHEMA_VERSION ? r.cursor : null,
+      watermark: r.watermark ? toIso(r.watermark) : null,
+      last_synced_at: r.last_synced_at ? toIso(r.last_synced_at) : null,
+      last_attempt_at: r.last_attempt_at ? toIso(r.last_attempt_at) : null,
+      last_error: r.last_error,
       artifact_count: r.artifact_count,
+      schema_version: r.schema_version,
     }));
+  }
+
+  /**
+   * 同期の試みを残す（失敗）。**cursor は動かさない。**
+   * 成功は `ingest` が記録するので、ここに来るのは読めなかった・送れなかったとき。
+   */
+  async recordAttempt(
+    tenantId: string,
+    userId: string,
+    source: WorkSource,
+    attempt: WorkSyncAttempt,
+  ): Promise<void> {
+    const at = this.#now();
+    await withTenant(this.#db, tenantId, (tx) =>
+      tx
+        .insertInto('work_sync_state')
+        .values({
+          tenant_id: tenantId,
+          user_id: userId,
+          source,
+          cursor: null,
+          watermark: null,
+          last_synced_at: attempt.ok ? at : null,
+          last_attempt_at: at,
+          last_error: attempt.ok ? null : (attempt.error ?? '理由が伝わらなかった失敗'),
+          artifact_count: 0,
+          schema_version: WORK_SYNC_SCHEMA_VERSION,
+        })
+        .onConflict((oc) =>
+          oc.columns(['tenant_id', 'user_id', 'source']).doUpdateSet({
+            last_attempt_at: at,
+            last_error: attempt.ok ? null : (attempt.error ?? '理由が伝わらなかった失敗'),
+          }),
+        )
+        .execute(),
+    );
   }
 
   async corrections(tenantId: string, userId: string): Promise<WorkCorrection[]> {
@@ -225,13 +279,11 @@ export class WorkContextService {
           updated_at: new Date(next.updated_at),
         })
         .onConflict((oc) =>
-          oc
-            .columns(['tenant_id', 'user_id'])
-            .doUpdateSet({
-              inference_enabled: next.inference_enabled,
-              overrides: JSON.stringify(next.overrides),
-              updated_at: new Date(next.updated_at),
-            }),
+          oc.columns(['tenant_id', 'user_id']).doUpdateSet({
+            inference_enabled: next.inference_enabled,
+            overrides: JSON.stringify(next.overrides),
+            updated_at: new Date(next.updated_at),
+          }),
         )
         .execute(),
     );
