@@ -1,0 +1,21 @@
+{
+  "key": {
+    "C6B4": "screenshot.detected",
+    "FCE1": "screenshot.attached-cloud",
+    "EB11": "guided-setup.intro",
+    "9CA7": "guided-setup.target-highlighted",
+    "CE26": "guided-setup.target-missing",
+    "0B04": "guided-setup.granted",
+    "BE04": "guided-setup.denied"
+  },
+  "order": [
+    "0B04",
+    "9CA7",
+    "BE04",
+    "C6B4",
+    "CE26",
+    "EB11",
+    "FCE1"
+  ],
+  "batch": 6
+}

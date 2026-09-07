@@ -1,0 +1,305 @@
+{
+  "rc": "7a7e1d7",
+  "pages": [
+    {
+      "id": "guided-setup.granted",
+      "blind_id": "0B04",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        },
+        {
+          "model": "sonnet",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.target-highlighted",
+      "blind_id": "9CA7",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "trust-provenance",
+              "what": "利用者に見せる一覧に「AstraDbg」という開発版らしき名前が出ており、しかもアイコンが空の灰色四角で、隣の AnyDesk / ChatGPT のような正式な見た目になっていない。どのアプリを許可しているのか信用しづらい。",
+              "where": "リスト2行目、アプリ名とその左のアイコン"
+            },
+            {
+              "axis": "state legibility",
+              "what": "スイッチは既にオンに見えるのに「再起動すると使えます」と出ており、いま許可済みなのか未許可なのかが読み取れない。",
+              "where": "2行目のスイッチと、その左の吹き出し"
+            },
+            {
+              "axis": "alignment",
+              "what": "赤い「1」バッジが左余白に単独で浮き、対応する対象が同じ画面内にない。指し示す線も近接もない。",
+              "where": "画面左上、リスト枠の外"
+            },
+            {
+              "axis": "density",
+              "what": "吹き出しがリスト行に重なって行の内容を隠している。",
+              "where": "2行目、アプリ名とスイッチの間"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.denied",
+      "blind_id": "BE04",
+      "verdict": "FIX_CANDIDATE",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "FIX",
+          "valid": false,
+          "why": "照合 2/4（画面に無い文字）",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "typography",
+              "what": "Button text 'もう一度試く' is invalid Japanese; should be 'もう一度試す' (correct verb form)",
+              "where": "Retry action button"
+            }
+          ]
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "screen-occupation",
+              "what": "右端の丸い常駐ボタンが枠の縁で切り落とされ、円として完結していない。",
+              "where": "画像の右端、波形アイコンの丸"
+            },
+            {
+              "axis": "error-recovery clarity",
+              "what": "「もう一度開く」を押しても同じ失敗が繰り返される場合の逃げ道が示されていない。副文は道順だけで、手動でたどればよいのか自動再試行だけなのかが読み取れない。",
+              "where": "副文「プライバシーとセキュリティ › 画面収録」と青いボタン"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "primary-action clarity",
+              "what": "パンくず『プライバシーとセキュリティ ﹥ 画面収録』がボタンなのか単なる説明文なのか、下線や色などの視覚的な手がかりが無く判別できない。再試行が再び失敗した場合の代替導線が不明瞭。",
+              "where": "ピル下部のグレー小文字テキスト"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "screenshot.detected",
+      "blind_id": "C6B4",
+      "verdict": "FIX_CANDIDATE",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": false,
+          "why": "照合 1/2（画面に無い文字）",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "primary-action clarity",
+              "what": "「そのまま聞けます」と促しているのに、聞くための手段（入力欄・マイク・ボタン）がこの面のどこにも見えない。次にどう操作すればよいかが絵から分からない。",
+              "where": "副文「認識しました・そのまま聞けます」と、その右の空白域"
+            },
+            {
+              "axis": "screen-occupation",
+              "what": "本文右側の広い空白が何にも使われておらず、行動を促す要素が置かれていない。",
+              "where": "副文の右から×の左まで"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "trust-provenance",
+              "what": "何が認識されたのかを示す画像サムネイルが無いため、ユーザーは実際に何が読み取られたのか視覚的に確認できない。",
+              "where": "『スクリーンショット』ラベルの左（アイコン/サムネイル領域が空）"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.target-missing",
+      "blind_id": "CE26",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "hierarchy",
+              "what": "見出しが「自動で見つけられません」という内部処理の失敗を語り、実際に必要な行動は副文側にある。利用者にとって一番大事な指示が二番目の行に落ちている。",
+              "where": "1行目の見出しと2行目の副文"
+            },
+            {
+              "axis": "state legibility",
+              "what": "同系の他のトーストと違い左端にアイコンが無く、これが失敗の知らせなのか単なる案内なのかが一目で判別できない。",
+              "where": "本文左端、テキストの左の余白"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.intro",
+      "blind_id": "EB11",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        },
+        {
+          "model": "sonnet",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        }
+      ]
+    },
+    {
+      "id": "screenshot.attached-cloud",
+      "blind_id": "FCE1",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        },
+        {
+          "model": "sonnet",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "keep": 5,
+    "fix_candidate": 2,
+    "not_enough_evidence": 0,
+    "models": [
+      "haiku",
+      "opus",
+      "sonnet"
+    ]
+  },
+  "gate": "FAIL"
+}

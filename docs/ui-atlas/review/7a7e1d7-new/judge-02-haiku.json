@@ -1,0 +1,27 @@
+{
+  "pages": {
+    "FCE1": {
+      "visible_text": [
+        "スクリーンショット",
+        "質問したときだけ",
+        "Claude",
+        "に送信"
+      ],
+      "observation": {
+        "happening": "A dark notification toast banner is displayed with a privacy message about screenshot handling",
+        "most_important": "User assurance that screenshots are only sent to Claude when explicitly requested",
+        "next_action": "User can dismiss the notification via the × button on the right side",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    }
+  },
+  "_judge": {
+    "model": "haiku",
+    "cost_usd": 0.0388247,
+    "turns": 2,
+    "duration_ms": 20907
+  }
+}

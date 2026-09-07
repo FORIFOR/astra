@@ -48,3 +48,10 @@ E2E の実行で見つけて直したもの: General Assistant は workflow を�
 
 - `run-unattended-verify.sh`: 専用の macOS テストアカウント → `tccutil reset` → 署名 RC を `open` で起動 →
   AX / CGEvent で操作 → artifacts。**「本人の VERIFY_ALL_OK 待ち」を恒久条件にしない。**
+
+## UI の再検証（2026-09-07、rc/atlas-61）
+
+新規面は `--selftest screenshotshots` で撮る（認識の 1 秒 / 出所 chip、320×52、fixed light==dark）。文脈 chip（voice.context）と
+同じ 2 行の形: 1 行目「スクリーンショット」+ その画像の縮小、2 行目 = 出所（「認識しました · そのまま聞けます」→「たった今」→
+初回「質問したときだけ Claude に送信」→ 以降「Claude に送信 · たった今」）。大きな説明カードや警告ダイアログは出さない。
+盲検（3 model）: KEEP。supremacy: COMPETITIVE。
