@@ -1,0 +1,21 @@
+{
+  "key": {
+    "BB40": "screenshot.detected",
+    "600B": "screenshot.attached-cloud",
+    "99F9": "guided-setup.intro",
+    "2E49": "guided-setup.target-highlighted",
+    "E5D1": "guided-setup.target-missing",
+    "8EBB": "guided-setup.granted",
+    "4CFB": "guided-setup.denied"
+  },
+  "order": [
+    "2E49",
+    "4CFB",
+    "600B",
+    "8EBB",
+    "99F9",
+    "BB40",
+    "E5D1"
+  ],
+  "batch": 6
+}

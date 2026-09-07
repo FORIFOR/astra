@@ -1,0 +1,343 @@
+{
+  "rc": "f3f3e9e",
+  "pages": [
+    {
+      "id": "guided-setup.target-highlighted",
+      "blind_id": "2E49",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "alignment",
+              "what": "案内 pill がシステム設定のリスト行の上に重なり、どの行に対する案内かが視覚的に確定しない（AstraDbg 行とも ChatGPT 行とも取れる位置にある）",
+              "where": "リスト中央、AstraDbg 行と ChatGPT 行にまたがる白い pill"
+            },
+            {
+              "axis": "trust-provenance",
+              "what": "利用者に見える名前が「AstraDbg」という内部ビルド名らしき表記で、製品名として不自然。権限を渡す相手の正体が読み取りにくい",
+              "where": "リスト 2 行目のアプリ名と pill 内の文言"
+            },
+            {
+              "axis": "state legibility",
+              "what": "pill がトグル列の手前まで伸びており、AstraDbg のトグルが「今オンなのか、オンにしたが未反映なのか」を文言と見た目のどちらで判断すべきか分からない",
+              "where": "pill 右端と紫枠のトグル"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "error-recovery clarity",
+              "what": "再起動が必要と伝えているのに、その場で再起動する手段（ボタン等）が提供されていない",
+              "where": "AstraDbg行の吹き出し"
+            },
+            {
+              "axis": "consistency",
+              "what": "他の画像（99F9）ではシステム設定を開くボタン付きで誘導しているのに、ここでは同種の『次に必要な操作』への導線がない",
+              "where": "AstraDbg行の吹き出し全体"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.denied",
+      "blind_id": "4CFB",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "FIX",
+          "valid": false,
+          "why": "照合 2/5（画面に無い文字）",
+          "confidence": "high",
+          "concerns": [
+            {
+              "axis": "typography",
+              "what": "Text is corrupted or truncated. '試く' is not valid Japanese (should be '試す'). '⻙' character is malformed.",
+              "where": "Button label 'もう一度試く' and in 'プライバシーセキュリティ 画⻙設定'"
+            },
+            {
+              "axis": "error-recovery clarity",
+              "what": "Exclamation mark button (!) has no label; its purpose is unclear to user",
+              "where": "Right side of dialog"
+            }
+          ]
+        },
+        {
+          "model": "opus",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "error-recovery clarity",
+              "what": "「開けませんでした」とだけ表示し、原因や再試行が成功する見込みの手がかりが無い",
+              "where": "本文テキスト全体"
+            },
+            {
+              "axis": "alignment",
+              "what": "警告アイコンの円がテキストピルから浮いて離れており、一体の要素として見えない",
+              "where": "右端の丸アイコンとピルの間の余白"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "screenshot.attached-cloud",
+      "blind_id": "600B",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": false,
+          "why": "照合 2/2（画面に無い文字）",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        },
+        {
+          "model": "sonnet",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.granted",
+      "blind_id": "8EBB",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        },
+        {
+          "model": "sonnet",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.intro",
+      "blind_id": "99F9",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": [
+            {
+              "axis": "state legibility",
+              "what": "Menu icon (≡) appears without explanation of its function",
+              "where": "Right side of dialog"
+            }
+          ]
+        },
+        {
+          "model": "opus",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "trust-provenance",
+              "what": "画面収録の権限警告なのに、表示されているアイコンが波形/バーのような無関係な図柄に見え、何を表すアイコンか読み取れない",
+              "where": "ピル右端の丸アイコン"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "screenshot.detected",
+      "blind_id": "BB40",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "FIX",
+          "valid": false,
+          "why": "照合 1/2（画面に無い文字）",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "typography",
+              "what": "Text contains corruption or typo: 'いただてください' is not correct Japanese (missing or scrambled characters — should likely be 'いただてください' or similar valid phrase)",
+              "where": "Message text 'その後いただてください'"
+            },
+            {
+              "axis": "error-recovery clarity",
+              "what": "Instructions are unclear due to malformed text; user cannot confidently understand next action",
+              "where": "Full message line"
+            }
+          ]
+        },
+        {
+          "model": "opus",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "low",
+          "concerns": []
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "consistency",
+              "what": "同じ『スクリーンショット』タイトルを持つ600Bのピルには閉じるボタンがあるのに、この画像には無く操作の一貫性がない",
+              "where": "ピル右側（閉じるボタンの有無）"
+            },
+            {
+              "axis": "state legibility",
+              "what": "『認識しました・そのまま聞いてください』という進行中の状態を示すメッセージなのに、状態を示す視覚的インジケーター（アイコン等）が一切無い",
+              "where": "ピル全体"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.target-missing",
+      "blind_id": "E5D1",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "error-recovery clarity",
+              "what": "1行目「Astra の行が見つかりません」と2行目「設定画面で Astra をオンにしてください」が矛盾している。行が見つからないなら、その行をオンにする操作はできない。利用者は設定画面で何を探せばよいか判断できない",
+              "where": "ピル左側の2行のテキスト（見出しとその下の説明行）"
+            },
+            {
+              "axis": "state legibility",
+              "what": "「行」という内部用語が使われており、どの一覧のどの行なのかが画面上に示されていない。ボタンを押した先で何を見ればよいかが分からない",
+              "where": "見出し「Astra の行が見つかりません」"
+            },
+            {
+              "axis": "consistency",
+              "what": "通知ピルの外側に無関係に見える円形要素が独立して置かれ、ラベルも接続も無いため、同じ通知の一部なのか別機能なのか区別できない",
+              "where": "画像右端の円形バッジ（縦棒アイコン入り）"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "state legibility",
+              "what": "エラー状態であるにもかかわらず色やアイコンによる警告表現がなく、通常の通知と区別がつきにくい",
+              "where": "バナー全体の背景色・左端"
+            },
+            {
+              "axis": "consistency",
+              "what": "右端のアイコン要素がバナーから浮いて配置されており、同じコンポーネントの一部なのか別要素なのか関係性が不明",
+              "where": "バナー右端の四角いアイコンとバナー本体の間の余白"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "keep": 7,
+    "fix_candidate": 0,
+    "not_enough_evidence": 0,
+    "models": [
+      "haiku",
+      "opus",
+      "sonnet"
+    ]
+  },
+  "gate": "PASS"
+}
