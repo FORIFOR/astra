@@ -92,7 +92,7 @@ extension SelfTest {
         let reasons = WorkFormat.reasons(top)
         check(!reasons.isEmpty && reasons.count <= 4, "理由の行が無い/多すぎる (\(reasons.count))")
         check(reasons.allSatisfy { !$0.contains("0.") && !$0.contains("×") }, "理由に数式や点数が混ざっている \(reasons)")
-        check(reasons.first == "明日が期限", "寄与の大きい理由が先頭に来ない \(reasons)")
+        check(reasons.first == "今日が期限", "寄与の大きい理由が先頭に来ない \(reasons)")
         row("why_important_actions", "1")
         row("why_reason_lines", String(reasons.count))
         check(WorkFormat.level(0.82) == "高" && WorkFormat.level(0.44) == "中" && WorkFormat.level(0.1) == "低", "高/中/低 の閾値")
@@ -162,18 +162,27 @@ enum WorkContextFixture {
         return f.string(from: d)
     }
 
+    /// 次の会議（brief の fixture と同じ時刻）。「今日 HH:mm」。
+    static func meetingLabel() -> String {
+        let d = Date().addingTimeInterval(1.25 * 3600)
+        let f = DateFormatter(); f.dateFormat = "H:mm"
+        return "今日 " + f.string(from: d)
+    }
+
     static func contextJSON() -> String {
+        let meetingAt = iso(1.25)
+        let meeting = meetingLabel()
         let src = { (source: String, id: String, label: String, excerpt: String) -> String in
             "{\"source\":\"\(source)\",\"external_id\":\"\(id)\",\"label\":\"\(label)\",\"observed_at\":\"\(iso(-1))\",\"url\":null,\"excerpt\":\"\(excerpt)\"}"
         }
         return """
         {"generated_at":"\(iso(0))","inference_enabled":true,
          "priorities":[
-          {"id":"project:mopita","project":"MOPITA","title":"MTI に見積の返信、明日 15:00 の定例の前に",
-           "score":0.82,"due_at":"\(iso(24, hour: 15))","waiting_on":"MTI",
-           "lines":["MTI からの返信待ち（3 日）","明日 15:00 定例","見積 v2 の確認が未返信"],
+          {"id":"project:mopita","project":"MOPITA","title":"MTI に見積の返信、\(meeting) の定例の前に",
+           "score":0.82,"due_at":"\(meetingAt)","waiting_on":"MTI",
+           "lines":["MTI からの返信待ち（3 日）","\(meeting) 定例","見積 v2 の確認が未返信"],
            "counts":{"gmail":4,"meeting":2,"astra_task":1},
-           "factors":[{"name":"deadline","value":0.72,"weight":0.3,"contribution":0.22,"reason":"明日が期限"},
+           "factors":[{"name":"deadline","value":0.72,"weight":0.3,"contribution":0.22,"reason":"今日が期限"},
                       {"name":"unanswered","value":0.9,"weight":0.2,"contribution":0.18,"reason":"3 日未返信"}],
            "sources":[\(src("gmail", "m-1", "Re: 見積 v2 のご確認", "来週水曜までにご確認いただけますか")),
                       \(src("meeting", "mt-1", "MOPITA 定例", "次回までに見積を確定する"))]},
@@ -234,9 +243,9 @@ enum WorkContextFixture {
          "since_last_meeting":[{"text":"2 件のメールが届いています","sources":[\(src("gmail", "m-1", "Re: 見積 v2 のご確認")),\(src("gmail", "m-3", "導入時期の件"))]},
                                {"text":"MTI 佐藤さん: 見積 v2 の確認をお願いします","sources":[\(src("gmail", "m-1", "Re: 見積 v2 のご確認"))]}],
          "open_items":[{"text":"MTI 佐藤さん に返す: 見積 v2 の確認（期限 明日）","sources":[\(src("gmail", "m-1", "Re: 見積 v2 のご確認"))]},
-                       {"text":"MTI からの返事待ち: SITE_ID（3 日）","sources":[\(src("gmail", "m-2", "SITE_ID の件"))]}],
+                       {"text":"MTI からの返事待ち: サイト ID（3 日）","sources":[\(src("gmail", "m-2", "サイト ID の件"))]}],
          "suggested_questions":[
-           {"question":"SITE_ID は、その後いかがでしょうか？","reason":"MTI からの返事を 3 日待っており、確定の連絡がありません","sources":[\(src("gmail", "m-2", "SITE_ID の件"))],"extracted_by":"rule"},
+           {"question":"サイト ID は、その後いかがでしょうか？","reason":"MTI からの返事を 3 日待っており、確定の連絡がありません","sources":[\(src("gmail", "m-2", "サイト ID の件"))],"extracted_by":"rule"},
            {"question":"見積 v2 の条件に懸念はありますか？","reason":"MTI 佐藤さん に返すものが残っています（期限 明日）","sources":[\(src("gmail", "m-1", "Re: 見積 v2 のご確認"))],"extracted_by":"rule"}],
          "provenance":[\(src("google_calendar", "ev-1", "MOPITA 定例")),\(src("meeting", "mt-0", "MOPITA 定例")),\(src("gmail", "m-1", "Re: 見積 v2 のご確認"))],
          "generated_at":"\(iso(0))"}

@@ -142,3 +142,49 @@ manifest の接続（読む / 書く）を通していない（live 接続の UI
 
 「これ返して」は意図（email_reply）までを測っている。「これ」の解決（開いているメール / 直前のスクショ）→ 案件背景つきの下書き → 既存の
 確認カードへ、という一連の経路は次の実装（Meeting prep の brief と同じ束）。盲検（6ebeaf3、3 面）は KEEP 3 / FIX_CANDIDATE 0。
+
+## 2026-09-07 深夜（P0-1 / P0-2）— 「これ返して」と会議前 brief
+
+判定は変わらず 3 段。新しい 2 つの gate は `scripts/reality/run-reply-brief-gate.sh` が出す。
+
+```text
+REPLY_IN_CONTEXT_GATE   = PASS_OFFLINE
+MEETING_BRIEF_GATE      = PASS_OFFLINE
+WORK_CONTEXT_LIVE_GATE  = AUTOMATION_MISSING（live で reply / brief まで一気に通すのは identity 待ち）
+```
+
+### 「これ返して」（28988cb / 3f2c1e9）
+
+| row                           | 結果  | 根拠                                                                                                                    |
+| ----------------------------- | ----- | ----------------------------------------------------------------------------------------------------------------------- |
+| 「これ」mail resolution       | PASS  | 端末の候補（Mail.app / Gmail タブの題名 → 選択 → 前面の窓）→ cloud が決定的に解決。「これ」は候補の題名で指示語も解ける |
+| wrong-thread selection        | 0     | 同点の別スレッドは ambiguous（聞き返す）、無関係な前面は none。似たメールを勝手に選ばない                               |
+| project / meeting / open-item | PASS  | pack = そのスレッド（<= 5 通）・案件・案件の直近の会議 / 決定 / やること・開いている件・本人が確認した書き方だけ        |
+| irrelevant context            | 0     | 別案件（○○社）は pack にも task.input.context にも出ない（試験）                                                        |
+| draft without send scope      | PASS  | 返信案は assistant の compose 段だけ（読む接続で足りる）。送るのは別 task（mail.send、EXTERNAL_COMMIT、承認）           |
+| source provenance             | 100%  | 確認カードに「何を踏まえたか」と出所（Gmail N 件 · 会議 N 件）                                                          |
+| JIT send permission           | PASS  | 送る接続が無ければ purpose を見せて接続を求める                                                                         |
+| permission grant auto-send    | 0     | 接続できたら**確認カードへ戻る**。送るのは本人がもう一度「送る」を押したときだけ（selftest で送信回数を数える）         |
+| external confirmation         | 100%  | Dock の確認（R2）+ cloud の承認（POST /v1/tasks/:id/approve）。[直す] の本文が送信内容                                  |
+| focus theft / extra window    | 0 / 0 | selftest                                                                                                                |
+
+送れるのはいま Gmail だけ（Outlook からの送信は 409 で「まだ」と言う）。「これ」の解決に選択・スクショが効くのは題名が取れる範囲で、
+Mail.app は AX の窓の題名（= 件名）、Gmail はタブの題名（件名 - アカウント - Gmail）を使う。
+
+### 会議前 brief（28988cb / 3f2c1e9）
+
+| row                             | 結果  | 根拠                                                                                            |
+| ------------------------------- | ----- | ----------------------------------------------------------------------------------------------- |
+| upcoming event resolved         | PASS  | 次の時刻つき予定（24 時間以内）。2 時間以内なら Home の Work Context より上に出る               |
+| previous meeting resolved       | PASS  | 案件の前回の会議 + 前後 6 時間の決定 / やること                                                 |
+| new mail since meeting          | PASS  | 前回以降に届いたメールと、その中の依頼                                                          |
+| open commitments                | PASS  | その案件の 返す / 待ち                                                                          |
+| cross-project contamination     | 0     | 別案件の語が brief に無い（試験）                                                               |
+| fabricated issue                | 0     | 開いている件が無ければ質問 0。質問はすべて規則（理由 + 出所）。LLM の言葉づかいは後から足せる   |
+| every factual statement sourced | 100%  | BriefFact は sources >= 1 が契約                                                                |
+| brief available before meeting  | PASS  | Home「次の会議」1 行（46pt）→ 準備する（382pt）→ 会議を始める（既存の録音開始に予定を引き継ぐ） |
+| suggested questions             | 1..3  | fixture で 2                                                                                    |
+| focus theft / new window        | 0 / 0 | selftest                                                                                        |
+
+会議中の Notes → 会議後の決定 / やること → Work Graph へ戻す経路は、会議の bundle（決定 / やること）を artifact として
+`localArtifacts` に流すところが未接続（brief の「前回」は decision / action_item の artifact を読むので、そこが繋がれば閉じる）。
