@@ -24,10 +24,16 @@ struct AvatarHUDView: View {
         HStack(alignment: .center, spacing: 10) {
             // 1 行目 = いまの状態（「画面収録が未許可です」）、2 行目 = すること。文を 1 本に詰めない（盲検 3/3）。
             VStack(alignment: .leading, spacing: 2) {
-                Text(lines.0)
-                    .font(.system(size: S.type(13), weight: .semibold))
-                    .foregroundStyle(Palette.text(dark))
-                    .lineLimit(1)
+                // 状態の記号は文の隣に（別置きの大きな丸に「!」を描くと、飾りに見えて意味の位置が合わない — 盲検 2/3）。
+                HStack(spacing: 5) {
+                    if let glyph = statusGlyph {
+                        Image(systemName: glyph.0).font(.system(size: 11, weight: .bold)).foregroundStyle(glyph.1)
+                    }
+                    Text(lines.0)
+                        .font(.system(size: S.type(13), weight: .semibold))
+                        .foregroundStyle(Palette.text(dark))
+                        .lineLimit(1)
+                }
                 if let sub = lines.1 {
                     Text(sub)
                         .font(.system(size: S.type(12)))
@@ -68,22 +74,13 @@ struct AvatarHUDView: View {
         .accessibilityIdentifier("guideAvatarBubble")
     }
 
-    /// 状態は丸の地の色と記号で言う（× はここに置かない）。
+    /// 丸は **Astra の印**（誰が言っているか）。状態は輪の色で添えるだけ（記号は吹き出しの側に置く）。
     private var avatar: some View {
         ZStack {
             Circle().fill(.regularMaterial)
-            Circle().fill(tint.opacity(model.state == .guiding || model.state == .idle ? 0.06 : 0.14))
-            Circle().stroke(model.state == .guiding ? Palette.accent(dark).opacity(0.55) : Palette.border(dark), lineWidth: model.state == .guiding ? 1.5 : 1)
-            switch model.state {
-            case .success:
-                Image(systemName: "checkmark").font(.system(size: 24, weight: .semibold)).foregroundStyle(Palette.success(dark))
-            case .warning:
-                Image(systemName: "exclamationmark").font(.system(size: 24, weight: .semibold)).foregroundStyle(Palette.warning(dark))
-            case .thinking:
-                AstraOrb(active: true)
-            default:
-                AstraVoiceMark()
-            }
+            Circle().fill(tint.opacity(model.state == .guiding || model.state == .idle ? 0.06 : 0.12))
+            Circle().stroke(tint.opacity(model.state == .idle ? 0.25 : 0.6), lineWidth: 1.5)
+            if model.state == .thinking { AstraOrb(active: true) } else { AstraVoiceMark() }
         }
         .frame(width: AvatarLayout.avatarSize, height: AvatarLayout.avatarSize)
         .accessibilityLabel("Astra")
@@ -94,6 +91,14 @@ struct AvatarHUDView: View {
     private var lines: (String, String?) {
         let parts = model.message.split(separator: "\n", maxSplits: 1).map(String.init)
         return (parts.first ?? "", parts.count > 1 ? parts[1] : nil)
+    }
+
+    private var statusGlyph: (String, Color)? {
+        switch model.state {
+        case .success: return ("checkmark.circle.fill", Palette.success(dark))
+        case .warning: return ("exclamationmark.triangle.fill", Palette.warning(dark))
+        default: return nil
+        }
     }
 
     private var tint: Color {

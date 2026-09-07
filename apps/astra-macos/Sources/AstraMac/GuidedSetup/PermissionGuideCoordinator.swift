@@ -403,7 +403,7 @@ final class PermissionGuideCoordinator: ObservableObject {
     static let messageScreenCapture = "画面収録が未許可です\nシステム設定で Astra をオンにしてください"
     static let messageMicrophone = "マイクが未許可です\n許可すると声で頼めます"
     static let messageMicrophoneSettings = "マイクが未許可です\nマイクの設定で Astra をオンにしてください"
-    static let messageGeneralTurnOn = "Astra の行が見つかりません\n設定画面で Astra をオンにしてください"
+    static let messageGeneralTurnOn = "Astra を自動で見つけられません\n画面収録の一覧で Astra をオンにしてください"
     static let messageSettingsFailed = "設定画面を開けませんでした\nプライバシーとセキュリティ › 画面収録"
     /// 何を設定できたかを言う（「設定できました」だけだと、絵の文字が 1 語で判定不能になる。何が済んだかも分かる）。
     static func messageDone(for permission: GuidePermission) -> String {

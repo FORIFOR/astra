@@ -98,7 +98,7 @@ enum UserFacingFacts {
     /// 端末内のモデルで見るとき。
     static let screenshotEgressLocal = "画像は端末の外へ送りません"
     /// 検知の一瞬（〜1 秒）だけ Dock に出す 2 行目（1 行目は chip の名）。窓は増やさない・focus は奪わない。
-    static let screenshotDetected = "認識しました · そのまま聞いてください"
+    static let screenshotDetected = "認識しました · そのまま聞けます"
     /// chip の名。以降は「· たった今」などの短い出所だけを添える。
     static let screenshotChip = "スクリーンショット"
     /// 質問で添えたあとの compact provenance（cloud）。{provider} はモデルの名前。

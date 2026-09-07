@@ -96,8 +96,9 @@ private struct IdleDock: View {
     var body: some View {
         // スクショを認識した瞬間（〜1 秒）と、その後の小さな出所。文脈 chip（voice.context）と同じ 2 行の形。**新しい窓は作らない**。
         if let shot = visual.justCaptured {
+            // × は chip と同じ位置に（一瞬の面でも、消す手が同じ場所にあること — 盲検の consistency）。
             screenshotChip(shot: shot, tint: Palette.accent(scheme == .dark),
-                           meta: Facts.screenshotDetected, dismiss: nil, id: "screenshotContextChip")
+                           meta: Facts.screenshotDetected, dismiss: shot.id, id: "screenshotContextChip")
                 .help("そのまま「これ何？」と聞いてください · \(VisualEgressPolicy.current.disclosure)")
         } else if let shot = visual.recent.first {
             // 質問で添えたあとは出所（初回「質問したときだけ Claude に送信」、以降「Claude に送信 · たった今」）。
