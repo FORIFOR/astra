@@ -196,7 +196,7 @@ enum AXCoordinateConverter {
 // MARK: - 吹き出しの置き場所（対象の近く・画面内に収める）
 
 enum CalloutPlacer {
-    static let gap: CGFloat = 10
+    static let gap: CGFloat = 6
     static let margin: CGFloat = 8
 
     /// 対象 rect（AppKit）に対して吹き出し size をどこへ置くか。
@@ -212,6 +212,7 @@ enum CalloutPlacer {
         return (clamp(fallback, within: bounds), .above)
     }
 
+    /// 尾が対象の中心に来るように置く（上下は横位置を対象の中心に、左右は縦位置を対象の中心に）。
     static func candidate(target: CGRect, size: CGSize, placement: GuidePlacement) -> CGRect {
         switch placement {
         case .above: return CGRect(x: target.midX - size.width / 2, y: target.maxY + gap, width: size.width, height: size.height)

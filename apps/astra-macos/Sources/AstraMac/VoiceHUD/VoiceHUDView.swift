@@ -96,12 +96,12 @@ private struct IdleDock: View {
     var body: some View {
         // スクショを認識した瞬間（〜1 秒）と、その後の小さな出所。文脈 chip（voice.context）と同じ 2 行の形。**新しい窓は作らない**。
         if let shot = visual.justCaptured {
-            screenshotChip(icon: "rectangle.dashed.badge.record", tint: Palette.accent(scheme == .dark),
+            screenshotChip(shot: shot, tint: Palette.accent(scheme == .dark),
                            meta: Facts.screenshotDetected, dismiss: nil, id: "screenshotContextChip")
                 .help("そのまま「これ何？」と聞いてください · \(VisualEgressPolicy.current.disclosure)")
         } else if let shot = visual.recent.first {
             // 質問で添えたあとは出所（初回「質問したときだけ Claude に送信」、以降「Claude に送信 · たった今」）。
-            screenshotChip(icon: "photo", tint: Palette.muted(scheme == .dark),
+            screenshotChip(shot: shot, tint: Palette.muted(scheme == .dark),
                            meta: visual.lastProvenance.map { $0.contains("質問") ? $0 : "\($0) · \(shot.ageLabel())" } ?? shot.ageLabel(),
                            dismiss: shot.id, id: "screenshotContextChipSmall")
                 .contentShape(Rectangle())
@@ -148,9 +148,10 @@ private struct IdleDock: View {
     }
 
     /// 1 行目は「スクリーンショット」、2 行目は出所や状態（voice.context の app 名 + 要約と同じ配分）。
-    private func screenshotChip(icon: String, tint: Color, meta: String, dismiss: UUID?, id: String) -> some View {
+    /// 先頭は**その画像の縮小**（どの絵の話かが一目で分かる。記号だけだと「何かの通知」に見える — 盲検の指摘）。
+    private func screenshotChip(shot: VisualContextArtifact, tint: Color, meta: String, dismiss: UUID?, id: String) -> some View {
         HStack(spacing: 10) {
-            Image(systemName: icon).font(.system(size: 14)).foregroundStyle(tint).frame(width: 18)
+            ScreenshotThumb(url: shot.imageURL, tint: tint)
             VStack(alignment: .leading, spacing: 1) {
                 Text(Facts.screenshotChip)
                     .font(.system(size: S.type(Metrics.dockPrimarySize), weight: .medium))
@@ -173,6 +174,25 @@ private struct IdleDock: View {
         .frame(maxHeight: .infinity)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier(id)
+    }
+}
+
+/// スクショの縮小（28×20、角丸 4、細い縁）。読めなければ記号に落ちる。
+private struct ScreenshotThumb: View {
+    let url: URL
+    let tint: Color
+    var body: some View {
+        Group {
+            if let img = NSImage(contentsOf: url) {
+                Image(nsImage: img).resizable().aspectRatio(contentMode: .fill)
+            } else {
+                Image(systemName: "photo").font(.system(size: 12)).foregroundStyle(tint)
+            }
+        }
+        .frame(width: 28, height: 20)
+        .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 4, style: .continuous).stroke(Color.white.opacity(0.22), lineWidth: 1))
+        .accessibilityHidden(true)
     }
 }
 

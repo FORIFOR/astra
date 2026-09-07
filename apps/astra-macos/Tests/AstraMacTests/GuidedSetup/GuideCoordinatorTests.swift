@@ -49,7 +49,7 @@ final class GuideCoordinatorTests: XCTestCase {
         stack.showAvatar(state: .guiding, message: "案内", onClose: {})
         let anchor = GuideAnchor(rect: CGRect(x: 200, y: 200, width: 40, height: 20),
                                  match: AXMatch(node: AXElementSnapshot(role: "AXCheckBox", title: "Astra"), selectorRank: 0))
-        stack.showGuide(message: "Astra をオンにしてください", at: anchor, preferred: .right)
+        stack.showGuide(message: "Astra をオンにしてください", at: anchor, preferred: .left)
         XCTAssertEqual(stack.visiblePanelCount, 3)
         XCTAssertTrue(stack.avatar.isVisible)
         stack.hideAll()
@@ -118,5 +118,28 @@ final class GuideCoordinatorTests: XCTestCase {
         XCTAssertEqual(h.overlay.visiblePanelCount, 0)
         XCTAssertFalse(h.coordinator.hasLiveWatchers)
         XCTAssertNil(h.coordinator.anchor)
+    }
+}
+
+
+@MainActor
+final class GuideAlreadyOnTests: XCTestCase {
+    func testASwitchThatIsAlreadyOnIsNotAskedToBeTurnedOn() {
+        // 画面収録はオンにしても再起動まで許可が返らない。その間「オンにしてください」と言うと状態と矛盾する（盲検 3/3）。
+        let h = Harness(states: [.accessibility: .granted, .screenCapture: .notDetermined, .microphone: .granted],
+                        tree: settingsTree(astraOn: true))
+        h.coordinator.start(); h.coordinator.tick()
+        XCTAssertEqual(h.overlay.guideMessage, PermissionGuideCoordinator.calloutAlreadyOn(for: "Astra"))
+        XCTAssertTrue(h.overlay.guideMessage!.contains("再起動"))
+    }
+
+    func testCalloutTailAimsAtTheTargetCentre() {
+        let target = CGRect(x: 400, y: 300, width: 40, height: 20)
+        let size = CGSize(width: 200, height: 40)
+        let left = CalloutPlacer.candidate(target: target, size: size, placement: .left)
+        XCTAssertEqual(left.maxX, target.minX - CalloutPlacer.gap)
+        XCTAssertEqual(left.midY, target.midY)
+        let below = CalloutPlacer.candidate(target: target, size: size, placement: .below)
+        XCTAssertEqual(below.midX, target.midX)
     }
 }

@@ -72,7 +72,7 @@ final class MockOverlay: GuideOverlaying {
 }
 
 /// 検査用の System Settings の木。Astra 行のスイッチが 1 つ。
-func settingsTree(astraFrame: CGRect? = CGRect(x: 600, y: 300, width: 40, height: 22), withAstra: Bool = true, withAdd: Bool = true) -> AXElementSnapshot {
+func settingsTree(astraFrame: CGRect? = CGRect(x: 600, y: 300, width: 40, height: 22), withAstra: Bool = true, withAdd: Bool = true, astraOn: Bool = false) -> AXElementSnapshot {
     // 実機の形: スイッチは title が空で identifier が `<App>_Toggle`、名前は静的テキストの value。
     var rows: [AXElementSnapshot] = [
         AXElementSnapshot(role: "AXStaticText", identifier: "Zoom_Title", value: "Zoom", axFrame: CGRect(x: 420, y: 260, width: 90, height: 22)),
@@ -80,7 +80,7 @@ func settingsTree(astraFrame: CGRect? = CGRect(x: 600, y: 300, width: 40, height
     ]
     if withAstra {
         rows.append(AXElementSnapshot(role: "AXStaticText", identifier: "Astra_Title", value: "Astra", axFrame: CGRect(x: 420, y: 300, width: 90, height: 22)))
-        rows.append(AXElementSnapshot(role: "AXCheckBox", subrole: "AXSwitch", identifier: "Astra_Toggle", value: "0", axFrame: astraFrame))
+        rows.append(AXElementSnapshot(role: "AXCheckBox", subrole: "AXSwitch", identifier: "Astra_Toggle", value: astraOn ? "1" : "0", axFrame: astraFrame))
     }
     var buttons: [AXElementSnapshot] = []
     if withAdd { buttons.append(AXElementSnapshot(role: "AXButton", axDescription: "追加", axFrame: CGRect(x: 500, y: 500, width: 24, height: 24))) }

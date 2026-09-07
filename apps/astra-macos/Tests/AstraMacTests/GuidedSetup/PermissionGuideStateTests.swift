@@ -50,7 +50,7 @@ final class PermissionGuideStateTests: XCTestCase {
         XCTAssertEqual(h.coordinator.state, .waitingScreenCapture)
         XCTAssertTrue(h.overlay.guideVisible)
         XCTAssertEqual(h.overlay.guideMessage, PermissionGuideCoordinator.calloutTurnOn(for: "Astra"), "行の名前で言う")
-        XCTAssertEqual(h.overlay.guidePlacement, .right, "行のスイッチは横に置く")
+        XCTAssertEqual(h.overlay.guidePlacement, .left, "行のスイッチは行の中（名前とスイッチの間）に置く")
         XCTAssertEqual(h.observer.started.count, 1)
         XCTAssertEqual(h.observer.observedElements, 0, "検査の木には実要素が無いので要素の監視は登録されない")
         // 付与 → 案内が消え、success

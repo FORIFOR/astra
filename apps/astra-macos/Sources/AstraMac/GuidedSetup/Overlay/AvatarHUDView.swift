@@ -11,7 +11,7 @@ struct AvatarHUDView: View {
     private var dark: Bool { scheme == .dark }
 
     var body: some View {
-        HStack(alignment: .center, spacing: 10) {
+        HStack(alignment: .center, spacing: 4) {
             if !model.message.isEmpty { bubble }
             avatar
         }
@@ -34,7 +34,8 @@ struct AvatarHUDView: View {
                     .font(.system(size: S.type(12), weight: .semibold))
                     .foregroundStyle(Palette.accent(dark))
                     .padding(.horizontal, 10).padding(.vertical, 5)
-                    .background(Palette.accent(dark).opacity(0.10), in: Capsule())
+                    .background(Palette.accent(dark).opacity(0.16), in: Capsule())
+                    .overlay(Capsule().stroke(Palette.accent(dark).opacity(0.35), lineWidth: 1))
                     .fixedSize()
                     .accessibilityIdentifier("guideAvatarAction")
             }
@@ -50,9 +51,10 @@ struct AvatarHUDView: View {
                 .accessibilityIdentifier("guideAvatarClose")
             }
         }
-        .padding(.leading, 12).padding(.trailing, 6).padding(.vertical, 7)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Palette.border(dark), lineWidth: 1))
+        .padding(.leading, 12).padding(.trailing, 6 + CalloutBubbleShape.tail).padding(.vertical, 7)
+        // 吹き出しの尾はアバターを指す: 「誰が言っているか」を形で言う（丸と文が別々に浮いて見えた）。
+        .background(.regularMaterial, in: CalloutBubbleShape(towards: .left))
+        .overlay(CalloutBubbleShape(towards: .left).stroke(Palette.border(dark), lineWidth: 1))
         .accessibilityIdentifier("guideAvatarBubble")
     }
 

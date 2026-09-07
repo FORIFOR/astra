@@ -488,8 +488,18 @@ extension SelfTest {
         store.reset(); store.bind(conversationID: "atlas")
         WindowCoordinator.shared.showVoiceHUD(); settle(0.5)
 
+        // 撮った絵らしい fixture（窓のタイトルバー + 文の行 + ボタン）。無地だと chip の縮小が「空の四角」に見える。
         let img = NSImage(size: NSSize(width: 800, height: 500))
-        img.lockFocus(); NSColor(calibratedWhite: 0.92, alpha: 1).setFill(); NSRect(x: 0, y: 0, width: 800, height: 500).fill(); img.unlockFocus()
+        img.lockFocus()
+        NSColor(calibratedWhite: 0.97, alpha: 1).setFill(); NSRect(x: 0, y: 0, width: 800, height: 500).fill()
+        NSColor(calibratedWhite: 0.86, alpha: 1).setFill(); NSRect(x: 0, y: 452, width: 800, height: 48).fill()
+        for (i, c) in [NSColor.systemRed, NSColor.systemYellow, NSColor.systemGreen].enumerated() {
+            c.setFill(); NSBezierPath(ovalIn: NSRect(x: 16 + CGFloat(i) * 20, y: 470, width: 12, height: 12)).fill()
+        }
+        NSColor(calibratedWhite: 0.30, alpha: 1).setFill()
+        for (i, w) in [520, 610, 440, 580, 360].enumerated() { NSRect(x: 60, y: 380 - CGFloat(i) * 46, width: CGFloat(w), height: 14).fill() }
+        NSColor.systemBlue.setFill(); NSBezierPath(roundedRect: NSRect(x: 60, y: 90, width: 160, height: 40), xRadius: 8, yRadius: 8).fill()
+        img.unlockFocus()
         let url = tmp.appendingPathComponent("スクリーンショット 2026-09-07 atlas.png")
         try? NSBitmapImageRep(data: img.tiffRepresentation!)!.representation(using: .png, properties: [:])!.write(to: url)
         // 1) 認識の一瞬（トーストは 1 秒。撮り終わるまで justCaptured を留める）

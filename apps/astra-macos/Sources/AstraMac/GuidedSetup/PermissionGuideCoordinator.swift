@@ -237,8 +237,14 @@ final class PermissionGuideCoordinator: ObservableObject {
                 deps.overlay.updateAvatar(state: .guiding, message: Self.introMessage(for: permission), action: openSettingsAction(permission))
             }
             // 吹き出しは見つけたものの名前で言う（一覧の行が「AstraDbg」なら「AstraDbg をオンにしてください」。別名で呼ぶと誤読させる）。
-            let named = message.replacingOccurrences(of: "{app}", with: found.match.node.displayName ?? deps.appNames.first ?? "Astra")
-            let preferred: GuidePlacement = found.match.node.role == (kAXButtonRole as String) ? .below : .right
+            let app = found.match.node.displayName ?? deps.appNames.first ?? "Astra"
+            var named = message.replacingOccurrences(of: "{app}", with: app)
+            // スイッチが既にオンなのに許可が無い = macOS が再起動を待っている（画面収録はそう）。「オンにして」とは言わない。
+            let isSwitch = found.match.node.role == (kAXCheckBoxRole as String) || found.match.node.role == "AXSwitch"
+            if isSwitch, found.match.node.value == "1" { named = Self.calloutAlreadyOn(for: app) }
+            // 行のスイッチは行の**中**（名前とスイッチの間の空き）に置く: 尾がスイッチに触れ、スクロールバーを跨がない。
+            // 「+」は下（横は隣の「−」を隠す）。
+            let preferred: GuidePlacement = found.match.node.role == (kAXButtonRole as String) ? .below : .left
             deps.overlay.showGuide(message: named, at: found, preferred: preferred)
             watchSettings(elements: [found.match.node.element].compactMap { $0 } + windows)
             return true
@@ -312,7 +318,7 @@ final class PermissionGuideCoordinator: ObservableObject {
         deps.overlay.hideGuide()
         observer?.stop(); observer = nil
         stopFallback()
-        deps.overlay.updateAvatar(state: .success, message: Self.messageDone, action: nil)
+        deps.overlay.updateAvatar(state: .success, message: Self.messageDone(for: permission), action: nil)
         deps.after(deps.successDwell) { [weak self] in
             guard let self, !self.state.isTerminal else { return }
             self.advance()
@@ -397,8 +403,18 @@ final class PermissionGuideCoordinator: ObservableObject {
     static let messageMicrophoneSettings = "マイクの設定で Astra をオンにしてください"
     static let messageGeneralTurnOn = "設定画面で Astra をオンにしてください"
     static let messageSettingsFailed = "設定画面を開けませんでした"
-    static let messageDone = "設定できました"
+    /// 何を設定できたかを言う（「設定できました」だけだと、絵の文字が 1 語で判定不能になる。何が済んだかも分かる）。
+    static func messageDone(for permission: GuidePermission) -> String {
+        switch permission {
+        case .accessibility: return "アクセシビリティを設定できました"
+        case .screenCapture: return "画面収録を設定できました"
+        case .microphone: return "マイクを設定できました"
+        }
+    }
     static let messageAllDone = "すべて設定できました"
+    /// スイッチはオンなのに許可がまだ = 再起動待ち。
+    /// 短く（行の中に置くので、長いと行の名前を隠す）。尾がその行を指しているので名前は要らない。
+    static func calloutAlreadyOn(for app: String) -> String { _ = app; return "オンです · 再起動すると使えます" }
     static let actionOpenSettings = "システム設定を開く"
     /// `{app}` は見つけた行の名前に置き換える。
     static let calloutTurnOn = "{app} をオンにしてください"
