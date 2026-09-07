@@ -819,3 +819,9 @@ pub fn api_task_approve(
         .map_err(map_transport)?;
     Ok(())
 }
+
+/// 仕事そのもの（GET /v1/tasks/:id）。JSON 本文。失敗の理由（error.code）を読むために使う。
+#[uniffi::export]
+pub fn api_task_json(base_url: String, access_token: String, task_id: String) -> Result<String, ApiError> {
+    get_json(&base_url, &access_token, &format!("/v1/tasks/{}", path_segment(&task_id)))
+}
