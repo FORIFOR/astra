@@ -132,7 +132,9 @@ extension SelfTest {
                 // 対象の周りを 2 倍で切り出す（行 + スイッチ + 吹き出し）。
                 if let cg = composite(settingsPID: pid, overlays: overlays) {
                     // 対象 + 吹き出しの周り（AppKit）→ CG 画面座標（上原点）→ 合成画像の座標。
-                    let around = (overlay.callout.frame ?? a.rect).union(overlay.highlight.frame ?? a.rect).insetBy(dx: -260, dy: -48)
+                    // 行の名前まで入れ、サイドバー（この Mac の iCloud の赤い「1」等）は入れない（judge が環境の印を欠陥と読む）。
+                    var around = (overlay.callout.frame ?? a.rect).union(overlay.highlight.frame ?? a.rect).insetBy(dx: 0, dy: -48)
+                    around.origin.x -= 150; around.size.width += 150 + 40
                     let primaryH = AXCoordinateConverter.primaryScreenHeight()
                     let cgRect = CGRect(x: around.minX, y: primaryH - around.maxY, width: around.width, height: around.height)
                     let rect = CGRect(x: (cgRect.minX - lastUnion.minX) * lastScale, y: (cgRect.minY - lastUnion.minY) * lastScale,

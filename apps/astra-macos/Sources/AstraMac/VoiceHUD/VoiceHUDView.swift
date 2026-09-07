@@ -98,7 +98,7 @@ private struct IdleDock: View {
         if let shot = visual.justCaptured {
             // × は chip と同じ位置に（一瞬の面でも、消す手が同じ場所にあること — 盲検の consistency）。
             screenshotChip(shot: shot, tint: Palette.accent(scheme == .dark),
-                           meta: Facts.screenshotDetected, dismiss: shot.id, id: "screenshotContextChip")
+                           meta: Facts.screenshotDetected, dismiss: shot.id, id: "screenshotContextChip", metaIsState: true)
                 .help("そのまま「これ何？」と聞いてください · \(VisualEgressPolicy.current.disclosure)")
         } else if let shot = visual.recent.first {
             // 質問で添えたあとは出所（初回「質問したときだけ Claude に送信」、以降「Claude に送信 · たった今」）。
@@ -150,7 +150,8 @@ private struct IdleDock: View {
 
     /// 1 行目は「スクリーンショット」、2 行目は出所や状態（voice.context の app 名 + 要約と同じ配分）。
     /// 先頭は**その画像の縮小**（どの絵の話かが一目で分かる。記号だけだと「何かの通知」に見える — 盲検の指摘）。
-    private func screenshotChip(shot: VisualContextArtifact, tint: Color, meta: String, dismiss: UUID?, id: String) -> some View {
+    /// `metaIsState`: 2 行目が「いま起きたこと」（認識の一瞬）なら本文色で出す（薄い灰では状態の変化に気づけない — 盲検）。
+    private func screenshotChip(shot: VisualContextArtifact, tint: Color, meta: String, dismiss: UUID?, id: String, metaIsState: Bool = false) -> some View {
         HStack(spacing: 10) {
             ScreenshotThumb(url: shot.imageURL, tint: tint)
             VStack(alignment: .leading, spacing: 1) {
@@ -160,7 +161,7 @@ private struct IdleDock: View {
                     .lineLimit(1)
                 Text(meta)
                     .font(.system(size: S.type(Metrics.dockMetaSize)))
-                    .foregroundStyle(Palette.muted(scheme == .dark))
+                    .foregroundStyle(metaIsState ? Palette.text(scheme == .dark) : Palette.muted(scheme == .dark))
                     .lineLimit(1)
             }
             Spacer(minLength: 0)
