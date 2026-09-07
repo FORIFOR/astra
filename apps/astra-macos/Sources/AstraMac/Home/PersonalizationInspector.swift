@@ -19,6 +19,12 @@ struct PersonalizationInspector: View {
                 if let p = store.profile {
                     toggleRow(p)
                     if p.inferenceEnabled {
+                        // 3 段の意味を、印の出る場所で 1 行だけ言う（盲検 d40c313: 「推測」と「観測」の違いが画面に無い）。
+                        Text("観測 = 記録から数えたこと · 推測 = そこから Astra が考えたこと · 確認済み = あなたが認めたこと")
+                            .font(.system(size: S.type(TypeScale.captionSize)))
+                            .foregroundStyle(Palette.muted(dark))
+                            .fixedSize(horizontal: false, vertical: true)
+                            .accessibilityIdentifier("personalizationLegend")
                         group("働き方", p.workingStyle, empty: "まだ確かめたものはありません。会議や依頼が増えると、ここに提案が出ます。")
                         group("仕事のパターン", p.workPatterns, empty: "まだ十分に読めていません。")
                         group("よく出る人・案件", p.frequentEntities, empty: "まだ読んでいません。")
