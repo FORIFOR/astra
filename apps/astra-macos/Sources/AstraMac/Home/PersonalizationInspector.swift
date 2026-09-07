@@ -59,7 +59,7 @@ struct PersonalizationInspector: View {
     }
 
     private func group(_ title: String, _ traits: [PersonalizationTrait], empty: String) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .font(.system(size: S.type(TypeScale.microSize), weight: .semibold))
                 .foregroundStyle(Palette.muted(dark))
@@ -74,13 +74,14 @@ struct PersonalizationInspector: View {
         }
     }
 
-    /// 1 件の推測。**どの行も同じ形**: 1 行目 = 言葉 + 状態（固定幅）、2 行目 = [出所 N] … [そのとおり] [この推測を使わない]。
+    /// 1 件の推測。**どの行も同じ形**: 1 行目 = 言葉 … [出所 N] 状態、2 行目 = [そのとおり] [この推測を使わない]。
     ///
-    /// 盲検（a752c92）で 3 judge が揃って指摘した: 確認済みの行だけ操作が 1 つで形が違う、操作が文字リンクに見えて
-    /// 押せると分からない、出所と操作の関係が読めない。行を hairline で囲み、操作は縁つきの button にし、
-    /// 確認済みでも [そのとおり] の場所を空けずに「確認済み」の印をそこへ置く。
+    /// 盲検（a752c92 → af507b2）で 3 judge が揃って指摘した順に直した: 確認済みの行だけ形が違う → 同じ 2 段、
+    /// 操作が文字リンクに見える → 縁つきの button、出所と操作の関係 → 出所は言葉の行に、操作は操作の行に、
+    /// 狭い Panel で 3 つの button が詰まる → 操作は 2 つだけの行にして幅を使う、
+    /// 灰色の「そのとおり」は押せないのか済みなのか読めない → 確認済みは**塗った**選択状態（押した結果が残る形）。
     private func traitRow(_ t: PersonalizationTrait) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Text(t.label)
                     .font(.system(size: S.type(TypeScale.secondarySize), weight: .medium))
@@ -88,35 +89,36 @@ struct PersonalizationInspector: View {
                     .strikethrough(!t.enabled, color: Palette.muted(dark))
                     .lineLimit(2)
                 Spacer(minLength: 4)
-                statusChip(t.enabled ? t.status.label : "使わない")
-                    .frame(width: 64, alignment: .trailing)
-            }
-            HStack(spacing: 6) {
                 if !t.sources.isEmpty {
                     actionButton("\(Facts.sourceLabel) \(t.sources.count)", accent: false) {
                         if evidenceOpen.contains(t.key) { evidenceOpen.remove(t.key) } else { evidenceOpen.insert(t.key) }
                     }
                     .accessibilityIdentifier("traitEvidence-\(t.key)")
                 }
-                Spacer(minLength: 0)
+                statusChip(t.enabled ? t.status.label : "使わない")
+            }
+            HStack(spacing: 8) {
                 if t.enabled {
-                    if t.status == .confirmed {
-                        // 場所を空けない。押せない印として同じ幅に置く。
+                    // 確認済みは塗りで残す（選択状態）。押しても変わらないが、灰色で「押せない」に見せない。
+                    let confirmed = t.status == .confirmed
+                    Button { if !confirmed { store.setTrait(t.key, status: .confirmed) } } label: {
                         Text(Facts.personalizationConfirm)
                             .font(.system(size: S.type(TypeScale.microSize), weight: .medium))
-                            .foregroundStyle(Palette.muted(dark))
-                            .frame(height: 24).padding(.horizontal, 8)
-                            .opacity(0.5)
-                    } else {
-                        actionButton(Facts.personalizationConfirm, accent: true) { store.setTrait(t.key, status: .confirmed) }
-                            .accessibilityIdentifier("traitConfirm-\(t.key)")
+                            .foregroundStyle(confirmed ? Color.white : Palette.accent(dark))
+                            .frame(height: 26).padding(.horizontal, 10)
+                            .background(
+                                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                    .fill(confirmed ? Palette.accent(dark) : Color.clear))
                     }
+                    .buttonStyle(AstraControlStyle(radius: 6, base: confirmed ? 0.0 : 0.05, filled: !confirmed))
+                    .accessibilityIdentifier("traitConfirm-\(t.key)")
                     actionButton(Facts.personalizationDisableTrait, accent: false) { store.setTrait(t.key, enabled: false) }
                         .accessibilityIdentifier("traitDisable-\(t.key)")
                 } else {
                     actionButton("使う", accent: true) { store.setTrait(t.key, enabled: true) }
                         .accessibilityIdentifier("traitEnable-\(t.key)")
                 }
+                Spacer(minLength: 0)
             }
             if evidenceOpen.contains(t.key) {
                 VStack(alignment: .leading, spacing: 3) {
@@ -135,8 +137,8 @@ struct PersonalizationInspector: View {
                 .padding(.top, 2)
             }
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 8)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 8, style: .continuous)
@@ -150,7 +152,7 @@ struct PersonalizationInspector: View {
             Text(title)
                 .font(.system(size: S.type(TypeScale.microSize), weight: .medium))
                 .foregroundStyle(accent ? Palette.accent(dark) : Palette.text(dark))
-                .frame(height: 24).padding(.horizontal, 8)
+                .frame(height: 26).padding(.horizontal, 10)
         }
         .buttonStyle(AstraControlStyle(radius: 6, base: 0.05))
     }
