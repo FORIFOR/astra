@@ -1,14 +1,14 @@
-# Astra UI Atlas — Visual Release Book (RC 6605c95)
+# Astra UI Atlas — Visual Release Book (RC b7eafe2)
 
 取扱説明書ではない。**全 UI を RC .app の実画像で 1 画面 1 ページに固定し、ページ単位で KEEP / FIX / NOT_ENOUGH_EVIDENCE を出す**ための資料。
 画像は署名済み RC .app が `--selftest` で描いたものだけ。モック・Figma・別ビルドは入れない。
 
 ```
-RC SHA            6605c95
-RC exe sha256     93bac973ffd2babf73ccfb50e6e5f9c8a2322d1f328bbff5e249aff4d7eccd13
-RC built          2026-09-07T20:52:16+09:00   captured 2026-09-07T20:52:17+09:00
+RC SHA            b7eafe2
+RC exe sha256     26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7
+RC built          2026-09-07T22:09:32+09:00   captured 2026-09-07T22:09:33+09:00
 codesign          com.astra.desktop / 6RR7572ZLU
-required screens  75   with RC image 75   NO_CAPTURE_PATH 0
+required screens  76   with RC image 76   NO_CAPTURE_PATH 0
 strips            5 / 5
 light == dark     21 面（voice.idle, voice.preparing, voice.listening, voice.thinking, voice.context, voice.context-expanded, voice.quick-actions, screenshot.detected, screenshot.attached-cloud, dock.running, dock.context-detail, dock.confirmation, dock.confirmation-edit, dock.result, dock.result-failed, meeting.controller, meeting.preparing, meeting.paused, meeting.notes, meeting.captions, meeting.ask）
 appearance_policy fixed 22 面 / 違反 0（なし）
@@ -60,6 +60,7 @@ appearance_policy fixed 22 面 / 違反 0（なし）
 | `main.home-work-context` | Main — Home (Work Context) | CAPTURED | [png](screens/main.home-work-context.light.png) | [png](screens/main.home-work-context.dark.png) |
 | `main.home-personalization` | Main — Home (Personalization) | CAPTURED | [png](screens/main.home-personalization.light.png) | [png](screens/main.home-personalization.dark.png) |
 | `main.home-work-why` | Main — Home (なぜ重要？) | CAPTURED | [png](screens/main.home-work-why.light.png) | [png](screens/main.home-work-why.dark.png) |
+| `main.home-meeting-brief` | Main — Home (次の会議の brief) | CAPTURED | [png](screens/main.home-meeting-brief.light.png) | [png](screens/main.home-meeting-brief.dark.png) |
 | `main.home-recording-now` | Main — Home (recording now) | CAPTURED | [png](screens/main.home-recording-now.light.png) | [png](screens/main.home-recording-now.dark.png) |
 | `main.home-upcoming` | Main — Home (upcoming meeting) | CAPTURED | [png](screens/main.home-upcoming.light.png) | [png](screens/main.home-upcoming.dark.png) |
 | `main.new-recording-sheet` | Main — New recording sheet | CAPTURED | [png](screens/main.new-recording-sheet.light.png) | [png](screens/main.new-recording-sheet.dark.png) |

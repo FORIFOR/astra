@@ -1,0 +1,71 @@
+{
+  "pages": {
+    "A9B6": {
+      "visible_text": [
+        "Home",
+        "Work",
+        "Library",
+        "Apps",
+        "こんばんは",
+        "何を終わらせますか?",
+        "録音を始める",
+        "前回の設定でその場で録り始めます",
+        "Gmail・Outlook・To Do・予定から管理しています",
+        "MOPITA",
+        "明日 15:00",
+        "MTI に見積の送信",
+        "要件定義書のレビューを返す",
+        "面接の日程候補を 2 名に返す",
+        "待っていること"
+      ],
+      "observation": {
+        "happening": "Home dashboard for AI assistant aggregating tasks and calendar events from Gmail, Outlook, To Do, and calendar apps. Shows greeting, a recording toggle with red indicator, and prioritized task list with expandable items.",
+        "most_important": "Task aggregator pulling from multiple sources with clear priority levels (高/中), timestamps, and expandable details; the input field 'What would you like to finish?' frames the primary interaction.",
+        "next_action": "User can start voice recording, ask a question in the input field, expand task details via chevron toggles, or interact with priority indicators on the right.",
+        "anomalies": [
+          "Expandable task items have small right-side toggle buttons (なぜ重要？ / 優先ではない) that may have modest click targets",
+          "Vertical spacing between task card sections is consistent but could benefit from subtle divider lines to enhance section separation"
+        ]
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "B115": {
+      "visible_text": [
+        "Home",
+        "こんばんは",
+        "何を終わらせますか?",
+        "次の会議",
+        "今日 23:19",
+        "MOPITA 定例",
+        "前回から未確認 2 件",
+        "閉じる",
+        "前回: MOPITA 定例 (9/3)",
+        "決定: 価格案を再提出する",
+        "やること: 導入時期を先方に確認する",
+        "2 件のメールが届いています",
+        "MTI 佐藤さん: 見積 v2 の確認をお願いします",
+        "会議を始める"
+      ],
+      "observation": {
+        "happening": "Same dashboard with expanded meeting detail panel overlaid. Shows next meeting (MOPITA at 23:19) with nested context: prior decisions, action items, received emails, and closed items. Red accent highlights 2 unconfirmed items. Primary action button 'Start meeting' appears at bottom right.",
+        "most_important": "Sophisticated context-aware expansion reveals meeting preparation state (what was decided, what must be done, what communications arrived) inline without losing the main task list; demonstrates relational information architecture.",
+        "next_action": "User can start the meeting via red button, close this detail panel to return to task list view, or click on linked items to navigate.",
+        "anomalies": [
+          "Nested bullet structure in expanded panel increases text density noticeably; line spacing could benefit from slight increase for readability",
+          "Multiple 'Source' (出所) label references (出所 1, 出所 2, etc.) indicate linked items but visual distinctiveness of these links could be stronger"
+        ]
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    }
+  },
+  "_judge": {
+    "model": "haiku",
+    "cost_usd": 0.0587397,
+    "turns": 3,
+    "duration_ms": 45825
+  }
+}

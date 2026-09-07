@@ -1,0 +1,152 @@
+{
+  "rc": "b7eafe2",
+  "pages": [
+    {
+      "id": "main.home-work-why",
+      "blind_id": "219E",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "primary-action clarity",
+              "what": "最重要カードを開いても実行できる操作が「閉じる」「優先ではない」という却下系だけで、返信・メールを開くなど前進する主要アクションが画面上に無い。出所の Gmail 行が押せるかも見た目で判別できない",
+              "where": "展開カード右上の操作列と「出所」ブロック（Gmail / 会議 の行）"
+            },
+            {
+              "axis": "consistency",
+              "what": "同じ位置の操作ラベルがカードごとに「閉じる」/「なぜ重要？」と入れ替わるため、列として読めず走査しづらい",
+              "where": "3枚のカードの右上、優先ではない の左隣"
+            },
+            {
+              "axis": "alignment",
+              "what": "「出所」内のラベル（Gmail・会議）と本文の左端が揃わず、さらに本文2行目がさらに右へ字下げされて、3段の不揃いなインデントになっている",
+              "where": "展開カード下部の「出所」ブロック"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        }
+      ]
+    },
+    {
+      "id": "main.home-meeting-brief",
+      "blind_id": "83BB",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "hierarchy",
+              "what": "4つの内容区分(前回/その後/開いている件/今日確認したいこと)がすべて同一の小さい灰色キャプションで、視覚的な軽重差がない",
+              "where": "カード中央、各セクション見出し"
+            },
+            {
+              "axis": "density",
+              "what": "各箇条書きの末尾に小さな「出所N」リンクが余白なく連続配置され、行間も狭いため文字が詰まって見える",
+              "where": "カード内の箇条書きリスト全体"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "main.home-work-context",
+      "blind_id": "AEBC",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": false,
+          "why": "照合 3/8（画面に無い文字）",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "consistency",
+              "what": "上段のカードと下段のリスト行で、同じ「未処理の用件」を扱うのに容器（枠あり箱／枠なし行）も操作語彙（優先ではない／外す／済んだ）も異なり、一つの画面として読み方を切り替えさせられる",
+              "where": "「今日、気にした方がいいこと」の3カードと、その下の「待っていること」「返すもの」の各行"
+            },
+            {
+              "axis": "density",
+              "what": "上の3カードは1件あたり4行＋余白をとるのに、下のリストは1件1行に圧縮されており、重要度の差以上に情報密度が急変して視線のリズムが途切れる",
+              "where": "画面中央、3枚目カードと「待っていること」見出しの境目"
+            },
+            {
+              "axis": "state legibility",
+              "what": "右端の数値列に「3 日」（経過日数）と「明日 15:00 / 9/9」（期限）が同じ体裁で並び、その数字が待ち時間なのか締切なのか見分けられない",
+              "where": "「待っていること」「返すもの」各行の右端、「出所を見る」の左"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "",
+          "valid": true,
+          "why": "",
+          "confidence": "",
+          "concerns": []
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "keep": 3,
+    "fix_candidate": 0,
+    "not_enough_evidence": 0,
+    "models": [
+      "haiku",
+      "opus",
+      "sonnet"
+    ]
+  },
+  "gate": "PASS"
+}
