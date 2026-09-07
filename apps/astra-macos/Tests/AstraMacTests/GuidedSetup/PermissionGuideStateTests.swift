@@ -111,6 +111,7 @@ final class PermissionGuideStateTests: XCTestCase {
         c.tick()
         XCTAssertEqual(c.state, .failed("設定画面を開けませんでした"))
         XCTAssertEqual(h.overlay.avatarState, .warning)
+        XCTAssertEqual(h.overlay.avatarAction, PermissionGuideCoordinator.actionRetryOpenSettings, "失敗のあとは「もう一度開く」")
         c.stop()
         XCTAssertEqual(c.state, .idle)
     }

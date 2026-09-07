@@ -36,6 +36,9 @@ m = json.load(open(os.path.join(atlas, "manifest.json"), encoding="utf-8"))
 req = [s for s in m["screens"] if s.get("required") and (s.get("image") or {}).get("light")]
 # 差分再検証: ASTRA_JUDGE_ONLY="guided-setup. screenshot." のように id の前置きで絞る（新規面だけ full audit、既存面は pixel regression）。
 only = [x for x in os.environ.get("ASTRA_JUDGE_ONLY", "").split() if x]
+# Apple の窓（System Settings）に Astra の 2 窓を重ねた合成面は、judge が OS の一覧（第三者アプリの行）まで採点してしまう。
+# 盲検は Astra が描いた画素だけを見る（manifest の blind_review: false）。合成面は Atlas の文脈証拠として残る。
+req = [s for s in req if s.get("blind_review", True)]
 if only:
     req = [s for s in req if any(s["id"].startswith(x) for x in only)]
 key, ids = {}, set()
@@ -137,7 +140,9 @@ for f in sorted(glob.glob(os.path.join(out, "judge-*.json"))):
         i = i.upper().replace(".PNG", "")
         if i not in pages: continue
         vt = [t for t in page.get("visible_text", []) if norm(t)]
-        hit = sum(1 for t in vt if norm(t) in ocr.get(i, ""))
+        # 記号（✓ × + − !）は絵に本当に在るが OCR は読めない（✓ を「く」と読む）。見た記号を挙げた judge を無効にしない。
+        SYMBOLS = {"✓", "✔", "×", "✕", "x", "+", "−", "-", "!", "！", "↑", "↓", "←", "→"}
+        hit = sum(1 for t in vt if norm(t) in ocr.get(i, "") or t.strip() in SYMBOLS)
         ratio = hit / len(vt) if vt else 0
         # 画面の文字が 3 つも無い面（Idle の Dock 等）では、読めた分が全部合っていれば有効。
         need = min(3, max(1, ocr_tokens.get(i, 0)))

@@ -15,7 +15,7 @@ struct AvatarHUDView: View {
             if !model.message.isEmpty { bubble }
             avatar
         }
-        .padding(4)
+        .padding(6)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("guideAvatar")
     }

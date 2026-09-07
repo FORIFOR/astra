@@ -180,7 +180,8 @@ final class PermissionGuideCoordinator: ObservableObject {
         guard deps.settingsPID() != nil else {
             if let started = settingsWaitStarted, deps.now().timeIntervalSince(started) > deps.settingsLaunchTimeout {
                 set(.failed("設定画面を開けませんでした"))
-                deps.overlay.updateAvatar(state: .warning, message: Self.messageSettingsFailed, action: openSettingsAction(.screenCapture))
+                deps.overlay.updateAvatar(state: .warning, message: Self.messageSettingsFailed,
+                                          action: (Self.actionRetryOpenSettings, { [weak self] in self?.deps.openSettings(.screenCapture) }))
                 stopFallback()
             }
             return
@@ -414,7 +415,8 @@ final class PermissionGuideCoordinator: ObservableObject {
     static let messageAllDone = "すべて設定できました"
     /// スイッチはオンなのに許可がまだ = 再起動待ち。
     /// 短く（行の中に置くので、長いと行の名前を隠す）。尾がその行を指しているので名前は要らない。
-    static func calloutAlreadyOn(for app: String) -> String { _ = app; return "オンです · 再起動すると使えます" }
+    static func calloutAlreadyOn(for app: String) -> String { "オンです · \(app) を再起動" }
+    static let actionRetryOpenSettings = "もう一度開く"
     static let actionOpenSettings = "システム設定を開く"
     /// `{app}` は見つけた行の名前に置き換える。
     static let calloutTurnOn = "{app} をオンにしてください"

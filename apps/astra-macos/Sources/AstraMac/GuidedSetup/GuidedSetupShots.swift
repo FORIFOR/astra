@@ -111,8 +111,10 @@ extension SelfTest {
         if let ai = args.firstIndex(of: "--app-name"), ai + 1 < args.count { deps.appNames = [args[ai + 1]] + deps.appNames }
         let coordinator = PermissionGuideCoordinator(dependencies: deps)
 
-        // 1) intro: アバターだけ（System Settings を開く前の姿）。
+        // 1) intro: アバターだけ（System Settings を開く前の姿）。実際の flow と同じく「システム設定を開く」の操作子を持つ。
         overlay.showAvatar(state: .guiding, message: PermissionGuideCoordinator.messageScreenCapture, onClose: {})
+        overlay.updateAvatar(state: .guiding, message: PermissionGuideCoordinator.messageScreenCapture,
+                             action: (PermissionGuideCoordinator.actionOpenSettings, {}))
         settle(0.5)
         if let cg = windowImage(overlay.avatar.window) { write("guided-setup-intro", cg) }
         overlay.hideAll()

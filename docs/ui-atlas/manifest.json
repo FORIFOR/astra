@@ -3670,7 +3670,7 @@
         ]
       },
       "status": "CAPTURED",
-      "note": "System Settings の窓は Apple のもの。Astra が描いたのはハイライトと吹き出しの 2 窓だけ。dark は System Settings が OS の外観のままなので撮らない。",
+      "note": "System Settings の窓は Apple のもの。Astra が描いたのはハイライトと吹き出しの 2 窓だけ。dark は System Settings が OS の外観のままなので撮らない。 盲検 review の対象外（Apple の窓が大半で、judge が OS の一覧まで採点する）。Astra が描いた部分の盲検は guided-setup.target-highlighted で、幾何は GUIDED_SETUP_GEOMETRY で見る。",
       "source": "RC",
       "captured": {
         "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
@@ -3688,7 +3688,8 @@
           }
         },
         "light": "screens/guided-setup.target-found.light.png"
-      }
+      },
+      "blind_review": false
     },
     {
       "id": "guided-setup.target-add",
@@ -3719,7 +3720,7 @@
         ]
       },
       "status": "CAPTURED",
-      "note": "System Settings の窓は Apple のもの。一覧の他の行（第三者アプリ）はこの Mac の環境で、Astra のものではない。",
+      "note": "System Settings の窓は Apple のもの。一覧の他の行（第三者アプリ）はこの Mac の環境で、Astra のものではない。 盲検 review の対象外（Apple の窓が大半で、judge が OS の一覧まで採点する）。Astra が描いた部分の盲検は guided-setup.target-highlighted で、幾何は GUIDED_SETUP_GEOMETRY で見る。",
       "source": "RC",
       "captured": {
         "exe_sha256": "baf78c3e30e7cba49b65440b2aa40024d94fa515ea055357699e1b01d404d0eb",
@@ -3737,7 +3738,8 @@
           }
         },
         "light": "screens/guided-setup.target-add.light.png"
-      }
+      },
+      "blind_review": false
     },
     {
       "id": "guided-setup.target-highlighted",
@@ -3830,7 +3832,9 @@
           }
         },
         "light": "screens/guided-setup.repositioned.light.png"
-      }
+      },
+      "blind_review": false,
+      "note": "盲検 review の対象外（Apple の窓が大半で、judge が OS の一覧まで採点する）。Astra が描いた部分の盲検は guided-setup.target-highlighted で、幾何は GUIDED_SETUP_GEOMETRY で見る。"
     },
     {
       "id": "guided-setup.target-missing",
