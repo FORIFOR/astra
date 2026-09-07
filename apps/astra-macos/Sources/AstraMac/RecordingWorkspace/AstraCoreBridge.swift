@@ -86,4 +86,21 @@ enum AstraCoreBridge {
     static func library(_ baseUrl: String, accessToken: String) throws -> [String] {
         try apiLibrary(baseUrl: baseUrl, accessToken: accessToken)
     }
+
+    // Work Context / Personalization。形は契約（@astra/contracts work.ts）が正本なので JSON のまま運ぶ。
+    static func workContext(_ baseUrl: String, accessToken: String) throws -> String {
+        try apiWorkContext(baseUrl: baseUrl, accessToken: accessToken)
+    }
+    static func workEvidence(_ baseUrl: String, accessToken: String, itemId: String) throws -> String {
+        try apiWorkEvidence(baseUrl: baseUrl, accessToken: accessToken, itemId: itemId)
+    }
+    static func workCorrect(_ baseUrl: String, accessToken: String, itemId: String, action: String, note: String) throws {
+        try apiWorkCorrect(baseUrl: baseUrl, accessToken: accessToken, itemId: itemId, action: action, note: note)
+    }
+    static func personalization(_ baseUrl: String, accessToken: String) throws -> String {
+        try apiPersonalization(baseUrl: baseUrl, accessToken: accessToken)
+    }
+    static func personalizationUpdate(_ baseUrl: String, accessToken: String, updateJson: String) throws -> String {
+        try apiPersonalizationUpdate(baseUrl: baseUrl, accessToken: accessToken, updateJson: updateJson)
+    }
 }

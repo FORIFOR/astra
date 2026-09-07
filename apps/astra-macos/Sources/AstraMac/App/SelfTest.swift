@@ -48,6 +48,7 @@ enum SelfTest {
         case "guidedshots": guidedShots(args); return true
         case "screenshotshots": screenshotShots(args); return true
         case "screenshotshot": screenshotShot(args); return true
+        case "workcontext": workContextGate(); return true
         case "journey": journeyGate(args); return true
         case "idle-hold": idleHold(args); return true
         case "confirmflow": confirmFlow(); return true
@@ -1250,7 +1251,7 @@ enum SelfTest {
     /// その 1 行だけ濃くなり、撮るたびに golden が動く（会議詳細の引用の行を
     /// ボタンにした直後、dark で 1.55% 揺れた）。撮影は人の手の位置に依存させない。
     @MainActor
-    private static func parkCursor() {
+    static func parkCursor() {
         guard let screen = NSScreen.screens.first else { return }
         // 右端の中ほど。**隅は避ける** —— Hot Corner を踏むと Mission Control が出て、
         // 窓のキャプチャそのものが失敗する（右下に置いた直後、guishot と secret が
@@ -5858,6 +5859,16 @@ enum SelfTest {
             shot.append(name)
         }
         take("home") { MainWindowController.shared.showSection(.home) }
+        // Work Context（気にすること・待ち・返すもの・今週の負荷）と Personalization。
+        // 差し込みは gateway の契約と同じ JSON（WorkContextFixture）。撮り終えたら外す。
+        take("home-work-context") {
+            WorkContextStore.shared.install(WorkContextFixture.context(), profile: WorkContextFixture.profile())
+            MainWindowController.shared.showSection(.work); settle(0.3)
+            MainWindowController.shared.showSection(.home)
+        }
+        take("home-personalization") { MainNav.shared.personalizationOpen = true }
+        MainNav.shared.personalizationOpen = false
+        WorkContextStore.shared.install(nil, profile: nil)
         take("work-tasks") { MainWindowController.shared.showWork(.tasks) }
         take("work-agents") { MainWindowController.shared.showWork(.agents) }
         take("library-meetings") { MainWindowController.shared.showLibrary(.meetings) }

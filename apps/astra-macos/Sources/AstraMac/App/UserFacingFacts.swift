@@ -58,6 +58,21 @@ enum UserFacingFacts {
     static let resultCopy = "コピー"
     static let resultOpenSettings = "設定を開く"
     static let recoveryResume = "続きから"
+    // Home の Work Context（気にすること・待ち・返すもの・今週の負荷）と Personalization。
+    static let workContextTitle = "今日、気にした方がいいこと"
+    static let workWaitingTitle = "待っていること"
+    static let workOwedTitle = "返すもの"
+    static let workWeekTitle = "今週の負荷"
+    static let workEvidence = "出所を見る"
+    static let workNotPriority = "優先ではない"
+    static let workDismiss = "外す"
+    static let workDone = "済んだ"
+    static let personalizationTitle = "Astra が使っているあなたの情報"
+    static let personalizationEdit = "編集"
+    static let personalizationConfirm = "そのとおり"
+    static let personalizationDisableTrait = "この推測を使わない"
+    static let personalizationDisableAll = "推測を使わない"
+    static let personalizationEnableAll = "推測を使う"
     static let recoveryDiscard = "破棄"
     /// できなかった頼みごとを、同じ入口でもう一度。黙って消える代わりに出す道。
     static let resultRetry = "やり直す"
@@ -188,6 +203,20 @@ enum UserFacingFacts {
             f("result.copy", resultCopy, false),
             f("result.openSettings", resultOpenSettings),
             f("recovery.resume", recoveryResume),
+            f("work.context.title", workContextTitle, false),
+            f("work.waiting.title", workWaitingTitle, false),
+            f("work.owed.title", workOwedTitle, false),
+            f("work.week.title", workWeekTitle, false),
+            f("work.evidence", workEvidence, false),
+            f("work.notPriority", workNotPriority, false),
+            f("work.dismiss", workDismiss, false),
+            f("work.done", workDone, false),
+            f("personalization.title", personalizationTitle, false),
+            f("personalization.edit", personalizationEdit, false),
+            f("personalization.confirm", personalizationConfirm, false),
+            f("personalization.disableTrait", personalizationDisableTrait, false),
+            f("personalization.disableAll", personalizationDisableAll, false),
+            f("personalization.enableAll", personalizationEnableAll, false),
             f("recovery.discard", recoveryDiscard),
             f("result.retry", resultRetry),
             f("transcription.recoveryHint", transcriptionRecoveryHint, false),

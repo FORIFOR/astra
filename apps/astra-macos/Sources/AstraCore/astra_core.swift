@@ -2756,6 +2756,29 @@ public func apiMeetingSegmentCount(baseUrl: String, accessToken: String, meeting
 })
 }
 /**
+ * Astra が使っている本人の情報（GET /v1/personalization）。JSON 本文。
+ */
+public func apiPersonalization(baseUrl: String, accessToken: String)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeApiError_lift) {
+    uniffi_astra_core_fn_func_api_personalization(
+        FfiConverterString.lower(baseUrl),
+        FfiConverterString.lower(accessToken),$0
+    )
+})
+}
+/**
+ * 確認・使わない・全体の停止（PUT /v1/personalization）。更新後の profile を JSON で返す。
+ */
+public func apiPersonalizationUpdate(baseUrl: String, accessToken: String, updateJson: String)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeApiError_lift) {
+    uniffi_astra_core_fn_func_api_personalization_update(
+        FfiConverterString.lower(baseUrl),
+        FfiConverterString.lower(accessToken),
+        FfiConverterString.lower(updateJson),$0
+    )
+})
+}
+/**
  * Apps（GET /v1/plugins/catalog）。name の一覧だけ（UI が並べる分）。
  */
 public func apiPluginCatalog(baseUrl: String, accessToken: String)throws  -> [String]  {
@@ -2849,6 +2872,42 @@ public func apiWaitTask(baseUrl: String, accessToken: String, taskId: String, ti
         FfiConverterString.lower(accessToken),
         FfiConverterString.lower(taskId),
         FfiConverterUInt64.lower(timeoutMs),$0
+    )
+})
+}
+/**
+ * Home の Work Context（GET /v1/work/context）。JSON 本文。
+ */
+public func apiWorkContext(baseUrl: String, accessToken: String)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeApiError_lift) {
+    uniffi_astra_core_fn_func_api_work_context(
+        FfiConverterString.lower(baseUrl),
+        FfiConverterString.lower(accessToken),$0
+    )
+})
+}
+/**
+ * 本人の訂正（POST /v1/work/corrections）。1 操作。
+ */
+public func apiWorkCorrect(baseUrl: String, accessToken: String, itemId: String, action: String, note: String)throws   {try rustCallWithError(FfiConverterTypeApiError_lift) {
+    uniffi_astra_core_fn_func_api_work_correct(
+        FfiConverterString.lower(baseUrl),
+        FfiConverterString.lower(accessToken),
+        FfiConverterString.lower(itemId),
+        FfiConverterString.lower(action),
+        FfiConverterString.lower(note),$0
+    )
+}
+}
+/**
+ * 1 件の出所（GET /v1/work/evidence/:itemId）。JSON 本文。
+ */
+public func apiWorkEvidence(baseUrl: String, accessToken: String, itemId: String)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeApiError_lift) {
+    uniffi_astra_core_fn_func_api_work_evidence(
+        FfiConverterString.lower(baseUrl),
+        FfiConverterString.lower(accessToken),
+        FfiConverterString.lower(itemId),$0
     )
 })
 }
@@ -3030,6 +3089,12 @@ private let initializationResult: InitializationResult = {
     if (uniffi_astra_core_checksum_func_api_meeting_segment_count() != 49591) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_astra_core_checksum_func_api_personalization() != 22756) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_astra_core_checksum_func_api_personalization_update() != 21167) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_astra_core_checksum_func_api_plugin_catalog() != 40736) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -3052,6 +3117,15 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_astra_core_checksum_func_api_wait_task() != 17601) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_astra_core_checksum_func_api_work_context() != 24612) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_astra_core_checksum_func_api_work_correct() != 28394) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_astra_core_checksum_func_api_work_evidence() != 12987) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_astra_core_checksum_func_astra_core_version() != 51046) {

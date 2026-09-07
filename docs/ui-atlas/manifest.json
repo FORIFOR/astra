@@ -1682,6 +1682,66 @@
       }
     },
     {
+      "id": "main.home-work-context",
+      "group": "main",
+      "title": "Main — Home (Work Context)",
+      "required": true,
+      "capture": {
+        "selftest": "sections",
+        "file": "home-work-context.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "メールや予定を繋いだあと Home を開いた。Work Context は予定より先に出る。",
+      "meaning": "「今日、気にした方がいいこと」最大 3 件（案件 · 期限 · 題 · 状況 1 行 · 件数と理由）、「待っていること」「返すもの」1 行ずつ、「今週の負荷」2×2、Personalization への入口 [編集]。どの行にも [出所を見る] と 1 操作の訂正がある。",
+      "primary": "出所を見る",
+      "secondary": "優先ではない / 外す / 済んだ（1 操作の訂正）、[編集]",
+      "states": "inference_enabled / 推測を止めている（事実だけ）/ 空（つなぐ前）",
+      "keys": "—",
+      "privacy": "出所は抜粋（<= 200 字）だけ。本文はここにも cloud にも無い。点数は決定的な式で LLM は関わらない。",
+      "prev": [
+        "main.home"
+      ],
+      "next": [
+        "main.home-personalization"
+      ],
+      "window": "Main Window",
+      "invariant": "大きな札を並べない（3 件で 1 面）。出所の無い行は 1 つも出さない。",
+      "source": "RC",
+      "appearance_policy": "adaptive"
+    },
+    {
+      "id": "main.home-personalization",
+      "group": "main",
+      "title": "Main — Home (Personalization)",
+      "required": true,
+      "capture": {
+        "selftest": "sections",
+        "file": "home-personalization.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "Home の Work Context の [編集]。右の Panel に「Astra が使っているあなたの情報」。",
+      "meaning": "働き方 / 仕事のパターン / よく出る人・案件を、観測 · 推測 · 確認済み の 3 段で見せる。行ごとに [そのとおり] と [この推測を使わない]、上に [推測を使わない]（全体）。",
+      "primary": "そのとおり / この推測を使わない",
+      "secondary": "推測を使わない（全体、1 操作）",
+      "states": "推測を使っています / 止めています",
+      "keys": "—",
+      "privacy": "推測を事実として固定しない。止めれば Astra は確認済みも含めて何も使わない。",
+      "prev": [
+        "main.home-work-context"
+      ],
+      "next": [],
+      "window": "Main Window（inspector）",
+      "invariant": "Agent Activity と同じ 1 枚の右 Panel を使う（Panel を増やさない）。",
+      "source": "RC",
+      "appearance_policy": "adaptive"
+    },
+    {
       "id": "main.home-recording-now",
       "group": "main",
       "title": "Main — Home (recording now)",

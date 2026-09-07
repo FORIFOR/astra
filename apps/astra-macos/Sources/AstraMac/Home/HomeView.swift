@@ -39,6 +39,7 @@ struct HomeView: View {
     @ObservedObject private var store = AstraStateStore.shared
     @ObservedObject private var sessions = MeetingSessionStore.shared
     @ObservedObject private var sheetOpener = NewRecordingSheetOpener.shared
+    @ObservedObject private var work = WorkContextStore.shared
     @FocusState private var intentFocused: Bool
 
     static func greetingForNow(_ date: Date = Date()) -> String {
@@ -98,6 +99,12 @@ struct HomeView: View {
                     recoverableRow
                 }
 
+                // 仕事の文脈（Work Context）。**予定より先。**今日どこに時間を使うかが先で、
+                // 予定はその手段。実データが無ければ節ごと出ない（架空の案件を作らない）。
+                if work.context != nil {
+                    WorkContextCard()
+                }
+
                 if !attention.isEmpty {
                     section("これからの予定")
                     ForEach(attention.prefix(3)) { a in
@@ -135,7 +142,7 @@ struct HomeView: View {
                 // 録音中は「何もありません」ではない。live を recent から外したので、
                 // ここも live を見ないと、録音カードの真下で「今日はまだ何もありません」と
                 // 言うことになる。
-                if attention.isEmpty && sessions.recent.isEmpty && sessions.live == nil && recentTasks.isEmpty && recordedCount == 0 {
+                if attention.isEmpty && sessions.recent.isEmpty && sessions.live == nil && recentTasks.isEmpty && recordedCount == 0 && work.context == nil {
                     // 中央に浮かせない。上の操作の続きとして、左揃えで置く。
                     // 虚空の真ん中に文字があると、余白が「空き」に見えて落ち着かない。
                     VStack(alignment: .leading, spacing: 6) {
@@ -210,6 +217,7 @@ struct HomeView: View {
         }
         .onAppear {
             loadReal()
+            work.load()
             // 許可の状態は開くたびに読み直す。設定で許可して戻ってきても、
             // 予定を求める行が古い状態（初回に読んだ値）のままだった。
             calendar = Permissions.calendar

@@ -84,6 +84,8 @@ final class MainData: ObservableObject {
                     // サインインを AI 操作/翻訳/声の依頼に渡す。どれも人が押してから文面を送る。
                     RecordingWorkspaceState.shared.configureBackend(base: base, token: tokens.accessToken)
                     VoiceHUDState.shared.configureBackend(base: base, token: tokens.accessToken)
+                    WorkContextStore.shared.configureBackend(base: base, token: tokens.accessToken)
+                    WorkContextStore.shared.load()
                     // 録音の自動 upload（会議作成→停止時に音声全体→落ちた録音の回収）は dev 専用。
                     // 既定では録音は gateway を知らない。`RecordingRuntime.devAutoUploadEnabled`。
                     if RecordingRuntime.devAutoUploadEnabled {
@@ -105,6 +107,8 @@ final class MainNav: ObservableObject {
     static let shared = MainNav()
     /// 右 Panel は既定で閉じる（§Workspace）。
     @Published var activityOpen = false
+    /// 右 Panel に Personalization（Astra が使っている本人の情報）を出す。Home の [編集] から。
+    @Published var personalizationOpen = false
     /// Home の Session Card から開いた会議（§8 Home → Session Detail の導線）。
     @Published var openSession: String?
     @Published var section: MainSection = .home
@@ -179,13 +183,19 @@ struct MainWindowView: View {
                 // 見出しを決めるのはここ 1 か所だけにする。
                 .navigationTitle(nav.title)
                 // 右の Agent Activity は **既定で閉じる**。Content を主役にする（Linear の作法）。
-                .inspector(isPresented: $nav.activityOpen) {
-                    AgentActivityPane()
-                        .inspectorColumnWidth(min: S.metric(Metrics.inspectorWidth) - 40, ideal: S.metric(Metrics.inspectorWidth), max: S.metric(Metrics.inspectorWidth) + 60)
+                // 右 Panel は 1 枚。Personalization を開いたときはそれ、そうでなければ Agent Activity。
+                // `.inspector` を 2 つ重ねると、どちらが出るかが SwiftUI の解決順に委ねられる。
+                .inspector(isPresented: Binding(
+                    get: { nav.activityOpen || nav.personalizationOpen },
+                    set: { open in if !open { nav.activityOpen = false; nav.personalizationOpen = false } })) {
+                    Group {
+                        if nav.personalizationOpen { PersonalizationInspector() } else { AgentActivityPane() }
+                    }
+                    .inspectorColumnWidth(min: S.metric(Metrics.inspectorWidth) - 40, ideal: S.metric(Metrics.inspectorWidth), max: S.metric(Metrics.inspectorWidth) + 60)
                 }
                 .toolbar {
                     ToolbarItem {
-                        Button { nav.activityOpen.toggle() } label: {
+                        Button { nav.personalizationOpen = false; nav.activityOpen.toggle() } label: {
                             Image(systemName: "sidebar.trailing")
                         }
                         .help("Agent Activity")

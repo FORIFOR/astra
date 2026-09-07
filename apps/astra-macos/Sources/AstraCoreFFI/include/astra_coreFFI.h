@@ -341,6 +341,16 @@ RustBuffer uniffi_astra_core_fn_func_api_me(RustBuffer base_url, RustBuffer acce
 uint32_t uniffi_astra_core_fn_func_api_meeting_segment_count(RustBuffer base_url, RustBuffer access_token, RustBuffer meeting_id, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_PERSONALIZATION
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_PERSONALIZATION
+RustBuffer uniffi_astra_core_fn_func_api_personalization(RustBuffer base_url, RustBuffer access_token, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_PERSONALIZATION_UPDATE
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_PERSONALIZATION_UPDATE
+RustBuffer uniffi_astra_core_fn_func_api_personalization_update(RustBuffer base_url, RustBuffer access_token, RustBuffer update_json, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_PLUGIN_CATALOG
 #define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_PLUGIN_CATALOG
 RustBuffer uniffi_astra_core_fn_func_api_plugin_catalog(RustBuffer base_url, RustBuffer access_token, RustCallStatus *_Nonnull out_status
@@ -379,6 +389,21 @@ uint64_t uniffi_astra_core_fn_func_api_upload_meeting_audio(RustBuffer base_url,
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_WAIT_TASK
 #define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_WAIT_TASK
 RustBuffer uniffi_astra_core_fn_func_api_wait_task(RustBuffer base_url, RustBuffer access_token, RustBuffer task_id, uint64_t timeout_ms, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_WORK_CONTEXT
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_WORK_CONTEXT
+RustBuffer uniffi_astra_core_fn_func_api_work_context(RustBuffer base_url, RustBuffer access_token, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_WORK_CORRECT
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_WORK_CORRECT
+void uniffi_astra_core_fn_func_api_work_correct(RustBuffer base_url, RustBuffer access_token, RustBuffer item_id, RustBuffer action, RustBuffer note, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_WORK_EVIDENCE
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_WORK_EVIDENCE
+RustBuffer uniffi_astra_core_fn_func_api_work_evidence(RustBuffer base_url, RustBuffer access_token, RustBuffer item_id, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_ASTRA_CORE_VERSION
@@ -770,6 +795,18 @@ uint16_t uniffi_astra_core_checksum_func_api_meeting_segment_count(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_PERSONALIZATION
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_PERSONALIZATION
+uint16_t uniffi_astra_core_checksum_func_api_personalization(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_PERSONALIZATION_UPDATE
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_PERSONALIZATION_UPDATE
+uint16_t uniffi_astra_core_checksum_func_api_personalization_update(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_PLUGIN_CATALOG
 #define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_PLUGIN_CATALOG
 uint16_t uniffi_astra_core_checksum_func_api_plugin_catalog(void
@@ -815,6 +852,24 @@ uint16_t uniffi_astra_core_checksum_func_api_upload_meeting_audio(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_WAIT_TASK
 #define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_WAIT_TASK
 uint16_t uniffi_astra_core_checksum_func_api_wait_task(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_WORK_CONTEXT
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_WORK_CONTEXT
+uint16_t uniffi_astra_core_checksum_func_api_work_context(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_WORK_CORRECT
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_WORK_CORRECT
+uint16_t uniffi_astra_core_checksum_func_api_work_correct(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_WORK_EVIDENCE
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_WORK_EVIDENCE
+uint16_t uniffi_astra_core_checksum_func_api_work_evidence(void
     
 );
 #endif

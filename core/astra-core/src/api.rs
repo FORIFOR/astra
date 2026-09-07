@@ -556,3 +556,103 @@ pub fn api_meeting_segment_count(
         .map_err(|e| ApiError::Decode { message: e.to_string() })?;
     Ok(resp.items.len() as u32)
 }
+
+// ---------------------------------------------------------------- Work Context
+
+/// 認証つき GET。本文をそのまま返す（JSON は Swift 側で Codable に写す）。
+///
+/// Work Context は入れ子の深い構造（priority → factors → sources）で、uniffi の Record に
+/// 写すと Rust と Swift の両方に同じ形を 2 度書くことになる。契約の正本は TypeScript 側
+/// （`@astra/contracts` の zod）なので、ここは運ぶだけにして形を持たない。
+fn get_json(base_url: &str, access_token: &str, path: &str) -> Result<String, ApiError> {
+    ureq::get(&format!("{}{}", base(base_url), path))
+        .set("Authorization", &format!("Bearer {access_token}"))
+        .call()
+        .map_err(map_transport)?
+        .into_string()
+        .map_err(|e| ApiError::Decode { message: e.to_string() })
+}
+
+/// path の 1 区切りにする（RFC 3986 unreserved 以外は %XX）。
+/// item id は `owed:gmail:m1` のような形で、そのまま入れると経路が変わる。
+fn path_segment(value: &str) -> String {
+    value
+        .bytes()
+        .map(|b| match b {
+            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => (b as char).to_string(),
+            _ => format!("%{:02X}", b),
+        })
+        .collect()
+}
+
+/// Home の Work Context（GET /v1/work/context）。JSON 本文。
+#[uniffi::export]
+pub fn api_work_context(base_url: String, access_token: String) -> Result<String, ApiError> {
+    get_json(&base_url, &access_token, "/v1/work/context")
+}
+
+/// 1 件の出所（GET /v1/work/evidence/:itemId）。JSON 本文。
+#[uniffi::export]
+pub fn api_work_evidence(
+    base_url: String,
+    access_token: String,
+    item_id: String,
+) -> Result<String, ApiError> {
+    get_json(&base_url, &access_token, &format!("/v1/work/evidence/{}", path_segment(&item_id)))
+}
+
+/// 本人の訂正（POST /v1/work/corrections）。1 操作。
+#[uniffi::export]
+pub fn api_work_correct(
+    base_url: String,
+    access_token: String,
+    item_id: String,
+    action: String,
+    note: String,
+) -> Result<(), ApiError> {
+    let body = ureq::json!({
+        "item_id": item_id,
+        "action": action,
+        "note": if note.is_empty() { serde_json::Value::Null } else { serde_json::Value::String(note) },
+    });
+    ureq::post(&format!("{}/v1/work/corrections", base(&base_url)))
+        .set("Authorization", &format!("Bearer {access_token}"))
+        .send_json(body)
+        .map_err(map_transport)?;
+    Ok(())
+}
+
+/// Astra が使っている本人の情報（GET /v1/personalization）。JSON 本文。
+#[uniffi::export]
+pub fn api_personalization(base_url: String, access_token: String) -> Result<String, ApiError> {
+    get_json(&base_url, &access_token, "/v1/personalization")
+}
+
+/// 確認・使わない・全体の停止（PUT /v1/personalization）。更新後の profile を JSON で返す。
+#[uniffi::export]
+pub fn api_personalization_update(
+    base_url: String,
+    access_token: String,
+    update_json: String,
+) -> Result<String, ApiError> {
+    let update: serde_json::Value =
+        serde_json::from_str(&update_json).map_err(|e| ApiError::Decode { message: e.to_string() })?;
+    ureq::put(&format!("{}/v1/personalization", base(&base_url)))
+        .set("Authorization", &format!("Bearer {access_token}"))
+        .send_json(update)
+        .map_err(map_transport)?
+        .into_string()
+        .map_err(|e| ApiError::Decode { message: e.to_string() })
+}
+
+#[cfg(test)]
+mod work_tests {
+    use super::*;
+
+    #[test]
+    fn evidence_ids_with_colons_are_escaped_in_the_path() {
+        assert_eq!(path_segment("owed:gmail:m1/x"), "owed%3Agmail%3Am1%2Fx");
+        assert_eq!(path_segment("project:MOPITA"), "project%3AMOPITA");
+        assert_eq!(path_segment("plain-id_1.0~"), "plain-id_1.0~");
+    }
+}
