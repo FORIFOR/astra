@@ -1,0 +1,310 @@
+{
+  "rc": "32b96f1",
+  "mode": "self-supremacy",
+  "pages": [
+    {
+      "id": "screenshot.detected",
+      "blind_id": "35E3",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4,
+        "density": 4.5,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 3.5,
+        "calmness": 5,
+        "craft": 4,
+        "distinctiveness": 3
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "BELOW_BAR",
+          "valid": false,
+          "ai_look": [
+            "「その後まで」は日本語エラー",
+            "生成 AI の日本語品質が低い"
+          ],
+          "why": "テキストが明らかに日本語として不自然で、ユーザーに伝わる情報が曖昧。「その後までいてください」という表現は成立していない。生成 AI の言語処理エラーが機能と品質を損なわせている。"
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "アイコン＋太字1行＋灰色サブ1行という、どの製品でも見る既定テンプレの反復"
+          ],
+          "why": "情報量が少なく落ち着いた受理通知として成立しており、絵から言える欠陥は無い。ただしアイコンと構成が汎用的で、一線級の製品と並べたときの固有性と、句読点の詰めの甘さ（中黒接続）が差として残る。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "簡潔で読みやすいが、閉じる／継続の操作アフォーダンスが画像から読み取れず一線級と比べるとやや弱い。欠陥とまでは言えない差。"
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.target-highlighted",
+      "blind_id": "47EE",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 3,
+        "density": 3.67,
+        "typography": 3,
+        "geometry": 3,
+        "state_clarity": 2.67,
+        "calmness": 3.33,
+        "craft": 2.67,
+        "distinctiveness": 2
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "トグル状態は明確で機能的だが、画面右端が切れているため完成度に欠ける。デザイン的には標準的な設定画面で、大型製品の洗練さには及ばない。"
+        },
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "「オンです・AstraDbg を再起動」のように、状態と指示を中黒で雑に連結した空語的な短文"
+          ],
+          "why": "絵から言える欠陥が複数ある。自社アプリ行のアイコンだけが未整備の placeholder で他社アイコンと並ぶと欠落に見え、デバッグ名らしい「AstraDbg」がそのまま露出。さらにコールアウトがリスト行に重なって内容を隠し、「再起動して」と言いながら再起動の操作を提供していない。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "情報だけ伝えてアクションボタンを用意しない中途半端な吹き出し",
+            "アイコンが実アプリアイコンでなく汎用プレースホルダーに見える"
+          ],
+          "why": "「再起動してください」という具体的アクションを求めているのに、そのアクションを実行する手段（ボタン）が同じ吹き出し内に存在しないという状態矛盾が絵から読み取れる。加えてAstraDbgのアイコンが実アイコンではなく汎用素材に見える点も craft を下げる。"
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.granted",
+      "blind_id": "4D14",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4.33,
+        "density": 4.67,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 4.67,
+        "calmness": 5,
+        "craft": 4,
+        "distinctiveness": 3
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "SUPREME",
+          "valid": true,
+          "ai_look": [],
+          "why": "最小限の情報量で最高の効果を実現。チェックマークとテキストの比率、余白、色彩が完璧に調和し、成功状態が一瞬で伝わる。細部まで磨かれた Apple/Linear レベルの一線級デザイン。"
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "成功状態が一語で言い切られ、色（淡緑＋チェック）と文言が矛盾なく一致していて欠陥は見当たらない。ただし吹き出し＋丸チェックという構成自体はごく標準的で、× 周りの余白の詰めも一線級ほど整っていない。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "ステータスアイコンをメッセージ本体から切り離して単独の円バッジにするパターンが、他の類似トースト（5788・5CB4・BCCA）でも繰り返されており、テンプレート的反復に見える"
+          ],
+          "why": "メッセージ自体は明快で成功状態も伝わるが、アイコンとテキストの分離がやや未完成な印象を与える程度で、致命的な欠陥ではない。"
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.target-missing",
+      "blind_id": "5788",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4.33,
+        "density": 4.33,
+        "typography": 3.67,
+        "geometry": 4,
+        "state_clarity": 4,
+        "calmness": 4,
+        "craft": 3.67,
+        "distinctiveness": 2.67
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "アクション指示が明確で UX として機能的。紫色ボタンは視認性が高いが、デザイン言語として標準的。大型製品と並べると、色選択がやや装飾的で洗練さに劣る。"
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "指示と主要操作が1行に収まり、押す先が明確で欠陥は無い。ただし理由の提示が省かれている点と、ピル型ボタン＋×という定型構成で、一線級と並べたときの固有性が弱い。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "主要アクションを主張の弱いピル型バッジで表現しており、ボタンらしいコントラストや形状的手がかりに乏しい「無意味なpill」パターンに近い"
+          ],
+          "why": "最重要操作である「システム設定を開く」のクリック可能性が視覚的に弱く、静的なラベルと誤認されうる具体的な状態明瞭性の欠陥が絵から言える。"
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.denied",
+      "blind_id": "5CB4",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4,
+        "density": 4.5,
+        "typography": 3.5,
+        "geometry": 3.5,
+        "state_clarity": 3.5,
+        "calmness": 4,
+        "craft": 3.5,
+        "distinctiveness": 2.5
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": false,
+          "ai_look": [],
+          "why": "エラーハンドリングが適切で、ユーザーに回復オプションを提示している。完成度は高いが、デザイン的には標準的なエラー通知パターンで独自性に欠ける。"
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "失敗の事実・色・再試行操作が一致していて破綻は無い。ただし再試行が失敗し続けた場合の逃げ道が絵の中に無く、エラー表現をオーブの色に依存している点が一線級との差。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "再試行アクションが弱いコントラストのピルで表現され、押せることが伝わりにくい"
+          ],
+          "why": "5788と同一の欠陥（アクションピルのクリック可能性が視覚的に弱い）に加え、失敗理由が皆無で次の一手を判断する材料が乏しい。"
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.intro",
+      "blind_id": "BCCA",
+      "verdict": "BELOW_BAR",
+      "avg": {
+        "hierarchy": 3,
+        "density": 3.5,
+        "typography": 2.5,
+        "geometry": 3,
+        "state_clarity": 2.5,
+        "calmness": 4,
+        "craft": 2.5,
+        "distinctiveness": 2
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "BELOW_BAR",
+          "valid": false,
+          "ai_look": [
+            "「忘うたか」は日本語の文法エラー・生成 AI の品質低下"
+          ],
+          "why": "「忘うたか」は明らかな日本語エラー。複数の条件が混在してテキストが長く、即座に何をすべきか不明確。メッセージが曖昧で、ユーザーに対する指示内容が機能していない。"
+        },
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "「〜を使うため、〜してください」と目的と手順を1文に詰め込んだ説明過多の言い回し"
+          ],
+          "why": "押させたい唯一のボタンのラベルが本文より低コントラストで、有効か無効かが絵から判別できない（状態の曖昧さ）。加えて本文が助詞の途中で折り返され、2行テキストとボタンの縦位置が揃っておらず、行揃えと可読性の両方で崩れている。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "同一パターンのピルCTAがバリエーション違いで繰り返し使われており、テンプレート反復感がある"
+          ],
+          "why": "5788・5CB4と共通のCTA視認性の弱さに加え、2行テキストとCTAピルの縦位置関係が曖昧で、読む順序とクリック対象の対応がやや崩れて見える。"
+        }
+      ]
+    },
+    {
+      "id": "screenshot.attached-cloud",
+      "blind_id": "ECAD",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4,
+        "density": 4,
+        "typography": 3.67,
+        "geometry": 3.67,
+        "state_clarity": 3.67,
+        "calmness": 4.33,
+        "craft": 3,
+        "distinctiveness": 2.67
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "Clean, functional toast with excellent contrast and readable typography. Dark theme, proper whitespace, clear message hierarchy. However, the design is generic — rounded-corner dark toast with left icon + right close button is a standard pattern seen across many products (Claude, Slack, Discord, etc.). No distinctive craft or visual personality. Well-executed but not memorable."
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "2行で「何が添付されたか」と「それがいつ送られるか」を言い切る設計は一線級で、装飾も過剰な pill も無い。ただしテキスト塊と × の間の余白が広く光学的に左寄りに見える点、サムネイルが中身のプレビューか汎用アイコンか読み取れない点が、Granola/Raycast 級と並べたときの差になる。欠陥ではなく詰めの差。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "NOT_ENOUGH_EVIDENCE",
+          "valid": true,
+          "ai_look": [
+            "説明的すぎるサブテキスト（プライバシー免責文をそのままUIに埋め込む定型パターン）",
+            "汎用的な暗色トースト+アイコン+×という量産テンプレ構成"
+          ],
+          "why": "1枚の小さな通知トーストのみで、これがどの製品のどの導線に出るものか、他状態との整合性、ホバー/フォーカス時の見え方が判断できない。文字は読めるが単体トーストの完成度だけでは主要製品との比較優劣を断定できない。"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "supreme": 0,
+    "competitive": 6,
+    "below_bar": 1,
+    "not_enough_evidence": 0,
+    "models": [
+      "haiku",
+      "opus",
+      "sonnet"
+    ]
+  },
+  "gate": "FAIL",
+  "ab_competitor": "AUTOMATION_MISSING: 競合の実 UI 画像（ASTRA_COMPETITORS_DIR）が無い。画面収録 TCC と driver が要る"
+}

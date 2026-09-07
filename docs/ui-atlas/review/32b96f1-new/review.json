@@ -1,0 +1,320 @@
+{
+  "rc": "32b96f1",
+  "pages": [
+    {
+      "id": "guided-setup.target-highlighted",
+      "blind_id": "1968",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "trust-provenance",
+              "what": "権限を渡す相手として並ぶ3つのアプリのうち、AstraDbg だけアイコンが空白のプレースホルダで、名前も内部ビルド風。誰に権限を与えているのか確信が持てない",
+              "where": "リスト中央の AstraDbg 行、左端のアイコン枠"
+            },
+            {
+              "axis": "contrast",
+              "what": "ラベルの背景が行の背景とほぼ同じ明度で、輪郭がほとんど立たず、システム画面の一部なのかアプリの吹き出しなのか区別できない",
+              "where": "AstraDbg 行の中央、トグルの左側にあるラベル"
+            },
+            {
+              "axis": "primary-action clarity",
+              "what": "「再起動」という次の行動を指示しているのに、押せるものが一つも無く、行動の起点が画面上に存在しない",
+              "where": "ラベル内のテキスト末尾"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "trust-provenance",
+              "what": "リストに表示されているアプリ名が『AstraDbg』という内部/デバッグ用らしき名称になっており、AnyDesk・ChatGPT のような正式なアプリ名と並ぶと未完成に見える",
+              "where": "リスト2行目とその上の吹き出しテキスト"
+            },
+            {
+              "axis": "state legibility",
+              "what": "青いフォーカスリングと吹き出しがトグルに重なっており、これが『クリックしてください』という指示なのか単なる状態表示なのか区別しづらい",
+              "where": "AstraDbg 行のトグルと吹き出し"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.target-missing",
+      "blind_id": "19ED",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "primary-action clarity",
+              "what": "『システム設定を開く』がボタンではなく丸みを帯びたタグ(ピル内ピル)として表示されており、押せる要素だと認識しにくい",
+              "where": "メッセージ本文右側のラベル"
+            },
+            {
+              "axis": "alignment",
+              "what": "×ボタンと右端の丸アイコンの間の余白が不自然に広く、アイコンが通知から浮いて見える",
+              "where": "ピル右端"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.denied",
+      "blind_id": "583C",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "primary-action clarity",
+              "what": "再試行操作『もう一度開く』がボタンでなくタグ状ラベルに見え、失敗直後の重要な回復アクションにしては目立たない",
+              "where": "メッセージ本文右側のラベル"
+            },
+            {
+              "axis": "error-recovery clarity",
+              "what": "エラー理由(なぜ開けなかったか)が示されておらず、再試行以外の代替手段も提示されていない",
+              "where": "ピル全体"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "screenshot.detected",
+      "blind_id": "6FF3",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": false,
+          "why": "照合 1/2（画面に無い文字）",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "error-recovery clarity",
+              "what": "取り込みを取り消す・閉じる手段が無い。間違ったスクリーンショットが取り込まれた場合に引き返せない",
+              "where": "カード右側の空いている領域（何も置かれていない）"
+            },
+            {
+              "axis": "hierarchy",
+              "what": "一番大きく強い文字が「スクリーンショット」という種類名で、利用者が本当に知りたい状態と次の行動（認識しました・そのまま聞いてください）が薄い小さな文字に落ちている",
+              "where": "カード内の上段と下段"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        }
+      ]
+    },
+    {
+      "id": "screenshot.attached-cloud",
+      "blind_id": "95F6",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        },
+        {
+          "model": "sonnet",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.granted",
+      "blind_id": "D11C",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        },
+        {
+          "model": "sonnet",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.intro",
+      "blind_id": "E897",
+      "verdict": "FIX_CANDIDATE",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": false,
+          "why": "照合 2/5（画面に無い文字）",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "state legibility",
+              "what": "権限が「未許可」という状態を示す語（未許可・オフ・要許可など）やアイコンが一切なく、依頼文だけで現在の状態が明示されていない。エラー由来の通知なのか通常の案内なのか区別がつかない",
+              "where": "pill 左側の本文テキスト全体"
+            },
+            {
+              "axis": "consistency",
+              "what": "右端の円形アイコンが pill と分離した別の面として置かれ、同じ通知の一部なのか常駐ウィジェットなのか統一が取れていない。ラベルもないため役割不明",
+              "where": "画像右端の丸いボタン"
+            },
+            {
+              "axis": "density",
+              "what": "本文が 2 行に折り返される一方で 2 行目右側に大きな空白が残り、pill の横幅に対して文字の収まりが不揃い",
+              "where": "pill 内、2 行目「オンにしてください」の右側"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "state legibility",
+              "what": "右端の紫色の丸いアイコンボタンにラベルやツールチップがなく、押すと何が起きるのか視覚的に説明されていない",
+              "where": "通知バー右端の区切り線の右側にある丸いアイコンボタン"
+            },
+            {
+              "axis": "primary-action clarity",
+              "what": "「システム設定を開く」ボタンが本文の説明文と同じ吹き出し内に地続きで表示されており、クリック可能な要素であることが文章から視覚的に分離しきれていない",
+              "where": "通知バー中央のグレー吹き出し内、文末に続く水色ピル部分"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "keep": 6,
+    "fix_candidate": 1,
+    "not_enough_evidence": 0,
+    "models": [
+      "haiku",
+      "opus",
+      "sonnet"
+    ]
+  },
+  "gate": "FAIL"
+}

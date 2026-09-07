@@ -1,0 +1,149 @@
+{
+  "pages": {
+    "1968": {
+      "visible_text": [
+        "AnyDesk",
+        "AstraDbg",
+        "オンです",
+        "AstraDbg を再起動",
+        "ChatGPT"
+      ],
+      "observation": {
+        "happening": "システム設定風のトグルリストで、AnyDesk・AstraDbg・ChatGPT の3項目が並び、AstraDbg のトグルに青い枠が付いて『オンです・AstraDbg を再起動』という吹き出しが重なっている。",
+        "most_important": "AstraDbg のトグルがオンになっており、再起動が必要と案内されている点。",
+        "next_action": "吹き出しを閉じる、またはアプリを再起動する。",
+        "anomalies": [
+          "左端にピンク/赤い丸アイコンが途中で切れて見える(何のアプリか不明)",
+          "AstraDbg の行だけ青いフォーカスリングが付いており、他の行には無い"
+        ]
+      },
+      "verdict": "FIX",
+      "concerns": [
+        {
+          "axis": "trust-provenance",
+          "what": "リストに表示されているアプリ名が『AstraDbg』という内部/デバッグ用らしき名称になっており、AnyDesk・ChatGPT のような正式なアプリ名と並ぶと未完成に見える",
+          "where": "リスト2行目とその上の吹き出しテキスト"
+        },
+        {
+          "axis": "state legibility",
+          "what": "青いフォーカスリングと吹き出しがトグルに重なっており、これが『クリックしてください』という指示なのか単なる状態表示なのか区別しづらい",
+          "where": "AstraDbg 行のトグルと吹き出し"
+        }
+      ],
+      "confidence": "medium"
+    },
+    "19ED": {
+      "visible_text": [
+        "設定画面で",
+        "Astra",
+        "をオンにしてください",
+        "システム設定を開く"
+      ],
+      "observation": {
+        "happening": "灰色の横長ピル状通知で、『設定画面で Astra をオンにしてください』というメッセージと『システム設定を開く』というタグ状の要素、閉じるボタン(×)、右端に丸いバーチャート風アイコンが並んでいる。",
+        "most_important": "Astra をシステム設定でオンにする必要があるという案内。",
+        "next_action": "『システム設定を開く』をクリックしてシステム設定を開く、または×で閉じる。",
+        "anomalies": [
+          "×ボタンと右端の丸いアイコンの間に大きな空白があり、そのアイコンが通知の一部なのか別要素なのか判別しづらい"
+        ]
+      },
+      "verdict": "FIX",
+      "concerns": [
+        {
+          "axis": "primary-action clarity",
+          "what": "『システム設定を開く』がボタンではなく丸みを帯びたタグ(ピル内ピル)として表示されており、押せる要素だと認識しにくい",
+          "where": "メッセージ本文右側のラベル"
+        },
+        {
+          "axis": "alignment",
+          "what": "×ボタンと右端の丸アイコンの間の余白が不自然に広く、アイコンが通知から浮いて見える",
+          "where": "ピル右端"
+        }
+      ],
+      "confidence": "medium"
+    },
+    "583C": {
+      "visible_text": [
+        "設定画面を開けませんでした",
+        "もう一度開く"
+      ],
+      "observation": {
+        "happening": "灰色の横長ピル状通知で『設定画面を開けませんでした』というエラーメッセージと『もう一度開く』というタグ状要素、×ボタン、右端にオレンジ系の丸に『!』のアイコンが表示されている。",
+        "most_important": "設定画面を開く操作が失敗したこと。",
+        "next_action": "『もう一度開く』をクリックして再試行する、または×で閉じる。",
+        "anomalies": [
+          "×ボタンと右端の警告アイコンの間に大きな空白があり、19EDと同様にアイコンが浮いて見える"
+        ]
+      },
+      "verdict": "FIX",
+      "concerns": [
+        {
+          "axis": "primary-action clarity",
+          "what": "再試行操作『もう一度開く』がボタンでなくタグ状ラベルに見え、失敗直後の重要な回復アクションにしては目立たない",
+          "where": "メッセージ本文右側のラベル"
+        },
+        {
+          "axis": "error-recovery clarity",
+          "what": "エラー理由(なぜ開けなかったか)が示されておらず、再試行以外の代替手段も提示されていない",
+          "where": "ピル全体"
+        }
+      ],
+      "confidence": "medium"
+    },
+    "6FF3": {
+      "visible_text": [
+        "スクリーンショット",
+        "認識しました",
+        "そのまま聞いてください"
+      ],
+      "observation": {
+        "happening": "濃い色の横長ピル状通知で、カードアイコンと共に『スクリーンショット』という太字タイトル、『認識しました・そのまま聞いてください』というグレーのサブテキストが表示されている。",
+        "most_important": "スクリーンショットが認識され、続けて質問できる状態であること。",
+        "next_action": "そのまま音声または入力で質問を続ける。",
+        "anomalies": [
+          "閉じるボタン(×)が見当たらない"
+        ]
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "medium"
+    },
+    "95F6": {
+      "visible_text": [
+        "スクリーンショット",
+        "質問したときだけ",
+        "Claude",
+        "に送信"
+      ],
+      "observation": {
+        "happening": "濃い色の横長ピル状通知で、カードアイコン、太字『スクリーンショット』、グレーのサブテキスト『質問したときだけ Claude に送信』、右端に×の閉じるボタンが表示されている。",
+        "most_important": "スクリーンショットは質問した時だけ Claude に送られるというプライバシー上の説明。",
+        "next_action": "×で通知を閉じる、または質問を続ける。",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "D11C": {
+      "visible_text": [
+        "画面収録を設定できました"
+      ],
+      "observation": {
+        "happening": "薄い色の横長ピル状通知で、『画面収録を設定できました』というメッセージ、×の閉じるボタン、右端に緑のチェックマーク付き丸アイコンが表示されている。",
+        "most_important": "画面収録の設定が正常に完了したこと。",
+        "next_action": "×で通知を閉じる、または通常操作に戻る。",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    }
+  },
+  "_judge": {
+    "model": "sonnet",
+    "cost_usd": 0.1550668,
+    "turns": 7,
+    "duration_ms": 72461
+  }
+}
