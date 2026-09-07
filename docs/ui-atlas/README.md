@@ -1,17 +1,17 @@
-# Astra UI Atlas — Visual Release Book (RC de5d319)
+# Astra UI Atlas — Visual Release Book (RC 353246f)
 
 取扱説明書ではない。**全 UI を RC .app の実画像で 1 画面 1 ページに固定し、ページ単位で KEEP / FIX / NOT_ENOUGH_EVIDENCE を出す**ための資料。
 画像は署名済み RC .app が `--selftest` で描いたものだけ。モック・Figma・別ビルドは入れない。
 
 ```
-RC SHA            de5d319
-RC exe sha256     45ee985f7348456b4bd32827d4e65d049130e2ba996537ad0dbc0980ea14f5a7
-RC built          2026-09-06T23:24:22+09:00   captured 2026-09-06T23:24:25+09:00
+RC SHA            353246f
+RC exe sha256     af12178ddbbb90b2ca4840b1e3f8ca6527571e9857437ea46f440c0ec54562da
+RC built          2026-09-07T10:08:20+09:00   captured 2026-09-07T10:08:21+09:00
 codesign          com.astra.desktop / 6RR7572ZLU
-required screens  62   with RC image 62   NO_CAPTURE_PATH 0
+required screens  71   with RC image 71   NO_CAPTURE_PATH 0
 strips            5 / 5
-light == dark     19 面（voice.idle, voice.preparing, voice.listening, voice.thinking, voice.context, voice.context-expanded, voice.quick-actions, dock.running, dock.context-detail, dock.confirmation, dock.confirmation-edit, dock.result, dock.result-failed, meeting.controller, meeting.preparing, meeting.paused, meeting.notes, meeting.captions, meeting.ask）
-appearance_policy fixed 20 面 / 違反 0（なし）
+light == dark     21 面（voice.idle, voice.preparing, voice.listening, voice.thinking, voice.context, voice.context-expanded, voice.quick-actions, screenshot.detected, screenshot.attached-cloud, dock.running, dock.context-detail, dock.confirmation, dock.confirmation-edit, dock.result, dock.result-failed, meeting.controller, meeting.preparing, meeting.paused, meeting.notes, meeting.captions, meeting.ask）
+appearance_policy fixed 22 面 / 違反 0（なし）
 ```
 
 | ファイル | 中身 |
@@ -34,6 +34,8 @@ appearance_policy fixed 20 面 / 違反 0（なし）
 | `voice.context` | Voice HUD — Context detected (compact) | CAPTURED | [png](screens/voice.context.light.png) | [png](screens/voice.context.dark.png) |
 | `voice.context-expanded` | Voice HUD — Context expanded | CAPTURED | [png](screens/voice.context-expanded.light.png) | [png](screens/voice.context-expanded.dark.png) |
 | `voice.quick-actions` | Voice HUD — Quick actions | CAPTURED | [png](screens/voice.quick-actions.light.png) | [png](screens/voice.quick-actions.dark.png) |
+| `screenshot.detected` | Screenshot — Recognized (1 s) | CAPTURED | [png](screens/screenshot.detected.light.png) | [png](screens/screenshot.detected.dark.png) |
+| `screenshot.attached-cloud` | Screenshot — Attached (cloud provenance, first time) | CAPTURED | [png](screens/screenshot.attached-cloud.light.png) | [png](screens/screenshot.attached-cloud.dark.png) |
 | `dock.running` | Task Dock — Running (agent steps) | CAPTURED | [png](screens/dock.running.light.png) | [png](screens/dock.running.dark.png) |
 | `dock.context-detail` | Task Dock — Context detail | CAPTURED | [png](screens/dock.context-detail.light.png) | [png](screens/dock.context-detail.dark.png) |
 | `dock.confirmation` | Task Dock — Confirmation (before side effect) | CAPTURED | [png](screens/dock.confirmation.light.png) | [png](screens/dock.confirmation.dark.png) |
@@ -91,6 +93,13 @@ appearance_policy fixed 20 面 / 違反 0（なし）
 | `system.update-unavailable` | System — Up to date / cannot check | CAPTURED | [png](screens/system.update-unavailable.light.png) | [png](screens/system.update-unavailable.dark.png) |
 | `system.generic-failure` | System — Generic action failure | CAPTURED | [png](screens/system.generic-failure.light.png) | [png](screens/system.generic-failure.dark.png) |
 | `settings.permissions` | Settings — 許可（OS）/ shortcuts | CAPTURED | [png](screens/settings.permissions.light.png) | [png](screens/settings.permissions.dark.png) |
+| `guided-setup.intro` | Guided Setup — Intro | CAPTURED | [png](screens/guided-setup.intro.light.png) | [png](screens/guided-setup.intro.dark.png) |
+| `guided-setup.target-found` | Guided Setup — Target found (System Settings + highlight + callout) | CAPTURED | [png](screens/guided-setup.target-found.light.png) | — |
+| `guided-setup.target-highlighted` | Guided Setup — Target highlighted (detail) | CAPTURED | [png](screens/guided-setup.target-highlighted.light.png) | — |
+| `guided-setup.repositioned` | Guided Setup — Follows the window (repositioned) | CAPTURED | [png](screens/guided-setup.repositioned.light.png) | — |
+| `guided-setup.target-missing` | Guided Setup — Target missing (generic fallback) | CAPTURED | [png](screens/guided-setup.target-missing.light.png) | [png](screens/guided-setup.target-missing.dark.png) |
+| `guided-setup.granted` | Guided Setup — Granted | CAPTURED | [png](screens/guided-setup.granted.light.png) | [png](screens/guided-setup.granted.dark.png) |
+| `guided-setup.denied` | Guided Setup — Could not open settings (warning) | CAPTURED | [png](screens/guided-setup.denied.light.png) | [png](screens/guided-setup.denied.dark.png) |
 | `components.neutral` | Control — neutral | CAPTURED | [png](screens/components.neutral.light.png) | [png](screens/components.neutral.dark.png) |
 | `components.hover` | Control — hover | CAPTURED | [png](screens/components.hover.light.png) | [png](screens/components.hover.dark.png) |
 | `components.focus` | Control — focus | CAPTURED | [png](screens/components.focus.light.png) | [png](screens/components.focus.dark.png) |

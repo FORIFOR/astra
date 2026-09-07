@@ -18,7 +18,10 @@ old = json.load(open(sys.argv[1], encoding="utf-8"))
 new = json.load(open(sys.argv[2] if len(sys.argv) > 2 else atlas / "manifest.json", encoding="utf-8"))
 threshold = float(os.environ.get("ASTRA_PIXEL_THRESHOLD", "0.5"))
 # 壁時計が写る面（挨拶 / 会議の題の時刻 / 『今日 · 42 分』）。差は時刻のせいなので、regression には数えず別に出す。
-time_dep = set(json.load(open(atlas / "time-dependent.json", encoding="utf-8"))["ids"]) if (atlas / "time-dependent.json").exists() else set()
+_td = json.load(open(atlas / "time-dependent.json", encoding="utf-8")) if (atlas / "time-dependent.json").exists() else {}
+time_dep = set(_td.get("ids", []))
+# 時刻ではないが run ごとに変わる面（理由つき）。regression には数えず「nondeterministic」として出す。
+nondet = set((_td.get("nondeterministic") or {}).get("ids", {}).keys())
 old_by = {s["id"]: s for s in old["screens"]}
 rows, regressions = [], []
 for s in new["screens"]:
@@ -50,12 +53,15 @@ for s in new["screens"]:
             pct, detail = -1.0, "hash differs (old png not available)"
         if s["id"] in time_dep:
             detail += "  [time-dependent fixture]"
+        elif s["id"] in nondet:
+            detail += "  [nondeterministic fixture: " + _td["nondeterministic"]["ids"][s["id"]] + "]"
         rows.append((s["id"], ap, pct, detail))
-        if (pct < 0 or pct > threshold) and s["id"] not in time_dep:
+        if (pct < 0 or pct > threshold) and s["id"] not in time_dep and s["id"] not in nondet:
             regressions.append((s["id"], ap, pct, detail))
 same = sum(1 for r in rows if r[3] == "same")
 timed = sum(1 for r in rows if "time-dependent" in r[3])
-print(f"PIXEL_REGRESSION existing faces compared: {len(rows)} (same {same}, time-dependent {timed}, differ {len(rows)-same-timed})")
+nd = sum(1 for r in rows if "nondeterministic" in r[3])
+print(f"PIXEL_REGRESSION existing faces compared: {len(rows)} (same {same}, time-dependent {timed}, nondeterministic {nd}, differ {len(rows)-same-timed-nd})")
 for r in rows:
     if r[3] != "same":
         print(f"  {r[0]:36s} {r[1]:5s} {r[2]:6.2f}%  {r[3]}")

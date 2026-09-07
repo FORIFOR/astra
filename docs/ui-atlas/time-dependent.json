@@ -33,5 +33,11 @@
     "main.scale-compact",
     "main.scale-comfortable",
     "main.scale-large"
-  ]
+  ],
+  "nondeterministic": {
+    "$comment": "時刻ではないが、撮るたびに変わる面。理由と直し方を書く。直したらここから外す。",
+    "ids": {
+      "main.apps-plugins": "プラグインのタイルの色が run ごとに変わる（並びは同じ）。色の種が順序の無い集合から来ている疑い。0.3〜0.5% の差。"
+    }
+  }
 }
