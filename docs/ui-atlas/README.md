@@ -1,14 +1,14 @@
-# Astra UI Atlas — Visual Release Book (RC 85b8333)
+# Astra UI Atlas — Visual Release Book (RC 0d089bc)
 
 取扱説明書ではない。**全 UI を RC .app の実画像で 1 画面 1 ページに固定し、ページ単位で KEEP / FIX / NOT_ENOUGH_EVIDENCE を出す**ための資料。
 画像は署名済み RC .app が `--selftest` で描いたものだけ。モック・Figma・別ビルドは入れない。
 
 ```
-RC SHA            85b8333
-RC exe sha256     1aff1809f031c9d38e2117f5d946334626a994f2b0d0e3a5071ecd32a2299643
-RC built          2026-09-07T15:15:27+09:00   captured 2026-09-07T15:15:30+09:00
+RC SHA            0d089bc
+RC exe sha256     d89571281078345c049fd0f2f83ffa7fd88af16036770848839311d99237fd12
+RC built          2026-09-07T17:11:29+09:00   captured 2026-09-07T17:11:30+09:00
 codesign          com.astra.desktop / 6RR7572ZLU
-required screens  72   with RC image 72   NO_CAPTURE_PATH 0
+required screens  74   with RC image 74   NO_CAPTURE_PATH 0
 strips            5 / 5
 light == dark     21 面（voice.idle, voice.preparing, voice.listening, voice.thinking, voice.context, voice.context-expanded, voice.quick-actions, screenshot.detected, screenshot.attached-cloud, dock.running, dock.context-detail, dock.confirmation, dock.confirmation-edit, dock.result, dock.result-failed, meeting.controller, meeting.preparing, meeting.paused, meeting.notes, meeting.captions, meeting.ask）
 appearance_policy fixed 22 面 / 違反 0（なし）
@@ -57,6 +57,8 @@ appearance_policy fixed 22 面 / 違反 0（なし）
 | `recording.agent-timeline` | Recording Workspace — Agent timeline | CAPTURED | [png](screens/recording.agent-timeline.light.png) | [png](screens/recording.agent-timeline.dark.png) |
 | `recording.meeting-canvas` | Recording Workspace — Meeting canvas | CAPTURED | [png](screens/recording.meeting-canvas.light.png) | [png](screens/recording.meeting-canvas.dark.png) |
 | `main.home` | Main — Home | CAPTURED | [png](screens/main.home.light.png) | [png](screens/main.home.dark.png) |
+| `main.home-work-context` | Main — Home (Work Context) | CAPTURED | [png](screens/main.home-work-context.light.png) | [png](screens/main.home-work-context.dark.png) |
+| `main.home-personalization` | Main — Home (Personalization) | CAPTURED | [png](screens/main.home-personalization.light.png) | [png](screens/main.home-personalization.dark.png) |
 | `main.home-recording-now` | Main — Home (recording now) | CAPTURED | [png](screens/main.home-recording-now.light.png) | [png](screens/main.home-recording-now.dark.png) |
 | `main.home-upcoming` | Main — Home (upcoming meeting) | CAPTURED | [png](screens/main.home-upcoming.light.png) | [png](screens/main.home-upcoming.dark.png) |
 | `main.new-recording-sheet` | Main — New recording sheet | CAPTURED | [png](screens/main.new-recording-sheet.light.png) | [png](screens/main.new-recording-sheet.dark.png) |

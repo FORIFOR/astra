@@ -1,0 +1,143 @@
+{
+  "rc": "d40c313",
+  "pages": [
+    {
+      "id": "main.home-personalization",
+      "blind_id": "4E29",
+      "verdict": "FIX_CANDIDATE",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": [
+            {
+              "axis": "contrast",
+              "what": "Gray text (e.g., descriptive text in right sidebar like 'Astra が提している あなたのの情報') has insufficient contrast against the light background",
+              "where": "Right sidebar, particularly non-header text and subtle labels"
+            },
+            {
+              "axis": "density",
+              "what": "Right sidebar packs too much content (section headers, small buttons, status indicators) in narrow column; scrollbar indicates overflow",
+              "where": "Right sidebar panel, multiple stacked suggestion items with inline buttons"
+            },
+            {
+              "axis": "hierarchy",
+              "what": "Relationship between main task list and right-sidebar feedback is unclear; sidebar feels like a secondary layer but occupies significant screen real estate",
+              "where": "Overall layout balance between content and learning-feedback panel"
+            }
+          ]
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "consistency",
+              "what": "右パネル 5 枚のカードでメタチップの構成が揃っていない（『確認済み』のみ／『出所 1』＋『推測』／『出所 1』＋『観測』）。同じ形のカードなのに情報の型が読み取れない",
+              "where": "右パネル『短く要点から』と、その下の『火・木は会議が多い』『MOPITA（案件）』など"
+            },
+            {
+              "axis": "state legibility",
+              "what": "『推測』と『観測』の 2 語が同じ位置に混在するが、どちらがより確かな情報なのか画面内に手掛かりが無い。ユーザーは同じ『そのとおり／使わない』を押す判断ができない",
+              "where": "右パネル『仕事のパターン』『よく出る人・案件』の各カード右上"
+            },
+            {
+              "axis": "density",
+              "what": "右パネルを開くと中央カラムが狭まり、タスクの説明文が折り返して 3 段になる一方、右パネルは行間が広く空きが多い。情報量に対する幅配分が逆になっている",
+              "where": "中央『MTI に見積の返信…』カードと右パネル全体の対比"
+            },
+            {
+              "axis": "screen occupation",
+              "what": "最下部の行がウィンドウ端で途中まで描かれて切れており、リストの終端が分からない",
+              "where": "中央カラム最下部『山田さん 要件定義書 v3 のレビュー』の行"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "screen occupation",
+              "what": "リスト最終行が途中でぶつ切りに切れており、スクロール可能であることを示すフェードや矢印などの手がかりがない",
+              "where": "中央カラム下端、「返すもの」セクション2行目"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "main.home-work-context",
+      "blind_id": "D9D4",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "alignment",
+              "what": "カード本文は左端に寄り、操作リンクは右端に張り付いて、間に本文 1 行分以上の空白が空く。ワイド幅では視線が横に飛び、どの操作がどのカードのものか目で追う必要がある",
+              "where": "『今日、気にした方がいいこと』3 枚のカード右側『出所を見る』『優先ではない』"
+            },
+            {
+              "axis": "consistency",
+              "what": "同じ『やること』系の一覧なのに、上 3 件はカード（枠＋余白）、下 4 件は枠なしの 1 行で、視覚的な重みの差が内容の重要度と対応しているか読み取れない",
+              "where": "『今日、気にした方がいいこと』と『待っていること』『返すもの』の境目"
+            },
+            {
+              "axis": "screen occupation",
+              "what": "最下行がウィンドウ下端で途中まで描かれて切れ、一覧の終端が示されていない",
+              "where": "中央カラム最下部『山田さん 要件定義書 v3 のレビュー』の行"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "screen occupation",
+              "what": "パネルを閉じた分の横幅がレイアウトに再配分されず、ウィンドウ右半分がほぼ未使用の空白になっている",
+              "where": "画面右側全体(コンテンツ列の右、ウィンドウ端まで)"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "keep": 1,
+    "fix_candidate": 1,
+    "not_enough_evidence": 0,
+    "models": [
+      "haiku",
+      "opus",
+      "sonnet"
+    ]
+  },
+  "gate": "FAIL"
+}

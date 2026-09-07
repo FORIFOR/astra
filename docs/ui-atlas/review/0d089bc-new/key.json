@@ -1,0 +1,11 @@
+{
+  "key": {
+    "F3B5": "main.home-work-context",
+    "C4FC": "main.home-personalization"
+  },
+  "order": [
+    "C4FC",
+    "F3B5"
+  ],
+  "batch": 6
+}

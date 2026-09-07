@@ -1,0 +1,11 @@
+{
+  "key": {
+    "D9D4": "main.home-work-context",
+    "4E29": "main.home-personalization"
+  },
+  "order": [
+    "4E29",
+    "D9D4"
+  ],
+  "batch": 6
+}
