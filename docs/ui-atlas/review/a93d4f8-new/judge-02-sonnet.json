@@ -1,0 +1,128 @@
+{
+  "pages": {
+    "C87B": {
+      "visible_text": [
+        "Shuhei Horio",
+        "Apple Account",
+        "iCloudストレージが残りわずかです",
+        "画面収録とシステムオーディオ録音",
+        "AstraDbg",
+        "AstraDbg をオンにしてください",
+        "ChatGPT",
+        "Claude",
+        "DeepNote Desktop",
+        "Google Chrome",
+        "OBS",
+        "ターミナル"
+      ],
+      "observation": {
+        "happening": "macOSのシステム設定「画面収録とシステムオーディオ録音」パネルで、アプリ一覧の中の「AstraDbg」行がフォーカスされ、右側に吹き出しで案内が出ている。",
+        "most_important": "吹き出し「AstraDbg をオンにしてください」という指示。",
+        "next_action": "AstraDbgのトグルをクリックして許可をオンにする、または吹き出しを閉じる。",
+        "anomalies": [
+          "AstraDbgのトグルは他のオン状態(ChatGPT、Claudeなど)と同じ青色・右寄せのノブに見え、既にオンのように見えるのに『オンにしてください』と指示しており矛盾して見える",
+          "吹き出しがリスト右側の余白に単独で浮いており、アンカー線が細く弱い"
+        ]
+      },
+      "verdict": "FIX",
+      "concerns": [
+        {
+          "axis": "state legibility",
+          "what": "トグルの見た目上の状態(オン相当の青色)と案内文(オンにしてください)が食い違って見える",
+          "where": "AstraDbg行のトグルとその右の吹き出し"
+        }
+      ],
+      "confidence": "medium"
+    },
+    "D5DA": {
+      "visible_text": [
+        "Shuhei Horio",
+        "Apple Account",
+        "画面収録とシステムオーディオ録音",
+        "AstraDbg",
+        "「+」から Astra を追加してください",
+        "ChatGPT",
+        "Claude",
+        "Google Chrome",
+        "OBS",
+        "ターミナル",
+        "+"
+      ],
+      "observation": {
+        "happening": "同じ設定パネルで、今度は下部の「+」ボタン付近に吹き出しが表示され、「Astra」を追加するよう案内している。",
+        "most_important": "「+」から「Astra」を追加するようにという案内。",
+        "next_action": "「+」ボタンをクリックしてAstraを追加する。",
+        "anomalies": [
+          "リストには既に『AstraDbg』が存在しトグルもオンに見えるのに、吹き出しは別名『Astra』を新規追加するよう指示しており、同一のものか別物か画面から判別できない"
+        ]
+      },
+      "verdict": "FIX",
+      "concerns": [
+        {
+          "axis": "consistency",
+          "what": "既存項目名『AstraDbg』と案内文の『Astra』という表記が一致せず、同じアプリを指すのか別の追加項目なのか不明瞭",
+          "where": "リスト内のAstraDbg行と下部の追加案内吹き出し"
+        }
+      ],
+      "confidence": "medium"
+    },
+    "DEC3": {
+      "visible_text": [
+        "AstraDbg をオンにしてください"
+      ],
+      "observation": {
+        "happening": "トグル列だけを切り出した拡大クロップ。3行のトグルのうち中央のものが紫の枠でハイライトされ、左向きの吹き出しで案内が出ている。",
+        "most_important": "「AstraDbg をオンにしてください」という案内文。",
+        "next_action": "ハイライトされたトグルをクリックする。",
+        "anomalies": [
+          "行のアプリ名・アイコンが画面外で一切見えないため、どのアプリの操作か文字情報以外で確認できない",
+          "ハイライトされたトグルは他の2行と同じ青色に見え、C87Bと同様に『オン済みに見えるのにオンにしてくださいと言われる』矛盾がある"
+        ]
+      },
+      "verdict": "FIX",
+      "concerns": [
+        {
+          "axis": "state legibility",
+          "what": "トグルの視覚状態(オン相当)と指示文(オンにしてください)が矛盾して見える",
+          "where": "中央のハイライトされたトグルと吹き出し"
+        }
+      ],
+      "confidence": "medium"
+    },
+    "E23F": {
+      "visible_text": [
+        "設定画面を開けませんでした",
+        "システム設定を開く"
+      ],
+      "observation": {
+        "happening": "小さなトースト/ピル状の通知。「設定画面を開けませんでした」というエラーメッセージと「システム設定を開く」ボタン、閉じる×、右端に警告アイコンが表示されている。",
+        "most_important": "エラーメッセージと復旧アクション「システム設定を開く」ボタン。",
+        "next_action": "「システム設定を開く」をクリックするか、×で閉じる。",
+        "anomalies": [
+          "右端の警告(!)アイコンがピルの丸みと連続しておらず、別パーツが継ぎ足されたように見える段差がある",
+          "どの設定画面が開けなかったのか、原因の詳細がテキストにない"
+        ]
+      },
+      "verdict": "FIX",
+      "concerns": [
+        {
+          "axis": "alignment",
+          "what": "警告アイコンの角丸がピル本体の丸みと揃っておらず、継ぎ目のような段差が見える",
+          "where": "ピル右端のアイコン接合部"
+        },
+        {
+          "axis": "error-recovery clarity",
+          "what": "『設定画面を開けませんでした』とあるが、どの設定(システム全体かアプリ固有か)が開けなかったのか特定できる情報がない",
+          "where": "エラーメッセージ本文"
+        }
+      ],
+      "confidence": "medium"
+    }
+  },
+  "_judge": {
+    "model": "sonnet",
+    "cost_usd": 0.18011,
+    "turns": 6,
+    "duration_ms": 69529
+  }
+}
