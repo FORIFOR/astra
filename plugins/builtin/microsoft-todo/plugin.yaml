@@ -19,6 +19,9 @@ connectors:
   - id: microsoft-todo
     auth: oauth2
     provider: microsoft
+    grants:
+      - tasks.read
+    purpose: To Do の未完了タスクと期限を読んで Work Context に写す。タスクは作らない・変えない
     scopes:
       - Tasks.Read
       - offline_access

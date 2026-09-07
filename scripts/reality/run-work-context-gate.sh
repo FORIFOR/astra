@@ -67,11 +67,20 @@ done
 row "read_only_default" "$([ "$ro" = 1 ] && echo PASS || echo FAIL)" "outlook / microsoft-todo: permissions は *.read、tools は READ だけ"
 [ "$ro" = 1 ] || fail=1
 
+# read-only first (Google): 読む接続に書く scope が無く、書く許可は理由つきの別の接続にある
+r="$(run_vitest connectors-acceptance pnpm exec vitest run evals/actions/connectors/acceptance.test.ts)"
+rc="${r%%|*}"; s="${r#*|}"; [ "$rc" = 0 ] || fail=1
+row "google_read_only_first" "$([ "$rc" = 0 ] && echo PASS || echo FAIL)" "connectors acceptance ($s): 読む接続の write scope 0、書く許可は -actions 接続に purpose つき、tool → 接続の結び"
+row "workcontext_gmail_write_scopes" "$([ "$rc" = 0 ] && echo 0 || echo FAIL)" "manifest gmail/gmail: gmail.readonly だけ"
+row "workcontext_calendar_write_scopes" "$([ "$rc" = 0 ] && echo 0 || echo FAIL)" "manifest calendar/google-calendar: calendar.readonly だけ"
+
 # ---------------------------------------------------------------- 3. device worker
 r="$(run_vitest worker pnpm --filter @astra/worker-agent-host test)"
 rc="${r%%|*}"; s="${r#*|}"
 [ "$rc" = 0 ] || fail=1
 row "raw_full_mailbox_to_llm" "$([ "$rc" = 0 ] && echo 0 || echo FAIL)" "work-sync: format=full を要求しない、LLM には件名+抜粋だけ"
+row "send_scope_requested_before_action" "$([ "$rc" = 0 ] && echo 0 || echo FAIL)" "worker: 読む tool と同期は読む接続の鍵だけ、送る tool は送る接続が無ければ purpose つきで not_connected（網に出ない）"
+row "purpose_first_before_escalation" "$([ "$rc" = 0 ] && echo PASS || echo FAIL)" "not_connected の文に接続名と purpose、manifest の書く接続は purpose 必須（契約の refine）"
 row "llm_semantic_extraction" "$([ "$rc" = 0 ] && echo PASS || echo FAIL)" "llm.classify_email（期限を作らない指示、道具 0）、読めない返事は捨てる"
 row "one_source_failure_isolated" "$([ "$rc" = 0 ] && echo PASS || echo FAIL)" "1 つの source が落ちても他は進み cursor は進めない"
 

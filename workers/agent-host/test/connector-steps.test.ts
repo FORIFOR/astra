@@ -31,20 +31,21 @@ function memoryStore(initial: Record<string, string> = {}): SecretStore & {
   };
 }
 
-const connected = (over: Record<string, unknown> = {}): Record<string, string> => ({
-  'com.astra.gmail/gmail': JSON.stringify({
+const tokenSet = (over: Record<string, unknown> = {}): string =>
+  JSON.stringify({
     accessToken: ACCESS,
     refreshToken: 'refresh-1',
     scopes: [],
     expiresAt: '2099-01-01T00:00:00.000Z',
     ...over,
-  }),
-  'com.astra.google-calendar/google-calendar': JSON.stringify({
-    accessToken: ACCESS,
-    refreshToken: 'refresh-1',
-    scopes: [],
-    expiresAt: '2099-01-01T00:00:00.000Z',
-  }),
+  });
+
+/** 読む接続と送る接続の両方が繋がっている端末。 */
+const connected = (over: Record<string, unknown> = {}): Record<string, string> => ({
+  'com.astra.gmail/gmail': tokenSet(over),
+  'com.astra.gmail/gmail-actions': tokenSet(over),
+  'com.astra.google-calendar/google-calendar': tokenSet(),
+  'com.astra.google-calendar/google-calendar-actions': tokenSet(),
 });
 
 interface Sent {
@@ -108,11 +109,40 @@ describe('running a connector step on the device', () => {
     expect(r.handles('crm.write')).toBe(false);
   });
 
-  it('says which connectors have tokens on this device, without revealing them', async () => {
+  it('says which connections have tokens on this device, without revealing them', async () => {
     const { runtime: r } = runtime(memoryStore(connected()));
-    expect(await r.connected('mail.')).toBe(true);
-    expect(await r.connected('outlook.')).toBe(false);
-    expect(await r.connected('todo.')).toBe(false);
+    expect(await r.connected('gmail')).toBe(true);
+    expect(await r.connected('gmail-actions')).toBe(true);
+    expect(await r.connected('outlook')).toBe(false);
+    expect(await r.connected('microsoft-todo')).toBe(false);
+  });
+
+  it('reads with the read-only connection and never touches the actions token', async () => {
+    // 読む接続だけが繋がっている端末（Work Context を使い始めた直後の形）
+    const store = memoryStore({ 'com.astra.gmail/gmail': tokenSet() });
+    const reads: string[] = [];
+    const original = store.get.bind(store);
+    store.get = async (key) => {
+      reads.push(key);
+      return original(key);
+    };
+    const { runtime: r, sent } = runtime(store);
+    const outcome = await r.run(step({ toolId: 'mail.search', args: {} }));
+    expect(outcome.ok).toBe(true);
+    expect(sent[0]!.authorization).toBe(`Bearer ${ACCESS}`);
+    expect(reads).toEqual(['com.astra.gmail/gmail']);
+  });
+
+  it('asks for the actions connection, with its purpose, before sending — and sends nothing', async () => {
+    const store = memoryStore({ 'com.astra.gmail/gmail': tokenSet() });
+    const { runtime: r, sent } = runtime(store);
+    const outcome = await r.run(step({ approval: approved('gmail.send') }));
+    expect(outcome.ok).toBe(false);
+    expect(outcome.error!.code).toBe('connector.not_connected');
+    // 何のために、どの接続が要るかを言う（purpose-first）。読む接続があっても送らない。
+    expect(outcome.error!.message).toContain('Gmail（下書き・送信・整理）');
+    expect(outcome.error!.message).toContain('承認したメールを送り');
+    expect(sent).toEqual([]);
   });
 
   it('reads Outlook only with email.read, and never sends anywhere but Graph', async () => {
@@ -216,7 +246,8 @@ describe('running a connector step on the device', () => {
       }),
     });
     const { runtime: r } = runtime(store);
-    const outcome = await r.run(step({ approval: approved('gmail.send') }));
+    // 読む接続の期限切れは、読む tool で分かる（送る tool は別の接続を見る）
+    const outcome = await r.run(step({ toolId: 'mail.search', args: {} }));
     expect(outcome.error!.code).toBe('connector.token_expired');
   });
 

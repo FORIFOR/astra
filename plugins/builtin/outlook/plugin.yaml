@@ -24,6 +24,10 @@ connectors:
   - id: outlook
     auth: oauth2
     provider: microsoft
+    grants:
+      - email.read
+      - calendar.read
+    purpose: メールの件名・差出人・冒頭と、予定の題名・時間・参加者を読んで Work Context に写す。送らない・変えない
     scopes:
       - Mail.Read
       - Calendars.Read

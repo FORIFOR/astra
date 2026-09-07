@@ -7,6 +7,7 @@
  * 一覧（件名・差出人・冒頭の抜粋）で足りる。cloud にも LLM にも、
  * 受信箱をまるごと渡す経路は無い（`WorkArtifact.body_excerpt` は 500 字まで）。
  *
+ * **読む接続だけを使う。**送る・動かす接続（gmail-actions など）のトークンはここから触らない。
  * 意味づけ（依頼か・誰を待っているか・期限）は端末の LLM に頼む。
  * 無ければ付けずに送り、cloud 側が規則で補う（代役は賢くしない）。
  */
@@ -96,41 +97,41 @@ export class WorkSyncLoop {
     const now = (this.#deps.now ?? (() => new Date()))();
     const ctx: NormalizeContext = { observedAt: now.toISOString() };
     const outcomes: SourceOutcome[] = [];
-    outcomes.push(await this.#source('gmail', 'mail.', 'email.read', () => this.#gmail(now, ctx)));
+    outcomes.push(await this.#source('gmail', 'gmail', 'email.read', () => this.#gmail(now, ctx)));
     outcomes.push(
-      await this.#source('google_calendar', 'calendar.', 'calendar.read', () =>
+      await this.#source('google_calendar', 'google-calendar', 'calendar.read', () =>
         this.#googleCalendar(now, ctx),
       ),
     );
     outcomes.push(
-      await this.#source('outlook_mail', 'outlook.', 'email.read', () =>
+      await this.#source('outlook_mail', 'outlook', 'email.read', () =>
         this.#outlookMail(now, ctx),
       ),
     );
     outcomes.push(
-      await this.#source('outlook_calendar', 'outlook.', 'calendar.read', () =>
+      await this.#source('outlook_calendar', 'outlook', 'calendar.read', () =>
         this.#outlookCalendar(now, ctx),
       ),
     );
     outcomes.push(
-      await this.#source('microsoft_todo', 'todo.', 'tasks.read', () => this.#todo(ctx)),
+      await this.#source('microsoft_todo', 'microsoft-todo', 'tasks.read', () => this.#todo(ctx)),
     );
     return { at: ctx.observedAt, outcomes };
   }
 
   async #source(
     source: WorkSource,
-    prefix: Parameters<ConnectorRuntime['connected']>[0],
+    key: Parameters<ConnectorRuntime['connected']>[0],
     permission: string,
     fetch: () => Promise<{ artifacts: WorkArtifact[]; cursor: string | null }>,
   ): Promise<SourceOutcome> {
     try {
       // 繋いでいないものは黙って飛ばす。繋いでいないことは失敗ではない。
-      if (!(await this.#deps.connectors.connected(prefix))) {
+      if (!(await this.#deps.connectors.connected(key))) {
         return { source, status: 'not_connected', artifacts: 0, classified: 0 };
       }
       // 繋いであっても、読む許可が外されていれば読まない。
-      if (!this.#deps.connectors.granted(prefix).includes(permission)) {
+      if (!this.#deps.connectors.granted(key).includes(permission)) {
         return { source, status: 'not_granted', artifacts: 0, classified: 0 };
       }
       const { artifacts, cursor } = await fetch();

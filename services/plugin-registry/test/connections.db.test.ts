@@ -106,13 +106,16 @@ describe.skipIf(!url)('ConnectionService', () => {
   });
 
   it('keeps only the scopes that were actually declared', async () => {
+    // 読む接続（gmail）は readonly しか宣言しない。同意画面で広い scope が付いても、
+    // この接続の記録が「送れる」に育つことは無い（read-only first）。
     const connection = await connect({
       grantedScopes: [
+        'https://www.googleapis.com/auth/gmail.readonly',
         'https://www.googleapis.com/auth/gmail.modify',
         'https://www.googleapis.com/auth/drive',
       ],
     });
-    expect(connection.grantedScopes).toEqual(['https://www.googleapis.com/auth/gmail.modify']);
+    expect(connection.grantedScopes).toEqual(['https://www.googleapis.com/auth/gmail.readonly']);
   });
 
   it('never hands the reference back out', async () => {

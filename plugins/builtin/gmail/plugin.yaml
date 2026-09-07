@@ -21,10 +21,27 @@ jobs:
 data_accessed:
   - Gmail のメール・スレッド・ラベル・下書き
   - そのメールに出てくる相手の名前とアドレス
+# 同意は capability 単位で 2 回に分ける（read-only first）。
+#   gmail          読むだけ。Work Context（Home の「今日、気にした方がいいこと」）はこれだけで動く
+#   gmail-actions  下書き・送信・整理。送る操作が要ったときに初めて、理由を見せてから求める
+# 「Work Context は読むだけ」という画面の説明と、OAuth の事実を一致させるための分け方。
 connectors:
   - id: gmail
     auth: oauth2
     provider: google
+    grants:
+      - email.read
+    purpose: メールの件名・差出人・冒頭を読んで、今の仕事の文脈（Work Context）に写す。送らない・動かさない
+    scopes:
+      - https://www.googleapis.com/auth/gmail.readonly
+  - id: gmail-actions
+    auth: oauth2
+    provider: google
+    grants:
+      - email.draft
+      - email.modify
+      - email.send
+    purpose: 返事を下書きし、あなたが承認したメールを送り、受信箱を整理する
     scopes:
       - https://www.googleapis.com/auth/gmail.modify
       - https://www.googleapis.com/auth/gmail.send

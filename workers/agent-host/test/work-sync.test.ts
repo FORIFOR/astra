@@ -17,7 +17,9 @@ import { WorkSyncLoop, semanticFrom } from '../src/work-sync.js';
 
 const NOW = new Date('2026-09-07T06:00:00.000Z');
 
-function memoryStore(initial: Record<string, string> = {}): SecretStore {
+function memoryStore(
+  initial: Record<string, string> = {},
+): SecretStore & { get: SecretStore['get'] } {
   const values = { ...initial };
   return {
     async get(key) {
@@ -67,6 +69,7 @@ function harness(
     granted?: Record<string, string[]>;
     llm?: (step: HostStep) => StepOutcome;
     routes?: (url: string) => { status?: number; body: unknown };
+    onSecretRead?: (key: string) => void;
   } = {},
 ): Harness {
   const urls: string[] = [];
@@ -81,6 +84,13 @@ function harness(
   const secrets = memoryStore(
     Object.fromEntries((options.connected ?? []).map((key) => [key, tokens])),
   );
+  if (options.onSecretRead) {
+    const original = secrets.get.bind(secrets);
+    secrets.get = async (key) => {
+      options.onSecretRead!(key);
+      return original(key);
+    };
+  }
   const runtime = new ConnectorRuntime({
     secrets,
     credentialRefFor: (pluginId, connectorId) => `keychain:${pluginId}/${connectorId}`,
@@ -202,6 +212,27 @@ describe('syncing work context from the device', () => {
     ]);
     expect(h.urls).toEqual([]);
     expect(h.batches).toEqual([]);
+  });
+
+  it('syncs with the read-only connections only, even when actions are connected too', async () => {
+    const reads: string[] = [];
+    const h = harness({
+      connected: [
+        'com.astra.gmail/gmail',
+        'com.astra.gmail/gmail-actions',
+        'com.astra.google-calendar/google-calendar',
+        'com.astra.google-calendar/google-calendar-actions',
+      ],
+      granted: GOOGLE_GRANTS,
+      onSecretRead: (key) => reads.push(key),
+    });
+    const report = await h.loop.syncOnce();
+    expect(report.outcomes.slice(0, 2).map((o) => o.status)).toEqual(['synced', 'synced']);
+    // 送る・作る接続のトークンは一度も読まない
+    expect(reads.filter((k) => k.includes('-actions'))).toEqual([]);
+    // 触るのは読む接続の鍵だけ（繋いでいない source の「有無」の確認も読む接続の鍵で）
+    for (const key of reads)
+      expect(key).toMatch(/\/(gmail|google-calendar|outlook|microsoft-todo)$/);
   });
 
   it('does not read a connected service whose read permission was withheld', async () => {
