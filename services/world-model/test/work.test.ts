@@ -21,6 +21,7 @@ import {
   extractDeadline,
   injectionText,
   pressure,
+  selectContextPack,
   rankPressure,
   ruleSemantic,
   selectInjection,
@@ -402,6 +403,62 @@ describe('context injection', () => {
     expect(text.startsWith('<work_context>')).toBe(true);
     expect(text.length).toBeLessThanOrEqual(1_200);
     expect(text).not.toContain('社内報');
+  });
+
+  /**
+   * CONTEXT_MINIMIZATION_GATE。
+   *   work-related scheduling query → relevant project/task injected   PASS
+   *   unrelated coding query        → work context injected            0
+   *   email reply query             → target thread/project only       PASS
+   *   meeting prep                  → participant + project + open items PASS
+   * どの turn も selected / available を持つ。
+   */
+  it('minimizes: nothing for an unrelated coding question, and the stats say so', () => {
+    for (const q of [
+      'この Swift コード直して',
+      'TypeScript で map と forEach の違いは？',
+      '会議を録音して',
+    ]) {
+      const pack = selectContextPack({ question: q, context: ctx });
+      expect(pack.intent, q).toBe('none');
+      expect(pack.items, q).toEqual([]);
+      expect(pack.text, q).toBe('');
+      expect(pack.stats.selected_artifacts, q).toBe(0);
+      expect(pack.stats.available_artifacts).toBeGreaterThan(0);
+    }
+  });
+
+  it('minimizes: a scheduling question gets the relevant priorities, bounded', () => {
+    const pack = selectContextPack({ question: '今日何を優先すべき？', context: ctx });
+    expect(pack.intent).toBe('priorities');
+    expect(pack.items.length).toBeGreaterThan(0);
+    expect(pack.items.length).toBeLessThanOrEqual(3);
+    expect(pack.stats.selected_artifacts).toBe(pack.items.length);
+    expect(pack.stats.selected_artifacts).toBeLessThanOrEqual(pack.stats.available_artifacts);
+    expect(pack.stats.chars).toBe(pack.text.length);
+  });
+
+  it('minimizes: an email reply gets only the named counterpart, never the whole inbox', () => {
+    const named = selectContextPack({ question: 'MTI に返信を書いて', context: ctx });
+    expect(named.intent).toBe('email_reply');
+    expect(named.items.map((i) => i.project)).toEqual(['MOPITA連携']);
+    expect(named.text).not.toContain('○○社');
+    expect(named.text).not.toContain('社内報');
+    // 相手も案件も名指しされていない「返信して」には、何も添えない
+    const vague = selectContextPack({ question: 'さっきのメールに返信して', context: ctx });
+    expect(vague.intent).toBe('email_reply');
+    expect(vague.items).toEqual([]);
+    expect(vague.stats.selected_artifacts).toBe(0);
+  });
+
+  it('minimizes: meeting prep gets that project, its counterpart and open items', () => {
+    const pack = selectContextPack({ question: 'MOPITA 定例の準備をしたい', context: ctx });
+    expect(pack.intent).toBe('meeting_prep');
+    expect(pack.items.map((i) => i.project)).toEqual(['MOPITA連携']);
+    const lines = pack.items[0]!.lines.join('\n');
+    expect(lines).toMatch(/MTI/);
+    expect(pack.stats.selected_artifacts).toBeGreaterThanOrEqual(1);
+    expect(pack.text).not.toContain('○○社');
   });
 
   it('injects nothing once the person turned inference off', () => {

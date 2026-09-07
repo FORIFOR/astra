@@ -40,6 +40,14 @@ export {
   EMPTY_PERSONALIZATION,
   type StoredPersonalization,
 } from './work/personalization.js';
-export { selectInjection, injectionText, type InjectionInput } from './work/injection.js';
+export {
+  classifyContextIntent,
+  injectionText,
+  RELEVANCE_THRESHOLD,
+  selectContextPack,
+  selectInjection,
+  type ContextPack,
+  type InjectionInput,
+} from './work/injection.js';
 export { ruleSemantic } from './work/semantic.js';
 export { WorkContextService, type WorkContextDeps } from './work/service.js';

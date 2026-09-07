@@ -45,6 +45,11 @@ row "provenance_coverage" "$([ "$rc" = 0 ] && echo 100% || echo FAIL)" "同上�
 row "irrelevant_injection" "$([ "$rc" = 0 ] && echo 'below threshold' || echo FAIL)" "同上（関連する案件だけ、<= 3 件 / 1200 字）"
 row "task_waiting_deadline_inference" "$([ "$rc" = 0 ] && echo PASS || echo FAIL)" "同上（owed / waiting / extractDeadline）"
 row "project_clustering" "$([ "$rc" = 0 ] && echo PASS || echo FAIL)" "同上（clusterProjects: 明示 → thread → Jaccard）"
+# CONTEXT_MINIMIZATION_GATE（問い → 意図 → 候補 → 閾値 → 最小の pack、turn ごとに selected / available）
+row "cm_scheduling_query_relevant" "$([ "$rc" = 0 ] && echo PASS || echo FAIL)" "「今日何を優先」→ 関連する案件 <= 3、selected <= available"
+row "cm_unrelated_coding_query" "$([ "$rc" = 0 ] && echo 0 || echo FAIL)" "「この Swift コード直して」→ 0 件（intent none）"
+row "cm_email_reply_target_only" "$([ "$rc" = 0 ] && echo PASS || echo FAIL)" "「MTI に返信を書いて」→ 相手の案件だけ、名指しの無い「返信して」→ 0"
+row "cm_meeting_prep_pack" "$([ "$rc" = 0 ] && echo PASS || echo FAIL)" "「MOPITA 定例の準備」→ 案件 + 相手 + 開いている件"
 
 # ---------------------------------------------------------------- 2. connectors (read-only, normalization)
 r="$(run_vitest connectors pnpm --filter @astra/service-connectors test)"
@@ -101,6 +106,8 @@ if pg_isready -h "${ASTRA_TEST_PGHOST:-localhost}" -p "${ASTRA_TEST_PGPORT:-5433
   rc="${r%%|*}"; s="${r#*|}"; [ "$rc" = 0 ] || fail=1
   row "http_surface_and_chat_injection" "$([ "$rc" = 0 ] && echo PASS || echo FAIL)" "gateway work.integration ($s): POST artifacts → GET context → chat lane <work_context>"
   row "cross_source_entity_resolution" "$([ "$rc" = 0 ] && echo PASS || echo FAIL)" "同上（Astra task + meeting + gmail が同じ案件に）"
+  row "cm_stats_recorded_per_turn" "$([ "$rc" = 0 ] && echo PASS || echo FAIL)" "同上（task.input.context_meta に intent / selected / available、log にも）"
+  row "persistent_sync_cursor" "$([ "$rc" = 0 ] && echo PASS || echo FAIL)" "work.db + gateway: cursor は upsert と同じ tx でだけ進む、途中 batch は前の cursor、失敗は理由だけ"
 else
   fail=1
   row "storage_tenant_isolation" "AUTOMATION_MISSING" "PG 5433 が無い（pnpm dev:infra）"

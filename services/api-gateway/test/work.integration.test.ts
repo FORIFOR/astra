@@ -213,9 +213,14 @@ describe.skipIf(!url)('work context over HTTP', () => {
         }>().tenant.id,
         taskId,
       );
+      const input = task.input as {
+        context?: string;
+        context_meta?: { intent: string; selected_artifacts: number; available_artifacts: number };
+      };
       return {
         statusCode: res.statusCode,
-        context: (task.input as { context?: string }).context ?? null,
+        context: input.context ?? null,
+        meta: input.context_meta ?? null,
         notice: null,
       };
     };
@@ -224,9 +229,26 @@ describe.skipIf(!url)('work context over HTTP', () => {
     expect(work.context).toContain('<work_context>');
     expect(work.context).toContain('MOPITA連携');
     expect(work.context!.length).toBeLessThanOrEqual(1_200);
+    // 渡した量の事実が turn（task）に残る
+    expect(work.meta).toMatchObject({ intent: 'priorities' });
+    expect(work.meta!.selected_artifacts).toBeGreaterThan(0);
+    expect(work.meta!.selected_artifacts).toBeLessThanOrEqual(work.meta!.available_artifacts);
+
+    // CONTEXT_MINIMIZATION: 関係の無い問いには 0 件（知っていても渡さない）
     const unrelated = await ask('社内報の文章を書いて');
     expect(unrelated.statusCode).toBe(202);
     expect(unrelated.context).toBeNull();
+    expect(unrelated.meta).toMatchObject({ intent: 'none', selected_artifacts: 0 });
+    expect(unrelated.meta!.available_artifacts).toBeGreaterThan(0);
+    const coding = await ask('この TypeScript の型エラーを直して');
+    expect(coding.context).toBeNull();
+    expect(coding.meta!.selected_artifacts).toBe(0);
+
+    // 返信: 名指しの相手の案件だけ
+    const reply = await ask('MTI に返信を書いて');
+    expect(reply.context).toContain('MOPITA連携');
+    expect(reply.context).not.toContain('○○社');
+    expect(reply.meta).toMatchObject({ intent: 'email_reply' });
   });
 
   it('takes a correction in one call, and stops all inference in one call', async () => {

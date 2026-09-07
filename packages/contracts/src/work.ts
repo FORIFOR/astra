@@ -321,6 +321,36 @@ export type PersonalizationUpdate = z.infer<typeof PersonalizationUpdate>;
 export const MAX_INJECTED_PRIORITIES = 3;
 export const MAX_INJECTED_CHARS = 1_200;
 
+/**
+ * 問いの意図（CONTEXT_MINIMIZATION_GATE）。
+ *
+ *   none          仕事の文脈が要らない問い（「この Swift コード直して」）→ 0 件
+ *   project       案件を名指しした問い → その案件だけ
+ *   priorities    今日 / 今週の優先を聞いている → 上位 <= 3
+ *   email_reply   返信を書こうとしている → 名指しの相手・案件の分だけ（無ければ 0）
+ *   meeting_prep  会議の準備 → その会議の案件 + 相手 + 開いている件
+ */
+export const CONTEXT_INTENTS = [
+  'none',
+  'project',
+  'priorities',
+  'email_reply',
+  'meeting_prep',
+] as const;
+export const ContextIntent = z.enum(CONTEXT_INTENTS);
+export type ContextIntent = z.infer<typeof ContextIntent>;
+
+/** 1 turn ごとに残す、注入の事実。**「何を知っているか」ではなく「何を渡したか」。** */
+export const InjectionStats = z.object({
+  intent: ContextIntent,
+  /** 渡した件数（案件・待ち・返すもの）。 */
+  selected_artifacts: z.number().int().nonnegative(),
+  /** 渡せた候補の総数。 */
+  available_artifacts: z.number().int().nonnegative(),
+  chars: z.number().int().nonnegative(),
+});
+export type InjectionStats = z.infer<typeof InjectionStats>;
+
 /** `<work_context>` の 1 行。 */
 export const InjectedPriority = z.object({
   project: z.string(),

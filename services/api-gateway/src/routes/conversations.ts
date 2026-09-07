@@ -9,6 +9,7 @@ import {
   StartConversationRequest,
   type Referent,
   type TurnAttachment,
+  type InjectionStats,
 } from '@astra/contracts';
 import type { ConversationService } from '@astra/service-conversation';
 import {
@@ -19,7 +20,7 @@ import {
 } from '@astra/service-conversation';
 import { agentKindFor, type TaskService } from '@astra/service-task';
 import type { Redis } from 'ioredis';
-import { injectionText, type WorkContextService } from '@astra/service-world-model';
+import { selectContextPack, type WorkContextService } from '@astra/service-world-model';
 import type { App } from '../fastify.js';
 import { parseLastEventId, pollingWaker, pumpEventStream, redisWaker } from './sse.js';
 import { requirePrincipal } from '../auth/middleware.js';
@@ -181,14 +182,18 @@ export function registerConversationRoutes(app: App, deps: ConversationRouteDeps
        * Home で頼んでも、Composer で頼んでも、Dock で頼んでも、
        * 会話に行が増えるだけで仕事は現れず、Dock は 10 秒待って諦めていた。
        */
-      // 全データは渡さない。仕事の状況を聞く問いにだけ、関連する上位 3 件までを添える。取れなければ添えない。
-      const workContext =
+      /*
+       * 全データは渡さない（CONTEXT_MINIMIZATION_GATE）。問いの意図に応じた最小の pack だけ。
+       * 渡した量（selected / available）は task の input と log に残し、後から数えられるようにする。
+       */
+      const pack =
         deps.work && decision.lane === 'chat'
           ? await deps.work
               .context(principal.tenantId, principal.userId)
-              .then((ctx) => injectionText({ question: body.text, context: ctx }))
-              .catch(() => '')
-          : '';
+              .then((ctx) => selectContextPack({ question: body.text, context: ctx }))
+              .catch(() => null)
+          : null;
+      if (pack) request.log.info({ work_context: pack.stats }, 'context minimization');
       const started = await startWork(
         deps,
         principal,
@@ -197,7 +202,8 @@ export function registerConversationRoutes(app: App, deps: ConversationRouteDeps
         decision.lane,
         turn.id,
         body.attachments,
-        workContext,
+        pack?.text ?? '',
+        pack?.stats ?? null,
       );
 
       // Lane は返さない。利用者に見せないものを API で配らない。
@@ -275,6 +281,7 @@ async function startWork(
   turnId: string,
   attachments: readonly TurnAttachment[] = [],
   workContext = '',
+  contextStats: InjectionStats | null = null,
 ): Promise<{ taskId: string | null; notice: string | null }> {
   const request =
     lane === 'chat'
@@ -287,6 +294,8 @@ async function startWork(
             message: text,
             ...(attachments.length > 0 ? { attachments: [...attachments] } : {}),
             ...(workContext ? { context: workContext } : {}),
+            // 渡した量の事実。何を知っているかではなく、何を渡したか。
+            ...(contextStats ? { context_meta: contextStats } : {}),
           },
         }
       : lane === 'research'
