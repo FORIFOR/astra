@@ -1,3 +1,22 @@
+# VISUAL_SUPREMACY_REPORT — 追記 2026-09-07（RC 85b8333）: 新規 UI の差分再検証
+
+Guided Setup（8 面）と Screenshot Context（2 面）を Atlas に追加し、既存 62 面は pixel regression のみ（PASS、時刻依存の
+fixture は `time-dependent.json`）、新規面だけ blind / supremacy を 9 round 回した。最終:
+
+```
+VISUAL_IDEAL_GATE(blind, new faces)   PASS   KEEP 5 / FIX_CANDIDATE 0 / NEE 0（合成 3 面は blind_review:false）
+VISUAL_SUPREMACY(blind, new faces)    PASS   BELOW_BAR 0 / NEE 0
+GUIDED_SETUP_GEOMETRY                 PASS
+UI_ATLAS_GATE                          PASS   72/72、strips 5/5、appearance policy 0 違反
+PIXEL_REGRESSION (existing 62)         PASS
+VISUAL_SUPREMACY_FINAL                 PASS
+UI_FROZEN                              YES
+```
+
+所在: docs/ui-atlas/review/85b8333-guided、docs/ui-atlas/supremacy/85b8333-guided、docs/guided-setup-gate.md。
+
+---
+
 # VISUAL_SUPREMACY_REPORT — RC b946708 (2026-09-06)
 
 対象: `docs/ui-atlas/` の Atlas（RC b946708、required 62 / captured 62、strips 5）。
@@ -7,6 +26,7 @@
 判定: SUPREME（KEEP）/ COMPETITIVE（FIX 推奨）/ BELOW_BAR（FIX 必須）。
 
 制約の明記:
+
 - 競合比較（Raycast / Wispr Flow / VoiceOS / Granola / SuperIntern / Otter / Linear / Notion / Apple / Sparkle）は **knowledge-based**（各社の既知デザイン言語との比較）。実物スクショ対照ではない。
 - 寸法・コントラスト比は未測。数値は strip キャプション印字値の転記のみ。
 - hover / アニメーション実挙動は静止画から確認不能（strip で確認できた範囲のみ判定）。
@@ -34,11 +54,11 @@ motion discontinuity            4/5  strips FAIL（合格は strip.controller-no
 
 ## 判定分布（67 id）
 
-| verdict | 件数 |
-|---|---|
-| SUPREME | 12 |
-| COMPETITIVE | 43 |
-| BELOW_BAR | 12 |
+| verdict     | 件数 |
+| ----------- | ---- |
+| SUPREME     | 12   |
+| COMPETITIVE | 43   |
+| BELOW_BAR   | 12   |
 
 **SUPREME 12**: meeting.controller / main.scale-compact / main.scale-comfortable / main.scale-large / session.processing / session.ready / system.mic-denied / system.interrupted / system.interrupted-journey / system.speech-permission / system.calendar-permission / system.generic-failure
 
@@ -126,7 +146,9 @@ components.neutral/hover/focus/pressed  COMPETITIVE  pressedがhoverと識別不
 ## 系統的 root cause（個別 FIX 47 件の根は 7 つ）
 
 ### RC-1. 遷移・生成時の未描画露出（最重症・実装欠陥）
+
 strip 4/5 が FAIL し、全て同一パターン:
+
 - 起動: 未ペイントの黒矩形が約 90ms 露出（idle-preparing-listening, T+91 平均輝度 1.2/255）
 - dock 拡大/縮小: **T+201 で完全な黒フレーム**（dock-running / running-confirmation の 2 本で同時刻再現 = 系統的）
 - workspace 出現: 黒い未描画矩形 2 フレーム → 完成形ポップイン（notes-workspace, max gap 81.1ms）
@@ -136,39 +158,46 @@ strip 4/5 が FAIL し、全て同一パターン:
 測定: 再キャプチャ strip で輝度ほぼゼロのフレーム 0 / max gap ≤ 33ms / フェード中間フレームの存在。
 
 ### RC-2. 状態システムが「録音中」しか設計されていない
+
 preparing / paused / recovered / resumed が「録音中の見た目 + ラベル文字差分」で作られている。
+
 - recording.paused: 赤ドット・赤停止・活性波形が全部「録音中」を主張（BELOW_BAR）
 - voice.preparing/listening: 差分がラベルとグロー暈のみ（BELOW_BAR）
 - mic-recovered / after-sharing / resumed: 事後状態が 1 フレームも残らない
-修正方針: 「状態 → 色・波形挙動・ドット形状」のトークン表を確定（paused=琥珀/灰+波形凍結、preparing=スピナー+操作減光、復帰=2〜3 秒の一過性確認表示、resumed=中断ステータス行）。
-測定: 1 秒フラッシュテストで状態判別正答率、blur test（ラベルぼかしで状態 3 種を区別できるか）。
+  修正方針: 「状態 → 色・波形挙動・ドット形状」のトークン表を確定（paused=琥珀/灰+波形凍結、preparing=スピナー+操作減光、復帰=2〜3 秒の一過性確認表示、resumed=中断ステータス行）。
+  測定: 1 秒フラッシュテストで状態判別正答率、blur test（ラベルぼかしで状態 3 種を区別できるか）。
 
 ### RC-3. 言語ポリシー未決定（日英混在）
+
 new-recording-sheet ラベル 5 語 / voice.context-expanded 全アクション / work-agents・library-files フィルタ / settings「表示の大きさ」の EN 値 / タブ列の Ask Astra。
 修正方針: 「トップレベル固有名・ブランド動詞のみ英語、操作・ラベル・フィルタ・フォームは日本語」を 1 行で明文化し、全 UI 文言を機械 lint。
 
 ### RC-4. 記号・色の意味体系が未固定
+
 - インジゴ単色に状態・アプリ識別・アクションの全セマンティクスが過積載（voice 群）
 - 「選択中」表現が 3 流派（settings=青塗り / workspace=グレー塗り / controller=グレー+インディゴアイコン）
 - 「↗」が「外部に出る」と「元に戻せない」の 2 義 / ✦ が状態とアクションの二役 / 赤ドットが live と録音予約の二重意味 / 転記「•」・淡色行・スコアバーが無凡例
 - 「やり直す」が pill とテキストリンクの 2 造形
-修正方針: side-effect バッジ・選択中・retry・状態色の design token / パターン定義を固定。
+  修正方針: side-effect バッジ・選択中・retry・状態色の design token / パターン定義を固定。
 
 ### RC-5. 空状態・placeholder の嘘と冗長
+
 - meeting.ask: パネル約 8 割の死んだ余白（< Raycast 大差）
 - stt-unavailable: 「まだ発話がありません」が左の notice と矛盾（speech-permission は正解実装済み — 社内に正解あり）
 - voice: 「見えている文脈はありません」の否定形常駐 / recording: 「決まったこと/待っています…」同語反復 / 「やること 0」空見出し
 - empty の整列流派分裂（Home=左揃え、Work/Library=中央揃え）
-修正方針: 空状態は「次の一手 or 沈黙」原則で統一。状態連動 placeholder を standard 化。
+  修正方針: 空状態は「次の一手 or 沈黙」原則で統一。状態連動 placeholder を standard 化。
 
 ### RC-6. モックデータ・キャプチャ衛生（Atlas の信頼性）
+
 - タイマー 00:01〜00:04 vs 本文 04:14〜05:01 の時刻矛盾が 6 枚 / dock.running「00:00 で 50%」/ running 3 ソース vs result「2 件」
 - 非アクティブウィンドウ撮影の混入（provenance.meeting-detail, home-recording-now）
 - HUD/dock 系で light/dark が byte-identical（dark-only が意図なら manifest に宣言を、意図でないなら light パイプライン欠陥）
 - README ヘッダ「NO_CAPTURE_PATH 0」と一覧表の dock.entering-recording「NO_CAPTURE_PATH」行、contact-sheet の赤枠が矛盾
-修正方針: Atlas ビルドに整合性の機械チェック（時刻整合・フォーカス状態・theme 宣言・件数一致）を追加。
+  修正方針: Atlas ビルドに整合性の機械チェック（時刻整合・フォーカス状態・theme 宣言・件数一致）を追加。
 
 ### RC-7. dark 面階層と押下状態
+
 - recording 群: light の「白カード on グレー地」の面差が dark で消える（サーフェストークン要一段明化）
 - components: pressed が hover と識別不能（4 状態が実質 3 状態）/ dark の「録音中」ラベル沈み
 
@@ -176,23 +205,23 @@ new-recording-sheet ラベル 5 語 / voice.context-expanded 全アクション 
 
 ## FIX 必須一覧（NO-GO 解除の必要条件）
 
-| # | 対象 | 内容 | root cause |
-|---|---|---|---|
-| 1 | strips 4 本 | 黒フレーム/黒フラッシュ排除・コンテンツ遷移接続 | RC-1 |
-| 2 | recording.paused | 状態色の全シグナル統一（赤要素→停止ボタンのみ・波形凍結） | RC-2 |
-| 3 | voice.preparing / listening | 波形を主役に・状態を造形で・空状態文撤去 | RC-2/5 |
-| 4 | system.resumed | 中断ステータス行 + 原因つき空状態文 | RC-2 |
-| 5 | voice.context-expanded | 日本語化・第1アクションに選択ハイライト・階層逆転解消 | RC-3/4 |
-| 6 | main.new-recording-sheet | ラベル日本語化・primary tint・背景 scrim | RC-3 |
-| 7 | main.work-agents | Agents タブに見出し+説明・フィルタをタブと別様式に | RC-3/4 |
-| 8 | main.apps-plugins | 行リスト化・重複トークン排除・固有アイコン・権限の人間語化 | RC-4 |
-| 9 | dock.context-detail | プレースホルダ 3 連を実データ形式に（Selection 引用・ウィンドウ実名） | RC-6 |
-| 10 | dock.confirmation | 「送信後は取り消せません」の可逆性スロット追加 | RC-4 |
-| 11 | meeting.ask | 文脈連動サジェスト 3〜5 件で余白を情報化 | RC-5 |
-| 12 | recording.rag | 資料/会議発言の分離・人間語メタ・スコアバー削除・選択チップ明示 | RC-4/5 |
-| 13 | settings.permissions | マイク行 purpose 文の truncation 解消（2 行折返し） | RC-7 |
-| 14 | 横断 6 件 | 選択中 3 流派 / retry 2 造形 / ↗ 2 義 / pressed / EN 値 / タブ列混在 | RC-4/3 |
-| 15 | Atlas 衛生 | モック時刻整合・フォーカス統一・theme 宣言・NO_CAPTURE_PATH 矛盾解消 | RC-6 |
+| #   | 対象                        | 内容                                                                  | root cause |
+| --- | --------------------------- | --------------------------------------------------------------------- | ---------- |
+| 1   | strips 4 本                 | 黒フレーム/黒フラッシュ排除・コンテンツ遷移接続                       | RC-1       |
+| 2   | recording.paused            | 状態色の全シグナル統一（赤要素→停止ボタンのみ・波形凍結）             | RC-2       |
+| 3   | voice.preparing / listening | 波形を主役に・状態を造形で・空状態文撤去                              | RC-2/5     |
+| 4   | system.resumed              | 中断ステータス行 + 原因つき空状態文                                   | RC-2       |
+| 5   | voice.context-expanded      | 日本語化・第1アクションに選択ハイライト・階層逆転解消                 | RC-3/4     |
+| 6   | main.new-recording-sheet    | ラベル日本語化・primary tint・背景 scrim                              | RC-3       |
+| 7   | main.work-agents            | Agents タブに見出し+説明・フィルタをタブと別様式に                    | RC-3/4     |
+| 8   | main.apps-plugins           | 行リスト化・重複トークン排除・固有アイコン・権限の人間語化            | RC-4       |
+| 9   | dock.context-detail         | プレースホルダ 3 連を実データ形式に（Selection 引用・ウィンドウ実名） | RC-6       |
+| 10  | dock.confirmation           | 「送信後は取り消せません」の可逆性スロット追加                        | RC-4       |
+| 11  | meeting.ask                 | 文脈連動サジェスト 3〜5 件で余白を情報化                              | RC-5       |
+| 12  | recording.rag               | 資料/会議発言の分離・人間語メタ・スコアバー削除・選択チップ明示       | RC-4/5     |
+| 13  | settings.permissions        | マイク行 purpose 文の truncation 解消（2 行折返し）                   | RC-7       |
+| 14  | 横断 6 件                   | 選択中 3 流派 / retry 2 造形 / ↗ 2 義 / pressed / EN 値 / タブ列混在  | RC-4/3     |
+| 15  | Atlas 衛生                  | モック時刻整合・フォーカス統一・theme 宣言・NO_CAPTURE_PATH 矛盾解消  | RC-6       |
 
 FIX 推奨（COMPETITIVE 43 件の個別詳細）は各 archetype レビューの全文（本レポート生成セッションの監査ログ）にあり、主要なものは verdict 一覧の右列に要約済み。
 
@@ -222,6 +251,7 @@ UI をまとめて 1 回修正 → Atlas 全再生成（62/62 PASS, golden light
 機能追加・reality gate へは寄り道していない。KEEP/Freeze 画面のコードは触っていない。
 
 ## 合格基準の判定
+
 ```
 BELOW BAR                     0    ✅ round1 の 13 面すべて解消
 state contradiction           0    ✅ recording.paused（波形 flat・「聞いています/待っています」除去）
@@ -236,6 +266,7 @@ motion discontinuity         0    ✅ SurfaceMotion pass=True・5/5（T0 idle→
 ```
 
 ## 状態別に直したもの（造形文法）
+
 ```
 idle       静的な Astra Voice Mark（3 本・不動）   ← 署名。活動波形にしない
 preparing  AstraOrb の pulse のみ・波形なし         ← 「聞いている」と紛れさせない
@@ -244,6 +275,7 @@ paused     波形 flat + 「一時停止中 — 再開するまで聞きませ�
 ```
 
 ## 空状態の型（6 面共通・偽物なし）
+
 ```
 見出し（大）
 短い説明
@@ -252,6 +284,7 @@ paused     波形 flat + 「一時停止中 — 再開するまで聞きませ�
 ```
 
 ## 主要 archetype（再判定）
+
 ```
 Invocation          >= Wispr/VoiceOS   idle が Astra 署名で distinct に
 Task Running         >  VoiceOS/Raycast dock.running / session.detail は Freeze（元から SUPREME）
@@ -265,13 +298,14 @@ Recovery            >= Linear/Apple     stt-unavailable / generic-failure は Fr
 ```
 
 ## 残（この巡の scope 外・COMPETITIVE のまま）
+
 - meeting.captions: 「字幕」がコントローラ/見出し/サブタブに重複（軽微・次巡）。
 - recording.workspace: 抽出が空の間の下部余白（COMPETITIVE。transcript 主役化は次巡の候補）。
 - motion 60fps の再測（gate 05）。
 
 → **VISUAL_SUPREMACY_GATE = PASS**（BELOW BAR 0 / 失格条件 0 / KEEP 無回帰 / motion 5/5）。
-   残りは COMPETITIVE のみ（captions の「字幕」重複・workspace の下部余白）で、重要 archetype に `Astra < competitor` は無い。
-   さらに厳密にするなら、盲検 supremacy モード（competitor 基準込みの 3 値自動判定）を review-blind に足して機械確認する。
+残りは COMPETITIVE のみ（captions の「字幕」重複・workspace の下部余白）で、重要 archetype に `Astra < competitor` は無い。
+さらに厳密にするなら、盲検 supremacy モード（competitor 基準込みの 3 値自動判定）を review-blind に足して機械確認する。
 
 ---
 
@@ -279,12 +313,14 @@ Recovery            >= Linear/Apple     stt-unavailable / generic-failure は Fr
 
 captions の階層整理と workspace の content-adaptive を入れ、盲検 supremacy 判定器（review-supremacy.sh）で
 3 巡回した。各巡で出た BELOW_BAR を deterministic に潰した:
+
 - 巡1（3件）: home-recording-now の空白 / update-unavailable の説明過多 / 「まだありません」反復 → 修正
 - 巡2（5件）: 上記 + transcript 左の空白 / settings の並列文 / 中央寄せダイアログ（native alert）→ transcript を全幅化、他は標準パターン
 - 巡3（3件）: mic-denied の「設定を開く」二重 → 文言修正。残 2 は components.*（DS 状態見本＝製品画面ではない）→ supremacy 対象から除外
 - 巡4（de5d319）: **BELOW_BAR 0**
 
 ## 盲検 supremacy（de5d319、8 軸・人手 0・製品画面 58 面）
+
 ```
 SUPREME       0     （全 3 judge 一致の SUPREME は稀。COMPETITIVE=「明確な差は無い」が既定）
 COMPETITIVE   53    一線級と並べて明確な欠陥・敗北は無い
@@ -294,6 +330,7 @@ NEE           5     cannot tell（小さな pill 等。敗北ではない）
 ```
 
 ## VISUAL_SUPREMACY_FINAL
+
 ```
 BELOW_BAR                     0     ✅ 盲検 de5d319
 state contradiction           0     ✅ paused/preparing/recording・時計
@@ -308,6 +345,7 @@ blind major losses            AUTOMATION_MISSING  競合 A/B は competitor 実�
 ```
 
 ## UI_FROZEN = YES（条件付き）
+
 製品画面 58 面すべて BELOW_BAR 0、状態矛盾 0、言語混在 0、AI 生成感 0、motion 5/5、KEEP 無回帰。
 以後 UI を触る理由は measured competitor deficit / semantic contradiction / systemic inconsistency の 3 つだけ。
 競合 A/B（実画像で「これは業界標準か、AI テンプレか」を切り分ける）だけが未測定 = AUTOMATION_MISSING。

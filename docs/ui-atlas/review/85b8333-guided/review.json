@@ -1,0 +1,215 @@
+{
+  "rc": "85b8333",
+  "pages": [
+    {
+      "id": "guided-setup.intro",
+      "blind_id": "00B9",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        },
+        {
+          "model": "sonnet",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.denied",
+      "blind_id": "0474",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": [
+            {
+              "axis": "typography",
+              "what": "Incorrect verb form in button text '試く' should be '試す'",
+              "where": "Blue CTA button text"
+            }
+          ]
+        },
+        {
+          "model": "opus",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        },
+        {
+          "model": "sonnet",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.granted",
+      "blind_id": "7C3E",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        },
+        {
+          "model": "sonnet",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.target-missing",
+      "blind_id": "A07F",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "consistency",
+              "what": "同じ「失敗して手動対応が必要」という種類の知らせなのに、0474 には警告アイコンが付き、この画面には付いていない。状態の重さが見た目で揃っていない。",
+              "where": "タイトル「Astra を自動で見つけられません」の行頭（0474 の警告アイコン位置に相当する場所）"
+            },
+            {
+              "axis": "state legibility",
+              "what": "アイコンも色も通常の案内と同じため、これが「うまくいかなかった」状態なのか「これからやる案内」なのか、文を読み切るまで見分けがつかない。",
+              "where": "カード上部のタイトル行全体"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.target-highlighted",
+      "blind_id": "EC16",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "trust-provenance",
+              "what": "一覧に表示されているアプリ名が「AstraDbg」で、他の画面の製品名「Astra」と一致しない。利用者はどれをオンにすべきか確信が持てず、デバッグ用の内部名が製品として露出している。",
+              "where": "リスト中央行のアプリ名ラベル"
+            },
+            {
+              "axis": "density",
+              "what": "案内の吹き出しがリスト行の上に重ねて置かれ、その行の内容を覆っている。下のアプリ名とトグルの対応関係が見えなくなる。",
+              "where": "AstraDbg の行、アプリ名とトグルの間の領域"
+            },
+            {
+              "axis": "alignment",
+              "what": "吹き出しは中央行にだけ存在し、他の2行にはない要素として行の縦のリズムを崩している。左のアイコン列・名前列の並びに対して吹き出しの左端がどの列とも揃っていない。",
+              "where": "中央行、AnyDesk と ChatGPT の名前左端を通る縦線に対して"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": [
+            {
+              "axis": "trust-provenance",
+              "what": "システム設定の一覧に製品名「Astra」ではなく内部/デバッグビルド名「AstraDbg」が表示され、他画面のブランド表記と食い違っている",
+              "where": "トグル一覧の中央行（フォーカスリング付きのエントリ）"
+            },
+            {
+              "axis": "screen occupation",
+              "what": "再起動案内のツールチップが下の行に重なり、'ChatGPT'行の内容を一部隠している",
+              "where": "「AstraDbg」行と「ChatGPT」行の間に浮くポップオーバー"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "keep": 5,
+    "fix_candidate": 0,
+    "not_enough_evidence": 0,
+    "models": [
+      "haiku",
+      "opus",
+      "sonnet"
+    ]
+  },
+  "gate": "PASS"
+}

@@ -1,4 +1,4 @@
-# SCREENSHOT_CONVERSATION_GATE（2026-09-07）
+# SCREENSHOT_CONVERSATION_GATE（2026-09-07）— PASS、機能は完成扱い（回帰時のみ変更）
 
 「⌘⇧4 → 『これ何？』」を完成機能として Freeze するための gate。人はクリックも判定もしない
 （HUMAN_INTERVENTION = 0）。測定器は 4 本:
@@ -55,3 +55,14 @@ E2E の実行で見つけて直したもの: General Assistant は workflow を�
 同じ 2 行の形: 1 行目「スクリーンショット」+ その画像の縮小、2 行目 = 出所（「認識しました · そのまま聞けます」→「たった今」→
 初回「質問したときだけ Claude に送信」→ 以降「Claude に送信 · たった今」）。大きな説明カードや警告ダイアログは出さない。
 盲検（3 model）: KEEP。supremacy: COMPETITIVE。
+
+## 確定（本人、2026-09-07）
+
+```
+SCREENSHOT_CONVERSATION_GATE = PASS
+SCREENSHOT_EGRESS_TRUTH      = PASS
+SCREENSHOT_REAL_E2E          = PASS（nonce 3 回連続: VX-7D5253 / VX-56F662 / 他）
+HUMAN_INTERVENTION           = 0   # この gate 内
+```
+
+`full unattended verify = AUTOMATION_MISSING` は製品全体のリリース gate の問題で、この機能の未達ではない。

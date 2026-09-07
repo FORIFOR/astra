@@ -1,0 +1,224 @@
+{
+  "rc": "85b8333",
+  "mode": "self-supremacy",
+  "pages": [
+    {
+      "id": "guided-setup.target-missing",
+      "blind_id": "172D",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4,
+        "density": 4,
+        "typography": 3.67,
+        "geometry": 4,
+        "state_clarity": 3.67,
+        "calmness": 4,
+        "craft": 3,
+        "distinctiveness": 2.33
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "broken_text_line_with_placeholder_dashes"
+          ],
+          "why": "The corrupted/broken text line with dashes (ーー) is a concrete defect—not merely unclear but visibly malformed, undermining polish and trustworthiness of the interface."
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "汎用的なインディゴ/紫のプライマリボタン（ブランドというより既定のテンプレ色に見える）",
+            "同一名詞を3回繰り返す説明過多"
+          ],
+          "why": "小さな通知カードとしては構造・行間・ボタン配置とも破綻はないが、見出しと説明で主体（アプリが見つけられない／ユーザーがオンにする）がずれており、状態表示アイコンも無いので、同系の成功カードと一目で区別しにくい。一線級なら見出し1行で「何をすべきか」まで確定させる。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "エラー通知として簡潔で明快だが、この1枚だけでは他の状態カード（成功/警告）との視覚言語の一貫性しか判断できず、一線級と並べて選ばれる決め手（独自性のある処理や特別なマイクロインタラクション）までは見えない。"
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.granted",
+      "blind_id": "32C8",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4,
+        "density": 4.33,
+        "typography": 4,
+        "geometry": 3.67,
+        "state_clarity": 5,
+        "calmness": 5,
+        "craft": 4,
+        "distinctiveness": 2.67
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "Polished, minimal success dialog with clear state indication. Execution is solid, but follows a generic pattern without distinctive qualities. Suitable for shipping, but not memorable."
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "緑の縦アクセント＋チェック＋短い断定文という成功表現は静かで正しく、状態の明瞭さは一線級。ただしカード幅がメッセージ量に対して明らかに過大で右半分が空き、完了後の導線も無いため、Linear/Raycast のトーストと並べると「型に流し込んだ」印象が残る。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "成功状態の通知として無駄がなく明快。ただし他のエラーカードと見比べると×ボタンの有無が一貫していない可能性があり、一線級のシステムはこの手のマイクロコピーの一貫性まで作り込む。"
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.target-highlighted",
+      "blind_id": "49F1",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 3,
+        "density": 3.67,
+        "typography": 3.33,
+        "geometry": 3.33,
+        "state_clarity": 3.33,
+        "calmness": 4,
+        "craft": 2.67,
+        "distinctiveness": 2.67
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "uniform_list_template_repetition",
+            "all_items_follow_identical_name_toggle_pattern"
+          ],
+          "why": "Functional list with clear toggle state (blue = on). Spacing and alignment are competent, but the design follows a standard template pattern without distinction or personality. No defects, but unremarkable."
+        },
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [],
+          "why": "「該当行のトグルだけをリングで指す」という指示の作り自体は良質だが、ユーザーが探すべき名前が「AstraDbg」というデバッグ由来の表記で、他画面の「Astra」と食い違っている。ユーザーは一覧で別名を探すことになり、指示が実際に破綻しうる。絵から読み取れる具体的欠陥。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "macOS純正の権限一覧UIを模した見た目で機能はするが、説明吹き出しが行の視認性を隠す形で重なっており、Appleの純正パターン（吹き出しは要素の外側に出す）ほど洗練されていない。"
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.intro",
+      "blind_id": "7242",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4,
+        "density": 4,
+        "typography": 3.67,
+        "geometry": 4,
+        "state_clarity": 4,
+        "calmness": 4,
+        "craft": 3,
+        "distinctiveness": 2
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "grammatical_error_in_japanese_text"
+          ],
+          "why": "The Japanese text contains a grammatical error that makes the message sound unnatural and non-native. This is a localization defect that undermines trust and polish, even though the dialog structure itself is sound."
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "汎用インディゴのプライマリボタン",
+            "説明行とボタンラベルが同義で情報量が増えていない"
+          ],
+          "why": "原因→場所→操作の3段が短く整い、この系統の中で最も筋が通っている。一方で説明行がボタンの重複であり、警告状態を示す色やアイコンが一切無いため、通知の束の中で「これは止まっている状態だ」と一目で拾えない点が一線級との差。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "エラーメッセージとしては明快だが、他画像との比較で似た意味の文言が複数バリエーション存在しており、単体では欠陥と言い切れないものの一線級の言葉遣いの一貫性・唯一性には届かない。"
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.denied",
+      "blind_id": "9BD2",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4,
+        "density": 4,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 4,
+        "calmness": 4,
+        "craft": 4,
+        "distinctiveness": 3
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "BELOW_BAR",
+          "valid": false,
+          "ai_look": [
+            "truncated_or_missing_text_in_button"
+          ],
+          "why": "The button text is incomplete or cut off ('試く' instead of '試す'), which is a concrete text rendering defect. Red warning icon adds tension appropriately, but the broken CTA undermines usability and polish."
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "この5枚で唯一、失敗を示すアイコンと人力の代替経路（パンくず）を両方持ち、自動導線が壊れた時の逃げ道を用意している点は良い。ただしパンくずが指示文になっておらず装飾的に見え、警告色とボタン色が別系統で、再失敗時の出口も無い。欠陥というより一線級との差。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "パンくずでの遷移先明示は親切で、失敗時の再試行動線も明確。ただし警告色の使い分けの一貫性はこの1枚だけでは判断できず、一線級と胸を張って並べるにはこのシリーズ全体の状態設計の検証が要る。"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "supreme": 0,
+    "competitive": 5,
+    "below_bar": 0,
+    "not_enough_evidence": 0,
+    "models": [
+      "haiku",
+      "opus",
+      "sonnet"
+    ]
+  },
+  "gate": "PASS",
+  "ab_competitor": "AUTOMATION_MISSING: 競合の実 UI 画像（ASTRA_COMPETITORS_DIR）が無い。画面収録 TCC と driver が要る"
+}

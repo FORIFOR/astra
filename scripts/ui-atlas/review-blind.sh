@@ -139,7 +139,8 @@ for f in sorted(glob.glob(os.path.join(out, "judge-*.json"))):
     for i, page in (j.get("pages") or {}).items():
         i = i.upper().replace(".PNG", "")
         if i not in pages: continue
-        vt = [t for t in page.get("visible_text", []) if norm(t)]
+        # 括弧書きの説明（「(見出し左: 三角の警告アイコン)」）は読んだ文字ではなく絵の説明。照合の分母に入れない。
+        vt = [t for t in page.get("visible_text", []) if norm(t) and not t.strip().startswith(("(", "（", "[", "［"))]
         # 記号（✓ × + − !）は絵に本当に在るが OCR は読めない（✓ を「く」と読む）。見た記号を挙げた judge を無効にしない。
         SYMBOLS = {"✓", "✔", "×", "✕", "x", "+", "−", "-", "!", "！", "↑", "↓", "←", "→"}
         hit = sum(1 for t in vt if norm(t) in ocr.get(i, "") or t.strip() in SYMBOLS)

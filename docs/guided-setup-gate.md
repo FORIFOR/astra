@@ -1,4 +1,4 @@
-# GUIDED_SETUP_GATE（2026-09-07）
+# GUIDED_SETUP_GATE（2026-09-07）— UI_FROZEN = YES
 
 macOS の権限設定を、右下の Astra アバターが System Settings の対象までハイライトと吹き出しで案内する。
 座標は OS API + Accessibility API + 状態機械で決める（画像認識・座標推定・固定座標 0）。人はクリックも判定もしない。
@@ -32,3 +32,18 @@ macOS の権限設定を、右下の Astra アバターが System Settings の�
 - この Mac の TCC 一覧には dev バンドル「AstraDbg」と第三者アプリ（「2.1.260」等）が並ぶ。judge はそれを欠陥と読む。
   合成 3 面を盲検から外し、幾何 gate と切り出し面（target-highlighted）で Astra の画素だけを見る。専用のテストアカウント
   （`scripts/reality/run-unattended-verify.sh`、AUTOMATION_MISSING）でまっさらな一覧を撮るのが本当の直し方。
+
+## 最終（RC 85b8333）
+
+本人の設計判断で独立したアバターの丸を外し、署名はカード内の小さな mark に降格（System Settings = 主役、対象行 = 操作対象、
+callout = ガイド、署名 = CTA より弱い階層）。差分 8 面だけ撮り直して再監査した:
+
+| 判定                                            | 結果                                       |
+| ----------------------------------------------- | ------------------------------------------ |
+| VISUAL_IDEAL_GATE（blind、Astra が描いた 5 面） | PASS — KEEP 5 / FIX_CANDIDATE 0 / NEE 0    |
+| VISUAL_SUPREMACY(blind)                         | PASS — BELOW_BAR 0 / NEE 0 / COMPETITIVE 5 |
+| GUIDED_SETUP_GEOMETRY                           | PASS                                       |
+| focus theft / extra window                      | 0                                          |
+| UI_ATLAS_GATE（72/72）/ PIXEL_REGRESSION        | PASS / PASS                                |
+
+**VISUAL_SUPREMACY_FINAL = PASS、UI_FROZEN = YES。** 以後 Guided Setup と Screenshot Context の UI は回帰が出たときだけ触る。
