@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   googleScopesFor,
+  microsoftScopesFor,
   permissionsFromGoogleScopes,
+  permissionsFromMicrosoftScopes,
   withheldPermissions,
 } from '../src/scopes.js';
 
@@ -63,5 +65,37 @@ describe('scope translation', () => {
   it('treats an empty grant as no permission at all', () => {
     expect(permissionsFromGoogleScopes('')).toEqual([]);
     expect(withheldPermissions(['email.read'], '')).toEqual(['email.read']);
+  });
+});
+
+describe('Microsoft scope translation', () => {
+  it('asks for read-only Graph scopes plus offline_access, nothing more', () => {
+    expect(microsoftScopesFor(['email.read', 'calendar.read', 'tasks.read'])).toEqual([
+      'Calendars.Read',
+      'Mail.Read',
+      'Tasks.Read',
+      'offline_access',
+    ]);
+  });
+
+  it('asks for nothing when nothing maps (and then no offline_access either)', () => {
+    expect(microsoftScopesFor(['microphone.capture'])).toEqual([]);
+  });
+
+  it('collapses read into read-write when both are asked', () => {
+    expect(microsoftScopesFor(['email.read', 'email.modify'])).toEqual([
+      'Mail.ReadWrite',
+      'offline_access',
+    ]);
+  });
+
+  it('reads what was granted and does not read Mail.Read as permission to send', () => {
+    const allowed = permissionsFromMicrosoftScopes('Mail.Read Calendars.Read offline_access');
+    expect(allowed).toEqual(['calendar.read', 'email.read']);
+    expect(permissionsFromMicrosoftScopes('Mail.ReadWrite')).toEqual([
+      'email.modify',
+      'email.read',
+    ]);
+    expect(permissionsFromMicrosoftScopes('Mail.ReadWrite')).not.toContain('email.send');
   });
 });

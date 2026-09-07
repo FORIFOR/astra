@@ -468,3 +468,42 @@ describe('rule-based semantic stand-in', () => {
     ).toBe('info');
   });
 });
+
+describe('emails that arrive without a meaning', () => {
+  it('are classified by the rule stand-in so they still show up as owed', () => {
+    // 端末に LLM が無い人のメール。semantic は null で届く。
+    const ctx = buildWorkContext({
+      artifacts: [
+        art({
+          id: 'gmail:no-llm',
+          title: 'MOPITA 見積の確認をお願いします',
+          body_excerpt: '9/9 までにご確認いただけますか',
+          people: [{ name: '田中', email: 'tanaka@example.com', role: 'from' }],
+          thread_id: 'gmail:t-no-llm',
+        }),
+      ],
+      corrections: [],
+      now: NOW,
+      inferenceEnabled: true,
+    });
+    expect(ctx.owed.map((o) => o.to)).toEqual(['田中']);
+    expect(ctx.owed[0]!.sources[0]!.external_id).toBe('gmail:no-llm');
+  });
+
+  it('never overrides what the device LLM already decided', () => {
+    const ctx = buildWorkContext({
+      artifacts: [
+        art({
+          id: 'gmail:llm',
+          title: '見積の確認をお願いします',
+          people: [{ name: '田中', email: null, role: 'from' }],
+          semantic: sem({ category: 'info', extracted_by: 'llm', confidence: 0.9 }),
+        }),
+      ],
+      corrections: [],
+      now: NOW,
+      inferenceEnabled: true,
+    });
+    expect(ctx.owed).toEqual([]);
+  });
+});

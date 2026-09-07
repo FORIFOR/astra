@@ -13,6 +13,9 @@ import {
   CONNECTOR_RECOVERY,
   GmailConnector,
   GoogleCalendarConnector,
+  MicrosoftTodoConnector,
+  OutlookCalendarConnector,
+  OutlookMailConnector,
   type ApprovalProof,
   type CreateEventInput,
   type DraftMessage,
@@ -51,8 +54,33 @@ export interface ConnectorRuntimeDeps {
   readonly now?: () => Date;
 }
 
-const GMAIL_PLUGIN = 'com.astra.gmail';
-const CALENDAR_PLUGIN = 'com.astra.google-calendar';
+/**
+ * この端末が扱う connector plugin。**tool の接頭辞 → plugin の表。**
+ *
+ * 接頭辞を `handles` に書き並べていた間、plugin を足すたびに
+ * 2 箇所（handles と dispatch）を直す必要があり、片方を忘れると
+ * 「引き受けるのに走らせない」step ができた。表にして 1 箇所にする。
+ */
+export const CONNECTOR_PLUGINS = {
+  'mail.': { pluginId: 'com.astra.gmail', connectorId: 'gmail', provider: 'google' },
+  'calendar.': {
+    pluginId: 'com.astra.google-calendar',
+    connectorId: 'google-calendar',
+    provider: 'google',
+  },
+  'outlook.': { pluginId: 'com.astra.outlook', connectorId: 'outlook', provider: 'microsoft' },
+  'todo.': {
+    pluginId: 'com.astra.microsoft-todo',
+    connectorId: 'microsoft-todo',
+    provider: 'microsoft',
+  },
+} as const;
+export type ConnectorPrefix = keyof typeof CONNECTOR_PLUGINS;
+
+const GMAIL_PLUGIN = CONNECTOR_PLUGINS['mail.'].pluginId;
+const CALENDAR_PLUGIN = CONNECTOR_PLUGINS['calendar.'].pluginId;
+const OUTLOOK_PLUGIN = CONNECTOR_PLUGINS['outlook.'].pluginId;
+const TODO_PLUGIN = CONNECTOR_PLUGINS['todo.'].pluginId;
 
 export class ConnectorRuntime {
   readonly #deps: ConnectorRuntimeDeps;
@@ -65,7 +93,22 @@ export class ConnectorRuntime {
 
   /** この端末はこの step を扱えるか。**扱えないものを引き受けない。** */
   handles(toolId: string): boolean {
-    return toolId.startsWith('mail.') || toolId.startsWith('calendar.');
+    return Object.keys(CONNECTOR_PLUGINS).some((prefix) => toolId.startsWith(prefix));
+  }
+
+  /**
+   * この plugin のトークンが端末にあるか。**値は返さない。**
+   * Work Context の同期が、繋いでいないサービスを黙って飛ばすために見る。
+   */
+  async connected(prefix: ConnectorPrefix): Promise<boolean> {
+    const { pluginId, connectorId } = CONNECTOR_PLUGINS[prefix];
+    const tokens = await this.#tokens.load(this.#deps.credentialRefFor(pluginId, connectorId));
+    return tokens !== null;
+  }
+
+  /** この plugin に実際に許された Astra の許可。 */
+  granted(prefix: ConnectorPrefix): readonly string[] {
+    return this.#deps.grantedScopes(CONNECTOR_PLUGINS[prefix].pluginId);
   }
 
   /**
@@ -112,7 +155,7 @@ export class ConnectorRuntime {
 
     switch (step.toolId) {
       case 'mail.search':
-        return (await this.#gmail()).list(
+        return this.gmail().list(
           {
             ...(typeof args['query'] === 'string' ? { query: args['query'] } : {}),
             ...(typeof args['max_results'] === 'number' ? { maxResults: args['max_results'] } : {}),
@@ -120,19 +163,19 @@ export class ConnectorRuntime {
           signal,
         );
       case 'mail.read':
-        return (await this.#gmail()).get(requireString(args, 'message_id'), signal);
+        return this.gmail().get(requireString(args, 'message_id'), signal);
       case 'mail.draft.create':
-        return (await this.#gmail()).draft(draftFrom(args), signal);
+        return this.gmail().draft(draftFrom(args), signal);
       case 'mail.send':
-        return (await this.#gmail()).send(draftFrom(args), step.approval ?? undefined, signal);
+        return this.gmail().send(draftFrom(args), step.approval ?? undefined, signal);
       case 'mail.trash':
-        return (await this.#gmail()).trash(
+        return this.gmail().trash(
           requireString(args, 'message_id'),
           step.approval ?? undefined,
           signal,
         );
       case 'calendar.list_events':
-        return (await this.#calendar()).list(
+        return this.googleCalendar().list(
           {
             timeMin: requireString(args, 'time_min'),
             timeMax: requireString(args, 'time_max'),
@@ -141,16 +184,38 @@ export class ConnectorRuntime {
           signal,
         );
       case 'calendar.get_event':
-        return (await this.#calendar()).get({ eventId: requireString(args, 'event_id') }, signal);
+        return this.googleCalendar().get({ eventId: requireString(args, 'event_id') }, signal);
       case 'calendar.create_event':
-        return (await this.#calendar()).create(eventFrom(args), step.approval ?? undefined, signal);
+        return this.googleCalendar().create(eventFrom(args), step.approval ?? undefined, signal);
+      case 'outlook.mail.search':
+        return this.outlookMail().list(
+          {
+            ...(typeof args['query'] === 'string' ? { query: args['query'] } : {}),
+            ...(typeof args['max_results'] === 'number' ? { maxResults: args['max_results'] } : {}),
+            ...(args['folder'] === 'sentitems' ? { folder: 'sentitems' as const } : {}),
+            ...(typeof args['since'] === 'string' ? { since: args['since'] } : {}),
+          },
+          signal,
+        );
+      case 'outlook.mail.read':
+        return this.outlookMail().get(requireString(args, 'message_id'), signal);
+      case 'outlook.calendar.list_events':
+        return this.outlookCalendar().list(
+          { timeMin: requireString(args, 'time_min'), timeMax: requireString(args, 'time_max') },
+          signal,
+        );
+      case 'todo.list_tasks':
+        return this.todo().list(
+          { ...(args['include_completed'] === true ? { includeCompleted: true } : {}) },
+          signal,
+        );
       default:
         // 知らない step を、何もせず成功にしない
         throw new ConnectorError('not_found', `this device does not handle ${step.toolId}`);
     }
   }
 
-  async #gmail(): Promise<GmailConnector> {
+  gmail(): GmailConnector {
     return new GmailConnector({
       token: () => this.#accessToken(GMAIL_PLUGIN, 'gmail', 'google'),
       grantedScopes: this.#deps.grantedScopes(GMAIL_PLUGIN),
@@ -159,13 +224,37 @@ export class ConnectorRuntime {
     });
   }
 
-  async #calendar(): Promise<GoogleCalendarConnector> {
+  googleCalendar(): GoogleCalendarConnector {
     return new GoogleCalendarConnector({
       token: () => this.#accessToken(CALENDAR_PLUGIN, 'google-calendar', 'google'),
       grantedScopes: this.#deps.grantedScopes(CALENDAR_PLUGIN),
       ...(this.#deps.fetch ? { fetch: this.#deps.fetch } : {}),
       ...(this.#deps.now ? { now: this.#deps.now } : {}),
     });
+  }
+
+  outlookMail(): OutlookMailConnector {
+    return new OutlookMailConnector(this.#microsoftDeps(OUTLOOK_PLUGIN, 'outlook'));
+  }
+
+  outlookCalendar(): OutlookCalendarConnector {
+    return new OutlookCalendarConnector(this.#microsoftDeps(OUTLOOK_PLUGIN, 'outlook'));
+  }
+
+  todo(): MicrosoftTodoConnector {
+    return new MicrosoftTodoConnector(this.#microsoftDeps(TODO_PLUGIN, 'microsoft-todo'));
+  }
+
+  #microsoftDeps(
+    pluginId: string,
+    connectorId: string,
+  ): ConstructorParameters<typeof OutlookMailConnector>[0] {
+    return {
+      token: () => this.#accessToken(pluginId, connectorId, 'microsoft'),
+      grantedScopes: this.#deps.grantedScopes(pluginId),
+      ...(this.#deps.fetch ? { fetch: this.#deps.fetch } : {}),
+      ...(this.#deps.now ? { now: this.#deps.now } : {}),
+    };
   }
 
   /**

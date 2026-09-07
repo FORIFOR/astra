@@ -16,6 +16,7 @@ import { httpStepTransport } from './step-transport.js';
 import { ClaudeCodeCli } from './claude-code.js';
 import { LlmRuntime } from './llm-steps.js';
 import { CompositeRunner } from './runner.js';
+import { DEFAULT_SYNC_INTERVAL_MS, WorkSyncLoop } from './work-sync.js';
 
 async function main(): Promise<void> {
   const logger = createLogger({
@@ -121,8 +122,38 @@ async function main(): Promise<void> {
   });
   void steps.start(id);
 
+  /*
+   * Work Context の同期。正本 §6、Work Context 仕様。
+   *
+   * 繋いであるサービスだけを読み、**抜粋にして**cloud へ渡す。
+   * 意味づけは端末の LLM。`ASTRA_WORK_SYNC=off` で止められる。
+   */
+  const workSync = new WorkSyncLoop({
+    connectors: runtime,
+    llm,
+    push: async (batch) => {
+      const response = await fetch(`${baseUrl}/v1/work/artifacts`, {
+        method: 'POST',
+        headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+        body: JSON.stringify(batch),
+      });
+      if (!response.ok) {
+        throw new Error(`POST /v1/work/artifacts failed with ${String(response.status)}`);
+      }
+    },
+    onError: (source, error) =>
+      logger.warn({ source, err: error.message }, 'work context sync failed for a source'),
+  });
+  if (process.env['ASTRA_WORK_SYNC'] !== 'off') {
+    const minutes = Number(process.env['ASTRA_WORK_SYNC_INTERVAL_MIN']);
+    workSync.start(
+      Number.isFinite(minutes) && minutes > 0 ? minutes * 60_000 : DEFAULT_SYNC_INTERVAL_MS,
+    );
+  }
+
   const shutdown = (signal: string): void => {
     logger.info({ signal }, 'shutting down the local agent host');
+    workSync.stop();
     void host.stop().finally(() => process.exit(0));
   };
   process.on('SIGINT', () => shutdown('SIGINT'));

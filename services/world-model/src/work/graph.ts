@@ -19,6 +19,7 @@ import {
   type WorkSource,
 } from '@astra/contracts';
 import { pressure, type PressureInput } from './pressure.js';
+import { ruleSemantic } from './semantic.js';
 
 const HOUR_MS = 3_600_000;
 const DAY_MS = 86_400_000;
@@ -366,9 +367,18 @@ export function buildWorkContext(input: BuildInput): WorkContext {
   const dismissed = new Set(
     input.corrections.filter((c) => c.action !== 'wrong_project').map((c) => c.item_id),
   );
-  const active = byTime(input.artifacts).filter(
-    (a) => !dismissed.has(a.id) && a.completed !== true,
-  );
+  /*
+   * 意味が付いていないメールは規則で補う（代役）。**端末の LLM が付けたものは上書きしない。**
+   * 補わないと、分類の無いメールは「返すもの」にも「待っていること」にも決して現れず、
+   * 端末に言語モデルが無い人には Work Context が空のままになる。
+   */
+  const active = byTime(input.artifacts)
+    .filter((a) => !dismissed.has(a.id) && a.completed !== true)
+    .map((a) =>
+      a.semantic === null && (a.kind === 'email' || a.kind === 'message')
+        ? { ...a, semantic: ruleSemantic(a, now) }
+        : a,
+    );
   const clusters = clusterProjects(active);
   const clusterByArtifact = new Map<string, ProjectCluster>();
   for (const c of clusters) for (const a of c.artifacts) clusterByArtifact.set(a.id, c);

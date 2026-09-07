@@ -280,3 +280,23 @@ describe('answering about a screenshot that stayed on this device', () => {
     expect(seen[0]!.prompt).toContain('見当たりませんでした');
   });
 });
+
+describe('classifying a mail on the device', () => {
+  it('sends only subject and excerpt, forbids invented deadlines, and allows no tools', () => {
+    const args = {
+      direction: 'inbound',
+      from: '田中',
+      to: ['me'],
+      subject: '見積の確認',
+      excerpt: '来週水曜までに',
+      occurred_at: '2026-09-07T01:00:00.000Z',
+    };
+    const prompt = promptFor('llm.classify_email', args);
+    expect(prompt).toContain('件名: 見積の確認');
+    expect(prompt).toContain('抜粋: 来週水曜までに');
+    expect(prompt).toContain('自分宛のメール');
+    expect(prompt).toContain('作らないでください');
+    expect(prompt).toContain('request_to_me');
+    expect(toolsFor('llm.classify_email', args)).toEqual([]);
+  });
+});

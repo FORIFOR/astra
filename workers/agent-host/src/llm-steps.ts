@@ -27,6 +27,7 @@ export const LLM_TOOLS = [
   'llm.answer',
   'llm.compose',
   'llm.summarize_meeting',
+  'llm.classify_email',
   'search.web',
 ] as const;
 
@@ -44,6 +45,7 @@ const TOOLS_FOR: Readonly<Record<LlmTool, readonly string[]>> = {
   'llm.answer': [],
   'llm.compose': [],
   'llm.summarize_meeting': [],
+  'llm.classify_email': [],
   'search.web': ['WebSearch'],
 };
 export type LlmTool = (typeof LLM_TOOLS)[number];
@@ -161,6 +163,31 @@ export function promptFor(
         '',
         '記録:',
         ...meetingLines(args['segments']),
+      ].join('\n');
+
+    case 'llm.classify_email':
+      return [
+        '次のメールを分類してください。手元にあるのは件名と冒頭の抜粋だけで、本文はありません。',
+        'category は次のどれか 1 つ: info（知らせ）, question（問い）, request_to_me（自分への依頼）, request_to_other（自分から相手への依頼）, approval_pending（承認待ち）, scheduling（日程調整）, other。',
+        'request は、何を求められている / 求めているかを 1 文で。無ければ null。',
+        'owner は対応するべき人。自分なら "me"。waiting_on は返事を待っている相手の名前。分からなければ null。',
+        /*
+         * **抜粋に無い期限を作らせない。**「急ぎ」の根拠が無いのに due が付くと、
+         * 決定的な式（Work Pressure）がそれを本物の期限として重く見る。
+         */
+        'due は抜粋に書かれている期限だけを ISO 8601（例 2026-09-08T18:00:00+09:00）で。書かれていなければ null。作らないでください。',
+        'project は件名や抜粋に現れる案件名・製品名・顧客名。無ければ null。',
+        'confidence は 0 から 1。',
+        json(
+          '{"category": "request_to_me", "request": "…", "owner": "me", "waiting_on": null, "due": null, "project": null, "confidence": 0.8}',
+        ),
+        '',
+        `向き: ${args['direction'] === 'outbound' ? '自分が出したメール' : '自分宛のメール'}`,
+        `差出人: ${String(args['from'] ?? '不明')}`,
+        `宛先: ${Array.isArray(args['to']) ? (args['to'] as unknown[]).map(String).join('、') : ''}`,
+        `日時: ${String(args['occurred_at'] ?? '')}`,
+        `件名: ${String(args['subject'] ?? '')}`,
+        `抜粋: ${String(args['excerpt'] ?? '')}`,
       ].join('\n');
 
     case 'search.web':

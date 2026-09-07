@@ -103,7 +103,52 @@ describe('running a connector step on the device', () => {
     const { runtime: r } = runtime(memoryStore(connected()));
     expect(r.handles('mail.send')).toBe(true);
     expect(r.handles('calendar.create_event')).toBe(true);
+    expect(r.handles('outlook.mail.search')).toBe(true);
+    expect(r.handles('todo.list_tasks')).toBe(true);
     expect(r.handles('crm.write')).toBe(false);
+  });
+
+  it('says which connectors have tokens on this device, without revealing them', async () => {
+    const { runtime: r } = runtime(memoryStore(connected()));
+    expect(await r.connected('mail.')).toBe(true);
+    expect(await r.connected('outlook.')).toBe(false);
+    expect(await r.connected('todo.')).toBe(false);
+  });
+
+  it('reads Outlook only with email.read, and never sends anywhere but Graph', async () => {
+    const store = memoryStore({
+      'com.astra.outlook/outlook': JSON.stringify({
+        accessToken: 'ms-access',
+        refreshToken: 'r',
+        scopes: [],
+        expiresAt: '2099-01-01T00:00:00.000Z',
+      }),
+    });
+    const sent: Sent[] = [];
+    const fetch = (async (url: string, init: RequestInit) => {
+      const headers = init.headers as Record<string, string>;
+      sent.push({ url, authorization: headers?.['authorization'], body: undefined });
+      return new Response(JSON.stringify({ value: [] }), { status: 200 });
+    }) as unknown as typeof globalThis.fetch;
+    const granted: Record<string, string[]> = { 'com.astra.outlook': ['calendar.read'] };
+    const r = new ConnectorRuntime({
+      secrets: store,
+      credentialRefFor: (pluginId, connectorId) => `keychain:${pluginId}/${connectorId}`,
+      grantedScopes: (pluginId) => granted[pluginId] ?? [],
+      fetch,
+      now: () => new Date('2026-08-27T00:00:00.000Z'),
+    });
+
+    const refused = await r.run(step({ toolId: 'outlook.mail.search', args: {} }));
+    expect(refused.ok).toBe(false);
+    expect(refused.error!.code).toBe('connector.insufficient_scope');
+    expect(sent).toEqual([]);
+
+    granted['com.astra.outlook'] = ['email.read', 'calendar.read'];
+    const ok = await r.run(step({ toolId: 'outlook.mail.search', args: { max_results: 5 } }));
+    expect(ok.ok).toBe(true);
+    expect(sent[0]!.url).toContain('https://graph.microsoft.com/v1.0/me/mailFolders/inbox/');
+    expect(sent[0]!.authorization).toBe('Bearer ms-access');
   });
 
   it('will not send without the approval that the cloud granted', async () => {

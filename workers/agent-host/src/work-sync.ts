@@ -1,0 +1,362 @@
+/**
+ * Work Context の同期。端末 → cloud。Work Context 仕様 §同期、正本 §6・§21。
+ *
+ * 繋いであるサービスから生データを取り、正規化して（抜粋だけ）、cloud へ渡す。
+ *
+ * **ここが、メールの本文が存在しうる唯一の場所。**そして本文は取りに行かない —
+ * 一覧（件名・差出人・冒頭の抜粋）で足りる。cloud にも LLM にも、
+ * 受信箱をまるごと渡す経路は無い（`WorkArtifact.body_excerpt` は 500 字まで）。
+ *
+ * 意味づけ（依頼か・誰を待っているか・期限）は端末の LLM に頼む。
+ * 無ければ付けずに送り、cloud 側が規則で補う（代役は賢くしない）。
+ */
+import {
+  WorkSemantic,
+  type WorkArtifact,
+  type WorkArtifactBatch,
+  type WorkSource,
+} from '@astra/contracts';
+import {
+  fromGmail,
+  fromGoogleCalendar,
+  fromOutlookCalendar,
+  fromOutlookMail,
+  fromTodo,
+  type NormalizeContext,
+} from '@astra/service-connectors';
+import type { ConnectorRuntime } from './connector-steps.js';
+import type { StepRunner } from './step-loop.js';
+
+/** 1 回の同期で、1 つの source がどうなったか。 */
+export interface SourceOutcome {
+  readonly source: WorkSource;
+  readonly status: 'synced' | 'not_connected' | 'not_granted' | 'failed';
+  readonly artifacts: number;
+  /** LLM が意味を付けた件数。 */
+  readonly classified: number;
+  readonly error?: string;
+}
+
+export interface WorkSyncReport {
+  readonly at: string;
+  readonly outcomes: readonly SourceOutcome[];
+}
+
+export interface WorkSyncDeps {
+  readonly connectors: ConnectorRuntime;
+  /** cloud へ渡す（`POST /v1/work/artifacts`）。 */
+  readonly push: (batch: WorkArtifactBatch) => Promise<void>;
+  /** 端末の LLM。無ければ意味を付けない。 */
+  readonly llm?: StepRunner;
+  readonly now?: () => Date;
+  /** 何日前まで遡るか（メール）。 */
+  readonly lookbackDays?: number;
+  /** 何日先まで見るか（予定）。 */
+  readonly lookaheadDays?: number;
+  /** 1 回の同期で LLM に頼む上限。 */
+  readonly maxClassifications?: number;
+  readonly onError?: (source: WorkSource, error: Error) => void;
+}
+
+export const DEFAULT_LOOKBACK_DAYS = 14;
+export const DEFAULT_LOOKAHEAD_DAYS = 14;
+export const DEFAULT_MAX_CLASSIFICATIONS = 30;
+export const DEFAULT_SYNC_INTERVAL_MS = 15 * 60_000;
+
+const DAY_MS = 86_400_000;
+
+export class WorkSyncLoop {
+  readonly #deps: WorkSyncDeps;
+  /** source ごとの続き（メールは最後に見た時刻）。process が生きている間だけ。 */
+  readonly #cursors = new Map<WorkSource, string>();
+  /** 既に LLM に頼んだ artifact。同じメールを毎回聞き直さない。 */
+  readonly #classified = new Map<string, WorkSemantic | null>();
+  #timer: ReturnType<typeof setTimeout> | null = null;
+  #stopping = false;
+  #inFlight: Promise<WorkSyncReport> | null = null;
+
+  constructor(deps: WorkSyncDeps) {
+    this.#deps = deps;
+  }
+
+  get cursors(): ReadonlyMap<WorkSource, string> {
+    return this.#cursors;
+  }
+
+  /** 1 回だけ回す。source ごとに独立で、1 つ落ちても他は進む。 */
+  async syncOnce(): Promise<WorkSyncReport> {
+    if (this.#inFlight) return this.#inFlight;
+    this.#inFlight = this.#run().finally(() => {
+      this.#inFlight = null;
+    });
+    return this.#inFlight;
+  }
+
+  async #run(): Promise<WorkSyncReport> {
+    const now = (this.#deps.now ?? (() => new Date()))();
+    const ctx: NormalizeContext = { observedAt: now.toISOString() };
+    const outcomes: SourceOutcome[] = [];
+    outcomes.push(await this.#source('gmail', 'mail.', 'email.read', () => this.#gmail(now, ctx)));
+    outcomes.push(
+      await this.#source('google_calendar', 'calendar.', 'calendar.read', () =>
+        this.#googleCalendar(now, ctx),
+      ),
+    );
+    outcomes.push(
+      await this.#source('outlook_mail', 'outlook.', 'email.read', () =>
+        this.#outlookMail(now, ctx),
+      ),
+    );
+    outcomes.push(
+      await this.#source('outlook_calendar', 'outlook.', 'calendar.read', () =>
+        this.#outlookCalendar(now, ctx),
+      ),
+    );
+    outcomes.push(
+      await this.#source('microsoft_todo', 'todo.', 'tasks.read', () => this.#todo(ctx)),
+    );
+    return { at: ctx.observedAt, outcomes };
+  }
+
+  async #source(
+    source: WorkSource,
+    prefix: Parameters<ConnectorRuntime['connected']>[0],
+    permission: string,
+    fetch: () => Promise<{ artifacts: WorkArtifact[]; cursor: string | null }>,
+  ): Promise<SourceOutcome> {
+    try {
+      // 繋いでいないものは黙って飛ばす。繋いでいないことは失敗ではない。
+      if (!(await this.#deps.connectors.connected(prefix))) {
+        return { source, status: 'not_connected', artifacts: 0, classified: 0 };
+      }
+      // 繋いであっても、読む許可が外されていれば読まない。
+      if (!this.#deps.connectors.granted(prefix).includes(permission)) {
+        return { source, status: 'not_granted', artifacts: 0, classified: 0 };
+      }
+      const { artifacts, cursor } = await fetch();
+      const { items, classified } = await this.#classify(artifacts);
+      // 500 件ずつ（契約の上限）。0 件でも 1 回送る — 同期した事実は残す。
+      const chunks = items.length === 0 ? [[]] : chunk(items, 500);
+      for (const artifacts of chunks) await this.#deps.push({ source, cursor, artifacts });
+      if (cursor) this.#cursors.set(source, cursor);
+      return { source, status: 'synced', artifacts: items.length, classified };
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      this.#deps.onError?.(source, err);
+      return { source, status: 'failed', artifacts: 0, classified: 0, error: err.message };
+    }
+  }
+
+  // ------------------------------------------------------------ sources
+
+  #since(source: WorkSource, now: Date): Date {
+    const cursor = this.#cursors.get(source);
+    const fallback = new Date(
+      now.getTime() - (this.#deps.lookbackDays ?? DEFAULT_LOOKBACK_DAYS) * DAY_MS,
+    );
+    if (!cursor) return fallback;
+    const parsed = Date.parse(cursor);
+    return Number.isFinite(parsed) ? new Date(parsed) : fallback;
+  }
+
+  #window(now: Date): { timeMin: string; timeMax: string } {
+    return {
+      timeMin: new Date(now.getTime() - 7 * DAY_MS).toISOString(),
+      timeMax: new Date(
+        now.getTime() + (this.#deps.lookaheadDays ?? DEFAULT_LOOKAHEAD_DAYS) * DAY_MS,
+      ).toISOString(),
+    };
+  }
+
+  async #gmail(
+    now: Date,
+    ctx: NormalizeContext,
+  ): Promise<{ artifacts: WorkArtifact[]; cursor: string | null }> {
+    const gmail = this.#deps.connectors.gmail();
+    const since = this.#since('gmail', now);
+    // Gmail の `after:` は秒。1 秒引いて、境界の 1 通を落とさない。
+    const query = `after:${String(Math.max(0, Math.floor(since.getTime() / 1000) - 1))}`;
+    const [inbox, sent] = await Promise.all([
+      gmail.list({ query, labelIds: ['INBOX'], maxResults: 50 }),
+      gmail.list({ query, labelIds: ['SENT'], maxResults: 50 }),
+    ]);
+    const artifacts = [
+      ...inbox.map((m) => fromGmail(m, 'inbound', ctx)),
+      ...sent.map((m) => fromGmail(m, 'outbound', ctx)),
+    ].filter((a): a is WorkArtifact => a !== null);
+    return { artifacts, cursor: latest(artifacts, since) };
+  }
+
+  async #googleCalendar(
+    now: Date,
+    ctx: NormalizeContext,
+  ): Promise<{ artifacts: WorkArtifact[]; cursor: string | null }> {
+    const events = await this.#deps.connectors.googleCalendar().list(this.#window(now));
+    return {
+      artifacts: events
+        .map((e) => fromGoogleCalendar(e, ctx))
+        .filter((a): a is WorkArtifact => a !== null),
+      cursor: null,
+    };
+  }
+
+  async #outlookMail(
+    now: Date,
+    ctx: NormalizeContext,
+  ): Promise<{ artifacts: WorkArtifact[]; cursor: string | null }> {
+    const outlook = this.#deps.connectors.outlookMail();
+    const since = this.#since('outlook_mail', now).toISOString();
+    const [inbox, sent] = await Promise.all([
+      outlook.list({ folder: 'inbox', since, maxResults: 50 }),
+      outlook.list({ folder: 'sentitems', since, maxResults: 50 }),
+    ]);
+    const artifacts = [...inbox, ...sent]
+      .map((m) => fromOutlookMail(m, ctx))
+      .filter((a): a is WorkArtifact => a !== null);
+    return { artifacts, cursor: latest(artifacts, new Date(since)) };
+  }
+
+  async #outlookCalendar(
+    now: Date,
+    ctx: NormalizeContext,
+  ): Promise<{ artifacts: WorkArtifact[]; cursor: string | null }> {
+    const events = await this.#deps.connectors.outlookCalendar().list(this.#window(now));
+    return {
+      artifacts: events
+        .map((e) => fromOutlookCalendar(e, ctx))
+        .filter((a): a is WorkArtifact => a !== null),
+      cursor: null,
+    };
+  }
+
+  async #todo(
+    ctx: NormalizeContext,
+  ): Promise<{ artifacts: WorkArtifact[]; cursor: string | null }> {
+    const tasks = await this.#deps.connectors.todo().list();
+    return {
+      artifacts: tasks.map((t) => fromTodo(t, ctx)).filter((a): a is WorkArtifact => a !== null),
+      cursor: null,
+    };
+  }
+
+  // ------------------------------------------------------------ semantic
+
+  /**
+   * メールに意味を付ける（端末の LLM）。
+   *
+   * **渡すのは件名と抜粋だけ。**本文は手元にも無い。
+   * 読めない返事は捨てて null のまま送る（cloud 側の規則が補う）。
+   * LLM が無い・落ちたときも同じ — **止めない、作らない。**
+   */
+  async #classify(
+    artifacts: readonly WorkArtifact[],
+  ): Promise<{ items: WorkArtifact[]; classified: number }> {
+    const llm = this.#deps.llm;
+    const limit = this.#deps.maxClassifications ?? DEFAULT_MAX_CLASSIFICATIONS;
+    if (!llm || !llm.handles(CLASSIFY_TOOL)) return { items: [...artifacts], classified: 0 };
+
+    let asked = 0;
+    let classified = 0;
+    const items: WorkArtifact[] = [];
+    for (const art of artifacts) {
+      if (art.kind !== 'email' || art.semantic !== null) {
+        items.push(art);
+        continue;
+      }
+      let semantic = this.#classified.get(art.id);
+      if (semantic === undefined) {
+        if (asked >= limit) {
+          items.push(art);
+          continue;
+        }
+        asked += 1;
+        semantic = await this.#ask(llm, art);
+        this.#classified.set(art.id, semantic);
+      }
+      if (semantic) classified += 1;
+      items.push(semantic ? { ...art, semantic } : art);
+    }
+    return { items, classified };
+  }
+
+  async #ask(llm: StepRunner, art: WorkArtifact): Promise<WorkSemantic | null> {
+    const from = art.people.find((p) => p.role === 'from');
+    const to = art.people.filter((p) => p.role === 'to').map((p) => p.name);
+    const outcome = await llm.run({
+      id: `classify:${art.id}`,
+      toolId: CLASSIFY_TOOL,
+      args: {
+        direction: art.direction,
+        from: from?.name ?? null,
+        to,
+        subject: art.title,
+        excerpt: art.body_excerpt ?? '',
+        occurred_at: art.occurred_at,
+      },
+      approval: null,
+    });
+    if (!outcome.ok) return null;
+    return semanticFrom(outcome.result);
+  }
+
+  // ---------------------------------------------------------------- loop
+
+  /** 間隔で回し続ける。最初の 1 回はすぐ。 */
+  start(intervalMs: number = DEFAULT_SYNC_INTERVAL_MS): void {
+    if (this.#timer) return;
+    this.#stopping = false;
+    const tick = (): void => {
+      if (this.#stopping) return;
+      void this.syncOnce().finally(() => {
+        if (this.#stopping) return;
+        this.#timer = setTimeout(tick, intervalMs);
+        this.#timer.unref?.();
+      });
+    };
+    tick();
+  }
+
+  stop(): void {
+    this.#stopping = true;
+    if (this.#timer) clearTimeout(this.#timer);
+    this.#timer = null;
+  }
+}
+
+export const CLASSIFY_TOOL = 'llm.classify_email';
+
+/**
+ * LLM の返事を `WorkSemantic` にする。**形が合わなければ null。**
+ * 半分だけ合っている返事を無理に使うと、根拠の無い「依頼」が台帳に載る。
+ */
+export function semanticFrom(value: unknown): WorkSemantic | null {
+  if (!value || typeof value !== 'object') return null;
+  const raw = value as Record<string, unknown>;
+  const parsed = WorkSemantic.safeParse({
+    category: raw['category'],
+    project: raw['project'] ?? null,
+    request: raw['request'] ?? null,
+    owner: raw['owner'] ?? null,
+    waiting_on: raw['waiting_on'] ?? null,
+    due: raw['due'] ?? null,
+    confidence: typeof raw['confidence'] === 'number' ? raw['confidence'] : 0.5,
+    extracted_by: 'llm',
+  });
+  return parsed.success ? parsed.data : null;
+}
+
+function chunk<T>(items: readonly T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size));
+  return out;
+}
+
+/** 一番新しい occurred_at。何も無ければ元の since を続きにする。 */
+function latest(artifacts: readonly WorkArtifact[], since: Date): string {
+  let max = since.getTime();
+  for (const a of artifacts) {
+    const t = Date.parse(a.occurred_at);
+    if (Number.isFinite(t) && t > max) max = t;
+  }
+  return new Date(max).toISOString();
+}

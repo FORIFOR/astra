@@ -1,0 +1,355 @@
+/**
+ * Work Context の同期（端末 → cloud）。Work Context 仕様、正本 §6・§21。
+ *
+ * 見るのは:
+ *   - 繋いでいないサービスは触らない（網にも出ない）
+ *   - 読む許可が無ければ読まない
+ *   - 本文を取りに行かない（Gmail `format=full` / Graph `body` を要求しない）
+ *   - 送るのは正規化した抜粋だけ。cursor が進む
+ *   - 端末の LLM が付けた意味は乗る。読めない返事は乗せない。無くても止まらない
+ *   - 1 つの source が落ちても他は進む
+ */
+import { describe, expect, it } from 'vitest';
+import type { WorkArtifactBatch } from '@astra/contracts';
+import type { SecretStore } from '@astra/oauth';
+import { ConnectorRuntime, type HostStep, type StepOutcome } from '../src/connector-steps.js';
+import { WorkSyncLoop, semanticFrom } from '../src/work-sync.js';
+
+const NOW = new Date('2026-09-07T06:00:00.000Z');
+
+function memoryStore(initial: Record<string, string> = {}): SecretStore {
+  const values = { ...initial };
+  return {
+    async get(key) {
+      return values[key] ?? null;
+    },
+    async set(key, value) {
+      values[key] = value;
+    },
+    async delete(key) {
+      delete values[key];
+    },
+  };
+}
+
+const tokens = JSON.stringify({
+  accessToken: 'tok',
+  refreshToken: 'r',
+  scopes: [],
+  expiresAt: '2099-01-01T00:00:00.000Z',
+});
+
+const gmailMessage = (id: string, subject: string, labels: string[]) => ({
+  id,
+  threadId: `t-${id}`,
+  snippet: 'ご確認をお願いします',
+  internalDate: String(NOW.getTime() - 3_600_000),
+  labelIds: labels,
+  payload: {
+    headers: [
+      { name: 'From', value: 'Tanaka <tanaka@example.com>' },
+      { name: 'To', value: 'me@example.com' },
+      { name: 'Subject', value: subject },
+    ],
+  },
+});
+
+interface Harness {
+  loop: WorkSyncLoop;
+  urls: string[];
+  batches: WorkArtifactBatch[];
+  asked: HostStep[];
+}
+
+function harness(
+  options: {
+    connected?: string[];
+    granted?: Record<string, string[]>;
+    llm?: (step: HostStep) => StepOutcome;
+    routes?: (url: string) => { status?: number; body: unknown };
+  } = {},
+): Harness {
+  const urls: string[] = [];
+  const batches: WorkArtifactBatch[] = [];
+  const asked: HostStep[] = [];
+  const fetch = (async (url: string) => {
+    urls.push(url);
+    const route = options.routes?.(url) ?? defaultRoutes(url);
+    return new Response(JSON.stringify(route.body), { status: route.status ?? 200 });
+  }) as unknown as typeof globalThis.fetch;
+
+  const secrets = memoryStore(
+    Object.fromEntries((options.connected ?? []).map((key) => [key, tokens])),
+  );
+  const runtime = new ConnectorRuntime({
+    secrets,
+    credentialRefFor: (pluginId, connectorId) => `keychain:${pluginId}/${connectorId}`,
+    grantedScopes: (pluginId) => options.granted?.[pluginId] ?? [],
+    fetch,
+    now: () => NOW,
+  });
+  const llm = options.llm
+    ? {
+        handles: (toolId: string) => toolId === 'llm.classify_email',
+        run: async (step: HostStep) => {
+          asked.push(step);
+          return options.llm!(step);
+        },
+      }
+    : undefined;
+  const loop = new WorkSyncLoop({
+    connectors: runtime,
+    ...(llm ? { llm } : {}),
+    push: async (batch) => {
+      batches.push(batch);
+    },
+    now: () => NOW,
+  });
+  return { loop, urls, batches, asked };
+}
+
+function defaultRoutes(url: string): { status?: number; body: unknown } {
+  if (url.includes('gmail.googleapis.com')) {
+    if (url.includes('/messages?')) {
+      const inbox = url.includes('labelIds=INBOX');
+      return { body: { messages: [{ id: inbox ? 'in1' : 'out1' }] } };
+    }
+    if (url.includes('/messages/in1')) {
+      return { body: gmailMessage('in1', '見積の確認をお願いします', ['INBOX', 'UNREAD']) };
+    }
+    if (url.includes('/messages/out1')) {
+      return { body: gmailMessage('out1', 'Re: 日程の件', ['SENT']) };
+    }
+  }
+  if (url.includes('googleapis.com/calendar')) {
+    return {
+      body: {
+        items: [
+          {
+            id: 'ev1',
+            summary: 'MOPITA 定例',
+            start: { dateTime: '2026-09-08T01:00:00Z' },
+            end: { dateTime: '2026-09-08T02:00:00Z' },
+            status: 'confirmed',
+          },
+        ],
+      },
+    };
+  }
+  if (url.includes('graph.microsoft.com')) {
+    if (url.includes('/mailFolders/inbox/')) {
+      return {
+        body: {
+          value: [
+            {
+              id: 'AAMk1',
+              conversationId: 'c1',
+              from: { emailAddress: { name: '佐藤', address: 'sato@example.com' } },
+              toRecipients: [{ emailAddress: { address: 'me@example.com' } }],
+              subject: '承認をお願いします',
+              bodyPreview: '稟議の承認を',
+              receivedDateTime: '2026-09-07T01:00:00Z',
+              isRead: false,
+            },
+          ],
+        },
+      };
+    }
+    if (url.includes('/mailFolders/sentitems/')) return { body: { value: [] } };
+    if (url.includes('/calendarView')) return { body: { value: [] } };
+    if (url.endsWith('/me/todo/lists')) {
+      return { body: { value: [{ id: 'L1', displayName: 'MOPITA' }] } };
+    }
+    if (url.includes('/todo/lists/L1/tasks')) {
+      return {
+        body: {
+          value: [
+            {
+              id: 'td1',
+              title: '要件定義書レビュー',
+              status: 'notStarted',
+              importance: 'high',
+              dueDateTime: { dateTime: '2026-09-09T00:00:00.0000000', timeZone: 'UTC' },
+              lastModifiedDateTime: '2026-09-06T00:00:00Z',
+            },
+          ],
+        },
+      };
+    }
+  }
+  return { status: 404, body: { error: { message: `no route for ${url}` } } };
+}
+
+const GOOGLE_GRANTS = {
+  'com.astra.gmail': ['email.read'],
+  'com.astra.google-calendar': ['calendar.read'],
+};
+const MICROSOFT_GRANTS = {
+  'com.astra.outlook': ['email.read', 'calendar.read'],
+  'com.astra.microsoft-todo': ['tasks.read'],
+};
+
+describe('syncing work context from the device', () => {
+  it('touches nothing when nothing is connected', async () => {
+    const h = harness();
+    const report = await h.loop.syncOnce();
+    expect(report.outcomes.map((o) => o.status)).toEqual([
+      'not_connected',
+      'not_connected',
+      'not_connected',
+      'not_connected',
+      'not_connected',
+    ]);
+    expect(h.urls).toEqual([]);
+    expect(h.batches).toEqual([]);
+  });
+
+  it('does not read a connected service whose read permission was withheld', async () => {
+    const h = harness({
+      connected: ['com.astra.gmail/gmail'],
+      granted: { 'com.astra.gmail': ['email.draft'] },
+    });
+    const report = await h.loop.syncOnce();
+    expect(report.outcomes[0]).toMatchObject({ source: 'gmail', status: 'not_granted' });
+    expect(h.urls).toEqual([]);
+  });
+
+  it('normalizes Google mail and calendar into excerpts and advances the cursor', async () => {
+    const h = harness({
+      connected: ['com.astra.gmail/gmail', 'com.astra.google-calendar/google-calendar'],
+      granted: GOOGLE_GRANTS,
+    });
+    const report = await h.loop.syncOnce();
+
+    expect(report.outcomes.slice(0, 2)).toEqual([
+      { source: 'gmail', status: 'synced', artifacts: 2, classified: 0 },
+      { source: 'google_calendar', status: 'synced', artifacts: 1, classified: 0 },
+    ]);
+    // **本文は取りに行かない。**一覧は metadata、予定は一覧だけ。
+    expect(h.urls.some((u) => u.includes('format=full'))).toBe(false);
+    expect(h.urls.filter((u) => u.includes('/messages?')).length).toBe(2);
+
+    const gmail = h.batches.find((b) => b.source === 'gmail')!;
+    expect(gmail.artifacts.map((a) => [a.id, a.direction])).toEqual([
+      ['gmail:in1', 'inbound'],
+      ['gmail:out1', 'outbound'],
+    ]);
+    expect(gmail.artifacts.every((a) => a.semantic === null)).toBe(true);
+    expect(gmail.artifacts[0]!.provenance.external_id).toBe('in1');
+    // 続きは、見た中で一番新しい時刻
+    expect(gmail.cursor).toBe(new Date(NOW.getTime() - 3_600_000).toISOString());
+    expect(h.loop.cursors.get('gmail')).toBe(gmail.cursor);
+
+    // 2 回目は cursor から先だけを頼む
+    h.urls.length = 0;
+    await h.loop.syncOnce();
+    const listing = h.urls.find((u) => u.includes('/messages?'))!;
+    const after = Number(new URL(listing).searchParams.get('q')!.replace('after:', ''));
+    expect(after).toBe(Math.floor((NOW.getTime() - 3_600_000) / 1000) - 1);
+  });
+
+  it('normalizes Microsoft mail, calendar and To Do the same way', async () => {
+    const h = harness({
+      connected: ['com.astra.outlook/outlook', 'com.astra.microsoft-todo/microsoft-todo'],
+      granted: MICROSOFT_GRANTS,
+    });
+    const report = await h.loop.syncOnce();
+    expect(report.outcomes.slice(2)).toEqual([
+      { source: 'outlook_mail', status: 'synced', artifacts: 1, classified: 0 },
+      { source: 'outlook_calendar', status: 'synced', artifacts: 0, classified: 0 },
+      { source: 'microsoft_todo', status: 'synced', artifacts: 1, classified: 0 },
+    ]);
+    // 一覧で body を要求しない
+    for (const url of h.urls.filter((u) => u.includes('/messages?'))) {
+      expect(new URL(url).searchParams.get('$select')!.split(',')).not.toContain('body');
+    }
+    const todo = h.batches.find((b) => b.source === 'microsoft_todo')!;
+    expect(todo.artifacts[0]).toMatchObject({
+      id: 'microsoft_todo:td1',
+      kind: 'task',
+      project_hint: 'MOPITA',
+      due_at: '2026-09-09T00:00:00.000Z',
+    });
+    // 0 件でも同期した事実は送る
+    expect(h.batches.find((b) => b.source === 'outlook_calendar')!.artifacts).toEqual([]);
+  });
+
+  it('attaches what the device LLM extracted, and asks once per mail', async () => {
+    const h = harness({
+      connected: ['com.astra.gmail/gmail'],
+      granted: GOOGLE_GRANTS,
+      llm: (step) => ({
+        ok: true,
+        result: {
+          category: step.args['direction'] === 'inbound' ? 'request_to_me' : 'info',
+          request: '見積を確認する',
+          owner: 'me',
+          waiting_on: null,
+          due: null,
+          project: 'MOPITA',
+          confidence: 0.8,
+        },
+      }),
+    });
+    const report = await h.loop.syncOnce();
+    expect(report.outcomes[0]).toMatchObject({ status: 'synced', artifacts: 2, classified: 2 });
+    expect(h.asked).toHaveLength(2);
+    // 渡すのは件名と抜粋だけ
+    expect(Object.keys(h.asked[0]!.args).sort()).toEqual([
+      'direction',
+      'excerpt',
+      'from',
+      'occurred_at',
+      'subject',
+      'to',
+    ]);
+    const inbound = h.batches[0]!.artifacts[0]!;
+    expect(inbound.semantic).toMatchObject({
+      category: 'request_to_me',
+      project: 'MOPITA',
+      extracted_by: 'llm',
+      confidence: 0.8,
+    });
+
+    // 同じメールを聞き直さない
+    await h.loop.syncOnce();
+    expect(h.asked).toHaveLength(2);
+  });
+
+  it('sends nothing semantic when the reply is unreadable or the model is gone', async () => {
+    const h = harness({
+      connected: ['com.astra.gmail/gmail'],
+      granted: GOOGLE_GRANTS,
+      llm: () => ({ ok: false, error: { code: 'llm.no_model', message: '無い' } }),
+    });
+    const report = await h.loop.syncOnce();
+    expect(report.outcomes[0]).toMatchObject({ status: 'synced', artifacts: 2, classified: 0 });
+    expect(h.batches[0]!.artifacts.every((a) => a.semantic === null)).toBe(true);
+
+    expect(semanticFrom({ category: 'nonsense' })).toBeNull();
+    expect(semanticFrom('text')).toBeNull();
+    expect(semanticFrom({ category: 'question', due: 'いつか' })).toBeNull();
+    expect(semanticFrom({ category: 'question' })).toMatchObject({
+      category: 'question',
+      extracted_by: 'llm',
+      confidence: 0.5,
+    });
+  });
+
+  it('keeps going when one source fails', async () => {
+    const h = harness({
+      connected: ['com.astra.gmail/gmail', 'com.astra.google-calendar/google-calendar'],
+      granted: GOOGLE_GRANTS,
+      routes: (url) =>
+        url.includes('gmail.googleapis.com')
+          ? { status: 500, body: { error: { message: 'boom' } } }
+          : defaultRoutes(url),
+    });
+    const report = await h.loop.syncOnce();
+    expect(report.outcomes[0]).toMatchObject({ source: 'gmail', status: 'failed' });
+    expect(report.outcomes[1]).toMatchObject({ source: 'google_calendar', status: 'synced' });
+    expect(h.batches.map((b) => b.source)).toEqual(['google_calendar']);
+    // 落ちた source の cursor は進めない
+    expect(h.loop.cursors.has('gmail')).toBe(false);
+  });
+});
