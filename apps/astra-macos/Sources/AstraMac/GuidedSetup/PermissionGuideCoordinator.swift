@@ -397,13 +397,14 @@ final class PermissionGuideCoordinator: ObservableObject {
 
     // 盲検で直した文言: 「1 つ設定してください」は何を直すか言っていない（3/3 FIX）。対象と場所を言い切る。
     // 成功の ✓ は丸だけに描く（文にもあると二重で、OCR は「く」と読む）。失敗は短く、操作子（システム設定を開く）を添える。
+    // 1 行目 = 状態、2 行目 = すること（改行で分ける。1 文に目的と手順を詰めない）。
     static let messageIntro = "使う機能の設定をいっしょに済ませます"
-    static let messageAccessibility = "この Mac を操作するため、システム設定で Astra をオンにしてください"
-    static let messageScreenCapture = "画面収録を使うため、システム設定で Astra をオンにしてください"
-    static let messageMicrophone = "声で頼むため、マイクを許可してください"
-    static let messageMicrophoneSettings = "マイクの設定で Astra をオンにしてください"
-    static let messageGeneralTurnOn = "設定画面で Astra をオンにしてください"
-    static let messageSettingsFailed = "設定画面を開けませんでした"
+    static let messageAccessibility = "アクセシビリティが未許可です\nシステム設定で Astra をオンにしてください"
+    static let messageScreenCapture = "画面収録が未許可です\nシステム設定で Astra をオンにしてください"
+    static let messageMicrophone = "マイクが未許可です\n許可すると声で頼めます"
+    static let messageMicrophoneSettings = "マイクが未許可です\nマイクの設定で Astra をオンにしてください"
+    static let messageGeneralTurnOn = "Astra の行が見つかりません\n設定画面で Astra をオンにしてください"
+    static let messageSettingsFailed = "設定画面を開けませんでした\nプライバシーとセキュリティ › 画面収録"
     /// 何を設定できたかを言う（「設定できました」だけだと、絵の文字が 1 語で判定不能になる。何が済んだかも分かる）。
     static func messageDone(for permission: GuidePermission) -> String {
         switch permission {
@@ -415,7 +416,7 @@ final class PermissionGuideCoordinator: ObservableObject {
     static let messageAllDone = "すべて設定できました"
     /// スイッチはオンなのに許可がまだ = 再起動待ち。
     /// 短く（行の中に置くので、長いと行の名前を隠す）。尾がその行を指しているので名前は要らない。
-    static func calloutAlreadyOn(for app: String) -> String { "オンです · \(app) を再起動" }
+    static func calloutAlreadyOn(for app: String) -> String { "\(app) を再起動すると使えます" }
     static let actionRetryOpenSettings = "もう一度開く"
     static let actionOpenSettings = "システム設定を開く"
     /// `{app}` は見つけた行の名前に置き換える。

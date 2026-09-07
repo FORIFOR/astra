@@ -22,20 +22,30 @@ struct AvatarHUDView: View {
 
     private var bubble: some View {
         HStack(alignment: .center, spacing: 10) {
-            Text(model.message)
-                .font(.system(size: S.type(13), weight: .medium))
-                .foregroundStyle(Palette.text(dark))
-                .lineLimit(2)
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: AvatarLayout.bubbleMaxWidth, alignment: .leading)
+            // 1 行目 = いまの状態（「画面収録が未許可です」）、2 行目 = すること。文を 1 本に詰めない（盲検 3/3）。
+            VStack(alignment: .leading, spacing: 2) {
+                Text(lines.0)
+                    .font(.system(size: S.type(13), weight: .semibold))
+                    .foregroundStyle(Palette.text(dark))
+                    .lineLimit(1)
+                if let sub = lines.1 {
+                    Text(sub)
+                        .font(.system(size: S.type(12)))
+                        .foregroundStyle(Palette.muted(dark))
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .frame(maxWidth: AvatarLayout.bubbleMaxWidth, alignment: .leading)
+            .fixedSize(horizontal: true, vertical: false)
             if let action = model.action {
+                // 押せるものは押せる形で（塗りのボタン）。薄い pill は「タグ」に見えた（盲検）。
                 Button(action.title) { action.run() }
                     .buttonStyle(.plain)
                     .font(.system(size: S.type(12), weight: .semibold))
-                    .foregroundStyle(Palette.accent(dark))
-                    .padding(.horizontal, 10).padding(.vertical, 5)
-                    .background(Palette.accent(dark).opacity(0.16), in: Capsule())
-                    .overlay(Capsule().stroke(Palette.accent(dark).opacity(0.35), lineWidth: 1))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 11).padding(.vertical, 6)
+                    .background(Palette.accent(dark), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
                     .fixedSize()
                     .accessibilityIdentifier("guideAvatarAction")
             }
@@ -78,6 +88,12 @@ struct AvatarHUDView: View {
         .frame(width: AvatarLayout.avatarSize, height: AvatarLayout.avatarSize)
         .accessibilityLabel("Astra")
         .accessibilityValue(model.message)
+    }
+
+    /// 「状態\nすること」。改行が無ければ 1 行。
+    private var lines: (String, String?) {
+        let parts = model.message.split(separator: "\n", maxSplits: 1).map(String.init)
+        return (parts.first ?? "", parts.count > 1 ? parts[1] : nil)
     }
 
     private var tint: Color {
