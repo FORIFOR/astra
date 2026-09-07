@@ -1,0 +1,129 @@
+{
+  "pages": {
+    "3A2D": {
+      "visible_text": [
+        "Home",
+        "こんばんは",
+        "何を終わらせますか?",
+        "録音を始める",
+        "前回の設定でその場で録り始めます",
+        "今日、気にした方がいいこと　Gmail・Outlook・To Do・予定から整理しています",
+        "MOPITA",
+        "高",
+        "明日15:00",
+        "MTIに見積の返信、明日15:00の定例の前に",
+        "なぜ重要?",
+        "優先ではない",
+        "待っていること",
+        "返すもの"
+      ],
+      "observation": {
+        "happening": "ホーム画面。上部に検索窓と「録音を始める」カードがあり、その下に「今日、気にした方がいいこと」として3件のタスクカード（MOPITA/極洋/採用のタグ付き）、さらに下に「待っていること」「返すもの」のリストが並んでいる。",
+        "most_important": "最上段のカード「MTIに見積の返信、明日15:00の定例の前に」（高優先度・明日期限）",
+        "next_action": "各カード右側の「なぜ重要?」または「優先ではない」をクリックする",
+        "anomalies": [
+          "左サイドバーのApps以下が大きく空白のまま",
+          "各カードの「なぜ重要?」と「優先ではない」が同じ青色・同じ太さのリンクで区別がなく、どちらが推奨アクションか視覚的に示されていない"
+        ]
+      },
+      "verdict": "FIX",
+      "concerns": [
+        {
+          "axis": "primary-action-clarity",
+          "what": "同一行内の2つのテキストリンク（なぜ重要?／優先ではない）が同色・同ウェイトで、優先すべき操作が視覚的に区別できない",
+          "where": "各タスクカード右端のアクションリンク"
+        }
+      ],
+      "confidence": "medium"
+    },
+    "5472": {
+      "visible_text": [
+        "Home",
+        "こんばんは",
+        "MOPITA",
+        "高",
+        "明日15:00",
+        "MTIに見積の返信、明日15:00の定例の前に",
+        "閉じる",
+        "優先ではない",
+        "明日が期限",
+        "3日未返信",
+        "出所",
+        "Gmail",
+        "Re: 見積v2のご確認",
+        "来週水曜までにご確認いただけますか",
+        "会議",
+        "MOPITA定例",
+        "次回までに見積を確認する",
+        "待っ"
+      ],
+      "observation": {
+        "happening": "3A2Dと同じホーム画面で、最上段のカードが展開され、「なぜ重要?」の根拠として『明日が期限』『3日未返信』というラベルと、出所（Gmailの引用文・会議メモ）が表示されている。ボタンラベルは「なぜ重要?」から「閉じる」に変わっている。",
+        "most_important": "展開された根拠情報（出所のGmail本文抜粋と会議情報）",
+        "next_action": "「閉じる」をクリックして詳細を畳む、または他の2枚のカードを操作する",
+        "anomalies": [
+          "展開により画面下端で「待っていること」の見出しらしき文字が『待っ』で途切れており、リスト項目が一切見えない"
+        ]
+      },
+      "observation_note": "",
+      "verdict": "FIX",
+      "concerns": [
+        {
+          "axis": "primary-action-clarity",
+          "what": "3A2Dと同様、「閉じる」と「優先ではない」が同色同ウェイトのリンクで並び、主アクションが区別されない",
+          "where": "展開カード右端のアクションリンク"
+        }
+      ],
+      "confidence": "medium"
+    },
+    "65E2": {
+      "visible_text": [
+        "Apps",
+        "Plugins",
+        "Connectors",
+        "外部サービスとの接続。つなぐまでAstraはそのサービスを読みません。",
+        "仕事のコンテキスト",
+        "Gmail",
+        "設定が必要",
+        "ASTRA_OAUTH_GOOGLE_CLIENT_ID",
+        "Google Calendar",
+        "Outlook",
+        "Microsoft To Do",
+        "ASTRA_OAUTH_MICROSOFT_CLIENT_ID",
+        "読むだけの接続です。送る・作るは、その操作が必要になったときに別に許可を求めます。",
+        "Finder",
+        "未接続",
+        "つなぐと、このMacのファイルを探せます"
+      ],
+      "observation": {
+        "happening": "Apps画面のConnectorsタブで、Gmail・Google Calendar・Outlook・Microsoft To Doの4つがリスト表示され、いずれも「設定が必要」（client ID未設定）の状態。下に独立したカードでFinder（未接続）が表示されている。",
+        "most_important": "4つの接続がすべて「設定が必要」でclient IDが未設定であること",
+        "next_action": "各行の丸いラジオボタンを押す（それ以外に設定用の入力欄やボタンは見当たらない）",
+        "anomalies": [
+          "「設定が必要」というエラー状態に対して、client IDを入力する欄や「設定する」ボタンなど解決手段が画面内に一切見当たらない",
+          "Finderだけ他の4項目と異なり、枠付きの独立したカードスタイルで配置されている"
+        ]
+      },
+      "verdict": "FIX",
+      "concerns": [
+        {
+          "axis": "error-recovery clarity",
+          "what": "「設定が必要」と表示されるだけで、それを解消するための入力欄・ボタン・リンクが画面に存在せず、ユーザーが次に何をすればよいか分からない",
+          "where": "Gmail/Google Calendar/Outlook/Microsoft To Doの各行"
+        },
+        {
+          "axis": "consistency",
+          "what": "Finderのみ枠付きカードのスタイルで表示され、リスト形式の他4接続と視覚的な扱いが異なる",
+          "where": "画面下部のFinderカード"
+        }
+      ],
+      "confidence": "high"
+    }
+  },
+  "_judge": {
+    "model": "sonnet",
+    "cost_usd": 0.1744912,
+    "turns": 4,
+    "duration_ms": 78850
+  }
+}

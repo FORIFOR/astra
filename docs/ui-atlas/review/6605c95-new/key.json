@@ -1,0 +1,13 @@
+{
+  "key": {
+    "3A2D": "main.home-work-context",
+    "5472": "main.home-work-why",
+    "65E2": "main.apps-connectors"
+  },
+  "order": [
+    "3A2D",
+    "5472",
+    "65E2"
+  ],
+  "batch": 6
+}

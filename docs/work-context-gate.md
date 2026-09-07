@@ -108,3 +108,37 @@ FIX_CANDIDATE だが、指摘の軸は毎回入れ替わり（一貫性 → 詰�
 残り（UI には触らない方針のまま P1）: Home の「なぜ高い？」（7 要因の内訳を押したときだけ）、Apps の「接続中 / 未接続」の事実表示、
 Google Tasks / Planner（WORK_CONTEXT_EXPANDED_COVERAGE）、desktop の `ConnectorState.connect` は openid/email だけを要求していて
 manifest の接続（読む / 書く）を通していない（live 接続の UI 側、AUTOMATION_MISSING と同じ束）。
+
+## 2026-09-07 夜（製品レビュー後）— リリース前必須の 5 点
+
+判定は 3 段: **WORK_CONTEXT_GATE = PASS_OFFLINE**、**DAILY_WORK_GATE = PASS_OFFLINE**（`scripts/reality/run-daily-work-gate.sh`）、
+**WORK_CONTEXT_LIVE_GATE = AUTOMATION_MISSING**（専用テスト identity）。
+
+| 必須項目                                           | 結果               | 根拠                                                                                                                                                                                                |
+| -------------------------------------------------- | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| desktop `ConnectorState.connect` が manifest scope | 実装済（6ebeaf3）  | Swift が `connectors[].grants/scopes/purpose` を読み、**読むだけの接続**の scope だけで OAuth → core で PKCE 交換 → worker と同じ Keychain 項目 → cloud に参照だけ記録。live の同意は identity 待ち |
+| Apps の接続状態表示                                | PASS               | 「仕事のコンテキスト」に 4 source を 接続中 / 未接続 / 設定が必要（何を設定するか付き）で並べる。真実 = cloud の記録 AND 手元の鍵（selftest `connected_sources_visible`）                           |
+| 「なぜ重要？」1 クリック                           | PASS               | 要因の理由を寄与順に <= 4 行 + 出所（数式なし）、開いている間は「閉じる」。高 / 中 / 低 の言葉（>= 0.5 / >= 0.25）。selftest `why_important_actions=1`                                              |
+| live Google/Microsoft connector の実経路           | 実装済・未実走     | 端末: 同意 → 交換 → Keychain → 記録 → worker が記録から許可を読む（`grantsFromConnections`）→ 読む接続だけで同期。実走は `run-work-context-live.sh` の identity 待ち                                |
+| 完全無人 live gate                                 | AUTOMATION_MISSING | harness は在る。欠けているのは事前 provisioning（Google Workspace / Microsoft tenant のテスト identity と refresh token）だけ                                                                       |
+
+### ASTRA DAILY WORK GATE（RC 6605c95、`/tmp/astra-daily-work-gate/report.txt`）
+
+| group       | row                                                                                                     | result                         |
+| ----------- | ------------------------------------------------------------------------------------------------------- | ------------------------------ |
+| Connect     | Gmail/Calendar or Microsoft setup                                                                       | AUTOMATION_MISSING             |
+| Connect     | read-only first                                                                                         | PASS                           |
+| Connect     | connected sources visible                                                                               | PASS（0/4 接続）               |
+| First value | first useful Work Context                                                                               | 18 ms（<= 60 s）               |
+| First value | top priorities                                                                                          | 1–3 visible                    |
+| First value | every inferred priority has source                                                                      | 100%                           |
+| Daily       | 今日何をすべき? / 誰を待っている? / 私が返すものは? / 次の会議を準備して / これ返して / 今週何がやばい? | PASS × 6（intent と最小 pack） |
+| Trust       | なぜ重要? / correction / personalization off                                                            | <= 1 action × 3                |
+| Trust       | coverage/connected sources visible                                                                      | PASS                           |
+| Trust       | fabricated deadline                                                                                     | 0                              |
+| Action      | draft without send permission / JIT write permission                                                    | PASS                           |
+| Action      | external confirmation                                                                                   | 100%                           |
+| Calmness    | unsolicited noisy alerts / focus theft / extra window                                                   | 0 / 0 / 0                      |
+
+「これ返して」は意図（email_reply）までを測っている。「これ」の解決（開いているメール / 直前のスクショ）→ 案件背景つきの下書き → 既存の
+確認カードへ、という一連の経路は次の実装（Meeting prep の brief と同じ束）。盲検（6ebeaf3、3 面）は KEEP 3 / FIX_CANDIDATE 0。
