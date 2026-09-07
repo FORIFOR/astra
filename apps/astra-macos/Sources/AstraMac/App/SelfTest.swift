@@ -604,7 +604,9 @@ enum SelfTest {
         recording.togglePause()
         // 準備中 shot で 0 に落ちた時計を、本編（メモは 04:14〜05:01）に戻す。
         // 戻さないと notes/captions/ask が「00:01 なのに 5 分前のメモ」で作り物に見える。
+        // 撮っている間は時計を止める（light と dark で秒がずれて fixed の gate が落ちた）。
         recording.elapsedSeconds = 5 * 60 + 20
+        recording.freezeClockForShot = true
         // 録音開始では窓を増やさない。Dock だけが録音コントローラになる。
         shoot("09-meeting-notes", { hud.toggleMeetingPanel(.notes) })
         shoot("09b-meeting-captions", { hud.toggleMeetingPanel(.captions) })

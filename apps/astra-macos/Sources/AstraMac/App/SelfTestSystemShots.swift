@@ -54,11 +54,13 @@ extension SelfTest {
         }
         /// 条件に合う窓が出るまで待って撮る（modal でない面）。
         @discardableResult
-        func shoot(_ name: String, timeout: Double = 8, _ match: (Win) -> Bool) -> Bool {
+        /// `dwell`: 窓が出てから撮るまでの間。Sparkle の更新窓は release notes を WebView が後から読むので、
+        /// 既定の 0.6 秒では回転する indicator のまま撮れた（実測。Atlas に spinner が載った）。
+        func shoot(_ name: String, timeout: Double = 8, dwell: Double = 0.6, _ match: (Win) -> Bool) -> Bool {
             let deadline = Date().addingTimeInterval(timeout)
             var found: Win?
             repeat { settle(0.25); found = windows().first(where: match) } while found == nil && Date() < deadline
-            settle(0.6)
+            settle(dwell)
             guard let w = found, write(name, w) else {
                 failures.append("\(name)=撮影不可 窓一覧 \(windows().map { "\(Int($0.w))x\(Int($0.h))" })")
                 return false
@@ -115,7 +117,7 @@ extension SelfTest {
             SoftwareUpdate.shared.checkNow()
             // 「新しい版があります」: Sparkle の窓（modal ではない）。alert より大きい。
             // Sparkle の窓は alert より大きいが、失敗したときは alert（260 幅）が出る。どちらも撮って絵で言う。
-            shoot("update-available", timeout: 25) { $0.w >= 220 && $0.w < 900 && $0.h >= 90 }
+            shoot("update-available", timeout: 25, dwell: 3.0) { $0.w >= 220 && $0.w < 900 && $0.h >= 90 }
             // 「あとで」に相当する閉じ方（performClose → Sparkle が remind-later として片付ける）。
             // close() では窓が残り、次の確認が始まらなかった（実測: 同じ窓をもう一度撮っていた）。
             for w in NSApp.windows where w.isVisible && w.title != "Astra 設定" && w.frame.width >= 220 && w.frame.width < 900 {

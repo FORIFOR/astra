@@ -34,6 +34,10 @@ import json, os, secrets, shutil, sys
 atlas, work, out, batch = sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4])
 m = json.load(open(os.path.join(atlas, "manifest.json"), encoding="utf-8"))
 req = [s for s in m["screens"] if s.get("required") and (s.get("image") or {}).get("light")]
+# 差分再検証: ASTRA_JUDGE_ONLY="guided-setup. screenshot." のように id の前置きで絞る（新規面だけ full audit、既存面は pixel regression）。
+only = [x for x in os.environ.get("ASTRA_JUDGE_ONLY", "").split() if x]
+if only:
+    req = [s for s in req if any(s["id"].startswith(x) for x in only)]
 key, ids = {}, set()
 # 途中で落ちた run を続けられるように、鍵が既にあればそれを使う（judge-*.json の ID と食い違わないため）。
 prev = os.path.join(out, "key.json")

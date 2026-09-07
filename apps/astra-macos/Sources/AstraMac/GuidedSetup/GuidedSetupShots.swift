@@ -233,7 +233,9 @@ extension SelfTest {
         }
         let geo = geometry.isEmpty ? "GUIDED_SETUP_GEOMETRY=SKIP" : (geometryFail.isEmpty ? "GUIDED_SETUP_GEOMETRY=PASS" : "GUIDED_SETUP_GEOMETRY=FAIL \(geometryFail)")
         print("SELFTEST_OK guidedshots: \(report.joined(separator: ", "))\(skipped.isEmpty ? "" : " SKIP=\(skipped)") \(geo)")
-        exit(geometryFail.isEmpty ? 0 : 2)
+        // 通常の exit は、System Settings を閉じた直後の AX callback と静的破棄が噛み合って戻らないことがあった（18 分残った実測）。
+        fflush(stdout)
+        _exit(geometryFail.isEmpty ? 0 : 2)
     }
 
     private static func rectDict(_ r: CGRect) -> [String: Double] {

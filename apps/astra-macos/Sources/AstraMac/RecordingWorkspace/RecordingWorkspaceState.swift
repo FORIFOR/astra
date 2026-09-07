@@ -67,6 +67,9 @@ final class RecordingWorkspaceState: ObservableObject {
     private var tickTimer: Timer?
     @Published var isPaused = false
     @Published var elapsedSeconds = 0
+    /// 検査用: 撮影の間だけ経過時計を止める。**本番では false。** light と dark を別プロセスで撮るので、
+    /// 動いたままだと同じ面が 05:21 / 05:23 とずれ、fixed（light == dark）の gate が運で通ったり落ちたりした（実測）。
+    var freezeClockForShot = false
     @Published var selectedTool: RecordingTool = .transcript
     @Published var ragOpen = false
     @Published var transcript: [TranscriptSegment] = []
@@ -215,7 +218,7 @@ final class RecordingWorkspaceState: ObservableObject {
         elapsedSeconds = 0
         tickTimer?.invalidate()
         tickTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
-            guard let self, self.isRecording, !self.isPaused else { return }
+            guard let self, self.isRecording, !self.isPaused, !self.freezeClockForShot else { return }
             self.elapsedSeconds += 1
         }
         // オンデバイス STT の途中経過/確定を transcript に反映する。

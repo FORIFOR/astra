@@ -37,6 +37,10 @@ m = json.load(open(os.path.join(atlas, "manifest.json"), encoding="utf-8"))
 # components.*（neutral/hover/focus/pressed）は DS の状態見本で、利用者が「製品画面」として選ぶものではない。
 # supremacy（一線級と並べて選べるか）の対象は製品画面。DS 参照は review-blind の KEEP/FIX には残すが、ここでは外す。
 req = [s for s in m["screens"] if s.get("required") and (s.get("image") or {}).get("light") and not s["id"].startswith("components.")]
+# 差分再検証: ASTRA_JUDGE_ONLY="guided-setup. screenshot." のように id の前置きで絞る（新規面だけ full audit）。
+only = [x for x in os.environ.get("ASTRA_JUDGE_ONLY", "").split() if x]
+if only:
+    req = [s for s in req if any(s["id"].startswith(x) for x in only)]
 key, ids = {}, set()
 prev = os.path.join(out, "key.json")
 if os.path.exists(prev):
