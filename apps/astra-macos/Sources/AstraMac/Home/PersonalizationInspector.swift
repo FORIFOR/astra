@@ -47,19 +47,19 @@ struct PersonalizationInspector: View {
     }
 
     /// 全体の停止。**押した瞬間に効く。**確認を挟まない（戻すのも 1 操作なので）。
+    ///
+    /// 状態は言葉で言い、操作は作用範囲まで書いた button にする（盲検 1127b32: 全体の切り替えと
+    /// 各行の「この推測を使わない」が同じ言葉で並んで作用範囲が読めなかった）。switch は試したが、
+    /// 前面でない窓では on でも off の絵になり、撮影と読み手を欺くのでやめた（workcontext gate で state を実測）。
     private func toggleRow(_ p: PersonalizationProfile) -> some View {
         HStack(spacing: 8) {
-            Text(p.inferenceEnabled ? "推測を使っています" : "推測を止めています")
+            Text(p.inferenceEnabled ? "すべての推測を使っています" : "すべての推測を止めています")
                 .font(.system(size: S.type(TypeScale.secondarySize), weight: .medium))
                 .foregroundStyle(Palette.text(dark))
             Spacer(minLength: 8)
-            Button { store.setInference(!p.inferenceEnabled) } label: {
-                Text(p.inferenceEnabled ? Facts.personalizationDisableAll : Facts.personalizationEnableAll)
-                    .font(.system(size: S.type(TypeScale.microSize), weight: .medium))
-                    .foregroundStyle(p.inferenceEnabled ? Palette.muted(dark) : Palette.accent(dark))
-                    .frame(height: 26).padding(.horizontal, 8)
+            actionButton(p.inferenceEnabled ? "すべて止める" : "すべて使う", accent: !p.inferenceEnabled) {
+                store.setInference(!p.inferenceEnabled)
             }
-            .buttonStyle(AstraControlStyle(radius: 7, base: 0.05))
             .accessibilityIdentifier("personalizationToggleAll")
         }
     }

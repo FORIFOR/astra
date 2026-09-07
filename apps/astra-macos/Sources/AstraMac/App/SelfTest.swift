@@ -5850,6 +5850,11 @@ enum SelfTest {
         var shot: [String] = [], fail: [String] = []
         func take(_ name: String, _ present: () -> Void) {
             present(); settle(0.9)
+            // 撮る直前に前面へ。inactive の窓は sidebar の選択色が薄く、switch が off に見える
+            // （workcontext gate: key=false active=false のまま撮っていた）。
+            NSApp.activate(ignoringOtherApps: true)
+            win.makeKeyAndOrderFront(nil)
+            settle(0.3)
             let id = CGWindowID(max(0, win.windowNumber))
             guard id != 0, let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, id, [.boundsIgnoreFraming, .bestResolution]),
                   let png = NSBitmapImageRep(cgImage: cg).representation(using: .png, properties: [:]) else {
