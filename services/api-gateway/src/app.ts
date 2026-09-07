@@ -37,7 +37,7 @@ import { registerOnboardingRoutes } from './routes/onboarding.js';
 import { registerVoiceRoutes, type VoiceRouteDeps } from './routes/voice.js';
 import type { ConversationService } from '@astra/service-conversation';
 import type { WorkContextService, WorldModelService } from '@astra/service-world-model';
-import { registerWorkRoutes } from './routes/work.js';
+import { localArtifacts, registerWorkRoutes } from './routes/work.js';
 import type { ConnectionService, DataSourceResolver } from '@astra/service-plugin-registry';
 import {
   registerMeetingAudioRoute,
@@ -170,7 +170,20 @@ export function buildApp(deps: AppDeps): App {
       conversations: deps.conversations,
       tasks: deps.tasks,
       redis: deps.redis,
-      ...(deps.work ? { work: deps.work } : {}),
+      ...(deps.work
+        ? {
+            work: deps.work,
+            extraArtifacts: (tenantId: string) =>
+              localArtifacts(
+                {
+                  work: deps.work!,
+                  tasks: deps.tasks,
+                  ...(deps.meetings ? { meetings: deps.meetings.meetings } : {}),
+                },
+                tenantId,
+              ),
+          }
+        : {}),
       ...(deps.ssePollIntervalMs === undefined
         ? {}
         : { ssePollIntervalMs: deps.ssePollIntervalMs }),

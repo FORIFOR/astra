@@ -50,4 +50,15 @@ export {
   type InjectionInput,
 } from './work/injection.js';
 export { ruleSemantic } from './work/semantic.js';
+export {
+  buildReplyPack,
+  renderReplyContext,
+  replyBasis,
+  replyInstruction,
+  resolveReplyTarget,
+  REPLY_MATCH_THRESHOLD,
+  type ReplyPackInput,
+  type ResolveReplyInput,
+} from './work/reply.js';
+export { buildMeetingBrief, nextEvent, type MeetingBriefInput } from './work/meeting-brief.js';
 export { WorkContextService, type WorkContextDeps } from './work/service.js';

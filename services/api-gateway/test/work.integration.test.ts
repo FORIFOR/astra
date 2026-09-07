@@ -21,6 +21,31 @@ const batch = {
   cursor: 'history-42',
   artifacts: [
     {
+      id: 'c1',
+      source: 'google_calendar',
+      kind: 'calendar_event',
+      title: 'MOPITA 定例',
+      body_excerpt: null,
+      people: [{ name: 'MTI 田中', email: 'tanaka@mti.example', role: 'attendee' }],
+      direction: 'self',
+      occurred_at: new Date(Date.now() + 5 * 3_600_000).toISOString(),
+      ends_at: new Date(Date.now() + 6 * 3_600_000).toISOString(),
+      due_at: null,
+      thread_id: null,
+      project_hint: 'MOPITA連携',
+      responded: null,
+      completed: null,
+      provenance: {
+        source: 'google_calendar',
+        external_id: 'c1',
+        label: 'MOPITA 定例',
+        observed_at: new Date().toISOString(),
+        url: null,
+        excerpt: null,
+      },
+      semantic: null,
+    },
+    {
       id: 'g1',
       source: 'gmail',
       kind: 'email',
@@ -113,7 +138,7 @@ describe.skipIf(!url)('work context over HTTP', () => {
       payload: batch,
     });
     expect(ok.statusCode).toBe(202);
-    expect(ok.json<{ accepted: number }>().accepted).toBe(2);
+    expect(ok.json<{ accepted: number }>().accepted).toBe(3);
     const tooLong = {
       ...batch,
       artifacts: [{ ...batch.artifacts[1], id: 'g3', body_excerpt: 'x'.repeat(501) }],
@@ -250,10 +275,10 @@ describe.skipIf(!url)('work context over HTTP', () => {
     expect(coding.meta!.selected_artifacts).toBe(0);
 
     // 返信: 名指しの相手の案件だけ
+    // 返信は REPLY_IN_CONTEXT の経路（相手の名指し → そのスレッドだけ）。別案件は添えない
     const reply = await ask('MTI に返信を書いて');
-    expect(reply.context).toContain('MOPITA連携');
+    expect(reply.context).toContain('MOPITA');
     expect(reply.context).not.toContain('○○社');
-    expect(reply.meta).toMatchObject({ intent: 'email_reply' });
   });
 
   it('takes a correction in one call, and stops all inference in one call', async () => {
@@ -295,5 +320,147 @@ describe.skipIf(!url)('work context over HTTP', () => {
       await app.inject({ method: 'GET', url: '/v1/work/context', headers: auth })
     ).json<{ priorities: unknown[]; inference_enabled: boolean }>();
     expect(silent).toMatchObject({ inference_enabled: false, priorities: [] });
+  });
+});
+
+describe.skipIf(!url)('reply in context and meeting brief', () => {
+  let harness: TestApp;
+  let app: App;
+  let auth: { authorization: string };
+  beforeAll(async () => {
+    const tokens = await makeTokens();
+    harness = await makeTestApp({
+      dbConfig: testDbConfig(url!, identityUrl),
+      tokens,
+      seedPlugins: true,
+    });
+    app = harness.app;
+    const issued = await app.inject({
+      method: 'POST',
+      url: '/v1/auth/dev/token',
+      payload: { email: `r-${uuidv7()}@example.com`, display_name: 'R' },
+    });
+    auth = { authorization: `Bearer ${issued.json<TokenResponse>().access_token}` };
+    await app.inject({
+      method: 'POST',
+      url: '/v1/plugins/com.astra.general/install',
+      headers: auth,
+      payload: { version: '0.1.0', granted_scopes: ['artifacts.read', 'artifacts.write'] },
+    });
+    await app.inject({ method: 'POST', url: '/v1/work/artifacts', headers: auth, payload: batch });
+  });
+  afterAll(async () => {
+    await harness.close();
+  });
+
+  const turn = async (text: string, replyCandidates: unknown[] = []) => {
+    const conv = (
+      await app.inject({ method: 'POST', url: '/v1/conversations', headers: auth, payload: {} })
+    ).json<{ id: string }>().id;
+    const res = await app.inject({
+      method: 'POST',
+      url: `/v1/conversations/${conv}/turns`,
+      headers: auth,
+      payload: { text, reply_candidates: replyCandidates },
+    });
+    return res;
+  };
+
+  it('resolves 「これ返して」 from the open mail, drafts with that thread only, and never sends', async () => {
+    const res = await turn('これ返して', [
+      { kind: 'mail', label: 'Re: MOPITA SITE_ID の件 - Gmail', app: 'Google Chrome' },
+    ]);
+    expect(res.statusCode).toBe(202);
+    const body = res.json<{
+      task_id: string;
+      reply: {
+        target: { artifact_id: string; thread_id: string };
+        sources: unknown[];
+        basis: string;
+      };
+    }>();
+    expect(body.reply.target.thread_id).toBe('th-mopita');
+    expect(body.reply.sources.length).toBeGreaterThan(0);
+    expect(body.reply.basis).toContain('踏まえて');
+    const tenantId = (await app.inject({ method: 'GET', url: '/v1/me', headers: auth })).json<{
+      tenant: { id: string };
+    }>().tenant.id;
+    const task = await harness.tasks.get(tenantId, body.task_id);
+    const input = task.input as { instruction?: string; context?: string; reply?: unknown };
+    expect(input.instruction).toContain('返信');
+    expect(input.context).toContain('MOPITA');
+    // 別案件のメールは添えない
+    expect(input.context).not.toContain('○○社');
+    expect(input.reply).toBeDefined();
+    // 送る段は無い（compose だけ）
+    expect(task.kind).not.toBe('mail.send');
+  });
+
+  it('asks back instead of guessing when no mail is open', async () => {
+    const res = await turn('これ返して');
+    expect(res.statusCode).toBe(200);
+    const body = res.json<{
+      needs_clarification: boolean;
+      answer: { text?: string } | { content?: { text: string } };
+    }>();
+    expect(body.needs_clarification).toBe(true);
+    expect(JSON.stringify(body.answer)).toContain('特定できませんでした');
+  });
+
+  it('builds the next meeting brief with sources, questions and no other project', async () => {
+    const res = await app.inject({ method: 'GET', url: '/v1/work/brief/next', headers: auth });
+    expect(res.statusCode).toBe(200);
+    const brief = res.json<{
+      event_id: string;
+      project: string | null;
+      open_items: { sources: unknown[] }[];
+      suggested_questions: { reason: string; sources: unknown[] }[];
+      provenance: unknown[];
+    }>();
+    expect(brief.event_id).toBe('c1');
+    expect(brief.project).toBe('MOPITA連携');
+    expect(brief.provenance.length).toBeGreaterThan(0);
+    for (const q of brief.suggested_questions) {
+      expect(q.reason.length).toBeGreaterThan(0);
+      expect(q.sources.length).toBeGreaterThan(0);
+    }
+    expect(JSON.stringify(brief)).not.toContain('○○社');
+  });
+
+  it('sending is a separate approved task, never started by the draft', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/v1/work/reply/send',
+      headers: auth,
+      payload: {
+        source: 'gmail',
+        to: ['tanaka@mti.example'],
+        subject: 'Re: MOPITA SITE_ID の件',
+        body: 'ご連絡ありがとうございます。',
+        in_reply_to: 'g1',
+        thread_id: 'th-mopita',
+      },
+    });
+    expect(res.statusCode).toBe(202);
+    const taskId = res.json<{ task_id: string }>().task_id;
+    const tenantId = (await app.inject({ method: 'GET', url: '/v1/me', headers: auth })).json<{
+      tenant: { id: string };
+    }>().tenant.id;
+    const task = await harness.tasks.get(tenantId, taskId);
+    expect(task.kind).toBe('mail.send');
+    const approvals = await app.inject({
+      method: 'GET',
+      url: `/v1/tasks/${taskId}/approvals`,
+      headers: auth,
+    });
+    expect(approvals.statusCode).toBe(200);
+    // Outlook からはまだ送れない、と言う（黙って Gmail 経由にしない）
+    const outlook = await app.inject({
+      method: 'POST',
+      url: '/v1/work/reply/send',
+      headers: auth,
+      payload: { source: 'outlook_mail', to: ['a@example.com'], subject: 's', body: 'b' },
+    });
+    expect(outlook.statusCode).toBe(409);
   });
 });

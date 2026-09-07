@@ -339,6 +339,8 @@ pub struct TurnOutcome {
     pub task_id: String,
     /// 仕事を起こさなかった理由・一言（無ければ空）。
     pub notice: String,
+    /// 返信案なら、宛先・出所・何を踏まえたか（`ReplyDraftMeta` の JSON。無ければ空）。
+    pub reply_json: String,
 }
 
 /// この turn に添えた端末内の画像（スクショ / クリップボード画像）。
@@ -393,6 +395,8 @@ pub fn api_send_turn_with_attachments(
         task_id: Option<String>,
         #[serde(default)]
         notice: Option<String>,
+        #[serde(default)]
+        reply: Option<serde_json::Value>,
     }
     let resp: Resp = ureq::post(&format!(
         "{}/v1/conversations/{}/turns",
@@ -409,6 +413,54 @@ pub fn api_send_turn_with_attachments(
         answer: resp.answer.unwrap_or_default(),
         task_id: resp.task_id.unwrap_or_default(),
         notice: resp.notice.unwrap_or_default(),
+        reply_json: resp.reply.map(|v| v.to_string()).unwrap_or_default(),
+    })
+}
+
+/// 「これ返して」の候補つきで依頼を送る。候補は `ReplyCandidate` の JSON 配列（端末が決めた順）。
+#[uniffi::export]
+pub fn api_send_turn_with_reply_candidates(
+    base_url: String,
+    access_token: String,
+    conversation_id: String,
+    text: String,
+    attachments: Vec<TurnAttachment>,
+    reply_candidates_json: String,
+) -> Result<TurnOutcome, ApiError> {
+    #[derive(Deserialize)]
+    struct Resp {
+        needs_clarification: bool,
+        #[serde(default)]
+        answer: Option<String>,
+        #[serde(default)]
+        task_id: Option<String>,
+        #[serde(default)]
+        notice: Option<String>,
+        #[serde(default)]
+        reply: Option<serde_json::Value>,
+    }
+    let candidates: serde_json::Value =
+        serde_json::from_str(&reply_candidates_json).unwrap_or(serde_json::json!([]));
+    let mut body = turn_body(&text, &attachments);
+    if let serde_json::Value::Object(ref mut map) = body {
+        map.insert("reply_candidates".to_string(), candidates);
+    }
+    let resp: Resp = ureq::post(&format!(
+        "{}/v1/conversations/{}/turns",
+        base(&base_url),
+        conversation_id
+    ))
+    .set("Authorization", &format!("Bearer {access_token}"))
+    .send_json(body)
+    .map_err(map_transport)?
+    .into_json()
+    .map_err(|e| ApiError::Decode { message: e.to_string() })?;
+    Ok(TurnOutcome {
+        needs_clarification: resp.needs_clarification,
+        answer: resp.answer.unwrap_or_default(),
+        task_id: resp.task_id.unwrap_or_default(),
+        notice: resp.notice.unwrap_or_default(),
+        reply_json: resp.reply.map(|v| v.to_string()).unwrap_or_default(),
     })
 }
 
@@ -704,5 +756,66 @@ pub fn api_plugin_disconnect(
     .set("Authorization", &format!("Bearer {access_token}"))
     .call()
     .map_err(map_transport)?;
+    Ok(())
+}
+
+// ---------------------------------------------------------------- reply / brief / approvals
+
+/** 返信を送る task を起こす（POST /v1/work/reply/send）。承認は別（`api_task_approve`）。task id を返す。 */
+#[uniffi::export]
+pub fn api_work_reply_send(
+    base_url: String,
+    access_token: String,
+    send_json: String,
+) -> Result<String, ApiError> {
+    let body: serde_json::Value =
+        serde_json::from_str(&send_json).map_err(|e| ApiError::Decode { message: e.to_string() })?;
+    #[derive(Deserialize)]
+    struct Resp { task_id: String }
+    let resp: Resp = ureq::post(&format!("{}/v1/work/reply/send", base(&base_url)))
+        .set("Authorization", &format!("Bearer {access_token}"))
+        .send_json(body)
+        .map_err(map_transport)?
+        .into_json()
+        .map_err(|e| ApiError::Decode { message: e.to_string() })?;
+    Ok(resp.task_id)
+}
+
+/** 次の会議の brief（GET /v1/work/brief/next）。無ければ空文字。 */
+#[uniffi::export]
+pub fn api_work_brief_next(base_url: String, access_token: String) -> Result<String, ApiError> {
+    let resp = ureq::get(&format!("{}/v1/work/brief/next", base(&base_url)))
+        .set("Authorization", &format!("Bearer {access_token}"))
+        .call()
+        .map_err(map_transport)?;
+    if resp.status() == 204 {
+        return Ok(String::new());
+    }
+    resp.into_string().map_err(|e| ApiError::Decode { message: e.to_string() })
+}
+
+/** 答えを待っている承認（GET /v1/tasks/:id/approvals）。JSON 本文。 */
+#[uniffi::export]
+pub fn api_task_approvals(
+    base_url: String,
+    access_token: String,
+    task_id: String,
+) -> Result<String, ApiError> {
+    get_json(&base_url, &access_token, &format!("/v1/tasks/{}/approvals", path_segment(&task_id)))
+}
+
+/** 承認に答える（POST /v1/tasks/:id/approve）。decision は APPROVED / REJECTED。 */
+#[uniffi::export]
+pub fn api_task_approve(
+    base_url: String,
+    access_token: String,
+    task_id: String,
+    approval_id: String,
+    decision: String,
+) -> Result<(), ApiError> {
+    ureq::post(&format!("{}/v1/tasks/{}/approve", base(&base_url), path_segment(&task_id)))
+        .set("Authorization", &format!("Bearer {access_token}"))
+        .send_json(ureq::json!({ "approval_id": approval_id, "decision": decision }))
+        .map_err(map_transport)?;
     Ok(())
 }

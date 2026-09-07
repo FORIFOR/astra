@@ -384,3 +384,123 @@ function escapeXml(s: string): string {
     (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' })[c] ?? c,
   );
 }
+
+// ---------------------------------------------------------------- reply
+
+/**
+ * 「これ返して」。端末が集めた**候補**を、決めた順で cloud に渡す（REPLY_IN_CONTEXT_GATE）。
+ *
+ *   1. mail       いま開いているメール（Mail.app / ブラウザの Gmail の題名）
+ *   2. selection  選択中の文字
+ *   3. screenshot 直前のスクショ（添付として別に来る）
+ *   4. frontmost  前面アプリの窓の題名
+ *   5. named      発話の中の人・案件（cloud が発話から取る。端末は送らない）
+ *   6. none
+ * 曖昧なら似たメールを勝手に選ばない。
+ */
+export const REPLY_CANDIDATE_KINDS = ['mail', 'selection', 'screenshot', 'frontmost'] as const;
+export const ReplyCandidate = z.object({
+  kind: z.enum(REPLY_CANDIDATE_KINDS),
+  /** 題名・選択文字・窓の題名。全文ではない。 */
+  label: z.string().min(1).max(300),
+  app: z.string().max(100).nullable().default(null),
+});
+export type ReplyCandidate = z.infer<typeof ReplyCandidate>;
+
+/** 解決したメール。artifact そのもの（抜粋）へ辿れる。 */
+export const ReplyTarget = z.object({
+  artifact_id: z.string(),
+  source: WorkSource,
+  thread_id: z.string().nullable(),
+  /** provider のメッセージ id（返信の in_reply_to）。 */
+  external_id: z.string(),
+  subject: z.string(),
+  /** 相手（差出人）。 */
+  to: PersonRef.nullable(),
+  project: z.string().nullable(),
+  /** どの候補で決まったか。 */
+  matched_by: z.enum([...REPLY_CANDIDATE_KINDS, 'named']),
+  confidence: z.number().min(0).max(1),
+});
+export type ReplyTarget = z.infer<typeof ReplyTarget>;
+
+export const ReplyResolution = z.discriminatedUnion('status', [
+  z.object({ status: z.literal('resolved'), target: ReplyTarget }),
+  z.object({ status: z.literal('ambiguous'), candidates: z.array(z.string()).max(5) }),
+  z.object({ status: z.literal('none') }),
+]);
+export type ReplyResolution = z.infer<typeof ReplyResolution>;
+
+/** 返信案に添える最小の文脈。**別案件のメールや今日の全予定は入れない。** */
+export const ReplyPack = z.object({
+  target: ReplyTarget,
+  /** そのスレッドの直近（抜粋）。 */
+  thread: z.array(Provenance).max(5),
+  project: z.string().nullable(),
+  /** その案件の直近の会議（無ければ null）。 */
+  meeting: Provenance.nullable(),
+  /** その案件で開いている件（自分が返す / 相手待ち）。 */
+  open_items: z.array(z.string().max(300)).max(5),
+  /** 本人が確認した働き方（confirmed だけ）。 */
+  personalization: z.array(z.string().max(200)).max(5),
+  /** 添えたものすべての出所。 */
+  sources: z.array(Provenance).min(1),
+});
+export type ReplyPack = z.infer<typeof ReplyPack>;
+
+/** turn の返事に添える、返信案の要点（本文は task の成果物）。 */
+export const ReplyDraftMeta = z.object({
+  target: ReplyTarget,
+  sources: z.array(Provenance).min(1),
+  /** 返信案を作るのに使った文脈の短い説明（「昨日の会議と、このスレッドを踏まえて」）。 */
+  basis: z.string().max(200),
+});
+export type ReplyDraftMeta = z.infer<typeof ReplyDraftMeta>;
+
+/** 送る（`POST /v1/work/reply/send`）。**本人が確認カードで押したあとにだけ**来る。 */
+export const SendReplyRequest = z.object({
+  source: WorkSource,
+  to: z.array(z.string().min(3).max(320)).min(1).max(20),
+  subject: z.string().min(1).max(500),
+  body: z.string().min(1).max(20_000),
+  in_reply_to: z.string().max(500).nullable().default(null),
+  thread_id: z.string().max(500).nullable().default(null),
+});
+export type SendReplyRequest = z.infer<typeof SendReplyRequest>;
+
+// ---------------------------------------------------------- meeting brief
+
+/** 事実 1 つ。**出所の無い事実は無い。** */
+export const BriefFact = z.object({
+  text: z.string().min(1).max(300),
+  sources: z.array(Provenance).min(1),
+});
+export type BriefFact = z.infer<typeof BriefFact>;
+
+/** 会議で確かめたいこと。質問だけでなく、なぜ聞くかと出所を持つ（それっぽい質問を作らない）。 */
+export const SuggestedQuestion = z.object({
+  question: z.string().min(1).max(200),
+  reason: z.string().min(1).max(300),
+  sources: z.array(Provenance).min(1),
+  extracted_by: z.enum(['llm', 'rule']),
+});
+export type SuggestedQuestion = z.infer<typeof SuggestedQuestion>;
+
+/**
+ * 会議前の brief（MEETING_BRIEF_GATE）。
+ *
+ *   次の予定 → 案件 → 前回の会議 → その後のメール → 開いている件 → 決定的な事実 → 言葉
+ */
+export const MeetingBrief = z.object({
+  event_id: z.string(),
+  title: z.string(),
+  starts_at: Timestamp,
+  project: z.string().nullable(),
+  previous: z.array(BriefFact).max(6),
+  since_last_meeting: z.array(BriefFact).max(6),
+  open_items: z.array(BriefFact).max(6),
+  suggested_questions: z.array(SuggestedQuestion).max(3),
+  provenance: z.array(Provenance).min(1),
+  generated_at: Timestamp,
+});
+export type MeetingBrief = z.infer<typeof MeetingBrief>;

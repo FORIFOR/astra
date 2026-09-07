@@ -386,9 +386,24 @@ RustBuffer uniffi_astra_core_fn_func_api_send_turn(RustBuffer base_url, RustBuff
 RustBuffer uniffi_astra_core_fn_func_api_send_turn_with_attachments(RustBuffer base_url, RustBuffer access_token, RustBuffer conversation_id, RustBuffer text, RustBuffer attachments, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_SEND_TURN_WITH_REPLY_CANDIDATES
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_SEND_TURN_WITH_REPLY_CANDIDATES
+RustBuffer uniffi_astra_core_fn_func_api_send_turn_with_reply_candidates(RustBuffer base_url, RustBuffer access_token, RustBuffer conversation_id, RustBuffer text, RustBuffer attachments, RustBuffer reply_candidates_json, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_START_CONVERSATION
 #define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_START_CONVERSATION
 RustBuffer uniffi_astra_core_fn_func_api_start_conversation(RustBuffer base_url, RustBuffer access_token, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_TASK_APPROVALS
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_TASK_APPROVALS
+RustBuffer uniffi_astra_core_fn_func_api_task_approvals(RustBuffer base_url, RustBuffer access_token, RustBuffer task_id, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_TASK_APPROVE
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_TASK_APPROVE
+void uniffi_astra_core_fn_func_api_task_approve(RustBuffer base_url, RustBuffer access_token, RustBuffer task_id, RustBuffer approval_id, RustBuffer decision, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_TASK_STATUS
@@ -406,6 +421,11 @@ uint64_t uniffi_astra_core_fn_func_api_upload_meeting_audio(RustBuffer base_url,
 RustBuffer uniffi_astra_core_fn_func_api_wait_task(RustBuffer base_url, RustBuffer access_token, RustBuffer task_id, uint64_t timeout_ms, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_WORK_BRIEF_NEXT
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_WORK_BRIEF_NEXT
+RustBuffer uniffi_astra_core_fn_func_api_work_brief_next(RustBuffer base_url, RustBuffer access_token, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_WORK_CONTEXT
 #define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_WORK_CONTEXT
 RustBuffer uniffi_astra_core_fn_func_api_work_context(RustBuffer base_url, RustBuffer access_token, RustCallStatus *_Nonnull out_status
@@ -419,6 +439,11 @@ void uniffi_astra_core_fn_func_api_work_correct(RustBuffer base_url, RustBuffer 
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_WORK_EVIDENCE
 #define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_WORK_EVIDENCE
 RustBuffer uniffi_astra_core_fn_func_api_work_evidence(RustBuffer base_url, RustBuffer access_token, RustBuffer item_id, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_WORK_REPLY_SEND
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_WORK_REPLY_SEND
+RustBuffer uniffi_astra_core_fn_func_api_work_reply_send(RustBuffer base_url, RustBuffer access_token, RustBuffer send_json, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_ASTRA_CORE_VERSION
@@ -869,9 +894,27 @@ uint16_t uniffi_astra_core_checksum_func_api_send_turn_with_attachments(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_SEND_TURN_WITH_REPLY_CANDIDATES
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_SEND_TURN_WITH_REPLY_CANDIDATES
+uint16_t uniffi_astra_core_checksum_func_api_send_turn_with_reply_candidates(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_START_CONVERSATION
 #define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_START_CONVERSATION
 uint16_t uniffi_astra_core_checksum_func_api_start_conversation(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_TASK_APPROVALS
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_TASK_APPROVALS
+uint16_t uniffi_astra_core_checksum_func_api_task_approvals(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_TASK_APPROVE
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_TASK_APPROVE
+uint16_t uniffi_astra_core_checksum_func_api_task_approve(void
     
 );
 #endif
@@ -893,6 +936,12 @@ uint16_t uniffi_astra_core_checksum_func_api_wait_task(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_WORK_BRIEF_NEXT
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_WORK_BRIEF_NEXT
+uint16_t uniffi_astra_core_checksum_func_api_work_brief_next(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_WORK_CONTEXT
 #define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_WORK_CONTEXT
 uint16_t uniffi_astra_core_checksum_func_api_work_context(void
@@ -908,6 +957,12 @@ uint16_t uniffi_astra_core_checksum_func_api_work_correct(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_WORK_EVIDENCE
 #define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_WORK_EVIDENCE
 uint16_t uniffi_astra_core_checksum_func_api_work_evidence(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_WORK_REPLY_SEND
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_WORK_REPLY_SEND
+uint16_t uniffi_astra_core_checksum_func_api_work_reply_send(void
     
 );
 #endif

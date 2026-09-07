@@ -10,6 +10,8 @@ import {
   type Referent,
   type TurnAttachment,
   type InjectionStats,
+  type ReplyDraftMeta,
+  type WorkArtifact,
 } from '@astra/contracts';
 import type { ConversationService } from '@astra/service-conversation';
 import {
@@ -20,7 +22,14 @@ import {
 } from '@astra/service-conversation';
 import { agentKindFor, type TaskService } from '@astra/service-task';
 import type { Redis } from 'ioredis';
-import { selectContextPack, type WorkContextService } from '@astra/service-world-model';
+import {
+  classifyContextIntent,
+  renderReplyContext,
+  replyBasis,
+  replyInstruction,
+  selectContextPack,
+  type WorkContextService,
+} from '@astra/service-world-model';
 import type { App } from '../fastify.js';
 import { parseLastEventId, pollingWaker, pumpEventStream, redisWaker } from './sse.js';
 import { requirePrincipal } from '../auth/middleware.js';
@@ -32,6 +41,8 @@ export interface ConversationRouteDeps {
   readonly ssePollIntervalMs?: number;
   /** Work Context。chat lane の問いに、関連する案件だけを `<work_context>` として添える（正本 §6、上限つき）。 */
   readonly work?: WorkContextService;
+  /** Astra 自身の task・会議を artifact として足す（work routes と同じもの）。 */
+  readonly extraArtifacts?: (tenantId: string) => Promise<WorkArtifact[]>;
 }
 
 export function registerConversationRoutes(app: App, deps: ConversationRouteDeps): void {
@@ -148,6 +159,8 @@ export function registerConversationRoutes(app: App, deps: ConversationRouteDeps
         contextLabels: [
           ...body.context_referents.map((r) => r.label),
           ...body.attachments.map((a) => a.label),
+          // 「これ返して」の「これ」は、開いているメールの題名で解ける
+          ...body.reply_candidates.map((c) => c.label),
         ],
       });
       const clarification = clarificationFor(resolutions);
@@ -159,6 +172,64 @@ export function registerConversationRoutes(app: App, deps: ConversationRouteDeps
         hasSelection: false,
         namedAgent: null,
       });
+
+      let replyMeta: ReplyDraftMeta | null = null;
+      let replyContext = '';
+      let replyInstructionText = '';
+      if (
+        deps.work &&
+        decision.lane === 'chat' &&
+        classifyContextIntent(body.text) === 'email_reply'
+      ) {
+        const extra = (await deps.extraArtifacts?.(principal.tenantId).catch(() => [])) ?? [];
+        const resolution = await deps.work
+          .resolveReply(
+            principal.tenantId,
+            principal.userId,
+            { utterance: body.text, candidates: body.reply_candidates },
+            extra,
+          )
+          .catch(() => null);
+        if (!resolution || resolution.status !== 'resolved') {
+          const why =
+            resolution?.status === 'ambiguous'
+              ? `どのメールか特定できませんでした。候補が ${String(resolution.candidates.length)} 件あります: ${resolution.candidates.join(' / ')}。メールを開いてからもう一度どうぞ。`
+              : 'どのメールか特定できませんでした。返信したいメールを開いてから、もう一度どうぞ。';
+          const answer = await deps.conversations.append({
+            tenantId: principal.tenantId,
+            conversationId: id,
+            role: 'assistant',
+            modality: state.response_mode,
+            text: why,
+          });
+          request.log.info(
+            { reply_resolution: resolution?.status ?? 'error' },
+            'reply target not resolved',
+          );
+          return reply.status(200).send({ turn, answer, needs_clarification: true });
+        }
+        const replyPack = await deps.work.replyPack(
+          principal.tenantId,
+          principal.userId,
+          resolution,
+          extra,
+        );
+        replyMeta = {
+          target: replyPack.target,
+          sources: replyPack.sources,
+          basis: replyBasis(replyPack),
+        };
+        replyContext = renderReplyContext(replyPack);
+        replyInstructionText = replyInstruction(replyPack);
+        request.log.info(
+          {
+            reply_target: replyPack.target.artifact_id,
+            sources: replyPack.sources.length,
+            matched_by: replyPack.target.matched_by,
+          },
+          'reply in context',
+        );
+      }
 
       /*
        * 指示語が解けないまま先へ進めない。
@@ -186,8 +257,13 @@ export function registerConversationRoutes(app: App, deps: ConversationRouteDeps
        * 全データは渡さない（CONTEXT_MINIMIZATION_GATE）。問いの意図に応じた最小の pack だけ。
        * 渡した量（selected / available）は task の input と log に残し、後から数えられるようにする。
        */
+      /*
+       * 「これ返して」（REPLY_IN_CONTEXT）。端末の候補（開いているメール → 選択 → 前面の窓）と発話から
+       * **決定的に**相手を決め、曖昧なら似たメールを選ばずに聞き返す。決まったら、そのスレッド・案件・
+       * 直近の会議・開いている件だけを添えて返信案を書かせる（送らない）。
+       */
       const pack =
-        deps.work && decision.lane === 'chat'
+        deps.work && decision.lane === 'chat' && !replyMeta
           ? await deps.work
               .context(principal.tenantId, principal.userId)
               .then((ctx) => selectContextPack({ question: body.text, context: ctx }))
@@ -202,8 +278,9 @@ export function registerConversationRoutes(app: App, deps: ConversationRouteDeps
         decision.lane,
         turn.id,
         body.attachments,
-        pack?.text ?? '',
+        replyMeta ? replyContext : (pack?.text ?? ''),
         pack?.stats ?? null,
+        replyMeta ? { meta: replyMeta, instruction: replyInstructionText } : null,
       );
 
       // Lane は返さない。利用者に見せないものを API で配らない。
@@ -215,6 +292,8 @@ export function registerConversationRoutes(app: App, deps: ConversationRouteDeps
         task_id: started.taskId,
         // 始められなかった理由。**黙って intent だけ返さない。**
         notice: started.notice,
+        // 返信案なら、宛先・出所・何を踏まえたか（本文は task の成果物）。
+        ...(replyMeta ? { reply: replyMeta } : {}),
       });
     },
   );
@@ -282,6 +361,7 @@ async function startWork(
   attachments: readonly TurnAttachment[] = [],
   workContext = '',
   contextStats: InjectionStats | null = null,
+  replyDraft: { meta: ReplyDraftMeta; instruction: string } | null = null,
 ): Promise<{ taskId: string | null; notice: string | null }> {
   const request =
     lane === 'chat'
@@ -292,6 +372,8 @@ async function startWork(
           input: {
             question: text,
             message: text,
+            // 返信案: compose の段だけを走らせる（instruction がある = compose）。送らない。
+            ...(replyDraft ? { instruction: replyDraft.instruction, reply: replyDraft.meta } : {}),
             ...(attachments.length > 0 ? { attachments: [...attachments] } : {}),
             ...(workContext ? { context: workContext } : {}),
             // 渡した量の事実。何を知っているかではなく、何を渡したか。

@@ -14,6 +14,7 @@
  */
 import {
   PersonalizationUpdate,
+  SendReplyRequest,
   WorkArtifactBatch,
   WorkCorrection,
   WorkSource,
@@ -156,6 +157,72 @@ export function registerWorkRoutes(app: App, deps: WorkRouteDeps): void {
       return reply.status(204).send();
     },
   );
+
+  /** 次の会議の brief（MEETING_BRIEF）。無ければ 204。 */
+  app.get('/v1/work/brief/next', async (request, reply) => {
+    const p = requirePrincipal();
+    const brief = await deps.work.meetingBrief(
+      p.tenantId,
+      p.userId,
+      await localArtifacts(deps, p.tenantId),
+    );
+    if (!brief) return reply.status(204).send();
+    request.log.info(
+      { event: brief.event_id, questions: brief.suggested_questions.length },
+      'meeting brief',
+    );
+    return brief;
+  });
+
+  app.get<{ Params: { eventId: string } }>('/v1/work/brief/:eventId', async (request, reply) => {
+    const p = requirePrincipal();
+    const brief = await deps.work.meetingBrief(
+      p.tenantId,
+      p.userId,
+      await localArtifacts(deps, p.tenantId),
+      request.params.eventId,
+    );
+    if (!brief)
+      return reply
+        .status(404)
+        .send({ error: { code: 'common.not_found', message: 'no such event' } });
+    return brief;
+  });
+
+  /**
+   * 返信を送る。**本人が確認カードで押したあとにだけ**来る。
+   * 送るのは task（mail.send、EXTERNAL_COMMIT）で、承認 → 端末の送る接続 → 送信。
+   * 承認は別の呼び出し（POST /v1/tasks/:id/approve）— ここで自動承認しない。
+   */
+  app.post('/v1/work/reply/send', async (request, reply) => {
+    const p = requirePrincipal();
+    const body = SendReplyRequest.parse(request.body ?? {});
+    if (body.source !== 'gmail') {
+      return reply.status(409).send({
+        error: {
+          code: 'connector.unsupported',
+          message: 'いまは Gmail の返信だけ送れます。Outlook からの送信はまだです。',
+        },
+      });
+    }
+    const { task } = await deps.tasks.create({
+      tenantId: p.tenantId,
+      userId: p.userId,
+      request: {
+        kind: 'mail.send',
+        title: `返信: ${body.subject}`,
+        input: {
+          to: body.to,
+          subject: body.subject,
+          body: body.body,
+          in_reply_to: body.in_reply_to,
+          thread_id: body.thread_id,
+        },
+      },
+      idempotencyKey: `reply:${p.userId}:${body.in_reply_to ?? body.subject}:${String(body.body.length)}`,
+    });
+    return reply.status(202).send({ task_id: task.id });
+  });
 
   app.get('/v1/personalization', async () => {
     const p = requirePrincipal();

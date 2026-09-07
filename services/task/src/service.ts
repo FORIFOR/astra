@@ -189,6 +189,32 @@ export class TaskService {
     return withTenant(this.#db, tenantId, async (tx) => toTask(await loadTask(tx, taskId)));
   }
 
+  /** いま答えを待っている承認。端末が確認カードから答えるために読む。 */
+  async pendingApprovals(
+    tenantId: string,
+    taskId: string,
+  ): Promise<
+    { id: string; summary: string; risk: string; expires_at: string; details: unknown }[]
+  > {
+    return withTenant(this.#db, tenantId, async (tx) => {
+      await loadTask(tx, taskId);
+      const rows = await tx
+        .selectFrom('approvals')
+        .select(['id', 'summary', 'risk', 'expires_at', 'details'])
+        .where('task_id', '=', taskId)
+        .where('status', '=', 'PENDING')
+        .orderBy('step_index')
+        .execute();
+      return rows.map((r) => ({
+        id: r.id,
+        summary: r.summary,
+        risk: r.risk,
+        expires_at: r.expires_at.toISOString(),
+        details: r.details,
+      }));
+    });
+  }
+
   async list(
     tenantId: string,
     limit: number,

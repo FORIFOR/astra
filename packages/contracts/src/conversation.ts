@@ -113,6 +113,20 @@ export const SendTurnRequest = z.object({
     .array(z.object({ label: z.string().min(1).max(200), kind: z.string().max(40) }))
     .max(10)
     .default([]),
+  /**
+   * 「これ返して」の候補。端末が決めた順（開いているメール → 選択 → 前面の窓）。
+   * 形は `@astra/contracts` の `ReplyCandidate`。cloud はこの順で解決し、曖昧なら選ばない。
+   */
+  reply_candidates: z
+    .array(
+      z.object({
+        kind: z.enum(['mail', 'selection', 'screenshot', 'frontmost']),
+        label: z.string().min(1).max(300),
+        app: z.string().max(100).nullable().default(null),
+      }),
+    )
+    .max(6)
+    .default([]),
 });
 export type SendTurnRequest = z.infer<typeof SendTurnRequest>;
 

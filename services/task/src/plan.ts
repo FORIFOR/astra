@@ -56,7 +56,7 @@ export interface TaskPlan {
   };
 }
 
-export const KNOWN_TASK_KINDS = ['echo', 'research', 'meeting.finalize'] as const;
+export const KNOWN_TASK_KINDS = ['echo', 'research', 'meeting.finalize', 'mail.send'] as const;
 export type TaskKind = (typeof KNOWN_TASK_KINDS)[number];
 
 export function isKnownTaskKind(kind: string): kind is TaskKind {
@@ -236,6 +236,45 @@ function planMeetingFinalize(input: Record<string, unknown>): TaskPlan {
   };
 }
 
+/**
+ * 返信を送る（「これ返して」の最後の 1 段）。正本 §9.2、Work Context 仕様 REPLY_IN_CONTEXT。
+ *
+ * 1 段だけ。**外へ出る操作なので承認が要り、端末の送る接続（gmail-actions）でしか動かない。**
+ * 本文は本人が確認カードで見た（直した）もの。ここで作文しない。
+ */
+function planMailSend(input: Record<string, unknown>): TaskPlan {
+  const to = Array.isArray(input['to'])
+    ? input['to'].filter((v): v is string => typeof v === 'string')
+    : [];
+  const subject = typeof input['subject'] === 'string' ? input['subject'] : '';
+  const body = typeof input['body'] === 'string' ? input['body'] : '';
+  if (to.length === 0 || !subject || !body) {
+    throw new UnknownTaskKindError('mail.send needs to, subject and body');
+  }
+  return {
+    steps: [
+      {
+        index: 0,
+        toolId: 'mail.send',
+        risk: 'EXTERNAL_COMMIT',
+        surface: 'local',
+        requiresConfirmation: true,
+        message: `${to.join(', ')} に返信を送ります`,
+        args: {
+          to,
+          subject,
+          body,
+          count: to.length,
+          ...(typeof input['in_reply_to'] === 'string'
+            ? { in_reply_to: input['in_reply_to'] }
+            : {}),
+        },
+      },
+    ],
+    artifact: { type: 'DOCUMENT', title: `返信: ${subject}`, mimeType: 'text/markdown' },
+  };
+}
+
 export function planTask(kind: string, input: Record<string, unknown>): TaskPlan {
   switch (kind) {
     case 'echo':
@@ -244,6 +283,8 @@ export function planTask(kind: string, input: Record<string, unknown>): TaskPlan
       return planResearch(input);
     case 'meeting.finalize':
       return planMeetingFinalize(input);
+    case 'mail.send':
+      return planMailSend(input);
     default:
       throw new UnknownTaskKindError(kind);
   }

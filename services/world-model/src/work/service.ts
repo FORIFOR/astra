@@ -19,10 +19,16 @@ import {
   type WorkSource,
   type WorkSyncAttempt,
   type WorkSyncState,
+  type MeetingBrief,
+  type ReplyCandidate,
+  type ReplyPack,
+  type ReplyResolution,
 } from '@astra/contracts';
 import { withTenant, type DbHandle } from '@astra/db';
 import { sql } from 'kysely';
 import { buildWorkContext, clusterProjects } from './graph.js';
+import { buildMeetingBrief } from './meeting-brief.js';
+import { buildReplyPack, resolveReplyTarget } from './reply.js';
 import {
   applyUpdate,
   deriveProfile,
@@ -307,6 +313,58 @@ export class WorkContextService {
       now: this.#now(),
       inferenceEnabled: stored.inference_enabled,
     });
+  }
+
+  /** 「これ返して」の相手を決める。候補の順。曖昧なら選ばない。 */
+  async resolveReply(
+    tenantId: string,
+    userId: string,
+    input: { utterance: string; candidates: readonly ReplyCandidate[] },
+    extra: readonly WorkArtifact[] = [],
+  ): Promise<ReplyResolution> {
+    const artifacts = [...(await this.artifacts(tenantId, userId)), ...extra];
+    return resolveReplyTarget({
+      utterance: input.utterance,
+      candidates: input.candidates,
+      artifacts,
+    });
+  }
+
+  /** 返信案に添える最小の文脈。 */
+  async replyPack(
+    tenantId: string,
+    userId: string,
+    target: ReplyResolution & { status: 'resolved' },
+    extra: readonly WorkArtifact[] = [],
+  ): Promise<ReplyPack> {
+    const artifacts = [...(await this.artifacts(tenantId, userId)), ...extra];
+    const stored = await this.stored(tenantId, userId);
+    const context = buildWorkContext({
+      artifacts,
+      corrections: await this.corrections(tenantId, userId),
+      now: this.#now(),
+      inferenceEnabled: stored.inference_enabled,
+    });
+    const profile = await this.personalization(tenantId, userId);
+    return buildReplyPack({ target: target.target, artifacts, context, profile });
+  }
+
+  /** 次の会議の brief。無ければ null。 */
+  async meetingBrief(
+    tenantId: string,
+    userId: string,
+    extra: readonly WorkArtifact[] = [],
+    eventId: string | null = null,
+  ): Promise<MeetingBrief | null> {
+    const artifacts = [...(await this.artifacts(tenantId, userId)), ...extra];
+    const stored = await this.stored(tenantId, userId);
+    const context = buildWorkContext({
+      artifacts,
+      corrections: await this.corrections(tenantId, userId),
+      now: this.#now(),
+      inferenceEnabled: stored.inference_enabled,
+    });
+    return buildMeetingBrief({ artifacts, context, now: this.#now(), eventId });
   }
 
   async personalization(tenantId: string, userId: string): Promise<PersonalizationProfile> {

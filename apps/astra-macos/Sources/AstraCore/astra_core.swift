@@ -1904,6 +1904,10 @@ public struct TurnOutcome {
      * 仕事を起こさなかった理由・一言（無ければ空）。
      */
     public var notice: String
+    /**
+     * 返信案なら、宛先・出所・何を踏まえたか（`ReplyDraftMeta` の JSON。無ければ空）。
+     */
+    public var replyJson: String
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
@@ -1916,11 +1920,15 @@ public struct TurnOutcome {
          */taskId: String, 
         /**
          * 仕事を起こさなかった理由・一言（無ければ空）。
-         */notice: String) {
+         */notice: String, 
+        /**
+         * 返信案なら、宛先・出所・何を踏まえたか（`ReplyDraftMeta` の JSON。無ければ空）。
+         */replyJson: String) {
         self.needsClarification = needsClarification
         self.answer = answer
         self.taskId = taskId
         self.notice = notice
+        self.replyJson = replyJson
     }
 }
 
@@ -1943,6 +1951,9 @@ extension TurnOutcome: Equatable, Hashable {
         if lhs.notice != rhs.notice {
             return false
         }
+        if lhs.replyJson != rhs.replyJson {
+            return false
+        }
         return true
     }
 
@@ -1951,6 +1962,7 @@ extension TurnOutcome: Equatable, Hashable {
         hasher.combine(answer)
         hasher.combine(taskId)
         hasher.combine(notice)
+        hasher.combine(replyJson)
     }
 }
 
@@ -1966,7 +1978,8 @@ public struct FfiConverterTypeTurnOutcome: FfiConverterRustBuffer {
                 needsClarification: FfiConverterBool.read(from: &buf), 
                 answer: FfiConverterString.read(from: &buf), 
                 taskId: FfiConverterString.read(from: &buf), 
-                notice: FfiConverterString.read(from: &buf)
+                notice: FfiConverterString.read(from: &buf), 
+                replyJson: FfiConverterString.read(from: &buf)
         )
     }
 
@@ -1975,6 +1988,7 @@ public struct FfiConverterTypeTurnOutcome: FfiConverterRustBuffer {
         FfiConverterString.write(value.answer, into: &buf)
         FfiConverterString.write(value.taskId, into: &buf)
         FfiConverterString.write(value.notice, into: &buf)
+        FfiConverterString.write(value.replyJson, into: &buf)
     }
 }
 
@@ -2861,6 +2875,21 @@ public func apiSendTurnWithAttachments(baseUrl: String, accessToken: String, con
 })
 }
 /**
+ * 「これ返して」の候補つきで依頼を送る。候補は `ReplyCandidate` の JSON 配列（端末が決めた順）。
+ */
+public func apiSendTurnWithReplyCandidates(baseUrl: String, accessToken: String, conversationId: String, text: String, attachments: [TurnAttachment], replyCandidatesJson: String)throws  -> TurnOutcome  {
+    return try  FfiConverterTypeTurnOutcome_lift(try rustCallWithError(FfiConverterTypeApiError_lift) {
+    uniffi_astra_core_fn_func_api_send_turn_with_reply_candidates(
+        FfiConverterString.lower(baseUrl),
+        FfiConverterString.lower(accessToken),
+        FfiConverterString.lower(conversationId),
+        FfiConverterString.lower(text),
+        FfiConverterSequenceTypeTurnAttachment.lower(attachments),
+        FfiConverterString.lower(replyCandidatesJson),$0
+    )
+})
+}
+/**
  * 会話を始める（POST /v1/conversations）。会話 id を返す。
  */
 public func apiStartConversation(baseUrl: String, accessToken: String)throws  -> String  {
@@ -2870,6 +2899,31 @@ public func apiStartConversation(baseUrl: String, accessToken: String)throws  ->
         FfiConverterString.lower(accessToken),$0
     )
 })
+}
+/**
+ * 答えを待っている承認（GET /v1/tasks/:id/approvals）。JSON 本文。
+ */
+public func apiTaskApprovals(baseUrl: String, accessToken: String, taskId: String)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeApiError_lift) {
+    uniffi_astra_core_fn_func_api_task_approvals(
+        FfiConverterString.lower(baseUrl),
+        FfiConverterString.lower(accessToken),
+        FfiConverterString.lower(taskId),$0
+    )
+})
+}
+/**
+ * 承認に答える（POST /v1/tasks/:id/approve）。decision は APPROVED / REJECTED。
+ */
+public func apiTaskApprove(baseUrl: String, accessToken: String, taskId: String, approvalId: String, decision: String)throws   {try rustCallWithError(FfiConverterTypeApiError_lift) {
+    uniffi_astra_core_fn_func_api_task_approve(
+        FfiConverterString.lower(baseUrl),
+        FfiConverterString.lower(accessToken),
+        FfiConverterString.lower(taskId),
+        FfiConverterString.lower(approvalId),
+        FfiConverterString.lower(decision),$0
+    )
+}
 }
 /**
  * 仕事の状態を引く。
@@ -2913,6 +2967,17 @@ public func apiWaitTask(baseUrl: String, accessToken: String, taskId: String, ti
 })
 }
 /**
+ * 次の会議の brief（GET /v1/work/brief/next）。無ければ空文字。
+ */
+public func apiWorkBriefNext(baseUrl: String, accessToken: String)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeApiError_lift) {
+    uniffi_astra_core_fn_func_api_work_brief_next(
+        FfiConverterString.lower(baseUrl),
+        FfiConverterString.lower(accessToken),$0
+    )
+})
+}
+/**
  * Home の Work Context（GET /v1/work/context）。JSON 本文。
  */
 public func apiWorkContext(baseUrl: String, accessToken: String)throws  -> String  {
@@ -2945,6 +3010,18 @@ public func apiWorkEvidence(baseUrl: String, accessToken: String, itemId: String
         FfiConverterString.lower(baseUrl),
         FfiConverterString.lower(accessToken),
         FfiConverterString.lower(itemId),$0
+    )
+})
+}
+/**
+ * 返信を送る task を起こす（POST /v1/work/reply/send）。承認は別（`api_task_approve`）。task id を返す。
+ */
+public func apiWorkReplySend(baseUrl: String, accessToken: String, sendJson: String)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeApiError_lift) {
+    uniffi_astra_core_fn_func_api_work_reply_send(
+        FfiConverterString.lower(baseUrl),
+        FfiConverterString.lower(accessToken),
+        FfiConverterString.lower(sendJson),$0
     )
 })
 }
@@ -3164,7 +3241,16 @@ private let initializationResult: InitializationResult = {
     if (uniffi_astra_core_checksum_func_api_send_turn_with_attachments() != 34022) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_astra_core_checksum_func_api_send_turn_with_reply_candidates() != 17486) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_astra_core_checksum_func_api_start_conversation() != 27882) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_astra_core_checksum_func_api_task_approvals() != 52972) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_astra_core_checksum_func_api_task_approve() != 17739) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_astra_core_checksum_func_api_task_status() != 37298) {
@@ -3176,6 +3262,9 @@ private let initializationResult: InitializationResult = {
     if (uniffi_astra_core_checksum_func_api_wait_task() != 17601) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_astra_core_checksum_func_api_work_brief_next() != 6628) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_astra_core_checksum_func_api_work_context() != 24612) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -3183,6 +3272,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_astra_core_checksum_func_api_work_evidence() != 12987) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_astra_core_checksum_func_api_work_reply_send() != 23683) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_astra_core_checksum_func_astra_core_version() != 51046) {
