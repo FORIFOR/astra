@@ -1790,6 +1790,35 @@
       }
     },
     {
+      "id": "main.home-work-why",
+      "group": "main",
+      "title": "Main — Home (なぜ重要？)",
+      "required": true,
+      "capture": {
+        "selftest": "sections",
+        "file": "home-work-why.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "Home の案件の [なぜ重要？]。",
+      "meaning": "その案件がなぜ上位かを、要因の言葉（寄与の大きい順、最大 4 行）と出所で説明する。数式や点数は出さない。",
+      "primary": "なぜ重要？（閉じる）",
+      "secondary": "出所の行（元のメール・会議へ）",
+      "states": "開いている / 閉じている",
+      "keys": "—",
+      "privacy": "出所は抜粋（<= 200 字）だけ。",
+      "prev": [
+        "main.home-work-context"
+      ],
+      "next": [],
+      "window": "Main Window",
+      "invariant": "理由の行は 4 行以内。数式は見せない。",
+      "source": "RC",
+      "appearance_policy": "adaptive"
+    },
+    {
       "id": "main.home-recording-now",
       "group": "main",
       "title": "Main — Home (recording now)",

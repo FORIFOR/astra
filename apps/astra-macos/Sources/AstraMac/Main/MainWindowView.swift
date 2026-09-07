@@ -86,6 +86,7 @@ final class MainData: ObservableObject {
                     VoiceHUDState.shared.configureBackend(base: base, token: tokens.accessToken)
                     WorkContextStore.shared.configureBackend(base: base, token: tokens.accessToken)
                     WorkContextStore.shared.load()
+                    ConnectorState.shared.configureBackend(base: base, token: tokens.accessToken)
                     // 録音の自動 upload（会議作成→停止時に音声全体→落ちた録音の回収）は dev 専用。
                     // 既定では録音は gateway を知らない。`RecordingRuntime.devAutoUploadEnabled`。
                     if RecordingRuntime.devAutoUploadEnabled {
@@ -557,12 +558,85 @@ private struct ConnectorsPane: View {
         }
     }
 
+    /// Work Context が読む source の状態。**事実だけ**（cloud の記録 + この Mac の鍵）。
+    /// 「Astra は仕事を全部把握している」と誤解させないために、繋いでいないものも並べて言う。
+    private func workSourceRow(_ s: ConnectorState.Source) -> some View {
+        let st = connectors.status[s.pluginId] ?? .disconnected
+        let connected = st == .connected
+        return HStack(alignment: .firstTextBaseline, spacing: 10) {
+            Image(systemName: connected ? "checkmark.circle.fill" : "circle")
+                .font(.system(size: 12))
+                .foregroundStyle(connected ? Palette.success(dark) : Palette.muted(dark))
+                .frame(width: 16)
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 8) {
+                    Text(s.name).font(.system(size: TypeScale.secondarySize, weight: .medium)).foregroundStyle(Palette.text(dark))
+                    Text({
+                        switch st {
+                        case .connected: return "接続中"
+                        case .disconnected: return "未接続"
+                        case .cannotConnect: return "設定が必要"
+                        case .connecting: return "同意画面を開いています…"
+                        case .failed(let why): return "つなげませんでした: \(why)"
+                        }
+                    }())
+                        .font(.system(size: TypeScale.captionSize))
+                        .foregroundStyle(connected ? Palette.success(dark) : Palette.muted(dark))
+                }
+                Text(s.purpose).font(.system(size: TypeScale.captionSize)).foregroundStyle(Palette.muted(dark))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 8)
+            if connected {
+                Button("切断") {
+                    guard Confirm.ask(ActionConfirmation(
+                        title: "\(s.name) との接続を切ります",
+                        details: ["Astra はこのサービスを読めなくなります", "使うにはもう一度つなぎ直してください"],
+                        risk: .r2, confirmLabel: "切断する")) else { return }
+                    connectors.disconnect(s.name)
+                }
+                .font(.system(size: TypeScale.microSize)).foregroundStyle(.secondary)
+                .frame(height: 28).padding(.horizontal, 8)
+                .buttonStyle(AstraControlStyle(radius: 8, base: 0.0))
+            } else if connectors.canConnect(s.name) {
+                Button("接続") { _ = connectors.connect(source: s) }
+                    .font(.system(size: TypeScale.microSize, weight: .medium)).foregroundStyle(Color.astraAccent(dark))
+                    .frame(height: 28).padding(.horizontal, 8)
+                    .buttonStyle(AstraControlStyle(radius: 8, base: 0.0))
+            }
+        }
+        .padding(.vertical, 8)
+        .accessibilityIdentifier("workSource-\(s.pluginId)")
+    }
+
     var body: some View {
-        let apps = self.apps.isEmpty ? ["Gmail", "Google Calendar", "Finder"] : self.apps
+        let sourceNames = Set(connectors.sources.map(\.name))
+        let apps = (self.apps.isEmpty ? ["Gmail", "Google Calendar", "Finder"] : self.apps).filter { !sourceNames.contains($0) }
         return ScrollView {
             WorkspaceHeader(title: Facts.appsConnectors,
                             subtitle: "外部サービスとの接続。つなぐまで Astra はそのサービスを読みません。")
                 .padding(.horizontal, 28).padding(.top, 28)
+
+            // 仕事のコンテキスト（Work Context）が読む source。繋いでいないものも事実として並べる。
+            if !connectors.sources.isEmpty {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(Facts.workContextSourcesTitle)
+                        .font(.system(size: TypeScale.microSize, weight: .semibold))
+                        .foregroundStyle(Palette.muted(dark)).tracking(0.4)
+                    ForEach(connectors.sources) { s in
+                        workSourceRow(s)
+                        if s.id != connectors.sources.last?.id { Divider().overlay(Color.hairline(dark)) }
+                    }
+                    Text("読むだけの接続です。送る・作るは、その操作が要ったときに別に許可を求めます。")
+                        .font(.system(size: TypeScale.captionSize)).foregroundStyle(Palette.muted(dark))
+                        .padding(.top, 4)
+                }
+                .padding(16)
+                .background(RoundedRectangle(cornerRadius: 10).fill(Color.cardSurface(dark).opacity(dark ? 0.5 : 0)))
+                .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.hairline(dark)))
+                .padding(.horizontal, 28).padding(.top, 16)
+                .accessibilityIdentifier("workContextSources")
+            }
 
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 260), spacing: 12)], spacing: 12) {
                 ForEach(apps, id: \.self) { a in
@@ -592,7 +666,7 @@ private struct ConnectorsPane: View {
                                               "使うにはもう一度つなぎ直してください"],
                                     risk: .r2,
                                     confirmLabel: "切断する")) else { return }
-                                connectors.connected.remove(a)
+                                connectors.disconnect(a)
                             }
                                 .font(.system(size: TypeScale.microSize))
                                 .foregroundStyle(.secondary)

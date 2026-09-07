@@ -356,6 +356,21 @@ RustBuffer uniffi_astra_core_fn_func_api_personalization_update(RustBuffer base_
 RustBuffer uniffi_astra_core_fn_func_api_plugin_catalog(RustBuffer base_url, RustBuffer access_token, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_PLUGIN_CONNECT
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_PLUGIN_CONNECT
+RustBuffer uniffi_astra_core_fn_func_api_plugin_connect(RustBuffer base_url, RustBuffer access_token, RustBuffer plugin_id, RustBuffer connect_json, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_PLUGIN_CONNECTIONS
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_PLUGIN_CONNECTIONS
+RustBuffer uniffi_astra_core_fn_func_api_plugin_connections(RustBuffer base_url, RustBuffer access_token, RustBuffer plugin_id, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_PLUGIN_DISCONNECT
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_PLUGIN_DISCONNECT
+void uniffi_astra_core_fn_func_api_plugin_disconnect(RustBuffer base_url, RustBuffer access_token, RustBuffer plugin_id, RustBuffer connector_id, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_REACHABLE
 #define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_REACHABLE
 int8_t uniffi_astra_core_fn_func_api_reachable(RustBuffer base_url, RustCallStatus *_Nonnull out_status
@@ -435,6 +450,11 @@ RustBuffer uniffi_astra_core_fn_func_connector_parse_callback(RustBuffer target,
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_CONNECTOR_PKCE_CHALLENGE
 #define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_CONNECTOR_PKCE_CHALLENGE
 RustBuffer uniffi_astra_core_fn_func_connector_pkce_challenge(RustBuffer verifier, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_CONNECTOR_TOKEN_URL
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_CONNECTOR_TOKEN_URL
+RustBuffer uniffi_astra_core_fn_func_connector_token_url(RustBuffer provider_id, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_FORMAT_ELAPSED
@@ -813,6 +833,24 @@ uint16_t uniffi_astra_core_checksum_func_api_plugin_catalog(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_PLUGIN_CONNECT
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_PLUGIN_CONNECT
+uint16_t uniffi_astra_core_checksum_func_api_plugin_connect(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_PLUGIN_CONNECTIONS
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_PLUGIN_CONNECTIONS
+uint16_t uniffi_astra_core_checksum_func_api_plugin_connections(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_PLUGIN_DISCONNECT
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_PLUGIN_DISCONNECT
+uint16_t uniffi_astra_core_checksum_func_api_plugin_disconnect(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_REACHABLE
 #define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_REACHABLE
 uint16_t uniffi_astra_core_checksum_func_api_reachable(void
@@ -906,6 +944,12 @@ uint16_t uniffi_astra_core_checksum_func_connector_parse_callback(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_CONNECTOR_PKCE_CHALLENGE
 #define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_CONNECTOR_PKCE_CHALLENGE
 uint16_t uniffi_astra_core_checksum_func_connector_pkce_challenge(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_CONNECTOR_TOKEN_URL
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_CONNECTOR_TOKEN_URL
+uint16_t uniffi_astra_core_checksum_func_connector_token_url(void
     
 );
 #endif

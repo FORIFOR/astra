@@ -656,3 +656,53 @@ mod work_tests {
         assert_eq!(path_segment("plain-id_1.0~"), "plain-id_1.0~");
     }
 }
+
+// ---------------------------------------------------------------- connections
+
+/// plugin の接続記録（GET /v1/plugins/:id/connections）。JSON 本文（`items`）。
+#[uniffi::export]
+pub fn api_plugin_connections(
+    base_url: String,
+    access_token: String,
+    plugin_id: String,
+) -> Result<String, ApiError> {
+    get_json(&base_url, &access_token, &format!("/v1/plugins/{}/connections", path_segment(&plugin_id)))
+}
+
+/// 繋いだことを cloud に記録する（POST /v1/plugins/:id/connect）。**参照だけ。値は渡さない。**
+#[uniffi::export]
+pub fn api_plugin_connect(
+    base_url: String,
+    access_token: String,
+    plugin_id: String,
+    connect_json: String,
+) -> Result<String, ApiError> {
+    let body: serde_json::Value =
+        serde_json::from_str(&connect_json).map_err(|e| ApiError::Decode { message: e.to_string() })?;
+    ureq::post(&format!("{}/v1/plugins/{}/connect", base(&base_url), path_segment(&plugin_id)))
+        .set("Authorization", &format!("Bearer {access_token}"))
+        .send_json(body)
+        .map_err(map_transport)?
+        .into_string()
+        .map_err(|e| ApiError::Decode { message: e.to_string() })
+}
+
+/// 接続を切る（DELETE /v1/plugins/:id/connections/:connector）。
+#[uniffi::export]
+pub fn api_plugin_disconnect(
+    base_url: String,
+    access_token: String,
+    plugin_id: String,
+    connector_id: String,
+) -> Result<(), ApiError> {
+    ureq::delete(&format!(
+        "{}/v1/plugins/{}/connections/{}",
+        base(&base_url),
+        path_segment(&plugin_id),
+        path_segment(&connector_id)
+    ))
+    .set("Authorization", &format!("Bearer {access_token}"))
+    .call()
+    .map_err(map_transport)?;
+    Ok(())
+}

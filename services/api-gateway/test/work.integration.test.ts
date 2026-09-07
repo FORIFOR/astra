@@ -164,7 +164,12 @@ describe.skipIf(!url)('work context over HTTP', () => {
   });
 
   it('builds the context with a source behind every inference, and opens the evidence', async () => {
+    // first useful Work Context: 取り込み済みの状態から Home が読めるまで（DAILY WORK GATE: <= 60 s）
+    const started = Date.now();
     const res = await app.inject({ method: 'GET', url: '/v1/work/context', headers: auth });
+    const firstValueMs = Date.now() - started;
+    console.log(`FIRST_VALUE_MS=${String(firstValueMs)}`);
+    expect(firstValueMs).toBeLessThan(60_000);
     expect(res.statusCode).toBe(200);
     const ctx = res.json<{
       priorities: { id: string; project: string; sources: unknown[]; factors: unknown[] }[];

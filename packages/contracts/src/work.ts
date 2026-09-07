@@ -327,6 +327,8 @@ export const MAX_INJECTED_CHARS = 1_200;
  *   none          仕事の文脈が要らない問い（「この Swift コード直して」）→ 0 件
  *   project       案件を名指しした問い → その案件だけ
  *   priorities    今日 / 今週の優先を聞いている → 上位 <= 3
+ *   waiting       誰を待っているか → 待ちの一覧（<= 3）
+ *   owed          自分が返すもの → 返すものの一覧（<= 3）
  *   email_reply   返信を書こうとしている → 名指しの相手・案件の分だけ（無ければ 0）
  *   meeting_prep  会議の準備 → その会議の案件 + 相手 + 開いている件
  */
@@ -334,6 +336,8 @@ export const CONTEXT_INTENTS = [
   'none',
   'project',
   'priorities',
+  'waiting',
+  'owed',
   'email_reply',
   'meeting_prep',
 ] as const;

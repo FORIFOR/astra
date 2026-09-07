@@ -5873,6 +5873,10 @@ enum SelfTest {
         }
         take("home-personalization") { MainNav.shared.personalizationOpen = true }
         MainNav.shared.personalizationOpen = false
+        take("home-work-why") {
+            if let first = WorkContextStore.shared.context?.priorities.first { WorkContextStore.shared.evidenceOpen.insert(first.id) }
+        }
+        WorkContextStore.shared.evidenceOpen = []
         WorkContextStore.shared.install(nil, profile: nil)
         take("work-tasks") { MainWindowController.shared.showWork(.tasks) }
         take("work-agents") { MainWindowController.shared.showWork(.agents) }

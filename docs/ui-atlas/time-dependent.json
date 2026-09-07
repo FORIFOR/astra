@@ -34,7 +34,8 @@
     "main.scale-comfortable",
     "main.scale-large",
     "main.home-work-context",
-    "main.home-personalization"
+    "main.home-personalization",
+    "main.home-work-why"
   ],
   "nondeterministic": {
     "$comment": "時刻ではないが、撮るたびに変わる面。理由と直し方を書く。直したらここから外す。",

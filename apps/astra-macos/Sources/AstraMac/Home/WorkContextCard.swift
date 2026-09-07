@@ -14,7 +14,7 @@ struct WorkContextCard: View {
     var body: some View {
         if let ctx = store.context {
             VStack(alignment: .leading, spacing: 6) {
-                header(Facts.workContextTitle, trailing: ctx.inferenceEnabled ? nil : "推測を止めています")
+                header(Facts.workContextTitle, trailing: ctx.inferenceEnabled ? coverage(ctx) : "推測を止めています")
                     .accessibilityIdentifier("workContextTitle")
                 if !ctx.inferenceEnabled {
                     note("推測を止めているので、気にすることは出しません。今週の事実だけ残しています。")
@@ -72,6 +72,13 @@ struct WorkContextCard: View {
                             .font(.system(size: S.type(TypeScale.microSize), weight: .semibold))
                             .foregroundStyle(Palette.muted(dark))
                             .tracking(0.3)
+                        // 点数は言葉で（高 / 中 / 低）。式は見せない。
+                        Text(WorkFormat.level(p.score))
+                            .font(.system(size: S.type(TypeScale.captionSize), weight: .semibold))
+                            .foregroundStyle(p.score >= 0.5 ? Palette.warning(dark) : Palette.muted(dark))
+                            .padding(.horizontal, 5).padding(.vertical, 1)
+                            .background(Capsule().stroke(Color.hairline(dark)))
+                            .accessibilityIdentifier("workLevel-\(p.id)")
                         if let due = WorkFormat.due(p.dueAt) {
                             Text(due)
                                 .font(.system(size: S.type(TypeScale.microSize), weight: .medium))
@@ -103,10 +110,10 @@ struct WorkContextCard: View {
                     }
                 }
                 Spacer(minLength: 12)
-                actions(id: p.id, sources: p.sources, correction: "not_priority", label: Facts.workNotPriority)
+                actions(id: p.id, sources: p.sources, correction: "not_priority", label: Facts.workNotPriority, why: true)
             }
             if store.evidenceOpen.contains(p.id) {
-                evidence(p.sources).padding(.leading, 13)
+                why(p).padding(.leading, 13)
             }
         }
         .padding(.horizontal, S.metric(Space.cardPadding))
@@ -161,13 +168,35 @@ struct WorkContextCard: View {
         .accessibilityIdentifier("workItem-\(id)")
     }
 
-    /// [出所を見る] と訂正。どちらも 1 回押すだけ。
-    private func actions(id: String, sources: [WorkProvenance], correction: String, label: String) -> some View {
+    /// 「なぜ重要？」: 理由（要因の言葉、寄与の大きい順に最大 4 行）と出所。数式は見せない。1 回押すだけ。
+    private func why(_ p: WorkPriority) -> some View {
+        let reasons = WorkFormat.reasons(p)
+        return VStack(alignment: .leading, spacing: 4) {
+            Text(Facts.workWhy)
+                .font(.system(size: S.type(TypeScale.captionSize), weight: .semibold))
+                .foregroundStyle(Palette.muted(dark))
+                .padding(.top, 4)
+            ForEach(Array(reasons.enumerated()), id: \.offset) { _, line in
+                Text(line)
+                    .font(.system(size: S.type(TypeScale.secondarySize)))
+                    .foregroundStyle(Palette.text(dark))
+            }
+            Text(Facts.sourceLabel)
+                .font(.system(size: S.type(TypeScale.captionSize), weight: .semibold))
+                .foregroundStyle(Palette.muted(dark))
+                .padding(.top, 4)
+            evidence(p.sources)
+        }
+        .accessibilityIdentifier("workWhy-\(p.id)")
+    }
+
+    /// [出所を見る]（案件は [なぜ重要？]）と訂正。どちらも 1 回押すだけ。
+    private func actions(id: String, sources: [WorkProvenance], correction: String, label: String, why: Bool = false) -> some View {
         HStack(spacing: 4) {
             Button {
                 if store.evidenceOpen.contains(id) { store.evidenceOpen.remove(id) } else { store.evidenceOpen.insert(id) }
             } label: {
-                Text(Facts.workEvidence)
+                Text(why ? Facts.workWhy : Facts.workEvidence)
                     .font(.system(size: S.type(TypeScale.microSize), weight: .medium))
                     .foregroundStyle(Palette.accent(dark))
                     .frame(height: 26).padding(.horizontal, 8)
@@ -250,6 +279,15 @@ struct WorkContextCard: View {
             .accessibilityIdentifier("openPersonalization")
         }
         .padding(.horizontal, S.metric(Space.cardPadding))
+    }
+
+    /// どこから整理しているか（事実）。「全部把握している」と誤解させない。
+    private func coverage(_ ctx: WorkContext) -> String? {
+        let names = ctx.sources.keys
+            .filter { !["astra_task", "meeting", "screenshot", "file", "browser"].contains($0) }
+            .map(WorkFormat.sourceName)
+        let uniq = Array(Set(names)).sorted()
+        return uniq.isEmpty ? nil : uniq.joined(separator: " · ") + " から整理しています"
     }
 
     private func header(_ title: String, trailing: String?) -> some View {

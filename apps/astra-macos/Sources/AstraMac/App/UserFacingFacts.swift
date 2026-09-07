@@ -67,6 +67,12 @@ enum UserFacingFacts {
     static let workNotPriority = "優先ではない"
     static let workDismiss = "外す"
     static let workDone = "済んだ"
+    /// 「なぜ重要？」。数式は見せない。理由の行と、出所。
+    static let workWhy = "なぜ重要？"
+    static let workLevelHigh = "高"
+    static let workLevelMid = "中"
+    static let workLevelLow = "低"
+    static let workContextSourcesTitle = "仕事のコンテキスト"
     static let personalizationTitle = "Astra が使っているあなたの情報"
     static let personalizationEdit = "編集"
     static let personalizationConfirm = "そのとおり"
@@ -211,6 +217,11 @@ enum UserFacingFacts {
             f("work.notPriority", workNotPriority, false),
             f("work.dismiss", workDismiss, false),
             f("work.done", workDone, false),
+            f("work.why", workWhy, false),
+            f("work.level.high", workLevelHigh, false),
+            f("work.level.mid", workLevelMid, false),
+            f("work.level.low", workLevelLow, false),
+            f("work.sources.title", workContextSourcesTitle, false),
             f("personalization.title", personalizationTitle, false),
             f("personalization.edit", personalizationEdit, false),
             f("personalization.confirm", personalizationConfirm, false),

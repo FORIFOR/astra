@@ -461,6 +461,52 @@ describe('context injection', () => {
     expect(pack.text).not.toContain('○○社');
   });
 
+  /** ASTRA DAILY WORK GATE の 6 問。どれも意図が取れ、要るものだけが渡る。 */
+  it('answers the six daily questions with the right kind of context', () => {
+    const q = (text: string) => selectContextPack({ question: text, context: ctx });
+    const today = q('今日何をすべき？');
+    expect(today.intent).toBe('priorities');
+    expect(today.items.length).toBeGreaterThan(0);
+
+    const waiting = q('誰を待っている？');
+    expect(waiting.intent).toBe('waiting');
+    expect(waiting.items.map((i) => i.lines[0])).toEqual([
+      expect.stringContaining('MTI からの返事待ち'),
+    ]);
+
+    const owed = q('私が返すものは？');
+    expect(owed.intent).toBe('owed');
+    expect(owed.items.map((i) => i.lines[0])).toEqual(
+      expect.arrayContaining([expect.stringContaining('佐藤 に返す')]),
+    );
+    expect(owed.items.length).toBeLessThanOrEqual(3);
+
+    const prep = q('次の会議を準備して');
+    expect(prep.intent).toBe('meeting_prep');
+    expect(prep.items.map((i) => i.project)).toEqual(['MOPITA連携']);
+
+    const reply = q('これ返して');
+    expect(reply.intent).toBe('email_reply');
+    // 「これ」が何かは会話の指示語解決の仕事。ここでは名指しが無いので受信箱は添えない
+    expect(reply.items).toEqual([]);
+
+    const week = q('今週何がやばい？');
+    expect(week.intent).toBe('priorities');
+    expect(week.items.length).toBeGreaterThan(0);
+    expect(week.stats.chars).toBeLessThanOrEqual(1_200);
+  });
+
+  it('never fabricates a deadline: no date in the text means no due', () => {
+    const a = art({
+      id: 'gmail:no-date',
+      title: 'ご相談',
+      body_excerpt: '先日の件について、お手すきの際にご確認ください。',
+      people: [{ name: '田中', email: null, role: 'from' }],
+    });
+    expect(ruleSemantic(a, NOW).due).toBeNull();
+    expect(extractDeadline(a.body_excerpt ?? '', NOW)).toBeNull();
+  });
+
   it('injects nothing once the person turned inference off', () => {
     const profile = deriveProfile(
       fixture,

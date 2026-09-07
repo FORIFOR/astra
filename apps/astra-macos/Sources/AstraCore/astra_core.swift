@@ -2790,6 +2790,43 @@ public func apiPluginCatalog(baseUrl: String, accessToken: String)throws  -> [St
 })
 }
 /**
+ * 繋いだことを cloud に記録する（POST /v1/plugins/:id/connect）。**参照だけ。値は渡さない。**
+ */
+public func apiPluginConnect(baseUrl: String, accessToken: String, pluginId: String, connectJson: String)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeApiError_lift) {
+    uniffi_astra_core_fn_func_api_plugin_connect(
+        FfiConverterString.lower(baseUrl),
+        FfiConverterString.lower(accessToken),
+        FfiConverterString.lower(pluginId),
+        FfiConverterString.lower(connectJson),$0
+    )
+})
+}
+/**
+ * plugin の接続記録（GET /v1/plugins/:id/connections）。JSON 本文（`items`）。
+ */
+public func apiPluginConnections(baseUrl: String, accessToken: String, pluginId: String)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeApiError_lift) {
+    uniffi_astra_core_fn_func_api_plugin_connections(
+        FfiConverterString.lower(baseUrl),
+        FfiConverterString.lower(accessToken),
+        FfiConverterString.lower(pluginId),$0
+    )
+})
+}
+/**
+ * 接続を切る（DELETE /v1/plugins/:id/connections/:connector）。
+ */
+public func apiPluginDisconnect(baseUrl: String, accessToken: String, pluginId: String, connectorId: String)throws   {try rustCallWithError(FfiConverterTypeApiError_lift) {
+    uniffi_astra_core_fn_func_api_plugin_disconnect(
+        FfiConverterString.lower(baseUrl),
+        FfiConverterString.lower(accessToken),
+        FfiConverterString.lower(pluginId),
+        FfiConverterString.lower(connectorId),$0
+    )
+}
+}
+/**
  * gateway に届くか（GET /v1/auth/providers, 認証不要）。オフライン判定に。
  */
 public func apiReachable(baseUrl: String) -> Bool  {
@@ -2985,6 +3022,17 @@ public func connectorPkceChallenge(verifier: String) -> String  {
 })
 }
 /**
+ * 提供者の token endpoint。交換は core（`connector_exchange_code`）が行うが、
+ * 端末側が mock と本物を同じ口で呼べるように URL を 1 箇所から出す。
+ */
+public func connectorTokenUrl(providerId: String) -> String?  {
+    return try!  FfiConverterOptionString.lift(try! rustCall() {
+    uniffi_astra_core_fn_func_connector_token_url(
+        FfiConverterString.lower(providerId),$0
+    )
+})
+}
+/**
  * 00:00 / 1:02:03 の形。UI はこれを使い、各言語で書き直さない。
  */
 public func formatElapsed(ms: UInt64) -> String  {
@@ -3098,6 +3146,15 @@ private let initializationResult: InitializationResult = {
     if (uniffi_astra_core_checksum_func_api_plugin_catalog() != 40736) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_astra_core_checksum_func_api_plugin_connect() != 31278) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_astra_core_checksum_func_api_plugin_connections() != 36870) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_astra_core_checksum_func_api_plugin_disconnect() != 38051) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_astra_core_checksum_func_api_reachable() != 45391) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -3144,6 +3201,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_astra_core_checksum_func_connector_pkce_challenge() != 40473) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_astra_core_checksum_func_connector_token_url() != 10630) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_astra_core_checksum_func_format_elapsed() != 55286) {

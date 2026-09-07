@@ -25,9 +25,15 @@ import { titleTokens } from './graph.js';
 /** 今日 / 今週の優先を聞いている問い。**命令（「会議を録音して」）は含めない。** */
 const PRIORITIES_INTENT =
   /(優先|やばい|忙し|何をす|何から|どれから|何が残|抱えて|締め?切り|期限|返信待ち|待ってい|返さな|今日.*(予定|やる|すべき|何)|今週.*(やる|予定|何)|priorit|what should|what.*focus|this week|deadline|waiting on|overdue)/i;
+/** 誰を待っているか。 */
+const WAITING_INTENT =
+  /(誰を待|誰から.*(返事|返信)|(返事|返信)待ち|待ってい|待ちの|waiting on|who am i waiting|blocked on)/i;
+/** 自分が返すもの。 */
+const OWED_INTENT =
+  /((私|自分|俺|わたし).*(返す|返さ|返信し)|返すもの|返さないと|返さなきゃ|返信しないと|what do i owe|i owe|owe)/i;
 /** 返事を書こうとしている問い。 */
 const EMAIL_REPLY_INTENT =
-  /((返信|返事|お返事|reply|respond).*(して|書い|下書き|作っ|draft|write)|(メール|mail).*(返し|書い|返信|reply))/i;
+  /((返信|返事|お返事|reply|respond).*(して|書い|下書き|作っ|draft|write)|(メール|mail).*(返し|書い|返信|reply)|(これ|それ|この|その).*(返して|返事して|返信して))/i;
 /** 会議の準備。 */
 const MEETING_PREP_INTENT =
   /((会議|定例|ミーティング|打ち合わせ|打合せ|mtg|meeting|商談).*(準備|備え|聞く|質問|議題|確認しておく|prep|agenda|before))/i;
@@ -51,6 +57,8 @@ export interface ContextPack {
 export function classifyContextIntent(question: string): Exclude<ContextIntent, 'project'> {
   if (EMAIL_REPLY_INTENT.test(question)) return 'email_reply';
   if (MEETING_PREP_INTENT.test(question)) return 'meeting_prep';
+  if (OWED_INTENT.test(question)) return 'owed';
+  if (WAITING_INTENT.test(question)) return 'waiting';
   if (PRIORITIES_INTENT.test(question)) return 'priorities';
   return 'none';
 }
@@ -157,6 +165,33 @@ export function selectContextPack(input: InjectionInput): ContextPack {
         selected += 1 + open.count;
       }
       return finish(intent, items, selected);
+    }
+    case 'waiting': {
+      // 待ちの一覧だけ（案件の点数や状況は添えない）。名指しがあればその相手・案件に絞る。
+      const waits = context.waiting_on.filter(
+        (w) =>
+          targets.length === 0 ||
+          (w.project !== null && targets.some((t) => t.project === w.project)),
+      );
+      const items = waits.slice(0, MAX_INJECTED_PRIORITIES).map((w) => ({
+        project: w.project ?? w.who,
+        score: 0,
+        lines: [`${w.who} からの返事待ち: ${w.what}（${String(Math.round(w.since_days))} 日）`],
+      }));
+      return finish(intent, items, items.length);
+    }
+    case 'owed': {
+      const owed = context.owed.filter(
+        (o) =>
+          targets.length === 0 ||
+          (o.project !== null && targets.some((t) => t.project === o.project)),
+      );
+      const items = owed.slice(0, MAX_INJECTED_PRIORITIES).map((o) => ({
+        project: o.project ?? o.to,
+        score: 0,
+        lines: [`${o.to} に返す: ${o.what}${o.due_at ? `（期限 ${o.due_at.slice(0, 10)}）` : ''}`],
+      }));
+      return finish(intent, items, items.length);
     }
     case 'priorities': {
       const rest = context.priorities.filter((p) => !targets.includes(p)).sort(rank);

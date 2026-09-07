@@ -18,6 +18,12 @@ import { LlmRuntime } from './llm-steps.js';
 import { CompositeRunner } from './runner.js';
 import type { WorkSyncState } from '@astra/contracts';
 import { DEFAULT_SYNC_INTERVAL_MS, WorkSyncLoop } from './work-sync.js';
+import {
+  grantsFromConnections,
+  knownPluginIds,
+  mergeGrants,
+  type ConnectionRecord,
+} from './grants.js';
 
 async function main(): Promise<void> {
   const logger = createLogger({
@@ -74,8 +80,35 @@ async function main(): Promise<void> {
    * `ASTRA_GRANTED_SCOPES` は `plugin=scope,scope;plugin=...` の形。
    * 空なら何も許されていないものとして扱う（既定で通さない）。
    */
-  const grantedScopes = parseGrants(process.env['ASTRA_GRANTED_SCOPES'] ?? '');
+  const envGrants = parseGrants(process.env['ASTRA_GRANTED_SCOPES'] ?? '');
+  /*
+   * 許可の正本は cloud の接続記録（実際に許された provider scope）。環境変数は harness の上書き。
+   * 起動時に読み、同期の周期で読み直す（繋ぎ直し・切断が効くように）。
+   */
+  let grantedScopes: Record<string, string[]> = mergeGrants({}, envGrants);
   const redirectUri = process.env['ASTRA_OAUTH_REDIRECT_URI'] ?? 'http://127.0.0.1:0/callback';
+
+  const refreshGrants = async (): Promise<void> => {
+    const items: ConnectionRecord[] = [];
+    for (const pluginId of knownPluginIds()) {
+      try {
+        const response = await fetch(
+          `${baseUrl}/v1/plugins/${encodeURIComponent(pluginId)}/connections`,
+          {
+            headers: { authorization: `Bearer ${token}` },
+          },
+        );
+        if (!response.ok) continue;
+        const body = (await response.json()) as { items?: ConnectionRecord[] };
+        items.push(...(body.items ?? []));
+      } catch {
+        // 読めなければ今の許可のまま。無いものを許したことにはしない。
+      }
+    }
+    grantedScopes = mergeGrants(grantsFromConnections(items), envGrants);
+  };
+  await refreshGrants();
+  logger.info({ grants: grantedScopes }, 'connector permissions from the cloud connection records');
 
   const host = new LocalAgentHost({
     deviceLabel,
@@ -155,9 +188,11 @@ async function main(): Promise<void> {
   });
   if (process.env['ASTRA_WORK_SYNC'] !== 'off') {
     const minutes = Number(process.env['ASTRA_WORK_SYNC_INTERVAL_MIN']);
-    workSync.start(
-      Number.isFinite(minutes) && minutes > 0 ? minutes * 60_000 : DEFAULT_SYNC_INTERVAL_MS,
-    );
+    const interval =
+      Number.isFinite(minutes) && minutes > 0 ? minutes * 60_000 : DEFAULT_SYNC_INTERVAL_MS;
+    workSync.start(interval);
+    const grantsTimer = setInterval(() => void refreshGrants(), interval);
+    grantsTimer.unref?.();
   }
 
   const shutdown = (signal: string): void => {

@@ -16,3 +16,4 @@ export * from './llm-steps.js';
 export * from './runner.js';
 export * from './work-sync.js';
 export * from './live-fixture.js';
+export * from './grants.js';

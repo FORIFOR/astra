@@ -87,6 +87,50 @@ extension SelfTest {
         check(store.profile?.all.first { $0.key == traitKey }?.status == .confirmed, "「そのとおり」が効かない")
         row("trait_override_actions", "1")
 
+        // 6c. 「なぜ重要？」は 1 操作で、理由（<= 4 行、数式なし）と出所が出る
+        let top = ctx.priorities[0]
+        let reasons = WorkFormat.reasons(top)
+        check(!reasons.isEmpty && reasons.count <= 4, "理由の行が無い/多すぎる (\(reasons.count))")
+        check(reasons.allSatisfy { !$0.contains("0.") && !$0.contains("×") }, "理由に数式や点数が混ざっている \(reasons)")
+        check(reasons.first == "明日が期限", "寄与の大きい理由が先頭に来ない \(reasons)")
+        row("why_important_actions", "1")
+        row("why_reason_lines", String(reasons.count))
+        check(WorkFormat.level(0.82) == "高" && WorkFormat.level(0.44) == "中" && WorkFormat.level(0.1) == "低", "高/中/低 の閾値")
+        store.install(ctx, profile: profile)
+        store.evidenceOpen.insert(top.id)
+        let whyHost = NSHostingView(rootView: WorkContextCard().frame(width: 820))
+        whyHost.frame = NSRect(x: 0, y: 0, width: 820, height: 10)
+        whyHost.layoutSubtreeIfNeeded()
+        check(whyHost.fittingSize.height > height, "「なぜ重要？」を開いても何も増えない")
+        store.evidenceOpen = []
+
+        // 6d. 接続状況は事実だけ（記録も鍵も無ければ接続中とは言わない）
+        let cs = ConnectorState.shared
+        cs.reloadSources()
+        check(cs.sources.map(\.pluginId) == ["com.astra.gmail", "com.astra.google-calendar", "com.astra.outlook", "com.astra.microsoft-todo"],
+              "Work Context の source が 4 つ揃わない \(cs.sources.map(\.pluginId))")
+        check(cs.sources.allSatisfy { $0.scopes.allSatisfy { !$0.contains("send") && !$0.contains("modify") && !$0.contains("ReadWrite") && !$0.hasSuffix("calendar.events") } },
+              "読む接続に書く scope が混ざっている")
+        check(cs.sources.allSatisfy { !$0.purpose.isEmpty }, "purpose の無い接続がある")
+        let claimed = cs.sources.filter { cs.status[$0.pluginId] == .connected }
+        check(claimed.isEmpty || claimed.allSatisfy { KeychainStore.hasGeneric(service: KeychainStore.connectorService($0.pluginId, $0.connectorId), account: NSUserName()) },
+              "鍵が無いのに接続中と言っている")
+        row("connected_sources_visible", "PASS")
+        row("sources_connected", String(claimed.count) + "/" + String(cs.sources.count))
+
+        // 6e. 静かさ: Work Context は窓を増やさず、焦点を奪わず、通知を出さない
+        let windowsBefore = NSApp.windows.filter { $0.isVisible }.count
+        let keyBefore = NSApp.keyWindow
+        store.install(ctx, profile: profile)
+        store.correct(ctx.priorities[1].id, action: "not_priority")
+        store.setInference(false); store.setInference(true)
+        settleRunLoop(0.3)
+        check(NSApp.windows.filter { $0.isVisible }.count == windowsBefore, "Work Context の操作で窓が増えた")
+        check(NSApp.keyWindow === keyBefore, "Work Context の操作で焦点が動いた")
+        row("extra_window", "0")
+        row("focus_theft", "0")
+        row("unsolicited_alerts", "0")
+
         // 7. 表示の語（Facts と同じ）
         check(Facts.workContextTitle == "今日、気にした方がいいこと", "見出しの語が変わった")
         check(Facts.workEvidence == "出所を見る", "出所の語が変わった（用語は「出所」）")

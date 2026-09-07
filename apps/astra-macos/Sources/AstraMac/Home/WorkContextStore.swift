@@ -288,6 +288,21 @@ enum WorkFormat {
             .joined(separator: " · ")
     }
 
+    /// 点数 → 言葉。閾値は決定的（>= 0.5 高、>= 0.25 中）。
+    static func level(_ score: Double) -> String {
+        score >= 0.5 ? Facts.workLevelHigh : score >= 0.25 ? Facts.workLevelMid : Facts.workLevelLow
+    }
+
+    /// 「なぜ重要？」の行。寄与の大きい要因の理由を、多い順に最大 4 つ。理由の無い要因は出さない。
+    static func reasons(_ p: WorkPriority) -> [String] {
+        let lines = p.factors
+            .filter { $0.contribution > 0 && !$0.reason.isEmpty }
+            .sorted { $0.contribution == $1.contribution ? $0.name < $1.name : $0.contribution > $1.contribution }
+            .prefix(4)
+            .map(\.reason)
+        return lines.isEmpty ? ["理由を出せる要因がありません"] : Array(lines)
+    }
+
     static func sourceName(_ source: String) -> String {
         switch source {
         case "gmail": return "Gmail"

@@ -76,6 +76,22 @@ enum AstraCoreBridge {
     static func configuredProviders(_ clientIds: [String: String]) -> [String] {
         connectorConfiguredProviderIds(clientIds: clientIds)
     }
+    static func tokenUrl(provider: String) -> String? { connectorTokenUrl(providerId: provider) }
+    /// 認可コードをトークンへ（PKCE）。失敗は空文字。
+    static func exchangeCode(tokenUrl: String, provider: String, clientId: String, redirectUri: String,
+                             code: String, verifier: String) -> String {
+        connectorExchangeCode(tokenUrl: tokenUrl, providerId: provider, clientId: clientId, redirectUri: redirectUri,
+                              code: code, codeVerifier: verifier, nowMs: UInt64(Date().timeIntervalSince1970 * 1000))
+    }
+    static func pluginConnections(_ baseUrl: String, accessToken: String, pluginId: String) throws -> String {
+        try apiPluginConnections(baseUrl: baseUrl, accessToken: accessToken, pluginId: pluginId)
+    }
+    static func pluginConnect(_ baseUrl: String, accessToken: String, pluginId: String, connectJson: String) throws -> String {
+        try apiPluginConnect(baseUrl: baseUrl, accessToken: accessToken, pluginId: pluginId, connectJson: connectJson)
+    }
+    static func pluginDisconnect(_ baseUrl: String, accessToken: String, pluginId: String, connectorId: String) throws {
+        try apiPluginDisconnect(baseUrl: baseUrl, accessToken: accessToken, pluginId: pluginId, connectorId: connectorId)
+    }
 
     /// RAG コンテキストの並べ替え（決定的）。ランキングは core に一本化する。
     /// 語彙一致・新しさ・プロジェクト一致 × source 重みで採点し、上位を返す。
