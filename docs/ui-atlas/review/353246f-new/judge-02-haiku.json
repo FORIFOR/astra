@@ -1,0 +1,58 @@
+{
+  "pages": {
+    "BFD2": {
+      "visible_text": [
+        "設定できました",
+        "✓"
+      ],
+      "observation": {
+        "happening": "完了状態の通知メッセージが表示されている。左側に成功テキスト、右側に閉じボタン",
+        "most_important": "設定が成功したことを示す緑のチェックマーク。×で閉じられる構造",
+        "next_action": "通知を閉じるか、スキップして次へ進む",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "D263": {
+      "visible_text": [
+        "スクリーンショット",
+        "記録しました。",
+        "そのまま開いてください。"
+      ],
+      "observation": {
+        "happening": "スクリーンショット取得完了の通知。左側にアイコン、右側に 2 行のテキスト",
+        "most_important": "スクリーンショットが記録され、ユーザーに開くよう指示している。アクション誘導が明確",
+        "next_action": "スクリーンショットファイルを開く、または通知を消す",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "D995": {
+      "visible_text": [
+        "設定画面を開けませんでした。",
+        "システム設定から",
+        "Astra をオンにしてください",
+        "!"
+      ],
+      "observation": {
+        "happening": "エラー/警告通知が表示されている。左側に問題説明と解決方法、右側に赤い警告アイコン",
+        "most_important": "何が失敗したか、何を実行すべきかが 2 行で具体的に説明されている。赤い感嘆符で重要度が表現される",
+        "next_action": "システム設定を開く、Astra を有効にする",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    }
+  },
+  "_judge": {
+    "model": "haiku",
+    "cost_usd": 0.0529324,
+    "turns": 4,
+    "duration_ms": 38586
+  }
+}

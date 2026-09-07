@@ -1,14 +1,14 @@
-# Astra UI Atlas — Visual Release Book (RC 353246f)
+# Astra UI Atlas — Visual Release Book (RC a93d4f8)
 
 取扱説明書ではない。**全 UI を RC .app の実画像で 1 画面 1 ページに固定し、ページ単位で KEEP / FIX / NOT_ENOUGH_EVIDENCE を出す**ための資料。
 画像は署名済み RC .app が `--selftest` で描いたものだけ。モック・Figma・別ビルドは入れない。
 
 ```
-RC SHA            353246f
-RC exe sha256     af12178ddbbb90b2ca4840b1e3f8ca6527571e9857437ea46f440c0ec54562da
-RC built          2026-09-07T10:08:20+09:00   captured 2026-09-07T10:08:21+09:00
+RC SHA            a93d4f8
+RC exe sha256     05f7c32b6ff880c613f98b81155c78b12ec0e2c31b982b1df08ea6fcb4972276
+RC built          2026-09-07T10:27:01+09:00   captured 2026-09-07T10:27:02+09:00
 codesign          com.astra.desktop / 6RR7572ZLU
-required screens  71   with RC image 71   NO_CAPTURE_PATH 0
+required screens  72   with RC image 72   NO_CAPTURE_PATH 0
 strips            5 / 5
 light == dark     21 面（voice.idle, voice.preparing, voice.listening, voice.thinking, voice.context, voice.context-expanded, voice.quick-actions, screenshot.detected, screenshot.attached-cloud, dock.running, dock.context-detail, dock.confirmation, dock.confirmation-edit, dock.result, dock.result-failed, meeting.controller, meeting.preparing, meeting.paused, meeting.notes, meeting.captions, meeting.ask）
 appearance_policy fixed 22 面 / 違反 0（なし）
@@ -95,6 +95,7 @@ appearance_policy fixed 22 面 / 違反 0（なし）
 | `settings.permissions` | Settings — 許可（OS）/ shortcuts | CAPTURED | [png](screens/settings.permissions.light.png) | [png](screens/settings.permissions.dark.png) |
 | `guided-setup.intro` | Guided Setup — Intro | CAPTURED | [png](screens/guided-setup.intro.light.png) | [png](screens/guided-setup.intro.dark.png) |
 | `guided-setup.target-found` | Guided Setup — Target found (System Settings + highlight + callout) | CAPTURED | [png](screens/guided-setup.target-found.light.png) | — |
+| `guided-setup.target-add` | Guided Setup — Astra not listed yet (add with +) | CAPTURED | [png](screens/guided-setup.target-add.light.png) | — |
 | `guided-setup.target-highlighted` | Guided Setup — Target highlighted (detail) | CAPTURED | [png](screens/guided-setup.target-highlighted.light.png) | — |
 | `guided-setup.repositioned` | Guided Setup — Follows the window (repositioned) | CAPTURED | [png](screens/guided-setup.repositioned.light.png) | — |
 | `guided-setup.target-missing` | Guided Setup — Target missing (generic fallback) | CAPTURED | [png](screens/guided-setup.target-missing.light.png) | [png](screens/guided-setup.target-missing.dark.png) |

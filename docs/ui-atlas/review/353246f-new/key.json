@@ -1,0 +1,25 @@
+{
+  "key": {
+    "D263": "screenshot.detected",
+    "8FA7": "screenshot.attached-cloud",
+    "8516": "guided-setup.intro",
+    "6FFE": "guided-setup.target-found",
+    "3FF0": "guided-setup.target-highlighted",
+    "2C62": "guided-setup.repositioned",
+    "6D00": "guided-setup.target-missing",
+    "BFD2": "guided-setup.granted",
+    "D995": "guided-setup.denied"
+  },
+  "order": [
+    "2C62",
+    "3FF0",
+    "6D00",
+    "6FFE",
+    "8516",
+    "8FA7",
+    "BFD2",
+    "D263",
+    "D995"
+  ],
+  "batch": 6
+}
