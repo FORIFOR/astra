@@ -75,6 +75,7 @@ export async function localArtifacts(
         excerpt: null,
       },
       semantic: null,
+      origin: null,
     });
   }
   const meetings = (await deps.meetings?.list(tenantId, 30).catch(() => [])) ?? [];
@@ -103,6 +104,7 @@ export async function localArtifacts(
         excerpt: null,
       },
       semantic: null,
+      origin: null,
     });
   }
   return out;

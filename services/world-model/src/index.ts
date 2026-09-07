@@ -61,4 +61,9 @@ export {
   type ResolveReplyInput,
 } from './work/reply.js';
 export { buildMeetingBrief, nextEvent, type MeetingBriefInput } from './work/meeting-brief.js';
+export {
+  meetingArtifacts,
+  stableMeetingArtifactId,
+  type MeetingPublishInput,
+} from './work/meeting-publisher.js';
 export { WorkContextService, type WorkContextDeps } from './work/service.js';

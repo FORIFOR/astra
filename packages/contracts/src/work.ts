@@ -99,6 +99,23 @@ export const WorkSemantic = z.object({
 });
 export type WorkSemantic = z.infer<typeof WorkSemantic>;
 
+/**
+ * 会議から Work Graph へ流す artifact の一次情報。MEETING_WORK_LOOP。
+ *
+ * どの会議の、どの発言（segment）から、誰が、いつ言ったか。文字起こし・音源の artifact へ辿れる。
+ * `status` は 3 段: observed（記録から数えた）/ inferred（要約が取り出した）/ confirmed（本人が Live Notes で認めた）。
+ */
+export const MeetingOrigin = z.object({
+  meeting_id: z.string().min(1),
+  segment_id: z.string().min(1),
+  speaker: z.string().max(100).nullable().default(null),
+  start_ms: z.number().int().nonnegative(),
+  transcript_artifact_id: z.string().nullable().default(null),
+  audio_artifact_id: z.string().nullable().default(null),
+  status: z.enum(['observed', 'inferred', 'confirmed']).default('inferred'),
+});
+export type MeetingOrigin = z.infer<typeof MeetingOrigin>;
+
 // ---------------------------------------------------------------- artifact
 
 /** 正規化した 1 件。Google / Microsoft / 端末の差はここで消えている。 */
@@ -123,6 +140,8 @@ export const WorkArtifact = z.object({
   completed: z.boolean().nullable().default(null),
   provenance: Provenance,
   semantic: WorkSemantic.nullable().default(null),
+  /** 会議から来たものの一次情報（話者・時刻・文字起こし・音源）。無ければ null。 */
+  origin: MeetingOrigin.nullable().default(null),
 });
 export type WorkArtifact = z.infer<typeof WorkArtifact>;
 

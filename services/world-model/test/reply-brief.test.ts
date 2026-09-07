@@ -43,6 +43,7 @@ function art(over: Partial<WorkArtifact> & { id: string; title: string }): WorkA
       excerpt: over.body_excerpt ?? null,
     },
     semantic: null,
+    origin: null,
     ...over,
   };
 }

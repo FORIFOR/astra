@@ -25,6 +25,11 @@ import {
   meetingProvidersFromEnv,
   HostMeetingSummarizer,
 } from '@astra/service-meeting';
+import {
+  meetingArtifacts,
+  WorkContextService,
+  WorldModelService,
+} from '@astra/service-world-model';
 // 数え方は gateway と同じものを使う。別々に数えると片方だけ見落とす。
 import { assertReadyForProduction, canonicalSha256 } from '@astra/contracts';
 import { capabilityReport, capabilitySummary } from '@astra/service-capabilities';
@@ -172,6 +177,10 @@ async function main(): Promise<void> {
         ...meetingExecutors({
           meetings,
           library,
+          // 会議の結論を Work Graph へ（MEETING_WORK_LOOP）。id は安定、再 finalize でも増えない。
+          sink: meetingArtifactSink(
+            new WorkContextService({ db, world: new WorldModelService({ db }) }),
+          ),
           recordings: new FsRecordingStore(recordingRoot),
           batch: meetingProviders.batch,
           /*
@@ -269,3 +278,45 @@ main().catch((error: unknown) => {
   console.error(error);
   process.exit(1);
 });
+
+/** 会議の bundle → 安定 id の artifact → work_artifacts（upsert）。 */
+function meetingArtifactSink(work: WorkContextService) {
+  return {
+    async publish(input: {
+      tenantId: string;
+      userId: string;
+      meeting: {
+        id: string;
+        title: string;
+        started_at: string;
+        ended_at: string | null;
+        recording_artifact_id: string | null;
+      };
+      bundle: Parameters<typeof meetingArtifacts>[0]['bundle'];
+      segments: Parameters<typeof meetingArtifacts>[0]['segments'];
+      speakers: Parameters<typeof meetingArtifacts>[0]['speakers'];
+    }): Promise<{ published: number }> {
+      const artifacts = meetingArtifacts({
+        meetingId: input.meeting.id,
+        title: input.meeting.title,
+        startedAt: input.meeting.started_at,
+        endedAt: input.meeting.ended_at,
+        bundle: input.bundle,
+        segments: input.segments,
+        speakers: input.speakers,
+        projectHint: null,
+        recordingArtifactId: input.meeting.recording_artifact_id,
+        transcriptArtifactId: null,
+        observedAt: new Date().toISOString(),
+      });
+      if (artifacts.length === 0) return { published: 0 };
+      await work.ingest(input.tenantId, input.userId, {
+        source: 'meeting',
+        cursor: null,
+        watermark: null,
+        artifacts,
+      });
+      return { published: artifacts.length };
+    },
+  };
+}

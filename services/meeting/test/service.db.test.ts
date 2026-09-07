@@ -230,4 +230,105 @@ describe.skipIf(!url)('MeetingService', () => {
       expect(after.ended_at).not.toBeNull();
     });
   });
+
+  it('meeting.bundle hands decisions and actions to the Work Graph sink with stable ids, twice the same', async () => {
+    const { meetingExecutors } = await import('../src/executor.js');
+    const { MemoryRecordingStore } = await import('../src/recording.js');
+    const meeting = await service.start({
+      tenantId,
+      userId,
+      title: 'MOPITA 定例',
+      language: 'ja-JP',
+      targetLanguage: null,
+      audioSources: ['microphone'],
+    });
+    await service.ingest(tenantId, meeting.id, [
+      {
+        isFinal: true,
+        speakerTag: 1,
+        text: '価格案を再提出することにしましょう',
+        startMs: 1000,
+        endMs: 4000,
+        language: 'ja',
+        confidence: 0.9,
+        source: 'microphone',
+      },
+      {
+        isFinal: true,
+        speakerTag: 1,
+        text: '見積を 9/9 までに送ります',
+        startMs: 5000,
+        endMs: 8000,
+        language: 'ja',
+        confidence: 0.9,
+        source: 'microphone',
+      },
+    ] as never);
+    const received: string[][] = [];
+    const executors = meetingExecutors({
+      meetings: service,
+      library: { create: async () => ({ id: uuidv7() }) } as never,
+      recordings: new MemoryRecordingStore(),
+      batch: {
+        name: 'test',
+        isStandIn: true,
+        async transcribe() {
+          throw new Error('unused');
+        },
+      },
+      summarizer: {
+        name: 'fixed',
+        isStandIn: true,
+        async summarize(segments: readonly { id: string }[]) {
+          return {
+            summary: [],
+            decisions: [
+              {
+                text: '価格案を再提出することにしましょう',
+                segmentIds: [String(segments[0]?.id ?? '')],
+              },
+            ],
+            actionItems: [
+              {
+                text: '見積を 9/9 までに送ります',
+                segmentIds: [String(segments[1]?.id ?? '')],
+                assignee: '自分',
+                due: '9/9',
+              },
+            ],
+            openQuestions: [],
+          };
+        },
+      } as never,
+      sink: {
+        async publish(input) {
+          // 安定 id: meeting:<id>:decision|action:<segment>。世界モデル側の関数と同じ規則（そちらは pure test で見る）。
+          const ids = [
+            ...input.bundle.decisions.map(
+              (d) =>
+                `meeting:${input.meeting.id}:decision:${String(d.citations[0]?.segment_id ?? '')}`,
+            ),
+            ...input.bundle.action_items.map(
+              (a) =>
+                `meeting:${input.meeting.id}:action:${String(a.citations[0]?.segment_id ?? '')}`,
+            ),
+          ];
+          received.push(ids);
+          return { published: ids.length };
+        },
+      },
+    });
+    const run = () =>
+      executors['meeting.bundle']!.execute(
+        { taskId: uuidv7(), tenantId, userId, input: { meeting_id: meeting.id } },
+        { toolId: 'meeting.bundle', args: { meeting_id: meeting.id } },
+      );
+    const first = await run();
+    const second = await run();
+    expect(first.detail).toContain('to Work Graph');
+    expect(received).toHaveLength(2);
+    expect(received[0]).toEqual(received[1]);
+    expect((first.result as { work_artifacts: number }).work_artifacts).toBe(received[0]!.length);
+    expect((second.result as { work_artifacts: number }).work_artifacts).toBe(received[0]!.length);
+  });
 });

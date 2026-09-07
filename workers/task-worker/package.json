@@ -22,6 +22,7 @@
     "@astra/service-library": "workspace:*",
     "@temporalio/worker": "^1.22.0",
     "@astra/service-meeting": "workspace:*",
+    "@astra/service-world-model": "workspace:*",
     "@astra/service-plugin-registry": "workspace:*",
     "@astra/service-capabilities": "workspace:*",
     "@astra/service-agent-runtime": "workspace:*",

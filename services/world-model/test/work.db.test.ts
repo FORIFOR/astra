@@ -46,6 +46,7 @@ function art(id: string, over: Partial<WorkArtifact> = {}): WorkArtifact {
       confidence: 0.9,
       extracted_by: 'llm',
     },
+    origin: null,
     ...over,
   };
 }
@@ -180,5 +181,59 @@ describe.skipIf(!url)('WorkContextService', () => {
     expect(fresh.cursor).toBeNull();
     expect(fresh.last_synced_at).toBeNull();
     expect(fresh.last_error).toBe('boom');
+  });
+
+  it('meeting artifacts upsert by stable id: a re-finalize does not grow the graph', async () => {
+    const { meetingArtifacts } = await import('../src/index.js');
+    const publish = (text: string) =>
+      meetingArtifacts({
+        meetingId: 'mt-loop',
+        title: 'MOPITA 定例',
+        startedAt: '2026-09-03T06:00:00.000Z',
+        endedAt: null,
+        bundle: {
+          meeting_id: 'mt-loop' as never,
+          title: 'MOPITA 定例',
+          duration_ms: 1000,
+          speaker_count: 1,
+          summary: [],
+          decisions: [{ text, citations: [{ segment_id: 'sg-1' as never, start_ms: 1000 }] }],
+          action_items: [
+            {
+              text: '見積を送る',
+              citations: [{ segment_id: 'sg-2' as never, start_ms: 2000 }],
+              assignee: null,
+              due: null,
+            },
+          ],
+          open_questions: [],
+        },
+        segments: [],
+        speakers: [],
+        projectHint: 'MOPITA連携',
+        recordingArtifactId: null,
+        transcriptArtifactId: null,
+        observedAt: '2026-09-03T07:00:00.000Z',
+      });
+    const before = (await work.artifacts(tenantId, userId)).filter(
+      (a) => a.source === 'meeting',
+    ).length;
+    await work.ingest(tenantId, userId, {
+      source: 'meeting',
+      cursor: null,
+      watermark: null,
+      artifacts: publish('価格案を再提出する'),
+    });
+    await work.ingest(tenantId, userId, {
+      source: 'meeting',
+      cursor: null,
+      watermark: null,
+      artifacts: publish('価格案を再提出する（Standard）'),
+    });
+    const after = (await work.artifacts(tenantId, userId)).filter((a) => a.source === 'meeting');
+    expect(after.length - before).toBe(2);
+    expect(after.find((a) => a.id === 'meeting:mt-loop:decision:sg-1')?.title).toContain(
+      'Standard',
+    );
   });
 });

@@ -108,6 +108,7 @@ export function fromGmail(
       excerpt: excerpt(mail.snippet, PROVENANCE_EXCERPT_CHARS),
     },
     semantic: null,
+    origin: null,
   };
 }
 
@@ -155,6 +156,7 @@ export function fromGoogleCalendar(
       excerpt: excerpt(event.description ?? '', PROVENANCE_EXCERPT_CHARS),
     },
     semantic: null,
+    origin: null,
   };
 }
 
@@ -200,6 +202,7 @@ export function fromOutlookMail(
       excerpt: excerpt(mail.preview, PROVENANCE_EXCERPT_CHARS),
     },
     semantic: null,
+    origin: null,
   };
 }
 
@@ -246,6 +249,7 @@ export function fromOutlookCalendar(
       excerpt: excerpt(event.preview, PROVENANCE_EXCERPT_CHARS),
     },
     semantic: null,
+    origin: null,
   };
 }
 
@@ -288,5 +292,6 @@ export function fromTodo(task: TodoTask, ctx: NormalizeContext): WorkArtifact | 
       excerpt: excerpt(task.preview, PROVENANCE_EXCERPT_CHARS),
     },
     semantic: null,
+    origin: null,
   };
 }
