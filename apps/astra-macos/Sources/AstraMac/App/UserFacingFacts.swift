@@ -74,6 +74,19 @@ enum UserFacingFacts {
     static let workLevelMid = "中"
     static let workLevelLow = "低"
     static let workContextSourcesTitle = "仕事のコンテキスト"
+    /// 「これ返して」の確認カードと、会議前の brief。
+    static let replyTitleSuffix = "さんへの返信"
+    static let replySend = "送る"
+    static let replyConnectNeeded = "送るには「Gmail（下書き・送信・整理）」の接続が要ります"
+    static let replyConnect = "接続する"
+    static let briefTitle = "次の会議"
+    static let briefPrepare = "準備する"
+    static let briefClose = "閉じる"
+    static let briefStart = "会議を始める"
+    static let briefPrevious = "前回"
+    static let briefSince = "その後"
+    static let briefOpen = "開いている件"
+    static let briefQuestions = "今日確認したいこと"
     static let personalizationTitle = "Astra が使っているあなたの情報"
     static let personalizationEdit = "編集"
     static let personalizationConfirm = "そのとおり"
@@ -224,6 +237,18 @@ enum UserFacingFacts {
             f("work.level.mid", workLevelMid, false),
             f("work.level.low", workLevelLow, false),
             f("work.sources.title", workContextSourcesTitle, false),
+            f("reply.titleSuffix", replyTitleSuffix, false),
+            f("reply.send", replySend, false),
+            f("reply.connectNeeded", replyConnectNeeded, false),
+            f("reply.connect", replyConnect, false),
+            f("brief.title", briefTitle, false),
+            f("brief.prepare", briefPrepare, false),
+            f("brief.close", briefClose, false),
+            f("brief.start", briefStart, false),
+            f("brief.previous", briefPrevious, false),
+            f("brief.since", briefSince, false),
+            f("brief.open", briefOpen, false),
+            f("brief.questions", briefQuestions, false),
             f("personalization.title", personalizationTitle, false),
             f("personalization.edit", personalizationEdit, false),
             f("personalization.confirm", personalizationConfirm, false),

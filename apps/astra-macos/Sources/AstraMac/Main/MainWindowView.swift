@@ -87,6 +87,7 @@ final class MainData: ObservableObject {
                     WorkContextStore.shared.configureBackend(base: base, token: tokens.accessToken)
                     WorkContextStore.shared.load()
                     ConnectorState.shared.configureBackend(base: base, token: tokens.accessToken)
+                    ReplyFlow.shared.configureBackend(base: base, token: tokens.accessToken)
                     // 録音の自動 upload（会議作成→停止時に音声全体→落ちた録音の回収）は dev 専用。
                     // 既定では録音は gateway を知らない。`RecordingRuntime.devAutoUploadEnabled`。
                     if RecordingRuntime.devAutoUploadEnabled {

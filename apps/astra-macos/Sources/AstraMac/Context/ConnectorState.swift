@@ -23,7 +23,10 @@ final class ConnectorState: ObservableObject {
         let provider: String
         let connectorId: String
         let scopes: [String]
-        var id: String { pluginId }
+        /// 読む接続は plugin id、送る・作る接続は `plugin#connector`。
+        var readOnly: Bool = true
+        var id: String { statusKey }
+        var statusKey: String { readOnly ? pluginId : "\(pluginId)#\(connectorId)" }
     }
 
     enum Status: Equatable { case connected, disconnected, cannotConnect, connecting, failed(String) }
@@ -50,8 +53,8 @@ final class ConnectorState: ObservableObject {
             return Source(pluginId: id, name: m.name, purpose: c.purpose ?? "読むだけ", provider: c.provider,
                           connectorId: c.id, scopes: c.scopes)
         }
-        for s in sources where status[s.pluginId] == nil {
-            status[s.pluginId] = hasToken(s) ? .connected : (canConnect(s.name) ? .disconnected : .cannotConnect)
+        for s in sources where status[s.statusKey] == nil {
+            status[s.statusKey] = hasToken(s) ? .connected : (canConnect(s.name) ? .disconnected : .cannotConnect)
         }
     }
 
@@ -84,6 +87,28 @@ final class ConnectorState: ObservableObject {
     }
 
     func source(named app: String) -> Source? { sources.first { $0.name == app } }
+
+    /// 送る・作る接続（manifest の grants に `.read` 以外があるもの）。JIT で求める。
+    func actionsSource(pluginId: String, connectorId: String) -> Source? {
+        let store = PluginRuntimeStore.shared
+        store.load()
+        guard let m = store.manifests.first(where: { $0.id == pluginId }),
+              let c = m.connectors.first(where: { $0.id == connectorId && !$0.readOnly }) else { return nil }
+        return Source(pluginId: pluginId, name: m.name, purpose: c.purpose ?? "送る・動かす", provider: c.provider,
+                      connectorId: c.id, scopes: c.scopes, readOnly: false)
+    }
+
+    /// 送る・作る接続を始める（purpose を見せたあとで呼ぶ）。
+    @discardableResult
+    func connectActions(pluginId: String, connectorId: String) -> Bool {
+        guard let s = actionsSource(pluginId: pluginId, connectorId: connectorId) else { return false }
+        return connect(source: s)
+    }
+
+    /// 検査用: 送る接続ができたことにする（OAuth 無し）。
+    func installActionsStatus(pluginId: String, connectorId: String, _ st: Status) {
+        status["\(pluginId)#\(connectorId)"] = st
+    }
     func status(of app: String) -> Status? { source(named: app).flatMap { status[$0.pluginId] } }
 
     private func hasToken(_ s: Source) -> Bool {
@@ -113,9 +138,9 @@ final class ConnectorState: ObservableObject {
             await MainActor.run {
                 for s in list {
                     guard let recorded = next[s.pluginId] else { continue }
-                    if case .connecting = self.status[s.pluginId] { continue }
+                    if case .connecting = self.status[s.statusKey] { continue }
                     let live = recorded && self.hasToken(s)
-                    self.status[s.pluginId] = live ? .connected : (self.canConnect(s.name) ? .disconnected : .cannotConnect)
+                    self.status[s.statusKey] = live ? .connected : (self.canConnect(s.name) ? .disconnected : .cannotConnect)
                     if live { self.connected.insert(s.name) } else { self.connected.remove(s.name) }
                 }
             }
@@ -133,10 +158,10 @@ final class ConnectorState: ObservableObject {
 
     @discardableResult
     func connect(source s: Source) -> Bool {
-        guard canConnect(s.name) else { status[s.pluginId] = .cannotConnect; return false }
+        guard canConnect(s.name) else { status[s.statusKey] = .cannotConnect; return false }
         let clientId = ProcessInfo.processInfo.environment["ASTRA_OAUTH_\(s.provider.uppercased())_CLIENT_ID"] ?? ""
         guard let tokenUrl = AstraCoreBridge.tokenUrl(provider: s.provider) else { return false }
-        status[s.pluginId] = .connecting
+        status[s.statusKey] = .connecting
         let ok = (try? flow.begin(provider: s.provider, clientId: clientId, scopes: s.scopes) { [weak self] callback, pending in
             Task { @MainActor in
                 guard let self else { return }
@@ -144,24 +169,24 @@ final class ConnectorState: ObservableObject {
                 self.finish(source: s, callback: callback, pending: pending, clientId: clientId, tokenUrl: tokenUrl)
             }
         }) ?? false
-        if !ok { status[s.pluginId] = .failed("ブラウザで同意画面を開けませんでした") }
+        if !ok { status[s.statusKey] = .failed("ブラウザで同意画面を開けませんでした") }
         return ok
     }
 
     /// 折り返し → 交換 → Keychain → cloud の記録。**参照だけを cloud へ。**
     private func finish(source s: Source, callback: OauthCallback, pending: ConnectorFlow.Pending, clientId: String, tokenUrl: String) {
         if let error = callback.error {
-            status[s.pluginId] = .failed(callback.errorDescription ?? error); return
+            status[s.statusKey] = .failed(callback.errorDescription ?? error); return
         }
         guard callback.state == pending.state, let code = callback.code else {
-            status[s.pluginId] = .failed("折り返しが合いませんでした（state）"); return
+            status[s.statusKey] = .failed("折り返しが合いませんでした（state）"); return
         }
         let json = AstraCoreBridge.exchangeCode(tokenUrl: tokenUrl, provider: s.provider, clientId: clientId,
                                                 redirectUri: pending.redirectUri, code: code, verifier: pending.verifier)
         guard let data = json.data(using: .utf8), !json.isEmpty,
               let t = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let access = t["access_token"] as? String else {
-            status[s.pluginId] = .failed("トークンを受け取れませんでした"); return
+            status[s.statusKey] = .failed("トークンを受け取れませんでした"); return
         }
         let granted = (t["granted_scopes"] as? [String]) ?? []
         let expiresAt: String? = (t["expires_at_ms"] as? Double).map {
@@ -177,11 +202,11 @@ final class ConnectorState: ObservableObject {
             "idToken": NSNull(),
         ]
         guard let storedData = try? JSONSerialization.data(withJSONObject: stored),
-              let storedText = String(data: storedData, encoding: .utf8) else { status[s.pluginId] = .failed("保存できませんでした"); return }
+              let storedText = String(data: storedData, encoding: .utf8) else { status[s.statusKey] = .failed("保存できませんでした"); return }
         do {
             try KeychainStore.setGeneric(service: KeychainStore.connectorService(s.pluginId, s.connectorId), account: NSUserName(), value: storedText)
         } catch {
-            status[s.pluginId] = .failed("Keychain に保存できませんでした"); return
+            status[s.statusKey] = .failed("Keychain に保存できませんでした"); return
         }
         if let base, let token {
             let body: [String: Any] = [
@@ -192,10 +217,10 @@ final class ConnectorState: ObservableObject {
             ]
             if let bodyData = try? JSONSerialization.data(withJSONObject: body), let bodyText = String(data: bodyData, encoding: .utf8) {
                 do { _ = try AstraCoreBridge.pluginConnect(base, accessToken: token, pluginId: s.pluginId, connectJson: bodyText) }
-                catch { status[s.pluginId] = .failed("接続を記録できませんでした"); return }
+                catch { status[s.statusKey] = .failed("接続を記録できませんでした"); return }
             }
         }
-        status[s.pluginId] = .connected
+        status[s.statusKey] = .connected
         connected.insert(s.name)
     }
 
@@ -206,7 +231,7 @@ final class ConnectorState: ObservableObject {
         if let base, let token {
             try? AstraCoreBridge.pluginDisconnect(base, accessToken: token, pluginId: s.pluginId, connectorId: s.connectorId)
         }
-        status[s.pluginId] = canConnect(s.name) ? .disconnected : .cannotConnect
+        status[s.statusKey] = canConnect(s.name) ? .disconnected : .cannotConnect
         connected.remove(s.name)
     }
 

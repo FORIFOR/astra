@@ -1843,6 +1843,37 @@
       }
     },
     {
+      "id": "main.home-meeting-brief",
+      "group": "main",
+      "title": "Main — Home (次の会議の brief)",
+      "required": true,
+      "capture": {
+        "selftest": "sections",
+        "file": "home-meeting-brief.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "次の会議が近い（2 時間以内なら Work Context より上、それより先なら下）。[準備する] で開く。",
+      "meaning": "前回（決定 / やること）・その後（届いたメール）・開いている件・今日確認したいこと（理由と出所つき）。すべて出所つき。[会議を始める] は既存の録音開始（予定を引き継ぐ）。",
+      "primary": "会議を始める",
+      "secondary": "閉じる",
+      "states": "閉じた 1 行 / 開いた中身、未解決 N 件",
+      "keys": "—",
+      "privacy": "事実は artifact から機械で組む（LLM は使わない）。抜粋だけ。",
+      "prev": [
+        "main.home-work-context"
+      ],
+      "next": [
+        "session.recording"
+      ],
+      "window": "Main Window",
+      "invariant": "出所の無い文は 1 つも出さない。質問は 1..3、理由つき。窓を増やさない。",
+      "source": "RC",
+      "appearance_policy": "adaptive"
+    },
+    {
       "id": "main.home-recording-now",
       "group": "main",
       "title": "Main — Home (recording now)",

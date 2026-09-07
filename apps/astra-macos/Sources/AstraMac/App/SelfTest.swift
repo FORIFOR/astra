@@ -49,6 +49,8 @@ enum SelfTest {
         case "screenshotshots": screenshotShots(args); return true
         case "screenshotshot": screenshotShot(args); return true
         case "workcontext": workContextGate(); return true
+        case "replyflow": replyFlowGate(); return true
+        case "brief": briefGate(); return true
         case "journey": journeyGate(args); return true
         case "idle-hold": idleHold(args); return true
         case "confirmflow": confirmFlow(); return true
@@ -5877,6 +5879,14 @@ enum SelfTest {
             if let first = WorkContextStore.shared.context?.priorities.first { WorkContextStore.shared.evidenceOpen.insert(first.id) }
         }
         WorkContextStore.shared.evidenceOpen = []
+        // 会議前の brief（閉じた行 / 開いた中身）。
+        take("home-meeting-brief") {
+            WorkContextStore.shared.installBrief(WorkContextFixture.brief())
+            WorkContextStore.shared.briefOpen = true
+            MainWindowController.shared.showSection(.work); settle(0.3)
+            MainWindowController.shared.showSection(.home)
+        }
+        WorkContextStore.shared.installBrief(nil)
         WorkContextStore.shared.install(nil, profile: nil)
         take("work-tasks") { MainWindowController.shared.showWork(.tasks) }
         take("work-agents") { MainWindowController.shared.showWork(.agents) }

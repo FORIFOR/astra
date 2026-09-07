@@ -116,6 +116,27 @@ enum AstraCoreBridge {
     static func personalization(_ baseUrl: String, accessToken: String) throws -> String {
         try apiPersonalization(baseUrl: baseUrl, accessToken: accessToken)
     }
+    // 「これ返して」/ 会議前 brief / 承認
+    static func sendTurn(_ baseUrl: String, accessToken: String, conversationId: String, text: String,
+                         attachments: [TurnAttachment], replyCandidatesJson: String) throws -> TurnOutcome {
+        try apiSendTurnWithReplyCandidates(baseUrl: baseUrl, accessToken: accessToken, conversationId: conversationId,
+                                           text: text, attachments: attachments, replyCandidatesJson: replyCandidatesJson)
+    }
+    static func workReplySend(_ baseUrl: String, accessToken: String, sendJson: String) throws -> String {
+        try apiWorkReplySend(baseUrl: baseUrl, accessToken: accessToken, sendJson: sendJson)
+    }
+    static func workBriefNext(_ baseUrl: String, accessToken: String) throws -> String {
+        try apiWorkBriefNext(baseUrl: baseUrl, accessToken: accessToken)
+    }
+    static func taskApprovals(_ baseUrl: String, accessToken: String, taskId: String) throws -> String {
+        try apiTaskApprovals(baseUrl: baseUrl, accessToken: accessToken, taskId: taskId)
+    }
+    static func taskApprove(_ baseUrl: String, accessToken: String, taskId: String, approvalId: String, decision: String) throws {
+        try apiTaskApprove(baseUrl: baseUrl, accessToken: accessToken, taskId: taskId, approvalId: approvalId, decision: decision)
+    }
+    static func taskGet(_ baseUrl: String, accessToken: String, taskId: String) throws -> String {
+        try apiTaskJson(baseUrl: baseUrl, accessToken: accessToken, taskId: taskId)
+    }
     static func personalizationUpdate(_ baseUrl: String, accessToken: String, updateJson: String) throws -> String {
         try apiPersonalizationUpdate(baseUrl: baseUrl, accessToken: accessToken, updateJson: updateJson)
     }

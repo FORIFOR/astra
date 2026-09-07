@@ -717,7 +717,7 @@ struct ConfirmationDock: View {
                     // 「送る」は 2 文字なので、padding だけ足しても 70pt にしかならず、
                     // 6 文字の Cancel（76pt）に負けていた（実測）。字数で重さが
                     // 決まってしまうので、最小幅で下から支える。
-                    ProbeButton(id: "confirmProceed", action: { AstraStateStore.shared.resolveConfirmation(approved: true) }) {
+                    ProbeButton(id: "confirmProceed", action: { AstraStateStore.shared.resolveConfirmation(approved: true, edits: edited) }) {
                         Text(confirmation.confirmLabel)
                     }
                         .font(.system(size: S.type(Metrics.dockRowSize), weight: .semibold))

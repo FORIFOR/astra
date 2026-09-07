@@ -125,8 +125,13 @@ final class AstraStateStore: ObservableObject {
         return true
     }
 
-    func resolveConfirmation(approved: Bool) {
+    /// 確認カードで直した値（param の label → 値、本文は "__preview"）。**答えた直後だけ意味を持つ。**
+    /// これまで「直す」は面の中で閉じていて、押した先には元の値が渡っていた（宣言だけの編集）。
+    var lastConfirmationEdits: [String: String] = [:]
+
+    func resolveConfirmation(approved: Bool, edits: [String: String] = [:]) {
         guard let pending = state.confirmation else { return }
+        lastConfirmationEdits = approved ? edits : [:]
         state.confirmation = nil
         bus.publish(.confirmationResolved(id: pending.id, approved: approved))
         setDock(state.meeting.isRecording ? .meeting(expanded: nil) : .idle)

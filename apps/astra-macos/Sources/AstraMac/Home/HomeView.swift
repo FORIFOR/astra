@@ -101,8 +101,16 @@ struct HomeView: View {
 
                 // 仕事の文脈（Work Context）。**予定より先。**今日どこに時間を使うかが先で、
                 // 予定はその手段。実データが無ければ節ごと出ない（架空の案件を作らない）。
+                // 次の会議が 2 時間以内なら、それが今いちばん急ぐことなので Work Context より上。
+                // それより先なら Work Context の下（今日の優先が先）。無ければ出ない。
+                if work.brief != nil, briefIsSoon {
+                    MeetingBriefRow()
+                }
                 if work.context != nil {
                     WorkContextCard()
+                }
+                if work.brief != nil, !briefIsSoon {
+                    MeetingBriefRow()
                 }
 
                 if !attention.isEmpty {
@@ -273,6 +281,12 @@ struct HomeView: View {
                 .fill(Palette.surface(dark)))
             .accessibilityIdentifier("homeIntentAnswer")
         }
+    }
+
+    /// 次の会議が 2 時間以内か（決定的）。
+    private var briefIsSoon: Bool {
+        guard let b = work.brief, let start = WorkFormat.parse(b.startsAt) else { return false }
+        return start.timeIntervalSinceNow < 2 * 3600
     }
 
     private func loadReal() {

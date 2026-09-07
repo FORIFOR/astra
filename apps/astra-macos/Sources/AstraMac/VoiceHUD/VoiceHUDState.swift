@@ -152,6 +152,9 @@ final class VoiceHUDState: ObservableObject {
         // 端末内の受け渡し場所へ写し、cloud へは id とラベルだけ。画素は端末で走るモデル呼び出しが読む。
         let attached = VisualReferenceResolver.resolve(text: text, recent: VisualContextStore.shared.recent).images
         let attachments = VisualContextStore.shared.attach(attached)
+        // 「これ返して」: 開いているメール → 選択 → 前面の窓 を、この順で候補として添える（題名だけ）。
+        let replyCandidates = ReplyContextResolver.isReplyUtterance(text)
+            ? ReplyContextResolver.json(ReplyContextResolver.candidates()) : ""
         mode = .thinking; answer = ""
         Task.detached { [weak self] in
             do {
@@ -162,18 +165,30 @@ final class VoiceHUDState: ObservableObject {
                     await MainActor.run { self?.conversationId = conv }
                 }
                 await MainActor.run { VisualContextStore.shared.bind(conversationID: conv) }
-                let outcome = try AstraCoreBridge.sendTurn(base, accessToken: token, conversationId: conv,
-                                                           text: text, attachments: attachments)
+                let outcome = replyCandidates.isEmpty
+                    ? try AstraCoreBridge.sendTurn(base, accessToken: token, conversationId: conv,
+                                                   text: text, attachments: attachments)
+                    : try AstraCoreBridge.sendTurn(base, accessToken: token, conversationId: conv,
+                                                   text: text, attachments: attachments, replyCandidatesJson: replyCandidates)
                 let reply = try Self.followUp(outcome, base: base, token: token, waitMs: 12_000)
                 await MainActor.run {
                     self?.answer = reply.text; self?.mode = .idle
                     if reply.settled { VisualContextStore.shared.markRecent(attached) }
+                    // 返信案なら、答えとしてではなく確認カードとして出す（送るのは押されたときだけ）。
+                    if reply.settled, !outcome.replyJson.isEmpty, let draft = ReplyFlow.draft(replyJson: outcome.replyJson, body: reply.text) {
+                        ReplyFlow.shared.present(draft)
+                    }
                 }
                 // 12 秒で終わらない仕事は、裏で待ち続けて届いたら差し替える（Dock は idle に戻す）。
                 if !reply.settled, !outcome.taskId.isEmpty {
                     let later = try Self.followUp(outcome, base: base, token: token, waitMs: 120_000)
                     await MainActor.run {
-                        if later.settled { self?.answer = later.text; VisualContextStore.shared.markRecent(attached) }
+                        if later.settled {
+                            self?.answer = later.text; VisualContextStore.shared.markRecent(attached)
+                            if !outcome.replyJson.isEmpty, let draft = ReplyFlow.draft(replyJson: outcome.replyJson, body: later.text) {
+                                ReplyFlow.shared.present(draft)
+                            }
+                        }
                     }
                 }
             } catch {

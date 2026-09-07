@@ -130,6 +130,34 @@ struct PersonalizationProfile: Codable {
     var all: [PersonalizationTrait] { workingStyle + workPatterns + frequentEntities }
 }
 
+struct BriefFact: Codable, Hashable, Identifiable {
+    var id: String { text }
+    let text: String
+    let sources: [WorkProvenance]
+}
+
+struct SuggestedQuestion: Codable, Hashable, Identifiable {
+    var id: String { question }
+    let question: String
+    let reason: String
+    let sources: [WorkProvenance]
+    let extractedBy: String
+}
+
+/// 会議前の brief（MEETING_BRIEF）。事実は出所つき、質問は理由と出所つき。
+struct MeetingBrief: Codable {
+    let eventId: String
+    let title: String
+    let startsAt: String
+    let project: String?
+    let previous: [BriefFact]
+    let sinceLastMeeting: [BriefFact]
+    let openItems: [BriefFact]
+    let suggestedQuestions: [SuggestedQuestion]
+    let provenance: [WorkProvenance]
+    let generatedAt: String
+}
+
 // MARK: - Store
 
 /// Home の Work Context と Personalization。gateway から読み、本人の訂正を 1 操作で返す。
@@ -142,6 +170,9 @@ final class WorkContextStore: ObservableObject {
 
     @Published private(set) var context: WorkContext?
     @Published private(set) var profile: PersonalizationProfile?
+    /// 次の会議の brief。無ければ nil（架空の会議を作らない）。
+    @Published private(set) var brief: MeetingBrief?
+    @Published var briefOpen = false
     /// 出所を開いている item。
     @Published var evidenceOpen: Set<String> = []
     /// 最後の失敗。黙って空にしない。
@@ -153,6 +184,7 @@ final class WorkContextStore: ObservableObject {
     /// 撮影・検査用の差し込み。**gateway から実データが読めればそちらが勝つ。**
     nonisolated(unsafe) static var preview: WorkContext?
     nonisolated(unsafe) static var previewProfile: PersonalizationProfile?
+    nonisolated(unsafe) static var previewBrief: MeetingBrief?
 
     static let decoder: JSONDecoder = {
         let d = JSONDecoder(); d.keyDecodingStrategy = .convertFromSnakeCase; return d
@@ -173,7 +205,11 @@ final class WorkContextStore: ObservableObject {
                     .flatMap { try? WorkContextStore.decoder.decode(WorkContext.self, from: Data($0.utf8)) }
                 let prof = (try? AstraCoreBridge.personalization(base, accessToken: token))
                     .flatMap { try? WorkContextStore.decoder.decode(PersonalizationProfile.self, from: Data($0.utf8)) }
+                let briefText = (try? AstraCoreBridge.workBriefNext(base, accessToken: token)) ?? ""
+                let brief = briefText.isEmpty ? nil
+                    : try? WorkContextStore.decoder.decode(MeetingBrief.self, from: Data(briefText.utf8))
                 await MainActor.run {
+                    self.brief = brief ?? (self.brief ?? WorkContextStore.previewBrief)
                     if let ctx { self.context = ctx; self.failure = nil }
                     else if self.context == nil { self.context = WorkContextStore.preview; self.failure = "仕事の文脈を読めませんでした" }
                     if let prof { self.profile = prof } else if self.profile == nil { self.profile = WorkContextStore.previewProfile }
@@ -184,8 +220,12 @@ final class WorkContextStore: ObservableObject {
             // （検査が install したものを onAppear の load が空にしていた）。
             if let p = WorkContextStore.preview { context = p }
             if let pp = WorkContextStore.previewProfile { profile = pp }
+            if let pb = WorkContextStore.previewBrief { brief = pb }
         }
     }
+
+    /// 検査用: brief を直に入れる。
+    func installBrief(_ b: MeetingBrief?) { brief = b; briefOpen = false }
 
     /// 検査用: gateway 無しで差し込みを直に入れる。
     func install(_ ctx: WorkContext?, profile: PersonalizationProfile?) {

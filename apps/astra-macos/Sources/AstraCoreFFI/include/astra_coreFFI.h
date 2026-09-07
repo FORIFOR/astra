@@ -406,6 +406,11 @@ RustBuffer uniffi_astra_core_fn_func_api_task_approvals(RustBuffer base_url, Rus
 void uniffi_astra_core_fn_func_api_task_approve(RustBuffer base_url, RustBuffer access_token, RustBuffer task_id, RustBuffer approval_id, RustBuffer decision, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_TASK_JSON
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_TASK_JSON
+RustBuffer uniffi_astra_core_fn_func_api_task_json(RustBuffer base_url, RustBuffer access_token, RustBuffer task_id, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_TASK_STATUS
 #define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_TASK_STATUS
 RustBuffer uniffi_astra_core_fn_func_api_task_status(RustBuffer base_url, RustBuffer access_token, RustBuffer task_id, RustCallStatus *_Nonnull out_status
@@ -915,6 +920,12 @@ uint16_t uniffi_astra_core_checksum_func_api_task_approvals(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_TASK_APPROVE
 #define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_TASK_APPROVE
 uint16_t uniffi_astra_core_checksum_func_api_task_approve(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_TASK_JSON
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_TASK_JSON
+uint16_t uniffi_astra_core_checksum_func_api_task_json(void
     
 );
 #endif

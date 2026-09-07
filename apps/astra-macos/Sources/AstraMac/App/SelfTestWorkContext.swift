@@ -222,6 +222,31 @@ enum WorkContextFixture {
         """
     }
 
+    static func briefJSON() -> String {
+        let src = { (source: String, id: String, label: String) -> String in
+            "{\"source\":\"\(source)\",\"external_id\":\"\(id)\",\"label\":\"\(label)\",\"observed_at\":\"\(iso(-1))\",\"url\":null,\"excerpt\":null}"
+        }
+        return """
+        {"event_id":"google_calendar:ev-1","title":"MOPITA 定例","starts_at":"\(iso(1.25))","project":"MOPITA",
+         "previous":[{"text":"前回: MOPITA 定例（9/3）","sources":[\(src("meeting", "mt-0", "MOPITA 定例"))]},
+                     {"text":"決定: 価格案を再提出する","sources":[\(src("meeting", "d-1", "MOPITA 定例"))]},
+                     {"text":"やること: 導入時期を先方に確認する","sources":[\(src("meeting", "a-1", "MOPITA 定例"))]}],
+         "since_last_meeting":[{"text":"2 件のメールが届いています","sources":[\(src("gmail", "m-1", "Re: 見積 v2 のご確認")),\(src("gmail", "m-3", "導入時期の件"))]},
+                               {"text":"MTI 佐藤さん: 見積 v2 の確認をお願いします","sources":[\(src("gmail", "m-1", "Re: 見積 v2 のご確認"))]}],
+         "open_items":[{"text":"MTI 佐藤さん に返す: 見積 v2 の確認（期限 明日）","sources":[\(src("gmail", "m-1", "Re: 見積 v2 のご確認"))]},
+                       {"text":"MTI からの返事待ち: SITE_ID（3 日）","sources":[\(src("gmail", "m-2", "SITE_ID の件"))]}],
+         "suggested_questions":[
+           {"question":"SITE_ID は、その後いかがでしょうか？","reason":"MTI からの返事を 3 日待っており、確定の連絡がありません","sources":[\(src("gmail", "m-2", "SITE_ID の件"))],"extracted_by":"rule"},
+           {"question":"見積 v2 の条件に懸念はありますか？","reason":"MTI 佐藤さん に返すものが残っています（期限 明日）","sources":[\(src("gmail", "m-1", "Re: 見積 v2 のご確認"))],"extracted_by":"rule"}],
+         "provenance":[\(src("google_calendar", "ev-1", "MOPITA 定例")),\(src("meeting", "mt-0", "MOPITA 定例")),\(src("gmail", "m-1", "Re: 見積 v2 のご確認"))],
+         "generated_at":"\(iso(0))"}
+        """
+    }
+
+    static func brief() -> MeetingBrief? {
+        try? WorkContextStore.decoder.decode(MeetingBrief.self, from: Data(briefJSON().utf8))
+    }
+
     static func context() -> WorkContext? {
         try? WorkContextStore.decoder.decode(WorkContext.self, from: Data(contextJSON().utf8))
     }

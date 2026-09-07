@@ -2926,6 +2926,18 @@ public func apiTaskApprove(baseUrl: String, accessToken: String, taskId: String,
 }
 }
 /**
+ * 仕事そのもの（GET /v1/tasks/:id）。JSON 本文。失敗の理由（error.code）を読むために使う。
+ */
+public func apiTaskJson(baseUrl: String, accessToken: String, taskId: String)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeApiError_lift) {
+    uniffi_astra_core_fn_func_api_task_json(
+        FfiConverterString.lower(baseUrl),
+        FfiConverterString.lower(accessToken),
+        FfiConverterString.lower(taskId),$0
+    )
+})
+}
+/**
  * 仕事の状態を引く。
  */
 public func apiTaskStatus(baseUrl: String, accessToken: String, taskId: String)throws  -> TaskStatus  {
@@ -3251,6 +3263,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_astra_core_checksum_func_api_task_approve() != 17739) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_astra_core_checksum_func_api_task_json() != 65389) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_astra_core_checksum_func_api_task_status() != 37298) {
