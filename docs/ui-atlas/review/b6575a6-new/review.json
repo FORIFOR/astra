@@ -1,0 +1,326 @@
+{
+  "rc": "b6575a6",
+  "pages": [
+    {
+      "id": "guided-setup.target-highlighted",
+      "blind_id": "2343",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "trust-provenance",
+              "what": "システム設定風のリスト上に、出所の分からない吹き出しが重なっている。OS の表示なのかサードパーティアプリのオーバーレイなのか判別できず、許可画面という敏感な文脈では信頼性の判断ができない",
+              "where": "AstraDbg 行の中央、ラベルとトグルの間に重なる淡いグレーの吹き出し"
+            },
+            {
+              "axis": "alignment",
+              "what": "吹き出しが行の内容領域に覆いかぶさり、リスト行の左ラベル／右トグルという整った構造を分断している。他の 2 行と同じ読み方ができない",
+              "where": "AstraDbg 行（中央の行）"
+            },
+            {
+              "axis": "error-recovery clarity",
+              "what": "「再起動すると使えます」と言うだけで、再起動する手段（ボタン等）も、閉じる手段も画面上に無い。ユーザーは自力で別の場所へ行くしかない",
+              "where": "吹き出しのテキスト部分"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "state legibility",
+              "what": "トグルはONに見えるが「再起動すると使えます」という文言と矛盾し、現在有効なのか無効なのか判断できない",
+              "where": "AstraDbg行のトグルスイッチと吹き出しの重なり部分"
+            },
+            {
+              "axis": "alignment",
+              "what": "吹き出しがトグルに重なって配置され、行の右端で要素が衝突している",
+              "where": "AstraDbg行右側"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.intro",
+      "blind_id": "3DF9",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        },
+        {
+          "model": "sonnet",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.granted",
+      "blind_id": "5BB3",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        },
+        {
+          "model": "sonnet",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        }
+      ]
+    },
+    {
+      "id": "screenshot.attached-cloud",
+      "blind_id": "7838",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "trust-provenance",
+              "what": "外部サービスへの送信条件を告げているのに、実際に何が送られるのか（プレビュー画像の中身）が見えず、送信を拒む手段も無い。同意に関わる情報なのに、確認も撤回もできない",
+              "where": "左のサムネイル領域と、×しか無い操作領域"
+            },
+            {
+              "axis": "contrast",
+              "what": "送信条件という最も重要な一文が、暗い背景の上で薄いグレーの細字になっており、見出しより弱く扱われている。読み落としやすい",
+              "where": "「質問したときだけ Claude に送信」の行"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        }
+      ]
+    },
+    {
+      "id": "screenshot.detected",
+      "blind_id": "EC85",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "primary-action clarity",
+              "what": "「そのまま聞けます」と次の行動を促しているのに、その行動を起こす場所（入力欄・ボタン）がカード内に一切無く、×だけが押せる。促しと操作が噛み合っていない",
+              "where": "本文「認識しました・そのまま聞けます」と、右上の×しか無い操作領域"
+            },
+            {
+              "axis": "contrast",
+              "what": "唯一の状態情報が薄いグレーの細字で、暗い背景上で見出しに対して明らかに弱い。成功状態の読み取りが弱くなる",
+              "where": "見出し下の本文行"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.denied",
+      "blind_id": "F7F7",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "FIX",
+          "valid": false,
+          "why": "照合 1/3（画面に無い文字）",
+          "confidence": "high",
+          "concerns": [
+            {
+              "axis": "typography",
+              "what": "ボタンテキスト「もう一開く」が日本語として標準的でない。正しくは「もう一度開く」または「再度開く」であるべき",
+              "where": "右下の青いリトライボタン"
+            }
+          ]
+        },
+        {
+          "model": "opus",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        },
+        {
+          "model": "sonnet",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.target-missing",
+      "blind_id": "FB32",
+      "verdict": "FIX_CANDIDATE",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "FIX",
+          "valid": false,
+          "why": "照合 3/6（画面に無い文字）",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "error-recovery clarity",
+              "what": "Recovery instruction is confusing: if Astra cannot be auto-detected, why instruct to turn it off? The connection between problem and solution is unclear.",
+              "where": "Second and third lines of instruction text"
+            },
+            {
+              "axis": "typography",
+              "what": "Text wrapping or truncation makes the instruction hard to read. Line breaks fragment the message across multiple lines in a way that reduces clarity.",
+              "where": "Instruction text area (second/third text lines)"
+            }
+          ]
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "primary-action clarity",
+              "what": "ラベルのない丸い波形アイコンが主要CTA「システム設定を開く」のすぐ右に同じ視覚的重みで置かれ、どちらが次の行動か迷う。役割が絵から読み取れない",
+              "where": "pill 右外側の円形ボタン"
+            },
+            {
+              "axis": "state legibility",
+              "what": "エラー状態であることを示す色や記号（警告アイコン等）が一切なく、太字の見出しだけでは通常の案内と区別しにくい",
+              "where": "左側テキストブロック先頭"
+            },
+            {
+              "axis": "consistency",
+              "what": "閉じる「×」が pill の内側でも外側でもない中間位置にあり、pill 本体と円形ボタンのどちらのコンテナに属するかが視覚的に決まっていない",
+              "where": "青ボタンと円形アイコンの間"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "screen occupation",
+              "what": "通知テキスト・ボタン群と、右端の無ラベル円形アイコンとの間に説明のつかない大きな空白があり、視覚的に浮いた要素になっている",
+              "where": "バナー右端、「×」ボタンとその右の円形アイコンの間"
+            },
+            {
+              "axis": "consistency",
+              "what": "円形アイコンが何のUI要素か(別の通知/ステータスインジケーター/無関係な要素)を示すラベルや文脈が画像内になく、バナーの一部なのか別コンポーネントなのか判別できない",
+              "where": "バナー右端の円形アイコン"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "keep": 6,
+    "fix_candidate": 1,
+    "not_enough_evidence": 0,
+    "models": [
+      "haiku",
+      "opus",
+      "sonnet"
+    ]
+  },
+  "gate": "FAIL"
+}

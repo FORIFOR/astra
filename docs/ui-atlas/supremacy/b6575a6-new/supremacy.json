@@ -1,0 +1,297 @@
+{
+  "rc": "b6575a6",
+  "mode": "self-supremacy",
+  "pages": [
+    {
+      "id": "guided-setup.denied",
+      "blind_id": "0EF0",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 3.67,
+        "density": 4,
+        "typography": 3.67,
+        "geometry": 3,
+        "state_clarity": 3.33,
+        "calmness": 3.33,
+        "craft": 3,
+        "distinctiveness": 2.67
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "Well-executed error notification with clear hierarchy and retry action. However, the trailing menu icon feels out of place, and the pattern is fairly standard without distinctive elements."
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "失敗の事実・場所・回復操作が1行ずつに整理され、日本語も自然で説明過多ではない。一線級と比べると、コンテナとボタンが同じ完全ピル形状で形の階層が出ておらず、オーブの配置・切れが仕上げの粗さとして残る。欠陥ではなく差。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "浮いた丸いアイコンボタンが主要トーストから孤立しており、レイアウトの統合ミスに見える",
+            "汎用的な青いピル型ボタン"
+          ],
+          "why": "トーストと右の丸アイコンの関係が絵から説明できず、両者が同一操作系なのか無関係な浮遊要素なのか判断できない。これは具体的な階層/craftの欠陥。"
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.intro",
+      "blind_id": "2F2C",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 3.67,
+        "density": 4,
+        "typography": 3.67,
+        "geometry": 3,
+        "state_clarity": 3.67,
+        "calmness": 3.67,
+        "craft": 3,
+        "distinctiveness": 2.67
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "Polished permission notification with informative tone rather than aggressive error. Clear action path to resolution. However, follows standard notification pattern without distinctive characteristics."
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "状態→手順→操作の順序が正しく、文言も短く命令形で迷いがない。ただしアイコンが無いぶん状態の即読性が0EF0より落ち、コンテナ・ボタンとも完全ピルで形の階層が無い。一線級との差はあるが絵から言える欠陥は無い。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "同系統3枚で丸アイコンが毎回同じ位置に孤立して浮く、テンプレ反復"
+          ],
+          "why": "0EF0と同型の孤立丸アイコン問題が再現しており、単発のノイズではなくコンポーネント設計自体の欠陥と読める。"
+        }
+      ]
+    },
+    {
+      "id": "screenshot.attached-cloud",
+      "blind_id": "9AA3",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4,
+        "density": 4,
+        "typography": 4,
+        "geometry": 3.5,
+        "state_clarity": 3.5,
+        "calmness": 4.5,
+        "craft": 3,
+        "distinctiveness": 3
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "SUPREME",
+          "valid": false,
+          "ai_look": [],
+          "why": "Minimal, elegant dark notification with excellent information hierarchy and calm aesthetic. No wasted space, clear purposeful design. Matches premium product standards (Linear, Raycast-level polish)."
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "2行で「何を持っているか」「いつ外に出るか」を言い切る抑制は良く、静かで邪魔にならない。ただし状態（撮った直後なのか待機なのか）が1枚では確定せず、サムネイルが中身を表していないため証拠性が弱い。ブランド語彙も他面と別系統に見える。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "単一カードで階層・余白・状態は明快だが、アイコン選定の意味的つながりが弱く一線級と並べるとやや見劣りする。"
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.target-highlighted",
+      "blind_id": "9E6D",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 3,
+        "density": 3.33,
+        "typography": 3.33,
+        "geometry": 2.67,
+        "state_clarity": 3.33,
+        "calmness": 3.33,
+        "craft": 2.33,
+        "distinctiveness": 2
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "Functional settings interface with clear toggle states but lacks visual polish. Description text hierarchy could be stronger. Straightforward but lacks distinctiveness compared to premium settings UI."
+        },
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [],
+          "why": "絵から言える欠陥が2つある。第一に、ユーザーが読むOSの権限一覧に『AstraDbg』という開発ビルド名がそのまま出ており、隣接する AnyDesk / ChatGPT と並ぶと明らかに製品として未完成に見える。第二に、吹き出しが自分の行に重なって行内容を覆い、名前と吹き出しの間に不整合な空きが生じている。OS標準の青トグルの上に製品固有の紫リングを重ねる処理も、この面だけ配色体系が二重になっている。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [],
+          "why": "行ごとのアイコン有無が不揃いで、リストの整合性が絵から崩れて見える具体的欠陥。"
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.target-missing",
+      "blind_id": "A45A",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 3.67,
+        "density": 3.67,
+        "typography": 3.33,
+        "geometry": 2.67,
+        "state_clarity": 3,
+        "calmness": 3,
+        "craft": 3,
+        "distinctiveness": 2.67
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "Solid error notification with clear action path. Consistent with companion notifications (0EF0, 2F2C). Well-designed but follows standard pattern without distinctive elements."
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "行き先（画面収録の一覧）と操作（オンにする）を名指ししており、権限誘導としては機能する。ただし同じ『システム設定を開く』ボタンが他面と違う角丸で、太字の使い方も揃っておらず、同一プロダクト内の一貫性が一線級に届かない。1行目の『自動で見つけられません』は原因の言い方としてやや技術寄りで、ユーザーの行動と直結していない。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "3枚のトーストで同一の孤立丸アイコンパターンが反復しており、テンプレ的な使い回しに見える"
+          ],
+          "why": "同型の欠陥（本体と丸アイコンの関係不明）が3枚通して再現しており、単発の見落としではなくコンポーネント設計の欠陥だと判断できる。"
+        }
+      ]
+    },
+    {
+      "id": "screenshot.detected",
+      "blind_id": "A81F",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 3.5,
+        "density": 4,
+        "typography": 3.5,
+        "geometry": 3.5,
+        "state_clarity": 3,
+        "calmness": 4.5,
+        "craft": 3,
+        "distinctiveness": 3
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "SUPREME",
+          "valid": false,
+          "ai_look": [],
+          "why": "Excellent completion status notification with minimal, focused design and calm dark theme. Clear state clarity and high craftsmanship. Feels premium and polished, though pattern (similar to 9AA3) is becoming familiar within the set."
+        },
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [],
+          "why": "『そのまま聞けます』と行動を促しながら、聞く手段（入力欄・ショートカット表記・マイク表示）がこの面のどこにも見えず、指示と画面が噛み合っていない。加えて 9AA3 の未認識状態と同じサムネイル・同じ枠のままで、状態が進んだことを示す視覚的な差分が無いため、2つの状態が絵として区別できない。中黒で完了と可能性を1行に繋ぐ書き方も、一線級のトーストの言い切りに比べて締まりがない。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "9AA3と同系統で完成度は高いが、アイコンの意味的一貫性が弱く一線級製品との差が残る。"
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.granted",
+      "blind_id": "EFA1",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 3.67,
+        "density": 4,
+        "typography": 3.67,
+        "geometry": 3,
+        "state_clarity": 3.33,
+        "calmness": 4.33,
+        "craft": 3,
+        "distinctiveness": 2.33
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "Well-executed notification toast with clear success messaging, compact density, and calm presentation. Green checkmark, Japanese text, and layout are professional and polished. However, the rightmost circular button introduces ambiguity—its role and necessity in a confirmation toast are unclear, detracting from pure clarity. Additionally, the pattern itself (checkmark + message + close button) is standard across many products, lacking the distinctiveness expected of SUPREME-tier design. No AI-generation artifacts detected."
+        },
+        {
+          "model": "opus",
+          "verdict": "NOT_ENOUGH_EVIDENCE",
+          "valid": true,
+          "ai_look": [
+            "成功＝緑チェック＋一文という最も既定的なテンプレ構成で、製品固有の手触りが無い"
+          ],
+          "why": "トースト単体は落ち着いていて読めるが、右の円形要素が何の状態を示すのかが絵から確定できない（収録中か待機かのラベルも色の意味も画面上に無い）。この浮遊した円とトーストの関係は前後の遷移が無いと判定できない。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "NOT_ENOUGH_EVIDENCE",
+          "valid": true,
+          "ai_look": [
+            "説明的すぎるトーストメッセージ(「〜を設定できました」という冗長な完了文言)",
+            "汎用的な薄灰背景+丸ボタンの組み合わせがテンプレ感を出している"
+          ],
+          "why": "極小の切り抜き画像で、通知トーストと円形ボタンの関係(同一コンポーネントか隣接する別UIか)、これがどのアプリ・どの画面文脈に属するかが分からない。単体のtoastとしてはクラフトは平凡だが致命的な欠陥とは言い切れず、周辺文脈がないと確定判定できない。"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "supreme": 0,
+    "competitive": 7,
+    "below_bar": 0,
+    "not_enough_evidence": 0,
+    "models": [
+      "haiku",
+      "opus",
+      "sonnet"
+    ]
+  },
+  "gate": "PASS",
+  "ab_competitor": "AUTOMATION_MISSING: 競合の実 UI 画像（ASTRA_COMPETITORS_DIR）が無い。画面収録 TCC と driver が要る"
+}

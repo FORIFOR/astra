@@ -1,0 +1,131 @@
+{
+  "pages": {
+    "2343": {
+      "visible_text": [
+        "AnyDesk",
+        "AstraDbg",
+        "AstraDbgを再起動すると使えます",
+        "ChatGPT"
+      ],
+      "observation": {
+        "happening": "アプリ一覧の設定行で、AstraDbgの行にトグルスイッチと吹き出し状の通知「AstraDbgを再起動すると使えます」が同時に表示されている。",
+        "most_important": "AstraDbgの機能を使うには再起動が必要というメッセージ",
+        "next_action": "明確な次アクション（ボタン等）が見当たらない。吹き出しを閉じる手段も見えない。",
+        "anomalies": [
+          "吹き出しがAstraDbg行のトグルスイッチ付近に重なっており、トグルの正確なON/OFF状態が見えにくい",
+          "トグル周囲の丸い強調リングと吹き出しが同時に出ていて視覚要素が重複している",
+          "他の2行（AnyDesk、ChatGPT）は文字とトグルのみのシンプルな行なのに、AstraDbg行だけ情報密度が急に上がっている"
+        ]
+      },
+      "verdict": "FIX",
+      "concerns": [
+        {
+          "axis": "state legibility",
+          "what": "トグルはONに見えるが「再起動すると使えます」という文言と矛盾し、現在有効なのか無効なのか判断できない",
+          "where": "AstraDbg行のトグルスイッチと吹き出しの重なり部分"
+        },
+        {
+          "axis": "alignment",
+          "what": "吹き出しがトグルに重なって配置され、行の右端で要素が衝突している",
+          "where": "AstraDbg行右側"
+        }
+      ],
+      "confidence": "medium"
+    },
+    "3DF9": {
+      "visible_text": [
+        "画面収録が未許可です",
+        "システム設定でAstraをオンにしてください",
+        "システム設定を開く",
+        "×"
+      ],
+      "observation": {
+        "happening": "画面収録の権限が許可されていないことを知らせる警告カードが表示され、設定を開くボタンと閉じるボタンがある。",
+        "most_important": "画面収録の許可がオフになっている、という警告",
+        "next_action": "「システム設定を開く」ボタンを押すか、×で通知を閉じる",
+        "anomalies": [
+          "カード右端に丸いアイコン（波形マーク入り）がカードと重なるように配置されている"
+        ]
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "medium"
+    },
+    "5BB3": {
+      "visible_text": [
+        "画面収録を設定できました",
+        "×"
+      ],
+      "observation": {
+        "happening": "画面収録の設定が正常に完了したことを知らせる成功通知カードが表示されている。",
+        "most_important": "設定完了のステータス（チェックマーク付き）",
+        "next_action": "×で閉じる以外に選択肢はない",
+        "anomalies": [
+          "カード右端に丸いアイコンがカードの縁に重なるように配置されている"
+        ]
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "medium"
+    },
+    "7838": {
+      "visible_text": [
+        "スクリーンショット",
+        "質問したときだけClaudeに送信",
+        "×"
+      ],
+      "observation": {
+        "happening": "ダークカードでスクリーンショット機能の挙動（質問した時だけ送信される）を説明する通知が表示されている。",
+        "most_important": "スクリーンショットは常時ではなく質問時のみ送信される、というプライバシー説明",
+        "next_action": "×で閉じる以外に見える操作はない",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "EC85": {
+      "visible_text": [
+        "スクリーンショット",
+        "認識しました・そのまま聞けます",
+        "×"
+      ],
+      "observation": {
+        "happening": "スクリーンショットが認識され、そのまま質問できる状態であることを知らせる通知カード。",
+        "most_important": "スクリーンショットが認識済みで、すぐに質問可能という状態",
+        "next_action": "×で閉じるか、そのまま質問する（画面外の操作）",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "F7F7": {
+      "visible_text": [
+        "設定画面を開けませんでした",
+        "プライバシーとセキュリティ",
+        "画面収録",
+        "もう一度開く",
+        "×"
+      ],
+      "observation": {
+        "happening": "システム設定の画面収録項目を開けなかったというエラーカードが表示され、パンくず状の場所案内と再試行ボタンがある。",
+        "most_important": "設定画面を開く操作が失敗したこと、および再試行の手段があること",
+        "next_action": "「もう一度開く」ボタンを押すか、×で閉じる",
+        "anomalies": [
+          "カード右端の丸いアイコンの縁がオレンジ系の色で、他画像（3DF9・5BB3）の同位置アイコンと縁の色が異なる",
+          "同アイコンがカードの右端に重なるように配置されている"
+        ]
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "medium"
+    }
+  },
+  "_judge": {
+    "model": "sonnet",
+    "cost_usd": 0.1610516,
+    "turns": 7,
+    "duration_ms": 75387
+  }
+}

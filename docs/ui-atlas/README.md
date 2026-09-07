@@ -1,12 +1,12 @@
-# Astra UI Atlas — Visual Release Book (RC b6575a6)
+# Astra UI Atlas — Visual Release Book (RC 85b8333)
 
 取扱説明書ではない。**全 UI を RC .app の実画像で 1 画面 1 ページに固定し、ページ単位で KEEP / FIX / NOT_ENOUGH_EVIDENCE を出す**ための資料。
 画像は署名済み RC .app が `--selftest` で描いたものだけ。モック・Figma・別ビルドは入れない。
 
 ```
-RC SHA            b6575a6
-RC exe sha256     f6123266975e15c9dc32e7691a58c979342d740d267a4a7b5f4d8a8c7470b6cb
-RC built          2026-09-07T11:48:54+09:00   captured 2026-09-07T11:48:57+09:00
+RC SHA            85b8333
+RC exe sha256     1aff1809f031c9d38e2117f5d946334626a994f2b0d0e3a5071ecd32a2299643
+RC built          2026-09-07T15:15:27+09:00   captured 2026-09-07T15:15:30+09:00
 codesign          com.astra.desktop / 6RR7572ZLU
 required screens  72   with RC image 72   NO_CAPTURE_PATH 0
 strips            5 / 5

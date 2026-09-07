@@ -1,0 +1,44 @@
+{
+  "pages": {
+    "FB32": {
+      "visible_text": [
+        "Astra を自動で見つけられません",
+        "Astraをご自宅のネットワーク上で",
+        "「Astra をオフに」してください",
+        "システム設定を開く",
+        "×",
+        "⋮ (three-line icon)"
+      ],
+      "observation": {
+        "happening": "Error dialog displayed. System cannot auto-detect Astra. User is shown instruction text and offered action to open System Settings.",
+        "most_important": "Astra auto-detection failed; user is prompted to open System Settings to resolve.",
+        "next_action": "User clicks 'システム設定を開く' button or closes dialog with X.",
+        "anomalies": [
+          "Instruction text appears cut off or awkwardly wrapped across lines",
+          "Logical contradiction: told Astra cannot be detected, yet instruction mentions 'turn Astra off'—unclear why",
+          "Text line break positioning makes the full instruction hard to parse"
+        ]
+      },
+      "verdict": "FIX",
+      "concerns": [
+        {
+          "axis": "error-recovery clarity",
+          "what": "Recovery instruction is confusing: if Astra cannot be auto-detected, why instruct to turn it off? The connection between problem and solution is unclear.",
+          "where": "Second and third lines of instruction text"
+        },
+        {
+          "axis": "typography",
+          "what": "Text wrapping or truncation makes the instruction hard to read. Line breaks fragment the message across multiple lines in a way that reduces clarity.",
+          "where": "Instruction text area (second/third text lines)"
+        }
+      ],
+      "confidence": "medium"
+    }
+  },
+  "_judge": {
+    "model": "haiku",
+    "cost_usd": 0.044385,
+    "turns": 2,
+    "duration_ms": 27448
+  }
+}

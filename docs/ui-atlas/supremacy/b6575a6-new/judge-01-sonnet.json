@@ -1,0 +1,204 @@
+{
+  "pages": {
+    "0EF0": {
+      "visible_text": [
+        "設定画面を開けませんでした",
+        "プライバシーとセキュリティ",
+        "画面収録",
+        "もう一度開く",
+        "×"
+      ],
+      "observation": {
+        "happening": "権限エラーのトースト。設定画面が開けなかったことを警告アイコン付きで伝え、パンくず「プライバシーとセキュリティ›画面収録」で該当設定の場所を示し、青い「もう一度開く」ボタンとXで閉じられる。",
+        "most_important": "「もう一度開く」ボタンによる再試行導線",
+        "next_action": "「もう一度開く」を押す、またはXで閉じる、あるいは右の丸いオレンジ縁のアイコンを押す",
+        "anomalies": [
+          "本体のトーストカードと右側の丸いオレンジ縁アイコンの間に不自然な隙間があり、同一コンポーネントなのか別要素なのか判別できない",
+          "丸アイコン内の棒グラフ風アイコンがテキスト内容（画面収録の許可）と結びつく理由が読み取れない"
+        ]
+      },
+      "scores": {
+        "hierarchy": 3,
+        "density": 4,
+        "typography": 3,
+        "geometry": 2,
+        "state_clarity": 2,
+        "calmness": 3,
+        "craft": 2,
+        "distinctiveness": 2
+      },
+      "ai_look": [
+        "浮いた丸いアイコンボタンが主要トーストから孤立しており、レイアウトの統合ミスに見える",
+        "汎用的な青いピル型ボタン"
+      ],
+      "verdict": "BELOW_BAR",
+      "why": "トーストと右の丸アイコンの関係が絵から説明できず、両者が同一操作系なのか無関係な浮遊要素なのか判断できない。これは具体的な階層/craftの欠陥。",
+      "confidence": "medium"
+    },
+    "2F2C": {
+      "visible_text": [
+        "画面収録が未許可です",
+        "システム設定で",
+        "Astra をオンにしてください",
+        "システム設定を開く",
+        "×"
+      ],
+      "observation": {
+        "happening": "画面収録権限が許可されていないことを伝えるトースト。太字タイトル＋説明文、青い「システム設定を開く」ボタン、Xで閉じる。右に0EF0と同じ丸いアイコンが浮いている。",
+        "most_important": "「システム設定を開く」ボタン",
+        "next_action": "ボタンを押してシステム設定を開く、またはXで閉じる",
+        "anomalies": [
+          "ここでも本体トーストと右の丸アイコンが分離しており関係性が不明",
+          "青ボタンの彩度・太字が強く、左のテキストより視覚的重量が勝ちすぎている"
+        ]
+      },
+      "scores": {
+        "hierarchy": 3,
+        "density": 4,
+        "typography": 3,
+        "geometry": 2,
+        "state_clarity": 2,
+        "calmness": 3,
+        "craft": 2,
+        "distinctiveness": 2
+      },
+      "ai_look": [
+        "同系統3枚で丸アイコンが毎回同じ位置に孤立して浮く、テンプレ反復"
+      ],
+      "verdict": "BELOW_BAR",
+      "why": "0EF0と同型の孤立丸アイコン問題が再現しており、単発のノイズではなくコンポーネント設計自体の欠陥と読める。",
+      "confidence": "medium"
+    },
+    "9AA3": {
+      "visible_text": [
+        "スクリーンショット",
+        "質問したときだけ",
+        "Claude に送信",
+        "×"
+      ],
+      "observation": {
+        "happening": "ダーク背景のトースト。カード風アイコン＋太字タイトル「スクリーンショット」、サブテキストでプライバシーの説明（質問したときだけClaudeに送信）、右上にX。",
+        "most_important": "「質問したときだけClaudeに送信」というプライバシー説明",
+        "next_action": "Xで閉じる以外の操作は見当たらない",
+        "anomalies": [
+          "左のアイコンがクレジットカード風の図形で、スクリーンショットという概念との結びつきが絵から読み取れない"
+        ]
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 4,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 4,
+        "calmness": 4,
+        "craft": 3,
+        "distinctiveness": 3
+      },
+      "ai_look": [],
+      "verdict": "COMPETITIVE",
+      "why": "単一カードで階層・余白・状態は明快だが、アイコン選定の意味的つながりが弱く一線級と並べるとやや見劣りする。",
+      "confidence": "medium"
+    },
+    "9E6D": {
+      "visible_text": [
+        "AnyDesk",
+        "AstraDbg",
+        "AstraDbg を再起動すると使えます",
+        "ChatGPT"
+      ],
+      "observation": {
+        "happening": "macOS風の設定リスト。AnyDesk・AstraDbg・ChatGPTの3行にトグルスイッチがあり、AstraDbgの行にツールチップで「再起動すると使えます」と表示されている。",
+        "most_important": "ツールチップの「AstraDbgを再起動すると使えます」という状態説明",
+        "next_action": "AstraDbgを再起動する",
+        "anomalies": [
+          "AnyDeskとChatGPTの行にはアプリアイコンらしき要素が見えるが、AstraDbgの行だけアイコンが見当たらず列が揃っていない",
+          "リスト上端の行が途中で切れており、スクロール位置が不自然",
+          "ツールチップがトグルスイッチに重なっている"
+        ]
+      },
+      "scores": {
+        "hierarchy": 3,
+        "density": 3,
+        "typography": 3,
+        "geometry": 2,
+        "state_clarity": 3,
+        "calmness": 3,
+        "craft": 2,
+        "distinctiveness": 2
+      },
+      "ai_look": [],
+      "verdict": "BELOW_BAR",
+      "why": "行ごとのアイコン有無が不揃いで、リストの整合性が絵から崩れて見える具体的欠陥。",
+      "confidence": "medium"
+    },
+    "A45A": {
+      "visible_text": [
+        "Astra を自動で見つけられません",
+        "画面収録の一覧で",
+        "Astra をオンにしてください",
+        "システム設定を開く",
+        "×"
+      ],
+      "observation": {
+        "happening": "Astraが自動検出できないことを伝えるトースト。説明文＋青いボタン「システム設定を開く」＋X。右に他2枚と同じ丸アイコンが浮いている。",
+        "most_important": "「システム設定を開く」ボタン",
+        "next_action": "ボタンを押す、Xで閉じる、または丸アイコンを押す",
+        "anomalies": [
+          "0EF0/2F2Cと同じ孤立した丸アイコンの配置問題が再度確認できる"
+        ]
+      },
+      "scores": {
+        "hierarchy": 3,
+        "density": 4,
+        "typography": 3,
+        "geometry": 2,
+        "state_clarity": 2,
+        "calmness": 3,
+        "craft": 2,
+        "distinctiveness": 2
+      },
+      "ai_look": [
+        "3枚のトーストで同一の孤立丸アイコンパターンが反復しており、テンプレ的な使い回しに見える"
+      ],
+      "verdict": "BELOW_BAR",
+      "why": "同型の欠陥（本体と丸アイコンの関係不明）が3枚通して再現しており、単発の見落としではなくコンポーネント設計の欠陥だと判断できる。",
+      "confidence": "medium"
+    },
+    "A81F": {
+      "visible_text": [
+        "スクリーンショット",
+        "認識しました",
+        "そのまま聞けます",
+        "×"
+      ],
+      "observation": {
+        "happening": "ダーク背景トースト。カード風アイコン＋太字タイトル「スクリーンショット」＋サブテキストで「認識しました・そのまま聞けます」という完了状態を伝える。",
+        "most_important": "「認識しました・そのまま聞けます」という状態確認メッセージ",
+        "next_action": "そのまま続けて話しかける、またはXで閉じる",
+        "anomalies": [
+          "9AA3と同様、アイコンがスクリーンショットという概念と直接結びつかない"
+        ]
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 4,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 4,
+        "calmness": 4,
+        "craft": 3,
+        "distinctiveness": 3
+      },
+      "ai_look": [],
+      "verdict": "COMPETITIVE",
+      "why": "9AA3と同系統で完成度は高いが、アイコンの意味的一貫性が弱く一線級製品との差が残る。",
+      "confidence": "medium"
+    }
+  },
+  "_judge": {
+    "model": "sonnet",
+    "cost_usd": 0.19492079999999998,
+    "turns": 9,
+    "duration_ms": 77145
+  }
+}

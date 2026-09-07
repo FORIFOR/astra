@@ -1,7 +1,7 @@
-# Pixel regression — RC b6575a6 vs de5d319 (existing faces only)
+# Pixel regression — RC 85b8333 vs de5d319 (existing faces only)
 
 ```
-PIXEL_REGRESSION existing faces compared: 126 (same 73, time-dependent 40, nondeterministic 2, differ 11)
+PIXEL_REGRESSION existing faces compared: 126 (same 77, time-dependent 39, nondeterministic 2, differ 8)
   meeting.preparing                    light   0.11%  66 px
   meeting.preparing                    dark    0.11%  66 px
   meeting.paused                       light   0.11%  66 px
@@ -10,23 +10,20 @@ PIXEL_REGRESSION existing faces compared: 126 (same 73, time-dependent 40, nonde
   meeting.captions                     dark    0.02%  66 px
   meeting.ask                          light   0.01%  51 px
   meeting.ask                          dark    0.01%  51 px
-  meeting.workspace                    light   0.21%  1554 px  [time-dependent fixture]
-  meeting.workspace                    dark    0.22%  1611 px  [time-dependent fixture]
+  meeting.workspace                    light   0.21%  1575 px  [time-dependent fixture]
+  meeting.workspace                    dark    0.22%  1615 px  [time-dependent fixture]
   recording.meeting-canvas             light   0.00%  0 px  [time-dependent fixture]
-  recording.meeting-canvas             dark    0.50%  3694 px  [time-dependent fixture]
+  recording.meeting-canvas             dark    0.02%  126 px  [time-dependent fixture]
   main.home                            light   0.06%  597 px  [time-dependent fixture]
   main.home                            dark    0.06%  609 px  [time-dependent fixture]
-  main.home-recording-now              light   0.15%  1534 px  [time-dependent fixture]
-  main.home-recording-now              dark    0.15%  1568 px  [time-dependent fixture]
+  main.home-recording-now              light   0.17%  1747 px  [time-dependent fixture]
+  main.home-recording-now              dark    0.15%  1572 px  [time-dependent fixture]
   main.home-upcoming                   light   2.75%  27979 px  [time-dependent fixture]
   main.home-upcoming                   dark   18.24%  185442 px  [time-dependent fixture]
   main.new-recording-sheet             light   1.70%  17267 px  [time-dependent fixture]
   main.new-recording-sheet             dark    2.21%  22434 px  [time-dependent fixture]
-  main.work-tasks                      light   0.00%  0 px
-  main.work-tasks                      dark    0.00%  0 px
-  main.work-agents                     light   0.00%  0 px
-  main.apps-plugins                    light   0.12%  1254 px  [nondeterministic fixture: プラグインのタイルの色が run ごとに変わる（並びは同じ）。色の種が順序の無い集合から来ている疑い。0.3〜0.5% の差。]
-  main.apps-plugins                    dark    0.59%  6004 px  [nondeterministic fixture: プラグインのタイルの色が run ごとに変わる（並びは同じ）。色の種が順序の無い集合から来ている疑い。0.3〜0.5% の差。]
+  main.apps-plugins                    light   0.37%  3805 px  [nondeterministic fixture: プラグインのタイルの色が run ごとに変わる（並びは同じ）。色の種が順序の無い集合から来ている疑い。0.3〜0.5% の差。]
+  main.apps-plugins                    dark    0.24%  2418 px  [nondeterministic fixture: プラグインのタイルの色が run ごとに変わる（並びは同じ）。色の種が順序の無い集合から来ている疑い。0.3〜0.5% の差。]
   main.scale-compact                   light   2.48%  25210 px  [time-dependent fixture]
   main.scale-compact                   dark   16.98%  172685 px  [time-dependent fixture]
   main.scale-comfortable               light   2.75%  27979 px  [time-dependent fixture]
@@ -41,19 +38,18 @@ PIXEL_REGRESSION existing faces compared: 126 (same 73, time-dependent 40, nonde
   session.ready                        dark   18.22%  185306 px  [time-dependent fixture]
   session.project                      light   2.75%  27979 px  [time-dependent fixture]
   session.project                      dark   18.24%  185442 px  [time-dependent fixture]
-  provenance.library-after-end         light   0.22%  2266 px  [time-dependent fixture]
-  provenance.source                    light   0.22%  2266 px  [time-dependent fixture]
-  provenance.reopened                  light   0.22%  2266 px  [time-dependent fixture]
-  system.after-sharing                 light   0.06%  39 px  [time-dependent fixture]
+  provenance.library-after-end         light   0.22%  2270 px  [time-dependent fixture]
+  provenance.source                    light   0.22%  2270 px  [time-dependent fixture]
+  provenance.reopened                  light   0.22%  2270 px  [time-dependent fixture]
   system.interrupted                   light   4.71%  47907 px  [time-dependent fixture]
-  system.interrupted                   dark   27.74%  282041 px  [time-dependent fixture]
-  system.interrupted-journey           light   0.16%  1653 px  [time-dependent fixture]
-  system.resumed                       light   0.22%  2245 px  [time-dependent fixture]
+  system.interrupted                   dark   27.74%  282040 px  [time-dependent fixture]
+  system.interrupted-journey           light   0.17%  1679 px  [time-dependent fixture]
+  system.resumed                       light   0.22%  2270 px  [time-dependent fixture]
   system.calendar-permission           light   0.06%  597 px  [time-dependent fixture]
   system.calendar-permission           dark    0.06%  609 px  [time-dependent fixture]
   system.accessibility-permission      light   0.06%  597 px  [time-dependent fixture]
   system.accessibility-permission      dark    0.06%  609 px  [time-dependent fixture]
-  system.generic-failure               light   1.73%  17572 px  [time-dependent fixture]
-  system.generic-failure               dark   13.91%  141460 px  [time-dependent fixture]
+  system.generic-failure               light   1.73%  17568 px  [time-dependent fixture]
+  system.generic-failure               dark   13.91%  141455 px  [time-dependent fixture]
 PIXEL_REGRESSION=PASS
 ```
