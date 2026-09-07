@@ -22,6 +22,8 @@ extension SelfTest {
         try? FileManager.default.createDirectory(atPath: outDir, withIntermediateDirectories: true)
         NSApp.setActivationPolicy(.regular)
         NSApp.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
+        // 前面のアプリとして描く。シェルから直に起こすと非活性のまま（traffic light が灰、既定ボタンが白）で撮れた（実測）。
+        NSApp.activate(ignoringOtherApps: true)
 
         func settle(_ s: Double) {
             let until = Date().addingTimeInterval(s)
@@ -136,6 +138,10 @@ extension SelfTest {
         settle(0.6)
 
         print("SYSSHOTS_DIR \(outDir)")
+        // `open -W` からは stdout が読めないので、結果をファイルにも残す（0 枚だった run の理由が分からなかった）。
+        try? (["SYSSHOTS_DIR \(outDir)"] + report.map { "SYSSHOT \($0)" } + notes.map { "SYSSHOT_NOTE \($0)" }
+              + skipped.map { "SYSSHOT_SKIP \($0)" } + failures.map { "SYSSHOT_FAIL \($0)" })
+            .joined(separator: "\n").write(toFile: "\(outDir)/sysshots-report.txt", atomically: true, encoding: .utf8)
         for line in report { print("SYSSHOT \(line)") }
         for n in notes { print("SYSSHOT_NOTE \(n)") }
         for s in skipped { print("SYSSHOT_SKIP \(s)") }
