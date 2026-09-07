@@ -1,89 +1,79 @@
 import SwiftUI
 
-/// 右下のアバターと、その脇の短い吹き出し。白基調・Material・角丸 16・過剰な装飾なし。
+/// 右下の案内カード。**独立したアバターの丸は無い**（本人の設計判断、2026-09-07）。
 ///
-/// 盲検（3 model）で直したこと: × はアバターの丸ではなく吹き出しの端に置く（丸の縁に重なって帰属が曖昧だった）、
-/// 成功の ✓ は丸だけに描く（文にも ✓ があると二重、OCR も読めない）、失敗と成功で丸の地の色を変える、
-/// 「システム設定を開く」の操作子を吹き出しに持つ（文章だけで放り出さない）。
+/// 文法: System Settings = 主役、対象行 / toggle = 操作対象、この callout = ガイド、Astra の署名 = カード内の小さな mark。
+/// 盲検 8 round で、丸のアバターは情報ではなく CTA と競合する視覚ノイズだと分かった（target-missing / denied で
+/// KEEP ↔ FIX_CANDIDATE が揺れた）。署名は CTA より弱い階層に置く。
 struct AvatarHUDView: View {
     @ObservedObject var model: AvatarHUDModel
     @Environment(\.colorScheme) private var scheme
     private var dark: Bool { scheme == .dark }
 
     var body: some View {
-        HStack(alignment: .center, spacing: 4) {
-            if !model.message.isEmpty { bubble }
-            avatar
-        }
-        // 輪（1.5pt）が窓の縁で切れないだけの余白（盲検: 「丸が枠の縁で切り落とされている」）。
-        .padding(.vertical, 9).padding(.leading, 9).padding(.trailing, 14)
-        .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("guideAvatar")
-    }
-
-    private var bubble: some View {
-        HStack(alignment: .center, spacing: 10) {
-            // 1 行目 = いまの状態（「画面収録が未許可です」）、2 行目 = すること。文を 1 本に詰めない（盲検 3/3）。
-            VStack(alignment: .leading, spacing: 2) {
-                // 状態の記号は文の隣に（別置きの大きな丸に「!」を描くと、飾りに見えて意味の位置が合わない — 盲検 2/3）。
-                HStack(spacing: 5) {
-                    if let glyph = statusGlyph {
-                        Image(systemName: glyph.0).font(.system(size: 11, weight: .bold)).foregroundStyle(glyph.1)
+        VStack(alignment: .leading, spacing: 6) {
+            // 署名（誰が言っているか）。CTA より弱く、状態より小さい。
+            HStack(spacing: 6) {
+                AstraVoiceMark().scaleEffect(0.75).frame(width: 18, height: 12)
+                Text("Astra")
+                    .font(.system(size: S.type(11), weight: .semibold))
+                    .foregroundStyle(Palette.muted(dark))
+                Spacer(minLength: 12)
+                if model.showsClose {
+                    Button(action: { model.onClose?() }) {
+                        Image(systemName: "xmark").font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(Palette.muted(dark))
+                            .frame(width: 22, height: 22)
+                            .contentShape(Rectangle())
                     }
-                    Text(lines.0)
-                        .font(.system(size: S.type(13), weight: .semibold))
-                        .foregroundStyle(Palette.text(dark))
-                        .lineLimit(1)
-                }
-                if let sub = lines.1 {
-                    Text(sub)
-                        .font(.system(size: S.type(12)))
-                        .foregroundStyle(Palette.muted(dark))
-                        .lineLimit(2)
-                        .fixedSize(horizontal: false, vertical: true)
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("案内をやめる")
+                    .accessibilityIdentifier("guideAvatarClose")
                 }
             }
-            .frame(maxWidth: AvatarLayout.bubbleMaxWidth, alignment: .leading)
-            .fixedSize(horizontal: true, vertical: false)
+            // 1 行目 = いまの状態（記号つき）、2 行目 = すること。
+            HStack(alignment: .firstTextBaseline, spacing: 5) {
+                if let glyph = statusGlyph {
+                    Image(systemName: glyph.0).font(.system(size: 12, weight: .bold)).foregroundStyle(glyph.1)
+                }
+                Text(lines.0)
+                    .font(.system(size: S.type(13), weight: .semibold))
+                    .foregroundStyle(Palette.text(dark))
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            if let sub = lines.1 {
+                Text(sub)
+                    .font(.system(size: S.type(12)))
+                    .foregroundStyle(Palette.muted(dark))
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
             if let action = model.action {
-                // 押せるものは押せる形で（塗りのボタン）。薄い pill は「タグ」に見えた（盲検）。
+                // 押せるものは押せる形で（塗りのボタン）。カードの中でいちばん強い要素。
                 Button(action.title) { action.run() }
                     .buttonStyle(.plain)
                     .font(.system(size: S.type(12), weight: .semibold))
                     .foregroundStyle(.white)
-                    .padding(.horizontal, 11).padding(.vertical, 6)
+                    .padding(.horizontal, 12).padding(.vertical, 6)
                     .background(Palette.accent(dark), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-                    .fixedSize()
+                    .padding(.top, 2)
                     .accessibilityIdentifier("guideAvatarAction")
             }
-            if model.showsClose {
-                Button(action: { model.onClose?() }) {
-                    Image(systemName: "xmark").font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(Palette.muted(dark))
-                        .frame(width: 22, height: 22)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("案内をやめる")
-                .accessibilityIdentifier("guideAvatarClose")
+        }
+        .padding(.horizontal, 14).padding(.top, 10).padding(.bottom, 12)
+        .frame(width: AvatarLayout.cardWidth, alignment: .leading)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Palette.border(dark), lineWidth: 1))
+        .overlay(alignment: .leading) {
+            // 状態の色を左の細い縁で添える（success / warning）。飾りの丸は置かない。
+            if let glyph = statusGlyph {
+                RoundedRectangle(cornerRadius: 2).fill(glyph.1).frame(width: 3).padding(.vertical, 12).padding(.leading, 1)
             }
         }
-        .padding(.leading, 12).padding(.trailing, 6 + CalloutBubbleShape.tail).padding(.vertical, 7)
-        // 吹き出しの尾はアバターを指す: 「誰が言っているか」を形で言う（丸と文が別々に浮いて見えた）。
-        .background(.regularMaterial, in: CalloutBubbleShape(towards: .left))
-        .overlay(CalloutBubbleShape(towards: .left).stroke(Palette.border(dark), lineWidth: 1))
-        .accessibilityIdentifier("guideAvatarBubble")
-    }
-
-    /// 丸は **Astra の印**（誰が言っているか）。状態は輪の色で添えるだけ（記号は吹き出しの側に置く）。
-    private var avatar: some View {
-        ZStack {
-            Circle().fill(.regularMaterial)
-            Circle().fill(tint.opacity(model.state == .guiding || model.state == .idle ? 0.06 : 0.12))
-            Circle().stroke(tint.opacity(model.state == .idle ? 0.25 : 0.6), lineWidth: 1.5)
-            if model.state == .thinking { AstraOrb(active: true) } else { AstraVoiceMark() }
-        }
-        .frame(width: AvatarLayout.avatarSize, height: AvatarLayout.avatarSize)
+        .padding(6)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("guideAvatar")
         .accessibilityLabel("Astra")
         .accessibilityValue(model.message)
     }
@@ -101,17 +91,9 @@ struct AvatarHUDView: View {
         default: return nil
         }
     }
-
-    private var tint: Color {
-        switch model.state {
-        case .success: return Palette.success(dark)
-        case .warning: return Palette.warning(dark)
-        default: return Palette.accent(dark)
-        }
-    }
 }
 
-/// アバター面の状態（View は読むだけ。変えるのは `AvatarOverlayController`）。
+/// カードの状態（View は読むだけ。変えるのは `AvatarOverlayController`）。
 @MainActor
 final class AvatarHUDModel: ObservableObject {
     struct Action { let title: String; let run: () -> Void }

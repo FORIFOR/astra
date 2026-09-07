@@ -1,7 +1,7 @@
 import AppKit
 import SwiftUI
 
-/// 右下（visibleFrame 基準で右 24pt・下 24pt）のアバター窓。
+/// 右下（visibleFrame 基準で右 24pt・下 24pt）の案内カードの窓（独立したアバターの丸は無い。署名はカードの中）。
 /// 閉じるボタンだけ受けるので mouse は通さない（窓は小さく、System Settings の上には掛からない）。
 @MainActor
 final class AvatarOverlayController {
@@ -42,7 +42,7 @@ final class AvatarOverlayController {
         guard let panel else { return }
         let probe = NSHostingView(rootView: AvatarHUDView(model: model))
         let fit = probe.fittingSize
-        let size = NSSize(width: max(AvatarLayout.avatarSize + 8, fit.width.rounded(.up)), height: max(AvatarLayout.avatarSize + 8, fit.height.rounded(.up)))
+        let size = NSSize(width: max(AvatarLayout.avatarSize, fit.width.rounded(.up)), height: max(AvatarLayout.avatarSize, fit.height.rounded(.up)))
         panel.setFrame(AvatarLayout.frame(size: size, in: screen.visibleFrame), display: true)
     }
 

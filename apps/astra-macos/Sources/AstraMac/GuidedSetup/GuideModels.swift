@@ -245,11 +245,13 @@ enum AvatarState: Equatable {
     case idle, listening, thinking, speaking, guiding, success, warning
 }
 
-/// 右下に置くアバターの寸法。visibleFrame 基準で右 24pt・下 24pt。
+/// 右下に置く案内カードの寸法。visibleFrame 基準で右 24pt・下 24pt。独立したアバターの丸は無い（署名はカードの中）。
 enum AvatarLayout {
     static let inset: CGFloat = 24
-    static let avatarSize: CGFloat = 60
-    static let bubbleMaxWidth: CGFloat = 260
+    /// 窓の最小辺（カードは中身で高さが決まる）。
+    static let avatarSize: CGFloat = 56
+    static let cardWidth: CGFloat = 300
+    static let bubbleMaxWidth: CGFloat = 272
 
     /// アバター窓の frame（吹き出しを含む全体）。右下に寄せる。
     static func frame(size: CGSize, in visibleFrame: CGRect) -> CGRect {
