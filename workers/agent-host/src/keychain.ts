@@ -8,6 +8,8 @@
  * **鍵を扱う経路を、外から読める短いコードにしておきたい**から。
  */
 import { execFile } from 'node:child_process';
+import { chmod, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { dirname } from 'node:path';
 import { promisify } from 'node:util';
 import type { SecretStore } from '@astra/oauth';
 
@@ -114,7 +116,60 @@ export class NoKeychain implements SecretStore {
   }
 }
 
+/**
+ * ファイルに置く資格情報ストア。**検査と無人 harness のためだけ。**
+ *
+ * 専用のテスト identity のトークンを本人の login keychain に混ぜない（`run-work-context-live.sh`）。
+ * 0600 で書き、読めなければ無いものとして扱う。既定では選ばれない —
+ * `ASTRA_SECRET_STORE_FILE` を明示したときだけ。
+ */
+export class FileSecretStore implements SecretStore {
+  readonly #path: string;
+
+  constructor(path: string) {
+    this.#path = path;
+  }
+
+  async #read(): Promise<Record<string, string>> {
+    try {
+      const text = await readFile(this.#path, 'utf8');
+      const parsed = JSON.parse(text) as unknown;
+      return parsed && typeof parsed === 'object' ? (parsed as Record<string, string>) : {};
+    } catch {
+      return {};
+    }
+  }
+
+  async #write(values: Record<string, string>): Promise<void> {
+    await mkdir(dirname(this.#path), { recursive: true });
+    await writeFile(this.#path, JSON.stringify(values), { mode: 0o600 });
+    await chmod(this.#path, 0o600);
+  }
+
+  async get(key: string): Promise<string | null> {
+    return (await this.#read())[key] ?? null;
+  }
+
+  async set(key: string, value: string): Promise<void> {
+    const values = await this.#read();
+    values[key] = value;
+    await this.#write(values);
+  }
+
+  async delete(key: string): Promise<void> {
+    const values = await this.#read();
+    delete values[key];
+    await this.#write(values);
+  }
+}
+
 /** この端末で使えるものを選ぶ。**無いものを在るふりにしない。** */
-export function keychainFor(platform: string, account: string): SecretStore {
+export function keychainFor(
+  platform: string,
+  account: string,
+  env: Readonly<Record<string, string | undefined>> = process.env,
+): SecretStore {
+  const file = env['ASTRA_SECRET_STORE_FILE'];
+  if (file) return new FileSecretStore(file);
   return platform === 'darwin' ? new MacKeychain(account) : new NoKeychain();
 }

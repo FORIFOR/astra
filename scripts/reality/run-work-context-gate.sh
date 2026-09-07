@@ -156,6 +156,13 @@ fi
   # 測った行が全部通っても、この Mac で実サービスに繋いでいなければ PASS とは言わない（PASS_OFFLINE）。
   if [ "$fail" != 0 ]; then echo "WORK_CONTEXT_GATE=FAIL"
   elif [ -n "$live" ]; then echo "WORK_CONTEXT_GATE=PASS"
-  else echo "WORK_CONTEXT_GATE=PASS_OFFLINE (live connectors NOT_CONNECTED: OAuth client id と本人の同意が要る = AUTOMATION_MISSING)"; fi
+  else echo "WORK_CONTEXT_GATE=PASS_OFFLINE"; fi
+  # 2 段目: 実サービスに繋いだ無人検証（scripts/reality/run-work-context-live.sh）。
+  # 専用テスト identity の refresh token が事前に無ければ AUTOMATION_MISSING と言う（人に OAuth を頼まない）。
+  if [ -n "${ASTRA_TEST_GOOGLE_REFRESH_TOKEN:-}${ASTRA_TEST_MICROSOFT_REFRESH_TOKEN:-}" ]; then
+    echo "WORK_CONTEXT_LIVE_GATE=RUN scripts/reality/run-work-context-live.sh"
+  else
+    echo "WORK_CONTEXT_LIVE_GATE=AUTOMATION_MISSING (dedicated Google Workspace / Microsoft tenant test identity: ASTRA_TEST_*_CLIENT_ID + ASTRA_TEST_*_REFRESH_TOKEN, pre-provisioned; see run-work-context-live.sh)"
+  fi
 } | tee "$OUT/report.txt"
 exit "$fail"
