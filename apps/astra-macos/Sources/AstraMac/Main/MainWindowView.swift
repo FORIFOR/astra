@@ -575,7 +575,8 @@ private struct ConnectorsPane: View {
                         switch st {
                         case .connected: return "接続中"
                         case .disconnected: return "未接続"
-                        case .cannotConnect: return "設定が必要"
+                        // 何を設定すればよいかまで言う（盲検 6ebeaf3: 「設定が必要」だけでは押す先が無い）
+                        case .cannotConnect: return "設定が必要（接続に使う client ID が未設定: ASTRA_OAUTH_\(s.provider.uppercased())_CLIENT_ID）"
                         case .connecting: return "同意画面を開いています…"
                         case .failed(let why): return "つなげませんでした: \(why)"
                         }

@@ -174,7 +174,7 @@ enum WorkContextFixture {
            "lines":["MTI からの返信待ち（3 日）","明日 15:00 定例","見積 v2 の確認が未返信"],
            "counts":{"gmail":4,"meeting":2,"astra_task":1},
            "factors":[{"name":"deadline","value":0.72,"weight":0.3,"contribution":0.22,"reason":"明日が期限"},
-                      {"name":"unanswered","value":0.9,"weight":0.2,"contribution":0.18,"reason":"48 時間未返信"}],
+                      {"name":"unanswered","value":0.9,"weight":0.2,"contribution":0.18,"reason":"3 日未返信"}],
            "sources":[\(src("gmail", "m-1", "Re: 見積 v2 のご確認", "来週水曜までにご確認いただけますか")),
                       \(src("meeting", "mt-1", "MOPITA 定例", "次回までに見積を確定する"))]},
           {"id":"project:kyokuyo","project":"極洋","title":"要件定義書のレビューを返す",

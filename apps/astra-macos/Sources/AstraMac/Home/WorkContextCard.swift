@@ -196,7 +196,8 @@ struct WorkContextCard: View {
             Button {
                 if store.evidenceOpen.contains(id) { store.evidenceOpen.remove(id) } else { store.evidenceOpen.insert(id) }
             } label: {
-                Text(why ? Facts.workWhy : Facts.workEvidence)
+                // 開いている間は「閉じる」。同じ字のままだと、どこを押せば畳めるか分からない（盲検 6ebeaf3）
+                Text(store.evidenceOpen.contains(id) ? Facts.workClose : (why ? Facts.workWhy : Facts.workEvidence))
                     .font(.system(size: S.type(TypeScale.microSize), weight: .medium))
                     .foregroundStyle(Palette.accent(dark))
                     .frame(height: 26).padding(.horizontal, 8)
