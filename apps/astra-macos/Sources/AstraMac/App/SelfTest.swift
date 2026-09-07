@@ -591,6 +591,8 @@ enum SelfTest {
             // 経過時計は最後の発言（05:01）以降にする。start() で 0 に戻るため、明示しないと
             // 「00:01 なのにメモは 04:14〜05:01」という矛盾した絵になる（盲検で指摘）。
             recording.elapsedSeconds = 5 * 60 + 12
+            // ここから先の会議の面は時計を止めて撮る（light / dark は別プロセス。動いたままだと秒がずれ、fixed の gate が運になる）。
+            recording.freezeClockForShot = true
             // 抽出は確定行が溜まるたびに新しい分だけ走る。最後の行が待ちのまま撮らないよう、ここで確定させる。
             MeetingIntelligence.shared.ingest(
                 recording.transcript.filter { !$0.interim }.map { CanvasItem($0.text, at: $0.at, speaker: $0.speaker) },
