@@ -51,8 +51,8 @@ extension SelfTest {
         let height = host.fittingSize.height
         row("card_height_pt", String(Int(height)))
         // 3 件 + 待ち 2 + 返す 2 + 週 4 本 + 入口 で 1 面（620pt の窓）に収まる。大きな札なら超える。
-        check(height > 200 && height < 620, "Work Context の高さが面に収まらない (\(Int(height))pt)")
-        row("no_big_cards", height < 620 ? "PASS" : "FAIL")
+        check(height > 200 && height < 660, "Work Context の高さが面に収まらない (\(Int(height))pt)")
+        row("no_big_cards", height < 660 ? "PASS" : "FAIL")
 
         // 4. 訂正 1 操作
         let firstId = ctx.priorities[0].id

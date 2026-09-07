@@ -87,7 +87,8 @@ struct WorkContextCard: View {
                         Text(p.lines.prefix(3).joined(separator: " · "))
                             .font(.system(size: S.type(TypeScale.secondarySize)))
                             .foregroundStyle(Palette.muted(dark))
-                            .lineLimit(1)
+                            // 右 Panel を開いて幅が縮んだときに「…」で切らない（盲検 a752c92）。広いときは 1 行のまま。
+                            .lineLimit(2)
                     }
                     HStack(spacing: 10) {
                         Text(WorkFormat.counts(p.counts))

@@ -74,76 +74,85 @@ struct PersonalizationInspector: View {
         }
     }
 
+    /// 1 件の推測。**どの行も同じ形**: 1 行目 = 言葉 + 状態（固定幅）、2 行目 = [出所 N] … [そのとおり] [この推測を使わない]。
+    ///
+    /// 盲検（a752c92）で 3 judge が揃って指摘した: 確認済みの行だけ操作が 1 つで形が違う、操作が文字リンクに見えて
+    /// 押せると分からない、出所と操作の関係が読めない。行を hairline で囲み、操作は縁つきの button にし、
+    /// 確認済みでも [そのとおり] の場所を空けずに「確認済み」の印をそこへ置く。
     private func traitRow(_ t: PersonalizationTrait) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Text(t.label)
-                    .font(.system(size: S.type(TypeScale.secondarySize)))
+                    .font(.system(size: S.type(TypeScale.secondarySize), weight: .medium))
                     .foregroundStyle(t.enabled ? Palette.text(dark) : Palette.muted(dark))
                     .strikethrough(!t.enabled, color: Palette.muted(dark))
                     .lineLimit(2)
                 Spacer(minLength: 4)
                 statusChip(t.enabled ? t.status.label : "使わない")
+                    .frame(width: 64, alignment: .trailing)
             }
-            HStack(spacing: 4) {
+            HStack(spacing: 6) {
                 if !t.sources.isEmpty {
-                    Button {
+                    actionButton("\(Facts.sourceLabel) \(t.sources.count)", accent: false) {
                         if evidenceOpen.contains(t.key) { evidenceOpen.remove(t.key) } else { evidenceOpen.insert(t.key) }
-                    } label: {
-                        Text("\(Facts.sourceLabel) \(t.sources.count)")
-                            .font(.system(size: S.type(TypeScale.captionSize)))
-                            .foregroundStyle(Palette.accent(dark))
-                            .frame(height: 22).padding(.horizontal, 6)
                     }
-                    .buttonStyle(AstraControlStyle(radius: 6, base: 0.0))
+                    .accessibilityIdentifier("traitEvidence-\(t.key)")
                 }
                 Spacer(minLength: 0)
                 if t.enabled {
-                    if t.status != .confirmed {
-                        Button { store.setTrait(t.key, status: .confirmed) } label: {
-                            Text(Facts.personalizationConfirm)
-                                .font(.system(size: S.type(TypeScale.captionSize), weight: .medium))
-                                .foregroundStyle(Palette.accent(dark))
-                                .frame(height: 22).padding(.horizontal, 6)
-                        }
-                        .buttonStyle(AstraControlStyle(radius: 6, base: 0.0))
-                        .accessibilityIdentifier("traitConfirm-\(t.key)")
-                    }
-                    Button { store.setTrait(t.key, enabled: false) } label: {
-                        Text(Facts.personalizationDisableTrait)
-                            .font(.system(size: S.type(TypeScale.captionSize)))
+                    if t.status == .confirmed {
+                        // 場所を空けない。押せない印として同じ幅に置く。
+                        Text(Facts.personalizationConfirm)
+                            .font(.system(size: S.type(TypeScale.microSize), weight: .medium))
                             .foregroundStyle(Palette.muted(dark))
-                            .frame(height: 22).padding(.horizontal, 6)
+                            .frame(height: 24).padding(.horizontal, 8)
+                            .opacity(0.5)
+                    } else {
+                        actionButton(Facts.personalizationConfirm, accent: true) { store.setTrait(t.key, status: .confirmed) }
+                            .accessibilityIdentifier("traitConfirm-\(t.key)")
                     }
-                    .buttonStyle(AstraControlStyle(radius: 6, base: 0.0))
-                    .accessibilityIdentifier("traitDisable-\(t.key)")
+                    actionButton(Facts.personalizationDisableTrait, accent: false) { store.setTrait(t.key, enabled: false) }
+                        .accessibilityIdentifier("traitDisable-\(t.key)")
                 } else {
-                    Button { store.setTrait(t.key, enabled: true) } label: {
-                        Text("使う")
-                            .font(.system(size: S.type(TypeScale.captionSize), weight: .medium))
-                            .foregroundStyle(Palette.accent(dark))
-                            .frame(height: 22).padding(.horizontal, 6)
-                    }
-                    .buttonStyle(AstraControlStyle(radius: 6, base: 0.0))
-                    .accessibilityIdentifier("traitEnable-\(t.key)")
+                    actionButton("使う", accent: true) { store.setTrait(t.key, enabled: true) }
+                        .accessibilityIdentifier("traitEnable-\(t.key)")
                 }
             }
             if evidenceOpen.contains(t.key) {
-                ForEach(t.sources.prefix(4)) { s in
-                    HStack(spacing: 6) {
-                        Text(WorkFormat.sourceName(s.source))
-                            .font(.system(size: S.type(TypeScale.captionSize), weight: .semibold))
-                            .foregroundStyle(Palette.muted(dark))
-                        Text(s.label)
-                            .font(.system(size: S.type(TypeScale.captionSize)))
-                            .foregroundStyle(Palette.text(dark))
-                            .lineLimit(1)
+                VStack(alignment: .leading, spacing: 3) {
+                    ForEach(t.sources.prefix(4)) { s in
+                        HStack(spacing: 6) {
+                            Text(WorkFormat.sourceName(s.source))
+                                .font(.system(size: S.type(TypeScale.captionSize), weight: .semibold))
+                                .foregroundStyle(Palette.muted(dark))
+                            Text(s.label)
+                                .font(.system(size: S.type(TypeScale.captionSize)))
+                                .foregroundStyle(Palette.text(dark))
+                                .lineLimit(1)
+                        }
                     }
                 }
+                .padding(.top, 2)
             }
         }
-        .padding(.vertical, 6)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .stroke(Color.hairline(dark)))
         .accessibilityIdentifier("trait-\(t.key)")
+    }
+
+    /// 縁のある小さな button。文字リンクにしない（押せることが見えるように）。
+    private func actionButton(_ title: String, accent: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(title)
+                .font(.system(size: S.type(TypeScale.microSize), weight: .medium))
+                .foregroundStyle(accent ? Palette.accent(dark) : Palette.text(dark))
+                .frame(height: 24).padding(.horizontal, 8)
+        }
+        .buttonStyle(AstraControlStyle(radius: 6, base: 0.05))
     }
 
     private func statusChip(_ text: String) -> some View {
