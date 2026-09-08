@@ -12,6 +12,12 @@ bash "$ROOT/scripts/ux-auto/build-tools.sh" >/dev/null
 
 pkill -9 -f AstraMac 2>/dev/null; sleep 1
 ASTRA_DATA_ROOT="$OUT/data" "$BIN" --selftest dock8 "$OUT" >"$OUT/log.txt" 2>&1
+capture_status=$?
+if [ "$capture_status" -ne 0 ] || ! grep -q '^SELFTEST_OK dock8:' "$OUT/log.txt"; then
+  echo "CONFIRMATION_GATE=FAIL dock8 exit=$capture_status log=$OUT/log.txt"
+  tail -20 "$OUT/log.txt"
+  exit 1
+fi
 pkill -9 -f AstraMac 2>/dev/null
 
 shot="$OUT/07-confirmation.png"
@@ -82,9 +88,10 @@ if grep -q "窓は常に1枚" "$OUT/log.txt"; then say "✓" "窓を増やして
 # 撮った絵では分からないもの（窓・焦点・高さが中身で決まるか・取り消し）は
 # 実際に動かして見る。宣言してあるが効いていない、を避ける。
 echo
-out="$("$BIN" --selftest confirmflow 2>&1 | tail -1)"
+out="$("$BIN" --selftest confirmflow 2>&1)"
+flow_status=$?
 pkill -9 -f AstraMac 2>/dev/null
-if echo "$out" | grep -q SELFTEST_OK; then say "✓" "${out#SELFTEST_OK confirmflow: }"
+if [ "$flow_status" -eq 0 ] && echo "$out" | grep -q '^SELFTEST_OK confirmflow:'; then say "✓" "${out#SELFTEST_OK confirmflow: }"
 else say "✗" "$out"; fail=1; fi
 
 echo

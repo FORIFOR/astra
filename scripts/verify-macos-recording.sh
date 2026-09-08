@@ -81,7 +81,15 @@ OUTFL="$("$BIN" --selftest fulllifecycle http://127.0.0.1:3000)"; echo "$OUTFL"
 [[ "$OUTFL" == SELFTEST_OK* || "$OUTFL" == SELFTEST_SKIP* ]] || { echo "FAIL: macOS full Voice HUD->Recording->save->HUD lifecycle" >&2; exit 1; }
 # UI/UX テスト仕様 v1.0 の E2E-001（Product Reality Gate）。窓を実提示したまま一本で通し、
 # HUD と Recording Workspace が同時に画面へ残らないことまで実測する。
-OUTE2E="$(ASTRA_E2E_SYNTHETIC=1 "$BIN" --selftest e2e001 http://127.0.0.1:3000)"; echo "$OUTE2E"
+# 実機gateで合成音源を暗黙に有効化しない。合成経路は明示した個別診断だけに使う。
+if [[ "${ASTRA_E2E_SYNTHETIC:-0}" = 1 ]]; then
+  echo "FAIL: recording gate requires real capture; ASTRA_E2E_SYNTHETIC=1 is diagnostic only" >&2
+  exit 1
+fi
+e2e_status=0
+OUTE2E="$("$BIN" --selftest e2e001 http://127.0.0.1:3000 2>&1)" || e2e_status=$?
+echo "$OUTE2E"
+[[ "$e2e_status" -eq 0 ]] || { echo "FAIL: E2E-001 exited $e2e_status" >&2; exit 1; }
 [[ "$OUTE2E" == SELFTEST_OK* || "$OUTE2E" == SELFTEST_SKIP* ]] || { echo "FAIL: E2E-001 Product Reality Gate" >&2; exit 1; }
 # Visual Gate: 8 主要画面を実アプリで撮り、geometry まで検査する（窓が在るだけでは PASS にしない）。
 SHOTS_BASE="${ASTRA_SHOTS_DIR:-/tmp/astra-shots}"

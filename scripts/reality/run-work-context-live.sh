@@ -63,9 +63,8 @@ cleanup() {
     ASTRA_LIVE_PROVIDER="$PROVIDER" ASTRA_SECRET_STORE_FILE="$STORE/secrets.json" pnpm exec tsx workers/agent-host/src/live-seed.ts "$NONCE" --cleanup "$STORE/seeded.json" >> "$OUT/seed.log" 2>&1 || true
   fi
   dbmate --url "$ADMIN_URL" --migrations-dir "$ROOT/infra/db/migrations" --no-dump-schema drop >/dev/null 2>&1 || true
-  psql "postgres://${PGSUPER}:${PGPASSWORD}@${PGHOST}:${PGPORT}/postgres" -X -q \
-    -c 'DROP ROLE IF EXISTS astra_app' -c 'DROP ROLE IF EXISTS astra_identity' \
-    -c 'DROP ROLE IF EXISTS astra_migrate' -c 'DROP ROLE IF EXISTS astra_share' >/dev/null 2>&1 || true
+  # bootstrap.sql のロールはクラスタ共通。別DBや別の検証も使用するため、
+  # このrunの一時DBを片付ける際に削除してはいけない。
   cp "$STORE"/*.log "$OUT/" 2>/dev/null || true
   rm -rf "$STORE"   # トークンのファイルはここで消える
   exit $rc

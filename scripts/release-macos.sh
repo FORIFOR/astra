@@ -49,18 +49,28 @@ echo "== build (release) =="
 # panic の位置文字列にはビルドした人の絶対パスがそのまま入る（実測 175 箇所）。
 # 不特定多数へ配るものに開発者のユーザー名を載せない。開発ビルドはそのままにして、
 # 配布ビルドだけ畳む。
-( cd "$ROOT/core/astra-core" \
-  && RUSTFLAGS="--remap-path-prefix=$HOME/.cargo=/cargo --remap-path-prefix=$ROOT=/astra ${RUSTFLAGS:-}" \
-     cargo build --release --quiet )
-export ASTRA_CORE_LIB_DIR="$ROOT/core/astra-core/target/release"
+for target in aarch64-apple-darwin x86_64-apple-darwin; do
+  ( cd "$ROOT/core/astra-core" \
+    && MACOSX_DEPLOYMENT_TARGET=14.0 \
+       RUSTFLAGS="--remap-path-prefix=$HOME/.cargo=/cargo --remap-path-prefix=$ROOT=/astra ${RUSTFLAGS:-}" \
+       cargo build --release --quiet --target "$target" )
+done
+export ASTRA_CORE_LIB_DIR="$ROOT/core/astra-core/target/universal-release"
+mkdir -p "$ASTRA_CORE_LIB_DIR"
+lipo -create \
+  "$ROOT/core/astra-core/target/aarch64-apple-darwin/release/libastra_core.a" \
+  "$ROOT/core/astra-core/target/x86_64-apple-darwin/release/libastra_core.a" \
+  -output "$ASTRA_CORE_LIB_DIR/libastra_core.a"
 [[ -f "$ASTRA_CORE_LIB_DIR/libastra_core.a" ]] || {
   echo "FAIL: release の libastra_core.a が無い" >&2; exit 1; }
 bash "$ROOT/scripts/fetch-sparkle.sh"
-( cd "$ROOT/apps/astra-macos" && swift build -c release )
+( cd "$ROOT/apps/astra-macos" && swift build -c release --arch arm64 --arch x86_64 )
 
 # 実行時に外の dylib を掴んでいないこと。掴んでいたら、その絶対パスが無い
 # 他人の Mac では起動しない（一度そうなっていた）。
-BIN="$ROOT/apps/astra-macos/.build/apple/Products/Release/AstraMac"
+BIN_DIR="$(cd "$ROOT/apps/astra-macos" && swift build -c release --arch arm64 --arch x86_64 --show-bin-path)"
+BIN="$BIN_DIR/AstraMac"
+[[ -x "$BIN" ]] || { echo "FAIL: 今回のuniversal実行体が無い: $BIN" >&2; exit 1; }
 if otool -L "$BIN" | grep -q "astra_core.*dylib"; then
   echo "FAIL: astra_core を dylib で掴んでいる（静的リンクになっていない）" >&2
   otool -L "$BIN" | grep astra_core >&2

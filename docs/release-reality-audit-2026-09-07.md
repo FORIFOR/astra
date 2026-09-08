@@ -99,3 +99,14 @@ Google → Microsoft → recovery → Real Meet → TCC → keyboard/VO → exac
 - UI taste上限緩和は裏づけのある実画面レビュー記録がないため撤回した。
 - Google/Microsoft live identity、live測定器の不足、公証・staple等の未達は上記のまま残る。
 - GitHubへのコード保存はRelease=GOや配布の承認を意味しない。
+
+## 2026-09-08 配布アーティファクト再検証
+
+配布スクリプトのCPU別ビルド出力、ライブゲートのcleanup、確認ゲートの終了状態を修正した後、同じRCから配布物を作り直した。
+
+- `dist/Astra.app` は Developer ID Application（Shuhei Horio）で署名し、hardened runtime と deep strict 検証に成功。
+- 公証 submission `2badcbd5-2e70-4f15-bc95-9adb09bd9af8` は Apple の `Accepted`。staple と `xcrun stapler validate` に成功。
+- `spctl --assess --type execute --verbose=4 dist/Astra.app` は `accepted` / `source=Notarized Developer ID`。
+- `scripts/verify-release-artifact.sh` は初回起動、DB生成、録音の強制終了後復旧、inspect、resume、finish、ready残存まで成功。
+- 配布ZIP SHA-256: `adbfee872513810ad298198f83cbc0236503734db29e688c5c76d4bbaaec10a1`。
+- この結果により Release Artifact gate は PASS へ更新できる。ただし Google/Microsoft の実OAuth、Real Meeting、TCC専用ユーザー、Keyboard/VoiceOver、全Live Work Context閉ループは未測定または `AUTOMATION_MISSING` のままであり、総合判定は **RELEASE = NO-GO**。
