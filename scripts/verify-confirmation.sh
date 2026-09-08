@@ -8,7 +8,13 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 BIN="$ROOT/apps/astra-macos/.build/debug/AstraMac"
 LAB="$ROOT/.build/uxlab"
 OUT="$(mktemp -d)"
-bash "$ROOT/scripts/ux-auto/build-tools.sh" >/dev/null
+if [[ -x "${ASTRA_CONFIRMATION_BIN:-}" ]]; then
+  BIN="$ASTRA_CONFIRMATION_BIN"
+elif [[ -x "$ROOT/dist/Astra.app/Contents/MacOS/AstraMac" ]]; then
+  BIN="$ROOT/dist/Astra.app/Contents/MacOS/AstraMac"
+else
+  bash "$ROOT/scripts/ux-auto/build-tools.sh" >/dev/null
+fi
 
 pkill -9 -f AstraMac 2>/dev/null; sleep 1
 ASTRA_DATA_ROOT="$OUT/data" "$BIN" --selftest dock8 "$OUT" >"$OUT/log.txt" 2>&1

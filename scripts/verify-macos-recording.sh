@@ -3,9 +3,15 @@
 # 断片が実際に書かれ、回復候補に出ることを確かめる（headless で再現可能）。
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-cd "$ROOT/apps/astra-macos"
-swift build >/dev/null
-BIN="$(swift build --show-bin-path)/AstraMac"
+if [[ -x "${ASTRA_RECORD_BIN:-}" ]]; then
+  BIN="$ASTRA_RECORD_BIN"
+elif [[ -x "$ROOT/dist/Astra.app/Contents/MacOS/AstraMac" ]]; then
+  BIN="$ROOT/dist/Astra.app/Contents/MacOS/AstraMac"
+else
+  cd "$ROOT/apps/astra-macos"
+  swift build >/dev/null
+  BIN="$(swift build --show-bin-path)/AstraMac"
+fi
 OUT="$("$BIN" --selftest record)"
 echo "$OUT"
 [[ "$OUT" == SELFTEST_OK* ]] || { echo "FAIL: macOS recording E2E" >&2; exit 1; }

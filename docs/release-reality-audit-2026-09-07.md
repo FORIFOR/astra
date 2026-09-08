@@ -110,3 +110,6 @@ Google → Microsoft → recovery → Real Meet → TCC → keyboard/VO → exac
 - `scripts/verify-release-artifact.sh` は初回起動、DB生成、録音の強制終了後復旧、inspect、resume、finish、ready残存まで成功。
 - 配布ZIP SHA-256: `adbfee872513810ad298198f83cbc0236503734db29e688c5c76d4bbaaec10a1`。
 - この結果により Release Artifact gate は PASS へ更新できる。ただし Google/Microsoft の実OAuth、Real Meeting、TCC専用ユーザー、Keyboard/VoiceOver、全Live Work Context閉ループは未測定または `AUTOMATION_MISSING` のままであり、総合判定は **RELEASE = NO-GO**。
+- `run-work-context-release-gate.sh` は同じRCで Offline 全項目 `PASS`。Live は両providerとも `AUTOMATION_MISSING`。
+- `run-real-meeting.sh dist/Astra.app` は BlackHole + `SwitchAudioSource` の実マイク経路で transcript similarity 0.90、decision 2/2、action 1/1、pause leakage 0、Library ready、source jump 0件を確認した（`REAL_MEETING_GATE=PARTIAL`）。`ASTRA_MEET_URL` / bot profile が無いため、実MeetのPASSには昇格しない。
+- `verify-macos-recording.sh` は合成ディスク録音・復旧などを通過したが、E2E-001実キャプチャは終了134（TCC/実環境の未解決）であり、合成結果へ読み替えない。
