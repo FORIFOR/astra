@@ -29,6 +29,21 @@ describe('live grants', () => {
     expect(() =>
       assertLiveScopes(tokens([...read, ...LIVE_SCOPES.google.write]), read, 'read'),
     ).toThrow('non-read'));
+  it('allows the Microsoft fixture seed grant to carry its cleanup scopes', () =>
+    expect(() =>
+      assertLiveScopes(
+        tokens([
+          'Mail.ReadWrite',
+          'Mail.Read',
+          'Mail.Send',
+          'Calendars.Read',
+          'Calendars.ReadWrite',
+          'User.Read',
+        ]),
+        ['Mail.ReadWrite', 'Calendars.ReadWrite', 'User.Read'],
+        'seed',
+      ),
+    ).not.toThrow());
   it('requires send permission before storing a write grant', () =>
     expect(() => assertLiveScopes(tokens(read), LIVE_SCOPES.google.write, 'write')).toThrow());
 });

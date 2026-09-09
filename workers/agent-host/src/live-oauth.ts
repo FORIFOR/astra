@@ -37,6 +37,16 @@ export function assertLiveScopes(
     'https://www.googleapis.com/auth/userinfo.email',
     'https://www.googleapis.com/auth/userinfo.profile',
   ]);
+  // The fixture seed identity is intentionally broader than either worker
+  // grant so it can create and remove test mail and calendar data. Read and
+  // write grants remain isolated; only the seed grant may carry this union.
+  if (grant === 'seed' && required.some((scope) => scope === 'Mail.ReadWrite')) {
+    allowed.add('Mail.Read');
+    allowed.add('Mail.ReadWrite');
+    allowed.add('Mail.Send');
+    allowed.add('Calendars.Read');
+    allowed.add('Calendars.ReadWrite');
+  }
   if (tokens.grantedScopes.some((scope) => !allowed.has(scope)))
     throw new Error(`${grant}: token contains non-${grant} scopes`);
 }
