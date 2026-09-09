@@ -1419,6 +1419,9 @@ struct QuickActionsDock: View {
         }
         .padding(.horizontal, 8)
         .frame(maxHeight: .infinity)
+        // クイック操作が作業領域に重なるときは、Escape で一手で静かな Dock に戻す。
+        // ボタンを増やして閉じる専用の面を作らず、Astra 全体の逃げ道の鍵に揃える。
+        .escapeKey { state.mode = .idle }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("dockQuickActions")
     }
