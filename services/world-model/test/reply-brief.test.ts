@@ -305,6 +305,65 @@ describe('reply personalization controls', () => {
 });
 
 describe('meeting brief', () => {
+  it('retains the explicit project history when unclassified mail clusters with its calendar title', () => {
+    const event = fixture.find((a) => a.id === 'c1')!;
+    const artifacts = [
+      ...fixture.filter((a) => a.id !== 'c1'),
+      { ...event, project_hint: null, title: 'MOPITA連携 顧客定例' },
+      art({
+        id: 'new-reply',
+        title: 'MOPITA連携 顧客定例',
+        direction: 'outbound',
+        occurred_at: iso('2026-09-07T08:59:00+09:00'),
+      }),
+    ];
+    const context = buildWorkContext({
+      artifacts,
+      corrections: [],
+      now: NOW,
+      inferenceEnabled: true,
+    });
+    const brief = buildMeetingBrief({ artifacts, context, now: NOW });
+    expect(brief?.project).toBe('MOPITA連携');
+    expect(brief?.previous.some((fact) => fact.text.startsWith('前回:'))).toBe(true);
+    expect(brief?.previous.some((fact) => fact.text.startsWith('決定:'))).toBe(true);
+    expect(brief?.previous.some((fact) => fact.text.startsWith('やること:'))).toBe(true);
+    expect(brief?.since_last_meeting.length).toBeGreaterThan(0);
+    expect(JSON.stringify(brief)).not.toContain('○○社');
+  });
+  it.each([false, true])(
+    'does not merge ambiguous project history (reply present: %s)',
+    (withReply) => {
+      const title = 'MOPITA連携 第二案件 顧客定例';
+      const artifacts = [
+        ...fixture.filter((a) => a.id !== 'c1'),
+        art({
+          id: 'second-meeting',
+          title: '他案件の秘密',
+          kind: 'meeting',
+          source: 'meeting',
+          project_hint: '第二案件',
+        }),
+        ...(withReply ? [art({ id: 'new-reply', title, direction: 'outbound' })] : []),
+        art({
+          id: 'next-event',
+          title,
+          kind: 'calendar_event',
+          source: 'google_calendar',
+          occurred_at: iso('2026-09-07T14:00:00+09:00'),
+        }),
+      ];
+      const context = buildWorkContext({
+        artifacts,
+        corrections: [],
+        now: NOW,
+        inferenceEnabled: true,
+      });
+      const brief = buildMeetingBrief({ artifacts, context, now: NOW });
+      expect(brief?.previous).toEqual([]);
+      expect(JSON.stringify(brief)).not.toContain('他案件の秘密');
+    },
+  );
   it('resolves the next event, its project, the previous meeting, mails since, open items and questions with sources', () => {
     const brief = buildMeetingBrief({ artifacts: fixture, context: ctx, now: NOW });
     expect(brief).not.toBeNull();

@@ -68,6 +68,8 @@ export interface WorkSyncDeps {
   readonly maxClassifications?: number;
   /** Optional provider search restriction, applied before fetching/classifying items. */
   readonly googleQuery?: string;
+  /** Restrict Microsoft validation data before classification or cloud publication. */
+  readonly microsoftQuery?: string;
   /** 混み合い（429）/ 時間切れのときに一度だけ待ってやり直す間隔。 */
   readonly backoffMs?: number;
   readonly sleep?: (ms: number) => Promise<void>;
@@ -287,11 +289,23 @@ export class WorkSyncLoop {
   ): Promise<{ artifacts: WorkArtifact[]; cursor: string | null }> {
     const outlook = this.#deps.connectors.outlookMail();
     const since = this.#since('outlook_mail', now).toISOString();
+    const restriction = this.#deps.microsoftQuery;
     const [inbox, sent] = await Promise.all([
-      outlook.list({ folder: 'inbox', since, maxResults: 50 }),
-      outlook.list({ folder: 'sentitems', since, maxResults: 50 }),
+      outlook.list({
+        folder: 'inbox',
+        since,
+        maxResults: 50,
+        ...(restriction ? { query: restriction } : {}),
+      }),
+      outlook.list({
+        folder: 'sentitems',
+        since,
+        maxResults: 50,
+        ...(restriction ? { query: restriction } : {}),
+      }),
     ]);
     const artifacts = [...inbox, ...sent]
+      .filter((m) => !restriction || m.subject.includes(restriction))
       .map((m) => fromOutlookMail(m, ctx))
       .filter((a): a is WorkArtifact => a !== null);
     return { artifacts, cursor: latest(artifacts, new Date(since)) };
@@ -304,6 +318,7 @@ export class WorkSyncLoop {
     const events = await this.#deps.connectors.outlookCalendar().list(this.#window(now));
     return {
       artifacts: events
+        .filter((e) => !this.#deps.microsoftQuery || e.title.includes(this.#deps.microsoftQuery))
         .map((e) => fromOutlookCalendar(e, ctx))
         .filter((a): a is WorkArtifact => a !== null),
       cursor: null,

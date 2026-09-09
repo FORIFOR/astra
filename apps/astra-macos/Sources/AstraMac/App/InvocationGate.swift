@@ -74,7 +74,8 @@ enum InvocationGate {
     /// 枠が 120ms 動かなくなるまで（最後に動いた時刻）を、2ms 刻みで見る。
     struct Timing { var stateMs: Double?; var firstFrameMs: Double?; var settledMs: Double? }
 
-    static func observe(fire: () -> Void, stateReached: () -> Bool, capSec: Double = 2.5) -> Timing {
+    static func observe(fire: () -> Void, stateReached: () -> Bool, capSec: Double = 2.5,
+                        sample: (Double) -> Void = { _ in }) -> Timing {
         var t = Timing()
         let base = dockWindow()?.frame
         var last = base
@@ -85,6 +86,7 @@ enum InvocationGate {
         while Date() < cap {
             CFRunLoopRunInMode(.defaultMode, 0.002, true)
             let now = Date()
+            sample(now.timeIntervalSince(t0) * 1000)
             if t.stateMs == nil, stateReached() { t.stateMs = now.timeIntervalSince(t0) * 1000 }
             let f = dockWindow()?.frame
             if f != last {
@@ -385,13 +387,22 @@ enum InvocationGate {
         WindowCoordinator.shared.toggleRecording(); settle(1.2)   // 止めて次へ（mic を止め切る）
         result.observations.append("初回（cold）: 枠 \(Int(cold.firstFrameMs ?? -1))ms・state \(Int(cold.stateMs ?? -1))ms。以下は 2 回目以降（steady-state）")
 
-        let t0 = Date()
-        var t1 = observe(fire: fireShortcut, stateReached: { recording.isRecording })
+        var t0 = Date()
+        var levelMs: Double?, journalMs: Double?
+        func sampleAudio(_ elapsed: Double) {
+            guard recording.isRecording else { return }
+            if levelMs == nil, !recording.awaitingAudio { levelMs = elapsed }
+            if journalMs == nil, RecordingRuntime.shared.recordedMs() > 0 { journalMs = elapsed }
+        }
+        // Sample audio while observing the animation, rather than starting the
+        // audio clock after the window has settled (including its 120ms wait).
+        var t1 = observe(fire: fireShortcut, stateReached: { recording.isRecording }, sample: sampleAudio)
         if registered, t1.stateMs == nil {
             // tap は登録できたが届かなかった。直接呼び直し、その旨を残す。
             result.observations.append("合成 \(GlobalShortcut.label()) が tap に届かなかった（1.5s）。handler を直接呼んで続ける")
             hop = "direct(tap-miss)"
-            t1 = observe(fire: { WindowCoordinator.shared.toggleRecording() }, stateReached: { recording.isRecording })
+            t0 = Date(); levelMs = nil; journalMs = nil
+            t1 = observe(fire: { WindowCoordinator.shared.toggleRecording() }, stateReached: { recording.isRecording }, sample: sampleAudio)
         }
         guard recording.isRecording else {
             // マイクが無い環境（CI 等）では録音に入れない。落とさず SKIP する
@@ -415,13 +426,11 @@ enum InvocationGate {
         if Permissions.microphone == .granted {
             // 2 つの合図を別々に見る: 波形の level（audio thread → main）と journal の recordedMs（core）。
             // どちらか早い方を「音が届いた」とし、もう一方も記す（遅れ方が分かる）。
-            var levelMs: Double?, journalMs: Double?
             let cap = Date().addingTimeInterval(3)
             while Date() < cap, levelMs == nil || journalMs == nil {
                 CFRunLoopRunInMode(.defaultMode, 0.002, true)
                 let now = Date().timeIntervalSince(t0) * 1000
-                if levelMs == nil, !recording.awaitingAudio { levelMs = now }
-                if journalMs == nil, RecordingRuntime.shared.recordedMs() > 0 { journalMs = now }
+                sampleAudio(now)
                 if let l = levelMs, let j = journalMs, min(l, j) > 0, now - min(l, j) > 500 { break }
             }
             micMs = [levelMs, journalMs].compactMap { $0 }.min()

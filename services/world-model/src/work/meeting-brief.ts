@@ -60,6 +60,27 @@ function projectOf(
 ): { name: string; members: WorkArtifact[] } | null {
   const clusters = clusterProjects(artifacts);
   const own = clusters.find((c) => c.artifacts.some((a) => a.id === event.id));
+  // A title-only cluster may grow after a reply arrives. Its size is not
+  // evidence that it supersedes a uniquely named, explicit project.
+  if (own && !own.key.startsWith('p:')) {
+    const eventTokens = new Set(titleTokens(event.title));
+    const named = clusters.filter((c) => {
+      if (!c.key.startsWith('p:')) return false;
+      const names = c.artifacts
+        .map((a) => a.semantic?.project ?? a.project_hint)
+        .filter((name): name is string => Boolean(name));
+      return names.some((name) => {
+        const tokens = titleTokens(name).filter((token) => token.length >= 2);
+        return tokens.length > 0 && tokens.every((token) => eventTokens.has(token));
+      });
+    });
+    if (named.length === 1) {
+      const project = named[0]!;
+      return { name: project.name, members: [...project.artifacts, ...own.artifacts] };
+    }
+    // Do not let the looser fallback below choose one of several named projects.
+    if (named.length > 1) return { name: own.name, members: own.artifacts };
+  }
   if (own && own.artifacts.length > 1) return { name: own.name, members: own.artifacts };
   const q = titleTokens(event.title).filter((w) => w.length >= 2);
   const scored = clusters

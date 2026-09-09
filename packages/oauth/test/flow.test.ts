@@ -257,6 +257,19 @@ describe('exchanging the code', () => {
 });
 
 describe('refreshing', () => {
+  it('requests the connection scopes explicitly when refreshing Microsoft access', async () => {
+    let submitted = '';
+    const next = await refresh(
+      config({ provider: 'microsoft', scopes: ['Mail.Read', 'User.Read'] }),
+      'refresh-value',
+      async (_url, init) => {
+        submitted = String(init?.body);
+        return jsonResponse({ access_token: 'read-access', scope: 'Mail.Read User.Read' });
+      },
+    );
+    expect(new URLSearchParams(submitted).get('scope')).toBe('Mail.Read User.Read');
+    expect(next.grantedScopes).toEqual(['Mail.Read', 'User.Read']);
+  });
   const tokens = (over: Partial<TokenSet> = {}): TokenSet => ({
     accessToken: 'a',
     refreshToken: 'r',

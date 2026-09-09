@@ -83,6 +83,7 @@ function harness(
     pushFails?: boolean;
     backoffMs?: number;
     googleQuery?: string;
+    microsoftQuery?: string;
   } = {},
 ): Harness {
   const urls: string[] = [];
@@ -125,6 +126,7 @@ function harness(
   const loop = new WorkSyncLoop({
     connectors: runtime,
     ...(options.googleQuery ? { googleQuery: options.googleQuery } : {}),
+    ...(options.microsoftQuery ? { microsoftQuery: options.microsoftQuery } : {}),
     ...(options.backoffMs === undefined ? {} : { backoffMs: options.backoffMs }),
     sleep: async (ms) => {
       sleeps.push(ms);
@@ -225,6 +227,44 @@ const MICROSOFT_GRANTS = {
 };
 
 describe('syncing work context from the device', () => {
+  it('excludes non-fixture Microsoft data before classification and publication', async () => {
+    const h = harness({
+      connected: ['com.astra.outlook/outlook'],
+      granted: MICROSOFT_GRANTS,
+      microsoftQuery: 'WC123456',
+      routes: (url) =>
+        url.includes('/calendarView')
+          ? {
+              body: {
+                value: [
+                  {
+                    id: 'private',
+                    subject: 'Private meeting',
+                    start: { dateTime: '2026-09-07T05:00:00Z', timeZone: 'UTC' },
+                    end: { dateTime: '2026-09-07T06:00:00Z', timeZone: 'UTC' },
+                  },
+                  {
+                    id: 'fixture',
+                    subject: 'WC123456 meeting',
+                    start: { dateTime: '2026-09-07T05:00:00Z', timeZone: 'UTC' },
+                    end: { dateTime: '2026-09-07T06:00:00Z', timeZone: 'UTC' },
+                  },
+                ],
+              },
+            }
+          : defaultRoutes(url),
+    });
+    await h.loop.syncOnce();
+    const mailUrls = h.urls.filter((url) => url.includes('/mailFolders/'));
+    expect(mailUrls).toHaveLength(2);
+    for (const url of mailUrls)
+      expect(new URL(url).searchParams.get('$search')).toContain('WC123456');
+    expect(h.batches.find((b) => b.source === 'outlook_mail')?.artifacts).toEqual([]);
+    const events = h.batches.find((b) => b.source === 'outlook_calendar')?.artifacts;
+    expect(events).toHaveLength(1);
+    expect(events?.[0]?.title).toBe('WC123456 meeting');
+    expect(JSON.stringify(h.asked)).not.toContain('Private meeting');
+  });
   it('preserves incoming work when Gmail lists one self-delivered message in both folders', async () => {
     const h = harness({
       connected: ['com.astra.gmail/gmail'],

@@ -232,7 +232,12 @@ export async function refresh(
 ): Promise<TokenSet> {
   const body = await post(
     config,
-    { grant_type: 'refresh_token', refresh_token: refreshToken, client_id: config.clientId },
+    {
+      grant_type: 'refresh_token',
+      refresh_token: refreshToken,
+      client_id: config.clientId,
+      ...(config.provider === 'microsoft' ? { scope: config.scopes.join(' ') } : {}),
+    },
     fetchImpl,
   );
   const next = parseTokenResponse(body, config.scopes, now());

@@ -200,6 +200,9 @@ async function main(): Promise<void> {
     ...(process.env['ASTRA_WORK_SYNC_GOOGLE_QUERY']
       ? { googleQuery: process.env['ASTRA_WORK_SYNC_GOOGLE_QUERY'] }
       : {}),
+    ...(process.env['ASTRA_WORK_SYNC_MICROSOFT_QUERY']
+      ? { microsoftQuery: process.env['ASTRA_WORK_SYNC_MICROSOFT_QUERY'] }
+      : {}),
     push: async (batch) => {
       await cloud('/v1/work/artifacts', 'POST', batch);
     },

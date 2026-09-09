@@ -14,6 +14,16 @@ Commit preparation: `scripts/verify-all.sh` completed with `VERIFY_ALL_OK` on re
 
 ## Validation history
 
+### Remaining-task corrections
+
+- Reproduced a missing-history case: an unclassified reply and calendar event formed a title-only cluster, which displaced the uniquely named explicit project when building the next brief. Explicit project matching now precedes the cluster-size shortcut. Multiple matching project names do not choose an arbitrary history, including when no reply exists. The regression checks prior decisions, actions, subsequent mail and exclusion of other projects. Targeted work/brief tests: 40 passed.
+- Microsoft refresh requests now explicitly request the configured scopes instead of relying on the provider's default grant. OAuth tests: 38 passed. Live credentials still require strict returned-scope and identity verification; this source change does not establish live separation by itself.
+- Microsoft validation applies its nonce to mail searches and filters returned mail/calendar titles before classification and cloud publication. Agent Host tests: 132 passed. Calendar filtering occurs locally after the bounded provider listing.
+- Google no-send diagnostic WC47197 passed all daily-answer and next-brief assertions; cleanup succeeded. It creates no send task and does not load a write grant. This does not replace final post-send validation; the five Google send authorizations remain consumed. Microsoft sends remain unused.
+- Corrected an invocation measurement error: microphone arrival was checked only after the window animation settled, including its 120ms stability wait. It is now sampled concurrently with the animation. A signed local candidate measured first audio at 187.7ms (target below 200ms), visible feedback at 50.3ms, and stop feedback at 58.3ms. This is a measurement correction, not a change to microphone capture. The same invocation run failed focus preservation because macOS UserNotificationCenter became frontmost; the overall invocation gate is not PASS. This diagnostic candidate is not the final notarized distribution.
+
+TypeScript typecheck and nine gateway/DB work integration tests passed after these corrections. `verify-all.sh` completed with `VERIFY_ALL_OK`, including 50 Swift tests, JA/JB/JC, and both golden comparisons. Its recording section automatically selected the existing distribution (and therefore printed the old microphone measurement); this mixed-candidate run is not final artifact attestation. The rebuilt distribution must be selected explicitly for final validation. Full Keyboard Access/VoiceOver outcome journeys, OS permission recovery, complete product review, live post-send gates, and final distribution verification remain outstanding.
+
 Release remains NO_GO until all gates are verified. Earlier notarized binaries do not attest the source changes below.
 
 Google OAuth was configured in the Astra project, with a Desktop client and one explicitly selected test account. Read, write, and seed grants were acquired separately, identity checked, and refreshed through Astra. Read grants retained only read/identity scopes after the other grants were added. Gmail profile and Calendar list calls returned HTTP 200. Credentials remain outside the repository in the private release-validation environment file (0600); no token values belong in evidence.
