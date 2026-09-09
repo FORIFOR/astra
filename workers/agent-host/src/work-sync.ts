@@ -62,6 +62,11 @@ export interface WorkSyncDeps {
   readonly now?: () => Date;
   /** 何日前まで遡るか（メール）。 */
   readonly lookbackDays?: number;
+  readonly calendarLookbackDays?: number;
+  readonly sources?: readonly WorkSource[];
+  readonly metadataOnly?: boolean;
+  readonly onSourceStart?: (source: WorkSource) => Promise<void>;
+  readonly onOutcome?: (outcome: SourceOutcome) => Promise<void>;
   /** 何日先まで見るか（予定）。 */
   readonly lookaheadDays?: number;
   /** 1 回の同期で LLM に頼む上限。 */
@@ -163,6 +168,20 @@ export class WorkSyncLoop {
     permission: string,
     fetch: () => Promise<{ artifacts: WorkArtifact[]; cursor: string | null }>,
   ): Promise<SourceOutcome> {
+    if (this.#deps.sources && !this.#deps.sources.includes(source))
+      return { source, status: 'not_connected', artifacts: 0, classified: 0 };
+    await this.#deps.onSourceStart?.(source);
+    const outcome = await this.#sourceRun(source, key, permission, fetch);
+    await this.#deps.onOutcome?.(outcome);
+    return outcome;
+  }
+
+  async #sourceRun(
+    source: WorkSource,
+    key: Parameters<ConnectorRuntime['connected']>[0],
+    permission: string,
+    fetch: () => Promise<{ artifacts: WorkArtifact[]; cursor: string | null }>,
+  ): Promise<SourceOutcome> {
     try {
       // 繋いでいないものは黙って飛ばす。繋いでいないことは失敗ではない。
       if (!(await this.#deps.connectors.connected(key))) {
@@ -173,7 +192,14 @@ export class WorkSyncLoop {
         return { source, status: 'not_granted', artifacts: 0, classified: 0 };
       }
       const { artifacts, cursor } = await this.#withBackoff(fetch);
-      const { items, classified } = await this.#classify(artifacts);
+      const minimized = this.#deps.metadataOnly
+        ? artifacts.map((a) => ({
+            ...a,
+            body_excerpt: null,
+            provenance: { ...a.provenance, excerpt: null },
+          }))
+        : artifacts;
+      const { items, classified } = await this.#classify(minimized);
       /*
        * 順番: fetch → normalize → upsert → cursor。
        * 500 件ずつ（契約の上限）送り、**cursor は最後の 1 回にだけ付ける**。途中の batch に付けると、
@@ -233,7 +259,9 @@ export class WorkSyncLoop {
 
   #window(now: Date): { timeMin: string; timeMax: string } {
     return {
-      timeMin: new Date(now.getTime() - 7 * DAY_MS).toISOString(),
+      timeMin: new Date(
+        now.getTime() - (this.#deps.calendarLookbackDays ?? 7) * DAY_MS,
+      ).toISOString(),
       timeMax: new Date(
         now.getTime() + (this.#deps.lookaheadDays ?? DEFAULT_LOOKAHEAD_DAYS) * DAY_MS,
       ).toISOString(),

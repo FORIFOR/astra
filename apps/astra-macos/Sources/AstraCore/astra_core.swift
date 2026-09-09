@@ -2736,6 +2736,19 @@ public func apiFinishMeeting(baseUrl: String, accessToken: String, meetingId: St
 })
 }
 /**
+ * One-time initial profile; only the four user-facing operations are exposed.
+ */
+public func apiInitialProfile(baseUrl: String, accessToken: String, operation: String, bodyJson: String)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeApiError_lift) {
+    uniffi_astra_core_fn_func_api_initial_profile(
+        FfiConverterString.lower(baseUrl),
+        FfiConverterString.lower(accessToken),
+        FfiConverterString.lower(operation),
+        FfiConverterString.lower(bodyJson),$0
+    )
+})
+}
+/**
  * Library（GET /v1/artifacts）。title の一覧（UI が並べる分）。
  */
 public func apiLibrary(baseUrl: String, accessToken: String)throws  -> [String]  {
@@ -3215,6 +3228,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_astra_core_checksum_func_api_finish_meeting() != 33249) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_astra_core_checksum_func_api_initial_profile() != 22725) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_astra_core_checksum_func_api_library() != 21570) {

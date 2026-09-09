@@ -35,6 +35,7 @@ import {
   EMPTY_PERSONALIZATION,
   type StoredPersonalization,
 } from './personalization.js';
+import { InitialProfileService } from './initial-profile.js';
 import type { WorldModelService } from '../service.js';
 
 export interface WorkContextDeps {
@@ -47,6 +48,7 @@ export interface WorkContextDeps {
 }
 
 export class WorkContextService {
+  readonly initialProfile: InitialProfileService;
   readonly #db: DbHandle;
   readonly #world: WorldModelService | undefined;
   readonly #now: () => Date;
@@ -56,6 +58,7 @@ export class WorkContextService {
     this.#db = deps.db;
     this.#world = deps.world;
     this.#now = deps.now ?? (() => new Date());
+    this.initialProfile = new InitialProfileService(deps.db, this.#now);
     this.#horizonDays = deps.horizonDays ?? 60;
   }
 
@@ -372,6 +375,29 @@ export class WorkContextService {
       this.artifacts(tenantId, userId),
       this.stored(tenantId, userId),
     ]);
+    const initial = await this.initialProfile.get(tenantId, userId);
+    if (initial) {
+      const frozen = initial.status === 'confirmed' ? initial.profile : null;
+      if (!frozen)
+        return {
+          working_style: [],
+          work_patterns: [],
+          frequent_entities: [],
+          inference_enabled: stored.inference_enabled,
+          updated_at: initial.updated_at,
+        };
+      const apply = (t: PersonalizationProfile['working_style'][number]) => ({
+        ...t,
+        ...stored.overrides[t.key],
+      });
+      return {
+        ...frozen,
+        inference_enabled: stored.inference_enabled,
+        working_style: frozen.working_style.map(apply),
+        work_patterns: frozen.work_patterns.map(apply),
+        frequent_entities: frozen.frequent_entities.map(apply),
+      };
+    }
     return deriveProfile(artifacts, stored, this.#now());
   }
 

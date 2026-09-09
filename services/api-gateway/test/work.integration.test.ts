@@ -564,3 +564,103 @@ describe.skipIf(!url)('reply in context and meeting brief', () => {
     expect(other.statusCode).toBe(409);
   });
 });
+
+describe.skipIf(!url)('one-time initial profile over HTTP', () => {
+  let harness: TestApp;
+  let app: App;
+  let headers: { authorization: string };
+  beforeAll(async () => {
+    harness = await makeTestApp({
+      dbConfig: testDbConfig(url!, identityUrl),
+      tokens: await makeTokens(),
+    });
+    app = harness.app;
+    const response = await app.inject({
+      method: 'POST',
+      url: '/v1/auth/dev/token',
+      payload: { email: `initial-${uuidv7()}@example.invalid`, display_name: 'Initial' },
+    });
+    headers = { authorization: `Bearer ${response.json<TokenResponse>().access_token}` };
+  });
+  afterAll(async () => {
+    await harness?.close();
+  });
+  it('requires completed data before review, validates edits, and never restarts a confirmed profile', async () => {
+    expect(
+      (await app.inject({ method: 'GET', url: '/v1/work/initial-profile', headers })).json(),
+    ).toEqual({ profile: null });
+    const initial = await app.inject({
+      method: 'POST',
+      url: '/v1/work/initial-profile',
+      headers,
+      payload: { provider: 'google' },
+    });
+    expect(initial.statusCode).toBe(200);
+    const sections = { focus: [], people: [], priorities: [], work_pattern: [], open_items: 0 };
+    expect(
+      (
+        await app.inject({
+          method: 'PUT',
+          url: '/v1/work/initial-profile',
+          headers,
+          payload: sections,
+        })
+      ).statusCode,
+    ).toBe(409);
+    const lease = (
+      await app.inject({ method: 'POST', url: '/v1/work/initial-profile/claim', headers })
+    ).json<{ job: { lease: string } }>().job.lease;
+    for (const source of ['gmail', 'google_calendar']) {
+      expect(
+        (
+          await app.inject({
+            method: 'POST',
+            url: '/v1/work/initial-profile/progress',
+            headers,
+            payload: { lease, outcome: { source, status: 'synced', artifacts: 0 } },
+          })
+        ).statusCode,
+      ).toBe(204);
+    }
+    expect(
+      (
+        await app.inject({
+          method: 'POST',
+          url: '/v1/work/initial-profile/finish',
+          headers,
+          payload: { lease, artifact_ids: [] },
+        })
+      ).statusCode,
+    ).toBe(204);
+    expect(
+      (
+        await app.inject({
+          method: 'PUT',
+          url: '/v1/work/initial-profile',
+          headers,
+          payload: { ...sections, focus: Array(6).fill('Too many') },
+        })
+      ).statusCode,
+    ).toBe(400);
+    expect(
+      (
+        await app.inject({
+          method: 'PUT',
+          url: '/v1/work/initial-profile',
+          headers,
+          payload: sections,
+        })
+      ).statusCode,
+    ).toBe(204);
+    const again = (
+      await app.inject({
+        method: 'POST',
+        url: '/v1/work/initial-profile',
+        headers,
+        payload: { provider: 'microsoft' },
+      })
+    ).json<{ profile: { id: string; status: string } }>().profile;
+    expect(again.status).toBe('confirmed');
+    expect(again.id).toBe(initial.json<{ profile: { id: string } }>().profile.id);
+  });
+});

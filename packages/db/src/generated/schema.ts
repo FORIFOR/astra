@@ -279,6 +279,14 @@ export interface HostStepRequests {
   tool_id: string;
 }
 
+export interface InitialProfiles {
+  lease_id: string | null;
+  lease_until: Timestamp | null;
+  payload: Json;
+  tenant_id: string;
+  user_id: string;
+}
+
 export interface JobCheckpoints {
   state: Generated<Json>;
   step_index: Generated<number>;
@@ -699,6 +707,7 @@ export interface DB {
   event_streams: EventStreams;
   evidence: Evidence;
   host_step_requests: HostStepRequests;
+  initial_profiles: InitialProfiles;
   job_checkpoints: JobCheckpoints;
   job_leases: JobLeases;
   meeting_segments: MeetingSegments;

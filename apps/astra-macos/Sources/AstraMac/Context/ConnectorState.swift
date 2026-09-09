@@ -252,6 +252,7 @@ final class ConnectorState: ObservableObject {
         }
         status[s.statusKey] = .connected
         connected.insert(s.name)
+        if s.readOnly { InitialProfileStore.shared.connected(provider: s.provider) }
     }
 
     /// 切る: 鍵を消し、cloud の記録を失効させる。

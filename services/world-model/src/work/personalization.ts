@@ -42,8 +42,9 @@ export function deriveProfile(
   artifacts: readonly WorkArtifact[],
   stored: StoredPersonalization,
   now: Date,
+  lookbackDays = 28,
 ): PersonalizationProfile {
-  const since = now.getTime() - 28 * 86_400_000;
+  const since = now.getTime() - lookbackDays * 86_400_000;
   const events = artifacts.filter(
     (a) =>
       (a.kind === 'calendar_event' || a.kind === 'meeting') && Date.parse(a.occurred_at) >= since,
@@ -57,7 +58,7 @@ export function deriveProfile(
     const endH = e.ends_at ? wallClock(new Date(e.ends_at)).getUTCHours() : d.getUTCHours() + 1;
     for (let h = d.getUTCHours(); h < Math.max(endH, d.getUTCHours() + 1); h += 1) busyHours.add(h);
   }
-  const weeks = 4;
+  const weeks = lookbackDays / 7;
   const heavy = [...perDay.entries()]
     .filter(([, n]) => n / weeks >= 2)
     .map(([d]) => d)

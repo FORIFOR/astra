@@ -1,0 +1,38 @@
+[
+  {
+    "bytes" : 249518,
+    "height" : 680,
+    "name" : "analysing-light",
+    "width" : 800
+  },
+  {
+    "bytes" : 154812,
+    "height" : 680,
+    "name" : "ready-light",
+    "width" : 800
+  },
+  {
+    "bytes" : 180727,
+    "height" : 680,
+    "name" : "editing-light",
+    "width" : 800
+  },
+  {
+    "bytes" : 249374,
+    "height" : 680,
+    "name" : "analysing-dark",
+    "width" : 800
+  },
+  {
+    "bytes" : 154441,
+    "height" : 680,
+    "name" : "ready-dark",
+    "width" : 800
+  },
+  {
+    "bytes" : 181022,
+    "height" : 680,
+    "name" : "editing-dark",
+    "width" : 800
+  }
+]

@@ -523,3 +523,37 @@ export const MeetingBrief = z.object({
   generated_at: Timestamp,
 });
 export type MeetingBrief = z.infer<typeof MeetingBrief>;
+
+// One-time registration profile. Progress is reported by the reading worker,
+// and the confirmed snapshot is immutable except for explicit user edits.
+export const InitialProfileSource = z.enum([
+  'gmail',
+  'google_calendar',
+  'outlook_mail',
+  'outlook_calendar',
+]);
+export const InitialProfileOutcome = z.object({
+  source: InitialProfileSource,
+  status: z.enum(['reading', 'synced', 'not_connected', 'not_granted', 'failed']),
+  artifacts: z.number().int().min(0).max(5000),
+});
+export const InitialProfileSections = z.object({
+  focus: z.array(z.string().trim().min(1).max(200)).max(5),
+  people: z.array(z.string().trim().min(1).max(200)).max(12),
+  priorities: z.array(z.string().trim().min(1).max(200)).max(5),
+  work_pattern: z.array(z.string().trim().min(1).max(200)).max(3),
+  open_items: z.number().int().min(0).max(5000),
+});
+export const InitialProfile = z.object({
+  id: z.uuid(),
+  provider: z.enum(['google', 'microsoft']),
+  status: z.enum(['queued', 'analysing', 'ready', 'confirmed', 'failed']),
+  started_at: Timestamp,
+  updated_at: Timestamp,
+  outcomes: z.array(InitialProfileOutcome).max(4),
+  sections: InitialProfileSections.nullable(),
+  profile: PersonalizationProfile.nullable(),
+});
+export type InitialProfile = z.infer<typeof InitialProfile>;
+export type InitialProfileOutcome = z.infer<typeof InitialProfileOutcome>;
+export type InitialProfileSections = z.infer<typeof InitialProfileSections>;

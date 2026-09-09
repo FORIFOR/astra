@@ -825,3 +825,29 @@ pub fn api_task_approve(
 pub fn api_task_json(base_url: String, access_token: String, task_id: String) -> Result<String, ApiError> {
     get_json(&base_url, &access_token, &format!("/v1/tasks/{}", path_segment(&task_id)))
 }
+
+/// One-time initial profile; only the four user-facing operations are exposed.
+#[uniffi::export]
+pub fn api_initial_profile(
+    base_url: String,
+    access_token: String,
+    operation: String,
+    body_json: String,
+) -> Result<String, ApiError> {
+    let path = "/v1/work/initial-profile";
+    if operation == "get" { return get_json(&base_url, &access_token, path); }
+    let (method, suffix) = match operation.as_str() {
+        "begin" => ("POST", ""),
+        "confirm" => ("PUT", ""),
+        "retry" => ("POST", "/retry"),
+        _ => return Err(ApiError::Decode { message: "unsupported initial profile operation".into() }),
+    };
+    let body: serde_json::Value = serde_json::from_str(&body_json)
+        .map_err(|e| ApiError::Decode { message: e.to_string() })?;
+    let response = ureq::request(method, &format!("{}{}{}", base(&base_url), path, suffix))
+        .timeout(std::time::Duration::from_secs(20))
+        .set("Authorization", &format!("Bearer {access_token}"))
+        .send_json(body).map_err(map_transport)?;
+    if response.status() == 204 { return Ok("{}".into()); }
+    response.into_string().map_err(|e| ApiError::Decode { message: e.to_string() })
+}

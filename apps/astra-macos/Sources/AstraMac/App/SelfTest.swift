@@ -68,6 +68,7 @@ enum SelfTest {
         case "guidedshots": guidedShots(args); return true
         case "screenshotshots": screenshotShots(args); return true
         case "screenshotshot": screenshotShot(args); return true
+        case "initialprofile": Task { @MainActor in await initialProfileShots(args) }; return true
         case "workcontext": workContextGate(); return true
         case "replyflow": replyFlowGate(); return true
         case "brief": briefGate(); return true

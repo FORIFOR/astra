@@ -39,6 +39,7 @@ struct HomeView: View {
     @ObservedObject private var store = AstraStateStore.shared
     @ObservedObject private var sessions = MeetingSessionStore.shared
     @ObservedObject private var sheetOpener = NewRecordingSheetOpener.shared
+    @ObservedObject private var initialProfile = InitialProfileStore.shared
     @ObservedObject private var work = WorkContextStore.shared
     @FocusState private var intentFocused: Bool
 
@@ -52,7 +53,7 @@ struct HomeView: View {
 
     var body: some View {
         ZStack {
-            homeBody
+            if initialProfile.visible { InitialProfileView() } else { homeBody }
             // §4 New Recording は Home に**重ねて**出す。window を増やさない。
             if sheetOpener.isOpen {
                 Color.black.opacity(0.24)

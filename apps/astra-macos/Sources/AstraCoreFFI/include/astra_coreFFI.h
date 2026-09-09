@@ -326,6 +326,11 @@ RustBuffer uniffi_astra_core_fn_func_api_dev_sign_in(RustBuffer base_url, RustBu
 RustBuffer uniffi_astra_core_fn_func_api_finish_meeting(RustBuffer base_url, RustBuffer access_token, RustBuffer meeting_id, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_INITIAL_PROFILE
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_INITIAL_PROFILE
+RustBuffer uniffi_astra_core_fn_func_api_initial_profile(RustBuffer base_url, RustBuffer access_token, RustBuffer operation, RustBuffer body_json, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_LIBRARY
 #define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_API_LIBRARY
 RustBuffer uniffi_astra_core_fn_func_api_library(RustBuffer base_url, RustBuffer access_token, RustCallStatus *_Nonnull out_status
@@ -824,6 +829,12 @@ uint16_t uniffi_astra_core_checksum_func_api_dev_sign_in(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_FINISH_MEETING
 #define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_FINISH_MEETING
 uint16_t uniffi_astra_core_checksum_func_api_finish_meeting(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_INITIAL_PROFILE
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_API_INITIAL_PROFILE
+uint16_t uniffi_astra_core_checksum_func_api_initial_profile(void
     
 );
 #endif

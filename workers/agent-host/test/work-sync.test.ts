@@ -18,7 +18,7 @@ import type {
 } from '@astra/contracts';
 import type { SecretStore } from '@astra/oauth';
 import { ConnectorRuntime, type HostStep, type StepOutcome } from '../src/connector-steps.js';
-import { WorkSyncLoop, semanticFrom } from '../src/work-sync.js';
+import { WorkSyncLoop, semanticFrom, type WorkSyncDeps } from '../src/work-sync.js';
 
 const NOW = new Date('2026-09-07T06:00:00.000Z');
 
@@ -84,6 +84,16 @@ function harness(
     backoffMs?: number;
     googleQuery?: string;
     microsoftQuery?: string;
+    initial?: Pick<
+      WorkSyncDeps,
+      | 'sources'
+      | 'lookbackDays'
+      | 'calendarLookbackDays'
+      | 'lookaheadDays'
+      | 'metadataOnly'
+      | 'onSourceStart'
+      | 'onOutcome'
+    >;
   } = {},
 ): Harness {
   const urls: string[] = [];
@@ -125,6 +135,7 @@ function harness(
     : undefined;
   const loop = new WorkSyncLoop({
     connectors: runtime,
+    ...options.initial,
     ...(options.googleQuery ? { googleQuery: options.googleQuery } : {}),
     ...(options.microsoftQuery ? { microsoftQuery: options.microsoftQuery } : {}),
     ...(options.backoffMs === undefined ? {} : { backoffMs: options.backoffMs }),
@@ -579,5 +590,56 @@ describe('syncing work context from the device', () => {
     // cloud が受け取っていないものを「読んだ」ことにしない
     expect(refused.loop.cursors.has('gmail')).toBe(false);
     expect(refused.attempts[0]!.attempt.ok).toBe(false);
+  });
+});
+
+describe('one-time profile source limits', () => {
+  it('reads bounded history, strips excerpts and reports actual completed counts', async () => {
+    const progress: string[] = [];
+    const h = harness({
+      connected: ['com.astra.gmail/gmail', 'com.astra.google-calendar/google-calendar'],
+      granted: {
+        'com.astra.gmail': ['email.read'],
+        'com.astra.google-calendar': ['calendar.read'],
+      },
+      initial: {
+        sources: ['gmail', 'google_calendar'],
+        lookbackDays: 45,
+        calendarLookbackDays: 90,
+        lookaheadDays: 45,
+        metadataOnly: true,
+        onSourceStart: async (source) => {
+          progress.push(`start:${source}`);
+        },
+        onOutcome: async (outcome) => {
+          progress.push(`${outcome.source}:${outcome.status}:${outcome.artifacts}`);
+        },
+      },
+    });
+    await h.loop.syncOnce();
+    expect(progress).toEqual([
+      'start:gmail',
+      'gmail:synced:2',
+      'start:google_calendar',
+      'google_calendar:synced:1',
+    ]);
+    expect(
+      h.batches
+        .flatMap((b) => b.artifacts)
+        .every((a) => a.body_excerpt === null && a.provenance.excerpt === null),
+    ).toBe(true);
+    expect(h.urls.some((url) => url.includes('graph.microsoft.com'))).toBe(false);
+    const calendar = new URL(h.urls.find((url) => url.includes('googleapis.com/calendar'))!);
+    expect(calendar.searchParams.get('timeMin')).toBe(
+      new Date(NOW.getTime() - 90 * 86400000).toISOString(),
+    );
+    expect(calendar.searchParams.get('timeMax')).toBe(
+      new Date(NOW.getTime() + 45 * 86400000).toISOString(),
+    );
+    expect(
+      h.urls
+        .filter((url) => url.includes('/messages?'))
+        .every((url) => new URL(url).searchParams.get('maxResults') === '50'),
+    ).toBe(true);
   });
 });

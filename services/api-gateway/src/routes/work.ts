@@ -14,6 +14,8 @@
  */
 import {
   canonicalSha256,
+  InitialProfileOutcome,
+  InitialProfileSections,
   PersonalizationUpdate,
   SendReplyRequest,
   WorkArtifactBatch,
@@ -22,6 +24,7 @@ import {
   WorkSyncAttempt,
   type WorkArtifact,
 } from '@astra/contracts';
+import { z } from 'zod';
 import type { TaskService } from '@astra/service-task';
 import type { MeetingService } from '@astra/service-meeting';
 import type { WorkContextService } from '@astra/service-world-model';
@@ -112,6 +115,62 @@ export async function localArtifacts(
 }
 
 export function registerWorkRoutes(app: App, deps: WorkRouteDeps): void {
+  app.get('/v1/work/initial-profile', async () => {
+    const p = requirePrincipal();
+    return { profile: await deps.work.initialProfile.get(p.tenantId, p.userId) };
+  });
+  app.post('/v1/work/initial-profile', async (request) => {
+    const p = requirePrincipal();
+    const body = z.object({ provider: z.enum(['google', 'microsoft']) }).parse(request.body);
+    return { profile: await deps.work.initialProfile.begin(p.tenantId, p.userId, body.provider) };
+  });
+  app.post('/v1/work/initial-profile/claim', async () => {
+    const p = requirePrincipal();
+    return { job: await deps.work.initialProfile.claim(p.tenantId, p.userId) };
+  });
+  app.post('/v1/work/initial-profile/progress', async (request, reply) => {
+    const p = requirePrincipal();
+    const body = z
+      .object({
+        lease: z.uuid(),
+        outcome: InitialProfileOutcome,
+        artifact_ids: z.array(z.string().max(512)).max(5000).default([]),
+      })
+      .parse(request.body);
+    const ok = await deps.work.initialProfile.progress(
+      p.tenantId,
+      p.userId,
+      body.lease,
+      body.outcome,
+      body.artifact_ids,
+    );
+    return reply.status(ok ? 204 : 409).send();
+  });
+  app.post('/v1/work/initial-profile/finish', async (request, reply) => {
+    const p = requirePrincipal();
+    const body = z
+      .object({ lease: z.uuid(), artifact_ids: z.array(z.string().max(512)).max(5000) })
+      .parse(request.body);
+    const ok = await deps.work.initialProfile.finish(
+      p.tenantId,
+      p.userId,
+      body.lease,
+      body.artifact_ids,
+    );
+    return reply.status(ok ? 204 : 409).send();
+  });
+  app.post('/v1/work/initial-profile/retry', async (_request, reply) => {
+    const p = requirePrincipal();
+    await deps.work.initialProfile.retry(p.tenantId, p.userId);
+    return reply.status(204).send();
+  });
+  app.put('/v1/work/initial-profile', async (request, reply) => {
+    const p = requirePrincipal();
+    const sections = InitialProfileSections.parse(request.body);
+    const ok = await deps.work.initialProfile.confirm(p.tenantId, p.userId, sections);
+    return reply.status(ok ? 204 : 409).send();
+  });
+
   app.get('/v1/work/context', async () => {
     const p = requirePrincipal();
     return deps.work.context(p.tenantId, p.userId, await localArtifacts(deps, p.tenantId));

@@ -5,6 +5,7 @@
  *
  * **Dock とは別プロセス。**Dock を閉じても、これは動き続ける。
  */
+import { runInitialProfile } from './initial-profile.js';
 import { createLogger } from '@astra/telemetry';
 import { credentialRef, connectorProviderConfig, type OauthProvider } from '@astra/oauth';
 import { LocalAgentHost } from './host.js';
@@ -220,6 +221,17 @@ async function main(): Promise<void> {
     onError: (source, error) =>
       logger.warn({ source, err: error.message }, 'work context sync failed for a source'),
   });
+  let initialBusy = false;
+  const initialTimer = setInterval(() => {
+    if (initialBusy || process.env['ASTRA_WORK_SYNC'] === 'off') return;
+    initialBusy = true;
+    void runInitialProfile({ cloud, connectors: runtime, refreshGrants })
+      .catch(() => logger.warn('initial profile could not finish; the lease will allow recovery'))
+      .finally(() => {
+        initialBusy = false;
+      });
+  }, 4_000);
+  initialTimer.unref?.();
   if (process.env['ASTRA_WORK_SYNC'] !== 'off') {
     const minutes = Number(process.env['ASTRA_WORK_SYNC_INTERVAL_MIN']);
     const interval =
@@ -231,6 +243,7 @@ async function main(): Promise<void> {
 
   const shutdown = (signal: string): void => {
     logger.info({ signal }, 'shutting down the local agent host');
+    clearInterval(initialTimer);
     workSync.stop();
     void host.stop().finally(() => process.exit(0));
   };

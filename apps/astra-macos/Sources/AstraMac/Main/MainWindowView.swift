@@ -76,7 +76,12 @@ final class MainData: ObservableObject {
         guard AstraCoreBridge.reachable(base) else { return }
         Task.detached { [base] in
             do {
-                let tokens = try AstraCoreBridge.devSignIn(base, email: "main-\(getpid())@astra.local", displayName: "Astra")
+                // The development identity must survive relaunches too; a per-process
+                // identity would incorrectly rebuild an initial profile on every launch.
+                let key = "astra.dev.identity.\(base)"
+                let identity = UserDefaults.standard.string(forKey: key) ?? UUID().uuidString.lowercased()
+                UserDefaults.standard.set(identity, forKey: key)
+                let tokens = try AstraCoreBridge.devSignIn(base, email: "main-\(identity)@astra.local", displayName: "Astra")
                 let apps = (try? AstraCoreBridge.pluginCatalog(base, accessToken: tokens.accessToken)) ?? []
                 let library = (try? AstraCoreBridge.library(base, accessToken: tokens.accessToken)) ?? []
                 await MainActor.run {
@@ -84,6 +89,7 @@ final class MainData: ObservableObject {
                     // サインインを AI 操作/翻訳/声の依頼に渡す。どれも人が押してから文面を送る。
                     RecordingWorkspaceState.shared.configureBackend(base: base, token: tokens.accessToken)
                     VoiceHUDState.shared.configureBackend(base: base, token: tokens.accessToken)
+                    InitialProfileStore.shared.configureBackend(base: base, token: tokens.accessToken)
                     WorkContextStore.shared.configureBackend(base: base, token: tokens.accessToken)
                     WorkContextStore.shared.load()
                     ConnectorState.shared.configureBackend(base: base, token: tokens.accessToken)

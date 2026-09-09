@@ -468,6 +468,21 @@ ALTER TABLE ONLY public.host_step_requests FORCE ROW LEVEL SECURITY;
 
 
 --
+-- Name: initial_profiles; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.initial_profiles (
+    tenant_id uuid NOT NULL,
+    user_id uuid NOT NULL,
+    payload jsonb NOT NULL,
+    lease_id uuid,
+    lease_until timestamp with time zone
+);
+
+ALTER TABLE ONLY public.initial_profiles FORCE ROW LEVEL SECURITY;
+
+
+--
 -- Name: job_checkpoints; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1270,6 +1285,14 @@ ALTER TABLE ONLY public.evidence
 
 ALTER TABLE ONLY public.host_step_requests
     ADD CONSTRAINT host_step_requests_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: initial_profiles initial_profiles_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.initial_profiles
+    ADD CONSTRAINT initial_profiles_pkey PRIMARY KEY (tenant_id, user_id);
 
 
 --
@@ -2469,6 +2492,22 @@ ALTER TABLE ONLY public.host_step_requests
 
 
 --
+-- Name: initial_profiles initial_profiles_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.initial_profiles
+    ADD CONSTRAINT initial_profiles_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+
+--
+-- Name: initial_profiles initial_profiles_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.initial_profiles
+    ADD CONSTRAINT initial_profiles_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
 -- Name: job_checkpoints job_checkpoints_task_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3255,6 +3294,19 @@ CREATE POLICY host_step_requests_tenant_isolation ON public.host_step_requests U
 
 
 --
+-- Name: initial_profiles; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.initial_profiles ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: initial_profiles initial_profiles_tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY initial_profiles_tenant_isolation ON public.initial_profiles USING ((tenant_id = public.astra_current_tenant())) WITH CHECK ((tenant_id = public.astra_current_tenant()));
+
+
+--
 -- Name: job_checkpoints; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -3644,3 +3696,4 @@ INSERT INTO schema_migrations (version) VALUES ('20260827120000');
 INSERT INTO schema_migrations (version) VALUES ('20260827150000');
 INSERT INTO schema_migrations (version) VALUES ('20260907090000');
 INSERT INTO schema_migrations (version) VALUES ('20260907170000');
+INSERT INTO schema_migrations (version) VALUES ('20260909120000');

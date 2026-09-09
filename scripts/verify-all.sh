@@ -17,6 +17,16 @@ if [[ "$(uname -s)" == Darwin ]]; then
     echo "VERIFY_ALL_FAIL: current macOS candidate could not be built"
     exit 1
   fi
+  # Recording automation requires a signed .app launched through LaunchServices.
+  # Unless a caller explicitly selects a candidate, package this source instead
+  # of silently picking an older distribution from dist/.
+  if [[ -z "${ASTRA_RECORD_BIN:-}" ]]; then
+    if ! bash "$ROOT/scripts/package-macos-app.sh"; then
+      echo "VERIFY_ALL_FAIL: current signed macOS candidate could not be packaged"
+      exit 1
+    fi
+    export ASTRA_RECORD_BIN="$ROOT/apps/astra-macos/.build/Astra.app/Contents/MacOS/AstraMac"
+  fi
 fi
 
 # `cmd | grep ...` は grep の終了状態になるので、**テストが落ちても緑**になっていた。
@@ -50,6 +60,7 @@ run "C# bridge -> core + gateway" bash scripts/verify-csharp-bridge.sh
 run "Windows C# logic type-check" bash scripts/verify-csharp-logic.sh
 run "C ABI round-trip (C)"        bash scripts/verify-c-abi.sh
 run "macOS recording + live E2E"  bash scripts/verify-macos-recording.sh
+run "initial profile native UI"  "$ROOT/apps/astra-macos/.build/debug/AstraMac" --selftest initialprofile /tmp/astra-initial-profile-verify
 # 録音セッションの通し。**プロセスを跨いで** kill → 復元まで確かめる。
 # CI が緑でもここが通らなければ未達、という位置づけのゲート。
 run "recording experience E2E"    bash scripts/verify-recording-experience.sh
