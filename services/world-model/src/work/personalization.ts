@@ -10,6 +10,7 @@ import type {
   PersonalizationUpdate,
   WorkArtifact,
 } from '@astra/contracts';
+import { wallClock } from './business-time.js';
 import { clusterProjects, personKey } from './graph.js';
 
 const WEEKDAY_JA = ['日', '月', '火', '水', '木', '金', '土'];
@@ -51,10 +52,10 @@ export function deriveProfile(
   const perDay = new Map<number, number>();
   const busyHours = new Set<number>();
   for (const e of events) {
-    const d = new Date(e.occurred_at);
-    perDay.set(d.getDay(), (perDay.get(d.getDay()) ?? 0) + 1);
-    const endH = e.ends_at ? new Date(e.ends_at).getHours() : d.getHours() + 1;
-    for (let h = d.getHours(); h < Math.max(endH, d.getHours() + 1); h += 1) busyHours.add(h);
+    const d = wallClock(new Date(e.occurred_at));
+    perDay.set(d.getUTCDay(), (perDay.get(d.getUTCDay()) ?? 0) + 1);
+    const endH = e.ends_at ? wallClock(new Date(e.ends_at)).getUTCHours() : d.getUTCHours() + 1;
+    for (let h = d.getUTCHours(); h < Math.max(endH, d.getUTCHours() + 1); h += 1) busyHours.add(h);
   }
   const weeks = 4;
   const heavy = [...perDay.entries()]

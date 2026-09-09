@@ -19,6 +19,7 @@ import {
   type WorkSource,
 } from '@astra/contracts';
 import { pressure, type PressureInput } from './pressure.js';
+import { wallClock, instant } from './business-time.js';
 import { ruleSemantic } from './semantic.js';
 
 const HOUR_MS = 3_600_000;
@@ -290,12 +291,12 @@ export function waitingItems(
 }
 
 function isToday(iso: string, now: Date): boolean {
-  const d = new Date(iso),
-    n = now;
+  const d = wallClock(new Date(iso)),
+    n = wallClock(now);
   return (
-    d.getFullYear() === n.getFullYear() &&
-    d.getMonth() === n.getMonth() &&
-    d.getDate() === n.getDate()
+    d.getUTCFullYear() === n.getUTCFullYear() &&
+    d.getUTCMonth() === n.getUTCMonth() &&
+    d.getUTCDate() === n.getUTCDate()
   );
 }
 
@@ -311,23 +312,24 @@ export function weekLoad(
   waiting: readonly WaitingItem[],
   now: Date,
 ): WeekLoad {
-  const start = new Date(now);
-  start.setHours(0, 0, 0, 0);
-  const day = start.getDay();
-  start.setDate(start.getDate() - ((day + 6) % 7)); // 月曜始まり
-  const end = new Date(start.getTime() + 7 * DAY_MS);
+  const start = wallClock(now);
+  start.setUTCHours(0, 0, 0, 0);
+  const day = start.getUTCDay();
+  start.setUTCDate(start.getUTCDate() - ((day + 6) % 7)); // 月曜始まり
+  const startAt = Date.parse(instant(start)!);
+  const endAt = Date.parse(instant(new Date(start.getTime() + 7 * DAY_MS))!);
   let hours = 0,
     deadlines = 0;
   for (const a of artifacts) {
     if ((a.kind === 'calendar_event' || a.kind === 'meeting') && a.ends_at) {
       const s = Date.parse(a.occurred_at),
         e = Date.parse(a.ends_at);
-      if (s >= start.getTime() && s < end.getTime() && e > s) hours += (e - s) / HOUR_MS;
+      if (s >= startAt && s < endAt && e > s) hours += (e - s) / HOUR_MS;
     }
     const due = a.semantic?.due ?? a.due_at;
     if (due && a.completed !== true) {
       const t = Date.parse(due);
-      if (t >= now.getTime() - DAY_MS && t < end.getTime()) deadlines += 1;
+      if (t >= now.getTime() - DAY_MS && t < endAt) deadlines += 1;
     }
   }
   return {
@@ -453,7 +455,9 @@ export function buildWorkContext(input: BuildInput): WorkContext {
     if (blockedBy) lines.push(`${blockedBy} からの返信待ち`);
     if (clusterOwed.length) lines.push(`${clusterOwed[0]!.to} に未返信`);
     if (meetings.length)
-      lines.push(`今日 ${new Date(meetings[0]!.occurred_at).toTimeString().slice(0, 5)} 会議`);
+      lines.push(
+        `今日 ${wallClock(new Date(meetings[0]!.occurred_at)).toISOString().slice(11, 16)} 会議`,
+      );
     const counts: Record<string, number> = {};
     for (const a of c.artifacts) counts[a.source] = (counts[a.source] ?? 0) + 1;
     const dueIso =
