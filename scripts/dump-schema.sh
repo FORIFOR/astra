@@ -67,8 +67,10 @@ fi
 # 実行のたびに変わる行を落とす。残すと生成物の鮮度検査が毎回落ちる。
 #   \restrict / \unrestrict … pg_dump 16 以降が付ける乱数トークン
 #   Dumped from / Dumped by   … サーバと pg_dump の版（環境で変わる）
+#   transaction_timeout = 0  … pg_dump 17+ の復元用設定。16 のサーバには存在しない。
 normalize() {
-  grep -v -E '^\\(un)?restrict ' | grep -v -E '^-- Dumped (from|by) '
+  grep -v -E '^\\(un)?restrict ' | grep -v -E '^-- Dumped (from|by) ' \
+    | grep -v -E '^SET transaction_timeout = 0;$'
 }
 
 {
