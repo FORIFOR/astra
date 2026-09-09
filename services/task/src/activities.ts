@@ -305,10 +305,14 @@ export function createTaskActivities(deps: ActivityDeps): TaskActivities {
       return inTenant(input, async (tx) => {
         const existing = await tx
           .selectFrom('approvals')
-          .select(['id'])
+          .select(['id', 'status'])
           .where('task_id', '=', input.taskId)
           .where('step_index', '=', step.index)
           .executeTakeFirst();
+        // 承認後にタスクを再開したとき、同じ step で再び確認を要求しない。
+        // 以前は status を見ずに既存IDを返していたため、再開直後に
+        // 「この操作には確認が必要です」で止まり、承認が実行へ進まなかった。
+        if (existing?.status === 'APPROVED') return null;
         if (existing) return { approvalId: existing.id };
 
         const approvalId = uuidv7();
