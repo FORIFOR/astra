@@ -9,7 +9,8 @@ describe('HTTP/local LLM adapter', () => {
       const body = JSON.parse(String(init?.body)) as { model: string; messages: { content: string }[] };
       expect(body.model).toBe('local-model');
       expect(JSON.stringify(body)).not.toContain('secret');
-      return new Response(JSON.stringify({ choices: [{ message: { content: 'ok' } }] }), { status: 200 });
+      expect(body).toMatchObject({ response_format: { type: 'json_object' } });
+      return new Response(JSON.stringify({ choices: [{ message: { content: '{"answer":"ok"}' } }] }), { status: 200 });
     });
     const client = new HttpLlmClient({
       kind: 'openai_api',
@@ -19,6 +20,6 @@ describe('HTTP/local LLM adapter', () => {
       fetch,
     });
     await expect(client.probe()).resolves.toMatchObject({ available: true });
-    await expect(client.ask('hello')).resolves.toBe('ok');
+    await expect(client.ask('hello')).resolves.toEqual({ answer: 'ok' });
   });
 });

@@ -37,12 +37,26 @@ export class HttpLlmClient {
     const response = await this.#fetch(`${this.#config.endpoint.replace(/\/$/, '')}/chat/completions`, {
       method: 'POST',
       headers: { ...this.#headers(), 'content-type': 'application/json' },
-      body: JSON.stringify({ model: this.#config.model, messages: [{ role: 'user', content: prompt }] }),
+      body: JSON.stringify({
+        model: this.#config.model,
+        messages: [{ role: 'user', content: prompt }],
+        // Astraの各LLM stepはJSON schemaをプロンプトで契約している。
+        // Ollama等はこの指定で引用符の崩れを減らせる。
+        response_format: { type: 'json_object' },
+      }),
       signal: AbortSignal.timeout(this.#config.timeoutMs ?? 120_000),
     });
     if (!response.ok) throw new Error(`${this.#config.kind} request failed (${response.status})`);
     const body = (await response.json()) as { choices?: readonly { message?: { content?: unknown } }[] };
-    return body.choices?.[0]?.message?.content ?? '';
+    const content = body.choices?.[0]?.message?.content;
+    if (typeof content !== 'string') return '';
+    try {
+      return JSON.parse(content) as unknown;
+    } catch {
+      // JSONを強制しない互換サーバーもある。上位層が形を検証できるよう、
+      // 生文字列を返し、空の成功には変換しない。
+      return content;
+    }
   }
 
   #headers(): Record<string, string> {

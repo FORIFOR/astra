@@ -27,7 +27,8 @@ export ASTRA_LLM_CLI="${ASTRA_LLM_CLI:-claude_code}"
 case "$ASTRA_LLM_CLI" in
   codex) LLM_COMMAND="${ASTRA_CODEX_PATH:-codex}" ;;
   claude_code) LLM_COMMAND="${ASTRA_CLAUDE_CODE_PATH:-claude}" ;;
-  *) echo 'FAIL: ASTRA_LLM_CLI must be codex or claude_code'; exit 1 ;;
+  api|local) LLM_COMMAND="" ;;
+  *) echo 'FAIL: ASTRA_LLM_CLI must be codex, claude_code, api, local, or none'; exit 1 ;;
 esac
 
 PROVIDER="${ASTRA_LIVE_PROVIDER:-google}"
@@ -67,7 +68,13 @@ for grant in READ WRITE; do
 done
 pg_isready -h "$PGHOST" -p "$PGPORT" >/dev/null 2>&1 && have+=("postgres:$PGPORT") || missing+=("postgres at $PGHOST:$PGPORT (pnpm dev:infra)")
 command -v dbmate >/dev/null 2>&1 && have+=("dbmate") || missing+=("dbmate")
-command -v "$LLM_COMMAND" >/dev/null 2>&1 && have+=("$ASTRA_LLM_CLI cli") || missing+=("$LLM_COMMAND on PATH (device LLM for the draft)")
+if [ -n "$LLM_COMMAND" ]; then
+  command -v "$LLM_COMMAND" >/dev/null 2>&1 && have+=("$ASTRA_LLM_CLI cli") || missing+=("$LLM_COMMAND on PATH (device LLM for the draft)")
+elif [ "$ASTRA_LLM_CLI" = local ]; then
+  curl -fsS --max-time 3 "${ASTRA_LOCAL_LLM_URL:-http://127.0.0.1:11434/v1}/models" >/dev/null 2>&1 && have+=("local LLM endpoint") || missing+=("local LLM endpoint (ASTRA_LOCAL_LLM_URL)")
+elif [ "$ASTRA_LLM_CLI" = api ]; then
+  [[ -n "${ASTRA_OPENAI_API_URL:-}${ASTRA_GEMINI_API_URL:-}${ASTRA_ANTHROPIC_API_URL:-}" ]] && have+=("API LLM endpoint") || missing+=("API LLM endpoint")
+fi
 echo "$NAME have=[${have[*]:-}]"
 if [[ ${#missing[@]} -gt 0 ]]; then
   printf '%s=AUTOMATION_MISSING %s\n' "$NAME" "$(IFS=';'; echo "${missing[*]}")"
