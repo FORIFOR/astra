@@ -4,6 +4,7 @@
  * 観測（observed）→ 推測（inferred）→ 本人が確認（confirmed）の 3 段。推測を事実として固定しない。
  * 本人が「この推測を使わない」と言えば enabled=false で、以後の注入に出ない。全体の停止も 1 操作。
  */
+import { createHash } from 'node:crypto';
 import type {
   PersonalizationProfile,
   PersonalizationTrait,
@@ -173,7 +174,23 @@ function trait(
   status: PersonalizationTrait['status'],
   arts: readonly WorkArtifact[],
 ): PersonalizationTrait {
-  return { key, label, value, status, enabled: true, sources: arts.map((a) => a.provenance) };
+  // Mail addresses and inferred project names can exceed the editable trait key limit.
+  // Hash only long keys so existing short-key overrides remain valid; truncation would collide.
+  const stableKey =
+    key.length <= 100 ? key : `sha256.${createHash('sha256').update(key).digest('hex')}`;
+  let boundedLabel = '';
+  for (const character of label) {
+    if (boundedLabel.length + character.length > 200) break;
+    boundedLabel += character;
+  }
+  return {
+    key: stableKey,
+    label: boundedLabel,
+    value,
+    status,
+    enabled: true,
+    sources: arts.map((a) => a.provenance),
+  };
 }
 
 /** 本人の更新を stored に畳む（1 操作）。 */

@@ -1,5 +1,10 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { InitialProfileSections, uuidv7, type WorkArtifact } from '@astra/contracts';
+import {
+  PersonalizationProfile,
+  InitialProfileSections,
+  uuidv7,
+  type WorkArtifact,
+} from '@astra/contracts';
 import { createDb, withIdentity, type DbHandle } from '@astra/db';
 import { WorkContextService } from '../src/work/service.js';
 import { initialSnapshot } from '../src/work/initial-profile.js';
@@ -36,6 +41,24 @@ const artifact = (id: string): WorkArtifact => ({
 });
 
 describe('initial profile summary', () => {
+  it('bounds long entity keys without merging distinct contacts', () => {
+    const longMail = (suffix: string) => ({
+      ...artifact(suffix),
+      people: [
+        {
+          name: 'Colleague',
+          email: `${'a'.repeat(90)}${suffix}@example.invalid`,
+          role: 'from' as const,
+        },
+      ],
+    });
+    const snapshot = initialSnapshot([longMail('1'), longMail('2')], NOW);
+    const profile = PersonalizationProfile.parse(snapshot.profile);
+    const keys = profile.frequent_entities.map((item) => item.key);
+    expect(new Set(keys).size).toBe(keys.length);
+    expect(keys.every((key) => key.length <= 100)).toBe(true);
+    expect(initialSnapshot([longMail('1'), longMail('2')], NOW).profile).toEqual(profile);
+  });
   it('does not invent facts for empty data', () => {
     expect(initialSnapshot([], NOW).sections).toEqual({
       focus: [],

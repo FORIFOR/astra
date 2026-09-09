@@ -5,6 +5,7 @@
  *
  * **Dock とは別プロセス。**Dock を閉じても、これは動き続ける。
  */
+import { cloudClient } from './cloud.js';
 import { runInitialProfile } from './initial-profile.js';
 import { createLogger } from '@astra/telemetry';
 import { credentialRef, connectorProviderConfig, type OauthProvider } from '@astra/oauth';
@@ -191,15 +192,7 @@ async function main(): Promise<void> {
    * 繋いであるサービスだけを読み、**抜粋にして**cloud へ渡す。
    * 意味づけは端末の LLM。`ASTRA_WORK_SYNC=off` で止められる。
    */
-  const cloud = async (path: string, method: string, body?: unknown): Promise<unknown> => {
-    const response = await fetch(`${baseUrl}${path}`, {
-      method,
-      headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
-      ...(body === undefined ? {} : { body: JSON.stringify(body) }),
-    });
-    if (!response.ok) throw new Error(`${method} ${path} failed with ${String(response.status)}`);
-    return response.status === 204 ? null : ((await response.json()) as unknown);
-  };
+  const cloud = cloudClient(baseUrl, token);
   const workSync = new WorkSyncLoop({
     connectors: runtime,
     llm,
