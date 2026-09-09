@@ -2,7 +2,9 @@
 
 ## Current checkpoint
 
-Release is NO_GO. Shared progress and remaining gates: https://github.com/FORIFOR/astra/issues/1.
+Release is NO_GO. A meeting-start recording reminder has now been added after the verified 70750b6 candidate: macOS notifications for Zoom, Teams and Google Meet, requiring a detected leave-call control and explicit start action. Native tests: 61 passed. Three-provider real-call notification verification and a distribution rebuild for this addition remain pending; 70750b6 artifact results do not attest it. See `docs/meeting-recording-reminders.md`.
+
+Shared progress and remaining gates: https://github.com/FORIFOR/astra/issues/1.
 
 Google's fifth authorized self-send completed with exact receipt and all five daily answers passing, but the final meeting brief lost previous decision/action/mail facts. The complete normal gate is still FAIL. The earlier response-loss component passed with one accepted send and no retry. All five Google send authorizations are consumed.
 
