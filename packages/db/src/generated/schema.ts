@@ -280,6 +280,7 @@ export interface HostStepRequests {
 }
 
 export interface InitialProfiles {
+  artifact_snapshot: Generated<Json>;
   lease_id: string | null;
   lease_until: Timestamp | null;
   payload: Json;

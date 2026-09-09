@@ -476,7 +476,8 @@ CREATE TABLE public.initial_profiles (
     user_id uuid NOT NULL,
     payload jsonb NOT NULL,
     lease_id uuid,
-    lease_until timestamp with time zone
+    lease_until timestamp with time zone,
+    artifact_snapshot jsonb DEFAULT '[]'::jsonb NOT NULL
 );
 
 ALTER TABLE ONLY public.initial_profiles FORCE ROW LEVEL SECURITY;
@@ -3697,3 +3698,4 @@ INSERT INTO schema_migrations (version) VALUES ('20260827150000');
 INSERT INTO schema_migrations (version) VALUES ('20260907090000');
 INSERT INTO schema_migrations (version) VALUES ('20260907170000');
 INSERT INTO schema_migrations (version) VALUES ('20260909120000');
+INSERT INTO schema_migrations (version) VALUES ('20260910003000');

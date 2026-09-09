@@ -5,6 +5,7 @@ import {
   type InitialProfileOutcome,
   type InitialProfileSections,
   WorkArtifact,
+  type WorkArtifactBatch,
   uuidv7,
   type PersonalizationProfile,
 } from '@astra/contracts';
@@ -93,7 +94,8 @@ export class InitialProfileService {
     return withTenant(this.db, tenant, async (tx) => {
       const r = await sql<{
         payload: unknown;
-      }>`SELECT payload FROM initial_profiles WHERE user_id=${user}`.execute(tx);
+        artifact_snapshot: unknown[];
+      }>`SELECT payload, artifact_snapshot FROM initial_profiles WHERE user_id=${user}`.execute(tx);
       return r.rows[0] ? InitialProfile.parse(r.rows[0].payload) : null;
     });
   }
@@ -131,11 +133,59 @@ export class InitialProfileService {
     const lease = uuidv7();
     return withTenant(this.db, tenant, async (tx) => {
       const r = await sql<{ payload: unknown }>`UPDATE initial_profiles
-        SET lease_id=${lease}, lease_until=${new Date(now.getTime() + 5 * 60_000)},
-          payload=jsonb_set(payload,'{status}','"analysing"'::jsonb)
+        SET artifact_snapshot='[]'::jsonb, lease_id=${lease}, lease_until=${new Date(now.getTime() + 5 * 60_000)},
+          payload=payload || '{"status":"analysing","outcomes":[],"sections":null,"profile":null}'::jsonb
         WHERE user_id=${user} AND (payload->>'status'='queued' OR
           (payload->>'status'='analysing' AND lease_until < ${now})) RETURNING payload`.execute(tx);
       return r.rows[0] ? { lease, profile: InitialProfile.parse(r.rows[0].payload) } : null;
+    });
+  }
+
+  /** Initial reads never mutate normal work artifacts or their synchronization cursor. */
+  async ingest(
+    tenant: string,
+    user: string,
+    lease: string,
+    batch: WorkArtifactBatch,
+  ): Promise<boolean> {
+    return withTenant(this.db, tenant, async (tx) => {
+      const result = await sql<{
+        payload: unknown;
+        artifact_snapshot: unknown[];
+      }>`SELECT payload, artifact_snapshot FROM initial_profiles
+        WHERE user_id=${user} AND lease_id=${lease} AND payload->>'status'='analysing' FOR UPDATE`.execute(
+        tx,
+      );
+      const row = result.rows[0];
+      if (!row) return false;
+      const profile = InitialProfile.parse(row.payload);
+      const allowed =
+        profile.provider === 'google'
+          ? ['gmail', 'google_calendar']
+          : ['outlook_mail', 'outlook_calendar'];
+      if (!allowed.includes(batch.source) || batch.artifacts.some((a) => a.source !== batch.source))
+        return false;
+      const snapshot = new Map(
+        row.artifact_snapshot.map((value) => {
+          const a = WorkArtifact.parse(value);
+          return [a.id, a] as const;
+        }),
+      );
+      for (const value of batch.artifacts) {
+        const a = WorkArtifact.parse(value);
+        snapshot.set(a.id, {
+          ...a,
+          body_excerpt: null,
+          semantic: null,
+          provenance: { ...a.provenance, excerpt: null },
+        });
+      }
+      if (snapshot.size > 5000) return false;
+      await sql`UPDATE initial_profiles SET artifact_snapshot=${JSON.stringify([...snapshot.values()])}::jsonb,
+        lease_until=${new Date(this.now().getTime() + 5 * 60_000)} WHERE user_id=${user}`.execute(
+        tx,
+      );
+      return true;
     });
   }
 
@@ -147,7 +197,10 @@ export class InitialProfileService {
     artifactIds: readonly string[] = [],
   ): Promise<boolean> {
     return withTenant(this.db, tenant, async (tx) => {
-      const r = await sql<{ payload: unknown }>`SELECT payload FROM initial_profiles
+      const r = await sql<{
+        payload: unknown;
+        artifact_snapshot: unknown[];
+      }>`SELECT payload, artifact_snapshot FROM initial_profiles
         WHERE user_id=${user} AND lease_id=${lease} AND payload->>'status'='analysing' FOR UPDATE`.execute(
         tx,
       );
@@ -161,17 +214,12 @@ export class InitialProfileService {
       p.outcomes = [...p.outcomes.filter((o) => o.source !== outcome.source), outcome];
       p.updated_at = this.now().toISOString();
       if (outcome.status === 'synced' && artifactIds.length) {
-        const rows = await sql<{
-          body: unknown;
-        }>`SELECT body FROM work_artifacts WHERE user_id=${user}
-          AND id=ANY(${sql.val(artifactIds)}::text[]) AND observed_at >= ${new Date(p.started_at)}`.execute(
-          tx,
-        );
         const allowed = new Set(
           p.outcomes.filter((o) => o.status === 'synced').map((o) => o.source),
         );
-        const artifacts = rows.rows
-          .map((r) => WorkArtifact.parse(r.body))
+        const artifacts = r.rows[0].artifact_snapshot
+          .map((value) => WorkArtifact.parse(value))
+          .filter((a) => artifactIds.includes(a.id))
           .filter((a) => allowed.has(a.source as InitialProfileOutcome['source']));
         const snapshot = initialSnapshot(artifacts, this.now());
         p.sections = snapshot.sections;
@@ -194,7 +242,8 @@ export class InitialProfileService {
     return withTenant(this.db, tenant, async (tx) => {
       const r = await sql<{
         payload: unknown;
-      }>`SELECT payload FROM initial_profiles WHERE user_id=${user}
+        artifact_snapshot: unknown[];
+      }>`SELECT payload, artifact_snapshot FROM initial_profiles WHERE user_id=${user}
         AND lease_id=${lease} AND payload->>'status'='analysing' FOR UPDATE`.execute(tx);
       if (!r.rows[0]) return false;
       const p = InitialProfile.parse(r.rows[0].payload);
@@ -206,14 +255,10 @@ export class InitialProfileService {
           ? 'ready'
           : 'failed';
       if (p.status === 'ready') {
-        const rows = artifactIds.length
-          ? await sql<{ body: unknown }>`SELECT body FROM work_artifacts
-          WHERE user_id=${user} AND id=ANY(${sql.val(artifactIds)}::text[])
-          AND observed_at >= ${new Date(p.started_at)}`.execute(tx)
-          : { rows: [] };
         const allowed = new Set(successful.map((o) => o.source));
-        const artifacts = rows.rows
-          .map((r) => WorkArtifact.parse(r.body))
+        const artifacts = r.rows[0].artifact_snapshot
+          .map((value) => WorkArtifact.parse(value))
+          .filter((a) => artifactIds.includes(a.id))
           .filter((a) => allowed.has(a.source as InitialProfileOutcome['source']));
         const snapshot = initialSnapshot(artifacts, this.now());
         p.sections = snapshot.sections;
@@ -247,7 +292,7 @@ export class InitialProfileService {
       p.status = 'confirmed';
       p.updated_at = this.now().toISOString();
       // Keep just the five reviewed groups as user-confirmed personalization.
-      // The provenance-bearing original inference remains in work artifacts.
+      // Initial metadata is discarded after the reviewed profile is confirmed.
       p.profile = {
         inference_enabled: true,
         updated_at: p.updated_at,
@@ -270,7 +315,7 @@ export class InitialProfileService {
           sources: [],
         })),
       };
-      await sql`UPDATE initial_profiles SET payload=${JSON.stringify(p)}::jsonb WHERE user_id=${user}`.execute(
+      await sql`UPDATE initial_profiles SET artifact_snapshot='[]'::jsonb, payload=${JSON.stringify(p)}::jsonb WHERE user_id=${user}`.execute(
         tx,
       );
       return true;

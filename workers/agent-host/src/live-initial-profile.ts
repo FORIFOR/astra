@@ -48,8 +48,8 @@ async function main(): Promise<void> {
     let reads = 0;
     const cloud = async (path: string, method: string, body?: unknown): Promise<unknown> => {
       phase = `${method} ${path}`;
-      if (path === '/v1/work/artifacts') {
-        const batch = WorkArtifactBatch.parse(body);
+      if (path === '/v1/work/initial-profile/artifacts') {
+        const batch = WorkArtifactBatch.parse((body as { batch: unknown }).batch);
         for (const artifact of batch.artifacts) {
           assert.equal(artifact.body_excerpt, null);
           assert.equal(artifact.provenance.excerpt, null);

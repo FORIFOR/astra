@@ -610,6 +610,32 @@ describe.skipIf(!url)('one-time initial profile over HTTP', () => {
     const lease = (
       await app.inject({ method: 'POST', url: '/v1/work/initial-profile/claim', headers })
     ).json<{ job: { lease: string } }>().job.lease;
+    expect(
+      (
+        await app.inject({
+          method: 'POST',
+          url: '/v1/work/initial-profile/artifacts',
+          headers,
+          payload: {
+            lease,
+            batch: { source: 'gmail', cursor: 'must-not-advance', watermark: null, artifacts: [] },
+          },
+        })
+      ).statusCode,
+    ).toBe(204);
+    expect(
+      (
+        await app.inject({
+          method: 'POST',
+          url: '/v1/work/initial-profile/artifacts',
+          headers,
+          payload: {
+            lease,
+            batch: { source: 'outlook_mail', cursor: null, watermark: null, artifacts: [] },
+          },
+        })
+      ).statusCode,
+    ).toBe(409);
     for (const source of ['gmail', 'google_calendar']) {
       expect(
         (

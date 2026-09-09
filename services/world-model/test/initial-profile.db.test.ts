@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
+  WorkSemantic,
   PersonalizationProfile,
   InitialProfileSections,
   uuidv7,
@@ -144,7 +145,7 @@ describe.skipIf(!process.env['TEST_DATABASE_URL'])('initial profile persistence'
         artifacts: 0,
       }),
     ).toBe(false);
-    await work.ingest(tenant, user, {
+    await work.initialProfile.ingest(tenant, user, claim.lease, {
       source: 'gmail',
       cursor: null,
       watermark: null,
@@ -192,6 +193,60 @@ describe.skipIf(!process.env['TEST_DATABASE_URL'])('initial profile persistence'
       (await new WorkContextService({ db }).initialProfile.begin(tenant, user, 'google')).id,
     ).toBe(initial.id);
   });
+  it('keeps rich artifacts and cursors unchanged in either synchronization order', async () => {
+    for (const normalFirst of [true, false]) {
+      const owner = uuidv7();
+      await withIdentity(db, (tx) =>
+        tx
+          .insertInto('users')
+          .values({ id: owner, email: `${owner}@example.invalid`, display_name: 'Isolation' })
+          .execute(),
+      );
+      await work.initialProfile.begin(tenant, owner, 'google');
+      const claim = (await work.initialProfile.claim(tenant, owner))!;
+      const rich = {
+        ...artifact('same'),
+        body_excerpt: 'Retained context',
+        semantic: WorkSemantic.parse({
+          category: 'other',
+          project: 'Retained project',
+          confidence: 0.8,
+          extracted_by: 'llm',
+        }),
+        provenance: { ...artifact('same').provenance, excerpt: 'Retained context' },
+      };
+      const batch = {
+        source: 'gmail' as const,
+        cursor: 'regular-cursor',
+        watermark: NOW.toISOString(),
+        artifacts: [rich],
+      };
+      if (normalFirst) await work.ingest(tenant, owner, batch);
+      const initialBatch = {
+        ...batch,
+        cursor: 'initial-must-not-advance',
+        artifacts: [artifact('same')],
+      };
+      expect(await work.initialProfile.ingest(other, owner, claim.lease, initialBatch)).toBe(false);
+      expect(await work.initialProfile.ingest(tenant, owner, uuidv7(), initialBatch)).toBe(false);
+      expect(await work.initialProfile.ingest(tenant, owner, claim.lease, initialBatch)).toBe(true);
+      if (!normalFirst) {
+        expect(await work.artifacts(tenant, owner)).toEqual([]);
+        expect(await work.syncState(tenant, owner)).toEqual([]);
+        await work.ingest(tenant, owner, batch);
+      }
+      expect(await work.artifacts(tenant, owner)).toEqual([rich]);
+      expect((await work.syncState(tenant, owner))[0]?.cursor).toBe('regular-cursor');
+      await work.initialProfile.progress(
+        tenant,
+        owner,
+        claim.lease,
+        { source: 'gmail', status: 'synced', artifacts: 1 },
+        ['same'],
+      );
+      expect(await work.artifacts(tenant, owner)).toEqual([rich]);
+    }
+  });
   it('recovers an expired worker lease without accepting stale progress', async () => {
     const owner = uuidv7();
     await withIdentity(db, (tx) =>
@@ -202,9 +257,32 @@ describe.skipIf(!process.env['TEST_DATABASE_URL'])('initial profile persistence'
     );
     await work.initialProfile.begin(tenant, owner, 'google');
     const old = (await work.initialProfile.claim(tenant, owner))!;
+    await work.initialProfile.ingest(tenant, owner, old.lease, {
+      source: 'gmail',
+      cursor: null,
+      watermark: null,
+      artifacts: [artifact('old')],
+    });
+    await work.initialProfile.progress(
+      tenant,
+      owner,
+      old.lease,
+      { source: 'gmail', status: 'synced', artifacts: 1 },
+      ['old'],
+    );
     clock = new Date(NOW.getTime() + 6 * 60_000);
     const next = (await work.initialProfile.claim(tenant, owner))!;
     expect(next.lease).not.toBe(old.lease);
+    expect(next.profile.outcomes).toEqual([]);
+    expect(next.profile.sections).toBeNull();
+    expect(
+      await work.initialProfile.ingest(tenant, owner, old.lease, {
+        source: 'gmail',
+        cursor: null,
+        watermark: null,
+        artifacts: [artifact('stale')],
+      }),
+    ).toBe(false);
     expect(await work.initialProfile.finish(tenant, owner, old.lease, [])).toBe(false);
     await work.initialProfile.progress(tenant, owner, next.lease, {
       source: 'gmail',

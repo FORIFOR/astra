@@ -3,6 +3,33 @@ import XCTest
 
 @MainActor
 final class MeetingReminderTests: XCTestCase {
+    func testUndeliveredReminderRetriesWithoutInvalidatingNewerSession() {
+        var p = MeetingReminderPolicy(); let now = Date()
+        let first = p.observe(key: "meet", inCall: true, recording: false, now: now)!
+        p.retryUndelivered(key: "meet", id: first)
+        let second = p.observe(key: "meet", inCall: true, recording: false, now: now)!
+        XCTAssertNotEqual(first, second)
+        p.retryUndelivered(key: "meet", id: first)
+        XCTAssertEqual(p.sessions["meet"], second)
+        XCTAssertNil(p.observe(key: "meet", inCall: true, recording: false, now: now))
+    }
+
+    func testMeetingIdentityRejectsUnrelatedAndLookalikeHosts() {
+        XCTAssertTrue(MeetingReminderPolicy.isMeetingDocument("https://meet.google.com/aaa-bbbb-ccc", provider: "Google Meet"))
+        XCTAssertFalse(MeetingReminderPolicy.isMeetingDocument("https://meet.google.com.example.org/", provider: "Google Meet"))
+        XCTAssertFalse(MeetingReminderPolicy.isMeetingDocument("https://example.org/help", provider: "Google Meet"))
+        XCTAssertFalse(MeetingReminderPolicy.isMeetingDocument("http://meet.google.com/aaa", provider: "Google Meet"))
+    }
+    func testDistinctBrowserCallsRearmAfterTheFirstTabCloses() {
+        var policy = MeetingReminderPolicy()
+        let first = MeetingReminderPolicy.sessionKey(pid: 42, provider: "Google Meet", document: "https://meet.google.com/aaa-bbbb-ccc")
+        let next = MeetingReminderPolicy.sessionKey(pid: 42, provider: "Google Meet", document: "https://meet.google.com/ddd-eeee-fff")
+        XCTAssertNotNil(policy.observe(key: first, inCall: true, recording: false, now: Date()))
+        // No absence event is available when the first tab closes.
+        XCTAssertNotNil(policy.observe(key: next, inCall: true, recording: false, now: Date()))
+        XCTAssertNil(policy.observe(key: next, inCall: true, recording: false, now: Date()))
+        XCTAssertFalse(next.contains("meet.google.com"))
+    }
     func testProvidersIncludeNativeAndBrowserMeetings() {
         for (bundle, title, expected) in [
             ("us.zoom.xos", "Zoom Workplace", "Zoom"),

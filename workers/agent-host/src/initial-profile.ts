@@ -29,7 +29,7 @@ export async function runInitialProfile(deps: {
     metadataOnly: true,
     maxClassifications: 0,
     push: async (batch) => {
-      await deps.cloud('/v1/work/artifacts', 'POST', batch);
+      await deps.cloud('/v1/work/initial-profile/artifacts', 'POST', { lease, batch });
       for (const artifact of batch.artifacts) ids.add(artifact.id);
     },
     onSourceStart: async (source) => {

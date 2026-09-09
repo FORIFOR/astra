@@ -3,6 +3,12 @@ import XCTest
 
 @MainActor
 final class InitialProfileTests: XCTestCase {
+    func testEmojiUsesTheSameUTF16LimitAsTheAPI() {
+        var s = InitialProfileSections(focus: [String(repeating: "🙂", count: 100)], people: [], priorities: [], workPattern: [], openItems: 0)
+        XCTAssertTrue(InitialProfileStore.valid(s))
+        s.focus = [String(repeating: "🙂", count: 101)]
+        XCTAssertFalse(InitialProfileStore.valid(s))
+    }
     func testAbsentProfileDoesNotShowSetupAgain() throws {
         XCTAssertNil(try InitialProfileStore.decode("{\"profile\":null}"))
     }

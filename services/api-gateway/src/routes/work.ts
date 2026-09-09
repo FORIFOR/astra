@@ -128,6 +128,12 @@ export function registerWorkRoutes(app: App, deps: WorkRouteDeps): void {
     const p = requirePrincipal();
     return { job: await deps.work.initialProfile.claim(p.tenantId, p.userId) };
   });
+  app.post('/v1/work/initial-profile/artifacts', async (request, reply) => {
+    const p = requirePrincipal();
+    const body = z.object({ lease: z.uuid(), batch: WorkArtifactBatch }).parse(request.body);
+    const ok = await deps.work.initialProfile.ingest(p.tenantId, p.userId, body.lease, body.batch);
+    return reply.status(ok ? 204 : 409).send();
+  });
   app.post('/v1/work/initial-profile/progress', async (request, reply) => {
     const p = requirePrincipal();
     const body = z

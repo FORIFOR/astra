@@ -76,7 +76,7 @@ final class InitialProfileStore: ObservableObject {
     static func valid(_ s: InitialProfileSections) -> Bool {
         let groups = [(s.focus, 5), (s.people, 12), (s.priorities, 5), (s.workPattern, 3)]
         return (0...5000).contains(s.openItems) && groups.allSatisfy { values, limit in
-            values.count <= limit && values.allSatisfy { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && $0.count <= 200 }
+            values.count <= limit && values.allSatisfy { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && $0.trimmingCharacters(in: .whitespacesAndNewlines).utf16.count <= 200 }
         }
     }
 
