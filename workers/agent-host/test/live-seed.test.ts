@@ -64,8 +64,8 @@ describe.each(['google', 'microsoft'] as const)('%s live fixture lifecycle', (pr
       .fn()
       .mockResolvedValueOnce(Response.json(profile))
       .mockResolvedValueOnce(Response.json(profile))
-      .mockResolvedValueOnce(Response.json({ id: 'm1' }))
-      .mockResolvedValueOnce(Response.json({ id: 'm2' }))
+      .mockResolvedValueOnce(Response.json({ id: 'm1', isDraft: false }))
+      .mockResolvedValueOnce(Response.json({ id: 'm2', isDraft: false }))
       .mockResolvedValueOnce(Response.json({ id: 'e1' }));
     vi.stubGlobal('fetch', request);
     const writes: string[] = [];
@@ -121,7 +121,7 @@ describe.each(['google', 'microsoft'] as const)('%s live fixture lifecycle', (pr
       .mockResolvedValueOnce(
         Response.json({ emailAddress: 'fixture@example.invalid', mail: 'fixture@example.invalid' }),
       )
-      .mockResolvedValueOnce(Response.json({ id: 'created-mail' }))
+      .mockResolvedValueOnce(Response.json({ id: 'created-mail', isDraft: false }))
       .mockResolvedValueOnce(new Response('unavailable', { status: 503 }));
     vi.stubGlobal('fetch', request);
     const journal: Seeded[] = [];
@@ -138,4 +138,37 @@ describe.each(['google', 'microsoft'] as const)('%s live fixture lifecycle', (pr
     ).rejects.toThrow('503');
     expect(journal.map((entry) => entry.messages)).toEqual([[], ['created-mail']]);
   });
+});
+
+describe('Microsoft received-message fixture verification', () => {
+  it.each([true, undefined])(
+    'does not continue with an unverified draft state: %s',
+    async (isDraft) => {
+      vi.stubEnv('ASTRA_TEST_MS_CLIENT_ID', 'seed-client');
+      vi.stubEnv('ASTRA_TEST_MS_REFRESH_TOKEN', 'test-seed-refresh');
+      vi.stubEnv('ASTRA_TEST_MS_READ_CLIENT_ID', 'read-client');
+      vi.stubEnv('ASTRA_TEST_MS_READ_REFRESH_TOKEN', 'test-read-refresh');
+      const profile = { mail: 'fixture@example.invalid' };
+      const request = vi
+        .fn()
+        .mockResolvedValueOnce(Response.json(profile))
+        .mockResolvedValueOnce(Response.json(profile))
+        .mockResolvedValueOnce(Response.json({ id: 'created-draft', isDraft }));
+      vi.stubGlobal('fetch', request);
+      const journal: Seeded[] = [];
+      const store = new TokenStore({
+        get: async () => null,
+        set: async () => {},
+        delete: async () => {},
+      });
+      await expect(
+        seedMicrosoft(fixture, store, now, async (value) => {
+          journal.push(structuredClone(value));
+        }),
+      ).rejects.toThrow('not a verified received message');
+      expect(request).toHaveBeenCalledTimes(3);
+      expect(journal.map((entry) => entry.messages)).toEqual([[], ['created-draft']]);
+      expect(request.mock.calls.every(([url]) => !String(url).endsWith('/send'))).toBe(true);
+    },
+  );
 });

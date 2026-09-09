@@ -169,18 +169,29 @@ export async function seedMicrosoft(
   const seeded: Seeded = { provider: 'microsoft', fixture: f, self, sink, messages, events: [] };
   await checkpoint(seeded);
   for (const mail of [f.mailA, f.mailB]) {
-    const created = await json<{ id: string }>(`${base}/me/mailFolders/inbox/messages`, access, {
-      method: 'POST',
-      body: {
-        subject: mail.subject,
-        body: { contentType: 'text', content: mail.body },
-        from: { emailAddress: { address: sink, name: 'ACME' } },
-        toRecipients: [{ emailAddress: { address: self } }],
-        isRead: false,
+    const created = await json<{ id: string; isDraft?: boolean }>(
+      `${base}/me/mailFolders/inbox/messages`,
+      access,
+      {
+        method: 'POST',
+        body: {
+          subject: mail.subject,
+          body: { contentType: 'text', content: mail.body },
+          from: { emailAddress: { address: sink, name: 'ACME' } },
+          toRecipients: [{ emailAddress: { address: self } }],
+          isRead: false,
+          // Import a received fixture, never send a setup email. MSGFLAG_UNSENT
+          // can be set on initial save (PidTagMessageFlags); still verify Graph's
+          // returned isDraft state instead of assuming the extended property worked.
+          // https://learn.microsoft.com/en-us/office/client-developer/outlook/mapi/pidtagmessageflags-canonical-property
+          singleValueExtendedProperties: [{ id: 'Integer 0x0E07', value: '0' }],
+        },
       },
-    });
+    );
     messages.push(created.id);
     await checkpoint(seeded);
+    if (created.isDraft !== false)
+      throw new Error('Microsoft seed is not a verified received message; retain IDs for cleanup');
   }
   const event = await json<{ id: string }>(`${base}/me/events`, access, {
     method: 'POST',
