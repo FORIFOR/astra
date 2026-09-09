@@ -19,6 +19,7 @@ import SwiftUI
 ///
 /// 高さが変わるときは **上辺の Y を固定**して下へ伸ばす（`WindowCoordinator`）。
 struct VoiceTaskDockView: View {
+    @ObservedObject var screenLayout: DockScreenLayout = DockScreenLayout()
     /// §10 Interface Size を変えたら描き直す（購読していないと変わらない）。
     @ObservedObject private var uiScale = UIScale.shared
     @ObservedObject private var store = AstraStateStore.shared
@@ -36,13 +37,15 @@ struct VoiceTaskDockView: View {
         ZStack(alignment: .top) {
             DockSurface()
             content
+                .frame(width: size.width, height: size.height, alignment: .top)
+                .padding(.top, screenLayout.topInset)
                 .opacity(contentVisible ? 1 : 0)
                 .animation(reduceMotion ? nil : .easeOut(duration: 0.12), value: contentVisible)
         }
         // 地が暗いので、中身も暗色側の配色で描く。
         // 各 View は `@Environment(\.colorScheme)` を見ているので、ここで一括して切り替わる。
         .environment(\.colorScheme, .dark)
-        .frame(width: size.width, height: size.height)
+        .frame(width: size.width, height: size.height + screenLayout.topInset)
         .onChange(of: store.dock) { old, new in
             guard !reduceMotion else { return }
             // 会議 Dock の中で板（メモ / 字幕 / Ask）が開閉するだけのときは、変わらない見出し
@@ -634,7 +637,7 @@ struct ConfirmationDock: View {
             }
 
             // ② 何が起きるか。
-            Text(confirmation.title)
+            Text(editing ? Facts.confirmationEditTitle : confirmation.title)
                 .font(.system(size: S.type(Metrics.dockTitleSize), weight: .semibold))
                 .tracking(-0.2)
                 .foregroundStyle(Palette.text(dark))
@@ -643,10 +646,10 @@ struct ConfirmationDock: View {
             // 「外部に出る」は宛先の並びでも題でもない。**独立した補助の段**にする。
             do {
                 HStack(spacing: 5) {
-                    Image(systemName: "arrow.up.forward")
+                    Image(systemName: editing ? "arrow.uturn.backward" : "arrow.up.forward")
                         .font(.system(size: ActionConfirmation.Glyph.criticalSize,
                                       weight: ActionConfirmation.Glyph.criticalWeight))
-                    Text(confirmation.risk.label)
+                    Text(editing ? Facts.confirmationEditReturn : confirmation.risk.label)
                     Spacer(minLength: 0)
                 }
                 .font(.system(size: S.type(Metrics.dockLabelSize)))

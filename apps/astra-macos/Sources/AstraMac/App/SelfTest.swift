@@ -10,9 +10,29 @@ import AstraCore
 /// `--selftest record`: Swift → astra-core → 実ディスク の E2E。UI を出さずに検証する。
 /// マイク許可の要らない合成サンプルを流し、断片ファイルが実際に書かれることを確かめる。
 enum SelfTest {
+    // Record the status in the LaunchServices app itself. Spawning a child
+    // changes macOS TCC attribution, so the test must not use a supervisor.
+    static func exit(_ status: Int32) -> Never {
+        if let path = ProcessInfo.processInfo.environment["ASTRA_SELFTEST_EXIT_RECEIPT"],
+           CommandLine.arguments.contains("--selftest") {
+            do {
+                let data = try JSONSerialization.data(withJSONObject: [
+                    "schema": 1, "exitCode": Int(status), "normalExit": true,
+                ])
+                try data.write(to: URL(fileURLWithPath: path), options: .atomic)
+            } catch {
+                print("SELFTEST_FAIL exit receipt: \(error.localizedDescription)")
+                Darwin.exit(1)
+            }
+        }
+        Darwin.exit(status)
+    }
+
     @MainActor
     static func run(_ args: [String]) -> Bool {
         guard let i = args.firstIndex(of: "--selftest"), i + 1 < args.count else { return false }
+        SecretMode.persistChanges = false
+        SecretMode.shared.set(false)
         switch args[i + 1] {
         case "record": recordToDisk(); return true
         case "lifecycle": lifecycle(); return true
@@ -55,6 +75,7 @@ enum SelfTest {
         case "idle-hold": idleHold(args); return true
         case "confirmflow": confirmFlow(); return true
         case "hold-meeting": holdMeeting(args); return true
+        case "home-meeting-focus": Task { @MainActor in await homeMeetingFocus() }; return true
         case "upgrade": upgradeGate(); return true
         case "update": updateCheck(); return true
         case "recoveryui": recoveryUI(); return true
@@ -227,7 +248,25 @@ enum SelfTest {
     private static func golden(_ args: [String]) {
         let i = args.firstIndex(of: "--selftest")!
         guard args.count > i + 3 else { print("SELFTEST_FAIL golden: 引数が足りない"); exit(2) }
-        let goldenDir = args[i + 2], freshDir = args[i + 3]
+        var goldenDir = args[i + 2]
+        let freshDir = args[i + 3]
+        // Font rasterization and the physical camera band vary by screen environment.
+        // Baseline adoption is explicit and recorded in its provenance manifest.
+        let os = ProcessInfo.processInfo.operatingSystemVersion
+        let scale = Int(NSScreen.main?.backingScaleFactor ?? 1)
+        let safeTop = Int(NSScreen.main?.safeAreaInsets.top ?? 0)
+        let environment = "macos-\(os.majorVersion).\(os.minorVersion).\(os.patchVersion)-\(scale)x"
+            + (safeTop > 0 ? "-safe-top-\(safeTop)" : "")
+        let original = URL(fileURLWithPath: goldenDir)
+        let isDark = original.lastPathComponent == "dark"
+        let root = isDark ? original.deletingLastPathComponent() : original
+        if root.lastPathComponent == "golden-screenshots" {
+            let baseline = root.appendingPathComponent("environments/\(environment)")
+            if FileManager.default.fileExists(atPath: baseline.appendingPathComponent("provenance.json").path) {
+                goldenDir = baseline.appendingPathComponent(isDark ? "dark" : "light").path
+                print("GOLDEN_REFERENCE \(environment) provenance=\(baseline.appendingPathComponent("provenance.json").path)")
+            }
+        }
         // 02b は「準備中…」（まだ取り込めていない正式な状態）。02 は取り込みが生きた姿。
         // 番号は整理せず足すだけにする（rename の churn を避ける）。
         let names = ["01-voice-hud-idle", "02-voice-hud-listening", "02b-voice-hud-preparing",
@@ -417,10 +456,12 @@ enum SelfTest {
             // 既定の `boundsIgnoreFraming` は影を切り落とすので、
             // 影を変えても絵が 1px も変わらない。
             let shadow = ProcessInfo.processInfo.environment["ASTRA_SHOT_SHADOW"] == "1"
+            // 通常の測定画像は 1px = 1pt。確認 gate はこの寸法で上限を測る。
             let opts: CGWindowImageOption = shadow
-                ? [.bestResolution] : [.boundsIgnoreFraming, .bestResolution]
+                ? [.bestResolution] : [.boundsIgnoreFraming, .nominalResolution]
             guard let (id, x, y, w, h) = found,
-                  let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, id, opts)
+                  let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, id, opts),
+                  shadow || (cg.width == Int(w) && cg.height == Int(h))
             else { return nil }
             let rep = NSBitmapImageRep(cgImage: cg)
             let shot = shadow ? (onBackdrop(cg) ?? rep) : rep
@@ -470,12 +511,20 @@ enum SelfTest {
         func shoot(_ name: String, _ transition: () -> Void, minColors: Int = 6) {
             transition()
             WindowCoordinator.shared.syncDockPanels()
-            let expect = store.dock.size(agentRows: store.state.activeTask?.steps.count ?? 0)
+            let contentSize = store.dock.size(agentRows: store.state.activeTask?.steps.count ?? 0)
+            let expect = CGSize(width: contentSize.width, height: contentSize.height + WindowCoordinator.shared.dockTopInset)
             guard let r = capture(name, expect: expect) else {
                 failures.append("\(name)=撮影不可(期待 \(Int(expect.width))x\(Int(expect.height)))")
                 return
             }
             topEdges.insert(Int(r.y.rounded()))
+            // Window-server geometry remains measurable even without AX permission.
+            // Content element geometry is still covered separately by the AX gate.
+            let inset = WindowCoordinator.shared.dockTopInset
+            UIGeometry.write([
+                "window": UIGeometry.Box(x: Double(r.x), y: Double(r.y), w: Double(r.w), h: Double(r.h)),
+                "contentLayout": UIGeometry.Box(x: 0, y: Double(inset), w: Double(contentSize.width), h: Double(contentSize.height)),
+            ], to: "\(outDir)/\(name).geometry.json")
             report.append("\(name) \(Int(r.w))x\(Int(r.h)) top=\(Int(r.y)) c\(r.colors) win=\(r.count)")
             if r.colors < minColors { failures.append("\(name)=中身なし(c\(r.colors))") }
             // 窓を足していない（Dock 以外に浮いていない）。
@@ -574,7 +623,7 @@ enum SelfTest {
             store.meetingDetected(app: "Google Meet")
             // **録音ボタンと同じ経路**を通す。Store を直接叩くと、ボタンが別のことを
             // していても気づけない（実際に一度そうなっていた）。
-            recording.start()
+            recording.start(captureMic: false, transcribe: false, requestPermissions: false)
             // 実マイクを開けない撮影でも「録音中」の姿にする（音が届いた姿。準備中は 08a で別に撮る）。
             // 届いている経路も shots と同じに仕込む。仕込まないと、開いた録音面（10-workspace）が
             // 最初のフレーム前の「まだ音が届いていません」で写る（RC で実際にそうなった）。
@@ -633,7 +682,7 @@ enum SelfTest {
         } while workspaceWindow == nil && Date() < wsDeadline
         settle(0.8)
         if let big = workspaceWindow,
-           let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, big.id, [.boundsIgnoreFraming, .bestResolution]) {
+           let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, big.id, [.boundsIgnoreFraming, .nominalResolution]) {
             let rep = NSBitmapImageRep(cgImage: cg)
             if let png = rep.representation(using: .png, properties: [:]) {
                 try? png.write(to: URL(fileURLWithPath: "\(outDir)/10-workspace.png"))
@@ -758,7 +807,7 @@ enum SelfTest {
             tops.insert(Int(f.minY.rounded()))
             widths.append(f.width)
             if settledAt == nil, abs(f.width - listeningSize.width) <= 1,
-               abs(f.height - listeningSize.height) <= 1 {
+               abs(f.height - (listeningSize.height + WindowCoordinator.shared.dockTopInset)) <= 1 {
                 settledAt = Date()
             }
         }
@@ -1176,16 +1225,23 @@ enum SelfTest {
         let i = args.firstIndex(of: "--selftest")!
         guard args.count > i + 3 else { print("SELFTEST_FAIL density: 引数が足りない"); exit(2) }
         let dir = args[i + 2], baselinePath = args[i + 3]
+        let layoutData = FileManager.default.contents(atPath: "\(dir)/capture-layout.json")
+        let layouts = layoutData.flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: [String: Int]] } ?? [:]
 
         /// 地の色が占める割合（%）。
-        func emptiness(_ path: String) -> Double? {
+        func emptiness(_ path: String, layout: [String: Int]?) -> Double? {
             guard let data = FileManager.default.contents(atPath: path),
                   let rep = NSBitmapImageRep(data: data) else { return nil }
             var counts: [UInt32: Int] = [:]
             var pts: [UInt32] = []
             let pw = rep.pixelsWide, ph = rep.pixelsHigh
-            let step = max(1, min(pw, ph) / 220)
-            var y = 0
+            let inset = layout?["topInsetPx"] ?? 0
+            guard inset >= 0, inset < ph,
+                  layout == nil || (layout?["width"] == pw && layout?["height"] == ph) else { return nil }
+            // The camera safe-area band is reserved, not content space. Total window
+            // occupation, including this band, is still checked by occupationGate.
+            let step = max(1, min(pw, ph - inset) / 220)
+            var y = inset
             while y < ph { var x = 0
                 while x < pw {
                     if let c = rep.colorAt(x: x, y: y) {
@@ -1213,6 +1269,27 @@ enum SelfTest {
             baseline = obj
         }
 
+        // The approved notch reference moves the outer top edge into the camera
+        // band. Its content-only density therefore needs a matching reference.
+        // Override only recorded Dock surfaces; all other historical limits stay.
+        let requestedBaseline = URL(fileURLWithPath: baselinePath).standardizedFileURL
+        if requestedBaseline.path.hasSuffix("/docs/evidence/density-baseline.json"),
+           let inset = layouts["01-voice-hud-idle"]?["topInsetPx"], inset > 0,
+           let screen = NSScreen.main {
+            let os = ProcessInfo.processInfo.operatingSystemVersion
+            let profile = "macos-\(os.majorVersion).\(os.minorVersion).\(os.patchVersion)-\(Int(screen.backingScaleFactor))x-safe-top-\(inset)"
+            let reference = requestedBaseline.deletingLastPathComponent().deletingLastPathComponent()
+                .appendingPathComponent("golden-screenshots/environments/\(profile)/density-baseline.json")
+            guard let d = try? Data(contentsOf: reference),
+                  let values = try? JSONSerialization.jsonObject(with: d) as? [String: Double],
+                  values.count == 3,
+                  ["01-voice-hud-idle", "02-voice-hud-listening", "02b-voice-hud-preparing"].allSatisfy({ values[$0] != nil }) else {
+                print("SELFTEST_FAIL density: matching notch reference missing: \(reference.path)"); exit(2)
+            }
+            baseline.merge(values) { _, adopted in adopted }
+            print("DENSITY_REFERENCE \(reference.path)")
+        }
+
         let names = (try? FileManager.default.contentsOfDirectory(atPath: dir))?
             .filter { $0.hasSuffix(".png") }.map { String($0.dropLast(4)) }.sorted() ?? []
         guard !names.isEmpty else { print("SELFTEST_FAIL density: \(dir) に png が無い"); exit(2) }
@@ -1220,7 +1297,9 @@ enum SelfTest {
         var measured: [String: Double] = [:]
         var worse: [String] = []
         for n in names {
-            guard let e = emptiness("\(dir)/\(n).png") else { continue }
+            guard let e = emptiness("\(dir)/\(n).png", layout: layouts[n]) else {
+                worse.append("\(n): image/capture layout invalid"); continue
+            }
             measured[n] = (e * 10).rounded() / 10
             print(String(format: "DENSITY %@ 地 %.1f%%", n, e))
             // 撮影ごとの揺れを拾わないよう 1.5 ポイントの遊びを持たせる。
@@ -1438,7 +1517,8 @@ enum SelfTest {
             present()
             settle(1.2)
             guard let snap = UIGeometry.snapshot() else { fail.append("\(name): 実寸を読めない"); continue }
-            for (key, maxW, maxH) in ceilings[name] ?? [] {
+            for (key, maxW, contentMaxH) in ceilings[name] ?? [] {
+                let maxH = contentMaxH + (key == dockKey ? WindowCoordinator.shared.dockTopInset : 0)
                 guard let box = snap[key] else { fail.append("\(name): \(key) が出ていない"); continue }
                 measured += 1
                 let share = box.w * box.h / (refW * refH) * 100
@@ -1475,7 +1555,15 @@ enum SelfTest {
     @MainActor
     private static func geometryGate(_ args: [String]) {
         let i = args.firstIndex(of: "--selftest")!
-        let refDir = args.count > i + 2 ? args[i + 2] : "docs/golden-screenshots/geometry"
+        var refDir = args.count > i + 2 ? args[i + 2] : "docs/golden-screenshots/geometry"
+        let requested = URL(fileURLWithPath: refDir)
+        if requested.lastPathComponent == "geometry",
+           requested.deletingLastPathComponent().lastPathComponent == "golden-screenshots",
+           let screen = NSScreen.main, screen.safeAreaInsets.top > 0 {
+            let os = ProcessInfo.processInfo.operatingSystemVersion
+            let profile = "macos-\(os.majorVersion).\(os.minorVersion).\(os.patchVersion)-\(Int(screen.backingScaleFactor))x-safe-top-\(Int(screen.safeAreaInsets.top))"
+            refDir = requested.deletingLastPathComponent().appendingPathComponent("environments/\(profile)/geometry").path
+        }
         let record = args.contains("--record")
         try? FileManager.default.createDirectory(atPath: refDir, withIntermediateDirectories: true)
 
@@ -3014,6 +3102,7 @@ enum SelfTest {
         recording.start()
         let fromCal = sessions.live
         check(2, "Calendar から 1-click", fromCal != nil && fromCal?.calendarEventId == "e1")
+        check(10, "録音ごとに別ID", fromCal?.id != id)
         check(10, "project 自動継承", fromCal?.projectId == "Research")
         check(10, "題と人数を継承", fromCal?.title == "Design Review" && fromCal?.participantCount == 4)
         recording.stop()
@@ -3513,26 +3602,32 @@ enum SelfTest {
         guardian.apply(sharing: false)
         if guardian.isSharing { fail.append("共有終了が反映されない") }
 
-        // ⑥ マイクが拒否されているなら**録音状態にしない**。
-        //    「録音中」と出しながら無音を録るのが一番高くつく壊れ方。
-        //    この Mac では許可済みなので、判定の分岐そのものを確かめる。
-        let denied: [Permissions.State] = [.denied, .restricted]
-        for state in denied where !denied.contains(state) {
-            fail.append("拒否判定が壊れている")
-        }
-        if Permissions.microphone == .granted {
-            // 許可されている環境では、開始できることだけ確かめる（拒否は下の分岐で担保）。
-            report.append("mic=granted")
-        } else {
-            RecordingWorkspaceState.shared.start()
-            if RecordingWorkspaceState.shared.isRecording {
-                fail.append("マイクが使えないのに録音状態になった")
+        // ⑥ Permission denial AND a pending first prompt must never create a
+        // recording, advance its clock, or erase the previous transcript.
+        let recording = RecordingWorkspaceState.shared
+        let priorMicrophone = Permissions.simulatedMicrophone
+        let priorTranscript = recording.transcript.map(\.text)
+        let priorId = recording.currentMeetingId
+        let priorElapsed = recording.elapsedSeconds
+        for state: Permissions.State in [.denied, .restricted, .notDetermined] {
+            Permissions.simulatedMicrophone = state
+            recording.start(requestPermissions: false)
+            if recording.isRecording || store.state.meeting.isRecording {
+                fail.append("マイクが使えないのに録音状態になった: \(state)")
             }
-            if RecordingWorkspaceState.shared.permissionIssue == nil {
-                fail.append("使えない理由が画面に出ない")
+            if recording.permissionIssue == nil {
+                fail.append("使えない理由が画面に出ない: \(state)")
             }
-            RecordingWorkspaceState.shared.stop()
+            if RecordingRuntime.shared.snapshot() != nil || recording.currentMeetingId != priorId {
+                fail.append("許可前に録音セッションを作った: \(state)")
+            }
+            if recording.elapsedSeconds != priorElapsed || recording.transcript.map(\.text) != priorTranscript {
+                fail.append("許可前に前の録音を消した: \(state)")
+            }
+            recording.stop()
         }
+        Permissions.simulatedMicrophone = priorMicrophone
+        report.append("mic denial/restriction/pending: no recording or session")
 
         // ⑦ §26 Progressive Permission: 機能ごとに**その分だけ**。他機能の許可を巻き込まない。
         if PermissionCenter.Capability.voice.required != [.microphone] {
@@ -3544,11 +3639,12 @@ enum SelfTest {
         if PermissionCenter.Capability.screenAsk.required != [.screenRecording] {
             fail.append("screenAsk が画面以外まで要求している")
         }
-        // 相手の声は本番経路でまだ取り込んでいない（captureSystemAudio は常に false）。使っていない目的で
-        // 画面収録を求めたら落ちる（`docs/privacy-egress.md`）。system audio を繋いだ日にここを変える。
-        // 音声認識（Apple Speech、手元）は端末から出ない。画面収録は system audio を繋ぐまで求めない。
+        // マイク録音に画面収録を巻き込まない。画面の音を選んだ場合だけ別に要求する。
         if PermissionCenter.Capability.meeting.required != [.microphone, .speechRecognition] {
-            fail.append("meeting がマイクと音声認識以外まで要求している（system audio は未接続）")
+            fail.append("meeting がマイクと音声認識以外まで要求している")
+        }
+        if PermissionCenter.Capability.meetingAudio.required != [.screenRecording] {
+            fail.append("meetingAudio が画面収録以外を要求している")
         }
         // 全機能の和集合を、どれか 1 機能が単独で要求してはいけない（＝初回一括の禁止）。
         let all = Set(PermissionCenter.Capability.allCases.flatMap(\.required))
@@ -5200,7 +5296,8 @@ enum SelfTest {
         let mainMiss = mainWant.filter { !has(mainTexts, $0) }
         // Workspace: 統合サーフェス（§2/§7）— Recording Hero / Transcript / Translation / AI / RAG / Task Dock
         // AI に頼む語は Ask 入力の横の 3 つ（要約 / 決定事項 / アクション）。「質問する」は入力欄そのもの。
-        let wsWant = ["録音中", "文字起こし", "翻訳", "要約", "決定事項", "アクション", "AI が見ている資料"]
+        let wsWant = [Facts.recordingHeroRecording, RecordingTool.transcript.title,
+                      RecordingTool.translation.title, "要約", "決定事項", "アクション", "AI が見ている資料"]
         let wsMiss = wsWant.filter { !has(wsTexts, $0) }
         guard mainMiss.isEmpty, wsMiss.isEmpty else {
             print("SELFTEST_FAIL axtree: mainMiss=\(mainMiss) wsMiss=\(wsMiss) (main=\(mainTexts.count) ws=\(wsTexts.count))"); exit(2)
@@ -5374,8 +5471,9 @@ enum SelfTest {
         var totalControls = 0, totalNameless = 0
         var tabSummary: [String] = []
         // Tab がボタンにも止まるかは OS の「キーボードナビゲーション」次第。結果と一緒に記す。
-        let fka = NSApp.isFullKeyboardAccessEnabled
-        emit("A11Y_ENV\tfullKeyboardAccess=\(fka)\tmacOS=\(ProcessInfo.processInfo.operatingSystemVersionString)")
+        let keyboardNavigation = NSApp.isFullKeyboardAccessEnabled
+        let fka = UserDefaults(suiteName: "com.apple.Accessibility")?.bool(forKey: "FullKeyboardAccessEnabled") ?? false
+        emit("A11Y_ENV\tfullKeyboardAccess=\(fka)\tkeyboardNavigation=\(keyboardNavigation)\tmacOS=\(ProcessInfo.processInfo.operatingSystemVersionString)")
         func add(_ r: (controls: Int, nameless: Int)) { totalControls += r.controls; totalNameless += r.nameless }
 
         // Dock の姿（key にならない面なので Tab は測らない）
@@ -5968,7 +6066,10 @@ enum SelfTest {
             // 出た直後は描画が終わっていないことがあるので一拍おく。
             settle(0.6)
             guard let (winID, w, h) = best,
-                  let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, winID, [.boundsIgnoreFraming, .bestResolution])
+                  // golden は logical points で保存する。Retina の物理画素を使うと
+                  // 同じ 220x44pt の窓が 440x88px になり、別の寸法と誤判定される。
+                  let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, winID, [.boundsIgnoreFraming, .nominalResolution]),
+                  cg.width == w, cg.height == h
             else { return nil }
             let rep = NSBitmapImageRep(cgImage: cg)
             var seen = Set<UInt32>()
@@ -5993,6 +6094,7 @@ enum SelfTest {
 
         var report: [String] = []
         var failures: [String] = []
+        var captureLayouts: [String: [String: Int]] = [:]
         func record(_ name: String, _ r: (w: Int, h: Int, colors: Int)?, expW: CGFloat?, expH: CGFloat?, minColors: Int) {
             guard let r = r else { failures.append("\(name)=撮影不可"); return }
             var ok = r.colors >= minColors
@@ -6000,6 +6102,9 @@ enum SelfTest {
             if let eh = expH { ok = ok && abs(r.h - Int(eh)) <= 2 }
             if !ok { failures.append("\(name)(\(r.w)x\(r.h),c\(r.colors))") }
             report.append("\(name) \(r.w)x\(r.h) c\(r.colors)")
+            let isDock = ["01-voice-hud-idle", "02-voice-hud-listening", "02b-voice-hud-preparing"].contains(name)
+            captureLayouts[name] = ["width": r.w, "height": r.h,
+                                   "topInsetPx": isDock ? Int(WindowCoordinator.shared.dockTopInset) : 0]
         }
 
         let state = RecordingWorkspaceState.shared
@@ -6019,7 +6124,7 @@ enum SelfTest {
         WindowCoordinator.shared.showVoiceHUD()
         let idleSize = AstraStateStore.shared.dock.size()
         record("01-voice-hud-idle", capture("01-voice-hud-idle"),
-               expW: idleSize.width, expH: idleSize.height, minColors: 4)
+               expW: idleSize.width, expH: idleSize.height + WindowCoordinator.shared.dockTopInset, minColors: 4)
 
         // 02b voice-hud-preparing（先に撮る）
         //
@@ -6030,7 +6135,7 @@ enum SelfTest {
         VoiceHUDState.shared.mode = .listening(partial: "")
         let preparingSize = AstraStateStore.shared.dock.size()
         record("02b-voice-hud-preparing", capture("02b-voice-hud-preparing"),
-               expW: preparingSize.width, expH: preparingSize.height, minColors: 4)
+               expW: preparingSize.width, expH: preparingSize.height + WindowCoordinator.shared.dockTopInset, minColors: 4)
 
         // 02 voice-hud-listening
         // 実マイクを開かない撮影なので、「取り込めている姿」を作ってから撮る。
@@ -6041,7 +6146,7 @@ enum SelfTest {
         // Dock は状態ごとに寸法が変わる。期待値も状態から引く（固定値で持たない）。
         let listeningSize = AstraStateStore.shared.dock.size()
         record("02-voice-hud-listening", capture("02-voice-hud-listening"),
-               expW: listeningSize.width, expH: listeningSize.height, minColors: 4)
+               expW: listeningSize.width, expH: listeningSize.height + WindowCoordinator.shared.dockTopInset, minColors: 4)
         // PREPARING_VISUAL_GATE: 同じ窓・同じ寸法で、意味だけが違う 2 枚であること。
         // 寸法が違えば「preparing だけ geometry が崩れた」を、同一なら「名乗りが変わっていない」を捕まえる。
         if abs(preparingSize.width - listeningSize.width) > 2
@@ -6246,6 +6351,10 @@ enum SelfTest {
         }
 
         print("SHOTS_DIR \(outDir)")
+        do {
+            let data = try JSONSerialization.data(withJSONObject: captureLayouts, options: [.sortedKeys, .prettyPrinted])
+            try data.write(to: URL(fileURLWithPath: "\(outDir)/capture-layout.json"), options: .atomic)
+        } catch { failures.append("capture layout write failed: \(error)") }
         for line in report { print("SHOT \(line)") }
         if failures.isEmpty {
             // 枚数は数えて言う（固定で書くと、面を足したときに嘘になる。実際 12 のまま 13 枚撮っていた）。
@@ -6320,7 +6429,7 @@ enum SelfTest {
             WindowCoordinator.shared.showVoiceHUD()
             settle(1.0)
             var wins = onScreenWindowSizes()
-            let hudUp = wins.contains { near($0.w, Metrics.hudWidth) && near($0.h, Metrics.hudHeight) }
+            let hudUp = wins.contains { near($0.w, Metrics.hudWidth) && near($0.h, Metrics.hudHeight + WindowCoordinator.shared.dockTopInset) }
             let wsAbsent = !wins.contains { near($0.w, Metrics.workspaceWidth) && near($0.h, Metrics.workspaceHeight) }
             guard hudUp, wsAbsent else {
                 print("SELFTEST_FAIL e2e001 ①HUD: hud=\(hudUp) workspaceAbsent=\(wsAbsent) wins=\(wins)"); exit(2)
@@ -6387,8 +6496,8 @@ enum SelfTest {
             }
             settle(1.2)
             wins = onScreenWindowSizes()
-            let controllerUp = wins.contains { near($0.w, Metrics.dockMeetingWidth) && near($0.h, Metrics.dockMeetingHeight) }
-            let idleGone = !wins.contains { near($0.w, Metrics.dockIdleWidth) && near($0.h, Metrics.dockIdleHeight) }
+            let controllerUp = wins.contains { near($0.w, Metrics.dockMeetingWidth) && near($0.h, Metrics.dockMeetingHeight + WindowCoordinator.shared.dockTopInset) }
+            let idleGone = !wins.contains { near($0.w, Metrics.dockIdleWidth) && near($0.h, Metrics.dockIdleHeight + WindowCoordinator.shared.dockTopInset) }
             let noExtraSurface = !wins.contains { near($0.w, Metrics.workspaceWidth) && near($0.h, Metrics.workspaceHeight) }
             let meetingId = RecordingRuntime.shared.activeMeetingId
             // online なら gateway の会議 UUID、offline ならローカル id（meeting-…）。どちらでも id は要る。
@@ -6435,9 +6544,9 @@ enum SelfTest {
             WindowCoordinator.shared.toggleRecording()
             settle(2.0)
             wins = onScreenWindowSizes()
-            let controllerGone = !wins.contains { near($0.w, Metrics.dockMeetingWidth) && near($0.h, Metrics.dockMeetingHeight) }
+            let controllerGone = !wins.contains { near($0.w, Metrics.dockMeetingWidth) && near($0.h, Metrics.dockMeetingHeight + WindowCoordinator.shared.dockTopInset) }
             let resultSize = AstraStateStore.shared.dock.size()
-            let resultUp = wins.contains { near($0.w, resultSize.width) && near($0.h, resultSize.height) }
+            let resultUp = wins.contains { near($0.w, resultSize.width) && near($0.h, resultSize.height + WindowCoordinator.shared.dockTopInset) }
             let stillOneSurface = wins.count == 1
             guard !state.isRecording, controllerGone, resultUp, stillOneSurface else {
                 print("SELFTEST_FAIL e2e001 ⑧復帰: stopped=\(!state.isRecording) controllerGone=\(controllerGone) result=\(resultUp) wins=\(wins)"); exit(8)

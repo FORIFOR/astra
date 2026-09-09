@@ -356,7 +356,8 @@ extension SelfTest {
         check(cloud.disclosure.contains("Claude") && cloud.disclosure.contains("質問したときだけ"), "cloud の開示文が「質問したときだけ…へ送ります」でない: \(cloud.disclosure)")
         check(!cloud.disclosure.contains("出ません") && !cloud.disclosure.contains("出ない"), "cloud なのに「出ない」と言っている")
         // 既定は cloud（端末内で画像を見るモデルはまだ無い。「出ない」と決して言わない）。
-        check(VisualEgressPolicy.current == cloud, "既定の方針が cloud(Claude) でない: \(VisualEgressPolicy.current)")
+        check(VisualEgressPolicy.configured(environment: [:]).sendsPixelsOffDevice, "未指定のモデルを端末内だけと表示している")
+        check(VisualEgressPolicy.configured(environment: ["ASTRA_LLM_CLI": "codex"]).disclosure.contains("OpenAI"), "Codexの送信先がOpenAIでない")
         check(Facts.all.contains { $0.key == "screenshot.egress.cloud" } && Facts.all.contains { $0.key == "screenshot.egress.local" }, "開示文が Facts に無い")
 
         try? FileManager.default.removeItem(at: dir)

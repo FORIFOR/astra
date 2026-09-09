@@ -1,7 +1,7 @@
 import AppKit
 import SwiftUI
 
-/// `--selftest realmeeting <outDir> [simulate] [force] [seconds=N] [cue=<file>]`
+/// `--selftest realmeeting <outDir> [simulate] [force] [systemaudio] [seconds=N] [cue=<file>]`
 ///
 /// `cue=` があるときは、台本を流す script（scripts/reality/run-real-meeting.sh）が書く 1 語
 /// （pause / resume / stop）で進み、こちらは `<outDir>/state`（recording / paused）を返す。
@@ -66,7 +66,7 @@ extension SelfTest {
         lap("detected")
 
         // ② 録音。実マイク or simulate。
-        recording.start(); settle(1.0)
+        recording.start(captureSystemAudio: !simulate && args.contains("systemaudio")); settle(1.0)
         if simulate { recording.markAudioLiveForShot(); RecordingRuntime.shared.markListening(.localUser) }
         guard let liveId = sessions.live?.id else {
             print("SELFTEST_FAIL realmeeting: 録音が始まっていない"); exit(2)
@@ -102,8 +102,9 @@ extension SelfTest {
         recording.togglePause(); settle(0.3)
         if !recording.isPaused { errors.append("一時停止にならない") }
         // 止める直前まで言っていた発話は、止めたあと utteranceGap で確定する。それは漏れではない。
-        settle(SpeechTranscriber.utteranceGap + 0.5)
+        settle(SpeechTranscriber.utteranceGap + SpeechTranscriber.closeTimeout + 0.5)
         let beforePause = recording.transcript.filter { !$0.interim }.count
+        let audioFramesBeforePause = RecordingRuntime.shared.systemAudioFrames
         writeState("paused")
         if simulate {
             // 止まっている間に入れようとしても増えないのが仕様なら、ここで入れる。増えたら漏れ。
@@ -116,6 +117,7 @@ extension SelfTest {
         }
         let duringPause = recording.transcript.filter { !$0.interim }.count
         let pauseLeak = max(0, duringPause - beforePause)
+        let audioFramesAfterPause = RecordingRuntime.shared.systemAudioFrames
         recording.togglePause(); settle(0.5)
         let resumed = !recording.isPaused
         writeState("recording")
@@ -136,7 +138,9 @@ extension SelfTest {
         let recordedMs = RecordingRuntime.shared.recordedMs()
         let sttFinals = RecordingRuntime.shared.sttFinals
         let sttPartials = RecordingRuntime.shared.sttPartials
-        recording.stop(); settle(2.5)
+        recording.stop()
+        let readyDeadline = Date().addingTimeInterval(7)
+        while sessions.session(id: liveId)?.status != .ready, Date() < readyDeadline { settle(0.1) }
         let ready = sessions.session(id: liveId)
         let canvas = LocalStore.shared.loadNotes(meetingId: liveId)
         let persistedT = LocalStore.shared.loadTranscript(meetingId: liveId)
@@ -155,6 +159,9 @@ extension SelfTest {
             "decisions": items(canvas.decisions), "actions": items(canvas.actions),
             "questions": items(canvas.questions), "concerns": items(canvas.concerns),
             "pauseLeak": pauseLeak, "resumed": resumed, "resumeRows": resumeRows,
+            "resumeRowsSaved": max(0, persistedT.count - duringPause),
+            "systemAudioFramesDuringPause": audioFramesAfterPause - audioFramesBeforePause,
+            "systemAudioFramesAfterResume": RecordingRuntime.shared.systemAudioFrames - audioFramesAfterPause,
             "libraryStatus": ready?.status.rawValue ?? "nil",
             "persisted": ["transcript": persistedT.count, "decisions": canvas.decisions.count, "actions": canvas.actions.count],
             "timings": timings, "errors": errors,
@@ -165,6 +172,8 @@ extension SelfTest {
             "microphone": Permissions.microphone.rawValue,
             "recordedMs": recordedMs,
             "sttFinals": sttFinals, "sttPartials": sttPartials,
+            "systemAudioFrames": RecordingRuntime.shared.systemAudioFrames,
+            "systemAudioPeak": RecordingRuntime.shared.systemAudioPeak,
         ]
         if let data = try? JSONSerialization.data(withJSONObject: result, options: [.prettyPrinted, .sortedKeys]) {
             try? data.write(to: URL(fileURLWithPath: "\(outDir)/result.json"))

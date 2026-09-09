@@ -439,6 +439,66 @@ describe('context injection', () => {
     expect(pack.stats.chars).toBe(pack.text.length);
   });
 
+  it('keeps the concrete obligation and exact deadline in priority answers', () => {
+    const p = ctx.priorities[0]!;
+    const due = '2026-09-11T09:00:00.000Z';
+    const pack = selectContextPack({
+      question: '今週何がやばい？',
+      context: {
+        ...ctx,
+        priorities: [{ ...p, due_at: due, lines: ['3 日後が期限', '担当者に未返信'] }],
+        owed: [
+          {
+            id: 'owed:test',
+            project: p.project,
+            to: '担当者',
+            what: '見積を提出する',
+            due_at: due,
+            sources: p.sources,
+          },
+        ],
+      },
+    });
+    expect(pack.text).toContain('見積を提出する');
+    expect(pack.text).toContain(due);
+    expect(pack.text).not.toContain('3 日後');
+  });
+
+  it('uses sourced previous meeting decisions only for meeting preparation', () => {
+    const p = ctx.priorities[0]!;
+    const brief = {
+      event_id: 'event:test',
+      title: '顧客定例',
+      starts_at: NOW.toISOString(),
+      project: p.project,
+      previous: [{ text: 'Standard プランで提案する', sources: p.sources }],
+      open_items: [],
+      since_last_meeting: [],
+      suggested_questions: [],
+      provenance: p.sources,
+      generated_at: NOW.toISOString(),
+    };
+    const prep = selectContextPack({
+      question: '次の会議を準備して',
+      context: ctx,
+      meetingBrief: brief,
+    });
+    expect(prep.text).toContain('Standard プラン');
+    expect(prep.text).toContain(p.sources[0]!.label);
+    expect(prep.stats.selected_artifacts).toBeLessThanOrEqual(prep.stats.available_artifacts);
+    expect(
+      selectContextPack({ question: 'Swift コードを直して', context: ctx, meetingBrief: brief })
+        .text,
+    ).toBe('');
+    expect(
+      selectContextPack({
+        question: '次の会議を準備して',
+        context: { ...ctx, inference_enabled: false },
+        meetingBrief: brief,
+      }).text,
+    ).toBe('');
+  });
+
   it('minimizes: an email reply gets only the named counterpart, never the whole inbox', () => {
     const named = selectContextPack({ question: 'MTI に返信を書いて', context: ctx });
     expect(named.intent).toBe('email_reply');
@@ -527,6 +587,25 @@ describe('personalization', () => {
     expect(p.frequent_entities.every((t) => t.sources.length > 0)).toBe(true);
     expect(p.working_style).toEqual([]);
     expect(p.inference_enabled).toBe(true);
+  });
+
+  it('uses a corrected writing preference immediately instead of its stale default label', () => {
+    const stored = applyUpdate(
+      EMPTY_PERSONALIZATION,
+      {
+        traits: [
+          {
+            key: 'style.prefersConcise',
+            status: 'confirmed',
+            value: '詳しく、出所と一緒に説明する',
+          },
+        ],
+      },
+      NOW,
+    );
+    expect(deriveProfile(fixture, stored, NOW).working_style[0]?.label).toBe(
+      '詳しく、出所と一緒に説明する',
+    );
   });
 
   it('lets the person confirm a style and disable one inference in one update', () => {

@@ -82,6 +82,7 @@ function harness(
     /** push を落とす（cloud が受け取れなかった）。 */
     pushFails?: boolean;
     backoffMs?: number;
+    googleQuery?: string;
   } = {},
 ): Harness {
   const urls: string[] = [];
@@ -123,6 +124,7 @@ function harness(
     : undefined;
   const loop = new WorkSyncLoop({
     connectors: runtime,
+    ...(options.googleQuery ? { googleQuery: options.googleQuery } : {}),
     ...(options.backoffMs === undefined ? {} : { backoffMs: options.backoffMs }),
     sleep: async (ms) => {
       sleeps.push(ms);
@@ -223,6 +225,34 @@ const MICROSOFT_GRANTS = {
 };
 
 describe('syncing work context from the device', () => {
+  it('preserves incoming work when Gmail lists one self-delivered message in both folders', async () => {
+    const h = harness({
+      connected: ['com.astra.gmail/gmail'],
+      granted: GOOGLE_GRANTS,
+      routes: (url) =>
+        url.includes('/messages?') ? { body: { messages: [{ id: 'in1' }] } } : defaultRoutes(url),
+    });
+    await h.loop.syncOnce();
+    const artifacts = h.batches.find((b) => b.source === 'gmail')!.artifacts;
+    expect(artifacts).toHaveLength(1);
+    expect(artifacts[0]!.direction).toBe('inbound');
+  });
+  it('restricts both Google sources before fetching mail details or classifying', async () => {
+    const h = harness({
+      connected: ['com.astra.gmail/gmail', 'com.astra.google-calendar/google-calendar'],
+      granted: GOOGLE_GRANTS,
+      googleQuery: 'WC123456',
+    });
+    await h.loop.syncOnce();
+    const searches = h.urls.filter((url) => url.includes('/messages?') || url.includes('/events?'));
+    expect(searches).toHaveLength(3);
+    for (const url of searches) {
+      expect(new URL(url).searchParams.get('q')).toContain('WC123456');
+    }
+    expect(
+      new URL(searches.find((url) => url.includes('/messages?'))!).searchParams.get('q'),
+    ).toContain('after:');
+  });
   it('touches nothing when nothing is connected', async () => {
     const h = harness();
     const report = await h.loop.syncOnce();
@@ -383,6 +413,13 @@ describe('syncing work context from the device', () => {
     expect(semanticFrom({ category: 'nonsense' })).toBeNull();
     expect(semanticFrom('text')).toBeNull();
     expect(semanticFrom({ category: 'question', due: 'いつか' })).toBeNull();
+    expect(
+      semanticFrom({ category: 'request_to_me', project: 'ACME', due: '2026-09-11' }),
+    ).toMatchObject({
+      category: 'request_to_me',
+      project: 'ACME',
+      due: null,
+    });
     expect(semanticFrom({ category: 'question' })).toMatchObject({
       category: 'question',
       extracted_by: 'llm',

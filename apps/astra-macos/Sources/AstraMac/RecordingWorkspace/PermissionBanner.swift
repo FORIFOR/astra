@@ -65,4 +65,10 @@ struct PermissionIssue {
             Permissions.openSpeechRecognitionSettings()
         }
     }
+    static var systemAudioUnavailable: PermissionIssue {
+        PermissionIssue(message: "画面の音を取り込めません。マイクの録音は続いています。", channel: .remoteAudio,
+                        transcriptHint: "画面収録の許可を確認し、録音を開始し直してください。") {
+            Permissions.openScreenRecordingSettings()
+        }
+    }
 }

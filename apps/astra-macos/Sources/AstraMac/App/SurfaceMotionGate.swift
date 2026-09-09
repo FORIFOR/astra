@@ -331,7 +331,7 @@ enum SurfaceMotionGate {
         // recording path so a raw debug executable does not invoke macOS TCC.
         recording.start(captureMic: false, transcribe: false, requestPermissions: false); settle(0.8)
         guard MeetingSessionStore.shared.live != nil else {
-            print("SELFTEST_FAIL surfacemotion: 録音が始まっていない"); exit(2)
+            print("SELFTEST_FAIL surfacemotion: 録音が始まっていない"); SelfTest.exit(2)
         }
         if NSWorkspace.shared.accessibilityDisplayShouldReduceMotion {
             result.notMeasured.append("Reduce Motion が有効なので遷移は一瞬（アニメーションは測れない）")
@@ -380,10 +380,10 @@ enum SurfaceMotionGate {
         print("PERCEIVED_SURFACE_CONTINUITY=LAYER_B（この selftest では測らない。判定は journeys/perceived/answers/aggregate.md）")
         if result.pass {
             print("SELFTEST_OK surfacemotion: \(result.transitions.count) 遷移とも同じ窓 id・上辺と中心は 2pt 以内・抜け 0（60fps window-only）")
-            exit(0)
+            SelfTest.exit(0)
         } else {
             print("SELFTEST_FAIL surfacemotion: \(result.transitions.flatMap(\.verdict).joined(separator: ", "))")
-            exit(2)
+            SelfTest.exit(2)
         }
     }
 }

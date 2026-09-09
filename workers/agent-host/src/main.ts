@@ -10,9 +10,11 @@ import { credentialRef, providerConfig, type OauthProvider } from '@astra/oauth'
 import { LocalAgentHost } from './host.js';
 import { httpTransport } from './transport.js';
 import { keychainFor } from './keychain.js';
+import { liveFaultTransport } from './live-fault-transport.js';
 import { ConnectorRuntime } from './connector-steps.js';
 import { HostStepLoop } from './step-loop.js';
 import { httpStepTransport } from './step-transport.js';
+import { CodexCli } from './codex.js';
 import { ClaudeCodeCli } from './claude-code.js';
 import { LlmRuntime } from './llm-steps.js';
 import { CompositeRunner } from './runner.js';
@@ -49,15 +51,34 @@ async function main(): Promise<void> {
    * 端末の側にあるので、呼ぶのも端末になる。
    * Claude Code のログインは Claude Code のもので、Astra は読まない。
    */
+  const preferredCli = process.env['ASTRA_LLM_CLI'];
+  if (preferredCli && !['codex', 'claude_code'].includes(preferredCli))
+    throw new Error('ASTRA_LLM_CLI must be codex or claude_code');
   const llm = new LlmRuntime({
-    claudeCode: new ClaudeCodeCli({
-      ...(process.env['ASTRA_CLAUDE_CODE_PATH']
-        ? { command: process.env['ASTRA_CLAUDE_CODE_PATH'] }
-        : {}),
-      ...(process.env['ASTRA_CLAUDE_CODE_MODEL']
-        ? { model: process.env['ASTRA_CLAUDE_CODE_MODEL'] }
-        : {}),
-    }),
+    ...(preferredCli !== 'claude_code'
+      ? {
+          codex: new CodexCli({
+            ...(process.env['ASTRA_CODEX_PATH']
+              ? { command: process.env['ASTRA_CODEX_PATH'] }
+              : {}),
+            ...(process.env['ASTRA_CODEX_MODEL']
+              ? { model: process.env['ASTRA_CODEX_MODEL'] }
+              : {}),
+          }),
+        }
+      : {}),
+    ...(preferredCli !== 'codex'
+      ? {
+          claudeCode: new ClaudeCodeCli({
+            ...(process.env['ASTRA_CLAUDE_CODE_PATH']
+              ? { command: process.env['ASTRA_CLAUDE_CODE_PATH'] }
+              : {}),
+            ...(process.env['ASTRA_CLAUDE_CODE_MODEL']
+              ? { model: process.env['ASTRA_CLAUDE_CODE_MODEL'] }
+              : {}),
+          }),
+        }
+      : {}),
   });
 
   /*
@@ -133,8 +154,10 @@ async function main(): Promise<void> {
    * トークンは OS の資格情報ストアから、呼ぶ直前にだけ読む。
    */
   const secrets = keychainFor(process.platform, process.env['USER'] ?? 'astra');
+  const faultFetch = liveFaultTransport(process.env);
   const runtime = new ConnectorRuntime({
     secrets,
+    ...(faultFetch ? { fetch: faultFetch } : {}),
     credentialRefFor: credentialRef,
     /*
      * 実際に許された scope。**要求した scope ではない。**
@@ -174,6 +197,9 @@ async function main(): Promise<void> {
   const workSync = new WorkSyncLoop({
     connectors: runtime,
     llm,
+    ...(process.env['ASTRA_WORK_SYNC_GOOGLE_QUERY']
+      ? { googleQuery: process.env['ASTRA_WORK_SYNC_GOOGLE_QUERY'] }
+      : {}),
     push: async (batch) => {
       await cloud('/v1/work/artifacts', 'POST', batch);
     },

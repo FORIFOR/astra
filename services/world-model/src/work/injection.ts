@@ -19,6 +19,7 @@ import {
   type PersonalizationProfile,
   type WorkContext,
   type WorkPriority,
+  type MeetingBrief,
 } from '@astra/contracts';
 import { titleTokens } from './graph.js';
 
@@ -45,6 +46,7 @@ export interface InjectionInput {
   readonly question: string;
   readonly context: WorkContext;
   readonly profile?: PersonalizationProfile | null;
+  readonly meetingBrief?: MeetingBrief | null;
 }
 
 export interface ContextPack {
@@ -87,7 +89,11 @@ function asInjected(p: WorkPriority, extra: readonly string[] = []): InjectedPri
  */
 export function selectContextPack(input: InjectionInput): ContextPack {
   const { context, question } = input;
-  const available = context.priorities.length + context.waiting_on.length + context.owed.length;
+  const available =
+    context.priorities.length +
+    context.waiting_on.length +
+    context.owed.length +
+    (input.meetingBrief ? 1 : 0);
   const empty = (intent: ContextIntent): ContextPack => ({
     intent,
     items: [],
@@ -151,6 +157,26 @@ export function selectContextPack(input: InjectionInput): ContextPack {
       return finish(intent, items, selected);
     }
     case 'meeting_prep': {
+      const brief = input.meetingBrief;
+      if (brief && (targets.length === 0 || targets.some((p) => p.project === brief.project))) {
+        const facts = [...brief.previous, ...brief.open_items, ...brief.since_last_meeting].slice(
+          0,
+          2,
+        );
+        const items = [
+          {
+            project: brief.project ?? brief.title,
+            score: 0,
+            lines: [
+              `${brief.title} 開始: ${brief.starts_at}`,
+              ...facts.map(
+                (fact) => `${fact.text}（出所: ${fact.sources.map((s) => s.label).join('、')}）`,
+              ),
+            ],
+          },
+        ];
+        return finish(intent, items, 1);
+      }
       // 名指しの案件 → 無ければ、今日の会議が状況に出ている案件 → それも無ければ 0
       const meetingLike = context.priorities.filter((p) =>
         p.lines.some((l) => /(会議|定例|ミーティング|meeting|打ち合わせ)/.test(l)),
@@ -198,7 +224,21 @@ export function selectContextPack(input: InjectionInput): ContextPack {
       const chosen = [...targets.sort(rank), ...rest].slice(0, MAX_INJECTED_PRIORITIES);
       return finish(
         intent,
-        chosen.map((p) => asInjected(p)),
+        chosen.map((p) => ({
+          ...asInjected(p),
+          lines: [
+            ...(p.due_at ? [`期限: ${p.due_at}`] : []),
+            ...context.owed
+              .filter((o) => o.project === p.project)
+              .slice(0, 1)
+              .map((o) => `${o.to} に返す: ${o.what}`),
+            ...context.waiting_on
+              .filter((w) => w.project === p.project)
+              .slice(0, 1)
+              .map((w) => `${w.who} からの返事待ち: ${w.what}`),
+            ...p.lines,
+          ].slice(0, 3),
+        })),
         chosen.length,
       );
     }

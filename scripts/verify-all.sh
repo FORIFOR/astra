@@ -8,6 +8,17 @@ cd "$ROOT"
 fail=0
 run() { echo; echo "== $1 =="; shift; if "$@"; then :; else echo "  ^ FAILED"; fail=1; fi; }
 
+# Several gates invoke .build/debug/AstraMac directly. Build before the first
+# consumer: a previous checkout's binary can otherwise reject current fixtures
+# (or pass despite a source regression). Stop if the candidate cannot be built.
+if [[ "$(uname -s)" == Darwin ]]; then
+  echo "== current macOS debug candidate =="
+  if ! swift build --package-path "$ROOT/apps/astra-macos"; then
+    echo "VERIFY_ALL_FAIL: current macOS candidate could not be built"
+    exit 1
+  fi
+fi
+
 # `cmd | grep ...` は grep の終了状態になるので、**テストが落ちても緑**になっていた。
 # 実際に 1 件落ちたまま VERIFY_ALL_OK が出た。要約だけ見せつつ、状態は元のコマンドのものを返す。
 # 落ちたときは要約だけでは追えない。**どのテストが落ちたか**を必ず残す。
@@ -16,6 +27,7 @@ run "Tauri Rust regression"       bash -c "cd apps/desktop/src-tauri && out=\$(c
 run "Tauri desktop JS regression" bash -c "out=\$(pnpm --filter @astra/desktop test 2>&1); st=\$?; echo \"\$out\" | grep -E 'Tests +[0-9]+ passed' | tail -1; [ \$st -eq 0 ] || { echo '--- 落ちたときの全文（末尾40行）---'; tail -40 <<<\"\$out\"; }; exit \$st"
 run "TCC usage descriptions"     bash scripts/verify-usage-descriptions.sh
 run "release consistency"        bash scripts/verify-release-consistency.sh
+run "release aggregation regression" python3 -m unittest discover -s scripts/tests -p 'test_*.py'
 run "UI taste"                   bash scripts/verify-ui-taste.sh
 run "permission JIT"             bash scripts/verify-permission-jit.sh
 # 端末から出る道（Apple STT サーバ・録音の自動 upload・使っていない画面収録）が既定で閉じているか。
@@ -43,7 +55,7 @@ run "macOS recording + live E2E"  bash scripts/verify-macos-recording.sh
 run "recording experience E2E"    bash scripts/verify-recording-experience.sh
 # 3 本の Journey を時間軸で通す（窓・鍵・面・遷移・出所 id の連続。層 A）。
 run "journeys JA/JB/JC"           bash scripts/verify-journeys.sh
-run "macOS swift unit tests"      bash -c 'cd apps/astra-macos || exit; out=$(swift test 2>&1); st=$?; echo "$out" | grep -E "Executed [0-9]+ tests" | head -1; if [ "$st" -ne 0 ]; then tail -40 <<<"$out"; fi; exit "$st"'
+run "macOS swift unit tests"      bash -c 'cd apps/astra-macos || exit; out=$(swift test 2>&1); st=$?; echo "$out" | grep -E "Executed [0-9]+ tests" | tail -1; if [ "$st" -ne 0 ]; then tail -40 <<<"$out"; fi; exit "$st"'
 
 echo
 if [[ $fail -eq 0 ]]; then echo "VERIFY_ALL_OK: この環境で検証できる全ゲートが緑"; else echo "VERIFY_ALL_FAIL"; exit 1; fi

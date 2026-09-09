@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# FKA_GATE — Full Keyboard Access（キーボードナビゲーション）を実 OS で ON にして、
+# FKA_GATE — 実OSのFull Keyboard AccessがONであることを確認して、
 # 署名済み RC .app に Tab を**本当に**送り、AX が公開する focus の移動を証拠に判定する。人手 0。
 #
 # 以前は「システム設定で ON にして、本人が TSV を読む」だった（docs/ux-benchmark/a11y/RUNBOOK.md §1）。
-# ここでは OS の設定を機械が切り替え（AppleKeyboardUIMode）、終わったら元に戻す。
+# 設定の変更は行わない。AppleKeyboardUIModeだけではFull Keyboard Accessの証拠にならない。
 #
 #   bash scripts/reality/run-fka.sh [Astra.app] [out.tsv]
 #
-# 判定（全部満たして FKA_GATE=PASS）:
+# 部分判定（FKA_TRAVERSAL_GATE）。4つの結果到達journeyは別途必要:
 #   fullKeyboardAccess=true            OS 側で ON になった実行だけを数える
 #   nameless controls               = 0   名前の無い操作部品が無い（VoiceOver も FKA もこれを読む）
 #   focus moved but not visible     = 0   動いたのに描かれていない focus（見えない鍵盤操作）
@@ -21,15 +21,19 @@ mkdir -p "$(dirname "$OUT")"
 [[ -x "$APP/Contents/MacOS/AstraMac" ]] || { echo "AUTOMATION_MISSING: 署名済み .app が無い（scripts/package-macos-app.sh）"; exit 2; }
 if pgrep -x AstraMac >/dev/null; then echo "FAIL: AstraMac が既に動いている"; exit 1; fi
 
-# OS の設定を切り替える。0/1 = off、2 = 全コントロール（FKA ON）。元の値は必ず戻す。
-prev="$(defaults read -g AppleKeyboardUIMode 2>/dev/null || echo 0)"
-restore() { if [[ "$prev" == "0" ]]; then defaults delete -g AppleKeyboardUIMode >/dev/null 2>&1 || true; else defaults write -g AppleKeyboardUIMode -int "$prev"; fi; }
-trap restore EXIT
-defaults write -g AppleKeyboardUIMode -int 2
+# Keyboard > Keyboard navigation (AppleKeyboardUIMode) and Accessibility >
+# Keyboard > Full Keyboard Access are separate settings. Do not change the former
+# and report the latter as measured.
+fka="$(defaults read com.apple.Accessibility FullKeyboardAccessEnabled 2>/dev/null || echo 0)"
+if [[ "$fka" != 1 ]]; then
+  echo "FKA_GATE=AUTOMATION_MISSING Full Keyboard Access is OFF in Accessibility > Keyboard"
+  exit 3
+fi
 
 # a11ynames は TSV を書く（open --args では stdout が読めない）。TCC の主体はバンドルなので open で起動する。
 rm -f "$OUT"
 data="$(mktemp -d)"
+trap 'rm -rf "$data"' EXIT
 open -W --env "ASTRA_DATA_ROOT=$data" "$APP" --args --selftest a11ynames "$OUT"
 [[ -f "$OUT" ]] || { echo "FAIL: a11ynames が TSV を書かなかった（$OUT）"; exit 1; }
 
@@ -56,6 +60,7 @@ print(f"  moved steps                  {dict(moved)}")
 print(f"  moved but not visible        {len(invisible)} {invisible[:3]}")
 print(f"  NOT_MEASURED surfaces        {not_measured}")
 print(f"  surfaces without a move      {missing_moves}")
-print(f"FKA_GATE={'PASS' if ok else 'FAIL'}")
-sys.exit(0 if ok else 1)
+print(f"FKA_TRAVERSAL_GATE={'PASS' if ok else 'FAIL'}")
+print('FKA_GATE=PARTIAL (surface traversal; four outcome journeys still required)' if ok else 'FKA_GATE=FAIL')
+sys.exit(2 if ok else 1)
 PY

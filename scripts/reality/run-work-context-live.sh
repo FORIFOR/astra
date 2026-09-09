@@ -11,10 +11,11 @@
 # 環境変数で渡す。本人のアカウントも login keychain も触らない（トークンはこの実行だけのファイル）。
 #
 #   ASTRA_TEST_GOOGLE_CLIENT_ID / ASTRA_TEST_GOOGLE_REFRESH_TOKEN   [ASTRA_TEST_GMAIL_SINK]
-#       Google Workspace のテスト identity。scope: gmail.insert gmail.readonly gmail.modify gmail.send calendar.events
+#       Google Workspace のテスト identity。scope: gmail.insert gmail.modify calendar.events
 #   ASTRA_TEST_MS_CLIENT_ID / ASTRA_TEST_MS_REFRESH_TOKEN               [ASTRA_TEST_OUTLOOK_SINK]
-#       Microsoft tenant のテスト identity。scope: Mail.ReadWrite Mail.Send Calendars.ReadWrite Tasks.ReadWrite offline_access
-#   Claude Code CLI（端末の LLM。返信案を書く）。sink は既定で identity 自身。
+#       Microsoft tenant のテスト identity。scope: Mail.ReadWrite Calendars.ReadWrite User.Read offline_access
+#   READ / WRITE_REFRESH_TOKEN もそれぞれ必須。scopeは live-oauth.ts の LIVE_SCOPES を参照。
+#   Claude Code CLI（端末の LLM。返信案を書く）。sink は identity 自身のみ。
 #
 # 流れ: preflight → 使い捨て DB + gateway → 固定 fixture を投入（Mail A/B・顧客定例・タスク）→
 #       端末 worker が読む接続だけで同期 → 期待した Work Graph（案件・期限・待ち・会議・pressure HIGH）を assert → 掃除。
@@ -22,6 +23,12 @@
 set -uo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
+export ASTRA_LLM_CLI="${ASTRA_LLM_CLI:-claude_code}"
+case "$ASTRA_LLM_CLI" in
+  codex) LLM_COMMAND="${ASTRA_CODEX_PATH:-codex}" ;;
+  claude_code) LLM_COMMAND="${ASTRA_CLAUDE_CODE_PATH:-claude}" ;;
+  *) echo 'FAIL: ASTRA_LLM_CLI must be codex or claude_code'; exit 1 ;;
+esac
 
 PROVIDER="${ASTRA_LIVE_PROVIDER:-google}"
 PORT="${ASTRA_LIVE_PORT:-3399}"
@@ -31,41 +38,63 @@ PGSUPER="${ASTRA_TEST_PGUSER:-astra}"
 export PGPASSWORD="${ASTRA_TEST_PGPASSWORD:-astra}"
 DB="astra_wclive_$$"
 ADMIN_URL="postgres://${PGSUPER}:${PGPASSWORD}@${PGHOST}:${PGPORT}/${DB}?sslmode=disable"
-STORE="$(mktemp -d)"
+STORE=""
 OUT="${ASTRA_LIVE_OUT:-/tmp/astra-work-context-live}"
 BASE="http://127.0.0.1:${PORT}"
 EMAIL="work-context-live-$$@astra.local"
 NONCE="WC$(date +%s | tail -c 6)"
 mkdir -p "$OUT"
+export ASTRA_LIVE_FAULT_NONCE="$NONCE" ASTRA_LIVE_FAULT_LOG="$OUT/fault-$PROVIDER-$NONCE.json"
 
 # ---- 1. preflight（この provider に要るものだけ）
 NAME="$([ "$PROVIDER" = microsoft ] && echo MICROSOFT_DAILY_WORK_LIVE || echo GOOGLE_DAILY_WORK_LIVE)"
+if [ "${ASTRA_LIVE_FAULT_MODE:-}" = send-response-loss ]; then NAME="$(echo "$PROVIDER" | tr '[:lower:]' '[:upper:]')_CONNECTOR_RESPONSE_LOSS_LIVE"; fi
+if [ "${ASTRA_LIVE_READ_DIAGNOSTIC:-}" = 1 ]; then NAME="$(echo "$PROVIDER" | tr '[:lower:]' '[:upper:]')_READ_DIAGNOSTIC"; fi
 have=(); missing=()
 if [ "$PROVIDER" = microsoft ]; then
-  [[ -n "${ASTRA_TEST_MS_CLIENT_ID:-}${ASTRA_TEST_MICROSOFT_CLIENT_ID:-}" && -n "${ASTRA_TEST_MS_REFRESH_TOKEN:-}${ASTRA_TEST_MICROSOFT_REFRESH_TOKEN:-}" ]] && have+=("microsoft test identity") || missing+=("Microsoft tenant test identity (ASTRA_TEST_MS_CLIENT_ID + ASTRA_TEST_MS_REFRESH_TOKEN; scopes Mail.ReadWrite/Mail.Send/Calendars.ReadWrite/Tasks.ReadWrite/offline_access)")
+  [[ -n "${ASTRA_TEST_MS_CLIENT_ID:-}${ASTRA_TEST_MICROSOFT_CLIENT_ID:-}" && -n "${ASTRA_TEST_MS_REFRESH_TOKEN:-}${ASTRA_TEST_MICROSOFT_REFRESH_TOKEN:-}" ]] && have+=("microsoft test identity") || missing+=("Microsoft tenant test identity (ASTRA_TEST_MS_CLIENT_ID + ASTRA_TEST_MS_REFRESH_TOKEN; scopes Mail.ReadWrite/Calendars.ReadWrite/User.Read/offline_access)")
 else
-  [[ -n "${ASTRA_TEST_GOOGLE_CLIENT_ID:-}" && -n "${ASTRA_TEST_GOOGLE_REFRESH_TOKEN:-}" ]] && have+=("google test identity") || missing+=("Google Workspace test identity (ASTRA_TEST_GOOGLE_CLIENT_ID + ASTRA_TEST_GOOGLE_REFRESH_TOKEN; scopes gmail.insert/gmail.readonly/gmail.modify/gmail.send/calendar.events)")
+  [[ -n "${ASTRA_TEST_GOOGLE_CLIENT_ID:-}" && -n "${ASTRA_TEST_GOOGLE_REFRESH_TOKEN:-}" ]] && have+=("google test identity") || missing+=("Google Workspace test identity (ASTRA_TEST_GOOGLE_CLIENT_ID + ASTRA_TEST_GOOGLE_REFRESH_TOKEN; scopes gmail.insert/gmail.modify/calendar.events)")
 fi
+for grant in READ WRITE; do
+  if [ "$PROVIDER" = microsoft ]; then
+    key="ASTRA_TEST_MS_${grant}_REFRESH_TOKEN"; alias="ASTRA_TEST_MICROSOFT_${grant}_REFRESH_TOKEN"
+    [[ -n "${!key:-}${!alias:-}" ]] || missing+=("dedicated ${grant} grant ($key)")
+  else
+    key="ASTRA_TEST_GOOGLE_${grant}_REFRESH_TOKEN"
+    [[ -n "${!key:-}" ]] || missing+=("dedicated ${grant} grant ($key)")
+  fi
+done
 pg_isready -h "$PGHOST" -p "$PGPORT" >/dev/null 2>&1 && have+=("postgres:$PGPORT") || missing+=("postgres at $PGHOST:$PGPORT (pnpm dev:infra)")
 command -v dbmate >/dev/null 2>&1 && have+=("dbmate") || missing+=("dbmate")
-command -v claude >/dev/null 2>&1 && have+=("claude code cli") || missing+=("Claude Code CLI on PATH (device LLM for the draft)")
+command -v "$LLM_COMMAND" >/dev/null 2>&1 && have+=("$ASTRA_LLM_CLI cli") || missing+=("$LLM_COMMAND on PATH (device LLM for the draft)")
 echo "$NAME have=[${have[*]:-}]"
 if [[ ${#missing[@]} -gt 0 ]]; then
   printf '%s=AUTOMATION_MISSING %s\n' "$NAME" "$(IFS=';'; echo "${missing[*]}")"
   exit 3
 fi
 
+STORE="$(mktemp -d)"
 GATEWAY_PID=""; HOST_PID=""; WORKER_PID=""
 cleanup() {
   local rc=$?
-  for pid in "$HOST_PID" "$WORKER_PID" "$GATEWAY_PID"; do [ -n "$pid" ] && { kill "$pid" 2>/dev/null || true; wait "$pid" 2>/dev/null || true; }; done
+  trap - EXIT
+  local cleanup_failed=0
+  for pid in "$HOST_PID" "$WORKER_PID" "$GATEWAY_PID"; do [ -n "$pid" ] && { python3 "$ROOT/scripts/reality/stop-test-process.py" "$pid" 2>/dev/null || true; wait "$pid" 2>/dev/null || true; }; done
   if [ -f "$STORE/seeded.json" ]; then
-    ASTRA_LIVE_PROVIDER="$PROVIDER" ASTRA_SECRET_STORE_FILE="$STORE/secrets.json" pnpm exec tsx workers/agent-host/src/live-seed.ts "$NONCE" --cleanup "$STORE/seeded.json" >> "$OUT/seed.log" 2>&1 || true
+    ASTRA_LIVE_PROVIDER="$PROVIDER" ASTRA_SECRET_STORE_FILE="$STORE/secrets.json" pnpm exec tsx workers/agent-host/src/live-seed.ts "$NONCE" --cleanup "$STORE/seeded.json" >> "$STORE/seed.log" 2>&1 || cleanup_failed=1
   fi
-  dbmate --url "$ADMIN_URL" --migrations-dir "$ROOT/infra/db/migrations" --no-dump-schema drop >/dev/null 2>&1 || true
+  dbmate --url "$ADMIN_URL" --migrations-dir "$ROOT/infra/db/migrations" --no-dump-schema drop >/dev/null 2>&1 || cleanup_failed=1
   # bootstrap.sql のロールはクラスタ共通。別DBや別の検証も使用するため、
   # このrunの一時DBを片付ける際に削除してはいけない。
   cp "$STORE"/*.log "$OUT/" 2>/dev/null || true
+  if [ "$cleanup_failed" != 0 ]; then
+    [ ! -f "$STORE/seeded.json" ] || cp "$STORE/seeded.json" "$OUT/seeded-cleanup-pending-$PROVIDER.json"
+    echo "$NAME=FAIL cleanup incomplete; fixture IDs retained in $OUT" >&2
+    rc=1
+  elif [ "$rc" = 0 ]; then
+    echo "$NAME=PASS"
+  fi
   rm -rf "$STORE"   # トークンのファイルはここで消える
   exit $rc
 }
@@ -82,9 +111,9 @@ export ASTRA_DB_IDENTITY_URL="postgres://astra_identity:astra_identity@${PGHOST}
 export REDIS_URL="${REDIS_URL:-redis://localhost:6380}" TEMPORAL_ADDRESS="${TEMPORAL_ADDRESS:-localhost:7233}"
 export ASTRA_OBJECT_STORE_ROOT="$STORE" ASTRA_RECORDING_ROOT="$STORE/recordings" ASTRA_BUILTIN_PLUGINS_DIR="$ROOT/plugins/builtin"
 export ASTRA_TASK_QUEUE="astra.task.wclive.$$"
-pnpm exec tsx workers/task-worker/src/worker-main.ts > "$STORE/worker.log" 2>&1 &
+python3 "$ROOT/scripts/reality/without-test-credentials.py" pnpm exec tsx workers/task-worker/src/worker-main.ts > "$STORE/worker.log" 2>&1 &
 WORKER_PID=$!
-pnpm exec tsx services/api-gateway/src/server.ts > "$STORE/gateway.log" 2>&1 &
+python3 "$ROOT/scripts/reality/without-test-credentials.py" pnpm exec tsx services/api-gateway/src/server.ts > "$STORE/gateway.log" 2>&1 &
 GATEWAY_PID=$!
 for _ in $(seq 1 60); do curl -fsS "$BASE/healthz" >/dev/null 2>&1 && break; sleep 1; done
 curl -fsS "$BASE/healthz" >/dev/null 2>&1 || fail "the gateway never became healthy"
@@ -99,18 +128,19 @@ export ASTRA_SECRET_STORE_FILE="$STORE/secrets.json" ASTRA_LIVE_SEEDED_FILE="$ST
 pnpm exec tsx workers/agent-host/src/live-seed.ts "$NONCE" > "$STORE/seed.log" 2>&1 || fail "seeding the fixture (see seed.log)"
 cat "$STORE/seed.log"
 
-# ---- 4. 端末 worker が読む接続だけで同期（送る接続のトークンはそもそも無い）
-# 読む許可 + 送る許可（送るのは承認と確認を通ってだけ）。
+# ---- 4. 端末 worker がread-only grantで同期。write tokenは承認項目を観測するまで保存しない。
 GRANTS="com.astra.gmail=email.read,email.send,email.draft,email.modify;com.astra.google-calendar=calendar.read;com.astra.outlook=email.read,calendar.read,email.send;com.astra.microsoft-todo=tasks.read"
-env -u CLAUDECODE -u CLAUDE_CODE_CHILD_SESSION -u CLAUDE_CODE_ENTRYPOINT -u CLAUDE_CODE_SESSION_ID \
+python3 "$ROOT/scripts/reality/without-test-credentials.py" env -u CLAUDECODE -u CLAUDE_CODE_CHILD_SESSION -u CLAUDE_CODE_ENTRYPOINT -u CLAUDE_CODE_SESSION_ID \
   ASTRA_API_URL="$BASE" ASTRA_HOST_TOKEN="$AT" ASTRA_DEVICE_LABEL="work-context-live" \
   ASTRA_GRANTED_SCOPES="$GRANTS" ASTRA_WORK_SYNC_INTERVAL_MIN=1 \
-  ASTRA_OAUTH_GOOGLE_CLIENT_ID="${ASTRA_TEST_GOOGLE_CLIENT_ID:-}" ASTRA_OAUTH_MICROSOFT_CLIENT_ID="${ASTRA_TEST_MS_CLIENT_ID:-${ASTRA_TEST_MICROSOFT_CLIENT_ID:-}}" \
+  ASTRA_WORK_SYNC_GOOGLE_QUERY="$NONCE" \
+  ASTRA_OAUTH_GOOGLE_CLIENT_SECRET="${ASTRA_TEST_GOOGLE_READ_CLIENT_SECRET:-${ASTRA_TEST_GOOGLE_CLIENT_SECRET:-}}" \
+  ASTRA_OAUTH_GOOGLE_CLIENT_ID="${ASTRA_TEST_GOOGLE_READ_CLIENT_ID:-${ASTRA_TEST_GOOGLE_CLIENT_ID:-}}" ASTRA_OAUTH_MICROSOFT_CLIENT_ID="${ASTRA_TEST_MS_READ_CLIENT_ID:-${ASTRA_TEST_MICROSOFT_READ_CLIENT_ID:-${ASTRA_TEST_MS_CLIENT_ID:-${ASTRA_TEST_MICROSOFT_CLIENT_ID:-}}}}" \
   pnpm exec tsx workers/agent-host/src/main.ts > "$STORE/host.log" 2>&1 &
 HOST_PID=$!
 
 # ---- 5. 閉ループを機械で assert（Home → 返信 → 会議 → 次の brief）
-pnpm exec tsx workers/agent-host/src/live-assert.ts "$BASE" "$AT" "$STORE/seeded.json" 240 | tee "$OUT/result-$PROVIDER.txt"
+ASTRA_LIVE_ASSERT_PHASE_ONLY=1 pnpm exec tsx workers/agent-host/src/live-assert.ts "$BASE" "$AT" "$STORE/seeded.json" 240 | tee "$OUT/result-$PROVIDER.txt"
 RC=${PIPESTATUS[0]}
 [ "$RC" = 0 ] || fail "see $OUT/result-$PROVIDER.txt and $OUT/host.log"
 echo "  artifacts: $OUT (result-$PROVIDER.txt / seed.log / host.log / worker.log / gateway.log)"

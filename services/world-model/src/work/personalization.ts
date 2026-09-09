@@ -130,7 +130,7 @@ export function deriveProfile(
     if (o?.status === 'confirmed' || o?.value !== undefined) {
       style.push({
         key,
-        label: STYLE_LABEL[key]!,
+        label: typeof o.value === 'string' ? o.value : STYLE_LABEL[key]!,
         value: o.value ?? 1,
         status: o.status ?? 'confirmed',
         enabled: o.enabled ?? true,

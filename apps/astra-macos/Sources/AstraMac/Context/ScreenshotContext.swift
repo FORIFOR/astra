@@ -32,7 +32,16 @@ enum VisualEgressPolicy: Equatable {
     case cloudVision(provider: String)
 
     static var current: VisualEgressPolicy {
-        ProcessInfo.processInfo.environment["ASTRA_LOCAL_VISION"] == "1" ? .localVision : .cloudVision(provider: "Claude")
+        configured(environment: ProcessInfo.processInfo.environment)
+    }
+
+    static func configured(environment: [String: String]) -> VisualEgressPolicy {
+        if environment["ASTRA_LOCAL_VISION"] == "1" { return .localVision }
+        switch environment["ASTRA_LLM_CLI"] {
+        case "codex": return .cloudVision(provider: "OpenAI")
+        case "claude_code": return .cloudVision(provider: "Claude")
+        default: return .cloudVision(provider: "接続したモデルの提供元")
+        }
     }
 
     /// 質問したときに画像が端末の外へ出るか。
@@ -51,7 +60,10 @@ enum VisualEgressPolicy: Equatable {
         switch self {
         case .localVision: return nil
         case .cloudVision(let provider):
-            return (firstTime ? Facts.screenshotSentFirst : Facts.screenshotSentCompact).replacingOccurrences(of: "{provider}", with: provider)
+            // Keep the send condition visible in the compact chip when the
+            // provider is not configured. The tooltip retains the full disclosure.
+            let label = provider == "接続したモデルの提供元" ? "クラウド" : provider
+            return (firstTime ? Facts.screenshotSentFirst : Facts.screenshotSentCompact).replacingOccurrences(of: "{provider}", with: label)
         }
     }
 }

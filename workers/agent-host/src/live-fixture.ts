@@ -12,7 +12,7 @@
  *   Mail A    「<dl> までに見積をください。コード <nonce>」（相手 → 自分）
  *   Meeting 1 決定「Standard プランで提案する」/ やること「見積を <dl> までに送る」（昨日）
  *   Mail B    「導入日は社内確認中です」（会議のあと）
- *   Meeting 2 明日 15:00 顧客定例（次の brief の対象）
+ *   Meeting 2 1時間後の顧客定例（次の brief の対象）
  */
 import type { MeetingBrief, WorkArtifact, WorkContext } from '@astra/contracts';
 
@@ -42,7 +42,9 @@ export function liveFixture(now: Date, nonce: string): LiveFixture {
   const deadline = atHour(now, 2, 18);
   const dl = `${deadline.getMonth() + 1}/${deadline.getDate()}`;
   const meeting1 = atHour(now, -1, 15);
-  const meeting2 = atHour(now, 1, 15);
+  // The next-brief product window is 24 hours. Tomorrow at 15:00 falls outside
+  // that window for morning runs, making the fixture depend on wall-clock time.
+  const meeting2 = new Date(now.getTime() + 60 * 60_000);
   const md = `${meeting2.getMonth() + 1}/${meeting2.getDate()}`;
   return {
     nonce,
@@ -54,7 +56,7 @@ export function liveFixture(now: Date, nonce: string): LiveFixture {
     },
     mailB: {
       subject: `[${project}] 導入日について`,
-      body: `${project} の導入日は社内確認中です。決まり次第ご連絡します。`,
+      body: `${project} の導入日は社内確認中です。ACME担当者からの導入日確定の回答を待っています。決まり次第ご連絡します。`,
       from: 'client@example.invalid',
     },
     meeting1: {
@@ -64,7 +66,7 @@ export function liveFixture(now: Date, nonce: string): LiveFixture {
       action: `見積を ${dl} までに送る`,
     },
     meeting2: {
-      subject: `${project} 顧客定例 (${md} 15:00)`,
+      subject: `${project} 顧客定例 (${md})`,
       startIso: meeting2.toISOString(),
       endIso: new Date(meeting2.getTime() + 3_600_000).toISOString(),
     },

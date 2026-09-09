@@ -11,6 +11,21 @@ final class WindowCoordinator {
     static var headless = false
 
     private var hudPanel: AstraPanel<VoiceTaskDockView>?
+    private let dockLayout = DockScreenLayout()
+    var dockTopInset: CGFloat { dockLayout.topInset }
+    private var screenObserver: NSObjectProtocol?
+
+    private init() {
+        screenObserver = NotificationCenter.default.addObserver(
+            forName: NSApplication.didChangeScreenParametersNotification, object: nil, queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.dockScreen = nil
+                self?.pendingScreen = nil
+                self?.syncDockPanels()
+            }
+        }
+    }
     private var recordingPanel: AstraPanel<RecordingWorkspaceView>?
     /// Dock を置く画面。切り替えは 500ms 安定してから（画面間でバタつかせない）。
     private var dockScreen: NSScreen?
@@ -89,21 +104,33 @@ final class WindowCoordinator {
 
     func showVoiceHUD() {
         if Self.headless { return }
+        guard let screen = activeScreen() else { return }
+        dockLayout.topInset = max(0, screen.safeAreaInsets.top)
         if hudPanel == nil {
             // 確認や入力を受けるので key になれる必要がある（ただし他アプリを非活性にしない）。
             hudPanel = AstraPanel(
                 size: AstraStateStore.shared.dock.size(),
                 level: .statusBar,
                 canKey: true,
-                content: VoiceTaskDockView()
+                content: VoiceTaskDockView(screenLayout: dockLayout)
             )
         }
-        guard let panel = hudPanel, let screen = activeScreen() else { return }
+        guard let panel = hudPanel else { return }
         panel.setFrame(
             PanelPositioner.voiceHUDFrame(screen: screen, size: AstraStateStore.shared.dock.size()),
             display: false)
         Elevation.apply(to: panel, .attached)
         fadeIn(panel, makeKey: false)
+    }
+
+    /// Home explicitly opens a tool: keyboard input must follow that action.
+    /// Passive Dock updates still use showVoiceHUD without taking focus.
+    func openMeetingPanelFromHome(_ requested: DockPresentation.MeetingPanel) {
+        VoiceHUDState.shared.toggleMeetingPanel(requested)
+        guard !Self.headless, !PresentationGuard.shared.isSharing,
+              case .meeting(let expanded) = VoiceHUDState.shared.mode, expanded != nil,
+              let panel = hudPanel, panel.isVisible else { return }
+        panel.makeKeyAndOrderFront(nil)
     }
 
     func hideVoiceHUD() {
@@ -122,6 +149,9 @@ final class WindowCoordinator {
     func syncDockPanels() {
         if Self.headless { return }
         guard let panel = hudPanel, let screen = activeScreen() else { return }
+        let inset = max(0, screen.safeAreaInsets.top)
+        let screenInsetChanged = dockLayout.topInset != inset
+        dockLayout.topInset = inset
         let target = PanelPositioner.voiceHUDFrame(
             screen: screen,
             size: AstraStateStore.shared.dock.size(
@@ -130,7 +160,7 @@ final class WindowCoordinator {
         Elevation.apply(to: panel, .attached)
         guard panel.frame != target else { return }
         // Reduce Motion のときは一気に。そうでなければ 180ms で。
-        if NSWorkspace.shared.accessibilityDisplayShouldReduceMotion {
+        if screenInsetChanged || NSWorkspace.shared.accessibilityDisplayShouldReduceMotion {
             panel.setFrame(target, display: true)
             panel.invalidateShadow()
         } else {

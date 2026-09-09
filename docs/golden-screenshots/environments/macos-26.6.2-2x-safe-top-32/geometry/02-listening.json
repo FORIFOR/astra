@@ -1,0 +1,32 @@
+{
+  "text:esc" : {
+    "h" : 9,
+    "w" : 13.5,
+    "x" : 560.5,
+    "y" : 54
+  },
+  "text:このページからタスクを作って…" : {
+    "h" : 21,
+    "w" : 247,
+    "x" : 38,
+    "y" : 48
+  },
+  "voiceHUD" : {
+    "h" : 85.5,
+    "w" : 600.5,
+    "x" : -0.5,
+    "y" : -0.5
+  },
+  "window:AstraPanel<VoiceTaskDockView>" : {
+    "h" : 85,
+    "w" : 600,
+    "x" : 0,
+    "y" : 0
+  },
+  "window:AstraPanel<VoiceTaskDockView>:topOffset" : {
+    "h" : 0,
+    "w" : 0,
+    "x" : 0,
+    "y" : 0
+  }
+}

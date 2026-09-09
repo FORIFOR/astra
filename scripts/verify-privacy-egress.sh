@@ -59,20 +59,18 @@ else
     "${req_not_true:+requiresOnDeviceRecognition が true 以外: $req_not_true}"
 fi
 
-# 3. .meeting が使っていない目的で画面収録を求めない。
-#    本番経路が captureSystemAudio: true を渡す日に、ここと PermissionCenter を一緒に変える。
+# 3. マイクだけの録音では画面収録を求めず、「画面の音」の選択と同じ条件で求める。
 pc="$SRC/Settings/PermissionCenter.swift"
-meeting_line=$(grep -n "case \.meeting: return \[" "$pc" || true)
-sysaudio_on=$(prod "captureSystemAudio: *true" || true)
-# 音声認識（Apple Speech）は手元で完結し端末から出ない。求めてよいのはマイクと音声認識だけ。
-if grep -q "case \.meeting: return \[\.microphone, \.speechRecognition\]$" <<<"$meeting_line" && [ -z "$sysaudio_on" ]; then
-  row "meeting unused screen permission" "0"
-elif [ -n "$sysaudio_on" ] && grep -q "screenRecording" <<<"$meeting_line"; then
-  row "meeting unused screen permission" "0 (system audio 接続済み)"
+workspace="$SRC/RecordingWorkspace/RecordingWorkspaceState.swift"
+if grep -q 'case .meeting: return \[.microphone, .speechRecognition\]$' "$pc" \
+  && grep -q 'case .meetingAudio: return \[.screenRecording\]$' "$pc" \
+  && grep -q 'if screenAudio && requestPermissions { PermissionCenter.request(.meetingAudio) }' "$workspace" \
+  && grep -q 'captureSystemAudio: screenAudio' "$workspace" \
+  && grep -q 'object(forKey: "astra.recording.systemAudio") as? Bool ?? true' "$workspace"; then
+  row "screen audio permission follows selection" "PASS"
 else
-  bad "meeting unused screen permission" "FAIL" \
-    "PermissionCenter .meeting: ${meeting_line:-（無い）}" \
-    "${sysaudio_on:+captureSystemAudio: true を渡している: $sysaudio_on}"
+  bad "screen audio permission follows selection" "FAIL" \
+    "マイク権限と画面音の権限・保存された選択の接続を確認してください"
 fi
 
 # 4. connector（OAuth）は人が押した行からしか始まらない。

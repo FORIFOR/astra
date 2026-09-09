@@ -76,6 +76,7 @@ struct SettingsView: View {
                 Text(label).font(.system(size: 12))
                 // 理由は補足ではなく、許可を出すかを決める材料。薄い灰では読めない（盲検 3/3）。
                 Text(reason).font(.system(size: 11)).foregroundStyle(.primary).opacity(0.78)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             Spacer()
             Text(state.rawValue).font(.system(size: 11))

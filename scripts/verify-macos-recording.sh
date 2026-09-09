@@ -7,6 +7,8 @@ if [[ -x "${ASTRA_RECORD_BIN:-}" ]]; then
   BIN="$ASTRA_RECORD_BIN"
 elif [[ -x "$ROOT/dist/Astra.app/Contents/MacOS/AstraMac" ]]; then
   BIN="$ROOT/dist/Astra.app/Contents/MacOS/AstraMac"
+elif [[ -x "$ROOT/apps/astra-macos/.build/Astra.app/Contents/MacOS/AstraMac" ]]; then
+  BIN="$ROOT/apps/astra-macos/.build/Astra.app/Contents/MacOS/AstraMac"
 else
   cd "$ROOT/apps/astra-macos"
   swift build >/dev/null
@@ -93,10 +95,38 @@ if [[ "${ASTRA_E2E_SYNTHETIC:-0}" = 1 ]]; then
   exit 1
 fi
 e2e_status=0
-OUTE2E="$("$BIN" --selftest e2e001 http://127.0.0.1:3000 2>&1)" || e2e_status=$?
+APP="${BIN%/Contents/MacOS/AstraMac}"
+if [[ "$APP" == "$BIN" || ! -f "$APP/Contents/Info.plist" ]]; then
+  echo "AUTOMATION_MISSING: E2E-001 requires a signed app launched through LaunchServices" >&2
+  exit 2
+fi
+codesign --verify --deep --strict "$APP" || exit 1
+# Tests that start recording/Speech must run as the app, not inherit the
+# terminal's TCC responsibility (which lacks NSSpeechRecognitionUsageDescription).
+run_app_selftest() {
+  local logs status=0
+  logs="$(mktemp -d)"
+  open -n -W --stdout "$logs/stdout.txt" --stderr "$logs/stderr.txt" \
+    "$APP" --args --selftest "$@" || status=$?
+  cat "$logs/stdout.txt" 2>/dev/null || true
+  cat "$logs/stderr.txt" >&2 2>/dev/null || true
+  if [[ "$status" -ne 0 ]] || ! grep -qE '^SELFTEST_(OK|SKIP)' "$logs/stdout.txt" \
+    || grep -qE '^SELFTEST_FAIL' "$logs/stdout.txt"; then
+    echo "FAIL: app selftest $1 did not complete (logs: $logs)" >&2
+    return 1
+  fi
+  rm -rf "$logs"
+}
+E2E_LOG="$(mktemp -d)"
+# 実キャプチャはバンドル自身をTCCの主体にする。openの終了0だけでは合格にしない。
+open -n -W --stdout "$E2E_LOG/stdout.txt" --stderr "$E2E_LOG/stderr.txt" \
+  "$APP" --args --selftest e2e001 http://127.0.0.1:3000 || e2e_status=$?
+OUTE2E="$(cat "$E2E_LOG/stdout.txt" 2>/dev/null)"
 echo "$OUTE2E"
+cat "$E2E_LOG/stderr.txt" >&2
 [[ "$e2e_status" -eq 0 ]] || { echo "FAIL: E2E-001 exited $e2e_status" >&2; exit 1; }
-[[ "$OUTE2E" == SELFTEST_OK* || "$OUTE2E" == SELFTEST_SKIP* ]] || { echo "FAIL: E2E-001 Product Reality Gate" >&2; exit 1; }
+grep -qE '^SELFTEST_OK e2e001\((online|offline)\):|^SELFTEST_SKIP e2e001:' <<<"$OUTE2E" || { echo "FAIL: E2E-001 Product Reality Gate (logs: $E2E_LOG)" >&2; exit 1; }
+[[ "$OUTE2E" != *未検証* ]] || { echo "FAIL: E2E-001 contains an unverified required step (logs: $E2E_LOG)" >&2; exit 1; }
 # Visual Gate: 8 主要画面を実アプリで撮り、geometry まで検査する（窓が在るだけでは PASS にしない）。
 SHOTS_BASE="${ASTRA_SHOTS_DIR:-/tmp/astra-shots}"
 for appearance in light dark; do
@@ -132,8 +162,10 @@ echo "$OUTOCC" | grep '^OCCUPATION ' || true; echo "$OUTOCC" | tail -1
 
 # 面がどれだけ空いているかを測り、基準より悪くなったら落とす（歯止め）。
 # 「良い UI」を目で言い合っても決まらないので数字にする。light だけで足りる。
-OUTD="$("$BIN" --selftest density "$SHOTS_BASE-light" "$ROOT/docs/evidence/density-baseline.json")"; echo "$OUTD" | tail -1
-[[ "$OUTD" == *SELFTEST_OK* ]] || { echo "$OUTD" >&2; echo "FAIL: density regression" >&2; exit 1; }
+density_status=0
+OUTD="$("$BIN" --selftest density "$SHOTS_BASE-light" "$ROOT/docs/evidence/density-baseline.json")" || density_status=$?
+echo "$OUTD" | tail -1
+[[ "$density_status" -eq 0 && "$OUTD" == *SELFTEST_OK* ]] || { echo "$OUTD" >&2; echo "FAIL: density regression" >&2; exit 1; }
 
 # §27 Plugin。同梱 manifest を読み、宣言だけでは呼べないことまで見る。
 OUTP="$("$BIN" --selftest plugins "$ROOT/plugins/builtin")"; echo "$OUTP" | tail -1
@@ -152,14 +184,17 @@ done
 DOCK_DIR="${ASTRA_DOCK_DIR:-/tmp/astra-dock}"
 for appearance in light dark; do
   ARG=""; [[ "$appearance" == dark ]] && ARG="dark"
-  OUTD="$("$BIN" --selftest dock8 "$DOCK_DIR-$appearance" $ARG)"; echo "$appearance: $(echo "$OUTD" | tail -1)"
-  [[ "$OUTD" == *SELFTEST_OK* ]] || { echo "$OUTD" >&2; echo "FAIL: Task Dock 8 states ($appearance)" >&2; exit 1; }
+  dock_status=0
+  OUTD="$(run_app_selftest dock8 "$DOCK_DIR-$appearance" $ARG)" || dock_status=$?
+  echo "$appearance: $(echo "$OUTD" | tail -1)"
+  [[ "$dock_status" -eq 0 && "$OUTD" == *SELFTEST_OK* ]] || { echo "$OUTD" >&2; echo "FAIL: Task Dock 8 states ($appearance)" >&2; exit 1; }
 done
 
-for t in screenshot waveform livemic livemeeting livescreen sttrecognize sttstream guishot axtree a11ynames calendarask egress navtitle recoveryui focus upgrade breakpoints dictation state presence perf storage meetingiq vad browser dockanim invocation invocationaudio entry update secret recordbutton session uiscale acceptance sessionsync; do
+for t in screenshot waveform livemic livemeeting livescreen sttrecognize sttstream guishot axtree a11ynames calendarask egress navtitle recoveryui focus upgrade breakpoints dictation state presence perf storage meetingiq vad browser dockanim invocation invocationaudio entry update secret recordbutton session uiscale acceptance sessionsync home-meeting-focus; do
   # `set -e` の下で $(…) が非 0 で返ると echo の前に落ち、どの検査が何と言って落ちたかが
   # ログに残らない（"^ FAILED" だけ）。出力を必ず残してから判定する。
-  OUT="$("$BIN" --selftest "$t")" || true
+  live_status=0
+  OUT="$(run_app_selftest "$t")" || live_status=$?
   echo "$OUT"
-  [[ "$OUT" == SELFTEST_OK* || "$OUT" == SELFTEST_SKIP* ]] || { echo "FAIL: macOS live $t" >&2; exit 1; }
+  [[ "$live_status" -eq 0 && ( "$OUT" == SELFTEST_OK* || "$OUT" == SELFTEST_SKIP* ) ]] || { echo "FAIL: macOS live $t" >&2; exit 1; }
 done

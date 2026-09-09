@@ -189,8 +189,8 @@ export function buildReplyPack(input: ReplyPackInput): ReplyPack {
             .filter((w) => w.project === project)
             .map((w) => `${w.who} からの返事待ち: ${w.what}`),
         ].slice(0, 5);
-  const personalization = (input.profile?.working_style ?? [])
-    .filter((t) => t.enabled && t.status === 'confirmed')
+  const personalization = (input.profile?.inference_enabled ? input.profile.working_style : [])
+    .filter((t) => t.enabled && t.status === 'confirmed' && t.value !== 0)
     .map((t) => t.label)
     .slice(0, 5);
   const sources: Provenance[] = [...thread];

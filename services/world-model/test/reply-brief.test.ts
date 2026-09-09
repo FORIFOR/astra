@@ -246,6 +246,64 @@ describe('reply in context', () => {
   });
 });
 
+describe('reply personalization controls', () => {
+  const resolution = () => {
+    const target = resolveReplyTarget({
+      utterance: 'これ返して',
+      candidates: [{ kind: 'mail', label: 'Re: MOPITA 見積の件', app: 'Mail' }],
+      artifacts: fixture,
+    });
+    if (target.status !== 'resolved') throw new Error('unresolved');
+    return target.target;
+  };
+  const profile = {
+    inference_enabled: true,
+    updated_at: NOW.toISOString(),
+    work_patterns: [],
+    frequent_entities: [],
+    working_style: [
+      {
+        key: 'style.prefersConcise',
+        label: '短く要点から',
+        value: 1,
+        status: 'confirmed' as const,
+        enabled: true,
+        sources: [],
+      },
+    ],
+  };
+  it('honors global OFF even when confirmed preferences remain stored', () => {
+    const pack = buildReplyPack({
+      target: resolution(),
+      artifacts: fixture,
+      context: ctx,
+      profile: { ...profile, inference_enabled: false },
+    });
+    expect(pack.personalization).toEqual([]);
+    expect(renderReplyContext(pack)).not.toContain('短く要点から');
+  });
+  it('honors individual disable and withdrawn preference values', () => {
+    for (const trait of [
+      { ...profile.working_style[0]!, enabled: false },
+      { ...profile.working_style[0]!, value: 0 },
+    ]) {
+      const pack = buildReplyPack({
+        target: resolution(),
+        artifacts: fixture,
+        context: ctx,
+        profile: { ...profile, working_style: [trait] },
+      });
+      expect(pack.personalization).toEqual([]);
+    }
+  });
+  it('includes an enabled confirmed preference when inference is ON', () => {
+    expect(
+      buildReplyPack({ target: resolution(), artifacts: fixture, context: ctx, profile })
+        .personalization,
+    ).toEqual(['短く要点から']);
+  });
+});
+
 describe('meeting brief', () => {
   it('resolves the next event, its project, the previous meeting, mails since, open items and questions with sources', () => {
     const brief = buildMeetingBrief({ artifacts: fixture, context: ctx, now: NOW });

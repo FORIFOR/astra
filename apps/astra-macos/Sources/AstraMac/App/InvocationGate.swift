@@ -116,7 +116,7 @@ enum InvocationGate {
         try? FileManager.default.createDirectory(atPath: outDir, withIntermediateDirectories: true)
 
         guard Permissions.microphone == .granted else {
-            print("SELFTEST_SKIP invocationaudio: マイク未許可（実 Mac + 許可でだけ測れる）"); exit(0)
+            print("SELFTEST_SKIP invocationaudio: マイク未許可（実 Mac + 許可でだけ測れる）"); SelfTest.exit(0)
         }
         RecordingRuntime.shared.markListening(.localUser)
         _ = LocalStore.shared.open(); MeetingSessionStore.shared.load()
@@ -162,7 +162,7 @@ enum InvocationGate {
         }
         guard let shown = surfaceShownAt, let live = captureLiveAt else {
             WindowCoordinator.shared.toggleRecording()
-            print("SELFTEST_FAIL invocationaudio: 面 \(surfaceShownAt != nil)・取り込み \(captureLiveAt != nil) を捉えられない"); exit(2)
+            print("SELFTEST_FAIL invocationaudio: 面 \(surfaceShownAt != nil)・取り込み \(captureLiveAt != nil) を捉えられない"); SelfTest.exit(2)
         }
         let lossWindowFromSurface = live.timeIntervalSince(shown) * 1000
         let lossWindowFromShortcut = live.timeIntervalSince(t0) * 1000
@@ -268,12 +268,12 @@ enum InvocationGate {
         diag("INVOCATION_AUDIO_TRUTH=\(verdict)（\(outDir)/result.json）")
         if !truthful {
             print("SELFTEST_FAIL invocationaudio: 取り込みが生きる前に録音中を名乗っている（state truth）")
-            exit(1)
+            SelfTest.exit(1)
         }
         print("SELFTEST_OK invocationaudio: \(verdict) — 物理の窓 \(Int(lossWindowFromSurface))ms は残るが、"
             + "その間 UI は「\(Facts.recordingHeroPreparing)」で、録音中を名乗ってから話した音は落ちない"
             + "（+0/+50/+100ms の生の欠けは \(anyLost ? "在り" : "無し")、記録値）")
-        exit(0)
+        SelfTest.exit(0)
     }
 
     // MARK: - 本体
@@ -334,7 +334,7 @@ enum InvocationGate {
         }
 
         WindowCoordinator.shared.showVoiceHUD(); settle(1.0)
-        guard let dock = dockWindow() else { print("SELFTEST_FAIL invocation: Dock が出ていない"); exit(2) }
+        guard let dock = dockWindow() else { print("SELFTEST_FAIL invocation: Dock が出ていない"); SelfTest.exit(2) }
         let windows0 = ownWindowCount()
         var focusTheft = 0
         var extraWindows = 0
@@ -397,9 +397,9 @@ enum InvocationGate {
             // マイクが無い環境（CI 等）では録音に入れない。落とさず SKIP する
             // （この gate は実 Mac のマイク許可があるときだけ意味を持つ）。
             if Permissions.microphone != .granted {
-                print("SELFTEST_SKIP invocation: マイク未許可（実 Mac + 許可でだけ測れる）"); exit(0)
+                print("SELFTEST_SKIP invocation: マイク未許可（実 Mac + 許可でだけ測れる）"); SelfTest.exit(0)
             }
-            print("SELFTEST_FAIL invocation: \(GlobalShortcut.label()) で録音が始まらない"); exit(2)
+            print("SELFTEST_FAIL invocation: \(GlobalShortcut.label()) で録音が始まらない"); SelfTest.exit(2)
         }
         let hopNote = hop == "tap" ? "合成 \(GlobalShortcut.label()) → CGEventTap → handler（OS の受信を含む）"
                                    : "入力監視なし: handler を直接呼んだ（OS の受信は含まない）"
@@ -520,11 +520,11 @@ enum InvocationGate {
         if !regressions.isEmpty {
             for r in regressions { diag("  回帰: \(r)") }
             print("SELFTEST_FAIL invocation: 回帰 \(regressions.count) 件")
-            exit(1)
+            SelfTest.exit(1)
         }
         let miss = worldClassFails.isEmpty ? "" : " — world-class 未達: \(worldClassFails.joined(separator: ", "))（回帰ではない）"
         print("SELFTEST_OK invocation: \(result.verdict) measured \(measured)/\(result.lines.count)\(miss)（\(outDir)/result.json）")
-        exit(0)
+        SelfTest.exit(0)
     }
 
     /// say の音声を VAD → SpeechTranscriber に流し、最初の partial までの ms を返す。

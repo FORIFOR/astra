@@ -224,6 +224,15 @@ export class ConnectorRuntime {
       case 'mail.draft.create':
         return this.gmailActions().draft(draftFrom(args), signal);
       case 'mail.send':
+        if (typeof args['in_reply_to'] === 'string' && args['in_reply_to']) {
+          return this.gmailActions().reply(
+            args['in_reply_to'],
+            draftFrom(args),
+            step.approval ?? undefined,
+            typeof args['thread_id'] === 'string' ? args['thread_id'] : undefined,
+            signal,
+          );
+        }
         return this.gmailActions().send(draftFrom(args), step.approval ?? undefined, signal);
       case 'mail.trash':
         return this.gmailActions().trash(

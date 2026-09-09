@@ -13,12 +13,15 @@
 # 動かす。
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-ZIP="$(ls -t "$ROOT"/dist/Astra-*.zip 2>/dev/null | head -1)"
-[[ -n "$ZIP" ]] || { echo "FAIL: dist に zip が無い。先に scripts/release-macos.sh" >&2; exit 1; }
+VERSION="$(node -p "require('$ROOT/package.json').version")" || exit 1
+ZIP="${1:-$ROOT/dist/Astra-${VERSION}.zip}"
+[[ -f "$ZIP" ]] || { echo "FAIL: 対象版のzipが無い。先に scripts/release-macos.sh" >&2; exit 1; }
+python3 "$ROOT/scripts/release-provenance.py" verify "$ROOT" "$ZIP" || exit 1
 
 WORK="$(mktemp -d)"
-trap 'rm -rf "$WORK"; pkill -f "$WORK" 2>/dev/null || true' EXIT
-ditto -x -k "$ZIP" "$WORK/app"
+VERIFIED=0
+trap 'pkill -f "$WORK" 2>/dev/null || true; if [[ "$VERIFIED" = 1 ]]; then rm -rf "$WORK"; else echo "artifact diagnostics: $WORK" >&2; fi' EXIT
+ditto -x -k "$ZIP" "$WORK/app" || exit 1
 APP="$WORK/app/Astra.app"
 BIN="$APP/Contents/MacOS/AstraMac"
 [[ -x "$BIN" ]] || { echo "FAIL: 展開しても実行体が無い" >&2; exit 1; }
@@ -64,12 +67,15 @@ PLUGINS="$(find "$APP/Contents/Resources/plugins/builtin" -name plugin.yaml 2>/d
 # 落としてきたものと同じ印（quarantine）を付けて判定する。
 # 印が無い状態で見ると Gatekeeper は甘くなる。利用者が受け取るのは印の付いた方。
 QDIR="$WORK/quarantined"; mkdir -p "$QDIR"
-cp "$ZIP" "$QDIR/dl.zip"
-xattr -w com.apple.quarantine "0083;$(printf %x "$(date +%s)");Safari;" "$QDIR/dl.zip" 2>/dev/null || true
-( cd "$QDIR" && ditto -x -k dl.zip . )
+cp "$ZIP" "$QDIR/dl.zip" || exit 1
+QUARANTINE="0083;$(printf %x "$(date +%s)");Safari;"
+xattr -w com.apple.quarantine "$QUARANTINE" "$QDIR/dl.zip" || exit 1
+( cd "$QDIR" && ditto -x -k dl.zip . ) || exit 1
 QAPP="$QDIR/Astra.app"
+xattr -w com.apple.quarantine "$QUARANTINE" "$QAPP" || exit 1
+[[ "$(xattr -p com.apple.quarantine "$QAPP")" == "$QUARANTINE" ]] || exit 1
 
-# Gatekeeper は**落とさない**。公証前は必ず rejected になるので、状態を報告するだけ。
+# Gatekeeperとstapleの両方を最終合格の条件にする。
 #
 # **`spctl` だけで判断しない。** 評価は経路ごとに再利用されるので、公証していない
 # 版でも「受理」と出ることがある（実際に出た。同じ場所で前に公証した版を
@@ -109,8 +115,8 @@ DB="$DATA/astra.sqlite"
 ASTRA_DATA_ROOT="$DATA" "$BIN" --selftest recordleg "$DB" record >/dev/null 2>&1 &
 P=$!; sleep 6; kill -9 $P 2>/dev/null; sleep 1
 for leg in inspect resume finish; do
-  OUT="$(ASTRA_DATA_ROOT="$DATA" "$BIN" --selftest recordleg "$DB" $leg 2>&1 | tail -1)"
-  [[ "$OUT" == RECORDLEG_OK* ]] && echo "  $leg OK" \
+  OUT="$(ASTRA_DATA_ROOT="$DATA" "$BIN" --selftest recordleg "$DB" $leg 2>&1 | tail -1)"; rc=$?
+  [[ "$rc" = 0 && "$OUT" == RECORDLEG_OK* ]] && echo "  $leg OK" \
     || { echo "  $leg: $OUT" >&2; fail=1; }
 done
 FINAL="$(sqlite3 "$DB" "select status from meetings limit 1;" 2>/dev/null)"
@@ -119,13 +125,33 @@ FINAL="$(sqlite3 "$DB" "select status from meetings limit 1;" 2>/dev/null)"
 
 echo "== 全ゲート（repo の外から） =="
 PASS=0; SKIP=0; BAD=0; BADLIST=""
-for t in acceptance ax axtree breakpoints browser calendar calendarask connector connectorexchange \
+for t in home-meeting-focus acceptance ax axtree breakpoints browser calendar calendarask connector connectorexchange \
          connectorflow connectorstate dictation dockanim e2e001 egress entry files hudlifecycle \
          keychain lifecycle livemeeting livemic livescreen meetingiq navtitle panel pause \
          perf permissions presence rag record recordbutton screen screenshot secret session \
          sessionsync shortcut speech state storage sttrecognize sttstream sysaudio timer \
          uiscale update vad waveform; do
-  OUT="$(cd "$WORK" && ASTRA_DATA_ROOT="$DATA" "$BIN" --selftest "$t" 2>&1 | tail -1)"
+  LOG="$WORK/$t.log"; ERR="$WORK/$t.stderr"; RECEIPT="$WORK/$t.exit.json"
+  # Keep TCC attributed to the distributed app. The app writes its own
+  # actual exit status; open returning zero alone is never a passing test.
+  (cd "$WORK" && open -n -W --env "ASTRA_DATA_ROOT=$DATA" --env "ASTRA_SELFTEST_EXIT_RECEIPT=$RECEIPT" --stdout "$LOG" --stderr "$ERR" \
+    "$APP" --args --selftest "$t")
+  opened=$?
+  rc="$(python3 - "$RECEIPT" <<'PY'
+import json, sys
+try:
+    r = json.load(open(sys.argv[1]))
+    code = r['exitCode']
+    assert r.get('schema') == 1 and type(code) is int and r.get('normalExit') is True
+    print(code)
+except (OSError, ValueError, KeyError, AssertionError):
+    print(255)
+PY
+)"
+  [[ "$opened" -eq 0 ]] || rc="$opened"
+  OUT="$(tail -1 "$LOG" 2>/dev/null)"
+  if grep -qE '^SELFTEST_FAIL|未検証' "$LOG" 2>/dev/null; then rc=1; fi
+  if [[ "$rc" != 0 ]]; then OUT="EXIT_$rc $OUT"; fi
   case "$OUT" in
     SELFTEST_OK*) PASS=$((PASS+1));;
     SELFTEST_SKIP*) SKIP=$((SKIP+1));;
@@ -135,9 +161,12 @@ for t in acceptance ax axtree breakpoints browser calendar calendarask connector
 done
 echo "  PASS=$PASS SKIP=$SKIP FAIL=$BAD"
 [[ "$BAD" -eq 0 ]] || { echo -e "  落ちたもの:$BADLIST" >&2; fail=1; }
+[[ "$SKIP" -eq 0 ]] || { echo '  必須selftestにSKIPが残っている' >&2; fail=1; }
+[[ "$READINESS" == NOTARIZED ]] || { echo "  配布条件未達: $READINESS" >&2; fail=1; }
 
 echo
 if [[ $fail -eq 0 ]]; then
+  VERIFIED=1
   echo "RELEASE_ARTIFACT_OK: 配布物が、repo の外・まっさらな置き場で動く（$PASS PASS / $SKIP SKIP）"
   echo "RELEASE_READINESS=$READINESS"
   [[ "$READINESS" == NOTARIZED ]] || echo "  ※ 公証と staple が済むまで、配ってはいけない"

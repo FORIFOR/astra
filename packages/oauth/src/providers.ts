@@ -68,10 +68,11 @@ export function providerConfig(
     clientId,
     scopes,
     ...(endpoints.extra ? { extraAuthorizeParams: endpoints.extra } : {}),
-    /*
-     * client_secret は入れない。native app は秘密を保てない（RFC 8252 §8.5）。
-     * 必要とする提供者は、そもそも native app 向けの client を出していない。
-     */
+    // Google Desktop clients require this value at the token endpoint.
+    // It does not authenticate a native app; PKCE remains required.
+    ...(provider === 'google' && env['ASTRA_OAUTH_GOOGLE_CLIENT_SECRET']
+      ? { clientSecret: env['ASTRA_OAUTH_GOOGLE_CLIENT_SECRET'] }
+      : {}),
   };
 }
 

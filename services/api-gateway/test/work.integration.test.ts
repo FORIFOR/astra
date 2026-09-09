@@ -281,6 +281,51 @@ describe.skipIf(!url)('work context over HTTP', () => {
     expect(reply.context).not.toContain('○○社');
   });
 
+  it('applies writing corrections and OFF controls to the very next reply task', async () => {
+    const update = async (payload: unknown) => {
+      const response = await app.inject({
+        method: 'PUT',
+        url: '/v1/personalization',
+        headers: auth,
+        payload: payload as object,
+      });
+      expect(response.statusCode).toBe(200);
+      return response.json<{ working_style: { label: string }[] }>();
+    };
+    const nextContext = async () => {
+      const conv = (
+        await app.inject({ method: 'POST', url: '/v1/conversations', headers: auth, payload: {} })
+      ).json<{ id: string }>().id;
+      const turn = await app.inject({
+        method: 'POST',
+        url: `/v1/conversations/${conv}/turns`,
+        headers: auth,
+        payload: { text: 'MTI に返信を書いて' },
+      });
+      expect(turn.statusCode).toBe(202);
+      const task = await app.inject({
+        method: 'GET',
+        url: `/v1/tasks/${turn.json<{ task_id: string }>().task_id}`,
+        headers: auth,
+      });
+      expect(task.statusCode).toBe(200);
+      return task.json<{ input: { context?: string } }>().input.context ?? '';
+    };
+    const key = 'style.prefersConcise';
+    const corrected = '詳しく、出所と一緒に説明する';
+    const profile = await update({
+      inference_enabled: true,
+      traits: [{ key, value: corrected, status: 'confirmed', enabled: true }],
+    });
+    expect(profile.working_style.some((trait) => trait.label === corrected)).toBe(true);
+    expect(await nextContext()).toContain(corrected);
+    await update({ traits: [{ key, enabled: false }] });
+    expect(await nextContext()).not.toContain(corrected);
+    await update({ inference_enabled: false, traits: [{ key, enabled: true }] });
+    expect(await nextContext()).not.toContain(corrected);
+    await update({ inference_enabled: true, traits: [{ key, enabled: false }] });
+  });
+
   it('takes a correction in one call, and stops all inference in one call', async () => {
     const before = (
       await app.inject({ method: 'GET', url: '/v1/work/context', headers: auth })

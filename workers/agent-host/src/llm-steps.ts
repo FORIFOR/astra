@@ -15,6 +15,7 @@ import {
   type LanguageModelOption,
 } from '@astra/contracts';
 import { ClaudeCodeCli, ClaudeCodeError, CLAUDE_CODE_RECOVERY } from './claude-code.js';
+import { CodexCli, CodexError } from './codex.js';
 import type { HostStep, StepOutcome } from './connector-steps.js';
 import { imageRefsOf, locateImages, type LocatedImage } from './visual-context.js';
 
@@ -261,6 +262,7 @@ function listOf(value: unknown): string {
 
 export interface LlmRuntimeDeps {
   readonly claudeCode?: ClaudeCodeCli;
+  readonly codex?: CodexCli;
   /** ほかの持ち込み（API キー）。無ければ Claude Code だけ。 */
   readonly others?: readonly LanguageModelOption[];
   /** 実際に呼ぶもの。種類ごとに 1 つ。 */
@@ -299,6 +301,16 @@ export class LlmRuntime {
         reason: probe.available ? null : (probe.reason ?? UNAVAILABLE_REASON.claude_code),
         // 資格情報は Claude Code のもの。Astra は持たない。
         credential: 'claude_code',
+        implementation: probe.version,
+      });
+    }
+    if (this.#deps.codex) {
+      const probe = await this.#deps.codex.probe();
+      found.push({
+        kind: 'codex',
+        available: probe.available,
+        reason: probe.reason,
+        credential: 'codex',
         implementation: probe.version,
       });
     }
@@ -345,9 +357,17 @@ export class LlmRuntime {
       const images = locateImages(imageRefsOf(step.args['images']));
       return {
         ok: true,
-        result: await ask(promptFor(tool, step.args, images), toolsFor(tool, step.args, images)),
+        result: await ask(
+          promptFor(tool, step.args, images),
+          toolsFor(tool, step.args, images),
+          images,
+        ),
       };
     } catch (error) {
+      if (error instanceof CodexError) {
+        if (error.reason === 'not_installed' || error.reason === 'not_signed_in') this.forget();
+        return { ok: false, error: { code: `llm.${error.reason}`, message: error.message } };
+      }
       if (error instanceof ClaudeCodeError) {
         if (error.reason === 'not_installed' || error.reason === 'not_signed_in') {
           // 使えなくなった。次の呼び出しで調べ直す。
@@ -370,7 +390,23 @@ export class LlmRuntime {
 
   #askFor(
     kind: LanguageModelKind,
-  ): ((prompt: string, allowedTools: readonly string[]) => Promise<unknown>) | null {
+  ):
+    | ((
+        prompt: string,
+        allowedTools: readonly string[],
+        images: readonly LocatedImage[],
+      ) => Promise<unknown>)
+    | null {
+    if (kind === 'codex' && this.#deps.codex) {
+      const cli = this.#deps.codex;
+      return (prompt, allowedTools, images) =>
+        cli.ask(prompt, {
+          images: allowedTools.includes('Read')
+            ? images.filter((image) => image.present).map((image) => image.path)
+            : [],
+          webSearch: allowedTools.includes('WebSearch'),
+        });
+    }
     const provided = this.#deps.askWith?.[kind];
     if (provided) return provided;
     if (kind === 'claude_code' && this.#deps.claudeCode) {

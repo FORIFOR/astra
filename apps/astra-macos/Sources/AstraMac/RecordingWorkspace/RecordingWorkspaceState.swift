@@ -65,6 +65,7 @@ final class RecordingWorkspaceState: ObservableObject {
     /// 録音を成り立たなくしている許可。無ければ nil。バナーで出す。
     @Published var permissionIssue: PermissionIssue?
     private var tickTimer: Timer?
+    private var microphoneRequest: UUID?
     @Published var isPaused = false
     @Published var elapsedSeconds = 0
     /// 検査用: 撮影の間だけ経過時計を止める。**本番では false。** light と dark を別プロセスで撮るので、
@@ -208,10 +209,49 @@ final class RecordingWorkspaceState: ObservableObject {
         }
     }
 
+    private var finishingRecording = false
+    private var startAfterFinishing: (() -> Void)?
+
     /// Start a recording. The optional switches are used only by the headless
     /// crash-recovery self-test, which must exercise the disk/session path
     /// without asking macOS TCC for microphone or speech access.
-    func start(captureMic: Bool = true, transcribe: Bool = true, requestPermissions: Bool = true) {
+    func start(captureMic: Bool = true, transcribe: Bool = true, requestPermissions: Bool = true,
+               captureSystemAudio: Bool? = nil) {
+        if finishingRecording {
+            startAfterFinishing = { [weak self] in
+                self?.start(captureMic: captureMic, transcribe: transcribe,
+                            requestPermissions: requestPermissions, captureSystemAudio: captureSystemAudio)
+            }
+            return
+        }
+        guard microphoneRequest == nil else { return }
+        // A permission prompt is not a recording. Do not clear the previous
+        // transcript, start the clock, or create a session before access exists.
+        if captureMic && Permissions.microphone != .granted {
+            permissionIssue = .microphoneDenied
+            AstraStateStore.shared.setDock(.result(AgentResult(
+                title: Facts.recordingCannotStart,
+                actions: [.openSettings],
+                detail: "マイクが許可されていません。設定で Astra に許可すると始められます。",
+                failed: true)))
+            if requestPermissions && Permissions.microphone == .notDetermined {
+                let request = UUID()
+                microphoneRequest = request
+                Permissions.requestMicrophone { [weak self] granted in
+                    guard let self, self.microphoneRequest == request else { return }
+                    self.microphoneRequest = nil
+                    if granted {
+                        self.start(captureMic: captureMic, transcribe: transcribe,
+                                   requestPermissions: requestPermissions, captureSystemAudio: captureSystemAudio)
+                    } else {
+                        self.pendingCalendarLink = nil
+                    }
+                }
+            } else {
+                pendingCalendarLink = nil
+            }
+            return
+        }
         isRecording = true
         // 前の会議を消す。消さないと 2 本目の録音に 1 本目の行が混ざる（`at` も衝突する）。
         // 前の会議は確定のたびに保存してあるので、ここで失うものは無い。
@@ -230,16 +270,19 @@ final class RecordingWorkspaceState: ObservableObject {
             // 直近の interim を置き換え、確定したら確定行にする（重なりは core の merge に委ねる設計）。
             // §19 誰の声かを channel から取る（混合波からは分からない）。
             let speaker = RecordingRuntime.shared.lastTranscriptChannel.label
-            if let last = self.transcript.last, last.interim {
+            let row: Int
+            if let index = self.transcript.lastIndex(where: { $0.interim && $0.speaker == speaker }) {
                 // 言い始めた時刻を保つ（確定するたびに時刻が動くと読みづらい）。
-                self.transcript[self.transcript.count - 1] =
-                    TranscriptSegment(speaker: speaker, text: text, interim: !isFinal, at: last.at)
+                self.transcript[index] =
+                    TranscriptSegment(speaker: speaker, text: text, interim: !isFinal, at: self.transcript[index].at)
+                row = index
             } else {
                 self.transcript.append(TranscriptSegment(
                     speaker: speaker, text: text, interim: !isFinal,
                     at: Double(self.elapsedSeconds)))
+                row = self.transcript.count - 1
             }
-            if isFinal { self.didFinalizeLastRow() } else { self.refreshRag() }
+            if isFinal { self.didFinalizeLastRow(index: row) } else { self.refreshRag() }
         }
         // 波形を実マイクレベルで更新する（デモの固定値をやめてフラットから始める）。
         audioLevels = Array(repeating: 0.0, count: 12)
@@ -279,8 +322,16 @@ final class RecordingWorkspaceState: ObservableObject {
         // 未確認のまま進む場合（プロンプト待ち）は、録れていないことを画面に出す。
         permissionIssue = captureMic && Permissions.microphone != .granted ? .microphoneDenied : nil
         if requestPermissions { refreshSpeechPermission() }
-        let localId = "meeting-\(Int(Date().timeIntervalSince1970))"
-        RecordingRuntime.shared.begin(meetingId: localId, captureMic: captureMic, transcribe: transcribe)
+        let localId = "meeting-\(UUID().uuidString.lowercased())"
+        // 設定の既定値は NewRecordingSheet の「画面の音」と同じ。無人の保存検査では要求しない。
+        let screenAudio = captureSystemAudio ?? (requestPermissions && captureMic &&
+            (UserDefaults.standard.object(forKey: "astra.recording.systemAudio") as? Bool ?? true))
+        if screenAudio && requestPermissions { PermissionCenter.request(.meetingAudio) }
+        RecordingRuntime.shared.onSystemAudioFailure = { [weak self] in
+            self?.permissionIssue = .systemAudioUnavailable
+        }
+        RecordingRuntime.shared.begin(meetingId: localId, captureMic: captureMic,
+                                      captureSystemAudio: screenAudio, transcribe: transcribe)
         // スクショ等は実際に journal を作った id に合わせる（サインイン時は gateway id）。
         currentMeetingId = RecordingRuntime.shared.activeMeetingId
         // §1 録音を始めたこの瞬間に Session を作って保存する。
@@ -311,10 +362,11 @@ final class RecordingWorkspaceState: ObservableObject {
     /// 末尾の行が確定した。保存 → 検索の索引 → 抽出。
     ///
     /// 保存は**確定のたび**。止めたときにまとめて書くと、落ちたら全部消える。
-    private func didFinalizeLastRow() {
-        if let last = transcript.last, !last.interim {
+    private func didFinalizeLastRow(index: Int? = nil) {
+        let index = index ?? transcript.count - 1
+        if transcript.indices.contains(index), !transcript[index].interim {
             LocalStore.shared.saveTranscriptRow(meetingId: currentMeetingId,
-                                                index: transcript.count - 1, last)
+                                                index: index, transcript[index])
         }
         refreshRag()
         // §20 確定行が溜まったら**新しい分だけ**抽出する（全文を毎回投げない）。
@@ -325,24 +377,37 @@ final class RecordingWorkspaceState: ObservableObject {
     }
 
     func stop() {
+        microphoneRequest = nil
+        pendingCalendarLink = nil
+        guard isRecording else {
+            permissionIssue = nil
+            return
+        }
         isRecording = false
         permissionIssue = nil
         tickTimer?.invalidate(); tickTimer = nil
-        // 先に終える: 言いかけていた最後の発話は end() の中で確定行になる（SpeechTranscriber.finish）。
-        RecordingRuntime.shared.end()   // 断片を確定（回復候補として残る）
-        // 溜まっていた確定行を抽出してから processing へ。抽出は 3 行ごとに走るので、短い会議は一度も
-        // 抽出されず「決まったこと 0」のまま ready になっていた（REAL_MEETING の実マイク経路で発見）。
-        MeetingIntelligence.shared.ingest(
-            transcript.filter { !$0.interim }.map { CanvasItem($0.text, at: $0.at, speaker: $0.speaker) },
-            force: true)
-        // §1 同じ Session が processing へ。新しいカードは作らない。
+        finishingRecording = true
         let id = currentMeetingId
+        // Show the stopped/processing state before waiting for the final utterance.
+        // A new start requested during this flush is queued for the next run loop.
         MeetingSessionStore.shared.beginProcessing(id: id)
-        // 停止後の姿も Store が決める（結果面へ morph する）。
         AstraStateStore.shared.meetingEnded()
-        // 読み取りが終わったら同じ id を ready にする。
-        finishProcessing(id: id)
+        RecordingRuntime.shared.end { [weak self] in
+            guard let self else { return }
+            MeetingIntelligence.shared.ingest(
+                self.transcript.filter { !$0.interim }.map { CanvasItem($0.text, at: $0.at, speaker: $0.speaker) },
+                force: true)
+            // The live ID has been cleared; keep late final words and notes tied
+            // to this recording before allowing the next recording to start.
+            LocalStore.shared.saveNotes(meetingId: id, AstraStateStore.shared.state.meeting.canvas)
+            self.finishProcessing(id: id)
+            self.finishingRecording = false
+            let pending = self.startAfterFinishing
+            self.startAfterFinishing = nil
+            if let pending { DispatchQueue.main.async(execute: pending) }
+        }
     }
+
     /// 予定に紐づかない録音の題。「14:32 の会議」。
     static func untitledMeetingName(now: Date = Date()) -> String {
         let f = DateFormatter(); f.dateFormat = "HH:mm"

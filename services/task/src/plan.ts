@@ -291,6 +291,9 @@ function planMailSend(input: Record<string, unknown>): TaskPlan {
           subject,
           body,
           count: to.length,
+          ...(typeof input['thread_id'] === 'string'
+            ? { thread_id: input['thread_id'].replace(/^gmail:/, '') }
+            : {}),
           ...(typeof input['in_reply_to'] === 'string'
             ? { in_reply_to: input['in_reply_to'] }
             : {}),

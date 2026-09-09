@@ -45,3 +45,30 @@ struct AudioMixer {
         return out
     }
 }
+
+/// Recording has one sample clock even when two capture devices deliver frames.
+/// Bounded queues tolerate different callback sizes without concatenating two timelines.
+struct RecordingAudioBuffer {
+    private var local: [Float] = []
+    private var remote: [Float] = []
+    static let capacity = 32_000
+
+    mutating func append(_ samples: [Float], channel: SpeakerChannel) {
+        if channel == .localUser {
+            local.append(contentsOf: samples)
+            if local.count > Self.capacity { local.removeFirst(local.count - Self.capacity) }
+        } else {
+            remote.append(contentsOf: samples)
+            if remote.count > Self.capacity { remote.removeFirst(remote.count - Self.capacity) }
+        }
+    }
+
+    mutating func take(_ count: Int) -> [Float] {
+        guard count > 0 else { return [] }
+        let a = Array(local.prefix(count)), b = Array(remote.prefix(count))
+        local.removeFirst(a.count); remote.removeFirst(b.count)
+        return (0..<count).map { i in
+            max(-1, min(1, (i < a.count ? a[i] : 0) + (i < b.count ? b[i] : 0)))
+        }
+    }
+}

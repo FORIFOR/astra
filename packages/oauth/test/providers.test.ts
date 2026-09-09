@@ -9,6 +9,7 @@ import {
   clientIdVar,
   configuredProviders,
   providerConfig,
+  refresh,
   unconfiguredProviders,
 } from '../src/index.js';
 
@@ -42,12 +43,41 @@ describe('building the config', () => {
     expect(config.scopes).toEqual(['mail.read']);
   });
 
-  it('never carries a client secret', () => {
+  it('does not invent a client secret when none is configured', () => {
     for (const provider of OAUTH_PROVIDERS) {
       const config = providerConfig(provider, [], { [clientIdVar(provider)]: 'x' })!;
       // native app は秘密を保てない（RFC 8252 §8.5）
       expect(config.clientSecret).toBeUndefined();
     }
+  });
+
+  it('passes the configured Google Desktop credential to the refresh endpoint', async () => {
+    const config = providerConfig('google', ['mail.read'], {
+      ASTRA_OAUTH_GOOGLE_CLIENT_ID: 'desktop-test',
+      ASTRA_OAUTH_GOOGLE_CLIENT_SECRET: 'test-only-desktop-credential',
+    })!;
+    await refresh(
+      { ...config, redirectUri: 'http://127.0.0.1:1234/callback' },
+      'test-refresh',
+      async (url, init) => {
+        expect(url).toBe('https://oauth2.googleapis.com/token');
+        const body = new URLSearchParams(String(init.body));
+        expect(body.get('client_secret')).toBe('test-only-desktop-credential');
+        expect(body.get('grant_type')).toBe('refresh_token');
+        return new Response(JSON.stringify({ access_token: 'test-access', scope: 'mail.read' }), {
+          status: 200,
+        });
+      },
+    );
+  });
+
+  it('does not forward Google credentials to Microsoft', () => {
+    expect(
+      providerConfig('microsoft', [], {
+        ASTRA_OAUTH_MICROSOFT_CLIENT_ID: 'ms-test',
+        ASTRA_OAUTH_GOOGLE_CLIENT_SECRET: 'google-test-only',
+      })!.clientSecret,
+    ).toBeUndefined();
   });
 
   it('points at the real endpoints, over https', () => {

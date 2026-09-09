@@ -21,7 +21,7 @@
 
   ],
   "product" : "Astra",
-  "startedAt" : "2026-09-05T15:56:23Z",
+  "startedAt" : "2026-09-09T07:02:01Z",
   "steps" : [
     {
       "front" : "com.apple.finder",
@@ -31,33 +31,33 @@
       },
       "interactions" : 1,
       "keyWindow" : false,
-      "ms" : 1191,
+      "ms" : 1189,
       "name" : "マイク拒否",
       "surface" : {
-        "h" : 129,
+        "h" : 161,
         "key" : false,
         "w" : 520,
-        "x" : 1020,
-        "y" : 1311
+        "x" : 604,
+        "y" : 956
       },
-      "transitionMs" : 222,
+      "transitionMs" : 215,
       "windows" : 1
     },
     {
       "front" : "com.apple.finder",
       "ids" : {
-        "session" : "meeting-1788623785"
+        "session" : "meeting-4898d77c-0d4a-4d30-8785-02e4465a7a0a"
       },
       "interactions" : 1,
       "keyWindow" : false,
-      "ms" : 1261,
+      "ms" : 1168,
       "name" : "回復",
       "surface" : {
-        "h" : 76,
+        "h" : 108,
         "key" : false,
         "w" : 820,
-        "x" : 870,
-        "y" : 1364
+        "x" : 454,
+        "y" : 1009
       },
       "windows" : 1
     },
@@ -69,14 +69,14 @@
       },
       "interactions" : 0,
       "keyWindow" : false,
-      "ms" : 1498,
+      "ms" : 1463,
       "name" : "共有のあと",
       "surface" : {
-        "h" : 76,
+        "h" : 108,
         "key" : false,
         "w" : 820,
-        "x" : 870,
-        "y" : 1364
+        "x" : 454,
+        "y" : 1009
       },
       "windows" : 1
     },
@@ -88,14 +88,14 @@
       },
       "interactions" : 1,
       "keyWindow" : false,
-      "ms" : 1292,
+      "ms" : 1269,
       "name" : "確認（やめる）",
       "surface" : {
-        "h" : 76,
+        "h" : 108,
         "key" : false,
         "w" : 820,
-        "x" : 870,
-        "y" : 1364
+        "x" : 454,
+        "y" : 1009
       },
       "windows" : 1
     },
@@ -106,19 +106,19 @@
       },
       "interactions" : 1,
       "keyWindow" : false,
-      "ms" : 2245,
+      "ms" : 2273,
       "name" : "落ちて再開",
       "surface" : {
         "h" : 820,
         "key" : false,
         "w" : 1240,
-        "x" : 660,
-        "y" : 466
+        "x" : 244,
+        "y" : 217
       },
       "windows" : 2
     }
   ],
   "success" : true,
-  "totalMs" : 7508,
+  "totalMs" : 7371,
   "windowsOpened" : 0
 }

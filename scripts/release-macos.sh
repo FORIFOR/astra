@@ -27,6 +27,10 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 OUT="$ROOT/dist"
 APP="$OUT/Astra.app"
 NOTARY_PROFILE="${ASTRA_NOTARY_PROFILE:-astra-notary}"
+NOTARY_BACKEND="${ASTRA_NOTARIZATION_BACKEND:-notarytool}"
+[[ "$NOTARY_BACKEND" == notarytool || "$NOTARY_BACKEND" == xcode ]] || {
+  echo "FAIL: unknown ASTRA_NOTARIZATION_BACKEND: $NOTARY_BACKEND" >&2; exit 1; }
+SOURCE_SNAPSHOT="$(python3 "$ROOT/scripts/release-provenance.py" snapshot "$ROOT")"
 
 VERSION="$(node -p "require('$ROOT/package.json').version")"
 [[ -n "$VERSION" ]] || { echo "FAIL: package.json から版番号を取れない" >&2; exit 1; }
@@ -35,7 +39,7 @@ VERSION="$(node -p "require('$ROOT/package.json').version")"
 IDENTITY="${ASTRA_SIGN_IDENTITY:-}"
 if [[ -z "$IDENTITY" ]]; then
   IDENTITY="$(security find-identity -v -p codesigning 2>/dev/null \
-    | grep "Developer ID Application" | head -1 | sed 's/.*"\(.*\)"/\1/')"
+    | awk -F'"' '/"Developer ID Application/ { if (!seen++) print $2 }')"
 fi
 if [[ -z "$IDENTITY" ]]; then
   echo "FAIL: Developer ID Application の証明書が無い。開発署名では配布できない。" >&2
@@ -148,7 +152,7 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>NSCameraUsageDescription</key><string>使いません。</string>
   <key>NSCalendarsUsageDescription</key><string>会議の予定を文脈として読むために、カレンダーを使います。</string>
   <!-- 自動更新（Sparkle）。**どちらも空のままでは更新を確かめない。**
-       配布先が決まったら appcast の URL を、`generate_keys` を回したら
+       配布先が決まったら appcast の URL を、generate_keys を回したら
        その公開鍵をここへ入れる。片方だけ入れても SoftwareUpdate は起動しない。 -->
   <key>SUFeedURL</key><string>${ASTRA_UPDATE_FEED:-}</string>
   <key>SUPublicEDKey</key><string>${ASTRA_UPDATE_PUBKEY:-b61dWnFNEdpzAWG/V5SMb4bZGrqgzJwMDAcuw/564cs=}</string>
@@ -185,6 +189,20 @@ if [[ -n "$SPARKLE_FW" ]]; then
   echo "sparkle: 同梱した"
 else
   echo "FAIL: Sparkle.framework が見つからない（scripts/fetch-sparkle.sh を先に）" >&2; exit 1
+fi
+
+if [[ "$NOTARY_BACKEND" == xcode ]]; then
+  # Xcode uses its signed-in Apple account; no app-specific password is copied.
+  TEAM="$(printf '%s' "$IDENTITY" | sed -n 's/.*(\([A-Z0-9]*\))$/\1/p')"
+  [[ -n "$TEAM" ]] || { echo "FAIL: Xcode backend requires a named Developer ID identity" >&2; exit 1; }
+  python3 "$ROOT/scripts/release-xcode-notarize.py" "$APP" "$OUT/astra.entitlements" "$TEAM"
+  ZIP="$OUT/Astra-${VERSION}.zip"
+  rm -f "$ZIP"
+  /usr/bin/ditto -c -k --keepParent "$APP" "$ZIP"
+  python3 "$ROOT/scripts/release-provenance.py" create "$ROOT" "$ZIP" "$SOURCE_SNAPSHOT"
+  echo "RELEASE_READINESS=NOTARIZED"
+  echo "artifact: $ZIP"
+  exit 0
 fi
 
 echo "== sign (Developer ID + hardened runtime) =="
@@ -234,5 +252,6 @@ spctl --assess --type execute --verbose=4 "$APP"
 
 rm -f "$ZIP"
 /usr/bin/ditto -c -k --keepParent "$APP" "$ZIP"
+python3 "$ROOT/scripts/release-provenance.py" create "$ROOT" "$ZIP" "$SOURCE_SNAPSHOT"
 echo "RELEASE_READINESS=NOTARIZED"
 echo "artifact: $ZIP"

@@ -528,11 +528,12 @@ private struct MeetingNotesCanvas: View {
         } else if RecordingRuntime.shared.transcriptionUnavailable, state.isRecording {
             // 音は届いていて録れているが、この Mac ではオンデバイス文字起こしが始められない。
             // サーバへは出さない（`SpeechTranscriber`）。空のまま「聞いています」と言わず、理由を言う。
-            HStack(spacing: 10) {
+            VStack(alignment: .leading, spacing: 10) {
                 Label(Facts.transcriptionOnDeviceUnavailable, systemImage: "text.badge.xmark")
                     .font(.system(size: TypeScale.microSize))
                     .foregroundStyle(Palette.danger(dark))
-                // 理由だけで終わらない。直しに行く道を同じ行に置く（Atlas system.stt-unavailable）。
+                    .fixedSize(horizontal: false, vertical: true)
+                // 狭い列でも理由と復旧操作を省略しないよう、操作は独立した段に置く。
                 ProbeButton(id: "openDictationSettings", action: { Permissions.openDictationSettings() }) {
                     Text("\(Facts.resultOpenSettings)（音声入力）")
                 }

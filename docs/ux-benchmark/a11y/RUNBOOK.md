@@ -15,12 +15,18 @@ BIN=apps/astra-macos/.build/debug/AstraMac
 
 1. システム設定 → キーボード → **キーボードナビゲーション** を ON。
 2. `"$BIN" --selftest a11ynames docs/ux-benchmark/a11y/$(date +%F)-a11ynames-fka-on.tsv`
-3. TSV の `A11Y_ENV` が `fullKeyboardAccess=true` になっていることを確かめる（false なら設定が効いていない）。
+3. TSV の `A11Y_ENV` が `keyboardNavigation=true` になっていることを確かめる（false なら設定が効いていない）。
 4. 見るところ: `A11Y_TAB` の各面で
    - `moved=true` の回数（OFF のときは main-home 6 / workspace 2 / settings 0）
    - `visible=no` なのに `moved=true` の行（**動いたのに見えない** = focus ring が描かれていない。記録する）
    - 名前の無い `AXGroup` で止まる回数（OFF のときは main-home で 4 回）
 5. 終わったら設定を戻す。
+
+## 1b. FULL_KEYBOARD_ACCESS（別のOS設定）
+
+「アクセシビリティ → キーボード → フルキーボードアクセス」は、上のキーボードナビゲーションとは別の機能。
+専用の検証セッションでこの設定がONのとき、TSVの `fullKeyboardAccess=true` を確認する。
+`run-fka.sh` は設定を変更しない。3面のTab移動は `FKA_TRAVERSAL_GATE` として記録し、4つのjourneyの結果到達を測るまでは `FKA_GATE=PARTIAL` とする。
 
 ## 2. VOICEOVER（実読み上げ）
 

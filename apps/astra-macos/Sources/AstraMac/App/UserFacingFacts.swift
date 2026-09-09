@@ -54,6 +54,8 @@ enum UserFacingFacts {
     static let confirmationCancel = "やめる"
     static let confirmationEdit = "直す"
     static let confirmationEditDone = "直し終える"
+    static let confirmationEditTitle = "内容を直す"
+    static let confirmationEditReturn = "修正内容を確認画面に戻します"
     static let resultOpen = "開く"
     static let resultCopy = "コピー"
     static let resultOpenSettings = "設定を開く"
@@ -82,7 +84,9 @@ enum UserFacingFacts {
     static let briefTitle = "次の会議"
     static let briefPrepare = "準備する"
     static let briefClose = "閉じる"
-    static let briefStart = "会議を始める"
+    static let briefStart = "この予定を録音"
+    static let briefHistory = "前回からの経緯"
+    static let briefOpenSource = "元の資料を開く"
     static let briefPrevious = "前回"
     static let briefSince = "その後"
     static let briefOpen = "開いている件"
@@ -219,6 +223,8 @@ enum UserFacingFacts {
             f("confirmation.cancel", confirmationCancel),
             f("confirmation.edit", confirmationEdit),
             f("confirmation.editDone", confirmationEditDone, false),
+            f("confirmation.editTitle", confirmationEditTitle, false),
+            f("confirmation.editReturn", confirmationEditReturn, false),
             f("result.open", resultOpen, false),
             f("result.copy", resultCopy, false),
             f("result.openSettings", resultOpenSettings),
@@ -245,6 +251,8 @@ enum UserFacingFacts {
             f("brief.prepare", briefPrepare, false),
             f("brief.close", briefClose, false),
             f("brief.start", briefStart, false),
+            f("brief.history", briefHistory, false),
+            f("brief.openSource", briefOpenSource, false),
             f("brief.previous", briefPrevious, false),
             f("brief.since", briefSince, false),
             f("brief.open", briefOpen, false),

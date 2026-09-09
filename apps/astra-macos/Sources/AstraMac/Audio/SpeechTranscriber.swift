@@ -33,6 +33,9 @@ final class SpeechTranscriber {
     // 次の…」の「Windows 版は」が消えた）。閉じるときは endAudio で認識器に最後まで処理させ、その final を待って
     // から確定する。次の発話の request は先に開いておくので、その間の音は落ちない。
     private var onEvent: ((Live) -> Void)?
+    private var pausedEvent: ((Live) -> Void)?
+    private var finishTimer: Timer?
+    private var finishCompletion: (() -> Void)?
     private var generation = 0            // 取り直した古い task の結果を見分けるため
     private var lastText = ""
     private var lastChange = Date()
@@ -206,7 +209,33 @@ final class SpeechTranscriber {
         request.append(buffer)
     }
 
+    /// Close recognition without keeping the caller inside a nested run loop.
+    /// Both a closing utterance and a newer partial are finalized in order.
+    func finishAsync(completion: @escaping () -> Void) {
+        pausedEvent = nil
+        gapTimer?.invalidate(); gapTimer = nil
+        finishCompletion = completion
+        func advance() -> Bool {
+            if let c = closing {
+                guard Date().timeIntervalSince(c.since) >= Self.closeTimeout else { return false }
+                finishClosing()
+            }
+            if !lastText.isEmpty {
+                beginClose(reopen: false)
+                return false
+            }
+            finish() // No pending utterance remains, so this cannot wait.
+            return true
+        }
+        if advance() { return }
+        let timer = Timer(timeInterval: 0.05, repeats: true) { _ in _ = advance() }
+        RunLoop.main.add(timer, forMode: .common)
+        finishTimer = timer
+    }
+
     func finish() {
+        finishTimer?.invalidate(); finishTimer = nil
+        pausedEvent = nil
         gapTimer?.invalidate(); gapTimer = nil
         // 止めた瞬間の発話も、認識器に最後まで処理させてから確定する（途中で切ると末尾が欠ける:
         // 「共有します」が「共有しま」で残った）。待つのは closeTimeout まで。
@@ -220,6 +249,23 @@ final class SpeechTranscriber {
         req?.endAudio()
         task?.cancel()
         task = nil
+        let completion = finishCompletion
+        finishCompletion = nil
+        completion?()
+    }
+
+    /// Finish the pre-pause utterance and release its recognition request.
+    /// A request opened during silence can become stale before recording resumes.
+    func pause() {
+        let callback = onEvent
+        finish()
+        pausedEvent = callback
+    }
+
+    func resume() throws {
+        guard let callback = pausedEvent else { return }
+        try start(onEvent: callback)
+        pausedEvent = nil
     }
 
     /// 音声ファイルを 1 回で認識する（オンデバイス）。会議録音の後処理や検証に使う。

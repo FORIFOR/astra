@@ -52,6 +52,7 @@ describe('live fixture and expectations', () => {
     expect(new Date(f.deadlineIso).getTime()).toBeGreaterThan(now.getTime());
     expect(new Date(f.meeting1.startedAt).getTime()).toBeLessThan(now.getTime());
     expect(new Date(f.meeting2.startIso).getTime()).toBeGreaterThan(now.getTime());
+    expect(new Date(f.meeting2.startIso).getTime() - now.getTime()).toBeLessThan(24 * 60 * 60_000);
   });
 
   it('builds meeting 1 outcomes with the same stable ids the real finalize would', () => {

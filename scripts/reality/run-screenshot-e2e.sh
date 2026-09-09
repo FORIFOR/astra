@@ -12,6 +12,12 @@
 set -uo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
+export ASTRA_LLM_CLI="${ASTRA_LLM_CLI:-claude_code}"
+case "$ASTRA_LLM_CLI" in
+  codex) LLM_COMMAND="${ASTRA_CODEX_PATH:-codex}" ;;
+  claude_code) LLM_COMMAND="${ASTRA_CLAUDE_CODE_PATH:-claude}" ;;
+  *) echo 'FAIL: ASTRA_LLM_CLI must be codex or claude_code'; exit 1 ;;
+esac
 
 PORT="${ASTRA_E2E_PORT:-3398}"
 PGHOST="${ASTRA_TEST_PGHOST:-localhost}"
@@ -33,12 +39,10 @@ cleanup() {
   local rc=$?
   set +m
   for pid in "$HOST_PID" "$WORKER_PID" "$GATEWAY_PID"; do
-    [ -n "$pid" ] && { kill "$pid" 2>/dev/null || true; wait "$pid" 2>/dev/null || true; }
+    [ -n "$pid" ] && { python3 "$ROOT/scripts/reality/stop-test-process.py" "$pid" 2>/dev/null || true; wait "$pid" 2>/dev/null || true; }
   done
-  dbmate --url "$ADMIN_URL" --migrations-dir "$ROOT/infra/db/migrations" --no-dump-schema drop >/dev/null 2>&1 || true
-  psql "postgres://${PGSUPER}:${PGPASSWORD}@${PGHOST}:${PGPORT}/postgres" -X -q \
-    -c 'DROP ROLE IF EXISTS astra_app' -c 'DROP ROLE IF EXISTS astra_identity' \
-    -c 'DROP ROLE IF EXISTS astra_migrate' -c 'DROP ROLE IF EXISTS astra_share' >/dev/null 2>&1 || true
+  dbmate --url "$ADMIN_URL" --migrations-dir "$ROOT/infra/db/migrations" --no-dump-schema drop >/dev/null 2>&1 || { echo 'SCREENSHOT_E2E=FAIL database cleanup' >&2; rc=1; }
+  # bootstrap roles belong to the cluster and may be used by other databases.
   if command -v docker >/dev/null 2>&1; then
     docker exec astra-temporal temporal --address temporal:7233 workflow list \
       --query "TaskQueue='$TASK_QUEUE' AND ExecutionStatus='Running'" --limit 50 --output json 2>/dev/null \
@@ -55,6 +59,7 @@ except Exception:
   fi
   cp "$STORE"/*.log "$OUT/" 2>/dev/null || true
   rm -rf "$STORE"
+  [ "$rc" != 0 ] || echo 'SCREENSHOT_E2E=PASS'
   exit $rc
 }
 trap cleanup EXIT
@@ -63,7 +68,7 @@ fail() { echo "SCREENSHOT_E2E=FAIL $1" >&2; for f in host worker gateway; do [ -
 json() { python3 -c "import json,sys;d=json.load(sys.stdin);print($1)"; }
 
 [ -x "$BIN" ] || fail "build the app first: swift build --package-path apps/astra-macos"
-command -v claude >/dev/null 2>&1 || fail "Claude Code CLI (claude) is not on PATH"
+command -v "$LLM_COMMAND" >/dev/null 2>&1 || fail "$LLM_COMMAND is not on PATH"
 
 say "provisioning ${DB}"
 dbmate --url "$ADMIN_URL" --migrations-dir "$ROOT/infra/db/migrations" --no-dump-schema up >/dev/null || fail "dbmate up"
@@ -99,7 +104,7 @@ AT="$(echo "$TOKENS" | json 'd["access_token"]')"
 curl -fsS -X POST "$BASE/v1/plugins/com.astra.general/install" -H "authorization: Bearer $AT" \
   -H 'content-type: application/json' -d '{"version":"0.1.0","granted_scopes":["artifacts.read","artifacts.write"]}' >/dev/null 2>&1 || true
 
-say "starting the local agent host (Claude Code CLI, this device's own login)"
+say "starting the local agent host ($ASTRA_LLM_CLI, this device's own login)"
 # 自分自身が Claude Code の中で動いているときは、入れ子の印を外して素の CLI として呼ぶ。
 env -u CLAUDECODE -u CLAUDE_CODE_CHILD_SESSION -u CLAUDE_CODE_ENTRYPOINT -u CLAUDE_CODE_SESSION_ID \
   ASTRA_API_URL="$BASE" ASTRA_HOST_TOKEN="$AT" ASTRA_DEVICE_LABEL="screenshot-e2e" \
@@ -107,16 +112,17 @@ env -u CLAUDECODE -u CLAUDE_CODE_CHILD_SESSION -u CLAUDE_CODE_ENTRYPOINT -u CLAU
 HOST_PID=$!
 ONLINE=""
 for _ in $(seq 1 60); do
-  ONLINE="$(curl -fsS "$BASE/v1/agent-hosts" -H "authorization: Bearer $AT" 2>/dev/null | json 'sum(1 for h in d["items"] if "claude_code" in (h.get("models") or []))' 2>/dev/null || echo 0)"
+  ONLINE="$(curl -fsS "$BASE/v1/agent-hosts" -H "authorization: Bearer $AT" 2>/dev/null | json "sum(1 for h in d['items'] if '$ASTRA_LLM_CLI' in (h.get('models') or []))" 2>/dev/null || echo 0)"
   [ "$ONLINE" != "0" ] && [ -n "$ONLINE" ] && break
   sleep 1
 done
-[ "$ONLINE" != "0" ] || fail "no online host with claude_code (is Claude Code signed in on this Mac?)"
-echo "  host online with claude_code"
+[ "$ONLINE" != "0" ] || fail "no online host with $ASTRA_LLM_CLI (is the selected CLI signed in on this Mac?)"
+echo "  host online with $ASTRA_LLM_CLI"
 
 say "asking about a screenshot whose content exists only in the pixels"
 "$BIN" --selftest screenshote2e "$BASE" --email "$EMAIL" --out "$OUT" 2>"$STORE/app.stderr.log" | tee "$OUT/result.txt"
-RC=${PIPESTATUS[0]}
-grep -q "SCREENSHOT_E2E=PASS" "$OUT/result.txt" || fail "see $OUT/result.txt"
+pipeline_status=("${PIPESTATUS[@]}")
+[ "${pipeline_status[0]}" = 0 ] && [ "${pipeline_status[1]}" = 0 ] || fail "app or evidence capture failed"
+grep -Eq '^SCREENSHOT_E2E=PASS( nonce=|$)' "$OUT/result.txt" || fail "see $OUT/result.txt"
 echo "  artifacts: $OUT (fixture.png / answer.txt / host.log)"
 exit 0

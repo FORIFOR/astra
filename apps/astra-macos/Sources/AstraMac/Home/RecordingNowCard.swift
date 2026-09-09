@@ -39,13 +39,13 @@ struct RecordingNowCard: View {
             Waveform(levels: recording.audioLevels, awaitingInput: recording.awaitingAudio)
                 .frame(height: 22)
             HStack(spacing: 8) {
-                Button(Facts.meetingNotesOpen) { VoiceHUDState.shared.toggleMeetingPanel(.notes) }
+                Button(Facts.meetingNotesOpen) { WindowCoordinator.shared.openMeetingPanelFromHome(.notes) }
                     .font(.system(size: S.type(TypeScale.secondarySize), weight: .medium))
                     .foregroundStyle(Palette.accent(dark))
                     .frame(height: 32).padding(.horizontal, 14)
                     .buttonStyle(AstraControlStyle(radius: 8, base: 0.05))
                     .accessibilityIdentifier("openLiveNotes")
-                Button("Ask Astra") { VoiceHUDState.shared.toggleMeetingPanel(.ask) }
+                Button("Ask Astra") { WindowCoordinator.shared.openMeetingPanelFromHome(.ask) }
                     .font(.system(size: S.type(TypeScale.secondarySize), weight: .medium))
                     .foregroundStyle(Palette.text(dark))
                     .frame(height: 32).padding(.horizontal, 14)

@@ -12,6 +12,7 @@ import ScreenCaptureKit
 @available(macOS 13.0, *)
 final class SystemAudioCapture: NSObject, SCStreamOutput {
     private var stream: SCStream?
+    @MainActor private var generation = 0
     private var converter: AVAudioConverter?
     private let targetRate: Double = 16_000
     private var onFrame: (([Float]) -> Void)?
@@ -32,10 +33,14 @@ final class SystemAudioCapture: NSObject, SCStreamOutput {
     }
 
     /// live 取り込みを始める。画面収録許可が無ければ throw（.app 側でユーザーが許可する）。
+    @MainActor
     func start(onFrame: @escaping ([Float]) -> Void) async throws {
-        self.onFrame = onFrame
+        generation += 1
+        let current = generation
+        sampleQueue.sync { self.onFrame = onFrame }
         let content = try await SCShareableContent.excludingDesktopWindows(
             false, onScreenWindowsOnly: true)
+        guard generation == current else { throw CancellationError() }
         guard let display = content.displays.first else {
             throw NSError(domain: "SystemAudioCapture", code: 1,
                           userInfo: [NSLocalizedDescriptionKey: "no display to attach to"])
@@ -44,13 +49,24 @@ final class SystemAudioCapture: NSObject, SCStreamOutput {
         let stream = SCStream(filter: filter, configuration: Self.configuration(), delegate: nil)
         try stream.addStreamOutput(self, type: .audio, sampleHandlerQueue: sampleQueue)
         try await stream.startCapture()
+        guard generation == current else {
+            try? await stream.stopCapture()
+            throw CancellationError()
+        }
         self.stream = stream
     }
 
+    @MainActor
     func stop() async {
+        generation += 1
         if let stream { try? await stream.stopCapture() }
         stream = nil
-        onFrame = nil
+        // The callback and converter are owned by the sample queue. Clearing a
+        // closure concurrently with its invocation can corrupt its reference count.
+        sampleQueue.sync {
+            onFrame = nil
+            converter = nil
+        }
     }
 
     // MARK: SCStreamOutput
@@ -70,7 +86,7 @@ final class SystemAudioCapture: NSObject, SCStreamOutput {
         guard let formatDesc = sampleBuffer.formatDescription,
               let asbd = formatDesc.audioStreamBasicDescription
         else { return nil }
-        let inFormat = AVAudioFormat(streamDescription: [asbd].withUnsafeBufferPointer { $0.baseAddress! })
+        let inFormat = pcmFormat(asbd)
         guard let inFormat else { return nil }
         guard let outFormat = AVAudioFormat(commonFormat: .pcmFormatFloat32,
                                             sampleRate: targetRate, channels: 1, interleaved: false)
@@ -104,5 +120,20 @@ final class SystemAudioCapture: NSObject, SCStreamOutput {
         }
         guard error == nil, let ch = out.floatChannelData, out.frameLength > 0 else { return nil }
         return Array(UnsafeBufferPointer(start: ch[0], count: Int(out.frameLength)))
+    }
+
+    /// The ASBD pointer must remain alive for the entire initializer call.
+    /// Returning a pointer from an array's withUnsafeBufferPointer closure left it dangling.
+    static func pcmFormat(_ description: AudioStreamBasicDescription) -> AVAudioFormat? {
+        guard description.mFormatID == kAudioFormatLinearPCM,
+              description.mSampleRate.isFinite, description.mSampleRate > 0,
+              description.mChannelsPerFrame > 0, description.mBytesPerFrame > 0,
+              description.mBitsPerChannel > 0 else { return nil }
+        var description = description
+        return withUnsafePointer(to: &description) { pointer in
+            guard let format = AVAudioFormat(streamDescription: pointer),
+                  format.commonFormat != .otherFormat else { return nil }
+            return format
+        }
     }
 }

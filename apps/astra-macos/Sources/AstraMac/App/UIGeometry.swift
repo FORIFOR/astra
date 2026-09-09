@@ -81,9 +81,9 @@ enum UIGeometry {
         //   - 中央に置く窓        : `:centerOffset` = (中央からの x, 可視領域の中央からの y)
         // 規則が変わる（上辺の窓が中央へ落ちる）と鍵そのものが無くなり、「が無い」で落ちる。
         func r(_ d: CGFloat) -> Double { (Double(d) * 2).rounded() / 2 }
-        let screen = NSScreen.screens.first
-        let sf = screen?.frame ?? .zero, vf = screen?.visibleFrame ?? .zero
         for win in NSApp.windows where win.isVisible {
+            let screen = win.screen ?? NSScreen.main
+            let sf = screen?.frame ?? .zero, vf = screen?.visibleFrame ?? .zero
             let f = win.frame
             let key = "window:" + (win.identifier?.rawValue ?? String(describing: type(of: win)))
             out[key] = Box(x: 0, y: 0, w: r(f.width), h: r(f.height))
@@ -247,4 +247,3 @@ enum UIGeometry {
         return try? JSONDecoder().decode(Snapshot.self, from: data)
     }
 }
-

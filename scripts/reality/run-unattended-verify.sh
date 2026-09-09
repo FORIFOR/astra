@@ -26,7 +26,7 @@ mkdir -p "$OUT"
 missing=(); have=()
 
 # ---- 1. preflight
-if id "$ACCOUNT" >/dev/null 2>&1; then have+=("account:$ACCOUNT"); else missing+=("dedicated macOS test account '$ACCOUNT' (one-time: sudo sysadminctl -addUser $ACCOUNT -password … ; then enable auto-login for it)"); fi
+if id "$ACCOUNT" >/dev/null 2>&1; then have+=("account:$ACCOUNT"); else missing+=("dedicated macOS test account '$ACCOUNT' (one-time: sudo sysadminctl -addUser $ACCOUNT -password … ; then sign in to its GUI session)"); fi
 if command -v tccutil >/dev/null 2>&1; then have+=("tccutil"); else missing+=("tccutil"); fi
 if [[ -d "$APP" ]] && codesign -v "$APP" >/dev/null 2>&1; then have+=("signed RC $BUNDLE_ID"); else missing+=("signed RC at $APP (scripts/package-macos-app.sh)"); fi
 if [[ -x "$ROOT/scripts/reality/tcc-dialog.sh" ]]; then have+=("tcc-dialog driver"); else missing+=("scripts/reality/tcc-dialog.sh"); fi
@@ -35,7 +35,8 @@ if osascript -e 'tell application "System Events" to get name of first process' 
 # 第 2 GUI セッション: 専用アカウントがログイン済みで、そのセッションで実行できること。
 if id "$ACCOUNT" >/dev/null 2>&1; then
   uid="$(id -u "$ACCOUNT")"
-  if launchctl print "user/$uid" >/dev/null 2>&1; then have+=("gui session:$ACCOUNT"); else missing+=("GUI session for '$ACCOUNT' (auto-login or CGSession -switchToUserID; then launchctl asuser $uid)"); fi
+  if sudo -n -u "$ACCOUNT" true >/dev/null 2>&1; then have+=("can run as:$ACCOUNT"); else missing+=("non-interactive execution as dedicated account $ACCOUNT"); fi
+  if launchctl print "gui/$uid" >/dev/null 2>&1; then have+=("gui session:$ACCOUNT"); else missing+=("GUI session for '$ACCOUNT' (sign in to the dedicated GUI session; then launchctl asuser $uid)"); fi
 fi
 
 echo "UNATTENDED_VERIFY have=[${have[*]:-}]"

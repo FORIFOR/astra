@@ -51,6 +51,17 @@ final class RecordingRuntime {
     private var micGeneration = 0
     private var sysAudio: AnyObject?
     private var speech: SpeechTranscriber?
+    private var remoteSpeech: SpeechTranscriber?
+    private var remoteVad = VoiceActivityDetector()
+    private var systemAudioWanted = false
+    private var audioGeneration = 0
+    private var audioBuffer = RecordingAudioBuffer()
+    private var mixTimer: Timer?
+    private var mixClock: TimeInterval?
+    private var mixedFrames = 0
+    private(set) var systemAudioFrames = 0
+    private(set) var systemAudioPeak: Float = 0
+    var onSystemAudioFailure: (() -> Void)?
     /// Listening（声で頼む）の取り込み。録音とは別で、ディスクには残さない。
     private var voiceSpeech: SpeechTranscriber?
     private var voiceVad = VoiceActivityDetector()
@@ -65,8 +76,8 @@ final class RecordingRuntime {
     /// この録音で文字起こしを頼まれているか（許可の答えが遅れて来たときに始めるため）。
     private var speechWanted = false
     /// 診断: 確定した発話の数 / 受け取った partial の数（REAL_MEETING の result.json）。録音中だけ意味を持つ。
-    var sttFinals: Int { speech?.finalsEmitted ?? 0 }
-    var sttPartials: Int { speech?.partialsSeen ?? 0 }
+    var sttFinals: Int { (speech?.finalsEmitted ?? 0) + (remoteSpeech?.finalsEmitted ?? 0) }
+    var sttPartials: Int { (speech?.partialsSeen ?? 0) + (remoteSpeech?.partialsSeen ?? 0) }
 
     /// オンデバイス STT を始める。録音の開始時、または音声認識の許可が下りた瞬間に呼ぶ。
     private func startSpeech() {
@@ -76,16 +87,28 @@ final class RecordingRuntime {
             try st.start { [weak self] live in
                 // §12 partial は final を待たずに UI へ。出るまでの時間を実測しておく。
                 let started = self?.speechStartedAt
-                let channel = self?.currentChannel ?? .localUser
-                DispatchQueue.main.async {
+                let channel = SpeakerChannel.localUser
+                let deliver = {
                     if let started { self?.lastPartialLatencyMs = Date().timeIntervalSince(started) * 1000 }
                     self?.lastTranscriptChannel = channel
                     self?.onTranscript?(live.text, live.isFinal)
                     // Dock が listening のときは、そこにも途中経過を出す。
                     if !live.isFinal { VoiceHUDState.shared.updatePartial(live.text) }
                 }
+                if Thread.isMainThread { deliver() } else { DispatchQueue.main.async(execute: deliver) }
             }
             self.speech = st
+            if systemAudioWanted {
+                let remote = SpeechTranscriber()
+                try remote.start { [weak self] live in
+                    let deliver = {
+                        self?.lastTranscriptChannel = .remoteAudio
+                        self?.onTranscript?(live.text, live.isFinal)
+                    }
+                    if Thread.isMainThread { deliver() } else { DispatchQueue.main.async(execute: deliver) }
+                }
+                remoteSpeech = remote
+            }
         } catch {
             // オンデバイス資産が無い / 認識器が無い。録音だけ続け、画面に理由を出す。
             // ここで `requiresOnDeviceRecognition = false` にして取り直すことはしない。
@@ -153,6 +176,18 @@ final class RecordingRuntime {
             return false
         }
         self.session = session
+        audioGeneration += 1
+        let generation = audioGeneration
+        paused = false
+        systemAudioWanted = captureSystemAudio
+        systemAudioFrames = 0; systemAudioPeak = 0
+        audioBuffer = RecordingAudioBuffer()
+        if captureSystemAudio {
+            mixClock = ProcessInfo.processInfo.systemUptime; mixedFrames = 0
+            mixTimer = Timer.scheduledTimer(withTimeInterval: 0.02, repeats: true) { [weak self] _ in
+                self?.drainMixedAudio()
+            }
+        }
         self.activeMeetingId = id
         transcriptionUnavailable = false
         resetListening()
@@ -171,23 +206,12 @@ final class RecordingRuntime {
             micGeneration += 1
             let gen = micGeneration
             micActive = true
-            micQueue.async { [weak self, weak session] in
+            micQueue.async { [weak self] in
                 do {
                     try mic.start { frame in
-                        _ = session?.pushSamples(samples: frame, sampleRate: 16_000)
-                        // §12 VAD: 声が乗っているフレームだけ STT へ流す（無音を延々と認識させない）。
-                        // 一時停止中は文字起こしもしない（session 側は core が sample を捨てる）。
-                        if self?.paused != true, self?.vad.accept(frame) == true {
-                            self?.currentChannel = .localUser
-                            self?.markListening(.localUser)
-                            if self?.speechStartedAt == nil { self?.speechStartedAt = Date() }
-                            self?.speech?.append(frame, sampleRate: 16_000)
+                        DispatchQueue.main.async {
+                            self?.receiveAudio(frame, channel: .localUser, generation: generation)
                         }
-                        // 波形用の音量（peak）を出す。
-                        var peak: Float = 0
-                        for v in frame { let a = abs(v); if a > peak { peak = a } }
-                        let level = min(1, peak * 1.6)   // 見やすさのため少し持ち上げる
-                        DispatchQueue.main.async { self?.onLevel?(level) }
                     }
                 } catch {
                     // マイクが開けなくてもセッションは成り立たせる（サンプルは外から push できる）
@@ -203,21 +227,57 @@ final class RecordingRuntime {
         if captureSystemAudio, #available(macOS 13.0, *) {
             let sys = SystemAudioCapture()
             self.sysAudio = sys
-            Task { [weak session] in
+            Task { [weak self] in
+                guard self?.audioGeneration == generation else { return }
                 do {
                     try await sys.start { [weak self] frame in
-                        _ = session?.pushSamples(samples: frame, sampleRate: 16_000)
-                        // §19 相手の声は remote_audio として扱う。混ぜてから起こすと主語が消える。
-                        self?.currentChannel = .remoteAudio
-                        self?.markListening(.remoteAudio)
+                        DispatchQueue.main.async {
+                            self?.receiveAudio(frame, channel: .remoteAudio, generation: generation)
+                        }
                     }
+                    if self?.audioGeneration != generation { await sys.stop() }
                 } catch {
                     // 画面収録許可が無ければ system audio 無しで続ける（mic だけで成り立つ）
                     NSLog("system audio capture unavailable: \(error)")
+                    if self?.audioGeneration == generation { self?.onSystemAudioFailure?() }
                 }
             }
         }
         return true
+    }
+
+    private func receiveAudio(_ frame: [Float], channel: SpeakerChannel, generation: Int) {
+        guard generation == audioGeneration, session != nil, !paused else { return }
+        markListening(channel)
+        let peak = frame.reduce(Float(0)) { max($0, abs($1)) }
+        if channel == .remoteAudio {
+            systemAudioFrames += frame.count
+            systemAudioPeak = max(systemAudioPeak, peak)
+        }
+        onLevel?(min(1, peak * 1.6))
+        if systemAudioWanted { audioBuffer.append(frame, channel: channel) }
+        else { _ = session?.pushSamples(samples: frame, sampleRate: 16_000) }
+        currentChannel = channel
+        if channel == .localUser, vad.accept(frame) {
+            if speechStartedAt == nil { speechStartedAt = Date() }
+            speech?.append(frame, sampleRate: 16_000)
+        } else if channel == .remoteAudio, remoteVad.accept(frame) {
+            remoteSpeech?.append(frame, sampleRate: 16_000)
+        }
+    }
+
+    private func drainMixedAudio() {
+        guard systemAudioWanted, !paused, let clock = mixClock else { return }
+        let due = max(0, Int(max(0, ProcessInfo.processInfo.systemUptime - clock) * 16_000) - mixedFrames)
+        guard due > 0 else { return }
+        // Drain in bounded chunks even if the main run loop was delayed.
+        var remaining = due
+        while remaining > 0 {
+            let count = min(remaining, 16_000)
+            _ = session?.pushSamples(samples: audioBuffer.take(count), sampleRate: 16_000)
+            remaining -= count
+        }
+        mixedFrames += due
     }
 
     /// テスト・外部音源用に直接サンプルを流す（headless E2E で使う）。
@@ -299,35 +359,71 @@ final class RecordingRuntime {
         micQueue.async { [micCapture] in micCapture.stop(); micCapture.prewarm() }
     }
     func setPaused(_ paused: Bool) {
+        if paused { drainMixedAudio() }
         self.paused = paused
         session?.setPaused(paused: paused)
+        if paused {
+            speech?.pause()
+            remoteSpeech?.pause()
+        } else {
+            do {
+                try speech?.resume()
+                try remoteSpeech?.resume()
+            } catch {
+                transcriptionUnavailable = true
+                NSLog("on-device STT resume unavailable: \(error)")
+            }
+        }
+        audioBuffer = RecordingAudioBuffer()
+        mixClock = ProcessInfo.processInfo.systemUptime; mixedFrames = 0
+        vad.reset(); remoteVad.reset()
     }
 
     /// 停止して確定。書けた断片は残り、回復候補になる。
-    func end() {
+    func end(completion: (() -> Void)? = nil) {
+        drainMixedAudio()
+        mixTimer?.invalidate(); mixTimer = nil; mixClock = nil
+        audioGeneration += 1
         vad.reset()
+        remoteVad.reset()
         speechStartedAt = nil
         if micActive {
             micActive = false
             // 止めたあと次の録音のために資源だけ確保し直す（IO は始めない）。
             micQueue.async { [micCapture] in micCapture.stop(); micCapture.prewarm() }
         }
-        speech?.finish(); speech = nil
+        let transcribers = [speech, remoteSpeech].compactMap { $0 }
         transcriptionUnavailable = false
         if #available(macOS 13.0, *), let sys = sysAudio as? SystemAudioCapture {
             Task { await sys.stop() }
         }
         sysAudio = nil
-        try? session?.finish()
-        session = nil
-        // 実 gateway の会議なら、録音を送ってから finalize を投げる（作成→録音→送信→終了）
-        if let base = apiBase, let token = accessToken, let id = meetingId {
-            if let _ = try? AstraCoreBridge.uploadMeetingAudio(base, accessToken: token, meetingId: id, journalRoot: root) {
-                _ = try? AstraCoreBridge.finishMeeting(base, accessToken: token, meetingId: id)
-                AstraCoreBridge.markUploaded(root: root, meetingId: id)  // 二重回復を防ぐ
+        let finishSession = { [self] in
+            speech = nil
+            remoteSpeech = nil
+            try? session?.finish()
+            session = nil
+            if let base = apiBase, let token = accessToken, let id = meetingId {
+                if let _ = try? AstraCoreBridge.uploadMeetingAudio(base, accessToken: token, meetingId: id, journalRoot: root) {
+                    _ = try? AstraCoreBridge.finishMeeting(base, accessToken: token, meetingId: id)
+                    AstraCoreBridge.markUploaded(root: root, meetingId: id)
+                }
             }
+            meetingId = nil
+            completion?()
         }
-        meetingId = nil
+        if completion != nil, !transcribers.isEmpty {
+            var remaining = transcribers.count
+            for transcriber in transcribers {
+                transcriber.finishAsync {
+                    remaining -= 1
+                    if remaining == 0 { finishSession() }
+                }
+            }
+        } else {
+            for transcriber in transcribers { transcriber.finish() }
+            finishSession()
+        }
     }
 
     /// 録りかけを 1 件捨てる。**音は消える。戻せない。**

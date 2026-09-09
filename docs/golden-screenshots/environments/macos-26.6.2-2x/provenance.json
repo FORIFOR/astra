@@ -1,0 +1,29 @@
+{
+  "source_commit": "a65544feadb6b2f16a895179fedc24804603af3a",
+  "os_version": "26.6.2",
+  "os_build": "25G83",
+  "backing_scale": 2,
+  "capture": "nominalResolution; capture-only patch stored alongside evidence",
+  "images": {
+    "light/01-voice-hud-idle.png": "b604c5b92643980af556d1dc943c7605c7295640576f9cb6eaf344885ff51a68",
+    "light/02-voice-hud-listening.png": "56a1f3fbc83dfd1b3d8d62001e4f902726930b224337dae01d98d9115ecd8d2a",
+    "light/02b-voice-hud-preparing.png": "f36d26369ebb301fdc058a04969a787dd57cabbd2af834175623430738c2aaee",
+    "light/03-recording-workspace.png": "12de15c4b28b2c7961edfd8010ecd720f2d1f7cba34ffc09d9adfcbec3bbe542",
+    "light/04-recording-transcript.png": "bf0e361e0157894309ca3f9175f7f7344933972e5d156ae2bba4a52f6a4002f4",
+    "light/05-recording-rag.png": "404aeded79942a6f148e02dac8df687d61783be2f0b0cf0d4c5501c03037a58d",
+    "light/08-meeting-detail.png": "755e943dc710c0676cd939581283e4c70ea2992c6b4926360a9c23ab39d32c0d",
+    "light/09-permission-denied.png": "ade45d522c864ec5339ce6bb27c0322ffe3484d772648872d0d358670ba7bae3",
+    "light/10-agent-timeline.png": "ecdf2961e0133db63661397b99efca88c9aab81a60a7116ce62dd72fc75319c7",
+    "light/11-meeting-canvas.png": "734660ab84e65909dc5e4209254d1240fa9573219e2bf12c450015aa74081d61",
+    "dark/01-voice-hud-idle.png": "b604c5b92643980af556d1dc943c7605c7295640576f9cb6eaf344885ff51a68",
+    "dark/02-voice-hud-listening.png": "56a1f3fbc83dfd1b3d8d62001e4f902726930b224337dae01d98d9115ecd8d2a",
+    "dark/02b-voice-hud-preparing.png": "f36d26369ebb301fdc058a04969a787dd57cabbd2af834175623430738c2aaee",
+    "dark/03-recording-workspace.png": "df57658e3db0c69b5715623f87d40523911d97de3186d7a905fba3bf70d8701f",
+    "dark/04-recording-transcript.png": "f9d997c0694f5b5bb4ce8a715d2434aad99b39951b11883d895c5b58d4d48420",
+    "dark/05-recording-rag.png": "c3c34b8afbcb048eba9ab82d34f4e2f508cca0e3cba9fabaeadf005f20444be3",
+    "dark/08-meeting-detail.png": "00e05bdb47fe691b5143e82a590cb4d7871a2a6b5e1eb5d09179c4aae1e55cde",
+    "dark/09-permission-denied.png": "572b8e08051c567496fc5e8afde41bbaad64a6cd7513bea0b137a8f44d46abba",
+    "dark/10-agent-timeline.png": "d8f83d244d04c39729442f7133050b13efbfe7b78c698c680dc1de43ccda8d5e",
+    "dark/11-meeting-canvas.png": "8a1c3c9e2299957485b67e9d80dee609b26bd7ef9d5e38864440f911a872fe13"
+  }
+}

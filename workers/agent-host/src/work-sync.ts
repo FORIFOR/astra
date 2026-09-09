@@ -66,6 +66,8 @@ export interface WorkSyncDeps {
   readonly lookaheadDays?: number;
   /** 1 回の同期で LLM に頼む上限。 */
   readonly maxClassifications?: number;
+  /** Optional provider search restriction, applied before fetching/classifying items. */
+  readonly googleQuery?: string;
   /** 混み合い（429）/ 時間切れのときに一度だけ待ってやり直す間隔。 */
   readonly backoffMs?: number;
   readonly sleep?: (ms: number) => Promise<void>;
@@ -243,14 +245,22 @@ export class WorkSyncLoop {
     const gmail = this.#deps.connectors.gmail();
     const since = this.#since('gmail', now);
     // Gmail の `after:` は秒。1 秒引いて、境界の 1 通を落とさない。
-    const query = `after:${String(Math.max(0, Math.floor(since.getTime() / 1000) - 1))}`;
+    const query = [
+      `after:${String(Math.max(0, Math.floor(since.getTime() / 1000) - 1))}`,
+      this.#deps.googleQuery,
+    ]
+      .filter(Boolean)
+      .join(' ');
     const [inbox, sent] = await Promise.all([
       gmail.list({ query, labelIds: ['INBOX'], maxResults: 50 }),
       gmail.list({ query, labelIds: ['SENT'], maxResults: 50 }),
     ]);
+    // A self-delivered Gmail message can have both INBOX and SENT labels.
+    // Keep its incoming copy so the same artifact ID cannot overwrite it as outgoing.
+    const inboxIds = new Set(inbox.map((message) => message.id));
     const artifacts = [
       ...inbox.map((m) => fromGmail(m, 'inbound', ctx)),
-      ...sent.map((m) => fromGmail(m, 'outbound', ctx)),
+      ...sent.filter((m) => !inboxIds.has(m.id)).map((m) => fromGmail(m, 'outbound', ctx)),
     ].filter((a): a is WorkArtifact => a !== null);
     return { artifacts, cursor: latest(artifacts, since) };
   }
@@ -259,7 +269,10 @@ export class WorkSyncLoop {
     now: Date,
     ctx: NormalizeContext,
   ): Promise<{ artifacts: WorkArtifact[]; cursor: string | null }> {
-    const events = await this.#deps.connectors.googleCalendar().list(this.#window(now));
+    const events = await this.#deps.connectors.googleCalendar().list({
+      ...this.#window(now),
+      ...(this.#deps.googleQuery ? { query: this.#deps.googleQuery } : {}),
+    });
     return {
       artifacts: events
         .map((e) => fromGoogleCalendar(e, ctx))
@@ -406,7 +419,12 @@ export function semanticFrom(value: unknown): WorkSemantic | null {
     request: raw['request'] ?? null,
     owner: raw['owner'] ?? null,
     waiting_on: raw['waiting_on'] ?? null,
-    due: raw['due'] ?? null,
+    // A date-only model answer has no time/zone. Keep the valid classification
+    // but leave its timestamp unset rather than inventing midnight or losing the project.
+    due:
+      typeof raw['due'] === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(raw['due'])
+        ? null
+        : (raw['due'] ?? null),
     confidence: typeof raw['confidence'] === 'number' ? raw['confidence'] : 0.5,
     extracted_by: 'llm',
   });

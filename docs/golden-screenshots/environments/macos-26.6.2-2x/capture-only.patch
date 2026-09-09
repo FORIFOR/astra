@@ -1,0 +1,40 @@
+diff --git a/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift b/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift
+index 39bb30f..fac80ac 100644
+--- a/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift
++++ b/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift
+@@ -417,10 +417,12 @@ enum SelfTest {
+             // 既定の `boundsIgnoreFraming` は影を切り落とすので、
+             // 影を変えても絵が 1px も変わらない。
+             let shadow = ProcessInfo.processInfo.environment["ASTRA_SHOT_SHADOW"] == "1"
++            // 通常の測定画像は 1px = 1pt。確認 gate はこの寸法で上限を測る。
+             let opts: CGWindowImageOption = shadow
+-                ? [.bestResolution] : [.boundsIgnoreFraming, .bestResolution]
++                ? [.bestResolution] : [.boundsIgnoreFraming, .nominalResolution]
+             guard let (id, x, y, w, h) = found,
+-                  let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, id, opts)
++                  let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, id, opts),
++                  shadow || (cg.width == Int(w) && cg.height == Int(h))
+             else { return nil }
+             let rep = NSBitmapImageRep(cgImage: cg)
+             let shot = shadow ? (onBackdrop(cg) ?? rep) : rep
+@@ -633,7 +635,7 @@ enum SelfTest {
+         } while workspaceWindow == nil && Date() < wsDeadline
+         settle(0.8)
+         if let big = workspaceWindow,
+-           let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, big.id, [.boundsIgnoreFraming, .bestResolution]) {
++           let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, big.id, [.boundsIgnoreFraming, .nominalResolution]) {
+             let rep = NSBitmapImageRep(cgImage: cg)
+             if let png = rep.representation(using: .png, properties: [:]) {
+                 try? png.write(to: URL(fileURLWithPath: "\(outDir)/10-workspace.png"))
+@@ -5968,7 +5970,10 @@ enum SelfTest {
+             // 出た直後は描画が終わっていないことがあるので一拍おく。
+             settle(0.6)
+             guard let (winID, w, h) = best,
+-                  let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, winID, [.boundsIgnoreFraming, .bestResolution])
++                  // golden は logical points で保存する。Retina の物理画素を使うと
++                  // 同じ 220x44pt の窓が 440x88px になり、別の寸法と誤判定される。
++                  let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, winID, [.boundsIgnoreFraming, .nominalResolution]),
++                  cg.width == w, cg.height == h
+             else { return nil }
+             let rep = NSBitmapImageRep(cgImage: cg)
+             var seen = Set<UInt32>()

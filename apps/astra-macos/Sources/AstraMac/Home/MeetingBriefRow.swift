@@ -40,9 +40,6 @@ struct MeetingBriefRow: View {
                 }
                 if store.briefOpen {
                     VStack(alignment: .leading, spacing: 8) {
-                        section(Facts.briefPrevious, b.previous, empty: "前回の会議の記録はありません")
-                        section(Facts.briefSince, b.sinceLastMeeting, empty: "前回から届いたメールはありません")
-                        section(Facts.briefOpen, b.openItems, empty: "開いている件はありません")
                         VStack(alignment: .leading, spacing: 4) {
                             Text(Facts.briefQuestions)
                                 .font(.system(size: S.type(TypeScale.captionSize), weight: .semibold))
@@ -57,12 +54,21 @@ struct MeetingBriefRow: View {
                                     Text("→ \(q.question)")
                                         .font(.system(size: S.type(TypeScale.secondarySize)))
                                         .foregroundStyle(Palette.text(dark))
-                                    Text("\(q.reason) · \(Facts.sourceLabel) \(q.sources.count)")
+                                    Text(q.reason)
                                         .font(.system(size: S.type(TypeScale.captionSize)))
                                         .foregroundStyle(Palette.muted(dark))
+                                    evidence(q.sources)
                                 }
                             }
                         }
+                        section(Facts.briefOpen, b.openItems, empty: "開いている件はありません")
+                        DisclosureGroup(Facts.briefHistory) {
+                            section(Facts.briefPrevious, b.previous, empty: "前回の会議の記録はありません")
+                            section(Facts.briefSince, b.sinceLastMeeting, empty: "前回から届いたメールはありません")
+                        }
+                        .font(.system(size: S.type(TypeScale.secondarySize)))
+                        .foregroundStyle(Palette.muted(dark))
+                        .accessibilityIdentifier("briefHistory")
                         HStack {
                             Spacer(minLength: 0)
                             Button {
@@ -104,15 +110,35 @@ struct MeetingBriefRow: View {
                 Text(empty).font(.system(size: S.type(TypeScale.secondarySize))).foregroundStyle(Palette.muted(dark))
             }
             ForEach(facts) { f in
-                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                VStack(alignment: .leading, spacing: 3) {
                     Text("・\(f.text)")
                         .font(.system(size: S.type(TypeScale.secondarySize)))
                         .foregroundStyle(Palette.text(dark))
-                    Text("\(Facts.sourceLabel) \(f.sources.count)")
-                        .font(.system(size: S.type(TypeScale.captionSize)))
-                        .foregroundStyle(Palette.muted(dark))
+                    evidence(f.sources)
                 }
             }
         }
     }
+
+    private func evidence(_ sources: [WorkProvenance]) -> some View {
+        DisclosureGroup("\(Facts.sourceLabel) \(sources.count) 件") {
+            ForEach(sources) { source in
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("\(WorkFormat.sourceName(source.source)) · \(source.label)")
+                        .foregroundStyle(Palette.text(dark))
+                        .fixedSize(horizontal: false, vertical: true)
+                    if let excerpt = source.excerpt, !excerpt.isEmpty {
+                        Text(excerpt).fixedSize(horizontal: false, vertical: true)
+                    }
+                    if let raw = source.url, let url = URL(string: raw),
+                       ["https", "http"].contains(url.scheme?.lowercased() ?? "") {
+                        Link(Facts.briefOpenSource, destination: url)
+                    }
+                }
+            }
+        }
+        .font(.system(size: S.type(TypeScale.captionSize)))
+        .foregroundStyle(Palette.muted(dark))
+    }
+
 }

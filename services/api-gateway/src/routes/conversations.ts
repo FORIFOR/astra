@@ -266,7 +266,16 @@ export function registerConversationRoutes(app: App, deps: ConversationRouteDeps
         deps.work && decision.lane === 'chat' && !replyMeta
           ? await deps.work
               .context(principal.tenantId, principal.userId)
-              .then((ctx) => selectContextPack({ question: body.text, context: ctx }))
+              .then(async (ctx) =>
+                selectContextPack({
+                  question: body.text,
+                  context: ctx,
+                  meetingBrief:
+                    ctx.inference_enabled && classifyContextIntent(body.text) === 'meeting_prep'
+                      ? await deps.work!.meetingBrief(principal.tenantId, principal.userId)
+                      : null,
+                }),
+              )
               .catch(() => null)
           : null;
       if (pack) request.log.info({ work_context: pack.stats }, 'context minimization');

@@ -41,8 +41,8 @@ step() {
   "$@" > "$log" 2>&1; local rc=$?
   if [[ $rc -eq 0 ]] && grep -qE "$pat" "$log"; then
     mark "$id" PASS "$(grep -E "$pat" "$log" | tail -1 | cut -c1-90)" "$name"
-  elif [[ $rc -eq 2 ]]; then
-    # 測定器の約束: exit 2 = 測れる所まで測った / 測定器が足りない（人を呼ばない）。
+  elif [[ $rc -eq 2 || $rc -eq 3 ]]; then
+    # exit 2 = 部分測定 / 測定器不足、exit 3 = Live preflight の前提不足。
     mark "$id" AUTOMATION_MISSING "$(grep -E 'AUTOMATION_MISSING|PARTIAL|SKIP' "$log" | tail -1 | cut -c1-110; true)" "$name"
   else
     mark "$id" FAIL "$(grep -E 'FAIL|error' "$log" | tail -1 | cut -c1-90; true)  → $log" "$name"
@@ -61,10 +61,11 @@ missing() {  # $1 id, $2 name, $3 script
 say "# IDEAL_PRODUCT_GATE — $(date '+%Y-%m-%d %H:%M') · $SHA · HUMAN_INTERVENTION=0"
 say ""
 say '```'
+# 02 署名済み候補（gate 用 RC。TCC はバンドルに紐づく）
+# verify-all の確認画面検証もこのバンドルを使うため、先に用意する。
+step 02 "build signed candidate" "launch: OK" bash scripts/package-macos-app.sh
 # 01 verify-all（30 段の自動 gate）
 step 01 "verify-all" "VERIFY_ALL_OK" ./scripts/verify-all.sh
-# 02 署名済み候補（gate 用 RC。TCC はバンドルに紐づく）
-step 02 "build signed candidate" "launch: OK" bash scripts/package-macos-app.sh
 # 03 UI Atlas 61/61（RC .app だけが描く → build → UI_ATLAS_GATE）
 atlas() {
   bash scripts/ui-atlas/capture-rc.sh "$APP" "$ATLAS_OUT" || return 1
@@ -79,8 +80,8 @@ PY
 step 03 "UI Atlas 61/61" "UI_ATLAS_GATE=PASS" atlas
 # 04 golden（shots 10 面、light / dark）
 golden() {
-  "$BIN" --selftest golden docs/golden-screenshots "$ATLAS_OUT/shots-light" | tail -1
-  "$BIN" --selftest golden docs/golden-screenshots/dark "$ATLAS_OUT/shots-dark" | tail -1
+  "$BIN" --selftest golden docs/golden-screenshots "$ATLAS_OUT/shots-light" | tail -1 || return 1
+  "$BIN" --selftest golden docs/golden-screenshots/dark "$ATLAS_OUT/shots-dark" | tail -1 || return 1
 }
 step 04 "golden light+dark" "SELFTEST_OK golden" golden
 # 05 SurfaceMotion 5/5（Atlas の motion/result.json）
@@ -93,7 +94,7 @@ PY
 }
 step 05 "SurfaceMotion 5/5" "SURFACE_CONTINUITY_MOTION=PASS" motion
 # 06 Invocation（ms と音の真実）
-invocation() { "$BIN" --selftest invocation; "$BIN" --selftest invocationaudio; }
+invocation() { "$BIN" --selftest invocation || return 1; "$BIN" --selftest invocationaudio; }
 step 06 "Invocation acoustic" "SELFTEST_OK invocationaudio" invocation
 # 06b スクショの自動コンテキスト（撮った瞬間に会話の文脈になる。撮っただけでは外部へ出さない）
 step 06b "Screenshot auto-context" "SCREENSHOT_CONTEXT_GATE=PASS" "$BIN" --selftest screenshotcontext
@@ -103,6 +104,8 @@ step 06c "Screenshot egress truth" "SCREENSHOT_EGRESS_TRUTH=PASS" "$BIN" --selft
 step 06d "Screenshot real E2E (nonce)" "SCREENSHOT_E2E=PASS" bash scripts/reality/run-screenshot-e2e.sh
 # 06e TCC を含む verify-all の無人実行。人を呼ばない: 無ければ AUTOMATION_MISSING
 missing 06e "Unattended verify-all (TCC)" scripts/reality/run-unattended-verify.sh
+# Work Context は独立した必須条件。Offline の成功だけでは Live を含む最終 PASS にしない。
+step 06f "Work Context release" "^WORK_CONTEXT_RELEASE_GATE=PASS$" bash scripts/reality/run-work-context-release-gate.sh
 # 07-11 実機の残り。測定器が無い段は AUTOMATION_MISSING（人を呼ばない）。
 missing 07 "Automated Real Meeting (2 machines)" scripts/reality/run-real-meeting.sh
 missing 08 "Automated Full Keyboard Access"     scripts/reality/run-fka.sh
@@ -126,7 +129,7 @@ step 13 "privacy egress" "PRIVACY_EGRESS_GATE=PASS" bash scripts/verify-privacy-
 step 14 "recovery" "RECORDING_EXPERIENCE_OK" bash scripts/verify-recording-experience.sh
 # 15 Sparkle（設定の真実 + Atlas に本物の更新の窓が撮れている）
 sparkle() {
-  "$BIN" --selftest update
+  "$BIN" --selftest update || return 1
   python3 - <<'PY'
 import json
 m = json.load(open("docs/ui-atlas/manifest.json", encoding="utf-8"))

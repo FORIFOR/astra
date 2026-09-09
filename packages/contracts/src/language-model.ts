@@ -21,6 +21,7 @@ import { z } from 'zod';
 /** 呼び方の種類。**増やすときは、選ぶ順も一緒に決める。** */
 export const LANGUAGE_MODEL_KINDS = [
   'claude_code',
+  'codex',
   'anthropic_api',
   'gemini_api',
   'openai_api',
@@ -31,6 +32,7 @@ export type LanguageModelKind = z.infer<typeof LanguageModelKind>;
 
 export const LANGUAGE_MODEL_LABEL: Readonly<Record<LanguageModelKind, string>> = {
   claude_code: 'Claude Code（この端末）',
+  codex: 'Codex（この端末）',
   anthropic_api: 'Anthropic API（自分のキー）',
   gemini_api: 'Gemini API（自分のキー）',
   openai_api: 'OpenAI API（自分のキー）',
@@ -43,7 +45,7 @@ export const LANGUAGE_MODEL_LABEL: Readonly<Record<LanguageModelKind, string>> =
  *   - `claude_code`: Astra は持たない。Claude Code が自分で持っている
  *   - `keychain`: 端末の資格情報ストア。サーバへは参照だけ
  */
-export const CREDENTIAL_LOCATIONS = ['claude_code', 'keychain', 'none'] as const;
+export const CREDENTIAL_LOCATIONS = ['claude_code', 'codex', 'keychain', 'none'] as const;
 export const CredentialLocation = z.enum(CREDENTIAL_LOCATIONS);
 export type CredentialLocation = z.infer<typeof CredentialLocation>;
 
@@ -67,6 +69,7 @@ export type LanguageModelOption = z.infer<typeof LanguageModelOption>;
  */
 export const SELECTION_ORDER: readonly LanguageModelKind[] = [
   'claude_code',
+  'codex',
   'anthropic_api',
   'gemini_api',
   'openai_api',
@@ -97,6 +100,7 @@ export function isAllowedCredentialLocation(
     // Claude Code の資格情報は Claude Code のもの。Astra は持たない。
     return location === 'claude_code';
   }
+  if (kind === 'codex') return location === 'codex';
   if (kind === 'local') return location === 'none';
   // 残りは端末の資格情報ストアだけ
   return location === 'keychain';
@@ -105,6 +109,7 @@ export function isAllowedCredentialLocation(
 /** 何が足りなくて使えないのか。画面にそのまま出す。 */
 export const UNAVAILABLE_REASON: Readonly<Record<LanguageModelKind, string>> = {
   claude_code: 'この端末に Claude Code が見つかりません。',
+  codex: 'この端末の Codex にサインインしてください。',
   anthropic_api: 'Anthropic の API キーが登録されていません。',
   gemini_api: 'Gemini の API キーが登録されていません。',
   openai_api: 'OpenAI の API キーが登録されていません。',
@@ -113,4 +118,4 @@ export const UNAVAILABLE_REASON: Readonly<Record<LanguageModelKind, string>> = {
 
 /** 1 つも無いときに出す文。**「あとで」で終わらせない。** */
 export const NO_MODEL_MESSAGE =
-  '言葉を扱う仕事には、モデルの接続が要ります。Claude Code を繋ぐか、お使いの API キーを登録してください。';
+  '言葉を扱う仕事には、モデルの接続が要ります。Claude Code または Codex を繋ぐか、お使いの API キーを登録してください。';

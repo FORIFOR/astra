@@ -14,6 +14,7 @@ enum PermissionCenter {
         case screenAsk      // 画面について聞く
         case control        // この Mac を操作する（dictation / グローバル操作）
         case meeting        // 会議を録る
+        case meetingAudio   // 録音設定で選んだ画面の音
         case schedule       // 予定から録る（Home の「これからの予定」）
 
         /// この機能に**本当に要る**もの。ここに書いていないものは要求しない。
@@ -22,12 +23,11 @@ enum PermissionCenter {
             case .voice: return [.microphone]
             case .screenAsk: return [.screenRecording]
             case .control: return [.accessibility]
-            // 相手の声（system audio）は本番の録音経路でまだ取り込んでいない（`captureSystemAudio` は常に false）。
-            // 使っていない目的で画面収録を求めない。system audio を本当に繋いだときに、
-            // 「相手の声も記録する」の入口で画面収録を JIT で求める。
+            // 画面の音は、選択した録音でだけ meetingAudio が別に要求する。
             // 手元の文字起こし（Apple Speech）は別の許可。これを求めずにいたので、初回は
             // 文字起こしが一度も始まらなかった（REAL_MEETING の実マイク経路で発見）。
             case .meeting: return [.microphone, .speechRecognition]
+            case .meetingAudio: return [.screenRecording]
             // 予定を読むだけ。録音そのものは .meeting が別に求める（巻き込まない）。
             case .schedule: return [.calendar]
             }
@@ -39,6 +39,7 @@ enum PermissionCenter {
             case .screenAsk: return "画面について答えるには\(Facts.permissionScreenRecording)の許可が要ります。"
             case .control: return "入力欄へ書き込むにはアクセシビリティが要ります。"
             case .meeting: return "会議を録るには\(Facts.permissionMicrophone)の許可が、手元で文字にするには\(Facts.permissionSpeechRecognition)の許可が要ります。"
+            case .meetingAudio: return "画面の音を録るには\(Facts.permissionScreenRecording)の許可が要ります。"
             case .schedule: return "これからの会議をここに出すには\(Facts.permissionCalendar)の許可が要ります。"
             }
         }
