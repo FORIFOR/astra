@@ -54,6 +54,20 @@ struct MeetingReminderPolicy {
 /// Read only AX button names, never meeting contents. Bounded work runs away
 /// from the main thread; a timeout is unknown, not evidence that a call ended.
 private enum MeetingCallProbe {
+    static func title(pid: pid_t) -> String? {
+        guard AXIsProcessTrusted() else { return nil }
+        let app = AXUIElementCreateApplication(pid)
+        AXUIElementSetMessagingTimeout(app, 0.1)
+        var focused: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(app, kAXFocusedWindowAttribute as CFString, &focused) == .success,
+              let focused else { return nil }
+        let window = focused as! AXUIElement
+        AXUIElementSetMessagingTimeout(window, 0.1)
+        var title: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(window, kAXTitleAttribute as CFString, &title) == .success else { return nil }
+        return title as? String
+    }
+
     static func joined(pid: pid_t) -> Bool? {
         guard AXIsProcessTrusted() else { return nil }
         let app = AXUIElementCreateApplication(pid)
@@ -127,7 +141,7 @@ final class MeetingRecordingReminder: NSObject, UNUserNotificationCenterDelegate
         probing = true
         defer { probing = false }
         let pid = app.processIdentifier
-        let title = AccessibilityContext.frontmostWindowTitle() ?? ""
+        let title = await Task.detached(priority: .utility) { MeetingCallProbe.title(pid: pid) }.value ?? ""
         let provider = MeetingReminderPolicy.provider(bundleId: bundle, title: title)
         let joined = await Task.detached(priority: .utility) { MeetingCallProbe.joined(pid: pid) }.value
         guard NSWorkspace.shared.frontmostApplication?.processIdentifier == pid else { return }
