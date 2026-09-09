@@ -11,19 +11,19 @@
 apps/astra-macos/.build/debug/AstraMac --selftest shots /tmp/astra-shots
 ```
 
-| #   | ファイル                      | 画面                   | geometry（実測）                     |
-| --- | ----------------------------- | ---------------------- | ------------------------------------ |
-| 01  | `01-voice-hud-idle.png`       | Voice HUD idle         | 310×31（tokens: hudWidth/hudHeight） |
-| 02  | `02-voice-hud-listening.png`  | Voice HUD listening    | 310×31                               |
-| 03  | `03-recording-workspace.png`  | Recording Workspace    | 920×590（workspaceWidth/Height）     |
-| 04  | `04-recording-transcript.png` | 文字起こし表示         | 920×590                              |
-| 05  | `05-recording-rag.png`        | RAG Drawer 展開        | 920×590                              |
-| 06  | `06-main-home.png`            | Main / Home            | 1040×680                             |
-| 07  | `07-apps.png`                 | Main / Apps            | 1040×680                             |
-| 08  | `08-meeting-detail.png`       | Meeting Detail         | 1040×680                             |
-| 09  | `09-permission-denied.png`    | マイク許可なしで録音中 | 920×590                              |
-| 03b | `03b-recording-paused.png`    | 一時停止中（pill の ▶）| 1080×680（Atlas meeting.paused）     |
-| 09b | `09b-stt-unavailable.png`     | オンデバイス STT 不可  | 1080×680（Atlas system.stt-unavailable）|
+| #   | ファイル                      | 画面                    | geometry（実測）                         |
+| --- | ----------------------------- | ----------------------- | ---------------------------------------- |
+| 01  | `01-voice-hud-idle.png`       | Voice HUD idle          | 310×31（tokens: hudWidth/hudHeight）     |
+| 02  | `02-voice-hud-listening.png`  | Voice HUD listening     | 310×31                                   |
+| 03  | `03-recording-workspace.png`  | Recording Workspace     | 920×590（workspaceWidth/Height）         |
+| 04  | `04-recording-transcript.png` | 文字起こし表示          | 920×590                                  |
+| 05  | `05-recording-rag.png`        | RAG Drawer 展開         | 920×590                                  |
+| 06  | `06-main-home.png`            | Main / Home             | 1040×680                                 |
+| 07  | `07-apps.png`                 | Main / Apps             | 1040×680                                 |
+| 08  | `08-meeting-detail.png`       | Meeting Detail          | 1040×680                                 |
+| 09  | `09-permission-denied.png`    | マイク許可なしで録音中  | 920×590                                  |
+| 03b | `03b-recording-paused.png`    | 一時停止中（pill の ▶） | 1080×680（Atlas meeting.paused）         |
+| 09b | `09b-stt-unavailable.png`     | オンデバイス STT 不可   | 1080×680（Atlas system.stt-unavailable） |
 
 `shots` は撮るだけでなく **geometry と非空白（色数）を検査**する。窓が在るだけでは PASS にしない。
 **light / dark の両方**を撮る（`--selftest shots <dir> [dark]`）。dark 版は `docs/golden-screenshots/dark/`。

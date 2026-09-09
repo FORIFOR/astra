@@ -144,7 +144,6 @@ CALENDAR_PURPOSE_FIRST
 UI の開示（chip の help）: 「質問したときだけ、その画像を Claude へ送ります」。既定の方針は cloud で、
 端末内モデルが繋がるまで「出ません」は出ない（`VisualEgressPolicy.current`）。
 
-
 ## 2026-09-09: 画面の音を本番録音に接続
 
 上記の未接続という記述は 2026-09-04 時点の記録。現在は「画面の音」の保存値を

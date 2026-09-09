@@ -18,3 +18,12 @@ docs/ux-benchmark/
 artifacts/ux/
 docs/golden-screenshots/
 docs/evidence/
+# UI Atlas also contains verbatim judge output and build.py/selftest-owned files.
+# Keep the same evidence-preservation rule as ux-benchmark; authored docs remain checked.
+docs/ui-atlas/review/
+docs/ui-atlas/supremacy/
+docs/ui-atlas/journey-*/result.json
+docs/ui-atlas/motion/result.json
+docs/ui-atlas/index.html
+docs/ui-atlas/manifest.json
+docs/ui-atlas/README.md

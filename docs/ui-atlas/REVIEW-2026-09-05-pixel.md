@@ -8,12 +8,12 @@
 
 ## 判定の要約
 
-| Verdict | 件数 | 内訳 |
-| --- | --- | --- |
-| KEEP | 41 | 下表 |
-| FIX | 5 | meeting.captions / system.mic-denied / main.apps-connectors / main.work-agents / main.new-recording-sheet |
-| NOT_ENOUGH_EVIDENCE | 15 | NO_CAPTURE_PATH 13 + 撮れているが state の証拠にならない 2（meeting.workspace / session.detail） |
-| 合計 | 61 | required 61（optional 5 は末尾に別掲） |
+| Verdict             | 件数 | 内訳                                                                                                      |
+| ------------------- | ---- | --------------------------------------------------------------------------------------------------------- |
+| KEEP                | 41   | 下表                                                                                                      |
+| FIX                 | 5    | meeting.captions / system.mic-denied / main.apps-connectors / main.work-agents / main.new-recording-sheet |
+| NOT_ENOUGH_EVIDENCE | 15   | NO_CAPTURE_PATH 13 + 撮れているが state の証拠にならない 2（meeting.workspace / session.detail）          |
+| 合計                | 61   | required 61（optional 5 は末尾に別掲）                                                                    |
 
 FIX 5 件のうち Craft Freeze override が要るのは 2 件（apps-connectors / work-agents。いずれも局所レイアウト）。
 残り 3 件は文言・状態結線だけで、寸法・色・段には触れない。
@@ -141,7 +141,7 @@ strip.notes-workspace            KEEP   (drift 0 / creation 0 / focus theft 0 / 
   1. `listeningLabel`: `state.permissionIssue != nil` のとき `.localUser` を parts から外す（残りが空なら nil）。
   2. `liveLine`: 最初の分岐に `if state.permissionIssue != nil { EmptyView() }` を足す
      （理由は banner と transcript が既に言っているので二重に言わない。440-443 行のコメントと同じ方針）。
-  fixture 側（SelfTest.swift:5966 付近）は変えなくてよい。UI が正しければ同じ fixture で正しい絵になる。
+     fixture 側（SelfTest.swift:5966 付近）は変えなくてよい。UI が正しければ同じ fixture で正しい絵になる。
 - Craft Freeze override: 不要（表示条件のみ。寸法・色は不変）。
 
 ### F3 main.apps-connectors — 1 行に並ぶカードの高さが揃っていない

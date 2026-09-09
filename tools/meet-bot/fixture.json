@@ -25,33 +25,19 @@
   "expected": {
     "decisions": [
       {
-        "must": [
-          "先に"
-        ],
-        "subject": [
-          "macOS",
-          "MC OS",
-          "マック"
-        ],
+        "must": ["先に"],
+        "subject": ["macOS", "MC OS", "マック"],
         "label": "macOS 版を先にリリース"
       },
       {
-        "must": [
-          "次のスプリント"
-        ],
-        "subject": [
-          "Windows",
-          "ウィンドウズ"
-        ],
+        "must": ["次のスプリント"],
+        "subject": ["Windows", "ウィンドウズ"],
         "label": "Windows 版は次のスプリント"
       }
     ],
     "actions": [
       {
-        "must": [
-          "山田",
-          "金曜"
-        ],
+        "must": ["山田", "金曜"],
         "label": "山田: テスト結果を金曜日までに共有"
       }
     ],

@@ -18,20 +18,20 @@ Offline の成功や資格情報の存在を Live の成功に読み替えない
 
 ## 実行結果と不足
 
-| 必須Gate | 状態 | 証拠・未達事項 |
-| --- | --- | --- |
-| GOOGLE_DAILY_WORK_LIVE | AUTOMATION_MISSING | 実行終了3。`ASTRA_TEST_GOOGLE_CLIENT_ID` / `ASTRA_TEST_GOOGLE_REFRESH_TOKEN` 未設定 |
-| MICROSOFT_DAILY_WORK_LIVE | AUTOMATION_MISSING | 実行終了3。`ASTRA_TEST_MS_CLIENT_ID` / `ASTRA_TEST_MS_REFRESH_TOKEN` および MICROSOFT 別名も未設定 |
-| LIVE_CONNECTOR_RECOVERY_GATE | AUTOMATION_MISSING | 指定マトリクスのLive測定器なし。送信timeout後の二重送信0は未証明 |
-| DAILY_USER_JOURNEY_LIVE | AUTOMATION_MISSING | 既存live-assertはHome・返信・Brief。6問すべてのLive回答、1操作の出所到達を検証していない |
-| PERSONALIZATION_REALITY_GATE | AUTOMATION_MISSING | 訂正直後・個別無効化・全OFF・無関係なSwift依頼への注入0をLiveで未検証 |
-| Invocation / Voice | NOT_MEASURED | 今回指定の全閾値を同じRCで未測定。既存selftestの成功を実音声の先頭欠落0と同一視しない |
-| Real Meeting → Work Graph → Brief | AUTOMATION_MISSING | `ASTRA_MEET_URL` / bot profile 未設定。BlackHoleは存在。bundleのDB試験は実Meet経路の代替ではない |
-| Screenshot | NOT_MEASURED | 最終RCでのnonce・latency・egress・参照解決の再測定未実施 |
-| Live TCC / Guided Setup | AUTOMATION_MISSING | 専用macOSユーザー `astra-verify` なし。現スクリプトはgrant recovery未実装、全5権限を完走しない |
-| Keyboard / VoiceOver | AUTOMATION_MISSING | 現FKAは3面のTab移動。VOは項目巡回のみでC/Dもidle面。指定4journeyの結果到達をassertしていない |
-| Six Principles / Visual final | NOT_MEASURED | 同一RCの全必須証拠を今回取得していない。旧goldenやKEEPを自動継承しない |
-| Release Artifact | FAIL | 開発署名、stapleなし、CI未確認、dirty tree。Sparkle実更新・exact RC guide・配布物との一致も未測定 |
+| 必須Gate                          | 状態               | 証拠・未達事項                                                                                     |
+| --------------------------------- | ------------------ | -------------------------------------------------------------------------------------------------- |
+| GOOGLE_DAILY_WORK_LIVE            | AUTOMATION_MISSING | 実行終了3。`ASTRA_TEST_GOOGLE_CLIENT_ID` / `ASTRA_TEST_GOOGLE_REFRESH_TOKEN` 未設定                |
+| MICROSOFT_DAILY_WORK_LIVE         | AUTOMATION_MISSING | 実行終了3。`ASTRA_TEST_MS_CLIENT_ID` / `ASTRA_TEST_MS_REFRESH_TOKEN` および MICROSOFT 別名も未設定 |
+| LIVE_CONNECTOR_RECOVERY_GATE      | AUTOMATION_MISSING | 指定マトリクスのLive測定器なし。送信timeout後の二重送信0は未証明                                   |
+| DAILY_USER_JOURNEY_LIVE           | AUTOMATION_MISSING | 既存live-assertはHome・返信・Brief。6問すべてのLive回答、1操作の出所到達を検証していない           |
+| PERSONALIZATION_REALITY_GATE      | AUTOMATION_MISSING | 訂正直後・個別無効化・全OFF・無関係なSwift依頼への注入0をLiveで未検証                              |
+| Invocation / Voice                | NOT_MEASURED       | 今回指定の全閾値を同じRCで未測定。既存selftestの成功を実音声の先頭欠落0と同一視しない              |
+| Real Meeting → Work Graph → Brief | AUTOMATION_MISSING | `ASTRA_MEET_URL` / bot profile 未設定。BlackHoleは存在。bundleのDB試験は実Meet経路の代替ではない   |
+| Screenshot                        | NOT_MEASURED       | 最終RCでのnonce・latency・egress・参照解決の再測定未実施                                           |
+| Live TCC / Guided Setup           | AUTOMATION_MISSING | 専用macOSユーザー `astra-verify` なし。現スクリプトはgrant recovery未実装、全5権限を完走しない     |
+| Keyboard / VoiceOver              | AUTOMATION_MISSING | 現FKAは3面のTab移動。VOは項目巡回のみでC/Dもidle面。指定4journeyの結果到達をassertしていない       |
+| Six Principles / Visual final     | NOT_MEASURED       | 同一RCの全必須証拠を今回取得していない。旧goldenやKEEPを自動継承しない                             |
+| Release Artifact                  | FAIL               | 開発署名、stapleなし、CI未確認、dirty tree。Sparkle実更新・exact RC guide・配布物との一致も未測定  |
 
 Google/Microsoft共通のpreflightで `postgres:5433`・`dbmate`・`claude code cli` は検出できた。
 資格情報はチャットや証跡へ貼らず、専用identityの実行環境へ設定する。
