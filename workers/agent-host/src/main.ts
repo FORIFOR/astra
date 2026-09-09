@@ -19,6 +19,7 @@ import { httpStepTransport } from './step-transport.js';
 import { CodexCli } from './codex.js';
 import { ClaudeCodeCli } from './claude-code.js';
 import { LlmRuntime } from './llm-steps.js';
+import { HttpLlmClient } from './http-llm.js';
 import { CompositeRunner } from './runner.js';
 import type { WorkSyncState } from '@astra/contracts';
 import { DEFAULT_SYNC_INTERVAL_MS, WorkSyncLoop } from './work-sync.js';
@@ -54,10 +55,30 @@ async function main(): Promise<void> {
    * Claude Code のログインは Claude Code のもので、Astra は読まない。
    */
   const preferredCli = process.env['ASTRA_LLM_CLI'];
-  if (preferredCli && !['codex', 'claude_code'].includes(preferredCli))
-    throw new Error('ASTRA_LLM_CLI must be codex or claude_code');
+  if (preferredCli && !['codex', 'claude_code', 'api', 'local', 'none'].includes(preferredCli))
+    throw new Error('ASTRA_LLM_CLI must be codex, claude_code, api, local, or none');
+  const llmKeychain = keychainFor(process.platform, deviceLabel);
+  const httpClients: Partial<Record<'anthropic_api' | 'gemini_api' | 'openai_api' | 'local', HttpLlmClient>> = {};
+  const httpConfigs = [
+    ['anthropic_api', process.env['ASTRA_ANTHROPIC_API_URL'], 'llm.anthropic_api', process.env['ASTRA_ANTHROPIC_MODEL'] ?? 'claude-3-5-sonnet-latest'],
+    ['gemini_api', process.env['ASTRA_GEMINI_API_URL'], 'llm.gemini_api', process.env['ASTRA_GEMINI_MODEL'] ?? 'gemini-2.5-flash'],
+    ['openai_api', process.env['ASTRA_OPENAI_API_URL'], 'llm.openai_api', process.env['ASTRA_OPENAI_MODEL'] ?? 'gpt-4o-mini'],
+    ['local', process.env['ASTRA_LOCAL_LLM_URL'], 'llm.local', process.env['ASTRA_LOCAL_LLM_MODEL'] ?? 'llama3.2'],
+  ] as const;
+  for (const [kind, endpoint, keyName, model] of httpConfigs) {
+    if (!endpoint) continue;
+    let apiKey: string | undefined;
+    if (kind !== 'local') {
+      try {
+        apiKey = (await llmKeychain.get(keyName)) ?? undefined;
+      } catch (error) {
+        logger.warn({ error, kind }, 'LLM API key could not be read from the local credential store');
+      }
+    }
+    httpClients[kind] = new HttpLlmClient({ kind, endpoint, model, ...(apiKey ? { apiKey } : {}) });
+  }
   const llm = new LlmRuntime({
-    ...(preferredCli !== 'claude_code'
+    ...(!preferredCli || preferredCli === 'codex'
       ? {
           codex: new CodexCli({
             ...(process.env['ASTRA_CODEX_PATH']
@@ -69,7 +90,7 @@ async function main(): Promise<void> {
           }),
         }
       : {}),
-    ...(preferredCli !== 'codex'
+    ...(!preferredCli || preferredCli === 'claude_code'
       ? {
           claudeCode: new ClaudeCodeCli({
             ...(process.env['ASTRA_CLAUDE_CODE_PATH']
@@ -81,6 +102,7 @@ async function main(): Promise<void> {
           }),
         }
       : {}),
+    ...(Object.keys(httpClients).length ? { http: httpClients } : {}),
   });
 
   /*

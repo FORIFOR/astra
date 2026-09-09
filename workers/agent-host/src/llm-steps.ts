@@ -16,6 +16,7 @@ import {
 } from '@astra/contracts';
 import { ClaudeCodeCli, ClaudeCodeError, CLAUDE_CODE_RECOVERY } from './claude-code.js';
 import { CodexCli, CodexError } from './codex.js';
+import { HttpLlmClient } from './http-llm.js';
 import type { HostStep, StepOutcome } from './connector-steps.js';
 import { imageRefsOf, locateImages, type LocatedImage } from './visual-context.js';
 
@@ -263,6 +264,8 @@ function listOf(value: unknown): string {
 export interface LlmRuntimeDeps {
   readonly claudeCode?: ClaudeCodeCli;
   readonly codex?: CodexCli;
+  /** OpenAI互換APIまたはローカル推論サーバー。キーは呼び出し元でKeychainから渡す。 */
+  readonly http?: Partial<Record<LanguageModelKind, HttpLlmClient>>;
   /** ほかの持ち込み（API キー）。無ければ Claude Code だけ。 */
   readonly others?: readonly LanguageModelOption[];
   /** 実際に呼ぶもの。種類ごとに 1 つ。 */
@@ -315,6 +318,17 @@ export class LlmRuntime {
       });
     }
     found.push(...(this.#deps.others ?? []));
+    for (const [kind, client] of Object.entries(this.#deps.http ?? {})) {
+      if (!client) continue;
+      const probe = await client.probe();
+      found.push({
+        kind: kind as LanguageModelKind,
+        available: probe.available,
+        reason: probe.reason,
+        credential: kind === 'local' ? 'none' : 'keychain',
+        implementation: probe.version,
+      });
+    }
     this.#options = found;
     return found;
   }
@@ -409,6 +423,8 @@ export class LlmRuntime {
     }
     const provided = this.#deps.askWith?.[kind];
     if (provided) return provided;
+    const http = this.#deps.http?.[kind];
+    if (http) return (prompt) => http.ask(prompt);
     if (kind === 'claude_code' && this.#deps.claudeCode) {
       const cli = this.#deps.claudeCode;
       return (prompt, allowedTools) => cli.ask(prompt, { allowedTools });
