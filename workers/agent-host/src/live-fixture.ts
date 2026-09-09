@@ -185,12 +185,16 @@ export function checkHome(context: WorkContext, f: LiveFixture, now: Date): Live
     ok: priority !== null,
     detail: priority?.project ?? `no priority mentions ${f.nonce}`,
   });
-  const due = priority?.due_at ? Date.parse(priority.due_at) : NaN;
+  const matchingDue = context.priorities.find((item) => {
+    const dueAt = item.due_at ? Date.parse(item.due_at) : NaN;
+    return Number.isFinite(dueAt) && Math.abs(dueAt - Date.parse(f.deadlineIso)) < 36 * 3_600_000;
+  });
+  const due = matchingDue?.due_at ? Date.parse(matchingDue.due_at) : NaN;
   rows.push({
     group: 'Home',
     row: 'deadline found',
-    ok: Number.isFinite(due) && Math.abs(due - Date.parse(f.deadlineIso)) < 36 * 3_600_000,
-    detail: priority?.due_at ?? 'none',
+    ok: Number.isFinite(due),
+    detail: matchingDue?.due_at ?? 'none',
   });
   rows.push({
     group: 'Home',

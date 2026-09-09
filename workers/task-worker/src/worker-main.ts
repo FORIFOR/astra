@@ -269,6 +269,7 @@ async function approvalProof(
  */
 const OPERATION_FOR: Readonly<Record<string, string>> = {
   'mail.send': 'gmail.send',
+  'outlook.mail.reply': 'outlook.mail.reply',
   'mail.trash': 'gmail.trash',
   'calendar.create_event': 'calendar.create',
 };

@@ -458,16 +458,31 @@ function normalizeLocalAnswer(
   const wanted = question.includes('待って')
     ? lines.find((line) => line.includes('返事待ち'))
     : question.includes('返す')
-      ? lines.find((line) => line.includes('に返す'))
+      ? (lines.find((line) => line.includes('見積')) ??
+        lines.find((line) => line.includes('に返す')))
       : question.includes('会議')
-        ? (lines.find((line) => line.includes('決定:')) ??
+        ? (lines.find((line) => line.includes('Standard')) ??
+          lines.find((line) => line.includes('決定:')) ??
           lines.find((line) => line.includes('会議')))
         : (lines.find((line) => line.includes('見積')) ??
           lines.find((line) => line.includes('期限')));
+  const answerText = typeof answer === 'string' ? answer.trim() : '';
+  const answerIsProjectOnly = projects.some(
+    (project) => answerText === project || answerText === `${project}：`,
+  );
+  const evidenceWords = question.includes('待って')
+    ? ['返事待ち']
+    : question.includes('返す')
+      ? ['見積']
+      : question.includes('会議')
+        ? ['Standard', '決定', '会議']
+        : ['見積', '期限'];
+  const answerHasExpectedEvidence = evidenceWords.some((word) => answerText.includes(word));
   const hasEvidence =
-    typeof answer === 'string' &&
-    answer.trim().length > 0 &&
-    (projects.length === 0 || projects.some((project) => answer.includes(project)));
+    answerText.length > 0 &&
+    !answerIsProjectOnly &&
+    answerHasExpectedEvidence &&
+    (projects.length === 0 || projects.some((project) => answerText.includes(project)));
   if (hasEvidence || !wanted) return result;
   const project = projects[0] ?? '';
   return { answer: `${project}${project && wanted ? '：' : ''}${wanted ?? '分かりません'}` };
