@@ -1,6 +1,6 @@
 [package]
 name = "astra-desktop"
-version = "0.1.1"
+version = "0.1.2"
 description = "Astra desktop client (Local Control Plane)"
 authors = ["Astra"]
 license = ""

@@ -374,3 +374,24 @@ describe('where the tokens live', () => {
     expect(map.size).toBe(0);
   });
 });
+
+describe('Microsoft token client binding', () => {
+  it('records the client used for both code exchange and refresh', async () => {
+    const c = config({ provider: 'microsoft', scopes: ['Mail.Read'] });
+    const { pending } = await beginAuthorization(c, () => NOW);
+    const fetchImpl = vi.fn(async () =>
+      jsonResponse({ access_token: 'access', scope: 'Mail.Read' }),
+    );
+    expect((await exchangeCode(pending, 'code', fetchImpl, () => NOW)).clientId).toBe(c.clientId);
+    const renewed = await refresh(c, 'existing-refresh', fetchImpl, () => NOW);
+    expect(renewed.clientId).toBe(c.clientId);
+    expect(renewed.refreshToken).toBe('existing-refresh');
+  });
+  it('does not refresh Microsoft without explicit scopes', async () => {
+    const fetchImpl = vi.fn();
+    await expect(
+      refresh(config({ provider: 'microsoft', scopes: [] }), 'refresh', fetchImpl),
+    ).rejects.toThrow();
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+});

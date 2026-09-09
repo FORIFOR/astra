@@ -27,21 +27,18 @@ export function assertLiveScopes(
   const granted = new Set(tokens.grantedScopes);
   if (required.some((scope) => !granted.has(scope)))
     throw new Error(`${grant}: provider did not attest all required scopes`);
-  if (grant === 'read') {
-    const allowed = new Set<string>([
-      ...LIVE_SCOPES.google.read,
-      ...LIVE_SCOPES.microsoft.read,
-      'openid',
-      'email',
-      'profile',
-      'offline_access',
-      'User.Read',
-      'https://www.googleapis.com/auth/userinfo.email',
-      'https://www.googleapis.com/auth/userinfo.profile',
-    ]);
-    if (tokens.grantedScopes.some((scope) => !allowed.has(scope)))
-      throw new Error('read: token contains non-read scopes');
-  }
+  const allowed = new Set<string>([
+    ...required,
+    'openid',
+    'email',
+    'profile',
+    'offline_access',
+    'User.Read',
+    'https://www.googleapis.com/auth/userinfo.email',
+    'https://www.googleapis.com/auth/userinfo.profile',
+  ]);
+  if (tokens.grantedScopes.some((scope) => !allowed.has(scope)))
+    throw new Error(`${grant}: token contains non-${grant} scopes`);
 }
 
 export async function liveTokens(
@@ -62,8 +59,25 @@ export async function liveTokens(
     process.env[`ASTRA_TEST_${alias}_READ_CLIENT_ID`] ??
     process.env[`ASTRA_TEST_${key}_CLIENT_ID`] ??
     process.env[`ASTRA_TEST_${alias}_CLIENT_ID`];
-  if (grant === 'write' && clientId !== workerClient)
+  if (provider === 'google' && grant === 'write' && clientId !== workerClient)
     throw new Error('worker read/write grants must belong to the same OAuth client');
+  if (provider === 'microsoft') {
+    const seedClient =
+      process.env['ASTRA_TEST_MS_CLIENT_ID'] ?? process.env['ASTRA_TEST_MICROSOFT_CLIENT_ID'];
+    const readClient =
+      process.env['ASTRA_TEST_MS_READ_CLIENT_ID'] ??
+      process.env['ASTRA_TEST_MICROSOFT_READ_CLIENT_ID'];
+    const writeClient =
+      process.env['ASTRA_TEST_MS_WRITE_CLIENT_ID'] ??
+      process.env['ASTRA_TEST_MICROSOFT_WRITE_CLIENT_ID'];
+    const configured = [seedClient, readClient, writeClient].filter(Boolean);
+    if (
+      new Set(configured).size !== configured.length ||
+      (grant === 'read' && !readClient) ||
+      (grant === 'write' && !writeClient)
+    )
+      throw new Error('microsoft: seed/read/write require distinct OAuth clients');
+  }
   const refreshToken =
     process.env[`ASTRA_TEST_${key}${suffix}_REFRESH_TOKEN`] ??
     process.env[`ASTRA_TEST_${alias}${suffix}_REFRESH_TOKEN`];

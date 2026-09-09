@@ -6,7 +6,7 @@
  * **Dock とは別プロセス。**Dock を閉じても、これは動き続ける。
  */
 import { createLogger } from '@astra/telemetry';
-import { credentialRef, providerConfig, type OauthProvider } from '@astra/oauth';
+import { credentialRef, connectorProviderConfig, type OauthProvider } from '@astra/oauth';
 import { LocalAgentHost } from './host.js';
 import { httpTransport } from './transport.js';
 import { keychainFor } from './keychain.js';
@@ -166,8 +166,13 @@ async function main(): Promise<void> {
      */
     grantedScopes: (pluginId) => grantedScopes[pluginId] ?? [],
     // 設定されていない提供者は更新しない。切れたら繋ぎ直しを促す。
-    refreshConfig: (provider) => {
-      const config = providerConfig(provider as OauthProvider, [], process.env);
+    refreshConfig: (provider, connectorId, scopes) => {
+      const config = connectorProviderConfig(
+        provider as OauthProvider,
+        connectorId,
+        scopes,
+        process.env,
+      );
       return config ? { ...config, redirectUri: redirectUri } : null;
     },
   });

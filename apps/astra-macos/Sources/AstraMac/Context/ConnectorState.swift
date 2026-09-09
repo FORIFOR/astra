@@ -72,7 +72,30 @@ final class ConnectorState: ObservableObject {
         for (k, v) in ProcessInfo.processInfo.environment where k.hasPrefix("ASTRA_OAUTH_") && k.hasSuffix("_CLIENT_ID") {
             out[k] = v
         }
+        out["ASTRA_OAUTH_MICROSOFT_CLIENT_ID"] = Self.connectionClientId(provider: "microsoft", readOnly: true, env: out)
         return out
+    }
+
+    /// A Microsoft refresh token inherits consent for its client, not one scope request.
+    static func connectionClientId(provider: String, readOnly: Bool, env: [String: String]) -> String? {
+        if provider != "microsoft" {
+            return env["ASTRA_OAUTH_\(provider.uppercased())_CLIENT_ID"].flatMap { $0.isEmpty ? nil : $0 }
+        }
+        let read = env["ASTRA_OAUTH_MICROSOFT_READ_CLIENT_ID"] ?? ""
+        let write = env["ASTRA_OAUTH_MICROSOFT_WRITE_CLIENT_ID"] ?? ""
+        if !read.isEmpty && read == write { return nil }
+        let selected = readOnly ? read : write
+        return selected.isEmpty ? nil : selected
+    }
+
+    static func microsoftScopesMatch(granted: [String], required: [String]) -> Bool {
+        func normalized(_ scope: String) -> String {
+            scope.lowercased().replacingOccurrences(of: "https://graph.microsoft.com/", with: "")
+        }
+        let identity: Set<String> = ["openid", "profile", "email", "offline_access", "user.read"]
+        let wanted = Set(required.map(normalized)).subtracting(identity)
+        let actual = Set(granted.map(normalized))
+        return wanted.isSubset(of: actual) && actual.isSubset(of: wanted.union(identity))
     }
 
     /// 設定済み（繋げる）プロバイダ id。判定は core に一本化。
@@ -158,8 +181,10 @@ final class ConnectorState: ObservableObject {
 
     @discardableResult
     func connect(source s: Source) -> Bool {
-        guard canConnect(s.name) else { status[s.statusKey] = .cannotConnect; return false }
-        let clientId = ProcessInfo.processInfo.environment["ASTRA_OAUTH_\(s.provider.uppercased())_CLIENT_ID"] ?? ""
+        guard let clientId = Self.connectionClientId(provider: s.provider, readOnly: s.readOnly,
+                                                     env: ProcessInfo.processInfo.environment) else {
+            status[s.statusKey] = .cannotConnect; return false
+        }
         guard let tokenUrl = AstraCoreBridge.tokenUrl(provider: s.provider) else { return false }
         status[s.statusKey] = .connecting
         let ok = (try? flow.begin(provider: s.provider, clientId: clientId, scopes: s.scopes) { [weak self] callback, pending in
@@ -189,11 +214,16 @@ final class ConnectorState: ObservableObject {
             status[s.statusKey] = .failed("トークンを受け取れませんでした"); return
         }
         let granted = (t["granted_scopes"] as? [String]) ?? []
+        if s.provider == "microsoft", !Self.microsoftScopesMatch(granted: granted, required: s.scopes) {
+            status[s.statusKey] = .failed("許可された範囲が接続の用途と一致しません。接続し直してください。")
+            return
+        }
         let expiresAt: String? = (t["expires_at_ms"] as? Double).map {
             ISO8601DateFormatter().string(from: Date(timeIntervalSince1970: $0 / 1000))
         }
         // 端末 worker と同じ形（@astra/oauth TokenSet）。値はここ（Keychain）にだけ置く。
         let stored: [String: Any] = [
+            "clientId": clientId,
             "accessToken": access,
             "refreshToken": t["refresh_token"] as? String ?? NSNull(),
             "expiresAt": expiresAt ?? NSNull(),

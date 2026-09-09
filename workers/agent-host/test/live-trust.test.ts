@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { TokenSet } from '@astra/oauth';
-import { assertLiveScopes, LIVE_SCOPES } from '../src/live-oauth.js';
+import { assertLiveScopes, liveTokens, LIVE_SCOPES } from '../src/live-oauth.js';
 import { checkReceipt, type ObservedMail } from '../src/live-receipt.js';
 const read = LIVE_SCOPES.google.read;
 const tokens = (grantedScopes: readonly string[]): TokenSet => ({
@@ -12,6 +12,15 @@ const tokens = (grantedScopes: readonly string[]): TokenSet => ({
   grantedScopes,
 });
 describe('live grants', () => {
+  it('rejects read/write mailbox authority on a send-only grant', () =>
+    expect(() =>
+      assertLiveScopes(
+        tokens(['Mail.Send', 'User.Read', 'Mail.ReadWrite']),
+        LIVE_SCOPES.microsoft.write,
+        'write',
+      ),
+    ).toThrow('non-write'));
+
   it('accepts provider-attested read scopes', () =>
     expect(() => assertLiveScopes(tokens(read), read, 'read')).not.toThrow());
   it('does not manufacture missing scope attestations', () =>
@@ -61,4 +70,27 @@ describe('actual reply receipt', () => {
   });
   it('cannot claim thread preservation when the original thread is unknown', () =>
     expect(checkReceipt([sent, received], { ...expected, thread: '' })).toBe(false));
+});
+
+describe('Microsoft live-client provisioning', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
+  });
+  it.each(['read', 'write'] as const)(
+    'refuses a legacy shared %s client before contacting Microsoft',
+    async (grant) => {
+      for (const prefix of ['MS', 'MICROSOFT']) {
+        vi.stubEnv(`ASTRA_TEST_${prefix}_CLIENT_ID`, 'shared');
+        vi.stubEnv(`ASTRA_TEST_${prefix}_READ_CLIENT_ID`, 'shared');
+        vi.stubEnv(`ASTRA_TEST_${prefix}_WRITE_CLIENT_ID`, 'shared');
+      }
+      const request = vi.fn();
+      vi.stubGlobal('fetch', request);
+      await expect(liveTokens('microsoft', LIVE_SCOPES.microsoft[grant], grant)).rejects.toThrow(
+        'distinct OAuth clients',
+      );
+      expect(request).not.toHaveBeenCalled();
+    },
+  );
 });

@@ -49,7 +49,11 @@ export interface ConnectorRuntimeDeps {
   /** 実際に許された scope。**要求した scope ではない。** */
   readonly grantedScopes: (pluginId: string) => readonly string[];
   /** トークンを更新するための設定。無ければ更新しない（切れたら繋ぎ直しを促す）。 */
-  readonly refreshConfig?: (provider: string) => ProviderConfig | null;
+  readonly refreshConfig?: (
+    provider: string,
+    connectorId: string,
+    scopes: readonly string[],
+  ) => ProviderConfig | null;
   readonly fetch?: typeof globalThis.fetch;
   readonly now?: () => Date;
 }
@@ -363,11 +367,19 @@ export class ConnectorRuntime {
     const tokens = await this.#tokens.load(ref);
     if (!tokens) throw new ConnectorError('not_connected', `${pluginId} is not connected`);
 
+    const config = this.#deps.refreshConfig?.(provider, connectorId, tokens.grantedScopes ?? []);
+    if (
+      provider === 'microsoft' &&
+      this.#deps.refreshConfig &&
+      (!config || tokens.clientId !== config.clientId)
+    ) {
+      throw new ConnectorError('not_connected', `${pluginId} needs its dedicated connection again`);
+    }
+
     const now = (this.#deps.now ?? (() => new Date()))().getTime();
     const expired = tokens.expiresAt !== null && Date.parse(tokens.expiresAt) <= now;
     if (!expired && !needsRefresh(tokens, now)) return tokens.accessToken;
 
-    const config = this.#deps.refreshConfig?.(provider);
     if (!config || !tokens.refreshToken) {
       /*
        * 更新できない。**切れたトークンで呼びに行かない。**
@@ -386,6 +398,16 @@ export class ConnectorRuntime {
       this.#deps.fetch ?? globalThis.fetch,
       () => now,
     );
+    if (
+      provider === 'microsoft' &&
+      this.#deps.refreshConfig &&
+      !this.#deps.refreshConfig(provider, connectorId, renewed.grantedScopes)
+    ) {
+      throw new ConnectorError(
+        'provider_error',
+        'Microsoft returned scopes outside this connection',
+      );
+    }
     await this.#tokens.save(pluginId, connectorId, renewed);
     return renewed.accessToken;
   }

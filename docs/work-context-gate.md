@@ -50,7 +50,7 @@
 | HUMAN_INTERVENTION             | 0               |                                                                                                     |
 
 **WORK_CONTEXT_GATE = PASS_OFFLINE。**測った行はすべて通ったが、この Mac では実サービスに繋いでいないので PASS とは言わない。
-live に必要なのは `ASTRA_OAUTH_GOOGLE_CLIENT_ID` / `ASTRA_OAUTH_MICROSOFT_CLIENT_ID` と本人の同意画面（一度きりの人手）。
+live に必要なのは `ASTRA_OAUTH_GOOGLE_CLIENT_ID` / `ASTRA_OAUTH_MICROSOFT_READ_CLIENT_ID` / `ASTRA_OAUTH_MICROSOFT_WRITE_CLIENT_ID` と本人の同意画面（一度きりの人手）。
 繋いだあとは同じスクリプトが `CONNECTED` と `PASS` を出す。
 
 ## 残課題（正直に）
@@ -252,3 +252,10 @@ credentials（`ASTRA_TEST_GOOGLE_*` / `ASTRA_TEST_MS_*`、sink は既定で iden
 → 次の brief（前回の決定 / 開いているやること / その後のメール / 出所 100% / 捏造 0）→ 掃除。GOOGLE / MICROSOFT は別々に回し、
 両方 PASS で `WORK_CONTEXT_LIVE_GATE = PASS`。**identity の provisioning は 1 回きりの人手で、以後は人手 0。**この Mac には無い。
 会議 1 は音声ではなく bundle（publisher と同じ形）で投入する。音声 → bundle → sink の実経路は `service.db.test.ts` が見る。
+
+### Microsoft client isolation (2026-09-09)
+
+Microsoft の読む接続と送る接続には異なるアプリ登録を使う。更新トークンは同じ client に同意済みの権限を利用できるため、scope を狭めるだけでは接続の分離にならない。
+`ASTRA_OAUTH_MICROSOFT_READ_CLIENT_ID` は読み取り、`ASTRA_OAUTH_MICROSOFT_WRITE_CLIENT_ID` は Mail.Send 用。旧共有 client の資格情報は再接続が必要で、worker は保存された client ID と用途別設定の一致を API 呼び出し前に検査する。
+
+実サービス検証でも `ASTRA_TEST_MS_CLIENT_ID`（fixture 作成・片付け）、`ASTRA_TEST_MS_READ_CLIENT_ID`、`ASTRA_TEST_MS_WRITE_CLIENT_ID` を別々にする。それぞれ対応する更新トークンを、リポジトリ外の権限 0600 の設定ファイルに保存する。テスト送信は利用者が許可した宛先と通数の範囲に限る。

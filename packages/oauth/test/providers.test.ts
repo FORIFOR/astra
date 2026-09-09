@@ -8,6 +8,7 @@ import {
   OAUTH_PROVIDERS,
   clientIdVar,
   configuredProviders,
+  connectorProviderConfig,
   providerConfig,
   refresh,
   unconfiguredProviders,
@@ -86,5 +87,65 @@ describe('building the config', () => {
       expect(config.authorizeUrl.startsWith('https://')).toBe(true);
       expect(config.tokenUrl.startsWith('https://')).toBe(true);
     }
+  });
+});
+
+describe('Microsoft connection isolation', () => {
+  const env = {
+    ASTRA_OAUTH_MICROSOFT_CLIENT_ID: 'legacy',
+    ASTRA_OAUTH_MICROSOFT_READ_CLIENT_ID: 'read-client',
+    ASTRA_OAUTH_MICROSOFT_WRITE_CLIENT_ID: 'send-client',
+  };
+  it('uses distinct clients for read and send connections', () => {
+    expect(connectorProviderConfig('microsoft', 'outlook-mail', ['Mail.Read'], env)?.clientId).toBe(
+      'read-client',
+    );
+    expect(
+      connectorProviderConfig('microsoft', 'outlook-mail-actions', ['Mail.Send'], env)?.clientId,
+    ).toBe('send-client');
+  });
+  it('requires migration from the shared client', () => {
+    expect(
+      connectorProviderConfig('microsoft', 'outlook-mail', ['Mail.Read'], {
+        ASTRA_OAUTH_MICROSOFT_CLIENT_ID: 'legacy',
+      }),
+    ).toBeNull();
+    expect(
+      connectorProviderConfig('microsoft', 'outlook-mail', ['Mail.Read'], {
+        ...env,
+        ASTRA_OAUTH_MICROSOFT_WRITE_CLIENT_ID: 'read-client',
+      }),
+    ).toBeNull();
+  });
+  it.each(['Mail.Send', 'Mail.ReadWrite', 'Calendars.ReadWrite'])(
+    'rejects %s on a read connection',
+    (scope) => {
+      expect(
+        connectorProviderConfig('microsoft', 'outlook-mail', ['Mail.Read', scope], env),
+      ).toBeNull();
+    },
+  );
+  it('rejects empty or read scopes on a send connection', () => {
+    expect(connectorProviderConfig('microsoft', 'outlook-mail-actions', [], env)).toBeNull();
+    expect(
+      connectorProviderConfig('microsoft', 'outlook-mail-actions', ['Mail.Send', 'Mail.Read'], env),
+    ).toBeNull();
+  });
+  it('accepts Graph scope URIs and identity scopes', () => {
+    expect(
+      connectorProviderConfig(
+        'microsoft',
+        'outlook-mail',
+        ['https://graph.microsoft.com/Mail.Read', 'User.Read', 'offline_access'],
+        env,
+      )?.clientId,
+    ).toBe('read-client');
+  });
+  it('preserves Google client configuration', () => {
+    expect(
+      connectorProviderConfig('google', 'gmail-actions', ['mail.send'], {
+        ASTRA_OAUTH_GOOGLE_CLIENT_ID: 'google',
+      })?.clientId,
+    ).toBe('google');
   });
 });

@@ -24,6 +24,7 @@ describe.each(['google', 'microsoft'] as const)('%s live fixture lifecycle', (pr
     vi.stubEnv(`ASTRA_TEST_${key}_CLIENT_ID`, 'test-only-client');
     vi.stubEnv(`ASTRA_TEST_${key}_REFRESH_TOKEN`, 'test-only-refresh');
     vi.stubEnv(`ASTRA_TEST_${key}_READ_REFRESH_TOKEN`, 'test-only-read-refresh');
+    if (provider === 'microsoft') vi.stubEnv('ASTRA_TEST_MS_READ_CLIENT_ID', 'test-read-client');
   }
   function seeded(): Seeded {
     return {

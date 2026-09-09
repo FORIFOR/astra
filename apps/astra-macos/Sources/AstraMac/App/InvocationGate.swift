@@ -495,7 +495,7 @@ enum InvocationGate {
         line("extra windows", target: "0", value: Double(extraWindows), unit: "n", pass: extraWindows == 0,
              note: "自分の窓 \(windows0) 枚のまま")
 
-        // ---- 内訳（Evidence A）: start() が主スレッドで何に時間を使うか。単体で測る。
+        // ---- 独立した起動プローブ（Evidence A）。別の実行同士を内訳として差し引かない。
         // 録音の外で 1 回ずつ起動して止める。本番の順は begin() の中（STT → マイク）。
         do {
             func ms(_ block: () -> Void) -> Double { let t = Date(); block(); return Date().timeIntervalSince(t) * 1000 }
@@ -505,14 +505,13 @@ enum InvocationGate {
             let st = SpeechTranscriber()
             let sttMs = ms { try? st.start { _ in } }
             st.finish()
-            // begin() 全体（journal 作成 + STT + マイク）。start() の残りは store と @Published の更新。
+            // begin() 全体も別に測る。HAL の状態が異なるので、上の単体値とは加減算できない。
             let rt = RecordingRuntime.shared
             let beginMs = ms { _ = rt.begin(meetingId: "invocation-probe-\(getpid())") }
             let endMs = ms { rt.end() }
-            let rest = (t1.stateMs ?? 0) - beginMs
-            let note = String(format: "RecordingRuntime.begin %.0fms（うち MicCapture.start %.0fms・SpeechTranscriber.start %.0fms、許可 %d）・end %.0fms・start() のそれ以外（store/Published）%.0fms", beginMs, micMs, sttMs, SpeechTranscriber.authorization.rawValue, endMs, rest)
-            diag("INVOCATION breakdown of start(): \(note)")
-            result.observations.append("start() 内訳: \(note)")
+            let note = String(format: "RecordingRuntime.begin %.0fms・MicCapture.start %.0fms・SpeechTranscriber.start %.0fms・end %.0fms（各々別の起動、内訳ではない。許可 %d）", beginMs, micMs, sttMs, endMs, SpeechTranscriber.authorization.rawValue)
+            diag("INVOCATION independent startup probes: \(note)")
+            result.observations.append("独立した起動プローブ: \(note)")
         }
 
         // ---- 判定と記録。

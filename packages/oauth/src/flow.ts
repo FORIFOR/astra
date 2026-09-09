@@ -118,6 +118,8 @@ export function acceptCallback(
 }
 
 export interface TokenSet {
+  /** Client that acquired this token; used to reject legacy/cross-client Microsoft credentials. */
+  readonly clientId?: string;
   readonly accessToken: string;
   readonly refreshToken: string | null;
   /** 期限。提供者が返さなければ null（**勝手に決めない**）。 */
@@ -221,7 +223,10 @@ export async function exchangeCode(
     },
     fetchImpl,
   );
-  return parseTokenResponse(body, pending.config.scopes, now());
+  return {
+    ...parseTokenResponse(body, pending.config.scopes, now()),
+    ...(pending.config.provider === 'microsoft' ? { clientId: pending.config.clientId } : {}),
+  };
 }
 
 export async function refresh(
@@ -230,6 +235,8 @@ export async function refresh(
   fetchImpl: FetchLike,
   now: () => number = Date.now,
 ): Promise<TokenSet> {
+  if (config.provider === 'microsoft' && config.scopes.length === 0)
+    throw new Error('Microsoft refresh requires explicit scopes');
   const body = await post(
     config,
     {
@@ -240,7 +247,10 @@ export async function refresh(
     },
     fetchImpl,
   );
-  const next = parseTokenResponse(body, config.scopes, now());
+  const next = {
+    ...parseTokenResponse(body, config.scopes, now()),
+    ...(config.provider === 'microsoft' ? { clientId: config.clientId } : {}),
+  };
   /*
    * 更新の応答が refresh token を返さない提供者がある。
    * **そのときは今までのものを使い続ける。**null にすると、
