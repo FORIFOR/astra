@@ -27,7 +27,7 @@ struct NewRecordingSheet: View {
             // 値はトグルが言う。「On」の文字で同じことを二度言わない（Atlas F5）。
             row("画面の音", value: Permissions.screenRecording == .granted ? "" : "許可が要ります",
                 ok: Permissions.screenRecording == .granted) {
-                Toggle("", isOn: $systemAudio).labelsHidden().toggleStyle(.switch)
+                Toggle("画面の音", isOn: $systemAudio).labelsHidden().toggleStyle(.switch)
             }
             picker("テンプレート", selection: $template, options: templates)
             picker("保存先", selection: Binding(
@@ -45,6 +45,7 @@ struct NewRecordingSheet: View {
             HStack(spacing: 10) {
                 Spacer(minLength: 0)
                 Button(Facts.confirmationCancel) { isPresented = false }
+                    .keyboardShortcut(.cancelAction)
                     .font(.system(size: TypeScale.bodySize))
                     .foregroundStyle(Palette.muted(dark))
                     .frame(height: 36).padding(.horizontal, 18)
@@ -113,7 +114,7 @@ struct NewRecordingSheet: View {
                 .font(.system(size: TypeScale.bodySize))
                 .foregroundStyle(Palette.muted(dark))
                 .frame(width: 130, alignment: .leading)
-            Picker("", selection: selection) {
+            Picker(title, selection: selection) {
                 ForEach(options, id: \.self) { Text($0).tag($0) }
             }
             .labelsHidden()
