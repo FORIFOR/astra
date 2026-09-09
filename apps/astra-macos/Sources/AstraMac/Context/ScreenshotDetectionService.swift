@@ -12,32 +12,48 @@ import Foundation
 // MARK: - フォルダ監視
 
 final class ScreenshotFolderWatcher {
+    // All filesystem work and watcher state belong to this queue. A protected or
+    // disconnected directory may block in open/readdir without freezing AppKit.
+    private let queue = DispatchQueue(label: "astra.screenshot.watch", qos: .utility)
     private var source: DispatchSourceFileSystemObject?
-    private var fd: Int32 = -1
-    private let queue = DispatchQueue(label: "astra.screenshot.watch", qos: .userInitiated)
-    private let onChange: (URL) -> Void
-    private var directory: URL?
+    private var known: Set<String>?
+    private let readNames: (URL) -> Set<String>?
+    private let onChange: ([URL]) -> Void
 
-    init(onChange: @escaping (URL) -> Void) { self.onChange = onChange }
+    init(readNames: @escaping (URL) -> Set<String>? = ScreenshotFolderWatcher.imageNames,
+         onChange: @escaping ([URL]) -> Void) {
+        self.readNames = readNames
+        self.onChange = onChange
+    }
 
     func start(directory: URL) {
-        stop()
-        self.directory = directory
-        fd = open(directory.path, O_EVTONLY)
-        guard fd >= 0 else { return }
-        let src = DispatchSource.makeFileSystemObjectSource(
-            fileDescriptor: fd, eventMask: [.write, .extend, .rename], queue: queue)
-        src.setEventHandler { [weak self] in
-            guard let self, let dir = self.directory else { return }
-            self.onChange(dir)
+        queue.async { [self] in
+            source?.cancel(); source = nil
+            known = readNames(directory)
+            let fd = open(directory.path, O_EVTONLY)
+            guard fd >= 0 else { return }
+            let src = DispatchSource.makeFileSystemObjectSource(
+                fileDescriptor: fd, eventMask: [.write, .extend, .rename], queue: queue)
+            src.setEventHandler { [weak self] in
+                guard let self, let now = self.readNames(directory) else { return }
+                defer { self.known = now }
+                // A failed initial read must not turn old files into new captures.
+                guard let before = self.known else { return }
+                self.onChange(now.subtracting(before).map { directory.appendingPathComponent($0) })
+            }
+            src.setCancelHandler { close(fd) }
+            src.resume()
+            source = src
         }
-        src.setCancelHandler { [fd] in close(fd) }
-        src.resume()
-        source = src
     }
 
     func stop() {
-        source?.cancel(); source = nil; fd = -1
+        queue.async { [self] in source?.cancel(); source = nil; known = nil }
+    }
+
+    private static func imageNames(in dir: URL) -> Set<String>? {
+        guard let items = try? FileManager.default.contentsOfDirectory(atPath: dir.path) else { return nil }
+        return Set(items.filter { !$0.hasPrefix(".") && ScreenshotClassifier.imageExts.contains(($0 as NSString).pathExtension.lowercased()) })
     }
 }
 
@@ -78,7 +94,7 @@ final class ScreenshotDetectionService {
 
     private var folderWatcher: ScreenshotFolderWatcher?
     private let clipboard = ClipboardImageWatcherHolder()
-    private var knownBefore: Set<String> = []
+    private var generation = UUID()
     private var running = false
 
     /// 起動時に呼ぶ。保存先を監視し、クリップボード画像も拾う。
@@ -89,10 +105,13 @@ final class ScreenshotDetectionService {
         // 起動時の掃除: 前回の受け渡し写し（30 分 / 20 件 / 200MB を超えたもの）を消す。
         HandoverCache.cleanup(directory: VisualContextStore.handoverDirectory)
         let dir = directory ?? ScreenshotClassifier.screenshotDirectory()
-        knownBefore = Self.imageNames(in: dir)   // 既存ファイルは「新規」に数えない
-        let watcher = ScreenshotFolderWatcher { [weak self] dir in
-            // watcher は専用 queue。ストアは main で触る。
-            Task { @MainActor in self?.scanFolder(dir) }
+        let current = UUID()
+        generation = current
+        let watcher = ScreenshotFolderWatcher { [weak self] urls in
+            Task { @MainActor in
+                guard let self, self.running, self.generation == current else { return }
+                for url in urls { self.waitStableThenIngest(url: url, dir: dir, generation: current) }
+            }
         }
         watcher.start(directory: dir)
         folderWatcher = watcher
@@ -106,36 +125,19 @@ final class ScreenshotDetectionService {
         folderWatcher?.stop(); folderWatcher = nil
         clipboard.watcher?.stop(); clipboard.watcher = nil
         running = false
-    }
-
-    private static func imageNames(in dir: URL) -> Set<String> {
-        let items = (try? FileManager.default.contentsOfDirectory(atPath: dir.path)) ?? []
-        // 隠しファイル（書き込み途中の一時名など）は拾わない。
-        return Set(items.filter { !$0.hasPrefix(".") && ScreenshotClassifier.imageExts.contains(($0 as NSString).pathExtension.lowercased()) })
-    }
-
-    /// フォルダに来た変化を見て、直近数秒の新しい画像だけを拾う。
-    func scanFolder(_ dir: URL) {
-        let now = Set(Self.imageNames(in: dir))
-        let added = now.subtracting(knownBefore)
-        knownBefore = now
-        for name in added {
-            let url = dir.appendingPathComponent(name)
-            // 書き込み途中を読まない。サイズが安定してから取り込む。
-            waitStableThenIngest(url: url, dir: dir)
-        }
+        generation = UUID()
     }
 
     /// size(t0) と 50ms 後の size(t1) が同じになったら「安定」とみなして読む。
     /// 安定していても**画像として読めなければ**まだ途中（PNG の末尾が来ていない）。
     /// フォルダの監視は中身の追記では鳴らないので、ここで読めるまで待ち直す（最大 ~2s）。
-    private func waitStableThenIngest(url: URL, dir: URL, attempt: Int = 0) {
+    private func waitStableThenIngest(url: URL, dir: URL, generation: UUID, attempt: Int = 0) {
         let s0 = fileSize(url)
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
-            guard let self else { return }
+            guard let self, self.running, self.generation == generation else { return }
             let s1 = self.fileSize(url)
             if s0 == s1 && s1 > 0 && self.ingestFile(url: url, dir: dir) { return }
-            if attempt < 40 { self.waitStableThenIngest(url: url, dir: dir, attempt: attempt + 1) }
+            if attempt < 40 { self.waitStableThenIngest(url: url, dir: dir, generation: generation, attempt: attempt + 1) }
         }
     }
 
