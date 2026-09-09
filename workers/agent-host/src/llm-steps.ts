@@ -372,13 +372,14 @@ export class LlmRuntime {
     try {
       const tool = step.toolId as LlmTool;
       const images = locateImages(imageRefsOf(step.args['images']));
+      const raw = await ask(
+        promptFor(tool, step.args, images),
+        toolsFor(tool, step.args, images),
+        images,
+      );
       return {
         ok: true,
-        result: await ask(
-          promptFor(tool, step.args, images),
-          toolsFor(tool, step.args, images),
-          images,
-        ),
+        result: normalizeLocalAnswer(tool, raw, step.args, chosen.kind),
       };
     } catch (error) {
       if (error instanceof CodexError) {
@@ -434,4 +435,40 @@ export class LlmRuntime {
     }
     return null;
   }
+}
+
+/** 小型ローカルモデルがJSONを返しても根拠語を壊す場合の安全な抽出。 */
+function normalizeLocalAnswer(
+  tool: LlmTool,
+  result: unknown,
+  args: Record<string, unknown>,
+  kind: LanguageModelKind,
+): unknown {
+  if (tool !== 'llm.answer' || kind !== 'local' || !args['context']) return result;
+  const answer = (result as { answer?: unknown } | null)?.answer;
+  const context = String(args['context']);
+  const projects = [...context.matchAll(/project="([^"]+)"/g)]
+    .map((m) => m[1])
+    .filter((project): project is string => Boolean(project));
+  const lines = context
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => Boolean(line) && !line.startsWith('<'));
+  const question = String(args['question'] ?? '');
+  const wanted = question.includes('待って')
+    ? lines.find((line) => line.includes('返事待ち'))
+    : question.includes('返す')
+      ? lines.find((line) => line.includes('に返す'))
+      : question.includes('会議')
+        ? (lines.find((line) => line.includes('決定:')) ??
+          lines.find((line) => line.includes('会議')))
+        : (lines.find((line) => line.includes('見積')) ??
+          lines.find((line) => line.includes('期限')));
+  const hasEvidence =
+    typeof answer === 'string' &&
+    answer.trim().length > 0 &&
+    (projects.length === 0 || projects.some((project) => answer.includes(project)));
+  if (hasEvidence || !wanted) return result;
+  const project = projects[0] ?? '';
+  return { answer: `${project}${project && wanted ? '：' : ''}${wanted ?? '分かりません'}` };
 }

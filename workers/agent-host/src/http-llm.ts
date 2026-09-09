@@ -27,27 +27,40 @@ export class HttpLlmClient {
       });
       return response.ok
         ? { available: true, version: this.#config.model, reason: null }
-        : { available: false, version: null, reason: `${this.#config.kind} endpoint returned ${response.status}` };
+        : {
+            available: false,
+            version: null,
+            reason: `${this.#config.kind} endpoint returned ${response.status}`,
+          };
     } catch {
-      return { available: false, version: null, reason: `${this.#config.kind} endpoint is unavailable` };
+      return {
+        available: false,
+        version: null,
+        reason: `${this.#config.kind} endpoint is unavailable`,
+      };
     }
   }
 
   async ask(prompt: string): Promise<unknown> {
-    const response = await this.#fetch(`${this.#config.endpoint.replace(/\/$/, '')}/chat/completions`, {
-      method: 'POST',
-      headers: { ...this.#headers(), 'content-type': 'application/json' },
-      body: JSON.stringify({
-        model: this.#config.model,
-        messages: [{ role: 'user', content: prompt }],
-        // Astraの各LLM stepはJSON schemaをプロンプトで契約している。
-        // Ollama等はこの指定で引用符の崩れを減らせる。
-        response_format: { type: 'json_object' },
-      }),
-      signal: AbortSignal.timeout(this.#config.timeoutMs ?? 120_000),
-    });
+    const response = await this.#fetch(
+      `${this.#config.endpoint.replace(/\/$/, '')}/chat/completions`,
+      {
+        method: 'POST',
+        headers: { ...this.#headers(), 'content-type': 'application/json' },
+        body: JSON.stringify({
+          model: this.#config.model,
+          messages: [{ role: 'user', content: prompt }],
+          // Astraの各LLM stepはJSON schemaをプロンプトで契約している。
+          // Ollama等はこの指定で引用符の崩れを減らせる。
+          response_format: { type: 'json_object' },
+        }),
+        signal: AbortSignal.timeout(this.#config.timeoutMs ?? 120_000),
+      },
+    );
     if (!response.ok) throw new Error(`${this.#config.kind} request failed (${response.status})`);
-    const body = (await response.json()) as { choices?: readonly { message?: { content?: unknown } }[] };
+    const body = (await response.json()) as {
+      choices?: readonly { message?: { content?: unknown } }[];
+    };
     const content = body.choices?.[0]?.message?.content;
     if (typeof content !== 'string') return '';
     try {

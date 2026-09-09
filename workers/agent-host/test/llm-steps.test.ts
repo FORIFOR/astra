@@ -279,6 +279,24 @@ describe('answering about a screenshot that stayed on this device', () => {
     expect(seen[0]!.tools).toEqual([]);
     expect(seen[0]!.prompt).toContain('見当たりませんでした');
   });
+
+  it('keeps local answers grounded when the small model drops the project name', async () => {
+    const runtime = new LlmRuntime({
+      others: [keyOption('local', true)],
+      askWith: { local: async () => ({ answer: '分かりません' }) },
+    });
+    const outcome = await runtime.run(
+      step({
+        toolId: 'llm.answer',
+        args: {
+          question: '今日何をすべき？',
+          context:
+            '<work_context>\n  <priority project="ACME 見積">\n    期限: 明日\n  </priority>\n</work_context>',
+        },
+      }),
+    );
+    expect(outcome).toEqual({ ok: true, result: { answer: 'ACME 見積：期限: 明日' } });
+  });
 });
 
 describe('classifying a mail on the device', () => {

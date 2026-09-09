@@ -6,11 +6,17 @@ describe('HTTP/local LLM adapter', () => {
     const fetch = vi.fn<typeof globalThis.fetch>(async (input, init) => {
       if (String(input).endsWith('/models')) return new Response('{}', { status: 200 });
       expect(init?.headers).toMatchObject({ authorization: 'Bearer secret' });
-      const body = JSON.parse(String(init?.body)) as { model: string; messages: { content: string }[] };
+      const body = JSON.parse(String(init?.body)) as {
+        model: string;
+        messages: { content: string }[];
+      };
       expect(body.model).toBe('local-model');
       expect(JSON.stringify(body)).not.toContain('secret');
       expect(body).toMatchObject({ response_format: { type: 'json_object' } });
-      return new Response(JSON.stringify({ choices: [{ message: { content: '{"answer":"ok"}' } }] }), { status: 200 });
+      return new Response(
+        JSON.stringify({ choices: [{ message: { content: '{"answer":"ok"}' } }] }),
+        { status: 200 },
+      );
     });
     const client = new HttpLlmClient({
       kind: 'openai_api',

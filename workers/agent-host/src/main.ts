@@ -58,12 +58,34 @@ async function main(): Promise<void> {
   if (preferredCli && !['codex', 'claude_code', 'api', 'local', 'none'].includes(preferredCli))
     throw new Error('ASTRA_LLM_CLI must be codex, claude_code, api, local, or none');
   const llmKeychain = keychainFor(process.platform, deviceLabel);
-  const httpClients: Partial<Record<'anthropic_api' | 'gemini_api' | 'openai_api' | 'local', HttpLlmClient>> = {};
+  const httpClients: Partial<
+    Record<'anthropic_api' | 'gemini_api' | 'openai_api' | 'local', HttpLlmClient>
+  > = {};
   const httpConfigs = [
-    ['anthropic_api', process.env['ASTRA_ANTHROPIC_API_URL'], 'llm.anthropic_api', process.env['ASTRA_ANTHROPIC_MODEL'] ?? 'claude-3-5-sonnet-latest'],
-    ['gemini_api', process.env['ASTRA_GEMINI_API_URL'], 'llm.gemini_api', process.env['ASTRA_GEMINI_MODEL'] ?? 'gemini-2.5-flash'],
-    ['openai_api', process.env['ASTRA_OPENAI_API_URL'], 'llm.openai_api', process.env['ASTRA_OPENAI_MODEL'] ?? 'gpt-4o-mini'],
-    ['local', process.env['ASTRA_LOCAL_LLM_URL'], 'llm.local', process.env['ASTRA_LOCAL_LLM_MODEL'] ?? 'llama3.2'],
+    [
+      'anthropic_api',
+      process.env['ASTRA_ANTHROPIC_API_URL'],
+      'llm.anthropic_api',
+      process.env['ASTRA_ANTHROPIC_MODEL'] ?? 'claude-3-5-sonnet-latest',
+    ],
+    [
+      'gemini_api',
+      process.env['ASTRA_GEMINI_API_URL'],
+      'llm.gemini_api',
+      process.env['ASTRA_GEMINI_MODEL'] ?? 'gemini-2.5-flash',
+    ],
+    [
+      'openai_api',
+      process.env['ASTRA_OPENAI_API_URL'],
+      'llm.openai_api',
+      process.env['ASTRA_OPENAI_MODEL'] ?? 'gpt-4o-mini',
+    ],
+    [
+      'local',
+      process.env['ASTRA_LOCAL_LLM_URL'],
+      'llm.local',
+      process.env['ASTRA_LOCAL_LLM_MODEL'] ?? 'llama3.2',
+    ],
   ] as const;
   for (const [kind, endpoint, keyName, model] of httpConfigs) {
     if (!endpoint) continue;
@@ -72,7 +94,10 @@ async function main(): Promise<void> {
       try {
         apiKey = (await llmKeychain.get(keyName)) ?? undefined;
       } catch (error) {
-        logger.warn({ error, kind }, 'LLM API key could not be read from the local credential store');
+        logger.warn(
+          { error, kind },
+          'LLM API key could not be read from the local credential store',
+        );
       }
     }
     httpClients[kind] = new HttpLlmClient({ kind, endpoint, model, ...(apiKey ? { apiKey } : {}) });
