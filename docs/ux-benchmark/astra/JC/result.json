@@ -21,7 +21,7 @@
 
   ],
   "product" : "Astra",
-  "startedAt" : "2026-09-09T07:02:01Z",
+  "startedAt" : "2026-09-09T09:58:56Z",
   "steps" : [
     {
       "front" : "com.apple.finder",
@@ -31,7 +31,7 @@
       },
       "interactions" : 1,
       "keyWindow" : false,
-      "ms" : 1189,
+      "ms" : 1195,
       "name" : "マイク拒否",
       "surface" : {
         "h" : 161,
@@ -40,17 +40,17 @@
         "x" : 604,
         "y" : 956
       },
-      "transitionMs" : 215,
+      "transitionMs" : 203,
       "windows" : 1
     },
     {
       "front" : "com.apple.finder",
       "ids" : {
-        "session" : "meeting-4898d77c-0d4a-4d30-8785-02e4465a7a0a"
+        "session" : "meeting-025eb7c2-e178-429d-b46e-e76c7ebad916"
       },
       "interactions" : 1,
       "keyWindow" : false,
-      "ms" : 1168,
+      "ms" : 1130,
       "name" : "回復",
       "surface" : {
         "h" : 108,
@@ -69,7 +69,7 @@
       },
       "interactions" : 0,
       "keyWindow" : false,
-      "ms" : 1463,
+      "ms" : 1501,
       "name" : "共有のあと",
       "surface" : {
         "h" : 108,
@@ -88,7 +88,7 @@
       },
       "interactions" : 1,
       "keyWindow" : false,
-      "ms" : 1269,
+      "ms" : 1272,
       "name" : "確認（やめる）",
       "surface" : {
         "h" : 108,
@@ -106,7 +106,7 @@
       },
       "interactions" : 1,
       "keyWindow" : false,
-      "ms" : 2273,
+      "ms" : 2282,
       "name" : "落ちて再開",
       "surface" : {
         "h" : 820,
@@ -119,6 +119,6 @@
     }
   ],
   "success" : true,
-  "totalMs" : 7371,
+  "totalMs" : 7388,
   "windowsOpened" : 0
 }

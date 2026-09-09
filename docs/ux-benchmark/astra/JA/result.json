@@ -19,12 +19,12 @@
     "体感の複雑さ（層 C）: 段は 5、面は 1 枚、増えた窓 0"
   ],
   "product" : "Astra",
-  "startedAt" : "2026-09-09T07:01:42Z",
+  "startedAt" : "2026-09-09T09:58:37Z",
   "steps" : [
     {
       "interactions" : 0,
       "keyWindow" : false,
-      "ms" : 50,
+      "ms" : 37,
       "name" : "Home（Dock は待機）",
       "surface" : {
         "h" : 76,
@@ -41,7 +41,7 @@
       "keys" : {
         "esc" : "listening→idle"
       },
-      "ms" : 1189,
+      "ms" : 1186,
       "name" : "Listening",
       "surface" : {
         "h" : 76,
@@ -50,16 +50,16 @@
         "x" : 754,
         "y" : 1041
       },
-      "transitionMs" : 223,
+      "transitionMs" : 211,
       "windows" : 2
     },
     {
       "ids" : {
-        "task" : "B02A6A3F-B0F3-44CF-94D7-8F2EAFAD0F69"
+        "task" : "A3A4765D-7048-4440-B9E7-7B0FE10FF315"
       },
       "interactions" : 0,
       "keyWindow" : false,
-      "ms" : 1125,
+      "ms" : 1084,
       "name" : "Running",
       "surface" : {
         "h" : 287,
@@ -73,8 +73,8 @@
     },
     {
       "ids" : {
-        "confirmation" : "A1C9F1F8-8F41-42C9-BE12-4E72DEA503E2",
-        "resolved" : "A1C9F1F8-8F41-42C9-BE12-4E72DEA503E2"
+        "confirmation" : "FDEFB87F-7D60-44DD-9400-345A54BD68CA",
+        "resolved" : "FDEFB87F-7D60-44DD-9400-345A54BD68CA"
       },
       "interactions" : 2,
       "keyWindow" : false,
@@ -82,7 +82,7 @@
         "cmdReturn" : "approved",
         "return" : "no-op"
       },
-      "ms" : 1825,
+      "ms" : 1851,
       "name" : "Confirmation",
       "surface" : {
         "h" : 76,
@@ -100,7 +100,7 @@
       "keys" : {
         "esc" : "result→idle"
       },
-      "ms" : 1240,
+      "ms" : 1306,
       "name" : "Done",
       "surface" : {
         "h" : 76,
@@ -109,11 +109,11 @@
         "x" : 754,
         "y" : 1041
       },
-      "transitionMs" : 190,
+      "transitionMs" : 205,
       "windows" : 2
     }
   ],
   "success" : true,
-  "totalMs" : 5432,
+  "totalMs" : 5466,
   "windowsOpened" : 0
 }
