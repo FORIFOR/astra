@@ -46,6 +46,17 @@ const ctx = await chromium.launchPersistentContext(profile, {
 const page = await ctx.newPage();
 await page.goto(url, { waitUntil: 'domcontentloaded' });
 note(`opened ${url}`);
+// Meet は参加ボタンの前に、カメラ/マイクを使うか確認する画面を挟む。
+// テスト音声は BlackHole から入れるため、Bot 自身のマイク・カメラは使わない。
+try {
+  await page
+    .getByRole('button', { name: /マイクとカメラを使用せずに続行|Continue without microphone and camera/ })
+    .first()
+    .click({ timeout: 8000 });
+  note('continued without mic/camera');
+} catch (e) {
+  note(`mic/camera prejoin skipped: ${e.message}`);
+}
 // マイク選択: 設定 → 音声 → マイク = BlackHole 2ch（UI は変わるので、text で探す）。
 try {
   await page
