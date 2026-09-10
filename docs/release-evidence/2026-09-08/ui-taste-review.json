@@ -1,0 +1,53 @@
+{
+  "entries": [
+    {
+      "kind": "material/blur",
+      "file": "GuidedSetup/Overlay/GuideCalloutView.swift",
+      "sha256": "bab26f44e4400667af955c422608fd80fef5617b7e6ca9dfbd6521173d95a1b4",
+      "count": 1,
+      "reason": "Permission guidance is a transient system-style callout; the material separates the instructional overlay from the app surface."
+    },
+    {
+      "kind": "material/blur",
+      "file": "GuidedSetup/Overlay/AvatarHUDView.swift",
+      "sha256": "4b0486c4917dab3231cf03d9cf76c2aa8f75b9c5b6fa1dcbeef9c3e8ae1fc201",
+      "count": 1,
+      "reason": "The permission avatar HUD is a transient status surface; the material is limited to the overlay boundary."
+    },
+    {
+      "kind": "Capsule",
+      "file": "Home/WorkPressureView.swift",
+      "sha256": "e2a93d0bdf63201dee58e270d3ffe696ce56c210a24feb42f0ab412bd73da337",
+      "count": 2,
+      "reason": "The two capsules are compact severity/status indicators; they encode bounded state rather than decorative cards."
+    },
+    {
+      "kind": "Capsule",
+      "file": "Home/SessionCard.swift",
+      "sha256": "c3b03fef620635fbc19a1151f7b68ed544c0628e119c291c6ffedf1adddea2d7",
+      "count": 1,
+      "reason": "The capsule is the session metadata tag and remains within the card row."
+    },
+    {
+      "kind": "Capsule",
+      "file": "Home/WorkContextCard.swift",
+      "sha256": "00869bda40efcc8265911cf50b70dcf9f9c9de405b8ddbf3cfeae81fc978b1fe",
+      "count": 1,
+      "reason": "The capsule is a compact context label; it does not create a new surface."
+    },
+    {
+      "kind": "Capsule",
+      "file": "Home/PersonalizationInspector.swift",
+      "sha256": "9692ab33f7a0329971491339b0341c7042f09e1b87fafe26f7ce299672c7c59c",
+      "count": 1,
+      "reason": "The capsule is a selected profile value indicator and is limited to the inspector row."
+    },
+    {
+      "kind": "Capsule",
+      "file": "VoiceHUD/VoiceHUDView.swift",
+      "sha256": "1968ba7e5bc12f88049a2f8fe3a2850db2dfe54a5d87a19a3579c20fece11b1c",
+      "count": 1,
+      "reason": "The capsule is the live voice status indicator and is required to preserve the Dock status grammar."
+    }
+  ]
+}
