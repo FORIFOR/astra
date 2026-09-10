@@ -1,6 +1,8 @@
 import AppKit
 
 final class AstraAppDelegate: NSObject, NSApplicationDelegate {
+    private var permissionRefreshObserver: NSObjectProtocol?
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         // headless の自己検証（Swift → core → ディスク）。UI を出さずに終了する。
         if SelfTest.run(CommandLine.arguments) { return }
@@ -20,6 +22,23 @@ final class AstraAppDelegate: NSObject, NSApplicationDelegate {
         WindowCoordinator.shared.start(demo: demo)
         // Dock アイコンが無いので、ここが起動後の唯一の入口になる（Main/録音/設定/終了）。
         StatusBarController.shared.install()
+
+        // Speech authorization is often granted in System Settings while the
+        // recording workspace remains alive.  The authorization callback is
+        // not delivered for that manual Settings change, so refresh the live
+        // session whenever Astra becomes active again.  Without this, a
+        // recording that started before approval keeps an empty transcript
+        // until the user stops and starts a new recording.
+        permissionRefreshObserver = NotificationCenter.default.addObserver(
+            forName: NSApplication.didBecomeActiveNotification,
+            object: nil,
+            queue: .main
+        ) { _ in
+            MainActor.assumeIsolated {
+                RecordingRuntime.shared.speechAuthorizationChanged()
+                RecordingWorkspaceState.shared.refreshSpeechPermission()
+            }
+        }
         // focus リングは Tab / 矢印を押してから見せる（開いた瞬間に出さない）。
         KeyboardNavigation.shared.install()
         // 自動更新。配布先と公開鍵が Info.plist に入っていなければ何もしない
