@@ -17,6 +17,7 @@ import { join } from 'node:path';
 const [corpus, out] = process.argv.slice(2);
 const url = process.env.ASTRA_MEET_URL;
 const profile = process.env.ASTRA_MEET_BOT_PROFILE;
+const profileDirectory = process.env.ASTRA_MEET_BOT_PROFILE_DIRECTORY;
 if (!url || !profile || !corpus || !out) {
   console.error('usage: ASTRA_MEET_URL ASTRA_MEET_BOT_PROFILE node join.mjs <corpus> <out>');
   process.exit(2);
@@ -40,15 +41,21 @@ process.on('exit', restore);
 
 const ctx = await chromium.launchPersistentContext(profile, {
   headless: false,
-  args: ['--use-fake-ui-for-media-stream', '--autoplay-policy=no-user-gesture-required'],
+  args: [
+    ...(profileDirectory ? [`--profile-directory=${profileDirectory}`] : []),
+    '--use-fake-ui-for-media-stream',
+    '--autoplay-policy=no-user-gesture-required',
+  ],
   permissions: ['microphone', 'camera'],
 });
 const page = await ctx.newPage();
 await page.goto(url, { waitUntil: 'domcontentloaded' });
 note(`opened ${url}`);
+const inCall = async () =>
+  await page.getByRole('button', { name: /通話から退出|Leave call/ }).first().isVisible().catch(() => false);
 // Meet は参加ボタンの前に、カメラ/マイクを使うか確認する画面を挟む。
 // テスト音声は BlackHole から入れるため、Bot 自身のマイク・カメラは使わない。
-try {
+if (!(await inCall())) try {
   await page
     .getByRole('button', {
       name: /マイクとカメラを使用せずに続行|Continue without microphone and camera/,
@@ -59,8 +66,25 @@ try {
 } catch (e) {
   note(`mic/camera prejoin skipped: ${e.message}`);
 }
-// マイク選択: 設定 → 音声 → マイク = BlackHole 2ch（UI は変わるので、text で探す）。
+
+// 未ログインの検証Botでも、主催者が「誰でも参加できます」にしていれば
+// 名前だけで入室できる。ログイン案内のポップアップが参加ボタンを覆うため閉じる。
+if (!(await inCall())) try {
+  const closeLogin = page.getByRole('button', { name: /閉じる|Close/ }).last();
+  if (await closeLogin.isVisible({ timeout: 1500 })) {
+    await closeLogin.click();
+    note('closed guest login prompt');
+  }
+} catch {}
 try {
+  const name = page.getByRole('textbox', { name: /名前|Your name|Name/ }).first();
+  if (await name.isVisible({ timeout: 1500 })) {
+    await name.fill('Astra Test Bot');
+    note('guest name = Astra Test Bot');
+  }
+} catch {}
+// マイク選択: 設定 → 音声 → マイク = BlackHole 2ch（UI は変わるので、text で探す）。
+if (!(await inCall())) try {
   await page
     .getByRole('button', { name: /設定|Settings|More options|その他/ })
     .first()
@@ -74,11 +98,15 @@ try {
 } catch (e) {
   note(`mic select skipped: ${e.message}`);
 }
-await page
-  .getByRole('button', { name: /今すぐ参加|参加をリクエスト|Join now|Ask to join/ })
-  .first()
-  .click({ timeout: 20000 });
-note('join clicked');
+if (await inCall()) {
+  note('already joined');
+} else {
+  await page
+    .getByRole('button', { name: /今すぐ参加|参加をリクエスト|Join now|Ask to join/ })
+    .first()
+    .click({ timeout: 20000 });
+  note('join clicked');
+}
 await page.waitForTimeout(8000);
 await page.screenshot({ path: join(out, '01-joined.png') });
 
