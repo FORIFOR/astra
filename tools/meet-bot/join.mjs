@@ -50,7 +50,9 @@ note(`opened ${url}`);
 // テスト音声は BlackHole から入れるため、Bot 自身のマイク・カメラは使わない。
 try {
   await page
-    .getByRole('button', { name: /マイクとカメラを使用せずに続行|Continue without microphone and camera/ })
+    .getByRole('button', {
+      name: /マイクとカメラを使用せずに続行|Continue without microphone and camera/,
+    })
     .first()
     .click({ timeout: 8000 });
   note('continued without mic/camera');
