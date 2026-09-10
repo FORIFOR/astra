@@ -50,5 +50,5 @@
     "voice": "Eddy",
     "text": "これは一時停止中の発言なので、記録に残ってはいけません。"
   },
-  "$judge_note": "must = 抽出できたかを見る必須 keyword（区別できる日本語の内容）。subject = 英語の固有名詞など best-effort（ja-JP のオンデバイス STT が落とすことがある）。"
+  "$judge_note": "must = 抽出できたかを見る必須 keyword、must_any = macOS日本語STTで実測した同義の候補グループ。subject = 英語の固有名詞など best-effort（ja-JP のオンデバイス STT が落とすことがある）。"
 }
