@@ -2,6 +2,7 @@
 //
 //   ASTRA_MEET_URL=https://meet.google.com/xxx-yyyy-zzz \
 //   ASTRA_MEET_BOT_PROFILE=~/astra-meet-bot-profile \
+//   ASTRA_MEET_BOT_EXECUTABLE_PATH='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' \
 //   node tools/meet-bot/join.mjs <corpus-dir> <out-dir>
 //
 // 前提: `npm i` で playwright、`npx playwright install chromium`。プロファイルは bot 用のテスト Google
@@ -18,6 +19,7 @@ const [corpus, out] = process.argv.slice(2);
 const url = process.env.ASTRA_MEET_URL;
 const profile = process.env.ASTRA_MEET_BOT_PROFILE;
 const profileDirectory = process.env.ASTRA_MEET_BOT_PROFILE_DIRECTORY;
+const executablePath = process.env.ASTRA_MEET_BOT_EXECUTABLE_PATH;
 if (!url || !profile || !corpus || !out) {
   console.error('usage: ASTRA_MEET_URL ASTRA_MEET_BOT_PROFILE node join.mjs <corpus> <out>');
   process.exit(2);
@@ -41,6 +43,7 @@ process.on('exit', restore);
 
 const ctx = await chromium.launchPersistentContext(profile, {
   headless: false,
+  ...(executablePath ? { executablePath } : {}),
   args: [
     ...(profileDirectory ? [`--profile-directory=${profileDirectory}`] : []),
     '--use-fake-ui-for-media-stream',
@@ -48,7 +51,8 @@ const ctx = await chromium.launchPersistentContext(profile, {
   ],
   permissions: ['microphone', 'camera'],
 });
-const page = await ctx.newPage();
+const page = ctx.pages()[0] ?? await ctx.newPage();
+await page.bringToFront();
 await page.goto(url, { waitUntil: 'domcontentloaded' });
 note(`opened ${url}`);
 const inCall = async () =>
