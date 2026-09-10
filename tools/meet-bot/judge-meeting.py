@@ -41,6 +41,18 @@ def recall(kind):
     items = [norm(d.get("text", "")) for d in res.get(kind, [])]
     hits = 0; miss = []
     for e in exp[kind]:
+        alternatives = e.get("must_any")
+        if alternatives:
+            matched = any(
+                all(kw_hit(k, it) for k in alt)
+                for alt in alternatives
+                for it in items
+            )
+            if matched:
+                hits += 1
+            else:
+                miss.append(e["label"])
+            continue
         # 必須は must（無ければ後方互換で keywords の日本語のみ、それも無ければ全部）。
         required = e.get("must") or [k for k in e.get("keywords", []) if has_jp(k)] or e.get("keywords", [])
         if any(all(kw_hit(k, it) for k in required) for it in items): hits += 1

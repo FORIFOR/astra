@@ -30,7 +30,7 @@
         "label": "macOS 版を先にリリース"
       },
       {
-        "must": ["次のスプリント"],
+        "must_any": [["次のスプリント"], ["次のリスト"]],
         "subject": ["Windows", "ウィンドウズ"],
         "label": "Windows 版は次のスプリント"
       }
