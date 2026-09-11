@@ -145,6 +145,9 @@ async function main(): Promise<void> {
     ...(!preferredCli || preferredCli === 'codex'
       ? {
           codex: new CodexCli({
+            ...(process.env['ASTRA_CODEX_TIMEOUT_MS'] !== undefined
+              ? { timeoutMs: Number(process.env['ASTRA_CODEX_TIMEOUT_MS']) }
+              : {}),
             ...(process.env['ASTRA_CODEX_PATH']
               ? { command: process.env['ASTRA_CODEX_PATH'] }
               : {}),

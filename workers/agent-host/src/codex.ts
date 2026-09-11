@@ -29,6 +29,13 @@ export class CodexCli {
       timeoutMs?: number;
     } = {},
   ) {
+    if (
+      config.timeoutMs !== undefined &&
+      (!Number.isInteger(config.timeoutMs) ||
+        config.timeoutMs < 1_000 ||
+        config.timeoutMs > 600_000)
+    )
+      throw new Error('Codex timeoutMs must be an integer between 1000 and 600000');
     this.#run = config.run ?? runCommand;
   }
   get command(): string {

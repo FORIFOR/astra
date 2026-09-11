@@ -1,0 +1,31 @@
+{
+  "social": {
+    "duration": "33.000000",
+    "bytes": 3277200,
+    "sha256": "43a5ef8733bd46041272dbd6837f2fac0321c901ca54326697f5c6e88fcd5478",
+    "video": {
+      "codec_name": "h264",
+      "width": 1080,
+      "height": 1920,
+      "r_frame_rate": "30/1"
+    }
+  },
+  "web": {
+    "duration": "33.000000",
+    "bytes": 2866204,
+    "sha256": "d3753baa639bd8085dc2a61e9b6049416b087c1a3c53ea6ee3c2a527077de03b",
+    "video": {
+      "codec_name": "h264",
+      "width": 1920,
+      "height": 1080,
+      "r_frame_rate": "30/1"
+    }
+  },
+  "audio": {
+    "integrated_lufs": -16.77,
+    "true_peak_dbtp": -1.47,
+    "narration": "Google Cloud TTS / ja-JP-Chirp3-HD-Aoede",
+    "auditory_review": false
+  },
+  "artifact_sha256": "145f04b5189d66d3bde12de9ea0791357862db69997201c7c2f5663f2267a76b"
+}
