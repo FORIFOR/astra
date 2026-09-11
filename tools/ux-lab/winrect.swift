@@ -10,10 +10,12 @@ if CommandLine.arguments.dropFirst().first == "screen" {
     exit(0)
 }
 
+let requestedPID = CommandLine.arguments.dropFirst().first.flatMap(Int32.init)
 let list = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] ?? []
 var best: CGRect?
 var bestID: CGWindowID = 0
 for w in list {
+    if let requestedPID, w[kCGWindowOwnerPID as String] as? Int32 != requestedPID { continue }
     guard let owner = w[kCGWindowOwnerName as String] as? String,
           owner.contains("Astra") || owner.contains("AstraMac"),
           let b = w[kCGWindowBounds as String] as? [String: Any],

@@ -252,15 +252,33 @@ export class MeetingService {
     segment: MeetingSegment,
     targetLanguage: string,
   ): Promise<string | null> {
-    if (!this.#translator) return null;
-    const text = await this.#translator.translate(
-      segment.text,
-      segment.language ?? 'auto',
-      targetLanguage,
-    );
-
-    await withTenant(this.#db, tenantId, (tx) =>
-      tx
+    const translator = this.#translator;
+    if (!translator) return null;
+    if (!segment.text.trim()) return null;
+    return withTenant(this.#db, tenantId, async (tx) => {
+      // Lock the persisted source row before calling the provider. This also
+      // serializes duplicate requests across gateway processes, not just locally.
+      const source = await tx
+        .selectFrom('meeting_segments')
+        .selectAll()
+        .where('id', '=', segment.id)
+        .where('meeting_id', '=', meetingId)
+        .forUpdate()
+        .executeTakeFirst();
+      if (!source) throw new AstraError('meeting.not_found', 'meeting segment not found');
+      const existing = await tx
+        .selectFrom('translations')
+        .select('text')
+        .where('segment_id', '=', segment.id)
+        .where('target_language', '=', targetLanguage)
+        .executeTakeFirst();
+      if (existing) return existing.text;
+      const sameLanguage =
+        source.language?.toLowerCase().split('-')[0] === targetLanguage.toLowerCase().split('-')[0];
+      const text = sameLanguage
+        ? source.text
+        : await translator.translate(source.text, source.language ?? 'auto', targetLanguage);
+      await tx
         .insertInto('translations')
         .values({
           segment_id: segment.id,
@@ -270,16 +288,20 @@ export class MeetingService {
           text,
           created_at: this.#now(),
         })
-        .onConflict((oc) => oc.columns(['segment_id', 'target_language']).doNothing())
-        .execute(),
-    );
-
-    await this.#emit(tenantId, meetingId, 'meeting.translation.final', {
-      segment_id: segment.id,
-      target_language: targetLanguage,
-      text,
+        .execute();
+      await appendEvent(
+        tx,
+        {
+          tenantId,
+          streamKind: 'meeting',
+          streamId: meetingId,
+          type: 'meeting.translation.final',
+          payload: { segment_id: segment.id, target_language: targetLanguage, text },
+        },
+        this.#publisher,
+      );
+      return text;
     });
-    return text;
   }
 
   /**

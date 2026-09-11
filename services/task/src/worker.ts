@@ -10,6 +10,7 @@ import { fileURLToPath } from 'node:url';
 import { Worker, type NativeConnection } from '@temporalio/worker';
 import { createTaskActivities, type ActivityDeps } from './activities.js';
 import { TASK_QUEUE } from './runtime/types.js';
+import { withActivityHeartbeat } from './activity-heartbeat.js';
 
 export interface TaskWorkerOptions {
   readonly connection: NativeConnection;
@@ -38,11 +39,28 @@ export async function createTaskWorker(
   deps: ActivityDeps,
   options: TaskWorkerOptions,
 ): Promise<Worker> {
+  const activities = createTaskActivities(deps);
+  const executeStep = activities.executeStep;
+  activities.executeStep = (input, step) =>
+    withActivityHeartbeat(() => {
+      const run = () => executeStep(input, step);
+      return deps.withStepContext
+        ? deps.withStepContext(
+            {
+              taskId: input.taskId,
+              tenantId: input.tenantId,
+              userId: input.userId,
+              stepIndex: step.index,
+            },
+            run,
+          )
+        : run();
+    });
   return Worker.create({
     connection: options.connection,
     namespace: options.namespace,
     taskQueue: options.taskQueue ?? TASK_QUEUE,
     workflowsPath: options.workflowsPath ?? defaultWorkflowsPath(),
-    activities: createTaskActivities(deps),
+    activities,
   });
 }

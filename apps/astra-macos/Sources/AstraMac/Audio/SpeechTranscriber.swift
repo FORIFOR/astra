@@ -33,6 +33,8 @@ final class SpeechTranscriber {
     // 次の…」の「Windows 版は」が消えた）。閉じるときは endAudio で認識器に最後まで処理させ、その final を待って
     // から確定する。次の発話の request は先に開いておくので、その間の音は落ちない。
     private var onEvent: ((Live) -> Void)?
+    var onFailure: ((Error) -> Void)?
+    private var consecutiveFailures = 0
     private var pausedEvent: ((Live) -> Void)?
     private var finishTimer: Timer?
     private var finishCompletion: (() -> Void)?
@@ -123,8 +125,23 @@ final class SpeechTranscriber {
         let gen = generation
         requestLock.lock(); request = req; requestLock.unlock()
         lastText = ""; lastChange = Date(); segmentStartedAt = Date()
-        task = recognizer.recognitionTask(with: req) { [weak self] result, _ in
-            guard let self, let result else { return }
+        task = recognizer.recognitionTask(with: req) { [weak self] result, error in
+            guard let self else { return }
+            if result == nil, let error {
+                guard gen == self.generation, self.onEvent != nil, self.finishCompletion == nil else { return }
+                if self.closing?.gen == gen { self.finishClosing(); return }
+                self.consecutiveFailures += 1
+                if self.consecutiveFailures <= 2 {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                        guard let self, self.generation == gen, self.onEvent != nil, self.finishCompletion == nil else { return }
+                        self.emitFinal(self.lastText)
+                        self.reopen()
+                    }
+                } else { self.onFailure?(error) }
+                return
+            }
+            guard let result else { return }
+            self.consecutiveFailures = 0
             let text = result.bestTranscription.formattedString
             if let c = self.closing, c.gen == gen {
                 // 閉じている前の発話。認識器が最後まで処理した文で確定する。

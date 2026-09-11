@@ -1,0 +1,29 @@
+name: Workflow or pilot proposal
+description: Tell us where Astra could help you or your team.
+title: '[Workflow] '
+body:
+  - type: markdown
+    attributes:
+      value: 'This starts a public discussion, not a commercial commitment. Leave private details out. 日本語でもどうぞ。'
+  - type: textarea
+    id: workflow
+    attributes:
+      label: What are you trying to accomplish?
+      description: What do you do today, and where do you lose time?
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: What would a useful result look like?
+    validations:
+      required: true
+  - type: dropdown
+    id: context
+    attributes:
+      label: Context
+      options:
+        - Individual workflow
+        - Team pilot
+        - Integration idea
+        - Other

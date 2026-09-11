@@ -32,7 +32,9 @@ enum KeychainStore {
     /// 保存する。既存は上書き（upsert）。
     static func set(_ key: String, _ value: String) throws {
         let data = Data(value.utf8)
-        SecItemDelete(query(key) as CFDictionary) // 既存を消してから足す（冪等 upsert）
+        let updated = SecItemUpdate(query(key) as CFDictionary, [kSecValueData as String: data] as CFDictionary)
+        if updated == errSecSuccess { return }
+        guard updated == errSecItemNotFound else { throw KeychainError.unexpected(updated) }
         var add = query(key)
         add[kSecValueData as String] = data
         // この端末でのみ、ロック解除後に読める。iCloud Keychain には同期しない。
@@ -89,6 +91,17 @@ enum KeychainStore {
         q[kSecMatchLimit as String] = kSecMatchLimitOne
         var out: CFTypeRef?
         return SecItemCopyMatching(q as CFDictionary, &out) == errSecSuccess
+    }
+
+    static func getGeneric(service: String, account: String) throws -> String? {
+        var q = genericQuery(service: service, account: account)
+        q[kSecReturnData as String] = true
+        q[kSecMatchLimit as String] = kSecMatchLimitOne
+        var out: CFTypeRef?
+        let status = SecItemCopyMatching(q as CFDictionary, &out)
+        if status == errSecItemNotFound { return nil }
+        guard status == errSecSuccess else { throw KeychainError.unexpected(status) }
+        return (out as? Data).flatMap { String(data: $0, encoding: .utf8) }
     }
 
     static func deleteGeneric(service: String, account: String) throws {

@@ -72,9 +72,6 @@ struct RecordingWorkspaceView: View {
         }
         .frame(width: Metrics.workspaceWidth, height: Metrics.workspaceHeight)
         .animation(.easeOut(duration: Motion.drawerMs), value: state.ragOpen)
-        .onChange(of: state.selectedTool) { _, tool in
-            if tool == .translation, state.translatedText.isEmpty { state.translate() }
-        }
         .accessibilityIdentifier("recordingWorkspace")
     }
 
@@ -184,7 +181,7 @@ private struct RecordingSideRail: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             PermissionBanner(state: state)
-            RecordingToolPalette(selection: $state.selectedTool)
+            RecordingToolPalette(selection: Binding(get: { state.selectedTool }, set: state.selectTool))
             TranscriptPanel(state: state)
                 .frame(maxHeight: .infinity)
             TaskTimelineView()
@@ -529,13 +526,17 @@ private struct MeetingNotesCanvas: View {
             // 音は届いていて録れているが、この Mac ではオンデバイス文字起こしが始められない。
             // サーバへは出さない（`SpeechTranscriber`）。空のまま「聞いています」と言わず、理由を言う。
             VStack(alignment: .leading, spacing: 10) {
-                Label(Facts.transcriptionOnDeviceUnavailable, systemImage: "text.badge.xmark")
+                Label(RecordingRuntime.shared.transcriptionFailureMessage, systemImage: "text.badge.xmark")
                     .font(.system(size: TypeScale.microSize))
                     .foregroundStyle(Palette.danger(dark))
                     .fixedSize(horizontal: false, vertical: true)
                 // 狭い列でも理由と復旧操作を省略しないよう、操作は独立した段に置く。
-                ProbeButton(id: "openDictationSettings", action: { Permissions.openDictationSettings() }) {
-                    Text("\(Facts.resultOpenSettings)（音声入力）")
+                ProbeButton(id: "openDictationSettings", action: {
+                    if RecordingRuntime.shared.liveTranscriptionFailure != nil { RecordingRuntime.shared.retryLiveTranscription() }
+                    else { Permissions.openDictationSettings() }
+                }) {
+                    Text(RecordingRuntime.shared.liveTranscriptionFailure != nil
+                         ? Facts.liveRetry : "\(Facts.resultOpenSettings)（音声入力）")
                 }
                 .font(.system(size: TypeScale.microSize, weight: .medium))
                 .foregroundStyle(Palette.accent(dark))

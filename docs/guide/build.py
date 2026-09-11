@@ -137,15 +137,16 @@ html=f'''<!doctype html><html lang="ja"><head><meta charset="utf-8">
 <p>Astra は Dock（画面下のアイコン列）には出ません。<b>メニューバー右上の波形アイコン</b>をクリックするとメニューが開きます。</p>
 {MENU}
 </div><div>
-<p><b>「{fact("menu.open")}」</b>で {fact("nav.home")} が出ます。左の一覧は 4 つ——{fact("nav.home")}（頼む・最近の状態）、{fact("nav.work")}（いま動いている仕事: {fact("work.tasks")} / {fact("work.agents")} / 録音中の会議）、{fact("nav.library")}（終わった成果: {fact("library.meetings")} / {fact("library.files")}）、{fact("nav.apps")}（できる仕事を増やす: {fact("apps.plugins")} / {fact("apps.connectors")}）。</p>
-<p>許可は、その機能を<b>初めて使うとき</b>に、要るものだけ聞かれます——初めて会議を録るとき{fact("permission.microphone")}、画面について聞くとき{fact("permission.screenRecording")}、{shortcut("shortcut.recording.toggle")} を使えるようにするとき{fact("permission.inputMonitoring")}、Home の「これからの予定」で予定を読むとき{fact("permission.calendar")}、というように。先にまとめて設定する必要はありません。<b>{fact("menu.settings")}</b> の「{fact("settings.permissionsSection")}」に 5 つ（{fact("permission.microphone")}・{fact("permission.screenRecording")}・{fact("permission.accessibility")}・{fact("permission.calendar")}・{fact("permission.inputMonitoring")}）の一覧があり、いま許可されているかの確認と、あとからの許可はそこでできます。{fact("permission.microphone")}を許可しないと録音は始まりません（→ 6）。{fact("permission.inputMonitoring")}が無いと {shortcut("shortcut.recording.toggle")} が効かず、黒いバーには「{fact("hud.clickHint")}」と出ます。</p>
+<p><b>「{fact("menu.open")}」</b>で {fact("nav.home")} が出ます。左の一覧は 4 つ——{fact("nav.home")}（頼む・最近の状態）、{fact("nav.work")}（いま動いている仕事: {fact("work.tasks")} / {fact("work.agents")} / {fact("dock.record")}中の会議）、{fact("nav.library")}（終わった成果: {fact("library.meetings")} / {fact("library.files")}）、{fact("nav.apps")}（できる仕事を増やす: {fact("apps.plugins")} / {fact("apps.connectors")}）。</p>
+<p>許可は、その機能を<b>初めて使うとき</b>に、要るものだけ聞かれます——初めて会議を録るとき{fact("permission.microphone")}、画面について聞くとき{fact("permission.screenRecording")}、{shortcut("shortcut.recording.toggle")} を使えるようにするとき{fact("permission.inputMonitoring")}、Home の「これからの予定」で予定を読むとき{fact("permission.calendar")}、というように。先にまとめて設定する必要はありません。<b>{fact("menu.settings")}</b> の「{fact("settings.permissionsSection")}」に 5 つ（{fact("permission.microphone")}・{fact("permission.screenRecording")}・{fact("permission.accessibility")}・{fact("permission.calendar")}・{fact("permission.inputMonitoring")}）の一覧があり、いま許可されているかの確認と、あとからの許可はそこでできます。{fact("permission.microphone")}を許可しないと{fact("dock.record")}は始まりません（→ 6）。{fact("permission.inputMonitoring")}が無いと {shortcut("shortcut.recording.toggle")} は使えません。その場合もバーの <b>{fact("dock.record")}</b> ボタンから始められます。</p>
 </div></div>
 
 <h2><span>2</span>会議を記録する</h2>
+<p>画面上部の Astra バーにある <b>{fact("dock.record")}</b> を押すと、その場で会議を録れます。Astra の名前を押すと追加の操作が開き、{shortcut("shortcut.escape")} で小さなバーに戻ります。バーが見つからないときは、メニューバーの Astra アイコン → <b>{fact("menu.showControls")}</b> で戻せます。</p>
 {img('home')}
 <ol>
 <li><span class="n">1</span><b>{fact("recording.start")}</b> を押す（または {shortcut("shortcut.recording.toggle")}、メニューの「{fact("recording.menu.start")}」）</li>
-<li>録音中は画面上部に小さな黒いバーが出ます。ここで止めたり、メモを見たりします</li>
+<li>{fact("dock.record")}中は画面上部に小さな黒いバーが出ます。ここで止めたり、メモを見たりします</li>
 </ol>
 {img('bar')}
 <ol>
@@ -156,17 +157,17 @@ html=f'''<!doctype html><html lang="ja"><head><meta charset="utf-8">
 <p>{fact("nav.home")} に戻ると「{fact("recording.hero.recording")}」のカードが出ています。ここの <b>{fact("recording.stop")}</b> でも止められ、<b>{fact("meeting.notes.open")}</b> で上のメモが開きます。</p>
 {img('recnow')}
 
-<h2 class="pb"><span>3</span>録音中に文字起こしを見る・質問する</h2>
+<h2 class="pb"><span>3</span>{fact("dock.record")}中に文字起こしを見る・質問する</h2>
 <p>メモの右上 <b>{fact("meeting.detach")} ↗</b> を押すと、大きな作業画面が開きます。</p>
 {img('ws')}
 <ol>
-<li><span class="n">1</span>右側に <b>いつ・誰が・何を</b> 言ったかが流れます（翻訳・字幕にも切替可）</li>
+<li><span class="n">1</span>右側の「原文」に <b>いつ・誰が・何を</b> 言ったかがリアルタイムで流れます。「翻訳」へ切り替えると、確定した発言を選んだ言語で読めます</li>
 <li><span class="n">2</span>下の欄に「さっき決まった納期は？」のように書くと、この会議の内容から答えます</li>
 <li><span class="n">3</span>入力欄の右の <b>{fact("notes.summary")} / {fact("notes.decisions")} / {fact("notes.actions")}</b> を押すと、書かなくてもその答えが出ます</li>
 </ol>
 
 <h2 class="pb"><span>4</span>終わった会議を見返す</h2>
-<p>左の <b>{fact("nav.library")}</b> → {fact("library.meetings")} → 会議を選ぶと、{fact("notes.summary")}・{fact("notes.decisions")}・{fact("notes.actions")}が出ます。語は録音中のメモと同じです。</p>
+<p>左の <b>{fact("nav.library")}</b> → {fact("library.meetings")} → 会議を選ぶと、{fact("notes.summary")}・{fact("notes.decisions")}・{fact("notes.actions")}が出ます。語は{fact("dock.record")}中のメモと同じです。</p>
 {img('detail')}
 <ol>
 <li><span class="n">1</span>文末の <b>[1] [2]</b> を押すと…</li>
@@ -177,7 +178,7 @@ html=f'''<!doctype html><html lang="ja"><head><meta charset="utf-8">
 <h2 class="pb"><span>5</span>頼みごとをする</h2>
 {img('ask')}
 <ol>
-<li><span class="n">1</span>{fact("nav.home")} の「<b>{fact("home.intent.placeholder")}</b>」に、やってほしいことを書く（右端の{fact("permission.microphone")}で声でも可）</li>
+<li><span class="n">1</span>{fact("nav.home")} の「<b>{fact("home.intent.placeholder")}</b>」に、やってほしいことを書く。{fact("home.intent.submitHint")}（{fact("permission.microphone")}のボタンで声でも可）</li>
 </ol>
 {img('listen', 600)}
 <p>声で頼むときは「{fact("listening.placeholder")}」が出ている間に話します。取り消すなら右端の {shortcut("shortcut.escape")}。</p>
@@ -200,20 +201,23 @@ html=f'''<!doctype html><html lang="ja"><head><meta charset="utf-8">
 <table>
 <tr><th>こうなった</th><th>こうする</th></tr>
 <tr><td>「{fact("recording.cannotStart")}」と出る</td><td>{fact("permission.microphone")}の許可がありません。<b>{fact("result.openSettings")}</b> → {fact("permission.microphone")}を「{fact("permission.request")}」。許可すると、そのまま録れます<br>{img('denied', 420)}</td></tr>
-<tr><td>録音しているのに文字が出ない<br>「{fact("recording.hero.recording")}{fact("recording.hero.silentSuffix")}」と出る</td><td>録音の途中で{fact("permission.microphone")}が使えなくなっています。右上の <b>{fact("result.openSettings")}</b> → {fact("permission.microphone")}を「{fact("permission.request")}」<br>{img('nomic', 480)}</td></tr>
-<tr><td>「{fact("transcription.onDeviceUnavailable")}」と出る</td><td>この Mac には日本語のオンデバイス文字起こしの資産が入っていません。録音は続いていて、音声は残ります。Astra は音声を外のサーバへ送って文字にすることはしません（Mac の設定 → キーボード → 音声入力 で日本語を追加すると入ることがあります）</td></tr>
-<tr><td>{shortcut("shortcut.recording.toggle")} を押しても何も起きない<br>黒いバーに「{fact("hud.clickHint")}」と出ている</td><td>Astra の <b>{fact("menu.settings")} → {fact("permission.inputMonitoring")}（{fact("shortcut.recording.toggle")}）</b> の「{fact("permission.request")}」を押す。Mac の設定が開いたら Astra をオンにし、Astra を一度終了してから、また開く</td></tr>
-<tr><td>{fact("nav.home")} に「録りかけが N 件あります」と出る</td><td>前回、保存前に終わった録音です。<b>{fact("recovery.resume")}</b> で読み取り、いらなければ <b>{fact("recovery.discard")}</b></td></tr>
-<tr><td>会議のカードに「{fact("session.interrupted")}」と出る</td><td>録音の途中で Astra が止まった会議です。カードを押すと開き、<b>確定した行までは</b>文字起こしが残っています</td></tr>
+<tr><td>{fact("dock.record")}しているのに文字が出ない<br>「{fact("recording.hero.recording")}{fact("recording.hero.silentSuffix")}」と出る</td><td>{fact("dock.record")}の途中で{fact("permission.microphone")}が使えなくなっています。右上の <b>{fact("result.openSettings")}</b> → {fact("permission.microphone")}を「{fact("permission.request")}」<br>{img('nomic', 480)}</td></tr>
+<tr><td>原文と翻訳の違いは？</td><td>原文には、聞き取った言葉が発言者・時刻とともにリアルタイムで表示されます。翻訳では、確定した発言の訳文と原文を確認できます。切り替えても{fact("dock.record")}は続きます。</td></tr>
+<tr><td>聞きながら翻訳したい</td><td>字幕欄の「翻訳」を選び、{fact("translation.target")}で英語または日本語を選びます。{fact("translation.auto")}がオンなら確定した発言から順に訳します。訳文の下に原文も残ります。既定ではこのMacのOllama（qwen2.5:7b）を使います。APIを設定した場合は翻訳する場所を選べ、APIを選ぶと文字起こしをその接続先へ送ります。</td></tr>
+<tr><td>翻訳が止まった</td><td>Ollamaの起動と画面に表示されたモデルを確認してください。モデルが未導入ならターミナルで <code>ollama pull qwen2.5:7b</code> を実行し、{fact("translation.retry")}を押してください。既にできた訳を残して、未翻訳の発言を処理します。{fact("translation.auto")}をオフにすると翻訳を止められます。新しい会議では、再び「翻訳」を選ぶまで翻訳は始まりません。</td></tr>
+<tr><td>Google のライブ字幕が途切れた</td><td>字幕欄の <b>{fact("transcription.liveRetry")}</b> を押してください。同じ会議のまま、接続後の音声から字幕を{fact("recording.resume")}します。途切れていた間の音声は Mac に保存されますが、この操作では遡って文字起こししません。</td></tr>
+<tr><td>「{fact("transcription.onDeviceUnavailable")}」と出る</td><td>この Mac には日本語のオンデバイス文字起こしの資産が入っていません。{fact("dock.record")}は続いていて、音声は残ります。設定の「ライブ文字起こし（Google STT）」をオンにすると、次の{fact("dock.record")}から音声をGoogleへ送り、{fact("dock.record")}中に字幕を表示できます（Mac の設定 → キーボード → 音声入力で日本語を追加すると端末内認識が使えることがあります）</td></tr>
+<tr><td>{shortcut("shortcut.recording.toggle")} を押しても何も起きない</td><td>Astra の <b>{fact("menu.settings")} → {fact("permission.inputMonitoring")}（{fact("shortcut.recording.toggle")}）</b> の「{fact("permission.request")}」を押す。Mac の設定が開いたら Astra をオンにし、Astra を一度終了してから、また開く</td></tr>
+<tr><td>{fact("nav.home")} に「録りかけが N 件あります」と出る</td><td>前回、保存前に終わった{fact("dock.record")}です。<b>{fact("recovery.resume")}</b> で読み取り、いらなければ <b>{fact("recovery.discard")}</b></td></tr>
+<tr><td>会議のカードに「{fact("session.interrupted")}」と出る</td><td>{fact("dock.record")}の途中で Astra が止まった会議です。カードを押すと開き、<b>確定した行までは</b>文字起こしが残っています</td></tr>
 <tr><td>画面共有中に Astra を見せたくない</td><td>黒いバーの <b>👁 目のアイコン</b> を押すと、共有画面や録画に Astra が映らなくなります（もう一度押すと戻る）</td></tr>
 <tr><td>Astra が見当たらない</td><td>メニューバー右上の波形アイコン → 「{fact("menu.open")}」</td></tr>
 <tr><td>新しい版があるか知りたい</td><td>メニューバーの波形アイコン → 「{fact("menu.checkUpdates")}」。新しい版があれば知らせが出て、入れるかどうかはあなたが決めます。起動時にも一度だけ静かに確かめています</td></tr>
 </table>
 
 <footer>Astra 操作ガイド（0.1.1 / 2026-09-03）· 画面は開発版の撮影です。文字や配置は今後変わることがあります。<br>
-録音した音声・文字起こし・鍵はこの Mac の中だけで扱われ、あなたが確認して実行したものだけが外に出ます。</footer>
+{fact("dock.record")}した音声は、設定で「ライブ文字起こし（Google STT）」を許可した場合だけGoogleへ送信されます。オフなら端末内だけで扱います。</footer>
 </body></html>'''
 os.makedirs(OUT, exist_ok=True)
 open(OUT+'/Astra-操作ガイド.html','w').write(html)
 print('written', len(html)//1024, 'KB', '/ facts used', len(USED_FACTS))
-

@@ -13,7 +13,16 @@
  * id は**そのままパスにしない**: 形を検査し、組み立てた正規パスが受け渡し場所の中にあることを確かめる
  * （`../`、絶対パス、外へ抜ける symlink はすべて「無い」扱い）。
  */
-import { existsSync, realpathSync } from 'node:fs';
+import {
+  existsSync,
+  realpathSync,
+  openSync,
+  closeSync,
+  fstatSync,
+  readSync,
+  constants,
+} from 'node:fs';
+import { HttpLlmError, type HttpLlmImage } from './http-llm.js';
 import { homedir } from 'node:os';
 import { join, resolve, sep } from 'node:path';
 
@@ -93,5 +102,39 @@ export function locateImages(
     const path = canonicalImagePath(ref.id, dir, fs);
     if (path === null) return { ...ref, path: join(resolve(dir), `${ref.id}.png`), present: false };
     return { ...ref, path, present: fs.exists(path) };
+  });
+}
+
+/** Recheck the handover boundary at read time; never silently answer without requested pixels. */
+export function readVisualImages(images: readonly LocatedImage[]): HttpLlmImage[] {
+  if (images.length > 4) throw new HttpLlmError('image_unavailable', 'Too many images');
+  let bytes = 0;
+  return images.map((image) => {
+    let fd: number | undefined;
+    try {
+      if (!image.present || canonicalImagePath(image.id, visualContextDir()) !== image.path)
+        throw new Error('Image is no longer available');
+      fd = openSync(image.path, constants.O_RDONLY | constants.O_NOFOLLOW);
+      const stat = fstatSync(fd);
+      bytes += stat.size;
+      if (!stat.isFile() || bytes > 20 * 1024 * 1024) throw new Error('Image exceeds the limit');
+      const data = Buffer.alloc(stat.size);
+      let offset = 0;
+      while (offset < data.length) {
+        const count = readSync(fd, data, offset, data.length - offset, offset);
+        if (!count) throw new Error('Image changed during reading');
+        offset += count;
+      }
+      if (
+        readSync(fd, Buffer.alloc(1), 0, 1, data.length) !== 0 ||
+        !data.subarray(0, 8).equals(Buffer.from('89504e470d0a1a0a', 'hex'))
+      )
+        throw new Error('Invalid PNG');
+      return { mimeType: 'image/png', data };
+    } catch {
+      throw new HttpLlmError('image_unavailable', 'The selected screenshot could not be loaded');
+    } finally {
+      if (fd !== undefined) closeSync(fd);
+    }
   });
 }

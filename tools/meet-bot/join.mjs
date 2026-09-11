@@ -51,35 +51,41 @@ const ctx = await chromium.launchPersistentContext(profile, {
   ],
   permissions: ['microphone', 'camera'],
 });
-const page = ctx.pages()[0] ?? await ctx.newPage();
+const page = ctx.pages()[0] ?? (await ctx.newPage());
 await page.bringToFront();
 await page.goto(url, { waitUntil: 'domcontentloaded' });
 note(`opened ${url}`);
 const inCall = async () =>
-  await page.getByRole('button', { name: /通話から退出|Leave call/ }).first().isVisible().catch(() => false);
+  await page
+    .getByRole('button', { name: /通話から退出|Leave call/ })
+    .first()
+    .isVisible()
+    .catch(() => false);
 // Meet は参加ボタンの前に、カメラ/マイクを使うか確認する画面を挟む。
 // テスト音声は BlackHole から入れるため、Bot 自身のマイク・カメラは使わない。
-if (!(await inCall())) try {
-  await page
-    .getByRole('button', {
-      name: /マイクとカメラを使用せずに続行|Continue without microphone and camera/,
-    })
-    .first()
-    .click({ timeout: 8000 });
-  note('continued without mic/camera');
-} catch (e) {
-  note(`mic/camera prejoin skipped: ${e.message}`);
-}
+if (!(await inCall()))
+  try {
+    await page
+      .getByRole('button', {
+        name: /マイクとカメラを使用せずに続行|Continue without microphone and camera/,
+      })
+      .first()
+      .click({ timeout: 8000 });
+    note('continued without mic/camera');
+  } catch (e) {
+    note(`mic/camera prejoin skipped: ${e.message}`);
+  }
 
 // 未ログインの検証Botでも、主催者が「誰でも参加できます」にしていれば
 // 名前だけで入室できる。ログイン案内のポップアップが参加ボタンを覆うため閉じる。
-if (!(await inCall())) try {
-  const closeLogin = page.getByRole('button', { name: /閉じる|Close/ }).last();
-  if (await closeLogin.isVisible({ timeout: 1500 })) {
-    await closeLogin.click();
-    note('closed guest login prompt');
-  }
-} catch {}
+if (!(await inCall()))
+  try {
+    const closeLogin = page.getByRole('button', { name: /閉じる|Close/ }).last();
+    if (await closeLogin.isVisible({ timeout: 1500 })) {
+      await closeLogin.click();
+      note('closed guest login prompt');
+    }
+  } catch {}
 try {
   const name = page.getByRole('textbox', { name: /名前|Your name|Name/ }).first();
   if (await name.isVisible({ timeout: 1500 })) {
@@ -88,20 +94,21 @@ try {
   }
 } catch {}
 // マイク選択: 設定 → 音声 → マイク = BlackHole 2ch（UI は変わるので、text で探す）。
-if (!(await inCall())) try {
-  await page
-    .getByRole('button', { name: /設定|Settings|More options|その他/ })
-    .first()
-    .click({ timeout: 8000 });
-  await page
-    .getByText(/BlackHole/)
-    .first()
-    .click({ timeout: 8000 });
-  await page.keyboard.press('Escape');
-  note('mic = BlackHole 2ch');
-} catch (e) {
-  note(`mic select skipped: ${e.message}`);
-}
+if (!(await inCall()))
+  try {
+    await page
+      .getByRole('button', { name: /設定|Settings|More options|その他/ })
+      .first()
+      .click({ timeout: 8000 });
+    await page
+      .getByText(/BlackHole/)
+      .first()
+      .click({ timeout: 8000 });
+    await page.keyboard.press('Escape');
+    note('mic = BlackHole 2ch');
+  } catch (e) {
+    note(`mic select skipped: ${e.message}`);
+  }
 if (await inCall()) {
   note('already joined');
 } else {

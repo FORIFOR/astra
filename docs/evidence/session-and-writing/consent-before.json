@@ -1,0 +1,10 @@
+{
+  "result": "REGRESSION_REPRODUCED",
+  "initial_consent": true,
+  "launch_override": false,
+  "persisted_value_after_old_test": "NO",
+  "effective_consent_after_old_test": false,
+  "isolated_bundle_id": "com.astra.selftest.consent.before.88478",
+  "user_domain_not_modified": true,
+  "old_test_output": "SELFTEST_FAIL egress: explicit cloud consent ignored\nSELFTEST_FAIL egress: explicit cloud consent ignored"
+}

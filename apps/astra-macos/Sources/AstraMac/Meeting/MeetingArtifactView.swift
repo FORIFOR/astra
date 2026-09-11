@@ -40,6 +40,8 @@ struct MeetingArtifactView: View {
     var relatedFiles: [String] = []
     /// 録音が残っているか。
     var hasAudio: Bool = false
+    var transcriptionFailure: String?
+    var onRetryTranscription: (() -> Void)?
 
     /// 押された引用。外から渡された `selected` を初期値にする。
     ///
@@ -167,6 +169,13 @@ struct MeetingArtifactView: View {
     @ViewBuilder private var tabContent: some View {
         switch tab {
         case "文字起こし":
+            if let failure = transcriptionFailure {
+                Text(failure).font(.system(size: TypeScale.secondarySize)).foregroundStyle(Palette.muted(dark))
+                if let retry = onRetryTranscription {
+                    Button("文字起こしを再試行", action: retry)
+                        .accessibilityIdentifier("retryCloudTranscription")
+                }
+            }
             if transcript.isEmpty { emptyTab("この会議の文字起こしはまだありません。") }
             else { citationList(transcript) }
         case "録音":

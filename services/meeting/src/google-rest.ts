@@ -10,6 +10,7 @@
  *
  * ここが持つのは「呼ぶ」ことだけ。何を訳すか・何を起こすかは呼ぶ側が決める。
  */
+import { randomUUID } from 'node:crypto';
 import { GoogleAuth } from 'google-auth-library';
 
 import type { TranslateClient, V2SpeechClient } from './google.js';
@@ -21,6 +22,8 @@ const SCOPES = ['https://www.googleapis.com/auth/cloud-platform'];
 export interface GoogleRestConfig {
   /** 課金と割り当ての先。ADC が利用者資格情報のときは必須。 */
   readonly projectId: string;
+  /** Private, same-project temporary audio bucket for recordings longer than 60 seconds. */
+  readonly audioBucket?: string | undefined;
   /** 差し替え可能にしてあるのは、試験で実際に呼ばないため。 */
   readonly fetch?: typeof globalThis.fetch;
   /** access token を返すもの。省略で ADC。 */
@@ -140,6 +143,27 @@ export function speechV2ClientFromEnv(config: GoogleRestConfig): V2SpeechClient 
   return {
     async recognize(request: unknown) {
       const parameters = request as { recognizer: string; content?: unknown };
+      const decoding = (
+        request as {
+          config?: {
+            explicitDecodingConfig?: { sampleRateHertz?: number; audioChannelCount?: number };
+          };
+        }
+      ).config?.explicitDecodingConfig;
+      if (
+        parameters.content instanceof Uint8Array &&
+        decoding?.sampleRateHertz &&
+        parameters.content.byteLength >
+          decoding.sampleRateHertz * (decoding.audioChannelCount ?? 1) * 2 * 60
+      ) {
+        return [
+          (await recognizeLongAudio(
+            request as { recognizer: string; config: unknown; content: Uint8Array },
+            config,
+            getToken,
+          )) as { results?: readonly never[] | null },
+        ];
+      }
       const url = `${speechEndpoint(parameters.recognizer)}/v2/${parameters.recognizer}:recognize`;
 
       /*
@@ -159,4 +183,90 @@ export function speechV2ClientFromEnv(config: GoogleRestConfig): V2SpeechClient 
       return [parsed as { results?: readonly never[] | null }];
     },
   };
+}
+
+/** Keep the complete conversation together for diarization; do not cut words at minute boundaries. */
+async function recognizeLongAudio(
+  request: { recognizer: string; config: unknown; content: Uint8Array },
+  config: GoogleRestConfig,
+  getToken: () => Promise<string>,
+): Promise<{ results?: readonly unknown[] | null }> {
+  if (!config.audioBucket)
+    throw new Error('GOOGLE_STT_AUDIO_BUCKET is required for recordings longer than 60 seconds');
+  const bucket = encodeURIComponent(config.audioBucket);
+  const name = `stt-temporary/${randomUUID()}.pcm`;
+  const object = `https://storage.googleapis.com/storage/v1/b/${bucket}/o/${encodeURIComponent(name)}`;
+  const uri = `gs://${config.audioBucket}/${name}`;
+  const doFetch = config.fetch ?? globalThis.fetch;
+  const headers = async () => ({
+    authorization: `Bearer ${await getToken()}`,
+    'x-goog-user-project': config.projectId,
+  });
+  const uploaded = await doFetch(
+    `https://storage.googleapis.com/upload/storage/v1/b/${bucket}/o?uploadType=media&name=${encodeURIComponent(name)}&ifGenerationMatch=0`,
+    {
+      method: 'POST',
+      headers: { ...(await headers()), 'content-type': 'application/octet-stream' },
+      body: Buffer.from(request.content),
+      signal: AbortSignal.timeout(120_000),
+    },
+  );
+  if (!uploaded.ok) throw new Error(`temporary STT audio upload failed (${uploaded.status})`);
+  try {
+    const endpoint = speechEndpoint(request.recognizer);
+    const operation = (await callJson(
+      `${endpoint}/v2/${request.recognizer}:batchRecognize`,
+      {
+        recognizer: request.recognizer,
+        config: request.config,
+        files: [{ uri }],
+        recognitionOutputConfig: { inlineResponseConfig: {} },
+      },
+      config,
+      getToken,
+    )) as { name?: string };
+    if (!operation.name || !operation.name.startsWith('projects/'))
+      throw new Error('Google did not return a batch operation');
+    const deadline = Date.now() + 25 * 60_000;
+    while (Date.now() < deadline) {
+      const response = await doFetch(`${endpoint}/v2/${operation.name}`, {
+        headers: await headers(),
+        signal: AbortSignal.timeout(60_000),
+      });
+      if (!response.ok) throw new Error(`Google batch status failed (${response.status})`);
+      const status = (await response.json()) as {
+        done?: boolean;
+        error?: { message?: string };
+        response?: {
+          results?: Record<
+            string,
+            {
+              error?: { message?: string };
+              transcript?: { results?: readonly unknown[] };
+              inlineResult?: { transcript?: { results?: readonly unknown[] } };
+            }
+          >;
+        };
+      };
+      if (status.error) throw new Error(status.error.message ?? 'Google batch failed');
+      if (status.done) {
+        const result = status.response?.results?.[uri];
+        if (result?.error)
+          throw new Error(result.error.message ?? 'Google file transcription failed');
+        const transcript = result?.inlineResult?.transcript ?? result?.transcript;
+        if (!transcript) throw new Error('Google batch completed without a transcript');
+        return transcript;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 2_000));
+    }
+    throw new Error('Google batch transcription timed out');
+  } finally {
+    const removed = await doFetch(object, {
+      method: 'DELETE',
+      headers: await headers(),
+      signal: AbortSignal.timeout(60_000),
+    });
+    if (!removed.ok && removed.status !== 404)
+      throw new Error(`temporary STT audio cleanup failed (${removed.status})`);
+  }
 }

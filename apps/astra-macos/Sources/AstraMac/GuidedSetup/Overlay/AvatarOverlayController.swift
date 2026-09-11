@@ -17,10 +17,18 @@ final class AvatarOverlayController {
         model.state = state
         model.message = message
         model.action = nil
+        model.applicationToAdd = nil
+        model.showsApplicationHelp = false
+        model.explanationLabel = nil
+        model.secondaryAction = nil
+        model.onLayoutChange = { [weak self] in
+            guard let self, let screen = self.panel?.screen ?? NSScreen.main else { return }
+            self.relayout(on: screen)
+        }
         model.onClose = onClose
         if panel == nil {
             let view = AvatarHUDView(model: model)
-            let p = FloatingPanel(size: NSSize(width: 120, height: 80), level: .floating, content: AnyView(view), passthrough: false)
+            let p = FloatingPanel(size: NSSize(width: 120, height: 80), level: .floating, content: AnyView(view), passthrough: false, interactive: true)
             Elevation.apply(to: p, .attached)
             panel = p
         }

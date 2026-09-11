@@ -85,16 +85,15 @@ describe('answering', () => {
 });
 
 describe('writing', () => {
-  it('marks what it wrote as a draft', async () => {
+  it('keeps draft and send status separate from the copyable document', async () => {
     const executors = generalExecutors(model());
     const outcome = await executors['general.compose']!.execute(task, {
       toolId: 'general.compose',
       args: { instruction: '日程調整のメール' },
     });
 
-    expect(outcome.artifact!.markdown).toContain('本文です。');
-    // 送ったと読まれないようにする
-    expect(outcome.artifact!.markdown).toContain('送信はしていません');
+    expect(outcome.artifact!.markdown).toBe('本文です。');
+    expect(outcome.result).toEqual({ composed: true, draft: true, sent: false });
   });
 
   it('refuses when there is nothing to write', async () => {

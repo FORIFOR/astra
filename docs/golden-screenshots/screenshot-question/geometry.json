@@ -1,0 +1,74 @@
+{
+  "offer-comfortable-dark" : {
+    "height" : 52,
+    "width" : 320
+  },
+  "offer-comfortable-light" : {
+    "height" : 52,
+    "width" : 320
+  },
+  "offer-compact-dark" : {
+    "height" : 52,
+    "width" : 320
+  },
+  "offer-compact-light" : {
+    "height" : 52,
+    "width" : 320
+  },
+  "offer-large-dark" : {
+    "height" : 52,
+    "width" : 320
+  },
+  "offer-large-light" : {
+    "height" : 52,
+    "width" : 320
+  },
+  "question-comfortable-dark" : {
+    "height" : 768,
+    "width" : 1162
+  },
+  "question-comfortable-light" : {
+    "height" : 768,
+    "width" : 1162
+  },
+  "question-compact-dark" : {
+    "height" : 768,
+    "width" : 1162
+  },
+  "question-compact-light" : {
+    "height" : 768,
+    "width" : 1162
+  },
+  "question-large-dark" : {
+    "height" : 768,
+    "width" : 1162
+  },
+  "question-large-light" : {
+    "height" : 768,
+    "width" : 1162
+  },
+  "removed-comfortable-dark" : {
+    "height" : 768,
+    "width" : 1162
+  },
+  "removed-comfortable-light" : {
+    "height" : 768,
+    "width" : 1162
+  },
+  "removed-compact-dark" : {
+    "height" : 768,
+    "width" : 1162
+  },
+  "removed-compact-light" : {
+    "height" : 768,
+    "width" : 1162
+  },
+  "removed-large-dark" : {
+    "height" : 768,
+    "width" : 1162
+  },
+  "removed-large-light" : {
+    "height" : 768,
+    "width" : 1162
+  }
+}

@@ -1,3 +1,4 @@
+import { boundedTaskTitle } from './task-title.js';
 /**
  * activity の実装。実装仕様 §6.4。
  *
@@ -21,7 +22,7 @@ import { approvalTtlMs, evaluate, isApprovalUsable, type ActionContext } from '@
 import type { PolicyDocument } from '@astra/contracts';
 import type { LibraryService } from '@astra/service-library';
 import { appendEvent, type EventPublisher } from './events.js';
-import { approvalSummaryFor, requiresSingleAttempt, type TaskStep } from './plan.js';
+import { approvalSummaryFor, requiresSingleAttempt, isMeteredStep, type TaskStep } from './plan.js';
 import type {
   ArtifactSpec,
   RequestedApproval,
@@ -84,6 +85,11 @@ export interface ActivityDeps {
    * 受け渡しに載せるには「どの task の何段目か」が要る。
    * ここで置かないと、モデルは自分がどの仕事の一部か分からない。
    */
+  /** Scope model context to this async execution, including overlapping users/tasks. */
+  readonly withStepContext?: <T>(
+    where: { taskId: string; tenantId: string; userId: string; stepIndex: number },
+    run: () => Promise<T>,
+  ) => Promise<T>;
   readonly onStep?: (where: {
     taskId: string;
     tenantId: string;
@@ -272,7 +278,7 @@ export function createTaskActivities(deps: ActivityDeps): TaskActivities {
           .updateTable('tasks')
           .set({
             status: 'RUNNING',
-            title: meta.title,
+            title: boundedTaskTitle(meta.title),
             run_id: meta.run_id,
             started_at: now(),
             updated_at: now(),
@@ -290,7 +296,11 @@ export function createTaskActivities(deps: ActivityDeps): TaskActivities {
             streamId: input.taskId,
             taskId: input.taskId,
             type: 'task.started',
-            payload: { kind: meta.kind, title: meta.title, step_count: meta.step_count },
+            payload: {
+              kind: meta.kind,
+              title: boundedTaskTitle(meta.title),
+              step_count: meta.step_count,
+            },
             idempotencyKey: stepKey(input.taskId, -1, 'started'),
           },
           deps.publisher,
@@ -571,6 +581,21 @@ export function createTaskActivities(deps: ActivityDeps): TaskActivities {
          */
         if (isHostOfflineError(error)) {
           throw ApplicationFailure.nonRetryable(messageOfCause(error), HostOfflineError.TYPE);
+        }
+
+        // Retrying or escalating a generative request may charge again after
+        // a lost response. Preserve host-offline recovery above (nothing ran).
+        if (isMeteredStep(step)) {
+          try {
+            await executor?.onFailure?.(input, step, error);
+          } catch {
+            /* preserve original */
+          }
+          throw ApplicationFailure.nonRetryable(
+            messageOfCause(error),
+            'MeteredRequestFailed',
+            '追加のAPI利用を避けるため、自動でやり直していません。',
+          );
         }
 
         // 送信先が受け付けた後に応答だけ失われる場合がある。

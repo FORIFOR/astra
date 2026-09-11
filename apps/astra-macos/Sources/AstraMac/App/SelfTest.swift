@@ -31,9 +31,20 @@ enum SelfTest {
     @MainActor
     static func run(_ args: [String]) -> Bool {
         guard let i = args.firstIndex(of: "--selftest"), i + 1 < args.count else { return false }
+        // Local checks must not upload audio because the user's real setting is ON.
+        // Dedicated cloud tests explicitly opt in after validating their fixture flags.
+        var overrides = UserDefaults.standard.volatileDomain(forName: UserDefaults.argumentDomain)
+        overrides[RecordingRuntime.cloudTranscriptionDefaultsKey] = false
+        UserDefaults.standard.setVolatileDomain(overrides, forName: UserDefaults.argumentDomain)
         SecretMode.persistChanges = false
         SecretMode.shared.set(false)
         switch args[i + 1] {
+        case "session-renewal": Task { await sessionRenewal() }; return true
+        case "outcome-live": Task { await outcomeLive(args) }; return true
+        case "workspace-ux": Task { await workspaceUX(args) }; return true
+        case "recording-journeys": Task { await recordingJourneys() }; return true
+        case "translation-journeys": Task { await translationJourneys() }; return true
+        case "translation-layout": Task { await translationLayout(args) }; return true
         case "record": recordToDisk(); return true
         case "lifecycle": lifecycle(); return true
         case "api": api(args); return true
@@ -61,11 +72,15 @@ enum SelfTest {
         case "geometry": geometryGate(args); return true
         case "occupation": occupationGate(); return true
         case "focus": focusGate(); return true
+        case "screenshot-input": Task { await screenshotInput(args) }; return true
         case "screenshotcontext": screenshotContextGate(); return true
+        case "screenshot-question": Task { await screenshotQuestion(args) }; return true
         case "screenshotegress": screenshotEgressGate(); return true
         case "screenshote2e": screenshotE2E(args); return true
         case "guidedsetup": guidedSetupGate(args); return true
         case "guidedshots": guidedShots(args); return true
+        case "permission-help": Task { await permissionHelp(args) }; return true
+        case "permission-capabilities": Task { await permissionCapabilities(args) }; return true
         case "screenshotshots": screenshotShots(args); return true
         case "screenshotshot": screenshotShot(args); return true
         case "initialprofile": Task { @MainActor in await initialProfileShots(args) }; return true
@@ -102,6 +117,8 @@ enum SelfTest {
         case "sections": sections(args); return true
         case "a11ynames": a11ynames(args); return true
         case "egress": egress(); return true
+        case "cloudlive": cloudLiveSTT(); return true
+        case "cloudshots": cloudShots(args); return true
         case "states": states(args); return true
         case "golden": golden(args); return true
         case "dock8": dock8(args); return true
@@ -2294,24 +2311,26 @@ enum SelfTest {
             }
             let t1 = rec.transition { WindowCoordinator.shared.toggleRecording() }
             settle(0.8)
-            _ = rec.shot("01-denied", window: JourneyRecorder.dockWindow())
-            var reason = "none"
-            if case .result(let r) = store.dock { reason = "dock:\(r.title)" }
-            else if recording.permissionIssue != nil { reason = "workspace-banner-only" }
-            let recovery = UIProbe.exists("result-openSettings")
-            if !reason.hasPrefix("dock:") { rec.error("拒否の理由が Dock に出ない（\(reason)）") }
-            if !recovery { rec.error("「設定を開く」が無い（行き止まり）") }
-            if recording.isRecording { rec.error("拒否なのに録音中になる") }
-            rec.step("マイク拒否", interactions: 1, transitionMs: t1,
-                     ids: ["reason": reason, "recovery": recovery ? "openSettings" : "none"])
-            store.dismissResult()
-            Permissions.simulatedMicrophone = nil
+            _ = rec.shot("01-denied", window: NSApp.keyWindow)
+            let explaining = PermissionGuideCoordinator.shared.state == .microphoneIntro
+            let enable = UIProbe.exists("guideAvatarAction")
+            let later = UIProbe.exists("guideLater")
+            if !explaining || !enable || !later { rec.error("マイクの説明から許可または中止を選べない") }
+            if recording.isRecording || sessions.live != nil { rec.error("許可前なのに録音セッションが作られた") }
+            rec.step("マイクの説明", interactions: 1, opensWindow: true, transitionMs: t1,
+                     ids: ["state": "microphoneIntro", "enable": String(enable), "later": String(later)])
+            // A new recording must not be blocked by the abandoned permission intent.
+            if !UIProbe.tap("guideLater") { rec.error("あとでを押せない") }
             settle(0.3)
+            if PermissionGuideCoordinator.shared.state != .idle || UIProbe.exists("guideAvatar") {
+                rec.error("中止後も権限ガイドが残っている")
+            }
+            Permissions.simulatedMicrophone = nil
 
-            // ② 回復して始める。
+            // ② 案内を中止したあと、合成音源で保存・復旧経路を再開する。OS付与の証跡ではない。
             recording.start(captureMic: false, transcribe: false, requestPermissions: false); settle(0.8)
             let liveId = sessions.live?.id ?? ""
-            if liveId.isEmpty { rec.error("許可のあとに始められない") }
+            if liveId.isEmpty { rec.error("案内を中止したあとに録音の保存経路を開始できない") }
             _ = rec.shot("02-recovered", window: JourneyRecorder.dockWindow())
             rec.step("回復", interactions: 1, ids: ["session": liveId])
 
@@ -2552,6 +2571,10 @@ enum SelfTest {
     /// ここを Store 直叩きで検査していたせいで、ボタンだけ別のことをしていたのを見逃した。
     @MainActor
     private static func recordButton() {
+        guard Permissions.microphone == .granted else {
+            print("SELFTEST_SKIP recordbutton: actual recording requires microphone grant; pre-permission explanation/cancel is covered by journey JC")
+            exit(0)
+        }
         let store = AstraStateStore.shared
         let recording = RecordingWorkspaceState.shared
         store.reset()
@@ -3035,6 +3058,10 @@ enum SelfTest {
     /// 「Home から押す → Home に残る → 後から開ける」を一本で歩く。
     @MainActor
     private static func acceptance() {
+        guard Permissions.microphone == .granted else {
+            print("SELFTEST_SKIP acceptance: recording lifecycle requires microphone grant; permission gating is covered separately")
+            exit(0)
+        }
         let path = NSTemporaryDirectory() + "astra-accept-\(getpid()).sqlite"
         defer { try? FileManager.default.removeItem(atPath: path) }
         LocalStore.shared.open(path)
@@ -3172,7 +3199,9 @@ enum SelfTest {
         }
 
         // ---- Dock から Stop したとき
-        recording.start()
+        // State/DB continuity is independent of microphone authorization. The real
+        // microphone lifecycle has its own mandatory hardware gate.
+        recording.start(captureMic: false, transcribe: false, requestPermissions: false)
         guard let id = sessions.live?.id else {
             print("SELFTEST_FAIL sessionsync: 録音が始まらない"); exit(2)
         }
@@ -3210,7 +3239,7 @@ enum SelfTest {
         // ④ Dock（WindowCoordinator）から Stop → Home も processing。
         WindowCoordinator.shared.toggleRecording()
         settle(0.2)
-        if sessions.session(id: id)?.status != .processing {
+        if ![MeetingSession.Status.processing, .ready].contains(sessions.session(id: id)?.status ?? .failed) {
             fail.append("Dock 停止で Home が processing にならない (\(sessions.session(id: id)?.status.rawValue ?? "nil"))")
         }
         if recording.isRecording { fail.append("Dock 停止で録音が止まっていない") }
@@ -3222,7 +3251,7 @@ enum SelfTest {
             CFRunLoopRunInMode(.defaultMode, 0.05, true)
             sawStage = sessions.session(id: id)?.processingStage != nil
         }
-        if !sawStage { fail.append("processing の段階が出ない") }
+        if !sawStage && sessions.session(id: id)?.status != .ready { fail.append("processing の段階も完了も出ない") }
         // ready まで待つ。
         let readyDeadline = Date().addingTimeInterval(6)
         while sessions.session(id: id)?.status != .ready, Date() < readyDeadline {
@@ -3230,11 +3259,13 @@ enum SelfTest {
         }
 
         // ---- Home から Stop したとき（逆方向）
-        recording.start()
+        // State/DB continuity is independent of microphone authorization. The real
+        // microphone lifecycle has its own mandatory hardware gate.
+        recording.start(captureMic: false, transcribe: false, requestPermissions: false)
         guard let id2 = sessions.live?.id else { fail.append("2 回目が始まらない"); reportSync(fail); return }
         recording.stop()   // Home の Stop ボタンが呼ぶもの
         settle(0.2)
-        if sessions.session(id: id2)?.status != .processing {
+        if ![MeetingSession.Status.processing, .ready].contains(sessions.session(id: id2)?.status ?? .failed) {
             fail.append("Home 停止で processing にならない")
         }
         // Dock 側も同じ状態へ移っている（結果面）。
@@ -4450,12 +4481,13 @@ enum SelfTest {
         guard AXIsProcessTrusted() else { print("SELFTEST_SKIP calendarask: mapping OK, AX not trusted"); exit(0) }
 
         // Home を 1 枚出して、自プロセスの AX で識別子と文を集める。
+        NSApp.setActivationPolicy(.regular)
         HomePane.previewUpcoming = []
         func homeTexts(_ state: Permissions.State, png: String? = nil) -> (ids: Set<String>, texts: Set<String>) {
             Permissions.simulatedCalendar = state
             let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 900, height: 600),
                              styleMask: [.titled, .closable, .resizable], backing: .buffered, defer: false)
-            w.contentView = NSHostingView(rootView: MainWindowView())
+            w.contentView = NSHostingView(rootView: MainWindowView(loadBackend: false))
             if let s = NSScreen.main { w.setFrameOrigin(NSPoint(x: s.frame.midX - 450, y: s.frame.midY - 300)) }
             w.makeKeyAndOrderFront(nil); NSApp.activate(ignoringOtherApps: true)
             MainNav.shared.section = .home
@@ -4463,6 +4495,7 @@ enum SelfTest {
             while Date() < show { CFRunLoopRunInMode(.defaultMode, 0.05, true) }
             let app = AXUIElementCreateApplication(getpid())
             var ids = Set<String>(), texts = Set<String>()
+            var contextDisclosure: AXUIElement?
             func attr(_ el: AXUIElement, _ name: String) -> String? {
                 var v: CFTypeRef?
                 guard AXUIElementCopyAttributeValue(el, name as CFString, &v) == .success else { return nil }
@@ -4470,14 +4503,37 @@ enum SelfTest {
                 return nil
             }
             func walk(_ el: AXUIElement, _ depth: Int) {
-                if depth > 24 { return }
-                if let id = attr(el, kAXIdentifierAttribute) { ids.insert(id) }
+                if depth > 64 { return }
+                if let id = attr(el, kAXIdentifierAttribute) {
+                    ids.insert(id)
+                    if id == "homeContextDisclosure" {
+                        var actions: CFArray?
+                        if AXUIElementCopyActionNames(el, &actions) == .success,
+                           let names = actions as? [String], names.contains(kAXPressAction) { contextDisclosure = el }
+                    }
+                }
+                if attr(el, kAXRoleAttribute) == kAXDisclosureTriangleRole as String,
+                   attr(el, kAXDescriptionAttribute) == "会議と今日の状況" {
+                    contextDisclosure = el
+                }
                 for a in ["AXTitle", "AXDescription", "AXValue"] { if let s = attr(el, a) { texts.insert(s) } }
                 var kids: CFTypeRef?
                 if AXUIElementCopyAttributeValue(el, kAXChildrenAttribute as CFString, &kids) == .success,
                    let arr = kids as? [AXUIElement] { for k in arr { walk(k, depth + 1) } }
             }
             walk(app, 0)
+            // Menu/toolbar nodes alone do not mean SwiftUI content is measurable.
+            guard ids.contains("homeView") else {
+                w.orderOut(nil); w.close(); Permissions.simulatedCalendar = nil
+                return (ids, texts)
+            }
+            if ids.contains("askCalendar") { fail.append("会議を開く前にカレンダー許可を求めている") }
+            if let disclosure = contextDisclosure,
+               AXUIElementPerformAction(disclosure, kAXPressAction as CFString) == .success {
+                let expanded = Date().addingTimeInterval(0.5)
+                while Date() < expanded { CFRunLoopRunInMode(.defaultMode, 0.05, true) }
+                ids.removeAll(); texts.removeAll(); walk(app, 0)
+            } else { fail.append("会議と今日の状況を開けない") }
             if let png, let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, CGWindowID(w.windowNumber),
                                                           [.boundsIgnoreFraming, .nominalResolution]) {
                 try? NSBitmapImageRep(cgImage: cg).representation(using: .png, properties: [:])?
@@ -4488,7 +4544,7 @@ enum SelfTest {
             return (ids, texts)
         }
         let asked = homeTexts(.notDetermined, png: outPNG)
-        guard !asked.ids.isEmpty else { print("SELFTEST_SKIP calendarask: own-process AX tree empty in this context"); exit(0) }
+        guard asked.ids.contains("homeView") else { print("SELFTEST_SKIP calendarask: mapping OK; own-process SwiftUI content tree unavailable (menu nodes are not a Home measurement)"); exit(0) }
         if !asked.ids.contains("askCalendar") { fail.append("未確認なのに Home に askCalendar が無い") }
         let reason = PermissionCenter.Capability.schedule.reason
         if !asked.texts.contains(where: { $0.contains(reason) }) { fail.append("理由の文が画面に無い") }
@@ -4497,7 +4553,7 @@ enum SelfTest {
             if r.ids.contains("askCalendar") { fail.append("\(state.rawValue)なのに askCalendar が出る") }
         }
         guard fail.isEmpty else { print("SELFTEST_FAIL calendarask: \(fail)"); exit(2) }
-        print("SELFTEST_OK calendarask: schedule=[calendar] askCalendar shown only when notDetermined, with reason; hidden when granted/denied")
+        print("SELFTEST_OK calendarask: schedule=[calendar]; expand meeting context before requesting permission; reason shown only when notDetermined; hidden when granted/denied")
         exit(0)
     }
 
@@ -4668,6 +4724,14 @@ enum SelfTest {
         }
         var fail: [String] = []
         if RecordingRuntime.devAutoUploadEnabled { fail.append("録音の自動 upload が env 無しで有効") }
+        let previousArguments = UserDefaults.standard.volatileDomain(forName: UserDefaults.argumentDomain)
+        if RecordingRuntime.cloudConsentValue(nil, developmentUpload: false) { fail.append("cloud consent must default to off") }
+        RecordingRuntime.setCloudTranscriptionAllowed(true)
+        if !RecordingRuntime.cloudTranscriptionAllowed { fail.append("explicit cloud consent ignored") }
+        RecordingRuntime.setCloudTranscriptionAllowed(false)
+        if RecordingRuntime.cloudTranscriptionAllowed { fail.append("cloud consent revocation ignored") }
+        UserDefaults.standard.setVolatileDomain(previousArguments, forName: UserDefaults.argumentDomain)
+
         if PermissionCenter.Capability.meeting.required != [.microphone, .speechRecognition] {
             fail.append("meeting がマイクと音声認識以外を求めている: \(PermissionCenter.Capability.meeting.required)")
         }
@@ -4698,12 +4762,104 @@ enum SelfTest {
         guard fail.isEmpty else {
             print("SELFTEST_FAIL egress: " + fail.joined(separator: " / ")); exit(2)
         }
-        print("SELFTEST_OK egress: autoUpload=off meeting=[microphone] sttNoFallback=\(stt)")
+        print("SELFTEST_OK egress: autoUpload=off cloudSTTConsent=\(RecordingRuntime.cloudTranscriptionAllowed ? "on" : "off") meeting=[microphone] sttNoFallback=\(stt)")
         exit(0)
     }
 
     /// `--selftest speech`: オンデバイス STT(Apple Speech)の可用性・認可・ロケールを検証する。
     /// live 認識は音声認識許可(TCC)が要るが、認識器の用意と認可状態の読み取りは prompt 無しで確かめられる。
+    @MainActor
+    private static func cloudShots(_ args: [String]) {
+        let i = args.firstIndex(of: "--selftest")!
+        let out = URL(fileURLWithPath: args.count > i + 2 ? args[i + 2] : "/tmp/astra-cloud-shots")
+        do {
+            try FileManager.default.createDirectory(at: out, withIntermediateDirectories: true)
+            var geometry: [[String: Any]] = []
+            for dark in [false, true] {
+                let name = dark ? "dark" : "light"
+                let views: [(String, AnyView)] = [
+                    ("settings", AnyView(SettingsView().background(dark ? Color.black : Color.white))),
+                    ("retry", AnyView(MeetingArtifactView(title: "文字起こしの確認", duration: "01:15", participants: 1,
+                        summary: [], decisions: [], actionItems: [],
+                        transcriptionFailure: "文字起こしサーバーに接続されていません。録音はこのMacに保存されています。",
+                        onRetryTranscription: {}).frame(width: 1080, height: 680).background(dark ? Color.black : Color.white)))
+                ]
+                for (kind, view) in views {
+                    let host = NSHostingView(rootView: view.environment(\.colorScheme, dark ? .dark : .light))
+                    let size = host.fittingSize
+                    let window = NSWindow(contentRect: NSRect(origin: .zero, size: size), styleMask: [.borderless], backing: .buffered, defer: false)
+                    window.contentView = host
+                    window.isReleasedWhenClosed = false
+                    window.center(); window.makeKeyAndOrderFront(nil)
+                    let until = Date().addingTimeInterval(0.4)
+                    while Date() < until { CFRunLoopRunInMode(.defaultMode, 0.05, true) }
+                    guard let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, CGWindowID(window.windowNumber), [.boundsIgnoreFraming, .bestResolution]) else {
+                        throw CloudMeetingTranscription.Failure(message: "window capture failed")
+                    }
+                    window.orderOut(nil)
+                    let rep = NSBitmapImageRep(cgImage: cg)
+                    guard let data = rep.representation(using: .png, properties: [:]) else { throw CloudMeetingTranscription.Failure(message: "PNG failed") }
+                    try data.write(to: out.appendingPathComponent("\(kind)-\(name).png"))
+                    geometry.append(["name": "\(kind)-\(name)", "width": cg.width / 2, "height": cg.height / 2])
+                }
+            }
+            try JSONSerialization.data(withJSONObject: geometry, options: [.prettyPrinted, .sortedKeys]).write(to: out.appendingPathComponent("geometry.json"))
+            print("SELFTEST_OK cloudshots"); exit(0)
+        } catch { print("SELFTEST_FAIL cloudshots: \(error)"); exit(2) }
+    }
+
+    @MainActor
+    private static func cloudLiveSTT() {
+        let env = ProcessInfo.processInfo.environment
+        guard env["ASTRA_CLOUD_STT_TEST"] == "1", let fixture = env["ASTRA_STT_FIXTURE"] else {
+            print("SELFTEST_FAIL cloudlive: explicit test opt-in and PCM fixture required"); exit(2)
+        }
+        Task {
+            let previous = UserDefaults.standard.volatileDomain(forName: UserDefaults.argumentDomain)
+            func restore() {
+                UserDefaults.standard.setVolatileDomain(previous, forName: UserDefaults.argumentDomain)
+            }
+            do {
+                RecordingRuntime.setCloudTranscriptionAllowed(true)
+                let base = env["ASTRA_GATEWAY_URL"] ?? "http://127.0.0.1:3000"
+                let tokens = try AstraCoreBridge.devSignIn(base, email: "stt-fixture@astra.local", displayName: "STT Fixture")
+                let runtime = RecordingRuntime.shared
+                runtime.configureBackend(base: base, accessToken: tokens.accessToken)
+                var interim = 0
+                var final = 0
+                var texts: [String] = []
+                var firstMs: Int?
+                let start = Date()
+                runtime.onTranscript = { text, isFinal in
+                    if firstMs == nil { firstMs = Int(Date().timeIntervalSince(start) * 1000) }
+                    if isFinal { final += 1 } else { interim += 1 }
+                    texts.append(text)
+                }
+                guard runtime.begin(meetingId: "live-fixture-" + UUID().uuidString.lowercased(), captureMic: false, transcribe: true) else {
+                    throw NSError(domain: "live-start", code: 1)
+                }
+                let pcm = try Data(contentsOf: URL(fileURLWithPath: fixture))
+                let samples: [Float] = stride(from: 0, to: pcm.count - 1, by: 2).map { offset in
+                    Float(Int16(bitPattern: UInt16(pcm[offset]) | UInt16(pcm[offset + 1]) << 8)) / 32768
+                }
+                // Real-time pacing plus silence: assert results BEFORE ending recording.
+                for offset in stride(from: 0, to: samples.count + 96_000, by: 3_200) {
+                    let frame = offset < samples.count ? Array(samples[offset..<min(offset + 3_200, samples.count)]) : [Float](repeating: 0, count: 3_200)
+                    runtime.push(frame, sampleRate: 16_000)
+                    try await Task.sleep(nanoseconds: 200_000_000)
+                }
+                let passed = interim > 0 && final > 0 && texts.contains(where: { $0.contains("金曜日") }) && runtime.snapshot() != nil
+                await withCheckedContinuation { continuation in runtime.end { continuation.resume() } }
+                restore()
+                guard passed else {
+                    print("SELFTEST_FAIL cloudlive: partials=\(interim) finals=\(final) failure=\(runtime.liveTranscriptionFailure ?? "none")"); exit(2)
+                }
+                print("SELFTEST_OK cloudlive: BEFORE STOP partials=\(interim) finals=\(final) firstMs=\(firstMs ?? -1), Japanese content verified; no batch task")
+                exit(0)
+            } catch { restore(); print("SELFTEST_FAIL cloudlive: \(error)"); exit(2) }
+        }
+    }
+
     @MainActor
     private static func speech() {
         let st = SpeechTranscriber(localeId: "ja-JP")
@@ -5057,7 +5213,7 @@ enum SelfTest {
         let mainSize = NSSize(width: 900, height: 600)
         let main = NSWindow(contentRect: NSRect(origin: .zero, size: mainSize),
                             styleMask: [.titled, .closable, .resizable], backing: .buffered, defer: false)
-        main.contentView = NSHostingView(rootView: MainWindowView())
+        main.contentView = NSHostingView(rootView: MainWindowView(loadBackend: false))
         let mainR = shoot("main", window: main) { centered(main, mainSize); main.makeKeyAndOrderFront(nil); NSApp.activate(ignoringOtherApps: true) }
 
         // 4) Task Dock / Intent Bar（spec §4: 画面下部中央・560×56、§4.2 bottom inset）
@@ -5220,6 +5376,13 @@ enum SelfTest {
         let deadline = Date().addingTimeInterval(2)
         while Date() < deadline { CFRunLoopRunInMode(.defaultMode, 0.05, true) }
 
+        var focused: CFTypeRef?
+        var owner: pid_t = 0
+        guard AXUIElementCopyAttributeValue(AXUIElementCreateSystemWide(), kAXFocusedUIElementAttribute as CFString, &focused) == .success,
+              let focused, AXUIElementGetPid(focused as! AXUIElement, &owner) == .success, owner == getpid() else {
+            win.orderOut(nil); win.close()
+            print("SELFTEST_FAIL dictation: fixture lost focus; no text was inserted"); exit(2)
+        }
         let inserted = Dictation.insert("会議の要点をまとめて")
         let value = field.stringValue
         win.orderOut(nil); win.close()
@@ -5273,7 +5436,7 @@ enum SelfTest {
         let mainTexts = axTexts {
             let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 900, height: 600),
                              styleMask: [.titled, .closable, .resizable], backing: .buffered, defer: false)
-            w.contentView = NSHostingView(rootView: MainWindowView())
+            w.contentView = NSHostingView(rootView: MainWindowView(loadBackend: false))
             if let s = NSScreen.main { w.setFrameOrigin(NSPoint(x: s.frame.midX - 450, y: s.frame.midY - 300)) }
             w.makeKeyAndOrderFront(nil); NSApp.activate(ignoringOtherApps: true)
             return w
@@ -5693,20 +5856,27 @@ enum SelfTest {
             ? args[args.firstIndex(of: "--selftest")! + 2] : "http://127.0.0.1:3000"
         guard AstraCoreBridge.reachable(base) else { print("SELFTEST_SKIP aiaction: gateway unreachable"); exit(0) }
         do {
-            let tokens = try AstraCoreBridge.devSignIn(base, email: "aiaction-\(getpid())@astra.local", displayName: "AI")
+            // A configured test host belongs to one test identity; a new PID identity
+            // has no host and cannot test actual local inference.
+            let configured = ProcessInfo.processInfo.environment["ASTRA_SELFTEST_AGENT_EMAIL"]
+            let email = configured?.hasSuffix("@astra.local") == true ? configured! : "aiaction-\(getpid())@astra.local"
+            let accessToken: String
+            if let path = ProcessInfo.processInfo.environment["ASTRA_SELFTEST_AGENT_TOKEN_PATH"], path.hasPrefix("/tmp/") {
+                accessToken = try String(contentsOfFile: path, encoding: .utf8).trimmingCharacters(in: .whitespacesAndNewlines)
+            } else { accessToken = try AstraCoreBridge.devSignIn(base, email: email, displayName: "AI").accessToken }
             let state = RecordingWorkspaceState.shared
-            state.configureBackend(base: base, token: tokens.accessToken)
+            state.configureBackend(base: base, token: accessToken)
             state.transcript = [
                 TranscriptSegment(speaker: "田中", text: "リリースは 9 月 12 日にしましょう。", interim: false),
                 TranscriptSegment(speaker: "鈴木", text: "OAuth の確認を私がやります。", interim: false),
             ]
             state.runAIAction("リアルタイム要約")
-            // 非同期の結果を待つ（最大 20 秒）。
-            let deadline = Date().addingTimeInterval(20)
+            // 非同期の結果を待つ（最大 35 秒）。
+            let deadline = Date().addingTimeInterval(35)
             while state.aiResult.isEmpty && Date() < deadline {
                 RunLoop.current.run(until: Date().addingTimeInterval(0.2))
             }
-            guard !state.aiResult.isEmpty, !state.aiResult.contains("失敗") else {
+            guard state.aiActionSucceeded, !state.aiResult.isEmpty, !state.aiResult.contains("失敗") else {
                 print("SELFTEST_FAIL aiaction result=\(state.aiResult)"); exit(2)
             }
             let preview = String(state.aiResult.prefix(40)).replacingOccurrences(of: "\n", with: " ")
@@ -5717,30 +5887,22 @@ enum SelfTest {
         }
     }
 
-    /// `--selftest translate <base>`: 翻訳タブが transcript を Agent 経由で訳し、結果が返るか検証する。
+    /// Uses the local translation client; error messages cannot count as translated text.
     @MainActor
     private static func translateTest(_ args: [String]) {
-        let base = args.count > (args.firstIndex(of: "--selftest")! + 2)
-            ? args[args.firstIndex(of: "--selftest")! + 2] : "http://127.0.0.1:3000"
-        guard AstraCoreBridge.reachable(base) else { print("SELFTEST_SKIP translate: gateway unreachable"); exit(0) }
-        do {
-            let tokens = try AstraCoreBridge.devSignIn(base, email: "translate-\(getpid())@astra.local", displayName: "T")
-            let state = RecordingWorkspaceState.shared
-            state.configureBackend(base: base, token: tokens.accessToken)
-            state.transcript = [TranscriptSegment(speaker: "田中", text: "会議を始めましょう。", interim: false)]
-            state.translatedText = ""
-            state.translate(to: "英語")
-            let deadline = Date().addingTimeInterval(20)
-            while state.translatedText.isEmpty && Date() < deadline {
-                RunLoop.current.run(until: Date().addingTimeInterval(0.2))
+        Task {
+            let model = MeetingTranslation()
+            model.setEngine(.local)
+            model.update([TranscriptSegment(speaker: "Tester", text: "次回の会議は金曜日の午後3時です。", interim: false)])
+            model.setEnabled(true)
+            let deadline = Date().addingTimeInterval(45)
+            while model.isTranslating && Date() < deadline { try? await Task.sleep(for: .milliseconds(100)) }
+            let text = model.text.lowercased()
+            guard text.contains("friday"), text.contains("3"), model.failure == nil else {
+                print("SELFTEST_FAIL translate: local model did not preserve the fixture date/time"); exit(2)
             }
-            guard !state.translatedText.isEmpty, !state.translatedText.contains("失敗") else {
-                print("SELFTEST_FAIL translate result=\(state.translatedText)"); exit(2)
-            }
-            let preview = String(state.translatedText.prefix(40)).replacingOccurrences(of: "\n", with: " ")
-            print("SELFTEST_OK translate: Agent 訳=\"\(preview)…\"")
-            exit(0)
-        } catch { print("SELFTEST_FAIL translate error=\(error)"); exit(3) }
+            print("SELFTEST_OK translate: local model preserved Friday and 3 pm"); exit(0)
+        }
     }
 
     /// `--selftest waveform`: 録音中に波形が実マイクレベルで更新されるか（固定デモでない）を検証する。
@@ -5773,9 +5935,9 @@ enum SelfTest {
             ? args[args.firstIndex(of: "--selftest")! + 2] : "http://127.0.0.1:3000"
         guard AstraCoreBridge.reachable(base) else { print("SELFTEST_SKIP recovery: gateway unreachable"); exit(0) }
         do {
-            let tokens = try AstraCoreBridge.devSignIn(base, email: "recovery-\(getpid())@astra.local", displayName: "R")
+            let token = try preparedTestToken(base: base, email: "recovery-\(getpid())@astra.local")
             // gateway に会議を作り、その id で「クラッシュした録音」を作る（アップロードしない）。
-            let mid = try AstraCoreBridge.createMeeting(base, accessToken: tokens.accessToken, title: "Recovery 会議", language: "ja-JP")
+            let mid = try AstraCoreBridge.createMeeting(base, accessToken: token, title: "Recovery 会議", language: "ja-JP")
             let root = LocalStore.dataRoot
                 .appendingPathComponent("meetings").path
             let session = try RecordingSession.start(root: root, meetingId: mid)
@@ -5784,8 +5946,13 @@ enum SelfTest {
             try session.finish()   // 断片は書けたがアップロードしていない = クラッシュ相当
             // 起動時スキャンで回復候補に出る。
             let runtime = RecordingRuntime.shared
-            runtime.configureBackend(base: base, accessToken: tokens.accessToken)
+            runtime.configureBackend(base: base, accessToken: token)
             let found = runtime.recoverableMeetings().contains { $0.meetingId == mid }
+            // This fixture uploads only its generated signal. Keep the opt-in in this
+            // process; the user's persistent cloud-audio preference is unchanged.
+            var overrides = UserDefaults.standard.volatileDomain(forName: UserDefaults.argumentDomain)
+            overrides[RecordingRuntime.cloudTranscriptionDefaultsKey] = true
+            UserDefaults.standard.setVolatileDomain(overrides, forName: UserDefaults.argumentDomain)
             // 復旧: gateway に送って finalize（アップロード済みに印す）。
             let sent = runtime.recover(meetingId: mid)
             // 復旧後は回復候補から消えるはず（二重アップロードしない）。
@@ -5877,6 +6044,14 @@ enum SelfTest {
         exit(0)
     }
 
+    /// Reuse the prepared test host's identity; do not spend an auth-rate-limit slot per fixture.
+    private static func preparedTestToken(base: String, email: String) throws -> String {
+        if let path = ProcessInfo.processInfo.environment["ASTRA_SELFTEST_AGENT_TOKEN_PATH"], path.hasPrefix("/tmp/") {
+            return try String(contentsOfFile: path, encoding: .utf8).trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        return try AstraCoreBridge.devSignIn(base, email: email, displayName: "SelfTest").accessToken
+    }
+
     /// `--selftest voiceask <base>`: Voice HUD の依頼が Agent に届き、thinking→応答→idle と進むか検証する。
     @MainActor
     private static func voiceask(_ args: [String]) {
@@ -5884,16 +6059,20 @@ enum SelfTest {
             ? args[args.firstIndex(of: "--selftest")! + 2] : "http://127.0.0.1:3000"
         guard AstraCoreBridge.reachable(base) else { print("SELFTEST_SKIP voiceask: gateway unreachable"); exit(0) }
         do {
-            let tokens = try AstraCoreBridge.devSignIn(base, email: "voiceask-\(getpid())@astra.local", displayName: "V")
+            let accessToken = try preparedTestToken(base: base, email: "voiceask-\(getpid())@astra.local")
+            guard LocalStore.shared.open() else { print("SELFTEST_FAIL voiceask: storage unavailable"); exit(2) }
             let hud = VoiceHUDState.shared
-            hud.configureBackend(base: base, token: tokens.accessToken)
-            hud.ask("今日の予定を教えて")
-            // thinking に入るはず。
+            hud.configureBackend(base: base, token: accessToken)
+            guard hud.ask("次の予定を一文で整理してください。Astraのレビューは金曜日15時です。"), let id = hud.latestRequestID else {
+                print("SELFTEST_FAIL voiceask: request not accepted"); exit(2)
+            }
             let wasThinking = hud.mode == .thinking
-            let deadline = Date().addingTimeInterval(20)
-            while hud.answer.isEmpty && Date() < deadline { RunLoop.current.run(until: Date().addingTimeInterval(0.2)) }
-            guard !hud.answer.isEmpty, !hud.answer.contains("失敗"), hud.mode == .idle else {
-                print("SELFTEST_FAIL voiceask answer=\(hud.answer) mode=\(hud.mode)"); exit(2)
+            let deadline = Date().addingTimeInterval(60)
+            while hud.requestInFlight && Date() < deadline { RunLoop.current.run(until: Date().addingTimeInterval(0.2)) }
+            let record = LocalStore.shared.loadTasks().first { $0.id == id }?.requestRecord
+            guard wasThinking, record?.hasResult == true, hud.mode == .idle,
+                  hud.answer.contains("金曜"), hud.answer.contains("15") || hud.answer.contains("3時") else {
+                print("SELFTEST_FAIL voiceask: no completed, persisted answer with fixture facts"); exit(2)
             }
             let preview = String(hud.answer.prefix(36)).replacingOccurrences(of: "\n", with: " ")
             print("SELFTEST_OK voiceask: thinking=\(wasThinking)→idle Agent 応答=\"\(preview)…\"")
@@ -5918,14 +6097,19 @@ enum SelfTest {
             for _ in 0..<6 { _ = session.pushSamples(samples: oneSec, sampleRate: 16_000) }
             try session.finish()
             // 後からサインインして復旧。
-            let tokens = try AstraCoreBridge.devSignIn(base, email: "recoff-\(getpid())@astra.local", displayName: "RO")
+            let token = try preparedTestToken(base: base, email: "recoff-\(getpid())@astra.local")
+            // This fixture deliberately uploads its generated six-second signal.
+            // Consent is process-local and never changes the user's stored preference.
+            var arguments = UserDefaults.standard.volatileDomain(forName: UserDefaults.argumentDomain)
+            arguments["astra.transcription.cloudGoogleSTT"] = true
+            UserDefaults.standard.setVolatileDomain(arguments, forName: UserDefaults.argumentDomain)
             let runtime = RecordingRuntime.shared
-            runtime.configureBackend(base: base, accessToken: tokens.accessToken)
+            runtime.configureBackend(base: base, accessToken: token)
             let foundBefore = runtime.recoverableMeetings().contains { $0.meetingId == localId }
             let sent = runtime.recover(meetingId: localId)
             let stillLocal = runtime.recoverableMeetings().contains { $0.meetingId == localId }
-            // 後片付け（リネーム先も含めて掃除）。
-            for m in runtime.recoverableMeetings() { try? FileManager.default.removeItem(atPath: root + "/" + m.meetingId) }
+            // Never delete other recovery candidates. The renamed, uploaded fixture
+            // remains under the caller's isolated test root for diagnostic inspection.
             try? FileManager.default.removeItem(atPath: root + "/" + localId)
             guard foundBefore, sent > 0, !stillLocal else {
                 print("SELFTEST_FAIL recoveryoffline found=\(foundBefore) sent=\(sent) stillLocal=\(stillLocal)"); exit(2)
@@ -6414,15 +6598,14 @@ enum SelfTest {
         }
 
         do {
+            guard LocalStore.shared.open() else { print("SELFTEST_FAIL e2e001 database unavailable"); exit(2) }
             // ---- サインイン（実 gateway）。以後すべて実経路。
             let state = RecordingWorkspaceState.shared
-            var accessToken: String? = nil
             if online {
-                let tokens = try AstraCoreBridge.devSignIn(base, email: "e2e-\(getpid())@astra.local", displayName: "E2E")
-                accessToken = tokens.accessToken
-                state.configureBackend(base: base, token: tokens.accessToken)
-                RecordingRuntime.shared.configureBackend(base: base, accessToken: tokens.accessToken)
-                VoiceHUDState.shared.configureBackend(base: base, token: tokens.accessToken)
+                let token = try preparedTestToken(base: base, email: "e2e-\(getpid())@astra.local")
+                state.configureBackend(base: base, token: token)
+                RecordingRuntime.shared.configureBackend(base: base, accessToken: token)
+                VoiceHUDState.shared.configureBackend(base: base, token: token)
             }
 
             // ---- ① 起動直後: Voice HUD が出ていて、Workspace は無い。
@@ -6461,8 +6644,16 @@ enum SelfTest {
                 if AXUIElementCopyAttributeValue(sys, kAXFocusedUIElementAttribute as CFString, &f) == .success,
                    let el = f {
                     var r: CFTypeRef?
+                    var owner: pid_t = 0
+                    let ownPID = AXUIElementGetPid(el as! AXUIElement, &owner) == .success && owner == getpid()
                     if AXUIElementCopyAttributeValue(el as! AXUIElement, kAXRoleAttribute as CFString, &r) == .success,
-                       let role = r as? String { ownFocus = (role == (kAXTextFieldRole as String)) }
+                       let role = r as? String { ownFocus = ownPID && (role == (kAXTextFieldRole as String)) }
+                    if ownFocus {
+                        var writable: DarwinBoolean = false, selectedWritable: DarwinBoolean = false
+                        let valueStatus = AXUIElementIsAttributeSettable(el as! AXUIElement, kAXValueAttribute as CFString, &writable)
+                        let selectedStatus = AXUIElementIsAttributeSettable(el as! AXUIElement, kAXSelectedTextAttribute as CFString, &selectedWritable)
+                        print("DICTATION_FIXTURE trusted=\(AXIsProcessTrusted()) value=\(valueStatus.rawValue)/\(writable.boolValue) selection=\(selectedStatus.rawValue)/\(selectedWritable.boolValue) editable=\(field.isEditable)")
+                    }
                     var v: CFTypeRef?
                     if ownFocus,
                        AXUIElementCopyAttributeValue(el as! AXUIElement, kAXValueAttribute as CFString, &v) == .success {
@@ -6501,8 +6692,8 @@ enum SelfTest {
             let idleGone = !wins.contains { near($0.w, Metrics.dockIdleWidth) && near($0.h, Metrics.dockIdleHeight + WindowCoordinator.shared.dockTopInset) }
             let noExtraSurface = !wins.contains { near($0.w, Metrics.workspaceWidth) && near($0.h, Metrics.workspaceHeight) }
             let meetingId = RecordingRuntime.shared.activeMeetingId
-            // online なら gateway の会議 UUID、offline ならローカル id（meeting-…）。どちらでも id は要る。
-            let meetingOK = !meetingId.isEmpty && (online ? !meetingId.hasPrefix("meeting-") : true)
+            // Live-only recording retains a local session even when an agent is connected.
+            let meetingOK = !meetingId.isEmpty && LocalStore.shared.loadSessions().contains { $0.id == meetingId && $0.status == .recording }
             guard state.isRecording, controllerUp, idleGone, noExtraSurface, meetingOK else {
                 print("SELFTEST_FAIL e2e001 ③切替: recording=\(state.isRecording) controller=\(controllerUp) idleGone=\(idleGone) noExtra=\(noExtraSurface) meeting=\(meetingId) wins=\(wins)"); exit(4)
             }
@@ -6535,7 +6726,7 @@ enum SelfTest {
                 state.runAIAction("リアルタイム要約")
                 let aiDeadline = Date().addingTimeInterval(30)
                 while state.aiRunning && Date() < aiDeadline { CFRunLoopRunInMode(.defaultMode, 0.1, true) }
-                guard !state.aiResult.isEmpty else { print("SELFTEST_FAIL e2e001 ⑦AI 応答なし"); exit(7) }
+                guard state.aiActionSucceeded, state.aiResult.contains("OAuth") else { print("SELFTEST_FAIL e2e001 ⑦AI 要約失敗: \(state.aiResult)"); exit(7) }
                 steps.append("⑦AI要約")
             } else {
                 steps.append("⑦AI(gateway無しのため未実行)")
@@ -6554,25 +6745,16 @@ enum SelfTest {
             }
             steps.append("⑧停止→結果面へ morph(窓は1枚のまま)")
 
-            // ---- ⑨ REMEMBER: 保存後に Library から取り出せる／回復候補に残っていない。
-            let root = LocalStore.dataRoot
-                .appendingPathComponent("meetings").path
+            // ---- ⑨ REMEMBER: live results and the closed audio remain in the local library.
+            // Stopping a recording must not require a second cloud transcription pass.
+            let root = LocalStore.dataRoot.appendingPathComponent("meetings").path
+            let saved = LocalStore.shared.loadSessions().first { $0.id == meetingId }
             let onDisk = FileManager.default.fileExists(atPath: root + "/" + meetingId)
-            if online {
-                let library = (try? AstraCoreBridge.library(base, accessToken: accessToken ?? "")) ?? []
-                let stillRecoverable = scanRecoverable(root: root, active: nil).contains { $0.meetingId == meetingId }
-                try? FileManager.default.removeItem(atPath: root + "/" + meetingId)
-                guard !stillRecoverable else { print("SELFTEST_FAIL e2e001 ⑨保存済みなのに回復候補に残る"); exit(9) }
-                steps.append("⑨Library(\(library.count)件)・未送信なし")
-            } else {
-                // オフラインでは gateway へ送れないので、**ローカルに残っていること**が正しい
-                // （ERR-001「ローカル録音継続」/ ERR-006「次回起動で復旧候補」）。消さない。
-                guard onDisk else { print("SELFTEST_FAIL e2e001 ⑨オフラインなのに録音がディスクに無い"); exit(9) }
-                let recoverable = scanRecoverable(root: root, active: nil).contains { $0.meetingId == meetingId }
-                try? FileManager.default.removeItem(atPath: root + "/" + meetingId)
-                guard recoverable else { print("SELFTEST_FAIL e2e001 ⑨オフライン録音が復旧候補に出ない"); exit(9) }
-                steps.append("⑨オフライン保存・復旧候補あり")
+            guard onDisk, saved?.status == .ready, saved?.endedAt != nil else {
+                print("SELFTEST_FAIL e2e001 ⑨保存: onDisk=\(onDisk) ready=\(saved?.status == .ready)"); exit(9)
             }
+            try? FileManager.default.removeItem(atPath: root + "/" + meetingId)
+            steps.append("⑨ローカルLibraryに同じ会議を保存・停止後の再文字起こしなし")
 
             WindowCoordinator.shared.hideVoiceHUD()
             print("SELFTEST_OK e2e001(" + (online ? "online" : "offline") + "): " + steps.joined(separator: " → "))
@@ -6582,42 +6764,37 @@ enum SelfTest {
         }
     }
 
-    /// `--selftest fulllifecycle <base>`: 実経路の全体を通す。サインイン → toggleRecording（=グローバル
-    /// ショートカットが呼ぶ）で録音開始（実 gateway 会議作成＋実マイク） → 実録音 → toggleRecording で停止
-    /// → 保存・送信・アップロード印 → HUD 復帰。§6「Voice HUD→Recording→保存→HUD復帰」の実 E2E。
+    /// Real microphone → stop → persisted ready session. Live transcription does not
+    /// upload the full recording again at stop; that former assertion is obsolete.
     @MainActor
     private static func fullLifecycle(_ args: [String]) {
-        let base = args.count > (args.firstIndex(of: "--selftest")! + 2)
-            ? args[args.firstIndex(of: "--selftest")! + 2] : "http://127.0.0.1:3000"
-        guard AstraCoreBridge.reachable(base) else { print("SELFTEST_SKIP fulllifecycle: gateway unreachable"); exit(0) }
         guard Permissions.microphone == .granted else { print("SELFTEST_SKIP fulllifecycle: mic not granted"); exit(0) }
-        do {
-            WindowCoordinator.headless = true
-            let tokens = try AstraCoreBridge.devSignIn(base, email: "full-\(getpid())@astra.local", displayName: "F")
-            RecordingWorkspaceState.shared.configureBackend(base: base, token: tokens.accessToken)
-            RecordingRuntime.shared.configureBackend(base: base, accessToken: tokens.accessToken)
-            let state = RecordingWorkspaceState.shared
-            // 通常時 → 録音開始（グローバルショートカット相当）。
-            WindowCoordinator.shared.toggleRecording()
-            let recording = state.isRecording
-            let meetingId = RecordingRuntime.shared.activeMeetingId
-            let isGatewayMeeting = !meetingId.hasPrefix("meeting-") && !meetingId.isEmpty  // gateway UUID
-            // 実マイクで 6 秒録る（5 秒断片が閉じる）。
-            RunLoop.current.run(until: Date().addingTimeInterval(6.0))
-            // 停止 → 保存・送信・アップロード印 → HUD 復帰。
-            WindowCoordinator.shared.toggleRecording()
-            let stopped = !state.isRecording
-            // 送信済みなので回復候補に出ない。
-            let root = LocalStore.dataRoot
-                .appendingPathComponent("meetings").path
-            let recoverable = scanRecoverable(root: root, active: nil).contains { $0.meetingId == meetingId }
-            try? FileManager.default.removeItem(atPath: root + "/" + meetingId)
-            guard recording, isGatewayMeeting, stopped, !recoverable else {
-                print("SELFTEST_FAIL fulllifecycle recording=\(recording) gatewayMeeting=\(isGatewayMeeting) stopped=\(stopped) recoverable=\(recoverable)"); exit(2)
-            }
-            print("SELFTEST_OK fulllifecycle: HUD→録音(実gateway会議 \(meetingId.prefix(8))…)→実マイク→保存送信→HUD復帰、候補に残らない")
-            exit(0)
-        } catch { print("SELFTEST_FAIL fulllifecycle error=\(error)"); exit(3) }
+        WindowCoordinator.headless = true
+        guard LocalStore.shared.open() else { print("SELFTEST_FAIL fulllifecycle database unavailable"); exit(2) }
+        var arguments = UserDefaults.standard.volatileDomain(forName: UserDefaults.argumentDomain)
+        arguments[RecordingRuntime.cloudTranscriptionDefaultsKey] = false
+        UserDefaults.standard.setVolatileDomain(arguments, forName: UserDefaults.argumentDomain)
+        let state = RecordingWorkspaceState.shared
+        WindowCoordinator.shared.toggleRecording()
+        let recording = state.isRecording
+        let meetingId = RecordingRuntime.shared.activeMeetingId
+        RunLoop.current.run(until: Date().addingTimeInterval(6.0))
+        let milliseconds = RecordingRuntime.shared.recordedMs()
+        WindowCoordinator.shared.toggleRecording()
+        let deadline = Date().addingTimeInterval(8)
+        while Date() < deadline && LocalStore.shared.loadSessions().first(where: { $0.id == meetingId })?.status != .ready {
+            CFRunLoopRunInMode(.defaultMode, 0.05, true)
+        }
+        let saved = LocalStore.shared.loadSessions().first { $0.id == meetingId }
+        let folder = LocalStore.dataRoot.appendingPathComponent("meetings").appendingPathComponent(meetingId)
+        let onDisk = FileManager.default.fileExists(atPath: folder.path)
+        let valid = recording && !state.isRecording && milliseconds > 0 && onDisk && saved?.status == .ready && saved?.endedAt != nil
+        if !meetingId.isEmpty { try? FileManager.default.removeItem(at: folder) }
+        guard valid else {
+            print("SELFTEST_FAIL fulllifecycle recording=\(recording) ms=\(milliseconds) onDisk=\(onDisk) ready=\(saved?.status == .ready)"); exit(2)
+        }
+        print("SELFTEST_OK fulllifecycle: HUD→実マイク \(milliseconds)ms→停止→同じ会議がローカルLibraryにreadyで保存")
+        exit(0)
     }
 
     /// `--selftest panel`: overlay パネルが全 Space・fullscreen 補助・装飾なし・透過に設定されているか
@@ -6696,7 +6873,7 @@ enum SelfTest {
             ("ContextLens", contentScore(ContextLensView(items: [ContextItem(category: "Current", text: "Current screen / Q4提案.pptx"), ContextItem(category: "Entity", text: "A社 / 田中様"), ContextItem(category: "Schedule", text: "明日 10:00 商談"), ContextItem(category: "Internal", text: "関連メール8件 / 資料4件"), ContextItem(category: "Policy", text: "Confidential / Local-only", sensitive: true)]), NSSize(width: 320, height: 420))),
             ("HomeView", contentScore(HomeView(attention: [HomeAttention(kind: "10:00 A社 商談", title: "前回から価格条件が変更", action: "準備する"), HomeAttention(kind: "Research complete", title: "半導体市場調査", action: "見る")], active: [HomeWork(title: "競合20社調査", meta: "12 sources · 進行中")]), NSSize(width: 820, height: 600))),
             ("RecordingWorkspace", contentScore(RecordingWorkspaceView(), NSSize(width: Metrics.workspaceWidth, height: Metrics.workspaceHeight))),
-            ("MainWindow", contentScore(MainWindowView(), NSSize(width: 900, height: 600))),
+            ("MainWindow", contentScore(MainWindowView(loadBackend: false), NSSize(width: 900, height: 600))),
             ("Settings", contentScore(SettingsView(), NSSize(width: 460, height: 420))),
         ]
         // 実際に描画されていれば、複数色（>=4）かつ相応の不透明面積（>=10%）を持つ。

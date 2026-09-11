@@ -173,6 +173,7 @@ export type MeetingBundle = z.infer<typeof MeetingBundle>;
 /** 音声 WS の制御メッセージ。binary は音声、text(JSON) はこれ（実装仕様 §3）。 */
 export const MeetingControlMessage = z.discriminatedUnion('type', [
   z.object({ type: z.literal('pause') }),
+  z.object({ type: z.literal('flush') }),
   z.object({ type: z.literal('resume') }),
   z.object({
     type: z.literal('marker'),

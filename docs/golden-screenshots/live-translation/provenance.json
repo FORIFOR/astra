@@ -1,0 +1,31 @@
+{
+  "source_base": "3e81017",
+  "date": "2026-09-11",
+  "round": "docs/ux-benchmark/compare/live-translation/ROUND.md",
+  "capture": "Signed debug candidate; real Google STT synthetic fixture and actual Qwen2.5:7b. Dock is intentionally dark in either app appearance.",
+  "images": {
+    "01-waiting-dark.png": "e70d1a27b6dd700ec9333be9549ad21ae8022bcebcf879790415301ed074fba2",
+    "01-waiting-light.png": "ee01e94c72ae9bd80f7f559d6ff069afc25f307612542ed9591b9f03e53d9201",
+    "02-english-dark.png": "f2fe6aea761de9e049b065dde3eaa5a875c553baadc95cedd84a927ee7899d9d",
+    "02-english-light.png": "2925e9560b863af6862ed663056363b4596b045ec7c40b5853faab6614152557",
+    "03-original-dark.png": "2bed3b8e9f106a44845c47646d479b3c5bd866c2e961961b6d86e975ec1c8f31",
+    "03-original-light.png": "82da7f1d8514d833a91d69ee9d486f6546ac38b513f823e98577dc8dc0b79f18",
+    "04-large-captions-dark.png": "027d3783373c1482a1246d91134d2c64860eb9a875972c17d1e9be4c70b0d1f0",
+    "04-large-captions-light.png": "855af33c3211951e52312e180d880e6e36eab01b336e89b1db0ebdfdab988965",
+    "05-japanese-dark.png": "8eee9cc5e6716cf4d7c606b181a4bfd718acd1d8b727006dd4f1849b0bb07cda",
+    "05-japanese-light.png": "8eee9cc5e6716cf4d7c606b181a4bfd718acd1d8b727006dd4f1849b0bb07cda",
+    "error-320-dark.png": "5b8eb598057d18c3b89ae1449100db5bec2a67a4b42c7728543e3994564c065b",
+    "error-320-light.png": "245de21fdca5417c219cb2198e883692876da51c673f4cc9eac1ce67e3d12ab8",
+    "error-720-dark.png": "afe769d8ac7bc4fc1a83e54e190bac1c15e591b9eba5bee4088eaf4920018de2",
+    "error-720-light.png": "16b7ce8bc17f0a5bdb8b7acf7521b65e8c75de0158dcf609daabeb16750f0268",
+    "pending-320-dark.png": "2e740662cf64a3cfad280417f1f02f207cfe82a466af26d6cb5c047059f64e0b",
+    "pending-320-light.png": "cd5849e9a2e77c4a4ff09dfed5d006fc00b3fb09455f9b541e170d2f6217502f",
+    "pending-720-dark.png": "1d5bbdcd51f658394b9e912cdc9a79fd3a6b0cca8f1cdd81014cc9ffc97679df",
+    "pending-720-light.png": "de68123d9daf13870416c4464deff8380e41b8f5f8ff6c3fca521893f8b668ad",
+    "ready-320-dark.png": "663bece2160ca865e69da0c41659895a74c96c21603788b26bb77d269b4c6305",
+    "ready-320-light.png": "8d0be5e7df05dd7344f92f7d9d13f1e01cdcdd08bf48b7f2e9063bd4748b083b",
+    "ready-720-dark.png": "a89ecebe6eb09a45af0568baf631a2c86fe37a8181298365e7c55e7732e62117",
+    "ready-720-light.png": "073237447ea6222f0a8f00a5db6a2124be06820695b5e4164ada00ffb6bdb53f"
+  },
+  "layout_fixtures": "pending/error/ready files use the native component with an injected delayed/failing translator, not external services."
+}

@@ -31,6 +31,9 @@ final class PermissionGuideCoordinator: ObservableObject {
         var relocateCoalesceInterval: TimeInterval = 0.08
         /// System Settings の一覧に出る名前の候補（表示名 / バンドル名 / 実行体名）。文字列 1 個に依存しない。
         var appNames: [String] = Dependencies.bundleAppNames()
+        var applicationToAdd = GuideApplication(url: Bundle.main.bundleURL)
+        /// Hide only Astra's ordinary windows; restoring never resumes a task or records audio.
+        var suspendWindows: () -> (() -> Void) = { {} }
 
         static func bundleAppNames() -> [String] {
             let info = Bundle.main.infoDictionary ?? [:]
@@ -54,7 +57,13 @@ final class PermissionGuideCoordinator: ObservableObject {
                 makeObserver: { AXObserverService() },
                 overlay: GuideOverlayStack(),
                 openSettings: { PermissionManager.shared.openSettings(for: $0) },
-                settingsPID: { AXElementService.shared.pid(ofBundle: SystemSettingsAnchorLocator.bundleID) })
+                settingsPID: { AXElementService.shared.pid(ofBundle: SystemSettingsAnchorLocator.bundleID) },
+                suspendWindows: {
+                    let main = MainWindowController.shared.suspendForPermissionGuide()
+                    let settings = SettingsWindowController.shared.suspendForPermissionGuide()
+                    let practice = PermissionPractice.shared.suspendForPermissionGuide()
+                    return { main(); settings(); practice() }
+                })
         }
     }
 
@@ -71,6 +80,12 @@ final class PermissionGuideCoordinator: ObservableObject {
     private var settingsWaitStarted: Date?
     private var distributedObserver: NSObjectProtocol?
     private var workspaceObservers: [NSObjectProtocol] = []
+    private var generation = UUID()
+    private var experience: GuidePermission?
+    private var purpose: PermissionGuidePurpose?
+    private var continuation: (() -> Void)?
+    private var cancellation: (() -> Void)?
+    private var restoreWindows: (() -> Void)?
     private lazy var locator = SystemSettingsAnchorLocator(tree: deps.tree)
 
     init(dependencies: Dependencies? = nil) {
@@ -83,6 +98,8 @@ final class PermissionGuideCoordinator: ObservableObject {
     /// 案内を始める。許可済みのものは飛ばす。
     func start(order: [GuidePermission] = GuidePlan.defaultOrder) {
         guard state.isTerminal else { return }
+        tearDownWatchers()
+        generation = UUID()
         plan = GuidePlan(order: order) { deps.permissions.state(of: $0) == .granted }
         GuideLog.debug("start: pending=\(plan.pending.map(\.rawValue))")
         deps.overlay.showAvatar(state: .guiding, message: Self.messageIntro, onClose: { [weak self] in self?.stop() })
@@ -90,13 +107,95 @@ final class PermissionGuideCoordinator: ObservableObject {
         advance()
     }
 
+    /// A Settings row guides only the permission the user selected.
+    func guide(_ permission: GuidePermission) {
+        if !state.isTerminal { stop() }
+        start(order: [permission])
+    }
+
+    /// Purpose-first public entry. Reading this card never requests OS access.
+    func explain(_ permission: GuidePermission, purpose: PermissionGuidePurpose? = nil, onCancel: (() -> Void)? = nil, then: @escaping () -> Void) {
+        stop()
+        generation = UUID()
+        experience = permission
+        let copy = purpose ?? PermissionGuidePurpose(explanation: permission.explanation, readyMessage: permission.readyMessage)
+        self.purpose = copy
+        continuation = then
+        cancellation = onCancel
+        plan = GuidePlan(pending: [permission])
+        deps.overlay.showAvatar(state: .guiding, message: copy.explanation, onClose: { [weak self] in self?.stop() })
+        deps.overlay.focusAvatar()
+        deps.overlay.setExplanationLabel("macOS：" + permission.systemPermissionName)
+        deps.overlay.setSecondaryAction(("あとで", { [weak self] in self?.stop() }))
+        if deps.permissions.state(of: permission) == .granted { showReady(permission); return }
+        set(PermissionGuideState.intro(for: permission))
+        let run = generation
+        deps.overlay.updateAvatar(state: .guiding, message: copy.explanation,
+            action: (permission.enableTitle, { [weak self] in
+                guard let self, self.generation == run else { return }
+                self.enableExplainedPermission()
+            }))
+    }
+
+    private func enableExplainedPermission() {
+        guard let permission = experience, state == PermissionGuideState.intro(for: permission) else { return }
+        deps.overlay.setExplanationLabel(nil)
+        deps.overlay.setSecondaryAction(nil)
+        restoreWindows = deps.suspendWindows()
+        subscribeSystemEvents()
+        // Recheck immediately before asking: another Astra instance may have received the grant.
+        if deps.permissions.state(of: permission) == .granted { showReady(permission); return }
+        deps.overlay.setApplicationToAdd(permission == .microphone ? nil : deps.applicationToAdd)
+        switch permission {
+        case .accessibility: beginAccessibility()
+        case .screenCapture: beginScreenCapture()
+        case .microphone: beginMicrophone()
+        }
+    }
+
+    private func showReady(_ permission: GuidePermission) {
+        plan.finish(permission)
+        tearDownWatchers()
+        deps.overlay.hideGuide()
+        deps.overlay.setApplicationToAdd(nil)
+        deps.overlay.setExplanationLabel(nil)
+        set(.ready(permission))
+        let run = generation
+        deps.overlay.updateAvatar(state: .success, message: purpose?.readyMessage ?? permission.readyMessage,
+            action: (purpose?.continueTitle ?? "試してみる", { [weak self] in
+                guard let self, self.generation == run, self.state == .ready(permission) else { return }
+                // A grant may be revoked while the success card is still visible.
+                guard self.deps.permissions.state(of: permission) == .granted else {
+                    let action = self.continuation ?? {}
+                    let cancel = self.cancellation
+                    self.cancellation = nil
+                    self.explain(permission, purpose: self.purpose, onCancel: cancel, then: action)
+                    return
+                }
+                let action = self.continuation
+                self.cancellation = nil
+                self.stop()
+                action?()
+            }))
+        deps.overlay.setSecondaryAction(("あとで", { [weak self] in self?.stop() }))
+    }
+
     /// 案内をやめる。**窓と observer をすべて手放す。**
     func stop() {
+        generation = UUID()
         tearDownWatchers()
         deps.overlay.hideAll()
+        deps.overlay.setApplicationToAdd(nil)
         anchor = nil
         plan = GuidePlan(pending: [])
+        experience = nil; purpose = nil; continuation = nil
+        let cancel = cancellation; cancellation = nil
+        deps.overlay.setExplanationLabel(nil)
+        deps.overlay.setSecondaryAction(nil)
+        let restore = restoreWindows; restoreWindows = nil
         set(.idle)
+        restore?()
+        cancel?()
     }
 
     // MARK: - 状態遷移（ここだけ）
@@ -109,19 +208,22 @@ final class PermissionGuideCoordinator: ObservableObject {
 
     /// 次の権限へ。無ければ completed。
     private func advance() {
+        while let next = plan.next, deps.permissions.state(of: next) == .granted { plan.finish(next) }
         guard let next = plan.next else {
             set(.completed)
             deps.overlay.updateAvatar(state: .success, message: Self.messageAllDone, action: nil)
             stopFallback()
             observer?.stop(); observer = nil
+            let run = generation
             deps.after(deps.successDwell * 2) { [weak self] in
-                guard let self, self.state == .completed else { return }
+                guard let self, self.generation == run, self.state == .completed else { return }
                 self.tearDownWatchers()
                 self.deps.overlay.hideAll()
                 self.set(.idle)
             }
             return
         }
+        deps.overlay.setApplicationToAdd(next == .accessibility || next == .screenCapture ? deps.applicationToAdd : nil)
         set(PermissionGuideState.intro(for: next))
         switch next {
         case .accessibility: beginAccessibility()
@@ -155,9 +257,11 @@ final class PermissionGuideCoordinator: ObservableObject {
         case .granted: granted(.microphone)
         case .notDetermined:
             set(.waitingMicrophone)
-            deps.permissions.requestMicrophone { [weak self] ok in
-                guard let self, self.state == .waitingMicrophone else { return }
-                if ok { self.granted(.microphone) } else { self.guideMicrophoneInSettings() }
+            let run = generation
+            deps.permissions.requestMicrophone { [weak self] _ in
+                guard let self, self.generation == run, self.state == .waitingMicrophone else { return }
+                if self.deps.permissions.state(of: .microphone) == .granted { self.granted(.microphone) }
+                else { self.guideMicrophoneInSettings() }
             }
         case .denied, .restricted:
             set(.waitingMicrophone)
@@ -170,7 +274,7 @@ final class PermissionGuideCoordinator: ObservableObject {
         deps.overlay.updateAvatar(state: .guiding, message: Self.messageMicrophoneSettings, action: openSettingsAction(.microphone))
         settingsWaitStarted = deps.now()
         locateAndShow(selectors: SystemSettingsAnchorLocator.astraRowSelectors(appNames: deps.appNames),
-                      message: Self.calloutTurnOn, fallback: Self.messageGeneralTurnOn)
+                      message: Self.calloutTurnOn, fallback: Self.messageMicrophoneFallback)
         startFallback()
     }
 
@@ -181,7 +285,7 @@ final class PermissionGuideCoordinator: ObservableObject {
             if let started = settingsWaitStarted, deps.now().timeIntervalSince(started) > deps.settingsLaunchTimeout {
                 set(.failed("設定画面を開けませんでした"))
                 deps.overlay.updateAvatar(state: .warning, message: Self.messageSettingsFailed,
-                                          action: (Self.actionRetryOpenSettings, { [weak self] in self?.deps.openSettings(.screenCapture) }))
+                                          action: (Self.actionRetryOpenSettings, { [weak self] in self?.retryScreenSettings() }))
                 stopFallback()
             }
             return
@@ -204,6 +308,15 @@ final class PermissionGuideCoordinator: ObservableObject {
             (SystemSettingsAnchorLocator.astraRowSelectors(appNames: deps.appNames), Self.calloutTurnOn),
             (SystemSettingsAnchorLocator.addButtonSelectors, Self.calloutAdd),
         ], fallback: Self.messageGeneralTurnOn)
+    }
+
+    private func retryScreenSettings() {
+        guard case .failed = state, plan.next == .screenCapture else { return }
+        set(.openingScreenSettings)
+        settingsWaitStarted = deps.now()
+        deps.openSettings(.screenCapture)
+        tryGuideScreenCapture()
+        startFallback()
     }
 
     /// System Settings の AX 木が読める状態か（起動直後は app 要素だけで子が無い）。AX 未許可なら読めないので true 扱い
@@ -278,8 +391,9 @@ final class PermissionGuideCoordinator: ObservableObject {
         GuideLog.debug("ax event: \(name)")
         guard !relocatePending else { return }
         relocatePending = true
+        let run = generation
         deps.after(deps.relocateCoalesceInterval) { [weak self] in
-            guard let self else { return }
+            guard let self, self.generation == run else { return }
             self.relocatePending = false
             self.relocateNow()
         }
@@ -293,7 +407,7 @@ final class PermissionGuideCoordinator: ObservableObject {
             if deps.settingsPID() != nil { locateScreenCaptureTargets() }
         case .waitingMicrophone:
             locateAndShow(selectors: SystemSettingsAnchorLocator.astraRowSelectors(appNames: deps.appNames),
-                          message: Self.calloutTurnOn, fallback: Self.messageGeneralTurnOn)
+                          message: Self.calloutTurnOn, fallback: Self.messageMicrophoneFallback)
         default: break
         }
         recheckPermissions()
@@ -313,15 +427,19 @@ final class PermissionGuideCoordinator: ObservableObject {
     }
 
     private func granted(_ permission: GuidePermission) {
+        guard plan.pending.contains(permission) else { return }
         GuideLog.debug("granted: \(permission)")
         plan.finish(permission)
         anchor = nil
         deps.overlay.hideGuide()
+        deps.overlay.setApplicationToAdd(nil)
         observer?.stop(); observer = nil
         stopFallback()
+        if experience == permission { showReady(permission); return }
         deps.overlay.updateAvatar(state: .success, message: Self.messageDone(for: permission), action: nil)
+        let run = generation
         deps.after(deps.successDwell) { [weak self] in
-            guard let self, !self.state.isTerminal else { return }
+            guard let self, self.generation == run, !self.state.isTerminal else { return }
             self.advance()
         }
     }
@@ -374,6 +492,7 @@ final class PermissionGuideCoordinator: ObservableObject {
     }
 
     private func tearDownWatchers() {
+        relocatePending = false
         stopFallback()
         observer?.stop(); observer = nil
         if let d = distributedObserver { DistributedNotificationCenter.default().removeObserver(d); distributedObserver = nil }
@@ -399,11 +518,12 @@ final class PermissionGuideCoordinator: ObservableObject {
     // 成功の ✓ は丸だけに描く（文にもあると二重で、OCR は「く」と読む）。失敗は短く、操作子（システム設定を開く）を添える。
     // 1 行目 = 状態、2 行目 = すること（改行で分ける。1 文に目的と手順を詰めない）。
     static let messageIntro = "使う機能の設定をいっしょに済ませます"
-    static let messageAccessibility = "アクセシビリティが未許可です\nシステム設定で Astra をオンにしてください"
+    static let messageAccessibility = "アクセシビリティの許可を確認しています\nシステム設定の一覧で Astra をオンにしてください"
     static let messageScreenCapture = "画面収録が未許可です\nシステム設定で Astra をオンにしてください"
     static let messageMicrophone = "マイクが未許可です\n許可すると声で頼めます"
     static let messageMicrophoneSettings = "マイクが未許可です\nマイクの設定で Astra をオンにしてください"
     static let messageGeneralTurnOn = "Astra を自動で見つけられません\n画面収録の一覧で Astra をオンにしてください"
+    static let messageMicrophoneFallback = "Astra を自動で見つけられません\nマイクの一覧で Astra をオンにしてください"
     static let messageSettingsFailed = "設定画面を開けませんでした\nプライバシーとセキュリティ › 画面収録"
     /// 何を設定できたかを言う（「設定できました」だけだと、絵の文字が 1 語で判定不能になる。何が済んだかも分かる）。
     static func messageDone(for permission: GuidePermission) -> String {
@@ -413,10 +533,10 @@ final class PermissionGuideCoordinator: ObservableObject {
         case .microphone: return "マイクを設定できました"
         }
     }
-    static let messageAllDone = "すべて設定できました"
+    static let messageAllDone = "今回の権限設定を確認できました"
     /// スイッチはオンなのに許可がまだ = 再起動待ち。
     /// 短く（行の中に置くので、長いと行の名前を隠す）。尾がその行を指しているので名前は要らない。
-    static func calloutAlreadyOn(for app: String) -> String { "\(app) を再起動すると使えます" }
+    static func calloutAlreadyOn(for app: String) -> String { "\(app) を再起動して再確認してください" }
     static let actionRetryOpenSettings = "もう一度開く"
     static let actionOpenSettings = "システム設定を開く"
     /// `{app}` は見つけた行の名前に置き換える。

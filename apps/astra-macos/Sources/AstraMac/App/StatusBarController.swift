@@ -38,6 +38,9 @@ final class StatusBarController {
         open.target = self
         menu.addItem(open)
 
+        let controls = NSMenuItem(title: Facts.menuShowControls, action: #selector(showControls), keyEquivalent: "")
+        controls.target = self
+        menu.addItem(controls)
         let recording = WindowCoordinator.shared.isRecording
         let rec = NSMenuItem(
             title: recording ? Facts.recordingMenuStop : Facts.recordingMenuStart,
@@ -102,10 +105,11 @@ final class StatusBarController {
     }
 
     @objc private func openMain() { MainWindowController.shared.showSection(.home) }
+    @objc private func showControls() { WindowCoordinator.shared.restoreControls() }
     @objc private func toggleRecording() { WindowCoordinator.shared.toggleRecording() }
     @objc private func openSettings() { SettingsWindowController.shared.show() }
     @objc private func openGuide() { NSWorkspace.shared.open(Self.guideURL) }
-    @objc private func startGuidedSetup() { PermissionGuideCoordinator.shared.start() }
+    @objc private func startGuidedSetup() { SettingsWindowController.shared.show() }
     @objc private func checkUpdates() {
         guard let reason = SoftwareUpdate.shared.checkNow() else { return }
         Self.presentUpdateUnavailable(reason: reason)

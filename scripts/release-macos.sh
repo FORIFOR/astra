@@ -24,7 +24,8 @@
 # 「配布できる」と言わない（他人の Mac では開けないので）。
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-OUT="$ROOT/dist"
+# A candidate can be built without replacing the app the user is running.
+OUT="${ASTRA_RELEASE_OUTPUT_DIR:-$ROOT/dist}"
 APP="$OUT/Astra.app"
 NOTARY_PROFILE="${ASTRA_NOTARY_PROFILE:-astra-notary}"
 NOTARY_BACKEND="${ASTRA_NOTARIZATION_BACKEND:-notarytool}"
@@ -146,8 +147,8 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>LSApplicationCategoryType</key><string>public.app-category.productivity</string>
   <key>NSHumanReadableCopyright</key><string>© 2026 Shuhei Horio</string>
   <key>NSCalendarsFullAccessUsageDescription</key><string>会議の予定を文脈として読むために、カレンダーを使います。読み取りは手元で行い、外部には送りません。</string>
-  <key>NSMicrophoneUsageDescription</key><string>会議を録音し、手元で文字にするためにマイクを使います。音声は端末から出しません。</string>
-  <key>NSSpeechRecognitionUsageDescription</key><string>会議の音声を手元で文字起こしするために使います。音は端末から出しません。</string>
+  <key>NSMicrophoneUsageDescription</key><string>会議を録音し、文字起こしするためにマイクを使います。クラウド文字起こしを許可した場合は、録音音声をGoogleへ送信します。</string>
+  <key>NSSpeechRecognitionUsageDescription</key><string>会議の音声を文字起こしします。設定で許可した場合は高精度化のためGoogle STTへ送信します。</string>
   <key>NSAppleEventsUsageDescription</key><string>前面アプリの文脈（開いている書類名など）を読むために使います。</string>
   <key>NSCameraUsageDescription</key><string>使いません。</string>
   <key>NSCalendarsUsageDescription</key><string>会議の予定を文脈として読むために、カレンダーを使います。</string>

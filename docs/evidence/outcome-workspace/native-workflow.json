@@ -1,0 +1,13 @@
+{
+  "homeSubmit": "native Cmd+Return and Send button",
+  "requestReuse": "filled draft only",
+  "resultPersisted": true,
+  "backendTaskID": "01a08ce5-eebc-7000-95a4-6fc0900211a2",
+  "characters": 185,
+  "suppliedDateAndThreeChecksPreserved": true,
+  "unrequestedAlternatives": false,
+  "inventedURL": false,
+  "copyPasteVerified": true,
+  "savePanelExportByteComparison": "identical",
+  "copyAndSaveReexecuteTask": false
+}

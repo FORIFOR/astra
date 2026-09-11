@@ -1,0 +1,31 @@
+
+ RUN  v3.2.7 /Users/shuhei/Projects/astra/services/task
+
+ ✓ test/metered-workflow.test.ts (16 tests) 4ms
+2026-09-11T04:44:23.270Z [WARN] Activity failed {
+  sdkComponent: 'worker',
+  isLocal: false,
+  attempt: 1,
+  namespace: 'test',
+  taskToken: 'dGVzdA==',
+  activityId: 'test',
+  activityType: 'unknown',
+  taskQueue: 'test',
+  workflowId: 'test',
+  workflowRunId: '00000000-0000-0000-0000-000000000000',
+  workflowType: 'test',
+  error: Error: provider failed
+      at /Users/shuhei/Projects/astra/services/task/test/activity-heartbeat.test.ts:32:15
+      at withActivityHeartbeat (/Users/shuhei/Projects/astra/services/task/src/activity-heartbeat.ts:14:12)
+      at Activity.execute (/Users/shuhei/Projects/astra/node_modules/.pnpm/@temporalio+worker@1.22.0/node_modules/@temporalio/worker/src/activity.ts:143:14)
+      at /Users/shuhei/Projects/astra/services/task/test/activity-heartbeat.test.ts:27:3
+      at file:///Users/shuhei/Projects/astra/node_modules/.pnpm/@vitest+runner@3.2.7/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20,
+  durationMs: 26
+}
+ ✓ test/activity-heartbeat.test.ts (2 tests) 173ms
+
+ Test Files  2 passed (2)
+      Tests  18 passed (18)
+   Start at  13:44:22
+   Duration  646ms (transform 63ms, setup 0ms, collect 345ms, tests 178ms, environment 0ms, prepare 62ms)
+

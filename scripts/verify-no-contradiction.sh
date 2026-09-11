@@ -11,15 +11,16 @@ LAB="$ROOT/.build/uxlab"
 OUT="$(mktemp -d)"
 bash "$ROOT/scripts/ux-auto/build-tools.sh" >/dev/null
 
-pkill -9 -x AstraMac 2>/dev/null; sleep 1
 # **音が来ていない状態**で会議の面を出す。J05 は音ありの姿を作るので、
 # そこで試しても矛盾の起きる条件を通らない（実際、壊しても落ちなかった）。
 "$BIN" --selftest hold-meeting 25 silent >/dev/null 2>&1 &
+TEST_PID=$!
+trap 'kill "$TEST_PID" 2>/dev/null || true' EXIT
 sleep 4
-r="$("$LAB/winrect")"
-if [ -z "$r" ]; then echo "FAIL: 窓が出ていない"; pkill -9 -x AstraMac; exit 1; fi
+r="$("$LAB/winrect" "$TEST_PID")"
+if [ -z "$r" ]; then echo "FAIL: 窓が出ていない"; kill "$TEST_PID" 2>/dev/null; exit 1; fi
 screencapture -x -o -l"$(echo "$r" | awk '{print $5}')" "$OUT/01-start.png" 2>/dev/null
-pkill -9 -x AstraMac 2>/dev/null
+kill "$TEST_PID" 2>/dev/null
 
 shot="$OUT/01-start.png"
 [ -f "$shot" ] || { echo "FAIL: 画面を撮れていない"; exit 1; }

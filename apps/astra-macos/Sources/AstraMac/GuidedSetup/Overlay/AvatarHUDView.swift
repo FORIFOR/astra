@@ -46,12 +46,56 @@ struct AvatarHUDView: View {
                 Text(sub)
                     .font(.system(size: S.type(12)))
                     .foregroundStyle(Palette.muted(dark))
-                    .lineLimit(2)
                     .fixedSize(horizontal: false, vertical: true)
+            }
+            if let label = model.explanationLabel {
+                Text(label)
+                    .font(.system(size: S.type(TypeScale.captionSize)))
+                    .foregroundStyle(Palette.muted(dark))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            if let application = model.applicationToAdd {
+                Button(model.showsApplicationHelp ? "追加の案内を閉じる" : "Astraが一覧にありませんか？") {
+                    model.showsApplicationHelp.toggle()
+                    model.onLayoutChange?()
+                }
+                .buttonStyle(.plain)
+                .font(.system(size: S.type(TypeScale.captionSize)))
+                .foregroundStyle(Palette.muted(dark))
+                .accessibilityIdentifier("guideMissingApplication")
+                if model.showsApplicationHelp {
+                    VStack(alignment: .leading, spacing: Space.compact) {
+                        Text("このアプリを設定の一覧へドラッグしてください。")
+                            .font(.system(size: S.type(TypeScale.captionSize)))
+                            .foregroundStyle(Palette.muted(dark))
+                            .fixedSize(horizontal: false, vertical: true)
+                        Label {
+                            Text(application.name)
+                        } icon: {
+                            Image(nsImage: NSWorkspace.shared.icon(forFile: application.url.path))
+                                .resizable().scaledToFit()
+                                .frame(width: S.type(TypeScale.cardTitleSize), height: S.type(TypeScale.cardTitleSize))
+                        }
+                        .font(.system(size: S.type(TypeScale.microSize)))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(Space.base)
+                        .background(Palette.surface(dark), in: RoundedRectangle(cornerRadius: Space.radiusSmall))
+                        .onDrag { application.itemProvider }
+                        .accessibilityLabel("\(application.name)を一覧へドラッグして追加")
+                        .accessibilityIdentifier("guideApplicationFile")
+                        Button("FinderでAstraを表示") { application.reveal() }
+                            .font(.system(size: S.type(TypeScale.captionSize)))
+                            .accessibilityIdentifier("guideRevealApplication")
+                        Text("許可後は自動で確認します。変わらない場合はAstraを開き直してください。")
+                            .font(.system(size: S.type(TypeScale.captionSize)))
+                            .foregroundStyle(Palette.muted(dark))
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
             }
             if let action = model.action {
                 // 押せるものは押せる形で（塗りのボタン）。カードの中でいちばん強い要素。
-                Button(action.title) { action.run() }
+                ProbeButton(id: "guideAvatarAction", action: { model.action?.run() }) { Text(action.title) }
                     .buttonStyle(.plain)
                     .font(.system(size: S.type(12), weight: .semibold))
                     .foregroundStyle(.white)
@@ -59,6 +103,13 @@ struct AvatarHUDView: View {
                     .background(Palette.accent(dark), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
                     .padding(.top, 2)
                     .accessibilityIdentifier("guideAvatarAction")
+            }
+            if let secondary = model.secondaryAction {
+                ProbeButton(id: "guideLater", action: { model.secondaryAction?.run() }) { Text(secondary.title) }
+                    .buttonStyle(.plain)
+                    .font(.system(size: S.type(TypeScale.captionSize)))
+                    .foregroundStyle(Palette.muted(dark))
+                    .accessibilityIdentifier("guideLater")
             }
         }
         .padding(.horizontal, 14).padding(.top, 10).padding(.bottom, 12)
@@ -73,6 +124,7 @@ struct AvatarHUDView: View {
         }
         .padding(6)
         .accessibilityElement(children: .contain)
+        .escapeKey { model.onClose?() }
         .accessibilityIdentifier("guideAvatar")
         .accessibilityLabel("Astra")
         .accessibilityValue(model.message)
@@ -101,5 +153,10 @@ final class AvatarHUDModel: ObservableObject {
     @Published var message: String = ""
     @Published var action: Action?
     @Published var showsClose = true
+    @Published var applicationToAdd: GuideApplication?
+    @Published var showsApplicationHelp = false
+    @Published var explanationLabel: String?
+    @Published var secondaryAction: Action?
+    var onLayoutChange: (() -> Void)?
     var onClose: (() -> Void)?
 }

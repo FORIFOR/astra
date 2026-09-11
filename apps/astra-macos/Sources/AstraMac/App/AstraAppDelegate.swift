@@ -4,6 +4,7 @@ final class AstraAppDelegate: NSObject, NSApplicationDelegate {
     private var permissionRefreshObserver: NSObjectProtocol?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        ApplicationMenu.shared.install()
         // headless の自己検証（Swift → core → ディスク）。UI を出さずに終了する。
         if SelfTest.run(CommandLine.arguments) { return }
         // §9 Chrome の Native Messaging host として起動されたとき。UI は出さない。
@@ -22,6 +23,8 @@ final class AstraAppDelegate: NSObject, NSApplicationDelegate {
         WindowCoordinator.shared.start(demo: demo)
         // Dock アイコンが無いので、ここが起動後の唯一の入口になる（Main/録音/設定/終了）。
         StatusBarController.shared.install()
+        // Prepare live transcription even when recording starts directly from the Dock.
+        Task { @MainActor in MainData.shared.load() }
 
         // Speech authorization is often granted in System Settings while the
         // recording workspace remains alive.  The authorization callback is
@@ -35,6 +38,7 @@ final class AstraAppDelegate: NSObject, NSApplicationDelegate {
             queue: .main
         ) { _ in
             MainActor.assumeIsolated {
+                MainData.shared.load()
                 RecordingRuntime.shared.speechAuthorizationChanged()
                 RecordingWorkspaceState.shared.refreshSpeechPermission()
             }

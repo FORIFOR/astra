@@ -1,3 +1,4 @@
+import { boundedTaskTitle } from './task-title.js';
 /**
  * Task サービス。実装仕様 §11・§6。
  *
@@ -397,7 +398,7 @@ function toTask(row: TaskRow): Task {
     created_by: row.created_by,
     conversation_id: row.conversation_id,
     kind: row.kind,
-    title: row.title,
+    title: boundedTaskTitle(row.title),
     status: row.status,
     input: row.input ?? {},
     result_artifact_id: row.result_artifact_id,

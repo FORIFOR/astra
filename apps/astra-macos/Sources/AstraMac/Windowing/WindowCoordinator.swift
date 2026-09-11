@@ -27,6 +27,39 @@ final class WindowCoordinator {
         }
     }
     private var recordingPanel: AstraPanel<RecordingWorkspaceView>?
+    private var screenshotOfferTimer: Timer?
+    private var screenshotOfferWasHidden = false
+
+    /// A capture replaces passive navigation with the existing offer, without taking focus.
+    /// Never replace recording controls, running work, sharing, or a permission guide.
+    func offerScreenshot() {
+        guard (Self.headless || hudPanel != nil), !PresentationGuard.shared.isSharing,
+              !RecordingWorkspaceState.shared.isRecording, !VoiceHUDState.shared.requestInFlight,
+              AstraStateStore.shared.state.activeTask?.status != .running,
+              PermissionGuideCoordinator.shared.state == .idle || PermissionGuideCoordinator.shared.state.isTerminal,
+              VisualContextStore.shared.offeredCapture != nil else { return }
+        switch VoiceHUDState.shared.mode {
+        case .idle, .quickActions, .appContext:
+            // The offer is rendered by IdleDock. Keeping Quick Actions visible hid
+            // a successfully detected capture until the user happened to press Esc.
+            VoiceHUDState.shared.mode = .idle
+        default: return
+        }
+        guard !Self.headless else { return }
+        screenshotOfferWasHidden = screenshotOfferWasHidden || !isVoiceHUDVisible
+        screenshotOfferTimer?.invalidate()
+        if !isVoiceHUDVisible { showVoiceHUD() }
+        guard screenshotOfferWasHidden else { return }
+        screenshotOfferTimer = Timer.scheduledTimer(withTimeInterval: 8, repeats: false) { [weak self] _ in
+            Task { @MainActor in self?.endScreenshotOffer() }
+        }
+    }
+
+    func endScreenshotOffer() {
+        screenshotOfferTimer?.invalidate(); screenshotOfferTimer = nil
+        if screenshotOfferWasHidden, VoiceHUDState.shared.mode == .idle { hideVoiceHUD() }
+        screenshotOfferWasHidden = false
+    }
     /// Dock を置く画面。切り替えは 500ms 安定してから（画面間でバタつかせない）。
     private var dockScreen: NSScreen?
     private var pendingScreen: (screen: NSScreen, since: Date)?
@@ -131,6 +164,16 @@ final class WindowCoordinator {
               case .meeting(let expanded) = VoiceHUDState.shared.mode, expanded != nil,
               let panel = hudPanel, panel.isVisible else { return }
         panel.makeKeyAndOrderFront(nil)
+    }
+
+    func restoreControls() {
+        screenshotOfferTimer?.invalidate(); screenshotOfferTimer = nil
+        screenshotOfferWasHidden = false
+        if RecordingWorkspaceState.shared.isRecording {
+            VoiceHUDState.shared.mode = .meeting(expanded: nil)
+        } else { VoiceHUDState.shared.mode = .idle }
+        // An explicit user action restores the controls, including Stop.
+        showVoiceHUD()
     }
 
     func hideVoiceHUD() {

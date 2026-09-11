@@ -39,6 +39,7 @@ enum UserFacingFacts {
     static let notesConcerns = "懸念"
     static let sourceLabel = "出所"
     static let homeIntentPlaceholder = "何を終わらせますか？"
+    static var homeSubmitHint: String { "\(UserShortcut.submitRequest.display) で送信・Return で改行" }
     static let listeningPlaceholder = "聞いています…"
     /// Dock の字幕・文字起こしがまだ空のとき。メモ・翻訳と同じく「何も無いことを隠さない」。
     static let captionsEmpty = "まだ発言がありません。聞こえたらここに流れます。"
@@ -108,9 +109,16 @@ enum UserFacingFacts {
     static let recordingPause = "一時停止"
     static let recordingResume = "再開"
     static let sessionInterrupted = "途中で終わっています"
+    static let dockRecord = "録音"
+    static let dockRelated = "関連操作"
+    static let menuShowControls = "録音コントロールを表示"
+    static let translationTarget = "翻訳先"
+    static let translationAuto = "自動更新"
+    static let translationRetry = "翻訳を再試行"
+    static let liveRetry = "ライブ字幕を再接続"
     static let hudClickHint = "クリック"
     static let permissionRequest = "許可…"
-    static let settingsPermissionsSection = "許可（OS）"
+    static let settingsPermissionsSection = "Astraでできること"
     static let settingsShortcutRow = "録音を開始 / 停止"
 
     // 録音の見出し（録音中 / 一時停止中）の正本は astra-core（Rust）の `hero_text`。
@@ -163,7 +171,7 @@ enum UserFacingFacts {
     static let libraryMeetings = "Meetings"
     static let libraryFiles = "Files"
     static let appsPlugins = "Plugins"
-    static let appsConnectors = "Connectors"
+    static let appsConnectors = "Connections"
     /// `DockLabel` が大文字にして出す（画面では PLAN / CONTEXT / SUGGESTED）。
     static let dockPlan = "Plan"
     static let dockContext = "Context"
@@ -214,6 +222,7 @@ enum UserFacingFacts {
             f("notes.concerns", notesConcerns, false),
             f("source.label", sourceLabel),
             f("home.intent.placeholder", homeIntentPlaceholder),
+            f("home.intent.submitHint", homeSubmitHint, false),
             f("listening.placeholder", listeningPlaceholder),
             f("captions.empty", captionsEmpty, false),
             f("sheet.project.none", projectNone, false),
@@ -271,6 +280,13 @@ enum UserFacingFacts {
             f("recording.pause", recordingPause),
             f("recording.resume", recordingResume),
             f("session.interrupted", sessionInterrupted),
+            f("dock.record", dockRecord),
+            f("dock.related", dockRelated),
+            f("menu.showControls", menuShowControls),
+            f("translation.target", translationTarget),
+            f("translation.auto", translationAuto),
+            f("translation.retry", translationRetry),
+            f("transcription.liveRetry", liveRetry),
             f("hud.clickHint", hudClickHint, false),
             f("permission.request", permissionRequest),
             f("settings.permissionsSection", settingsPermissionsSection),
@@ -325,6 +341,7 @@ struct UserShortcut {
 
     /// 確認の実行。Return だけでは走らない（押し慣れた鍵で外へ出るのは危ない）。
     static let confirm = UserShortcut(key: .return, modifiers: .command)
+    static let submitRequest = UserShortcut(key: .return, modifiers: .command)
     /// 逃げ道。どの面でも同じ鍵。
     static let cancel = UserShortcut(key: .escape, modifiers: [])
 

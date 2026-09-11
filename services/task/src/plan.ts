@@ -14,6 +14,37 @@ export function requiresSingleAttempt(step: { readonly risk: StepRisk }): boolea
   return step.risk !== 'READ' && step.risk !== 'REVERSIBLE_WRITE';
 }
 
+/** Generative work can be billed even when its response is lost. */
+export function isMeteredStep(step: { readonly toolId: string }): boolean {
+  return (
+    step.toolId.startsWith('llm.') ||
+    step.toolId.startsWith('research.') ||
+    // A video artifact can be deleted locally, but the provider's generation
+    // charge cannot be undone. An ambiguous timeout must not submit a new job.
+    [
+      'search.web',
+      'general.answer',
+      'general.compose',
+      'meeting.transcribe',
+      'meeting.summarize',
+      'meeting.bundle',
+      'video.render',
+    ].includes(step.toolId)
+  );
+}
+
+/** Carry the durable summary activity result into rendering; don't ask the LLM twice. */
+export function withMeetingSummary(
+  step: TaskStep,
+  steps: readonly TaskStep[],
+  results: readonly unknown[],
+): TaskStep {
+  if (step.toolId !== 'meeting.bundle') return step;
+  const index = steps.findIndex((s) => s.index < step.index && s.toolId === 'meeting.summarize');
+  if (index < 0 || results[index] === undefined) return step;
+  return { ...step, args: { ...step.args, summary_result: results[index] } };
+}
+
 /** contracts の ComplianceProfile と同じ値。ここは import できない（冒頭の注意）。 */
 export type StepComplianceProfile =
   'GENERAL' | 'ENTERPRISE' | 'REGULATED_HEALTH' | 'CARE' | 'FINANCIAL';

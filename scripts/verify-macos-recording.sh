@@ -14,6 +14,37 @@ else
   swift build >/dev/null
   BIN="$(swift build --show-bin-path)/AstraMac"
 fi
+APP="${BIN%/Contents/MacOS/AstraMac}"
+if [[ "$APP" == "$BIN" || ! -f "$APP/Contents/Info.plist" ]]; then
+  echo "AUTOMATION_MISSING: E2E-001 requires a signed app launched through LaunchServices" >&2
+  exit 2
+fi
+codesign --verify --deep --strict "$APP" || exit 1
+# LaunchServices does not inherit the shell environment. Keep fixtures out of the
+# user's real library when the caller selects an isolated data root.
+APP_ENV=()
+for key in ASTRA_DATA_ROOT ASTRA_SELFTEST_AGENT_EMAIL ASTRA_SELFTEST_AGENT_TOKEN_PATH; do
+  if [[ -n "${!key:-}" ]]; then APP_ENV+=(--env "$key=${!key}"); fi
+done
+# Tests that start recording/Speech must run as the app, not inherit the
+# terminal's TCC responsibility (which lacks NSSpeechRecognitionUsageDescription).
+# UI/capture fixtures exercise local recording. Do not inherit the user's cloud opt-in.
+# Google finalization is verified separately by the explicit cloudstt integration test.
+run_app_selftest() {
+  local logs status=0
+  logs="$(mktemp -d)"
+  open -n -W "${APP_ENV[@]}" --stdout "$logs/stdout.txt" --stderr "$logs/stderr.txt" \
+    "$APP" --args -astra.transcription.cloudGoogleSTT NO --selftest "$@" || status=$?
+  cat "$logs/stdout.txt" 2>/dev/null || true
+  cat "$logs/stderr.txt" >&2 2>/dev/null || true
+  if [[ "$status" -ne 0 ]] || ! grep -qE '^SELFTEST_(OK|SKIP)' "$logs/stdout.txt" \
+    || grep -qE '^SELFTEST_FAIL' "$logs/stdout.txt"; then
+    echo "FAIL: app selftest $1 did not complete (logs: $logs)" >&2
+    return 1
+  fi
+  rm -rf "$logs"
+}
+
 OUT="$("$BIN" --selftest record)"
 echo "$OUT"
 [[ "$OUT" == SELFTEST_OK* ]] || { echo "FAIL: macOS recording E2E" >&2; exit 1; }
@@ -69,7 +100,7 @@ OUTP="$("$BIN" --selftest pause)"; echo "$OUTP"
 [[ "$OUTP" == SELFTEST_OK* ]] || { echo "FAIL: macOS pause actually stops recording" >&2; exit 1; }
 OUTTM="$("$BIN" --selftest timer)"; echo "$OUTTM"
 [[ "$OUTTM" == SELFTEST_OK* ]] || { echo "FAIL: macOS elapsed timer" >&2; exit 1; }
-OUTA="$("$BIN" --selftest aiaction http://127.0.0.1:3000)"; echo "$OUTA"
+OUTA="$("$BIN" --selftest aiaction http://127.0.0.1:3000)" || { echo "$OUTA"; exit 1; }; echo "$OUTA"
 [[ "$OUTA" == SELFTEST_OK* || "$OUTA" == SELFTEST_SKIP* ]] || { echo "FAIL: macOS AI action via Agent" >&2; exit 1; }
 OUTT="$("$BIN" --selftest translate http://127.0.0.1:3000)"; echo "$OUTT"
 [[ "$OUTT" == SELFTEST_OK* || "$OUTT" == SELFTEST_SKIP* ]] || { echo "FAIL: macOS translate via Agent" >&2; exit 1; }
@@ -81,11 +112,11 @@ OUTCS="$("$BIN" --selftest connectorstate)"; echo "$OUTCS"
 [[ "$OUTCS" == SELFTEST_OK* ]] || { echo "FAIL: macOS connector state" >&2; exit 1; }
 OUTCE="$("$BIN" --selftest connectorexchange)"; echo "$OUTCE"
 [[ "$OUTCE" == SELFTEST_OK* ]] || { echo "FAIL: macOS connector exchange (mock token endpoint)" >&2; exit 1; }
-OUTVA="$("$BIN" --selftest voiceask http://127.0.0.1:3000)"; echo "$OUTVA"
+OUTVA="$("$BIN" --selftest voiceask http://127.0.0.1:3000)" || { echo "$OUTVA"; exit 1; }; echo "$OUTVA"
 [[ "$OUTVA" == SELFTEST_OK* || "$OUTVA" == SELFTEST_SKIP* ]] || { echo "FAIL: macOS voice ask via Agent" >&2; exit 1; }
-OUTRO="$("$BIN" --selftest recoveryoffline http://127.0.0.1:3000)"; echo "$OUTRO"
+OUTRO="$("$BIN" --selftest recoveryoffline http://127.0.0.1:3000)" || { echo "$OUTRO"; exit 1; }; echo "$OUTRO"
 [[ "$OUTRO" == SELFTEST_OK* || "$OUTRO" == SELFTEST_SKIP* ]] || { echo "FAIL: macOS offline recovery" >&2; exit 1; }
-OUTFL="$("$BIN" --selftest fulllifecycle http://127.0.0.1:3000)"; echo "$OUTFL"
+OUTFL="$(run_app_selftest fulllifecycle http://127.0.0.1:3000)" || { echo "$OUTFL"; exit 1; }; echo "$OUTFL"
 [[ "$OUTFL" == SELFTEST_OK* || "$OUTFL" == SELFTEST_SKIP* ]] || { echo "FAIL: macOS full Voice HUD->Recording->save->HUD lifecycle" >&2; exit 1; }
 # UI/UX テスト仕様 v1.0 の E2E-001（Product Reality Gate）。窓を実提示したまま一本で通し、
 # HUD と Recording Workspace が同時に画面へ残らないことまで実測する。
@@ -95,32 +126,10 @@ if [[ "${ASTRA_E2E_SYNTHETIC:-0}" = 1 ]]; then
   exit 1
 fi
 e2e_status=0
-APP="${BIN%/Contents/MacOS/AstraMac}"
-if [[ "$APP" == "$BIN" || ! -f "$APP/Contents/Info.plist" ]]; then
-  echo "AUTOMATION_MISSING: E2E-001 requires a signed app launched through LaunchServices" >&2
-  exit 2
-fi
-codesign --verify --deep --strict "$APP" || exit 1
-# Tests that start recording/Speech must run as the app, not inherit the
-# terminal's TCC responsibility (which lacks NSSpeechRecognitionUsageDescription).
-run_app_selftest() {
-  local logs status=0
-  logs="$(mktemp -d)"
-  open -n -W --stdout "$logs/stdout.txt" --stderr "$logs/stderr.txt" \
-    "$APP" --args --selftest "$@" || status=$?
-  cat "$logs/stdout.txt" 2>/dev/null || true
-  cat "$logs/stderr.txt" >&2 2>/dev/null || true
-  if [[ "$status" -ne 0 ]] || ! grep -qE '^SELFTEST_(OK|SKIP)' "$logs/stdout.txt" \
-    || grep -qE '^SELFTEST_FAIL' "$logs/stdout.txt"; then
-    echo "FAIL: app selftest $1 did not complete (logs: $logs)" >&2
-    return 1
-  fi
-  rm -rf "$logs"
-}
 E2E_LOG="$(mktemp -d)"
 # 実キャプチャはバンドル自身をTCCの主体にする。openの終了0だけでは合格にしない。
-open -n -W --stdout "$E2E_LOG/stdout.txt" --stderr "$E2E_LOG/stderr.txt" \
-  "$APP" --args --selftest e2e001 http://127.0.0.1:3000 || e2e_status=$?
+open -n -W "${APP_ENV[@]}" --stdout "$E2E_LOG/stdout.txt" --stderr "$E2E_LOG/stderr.txt" \
+  "$APP" --args -astra.transcription.cloudGoogleSTT NO --selftest e2e001 http://127.0.0.1:3000 || e2e_status=$?
 OUTE2E="$(cat "$E2E_LOG/stdout.txt" 2>/dev/null)"
 echo "$OUTE2E"
 cat "$E2E_LOG/stderr.txt" >&2
@@ -190,11 +199,20 @@ for appearance in light dark; do
   [[ "$dock_status" -eq 0 && "$OUTD" == *SELFTEST_OK* ]] || { echo "$OUTD" >&2; echo "FAIL: Task Dock 8 states ($appearance)" >&2; exit 1; }
 done
 
+live_fail=0
 for t in screenshot waveform livemic livemeeting livescreen sttrecognize sttstream guishot axtree a11ynames calendarask egress navtitle recoveryui focus upgrade breakpoints dictation state presence perf storage meetingiq vad browser dockanim invocation invocationaudio entry update secret recordbutton session uiscale acceptance sessionsync home-meeting-focus; do
   # `set -e` の下で $(…) が非 0 で返ると echo の前に落ち、どの検査が何と言って落ちたかが
   # ログに残らない（"^ FAILED" だけ）。出力を必ず残してから判定する。
   live_status=0
   OUT="$(run_app_selftest "$t")" || live_status=$?
   echo "$OUT"
-  [[ "$live_status" -eq 0 && ( "$OUT" == SELFTEST_OK* || "$OUT" == SELFTEST_SKIP* ) ]] || { echo "FAIL: macOS live $t" >&2; exit 1; }
+  # Diagnostics may precede the result. Require this test's result on its own
+  # line, and preserve the process exit status instead of matching the prefix.
+  if [[ "$live_status" -ne 0 ]] ||
+     ! grep -Eq "^SELFTEST_(OK|SKIP) ${t}:" <<<"$OUT" ||
+     grep -q '^SELFTEST_FAIL' <<<"$OUT"; then
+    echo "FAIL: macOS live $t" >&2; live_fail=1
+  fi
 done
+
+[[ "$live_fail" -eq 0 ]] || exit 1

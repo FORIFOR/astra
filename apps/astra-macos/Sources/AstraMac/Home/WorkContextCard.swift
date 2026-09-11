@@ -43,8 +43,9 @@ struct WorkContextCard: View {
                         }
                     }
                 }
-                WorkPressureView(week: ctx.week)
-                    .padding(.top, 4)
+                if ctx.week.meetingHours > 0 || ctx.week.deadlines > 0 || ctx.week.unanswered > 0 || ctx.week.waiting > 0 {
+                    WorkPressureView(week: ctx.week).padding(.top, 4)
+                }
                 personalizationRow
                 if let failure = store.failure {
                     Text(failure)
@@ -52,6 +53,7 @@ struct WorkContextCard: View {
                         .foregroundStyle(Palette.warning(dark))
                 }
             }
+            .accessibilityElement(children: .contain)
             .accessibilityIdentifier("workContextCard")
         }
     }

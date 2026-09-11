@@ -1,0 +1,86 @@
+
+astra-final-verify-all.log
+== current macOS debug candidate ==
+== astra-core tests ==
+== Tauri Rust regression ==
+== Tauri desktop JS regression ==
+      Tests  352 passed (352)
+== TCC usage descriptions ==
+== release consistency ==
+== release aggregation regression ==
+== UI taste ==
+== UI の癖 ==
+UI_TASTE_OK: 癖は上限内
+== permission JIT ==
+== privacy egress ==
+== PRIVACY_EGRESS_GATE ==
+== no contradiction ==
+== confirmation surface ==
+== CONFIRMATION_GATE ==
+== screen terms (one word each) ==
+== guide facts (app words only) ==
+SELFTEST_OK shots: 16面を実アプリで撮影・geometry OK・面どうしが別の絵
+GUIDE_FACTS_OK: ガイドの語はアプリの表示（UserFacingFacts）だけから来ている
+== guide facts selfcheck ==
+GUIDE_FACTS_SELFCHECK_OK: 3 つの書き戻しを全部捕まえた
+== design tokens fresh ==
+== type scale (no literals) ==
+== swift bindings fresh ==
+== workspace fixture fresh ==
+== conventions ==
+== C ABI contract (3-way) ==
+== native path Tauri-free ==
+== WinUI XAML well-formed ==
+== C# bridge -> core + gateway ==
+== Windows C# logic type-check ==
+== C ABI round-trip (C) ==
+== macOS recording + live E2E ==
+SELFTEST_OK record: closed=1 fragmentBytes=160000 elapsed=00:05 recoverable=1
+SELFTEST_OK lifecycle: elapsed=00:05 recovered=true
+SELFTEST_OK shortcut: registered=true combo=⌥Space matcher=ok receivedSyntheticPress=true
+SELFTEST_OK sysaudio: capturesAudio=true sampleRate=48000 channels=2 excludesSelf=true
+SELFTEST_OK calendar: status=未確認 upcoming=0
+SELFTEST_OK screen: width=1280 height=800 pixelFormat=BGRA audio=false
+SELFTEST_OK rag: order=a,c,b topScore=1.00 reason=語が 1 件一致 · 新しい · このプロジェクト
+SELFTEST_OK keychain: roundtrip ok, absent=nil, delete idempotent, service=com.astra.mac
+SELFTEST_OK files: candidates=2(binary除外) top=oauth.txt score=0.72
+SELFTEST_OK ax: trusted=true selection=nil candidates=0
+SELFTEST_OK speech: auth=0 onDeviceCapable=true started=false appendedFrames=false serverFallback=never
+SELFTEST_OK connector: pkce=S256✓ authorizeUrl✓ nonLoopbackRejected✓ configured=0
+SELFTEST_OK permissions: mic=許可済み screen=許可済み ax=許可済み calendar=未確認 speech=0
+SELFTEST_OK shape: path matches shared fixture (14 segments); taskDock content 296.0pt fits dockWidth 296.0pt
+SELFTEST_OK hudlifecycle: HUD→Recording→保存→HUD 復帰 の window 状態遷移 OK
+SELFTEST_OK panel: 全Space=true fullscreen補助=true borderless=true 透過=true notMain=true
+SELFTEST_OK render: VoiceHUD:c139/o0.99 IntentBar:c89/o1.00 RecordingIndicator:c168/o1.00 ConfirmationCard:c90/o0.94 MeetingArtifact:c99/o1.00 ResearchResult:c122/o0.81 MeetingSurface:c57/o1.00 LineagePanel:c126/o0.82 ApprovalCard:c106/o0.77 EvidenceSummary:c133/o0.70 WorkSurface:c123/o0.80 ContextLens:c100/o0.88 HomeView:c43/o1.00 RecordingWorkspace:c55/o0.99 MainWindow:c78/o1.00 Settings:c18/o0.13
+SELFTEST_OK pause: 停止中は録音が進まない before=5000 pause=5000 resume=10000
+SELFTEST_OK timer: 経過が進む running=2 停止で止まる paused=2 再開で進む resumed=3
+== initial profile native UI ==
+SELFTEST_OK initialprofile: 6 native captures; review/edit actions present; no external data or send
+== recording experience E2E ==
+RECORDING_EXPERIENCE_OK: 録音 → kill → interrupted → 続きから ready → 再起動で保持 (id=meeting-4ac45d05-5060-4a61-ab3f-7376c2c5f132)
+== journeys JA/JB/JC ==
+SURFACE_CONTINUITY_MOTION=PASS
+JOURNEYS_OK: 3 本とも最後まで通った（J-B の遷移中も 60fps で連続）
+== macOS swift unit tests ==
+	 Executed 86 tests, with 0 failures (0 unexpected) in 0.270 (0.276) seconds
+VERIFY_ALL_FAIL
+
+astra-final-unit.log
+	 Executed 86 tests, with 0 failures (0 unexpected) in 0.324 (0.330) seconds
+	 Executed 86 tests, with 0 failures (0 unexpected) in 0.324 (0.330) seconds
+
+astra-translation-layout.log
+SELFTEST_OK translation-layout: 12 native captures; pending original, error, retry; 320/720pt light/dark
+
+astra-translation-geometry-check.log
+SELFTEST_OK geometry: 6状態の位置・寸法が基準と 2pt 以内
+
+astra-translation-density.log
+SELFTEST_OK density: 16面が基準以下（最も詰まっている 07-apps 44.7% / 最も空いている 02b-voice-hud-preparing 94.3%）
+
+astra-dictation-diagnostic.log
+DICTATION_FIXTURE trusted=false value=0/true selection=0/true editable=true
+SELFTEST_FAIL e2e001 ②dictation: inserted=false value=""
+
+astra-ai-action-review.log
+SELFTEST_FAIL aiaction result=仕事を始められませんでした。

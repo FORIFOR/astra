@@ -1,0 +1,11 @@
+{
+  "id": "video",
+  "elapsedMs": 104822,
+  "result": {
+    "ok": false,
+    "error": {
+      "code": "llm.failed",
+      "message": "この端末でモデルを呼び出せませんでした。"
+    }
+  }
+}

@@ -1,4 +1,5 @@
 import AppKit
+import ApplicationServices
 
 /// §22 画面共有が始まったら Astra を引っ込める。
 ///
@@ -18,11 +19,7 @@ final class PresentationGuard: ObservableObject {
     @Published private(set) var isSharing = false
     private var timer: Timer?
 
-    /// 画面全体が共有されているか。共有中のアプリが画面キャプチャを走らせているかで見る。
-    ///
-    /// macOS には「いま画面共有中か」を直接聞ける公開 API が無いので、
-    /// 画面共有を行うアプリが動いていて、かつ録画中を示す状態から**推定**する。
-    /// 推定であることを隠さない —— 外したときに黙って晒さないよう、既定を安全側にしている。
+    /// 共有停止コントロールを調べる対象。起動中・会議中というだけでは共有と判定しない。
     static let sharingApps: Set<String> = [
         "us.zoom.xos", "com.microsoft.teams", "com.microsoft.teams2",
         "com.cisco.webexmeetingsapp", "com.apple.ScreenSharing", "com.google.Chrome",
@@ -40,10 +37,29 @@ final class PresentationGuard: ObservableObject {
         timer = nil
     }
 
+    private var probing = false
+    private var monitoredPID: pid_t?
+
     func refresh() {
-        // 会議アプリが前面かつ会議として検出されている間だけ、共有の可能性を見る。
-        let detected = AstraStateStore.shared.state.meeting.detectedApp != nil
-        apply(sharing: detected && Self.anySharingAppRunning())
+        guard !probing else { return }
+        let candidate = NSWorkspace.shared.runningApplications.first {
+            $0.isActive && Self.sharingApps.contains($0.bundleIdentifier ?? "")
+        }
+        // Keep observing the actual sharing app when the user switches to another
+        // supported app. Its idle UI must not clear an ongoing share.
+        if !isSharing, let candidate { monitoredPID = candidate.processIdentifier }
+        guard let pid = monitoredPID else { return }
+        guard NSRunningApplication(processIdentifier: pid)?.isTerminated == false else {
+            monitoredPID = nil; apply(sharing: false); return
+        }
+        probing = true
+        Task.detached {
+            let observed = ScreenSharingProbe.inspect(pid: pid)
+            await MainActor.run {
+                self.probing = false
+                if let observed { self.apply(sharing: observed) }
+            }
+        }
     }
 
     static func anySharingAppRunning() -> Bool {
@@ -70,5 +86,46 @@ final class PresentationGuard: ObservableObject {
             // （以前は mode == .meeting の間は戻らず、Stop が押せなくなっていた）。
             WindowCoordinator.shared.showVoiceHUD()
         }
+    }
+}
+
+/// A running meeting is not evidence of screen sharing. Only an actual stop-sharing
+/// control hides Astra; incomplete accessibility observations preserve the previous state.
+enum ScreenSharingProbe {
+    static func isStopControl(_ label: String) -> Bool {
+        let text = label.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        return ["stop sharing", "stop share", "stop presenting", "stop screen sharing",
+                "共有を停止", "画面共有を停止", "共有の停止", "プレゼンテーションを停止"]
+            .contains { text == $0 || text.hasPrefix($0 + " (") || text.hasPrefix($0 + "（") }
+    }
+
+    static func inspect(pid: pid_t) -> Bool? {
+        guard AXIsProcessTrusted() else { return nil }
+        let app = AXUIElementCreateApplication(pid)
+        AXUIElementSetMessagingTimeout(app, 0.05)
+        var windows: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(app, kAXWindowsAttribute as CFString, &windows) == .success,
+              let roots = windows as? [AXUIElement] else { return nil }
+        var queue = roots
+        var complete = true
+        var visited = 0
+        let deadline = Date().addingTimeInterval(0.35)
+        while !queue.isEmpty && visited < 240 && Date() < deadline {
+            let element = queue.removeFirst(); visited += 1
+            AXUIElementSetMessagingTimeout(element, 0.025)
+            func read(_ name: String) -> CFTypeRef? {
+                var value: CFTypeRef?
+                let status = AXUIElementCopyAttributeValue(element, name as CFString, &value)
+                if status == .cannotComplete || status == .invalidUIElement { complete = false }
+                return status == .success ? value : nil
+            }
+            let role = read(kAXRoleAttribute) as? String
+            if [kAXButtonRole, kAXMenuButtonRole, kAXCheckBoxRole].contains(role ?? "") {
+                let labels = [read(kAXTitleAttribute), read(kAXDescriptionAttribute), read(kAXHelpAttribute)].compactMap { $0 as? String }
+                if labels.contains(where: isStopControl) { return true }
+            }
+            queue.append(contentsOf: (read(kAXChildrenAttribute) as? [AXUIElement]) ?? [])
+        }
+        return complete && queue.isEmpty ? false : nil
     }
 }

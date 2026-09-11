@@ -19,29 +19,44 @@ prod() { grep -rn "$@" "$SRC" --include='*.swift' | grep -v "App/SelfTest.swift"
 
 echo "== PRIVACY_EGRESS_GATE =="
 
-# 1. 録音の自動 upload は release で 0。
+# 1. 録音の upload は、明示的な Google STT 同意の外では 0。
 #    - 音声を送る関数は RecordingRuntime だけが呼ぶ
-#    - 本番が RecordingRuntime に gateway を渡すのは devAutoUploadEnabled の中だけ
-#    - devAutoUploadEnabled は #if DEBUG の外で false
+#    - cloudTranscriptionAllowed が true のときだけ会議作成・送信・回復を行う
 up=$(prod "uploadMeetingAudio(" | grep -v "RecordingWorkspace/RecordingRuntime.swift\|RecordingWorkspace/AstraCoreBridge.swift" || true)
-cfg=$(prod "RecordingRuntime.shared.configureBackend" || true)
-cfg_bad=""
-while IFS= read -r line; do
-  [ -z "$line" ] && continue
-  f="${line%%:*}"; n="${line#*:}"; n="${n%%:*}"
-  from=$(( n > 6 ? n - 6 : 1 ))
-  sed -n "${from},${n}p" "$f" | grep -q "if RecordingRuntime.devAutoUploadEnabled" || cfg_bad="$cfg_bad"$'\n'"${line#$ROOT/}"
-done <<<"$cfg"
 flag=$(awk '/static var devAutoUploadEnabled/,/^    }/' "$SRC/RecordingWorkspace/RecordingRuntime.swift")
 flag_ok=1
 grep -q "#if DEBUG" <<<"$flag" || flag_ok=0
 grep -A2 "#else" <<<"$flag" | grep -q "return false" || flag_ok=0
-if [ -z "$up" ] && [ -z "$cfg_bad" ] && [ $flag_ok -eq 1 ]; then
-  row "release default recording upload" "0"
+cloud_gate=$(python3 - "$SRC" <<'CHECK'
+import pathlib, sys, re
+src=pathlib.Path(sys.argv[1])
+r=(src/'RecordingWorkspace/RecordingRuntime.swift').read_text()
+c=(src/'RecordingWorkspace/CloudMeetingTranscription.swift').read_text()
+l=(src/'Audio/GoogleLiveTranscriber.swift').read_text()
+m=(src/'Main/MainWindowView.swift').read_text()
+checks = [
+ 'stored as? Bool ?? developmentUpload' in r,
+ 'cloudConsentValue(UserDefaults.standard.object(forKey: cloudTranscriptionDefaultsKey),' in r,
+ 'developmentUpload: devAutoUploadEnabled)' in r,
+ 'cloudRequestedForRecording = Self.cloudTranscriptionAllowed' in r,
+ 'if transcribe, cloudRequestedForRecording { startGoogleLive() }' in r,
+ 'guard RecordingRuntime.cloudTranscriptionAllowed else' in l,
+ 'try await ws.send(.data(Data(bytes)))' in l,
+ 'CloudMeetingTranscription.finalize' not in r[r.index('    func end('):r.index('    func retryCloudTranscription')],
+ 'guard RecordingRuntime.cloudTranscriptionAllowed else' in c,
+ bool(re.search(r'try consent\(\)\s+try await socket.send\(\.data', c)),
+ 'if RecordingRuntime.devAutoUploadEnabled {' in m,
+ 'if RecordingRuntime.cloudTranscriptionAllowed {\n                        let recovered' not in m,
+]
+if all(checks): print('guarded')
+CHECK
+)
+if [ -z "$up" ] && [ -n "$cloud_gate" ] && [ $flag_ok -eq 1 ]; then
+  row "recording upload requires explicit cloud consent" "PASS"
 else
-  bad "release default recording upload" "FAIL" \
+  bad "recording upload requires explicit cloud consent" "FAIL" \
     "${up:+upload を RecordingRuntime の外で呼んでいる: $up}" \
-    "${cfg_bad:+devAutoUploadEnabled の外で録音に gateway を渡している:$cfg_bad}" \
+    "$([ -n "$cloud_gate" ] || echo 'cloudTranscriptionAllowed の gate が無い')" \
     "$([ $flag_ok -eq 1 ] || echo 'devAutoUploadEnabled が #if DEBUG / #else false になっていない')"
 fi
 
@@ -91,17 +106,17 @@ else
   bad "external action confirmation" "FAIL" "Confirm.ask の入口が $conf 箇所しかない"
 fi
 
-# 6. ガイドの「この Mac の中だけ」と、Info.plist の「音は端末から出しません」が、コードと食い違わない。
+# 6. ガイドが、オンデバイスと Google STT の選択を正しく説明する。
 guide="$ROOT/docs/guide/build.py"
 claim_ok=1
-grep -q "この Mac の中だけで扱われ" "$guide" || claim_ok=0
+grep -q "Google STT" "$guide" || claim_ok=0
 grep -q "相手の声のために" "$guide" && claim_ok=0     # 取り込んでいない音のために許可を説明しない
 grep -q "transcription.onDeviceUnavailable" "$guide" || claim_ok=0   # 落とさない代わりに、出ない理由を教える
 usage=$(grep -rn "NSSpeechRecognitionUsageDescription" "$ROOT/scripts/build-macos-app.sh" "$ROOT/apps/astra-macos/Info.plist" "$ROOT/apps/astra-macos/Sources" 2>/dev/null | head -1)
 if [ $claim_ok -eq 1 ]; then
-  row "local-only guide claim" "consistent"
+  row "transcription egress guide" "consistent"
 else
-  bad "local-only guide claim" "FAIL" "docs/guide/build.py: 「この Mac の中だけ」が無い / 「相手の声のために」が残っている / 出ない理由の行が無い"
+  bad "transcription egress guide" "FAIL" "docs/guide/build.py: Google STT の説明が無い / 「相手の声のために」が残っている / 出ない理由の行が無い"
 fi
 
 # 実行体（ある時だけ）: 既定 OFF と、資産の無いロケールで throw。

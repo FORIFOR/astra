@@ -98,9 +98,10 @@ final class PermissionGuideStateTests: XCTestCase {
         let h = Harness(states: [.accessibility: .granted, .screenCapture: .notDetermined, .microphone: .granted], settingsRunning: false)
         // now を差し替えるために依存を作り直す
         let p = h.permissions
+        var settingsIsRunning = false
         var deps = PermissionGuideCoordinator.Dependencies(
             permissions: p, tree: h.tree, makeObserver: { h.observer }, overlay: h.overlay,
-            openSettings: { _ in }, settingsPID: { nil })
+            openSettings: { _ in }, settingsPID: { settingsIsRunning ? 4242 : nil })
         deps.successDwell = 0; deps.fallbackInterval = 0; deps.after = { _, b in b() }
         deps.settingsLaunchTimeout = 5
         deps.now = { t }
@@ -112,6 +113,10 @@ final class PermissionGuideStateTests: XCTestCase {
         XCTAssertEqual(c.state, .failed("設定画面を開けませんでした"))
         XCTAssertEqual(h.overlay.avatarState, .warning)
         XCTAssertEqual(h.overlay.avatarAction, PermissionGuideCoordinator.actionRetryOpenSettings, "失敗のあとは「もう一度開く」")
+        settingsIsRunning = true
+        h.overlay.avatarRun?()
+        XCTAssertEqual(c.state, .waitingScreenCapture, "retry resumes detection instead of leaving a failed guide")
+        XCTAssertEqual(p.screenRequests, 1, "retrying Settings does not repeat the OS permission prompt")
         c.stop()
         XCTAssertEqual(c.state, .idle)
     }

@@ -10,10 +10,17 @@ import {
   defineQuery,
   defineSignal,
   proxyActivities,
+  patched,
   setHandler,
   workflowInfo,
 } from '@temporalio/workflow';
-import { planTask, requiresSingleAttempt, type TaskPlan } from './plan.js';
+import {
+  planTask,
+  requiresSingleAttempt,
+  isMeteredStep,
+  withMeetingSummary,
+  type TaskPlan,
+} from './plan.js';
 
 /**
  * 端末が落ちたときの失敗種別。
@@ -68,6 +75,13 @@ const tools = proxyActivities<TaskActivities>({
 const singleAttemptTools = proxyActivities<TaskActivities>({
   startToCloseTimeout: '5 minutes',
   heartbeatTimeout: '30 seconds',
+  retry: { maximumAttempts: 1 },
+});
+
+// Google long-audio operations can exceed the ordinary five-minute tool budget.
+// Avoid automatic retranscription after a timeout; the recording remains recoverable.
+const meetingTranscription = proxyActivities<TaskActivities>({
+  startToCloseTimeout: '30 minutes',
   retry: { maximumAttempts: 1 },
 });
 
@@ -247,7 +261,10 @@ export async function TaskWorkflow(input: TaskWorkflowInput): Promise<TaskResult
      * 「進行中」に見える。**気づけない失敗**が一番まずい。
      */
     try {
-      results.push(await runStepWaitingForHost(step));
+      const effective = patched('reuse-meeting-summary-v1')
+        ? withMeetingSummary(step, plan.steps, results)
+        : step;
+      results.push(await runStepWaitingForHost(effective));
     } catch (error) {
       await failWith(step.index, error);
       throw error;
@@ -283,7 +300,20 @@ export async function TaskWorkflow(input: TaskWorkflowInput): Promise<TaskResult
   async function runStepWaitingForHost(step: TaskPlan['steps'][number]): Promise<unknown> {
     for (let round = 0; ; round += 1) {
       try {
-        const executor = requiresSingleAttempt(step) ? singleAttemptTools : tools;
+        const executor =
+          step.toolId === 'meeting.transcribe' && patched('long-meeting-stt-v1')
+            ? meetingTranscription
+            : requiresSingleAttempt(step) ||
+                (patched('metered-single-attempt-v1') &&
+                  isMeteredStep(step) &&
+                  // Preserve the original activity policy when replaying video
+                  // histories created before rendering joined metered work.
+                  (step.toolId !== 'video.render' || patched('video-render-single-attempt-v1')) &&
+                  // General's cloud step delegates to a metered device model too.
+                  (!['general.answer', 'general.compose'].includes(step.toolId) ||
+                    patched('general-generation-single-attempt-v1')))
+              ? singleAttemptTools
+              : tools;
         return await executor.executeStep(input, step);
       } catch (error) {
         if (!isHostOffline(error) || round >= MAX_HOST_WAIT_ROUNDS) throw error;

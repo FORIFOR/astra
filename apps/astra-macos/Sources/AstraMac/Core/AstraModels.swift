@@ -75,7 +75,7 @@ enum DockPresentation: Equatable {
         switch self {
         case .idle:
             // スクショを認識した一瞬（〜1 秒）と、そのあとの chip は、文脈 chip と同じ幅（窓は増やさない）。
-            if VisualContextStore.shared.justCaptured != nil || !VisualContextStore.shared.recent.isEmpty {
+            if VisualContextStore.shared.offeredCapture != nil {
                 return CGSize(width: Metrics.dockContextWidth, height: Metrics.dockContextHeight)
             }
             return CGSize(width: Metrics.dockIdleWidth, height: Metrics.dockIdleHeight)
@@ -239,6 +239,7 @@ struct AgentStep: Identifiable, Equatable {
 }
 
 struct AgentTask: Identifiable, Equatable {
+    var requestRecord: TaskRequestRecord? = nil
     /// 進み具合（0–1）。段の状態から出す。持たせると必ずずれるので、計算にする。
     var progress: Double {
         guard !steps.isEmpty else { return 0 }

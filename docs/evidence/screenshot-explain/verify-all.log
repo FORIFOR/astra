@@ -1,0 +1,1227 @@
+== current macOS debug candidate ==
+[0/1] Planning build
+Building for debugging...
+[0/3] Write swift-version--58304C5D6DBC2206.txt
+Build complete! (0.22s)
+[0/1] Planning build
+Building for production...
+[0/3] Write sources
+[1/3] Write swift-version--58304C5D6DBC2206.txt
+[3/4] Compiling AstraMac ApprovalCard.swift
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/JourneyRecorder.swift:216:24: warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+214 |         let path = "\(outDir)/\(name).png"
+215 |         guard let win = window ?? Self.largestWindow(),
+216 |               let cg = CGWindowListCreateImage(
+    |                        `- warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+217 |                 .null, .optionIncludingWindow, CGWindowID(win.windowNumber),
+218 |                 [.boundsIgnoreFraming, .bestResolution]),
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift:193:28: warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+ 191 |             }
+ 192 |             guard let (winID, _, _) = best,
+ 193 |                   let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, winID, [.boundsIgnoreFraming, .bestResolution])
+     |                            `- warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+ 194 |             else { return nil }
+ 195 |             let rep = NSBitmapImageRep(cgImage: cg)
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift:480:28: warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+ 478 |                 ? [.bestResolution] : [.boundsIgnoreFraming, .nominalResolution]
+ 479 |             guard let (id, x, y, w, h) = found,
+ 480 |                   let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, id, opts),
+     |                            `- warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+ 481 |                   shadow || (cg.width == Int(w) && cg.height == Int(h))
+ 482 |             else { return nil }
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift:702:21: warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+ 700 |         settle(0.8)
+ 701 |         if let big = workspaceWindow,
+ 702 |            let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, big.id, [.boundsIgnoreFraming, .nominalResolution]) {
+     |                     `- warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+ 703 |             let rep = NSBitmapImageRep(cgImage: cg)
+ 704 |             if let png = rep.representation(using: .png, properties: [:]) {
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift:1154:28: warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+1152 |             settle(0.6)
+1153 |             guard let win = NSApp.windows.first(where: { $0.isVisible && $0.frame.width > 900 }),
+1154 |                   let cg = CGWindowListCreateImage(
+     |                            `- warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+1155 |                     .null, .optionIncludingWindow, CGWindowID(win.windowNumber),
+1156 |                     [.boundsIgnoreFraming, .bestResolution]) else { return nil }
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift:2356:25: warning: call to main actor-isolated instance method 'shot(_:window:)' in a synchronous nonisolated context [#ActorIsolatedCall]
+2354 |                 surfaces = NSApp.windows.filter(\.isVisible).count - w0
+2355 |                 dockAnswerable = UIProbe.exists("confirmCancel")
+2356 |                 _ = rec.shot("04-confirm", window: JourneyRecorder.dockWindow())
+     |                         `- warning: call to main actor-isolated instance method 'shot(_:window:)' in a synchronous nonisolated context [#ActorIsolatedCall]
+2357 |                 _ = UIProbe.tap("confirmCancel")
+2358 |                 // 別の面が残っていたら、それも閉じる（残さないと 120 秒止まる）。
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/JourneyRecorder.swift:213:10: note: calls to instance method 'shot(_:window:)' from outside of its actor context are implicitly asynchronous
+211 |     /// 測っていた（開始直後の白紙を測ろうとして、地 91.9% と出たのがそれ）。
+212 |     @discardableResult
+213 |     func shot(_ name: String, window: NSWindow? = nil) -> Bool {
+    |          `- note: calls to instance method 'shot(_:window:)' from outside of its actor context are implicitly asynchronous
+214 |         let path = "\(outDir)/\(name).png"
+215 |         guard let win = window ?? Self.largestWindow(),
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift:2356:68: warning: call to main actor-isolated static method 'dockWindow()' in a synchronous nonisolated context [#ActorIsolatedCall]
+2354 |                 surfaces = NSApp.windows.filter(\.isVisible).count - w0
+2355 |                 dockAnswerable = UIProbe.exists("confirmCancel")
+2356 |                 _ = rec.shot("04-confirm", window: JourneyRecorder.dockWindow())
+     |                                                                    `- warning: call to main actor-isolated static method 'dockWindow()' in a synchronous nonisolated context [#ActorIsolatedCall]
+2357 |                 _ = UIProbe.tap("confirmCancel")
+2358 |                 // 別の面が残っていたら、それも閉じる（残さないと 120 秒止まる）。
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/JourneyRecorder.swift:154:17: note: calls to static method 'dockWindow()' from outside of its actor context are implicitly asynchronous
+152 | 
+153 |     /// Dock（画面上端の常駐 panel）。level で見分ける。
+154 |     static func dockWindow() -> NSWindow? {
+    |                 `- note: calls to static method 'dockWindow()' from outside of its actor context are implicitly asynchronous
+155 |         NSApp.windows.first { $0.isVisible && $0.level == .statusBar }
+156 |     }
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift:2804:29: warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+2802 |                 }
+2803 |                 // 窓 id 経由。dark へ切り替えた直後などに nil を返すことがある。
+2804 |                 var image = CGWindowListCreateImage(.null, .optionIncludingWindow, win.id,
+     |                             `- warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+2805 |                                                     [.boundsIgnoreFraming, .bestResolution])
+2806 |                 if image == nil {
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift:2808:29: warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+2806 |                 if image == nil {
+2807 |                     // 代わりに画面のその領域を撮る。窓の再描画中でもこちらは通ることが多い。
+2808 |                     image = CGWindowListCreateImage(rect, .optionOnScreenOnly, kCGNullWindowID, [.bestResolution])
+     |                             `- warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+2809 |                 }
+2810 |                 if let cg = image,
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift:3440:24: warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+3438 |                           width: f.width + pad * 2,
+3439 |                           height: f.height + pad * 2)
+3440 |         guard let cg = CGWindowListCreateImage(rect, .optionOnScreenOnly, kCGNullWindowID, [.bestResolution]),
+     |                        `- warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+3441 |               let png = NSBitmapImageRep(cgImage: cg).representation(using: .png, properties: [:]) else {
+3442 |             print("SELFTEST_FAIL dockedge: 撮影できない"); exit(2)
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift:3450:22: warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+3448 |         settle(1.0)
+3449 |         let without = out.replacingOccurrences(of: ".png", with: "-without.png")
+3450 |         if let cg2 = CGWindowListCreateImage(rect, .optionOnScreenOnly, kCGNullWindowID, [.bestResolution]),
+     |                      `- warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+3451 |            let png2 = NSBitmapImageRep(cgImage: cg2).representation(using: .png, properties: [:]) {
+3452 |             try? png2.write(to: URL(fileURLWithPath: without))
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift:4128:62: warning: conditional downcast from '(json: [String : Any], consumed: Int)?' to '(json: [String : Any], consumed: Int)' does nothing
+4126 |         // ① 1 通ぶん届いていなければ nil（エラーにしない）。
+4127 |         let full = frame(["type": "context", "payload": ["url": "https://example.com", "title": "T"]])
+4128 |         if (try? NativeMessagingHost.decode(full.prefix(3))) as? (json: [String: Any], consumed: Int) != nil {
+     |                                                              `- warning: conditional downcast from '(json: [String : Any], consumed: Int)?' to '(json: [String : Any], consumed: Int)' does nothing
+4129 |             fail.append("途中のバッファで復号した")
+4130 |         }
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift:4536:34: warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+4534 |                 ids.removeAll(); texts.removeAll(); walk(app, 0)
+4535 |             } else { fail.append("会議と今日の状況を開けない") }
+4536 |             if let png, let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, CGWindowID(w.windowNumber),
+     |                                  `- warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+4537 |                                                           [.boundsIgnoreFraming, .nominalResolution]) {
+4538 |                 try? NSBitmapImageRep(cgImage: cg).representation(using: .png, properties: [:])?
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift:4795:36: warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+4793 |                     let until = Date().addingTimeInterval(0.4)
+4794 |                     while Date() < until { CFRunLoopRunInMode(.defaultMode, 0.05, true) }
+4795 |                     guard let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, CGWindowID(window.windowNumber), [.boundsIgnoreFraming, .bestResolution]) else {
+     |                                    `- warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+4796 |                         throw CloudMeetingTranscription.Failure(message: "window capture failed")
+4797 |                     }
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift:4851:77: warning: backward matching of the unlabeled trailing closure is deprecated; label the argument with 'completion' to suppress this warning [#TrailingClosureMatching]
+4849 |                 }
+4850 |                 let passed = interim > 0 && final > 0 && texts.contains(where: { $0.contains("金曜日") }) && runtime.snapshot() != nil
+4851 |                 await withCheckedContinuation { continuation in runtime.end { continuation.resume() } }
+     |                                                                             `- warning: backward matching of the unlabeled trailing closure is deprecated; label the argument with 'completion' to suppress this warning [#TrailingClosureMatching]
+4852 |                 restore()
+4853 |                 guard passed else {
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/RecordingWorkspace/RecordingRuntime.swift:460:10: note: 'end(cloudCompletion:completion:)' declared here
+458 | 
+459 |     /// 停止して確定。書けた断片は残り、回復候補になる。
+460 |     func end(cloudCompletion: ((String, String?) -> Void)? = nil, completion: (() -> Void)? = nil) {
+    |          `- note: 'end(cloudCompletion:completion:)' declared here
+461 |         drainMixedAudio()
+462 |         mixTimer?.invalidate(); mixTimer = nil; mixClock = nil
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift:5168:28: warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+5166 |             }
+5167 |             guard winID != 0,
+5168 |                   let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, winID, [.boundsIgnoreFraming, .bestResolution])
+     |                            `- warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+5169 |             else { window.orderOut(nil); window.close(); return nil }
+5170 |             let rep = NSBitmapImageRep(cgImage: cg)
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift:5573:28: warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+5571 |         }
+5572 |         func shot(_ win: NSWindow) -> [UInt8]? {
+5573 |             guard let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, CGWindowID(win.windowNumber),
+     |                            `- warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+5574 |                                                    [.boundsIgnoreFraming, .nominalResolution]),
+5575 |                   cg.width > 4, cg.height > 4 else { return nil }
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift:5843:21: warning: left side of nil coalescing operator '??' has non-optional type 'Int', so the right side is never used
+5841 |             .appendingPathComponent("meetings/screenshot-selftest").path
+5842 |         try? FileManager.default.removeItem(atPath: root)
+5843 |         guard (size ?? 0) > 1000, isPng else {
+     |                     `- warning: left side of nil coalescing operator '??' has non-optional type 'Int', so the right side is never used
+5844 |             print("SELFTEST_FAIL screenshot size=\(size ?? 0) isPng=\(isPng)"); exit(2)
+5845 |         }
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift:5844:57: warning: left side of nil coalescing operator '??' has non-optional type 'Int', so the right side is never used
+5842 |         try? FileManager.default.removeItem(atPath: root)
+5843 |         guard (size ?? 0) > 1000, isPng else {
+5844 |             print("SELFTEST_FAIL screenshot size=\(size ?? 0) isPng=\(isPng)"); exit(2)
+     |                                                         `- warning: left side of nil coalescing operator '??' has non-optional type 'Int', so the right side is never used
+5845 |         }
+5846 |         print("SELFTEST_OK screenshot: 実 PNG 保存 bytes=\(size ?? 0) isPng=\(isPng)")
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift:5846:68: warning: left side of nil coalescing operator '??' has non-optional type 'Int', so the right side is never used
+5844 |             print("SELFTEST_FAIL screenshot size=\(size ?? 0) isPng=\(isPng)"); exit(2)
+5845 |         }
+5846 |         print("SELFTEST_OK screenshot: 実 PNG 保存 bytes=\(size ?? 0) isPng=\(isPng)")
+     |                                                              `- warning: left side of nil coalescing operator '??' has non-optional type 'Int', so the right side is never used
+5847 |         exit(0)
+5848 |     }
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift:6154:37: warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+6152 |             settle(0.3)
+6153 |             let id = CGWindowID(max(0, win.windowNumber))
+6154 |             guard id != 0, let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, id, [.boundsIgnoreFraming, .bestResolution]),
+     |                                     `- warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+6155 |                   let png = NSBitmapImageRep(cgImage: cg).representation(using: .png, properties: [:]) else {
+6156 |                 fail.append(name); return
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift:6255:28: warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+6253 |                   // golden は logical points で保存する。Retina の物理画素を使うと
+6254 |                   // 同じ 220x44pt の窓が 440x88px になり、別の寸法と誤判定される。
+6255 |                   let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, winID, [.boundsIgnoreFraming, .nominalResolution]),
+     |                            `- warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+6256 |                   cg.width == w, cg.height == h
+6257 |             else { return nil }
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift:6947:87: warning: mutation of captured var 'ready' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+6945 |         }
+6946 |         let readyLock = NSLock(); var ready = false
+6947 |         listener.stateUpdateHandler = { st in if case .ready = st { readyLock.lock(); ready = true; readyLock.unlock() } }
+     |                                                                                       `- warning: mutation of captured var 'ready' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+6948 |         listener.start(queue: q)
+6949 |         var waited = 0
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift:6994:42: warning: left side of nil coalescing operator '??' has non-optional type 'Int', so the right side is never used
+6992 |         let recoverable = scanRecoverable(root: root, active: nil)
+6993 | 
+6994 |         guard closed == 1, exists, (size ?? 0) > 0, snap.elapsedLabel == "00:05",
+     |                                          `- warning: left side of nil coalescing operator '??' has non-optional type 'Int', so the right side is never used
+6995 |               recoverable.count == 1, recoverable[0].meetingId == "selftest"
+6996 |         else {
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift:6997:80: warning: left side of nil coalescing operator '??' has non-optional type 'Int', so the right side is never used
+6995 |               recoverable.count == 1, recoverable[0].meetingId == "selftest"
+6996 |         else {
+6997 |             print("SELFTEST_FAIL closed=\(closed) exists=\(exists) size=\(size ?? 0) elapsed=\(snap.elapsedLabel) recoverable=\(recoverable.count)")
+     |                                                                                `- warning: left side of nil coalescing operator '??' has non-optional type 'Int', so the right side is never used
+6998 |             exit(3)
+6999 |         }
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift:7001:74: warning: left side of nil coalescing operator '??' has non-optional type 'Int', so the right side is never used
+6999 |         }
+7000 |         try? FileManager.default.removeItem(atPath: root)
+7001 |         print("SELFTEST_OK record: closed=\(closed) fragmentBytes=\(size ?? 0) elapsed=\(snap.elapsedLabel) recoverable=\(recoverable.count)")
+     |                                                                          `- warning: left side of nil coalescing operator '??' has non-optional type 'Int', so the right side is never used
+7002 |         exit(0)
+7003 |     }
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTestPermissionCapabilities.swift:24:31: warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+ 22 |             window.displayIfNeeded()
+ 23 |             try? await Task.sleep(for: .milliseconds(600))
+ 24 |             guard let image = CGWindowListCreateImage(.null, .optionIncludingWindow,
+    |                               `- warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+ 25 |                 CGWindowID(window.windowNumber), [.boundsIgnoreFraming, .nominalResolution]),
+ 26 |                 let data = NSBitmapImageRep(cgImage: image).representation(using: .png, properties: [:]) else {
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTestPermissionHelp.swift:24:31: warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+22 |             window.displayIfNeeded()
+23 |             try? await Task.sleep(for: .milliseconds(600))
+24 |             guard let image = CGWindowListCreateImage(.null, .optionIncludingWindow,
+   |                               `- warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+25 |                 CGWindowID(window.windowNumber), [.boundsIgnoreFraming, .nominalResolution]),
+26 |                 let data = NSBitmapImageRep(cgImage: image).representation(using: .png, properties: [:]) else {
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTestRecordingJourneys.swift:26:28: warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+ 24 |         func capture(_ name: String) {
+ 25 |             guard let win = NSApp.windows.first(where: { $0.isVisible && $0 is NSPanel }),
+ 26 |                   let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, CGWindowID(win.windowNumber), [.boundsIgnoreFraming]),
+    |                            `- warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+ 27 |                   let png = NSBitmapImageRep(cgImage: cg).representation(using: .png, properties: [:]) else {
+ 28 |                 failures.append("screenshot missing: \(name)"); return
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTestScreenshot.swift:286:24: warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+284 |         settle(0.6)
+285 |         guard let win = NSApp.windows.first(where: { $0.isVisible && $0.frame.width > 100 }),
+286 |               let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, CGWindowID(win.windowNumber),
+    |                        `- warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+287 |                                                [.boundsIgnoreFraming, .bestResolution]) else {
+288 |             print("SCREENSHOT_SHOT_FAIL: HUD 窓が撮れない"); exit(2)
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTestScreenshot.swift:478:28: warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+476 |             WindowCoordinator.shared.showVoiceHUD(); settle(0.45)
+477 |             guard let win = NSApp.windows.first(where: { $0.isVisible && $0.frame.width > 100 }),
+478 |                   let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, CGWindowID(win.windowNumber), [.boundsIgnoreFraming, .bestResolution]),
+    |                            `- warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+479 |                   let png = NSBitmapImageRep(cgImage: cg).representation(using: .png, properties: [:]) else { report.append("\(name) MISSING"); return }
+480 |             try? png.write(to: URL(fileURLWithPath: "\(outDir)/\(name).png"))
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTestScreenshotQuestion.swift:44:25: warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+42 |             try? await Task.sleep(for: .milliseconds(300))
+43 |             host.layoutSubtreeIfNeeded(); host.displayIfNeeded()
+44 |             if let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, CGWindowID(window.windowNumber), [.boundsIgnoreFraming, .nominalResolution]),
+   |                         `- warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+45 |                let bytes = NSBitmapImageRep(cgImage: cg).representation(using: .png, properties: [:]) {
+46 |                 try? bytes.write(to: output.appendingPathComponent(name + ".png"))
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTestSystemShots.swift:51:28: warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+ 49 |         /// いま出ている窓を書く。どの窓を撮ったかは寸法で言う（絵と付き合わせられるように）。
+ 50 |         func write(_ name: String, _ win: Win) -> Bool {
+ 51 |             guard let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, win.id, [.boundsIgnoreFraming, .bestResolution]),
+    |                            `- warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+ 52 |                   let png = NSBitmapImageRep(cgImage: cg).representation(using: .png, properties: [:]) else { return false }
+ 53 |             try? png.write(to: URL(fileURLWithPath: "\(outDir)/\(name).png"))
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTestTranslationJourneys.swift:33:32: warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+ 31 |                 let key = name + (dark ? "-dark" : "-light")
+ 32 |                 guard let window = NSApp.windows.first(where: { $0.isVisible && $0 is NSPanel }),
+ 33 |                       let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, CGWindowID(window.windowNumber), [.boundsIgnoreFraming]),
+    |                                `- warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+ 34 |                       let png = NSBitmapImageRep(cgImage: cg).representation(using: .png, properties: [:]) else {
+ 35 |                     failures.append("capture " + key); continue
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTestWorkContext.swift:256:31: warning: main actor-isolated static property 'decoder' can not be referenced from a nonisolated context; this is an error in the Swift 6 language mode
+253 |     }
+254 | 
+255 |     static func brief() -> MeetingBrief? {
+    |                 `- note: add '@MainActor' to make static method 'brief()' part of global actor 'MainActor'
+256 |         try? WorkContextStore.decoder.decode(MeetingBrief.self, from: Data(briefJSON().utf8))
+    |                               `- warning: main actor-isolated static property 'decoder' can not be referenced from a nonisolated context; this is an error in the Swift 6 language mode
+257 |     }
+258 | 
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/Home/WorkContextStore.swift:189:16: note: static property declared here
+187 |     nonisolated(unsafe) static var previewBrief: MeetingBrief?
+188 | 
+189 |     static let decoder: JSONDecoder = {
+    |                `- note: static property declared here
+190 |         let d = JSONDecoder(); d.keyDecodingStrategy = .convertFromSnakeCase; return d
+191 |     }()
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTestWorkContext.swift:260:31: warning: main actor-isolated static property 'decoder' can not be referenced from a nonisolated context; this is an error in the Swift 6 language mode
+257 |     }
+258 | 
+259 |     static func context() -> WorkContext? {
+    |                 `- note: add '@MainActor' to make static method 'context()' part of global actor 'MainActor'
+260 |         try? WorkContextStore.decoder.decode(WorkContext.self, from: Data(contextJSON().utf8))
+    |                               `- warning: main actor-isolated static property 'decoder' can not be referenced from a nonisolated context; this is an error in the Swift 6 language mode
+261 |     }
+262 |     static func profile() -> PersonalizationProfile? {
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/Home/WorkContextStore.swift:189:16: note: static property declared here
+187 |     nonisolated(unsafe) static var previewBrief: MeetingBrief?
+188 | 
+189 |     static let decoder: JSONDecoder = {
+    |                `- note: static property declared here
+190 |         let d = JSONDecoder(); d.keyDecodingStrategy = .convertFromSnakeCase; return d
+191 |     }()
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTestWorkContext.swift:263:31: warning: main actor-isolated static property 'decoder' can not be referenced from a nonisolated context; this is an error in the Swift 6 language mode
+260 |         try? WorkContextStore.decoder.decode(WorkContext.self, from: Data(contextJSON().utf8))
+261 |     }
+262 |     static func profile() -> PersonalizationProfile? {
+    |                 `- note: add '@MainActor' to make static method 'profile()' part of global actor 'MainActor'
+263 |         try? WorkContextStore.decoder.decode(PersonalizationProfile.self, from: Data(profileJSON().utf8))
+    |                               `- warning: main actor-isolated static property 'decoder' can not be referenced from a nonisolated context; this is an error in the Swift 6 language mode
+264 |     }
+265 | }
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/Home/WorkContextStore.swift:189:16: note: static property declared here
+187 |     nonisolated(unsafe) static var previewBrief: MeetingBrief?
+188 | 
+189 |     static let decoder: JSONDecoder = {
+    |                `- note: static property declared here
+190 |         let d = JSONDecoder(); d.keyDecodingStrategy = .convertFromSnakeCase; return d
+191 |     }()
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTestWorkspaceUX.swift:46:36: warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+44 |                     // NavigationSplitView renders through AppKit/layer-backed subviews;
+45 |                     // cacheDisplay produces an empty shell on macOS 26. Capture our window.
+46 |                     guard let cg = CGWindowListCreateImage(.null, .optionIncludingWindow,
+   |                                    `- warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+47 |                         CGWindowID(window.windowNumber), [.boundsIgnoreFraming, .nominalResolution]),
+48 |                         let png = NSBitmapImageRep(cgImage: cg).representation(using: .png, properties: [:]) else { failures.append(name); return }
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SurfaceMotionGate.swift:64:13: warning: immutable property will not be decoded because it is declared with an initial value which cannot be overwritten
+ 62 | 
+ 63 |     struct Result: Codable {
+ 64 |         let product = "Astra"
+    |             |- warning: immutable property will not be decoded because it is declared with an initial value which cannot be overwritten
+    |             |- note: set the initial value via the initializer or explicitly define a CodingKeys enum including a 'product' case to silence this warning
+    |             `- note: make the property mutable instead
+ 65 |         let startedAt: String
+ 66 |         let targetFps = 60
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SurfaceMotionGate.swift:66:13: warning: immutable property will not be decoded because it is declared with an initial value which cannot be overwritten
+ 64 |         let product = "Astra"
+ 65 |         let startedAt: String
+ 66 |         let targetFps = 60
+    |             |- warning: immutable property will not be decoded because it is declared with an initial value which cannot be overwritten
+    |             |- note: set the initial value via the initializer or explicitly define a CodingKeys enum including a 'targetFps' case to silence this warning
+    |             `- note: make the property mutable instead
+ 67 |         var transitions: [Transition] = []
+ 68 |         var notMeasured: [String] = []
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SurfaceMotionGate.swift:102:13: warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+100 |     private static func capture(_ wins: [Win]) -> [Shot] {
+101 |         wins.compactMap { win in
+102 |             CGWindowListCreateImage(.null, .optionIncludingWindow, win.id, [.boundsIgnoreFraming, .nominalResolution])
+    |             `- warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+103 |                 .map { Shot(win: win, image: $0) }
+104 |         }
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/Context/ConnectorFlow.swift:54:69: warning: mutation of captured var 'ready' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+52 |         }
+53 |         var ready = false
+54 |         listener.stateUpdateHandler = { st in if case .ready = st { ready = true } }
+   |                                                                     `- warning: mutation of captured var 'ready' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+55 |         listener.start(queue: .main)
+56 |         // .ready になると port が確定する。
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/Context/ConnectorState.swift:163:42: warning: reference to captured var 'next' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+161 |             await MainActor.run {
+162 |                 for s in list {
+163 |                     guard let recorded = next[s.pluginId] else { continue }
+    |                                          `- warning: reference to captured var 'next' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+164 |                     if case .connecting = self.status[s.statusKey] { continue }
+165 |                     let live = recorded && self.hasToken(s)
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/GuidedSetup/GuidedSetupSelfTest.swift:144:21: warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+142 |         // アバターの姿を残す（目視用）。
+143 |         if let win = overlay.avatar.window,
+144 |            let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, CGWindowID(win.windowNumber), [.boundsIgnoreFraming, .bestResolution]) {
+    |                     `- warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+145 |             let png = NSBitmapImageRep(cgImage: cg).representation(using: .png, properties: [:])
+146 |             try? png?.write(to: URL(fileURLWithPath: "\(outDir)/guided-setup-avatar.png"))
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/GuidedSetup/GuidedSetupShots.swift:57:20: warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+ 55 |         func windowImage(_ win: NSWindow?) -> CGImage? {
+ 56 |             guard let win else { return nil }
+ 57 |             return CGWindowListCreateImage(.null, .optionIncludingWindow, CGWindowID(win.windowNumber), [.boundsIgnoreFraming, .bestResolution])
+    |                    `- warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+ 58 |         }
+ 59 |         /// Apple の窓（System Settings）と Astra の窓を、**それだけ**で合成する（机の上の他の窓や壁紙は入れない）。
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/GuidedSetup/GuidedSetupShots.swift:84:31: warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+ 82 |             }
+ 83 |             let union = layers.map(\.1).reduce(CGRect.null) { $0.union($1) }
+ 84 |             guard let first = CGWindowListCreateImage(.null, .optionIncludingWindow, settingsID, [.boundsIgnoreFraming, .bestResolution]) else {
+    |                               `- warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+ 85 |                 report.append("composite: cannot capture settings window"); return nil
+ 86 |             }
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/GuidedSetup/GuidedSetupShots.swift:93:60: warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+ 91 |                                       space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
+ 92 |             for (id, b) in layers {
+ 93 |                 guard let img = id == settingsID ? first : CGWindowListCreateImage(.null, .optionIncludingWindow, id, [.boundsIgnoreFraming, .bestResolution]) else {
+    |                                                            `- warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+ 94 |                     report.append("composite: window \(id) not capturable at \(b)"); continue
+ 95 |                 }
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/GuidedSetup/PermissionGuideCoordinator.swift:49:74: warning: passing non-Sendable parameter 'block' to function expecting a '@Sendable' closure
+ 46 |         }
+ 47 |         /// 遅延実行。検査では即時。
+ 48 |         var after: (TimeInterval, @escaping () -> Void) -> Void = { s, block in
+    |                                                                        `- note: parameter 'block' is implicitly non-Sendable
+ 49 |             DispatchQueue.main.asyncAfter(deadline: .now() + s, execute: block)
+    |                                                                          `- warning: passing non-Sendable parameter 'block' to function expecting a '@Sendable' closure
+ 50 |         }
+ 51 |         var now: () -> Date = Date.init
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/Home/SessionCard.swift:49:10: warning: 'onChange(of:perform:)' was deprecated in macOS 14.0: Use `onChange` with a two or zero parameter action closure instead. [#DeprecatedDeclaration]
+ 47 |         // 検査から「開けるか」を押す口。開けない状態では登録しない（押せたことにしない）。
+ 48 |         .onAppear { syncProbe() }
+ 49 |         .onChange(of: session.status) { _ in syncProbe() }
+    |          `- warning: 'onChange(of:perform:)' was deprecated in macOS 14.0: Use `onChange` with a two or zero parameter action closure instead. [#DeprecatedDeclaration]
+ 50 |         .onDisappear { UIProbe.unregister("session-\(session.id)") }
+ 51 |     }
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/Home/WorkContextStore.swift:205:54: warning: main actor-isolated static property 'decoder' can not be referenced from a nonisolated context; this is an error in the Swift 6 language mode
+187 |     nonisolated(unsafe) static var previewBrief: MeetingBrief?
+188 | 
+189 |     static let decoder: JSONDecoder = {
+    |                `- note: static property declared here
+190 |         let d = JSONDecoder(); d.keyDecodingStrategy = .convertFromSnakeCase; return d
+191 |     }()
+    :
+203 |             Task.detached { [base, token] in
+204 |                 let ctx = (try? AstraCoreBridge.workContext(base, accessToken: token))
+205 |                     .flatMap { try? WorkContextStore.decoder.decode(WorkContext.self, from: Data($0.utf8)) }
+    |                                                      `- warning: main actor-isolated static property 'decoder' can not be referenced from a nonisolated context; this is an error in the Swift 6 language mode
+206 |                 let prof = (try? AstraCoreBridge.personalization(base, accessToken: token))
+207 |                     .flatMap { try? WorkContextStore.decoder.decode(PersonalizationProfile.self, from: Data($0.utf8)) }
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/Home/WorkContextStore.swift:207:54: warning: main actor-isolated static property 'decoder' can not be referenced from a nonisolated context; this is an error in the Swift 6 language mode
+187 |     nonisolated(unsafe) static var previewBrief: MeetingBrief?
+188 | 
+189 |     static let decoder: JSONDecoder = {
+    |                `- note: static property declared here
+190 |         let d = JSONDecoder(); d.keyDecodingStrategy = .convertFromSnakeCase; return d
+191 |     }()
+    :
+205 |                     .flatMap { try? WorkContextStore.decoder.decode(WorkContext.self, from: Data($0.utf8)) }
+206 |                 let prof = (try? AstraCoreBridge.personalization(base, accessToken: token))
+207 |                     .flatMap { try? WorkContextStore.decoder.decode(PersonalizationProfile.self, from: Data($0.utf8)) }
+    |                                                      `- warning: main actor-isolated static property 'decoder' can not be referenced from a nonisolated context; this is an error in the Swift 6 language mode
+208 |                 let briefText = (try? AstraCoreBridge.workBriefNext(base, accessToken: token)) ?? ""
+209 |                 let brief = briefText.isEmpty ? nil
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/Home/WorkContextStore.swift:210:45: warning: main actor-isolated static property 'decoder' cannot be accessed from outside of the actor; this is an error in the Swift 6 language mode
+208 |                 let briefText = (try? AstraCoreBridge.workBriefNext(base, accessToken: token)) ?? ""
+209 |                 let brief = briefText.isEmpty ? nil
+210 |                     : try? WorkContextStore.decoder.decode(MeetingBrief.self, from: Data(briefText.utf8))
+    |                                             `- warning: main actor-isolated static property 'decoder' cannot be accessed from outside of the actor; this is an error in the Swift 6 language mode
+211 |                 await MainActor.run {
+212 |                     self.brief = brief ?? (self.brief ?? WorkContextStore.previewBrief)
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/Home/WorkContextStore.swift:287:49: warning: main actor-isolated static property 'decoder' cannot be accessed from outside of the actor; this is an error in the Swift 6 language mode
+285 |         Task.detached {
+286 |             if let text = try? AstraCoreBridge.personalizationUpdate(base, accessToken: token, updateJson: json),
+287 |                let prof = try? WorkContextStore.decoder.decode(PersonalizationProfile.self, from: Data(text.utf8)) {
+    |                                                 `- warning: main actor-isolated static property 'decoder' cannot be accessed from outside of the actor; this is an error in the Swift 6 language mode
+288 |                 await MainActor.run { self.profile = prof }
+289 |             } else {
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/Meeting/MeetingArtifactView.swift:162:10: warning: 'onChange(of:perform:)' was deprecated in macOS 14.0: Use `onChange` with a two or zero parameter action closure instead. [#DeprecatedDeclaration]
+160 |         // 検査が「いま右に何が出ているか」を読む口。speaker|time。
+161 |         .onAppear { UIProbe.fact("meetingShown", shown.map { "\($0.speaker)|\($0.transcriptTime)" }) }
+162 |         .onChange(of: picked?.id) { _ in
+    |          `- warning: 'onChange(of:perform:)' was deprecated in macOS 14.0: Use `onChange` with a two or zero parameter action closure instead. [#DeprecatedDeclaration]
+163 |             UIProbe.fact("meetingShown", shown.map { "\($0.speaker)|\($0.transcriptTime)" })
+164 |         }
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/RecordingWorkspace/RecordingRuntime.swift:140:95: warning: converting non-Sendable function value to '@MainActor @Sendable @convention(block) () -> Void' may introduce data races
+138 |                     if !live.isFinal { VoiceHUDState.shared.updatePartial(live.text) }
+139 |                 }
+140 |                 if Thread.isMainThread { deliver() } else { DispatchQueue.main.async(execute: deliver) }
+    |                                                                                               `- warning: converting non-Sendable function value to '@MainActor @Sendable @convention(block) () -> Void' may introduce data races
+141 |             }
+142 |             self.speech = st
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/RecordingWorkspace/RecordingRuntime.swift:151:99: warning: converting non-Sendable function value to '@MainActor @Sendable @convention(block) () -> Void' may introduce data races
+149 |                         self?.onTranscript?(live.text, live.isFinal)
+150 |                     }
+151 |                     if Thread.isMainThread { deliver() } else { DispatchQueue.main.async(execute: deliver) }
+    |                                                                                                   `- warning: converting non-Sendable function value to '@MainActor @Sendable @convention(block) () -> Void' may introduce data races
+152 |                 }
+153 |                 remoteSpeech = remote
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/RecordingWorkspace/RecordingRuntime.swift:261:23: warning: call to main actor-isolated instance method 'drainMixedAudio()' in a synchronous nonisolated context [#ActorIsolatedCall]
+259 |             mixClock = ProcessInfo.processInfo.systemUptime; mixedFrames = 0
+260 |             mixTimer = Timer.scheduledTimer(withTimeInterval: 0.02, repeats: true) { [weak self] _ in
+261 |                 self?.drainMixedAudio()
+    |                       `- warning: call to main actor-isolated instance method 'drainMixedAudio()' in a synchronous nonisolated context [#ActorIsolatedCall]
+262 |             }
+263 |         }
+    :
+341 |     }
+342 | 
+343 |     private func drainMixedAudio() {
+    |                  `- note: calls to instance method 'drainMixedAudio()' from outside of its actor context are implicitly asynchronous
+344 |         guard systemAudioWanted, !paused, let clock = mixClock else { return }
+345 |         let due = max(0, Int(max(0, ProcessInfo.processInfo.systemUptime - clock) * 16_000) - mixedFrames)
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/RecordingWorkspace/RecordingRuntime.swift:283:25: warning: capture of 'mic' with non-Sendable type 'MicCapture' in a '@Sendable' closure [#SendableClosureCaptures]
+281 |             micQueue.async { [weak self] in
+282 |                 do {
+283 |                     try mic.start { frame in
+    |                         `- warning: capture of 'mic' with non-Sendable type 'MicCapture' in a '@Sendable' closure [#SendableClosureCaptures]
+284 |                         DispatchQueue.main.async {
+285 |                             self?.receiveAudio(frame, channel: .localUser, generation: generation)
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/Audio/MicCapture.swift:8:13: note: class 'MicCapture' does not conform to the 'Sendable' protocol
+ 6 | /// **注意**: ライブ取り込みは署名済み .app + マイク許可(TCC)が要る。SwiftPM の裸実行では
+ 7 | /// 許可プロンプトが出ないため headless では動かない。ここは実装であり、実許可の検証は .app 側で。
+ 8 | final class MicCapture {
+   |             `- note: class 'MicCapture' does not conform to the 'Sendable' protocol
+ 9 |     private let engine = AVAudioEngine()
+10 |     private let targetRate: Double = 16_000
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/RecordingWorkspace/RecordingRuntime.swift:371:42: warning: capture of 'micCapture' with non-Sendable type 'MicCapture' in a '@Sendable' closure [#SendableClosureCaptures]
+369 |     func prewarmMic() {
+370 |         guard Permissions.microphone == .granted else { return }
+371 |         micQueue.async { [micCapture] in micCapture.prewarm() }
+    |                                          `- warning: capture of 'micCapture' with non-Sendable type 'MicCapture' in a '@Sendable' closure [#SendableClosureCaptures]
+372 |     }
+373 | 
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/Audio/MicCapture.swift:8:13: note: class 'MicCapture' does not conform to the 'Sendable' protocol
+ 6 | /// **注意**: ライブ取り込みは署名済み .app + マイク許可(TCC)が要る。SwiftPM の裸実行では
+ 7 | /// 許可プロンプトが出ないため headless では動かない。ここは実装であり、実許可の検証は .app 側で。
+ 8 | final class MicCapture {
+   |             `- note: class 'MicCapture' does not conform to the 'Sendable' protocol
+ 9 |     private let engine = AVAudioEngine()
+10 |     private let targetRate: Double = 16_000
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/RecordingWorkspace/RecordingRuntime.swift:413:21: warning: capture of 'mic' with non-Sendable type 'MicCapture' in a '@Sendable' closure [#SendableClosureCaptures]
+411 |         micQueue.async { [weak self] in
+412 |             do {
+413 |                 try mic.start { frame in
+    |                     `- warning: capture of 'mic' with non-Sendable type 'MicCapture' in a '@Sendable' closure [#SendableClosureCaptures]
+414 |                     guard let self, self.voiceListening else { return }
+415 |                     if !sawFirst { sawFirst = true; DispatchQueue.main.async { onFirstFrame() } }
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/Audio/MicCapture.swift:8:13: note: class 'MicCapture' does not conform to the 'Sendable' protocol
+ 6 | /// **注意**: ライブ取り込みは署名済み .app + マイク許可(TCC)が要る。SwiftPM の裸実行では
+ 7 | /// 許可プロンプトが出ないため headless では動かない。ここは実装であり、実許可の検証は .app 側で。
+ 8 | final class MicCapture {
+   |             `- note: class 'MicCapture' does not conform to the 'Sendable' protocol
+ 9 |     private let engine = AVAudioEngine()
+10 |     private let targetRate: Double = 16_000
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/RecordingWorkspace/RecordingRuntime.swift:414:42: warning: main actor-isolated property 'voiceListening' can not be referenced from a nonisolated context
+107 |     private var voiceSpeech: SpeechTranscriber?
+108 |     private var voiceVad = VoiceActivityDetector()
+109 |     private(set) var voiceListening = false
+    |                      `- note: property declared here
+110 |     /// 文字起こしを頼まれたのに、この Mac ではオンデバイス STT が始められなかった。
+111 |     /// **録音は続いている。**サーバへは落とさない（`SpeechTranscriber` 冒頭）。画面はこれを見て
+    :
+412 |             do {
+413 |                 try mic.start { frame in
+414 |                     guard let self, self.voiceListening else { return }
+    |                                          `- warning: main actor-isolated property 'voiceListening' can not be referenced from a nonisolated context
+415 |                     if !sawFirst { sawFirst = true; DispatchQueue.main.async { onFirstFrame() } }
+416 |                     if self.voiceVad.accept(frame) { self.voiceSpeech?.append(frame, sampleRate: 16_000) }
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/RecordingWorkspace/RecordingRuntime.swift:416:29: warning: main actor-isolated property 'voiceVad' can not be mutated from a nonisolated context
+106 |     /// Listening（声で頼む）の取り込み。録音とは別で、ディスクには残さない。
+107 |     private var voiceSpeech: SpeechTranscriber?
+108 |     private var voiceVad = VoiceActivityDetector()
+    |                 `- note: mutation of this property is only permitted within the actor
+109 |     private(set) var voiceListening = false
+110 |     /// 文字起こしを頼まれたのに、この Mac ではオンデバイス STT が始められなかった。
+    :
+414 |                     guard let self, self.voiceListening else { return }
+415 |                     if !sawFirst { sawFirst = true; DispatchQueue.main.async { onFirstFrame() } }
+416 |                     if self.voiceVad.accept(frame) { self.voiceSpeech?.append(frame, sampleRate: 16_000) }
+    |                             `- warning: main actor-isolated property 'voiceVad' can not be mutated from a nonisolated context
+417 |                 }
+418 |             } catch {
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/RecordingWorkspace/RecordingRuntime.swift:416:59: warning: main actor-isolated property 'voiceSpeech' can not be referenced from a nonisolated context
+105 |     var onSystemAudioFailure: (() -> Void)?
+106 |     /// Listening（声で頼む）の取り込み。録音とは別で、ディスクには残さない。
+107 |     private var voiceSpeech: SpeechTranscriber?
+    |                 `- note: property declared here
+108 |     private var voiceVad = VoiceActivityDetector()
+109 |     private(set) var voiceListening = false
+    :
+414 |                     guard let self, self.voiceListening else { return }
+415 |                     if !sawFirst { sawFirst = true; DispatchQueue.main.async { onFirstFrame() } }
+416 |                     if self.voiceVad.accept(frame) { self.voiceSpeech?.append(frame, sampleRate: 16_000) }
+    |                                                           `- warning: main actor-isolated property 'voiceSpeech' can not be referenced from a nonisolated context
+417 |                 }
+418 |             } catch {
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/RecordingWorkspace/RecordingRuntime.swift:435:42: warning: capture of 'micCapture' with non-Sendable type 'MicCapture' in a '@Sendable' closure [#SendableClosureCaptures]
+433 |         voiceSpeech?.finish(); voiceSpeech = nil
+434 |         voiceVad.reset()
+435 |         micQueue.async { [micCapture] in micCapture.stop(); micCapture.prewarm() }
+    |                                          `- warning: capture of 'micCapture' with non-Sendable type 'MicCapture' in a '@Sendable' closure [#SendableClosureCaptures]
+436 |     }
+437 |     func setPaused(_ paused: Bool) {
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/Audio/MicCapture.swift:8:13: note: class 'MicCapture' does not conform to the 'Sendable' protocol
+ 6 | /// **注意**: ライブ取り込みは署名済み .app + マイク許可(TCC)が要る。SwiftPM の裸実行では
+ 7 | /// 許可プロンプトが出ないため headless では動かない。ここは実装であり、実許可の検証は .app 側で。
+ 8 | final class MicCapture {
+   |             `- note: class 'MicCapture' does not conform to the 'Sendable' protocol
+ 9 |     private let engine = AVAudioEngine()
+10 |     private let targetRate: Double = 16_000
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/RecordingWorkspace/RecordingRuntime.swift:483:17: warning: initialization of immutable value 'id' was never used; consider replacing with assignment to '_' or removing it [#no-usage]
+481 |             try? session?.finish()
+482 |             session = nil
+483 |             let id = activeMeetingId
+    |                 `- warning: initialization of immutable value 'id' was never used; consider replacing with assignment to '_' or removing it [#no-usage]
+484 |             meetingId = nil
+485 |             // Live results already went through onTranscript and the local transcript store.
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/RecordingWorkspace/RecordingRuntime.swift:470:46: warning: capture of 'micCapture' with non-Sendable type 'MicCapture' in a '@Sendable' closure [#SendableClosureCaptures]
+468 |             micActive = false
+469 |             // 止めたあと次の録音のために資源だけ確保し直す（IO は始めない）。
+470 |             micQueue.async { [micCapture] in micCapture.stop(); micCapture.prewarm() }
+    |                                              `- warning: capture of 'micCapture' with non-Sendable type 'MicCapture' in a '@Sendable' closure [#SendableClosureCaptures]
+471 |         }
+472 |         let transcribers = [speech, remoteSpeech].compactMap { $0 }
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/Audio/MicCapture.swift:8:13: note: class 'MicCapture' does not conform to the 'Sendable' protocol
+ 6 | /// **注意**: ライブ取り込みは署名済み .app + マイク許可(TCC)が要る。SwiftPM の裸実行では
+ 7 | /// 許可プロンプトが出ないため headless では動かない。ここは実装であり、実許可の検証は .app 側で。
+ 8 | final class MicCapture {
+   |             `- note: class 'MicCapture' does not conform to the 'Sendable' protocol
+ 9 |     private let engine = AVAudioEngine()
+10 |     private let targetRate: Double = 16_000
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/RecordingWorkspace/RecordingWorkspaceState.swift:273:34: warning: main actor-isolated property 'isRecording' can not be referenced from a Sendable closure
+ 59 |     static let shared = RecordingWorkspaceState()
+ 60 | 
+ 61 |     @Published var isRecording = false
+    |                    `- note: property declared here
+ 62 |     /// 録音を成り立たなくしている許可。無ければ nil。バナーで出す。
+ 63 |     @Published var permissionIssue: PermissionIssue?
+    :
+271 |         tickTimer?.invalidate()
+272 |         tickTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+273 |             guard let self, self.isRecording, !self.isPaused, !self.freezeClockForShot else { return }
+    |                                  `- warning: main actor-isolated property 'isRecording' can not be referenced from a Sendable closure
+274 |             self.elapsedSeconds += 1
+275 |         }
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/RecordingWorkspace/RecordingWorkspaceState.swift:273:53: warning: main actor-isolated property 'isPaused' can not be referenced from a Sendable closure
+ 64 |     private var tickTimer: Timer?
+ 65 |     private var microphoneRequest: UUID?
+ 66 |     @Published var isPaused = false
+    |                    `- note: property declared here
+ 67 |     @Published var elapsedSeconds = 0
+ 68 |     /// 検査用: 撮影の間だけ経過時計を止める。**本番では false。** light と dark を別プロセスで撮るので、
+    :
+271 |         tickTimer?.invalidate()
+272 |         tickTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+273 |             guard let self, self.isRecording, !self.isPaused, !self.freezeClockForShot else { return }
+    |                                                     `- warning: main actor-isolated property 'isPaused' can not be referenced from a Sendable closure
+274 |             self.elapsedSeconds += 1
+275 |         }
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/RecordingWorkspace/RecordingWorkspaceState.swift:273:69: warning: main actor-isolated property 'freezeClockForShot' can not be referenced from a Sendable closure
+ 68 |     /// 検査用: 撮影の間だけ経過時計を止める。**本番では false。** light と dark を別プロセスで撮るので、
+ 69 |     /// 動いたままだと同じ面が 05:21 / 05:23 とずれ、fixed（light == dark）の gate が運で通ったり落ちたりした（実測）。
+ 70 |     var freezeClockForShot = false
+    |         `- note: property declared here
+ 71 |     @Published var selectedTool: RecordingTool = .transcript
+ 72 |     @Published var ragOpen = false
+    :
+271 |         tickTimer?.invalidate()
+272 |         tickTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+273 |             guard let self, self.isRecording, !self.isPaused, !self.freezeClockForShot else { return }
+    |                                                                     `- warning: main actor-isolated property 'freezeClockForShot' can not be referenced from a Sendable closure
+274 |             self.elapsedSeconds += 1
+275 |         }
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/RecordingWorkspace/RecordingWorkspaceState.swift:274:18: warning: main actor-isolated property 'elapsedSeconds' can not be mutated from a Sendable closure
+ 65 |     private var microphoneRequest: UUID?
+ 66 |     @Published var isPaused = false
+ 67 |     @Published var elapsedSeconds = 0
+    |                    `- note: mutation of this property is only permitted within the actor
+ 68 |     /// 検査用: 撮影の間だけ経過時計を止める。**本番では false。** light と dark を別プロセスで撮るので、
+ 69 |     /// 動いたままだと同じ面が 05:21 / 05:23 とずれ、fixed（light == dark）の gate が運で通ったり落ちたりした（実測）。
+    :
+272 |         tickTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+273 |             guard let self, self.isRecording, !self.isPaused, !self.freezeClockForShot else { return }
+274 |             self.elapsedSeconds += 1
+    |                  `- warning: main actor-isolated property 'elapsedSeconds' can not be mutated from a Sendable closure
+275 |         }
+276 |         // オンデバイス STT の途中経過/確定を transcript に反映する。
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/RecordingWorkspace/RecordingWorkspaceState.swift:422:64: warning: converting non-Sendable function value to '@MainActor @Sendable @convention(block) () -> Void' may introduce data races
+420 |             let pending = self.startAfterFinishing
+421 |             self.startAfterFinishing = nil
+422 |             if let pending { DispatchQueue.main.async(execute: pending) }
+    |                                                                `- warning: converting non-Sendable function value to '@MainActor @Sendable @convention(block) () -> Void' may introduce data races
+423 |         }
+424 |     }
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/VoiceHUD/VoiceHUDState.swift:184:43: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+182 |                 else {
+183 |                     conv = try AstraCoreBridge.startConversation(base, accessToken: token)
+184 |                     await MainActor.run { self?.conversationId = conv }
+    |                                           `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+185 |                 }
+186 |                 await MainActor.run {
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/VoiceHUD/VoiceHUDState.swift:188:21: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+186 |                 await MainActor.run {
+187 |                     VisualContextStore.shared.bind(conversationID: conv, preserving: Set(attached.map(\.id)))
+188 |                     self?.updateRequest(task.id) { $0.conversationID = conv }
+    |                     `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+189 |                 }
+190 |                 let outcome = replyCandidates.isEmpty
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/VoiceHUD/VoiceHUDState.swift:196:21: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+194 |                                                    text: text, attachments: attachments, replyCandidatesJson: replyCandidates)
+195 |                 await MainActor.run {
+196 |                     self?.updateRequest(task.id) { $0.backendTaskID = outcome.taskId; $0.phase = .working }
+    |                     `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+197 |                 }
+198 |                 let reply = try Self.followUp(outcome, base: base, token: token, waitMs: 12_000)
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/VoiceHUD/VoiceHUDState.swift:200:21: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+198 |                 let reply = try Self.followUp(outcome, base: base, token: token, waitMs: 12_000)
+199 |                 await MainActor.run {
+200 |                     self?.applyReply(reply, to: task.id)
+    |                     `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+201 |                     self?.answer = reply.text; self?.mode = .idle
+202 |                     if reply.settled { VisualContextStore.shared.markRecent(attached) }
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/VoiceHUD/VoiceHUDState.swift:201:21: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+199 |                 await MainActor.run {
+200 |                     self?.applyReply(reply, to: task.id)
+201 |                     self?.answer = reply.text; self?.mode = .idle
+    |                     `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+202 |                     if reply.settled { VisualContextStore.shared.markRecent(attached) }
+203 |                     // 返信案なら、答えとしてではなく確認カードとして出す（送るのは押されたときだけ）。
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/VoiceHUD/VoiceHUDState.swift:201:48: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+199 |                 await MainActor.run {
+200 |                     self?.applyReply(reply, to: task.id)
+201 |                     self?.answer = reply.text; self?.mode = .idle
+    |                                                `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+202 |                     if reply.settled { VisualContextStore.shared.markRecent(attached) }
+203 |                     // 返信案なら、答えとしてではなく確認カードとして出す（送るのは押されたときだけ）。
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/VoiceHUD/VoiceHUDState.swift:212:25: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+210 |                     let later = try Self.followUp(outcome, base: base, token: token, waitMs: 120_000)
+211 |                     await MainActor.run {
+212 |                         self?.applyReply(later, to: task.id)
+    |                         `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+213 |                         if later.settled {
+214 |                             self?.answer = later.text; VisualContextStore.shared.markRecent(attached)
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/VoiceHUD/VoiceHUDState.swift:214:29: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+212 |                         self?.applyReply(later, to: task.id)
+213 |                         if later.settled {
+214 |                             self?.answer = later.text; VisualContextStore.shared.markRecent(attached)
+    |                             `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+215 |                             if !outcome.replyJson.isEmpty, let draft = ReplyFlow.draft(replyJson: outcome.replyJson, body: later.text) {
+216 |                                 ReplyFlow.shared.present(draft)
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/VoiceHUD/VoiceHUDState.swift:221:39: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+219 |                     }
+220 |                 }
+221 |                 await MainActor.run { self?.requestInFlight = false }
+    |                                       `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+222 |             } catch {
+223 |                 await MainActor.run {
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/VoiceHUD/VoiceHUDState.swift:224:21: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+222 |             } catch {
+223 |                 await MainActor.run {
+224 |                     self?.updateRequest(task.id) {
+    |                     `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+225 |                         $0.phase = .unknown
+226 |                         $0.message = $0.backendTaskID.isEmpty
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/VoiceHUD/VoiceHUDState.swift:230:21: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+228 |                             : "通信が切れました。状況を確認すると、同じ仕事の続きが読み込まれます。"
+229 |                     }
+230 |                     self?.answer = "接続を確認してください。依頼と現在の状況は Work に保存されています。"; self?.mode = .idle
+    |                     `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+231 |                     self?.requestInFlight = false
+232 |                 }
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/VoiceHUD/VoiceHUDState.swift:230:139: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+228 |                             : "通信が切れました。状況を確認すると、同じ仕事の続きが読み込まれます。"
+229 |                     }
+230 |                     self?.answer = "接続を確認してください。依頼と現在の状況は Work に保存されています。"; self?.mode = .idle
+    |                                                                             `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+231 |                     self?.requestInFlight = false
+232 |                 }
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/VoiceHUD/VoiceHUDState.swift:231:21: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+229 |                     }
+230 |                     self?.answer = "接続を確認してください。依頼と現在の状況は Work に保存されています。"; self?.mode = .idle
+231 |                     self?.requestInFlight = false
+    |                     `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+232 |                 }
+233 |             }
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/VoiceHUD/VoiceHUDState.swift:307:39: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+305 |                 let outcome = TurnOutcome(needsClarification: false, answer: "", taskId: record.backendTaskID, notice: "", replyJson: "")
+306 |                 let reply = try Self.followUp(outcome, base: base, token: token, waitMs: 12_000)
+307 |                 await MainActor.run { self?.applyReply(reply, to: id); self?.refreshingRequests.remove(id) }
+    |                                       `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+308 |             } catch {
+309 |                 await MainActor.run {
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/VoiceHUD/VoiceHUDState.swift:307:72: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+305 |                 let outcome = TurnOutcome(needsClarification: false, answer: "", taskId: record.backendTaskID, notice: "", replyJson: "")
+306 |                 let reply = try Self.followUp(outcome, base: base, token: token, waitMs: 12_000)
+307 |                 await MainActor.run { self?.applyReply(reply, to: id); self?.refreshingRequests.remove(id) }
+    |                                                                        `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+308 |             } catch {
+309 |                 await MainActor.run {
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/VoiceHUD/VoiceHUDState.swift:310:21: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+308 |             } catch {
+309 |                 await MainActor.run {
+310 |                     self?.updateRequest(id) { $0.message = "状況を取得できませんでした。接続を確認してから、もう一度状況を確認できます。" }
+    |                     `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+311 |                     self?.refreshingRequests.remove(id)
+312 |                 }
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/VoiceHUD/VoiceHUDState.swift:311:21: warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+309 |                 await MainActor.run {
+310 |                     self?.updateRequest(id) { $0.message = "状況を取得できませんでした。接続を確認してから、もう一度状況を確認できます。" }
+311 |                     self?.refreshingRequests.remove(id)
+    |                     `- warning: reference to captured var 'self' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+312 |                 }
+313 |             }
+
+[#ActorIsolatedCall]: <https://docs.swift.org/compiler/documentation/diagnostics/actor-isolated-call>
+[#DeprecatedDeclaration]: <https://docs.swift.org/compiler/documentation/diagnostics/deprecated-declaration>
+[#SendableClosureCaptures]: <https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures>
+[#TrailingClosureMatching]: <https://docs.swift.org/compiler/documentation/diagnostics/trailing-closure-matching>
+[3/5] Write Objects.LinkFileList
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[355](25ac62e5b3c53843-curve25519.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[356](0bbbd18bda93c05b-aes_nohw.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[357](00c879ee3285a50d-montgomery.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[358](00c879ee3285a50d-montgomery_inv.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[359](a0330e891e733f4e-ecp_nistz.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[361](a0330e891e733f4e-gfp_p384.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[363](aaa1ba3e455ee2e1-limbs.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[364](a4019cc0736b0423-mem.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[365](d5a9841f3dc6e253-poly1305.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[366](a0330e891e733f4e-p256-nistz.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[367](c322a0bcc369f531-chacha-armv8-ios64.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[368](c322a0bcc369f531-chacha20_poly1305_armv8-ios64.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[369](c322a0bcc369f531-aesv8-armx-ios64.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[370](c322a0bcc369f531-aesv8-gcm-armv8-ios64.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[371](c322a0bcc369f531-ghash-neon-armv8-ios64.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[372](c322a0bcc369f531-ghashv8-armx-ios64.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[373](c322a0bcc369f531-vpaes-armv8-ios64.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[374](c322a0bcc369f531-armv8-mont-ios64.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[375](c322a0bcc369f531-p256-armv8-asm-ios64.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[376](c322a0bcc369f531-sha512-armv8-ios64.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[377](c322a0bcc369f531-sha256-armv8-ios64.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[557](std-ddc72da0927e9db9.std.61a5f0013896dfb1-cgu.0.rcgu.o)) was built for newer 'macOS' version (26.0) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[558](panic_unwind-63ea78ca2e1c0db3.panic_unwind.b9418b0471e31d36-cgu.0.rcgu.o)) was built for newer 'macOS' version (26.0) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[559](object-c0adbf29d899f046.object.cf48ae80852c1dc4-cgu.0.rcgu.o)) was built for newer 'macOS' version (26.0) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[561](addr2line-b92825ace6709456.addr2line.f3cce53e8c22052d-cgu.0.rcgu.o)) was built for newer 'macOS' version (26.0) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[562](gimli-49cd0cae66d7f640.gimli.a9de2a852aa7a696-cgu.0.rcgu.o)) was built for newer 'macOS' version (26.0) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[564](rustc_demangle-a5e20ae1249591d9.rustc_demangle.c8ddca633150ec1-cgu.0.rcgu.o)) was built for newer 'macOS' version (26.0) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[566](hashbrown-7ef914ecbc5b3828.hashbrown.f3d328c4a0fd8a24-cgu.0.rcgu.o)) was built for newer 'macOS' version (26.0) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[568](miniz_oxide-d817fa4718a8ef96.miniz_oxide.cf735aedbe58ef77-cgu.0.rcgu.o)) was built for newer 'macOS' version (26.0) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[569](adler2-b603e41842b612c3.adler2.c400f6a6402c7116-cgu.0.rcgu.o)) was built for newer 'macOS' version (26.0) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[573](alloc-7d19d4a84a64ec6c.alloc.650f235c7e2e357a-cgu.0.rcgu.o)) was built for newer 'macOS' version (26.0) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[574](core-f186bd403406965f.core.aedb9fd4ead64aec-cgu.0.rcgu.o)) was built for newer 'macOS' version (26.0) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[591](compiler_builtins-28935136ed986f39.compiler_builtins.bb8f0d37d096e781-cgu.016.rcgu.o)) was built for newer 'macOS' version (26.0) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[719](compiler_builtins-28935136ed986f39.compiler_builtins.bb8f0d37d096e781-cgu.144.rcgu.o)) was built for newer 'macOS' version (26.0) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[768](compiler_builtins-28935136ed986f39.compiler_builtins.bb8f0d37d096e781-cgu.193.rcgu.o)) was built for newer 'macOS' version (26.0) than being linked (14.0)
+[4/5] Linking AstraMac
+Build complete! (68.31s)
+/Users/shuhei/Projects/astra/apps/astra-macos/.build/Astra.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate: replacing existing signature
+/Users/shuhei/Projects/astra/apps/astra-macos/.build/Astra.app/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app: replacing existing signature
+/Users/shuhei/Projects/astra/apps/astra-macos/.build/Astra.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc: replacing existing signature
+/Users/shuhei/Projects/astra/apps/astra-macos/.build/Astra.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc: replacing existing signature
+/Users/shuhei/Projects/astra/apps/astra-macos/.build/Astra.app/Contents/Frameworks/Sparkle.framework/Autoupdate: replacing existing signature
+/Users/shuhei/Projects/astra/apps/astra-macos/.build/Astra.app/Contents/Frameworks/Sparkle.framework/Updater.app: replacing existing signature
+/Users/shuhei/Projects/astra/apps/astra-macos/.build/Astra.app/Contents/Frameworks/Sparkle.framework: replacing existing signature
+/Users/shuhei/Projects/astra/apps/astra-macos/.build/Astra.app: replacing existing signature
+--prepared:/Users/shuhei/Projects/astra/apps/astra-macos/.build/Astra.app/Contents/Frameworks/Sparkle.framework/Versions/Current/.
+--validated:/Users/shuhei/Projects/astra/apps/astra-macos/.build/Astra.app/Contents/Frameworks/Sparkle.framework/Versions/Current/.
+/Users/shuhei/Projects/astra/apps/astra-macos/.build/Astra.app: valid on disk
+/Users/shuhei/Projects/astra/apps/astra-macos/.build/Astra.app: satisfies its Designated Requirement
+Identifier=com.astra.desktop
+Authority=Apple Development: Shuhei Horio (N5DXXRWC3M)
+TeamIdentifier=6RR7572ZLU
+launch: OK（実行体は起動する）
+packaged: /Users/shuhei/Projects/astra/apps/astra-macos/.build/Astra.app
+実 Calendar 検証: open "/Users/shuhei/Projects/astra/apps/astra-macos/.build/Astra.app" --args --selftest calendarlive  → プロンプトで許可 → 結果は /tmp/astra-calendarlive.txt
+
+== astra-core tests ==
+test result: ok. 38 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+
+== Tauri Rust regression ==
+test result: ok. 67 passed; 0 failed; 3 ignored; 0 measured; 0 filtered out; finished in 0.31s
+
+== Tauri desktop JS regression ==
+      Tests  352 passed (352)
+
+== TCC usage descriptions ==
+USAGE_DESCRIPTIONS_OK: 要求しうる権限の用途説明が揃っている (5 件)
+
+== release consistency ==
+  package.json=0.1.2 tauri.conf.json=0.1.2 src-tauri/Cargo.toml=0.1.2 astra-core/Cargo.toml=0.1.2
+RELEASE_CONSISTENCY_OK: 版番号 0.1.2 で一致・配布物は外部 dylib を掴まない・Developer ID + hardened runtime
+
+== release aggregation regression ==
+.......................
+----------------------------------------------------------------------
+Ran 23 tests in 7.868s
+
+OK
+
+== UI taste ==
+== UI の癖 ==
+  gradient               2 /   4
+  角丸 >28pt           0 /   0
+  material/blur: actual=10, reviewed additions=2 (content-bound)
+  material/blur          8 /   8
+  sparkles アイコン   4 /   6
+  Capsule: actual=26, reviewed additions=6 (content-bound)
+  Capsule               20 /  20
+  shadow                 6 /   9
+  40字超の文言      5 /   6
+
+UI_TASTE_OK: 癖は上限内
+
+== permission JIT ==
+  起動経路（AppDelegate）で権限を求めていない OK
+  求めている場所:
+    apps/astra-macos/Sources/AstraMac/GuidedSetup/PermissionManager.swift:41:        Permissions.requestMicrophone(done)
+    apps/astra-macos/Sources/AstraMac/Settings/PermissionCenter.swift:88:            case .microphone: Permissions.requestMicrophone { _ in done() }
+    apps/astra-macos/Sources/AstraMac/Settings/PermissionCenter.swift:89:            case .screenRecording: Permissions.requestScreenRecording(); done()
+    apps/astra-macos/Sources/AstraMac/Settings/PermissionCenter.swift:91:            case .calendar: Permissions.requestCalendar { _ in done() }
+    apps/astra-macos/Sources/AstraMac/Settings/PermissionCenter.swift:92:            case .speechRecognition: Permissions.requestSpeechRecognition { _ in done() }
+    apps/astra-macos/Sources/AstraMac/Settings/SettingsView.swift:46:                              request: { Permissions.requestSpeechRecognition { _ in speech = Permissions.speechRecognition } })
+    apps/astra-macos/Sources/AstraMac/Settings/SettingsView.swift:48:                              request: { Permissions.requestCalendar { _ in cal = Permissions.calendar } })
+    apps/astra-macos/Sources/AstraMac/Settings/SettingsView.swift:52:                    if !Permissions.requestInputMonitoring() { Permissions.openInputMonitoringSettings() }
+    apps/astra-macos/Sources/AstraMac/Home/HomeView.swift:492:                PermissionCenter.request(.schedule) {
+    apps/astra-macos/Sources/AstraMac/RecordingWorkspace/RecordingWorkspaceState.swift:310:            PermissionCenter.request(.meeting) {
+    apps/astra-macos/Sources/AstraMac/RecordingWorkspace/RecordingWorkspaceState.swift:339:        if screenAudio && requestPermissions { PermissionCenter.request(.meetingAudio) }
+  求める場所は機能の入口だけ OK
+  取扱説明書も「使うときに要るものだけ」 OK
+
+PERMISSION_JIT_OK: 起動時に求めず、使う直前に求める
+
+== privacy egress ==
+== PRIVACY_EGRESS_GATE ==
+  recording upload requires explicit cloud consent PASS
+  silent Apple STT fallback                0
+  screen audio permission follows selection PASS
+  connector egress requires user action    PASS
+  external action confirmation             PASS (Confirm.ask ×5; 面は CONFIRMATION_GATE)
+  transcription egress guide               consistent
+  runtime (--selftest egress)              autoUpload=off cloudSTTConsent=off meeting=[microphone] sttNoFallback=NOT_MEASURED
+
+PRIVACY_EGRESS_GATE=PASS
+
+== no contradiction ==
+scripts/verify-no-contradiction.sh: line 28: 81766 Terminated: 15          "$BIN" --selftest hold-meeting 25 silent > /dev/null 2>&1
+NO_CONTRADICTION_OK: 画面の中で言っていることが食い違わない
+
+== confirmation surface ==
+== CONFIRMATION_GATE ==
+
+  · 面の寸法 560x286pt
+  ✓ 幅 <= 620pt
+  ✓ 高さ <= 360pt
+  ✓ ① どのアプリ / どこへ
+  ✓ ② 何が起きるか
+  ✓ ③ 決定的な値
+  ✓ ④ 中身の下見
+  ✓ ⑤ 出所
+  ✓ ⑥ 取消
+  ✓ ⑥ 直す
+  ✓ ⑥ 実行
+  ✓ 決断に不要なもの（履歴・会議ノート・sidebar）が無い
+  ✓ 主たる操作 96x32pt が逃げ道 72pt（やめる）以上
+  ✓ 中身の間の中央値 = 11.9pt（操作の手前 28.0pt は区切りとして除外）
+  ✓ 窓を増やしていない（同じ面が morph）
+
+  ✓ 窓を増やさない・焦点を奪わない・560x254pt・高さは中身で決まる（254→163）・取り消しで戻る
+
+CONFIRMATION_GATE=PASS
+
+== screen terms (one word each) ==
+TERMS_OK: 画面の語は 1 語ずつ
+
+== guide facts (app words only) ==
+  facts 126 件 / ガイドが引く key 62 件 / 文字で書かれた protected 0 件 / 一字違い 0 件 / 古い綴り 0 件
+SELFTEST_OK shots: 16面を実アプリで撮影・geometry OK・面どうしが別の絵
+  guide build: written 902 KB / facts used 62
+GUIDE_FACTS_OK: ガイドの語はアプリの表示（UserFacingFacts）だけから来ている
+
+== guide facts selfcheck ==
+  selfcheck 1 一字違いの古い写し:
+    FAIL: protected の語「録音」(dock.record) がガイドに文字で書かれている（build.py:131 付近）。fact("dock.record") で引く
+    FAIL: 「録音の開始 / 停止」はアプリの語「録音を開始 / 停止」(settings.shortcutRow) と一字違い（build.py:131 付近）。古い写し。fact("settings.shortcutRow") で引く
+  selfcheck 2 許可名を文字で:
+    FAIL: protected の語「画面収録」(permission.screenRecording) がガイドに文字で書かれている（build.py:141 付近）。fact("permission.screenRecording") で引く
+  selfcheck 3 知らない key:
+    FAIL: ガイドが知らない fact を引いている: settings.noSuchRow
+GUIDE_FACTS_SELFCHECK_OK: 3 つの書き戻しを全部捕まえた
+
+== design tokens fresh ==
+design tokens are current
+
+== type scale (no literals) ==
+TYPE_LITERALS_OK: 6 つの型の view に字の大きさの直書きは無い（5 scope）
+
+== swift bindings fresh ==
+swift bindings are current
+
+== workspace fixture fresh ==
+recording-workspace fixture is current
+
+== conventions ==
+convention check passed
+
+== C ABI contract (3-way) ==
+C ABI contract ok: Rust 21 = header 21, C# が呼ぶ 21 個すべて一致
+
+== native path Tauri-free ==
+native product path is Tauri-free: 170 Swift files + astra-core に Tauri 依存なし (Done#8)
+
+== WinUI XAML well-formed ==
+xaml well-formed: 5 WinUI .xaml files OK
+
+== C# bridge -> core + gateway ==
+CS_OK gateway(AstraSession): signedIn apps=14 library=0 echoArtifact=52bytes
+CS_OK bridge->core: version=0.1.2 pkce=S256 authorizeUrl parseCallback elapsed=01:05; geometry matches shared fixture
+
+== Windows C# logic type-check ==
+CSLOGIC_OK: Windows C# 実ロジック全体(Window code-behind 含む)が型検査を通過
+
+== C ABI round-trip (C) ==
+CABI_OK connector: pkce=S256 authorizeUrl ok nonLoopbackRejected parseCallback ok
+CABI_OK api: me=owner meeting=ok agent=COMPLETED apps=[... library=[...
+CABI_OK closed=1 ms=5000 fragmentBytes=160000 markedUploaded=1
+
+== macOS recording + live E2E ==
+SELFTEST_OK record: closed=1 fragmentBytes=160000 elapsed=00:05 recoverable=1
+SELFTEST_OK lifecycle: elapsed=00:05 recovered=true
+SELFTEST_OK shortcut: registered=true combo=⌥Space matcher=ok receivedSyntheticPress=true
+SELFTEST_OK sysaudio: capturesAudio=true sampleRate=48000 channels=2 excludesSelf=true
+SELFTEST_OK calendar: status=未確認 upcoming=0
+SELFTEST_OK screen: width=1280 height=800 pixelFormat=BGRA audio=false
+SELFTEST_OK rag: order=a,c,b topScore=1.00 reason=語が 1 件一致 · 新しい · このプロジェクト
+SELFTEST_OK keychain: roundtrip ok, absent=nil, delete idempotent, service=com.astra.mac
+SELFTEST_OK files: candidates=2(binary除外) top=oauth.txt score=0.72
+SELFTEST_OK ax: trusted=true selection=nil candidates=0
+SELFTEST_OK speech: auth=0 onDeviceCapable=true started=false appendedFrames=false serverFallback=never
+SELFTEST_OK connector: pkce=S256✓ authorizeUrl✓ nonLoopbackRejected✓ configured=0
+SELFTEST_OK permissions: mic=許可済み screen=許可済み ax=許可済み calendar=未確認 speech=0
+SELFTEST_OK shape: path matches shared fixture (14 segments); taskDock content 296.0pt fits dockWidth 296.0pt
+SELFTEST_OK hudlifecycle: HUD→Recording→保存→HUD 復帰 の window 状態遷移 OK
+SELFTEST_OK panel: 全Space=true fullscreen補助=true borderless=true 透過=true notMain=true
+SELFTEST_OK render: VoiceHUD:c139/o0.99 IntentBar:c89/o1.00 RecordingIndicator:c168/o1.00 ConfirmationCard:c90/o0.94 MeetingArtifact:c99/o1.00 ResearchResult:c122/o0.81 MeetingSurface:c57/o1.00 LineagePanel:c126/o0.82 ApprovalCard:c106/o0.77 EvidenceSummary:c133/o0.70 WorkSurface:c123/o0.80 ContextLens:c100/o0.88 HomeView:c67/o1.00 RecordingWorkspace:c52/o0.99 MainWindow:c61/o1.00 Settings:c8/o0.11
+SELFTEST_OK pause: 停止中は録音が進まない before=5000 pause=5000 resume=10000
+SELFTEST_OK timer: 経過が進む running=2 停止で止まる paused=2 再開で進む resumed=3
+SELFTEST_OK aiaction: Agent 応答="「プロジェクト X」のリリースは 9 月 12 日とし、OAuth の確認を鈴木…"
+SELFTEST_OK translate: local model preserved Friday and 3 pm
+SELFTEST_OK recovery: 検出→復旧 uploadedBytes=192000 復旧後は候補から消える(stillThere=false)
+SELFTEST_OK connectorflow: loopback 受理 code=abc123 state=xyz789 port=50208
+SELFTEST_OK connectorstate: mapping ok, canConnect gated by client_id (google env=false)
+SELFTEST_OK connectorexchange: Swift→core→実HTTP 交換 tokens 取得+Keychain 保管 (verifier 送信=true)
+SELFTEST_OK voiceask: thinking=true→idle Agent 応答="Astra のレビューは金曜日 15 時です。…"
+SELFTEST_OK recoveryoffline: オフライン録音を新規会議に紐付けて復旧 sent=192000 local消滅=true
+SELFTEST_SKIP fulllifecycle: mic not granted
+SELFTEST_SKIP e2e001: mic not granted
+light: SELFTEST_OK shots: 16面を実アプリで撮影・geometry OK・面どうしが別の絵
+STATE hover diff=2.629%
+STATE focus diff=0.642%
+STATE pressed diff=2.560%
+SELFTEST_OK golden: 10面が committed の golden と一致
+dark: SELFTEST_OK shots: 16面を実アプリで撮影・geometry OK・面どうしが別の絵
+STATE hover diff=2.647%
+STATE focus diff=0.644%
+STATE pressed diff=2.621%
+SELFTEST_OK golden: 10面が committed の golden と一致
+SELFTEST_OK geometry: 6状態の位置・寸法が基準と 2pt 以内
+OCCUPATION 01-idle VoiceTaskDockView: 220x76pt = 1.3% of 1440x900（上限 220x76）
+OCCUPATION 02-listening VoiceTaskDockView: 600x85pt = 3.9% of 1440x900（上限 600x152）
+OCCUPATION 03-task-dock VoiceTaskDockView: 720x323pt = 17.9% of 1440x900（上限 720x330）
+OCCUPATION 04-meeting VoiceTaskDockView: 820x108pt = 6.8% of 1440x900（上限 820x108）
+OCCUPATION 05-meeting-notes VoiceTaskDockView: 820x389pt = 24.6% of 1440x900（上限 820x492）
+OCCUPATION 06-workspace VoiceTaskDockView: 820x389pt = 24.6% of 1440x900（上限 820x492）
+OCCUPATION 06-workspace RecordingWorkspaceView: 1080x680pt = 56.7% of 1440x900（上限 1080x680）
+SELFTEST_OK occupation: 7面の実寸が token の上限以内
+SELFTEST_OK density: 16面が基準以下（最も詰まっている 09c-speech-denied 57.1% / 最も空いている 02b-voice-hud-preparing 94.3%）
+SELFTEST_OK plugins: manifest 14 件・宣言だけでは呼べない・許諾で呼べる・取り消せる・manifest 外は通らない
+light: SELFTEST_OK sessionshots: 16面を実遷移で撮影・同じ id が姿を変える
+dark: SELFTEST_OK sessionshots: 16面を実遷移で撮影・同じ id が姿を変える
+light: SELFTEST_OK dock8: 19状態を実遷移で撮影・top anchor 固定・窓は常に1枚・idle 220pt→agent 720pt
+dark: SELFTEST_OK dock8: 19状態を実遷移で撮影・top anchor 固定・窓は常に1枚・idle 220pt→agent 720pt
+SELFTEST_SKIP screenshot: screen recording not granted
+SELFTEST_SKIP waveform: microphone not granted
+SELFTEST_SKIP livemic: microphone not granted (status=未確認)
+SELFTEST_SKIP livemeeting: microphone not granted
+SELFTEST_SKIP livescreen: screen recording not granted
+SELFTEST_SKIP sttrecognize: speech not authorized
+SELFTEST_SKIP sttstream: speech not authorized
+SELFTEST_OK guishot: 実提示 HUD=220x44/c68 Workspace=1080x680/c35 Main=940x704/c45 IntentBar=560x56/c49 png=/var/folders/xn/mdmvpkwd0yx4tcr7rvn_3xv80000gn/T/astra-guishot-workspace-83670.png
+SELFTEST_SKIP axtree: AX not trusted
+SELFTEST_SKIP a11ynames: AX not trusted
+SELFTEST_SKIP calendarask: mapping OK, AX not trusted
+SELFTEST_OK egress: autoUpload=off cloudSTTConsent=off meeting=[microphone] sttNoFallback=NOT_MEASURED
+SELFTEST_OK navtitle: 5面の見出しが状態と一致し、面ごとに実際に描き変わる。1 件を開いても sidebar で出られる
+SELFTEST_OK recoveryui: 録りかけを捨てられる・置き場の外は消さない・録音中のものは捨てない
+SELFTEST_OK focus: Dock は出ても姿を変えても、前面のアプリから焦点を奪わない
+SELFTEST_OK upgrade: 古い DB に列を足して開ける・保存できる・昔の行を失わない
+SELFTEST_OK breakpoints: >=1280 3-column / 960-1279 inspector drawer / <960 sidebar collapsed; render c9/c9/c7
+SELFTEST_SKIP dictation: AX not trusted
+SELFTEST_OK state: 状態は AstraStateStore 1 箇所・dock↔mode 連動・R0/R1 は無確認 R2/R3 は確認・文脈は出所優先・EventBus 到達
+SELFTEST_OK presence: 会議検出（Zoom/Meet/Huddle）・検出しても録音は始まらない・共有中は Dock を出さない・許可は機能ごとに最小・マイク不可なら録音状態にしない・AX は推測で埋めない mic denial/restriction/pending: no recording or session
+PERF dock=43ms ax=7ms app=0ms mem=16MB cpu1s=1.3% cpu5s=-0.14%
+SELFTEST_OK perf: §29 の実測が目標内 (dock=43ms ax=7ms app=0ms mem=16MB cpu1s=1.3% cpu5s=-0.14%)
+SELFTEST_OK storage: §24 の7テーブル・画像/音声/本文の列を持たない・UI を閉じても task が残る・§11 通常時 0fps/上限3fps・§14 Vision は最後の手段
+SELFTEST_OK meetingiq: 増分だけ投入（全文再投入なし）・Canvas は構造データ・State/EventBus へ反映
+SELFTEST_SKIP vad: speech not authorized (VAD の判定は上で PASS)
+SELFTEST_OK browser: フレーム形式・全文は受け取らない・Notion のページを特定・DOM は AX より優先
+SELFTEST_OK dockanim: Presence→Listening 214ms・遷移中も上辺 Y は不動・滑らかに拡大
+INVOCATION idle screen occupation: 0.87%  target < 1%  PASS  （220x76pt / 1728x1117; 1440x900 なら 1.29%）
+SELFTEST_SKIP invocation: マイク未許可（実 Mac + 許可でだけ測れる）
+SELFTEST_SKIP invocationaudio: マイク未許可（実 Mac + 許可でだけ測れる）
+SELFTEST_OK entry: メニュー(⌘O)・Dock・結果面のどれからも Main View が実際に開く
+SELFTEST_OK update: 設定済み・設定が無ければ動かない・版=1.0
+could not create image from rect
+could not create image from rect
+could not create image from rect
+SELFTEST_SKIP secret: screencapture が使えない
+SELFTEST_SKIP recordbutton: actual recording requires microphone grant; pre-permission explanation/cancel is covered by journey JC
+SELFTEST_OK session: 開始で保存・同じ id が recording→processing→ready・保存先/project を後から変更・再起動で復元・落ちたら interrupted・予定から継承
+SELFTEST_OK uiscale: 3段が別々に効く（文字 x1.12 / 寸法 x1.18）・既定は素の値・設定は残る
+SELFTEST_SKIP acceptance: recording lifecycle requires microphone grant; permission gating is covered separately
+SELFTEST_OK sessionsync: Dock/Home/DB が同じ id・面切替と Scale で録音を失わない・停止はどちらからでも両方へ届く・DB と UI が一致
+FOCUS_STATE home active=true key=14250 main=14250 visible=14249:,14250:Home
+FOCUS_STATE notes active=true key=14249 main=14250 visible=14249:,14250:Home
+FOCUS_STATE passive active=true key=14250 main=14250 visible=14249:,14250:Home
+FOCUS_STATE ask active=true key=14249 main=14250 visible=14249:,14250:Home
+FOCUS_STATE sharing active=true key=14250 main=14250 visible=14250:Home
+SELFTEST_OK home-meeting-focus: explicit Notes/Ask use existing Dock key window; passive updates preserve Home; sharing stays hidden
+
+== initial profile native UI ==
+SELFTEST_OK initialprofile: 6 native captures; review/edit actions present; no external data or send
+
+== recording experience E2E ==
+  録音開始           id=meeting-dee69203-8ac6-4043-8699-aa52bd1b997c (停止前に DB へ recording を確認済み)
+  強制終了           kill -9（正常終了の経路を通さない）
+  DB(kill 直後)        meeting-dee69203-8ac6-4043-8699-aa52bd1b997c=recording
+  再起動              meeting-dee69203-8ac6-4043-8699-aa52bd1b997c=interrupted
+  続きから処理     id=meeting-dee69203-8ac6-4043-8699-aa52bd1b997c status=ready actions=1
+  再々起動           meeting-dee69203-8ac6-4043-8699-aa52bd1b997c=ready (同じ id)
+RECORDING_EXPERIENCE_OK: 録音 → kill → interrupted → 続きから ready → 再起動で保持 (id=meeting-dee69203-8ac6-4043-8699-aa52bd1b997c)
+
+== journeys JA/JB/JC ==
+  JOURNEY JA success=true ms=5434 interactions=4 windows=0 focusTheft=0 errors=0
+  JOURNEY JB success=true ms=9983 interactions=7 windows=0 focusTheft=0 errors=0
+  JOURNEY JC success=true ms=7304 interactions=4 windows=0 focusTheft=0 errors=0
+  MOTION T0-idle-to-listening frames=39 captured=39 fps=54 maxGap=51ms sameId=100% windows+0 focusTheft=0 top=0.0pt center=0.5pt missing=0 heightRev=0 maxStep=0.44 contentΔmax=1.1 other(shift=0.0pt alphaRev=0) settled=183ms
+  MOTION T3-dock-to-running frames=41 captured=41 fps=57 maxGap=40ms sameId=100% windows+0 focusTheft=0 top=0.0pt center=0.5pt missing=0 heightRev=0 maxStep=0.44 contentΔmax=12.3 other(shift=0.0pt alphaRev=0) settled=217ms
+  MOTION T4-running-to-confirmation frames=40 captured=40 fps=56 maxGap=47ms sameId=100% windows+0 focusTheft=0 top=0.0pt center=0.5pt missing=0 heightRev=0 maxStep=0.37 contentΔmax=11.5 other(shift=0.0pt alphaRev=0) settled=216ms
+  MOTION T1-meeting-to-notes frames=41 captured=41 fps=57 maxGap=27ms sameId=100% windows+0 focusTheft=0 top=0.0pt center=0.0pt missing=0 heightRev=0 maxStep=0.24 contentΔmax=6.5 other(shift=0.0pt alphaRev=0) settled=200ms
+  MOTION T2-notes-to-workspace frames=37 captured=37 fps=51 maxGap=81ms sameId=100% windows+0 focusTheft=0 top=0.0pt center=0.0pt missing=0 heightRev=0 maxStep=0.00 contentΔmax=129.6 other(shift=0.0pt alphaRev=0) settled=200ms
+SURFACE_CONTINUITY_MOTION=PASS
+PERCEIVED_SURFACE_CONTINUITY=LAYER_B（この selftest では測らない。判定は journeys/perceived/answers/aggregate.md）
+JOURNEYS_OK: 3 本とも最後まで通った（J-B の遷移中も 60fps で連続）
+
+== macOS swift unit tests ==
+	 Executed 131 tests, with 0 failures (0 unexpected) in 0.679 (0.690) seconds
+
+VERIFY_ALL_OK: この環境で検証できる全ゲートが緑

@@ -108,12 +108,12 @@ export function generalExecutors(model: LanguageModel): Record<string, Executor>
             : await model.compose(instruction, context);
 
         return {
-          result: { composed: true },
+          result: { composed: true, draft: true, sent: false },
           detail: null,
           artifact: {
             title: titleOf(instruction),
-            // **下書きだと分かるようにする。**送ったと読まれない。
-            markdown: `${text}\n\n---\n\n※ 下書きです。送信はしていません。`,
+            // Draft/send state is metadata, not copy that contaminates exported work.
+            markdown: text,
           },
         };
       },

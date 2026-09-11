@@ -318,3 +318,70 @@ describe('when the recogniser cannot separate speakers', () => {
     );
   });
 });
+
+describe('long meeting transcription', () => {
+  const request = {
+    recognizer: 'projects/astra-test/locations/us/recognizers/_',
+    config: { explicitDecodingConfig: { sampleRateHertz: 16000, audioChannelCount: 1 } },
+    content: new Uint8Array(61 * 32000),
+  };
+  it('uses a complete GCS recording, reads inline results and removes temporary audio', async () => {
+    const urls: string[] = [];
+    let uri = '';
+    const client = speechV2ClientFromEnv({
+      ...config(async (url, init) => {
+        urls.push(String(url));
+        if (String(url).includes('/upload/')) return json({});
+        if (init?.method === 'DELETE') return new Response(null, { status: 204 });
+        if (String(url).endsWith(':batchRecognize')) {
+          const body = JSON.parse(String(init?.body));
+          uri = body.files[0].uri;
+          expect(body.recognitionOutputConfig).toEqual({ inlineResponseConfig: {} });
+          expect(body.content).toBeUndefined();
+          return json({ name: 'projects/astra-test/locations/us/operations/one' });
+        }
+        return json({
+          done: true,
+          response: {
+            results: {
+              [uri]: {
+                inlineResult: {
+                  transcript: {
+                    results: [{ alternatives: [{ transcript: '金曜日の午後三時です' }] }],
+                  },
+                },
+              },
+            },
+          },
+        });
+      }),
+      audioBucket: 'private-audio',
+    });
+    const [result] = await client.recognize(request);
+    expect(result.results).toHaveLength(1);
+    expect(urls).toHaveLength(4);
+    expect(urls.some((url) => url.endsWith(':recognize'))).toBe(false);
+    expect(urls.at(-1)).toContain('/storage/v1/b/private-audio/o/stt-temporary');
+  });
+  it('rejects missing long-audio configuration before sending audio', async () => {
+    const fetch = vi.fn();
+    await expect(speechV2ClientFromEnv({ ...config(fetch) }).recognize(request)).rejects.toThrow(
+      'GOOGLE_STT_AUDIO_BUCKET',
+    );
+    expect(fetch).not.toHaveBeenCalled();
+  });
+  it('removes temporary audio even when Google rejects the batch', async () => {
+    const methods: string[] = [];
+    const client = speechV2ClientFromEnv({
+      ...config(async (url, init) => {
+        methods.push(init?.method ?? 'GET');
+        if (String(url).includes('/upload/')) return json({});
+        if (init?.method === 'DELETE') return new Response(null, { status: 204 });
+        return json({ error: { message: 'recognition unavailable' } }, 503);
+      }),
+      audioBucket: 'private-audio',
+    });
+    await expect(client.recognize(request)).rejects.toThrow('recognition unavailable');
+    expect(methods.at(-1)).toBe('DELETE');
+  });
+});

@@ -19,12 +19,12 @@
     "体感の複雑さ（層 C）: 段は 5、面は 1 枚、増えた窓 0"
   ],
   "product" : "Astra",
-  "startedAt" : "2026-09-09T09:58:37Z",
+  "startedAt" : "2026-09-11T16:57:35Z",
   "steps" : [
     {
       "interactions" : 0,
       "keyWindow" : false,
-      "ms" : 37,
+      "ms" : 50,
       "name" : "Home（Dock は待機）",
       "surface" : {
         "h" : 76,
@@ -41,7 +41,7 @@
       "keys" : {
         "esc" : "listening→idle"
       },
-      "ms" : 1186,
+      "ms" : 1192,
       "name" : "Listening",
       "surface" : {
         "h" : 76,
@@ -50,16 +50,16 @@
         "x" : 754,
         "y" : 1041
       },
-      "transitionMs" : 211,
+      "transitionMs" : 216,
       "windows" : 2
     },
     {
       "ids" : {
-        "task" : "A3A4765D-7048-4440-B9E7-7B0FE10FF315"
+        "task" : "3D7C3C9B-8CFD-478D-A303-955948185B7E"
       },
       "interactions" : 0,
       "keyWindow" : false,
-      "ms" : 1084,
+      "ms" : 1102,
       "name" : "Running",
       "surface" : {
         "h" : 287,
@@ -68,13 +68,13 @@
         "x" : 504,
         "y" : 830
       },
-      "transitionMs" : 193,
+      "transitionMs" : 192,
       "windows" : 2
     },
     {
       "ids" : {
-        "confirmation" : "FDEFB87F-7D60-44DD-9400-345A54BD68CA",
-        "resolved" : "FDEFB87F-7D60-44DD-9400-345A54BD68CA"
+        "confirmation" : "4587DDB1-B8AB-4AA9-9B93-CC698A43E0CD",
+        "resolved" : "4587DDB1-B8AB-4AA9-9B93-CC698A43E0CD"
       },
       "interactions" : 2,
       "keyWindow" : false,
@@ -82,7 +82,7 @@
         "cmdReturn" : "approved",
         "return" : "no-op"
       },
-      "ms" : 1851,
+      "ms" : 1828,
       "name" : "Confirmation",
       "surface" : {
         "h" : 76,
@@ -91,7 +91,7 @@
         "x" : 754,
         "y" : 1041
       },
-      "transitionMs" : 208,
+      "transitionMs" : 206,
       "windows" : 2
     },
     {
@@ -100,7 +100,7 @@
       "keys" : {
         "esc" : "result→idle"
       },
-      "ms" : 1306,
+      "ms" : 1268,
       "name" : "Done",
       "surface" : {
         "h" : 76,
@@ -109,11 +109,11 @@
         "x" : 754,
         "y" : 1041
       },
-      "transitionMs" : 205,
+      "transitionMs" : 185,
       "windows" : 2
     }
   ],
   "success" : true,
-  "totalMs" : 5466,
+  "totalMs" : 5442,
   "windowsOpened" : 0
 }

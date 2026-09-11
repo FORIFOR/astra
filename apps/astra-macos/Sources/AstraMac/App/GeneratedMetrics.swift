@@ -5,6 +5,8 @@ import SwiftUI
 
 /// 手書き案の寸法（logical points）。両 OS 共通の数値を Swift へ生成したもの。
 enum Metrics {
+    static let homeComposerEditorHeight: CGFloat = 84
+    static let homeContentWidth: CGFloat = 760
     static let workspaceWidth: CGFloat = 1080
     static let workspaceHeight: CGFloat = 680
     static let workspaceRadius: CGFloat = 28

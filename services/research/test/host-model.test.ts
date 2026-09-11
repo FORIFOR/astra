@@ -185,3 +185,9 @@ describe('asking about a screenshot on the device', () => {
     expect('images' in asks[0]!.args).toBe(false);
   });
 });
+
+it('rejects a malformed JSON fragment instead of publishing it as a written answer', async () => {
+  const { host: h } = host(() => ({ answer: '{', text: '{}' }));
+  await expect(model(h).answer('write a document')).rejects.toThrow('form we could read');
+  await expect(model(h).compose('write a document')).rejects.toThrow('form we could read');
+});

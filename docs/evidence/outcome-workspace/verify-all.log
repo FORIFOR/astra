@@ -1,0 +1,496 @@
+== current macOS debug candidate ==
+[0/1] Planning build
+Building for debugging...
+[0/4] Write sources
+[1/4] Write swift-version--58304C5D6DBC2206.txt
+[3/6] Compiling AstraMac SelfTest.swift
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift:191:28: warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+ 189 |             }
+ 190 |             guard let (winID, _, _) = best,
+ 191 |                   let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, winID, [.boundsIgnoreFraming, .bestResolution])
+     |                            `- warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+ 192 |             else { return nil }
+ 193 |             let rep = NSBitmapImageRep(cgImage: cg)
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift:478:28: warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+ 476 |                 ? [.bestResolution] : [.boundsIgnoreFraming, .nominalResolution]
+ 477 |             guard let (id, x, y, w, h) = found,
+ 478 |                   let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, id, opts),
+     |                            `- warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+ 479 |                   shadow || (cg.width == Int(w) && cg.height == Int(h))
+ 480 |             else { return nil }
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift:700:21: warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+ 698 |         settle(0.8)
+ 699 |         if let big = workspaceWindow,
+ 700 |            let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, big.id, [.boundsIgnoreFraming, .nominalResolution]) {
+     |                     `- warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+ 701 |             let rep = NSBitmapImageRep(cgImage: cg)
+ 702 |             if let png = rep.representation(using: .png, properties: [:]) {
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift:1152:28: warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+1150 |             settle(0.6)
+1151 |             guard let win = NSApp.windows.first(where: { $0.isVisible && $0.frame.width > 900 }),
+1152 |                   let cg = CGWindowListCreateImage(
+     |                            `- warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+1153 |                     .null, .optionIncludingWindow, CGWindowID(win.windowNumber),
+1154 |                     [.boundsIgnoreFraming, .bestResolution]) else { return nil }
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift:2352:25: warning: call to main actor-isolated instance method 'shot(_:window:)' in a synchronous nonisolated context [#ActorIsolatedCall]
+2350 |                 surfaces = NSApp.windows.filter(\.isVisible).count - w0
+2351 |                 dockAnswerable = UIProbe.exists("confirmCancel")
+2352 |                 _ = rec.shot("04-confirm", window: JourneyRecorder.dockWindow())
+     |                         `- warning: call to main actor-isolated instance method 'shot(_:window:)' in a synchronous nonisolated context [#ActorIsolatedCall]
+2353 |                 _ = UIProbe.tap("confirmCancel")
+2354 |                 // 別の面が残っていたら、それも閉じる（残さないと 120 秒止まる）。
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/JourneyRecorder.swift:213:10: note: calls to instance method 'shot(_:window:)' from outside of its actor context are implicitly asynchronous
+211 |     /// 測っていた（開始直後の白紙を測ろうとして、地 91.9% と出たのがそれ）。
+212 |     @discardableResult
+213 |     func shot(_ name: String, window: NSWindow? = nil) -> Bool {
+    |          `- note: calls to instance method 'shot(_:window:)' from outside of its actor context are implicitly asynchronous
+214 |         let path = "\(outDir)/\(name).png"
+215 |         guard let win = window ?? Self.largestWindow(),
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift:2352:68: warning: call to main actor-isolated static method 'dockWindow()' in a synchronous nonisolated context [#ActorIsolatedCall]
+2350 |                 surfaces = NSApp.windows.filter(\.isVisible).count - w0
+2351 |                 dockAnswerable = UIProbe.exists("confirmCancel")
+2352 |                 _ = rec.shot("04-confirm", window: JourneyRecorder.dockWindow())
+     |                                                                    `- warning: call to main actor-isolated static method 'dockWindow()' in a synchronous nonisolated context [#ActorIsolatedCall]
+2353 |                 _ = UIProbe.tap("confirmCancel")
+2354 |                 // 別の面が残っていたら、それも閉じる（残さないと 120 秒止まる）。
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/JourneyRecorder.swift:154:17: note: calls to static method 'dockWindow()' from outside of its actor context are implicitly asynchronous
+152 | 
+153 |     /// Dock（画面上端の常駐 panel）。level で見分ける。
+154 |     static func dockWindow() -> NSWindow? {
+    |                 `- note: calls to static method 'dockWindow()' from outside of its actor context are implicitly asynchronous
+155 |         NSApp.windows.first { $0.isVisible && $0.level == .statusBar }
+156 |     }
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift:2796:29: warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+2794 |                 }
+2795 |                 // 窓 id 経由。dark へ切り替えた直後などに nil を返すことがある。
+2796 |                 var image = CGWindowListCreateImage(.null, .optionIncludingWindow, win.id,
+     |                             `- warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+2797 |                                                     [.boundsIgnoreFraming, .bestResolution])
+2798 |                 if image == nil {
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift:2800:29: warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+2798 |                 if image == nil {
+2799 |                     // 代わりに画面のその領域を撮る。窓の再描画中でもこちらは通ることが多い。
+2800 |                     image = CGWindowListCreateImage(rect, .optionOnScreenOnly, kCGNullWindowID, [.bestResolution])
+     |                             `- warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+2801 |                 }
+2802 |                 if let cg = image,
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift:3424:24: warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+3422 |                           width: f.width + pad * 2,
+3423 |                           height: f.height + pad * 2)
+3424 |         guard let cg = CGWindowListCreateImage(rect, .optionOnScreenOnly, kCGNullWindowID, [.bestResolution]),
+     |                        `- warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+3425 |               let png = NSBitmapImageRep(cgImage: cg).representation(using: .png, properties: [:]) else {
+3426 |             print("SELFTEST_FAIL dockedge: 撮影できない"); exit(2)
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift:3434:22: warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+3432 |         settle(1.0)
+3433 |         let without = out.replacingOccurrences(of: ".png", with: "-without.png")
+3434 |         if let cg2 = CGWindowListCreateImage(rect, .optionOnScreenOnly, kCGNullWindowID, [.bestResolution]),
+     |                      `- warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+3435 |            let png2 = NSBitmapImageRep(cgImage: cg2).representation(using: .png, properties: [:]) {
+3436 |             try? png2.write(to: URL(fileURLWithPath: without))
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift:4112:62: warning: conditional downcast from '(json: [String : Any], consumed: Int)?' to '(json: [String : Any], consumed: Int)' does nothing
+4110 |         // ① 1 通ぶん届いていなければ nil（エラーにしない）。
+4111 |         let full = frame(["type": "context", "payload": ["url": "https://example.com", "title": "T"]])
+4112 |         if (try? NativeMessagingHost.decode(full.prefix(3))) as? (json: [String: Any], consumed: Int) != nil {
+     |                                                              `- warning: conditional downcast from '(json: [String : Any], consumed: Int)?' to '(json: [String : Any], consumed: Int)' does nothing
+4113 |             fail.append("途中のバッファで復号した")
+4114 |         }
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift:4506:34: warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+4504 |                 ids.removeAll(); texts.removeAll(); walk(app, 0)
+4505 |             } else { fail.append("会議と今日の状況を開けない") }
+4506 |             if let png, let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, CGWindowID(w.windowNumber),
+     |                                  `- warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+4507 |                                                           [.boundsIgnoreFraming, .nominalResolution]) {
+4508 |                 try? NSBitmapImageRep(cgImage: cg).representation(using: .png, properties: [:])?
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift:4768:36: warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+4766 |                     let until = Date().addingTimeInterval(0.4)
+4767 |                     while Date() < until { CFRunLoopRunInMode(.defaultMode, 0.05, true) }
+4768 |                     guard let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, CGWindowID(window.windowNumber), [.boundsIgnoreFraming, .bestResolution]) else {
+     |                                    `- warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+4769 |                         throw CloudMeetingTranscription.Failure(message: "window capture failed")
+4770 |                     }
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift:4826:77: warning: backward matching of the unlabeled trailing closure is deprecated; label the argument with 'completion' to suppress this warning [#TrailingClosureMatching]
+4824 |                 }
+4825 |                 let passed = interim > 0 && final > 0 && texts.contains(where: { $0.contains("金曜日") }) && runtime.snapshot() != nil
+4826 |                 await withCheckedContinuation { continuation in runtime.end { continuation.resume() } }
+     |                                                                             `- warning: backward matching of the unlabeled trailing closure is deprecated; label the argument with 'completion' to suppress this warning [#TrailingClosureMatching]
+4827 |                 restore()
+4828 |                 guard passed else {
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/RecordingWorkspace/RecordingRuntime.swift:449:10: note: 'end(cloudCompletion:completion:)' declared here
+447 | 
+448 |     /// 停止して確定。書けた断片は残り、回復候補になる。
+449 |     func end(cloudCompletion: ((String, String?) -> Void)? = nil, completion: (() -> Void)? = nil) {
+    |          `- note: 'end(cloudCompletion:completion:)' declared here
+450 |         drainMixedAudio()
+451 |         mixTimer?.invalidate(); mixTimer = nil; mixClock = nil
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift:5143:28: warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+5141 |             }
+5142 |             guard winID != 0,
+5143 |                   let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, winID, [.boundsIgnoreFraming, .bestResolution])
+     |                            `- warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+5144 |             else { window.orderOut(nil); window.close(); return nil }
+5145 |             let rep = NSBitmapImageRep(cgImage: cg)
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift:5548:28: warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+5546 |         }
+5547 |         func shot(_ win: NSWindow) -> [UInt8]? {
+5548 |             guard let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, CGWindowID(win.windowNumber),
+     |                            `- warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+5549 |                                                    [.boundsIgnoreFraming, .nominalResolution]),
+5550 |                   cg.width > 4, cg.height > 4 else { return nil }
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift:5818:21: warning: left side of nil coalescing operator '??' has non-optional type 'Int', so the right side is never used
+5816 |             .appendingPathComponent("meetings/screenshot-selftest").path
+5817 |         try? FileManager.default.removeItem(atPath: root)
+5818 |         guard (size ?? 0) > 1000, isPng else {
+     |                     `- warning: left side of nil coalescing operator '??' has non-optional type 'Int', so the right side is never used
+5819 |             print("SELFTEST_FAIL screenshot size=\(size ?? 0) isPng=\(isPng)"); exit(2)
+5820 |         }
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift:5819:57: warning: left side of nil coalescing operator '??' has non-optional type 'Int', so the right side is never used
+5817 |         try? FileManager.default.removeItem(atPath: root)
+5818 |         guard (size ?? 0) > 1000, isPng else {
+5819 |             print("SELFTEST_FAIL screenshot size=\(size ?? 0) isPng=\(isPng)"); exit(2)
+     |                                                         `- warning: left side of nil coalescing operator '??' has non-optional type 'Int', so the right side is never used
+5820 |         }
+5821 |         print("SELFTEST_OK screenshot: 実 PNG 保存 bytes=\(size ?? 0) isPng=\(isPng)")
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift:5821:68: warning: left side of nil coalescing operator '??' has non-optional type 'Int', so the right side is never used
+5819 |             print("SELFTEST_FAIL screenshot size=\(size ?? 0) isPng=\(isPng)"); exit(2)
+5820 |         }
+5821 |         print("SELFTEST_OK screenshot: 実 PNG 保存 bytes=\(size ?? 0) isPng=\(isPng)")
+     |                                                              `- warning: left side of nil coalescing operator '??' has non-optional type 'Int', so the right side is never used
+5822 |         exit(0)
+5823 |     }
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift:6124:37: warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+6122 |             settle(0.3)
+6123 |             let id = CGWindowID(max(0, win.windowNumber))
+6124 |             guard id != 0, let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, id, [.boundsIgnoreFraming, .bestResolution]),
+     |                                     `- warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+6125 |                   let png = NSBitmapImageRep(cgImage: cg).representation(using: .png, properties: [:]) else {
+6126 |                 fail.append(name); return
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift:6225:28: warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+6223 |                   // golden は logical points で保存する。Retina の物理画素を使うと
+6224 |                   // 同じ 220x44pt の窓が 440x88px になり、別の寸法と誤判定される。
+6225 |                   let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, winID, [.boundsIgnoreFraming, .nominalResolution]),
+     |                            `- warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+6226 |                   cg.width == w, cg.height == h
+6227 |             else { return nil }
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift:6917:87: warning: mutation of captured var 'ready' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+6915 |         }
+6916 |         let readyLock = NSLock(); var ready = false
+6917 |         listener.stateUpdateHandler = { st in if case .ready = st { readyLock.lock(); ready = true; readyLock.unlock() } }
+     |                                                                                       `- warning: mutation of captured var 'ready' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+6918 |         listener.start(queue: q)
+6919 |         var waited = 0
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift:6964:42: warning: left side of nil coalescing operator '??' has non-optional type 'Int', so the right side is never used
+6962 |         let recoverable = scanRecoverable(root: root, active: nil)
+6963 | 
+6964 |         guard closed == 1, exists, (size ?? 0) > 0, snap.elapsedLabel == "00:05",
+     |                                          `- warning: left side of nil coalescing operator '??' has non-optional type 'Int', so the right side is never used
+6965 |               recoverable.count == 1, recoverable[0].meetingId == "selftest"
+6966 |         else {
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift:6967:80: warning: left side of nil coalescing operator '??' has non-optional type 'Int', so the right side is never used
+6965 |               recoverable.count == 1, recoverable[0].meetingId == "selftest"
+6966 |         else {
+6967 |             print("SELFTEST_FAIL closed=\(closed) exists=\(exists) size=\(size ?? 0) elapsed=\(snap.elapsedLabel) recoverable=\(recoverable.count)")
+     |                                                                                `- warning: left side of nil coalescing operator '??' has non-optional type 'Int', so the right side is never used
+6968 |             exit(3)
+6969 |         }
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTest.swift:6971:74: warning: left side of nil coalescing operator '??' has non-optional type 'Int', so the right side is never used
+6969 |         }
+6970 |         try? FileManager.default.removeItem(atPath: root)
+6971 |         print("SELFTEST_OK record: closed=\(closed) fragmentBytes=\(size ?? 0) elapsed=\(snap.elapsedLabel) recoverable=\(recoverable.count)")
+     |                                                                          `- warning: left side of nil coalescing operator '??' has non-optional type 'Int', so the right side is never used
+6972 |         exit(0)
+6973 |     }
+
+[#ActorIsolatedCall]: <https://docs.swift.org/compiler/documentation/diagnostics/actor-isolated-call>
+[#DeprecatedDeclaration]: <https://docs.swift.org/compiler/documentation/diagnostics/deprecated-declaration>
+[#SendableClosureCaptures]: <https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures>
+[#TrailingClosureMatching]: <https://docs.swift.org/compiler/documentation/diagnostics/trailing-closure-matching>
+[4/6] Emitting module AstraMac
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/GuidedSetup/GuidedSetupSelfTest.swift:144:21: warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+142 |         // アバターの姿を残す（目視用）。
+143 |         if let win = overlay.avatar.window,
+144 |            let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, CGWindowID(win.windowNumber), [.boundsIgnoreFraming, .bestResolution]) {
+    |                     `- warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+145 |             let png = NSBitmapImageRep(cgImage: cg).representation(using: .png, properties: [:])
+146 |             try? png?.write(to: URL(fileURLWithPath: "\(outDir)/guided-setup-avatar.png"))
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/GuidedSetup/PermissionGuideCoordinator.swift:46:74: warning: passing non-Sendable parameter 'block' to function expecting a '@Sendable' closure
+ 43 |         }
+ 44 |         /// 遅延実行。検査では即時。
+ 45 |         var after: (TimeInterval, @escaping () -> Void) -> Void = { s, block in
+    |                                                                        `- note: parameter 'block' is implicitly non-Sendable
+ 46 |             DispatchQueue.main.asyncAfter(deadline: .now() + s, execute: block)
+    |                                                                          `- warning: passing non-Sendable parameter 'block' to function expecting a '@Sendable' closure
+ 47 |         }
+ 48 |         var now: () -> Date = Date.init
+
+[#DeprecatedDeclaration]: <https://docs.swift.org/compiler/documentation/diagnostics/deprecated-declaration>
+[4/7] Write Objects.LinkFileList
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[355](25ac62e5b3c53843-curve25519.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[356](0bbbd18bda93c05b-aes_nohw.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[357](00c879ee3285a50d-montgomery.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[358](00c879ee3285a50d-montgomery_inv.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[359](a0330e891e733f4e-ecp_nistz.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[361](a0330e891e733f4e-gfp_p384.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[363](aaa1ba3e455ee2e1-limbs.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[364](a4019cc0736b0423-mem.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[365](d5a9841f3dc6e253-poly1305.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[366](a0330e891e733f4e-p256-nistz.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[367](c322a0bcc369f531-chacha-armv8-ios64.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[368](c322a0bcc369f531-chacha20_poly1305_armv8-ios64.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[369](c322a0bcc369f531-aesv8-armx-ios64.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[370](c322a0bcc369f531-aesv8-gcm-armv8-ios64.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[371](c322a0bcc369f531-ghash-neon-armv8-ios64.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[372](c322a0bcc369f531-ghashv8-armx-ios64.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[373](c322a0bcc369f531-vpaes-armv8-ios64.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[374](c322a0bcc369f531-armv8-mont-ios64.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[375](c322a0bcc369f531-p256-armv8-asm-ios64.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[376](c322a0bcc369f531-sha512-armv8-ios64.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[377](c322a0bcc369f531-sha256-armv8-ios64.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+[5/7] Linking AstraMac
+[6/7] Applying AstraMac
+Build complete! (7.96s)
+
+== astra-core tests ==
+test result: ok. 38 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+== Tauri Rust regression ==
+test result: ok. 67 passed; 0 failed; 3 ignored; 0 measured; 0 filtered out; finished in 0.26s
+
+== Tauri desktop JS regression ==
+      Tests  352 passed (352)
+
+== TCC usage descriptions ==
+USAGE_DESCRIPTIONS_OK: 要求しうる権限の用途説明が揃っている (5 件)
+
+== release consistency ==
+  package.json=0.1.2 tauri.conf.json=0.1.2 src-tauri/Cargo.toml=0.1.2 astra-core/Cargo.toml=0.1.2
+RELEASE_CONSISTENCY_OK: 版番号 0.1.2 で一致・配布物は外部 dylib を掴まない・Developer ID + hardened runtime
+
+== release aggregation regression ==
+.......................
+----------------------------------------------------------------------
+Ran 23 tests in 6.882s
+
+OK
+
+== UI taste ==
+== UI の癖 ==
+  gradient               2 /   4
+  角丸 >28pt           0 /   0
+  material/blur: actual=10, reviewed additions=2 (content-bound)
+  material/blur          8 /   8
+  sparkles アイコン   4 /   6
+  Capsule: actual=26, reviewed additions=6 (content-bound)
+  Capsule               20 /  20
+  shadow                 6 /   9
+  40字超の文言      6 /   6
+
+UI_TASTE_OK: 癖は上限内
+
+== permission JIT ==
+  起動経路（AppDelegate）で権限を求めていない OK
+  求めている場所:
+    apps/astra-macos/Sources/AstraMac/GuidedSetup/PermissionManager.swift:41:        Permissions.requestMicrophone(done)
+    apps/astra-macos/Sources/AstraMac/Settings/PermissionCenter.swift:88:            case .microphone: Permissions.requestMicrophone { _ in done() }
+    apps/astra-macos/Sources/AstraMac/Settings/PermissionCenter.swift:89:            case .screenRecording: Permissions.requestScreenRecording(); done()
+    apps/astra-macos/Sources/AstraMac/Settings/PermissionCenter.swift:91:            case .calendar: Permissions.requestCalendar { _ in done() }
+    apps/astra-macos/Sources/AstraMac/Settings/PermissionCenter.swift:92:            case .speechRecognition: Permissions.requestSpeechRecognition { _ in done() }
+    apps/astra-macos/Sources/AstraMac/Settings/SettingsView.swift:36:                              request: { Permissions.requestMicrophone { _ in mic = Permissions.microphone } })
+    apps/astra-macos/Sources/AstraMac/Settings/SettingsView.swift:38:                              request: { Permissions.requestScreenRecording(); screen = Permissions.screenRecording })
+    apps/astra-macos/Sources/AstraMac/Settings/SettingsView.swift:42:                              request: { Permissions.requestSpeechRecognition { _ in speech = Permissions.speechRecognition } })
+    apps/astra-macos/Sources/AstraMac/Settings/SettingsView.swift:44:                              request: { Permissions.requestCalendar { _ in cal = Permissions.calendar } })
+    apps/astra-macos/Sources/AstraMac/Settings/SettingsView.swift:48:                    if !Permissions.requestInputMonitoring() { Permissions.openInputMonitoringSettings() }
+    apps/astra-macos/Sources/AstraMac/Home/HomeView.swift:429:                PermissionCenter.request(.schedule) {
+    apps/astra-macos/Sources/AstraMac/VoiceHUD/VoiceHUDState.swift:56:        PermissionCenter.request(.voice)
+    apps/astra-macos/Sources/AstraMac/RecordingWorkspace/RecordingWorkspaceState.swift:245:                Permissions.requestMicrophone { [weak self] granted in
+    apps/astra-macos/Sources/AstraMac/RecordingWorkspace/RecordingWorkspaceState.swift:308:            PermissionCenter.request(.meeting) {
+    apps/astra-macos/Sources/AstraMac/RecordingWorkspace/RecordingWorkspaceState.swift:337:        if screenAudio && requestPermissions { PermissionCenter.request(.meetingAudio) }
+  求める場所は機能の入口だけ OK
+  取扱説明書も「使うときに要るものだけ」 OK
+
+PERMISSION_JIT_OK: 起動時に求めず、使う直前に求める
+
+== privacy egress ==
+== PRIVACY_EGRESS_GATE ==
+  recording upload requires explicit cloud consent PASS
+  silent Apple STT fallback                0
+  screen audio permission follows selection PASS
+  connector egress requires user action    PASS
+  external action confirmation             PASS (Confirm.ask ×5; 面は CONFIRMATION_GATE)
+  transcription egress guide               consistent
+  runtime (--selftest egress)              autoUpload=off cloudSTTConsent=on meeting=[microphone] sttNoFallback=NOT_MEASURED
+
+PRIVACY_EGRESS_GATE=PASS
+
+== no contradiction ==
+scripts/verify-no-contradiction.sh: line 28: 61980 Terminated: 15          "$BIN" --selftest hold-meeting 25 silent > /dev/null 2>&1
+NO_CONTRADICTION_OK: 画面の中で言っていることが食い違わない
+
+== confirmation surface ==
+== CONFIRMATION_GATE ==
+
+  · 面の寸法 560x286pt
+  ✓ 幅 <= 620pt
+  ✓ 高さ <= 360pt
+  ✓ ① どのアプリ / どこへ
+  ✓ ② 何が起きるか
+  ✓ ③ 決定的な値
+  ✓ ④ 中身の下見
+  ✓ ⑤ 出所
+  ✓ ⑥ 取消
+  ✓ ⑥ 直す
+  ✓ ⑥ 実行
+  ✓ 決断に不要なもの（履歴・会議ノート・sidebar）が無い
+  ✓ 主たる操作 96x32pt が逃げ道 72pt（やめる）以上
+  ✓ 中身の間の中央値 = 11.9pt（操作の手前 28.0pt は区切りとして除外）
+  ✓ 窓を増やしていない（同じ面が morph）
+
+  ✓ 窓を増やさない・焦点を奪わない・560x254pt・高さは中身で決まる（254→163）・取り消しで戻る
+
+CONFIRMATION_GATE=PASS
+
+== screen terms (one word each) ==
+TERMS_OK: 画面の語は 1 語ずつ
+
+== guide facts (app words only) ==
+  facts 126 件 / ガイドが引く key 62 件 / 文字で書かれた protected 0 件 / 一字違い 0 件 / 古い綴り 0 件
+  guide build: written 890 KB / facts used 62
+GUIDE_FACTS_OK: ガイドの語はアプリの表示（UserFacingFacts）だけから来ている
+
+== guide facts selfcheck ==
+  selfcheck 1 一字違いの古い写し:
+    FAIL: protected の語「録音」(dock.record) がガイドに文字で書かれている（build.py:131 付近）。fact("dock.record") で引く
+    FAIL: 「録音の開始 / 停止」はアプリの語「録音を開始 / 停止」(settings.shortcutRow) と一字違い（build.py:131 付近）。古い写し。fact("settings.shortcutRow") で引く
+  selfcheck 2 許可名を文字で:
+    FAIL: protected の語「画面収録」(permission.screenRecording) がガイドに文字で書かれている（build.py:141 付近）。fact("permission.screenRecording") で引く
+  selfcheck 3 知らない key:
+    FAIL: ガイドが知らない fact を引いている: settings.noSuchRow
+GUIDE_FACTS_SELFCHECK_OK: 3 つの書き戻しを全部捕まえた
+
+== design tokens fresh ==
+design tokens are current
+
+== type scale (no literals) ==
+TYPE_LITERALS_OK: 6 つの型の view に字の大きさの直書きは無い（5 scope）
+
+== swift bindings fresh ==
+swift bindings are current
+
+== workspace fixture fresh ==
+recording-workspace fixture is current
+
+== conventions ==
+convention check passed
+
+== C ABI contract (3-way) ==
+C ABI contract ok: Rust 21 = header 21, C# が呼ぶ 21 個すべて一致
+
+== native path Tauri-free ==
+native product path is Tauri-free: 160 Swift files + astra-core に Tauri 依存なし (Done#8)
+
+== WinUI XAML well-formed ==
+xaml well-formed: 5 WinUI .xaml files OK
+
+== C# bridge -> core + gateway ==
+CS_OK gateway(AstraSession): signedIn apps=14 library=0 echoArtifact=52bytes
+CS_OK bridge->core: version=0.1.2 pkce=S256 authorizeUrl parseCallback elapsed=01:05; geometry matches shared fixture
+
+== Windows C# logic type-check ==
+CSLOGIC_OK: Windows C# 実ロジック全体(Window code-behind 含む)が型検査を通過
+
+== C ABI round-trip (C) ==
+CABI_OK connector: pkce=S256 authorizeUrl ok nonLoopbackRejected parseCallback ok
+CABI_OK api: me=owner meeting=ok agent=COMPLETED apps=[... library=[...
+CABI_OK closed=1 ms=5000 fragmentBytes=160000 markedUploaded=1
+
+== macOS recording + live E2E ==
+SELFTEST_OK record: closed=1 fragmentBytes=160000 elapsed=00:05 recoverable=1
+SELFTEST_OK lifecycle: elapsed=00:05 recovered=true
+SELFTEST_OK shortcut: registered=true combo=⌥Space matcher=ok receivedSyntheticPress=true
+SELFTEST_OK sysaudio: capturesAudio=true sampleRate=48000 channels=2 excludesSelf=true
+SELFTEST_OK calendar: status=未確認 upcoming=0
+SELFTEST_OK screen: width=1280 height=800 pixelFormat=BGRA audio=false
+SELFTEST_OK rag: order=a,c,b topScore=1.00 reason=語が 1 件一致 · 新しい · このプロジェクト
+SELFTEST_OK keychain: roundtrip ok, absent=nil, delete idempotent, service=com.astra.mac
+SELFTEST_OK files: candidates=2(binary除外) top=oauth.txt score=0.72
+SELFTEST_OK ax: trusted=true selection=nil candidates=0
+SELFTEST_OK speech: auth=0 onDeviceCapable=true started=false appendedFrames=false serverFallback=never
+SELFTEST_OK connector: pkce=S256✓ authorizeUrl✓ nonLoopbackRejected✓ configured=0
+SELFTEST_OK permissions: mic=許可済み screen=許可済み ax=許可済み calendar=未確認 speech=0
+SELFTEST_OK shape: path matches shared fixture (14 segments); taskDock content 296.0pt fits dockWidth 296.0pt
+SELFTEST_OK hudlifecycle: HUD→Recording→保存→HUD 復帰 の window 状態遷移 OK
+SELFTEST_OK panel: 全Space=true fullscreen補助=true borderless=true 透過=true notMain=true
+SELFTEST_OK render: VoiceHUD:c139/o0.99 IntentBar:c89/o1.00 RecordingIndicator:c168/o1.00 ConfirmationCard:c90/o0.94 MeetingArtifact:c99/o1.00 ResearchResult:c122/o0.81 MeetingSurface:c57/o1.00 LineagePanel:c126/o0.82 ApprovalCard:c106/o0.77 EvidenceSummary:c133/o0.70 WorkSurface:c123/o0.80 ContextLens:c100/o0.88 HomeView:c61/o1.00 RecordingWorkspace:c52/o0.99 MainWindow:c65/o1.00 Settings:c18/o0.13
+SELFTEST_OK pause: 停止中は録音が進まない before=5000 pause=5000 resume=10000
+SELFTEST_OK timer: 経過が進む running=2 停止で止まる paused=2 再開で進む resumed=3
+SELFTEST_OK aiaction: Agent 応答="田中はリリース日を9月12日に決定し、鈴木はOAuthの確認を担当することを確認…"
+SELFTEST_OK translate: local model preserved Friday and 3 pm
+SELFTEST_OK recovery: 検出→復旧 uploadedBytes=192000 復旧後は候補から消える(stillThere=false)
+SELFTEST_OK connectorflow: loopback 受理 code=abc123 state=xyz789 port=50180
+SELFTEST_OK connectorstate: mapping ok, canConnect gated by client_id (google env=false)
+SELFTEST_OK connectorexchange: Swift→core→実HTTP 交換 tokens 取得+Keychain 保管 (verifier 送信=true)
+SELFTEST_OK voiceask: thinking=true→idle Agent 応答="Astraのレビューは金曜日15時です。…"
+SELFTEST_OK recoveryoffline: オフライン録音を新規会議に紐付けて復旧 sent=192000 local消滅=true
+SELFTEST_OK fulllifecycle: HUD→実マイク 5000ms→停止→同じ会議がローカルLibraryにreadyで保存
+DICTATION_FIXTURE trusted=false value=0/true selection=0/true editable=true
+SELFTEST_FAIL e2e001 ②dictation: inserted=false value=""
+FAIL: E2E-001 Product Reality Gate (logs: /var/folders/xn/mdmvpkwd0yx4tcr7rvn_3xv80000gn/T/tmp.TbD1sXqqEp)
+  ^ FAILED
+
+== initial profile native UI ==
+SELFTEST_OK initialprofile: 6 native captures; review/edit actions present; no external data or send
+
+== recording experience E2E ==
+  録音開始           id=meeting-02420944-1a31-4be6-b74f-b0dd34dd55da (停止前に DB へ recording を確認済み)
+  強制終了           kill -9（正常終了の経路を通さない）
+  DB(kill 直後)        meeting-02420944-1a31-4be6-b74f-b0dd34dd55da=recording
+  再起動              meeting-02420944-1a31-4be6-b74f-b0dd34dd55da=interrupted
+  続きから処理     id=meeting-02420944-1a31-4be6-b74f-b0dd34dd55da status=ready actions=1
+  再々起動           meeting-02420944-1a31-4be6-b74f-b0dd34dd55da=ready (同じ id)
+RECORDING_EXPERIENCE_OK: 録音 → kill → interrupted → 続きから ready → 再起動で保持 (id=meeting-02420944-1a31-4be6-b74f-b0dd34dd55da)
+
+== journeys JA/JB/JC ==
+  JOURNEY JA success=true ms=5462 interactions=4 windows=0 focusTheft=0 errors=0
+  JOURNEY JB success=true ms=9979 interactions=7 windows=0 focusTheft=0 errors=0
+  JOURNEY JC success=true ms=7370 interactions=4 windows=0 focusTheft=0 errors=0
+  MOTION T0-idle-to-listening frames=40 captured=40 fps=56 maxGap=37ms sameId=100% windows+0 focusTheft=0 top=0.0pt center=0.5pt missing=0 heightRev=0 maxStep=0.44 contentΔmax=0.9 other(shift=0.0pt alphaRev=0) settled=167ms
+  MOTION T3-dock-to-running frames=41 captured=41 fps=57 maxGap=26ms sameId=100% windows+0 focusTheft=0 top=0.0pt center=0.5pt missing=0 heightRev=0 maxStep=0.27 contentΔmax=8.3 other(shift=0.0pt alphaRev=0) settled=200ms
+  MOTION T4-running-to-confirmation frames=41 captured=41 fps=57 maxGap=29ms sameId=100% windows+0 focusTheft=0 top=0.0pt center=0.5pt missing=0 heightRev=0 maxStep=0.27 contentΔmax=10.1 other(shift=0.0pt alphaRev=0) settled=200ms
+  MOTION T1-meeting-to-notes frames=42 captured=42 fps=59 maxGap=19ms sameId=100% windows+0 focusTheft=0 top=0.0pt center=0.0pt missing=0 heightRev=0 maxStep=0.20 contentΔmax=6.1 other(shift=0.0pt alphaRev=0) settled=183ms
+  MOTION T2-notes-to-workspace frames=38 captured=38 fps=53 maxGap=64ms sameId=100% windows+0 focusTheft=0 top=0.0pt center=0.0pt missing=0 heightRev=0 maxStep=0.00 contentΔmax=163.2 other(shift=0.0pt alphaRev=0) settled=167ms
+SURFACE_CONTINUITY_MOTION=PASS
+PERCEIVED_SURFACE_CONTINUITY=LAYER_B（この selftest では測らない。判定は journeys/perceived/answers/aggregate.md）
+JOURNEYS_OK: 3 本とも最後まで通った（J-B の遷移中も 60fps で連続）
+
+== macOS swift unit tests ==
+	 Executed 104 tests, with 0 failures (0 unexpected) in 0.338 (0.346) seconds
+
+VERIFY_ALL_FAIL

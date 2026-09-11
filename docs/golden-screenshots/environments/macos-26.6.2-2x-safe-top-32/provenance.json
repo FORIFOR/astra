@@ -39,26 +39,26 @@
     }
   ],
   "images": {
-    "dark/01-voice-hud-idle.png": "7d2c4dbf7334d3844aff7abd5d5f4b638a870f4c46670b91bc537e29e54940da",
+    "dark/01-voice-hud-idle.png": "1f8923eb30dd09a5055970335b2ef46e22efd8d0f72f6eaee999659d9332bbec",
     "dark/02-voice-hud-listening.png": "ded84d82d21979891bfaa6d884c2b8f5a388522788204349d439f669823d1ef2",
     "dark/02b-voice-hud-preparing.png": "798ded4748fa3599b8c716464c6a2dac6d7df3c0b864093713ed92705bb36b6c",
-    "dark/03-recording-workspace.png": "df57658e3db0c69b5715623f87d40523911d97de3186d7a905fba3bf70d8701f",
-    "dark/04-recording-transcript.png": "f9d997c0694f5b5bb4ce8a715d2434aad99b39951b11883d895c5b58d4d48420",
-    "dark/05-recording-rag.png": "c3c34b8afbcb048eba9ab82d34f4e2f508cca0e3cba9fabaeadf005f20444be3",
+    "dark/03-recording-workspace.png": "fa3878e67cabc4e6cd0b9fccccffef5b8b5db13aee40a322af72a2a3ec8b8243",
+    "dark/04-recording-transcript.png": "ed57f82a7d3d0d5670b918559d54ee30ad9db43321f0ad920f5d2f9788bf7f68",
+    "dark/05-recording-rag.png": "7dadb252da65f8feb966d499967c18c7c03956ed297d6d81735dc722e34f8df7",
     "dark/08-meeting-detail.png": "00e05bdb47fe691b5143e82a590cb4d7871a2a6b5e1eb5d09179c4aae1e55cde",
-    "dark/09-permission-denied.png": "572b8e08051c567496fc5e8afde41bbaad64a6cd7513bea0b137a8f44d46abba",
-    "dark/10-agent-timeline.png": "d8f83d244d04c39729442f7133050b13efbfe7b78c698c680dc1de43ccda8d5e",
-    "dark/11-meeting-canvas.png": "8a1c3c9e2299957485b67e9d80dee609b26bd7ef9d5e38864440f911a872fe13",
-    "light/01-voice-hud-idle.png": "7d2c4dbf7334d3844aff7abd5d5f4b638a870f4c46670b91bc537e29e54940da",
+    "dark/09-permission-denied.png": "e070c309a0efa7981de3966b36883d2ee8eec964b54bf92755f889ccedc576c1",
+    "dark/10-agent-timeline.png": "7bd769b7ae4d04b975c27af6d1f8308ceba840515ce24f58b02eff924d0ebc1e",
+    "dark/11-meeting-canvas.png": "ed36187855236e1583a1582e9b5369b780887dd4ecdfac5f18ac9debe1619e0f",
+    "light/01-voice-hud-idle.png": "1f8923eb30dd09a5055970335b2ef46e22efd8d0f72f6eaee999659d9332bbec",
     "light/02-voice-hud-listening.png": "ded84d82d21979891bfaa6d884c2b8f5a388522788204349d439f669823d1ef2",
     "light/02b-voice-hud-preparing.png": "798ded4748fa3599b8c716464c6a2dac6d7df3c0b864093713ed92705bb36b6c",
-    "light/03-recording-workspace.png": "12de15c4b28b2c7961edfd8010ecd720f2d1f7cba34ffc09d9adfcbec3bbe542",
-    "light/04-recording-transcript.png": "bf0e361e0157894309ca3f9175f7f7344933972e5d156ae2bba4a52f6a4002f4",
-    "light/05-recording-rag.png": "404aeded79942a6f148e02dac8df687d61783be2f0b0cf0d4c5501c03037a58d",
+    "light/03-recording-workspace.png": "0884d5783b8413833c7c8721a4ae79147ee62697b26e6aa5692911199d1c5254",
+    "light/04-recording-transcript.png": "c034f986ac751cba6a49e4db151f90a8267e539168a9b4b4ecf5a78d2d978191",
+    "light/05-recording-rag.png": "0f2d76669b0189de64ae0af0d4c55c175e1aef0ba9ff48c9677c450c3eabd68b",
     "light/08-meeting-detail.png": "755e943dc710c0676cd939581283e4c70ea2992c6b4926360a9c23ab39d32c0d",
-    "light/09-permission-denied.png": "ade45d522c864ec5339ce6bb27c0322ffe3484d772648872d0d358670ba7bae3",
-    "light/10-agent-timeline.png": "ecdf2961e0133db63661397b99efca88c9aab81a60a7116ce62dd72fc75319c7",
-    "light/11-meeting-canvas.png": "734660ab84e65909dc5e4209254d1240fa9573219e2bf12c450015aa74081d61"
+    "light/09-permission-denied.png": "716545d91d9197b0b0c307ba9f85d319d1de7509920fc7260a50960a06bd06e6",
+    "light/10-agent-timeline.png": "6e2398ecb3d05f96ce255ea61c9e8fcdcd8cf25193550a9e43cc8474ac32aa4c",
+    "light/11-meeting-canvas.png": "85f064f0707adfc284ba2d4063e7dedc149c8110dc82bfb5e76e2b29060bd09b"
   },
   "density_reference": {
     "file": "density-baseline.json",
@@ -67,5 +67,219 @@
     "previous_idle_percent": 80.9,
     "historical_rc_image_idle_percent": 82.0,
     "adopted_content_idle_percent": 83.8
+  },
+  "recording_journeys_update": {
+    "date": "2026-09-11",
+    "round": "docs/ux-benchmark/compare/recording-journeys/ROUND.md",
+    "change": "Idle shortcut badges replaced with an explicit recording button. Astra label now opens actions. Only idle image and idle AX controls adopted; window dimensions and other surfaces retain their baselines.",
+    "review": "Compared before/after/diff visually; 220x44pt content plus 32pt physical camera band. Actual mouse recording, Escape, live subtitles and pause/resume verified.",
+    "geometry_sha256": "43c720ee8e578df6cfa1722fb1057ae3d6cc01a43c4dfdedaa04a0e05b57cfc3",
+    "density_adoption": "Idle only: 83.8 to 89.1 percent after removal of two decorative shortcut badge fills; DESIGN.md section 4 permits this specific adoption. Size and other thresholds retained."
+  },
+  "live_translation_update": {
+    "date": "2026-09-11",
+    "round": "docs/ux-benchmark/compare/live-translation/ROUND.md",
+    "review": "Six workspace images per appearance adopt the label change from ライブ to 大きな字幕. Pixel changes for five surfaces are confined to the label; meeting canvas also has small text rasterization differences, visually inspected. No window size change. Pre-adoption comparisons were below the existing 0.5% threshold.",
+    "geometry": "05/06 now report the actual 780x238pt meetingPanelBody container instead of an inherited child text label. Detach and tool buttons retain individual IDs and 26/32pt heights. Four other states unchanged."
+  },
+  "transcript_modes_update": {
+    "date": "2026-09-11",
+    "round": "docs/ux-benchmark/compare/transcript-modes/ROUND.md",
+    "review": "Removed large-caption mode; original and translation retain existing dimensions and rendering. Eleven image differences are confined to the removed button label. Light meeting-canvas also has text rasterization differences; original text, attribution and timestamps visually confirmed. All differences remain below the existing 0.5% threshold.",
+    "geometry": "All six measured states retain dimensions and controls; only tool-captions disappears from 06-workspace.",
+    "comparison": [
+      {
+        "image": "light/03-recording-workspace.png",
+        "size": [
+          1080,
+          680
+        ],
+        "before_sha256": "d4d130807e7a3f690bf69a0f9f3a1ba3360e758cabe580e1f7d0e26c6642fdc3",
+        "after_sha256": "0884d5783b8413833c7c8721a4ae79147ee62697b26e6aa5692911199d1c5254",
+        "difference_bounds": [
+          491,
+          133,
+          576,
+          146
+        ],
+        "changed_percent_gt16": 0.06753812636165578
+      },
+      {
+        "image": "light/04-recording-transcript.png",
+        "size": [
+          1080,
+          680
+        ],
+        "before_sha256": "7d3acc160251809667dd2837d4d5631fabb50a02707ee9b14c35c418f2d35755",
+        "after_sha256": "c034f986ac751cba6a49e4db151f90a8267e539168a9b4b4ecf5a78d2d978191",
+        "difference_bounds": [
+          491,
+          133,
+          576,
+          146
+        ],
+        "changed_percent_gt16": 0.06753812636165578
+      },
+      {
+        "image": "light/05-recording-rag.png",
+        "size": [
+          1080,
+          680
+        ],
+        "before_sha256": "cf2c12f245f2a7da8b2598f4fadb7bae287bc7fb79389458b9a496a45ad13d86",
+        "after_sha256": "0f2d76669b0189de64ae0af0d4c55c175e1aef0ba9ff48c9677c450c3eabd68b",
+        "difference_bounds": [
+          491,
+          133,
+          576,
+          146
+        ],
+        "changed_percent_gt16": 0.06753812636165578
+      },
+      {
+        "image": "light/09-permission-denied.png",
+        "size": [
+          1080,
+          680
+        ],
+        "before_sha256": "6527e0e58a44f76ddacfc46130ed4df52d0c62271c11c052d9b33c0f6d3a9aef",
+        "after_sha256": "716545d91d9197b0b0c307ba9f85d319d1de7509920fc7260a50960a06bd06e6",
+        "difference_bounds": [
+          491,
+          189,
+          576,
+          202
+        ],
+        "changed_percent_gt16": 0.06753812636165578
+      },
+      {
+        "image": "light/10-agent-timeline.png",
+        "size": [
+          1080,
+          680
+        ],
+        "before_sha256": "2a966b7c6d71aeb5fe8ddf8cd353069307aa5231e441199e358d8acc061e6ff8",
+        "after_sha256": "6e2398ecb3d05f96ce255ea61c9e8fcdcd8cf25193550a9e43cc8474ac32aa4c",
+        "difference_bounds": [
+          491,
+          133,
+          576,
+          146
+        ],
+        "changed_percent_gt16": 0.06753812636165578
+      },
+      {
+        "image": "light/11-meeting-canvas.png",
+        "size": [
+          1080,
+          680
+        ],
+        "before_sha256": "6d74c012424984ed0e190220fb920e4918ead9cb54ed7f3b1843689ad2a93d2d",
+        "after_sha256": "85f064f0707adfc284ba2d4063e7dedc149c8110dc82bfb5e76e2b29060bd09b",
+        "difference_bounds": [
+          749,
+          133,
+          1002,
+          255
+        ],
+        "changed_percent_gt16": 0.32979302832244006
+      },
+      {
+        "image": "dark/03-recording-workspace.png",
+        "size": [
+          1080,
+          680
+        ],
+        "before_sha256": "8246e6ba67a99fcdbd7fccde10b988eebdd8898f7379b15d13c0db3c26e3b630",
+        "after_sha256": "fa3878e67cabc4e6cd0b9fccccffef5b8b5db13aee40a322af72a2a3ec8b8243",
+        "difference_bounds": [
+          491,
+          133,
+          576,
+          146
+        ],
+        "changed_percent_gt16": 0.07162309368191722
+      },
+      {
+        "image": "dark/04-recording-transcript.png",
+        "size": [
+          1080,
+          680
+        ],
+        "before_sha256": "9f93db9b56cd9962ac22c1064146ceb7420e9f7706b00c38186276c419185d39",
+        "after_sha256": "ed57f82a7d3d0d5670b918559d54ee30ad9db43321f0ad920f5d2f9788bf7f68",
+        "difference_bounds": [
+          491,
+          133,
+          576,
+          146
+        ],
+        "changed_percent_gt16": 0.07162309368191722
+      },
+      {
+        "image": "dark/05-recording-rag.png",
+        "size": [
+          1080,
+          680
+        ],
+        "before_sha256": "6e7c58edb3e17353d180a685c3beb69ace0e1da2e809be0dd384e2d0f6a4f326",
+        "after_sha256": "7dadb252da65f8feb966d499967c18c7c03956ed297d6d81735dc722e34f8df7",
+        "difference_bounds": [
+          491,
+          133,
+          576,
+          146
+        ],
+        "changed_percent_gt16": 0.07162309368191722
+      },
+      {
+        "image": "dark/09-permission-denied.png",
+        "size": [
+          1080,
+          680
+        ],
+        "before_sha256": "44a161fa87a45106196a4d39d4fa995ac92b22f59e7825f4cc3d57fbc4bbaebe",
+        "after_sha256": "e070c309a0efa7981de3966b36883d2ee8eec964b54bf92755f889ccedc576c1",
+        "difference_bounds": [
+          491,
+          189,
+          576,
+          202
+        ],
+        "changed_percent_gt16": 0.07162309368191722
+      },
+      {
+        "image": "dark/10-agent-timeline.png",
+        "size": [
+          1080,
+          680
+        ],
+        "before_sha256": "22cc0aba3fb8c0d35061b0d62fad98d38dd649699458cec5f12fec03e0bf4503",
+        "after_sha256": "7bd769b7ae4d04b975c27af6d1f8308ceba840515ce24f58b02eff924d0ebc1e",
+        "difference_bounds": [
+          491,
+          133,
+          576,
+          146
+        ],
+        "changed_percent_gt16": 0.07162309368191722
+      },
+      {
+        "image": "dark/11-meeting-canvas.png",
+        "size": [
+          1080,
+          680
+        ],
+        "before_sha256": "0b05aa0135b7fb1023afd48d98d66ef76ec78d7d97498c304dda4bbbbbee52ab",
+        "after_sha256": "ed36187855236e1583a1582e9b5369b780887dd4ecdfac5f18ac9debe1619e0f",
+        "difference_bounds": [
+          889,
+          133,
+          974,
+          146
+        ],
+        "changed_percent_gt16": 0.07162309368191722
+      }
+    ]
   }
 }

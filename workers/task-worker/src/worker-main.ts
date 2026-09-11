@@ -7,6 +7,7 @@
  * 同じイベントループに乗せたくないため。
  */
 import path from 'node:path';
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { NativeConnection } from '@temporalio/worker';
 import { createDb, dbConfigFromEnv, withTenant, type DbHandle } from '@astra/db';
 import { createLogger } from '@astra/telemetry';
@@ -16,7 +17,7 @@ import {
   researchExecutors,
   generalExecutors,
   researchProvidersFromEnv,
-  setModelContext,
+  withModelContext,
 } from '@astra/service-research';
 import {
   FsRecordingStore,
@@ -77,8 +78,9 @@ async function main(): Promise<void> {
    * 会議の要約は step の中で起きるので、受け渡しに載せる先が要る。
    * 調査の側は `setModelContext` が同じものを持つ。
    */
-  let here: { taskId: string; tenantId: string; userId: string; stepIndex: number } | null = null;
-  const modelContext = (): typeof here => here;
+  type StepContext = { taskId: string; tenantId: string; userId: string; stepIndex: number };
+  const here = new AsyncLocalStorage<StepContext>();
+  const modelContext = (): StepContext | null => here.getStore() ?? null;
 
   const hostExecutor = new HostStepExecutor({
     bridge: hostBridge,
@@ -144,10 +146,7 @@ async function main(): Promise<void> {
       hostExecutor,
       hosts: hostBridge,
       // step ごとに「いまここ」を置く。言語モデルはこの中から呼ばれる。
-      onStep: (where) => {
-        here = where;
-        setModelContext(where);
-      },
+      withStepContext: (where, run) => here.run(where, () => withModelContext(where, run)),
       executors: {
         ...researchExecutors(research),
         /*

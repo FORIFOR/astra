@@ -10,9 +10,9 @@
     {
       "kind": "material/blur",
       "file": "GuidedSetup/Overlay/AvatarHUDView.swift",
-      "sha256": "4b0486c4917dab3231cf03d9cf76c2aa8f75b9c5b6fa1dcbeef9c3e8ae1fc201",
+      "sha256": "8e310117d1d5d4ac1d71c33d5fa2d4b37c7a2fc716e345f4b6c90248e490c31b",
       "count": 1,
-      "reason": "The permission avatar HUD is a transient status surface; the material is limited to the overlay boundary."
+      "reason": "Re-reviewed 2026-09-11 for permission-capabilities: the same one regularMaterial boundary remains on the existing 300pt transient guide. Purpose, waiting, optional repair and ready reuse that surface. Native light/dark captures and fitted geometry are in docs/golden-screenshots/permission-capabilities. No material allowance increase; this is a scoped implementation audit, not an independent product-wide review."
     },
     {
       "kind": "Capsule",
@@ -31,9 +31,9 @@
     {
       "kind": "Capsule",
       "file": "Home/WorkContextCard.swift",
-      "sha256": "00869bda40efcc8265911cf50b70dcf9f9c9de405b8ddbf3cfeae81fc978b1fe",
+      "sha256": "79c7f6a84448bb5b89297b33625a31b6823ad1598f37c972cbcfbeb1a052d29a",
       "count": 1,
-      "reason": "The capsule is a compact context label; it does not create a new surface."
+      "reason": "Existing priority severity capsule unchanged. Workspace UX audit hides zero-valued pressure bars; native light/dark captures and source review show no new pill surfaces."
     },
     {
       "kind": "Capsule",
@@ -45,9 +45,9 @@
     {
       "kind": "Capsule",
       "file": "VoiceHUD/VoiceHUDView.swift",
-      "sha256": "1968ba7e5bc12f88049a2f8fe3a2850db2dfe54a5d87a19a3579c20fece11b1c",
+      "sha256": "5e0fec724b9b429c33d28e0d20035ed61060d4373b70cbf3ce685cbc0cd337c9",
       "count": 1,
-      "reason": "The capsule is the live voice status indicator and is required to preserve the Dock status grammar."
+      "reason": "Re-reviewed 2026-09-12 for screenshot questions: existing task progress Capsules are unchanged. The 320x52 Dock now has one question action plus dismiss; the duplicate action is removed. Three-scale native captures confirm the complete label fits. No Capsule, shadow, material or allowance increase; scoped implementation review only."
     }
   ]
 }

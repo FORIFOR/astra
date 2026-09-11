@@ -1,0 +1,6 @@
+FOCUS_STATE home active=true key=10708 main=10708 visible=10707:,10708:Home
+FOCUS_STATE notes active=true key=10707 main=10708 visible=10707:,10708:Home
+FOCUS_STATE passive active=true key=10708 main=10708 visible=10707:,10708:Home
+FOCUS_STATE ask active=true key=10707 main=10708 visible=10707:,10708:Home
+FOCUS_STATE sharing active=true key=10708 main=10708 visible=10708:Home
+SELFTEST_OK home-meeting-focus: explicit Notes/Ask use existing Dock key window; passive updates preserve Home; sharing stays hidden

@@ -1,101 +1,75 @@
+<p align="center"><img src="apps/desktop/src-tauri/icons/128x128@2x.png" width="88" alt="Astra"></p>
+
 # Astra
 
-会話（音声 / テキスト）から、調べる・作る・動かすまでを一貫して行う AI プラットフォーム。
+**Your screen. Your next move.**
 
-ユーザーに見せるトップレベル UI は **4 タブ固定**（Home / Work / Library / Apps）と、
-OS のどこからでも呼び出せる **Task Dock**。North Star は **Intent → Done**。
+A native Mac AI workspace. Take a screenshot, ask your own question, and keep the answer with your work. Use a local vision model or connect a supported AI provider.
 
-> 話す / 打つ → AI が理解する → 調べる / 動く → 結果が Library に残る
+[Website & demo](https://astra-forifor.forifor.chatgpt.site) · [日本語](docs/README.ja.md) · [Setup](docs/LOCAL_PREVIEW.md) · [Feedback](https://github.com/FORIFOR/astra/issues)
 
-## ドキュメント
+![Astra's screenshot question composer](docs/golden-screenshots/screenshot-question/question-comfortable-light.png)
 
-| 文書                                                                                             | 役割                                                 |
-| ------------------------------------------------------------------------------------------------ | ---------------------------------------------------- |
-| [`docs/spec/new_ai_platform_design_spec_v0.1.md`](docs/spec/new_ai_platform_design_spec_v0.1.md) | **正本**（製品仕様 v0.1、凍結）                      |
-| [`docs/spec/astra_ui_ux_detailed_spec_v0.1.md`](docs/spec/astra_ui_ux_detailed_spec_v0.1.md)     | UI/UX 詳細仕様 v0.1（凍結。正本は同名 `.docx`）      |
-| [`docs/spec/phase-0-implementation-spec.md`](docs/spec/phase-0-implementation-spec.md)           | Phase 0 実装仕様                                     |
-| [`docs/adr/`](docs/adr/)                                                                         | 設計判断の記録                                       |
-| [`docs/guide/Astra-操作ガイド.pdf`](docs/guide/Astra-操作ガイド.pdf)                             | 利用者向け操作ガイド（`docs/guide/build.py` で生成） |
+## A small workflow worth keeping
 
-## 現在地
+1. Take a Mac screenshot. Astra offers to help with it.
+2. Write what **you** want to know. The image is already attached.
+3. Send the question. Reopen the answer in Work, copy it, or save it as Markdown.
 
-**Phase 0 完了 / Phase 1 進行中。**
+Try: “What does this error mean?” or “What would you improve on this page?” Screenshot detection itself makes no AI request. The selected image is included when you send your question.
 
-- Phase 0: P0-01 〜 P0-18。受け入れテスト AC-1〜AC-16 が green。
-  `pnpm test:acceptance` が「create task → progress → result artifact」を HTTP から検証する。
-- Phase 1: **UI-0・UI-1 完了**。
-  UI-0 = design tokens + shell + shared state（Light・Dark + 4-tab shell）。
-  UI-1 = Task Dock + Context Lens（OS 上で intent → context 確認）。
-  UI-2 = Work Surface + progress + result（durable task の状態が見える）。
-  UI-3 = Home / Work / Library（サインイン導線 + task → artifact continuity）。
-  次は UI-4（Meeting）。ただし Meeting は Phase 3 の backend が要る。
+## Bring your model
 
-実装順は正本 §28 に従う。
+| Route | What you need                                                   |
+| ----- | --------------------------------------------------------------- |
+| Local | Ollama with a vision-capable model for image questions          |
+| API   | A supported OpenAI-compatible endpoint and your own credentials |
+| CLI   | A configured Codex or Claude Code installation                  |
 
-```text
-Phase 0  Foundation          ← いまここ
-Phase 1  Universal Interface（Task Dock v2 / 4タブ / ローカル STT）
-Phase 2  Research + Library（Evidence Ledger / 共有リンク）
-Phase 3  Meeting（V1 streaming diarization + Chirp 3 final pass）
-Phase 4  Plugin Platform
-Phase 5  First Specialist Agents
-Phase 6  World Model / Proactivity
-Phase 7  Regulated / Financial
-```
+An explicitly selected route is not silently replaced by a paid provider. Local vision keeps the selected image at the local model endpoint. External providers receive the submitted content and may charge for usage; speed and quality vary by model.
 
-## 構成
+## Quick start
 
-```text
-apps/desktop         Tauri v2 + React。Local Control Plane / 4 タブ shell / Task Dock
-apps/share-web       共有リンクの公開 viewer
-services/*           Cloud Control Plane（正本 §17 のサービス境界）
-workers/*            Temporal worker
-packages/contracts   Zod を一次ソースとする API / イベント契約
-packages/api-client  contracts に対する HTTP / SSE クライアント
-packages/db          PostgreSQL 型付きアクセスとテナント境界
-packages/*           ui-kit / agent-sdk / plugin-sdk / policy / telemetry
-plugins/builtin/*    同梱プラグインの manifest
-infra/*              terraform / cloudrun / db マイグレーション
-evals/*              正本 §25 の受け入れスイート
-```
+**Developer preview — setup is required.** The Mac app currently needs a local gateway, task worker, agent host, and model. The app download alone is not a hosted service.
 
-Phase 0〜3 はサービス境界を保ったまま単一プロセスで動かす（[ADR 0001](docs/adr/0001-modular-monolith-deployment.md)）。
+- macOS 14 or later; native SwiftUI app, Apple silicon and Intel builds.
+- [Follow the local setup guide](docs/LOCAL_PREVIEW.md), then try a text request before an image question.
+- [Mac builds](https://github.com/FORIFOR/astra/releases): use the build and source version named together in its release notes.
+- [See the actual interface and demo](https://astra-forifor.forifor.chatgpt.site/#experience).
 
-## 開発
+The preview includes recording, live transcription, service connections, and guided Mac permissions. Those paths have additional credentials and permissions; they are not prerequisites for the local text workflow. Production-wide release acceptance is still tracked separately from this developer preview.
 
-必要なもの: Node >= 22, pnpm 10, Docker, Rust（Phase 1 以降）, dbmate。
+## Help shape Astra
+
+If this fits how you work, a star helps other people find it. The most useful feedback is a real workflow: what you tried, what you expected, and where Astra got in the way.
+
+- [Report a reproducible problem](https://github.com/FORIFOR/astra/issues/new?template=bug_report.yml).
+- [Suggest a workflow or team pilot](https://github.com/FORIFOR/astra/issues/new?template=workflow.yml).
+- Read [contribution guidance](CONTRIBUTING.md) before making a change.
+
+Issues are public. Use synthetic examples and remove credentials and personal information. This repository currently has no project-wide open-source license; public visibility is not a license grant. Third-party components retain their own licenses.
+
+## Inside the project
+
+| Directory             | Purpose                                               |
+| --------------------- | ----------------------------------------------------- |
+| `apps/astra-macos`    | Native SwiftUI Mac app and interaction tests          |
+| `apps/windows`        | Native Windows client work                            |
+| `core`                | Shared Rust core and native bindings                  |
+| `services`            | Gateway, identity, tasks, artifacts, and integrations |
+| `workers/agent-host`  | Device-side models and tools                          |
+| `workers/task-worker` | Durable task execution                                |
+| `packages/contracts`  | Shared Zod contracts                                  |
+| `shared/design`       | Design rules and generated tokens                     |
+| `docs/evidence`       | Verification records and known limitations            |
+
+The older Tauri client remains under `apps/desktop`; the current Mac interface is `apps/astra-macos`.
 
 ```sh
 pnpm install
-cp .env.example .env
-pnpm dev:infra        # PostgreSQL 16(+pgvector) / Redis / Temporal
-
 pnpm build
-pnpm test             # DB 不要のテスト
-pnpm test:db          # 使い捨て DB を用意して DB 依存のテストも実行
-pnpm test:acceptance  # Phase 0 の受け入れテスト（AC-1〜AC-16）
-pnpm smoke            # 実プロセスを起動して HTTP で疎通（server.ts / worker-main.ts）
-
-pnpm check:conventions  # サービス境界とテーブル所有権の検査
-pnpm check:generated    # schema.sql / Kysely 型 / Dock geometry の鮮度
-pnpm db:verify          # マイグレーションの up / RLS / append-only / down
-
-cd apps/desktop/src-tauri && cargo test   # Dock の配置計算
+pnpm test
+pnpm check:conventions
 ```
 
-開発中のサービスは**リポジトリルートから起動する**。相対パスの既定が cwd 依存なので、
-別の場所から起動すると gateway と worker が違う `.data/objects` を見てしまう。
-
-```sh
-pnpm dev:worker   # Temporal worker
-pnpm dev:gateway  # api-gateway（4 タブ shell からはまだ繋いでいない）
-```
-
-Temporal UI: http://localhost:8233
-
-## 規約
-
-- 契約（型・イベント・スキーマ）は `packages/contracts` の Zod が一次ソース。手書きの型を並置しない。
-- DB へのアクセスは `packages/db` の `withTenant` / `withSystem` / `withIdentity` を経由する。生の SQL を service から直接投げない。
-- サービスは他サービスの内部モジュールを import しない。
-- append-only なテーブル（`action_receipts` / `audit_events`）は DB トリガで UPDATE / DELETE を拒否する。
+Native and end-to-end checks require additional local dependencies. See [setup](docs/LOCAL_PREVIEW.md), [design rules](shared/design/DESIGN.md), and [`scripts/verify-all.sh`](scripts/verify-all.sh). Product specifications and architecture decisions are indexed in [docs](docs/README.md).

@@ -38,13 +38,14 @@ final class InitialProfileStore: ObservableObject {
     private var requestedProvider: String?
     var visible: Bool { (starting || failure != nil) || (result != nil && result?.finished != true) }
 
-    func configureBackend(base: String, token: String) {
+    func configureBackend(base: String, token: String, renewal: Bool = false) {
         // Cancel stale responses when the authenticated session changes.
-        if self.base != base || self.token != token {
+        if self.base != base || (!renewal && self.token != token) {
             poll?.cancel(); generation = UUID(); result = nil; failure = nil
             starting = false; saving = false; requestedProvider = nil
         }
         self.base = base; self.token = token
+        poll?.cancel()
         poll = Task { await refresh(); schedule() }
     }
 

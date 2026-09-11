@@ -11,6 +11,7 @@ enum PermissionGuideState: Equatable {
     case waitingScreenCapture
     case microphoneIntro
     case waitingMicrophone
+    case ready(GuidePermission)
     case completed
     case failed(String)
 
@@ -20,6 +21,7 @@ enum PermissionGuideState: Equatable {
         case .accessibilityIntro, .waitingAccessibility: return .accessibility
         case .screenCaptureIntro, .openingScreenSettings, .guidingScreenCapture, .waitingScreenCapture: return .screenCapture
         case .microphoneIntro, .waitingMicrophone: return .microphone
+        case .ready(let permission): return permission
         case .idle, .completed, .failed: return nil
         }
     }

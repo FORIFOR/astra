@@ -1,0 +1,44 @@
+{
+  "01-idle" : {
+    "height" : 76,
+    "scale" : 2,
+    "width" : 220,
+    "x" : 754,
+    "y" : 1041
+  },
+  "02-actions" : {
+    "height" : 68,
+    "scale" : 2,
+    "width" : 560,
+    "x" : 584,
+    "y" : 1049
+  },
+  "03-disconnected" : {
+    "height" : 492,
+    "scale" : 2,
+    "width" : 820,
+    "x" : 454,
+    "y" : 625
+  },
+  "04-live" : {
+    "height" : 492,
+    "scale" : 2,
+    "width" : 820,
+    "x" : 454,
+    "y" : 625
+  },
+  "05-paused" : {
+    "height" : 492,
+    "scale" : 2,
+    "width" : 820,
+    "x" : 454,
+    "y" : 625
+  },
+  "06-resumed" : {
+    "height" : 492,
+    "scale" : 2,
+    "width" : 820,
+    "x" : 454,
+    "y" : 625
+  }
+}

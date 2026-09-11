@@ -6,6 +6,10 @@
  * **Dock とは別プロセス。**Dock を閉じても、これは動き続ける。
  */
 import { cloudClient } from './cloud.js';
+import { ApiSession } from './api-session.js';
+import { acquireHostInstance } from './instance-lock.js';
+import { homedir } from 'node:os';
+import { resolve } from 'node:path';
 import { runInitialProfile } from './initial-profile.js';
 import { createLogger } from '@astra/telemetry';
 import { credentialRef, connectorProviderConfig, type OauthProvider } from '@astra/oauth';
@@ -21,7 +25,7 @@ import { ClaudeCodeCli } from './claude-code.js';
 import { LlmRuntime } from './llm-steps.js';
 import { HttpLlmClient } from './http-llm.js';
 import { CompositeRunner } from './runner.js';
-import type { WorkSyncState } from '@astra/contracts';
+import type { WorkSyncState, LanguageModelKind } from '@astra/contracts';
 import { DEFAULT_SYNC_INTERVAL_MS, WorkSyncLoop } from './work-sync.js';
 import {
   grantsFromConnections,
@@ -37,15 +41,26 @@ async function main(): Promise<void> {
   });
 
   const baseUrl = process.env['ASTRA_API_URL'] ?? 'http://127.0.0.1:8080';
-  const token = process.env['ASTRA_HOST_TOKEN'];
-  if (!token) {
-    // 名乗れないまま起動しない。黙って何もしない process を残さない。
-    logger.error('ASTRA_HOST_TOKEN is required; the host cannot register without it');
-    process.exitCode = 1;
-    return;
-  }
-
   const deviceLabel = process.env['ASTRA_DEVICE_LABEL'] ?? `${process.env['USER'] ?? 'device'}`;
+  // A refresh chain must never be opened by two host processes. Acquire this
+  // before Keychain reads/writes or bootstrap credentials can replace each other.
+  const storeIdentity = process.env['ASTRA_SECRET_STORE_FILE']
+    ? resolve(process.env['ASTRA_SECRET_STORE_FILE'])
+    : `${homedir()}:astra-host-${deviceLabel}`;
+  const instance = await acquireHostInstance(`${storeIdentity}:${new URL(baseUrl).origin}`);
+  const apiSession = new ApiSession({
+    baseUrl,
+    ...(process.env['ASTRA_HOST_TOKEN'] ? { token: process.env['ASTRA_HOST_TOKEN'] } : {}),
+    ...(process.env['ASTRA_HOST_REFRESH_TOKEN']
+      ? { refreshToken: process.env['ASTRA_HOST_REFRESH_TOKEN'] }
+      : {}),
+    secrets: keychainFor(process.platform, `astra-host-${deviceLabel}`),
+  });
+  // Credentials must not be inherited by model CLIs or tools launched below.
+  delete process.env['ASTRA_HOST_TOKEN'];
+  delete process.env['ASTRA_HOST_REFRESH_TOKEN'];
+  await apiSession.start();
+  const token = ''; // Authorization is supplied at request time by apiSession.fetch.
 
   /*
    * 言葉を扱う仕事も端末で。正本 §21、UI/UX §22。
@@ -100,9 +115,33 @@ async function main(): Promise<void> {
         );
       }
     }
-    httpClients[kind] = new HttpLlmClient({ kind, endpoint, model, ...(apiKey ? { apiKey } : {}) });
+    const reasoningEffort =
+      kind === 'local' ? process.env['ASTRA_LOCAL_LLM_REASONING_EFFORT'] : undefined;
+    if (reasoningEffort && !['none', 'low', 'medium', 'high'].includes(reasoningEffort))
+      throw new Error('ASTRA_LOCAL_LLM_REASONING_EFFORT must be none, low, medium, or high');
+    httpClients[kind] = new HttpLlmClient({
+      kind,
+      endpoint,
+      model,
+      ...(apiKey ? { apiKey } : {}),
+      ...(reasoningEffort
+        ? { reasoningEffort: reasoningEffort as 'none' | 'low' | 'medium' | 'high' }
+        : {}),
+      ...(process.env['ASTRA_LLM_MAX_OUTPUT_TOKENS'] === undefined
+        ? {}
+        : { maxOutputTokens: Number(process.env['ASTRA_LLM_MAX_OUTPUT_TOKENS']) }),
+    });
   }
+  const allowedKinds: readonly LanguageModelKind[] | undefined =
+    preferredCli === 'api'
+      ? ['anthropic_api', 'gemini_api', 'openai_api']
+      : preferredCli === 'none'
+        ? []
+        : preferredCli
+          ? [preferredCli as LanguageModelKind]
+          : undefined;
   const llm = new LlmRuntime({
+    ...(allowedKinds ? { allowedKinds } : {}),
     ...(!preferredCli || preferredCli === 'codex'
       ? {
           codex: new CodexCli({
@@ -162,7 +201,7 @@ async function main(): Promise<void> {
     const items: ConnectionRecord[] = [];
     for (const pluginId of knownPluginIds()) {
       try {
-        const response = await fetch(
+        const response = await apiSession.fetch(
           `${baseUrl}/v1/plugins/${encodeURIComponent(pluginId)}/connections`,
           {
             headers: { authorization: `Bearer ${token}` },
@@ -183,7 +222,7 @@ async function main(): Promise<void> {
   const host = new LocalAgentHost({
     deviceLabel,
     models,
-    transport: httpTransport({ baseUrl, token }),
+    transport: httpTransport({ baseUrl, token, fetch: apiSession.fetch }),
     runner: {
       // 実際の実行は Phase 5（BYOK / Claude Code）で差し込む
       async run({ stillLeased }) {
@@ -227,7 +266,7 @@ async function main(): Promise<void> {
   });
 
   const steps = new HostStepLoop({
-    transport: httpStepTransport({ baseUrl, token }),
+    transport: httpStepTransport({ baseUrl, token, fetch: apiSession.fetch }),
     runner: new CompositeRunner([runtime, llm]),
     onError: (error) => logger.warn({ err: error.message }, 'a step could not be handled'),
   });
@@ -239,10 +278,10 @@ async function main(): Promise<void> {
    * 繋いであるサービスだけを読み、**抜粋にして**cloud へ渡す。
    * 意味づけは端末の LLM。`ASTRA_WORK_SYNC=off` で止められる。
    */
-  const cloud = cloudClient(baseUrl, token);
+  const cloud = cloudClient(baseUrl, token, apiSession.fetch);
   const workSync = new WorkSyncLoop({
     connectors: runtime,
-    llm,
+    llm: llm.forBackground(process.env['ASTRA_WORK_SYNC_METERED_LLM'] === 'on'),
     ...(process.env['ASTRA_WORK_SYNC_GOOGLE_QUERY']
       ? { googleQuery: process.env['ASTRA_WORK_SYNC_GOOGLE_QUERY'] }
       : {}),
@@ -285,7 +324,10 @@ async function main(): Promise<void> {
     logger.info({ signal }, 'shutting down the local agent host');
     clearInterval(initialTimer);
     workSync.stop();
-    void host.stop().finally(() => process.exit(0));
+    void host.stop().finally(async () => {
+      await instance.release();
+      process.exit(0);
+    });
   };
   process.on('SIGINT', () => shutdown('SIGINT'));
   process.on('SIGTERM', () => shutdown('SIGTERM'));

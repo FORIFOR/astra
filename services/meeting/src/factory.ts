@@ -69,6 +69,7 @@ export interface MeetingProviderEnv {
    * 無いと Google が 403 を返し、原因が「権限」に見えてしまう。
    */
   readonly GOOGLE_CLOUD_PROJECT?: string | undefined;
+  readonly GOOGLE_STT_AUDIO_BUCKET?: string | undefined;
 }
 
 /**
@@ -96,7 +97,7 @@ function clientsFromEnv(env: MeetingProviderEnv):
      */
     speechV2: async () => {
       const { speechV2ClientFromEnv } = await import('./google-rest.js');
-      return speechV2ClientFromEnv({ projectId });
+      return speechV2ClientFromEnv({ projectId, audioBucket: env.GOOGLE_STT_AUDIO_BUCKET });
     },
     ...(env.GOOGLE_STT_RECOGNIZER
       ? {

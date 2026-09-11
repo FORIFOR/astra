@@ -134,6 +134,7 @@ export function meetingExecutors(deps: MeetingExecutorDeps): Record<
 
         const audio = await recordings.seal(meetingId);
         const results = await batch.transcribe(audio, { language: meeting.language });
+        await meetings.applyFinalPass(input.tenantId, meetingId, results);
         return { result: { results: results.length }, detail: `${results.length} segments` };
       },
     },
@@ -147,11 +148,9 @@ export function meetingExecutors(deps: MeetingExecutorDeps): Record<
       async execute(input, step) {
         const meetingId = meetingIdOf(input, step);
         const meeting = await meetings.get(input.tenantId, meetingId);
-        const audio = await recordings.seal(meetingId);
-        const results = await batch.transcribe(audio, { language: meeting.language });
-        const saved = await meetings.applyFinalPass(input.tenantId, meetingId, results);
-
+        // The transcribe step already persisted final rows. Do not bill the same audio twice.
         const final = await meetings.segments(input.tenantId, meetingId, 'final');
+        const saved: readonly MeetingSegment[] = [];
         return {
           result: { added: saved.length, total: final.length },
           detail: `${speakerCount(final)} speakers`,
@@ -188,18 +187,32 @@ export function meetingExecutors(deps: MeetingExecutorDeps): Record<
         const meetingId = meetingIdOf(input, step);
         const meeting = await meetings.get(input.tenantId, meetingId);
         const segments = await meetings.segments(input.tenantId, meetingId);
-        const draft = await summarizer.summarize(segments);
-        const cited = withCitations(draft, segments);
+        const saved = step.args['summary_result'];
+        // Old workflow histories and direct calls can lack a previous step.
+        // New workflows always pass the persisted result, including empty arrays.
+        const cited =
+          saved === undefined
+            ? withCitations(await summarizer.summarize(segments), segments)
+            : null;
+        const summary =
+          saved === undefined
+            ? {
+                summary: cited!.summary,
+                decisions: cited!.decisions,
+                action_items: cited!.actionItems,
+                open_questions: cited!.openQuestions,
+              }
+            : (saved as Record<string, unknown>);
 
         const bundle = MeetingBundle.parse({
           meeting_id: meetingId,
           title: meeting.title,
           duration_ms: durationMs(segments),
           speaker_count: speakerCount(segments),
-          summary: cited.summary,
-          decisions: cited.decisions,
-          action_items: cited.actionItems,
-          open_questions: cited.openQuestions,
+          summary: summary['summary'],
+          decisions: summary['decisions'],
+          action_items: summary['action_items'],
+          open_questions: summary['open_questions'],
         });
 
         const speakers = await meetings.speakers(input.tenantId, meetingId);

@@ -1,0 +1,10 @@
+
+ RUN  v3.2.7 /Users/shuhei/Projects/astra/services/conversation
+
+ ✓ test/lane.test.ts (10 tests) 2ms
+
+ Test Files  1 passed (1)
+      Tests  10 passed (10)
+   Start at  04:49:28
+   Duration  195ms (transform 29ms, setup 0ms, collect 27ms, tests 2ms, environment 0ms, prepare 38ms)
+

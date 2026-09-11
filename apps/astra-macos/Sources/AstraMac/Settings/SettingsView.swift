@@ -8,6 +8,13 @@ struct SettingsView: View {
     @State private var cal = Permissions.calendar
     @State private var input = Permissions.inputMonitoring
     @State private var speech = Permissions.speechRecognition
+    @State private var showAdditionalPermissions: Bool
+
+    init(showAdditionalPermissions: Bool = false) {
+        _showAdditionalPermissions = State(initialValue: showAdditionalPermissions)
+    }
+    @ObservedObject private var practice = PermissionPractice.shared
+    @State private var cloudTranscription = RecordingRuntime.cloudTranscriptionAllowed
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -30,13 +37,11 @@ struct SettingsView: View {
                 .accessibilityIdentifier("uiScale")
             }
             section(Facts.settingsPermissionsSection) {
-                // 各行に「何のために要るか」を添える。名前と状態だけでは、許すかどうかを決められない。
-                permissionRow(Facts.permissionMicrophone, mic, reason: PermissionCenter.Capability.meeting.reason,
-                              request: { Permissions.requestMicrophone { _ in mic = Permissions.microphone } })
-                permissionRow(Facts.permissionScreenRecording, screen, reason: PermissionCenter.Capability.screenAsk.reason,
-                              request: { Permissions.requestScreenRecording(); screen = Permissions.screenRecording })
-                permissionRow(Facts.permissionAccessibility, ax, reason: PermissionCenter.Capability.control.reason,
-                              request: { Permissions.openAccessibilitySettings() })
+                capabilityRow(.microphone, state: mic)
+                capabilityRow(.screenCapture, state: screen)
+                capabilityRow(.accessibility, state: ax)
+            }
+            DisclosureGroup("その他の許可", isExpanded: $showAdditionalPermissions) {
                 permissionRow(Facts.permissionSpeechRecognition, speech, reason: "会議を手元で文字にするには\(Facts.permissionSpeechRecognition)の許可が要ります。",
                               request: { Permissions.requestSpeechRecognition { _ in speech = Permissions.speechRecognition } })
                 permissionRow(Facts.permissionCalendar, cal, reason: PermissionCenter.Capability.schedule.reason,
@@ -49,17 +54,76 @@ struct SettingsView: View {
                 })
             }
 
-            Text("ライブのマイク / 画面 / グローバル操作は、署名済みアプリで、上の許可をあなたが与えたときだけ動きます。")
+            section("文字起こし") {
+                Toggle("ライブ文字起こし（Google STT）", isOn: Binding(
+                    get: { cloudTranscription },
+                    set: { allowed in
+                        cloudTranscription = allowed
+                        RecordingRuntime.setCloudTranscriptionAllowed(allowed)
+                    }))
+                .toggleStyle(.switch)
+                .accessibilityIdentifier("cloudTranscriptionToggle")
+                Text(cloudTranscription
+                     ? "録音中の音声をGoogleへ送り、字幕をリアルタイムに表示します。"
+                     : "音声はこのMac内だけで処理します。Googleのライブ字幕を使うにはオンにします。")
+                    .font(.system(size: 11)).foregroundStyle(.primary).opacity(0.78)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Text(practice.isReadingScreen ? "画面を1枚読み取り中です。外部には送信していません。" : "画面は必要なときだけ読み取ります。許可はmacOSの設定で変更できます。")
                 .font(.system(size: 11)).foregroundStyle(.secondary)
-            Spacer()
         }
         .padding(24)
-        .frame(width: 460, height: 540)
+        .frame(width: 460)
+        .fixedSize(horizontal: false, vertical: true)
+        .onChange(of: showAdditionalPermissions) { _, _ in SettingsWindowController.shared.resizeToContent() }
+        .onAppear(perform: refreshPermissions)
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in refreshPermissions() }
+        .onReceive(NotificationCenter.default.publisher(for: SettingsWindowController.didShow)) { _ in refreshPermissions() }
+        .onReceive(PermissionGuideCoordinator.shared.$state) { _ in refreshPermissions() }
     }
 
-    private func section<C: View>(_ title: String, @ViewBuilder _ content: () -> C) -> some View {
+    private func capabilityRow(_ permission: GuidePermission, state: Permissions.State) -> some View {
+        HStack(alignment: .center, spacing: Space.base) {
+            Image(systemName: permission.symbol).frame(width: 20)
+            VStack(alignment: .leading, spacing: Space.compact) {
+                Text(permission.capabilityTitle).font(.system(size: S.type(TypeScale.secondarySize)))
+                Text("macOS：" + permission.systemPermissionName)
+                    .font(.system(size: S.type(TypeScale.captionSize))).foregroundStyle(.secondary)
+            }
+            Spacer(minLength: Space.compact)
+            if state == .granted {
+                Label("準備完了", systemImage: "checkmark")
+                    .font(.system(size: S.type(TypeScale.captionSize))).foregroundStyle(.secondary)
+            }
+            Button(state == .granted ? "試す" : "有効にする") {
+                if state == .granted { PermissionPractice.use(permission) }
+                else { PermissionGuideCoordinator.shared.explain(permission) { PermissionPractice.use(permission) } }
+            }
+            .controlSize(.small)
+            .accessibilityLabel(permission.capabilityTitle + (state == .granted ? "を試す" : "を有効にする"))
+            .accessibilityIdentifier("permissionGuide-" + permission.rawValue)
+        }.padding(.vertical, Space.compact)
+    }
+
+    private func refreshPermissions() {
+        mic = Permissions.microphone; screen = Permissions.screenRecording
+        ax = Permissions.accessibility; cal = Permissions.calendar
+        input = Permissions.inputMonitoring; speech = Permissions.speechRecognition
+        cloudTranscription = RecordingRuntime.cloudTranscriptionAllowed
+    }
+
+    private func section<C: View>(_ title: String, action: (() -> Void)? = nil, @ViewBuilder _ content: () -> C) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(title).font(.system(size: 12, weight: .semibold)).foregroundStyle(.secondary)
+            HStack {
+                Text(title).font(.system(size: 12, weight: .semibold)).foregroundStyle(.secondary)
+                if let action {
+                    Spacer()
+                    Button("設定を案内…", action: action).controlSize(.small)
+                        .help("アクセシビリティ・画面収録・マイクの設定を順に案内します")
+                        .accessibilityIdentifier("settingsPermissionGuide")
+                }
+            }
             content()
         }
     }
@@ -70,7 +134,7 @@ struct SettingsView: View {
     }
 
     private func permissionRow(_ label: String, _ state: Permissions.State, reason: String,
-                               request: @escaping () -> Void) -> some View {
+                               guided: GuidePermission? = nil, request: @escaping () -> Void = {}) -> some View {
         HStack(alignment: .firstTextBaseline) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(label).font(.system(size: 12))
@@ -82,7 +146,12 @@ struct SettingsView: View {
             Text(state.rawValue).font(.system(size: 11))
                 .foregroundStyle(state == .granted ? .green : .secondary)
             if state != .granted {
-                Button(Facts.permissionRequest, action: request).controlSize(.small)
+                Button(guided == nil ? Facts.permissionRequest : "設定を案内…") {
+                    if let guided { PermissionGuideCoordinator.shared.explain(guided) { PermissionPractice.use(guided) } }
+                    else { request() }
+                }.controlSize(.small)
+                    .accessibilityLabel("\(label)：\(guided == nil ? Facts.permissionRequest : "設定を案内")")
+                    .accessibilityIdentifier(guided.map { "permissionGuide-\($0.rawValue)" } ?? "permission-\(label)")
             }
         }
     }

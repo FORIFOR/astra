@@ -1,0 +1,58 @@
+[
+  {
+    "keyMeaningPassed" : true,
+    "seconds" : 0.56215393543243408,
+    "source" : "The next meeting is on Friday at 3 pm. Please review the release checklist.",
+    "target" : "ja",
+    "translation" : "次は金曜日午後3時で会議があります。リリースチェックリストを確認してください。"
+  },
+  {
+    "keyMeaningPassed" : true,
+    "seconds" : 0.46939098834991455,
+    "source" : "Do not send the email yet. We need approval first.",
+    "target" : "ja",
+    "translation" : "まだメールを送らないでください。承認が必要です。"
+  },
+  {
+    "keyMeaningPassed" : true,
+    "seconds" : 0.68465495109558105,
+    "source" : "We have 12 open issues and 3 urgent bugs. The deadline is September 18.",
+    "target" : "ja",
+    "translation" : "開いた問題は12件、緊急のバグは3件あります。期限は9月18日です。"
+  },
+  {
+    "keyMeaningPassed" : true,
+    "seconds" : 0.45505309104919434,
+    "source" : "The microphone is muted. Please turn it on before the meeting.",
+    "target" : "ja",
+    "translation" : "マイクはミュートされています。会議開始前にオンにしてください。"
+  },
+  {
+    "keyMeaningPassed" : true,
+    "seconds" : 0.37579107284545898,
+    "source" : "次回の打ち合わせは金曜日の午後3時です。",
+    "target" : "en",
+    "translation" : "The next meeting is on Friday at 3 PM."
+  },
+  {
+    "keyMeaningPassed" : true,
+    "seconds" : 0.41329300403594971,
+    "source" : "まだメールを送らないでください。先に承認が必要です。",
+    "target" : "en",
+    "translation" : "Please don't send the email yet. Approval is needed first."
+  },
+  {
+    "keyMeaningPassed" : true,
+    "seconds" : 0.65174007415771484,
+    "source" : "未対応の課題は12件、緊急の不具合は3件です。締め切りは9月18日です。",
+    "target" : "en",
+    "translation" : "There are 12 unsolved issues and 3 urgent problems. The deadline is September 18th."
+  },
+  {
+    "keyMeaningPassed" : true,
+    "seconds" : 0.41416096687316895,
+    "source" : "マイクがミュートになっています。会議の前にオンにしてください。",
+    "target" : "en",
+    "translation" : "The microphone is muted. Please turn it on before the meeting."
+  }
+]

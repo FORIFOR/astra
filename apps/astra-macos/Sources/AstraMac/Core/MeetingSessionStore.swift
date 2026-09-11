@@ -129,6 +129,16 @@ final class MeetingSessionStore: ObservableObject {
             loaded[index].endedAt = loaded[index].endedAt ?? loaded[index].updatedAt
             LocalStore.shared.saveSession(loaded[index])
         }
+        for index in loaded.indices where loaded[index].status == .processing
+            && CloudMeetingTranscription.hasPending(id: loaded[index].id)
+            && !RecordingRuntime.shared.cloudPendingIds.contains(loaded[index].id) {
+            // Local cloud polling does not survive a process restart. Keep the audio and
+            // expose an explicit retry instead of leaving the card processing forever.
+            loaded[index].status = .failed
+            loaded[index].processingStage = nil
+            CloudMeetingTranscription.saveFailure("文字起こしの途中でアプリが終了しました。録音は保存されています。再試行できます。", id: loaded[index].id)
+            LocalStore.shared.saveSession(loaded[index])
+        }
         sessions = loaded
     }
 

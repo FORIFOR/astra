@@ -16,6 +16,7 @@ import {
 import type { ConversationService } from '@astra/service-conversation';
 import {
   clarificationFor,
+  isDocumentRequest,
   remember,
   resolveReferences,
   routeLane,
@@ -382,6 +383,7 @@ async function startWork(
             question: text,
             message: text,
             // 返信案: compose の段だけを走らせる（instruction がある = compose）。送らない。
+            ...(isDocumentRequest(text) ? { instruction: text } : {}),
             ...(replyDraft ? { instruction: replyDraft.instruction, reply: replyDraft.meta } : {}),
             ...(attachments.length > 0 ? { attachments: [...attachments] } : {}),
             ...(workContext ? { context: workContext } : {}),

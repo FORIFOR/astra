@@ -1,0 +1,19 @@
+{
+  "result": "PASS",
+  "isolated_bundle_id": "com.astra.selftest.consent.88476",
+  "cases": [
+    {
+      "initial_consent": true,
+      "launch_override": false,
+      "selftest": "egress PASS",
+      "persistent_consent_unchanged": true
+    },
+    {
+      "initial_consent": false,
+      "launch_override": false,
+      "selftest": "egress PASS",
+      "persistent_consent_unchanged": true
+    }
+  ],
+  "user_domain_not_modified": true
+}

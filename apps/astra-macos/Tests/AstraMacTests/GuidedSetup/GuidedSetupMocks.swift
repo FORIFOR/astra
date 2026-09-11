@@ -59,9 +59,17 @@ final class MockOverlay: GuideOverlaying {
         avatarVisible = true; avatarState = state; avatarMessage = message; self.onClose = onClose; log.append("avatar:\(state)")
     }
     var avatarAction: String?
+    var avatarRun: (() -> Void)?
     var guidePlacement: GuidePlacement?
+    var applicationToAdd: GuideApplication?
+    var explanationLabel: String?
+    var secondaryAction: (title: String, run: () -> Void)?
+    func focusAvatar() {}
+    func setExplanationLabel(_ text: String?) { explanationLabel = text }
+    func setSecondaryAction(_ action: (title: String, run: () -> Void)?) { secondaryAction = action }
+    func setApplicationToAdd(_ application: GuideApplication?) { applicationToAdd = application }
     func updateAvatar(state: AvatarState, message: String, action: (title: String, run: () -> Void)?) {
-        avatarState = state; avatarMessage = message; avatarAction = action?.title; log.append("avatar:\(state)")
+        avatarState = state; avatarMessage = message; avatarAction = action?.title; avatarRun = action?.run; log.append("avatar:\(state)")
     }
     func showGuide(message: String, at anchor: GuideAnchor, preferred: GuidePlacement) {
         guideVisible = true; guideMessage = message; guideAnchor = anchor; guidePlacement = preferred; log.append("guide")

@@ -5,6 +5,8 @@ namespace Astra;
 /// <summary>手書き案の寸法（effective px）。両 OS 共通の数値を Windows へ生成したもの。</summary>
 public static class Metrics
 {
+    public const double HomeComposerEditorHeight = 84;
+    public const double HomeContentWidth = 760;
     public const double WorkspaceWidth = 1080;
     public const double WorkspaceHeight = 680;
     public const double WorkspaceRadius = 28;

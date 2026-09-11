@@ -5,29 +5,26 @@ import UniformTypeIdentifiers
 import AstraCore
 
 enum RecordingTool: String, CaseIterable, Identifiable {
-    case transcript, translation, captions
+    case transcript, translation
     var id: String { rawValue }
     var title: String {
         switch self {
         // controller のタブが「字幕」（機能）。パネル内はその**表示モード**なので、字幕を繰り返さない。
         case .transcript: return "原文"
         case .translation: return "翻訳"
-        case .captions: return "ライブ"
         }
     }
-    /// ⌘1 / ⌘2 / ⌘3 で切り替える（マウス無しでも右列を操作できるように）。
+    /// ⌘1 / ⌘2 で切り替える（マウス無しでも右列を操作できるように）。
     var shortcut: KeyEquivalent {
         switch self {
         case .transcript: return "1"
         case .translation: return "2"
-        case .captions: return "3"
         }
     }
     var icon: String {
         switch self {
         case .transcript: return "text.alignleft"
         case .translation: return "character.bubble"
-        case .captions: return "captions.bubble"
         }
     }
 }
@@ -73,7 +70,9 @@ final class RecordingWorkspaceState: ObservableObject {
     var freezeClockForShot = false
     @Published var selectedTool: RecordingTool = .transcript
     @Published var ragOpen = false
-    @Published var transcript: [TranscriptSegment] = []
+    @Published var transcript: [TranscriptSegment] = [] {
+        didSet { translation.update(transcript) }
+    }
     /// RAG コンテキストの並べ替え結果（core の rank_context 由来）。
     @Published var ragResults: [RankedContext] = []
     /// いまの会議 id（スクリーンショット等の保存先に使う）。
@@ -81,13 +80,14 @@ final class RecordingWorkspaceState: ObservableObject {
     /// AI 操作（要約/質問/決定事項/アクション）の結果。
     @Published var aiResult = ""
     @Published var aiRunning = false
-    /// 翻訳タブの結果（Agent 経由）。
-    @Published var translatedText = ""
-    @Published var translating = false
+    @Published private(set) var aiActionSucceeded = false
+    let translation = MeetingTranslation()
+    var translatedText: String { translation.text }
+    var translating: Bool { translation.isTranslating }
     /// 実バックエンド（サインイン済みのときだけ AI 操作が動く）。
     private var apiBase: String?
     private var apiToken: String?
-    private var conversationId: String?
+    private let aiRequests = MeetingAIRequests()
     /// ユーザーが選んだローカルファイル由来の候補（Finder access）。transcript と混ぜて並べ替える。
     var fileCandidates: [ContextCandidate] = []
     /// まだ一度も実マイクの値が来ていない。「静か」と「聞けていない」を描き分けるため。
@@ -123,6 +123,10 @@ final class RecordingWorkspaceState: ObservableObject {
     /// 許可の答えが遅れて来たときにも呼ぶ（JIT のダイアログのあと）。
     func refreshSpeechPermission() {
         guard isRecording else { return }
+        if RecordingRuntime.cloudTranscriptionAllowed {
+            if permissionIssue != nil, permissionIssue?.channel == nil { permissionIssue = nil }
+            return
+        }
         let denied = Permissions.speechRecognition == .denied || Permissions.speechRecognition == .restricted
         if permissionIssue?.channel == .localUser { return }          // マイク拒否が出ている
         if denied { permissionIssue = .speechDenied }
@@ -141,6 +145,7 @@ final class RecordingWorkspaceState: ObservableObject {
     private var holdPreparingForShot = false
 
     func loadDemo(ragOpen: Bool) {
+        translation.reset()
         isRecording = true
         // §17 の固定画面は「録音中で音が届いている」姿。準備中の姿は 02b で別に固定する。
         awaitingAudio = false
@@ -229,23 +234,25 @@ final class RecordingWorkspaceState: ObservableObject {
         // transcript, start the clock, or create a session before access exists.
         if captureMic && Permissions.microphone != .granted {
             permissionIssue = .microphoneDenied
-            AstraStateStore.shared.setDock(.result(AgentResult(
-                title: Facts.recordingCannotStart,
-                actions: [.openSettings],
-                detail: "マイクが許可されていません。設定で Astra に許可すると始められます。",
-                failed: true)))
-            if requestPermissions && Permissions.microphone == .notDetermined {
+            if !requestPermissions {
+                AstraStateStore.shared.setDock(.result(AgentResult(
+                    title: Facts.recordingCannotStart,
+                    actions: [.openSettings],
+                    detail: "マイクが許可されていません。設定で Astra に許可すると始められます。",
+                    failed: true)))
+            }
+            if requestPermissions {
                 let request = UUID()
                 microphoneRequest = request
-                Permissions.requestMicrophone { [weak self] granted in
+                PermissionGuideCoordinator.shared.explain(.microphone, purpose: .recording, onCancel: { [weak self] in
                     guard let self, self.microphoneRequest == request else { return }
                     self.microphoneRequest = nil
-                    if granted {
-                        self.start(captureMic: captureMic, transcribe: transcribe,
-                                   requestPermissions: requestPermissions, captureSystemAudio: captureSystemAudio)
-                    } else {
-                        self.pendingCalendarLink = nil
-                    }
+                    self.pendingCalendarLink = nil
+                }) { [weak self] in
+                    guard let self, self.microphoneRequest == request else { return }
+                    self.microphoneRequest = nil
+                    self.start(captureMic: captureMic, transcribe: transcribe,
+                               requestPermissions: requestPermissions, captureSystemAudio: captureSystemAudio)
                 }
             } else {
                 pendingCalendarLink = nil
@@ -255,6 +262,8 @@ final class RecordingWorkspaceState: ObservableObject {
         isRecording = true
         // 前の会議を消す。消さないと 2 本目の録音に 1 本目の行が混ざる（`at` も衝突する）。
         // 前の会議は確定のたびに保存してあるので、ここで失うものは無い。
+        translation.reset()
+        selectedTool = .transcript
         transcript = []
         AstraStateStore.shared.updateCanvas(MeetingCanvas())
         // 経過時間を実際に進める（一時停止中は止める）。以前は 0 のままだった。
@@ -267,6 +276,7 @@ final class RecordingWorkspaceState: ObservableObject {
         // オンデバイス STT の途中経過/確定を transcript に反映する。
         RecordingRuntime.shared.onTranscript = { [weak self] text, isFinal in
             guard let self else { return }
+            if !text.isEmpty, !self.holdPreparingForShot { self.awaitingAudio = false }
             // 直近の interim を置き換え、確定したら確定行にする（重なりは core の merge に委ねる設計）。
             // §19 誰の声かを channel から取る（混合波からは分からない）。
             let speaker = RecordingRuntime.shared.lastTranscriptChannel.label
@@ -296,7 +306,7 @@ final class RecordingWorkspaceState: ObservableObject {
         // 実ランタイム: マイク → astra-core → ディスク断片（許可があればライブ取り込み + 手元 STT）
         MeetingIntelligence.shared.reset()
         // §26 会議に要るものだけを、始めるこの瞬間に要求する（起動時に一括で聞かない）。
-        if requestPermissions {
+        if requestPermissions && !RecordingRuntime.cloudTranscriptionAllowed {
             PermissionCenter.request(.meeting) {
                 RecordingRuntime.shared.speechAuthorizationChanged()
                 RecordingWorkspaceState.shared.refreshSpeechPermission()
@@ -392,7 +402,12 @@ final class RecordingWorkspaceState: ObservableObject {
         // A new start requested during this flush is queued for the next run loop.
         MeetingSessionStore.shared.beginProcessing(id: id)
         AstraStateStore.shared.meetingEnded()
-        RecordingRuntime.shared.end { [weak self] in
+        RecordingRuntime.shared.end(cloudCompletion: { [weak self] finishedId, failure in
+            if let failure {
+                NSLog("cloud transcription failed: %@", failure)
+                MeetingSessionStore.shared.markFailed(id: finishedId)
+            } else { self?.finishProcessing(id: finishedId) }
+        }) { [weak self] in
             guard let self else { return }
             MeetingIntelligence.shared.ingest(
                 self.transcript.filter { !$0.interim }.map { CanvasItem($0.text, at: $0.at, speaker: $0.speaker) },
@@ -400,7 +415,7 @@ final class RecordingWorkspaceState: ObservableObject {
             // The live ID has been cleared; keep late final words and notes tied
             // to this recording before allowing the next recording to start.
             LocalStore.shared.saveNotes(meetingId: id, AstraStateStore.shared.state.meeting.canvas)
-            self.finishProcessing(id: id)
+            if !RecordingRuntime.shared.cloudPendingIds.contains(id) { self.finishProcessing(id: id) }
             self.finishingRecording = false
             let pending = self.startAfterFinishing
             self.startAfterFinishing = nil
@@ -420,8 +435,8 @@ final class RecordingWorkspaceState: ObservableObject {
     /// 読み取り。会議中に溜めた構造データをそのまま Session の中身にする。
     /// gateway が無くても成立するよう、手元の抽出結果を使う。
     private func finishProcessing(id: String) {
-        let canvas = AstraStateStore.shared.state.meeting.canvas
-        let speakers = Set(transcript.map(\.speaker))
+        let canvas = LocalStore.shared.loadNotes(meetingId: id)
+        let speakers = Set(LocalStore.shared.loadTranscript(meetingId: id).map(\.speaker))
         let store = MeetingSessionStore.shared
         // 段階を順に進める。spinner だけでは「止まっている」と区別がつかない。
         let stages: [ProcessingStage] = [.savingTranscript, .analyzing, .extractingActions, .preparingNotes]
@@ -443,16 +458,21 @@ final class RecordingWorkspaceState: ObservableObject {
 
     /// サインイン済みセッションを渡す（Main Window のサインインから）。
     func configureBackend(base: String, token: String) {
-        apiBase = base; apiToken = token; conversationId = nil
+        apiBase = base; apiToken = token
     }
 
     /// AI 操作。transcript を Agent（会話）に渡して結果を得る。要約/質問/決定事項/アクション。
     /// 同期 I/O なのでバックグラウンドで回し、結果を main で反映する。
     func runAIAction(_ title: String) {
+        guard !aiRunning else { return }
+        aiActionSucceeded = false
         guard let base = apiBase, let token = apiToken else {
             aiResult = "サインインすると AI 操作が使えます。"; return
         }
-        let transcriptText = transcript.map { "\($0.speaker): \($0.text)" }.joined(separator: "\n")
+        let transcriptText = transcript.filter { !$0.interim && !$0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }.map { "\($0.speaker): \($0.text)" }.joined(separator: "\n")
+        guard !transcriptText.isEmpty else {
+            aiResult = "発言が文字起こしされてから実行してください。"; return
+        }
         let instruction: String
         switch title {
         case "リアルタイム要約": instruction = "次の会議の文字起こしを日本語で3行以内に要約して。"
@@ -461,7 +481,9 @@ final class RecordingWorkspaceState: ObservableObject {
         default: instruction = "次の会議の文字起こしについて答えて。"
         }
         aiRunning = true; aiResult = ""
-        let prompt = instruction + "\n---\n" + (transcriptText.isEmpty ? "(まだ発話がありません)" : transcriptText)
+        let prompt = instruction + "\n---\n" + transcriptText
+        let key = MeetingAIRequests.Key(scope: base + "\n" + token, meeting: currentMeetingId,
+                                        action: title, transcript: transcriptText)
 
         // §15 何をしているかを段階で見せる。Timeline はこの task を描くだけ（別に状態を持たない）。
         let steps = [
@@ -475,65 +497,58 @@ final class RecordingWorkspaceState: ObservableObject {
         store.startTask(task)
         let stepIds = steps.map(\.id)
 
-        Task.detached { [weak self] in
+        Task { [weak self] in
+            guard let self else { return }
             do {
-                await MainActor.run { store.updateStep(stepIds[0], to: .running) }
-                let conv: String
-                if let existing = await self?.conversationId { conv = existing }
-                else {
-                    conv = try AstraCoreBridge.startConversation(base, accessToken: token)
-                    await MainActor.run { self?.conversationId = conv }
-                }
-                await MainActor.run {
-                    store.updateStep(stepIds[0], to: .success)
-                    store.updateStep(stepIds[1], to: transcriptText.isEmpty ? .failed : .success)
-                    store.updateStep(stepIds[2], to: .running)
-                }
-                let outcome = try AstraCoreBridge.sendTurn(base, accessToken: token, conversationId: conv, text: prompt)
-                let text = !outcome.answer.isEmpty ? outcome.answer
-                    : !outcome.notice.isEmpty ? outcome.notice
-                    : outcome.needsClarification ? "詳しく教えてください。"
-                    : "(応答なし)"
-                await MainActor.run {
-                    store.updateStep(stepIds[2], to: .success)
-                    store.finishTask(.success)
-                    self?.aiResult = text; self?.aiRunning = false
+                store.updateStep(stepIds[0], to: .running)
+                store.updateStep(stepIds[1], to: .success)
+                store.updateStep(stepIds[2], to: .running)
+                let answer = try await self.aiRequests.run(key, submit: {
+                    try await Task.detached {
+                        // Each action contains its full source snapshot. Reusing a
+                        // conversation would append old full transcripts every time.
+                        let conv = try AstraCoreBridge.startConversation(base, accessToken: token)
+                        let outcome = try AstraCoreBridge.sendTurn(base, accessToken: token, conversationId: conv, text: prompt)
+                        guard !outcome.needsClarification else {
+                            throw TranslationFailure(message: outcome.notice.isEmpty ? "詳しく教えてください。" : outcome.notice)
+                        }
+                        return MeetingAIRequests.Submission(answer: outcome.answer, taskId: outcome.taskId)
+                    }.value
+                }, poll: { job in
+                    try await Task.detached {
+                        let done = try AstraCoreBridge.waitTask(base, accessToken: token, taskId: job, timeoutMs: 30_000)
+                        if ["FAILED", "CANCELLED"].contains(done.status) { throw MeetingAIRequests.TerminalJobFailure() }
+                        guard done.status == "COMPLETED", !done.resultArtifactId.isEmpty else {
+                            throw TranslationFailure(message: "結果をまだ取得できません。再試行すると同じ処理の結果を確認します。")
+                        }
+                        return try AstraCoreBridge.artifactContent(base, accessToken: token, artifactId: done.resultArtifactId)
+                    }.value
+                })
+                store.updateStep(stepIds[0], to: .success)
+                store.updateStep(stepIds[2], to: .success)
+                store.finishTask(.success)
+                if self.currentMeetingId == key.meeting {
+                    self.aiActionSucceeded = true; self.aiResult = answer
                 }
             } catch {
-                await MainActor.run {
-                    store.updateStep(stepIds[2], to: .failed)
-                    store.finishTask(.failed)
-                    self?.aiResult = "AI 操作に失敗しました: \(error)"; self?.aiRunning = false
-                }
+                store.updateStep(stepIds[2], to: .failed)
+                store.finishTask(.failed)
+                if self.currentMeetingId == key.meeting { self.aiResult = "AI 操作に失敗しました: \(error.localizedDescription)" }
             }
+            self.aiRunning = false
         }
     }
 
-    /// 文字起こしを翻訳する（Agent 経由）。翻訳タブに切り替えたときに呼ぶ。
+    func selectTool(_ tool: RecordingTool) {
+        selectedTool = tool
+        if tool == .translation { translate(to: translation.language.title) }
+    }
+
+    /// Selecting Translation starts incremental translation of confirmed utterances.
     func translate(to language: String = "英語") {
-        guard let base = apiBase, let token = apiToken else {
-            translatedText = "サインインすると翻訳できます。"; return
-        }
-        let source = transcript.map { $0.text }.joined(separator: "\n")
-        guard !source.isEmpty else { translatedText = ""; return }
-        translating = true; translatedText = ""
-        let prompt = "次の文を\(language)に翻訳して。訳文だけ返して。\n---\n" + source
-        Task.detached { [weak self] in
-            do {
-                let conv: String
-                if let existing = await self?.conversationId { conv = existing }
-                else {
-                    conv = try AstraCoreBridge.startConversation(base, accessToken: token)
-                    await MainActor.run { self?.conversationId = conv }
-                }
-                let outcome = try AstraCoreBridge.sendTurn(base, accessToken: token, conversationId: conv, text: prompt)
-                let text = !outcome.answer.isEmpty ? outcome.answer
-                    : !outcome.notice.isEmpty ? outcome.notice : "(訳を取得できませんでした)"
-                await MainActor.run { self?.translatedText = text; self?.translating = false }
-            } catch {
-                await MainActor.run { self?.translatedText = "翻訳に失敗しました: \(error)"; self?.translating = false }
-            }
-        }
+        translation.setLanguage(language == "日本語" ? .japanese : .english)
+        translation.update(transcript)
+        translation.setEnabled(true)
     }
 
     func togglePause() {

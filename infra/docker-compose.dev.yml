@@ -12,7 +12,7 @@ services:
       POSTGRES_PASSWORD: astra
       POSTGRES_DB: astra
     ports:
-      - '5433:5432'
+      - '127.0.0.1:5433:5432'
     volumes:
       - astra-pg:/var/lib/postgresql/data
     healthcheck:
@@ -25,7 +25,7 @@ services:
     image: redis:7-alpine
     container_name: astra-redis
     ports:
-      - '6380:6379'
+      - '127.0.0.1:6380:6379'
     command: ['redis-server', '--appendonly', 'yes']
     volumes:
       - astra-redis:/data
@@ -43,7 +43,7 @@ services:
       POSTGRES_PWD: astra
       POSTGRES_SEEDS: postgres
     ports:
-      - '7233:7233'
+      - '127.0.0.1:7233:7233'
 
   temporal-ui:
     image: temporalio/ui:2.34.0
@@ -54,7 +54,7 @@ services:
       TEMPORAL_ADDRESS: temporal:7233
       TEMPORAL_CORS_ORIGINS: http://localhost:3000
     ports:
-      - '8233:8080'
+      - '127.0.0.1:8233:8080'
 
 volumes:
   astra-pg:

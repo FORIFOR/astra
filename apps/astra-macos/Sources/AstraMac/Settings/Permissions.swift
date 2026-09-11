@@ -103,9 +103,11 @@ enum Permissions {
         }
     }
 
+    static var simulatedScreenRecording: State?
     static var screenRecording: State {
+        if let s = simulatedScreenRecording { return s }
         // CGPreflightScreenCaptureAccess は macOS 11+。true=許可済み
-        CGPreflightScreenCaptureAccess() ? .granted : .notDetermined
+        return CGPreflightScreenCaptureAccess() ? .granted : .notDetermined
     }
 
     static func requestScreenRecording() {

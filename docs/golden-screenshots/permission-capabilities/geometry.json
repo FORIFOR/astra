@@ -1,0 +1,210 @@
+{
+  "home-dark" : {
+    "fittingHeight" : 589.5,
+    "fittingWidth" : 547,
+    "height" : 800,
+    "width" : 980,
+    "windowHeight" : 832,
+    "windowWidth" : 980
+  },
+  "home-light" : {
+    "fittingHeight" : 589.5,
+    "fittingWidth" : 547,
+    "height" : 800,
+    "width" : 980,
+    "windowHeight" : 832,
+    "windowWidth" : 980
+  },
+  "missing-application-dark" : {
+    "fittingHeight" : 272,
+    "fittingWidth" : 312,
+    "height" : 272,
+    "width" : 312,
+    "windowHeight" : 272,
+    "windowWidth" : 312
+  },
+  "missing-application-light" : {
+    "fittingHeight" : 272,
+    "fittingWidth" : 312,
+    "height" : 272,
+    "width" : 312,
+    "windowHeight" : 272,
+    "windowWidth" : 312
+  },
+  "practice-control-dark" : {
+    "fittingHeight" : 243,
+    "fittingWidth" : 460,
+    "height" : 243,
+    "width" : 460,
+    "windowHeight" : 275,
+    "windowWidth" : 460
+  },
+  "practice-control-light" : {
+    "fittingHeight" : 243,
+    "fittingWidth" : 460,
+    "height" : 243,
+    "width" : 460,
+    "windowHeight" : 275,
+    "windowWidth" : 460
+  },
+  "practice-screen-reading-dark" : {
+    "fittingHeight" : 330.5,
+    "fittingWidth" : 460,
+    "height" : 331,
+    "width" : 460,
+    "windowHeight" : 363,
+    "windowWidth" : 460
+  },
+  "practice-screen-reading-light" : {
+    "fittingHeight" : 330.5,
+    "fittingWidth" : 460,
+    "height" : 331,
+    "width" : 460,
+    "windowHeight" : 363,
+    "windowWidth" : 460
+  },
+  "practice-screen-result-dark" : {
+    "fittingHeight" : 498.5,
+    "fittingWidth" : 460,
+    "height" : 499,
+    "width" : 460,
+    "windowHeight" : 531,
+    "windowWidth" : 460
+  },
+  "practice-screen-result-light" : {
+    "fittingHeight" : 498.5,
+    "fittingWidth" : 460,
+    "height" : 499,
+    "width" : 460,
+    "windowHeight" : 531,
+    "windowWidth" : 460
+  },
+  "ready-dark" : {
+    "fittingHeight" : 154,
+    "fittingWidth" : 312,
+    "height" : 154,
+    "width" : 312,
+    "windowHeight" : 154,
+    "windowWidth" : 312
+  },
+  "ready-light" : {
+    "fittingHeight" : 154,
+    "fittingWidth" : 312,
+    "height" : 154,
+    "width" : 312,
+    "windowHeight" : 154,
+    "windowWidth" : 312
+  },
+  "settings-additional-dark" : {
+    "fittingHeight" : 626.5,
+    "fittingWidth" : 460,
+    "height" : 627,
+    "width" : 460,
+    "windowHeight" : 659,
+    "windowWidth" : 460
+  },
+  "settings-additional-light" : {
+    "fittingHeight" : 626.5,
+    "fittingWidth" : 460,
+    "height" : 627,
+    "width" : 460,
+    "windowHeight" : 659,
+    "windowWidth" : 460
+  },
+  "settings-pending-dark" : {
+    "fittingHeight" : 514,
+    "fittingWidth" : 460,
+    "height" : 514,
+    "width" : 460,
+    "windowHeight" : 546,
+    "windowWidth" : 460
+  },
+  "settings-pending-light" : {
+    "fittingHeight" : 514,
+    "fittingWidth" : 460,
+    "height" : 514,
+    "width" : 460,
+    "windowHeight" : 546,
+    "windowWidth" : 460
+  },
+  "settings-refreshed-dark" : {
+    "fittingHeight" : 514,
+    "fittingWidth" : 460,
+    "height" : 514,
+    "width" : 460,
+    "windowHeight" : 546,
+    "windowWidth" : 460
+  },
+  "settings-refreshed-light" : {
+    "fittingHeight" : 514,
+    "fittingWidth" : 460,
+    "height" : 514,
+    "width" : 460,
+    "windowHeight" : 546,
+    "windowWidth" : 460
+  },
+  "waiting-dark" : {
+    "fittingHeight" : 154,
+    "fittingWidth" : 312,
+    "height" : 154,
+    "width" : 312,
+    "windowHeight" : 154,
+    "windowWidth" : 312
+  },
+  "waiting-light" : {
+    "fittingHeight" : 154,
+    "fittingWidth" : 312,
+    "height" : 154,
+    "width" : 312,
+    "windowHeight" : 154,
+    "windowWidth" : 312
+  },
+  "why-accessibility-dark" : {
+    "fittingHeight" : 189,
+    "fittingWidth" : 312,
+    "height" : 189,
+    "width" : 312,
+    "windowHeight" : 189,
+    "windowWidth" : 312
+  },
+  "why-accessibility-light" : {
+    "fittingHeight" : 189,
+    "fittingWidth" : 312,
+    "height" : 189,
+    "width" : 312,
+    "windowHeight" : 189,
+    "windowWidth" : 312
+  },
+  "why-microphone-dark" : {
+    "fittingHeight" : 189,
+    "fittingWidth" : 312,
+    "height" : 189,
+    "width" : 312,
+    "windowHeight" : 189,
+    "windowWidth" : 312
+  },
+  "why-microphone-light" : {
+    "fittingHeight" : 189,
+    "fittingWidth" : 312,
+    "height" : 189,
+    "width" : 312,
+    "windowHeight" : 189,
+    "windowWidth" : 312
+  },
+  "why-screenCapture-dark" : {
+    "fittingHeight" : 189,
+    "fittingWidth" : 312,
+    "height" : 189,
+    "width" : 312,
+    "windowHeight" : 189,
+    "windowWidth" : 312
+  },
+  "why-screenCapture-light" : {
+    "fittingHeight" : 189,
+    "fittingWidth" : 312,
+    "height" : 189,
+    "width" : 312,
+    "windowHeight" : 189,
+    "windowWidth" : 312
+  }
+}

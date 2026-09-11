@@ -242,6 +242,18 @@ final class VisualContextStore: ObservableObject {
     @Published private(set) var recent: [VisualContextArtifact] = []
     /// Dock の一瞬のトースト用（撮った直後だけ true、数秒で下げる）。
     @Published var justCaptured: VisualContextArtifact?
+    @Published private(set) var offeredCaptureID: UUID?
+    var offeredCapture: VisualContextArtifact? {
+        recent.first { $0.id == offeredCaptureID }
+    }
+
+    func dismissOffer() {
+        offeredCaptureID = nil
+        justCaptured = nil
+        toastTimer?.invalidate()
+        WindowCoordinator.shared.endScreenshotOffer()
+        WindowCoordinator.shared.syncDockPanels()
+    }
 
     /// 会話に紐付ける前の待ち（会話がまだ無いときも捨てない）。
     private var conversationID: String?
@@ -297,9 +309,14 @@ final class VisualContextStore: ObservableObject {
             ?? Self.handoverDirectory.appendingPathComponent("\(id.uuidString.lowercased()).png")
     }
 
-    func bind(conversationID: String?) {
+    func bind(conversationID: String?, preserving imageIDs: Set<UUID> = []) {
         // 会話が変わった = 前の会話は閉じた。その会話の受け渡し写しは消す（他の会話から再利用させない）。
         if let previous = self.conversationID, let new = conversationID, previous != new {
+            // A submitted Home question opens a new conversation. Its selected images
+            // must survive cleanup of the previous conversation, including clipboard files.
+            for i in recent.indices where imageIDs.contains(recent[i].id) {
+                recent[i].conversationID = new
+            }
             closeConversation(previous)
         }
         self.conversationID = conversationID
@@ -328,10 +345,12 @@ final class VisualContextStore: ObservableObject {
             kind: kind, state: .available)
         purgeExpired(now: now)
         recent.insert(art, at: 0)
+        offeredCaptureID = art.id
         if recent.count > 20 { recent.removeLast(recent.count - 20) }
         // 一瞬のトースト。窓は作らない・focus は奪わない（UI 側で chip として描くだけ）。
         justCaptured = art
         WindowCoordinator.shared.syncDockPanels()   // idle Dock を横広トーストへ
+        WindowCoordinator.shared.offerScreenshot()
         toastTimer?.invalidate()
         toastTimer = Timer.scheduledTimer(withTimeInterval: Self.toastSeconds, repeats: false) { [weak self] _ in
             Task { @MainActor in self?.justCaptured = nil; WindowCoordinator.shared.syncDockPanels() }
@@ -395,7 +414,8 @@ final class VisualContextStore: ObservableObject {
             Self.egressDisclosed = true
             WindowCoordinator.shared.syncDockPanels()
         }
-        markAttached(newestFirst)
+        let writtenIDs = Set(out.map(\.id))
+        markAttached(newestFirst.filter { writtenIDs.contains($0.id.uuidString.lowercased()) })
         HandoverCache.cleanup(directory: Self.handoverDirectory, now: now)
         return out
     }
@@ -443,6 +463,7 @@ final class VisualContextStore: ObservableObject {
 
     /// コンテキストから外す（≤1 操作）。端末に残した写しも消す。
     func remove(_ id: UUID) {
+        if offeredCaptureID == id { dismissOffer() }
         recent.filter { $0.id == id }.forEach(cleanup)
         recent.removeAll { $0.id == id }
     }
@@ -451,6 +472,8 @@ final class VisualContextStore: ObservableObject {
     func reset() {
         recent.forEach(cleanup)
         recent = []; ingestedKeys = []; justCaptured = nil; conversationID = nil; attachCount = 0; lastProvenance = nil
+        offeredCaptureID = nil
+        toastTimer?.invalidate()
     }
 }
 

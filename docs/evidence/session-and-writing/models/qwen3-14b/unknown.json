@@ -1,0 +1,10 @@
+{
+  "id": "unknown",
+  "elapsedMs": 1010,
+  "result": {
+    "ok": true,
+    "result": {
+      "answer": "分かりません。利用者テストや売上データはまだありません。"
+    }
+  }
+}

@@ -1,0 +1,7 @@
+# Permission help — 2026-09-11
+
+reference : User-supplied ChatGPT Computer Use guide, [screenshot](/Users/shuhei/Desktop/スクリーンショット%202026-09-06%2014.45.38.png), inspected in the conversation: give the user the actual app to add beside clear System Settings instructions.
+hypothesis: Connect the existing native guide to Settings and the application menu. When Accessibility prevents reading the OS list, provide the running app as a draggable file with a Finder alternative, then confirm permission through the OS API.
+measured  : SettingsView is fixed at 460 × 620 pt; its three relevant permission buttons bypass PermissionGuideCoordinator, and @State permission values are not refreshed on reactivation. The guide card is 300 pt wide with content-measured height and has no app-file drag source.
+candidates: A = current menu-bar-only guide and generic Settings buttons; B = same 460 × 620 pt Settings and 300 pt guide, connected entry points plus app-file help only for Accessibility/Screen Recording; C = a separate onboarding window (rejected: duplicates the existing guide).
+gate      : Select B only after native state-machine/drag-payload tests, light/dark captures and geometry, actual Settings → guide → System Settings → close/reopen journey. OS grant acceptance remains the user's action; no simulated permission is a real grant. Run verify-all before any commit and retain failed/untestable gates.

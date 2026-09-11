@@ -2,7 +2,7 @@
  * MeetingService の DB 側。Phase 3 実装仕様 §3。
  *   ./infra/db/with-test-db.sh pnpm --filter @astra/service-meeting test
  */
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { uuidv7 } from '@astra/contracts';
 import { createDb, withIdentity, withTenant, type DbHandle } from '@astra/db';
 import { MeetingService } from '../src/service.js';
@@ -151,17 +151,32 @@ describe.skipIf(!url)('MeetingService', () => {
     expect(await service.speakers(tenantId, another.id)).toEqual([]);
   });
 
-  it('translates a final segment once, no matter how often it is asked', async () => {
+  it('calls the translator once across concurrent services and persisted retries', async () => {
     const meeting = await startMeeting();
     const [segment] = await service.ingest(tenantId, meeting.id, [r({ text: '初期費用が' })]);
-    await service.translate(tenantId, meeting.id, segment!, 'en-US');
-    await service.translate(tenantId, meeting.id, segment!, 'en-US');
-
+    const translator = new EchoTranslationProvider();
+    const translate = vi.spyOn(translator, 'translate');
+    const create = () => new MeetingService({ db, publisher: { async publish() {} }, translator });
+    const answers = await Promise.all(
+      [create(), create(), create()].map((s) =>
+        s.translate(tenantId, meeting.id, segment!, 'en-US'),
+      ),
+    );
+    expect(new Set(answers).size).toBe(1);
+    await create().translate(tenantId, meeting.id, segment!, 'en-US');
+    expect(translate).toHaveBeenCalledTimes(1);
     const rows = await withTenant(db, tenantId, (tx) =>
       tx.selectFrom('translations').selectAll().where('meeting_id', '=', meeting.id).execute(),
     );
     expect(rows).toHaveLength(1);
-    expect(rows[0]!.text).toContain('初期費用が');
+    const events = await service.eventsAfter(tenantId, meeting.id, 0);
+    expect(events.filter((e) => e.type === 'meeting.translation.final')).toHaveLength(1);
+    await expect(
+      create().translate(otherTenantId, meeting.id, segment!, 'en-US'),
+    ).rejects.toThrow();
+    expect(translate).toHaveBeenCalledTimes(1);
+    expect(await create().translate(tenantId, meeting.id, segment!, 'ja')).toBe(segment!.text);
+    expect(translate).toHaveBeenCalledTimes(1); // already in target language
   });
 
   it('marks a meeting degraded without ending it', async () => {

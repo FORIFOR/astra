@@ -1,0 +1,15 @@
+{
+  "provider": "google-stt-batch",
+  "rows": [
+    {
+      "isFinal": true,
+      "speakerTag": 1,
+      "text": "今日の会議ではアストラの文字起こしの品質を確認します。次回の打ち合わせは金曜日の午後3時です。はい。",
+      "startMs": 0,
+      "endMs": 10440,
+      "language": "ja-JP",
+      "confidence": null,
+      "provider": "google-stt-batch"
+    }
+  ]
+}

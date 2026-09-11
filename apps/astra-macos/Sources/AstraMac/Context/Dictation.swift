@@ -43,7 +43,12 @@ enum Dictation {
     @discardableResult
     static func insert(_ text: String) -> Bool {
         guard !text.isEmpty, let target = focusedTextTarget() else { return false }
+        return insert(text, into: target)
+    }
 
+    /// Use an explicitly verified target when a local practice field owns the operation.
+    static func insert(_ text: String, into target: AXUIElement) -> Bool {
+        guard AXIsProcessTrusted(), !text.isEmpty else { return false }
         // 選択範囲があるなら、そこへ差し替えるのが最も素直（AXSelectedText）。
         var selectedRef: CFTypeRef?
         if AXUIElementCopyAttributeValue(target, kAXSelectedTextAttribute as CFString, &selectedRef) == .success,

@@ -1,0 +1,22 @@
+[
+  {
+    "height" : 620,
+    "name" : "settings-light",
+    "width" : 460
+  },
+  {
+    "height" : 680,
+    "name" : "retry-light",
+    "width" : 1080
+  },
+  {
+    "height" : 620,
+    "name" : "settings-dark",
+    "width" : 460
+  },
+  {
+    "height" : 680,
+    "name" : "retry-dark",
+    "width" : 1080
+  }
+]

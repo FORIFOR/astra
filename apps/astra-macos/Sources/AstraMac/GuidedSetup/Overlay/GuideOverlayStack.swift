@@ -6,6 +6,10 @@ protocol GuideOverlaying: AnyObject {
     func showAvatar(state: AvatarState, message: String, onClose: @escaping () -> Void)
     /// `action`: 吹き出しの操作子（「システム設定を開く」）。nil なら文だけ。
     func updateAvatar(state: AvatarState, message: String, action: (title: String, run: () -> Void)?)
+    func focusAvatar()
+    func setExplanationLabel(_ text: String?)
+    func setSecondaryAction(_ action: (title: String, run: () -> Void)?)
+    func setApplicationToAdd(_ application: GuideApplication?)
     func showGuide(message: String, at anchor: GuideAnchor, preferred: GuidePlacement)
     func hideGuide()
     func hideAll()
@@ -28,6 +32,26 @@ final class GuideOverlayStack: GuideOverlaying {
 
     func updateAvatar(state: AvatarState, message: String, action: (title: String, run: () -> Void)?) {
         avatar.update(state: state, message: message, action: action.map { AvatarHUDModel.Action(title: $0.title, run: $0.run) })
+    }
+
+    func focusAvatar() {
+        avatar.window?.makeKeyAndOrderFront(nil)
+    }
+
+    func setExplanationLabel(_ text: String?) {
+        avatar.model.explanationLabel = text
+        if let screen = avatar.window?.screen ?? NSScreen.main { avatar.relayout(on: screen) }
+    }
+
+    func setSecondaryAction(_ action: (title: String, run: () -> Void)?) {
+        avatar.model.secondaryAction = action.map { .init(title: $0.title, run: $0.run) }
+        if let screen = avatar.window?.screen ?? NSScreen.main { avatar.relayout(on: screen) }
+    }
+
+    func setApplicationToAdd(_ application: GuideApplication?) {
+        if avatar.model.applicationToAdd?.url != application?.url { avatar.model.showsApplicationHelp = false }
+        avatar.model.applicationToAdd = application
+        if let screen = avatar.window?.screen ?? NSScreen.main { avatar.relayout(on: screen) }
     }
 
     func showGuide(message: String, at anchor: GuideAnchor, preferred: GuidePlacement) {

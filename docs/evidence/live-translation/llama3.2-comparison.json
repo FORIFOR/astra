@@ -1,0 +1,106 @@
+[
+  {
+    "language": "ja",
+    "source": "The next meeting is on Friday at 3 pm. Please review the release checklist.",
+    "seconds": 0.45,
+    "choice": {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "{\"translation\":\"次の会議は金曜日午後3時です。リリースチェックリストを確認してください。\"}"
+      },
+      "finish_reason": "stop"
+    }
+  },
+  {
+    "language": "ja",
+    "source": "Do not send the email yet. We need approval first.",
+    "seconds": 0.3,
+    "choice": {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "{\"translation\":\"そのメールを送るのを待ってください。承認を取る必要があります。\"}"
+      },
+      "finish_reason": "stop"
+    }
+  },
+  {
+    "language": "ja",
+    "source": "We have 12 open issues and 3 urgent bugs. The deadline is September 18.",
+    "seconds": 0.38,
+    "choice": {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "{\"translation\":\"12つのオープンなissueと3つの緊急のバグがあります。18日までに完了する必要があります。\"}"
+      },
+      "finish_reason": "stop"
+    }
+  },
+  {
+    "language": "ja",
+    "source": "The microphone is muted. Please turn it on before the meeting.",
+    "seconds": 0.24,
+    "choice": {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "{\"translation\":\"マイクが静止しています。会議前にオンにしてください。\"}"
+      },
+      "finish_reason": "stop"
+    }
+  },
+  {
+    "language": "en",
+    "source": "次回の打ち合わせは金曜日の午後3時です。",
+    "seconds": 0.28,
+    "choice": {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "{\"translation\":\"Our next meeting will be on Friday at 3 pm.\"}"
+      },
+      "finish_reason": "stop"
+    }
+  },
+  {
+    "language": "en",
+    "source": "まだメールを送らないでください。先に承認が必要です。",
+    "seconds": 0.21,
+    "choice": {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "{\"translation\":\"Please do not send the email yet. Approval is needed first.\"}"
+      },
+      "finish_reason": "stop"
+    }
+  },
+  {
+    "language": "en",
+    "source": "未対応の課題は12件、緊急の不具合は3件です。締め切りは9月18日です。",
+    "seconds": 0.33,
+    "choice": {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "{\"translation\":\"There are 12 unaddressed issues and 3 urgent faults. The deadline is September 18th.\"}"
+      },
+      "finish_reason": "stop"
+    }
+  },
+  {
+    "language": "en",
+    "source": "マイクがミュートになっています。会議の前にオンにしてください。",
+    "seconds": 0.22,
+    "choice": {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "{\"translation\":\"The microphone is muted. Please turn it on before the meeting.\"}"
+      },
+      "finish_reason": "stop"
+    }
+  }
+]

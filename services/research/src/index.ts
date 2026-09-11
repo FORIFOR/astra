@@ -34,6 +34,7 @@ export {
 export {
   researchProvidersFromEnv,
   setModelContext,
+  withModelContext,
   standIns as researchStandIns,
   type ResearchProviderEnv,
   type ResearchProviderParts,

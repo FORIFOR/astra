@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// 右列の見出し兼切替（文字起こし / 翻訳 / 字幕）。
+/// 右列の見出し兼切替（原文 / 翻訳）。
 ///
 /// 以前は左端に浮かぶ縦カードだった。**切替と結果が画面の左右に離れていて**目が往復するうえ、
 /// カードが 1 枚増えるぶん情報が散らかっていたので、結果（TranscriptPanel）の真上に置く
@@ -37,6 +37,7 @@ struct RecordingToolPalette: View {
         .background(
             RoundedRectangle(cornerRadius: 10).fill(Color.subtleFill(dark, 0.035))
         )
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("toolPalette")
     }
 }

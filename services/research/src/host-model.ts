@@ -211,7 +211,7 @@ function stringsOf(result: unknown, key: string): string[] {
  */
 function textOf(result: unknown, key: string): string {
   const value = (result as Record<string, unknown> | null)?.[key];
-  if (typeof value !== 'string' || value.trim().length === 0) {
+  if (typeof value !== 'string' || value.trim().length === 0 || /^[\s{}\[\]\":,`]*$/.test(value)) {
     throw new Error('the model did not answer in a form we could read');
   }
   return value.trim();

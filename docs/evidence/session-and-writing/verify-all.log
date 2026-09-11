@@ -1,0 +1,222 @@
+== current macOS debug candidate ==
+[0/1] Planning build
+Building for debugging...
+[0/3] Write swift-version--58304C5D6DBC2206.txt
+Build complete! (0.18s)
+
+== astra-core tests ==
+test result: ok. 38 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+== Tauri Rust regression ==
+test result: ok. 67 passed; 0 failed; 3 ignored; 0 measured; 0 filtered out; finished in 0.34s
+
+== Tauri desktop JS regression ==
+      Tests  352 passed (352)
+
+== TCC usage descriptions ==
+USAGE_DESCRIPTIONS_OK: 要求しうる権限の用途説明が揃っている (5 件)
+
+== release consistency ==
+  package.json=0.1.2 tauri.conf.json=0.1.2 src-tauri/Cargo.toml=0.1.2 astra-core/Cargo.toml=0.1.2
+RELEASE_CONSISTENCY_OK: 版番号 0.1.2 で一致・配布物は外部 dylib を掴まない・Developer ID + hardened runtime
+
+== release aggregation regression ==
+.......................
+----------------------------------------------------------------------
+Ran 23 tests in 6.759s
+
+OK
+
+== UI taste ==
+== UI の癖 ==
+  gradient               2 /   4
+  角丸 >28pt           0 /   0
+  material/blur: actual=10, reviewed additions=2 (content-bound)
+  material/blur          8 /   8
+  sparkles アイコン   4 /   6
+  Capsule: actual=26, reviewed additions=6 (content-bound)
+  Capsule               20 /  20
+  shadow                 6 /   9
+  40字超の文言      6 /   6
+
+UI_TASTE_OK: 癖は上限内
+
+== permission JIT ==
+  起動経路（AppDelegate）で権限を求めていない OK
+  求めている場所:
+    apps/astra-macos/Sources/AstraMac/GuidedSetup/PermissionManager.swift:41:        Permissions.requestMicrophone(done)
+    apps/astra-macos/Sources/AstraMac/Settings/PermissionCenter.swift:88:            case .microphone: Permissions.requestMicrophone { _ in done() }
+    apps/astra-macos/Sources/AstraMac/Settings/PermissionCenter.swift:89:            case .screenRecording: Permissions.requestScreenRecording(); done()
+    apps/astra-macos/Sources/AstraMac/Settings/PermissionCenter.swift:91:            case .calendar: Permissions.requestCalendar { _ in done() }
+    apps/astra-macos/Sources/AstraMac/Settings/PermissionCenter.swift:92:            case .speechRecognition: Permissions.requestSpeechRecognition { _ in done() }
+    apps/astra-macos/Sources/AstraMac/Settings/SettingsView.swift:36:                              request: { Permissions.requestMicrophone { _ in mic = Permissions.microphone } })
+    apps/astra-macos/Sources/AstraMac/Settings/SettingsView.swift:38:                              request: { Permissions.requestScreenRecording(); screen = Permissions.screenRecording })
+    apps/astra-macos/Sources/AstraMac/Settings/SettingsView.swift:42:                              request: { Permissions.requestSpeechRecognition { _ in speech = Permissions.speechRecognition } })
+    apps/astra-macos/Sources/AstraMac/Settings/SettingsView.swift:44:                              request: { Permissions.requestCalendar { _ in cal = Permissions.calendar } })
+    apps/astra-macos/Sources/AstraMac/Settings/SettingsView.swift:48:                    if !Permissions.requestInputMonitoring() { Permissions.openInputMonitoringSettings() }
+    apps/astra-macos/Sources/AstraMac/Home/HomeView.swift:430:                PermissionCenter.request(.schedule) {
+    apps/astra-macos/Sources/AstraMac/VoiceHUD/VoiceHUDState.swift:57:        PermissionCenter.request(.voice)
+    apps/astra-macos/Sources/AstraMac/RecordingWorkspace/RecordingWorkspaceState.swift:245:                Permissions.requestMicrophone { [weak self] granted in
+    apps/astra-macos/Sources/AstraMac/RecordingWorkspace/RecordingWorkspaceState.swift:308:            PermissionCenter.request(.meeting) {
+    apps/astra-macos/Sources/AstraMac/RecordingWorkspace/RecordingWorkspaceState.swift:337:        if screenAudio && requestPermissions { PermissionCenter.request(.meetingAudio) }
+  求める場所は機能の入口だけ OK
+  取扱説明書も「使うときに要るものだけ」 OK
+
+PERMISSION_JIT_OK: 起動時に求めず、使う直前に求める
+
+== privacy egress ==
+== PRIVACY_EGRESS_GATE ==
+  recording upload requires explicit cloud consent PASS
+  silent Apple STT fallback                0
+  screen audio permission follows selection PASS
+  connector egress requires user action    PASS
+  external action confirmation             PASS (Confirm.ask ×5; 面は CONFIRMATION_GATE)
+  transcription egress guide               consistent
+  runtime (--selftest egress)              autoUpload=off cloudSTTConsent=on meeting=[microphone] sttNoFallback=NOT_MEASURED
+
+PRIVACY_EGRESS_GATE=PASS
+
+== no contradiction ==
+scripts/verify-no-contradiction.sh: line 28: 80264 Terminated: 15          "$BIN" --selftest hold-meeting 25 silent > /dev/null 2>&1
+NO_CONTRADICTION_OK: 画面の中で言っていることが食い違わない
+
+== confirmation surface ==
+== CONFIRMATION_GATE ==
+
+  · 面の寸法 560x286pt
+  ✓ 幅 <= 620pt
+  ✓ 高さ <= 360pt
+  ✓ ① どのアプリ / どこへ
+  ✓ ② 何が起きるか
+  ✓ ③ 決定的な値
+  ✓ ④ 中身の下見
+  ✓ ⑤ 出所
+  ✓ ⑥ 取消
+  ✓ ⑥ 直す
+  ✓ ⑥ 実行
+  ✓ 決断に不要なもの（履歴・会議ノート・sidebar）が無い
+  ✓ 主たる操作 96x32pt が逃げ道 72pt（やめる）以上
+  ✓ 中身の間の中央値 = 11.9pt（操作の手前 28.0pt は区切りとして除外）
+  ✓ 窓を増やしていない（同じ面が morph）
+
+  ✓ 窓を増やさない・焦点を奪わない・560x254pt・高さは中身で決まる（254→163）・取り消しで戻る
+
+CONFIRMATION_GATE=PASS
+
+== screen terms (one word each) ==
+TERMS_OK: 画面の語は 1 語ずつ
+
+== guide facts (app words only) ==
+  facts 126 件 / ガイドが引く key 62 件 / 文字で書かれた protected 0 件 / 一字違い 0 件 / 古い綴り 0 件
+  guide build: written 890 KB / facts used 62
+GUIDE_FACTS_OK: ガイドの語はアプリの表示（UserFacingFacts）だけから来ている
+
+== guide facts selfcheck ==
+  selfcheck 1 一字違いの古い写し:
+    FAIL: protected の語「録音」(dock.record) がガイドに文字で書かれている（build.py:131 付近）。fact("dock.record") で引く
+    FAIL: 「録音の開始 / 停止」はアプリの語「録音を開始 / 停止」(settings.shortcutRow) と一字違い（build.py:131 付近）。古い写し。fact("settings.shortcutRow") で引く
+  selfcheck 2 許可名を文字で:
+    FAIL: protected の語「画面収録」(permission.screenRecording) がガイドに文字で書かれている（build.py:141 付近）。fact("permission.screenRecording") で引く
+  selfcheck 3 知らない key:
+    FAIL: ガイドが知らない fact を引いている: settings.noSuchRow
+GUIDE_FACTS_SELFCHECK_OK: 3 つの書き戻しを全部捕まえた
+
+== design tokens fresh ==
+design tokens are current
+
+== type scale (no literals) ==
+TYPE_LITERALS_OK: 6 つの型の view に字の大きさの直書きは無い（5 scope）
+
+== swift bindings fresh ==
+swift bindings are current
+
+== workspace fixture fresh ==
+recording-workspace fixture is current
+
+== conventions ==
+convention check passed
+
+== C ABI contract (3-way) ==
+C ABI contract ok: Rust 21 = header 21, C# が呼ぶ 21 個すべて一致
+
+== native path Tauri-free ==
+native product path is Tauri-free: 163 Swift files + astra-core に Tauri 依存なし (Done#8)
+
+== WinUI XAML well-formed ==
+xaml well-formed: 5 WinUI .xaml files OK
+
+== C# bridge -> core + gateway ==
+CS_OK gateway(AstraSession): signedIn apps=14 library=0 echoArtifact=52bytes
+CS_OK bridge->core: version=0.1.2 pkce=S256 authorizeUrl parseCallback elapsed=01:05; geometry matches shared fixture
+
+== Windows C# logic type-check ==
+CSLOGIC_OK: Windows C# 実ロジック全体(Window code-behind 含む)が型検査を通過
+
+== C ABI round-trip (C) ==
+CABI_OK connector: pkce=S256 authorizeUrl ok nonLoopbackRejected parseCallback ok
+CABI_OK api: me=owner meeting=ok agent=COMPLETED apps=[... library=[...
+CABI_OK closed=1 ms=5000 fragmentBytes=160000 markedUploaded=1
+
+== macOS recording + live E2E ==
+SELFTEST_OK record: closed=1 fragmentBytes=160000 elapsed=00:05 recoverable=1
+SELFTEST_OK lifecycle: elapsed=00:05 recovered=true
+SELFTEST_OK shortcut: registered=true combo=⌥Space matcher=ok receivedSyntheticPress=true
+SELFTEST_OK sysaudio: capturesAudio=true sampleRate=48000 channels=2 excludesSelf=true
+SELFTEST_OK calendar: status=未確認 upcoming=0
+SELFTEST_OK screen: width=1280 height=800 pixelFormat=BGRA audio=false
+SELFTEST_OK rag: order=a,c,b topScore=1.00 reason=語が 1 件一致 · 新しい · このプロジェクト
+SELFTEST_OK keychain: roundtrip ok, absent=nil, delete idempotent, service=com.astra.mac
+SELFTEST_OK files: candidates=2(binary除外) top=oauth.txt score=0.72
+SELFTEST_OK ax: trusted=true selection=nil candidates=0
+SELFTEST_OK speech: auth=0 onDeviceCapable=true started=false appendedFrames=false serverFallback=never
+SELFTEST_OK connector: pkce=S256✓ authorizeUrl✓ nonLoopbackRejected✓ configured=0
+SELFTEST_OK permissions: mic=許可済み screen=許可済み ax=許可済み calendar=未確認 speech=0
+SELFTEST_OK shape: path matches shared fixture (14 segments); taskDock content 296.0pt fits dockWidth 296.0pt
+SELFTEST_OK hudlifecycle: HUD→Recording→保存→HUD 復帰 の window 状態遷移 OK
+SELFTEST_OK panel: 全Space=true fullscreen補助=true borderless=true 透過=true notMain=true
+SELFTEST_OK render: VoiceHUD:c139/o0.99 IntentBar:c89/o1.00 RecordingIndicator:c168/o1.00 ConfirmationCard:c90/o0.94 MeetingArtifact:c99/o1.00 ResearchResult:c122/o0.81 MeetingSurface:c57/o1.00 LineagePanel:c126/o0.82 ApprovalCard:c106/o0.77 EvidenceSummary:c133/o0.70 WorkSurface:c123/o0.80 ContextLens:c100/o0.88 HomeView:c60/o1.00 RecordingWorkspace:c52/o0.99 MainWindow:c63/o1.00 Settings:c17/o0.14
+SELFTEST_OK pause: 停止中は録音が進まない before=5000 pause=5000 resume=10000
+SELFTEST_OK timer: 経過が進む running=2 停止で止まる paused=2 再開で進む resumed=3
+SELFTEST_OK aiaction: Agent 応答="「プロジェクト X」のリリースは 9 月 12 日とし、OAuth の確認を鈴木…"
+SELFTEST_OK translate: local model preserved Friday and 3 pm
+SELFTEST_OK recovery: 検出→復旧 uploadedBytes=192000 復旧後は候補から消える(stillThere=false)
+SELFTEST_OK connectorflow: loopback 受理 code=abc123 state=xyz789 port=50184
+SELFTEST_OK connectorstate: mapping ok, canConnect gated by client_id (google env=false)
+SELFTEST_OK connectorexchange: Swift→core→実HTTP 交換 tokens 取得+Keychain 保管 (verifier 送信=true)
+SELFTEST_OK voiceask: thinking=true→idle Agent 応答="Astra のレビューは金曜日 15 時です。…"
+SELFTEST_OK recoveryoffline: オフライン録音を新規会議に紐付けて復旧 sent=192000 local消滅=true
+SELFTEST_OK fulllifecycle: HUD→実マイク 5000ms→停止→同じ会議がローカルLibraryにreadyで保存
+DICTATION_FIXTURE trusted=false value=0/true selection=0/true editable=true
+SELFTEST_FAIL e2e001 ②dictation: inserted=false value=""
+FAIL: E2E-001 Product Reality Gate (logs: /var/folders/xn/mdmvpkwd0yx4tcr7rvn_3xv80000gn/T/tmp.LeVXXZ45yJ)
+  ^ FAILED
+
+== initial profile native UI ==
+SELFTEST_OK initialprofile: 6 native captures; review/edit actions present; no external data or send
+
+== recording experience E2E ==
+  録音開始           id=meeting-4f706dc3-1c56-4ec9-9d0e-322f8fbde829 (停止前に DB へ recording を確認済み)
+  強制終了           kill -9（正常終了の経路を通さない）
+  DB(kill 直後)        meeting-4f706dc3-1c56-4ec9-9d0e-322f8fbde829=recording
+  再起動              meeting-4f706dc3-1c56-4ec9-9d0e-322f8fbde829=interrupted
+  続きから処理     id=meeting-4f706dc3-1c56-4ec9-9d0e-322f8fbde829 status=ready actions=1
+  再々起動           meeting-4f706dc3-1c56-4ec9-9d0e-322f8fbde829=ready (同じ id)
+RECORDING_EXPERIENCE_OK: 録音 → kill → interrupted → 続きから ready → 再起動で保持 (id=meeting-4f706dc3-1c56-4ec9-9d0e-322f8fbde829)
+
+== journeys JA/JB/JC ==
+  JOURNEY JA success=true ms=5461 interactions=4 windows=0 focusTheft=0 errors=0
+  JOURNEY JB success=true ms=9968 interactions=7 windows=0 focusTheft=0 errors=0
+  JOURNEY JC success=true ms=7355 interactions=4 windows=0 focusTheft=0 errors=0
+  MOTION T0-idle-to-listening frames=39 captured=39 fps=54 maxGap=51ms sameId=100% windows+0 focusTheft=0 top=0.0pt center=0.5pt missing=0 heightRev=0 maxStep=0.56 contentΔmax=0.9 other(shift=0.0pt alphaRev=0) settled=184ms
+  MOTION T3-dock-to-running frames=40 captured=40 fps=56 maxGap=46ms sameId=100% windows+0 focusTheft=0 top=0.0pt center=0.5pt missing=0 heightRev=0 maxStep=0.36 contentΔmax=12.5 other(shift=0.0pt alphaRev=0) settled=200ms
+  MOTION T4-running-to-confirmation frames=40 captured=40 fps=56 maxGap=51ms sameId=100% windows+0 focusTheft=0 top=0.0pt center=0.5pt missing=0 heightRev=0 maxStep=0.28 contentΔmax=11.2 other(shift=0.0pt alphaRev=0) settled=216ms
+  MOTION T1-meeting-to-notes frames=40 captured=40 fps=56 maxGap=35ms sameId=100% windows+0 focusTheft=0 top=0.0pt center=0.0pt missing=0 heightRev=0 maxStep=0.43 contentΔmax=7.1 other(shift=0.0pt alphaRev=0) settled=184ms
+  MOTION T2-notes-to-workspace frames=37 captured=37 fps=51 maxGap=89ms sameId=100% windows+0 focusTheft=0 top=0.0pt center=0.0pt missing=0 heightRev=0 maxStep=0.00 contentΔmax=117.5 other(shift=0.0pt alphaRev=0) settled=184ms
+SURFACE_CONTINUITY_MOTION=PASS
+PERCEIVED_SURFACE_CONTINUITY=LAYER_B（この selftest では測らない。判定は journeys/perceived/answers/aggregate.md）
+JOURNEYS_OK: 3 本とも最後まで通った（J-B の遷移中も 60fps で連続）
+
+== macOS swift unit tests ==
+	 Executed 109 tests, with 0 failures (0 unexpected) in 0.482 (0.491) seconds
+
+VERIFY_ALL_FAIL

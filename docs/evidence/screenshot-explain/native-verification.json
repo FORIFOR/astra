@@ -1,0 +1,35 @@
+{
+  "tested_at": "2026-09-11T14:26:01.051104+00:00",
+  "native_capture": "macOS Screenshot utility; whole-screen capture, standard screenshot save path",
+  "shortcut_preference": "Cmd+Shift+3 enabled (AppleSymbolicHotKeys 28); CUA synthetic shortcut did not trigger capture, so the macOS Capture control was used",
+  "native_flow": [
+    "saved screenshot detected by Astra",
+    "clicked image explanation",
+    "expired desktop credentials produced inline recovery",
+    "clicked reconnect",
+    "same image sent through gateway, task worker, local agent host",
+    "answer shown in Work"
+  ],
+  "task_id": "33423260-A9CF-4B3C-8204-2FF61374C0B4",
+  "phase": "complete",
+  "default_prompt_contains_nonce": false,
+  "answer_contains_pixel_nonce": true,
+  "observed_answer_within_ms": 32511,
+  "answer": "この画面は、Codexという開発環境内で「ASTRA・SCREENSHOT CHECK」というテスト用資料（`astra-vision-fixture.png`）が表示されている状態です。\n\n重要な内容とエラーは以下の通りです：\n\n1.  **接続エラー**: 背景の資料には「Connection interrupted」および赤文字で「ERROR CODE: VX-Q7M2」と表示されています。\n2.  **システム警告**: 画面中央にオーバーレイされたポップアップで、「アプリケーション \"screencaptureui\" を開けません。」というエラーが発生しています。これは、スクリーンショットの取得機能（`screencaptureui`）が起動していないためです。",
+  "model": "qwen3.5:9b",
+  "model_endpoint": "http://127.0.0.1:11434/v1",
+  "external_model_requests": 0,
+  "direct_adapter_test": {
+    "elapsedMs": 22802,
+    "answer": "ASTRA・スクリーンショットチェック\n\n接続が中断しました\n\nエラーコード：VX-Q7M2\n\n再接続するには再試行してください\n\nローカルテストフィクスチャ — 実際のアカウントデータなし"
+  },
+  "private_desktop_image_committed": false,
+  "request_to_saved_result_ms": 28833,
+  "runtime_services": [
+    "com.astra.local.gateway",
+    "com.astra.local.worker",
+    "com.astra.local.host"
+  ],
+  "runtime_gateway_signing_identity": "persistent local key, private key outside repository",
+  "verify_all": "VERIFY_ALL_OK"
+}
