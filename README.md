@@ -2,15 +2,15 @@
 
 # Astra
 
-**Turn a screenshot into your next draft.**
+**Your idea. Make it move.**
 
 A native Mac AI workspace. Take a screenshot, ask your own question, and keep the answer with your work. Use a local vision model or connect a supported AI provider.
 
 [Website & demo](https://astra-forifor.forifor.chatgpt.site) · [日本語](docs/README.ja.md) · [Setup](docs/LOCAL_PREVIEW.md) · [Feedback](https://github.com/FORIFOR/astra/issues)
 
-[![Watch: a screenshot becomes a website-copy proposal](docs/launch/2026-09-12/v2/poster.jpg)](https://youtube.com/shorts/x74kQKDzHsU)
+[![A sketch becomes an interactive little universe](docs/launch/2026-09-12/v3/poster.jpg)](https://youtube.com/shorts/xOQnOKG_Ndg)
 
-**[Watch the 30-second demo](https://youtube.com/shorts/x74kQKDzHsU)** — a fictional studio page, a real local-model answer, and a Markdown save. About 24 seconds to answer in this run; waiting is shortened. [Read the actual proposal](docs/launch/2026-09-12/v2/PROPOSAL.md).
+**[Watch the 33-second demo](https://youtube.com/shorts/xOQnOKG_Ndg)** — a sketch, a real Astra request, and an interactive HTML result. The final Codex generation took about 3 minutes after iteration; waiting is shortened. HTML was extracted from the saved Markdown document, then opened in a browser. [Try the actual result](https://astra-forifor.forifor.chatgpt.site/orbit.html) · [See the workflow and validation](docs/launch/2026-09-12/v3/PROVENANCE.md).
 
 ## A small workflow worth keeping
 

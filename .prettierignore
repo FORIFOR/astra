@@ -27,3 +27,7 @@ docs/ui-atlas/motion/result.json
 docs/ui-atlas/index.html
 docs/ui-atlas/manifest.json
 docs/ui-atlas/README.md
+
+# Verbatim model output and native export used in the launch recording.
+docs/launch/2026-09-12/v3/orbit-codex.html
+docs/launch/2026-09-12/v3/orbit-from-astra.md

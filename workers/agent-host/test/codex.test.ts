@@ -12,6 +12,21 @@ const answer = [
   .join('\n');
 
 describe('Codex CLI', () => {
+  it('honors a bounded longer generation deadline without retrying a timeout', async () => {
+    let calls = 0;
+    const cli = new CodexCli({
+      timeoutMs: 300_000,
+      run: async (_, __, options) => {
+        calls += 1;
+        expect(options.timeoutMs).toBe(300_000);
+        return { code: 124, stdout: '', stderr: '' };
+      },
+    });
+    await expect(cli.ask('create an HTML document')).rejects.toThrow('時間内');
+    expect(calls).toBe(1);
+    for (const timeoutMs of [NaN, Infinity, -1, 0, 1.5, 600_001])
+      expect(() => new CodexCli({ timeoutMs })).toThrow('timeoutMs');
+  });
   it('requires login, not just installation', async () => {
     const cli = new CodexCli({
       run: async (_, args) => ({
