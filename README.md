@@ -2,13 +2,15 @@
 
 # Astra
 
-**Your screen. Your next move.**
+**Turn a screenshot into your next draft.**
 
 A native Mac AI workspace. Take a screenshot, ask your own question, and keep the answer with your work. Use a local vision model or connect a supported AI provider.
 
 [Website & demo](https://astra-forifor.forifor.chatgpt.site) · [日本語](docs/README.ja.md) · [Setup](docs/LOCAL_PREVIEW.md) · [Feedback](https://github.com/FORIFOR/astra/issues)
 
-![Astra's screenshot question composer](docs/golden-screenshots/screenshot-question/question-comfortable-light.png)
+[![Watch: a screenshot becomes a website-copy proposal](docs/launch/2026-09-12/v2/poster.jpg)](https://youtube.com/shorts/x74kQKDzHsU)
+
+**[Watch the 30-second demo](https://youtube.com/shorts/x74kQKDzHsU)** — a fictional studio page, a real local-model answer, and a Markdown save. About 24 seconds to answer in this run; waiting is shortened. [Read the actual proposal](docs/launch/2026-09-12/v2/PROPOSAL.md).
 
 ## A small workflow worth keeping
 
@@ -35,7 +37,7 @@ An explicitly selected route is not silently replaced by a paid provider. Local 
 - macOS 14 or later; native SwiftUI app, Apple silicon and Intel builds.
 - [Follow the local setup guide](docs/LOCAL_PREVIEW.md), then try a text request before an image question.
 - [Mac builds](https://github.com/FORIFOR/astra/releases): use the build and source version named together in its release notes.
-- [See the actual interface and demo](https://astra-forifor.forifor.chatgpt.site/#experience).
+- [See the actual interface and demo](https://astra-forifor.forifor.chatgpt.site/#demo-slot).
 
 The preview includes recording, live transcription, service connections, and guided Mac permissions. Those paths have additional credentials and permissions; they are not prerequisites for the local text workflow. Production-wide release acceptance is still tracked separately from this developer preview.
 

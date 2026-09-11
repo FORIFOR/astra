@@ -1,0 +1,38 @@
+{
+  "social": {
+    "width": 1080,
+    "height": 1920,
+    "frames": 900,
+    "seconds": "30.000000",
+    "bytes": 2874835,
+    "sha256": "e31204462a016ce5737814ba20db0edce1f6a3c2892b739a651ad2db1288e419",
+    "decode": "passed",
+    "color_space": "bt709",
+    "audio_sample_rate": "48000"
+  },
+  "web": {
+    "width": 1920,
+    "height": 1080,
+    "frames": 900,
+    "seconds": "30.000000",
+    "bytes": 3123003,
+    "sha256": "ff4e16a2e38d46179fe0cd8ea3bf25b8863cbf6f326c5427713bdc10c8bdc5a7",
+    "decode": "passed",
+    "color_space": "bt709",
+    "audio_sample_rate": "48000"
+  },
+  "visual_review": {
+    "mobile_width": 360,
+    "scene_times": [1, 4, 7, 10, 14, 18, 25, 28],
+    "all_eight_scenes_checked": true,
+    "offer_matches_screenshot_question": true,
+    "enlarged_answer_matches_saved_markdown": true,
+    "editing_disclosed": true
+  },
+  "audio_review": {
+    "method": "loudness and decoded-signal checks; no auditory review available",
+    "source": "original programmatic synthesis, no external samples",
+    "integrated_lufs": -20.17,
+    "true_peak_dbtp": -1.49
+  }
+}

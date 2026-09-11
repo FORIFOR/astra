@@ -1,3 +1,5 @@
+> Historical first launch draft. See [revision 2](v2/PUBLICATION.md) for the current promoted video and [research](v2/RESEARCH.md) for the changes.
+
 # Launch posts prepared for the owner account
 
 ## X — Japanese

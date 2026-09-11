@@ -1,12 +1,14 @@
 # Astra
 
-**その画面から、次の一歩へ。**
+**スクショを、提案のたたき台に。**
 
 スクリーンショットを撮り、画像を添えてAIに質問し、答えを仕事として残せるMacアプリです。ローカルの画像モデルや、対応するAIプロバイダーを接続して使います。
 
 [ホームページ・実演](https://astra-forifor.forifor.chatgpt.site) · [English](../README.md) · [セットアップ](LOCAL_PREVIEW.md)
 
-![画像を添えた質問欄](golden-screenshots/screenshot-question/question-comfortable-light.png)
+[![スクショからWebの改善案を作る実演](launch/2026-09-12/v2/poster.jpg)](https://youtube.com/shorts/x74kQKDzHsU)
+
+**[30秒の実演を見る](https://youtube.com/shorts/x74kQKDzHsU)** — 架空のWeb制作会社のページで、質問から改善案のMarkdown保存まで実際に操作しました。ローカルモデルの回答は約24秒。待ち時間を短縮しています。[実際の改善案](launch/2026-09-12/v2/PROPOSAL.md)。
 
 1. いつも通りMacでスクリーンショットを撮る。
 2. Astraの案内から質問欄を開き、知りたいことを書く。
