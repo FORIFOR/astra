@@ -1,0 +1,27 @@
+WEBVTT
+
+NOTE Original instrumental music throughout; no spoken narration.
+
+00:00:00.000 --> 00:00:03.000
+From a screenshot to a website-copy proposal.
+
+00:00:03.000 --> 00:00:06.000
+“Together, toward the future.” What does this company do?
+
+00:00:06.000 --> 00:00:08.000
+Astra detects the screenshot. Ask with the image attached.
+
+00:00:08.000 --> 00:00:13.000
+Ask for one headline and button. Do not invent prices or claims.
+
+00:00:13.000 --> 00:00:15.000
+A local Ollama model responds in about 24 seconds. Wait shortened.
+
+00:00:15.000 --> 00:00:22.000
+Actual answer: Corporate website creation and improvement for small and medium businesses.
+
+00:00:22.000 --> 00:00:26.000
+Save the actual answer as Markdown for a proposal draft.
+
+00:00:26.000 --> 00:00:30.000
+Astra for Mac. Public code on GitHub. Backend and model setup required.

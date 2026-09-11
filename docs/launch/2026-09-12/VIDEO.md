@@ -1,3 +1,5 @@
+> Historical first launch draft. See [revision 2](v2/PUBLICATION.md) for the current promoted video and [research](v2/RESEARCH.md) for the changes.
+
 # Real screenshot question demonstration
 
 A synthetic English error screen is opened in macOS Preview and captured with the macOS window-capture tool. Astra's actual screenshot detector offers a question entry, the user question is entered through the native interface, and the local model responds. The answer identifies VX-Q7M2, translates Connection interrupted, suggests retrying, and does not claim to know the underlying cause. The native Save action writes the Markdown linked here as DEMO-ANSWER.md.

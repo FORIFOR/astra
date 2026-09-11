@@ -1,0 +1,58 @@
+{
+  "recorded": "2026-09-12",
+  "model": "Ollama qwen3.5:9b",
+  "request_to_completion_seconds": 23.746,
+  "external_model_requests": 0,
+  "local_model_requests": 2,
+  "fixture": "fictional NODE STUDIO web company page; no client/account data",
+  "request": "このWebサイトの見出しとボタンの改善案を1つ。\n見出しは対象と提供内容が伝わる20字以内、ボタンは6字以内。\n画面にない価格・無料・実績・保証は追加しないで。\n理由、見出し、ボタンの順に短く。",
+  "answer": "理由：現状の「ともに、未来へ。」は抽象的であり、具体的なサービス内容（中小企業のコーポレートサイト制作）が伝わりにくい。\n見出し：中小企業向けコーポレートサイト制作・改善\nボタン：詳細を見る",
+  "first_candidate_rejected": "invented a free consultation unsupported by the fixture; prompt constrained before second run",
+  "method": "native window screenshot detector -> native question composer -> real local model request -> native Markdown Save",
+  "vfr_handling": "normalize entire macOS variable-frame-rate recordings to 30fps before seeking, so held frames are retained",
+  "edits": [
+    {
+      "seconds": [0, 3],
+      "scene": "editorial before/after, verbatim actual headline with new line breaks"
+    },
+    {
+      "seconds": [3, 6],
+      "scene": "recorded page crop"
+    },
+    {
+      "seconds": [6, 8],
+      "scene": "recorded screenshot question offer"
+    },
+    {
+      "seconds": [8, 13],
+      "scene": "recorded prompt paste and send; three seconds slowed to five"
+    },
+    {
+      "seconds": [13, 15],
+      "scene": "24 seconds of generation condensed to two; elapsed time disclosed"
+    },
+    {
+      "seconds": [15, 22],
+      "scene": "recorded result plus enlarged verbatim headline"
+    },
+    {
+      "seconds": [22, 26],
+      "scene": "one second of Save action followed by three seconds of actual save confirmation"
+    },
+    {
+      "seconds": [26, 30],
+      "scene": "GitHub CTA and setup qualification"
+    }
+  ],
+  "audio": "original instrumental synthesized by AI-authored Python, no samples or OS voices; AI music use disclosed on YouTube",
+  "raw_sha256": {
+    "page-raw.mov": "cff411ebaadcfcd0d656501b688e0c768f1b6475676738b72d1f2d8bbaa9c04a",
+    "offer-final-raw.mov": "c037589c61a0700ac5444e08fd87cd934ab9567521fe051845522317900621d7",
+    "improved-raw.mov": "ae40815e343334401cfe7fad2b27a2942960ec8d4a7633e206be09cbbabb4b84",
+    "save-raw.mov": "009eb2cc3cf23cc2af41824b65d38311e9376493044159f8dd765cc2718cd8cb"
+  },
+  "published_video_sha256": {
+    "astra-web-proposal-social.mp4": "e31204462a016ce5737814ba20db0edce1f6a3c2892b739a651ad2db1288e419",
+    "astra-web-proposal-web.mp4": "ff4e16a2e38d46179fe0cd8ea3bf25b8863cbf6f326c5427713bdc10c8bdc5a7"
+  }
+}
