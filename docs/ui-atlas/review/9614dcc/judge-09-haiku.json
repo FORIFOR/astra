@@ -1,0 +1,142 @@
+{
+  "pages": {
+    "CC4F": {
+      "visible_text": [
+        "録音中",
+        "04:21",
+        "会議",
+        "マイクと画面の音を聞いています",
+        "OAuth だけ確認お願いします",
+        "決まったこと",
+        "やること",
+        "この会議について聞く",
+        "AI が見ている資料 3 件"
+      ],
+      "observation": {
+        "happening": "An active recorded meeting is in progress. The interface displays a meeting header with recording indicator and time, a left panel organizing discussion into categories (decisions, tasks), and a right-side transcript pane with speaker names and timestamps.",
+        "most_important": "The product is actively recording a meeting with real-time organization of decisions, tasks, and a live transcript visible alongside.",
+        "next_action": "Continue participating in meeting, review decisions and tasks listed, or access AI-found materials.",
+        "anomalies": [
+          "Left panel shows repeated '待っています' placeholder text, which may confuse new users about whether content is loaded or awaiting input"
+        ]
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "CDBD": {
+      "visible_text": [
+        "準備中...",
+        "06:13",
+        "Loading indicator"
+      ],
+      "observation": {
+        "happening": "A minimal status bar showing preparation/loading state with timestamp. No additional context provided.",
+        "most_important": "System is in a loading state; user is informed to wait.",
+        "next_action": "Wait for process to complete.",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "DEBA": {
+      "visible_text": [
+        "Google Meet",
+        "05:13",
+        "メモ",
+        "字幕",
+        "Ask Astra",
+        "ライブメモ",
+        "決まったこと",
+        "初期費用が必要です",
+        "やること",
+        "見積は明日までにお願いします",
+        "質問",
+        "誰が対応しますか"
+      ],
+      "observation": {
+        "happening": "A Google Meet meeting in progress with AI-powered transcription and note organization. Meeting notes are categorized and time-stamped, with speaker attribution visible.",
+        "most_important": "Live meeting with real-time AI transcription and automatic meeting notes organized by decision/action/question categories.",
+        "next_action": "Respond to questions, complete assigned tasks, or use Ask Astra feature.",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "E04B": {
+      "visible_text": [
+        "新しいバージョンの Astra が入手できます!",
+        "Astra 1.0",
+        "このバージョンで変わること",
+        "直したこと",
+        "このバージョンはスキップ",
+        "アップデートをインストール"
+      ],
+      "observation": {
+        "happening": "A standard software update dialog presented in native macOS window style. Clear visual hierarchy distinguishes primary action (blue install button) from secondary action (gray skip button). Changelog information is organized in clearly labeled sections.",
+        "most_important": "New software version available with clear action options and changelog transparency.",
+        "next_action": "Click Install to update or Skip to defer.",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "E3DE": {
+      "visible_text": [
+        "11:12 の会議",
+        "Home",
+        "Work",
+        "Library",
+        "Apps",
+        "決まったこと 1",
+        "macOS を先に出すことに決めました",
+        "やること 0",
+        "メモ 2",
+        "Windows はいつ出しますか",
+        "Windows は次の周で追います",
+        "文字起こし"
+      ],
+      "observation": {
+        "happening": "A comprehensive meeting review interface with clear three-column layout: left navigation sidebar, center content panel showing meeting summary with decision/task/memo counts, right panel with related discussion items, and bottom transcript section with speaker attribution and timestamps.",
+        "most_important": "Post-meeting review tool that aggregates decisions, tasks, discussion, and full transcript in one organized view. Clear content hierarchy makes navigation intuitive.",
+        "next_action": "Review decisions made, view complete transcript, manage related files, or navigate to other meetings.",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "E9D3": {
+      "visible_text": [
+        "録音中",
+        "04:21",
+        "会議",
+        "OAuth だけ確認お願いします",
+        "AI が見つけた資料",
+        "ファイル",
+        "Gmail",
+        "Drive",
+        "このプロジェクト",
+        "新しい・新しい"
+      ],
+      "observation": {
+        "happening": "The meeting interface (CC4F base) is augmented with a right-side panel showing AI-discovered related materials. The panel has tabbed interface (Files, Gmail, Drive) and displays contextually relevant materials with metadata about freshness and relevance.",
+        "most_important": "AI has automatically surfaced supporting materials from multiple sources (file storage, email, cloud drive) that are relevant to the active meeting discussion.",
+        "next_action": "Review suggested materials, open relevant items, or dismiss panel to refocus on meeting.",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    }
+  },
+  "_judge": {
+    "model": "haiku",
+    "cost_usd": 0.07433340000000001,
+    "turns": 7,
+    "duration_ms": 86277
+  }
+}

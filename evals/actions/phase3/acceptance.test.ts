@@ -278,6 +278,7 @@ describe.skipIf(!url)('Phase 3 acceptance', () => {
   });
 
   it('AC3-5: translation happens per settled segment, not per keystroke', async () => {
+    let providerCalls = 0;
     const translator = new MeetingService({
       db,
       publisher: { async publish() {} },
@@ -285,18 +286,27 @@ describe.skipIf(!url)('Phase 3 acceptance', () => {
         name: 'test',
         isStandIn: true,
         async translate(text) {
+          providerCalls += 1;
           return `EN: ${text}`;
         },
       },
     });
     const segments = await meetings.segments(tenantId, meeting.id, 'live');
-    await translator.translate(tenantId, meeting.id, segments[0]!, 'en-US');
-    await translator.translate(tenantId, meeting.id, segments[0]!, 'en-US');
+    const first = await translator.translate(tenantId, meeting.id, segments[0]!, 'en-US');
+    const repeated = await translator.translate(tenantId, meeting.id, segments[0]!, 'en-US');
+    expect(first).toBe(`EN: ${segments[0]!.text}`);
+    expect(repeated).toBe(first);
+    expect(providerCalls).toBe(1);
 
     const events = await meetings.eventsAfter(tenantId, meeting.id, 0);
     const translated = events.filter((e) => e.type === 'meeting.translation.final');
     // 訳し直しても増えない
-    expect(translated).toHaveLength(2);
+    expect(translated).toHaveLength(1);
+    expect(translated[0]!.payload).toMatchObject({
+      segment_id: segments[0]!.id,
+      target_language: 'en-US',
+      text: first,
+    });
     // 途中経過は訳さない（画面が揺れる）
     expect(events.some((e) => e.type === 'meeting.transcript.partial')).toBe(true);
     expect(

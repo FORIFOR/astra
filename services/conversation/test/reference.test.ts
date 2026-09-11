@@ -122,3 +122,41 @@ describe('what is on screen (正本 §6)', () => {
     expect(clarificationFor(resolutions)).not.toBeNull();
   });
 });
+
+describe('what is on screen right now (screenshot auto-context)', () => {
+  it('resolves a bare "これ" from what is on screen when the conversation has nothing yet', () => {
+    // 撮ったばかりのスクショは「見ているもの」。「これ何？」で聞き返さない。
+    const [resolution] = resolveReferences('これ何？', {
+      referents: [],
+      contextLabels: ['スクリーンショット（たった今）'],
+    });
+    expect(resolution!.phrase).toBe('これ');
+    expect(resolution!.reason).toBeNull();
+    expect(clarificationFor([resolution!])).toBeNull();
+  });
+
+  it('still asks about "それ" when only the screen has something', () => {
+    // 「それ」は会話のもの。画面にあるからといって埋めない。
+    const [resolution] = resolveReferences('それを消して', {
+      referents: [],
+      contextLabels: ['スクリーンショット（たった今）'],
+    });
+    expect(resolution!.resolved).toBeNull();
+    expect(resolution!.reason).toContain('nothing has been referred to');
+  });
+
+  it('resolves "さっきの" from what is on screen, but not "昨日の続き"', () => {
+    const labels = ['スクリーンショット（たった今）', 'スクリーンショット（1 つ前）'];
+    const [recent] = resolveReferences('さっきのと今のを比べて', {
+      referents: [],
+      contextLabels: labels,
+    });
+    expect(recent!.reason).toBeNull();
+    const [yesterday] = resolveReferences('昨日の続きをやって', {
+      referents: [],
+      contextLabels: labels,
+    });
+    expect(yesterday!.resolved).toBeNull();
+    expect(yesterday!.reason).not.toBeNull();
+  });
+});

@@ -195,11 +195,11 @@ export class GoogleStreamingV2Transcriber implements StreamingTranscriber {
     let stream: DuplexStream | null = null;
     let failure: Error | null = null;
     let ended = false;
+    let finishRequested = false;
+    let resolveEnd: (() => void) | undefined;
     let reconnects = 0;
+    let finishPromise: Promise<TranscriptResult[]> | undefined;
     const pending: TranscriptResult[] = [];
-    /** 送った frame の番号。**作り直しても振り直さない**（重複の判定に使う）。 */
-    let nextSequence = 0;
-    const sent = new Set<number>();
 
     const setState = (next: StreamState): void => {
       state = next;
@@ -236,10 +236,20 @@ export class GoogleStreamingV2Transcriber implements StreamingTranscriber {
     const open = (): void => {
       setState(state === 'idle' ? 'connecting' : 'reconnecting');
       const next = deps.client.streamingRecognize();
+      stream = next;
       next.on('data', (response) => {
+        if (stream !== next || ended) return;
         pending.push(...fromStreamingResponse(response, config, { provider: model, fallbackUsed }));
       });
       next.on('error', (error) => {
+        if (stream !== next || ended) return;
+        stream = null;
+        next.destroy?.();
+        if (finishRequested) {
+          failure = error;
+          resolveEnd?.();
+          return;
+        }
         /*
          * モデルが無い location なら、1 度だけ落として作り直す。
          * **黙って落ちない。**落ちたことを呼び出し側へ知らせる。
@@ -256,7 +266,14 @@ export class GoogleStreamingV2Transcriber implements StreamingTranscriber {
          * それ以外は作り直しを試す。**回数を切る。**
          * 無限に作り直すと、料金だけが増えて音は届かない。
          */
-        if (reconnects < maxReconnects && !ended) {
+        // Authentication, quota and invalid configuration errors do not recover
+        // by immediately opening another paid stream. Retry transport failures only.
+        const code = (error as Error & { code?: number }).code;
+        const transient =
+          code === 14 ||
+          (code === undefined &&
+            /connection reset|ECONNRESET|EPIPE|socket hang up/i.test(error.message));
+        if (transient && reconnects < maxReconnects && !ended && !finishRequested) {
           reconnects += 1;
           stream = null;
           open();
@@ -266,13 +283,14 @@ export class GoogleStreamingV2Transcriber implements StreamingTranscriber {
         setState('closed');
       });
       next.on('end', () => {
+        if (stream !== next) return;
+        resolveEnd?.();
         ended = true;
         setState('closed');
       });
 
       // 最初のメッセージは設定。以降が音声（V2 の約束）。
       next.write(configMessage());
-      stream = next;
       setState('streaming');
     };
 
@@ -287,14 +305,9 @@ export class GoogleStreamingV2Transcriber implements StreamingTranscriber {
       async push(frame: Uint8Array, atMs: number) {
         if (failure) throw failure;
         void atMs;
-        const sequence = nextSequence;
-        nextSequence += 1;
-        /*
-         * **同じ frame を二度送らない。**作り直しの前後で送り直すと、
-         * 同じ発言が二重に字幕へ出る。
-         */
-        if (!sent.has(sequence) && stream && !ended) {
-          sent.add(sequence);
+        if (finishRequested || ended) throw new Error('transcription session is closed');
+        // Each push is written once; reconnect never replays accepted frames.
+        if (frame.byteLength > 0 && stream) {
           /*
            * **recognizer は毎回いる。**V2 の `StreamingRecognizeRequest` は
            * 全メッセージに持たせる決まりで、音声だけを送ると
@@ -304,13 +317,31 @@ export class GoogleStreamingV2Transcriber implements StreamingTranscriber {
         }
         return drain();
       },
-      async finish() {
-        setState('draining');
-        if (stream && !ended) stream.end();
-        // end のあとに残りが届くので、一巡だけ待つ
-        await new Promise((resolve) => setImmediate(resolve));
-        setState('closed');
-        return drain();
+      finish() {
+        if (finishPromise) return finishPromise;
+        finishRequested = true;
+        finishPromise = (async () => {
+          setState('draining');
+          const active = stream;
+          if (active && !ended) {
+            await new Promise<void>((resolve) => {
+              const timeout = setTimeout(resolve, 2000);
+              resolveEnd = () => {
+                clearTimeout(timeout);
+                resolve();
+              };
+              active.end();
+            });
+          }
+          // end() only half-closes gRPC. Release it even if the provider never
+          // sends its final end event, and ignore all subsequent callbacks.
+          ended = true;
+          stream = null;
+          active?.destroy?.();
+          setState('closed');
+          return drain();
+        })();
+        return finishPromise;
       },
     };
   }

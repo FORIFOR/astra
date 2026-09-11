@@ -28,6 +28,7 @@ grep -rn "Permissions\.request\|PermissionCenter\.request" "$SRC" \
 # 求めてよいファイルは、機能の入口だけ。新しい場所で求めるなら、ここに「何の機能の直前か」を
 # 書いてから足す（一覧が黙って増えると、いつの間にか「起動時に一括」へ戻る）。
 allowed=(
+  "GuidedSetup/PermissionManager.swift"       # Guided Setupの要求アダプター。宣言だけでは要求せず、既存Permissionsへ委譲する
   "Settings/PermissionCenter.swift"           # 機能→要る許可の写像。要求はここを通す
   "Settings/SettingsView.swift"               # 5 つの一覧。あとから見直す場所（一括の案内はしない）
   "Home/HomeView.swift"                       # ⌥Space を使えるようにする → 入力監視 / 予定から録る → カレンダー（「これからの予定」の場所で）

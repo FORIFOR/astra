@@ -1,0 +1,21 @@
+{
+  "key": {
+    "CB5B": "screenshot.detected",
+    "5798": "screenshot.attached-cloud",
+    "E389": "guided-setup.intro",
+    "9C85": "guided-setup.target-highlighted",
+    "94DF": "guided-setup.target-missing",
+    "B726": "guided-setup.granted",
+    "FF03": "guided-setup.denied"
+  },
+  "order": [
+    "5798",
+    "94DF",
+    "9C85",
+    "B726",
+    "CB5B",
+    "E389",
+    "FF03"
+  ],
+  "batch": 6
+}

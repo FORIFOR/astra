@@ -1,0 +1,10 @@
+{
+  "id": "grounded",
+  "elapsedMs": 1097,
+  "result": {
+    "ok": true,
+    "result": {
+      "answer": "佐藤は金曜日までにテスト結果を共有することになっています。"
+    }
+  }
+}

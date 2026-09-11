@@ -8,11 +8,32 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 BIN="$ROOT/apps/astra-macos/.build/debug/AstraMac"
 LAB="$ROOT/.build/uxlab"
 OUT="$(mktemp -d)"
-bash "$ROOT/scripts/ux-auto/build-tools.sh" >/dev/null
+if [[ -x "${ASTRA_CONFIRMATION_BIN:-}" ]]; then
+  BIN="$ASTRA_CONFIRMATION_BIN"
+elif [[ -x "$ROOT/dist/Astra.app/Contents/MacOS/AstraMac" ]]; then
+  BIN="$ROOT/dist/Astra.app/Contents/MacOS/AstraMac"
+elif [[ -x "$ROOT/apps/astra-macos/.build/Astra.app/Contents/MacOS/AstraMac" ]]; then
+  BIN="$ROOT/apps/astra-macos/.build/Astra.app/Contents/MacOS/AstraMac"
+fi
+APP="${BIN%/Contents/MacOS/AstraMac}"
+if [[ "$APP" == "$BIN" || ! -f "$APP/Contents/Info.plist" ]]; then
+  echo "CONFIRMATION_GATE=AUTOMATION_MISSING signed app required (scripts/package-macos-app.sh)"
+  exit 2
+fi
+codesign --verify --deep --strict "$APP" || exit 1
+bash "$ROOT/scripts/ux-auto/build-tools.sh" >/dev/null || exit 1
 
-pkill -9 -f AstraMac 2>/dev/null; sleep 1
-ASTRA_DATA_ROOT="$OUT/data" "$BIN" --selftest dock8 "$OUT" >"$OUT/log.txt" 2>&1
-pkill -9 -f AstraMac 2>/dev/null
+# CLI の責任プロセスには Speech の用途説明が無い場合がある。
+# LaunchServices から署名バンドルを起動し、TCC の主体と検証対象を揃える。
+open -n -W --stdout "$OUT/log.txt" --stderr "$OUT/stderr.txt" \
+  --env "ASTRA_DATA_ROOT=$OUT/data" "$APP" --args --selftest dock8 "$OUT"
+capture_status=$?
+if [ "$capture_status" -ne 0 ] || ! grep -q '^SELFTEST_OK dock8:' "$OUT/log.txt"; then
+  echo "CONFIRMATION_GATE=FAIL dock8 exit=$capture_status log=$OUT/log.txt"
+  tail -20 "$OUT/log.txt"
+  tail -20 "$OUT/stderr.txt"
+  exit 1
+fi
 
 shot="$OUT/07-confirmation.png"
 [ -f "$shot" ] || { echo "FAIL: 確認の面を撮れていない"; exit 1; }
@@ -82,9 +103,9 @@ if grep -q "窓は常に1枚" "$OUT/log.txt"; then say "✓" "窓を増やして
 # 撮った絵では分からないもの（窓・焦点・高さが中身で決まるか・取り消し）は
 # 実際に動かして見る。宣言してあるが効いていない、を避ける。
 echo
-out="$("$BIN" --selftest confirmflow 2>&1 | tail -1)"
-pkill -9 -f AstraMac 2>/dev/null
-if echo "$out" | grep -q SELFTEST_OK; then say "✓" "${out#SELFTEST_OK confirmflow: }"
+out="$("$BIN" --selftest confirmflow 2>&1)"
+flow_status=$?
+if [ "$flow_status" -eq 0 ] && echo "$out" | grep -q '^SELFTEST_OK confirmflow:'; then say "✓" "${out#SELFTEST_OK confirmflow: }"
 else say "✗" "$out"; fail=1; fi
 
 echo

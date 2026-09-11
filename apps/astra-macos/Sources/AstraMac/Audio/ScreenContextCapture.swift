@@ -33,14 +33,15 @@ enum ScreenContextCapture {
 
     /// 前面ディスプレイの静止フレームを 1 枚取る。許可が無ければ throw（.app 側でユーザーが許可）。
     /// 戻りは BGRA の CGImage。文脈抽出（OCR/要約）は下流で行う。
-    static func captureFrame() async throws -> CGImage {
+    static func captureFrame(excludingBundleID: String? = nil) async throws -> CGImage {
         let content = try await SCShareableContent.excludingDesktopWindows(
             false, onScreenWindowsOnly: true)
-        guard let display = content.displays.first else {
+        guard let display = content.displays.first(where: { $0.displayID == CGMainDisplayID() }) ?? content.displays.first else {
             throw NSError(domain: "ScreenContextCapture", code: 1,
                           userInfo: [NSLocalizedDescriptionKey: "no display to capture"])
         }
-        let filter = SCContentFilter(display: display, excludingWindows: [])
+        let excluded = content.applications.filter { $0.bundleIdentifier == excludingBundleID }
+        let filter = SCContentFilter(display: display, excludingApplications: excluded, exceptingWindows: [])
         let config = configuration(width: display.width, height: display.height)
         return try await SCScreenshotManager.captureImage(
             contentFilter: filter, configuration: config)

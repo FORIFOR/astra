@@ -43,7 +43,12 @@ enum Dictation {
     @discardableResult
     static func insert(_ text: String) -> Bool {
         guard !text.isEmpty, let target = focusedTextTarget() else { return false }
+        return insert(text, into: target)
+    }
 
+    /// Use an explicitly verified target when a local practice field owns the operation.
+    static func insert(_ text: String, into target: AXUIElement) -> Bool {
+        guard AXIsProcessTrusted(), !text.isEmpty else { return false }
         // 選択範囲があるなら、そこへ差し替えるのが最も素直（AXSelectedText）。
         var selectedRef: CFTypeRef?
         if AXUIElementCopyAttributeValue(target, kAXSelectedTextAttribute as CFString, &selectedRef) == .success,
@@ -59,17 +64,39 @@ enum Dictation {
               let current = valueRef as? String
         else { return false }
 
-        var caret = current.count   // 取れなければ末尾へ足す（消さない）
+        // AX の位置は UTF-16 単位。String.count（書記素数）では絵文字以降がずれる。
+        var selection = CFRange(location: current.utf16.count, length: 0)
         var rangeRef: CFTypeRef?
         if AXUIElementCopyAttributeValue(target, kAXSelectedTextRangeAttribute as CFString, &rangeRef) == .success,
            let axValue = rangeRef, CFGetTypeID(axValue) == AXValueGetTypeID() {
             var range = CFRange(location: 0, length: 0)
             if AXValueGetValue(axValue as! AXValue, .cfRange, &range) {
-                caret = max(0, min(current.count, range.location + range.length))
+                selection = range
             }
         }
-        let index = current.index(current.startIndex, offsetBy: caret)
-        let merged = String(current[current.startIndex..<index]) + text + String(current[index...])
-        return AXUIElementSetAttributeValue(target, kAXValueAttribute as CFString, merged as CFTypeRef) == .success
+        guard let merged = replacingSelection(in: current, range: selection, with: text),
+              AXUIElementSetAttributeValue(target, kAXValueAttribute as CFString, merged as CFTypeRef) == .success
+        else { return false }
+        var nextCaret = CFRange(location: selection.location + text.utf16.count, length: 0)
+        if let value = AXValueCreate(.cfRange, &nextCaret) {
+            _ = AXUIElementSetAttributeValue(target, kAXSelectedTextRangeAttribute as CFString, value)
+        }
+        return true
+    }
+
+    /// AXSelectedText が書けない入力欄でも、選択部分を残さず正しい位置に置換する。
+    static func replacingSelection(in current: String, range: CFRange, with text: String) -> String? {
+        let count = current.utf16.count
+        guard range.location >= 0, range.length >= 0, range.location <= count,
+              range.length <= count - range.location
+        else { return nil }
+        let units = current.utf16
+        let start = units.index(units.startIndex, offsetBy: range.location)
+        let end = units.index(start, offsetBy: range.length)
+        guard start.samePosition(in: current.unicodeScalars) != nil,
+              end.samePosition(in: current.unicodeScalars) != nil,
+              let indices = Range(NSRange(location: range.location, length: range.length), in: current)
+        else { return nil }
+        return current.replacingCharacters(in: indices, with: text)
     }
 }

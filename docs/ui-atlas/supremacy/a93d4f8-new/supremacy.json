@@ -1,0 +1,415 @@
+{
+  "rc": "a93d4f8",
+  "mode": "self-supremacy",
+  "pages": [
+    {
+      "id": "screenshot.detected",
+      "blind_id": "0DAC",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4,
+        "density": 4.5,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 4,
+        "calmness": 5,
+        "craft": 4,
+        "distinctiveness": 3
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": false,
+          "ai_look": [],
+          "why": "Minimalist notification design with excellent state clarity and calm palette. Lacks distinctiveness—follows standard system notification patterns without visual innovation."
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "2行・1グリフの引き算が効いていて静かで、成功通知として過不足がない。ただし取り消し手段が絵の中に無く、形状・配色（ダークピル＋紫グリフ）自体は同種プロダクトで見慣れた範囲で、一線級と並べたときの固有性が弱い。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "Raycast/CleanShot系でよく見るダークHUDトーストの定型パターン"
+          ],
+          "why": "小さいが情報設計は明快。ただしダークHUDトースト自体は業界で頻出する定型で、一線級と並べて際立つ差別化要素はない。"
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.intro",
+      "blind_id": "1FC3",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "avg": {
+        "hierarchy": 3,
+        "density": 3,
+        "typography": 4,
+        "geometry": 3,
+        "state_clarity": 2,
+        "calmness": 4,
+        "craft": 3,
+        "distinctiveness": 2
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": false,
+          "ai_look": [],
+          "why": "Clean, functional toast notification with clear action path. Text truncation on left suggests viewport constraint rather than design choice. Follows standard iOS/macOS patterns without distinctive visual treatment."
+        },
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "行き先の無い指示文だけで解決手段を持たせない、説明過多寄りの文面"
+          ],
+          "why": "絵の中で完結する欠陥がある。ユーザーに次の場所（システム設定）へ行けと明示しながら、その場から行く手段が無く×しか無い＝ブロッキング状態なのに解除経路がUIに載っていない。加えて円形ボタンがトーストと視覚的に結び付いておらず、同一の状態を表しているのか読めない。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "BELOW_BAR",
+          "valid": false,
+          "ai_look": [],
+          "why": "許可を求める通知にもかかわらず実行可能な導線ボタンが欠けており、閉じる以外に取れる行動が絵から読み取れない。同系統の別状態(3911)と比較すると明確な機能不足。"
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.target-found",
+      "blind_id": "22B2",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 3.67,
+        "density": 3.33,
+        "typography": 3.67,
+        "geometry": 3.33,
+        "state_clarity": 2.67,
+        "calmness": 3.33,
+        "craft": 3.33,
+        "distinctiveness": 2.67
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "SUPREME",
+          "valid": true,
+          "ai_look": [],
+          "why": "Authentic macOS System Settings interface with world-class polish. Information architecture is exemplary—sidebar navigation organizes settings logically, main pane presents permission toggles with consistent spacing and visual hierarchy. Highlighting of AstraDbg with directional arrow shows thoughtful state communication. No defects visible. This represents the standard against which modern OS settings panels are measured."
+        },
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "OSの画面をそのまま借りて吹き出しを載せただけの、自製UIとしての設計が無いガイド"
+          ],
+          "why": "状態矛盾が絵から言える：オンにせよと指示している当の行のトグルが、同一画面のオフ表示（VoiceOS）と比べて既にオン側に見え、フォーカスリングのせいでオン/オフの判読すら曖昧。さらに「AstraDbg」という内部名の露出、アプリ名欄のバージョン文字列、ウィンドウ外に浮く縦バーと下端の切れなど、仕上げの破綻が複数見える。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [],
+          "why": "自社アプリの付加要素(フォーカスリング+吹き出し)と実際のトグル状態が矛盾しているように見え、ユーザーが『もうオンなのになぜ言われるのか』と迷う具体的な欠陥。加えて大部分がOSネイティブ画面でプロダクト独自の作り込みは吹き出し部分のみのため差別化に乏しい。"
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.denied",
+      "blind_id": "2AFB",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4,
+        "density": 3.67,
+        "typography": 4,
+        "geometry": 3.67,
+        "state_clarity": 4.33,
+        "calmness": 3.67,
+        "craft": 3.67,
+        "distinctiveness": 2.67
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "Error state notification with thoughtful warm color palette (beige circle vs. typical red/orange) providing psychological gentleness. Clear error message and recovery path. Lacks visual distinctiveness—follows standard notification patterns. Error state inherently reduces calmness score despite warm palette."
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "エラー文＋復帰ボタン＋閉じるが1行に収まり、円形部の色が警告に変わる点は状態伝達として機能している。ただし失敗した当の操作をそのまま再提示していること、トースト本体の色がエラーを示していないこと、円形部との結び付きの弱さが、一線級のエラー処理と並べると劣る。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "エラー内容・原因・回復導線・状態を示す色分けアイコン(赤=エラー)まで揃っており実用上の欠陥は見当たらないが、コンパクトなピル通知自体は業界共通パターンで際立った独自性はない。"
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.repositioned",
+      "blind_id": "3090",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 3.67,
+        "density": 3.33,
+        "typography": 3.67,
+        "geometry": 3.33,
+        "state_clarity": 2.67,
+        "calmness": 3.33,
+        "craft": 3.33,
+        "distinctiveness": 2.67
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "SUPREME",
+          "valid": true,
+          "ai_look": [],
+          "why": "Identical to 22B2—authentic macOS System Settings with flawless execution. Exemplary information hierarchy, consistent visual language, clear state communication via highlight + directional arrow. No defects. Duplicate appearance suggests this state was deliberately captured twice, possibly to test consistency or for sequential flow."
+        },
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "OS画面に吹き出しを重ねただけのテンプレ的オンボーディング",
+            "同じ構図の反復"
+          ],
+          "why": "22B2 と同じ欠陥が同じように絵から言える。指示（オンにせよ）と当該トグルの見え方（オン側）が矛盾し、フォーカスリングによりオン/オフの判読が壊れている。内部名の露出、アプリ名欄のバージョン文字列、ウィンドウ外に残る縦バーと下端の切れも同様。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [],
+          "why": "22B2と同一内容の重複画像であり、同じ状態矛盾（既にオンに見えるトグルへの『オンにしてください』指示）が確認できる。"
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.target-missing",
+      "blind_id": "3911",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4,
+        "density": 4.5,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 4,
+        "calmness": 4,
+        "craft": 4,
+        "distinctiveness": 3
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": false,
+          "ai_look": [],
+          "why": "Well-crafted action alert with clear call-to-action button and dismiss option. Blue circular icon with bars maintains visual consistency with 1FC3. Follows standard iOS/macOS notification patterns without distinctive visual treatment. Action path is straightforward and accessible."
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "指示・実行・却下が1行に静かに収まり、権限案内として必要十分。欠陥ではなく差として、円形ボタンとの関係が視覚的に結ばれていない点と、形（ピル＋淡紫ボタン）が同カテゴリで見慣れた造形である点が、一線級と並べたときに弱い。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "行動要求とその場で実行できるボタンが揃い、1FC3で見られた導線欠落が解消されている点は良い。ただしピル通知自体の型は一般的で一線級との差別化要素は薄い。"
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.target-highlighted",
+      "blind_id": "5068",
+      "verdict": "BELOW_BAR",
+      "avg": {
+        "hierarchy": 2.5,
+        "density": 3,
+        "typography": 3,
+        "geometry": 2.5,
+        "state_clarity": 1,
+        "calmness": 3,
+        "craft": 2,
+        "distinctiveness": 2
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": false,
+          "ai_look": [],
+          "why": "トグルUIは標準的で実装完度が高いが、一線級の個性を欠く"
+        },
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "文脈（行ラベル）を欠いたまま指示文だけを置く、説明先行の作り",
+            "フォーカスリングとコーチマークの二重強調で、どちらが主かが決まっていない"
+          ],
+          "why": "指示文（オンにしてください）と、指されているトグルの見た目（オン）が矛盾している。さらに対象行のラベルが画面内に無く、ユーザーが「どれが AstraDbg か」を絵の中だけで確認できない。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "generic rounded speech-bubble coachmark with no clear anchor arrow tip touching the control it refers to"
+          ],
+          "why": "The toggle appears already on while the coachmark instructs the user to turn it on — a state/instruction contradiction visible directly in the frame."
+        }
+      ]
+    },
+    {
+      "id": "screenshot.attached-cloud",
+      "blind_id": "6A38",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4,
+        "density": 4,
+        "typography": 3.5,
+        "geometry": 4,
+        "state_clarity": 3,
+        "calmness": 4,
+        "craft": 3.5,
+        "distinctiveness": 2.5
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": false,
+          "ai_look": [],
+          "why": "シンプルで実装完度が高いが、視認性において一線級の差別化がない"
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "見出し＋1行の限定条件という、無駄のない2行構成で、プライバシー文言も具体的（「質問したときだけ」）。ただし操作の主導線が×のみで、一線級のトーストが持つ「確認/設定へ」の出口が絵から見えない点が弱い。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "generic placeholder icon standing in for what should be a real content preview"
+          ],
+          "why": "Clean, calm, well-proportioned toast with clear copy, but omitting an actual screenshot thumbnail is a real gap next to how top apps confirm captured content."
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.granted",
+      "blind_id": "8F53",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "avg": {},
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "SUPREME",
+          "valid": false,
+          "ai_look": [],
+          "why": "成功通知の最適な表現。余白、色彩、形状、タイポグラフィが完璧に調和。欠陥なし。一線級製品と並べても遜色ない"
+        },
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": false,
+          "ai_look": [
+            "成功＝緑の丸チェックという定番記号への依存",
+            "対象を書かない空語的な完了メッセージ（「設定できました」だけ）"
+          ],
+          "why": "チェックバッジとテキストピルが視覚的に結び付いておらず（揃っていない・離れている）、単一の成功状態として読めない。加えて何が完了したのかが絵の中に無い。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "BELOW_BAR",
+          "valid": false,
+          "ai_look": [
+            "two disconnected components (text pill + icon circle) glued side-by-side instead of one unified toast"
+          ],
+          "why": "The success icon is detached from its message pill with a visible gap, a concrete geometry/craft flaw rather than a stylistic difference."
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.target-add",
+      "blind_id": "BC94",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4,
+        "density": 3.67,
+        "typography": 4,
+        "geometry": 3.67,
+        "state_clarity": 3.33,
+        "calmness": 3.33,
+        "craft": 3.33,
+        "distinctiveness": 2
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "macOS 純正品質として完璧だが、OS標準デザインのため個性・差別化がない。デザイン革新性に欠ける"
+        },
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "OS 標準画面に後付けの指示バブルを重ねる、チュートリアル的な説明過多の被せ方"
+          ],
+          "why": "土台は macOS 標準の完成した画面だが、被せられた指示層が破綻している。「Astra を追加」と言いながらリストには「AstraDbg」が既に存在し、同一か別かが読めない。さらに一覧先頭が「2.1.260」というバージョン文字列で、識別可能な名前になっていない。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "unanchored tooltip with no clear pointer to its target, relying on the user to infer which control '+' means"
+          ],
+          "why": "Debug-build naming ('AstraDbg') leaks next to the product's real name ('Astra') in a user-facing onboarding screenshot, and the guidance bubble isn't visually anchored to the control it refers to — both are concrete, visible defects."
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "supreme": 0,
+    "competitive": 7,
+    "below_bar": 1,
+    "not_enough_evidence": 2,
+    "models": [
+      "haiku",
+      "opus",
+      "sonnet"
+    ]
+  },
+  "gate": "FAIL",
+  "ab_competitor": "AUTOMATION_MISSING: 競合の実 UI 画像（ASTRA_COMPETITORS_DIR）が無い。画面収録 TCC と driver が要る"
+}

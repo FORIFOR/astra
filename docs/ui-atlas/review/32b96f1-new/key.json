@@ -1,0 +1,21 @@
+{
+  "key": {
+    "6FF3": "screenshot.detected",
+    "95F6": "screenshot.attached-cloud",
+    "E897": "guided-setup.intro",
+    "1968": "guided-setup.target-highlighted",
+    "19ED": "guided-setup.target-missing",
+    "D11C": "guided-setup.granted",
+    "583C": "guided-setup.denied"
+  },
+  "order": [
+    "1968",
+    "19ED",
+    "583C",
+    "6FF3",
+    "95F6",
+    "D11C",
+    "E897"
+  ],
+  "batch": 6
+}

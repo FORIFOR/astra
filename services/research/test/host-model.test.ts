@@ -165,3 +165,29 @@ describe('a model that runs on the device', () => {
     await expect(model(failing).decompose('q', 3)).rejects.toMatchObject({ name: 'HostOffline' });
   });
 });
+
+describe('asking about a screenshot on the device', () => {
+  it('passes the images by id so the device reads the pixels itself', async () => {
+    const { host: h, asks } = host(() => ({ answer: '設定画面です。' }));
+    const text = await model(h).answer('これ何？', undefined, [
+      { id: 'shot-1', kind: 'screenshot', label: 'スクリーンショット（たった今）' },
+    ]);
+    expect(text).toBe('設定画面です。');
+    expect(asks[0]!.toolId).toBe('llm.answer');
+    expect(asks[0]!.args['images']).toEqual([
+      { id: 'shot-1', kind: 'screenshot', label: 'スクリーンショット（たった今）' },
+    ]);
+  });
+
+  it('sends no images key at all when nothing was attached', async () => {
+    const { host: h, asks } = host(() => ({ answer: 'ok' }));
+    await model(h).answer('q');
+    expect('images' in asks[0]!.args).toBe(false);
+  });
+});
+
+it('rejects a malformed JSON fragment instead of publishing it as a written answer', async () => {
+  const { host: h } = host(() => ({ answer: '{', text: '{}' }));
+  await expect(model(h).answer('write a document')).rejects.toThrow('form we could read');
+  await expect(model(h).compose('write a document')).rejects.toThrow('form we could read');
+});

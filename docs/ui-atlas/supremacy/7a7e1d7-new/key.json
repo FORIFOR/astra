@@ -1,0 +1,21 @@
+{
+  "key": {
+    "E3EE": "screenshot.detected",
+    "F5DF": "screenshot.attached-cloud",
+    "9AE8": "guided-setup.intro",
+    "4E95": "guided-setup.target-highlighted",
+    "69AE": "guided-setup.target-missing",
+    "1FA3": "guided-setup.granted",
+    "50D2": "guided-setup.denied"
+  },
+  "order": [
+    "1FA3",
+    "4E95",
+    "50D2",
+    "69AE",
+    "9AE8",
+    "E3EE",
+    "F5DF"
+  ],
+  "batch": 6
+}

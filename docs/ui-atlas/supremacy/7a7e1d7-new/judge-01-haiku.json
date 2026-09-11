@@ -1,0 +1,190 @@
+{
+  "pages": {
+    "1FA3": {
+      "visible_text": [
+        "画面収録を設定できました",
+        "✓",
+        "×",
+        "circular icon button"
+      ],
+      "observation": {
+        "happening": "Success notification banner indicating screen recording settings have been configured",
+        "most_important": "Green checkmark + positive message conveys successful completion",
+        "next_action": "User can dismiss via close button or proceed with circular icon action",
+        "anomalies": []
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 5,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 5,
+        "calmness": 5,
+        "craft": 4,
+        "distinctiveness": 3
+      },
+      "ai_look": [],
+      "verdict": "COMPETITIVE",
+      "why": "Polished, minimal success notification with clear state signaling. Follows proven pattern but lacks distinctive personality.",
+      "confidence": "high"
+    },
+    "4E95": {
+      "visible_text": [
+        "AnyDesk",
+        "AstraDbg",
+        "ChatGPT",
+        "を再起動すると使えます",
+        "notification badge (1)",
+        "toggle switches (3)"
+      ],
+      "observation": {
+        "happening": "Settings panel showing app integrations with toggle switches; warning message spans across content",
+        "most_important": "Configuration list of three services, all toggled on; instructional text warns that restart is needed",
+        "next_action": "User should toggle services and restart application",
+        "anomalies": [
+          "Warning text placement splits across multiple lines awkwardly",
+          "Alignment between toggles and labels appears slightly misaligned",
+          "Visual weight imbalance between items"
+        ]
+      },
+      "scores": {
+        "hierarchy": 3,
+        "density": 4,
+        "typography": 4,
+        "geometry": 3,
+        "state_clarity": 3,
+        "calmness": 3,
+        "craft": 3,
+        "distinctiveness": 2
+      },
+      "ai_look": [
+        "generic settings list template",
+        "toggle controls follow standard mobile pattern without refinement"
+      ],
+      "verdict": "BELOW_BAR",
+      "why": "Warning message placement creates visual confusion; text wrapping and alignment issues reduce craft. State clarity of warning vs. configuration is ambiguous.",
+      "confidence": "high"
+    },
+    "50D2": {
+      "visible_text": [
+        "設定画面を開けませんでした",
+        "プライバシーセキュリティ: 画面設録",
+        "もう一度開く",
+        "⚠",
+        "×"
+      ],
+      "observation": {
+        "happening": "Error notification indicating failure to open settings screen for privacy/screen recording",
+        "most_important": "Orange warning icon + error message clearly signals failure; action button offers recovery path",
+        "next_action": "User can click 'もう一度開く' (Open again) to retry or dismiss",
+        "anomalies": []
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 4,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 4,
+        "calmness": 4,
+        "craft": 4,
+        "distinctiveness": 3
+      },
+      "ai_look": [],
+      "verdict": "COMPETITIVE",
+      "why": "Well-executed error notification with clear problem statement and recovery action. Professional craft but follows standard error notification pattern.",
+      "confidence": "high"
+    },
+    "69AE": {
+      "visible_text": [
+        "Astra を自動で見つけられません",
+        "画面設録の一覧で Astra をオンにしてください",
+        "システム設定を開く",
+        "×"
+      ],
+      "observation": {
+        "happening": "Instructional notification explaining Astra cannot be auto-detected; directs user to system settings",
+        "most_important": "Problem statement + clear instruction + action button path users toward solution",
+        "next_action": "Click 'システム設定を開く' (Open system settings) to enable Astra",
+        "anomalies": []
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 4,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 4,
+        "calmness": 4,
+        "craft": 4,
+        "distinctiveness": 3
+      },
+      "ai_look": [],
+      "verdict": "COMPETITIVE",
+      "why": "Clear instructional design with hierarchical messaging. Well-proportioned and calm. Lacks distinctive design but achieves usability goals effectively.",
+      "confidence": "high"
+    },
+    "9AE8": {
+      "visible_text": [
+        "画面収録が未許可です",
+        "システム設定で Astra をオンにしてください",
+        "システム設定を開く",
+        "×"
+      ],
+      "observation": {
+        "happening": "Permission notification indicating screen recording is not authorized; offers path to enable in system settings",
+        "most_important": "Permission state + actionable instruction + direct system settings link",
+        "next_action": "User clicks 'システム設定を開く' (Open system settings) to grant permission",
+        "anomalies": []
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 4,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 4,
+        "calmness": 4,
+        "craft": 4,
+        "distinctiveness": 3
+      },
+      "ai_look": [],
+      "verdict": "COMPETITIVE",
+      "why": "Polished permission notification with actionable messaging. Professional presentation but follows standard system notification pattern.",
+      "confidence": "high"
+    },
+    "E3EE": {
+      "visible_text": [
+        "スクリーンショット",
+        "認識しました・その先まけけます"
+      ],
+      "observation": {
+        "happening": "Dark toast notification announcing screenshot action completion",
+        "most_important": "Minimal dark toast design; subtitle text appears corrupted or cut off, making message unclear",
+        "next_action": "Cannot determine due to text illegibility",
+        "anomalies": [
+          "Subtitle text is garbled or severely cut off ('その先まけけます' appears corrupted)",
+          "Message state is ambiguous due to text rendering issue",
+          "Unclear what 'completion' or 'next' state is being communicated"
+        ]
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 5,
+        "typography": 2,
+        "geometry": 4,
+        "state_clarity": 2,
+        "calmness": 5,
+        "craft": 3,
+        "distinctiveness": 3
+      },
+      "ai_look": [],
+      "verdict": "BELOW_BAR",
+      "why": "Text rendering failure or corruption makes message illegible. State clarity is broken—users cannot confirm what was completed or what to do next. This is a defect, not a minor weakness.",
+      "confidence": "high"
+    }
+  },
+  "_judge": {
+    "model": "haiku",
+    "cost_usd": 0.057019200000000006,
+    "turns": 7,
+    "duration_ms": 46701
+  }
+}

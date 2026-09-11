@@ -1,0 +1,83 @@
+{
+  "pages": {
+    "3A2D": {
+      "visible_text": [
+        "こんばんは",
+        "何を終わらせますか?",
+        "録音を始める",
+        "前回の設定でその場で喋り始めます",
+        "MOPITA",
+        "朝日 15:00",
+        "要件定義書のレビューを返す",
+        "面接の日程候補を 2 名に返す",
+        "待っていること"
+      ],
+      "observation": {
+        "happening": "A task/productivity dashboard showing aggregated work items from multiple services (Gmail, Outlook, To Do, calendar). The screen displays a collapsed list of prioritized tasks with visual indicators (red/yellow pills) and next actions.",
+        "most_important": "Primary voice-recording action is prominently displayed with clear next-step instruction. Task items are scannable with source system labels and deadline information embedded.",
+        "next_action": "User can expand individual tasks, close the voice recording prompt, or navigate to Work/Library/Apps via sidebar.",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "5472": {
+      "visible_text": [
+        "こんばんは",
+        "何を終わらせますか?",
+        "録音を始める",
+        "MOPITA",
+        "朝日 15:00",
+        "閉じる",
+        "なぜ重要?",
+        "朝日が期限",
+        "3 日未送信",
+        "出所",
+        "Gmail",
+        "Re: 見東 v2 の二確認"
+      ],
+      "observation": {
+        "happening": "The same dashboard with the first task expanded inline. The MOPITA task shows collapsible details: why it matters, deadline status, unread count, and source information (Gmail, meeting sections).",
+        "most_important": "Expand/collapse interaction is smooth and integrated into the list. Details layer cleanly without disrupting the overall task list structure. Close button provides clear affordance to collapse.",
+        "next_action": "User can close the expanded view, view Gmail thread details, or interact with the meeting section.",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "65E2": {
+      "visible_text": [
+        "Apps",
+        "Plugins",
+        "Connectors",
+        "Connectors",
+        "外部サービスとの接続",
+        "つなぐまで Astra はそのサービスを読みません",
+        "仕事のコンテキスト",
+        "Gmail",
+        "Google Calendar",
+        "Outlook",
+        "Microsoft To Do",
+        "Finder",
+        "連携済み"
+      ],
+      "observation": {
+        "happening": "An integrations/connectors configuration page showing available external services (email, calendar, task managers) with radio buttons for each. Finder is marked as already connected (blue card with checkmark).",
+        "most_important": "Clear categorization under 'Work Context' with explanatory text for each service describing what data/permissions each connector requires. Visual distinction (blue card) for the already-connected Finder integration.",
+        "next_action": "User can select a service to connect, view its requirements, or navigate back using the sidebar.",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    }
+  },
+  "_judge": {
+    "model": "haiku",
+    "cost_usd": 0.060514,
+    "turns": 4,
+    "duration_ms": 40223
+  }
+}

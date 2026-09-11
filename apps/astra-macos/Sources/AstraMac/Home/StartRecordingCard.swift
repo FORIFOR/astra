@@ -44,6 +44,7 @@ struct StartRecordingCard: View {
             }
             .buttonStyle(AstraControlStyle(radius: 12, base: 0.0))
             .help("録音の設定を決めて始める")
+            .accessibilityLabel("録音の設定を決めて始める")
             .accessibilityIdentifier("startRecordingOptions")
         }
         .background(

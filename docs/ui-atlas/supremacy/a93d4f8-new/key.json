@@ -1,0 +1,27 @@
+{
+  "key": {
+    "0DAC": "screenshot.detected",
+    "6A38": "screenshot.attached-cloud",
+    "1FC3": "guided-setup.intro",
+    "22B2": "guided-setup.target-found",
+    "BC94": "guided-setup.target-add",
+    "5068": "guided-setup.target-highlighted",
+    "3090": "guided-setup.repositioned",
+    "3911": "guided-setup.target-missing",
+    "8F53": "guided-setup.granted",
+    "2AFB": "guided-setup.denied"
+  },
+  "order": [
+    "0DAC",
+    "1FC3",
+    "22B2",
+    "2AFB",
+    "3090",
+    "3911",
+    "5068",
+    "6A38",
+    "8F53",
+    "BC94"
+  ],
+  "batch": 6
+}

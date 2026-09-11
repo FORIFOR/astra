@@ -28,6 +28,9 @@
       "path": "../../services/meeting"
     },
     {
+      "path": "../../services/world-model"
+    },
+    {
       "path": "../../services/plugin-registry"
     },
     {

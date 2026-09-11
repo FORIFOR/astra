@@ -17,16 +17,20 @@ import { EXTERNAL_SEND_SCOPES, PERMISSION_SCOPES, riskRank } from '@astra/contra
 import {
   CALENDAR_OPERATIONS,
   GMAIL_OPERATIONS,
+  MICROSOFT_OPERATIONS,
   googleScopesFor,
+  microsoftScopesFor,
   permissionsFromGoogleScopes,
+  permissionsFromMicrosoftScopes,
   type OperationDecl,
 } from '@astra/service-connectors';
+import { CONNECTORS, TOOL_CONNECTOR } from '@astra/worker-agent-host';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 
 interface Manifest {
   permissions: string[];
-  connectors: { scopes: string[] }[];
+  connectors: { id: string; scopes: string[]; grants: string[]; purpose?: string | null }[];
   tools: { id: string; risk: string; requires_confirmation?: boolean }[];
 }
 
@@ -43,6 +47,13 @@ const GMAIL_TOOLS: Record<string, OperationDecl> = {
   'mail.trash': GMAIL_OPERATIONS.trash,
 };
 
+const OUTLOOK_TOOLS: Record<string, OperationDecl> = {
+  'outlook.mail.search': MICROSOFT_OPERATIONS.mailList,
+  'outlook.mail.read': MICROSOFT_OPERATIONS.mailGet,
+  'outlook.calendar.list_events': MICROSOFT_OPERATIONS.calendarList,
+  'outlook.mail.reply': MICROSOFT_OPERATIONS.mailReply,
+};
+
 const CALENDAR_TOOLS: Record<string, OperationDecl> = {
   'calendar.list_events': CALENDAR_OPERATIONS.list,
   'calendar.get_event': CALENDAR_OPERATIONS.get,
@@ -50,9 +61,10 @@ const CALENDAR_TOOLS: Record<string, OperationDecl> = {
 };
 
 describe('the connector manifests match what is implemented', () => {
-  for (const [name, tools] of [
-    ['gmail', GMAIL_TOOLS],
-    ['calendar', CALENDAR_TOOLS],
+  for (const [name, tools, scopesFor, readBack] of [
+    ['gmail', GMAIL_TOOLS, googleScopesFor, permissionsFromGoogleScopes],
+    ['calendar', CALENDAR_TOOLS, googleScopesFor, permissionsFromGoogleScopes],
+    ['outlook', OUTLOOK_TOOLS, microsoftScopesFor, permissionsFromMicrosoftScopes],
   ] as const) {
     it(`${name}: declares no tool that does not exist`, async () => {
       const declared = (await manifest(name)).tools.map((t) => t.id).sort();
@@ -87,20 +99,85 @@ describe('the connector manifests match what is implemented', () => {
       }
     });
 
-    it(`${name}: asks the provider for exactly the scopes its permissions need`, async () => {
-      const declared = (await manifest(name)).permissions as never;
-      const asked = (await manifest(name)).connectors.flatMap((c) => c.scopes).sort();
-      expect(asked).toEqual(googleScopesFor(declared));
+    it(`${name}: each connection asks the provider for exactly the scopes its grants need`, async () => {
+      // 同意は接続（capability）ごと。接続が要求する scope は、その接続が与える許可の分だけ。
+      for (const c of (await manifest(name)).connectors) {
+        expect(c.scopes.slice().sort(), c.id).toEqual(scopesFor(c.grants as never));
+      }
     });
 
-    it(`${name}: would read back the permissions it asked for`, async () => {
+    it(`${name}: the connections together cover the permissions, each once`, async () => {
+      const m = await manifest(name);
+      const all = m.connectors.flatMap((c) => c.grants).sort();
+      expect(all).toEqual([...m.permissions].sort());
+    });
+
+    it(`${name}: would read back the permissions each connection asked for`, async () => {
       // 要求 → 同意 → 記録 が閉じているか。ここが開いていると、
       // 許したはずの操作が動かない、あるいはその逆になる。
-      const declared = (await manifest(name)).permissions as never;
-      const granted = googleScopesFor(declared).join(' ');
-      expect(permissionsFromGoogleScopes(granted).sort()).toEqual([...declared].sort());
+      const m = await manifest(name);
+      for (const c of m.connectors) {
+        const granted = scopesFor(c.grants as never).join(' ');
+        const readBackPermissions = readBack(granted);
+        // 与えると言った許可は全部読み戻せる。Google の広い scope（modify ⊇ readonly）が
+        // 余分に含む分は plugin の許可の中に収まる（宣言に無い許可は生まれない）。
+        for (const g of c.grants) expect(readBackPermissions, c.id).toContain(g);
+        for (const p of readBackPermissions)
+          expect(m.permissions, `${c.id} reads back ${p}`).toContain(p);
+      }
     });
   }
+
+  /**
+   * GOOGLE_READ_ONLY_FIRST。
+   *
+   * 「Work Context は読むだけ」という画面の説明と、OAuth の事実を一致させる。
+   * 読む接続に書く scope が 1 つも無く、書く接続は理由（purpose）を持ち、
+   * 書く tool は書く接続に、読む tool は読む接続に結ばれている。
+   */
+  describe('read-only first (GOOGLE_READ_ONLY_FIRST)', () => {
+    const WRITE_SCOPE =
+      /(modify|send|compose|calendar\.events|calendar$|mail\.google\.com|Mail\.Send|ReadWrite)/;
+
+    for (const [name, readId, actionsId] of [
+      ['gmail', 'gmail', 'gmail-actions'],
+      ['calendar', 'google-calendar', 'google-calendar-actions'],
+      ['outlook', 'outlook', 'outlook-actions'],
+    ] as const) {
+      it(`${name}: the read connection holds no write scope`, async () => {
+        const read = (await manifest(name)).connectors.find((c) => c.id === readId)!;
+        expect(read.scopes.filter((s) => WRITE_SCOPE.test(s))).toEqual([]);
+        expect(read.grants.every((g) => g.endsWith('.read'))).toBe(true);
+      });
+
+      it(`${name}: every write permission lives in the actions connection, with a purpose`, async () => {
+        const m = await manifest(name);
+        const actions = m.connectors.find((c) => c.id === actionsId)!;
+        const writes = m.permissions.filter((p) => !p.endsWith('.read'));
+        expect(actions.grants.slice().sort()).toEqual(writes.sort());
+        expect((actions.purpose ?? '').length).toBeGreaterThan(0);
+      });
+    }
+
+    it('binds read tools to read connections and write tools to actions connections', () => {
+      for (const [toolId, key] of Object.entries(TOOL_CONNECTOR)) {
+        const risk = { ...GMAIL_TOOLS, ...CALENDAR_TOOLS, ...OUTLOOK_TOOLS }[toolId]?.risk;
+        if (!risk) continue; // To Do は読む tool しか無い
+        if (risk === 'READ') expect(key, toolId).not.toMatch(/-actions$/);
+        else expect(key, toolId).toMatch(/-actions$/);
+      }
+    });
+
+    it('the device worker names the same connections the manifests declare', async () => {
+      for (const name of ['gmail', 'calendar', 'outlook', 'microsoft-todo'] as const) {
+        for (const c of (await manifest(name)).connectors) {
+          const entry = CONNECTORS[c.id as keyof typeof CONNECTORS];
+          expect(entry, `${name}/${c.id}`).toBeDefined();
+          expect(entry.connectorId).toBe(c.id);
+        }
+      }
+    });
+  });
 
   it('marks everything that leaves the tenant as needing a person', async () => {
     for (const name of ['gmail', 'calendar'] as const) {
@@ -128,11 +205,12 @@ describe('the connector manifests match what is implemented', () => {
     expect(GMAIL_OPERATIONS.send.scope).not.toBe(GMAIL_OPERATIONS.draft.scope);
   });
 
-  it('does not ask the consent screen for the same thing twice', async () => {
-    // gmail.modify は readonly と compose を含む。3 つ並べると同意画面が読めなくなる。
-    const asked = (await manifest('gmail')).connectors.flatMap((c) => c.scopes);
-    expect(asked).not.toContain('https://www.googleapis.com/auth/gmail.readonly');
-    expect(asked).toContain('https://www.googleapis.com/auth/gmail.modify');
-    expect(asked).toContain('https://www.googleapis.com/auth/gmail.send');
+  it('does not ask the consent screen for the same thing twice within one connection', async () => {
+    // gmail.modify は readonly と compose を含む。送る接続で 3 つ並べると同意画面が読めなくなる。
+    const actions = (await manifest('gmail')).connectors.find((c) => c.id === 'gmail-actions')!;
+    expect(actions.scopes).not.toContain('https://www.googleapis.com/auth/gmail.readonly');
+    expect(actions.scopes).not.toContain('https://www.googleapis.com/auth/gmail.compose');
+    expect(actions.scopes).toContain('https://www.googleapis.com/auth/gmail.modify');
+    expect(actions.scopes).toContain('https://www.googleapis.com/auth/gmail.send');
   });
 });

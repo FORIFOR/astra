@@ -1,0 +1,66 @@
+{
+  "accessibility-guide-dark" : {
+    "fittingHeight" : 238,
+    "fittingWidth" : 312,
+    "height" : 238,
+    "width" : 312,
+    "windowHeight" : 238,
+    "windowWidth" : 312
+  },
+  "accessibility-guide-light" : {
+    "fittingHeight" : 238,
+    "fittingWidth" : 312,
+    "height" : 238,
+    "width" : 312,
+    "windowHeight" : 238,
+    "windowWidth" : 312
+  },
+  "confirmed-dark" : {
+    "fittingHeight" : 78,
+    "fittingWidth" : 312,
+    "height" : 78,
+    "width" : 312,
+    "windowHeight" : 78,
+    "windowWidth" : 312
+  },
+  "confirmed-light" : {
+    "fittingHeight" : 78,
+    "fittingWidth" : 312,
+    "height" : 78,
+    "width" : 312,
+    "windowHeight" : 78,
+    "windowWidth" : 312
+  },
+  "settings-pending-dark" : {
+    "fittingHeight" : 620,
+    "fittingWidth" : 460,
+    "height" : 620,
+    "width" : 460,
+    "windowHeight" : 652,
+    "windowWidth" : 460
+  },
+  "settings-pending-light" : {
+    "fittingHeight" : 620,
+    "fittingWidth" : 460,
+    "height" : 620,
+    "width" : 460,
+    "windowHeight" : 652,
+    "windowWidth" : 460
+  },
+  "settings-refreshed-dark" : {
+    "fittingHeight" : 620,
+    "fittingWidth" : 460,
+    "height" : 620,
+    "width" : 460,
+    "windowHeight" : 652,
+    "windowWidth" : 460
+  },
+  "settings-refreshed-light" : {
+    "fittingHeight" : 620,
+    "fittingWidth" : 460,
+    "height" : 620,
+    "width" : 460,
+    "windowHeight" : 652,
+    "windowWidth" : 460
+  }
+}

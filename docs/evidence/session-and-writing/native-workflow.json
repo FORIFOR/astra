@@ -1,0 +1,29 @@
+{
+  "task": {
+    "id": "01a08ecc-7ac0-7000-a061-861756705923",
+    "status": "COMPLETED",
+    "created_at": "2026-09-11T04:49:20.644Z",
+    "started_at": "2026-09-11T04:49:20.700Z",
+    "completed_at": "2026-09-11T04:50:06.473Z",
+    "result_artifact_id": "01a08ecd-2dd4-7000-84b9-76fbfd28de3a"
+  },
+  "step": {
+    "id": "01a08ecc-7b80-7000-aad9-e08f277fa5ff",
+    "tool": "llm.compose",
+    "status": "DONE",
+    "seconds": 44.457
+  },
+  "native_request_id": "C37522EA-3773-461F-9323-2E77ED7BF079",
+  "generation_calls": 1,
+  "saved_bytes": 4827,
+  "saved_text_matches_model": true,
+  "ui_journey": [
+    "Home submit",
+    "leave to Home during generation",
+    "reopen from Home",
+    "read complete result in Work",
+    "copy feedback",
+    "native Save panel to Markdown"
+  ],
+  "release": "hold"
+}

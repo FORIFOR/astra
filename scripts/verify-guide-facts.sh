@@ -148,7 +148,7 @@ if [[ $fail -eq 0 ]]; then
   shots="${ASTRA_GUIDE_CLEAN_SHOTS:-}"
   if [[ -z "$shots" || ! -f "$shots/06-main-home.png" ]]; then
     shots="$TMP/shots"
-    pkill -9 -x AstraMac 2>/dev/null; sleep 0.5
+    # The fixture captures its own window IDs. Never terminate the user's running Astra.
     ASTRA_DATA_ROOT="$TMP/data" "$BIN" --selftest shots "$shots" 2>&1 | grep -E '^SELFTEST_(OK|FAIL)' || { echo "  FAIL: 初回起動の面が撮れない"; fail=1; }
   fi
   if [[ $fail -eq 0 ]]; then

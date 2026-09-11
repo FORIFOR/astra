@@ -207,7 +207,7 @@ export class GmailConnector {
    * 承認は `proof` で示す。無ければ `ApprovalRequired` を投げて、何も送らない。
    */
   async send(
-    message: DraftMessage,
+    message: DraftMessage & { readonly threadId?: string },
     proof: ApprovalProof | undefined,
     signal?: AbortSignal,
   ): Promise<{ messageId: string; threadId: string }> {
@@ -216,11 +216,47 @@ export class GmailConnector {
     assertSendable(message);
     const result = await callJson<{ id?: string; threadId?: string }>(
       `${BASE}/messages/send`,
-      { method: 'POST', body: { raw: encodeMessage(message) } },
+      {
+        method: 'POST',
+        body: {
+          raw: encodeMessage(message),
+          ...(message.threadId ? { threadId: message.threadId } : {}),
+        },
+      },
       this.#deps,
       signal,
     );
     return { messageId: result.id ?? '', threadId: result.threadId ?? '' };
+  }
+
+  /** Resolve the provider message ID to its RFC Message-ID before replying. */
+  async reply(
+    originalId: string,
+    message: DraftMessage,
+    proof: ApprovalProof | undefined,
+    expectedThread: string | undefined,
+    signal?: AbortSignal,
+  ): Promise<{ messageId: string; threadId: string }> {
+    requireScope(GMAIL_OPERATIONS.send, this.#deps.grantedScopes);
+    requireApproval(GMAIL_OPERATIONS.send, proof, (this.#deps.now ?? (() => new Date()))());
+    const original = await this.get(originalId, signal);
+    if (
+      !original.messageIdHeader ||
+      !original.threadId ||
+      (expectedThread && original.threadId !== expectedThread)
+    ) {
+      throw new ConnectorError('provider_error', 'the original reply thread could not be verified');
+    }
+    return this.send(
+      {
+        ...message,
+        inReplyTo: original.messageIdHeader,
+        references: [original.messageIdHeader],
+        threadId: original.threadId,
+      },
+      proof,
+      signal,
+    );
   }
 
   /**

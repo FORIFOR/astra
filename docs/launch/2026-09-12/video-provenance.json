@@ -1,0 +1,21 @@
+{
+  "captured": "2026-09-12",
+  "model": "Ollama qwen3.5:9b",
+  "request_to_completion_seconds": 31.9,
+  "external_model_requests": 0,
+  "fixture": "synthetic error screen; no real account data",
+  "method": "macOS screencapture window capture, native Astra UI actions, actual local model response, native Markdown save",
+  "edits": "30-second montage; window crops; title captions; wait trimmed; 0.083-second recorded Dock offer held for 3 seconds; answer reopened after save",
+  "raw_sha256": {
+    "screenshot-question-raw.mov": "8ff0d40229962098a75fedd97db853da088aead44cd5785340349305f94c9bcd",
+    "workflow-raw.mov": "497361795b0831a97f48e5051b793d956afc9abf0d121b5bf7fcba7bb2f6cf24",
+    "answer-raw.mov": "1c379dd259deeb2e64e2a05f7d8d8e18430662854b3fbd1b858ed5faa67f8257",
+    "offer-raw.mov": "0e0d22d1a90e8cc231af6376fe364f1048cfce6a4860afc82175cb442d9a1edd",
+    "fixture-raw.mov": "8924ceb903c0e6dc127e8b2372b239098042b3bab88e0b8c5d59d82944a449dc",
+    "screenshot-success-raw.mov": "c27e555ee86f39ddfc6d5a1f04e0954b850412397e818a4dac49f9c30a2c04b7"
+  },
+  "published_sha256": {
+    "astra-demo-web.mp4": "0da71f8f3e8255da4282c6e23239e4409312fc7417c573853e66e3b6de11fbcb",
+    "astra-demo-social.mp4": "d6ea61b3913ab8b38c29ece822a2ea48cec2f55bea4ad262373ce8a20562850a"
+  }
+}

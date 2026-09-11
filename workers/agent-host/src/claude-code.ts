@@ -62,7 +62,7 @@ export const runCommand: RunCommand = (command, args, options) =>
       { timeout: options.timeoutMs, maxBuffer: 32 * 1024 * 1024 },
       (error, stdout, stderr) => {
         resolve({
-          code: (error as { code?: number } | null)?.code ?? 0,
+          code: error ? (error.killed ? 124 : typeof error.code === 'number' ? error.code : 1) : 0,
           stdout,
           stderr,
           // ENOENT は code に文字列が入る。呼び出し側で見分けられるよう stderr に残す
@@ -97,6 +97,7 @@ const DEFAULT_TIMEOUT_MS = 120_000;
  */
 export function failureFrom(result: RunResult): ClaudeCodeFailure | null {
   if (result.code === 0) return null;
+  if (result.code === 124) return 'timed_out';
   if (result.code === null || /ENOENT|command not found/i.test(result.stderr)) {
     return 'not_installed';
   }

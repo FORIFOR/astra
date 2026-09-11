@@ -15,7 +15,13 @@
  */
 import { canonicalSha256 } from '@astra/contracts';
 import { groundedFindings } from './anthropic.js';
-import type { ExtractedClaim, Finding, LanguageModel, SearchHit } from './providers.js';
+import type {
+  ExtractedClaim,
+  Finding,
+  LanguageModel,
+  SearchHit,
+  VisualAttachment,
+} from './providers.js';
 
 /** 端末への受け渡し口。`@astra/service-agent-host` の `HostStepExecutor` が満たす。 */
 export interface HostCall {
@@ -111,18 +117,33 @@ export class HostLanguageModel implements LanguageModel {
     );
   }
 
-  async answer(question: string, context?: string): Promise<string> {
+  async answer(
+    question: string,
+    context?: string,
+    attachments?: readonly VisualAttachment[],
+  ): Promise<string> {
     const result = await this.#ask('llm.answer', {
       question,
       ...(context ? { context } : {}),
+      // 画像は id で渡す。端末が `visual-context/<id>.png` を読む。画素は cloud を通らない。
+      ...(attachments && attachments.length > 0
+        ? { images: attachments.map((a) => ({ id: a.id, kind: a.kind, label: a.label })) }
+        : {}),
     });
     return textOf(result, 'answer');
   }
 
-  async compose(instruction: string, context?: string): Promise<string> {
+  async compose(
+    instruction: string,
+    context?: string,
+    attachments?: readonly VisualAttachment[],
+  ): Promise<string> {
     const result = await this.#ask('llm.compose', {
       instruction,
       ...(context ? { context } : {}),
+      ...(attachments && attachments.length > 0
+        ? { images: attachments.map((a) => ({ id: a.id, kind: a.kind, label: a.label })) }
+        : {}),
     });
     return textOf(result, 'text');
   }
@@ -190,7 +211,7 @@ function stringsOf(result: unknown, key: string): string[] {
  */
 function textOf(result: unknown, key: string): string {
   const value = (result as Record<string, unknown> | null)?.[key];
-  if (typeof value !== 'string' || value.trim().length === 0) {
+  if (typeof value !== 'string' || value.trim().length === 0 || /^[\s{}\[\]\":,`]*$/.test(value)) {
     throw new Error('the model did not answer in a form we could read');
   }
   return value.trim();

@@ -22,7 +22,7 @@ import {
   videoDataSources,
 } from '@astra/service-agent-runtime';
 import { AgentHostService, HostBridge, HostStepExecutor } from '@astra/service-agent-host';
-import { WorldModelService } from '@astra/service-world-model';
+import { WorkContextService, WorldModelService } from '@astra/service-world-model';
 import { ConversationService } from '@astra/service-conversation';
 import {
   ResearchLedgerService,
@@ -142,6 +142,7 @@ async function main(): Promise<void> {
   // gateway は束ねるだけ（実装仕様 §5.1）。
   const domain = new DomainService({ db });
   const world = new WorldModelService({ db });
+  const work = new WorkContextService({ db, world });
   const conversations = new ConversationService({ db });
   const dataSources = composeDataSources(
     researchDataSources(db),
@@ -184,6 +185,7 @@ async function main(): Promise<void> {
     dataSources,
     domain: { domain, definitions: entityDefinitions(assetReader(registry)) },
     world,
+    work,
     conversations,
     connections,
     voice: {

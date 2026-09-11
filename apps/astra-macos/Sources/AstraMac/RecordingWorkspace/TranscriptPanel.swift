@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// 道具箱の選択に応じて中身を出す面: 文字起こし / 翻訳 / 字幕。
-/// transcript は STT が埋める実データ。翻訳は Agent 経由。字幕は直近の 1 行を大きく。
+/// 道具箱の選択に応じて中身を出す面: 原文 / 翻訳。
+/// 原文は STT の実データをライブ表示。翻訳は確定した発言を順に処理する。
 struct TranscriptPanel: View {
     @Environment(\.colorScheme) private var scheme
     private var dark: Bool { scheme == .dark }
@@ -9,6 +9,15 @@ struct TranscriptPanel: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
+            if state.isRecording, !state.transcript.isEmpty,
+               let failure = RecordingRuntime.shared.liveTranscriptionFailure {
+                Text(failure)
+                    .font(.system(size: TypeScale.captionSize))
+                    .foregroundStyle(Palette.danger(dark))
+                    .fixedSize(horizontal: false, vertical: true)
+                Button(Facts.liveRetry) { RecordingRuntime.shared.retryLiveTranscription() }
+                    .accessibilityIdentifier("retryLiveTranscription")
+            }
             content
         }
         .padding(11)
@@ -28,9 +37,9 @@ struct TranscriptPanel: View {
             if state.transcript.isEmpty {
                 // 「まだ発話がありません」は、聞けているのに誰も話していない、という意味になる。
                 // 許可が無くて聞けていないなら、そう言う。待っても何も出ないので。
-                empty(state.permissionIssue == nil
-                      ? "まだ発話がありません。"
-                      : "マイクが使えないので、聞き取れていません。")
+                empty(state.permissionIssue?.transcriptHint
+                      ?? (RecordingRuntime.shared.transcriptionUnavailable && state.isRecording
+                          ? RecordingRuntime.shared.transcriptionFailureMessage : "まだ発話がありません。"))
             } else {
                 // 時刻・話者・本文の 3 列。時刻が無いと、後から音のどこに戻ればよいか分からない。
                 // まだ確定していない行は、薄いだけでは「小声」と見分けが付かないので、
@@ -73,15 +82,7 @@ struct TranscriptPanel: View {
                 }
             }
         case .translation:
-            if state.translating { empty("翻訳中…") }
-            else if state.translatedText.isEmpty { empty("「翻訳」を選ぶと文字起こしを訳します。") }
-            else { ScrollView { Text(state.translatedText).font(.system(size: TypeScale.microSize)).frame(maxWidth: .infinity, alignment: .leading) } }
-        case .captions:
-            VStack { Spacer()
-                Text(state.transcript.last?.text ?? "…")
-                    .font(.system(size: TypeScale.bodySize, weight: .medium)).multilineTextAlignment(.center)
-                    .frame(maxWidth: .infinity)
-                Spacer() }
+            MeetingTranslationView(model: state.translation)
         }
     }
 

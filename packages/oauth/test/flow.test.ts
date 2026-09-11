@@ -257,6 +257,19 @@ describe('exchanging the code', () => {
 });
 
 describe('refreshing', () => {
+  it('requests the connection scopes explicitly when refreshing Microsoft access', async () => {
+    let submitted = '';
+    const next = await refresh(
+      config({ provider: 'microsoft', scopes: ['Mail.Read', 'User.Read'] }),
+      'refresh-value',
+      async (_url, init) => {
+        submitted = String(init?.body);
+        return jsonResponse({ access_token: 'read-access', scope: 'Mail.Read User.Read' });
+      },
+    );
+    expect(new URLSearchParams(submitted).get('scope')).toBe('Mail.Read User.Read');
+    expect(next.grantedScopes).toEqual(['Mail.Read', 'User.Read']);
+  });
   const tokens = (over: Partial<TokenSet> = {}): TokenSet => ({
     accessToken: 'a',
     refreshToken: 'r',
@@ -359,5 +372,26 @@ describe('where the tokens live', () => {
     });
     await tokenStore.forget(ref);
     expect(map.size).toBe(0);
+  });
+});
+
+describe('Microsoft token client binding', () => {
+  it('records the client used for both code exchange and refresh', async () => {
+    const c = config({ provider: 'microsoft', scopes: ['Mail.Read'] });
+    const { pending } = await beginAuthorization(c, () => NOW);
+    const fetchImpl = vi.fn(async () =>
+      jsonResponse({ access_token: 'access', scope: 'Mail.Read' }),
+    );
+    expect((await exchangeCode(pending, 'code', fetchImpl, () => NOW)).clientId).toBe(c.clientId);
+    const renewed = await refresh(c, 'existing-refresh', fetchImpl, () => NOW);
+    expect(renewed.clientId).toBe(c.clientId);
+    expect(renewed.refreshToken).toBe('existing-refresh');
+  });
+  it('does not refresh Microsoft without explicit scopes', async () => {
+    const fetchImpl = vi.fn();
+    await expect(
+      refresh(config({ provider: 'microsoft', scopes: [] }), 'refresh', fetchImpl),
+    ).rejects.toThrow();
+    expect(fetchImpl).not.toHaveBeenCalled();
   });
 });

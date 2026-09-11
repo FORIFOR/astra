@@ -1,0 +1,30 @@
+{
+  "captured": "2026-09-11",
+  "source_head": "3e81017",
+  "worktree_changes": true,
+  "round": "docs/ux-benchmark/compare/workspace-ux/ROUND.md",
+  "fixture": "--selftest workspace-ux",
+  "external_requests": 0,
+  "images": {
+    "composer-1162-dark.png": "d3947adb788c228b0d6f71a756bf96192f957c4876ecb404b62a0f0f9758e005",
+    "composer-1162-light.png": "78d92cef463e82344579572cc04649b7c7640469b756a2c219b902d334c0112a",
+    "composer-940-dark.png": "bd5f35eec47be9ab8e49287ccef55f9faa92d508637fadefc8f18c866edbf859",
+    "composer-940-light.png": "55f7cc72375cb711358dec6d07aee6f0f672c487b8581f8b0795c86eb1031563",
+    "connections-1162-dark.png": "efdc3c516bc94dd2ca54c21d8f5d87d5dbd048b61f9ff090d485394c57ec54d9",
+    "connections-1162-light.png": "34e52dbbaa6f35441eb0a078a3a042bd3916c7268a90217132053e35090706e9",
+    "connections-940-dark.png": "462483894b137a15de22734e9a287f05f4c67342bf91fb62307150b8912e0402",
+    "connections-940-light.png": "5054c4adeaeedcbefb275449fd7bed9e3351d51b553794e4f27bfa161d8829bd",
+    "detail-1162-dark.png": "cc60321cf56f661575cc933ebc8e02f2f8a0b07839d669e2444366f322dd309f",
+    "detail-1162-light.png": "7e28a598dcbf830dea073994b9c43c2fa14bd0b5ca50117aaa956ce4105598c2",
+    "detail-940-dark.png": "a9329b6481e09dfcf808f0955f02348a2ddee713e728505de80f41b224ba4f98",
+    "detail-940-light.png": "61c14ee2bba2160a6b12df4e2304b3093ea55956a6d42dabc40a123bd542f944",
+    "home-1162-dark.png": "e15d663a40bd70397e0df097b6e5e54ea88ee02e57c79ba336430e0de88febcb",
+    "home-1162-light.png": "991948d7c8fbbe416247240465cc3e7a8eb49fe4fc399679b4d32bd4b5a80a18",
+    "home-940-dark.png": "ce36629001575bc8b6603ac94c9c6897fd3bd93e39371dfdf9f8dfc5a616f792",
+    "home-940-light.png": "c16282e851f41fe71612930b672b0f75f18794a066a7980ca0496a644de47452",
+    "tasks-1162-dark.png": "28e877684477a0a91fceea7e2da739789c841f0914031fa03a1765aeb668051f",
+    "tasks-1162-light.png": "46ce21c568179be03cc9bceb7a80aea09f871a71eb5ebe3670e9ceeeb238b98e",
+    "tasks-940-dark.png": "e69e819e7a30d129e6ed3f14bce57d1ace749ce22f5f3cf8f2583483e1516612",
+    "tasks-940-light.png": "b38c106a23d462b53ca79e5b31afd2c2ab0f6ab532c75a116c62bd5b1dc0ea43"
+  }
+}

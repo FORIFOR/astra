@@ -7,7 +7,6 @@ import Foundation
 /// 許可プロンプトが出ないため headless では動かない。ここは実装であり、実許可の検証は .app 側で。
 final class MicCapture {
     private let engine = AVAudioEngine()
-    private var converter: AVAudioConverter?
     private let targetRate: Double = 16_000
 
     /// 16 kHz mono の f32 フレームを繰り返し渡す。
@@ -19,10 +18,12 @@ final class MicCapture {
                 commonFormat: .pcmFormatFloat32,
                 sampleRate: targetRate, channels: 1, interleaved: false)
         else { throw NSError(domain: "MicCapture", code: 1) }
-        converter = AVAudioConverter(from: inFormat, to: outFormat)
+        guard let converter = AVAudioConverter(from: inFormat, to: outFormat) else {
+            throw NSError(domain: "MicCapture", code: 2)
+        }
 
         input.installTap(onBus: 0, bufferSize: 1024, format: inFormat) { [weak self] buffer, _ in
-            guard let self, let converter = self.converter else { return }
+            guard let self else { return }
             let capacity = AVAudioFrameCount(
                 Double(buffer.frameLength) * self.targetRate / inFormat.sampleRate + 1)
             guard let out = AVAudioPCMBuffer(pcmFormat: outFormat, frameCapacity: capacity)

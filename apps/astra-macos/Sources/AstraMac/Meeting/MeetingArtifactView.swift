@@ -40,6 +40,8 @@ struct MeetingArtifactView: View {
     var relatedFiles: [String] = []
     /// 録音が残っているか。
     var hasAudio: Bool = false
+    var transcriptionFailure: String?
+    var onRetryTranscription: (() -> Void)?
 
     /// 押された引用。外から渡された `selected` を初期値にする。
     ///
@@ -83,7 +85,8 @@ struct MeetingArtifactView: View {
                     Text(title).font(.system(size: TypeScale.sectionTitleSize, weight: TypeScale.sectionTitleWeight))
                         .foregroundStyle(Palette.text(dark))
                     Spacer()
-                    Text("\(duration) · \(participants) 人")
+                    // 人数が取れていない会議に「0 人」と書かない（発言があるのに 0 人は壊れて見える）。
+                    Text(participants > 0 ? "\(duration) · \(participants) 人" : duration)
                         .font(.system(size: TypeScale.microSize)).foregroundStyle(Palette.muted(dark))
                 }
                 // 画面の言語を揃える（ここだけ英語で、他は日本語だった）。
@@ -166,6 +169,13 @@ struct MeetingArtifactView: View {
     @ViewBuilder private var tabContent: some View {
         switch tab {
         case "文字起こし":
+            if let failure = transcriptionFailure {
+                Text(failure).font(.system(size: TypeScale.secondarySize)).foregroundStyle(Palette.muted(dark))
+                if let retry = onRetryTranscription {
+                    Button("文字起こしを再試行", action: retry)
+                        .accessibilityIdentifier("retryCloudTranscription")
+                }
+            }
             if transcript.isEmpty { emptyTab("この会議の文字起こしはまだありません。") }
             else { citationList(transcript) }
         case "録音":

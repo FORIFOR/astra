@@ -17,13 +17,15 @@ final class SecretMode: ObservableObject {
     static let shared = SecretMode()
 
     private static let key = "astra.secretMode"
+    /// Selftests exercise real windows without changing the user's saved mode.
+    static var persistChanges = true
 
     @Published private(set) var isOn: Bool = UserDefaults.standard.bool(forKey: "astra.secretMode")
 
     func set(_ on: Bool) {
         guard isOn != on else { return }
         isOn = on
-        UserDefaults.standard.set(on, forKey: Self.key)
+        if Self.persistChanges { UserDefaults.standard.set(on, forKey: Self.key) }
         apply()
     }
 

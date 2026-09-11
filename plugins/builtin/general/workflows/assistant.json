@@ -1,0 +1,21 @@
+{
+  "workflows": [
+    {
+      "id": "assistant",
+      "title": "質問に答える / 文章を作る",
+      "agent": "assistant",
+      "steps": [
+        {
+          "tool": "general.answer",
+          "message": "答えをまとめています",
+          "condition": { "when": "input_absent", "key": "instruction" }
+        },
+        {
+          "tool": "general.compose",
+          "message": "文章を書いています",
+          "condition": { "when": "input_present", "key": "instruction" }
+        }
+      ]
+    }
+  ]
+}

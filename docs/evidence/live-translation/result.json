@@ -1,0 +1,28 @@
+{
+  "checks" : [
+    "PASS: local translation fixture 1 preserves key meaning",
+    "PASS: local translation fixture 2 preserves key meaning",
+    "PASS: local translation fixture 3 preserves key meaning",
+    "PASS: local translation fixture 4 preserves key meaning",
+    "PASS: local translation fixture 5 preserves key meaning",
+    "PASS: local translation fixture 6 preserves key meaning",
+    "PASS: local translation fixture 7 preserves key meaning",
+    "PASS: local translation fixture 8 preserves key meaning",
+    "PASS: select translation before speech waits without error",
+    "PASS: Google live speech is translated to English before recording stops",
+    "PASS: translated rows retain original words and timestamps",
+    "PASS: original switch keeps recording and translation running",
+    "PASS: auto off keeps original transcription growing without new translations",
+    "PASS: auto on catches up without retranslating prior rows",
+    "PASS: original survives stop",
+    "PASS: new meeting clears translations and requires a new selection",
+    "PASS: English to Japanese preserves the date and time",
+    "PASS: same-language selection preserves the original text verbatim"
+  ],
+  "durations" : {
+    "englishToJapaneseSeconds" : 0.72500801086425781
+  },
+  "failures" : [
+
+  ]
+}

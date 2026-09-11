@@ -1,0 +1,309 @@
+{
+  "rc": "f3f3e9e",
+  "mode": "self-supremacy",
+  "pages": [
+    {
+      "id": "screenshot.attached-cloud",
+      "blind_id": "5798",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4,
+        "density": 3.33,
+        "typography": 4,
+        "geometry": 3.33,
+        "state_clarity": 4.33,
+        "calmness": 4.33,
+        "craft": 3.67,
+        "distinctiveness": 2.33
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "Well-executed notification with clear state and control options, but follows standard notification bar pattern without distinctive visual or interaction elements."
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "2行＋サムネイル＋×という最小構成で、送信条件まで一文で言い切れている点は良い。ただし暗いピル型HUDという形式自体は既視感が強く、× の位置も本文と揃わず浮いているため、一線級と並べると差が出る。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "内容に関わらず使い回される汎用アイコン（実データのサムネイルではない）"
+          ],
+          "why": "情報設計・余白は破綻していないが、アイコンが実写サムネイルでなく汎用プレースホルダーである点、デザインとしての独自性が薄い点で一線級には一歩届かない。"
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.target-missing",
+      "blind_id": "94DF",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 3.33,
+        "density": 3,
+        "typography": 3.33,
+        "geometry": 2.67,
+        "state_clarity": 3,
+        "calmness": 3,
+        "craft": 2.67,
+        "distinctiveness": 2
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "Functional error dialog with clear messaging and actionable button, but audio icon placement and styling follow predictable patterns. Minor geometry concern with icon attachment."
+        },
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "青紫のベタ塗りプライマリボタンに依存した唯一の視覚的アクセント"
+          ],
+          "why": "「Astra の行が見つかりません」という実装都合の文言が主見出しに出ており、見出し（見つからない）と本文（オンにして）で状態の説明が矛盾して読める。利用者は何が起きたのか絵から特定できない。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "アラート本体から浮いた孤立円形バッジ（役割不明のまま隣接配置）"
+          ],
+          "why": "文言が不自然で意味が取りづらいこと、アラートと独立円形アイコンが未接続のまま並んでおり幾何的・状態的に何を示すか絵から判断できないこと、という具体的欠陥がある。"
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.target-highlighted",
+      "blind_id": "9C85",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 3.33,
+        "density": 4,
+        "typography": 4,
+        "geometry": 3,
+        "state_clarity": 3,
+        "calmness": 3,
+        "craft": 3,
+        "distinctiveness": 2.33
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "Clean, compact settings panel with clear toggle states and helpful context note. Badge placement and purpose feels slightly disconnected. Well-executed but standard list pattern."
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "「オン済みだが再起動が必要」という一番伝えにくい状態を一文で言えているのは強い。ただし赤バッジ・紫枠・吹き出しの3系統が狭い範囲で競合し、赤い「1」は指示対象が絵から辿れない点が一線級との差。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "吹き出しツールチップが行コンテンツに素朴に重なるだけの実装（衝突回避のレイアウトがない）"
+          ],
+          "why": "『ONだが実際は無効（再起動待ち）』という重要な状態差が、他の完全に有効なトグルと見た目上区別できず、さらに吹き出しがラベルに重なり読みづらいという具体的欠陥が絵から確認できる。"
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.granted",
+      "blind_id": "B726",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4.33,
+        "density": 4.33,
+        "typography": 3.67,
+        "geometry": 4.33,
+        "state_clarity": 4.67,
+        "calmness": 4.67,
+        "craft": 4,
+        "distinctiveness": 2.67
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "SUPREME",
+          "valid": true,
+          "ai_look": [],
+          "why": "Minimal, perfectly balanced success state. Green checkmark and soft background create calm confirmation. Message is concise and clear. Execution is excellent across all dimensions. Only limitation is that success dialogs are a known pattern, but this one is exemplary."
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "一行＋チェックだけに絞った潔い成功表示で騒がしさが無い。ただしチェック円の彩度が落ちて成功の合図が弱く、次に何ができるかへの橋渡しも無いため、一線級と並べると物足りない。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "成功トーストとして破綻なく明快だが、緑チェック＋一行文というパターンは非常に一般的でこの製品ならではの個性は見えない。"
+        }
+      ]
+    },
+    {
+      "id": "screenshot.detected",
+      "blind_id": "CB5B",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4,
+        "density": 3.33,
+        "typography": 4,
+        "geometry": 3.67,
+        "state_clarity": 4,
+        "calmness": 4.33,
+        "craft": 3.67,
+        "distinctiveness": 2.33
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "Clear acknowledgment notification with instructional message. Dark theme and minimal elements are calm and appropriate. Follows standard notification pattern without distinctive elements."
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "「認識しました」＋「そのまま聞いてください」で状態と次の一手を1行に収めた密度は良い。ただし閉じる／取り消す手段が絵に無く、右側の空きも用途不明で、仕上がりに一段の余地がある。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "メッセージ内容に関わらず同一の汎用アイコンをテンプレート的に再利用"
+          ],
+          "why": "単体としては整っているが、アイコンが内容非依存の使い回しであること、同種トースト間で閉じるボタンの有無が説明なく変わっている点が一線級との差。"
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.intro",
+      "blind_id": "E389",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 3.67,
+        "density": 3.33,
+        "typography": 3.67,
+        "geometry": 3,
+        "state_clarity": 3.33,
+        "calmness": 3,
+        "craft": 3,
+        "distinctiveness": 2.33
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "Potential text generation artifact: doubled Japanese particle or awkward phrasing structure"
+          ],
+          "why": "Functional permissions error dialog with actionable button, but message clarity suffers from apparent grammatical issue. Audio icon integration similar to 94DF. Standard pattern execution with minor text concern."
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "青紫のベタ塗りボタンが唯一の色アクセントになっている"
+          ],
+          "why": "状態（未許可）・原因（Astra がオフ）・解決導線（設定を開く）が1本のバーに過不足なく収まっており、94DF の同型より文言が明確。ただし警告色が無く、ボタンと右の円が同系色で競合するため、一線級と比べると弱い。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "アラートから浮いた役割不明の円形バッジがこの画像でも再出現し、コンポーネント合成が場当たり的に見える"
+          ],
+          "why": "文言自体は94DFより明確だが、アラートと独立円形アイコンの未接続配置という同一の幾何的欠陥が再現しており、視覚的に何の関係かが絵から読み取れない。"
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.denied",
+      "blind_id": "FF03",
+      "verdict": "BELOW_BAR",
+      "avg": {
+        "hierarchy": 3,
+        "density": 3,
+        "typography": 3.5,
+        "geometry": 2,
+        "state_clarity": 3,
+        "calmness": 3,
+        "craft": 2,
+        "distinctiveness": 2
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": false,
+          "ai_look": [
+            "Generic alert banner pattern seen across many apps",
+            "Red circle icon feels isolated and template-like",
+            "Simple centered-row layout without particular refinement",
+            "Standard error state implementation without distinctive visual treatment"
+          ],
+          "why": "Functional and clear error notification that works as intended. Message hierarchy is readable, state is unambiguous, Japanese localization is present. However, the visual execution is conventional - similar patterns exist in many products. The large red circle icon creates imbalance rather than adding clarity. Lacks the refinement and distinctive character expected in world-class desktop products like Linear, Raycast, or Apple's system UI. Well-executed competence, but forgettable design."
+        },
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "失敗の合図として巨大な丸 ! バッジを別置きする、装飾優先で意味の位置が合っていない処理",
+            "青い塗りつぶし pill ボタンが1個だけ強い彩度で置かれ、周囲のニュートラルなトーストと系統が繋がっていない"
+          ],
+          "why": "文言と情報量（失敗事実＋対象パス＋再試行＋閉じる）は良いが、絵から言える欠陥がある。エラーバッジがトーストのコンテナ外に置かれて右端で切れており、コンテナと図形の関係が破綻している。失敗の合図が本文の起点から遠い右端にあるため、状態の読み取りも遅い。一線級のトーストならアイコンは本文左に収まり、コンテナ内で完結する。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [],
+          "why": "1行のトースト内で情報要素（テキスト2行、ボタン、×、丸アイコン）が窮屈に詰め込まれ、左右の余白が不揃い。パンくずの区切り記号のグリフが崩れて見え、アイコンの二重着色（丸背景＋オレンジ!）が冗長で、一線級プロダクトのシステムトーストと比べると仕上げが粗い。"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "supreme": 0,
+    "competitive": 6,
+    "below_bar": 1,
+    "not_enough_evidence": 0,
+    "models": [
+      "haiku",
+      "opus",
+      "sonnet"
+    ]
+  },
+  "gate": "FAIL",
+  "ab_competitor": "AUTOMATION_MISSING: 競合の実 UI 画像（ASTRA_COMPETITORS_DIR）が無い。画面収録 TCC と driver が要る"
+}

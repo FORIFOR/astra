@@ -1,0 +1,1 @@
+SELFTEST_OK session-renewal: real gateway rotation, 8 concurrent callers, Keychain reload, same user and tenant, credentials cleaned up

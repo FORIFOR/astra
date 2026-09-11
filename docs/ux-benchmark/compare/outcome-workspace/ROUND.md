@@ -1,0 +1,9 @@
+# Outcome workspace — 2026-09-11
+
+reference : Apple / Notion (https://styles.refero.design/apple, https://styles.refero.design/notion; reference observations recorded 2026-09-03 in shared/design/DESIGN.md): use a quiet reading surface and typographic hierarchy; put the result before supporting records.
+hypothesis: replace Home's competing dashboard sections with one creation entry and move submitted work into a durable result workspace; the next action and the produced document should remain identifiable after navigation and restart.
+measured  : current Home has an 84pt editor, up to 3 task rows, a recording card, recovery, work context, profile, calendar and 6 meeting rows; submitted VoiceHUD answers never enter the SQLite task history. Task details display steps but no produced document.
+candidates: A = existing mixed dashboard and ephemeral answer; B = focused creation entry + 3 editable starter requests + 3 recent jobs, with meetings/context under one disclosure (the latest interrupted meeting remains directly accessible) and result-first job detail; C = separate chat and artifact windows (rejected: splits one job across surfaces). Keep existing type/color/radius tokens; B content width 760pt instead of 900pt, detail width 900pt.
+gate      : persist request / backend identity / result atomically, never resend to refresh; verify success, clarification, failure, interrupted polling and legacy migration; complete a real local-model job, reopen and export its actual output; native captures at 940/1162pt in light/dark, geometry + occupation + type scale; verify-all before commit. No claimed blind panel result.
+
+The user explicitly requested reconsidering the existing structure. This round replaces the earlier Home dashboard hierarchy; it does not add unsupported video rendering, publication or financial execution claims.

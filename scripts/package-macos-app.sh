@@ -6,30 +6,47 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 IDENTITY="${ASTRA_SIGN_IDENTITY:-Apple Development}"   # security find-identity -v -p codesigning で確認
 APP="$ROOT/apps/astra-macos/.build/Astra.app"
 ( cd "$ROOT/apps/astra-macos" && swift build -c release )
-rm -rf "$APP"; mkdir -p "$APP/Contents/MacOS"
+rm -rf "$APP"; mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources/ja.lproj"
 cp "$ROOT/apps/astra-macos/.build/release/AstraMac" "$APP/Contents/MacOS/AstraMac"
-cat > "$APP/Contents/Info.plist" <<'PLIST'
+ICON_SRC="$ROOT/apps/desktop/src-tauri/icons/icon.icns"
+[[ -f "$ICON_SRC" ]] || { echo "FAIL: アイコン ($ICON_SRC) が無い" >&2; exit 1; }
+cp "$ICON_SRC" "$APP/Contents/Resources/AppIcon.icns"
+cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
   <key>CFBundleExecutable</key><string>AstraMac</string>
   <key>CFBundleIdentifier</key><string>com.astra.desktop</string>
   <key>CFBundleName</key><string>Astra</string>
+  <key>CFBundleIconFile</key><string>AppIcon</string>
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>CFBundleShortVersionString</key><string>1.0</string>
   <key>CFBundleVersion</key><string>1</string>
   <key>LSMinimumSystemVersion</key><string>14.0</string>
+  <!-- 画面は日本語。Sparkle は**アプリの**言語に合わせて自分の窓を出すので、
+       ja.lproj を持たないと更新の窓だけ英語になった（Atlas system.update-available）。 -->
+  <key>CFBundleDevelopmentRegion</key><string>ja</string>
+  <key>CFBundleLocalizations</key><array><string>ja</string></array>
   <key>NSCalendarsFullAccessUsageDescription</key><string>会議の予定を文脈として読むために、カレンダーを使います。読み取りは手元で行い、外部には送りません。</string>
   <!-- 用途説明が無い権限を要求すると、OS がプロセスを**落とす**
        （TCC crashing due to privacy violation）。実際に録音開始でそうなった。
        要求しうるものは全部ここに書く。 -->
-  <key>NSMicrophoneUsageDescription</key><string>会議を録音し、手元で文字にするためにマイクを使います。音声は端末から出しません。</string>
-  <key>NSSpeechRecognitionUsageDescription</key><string>会議の音声を手元で文字起こしするために使います。音は端末から出しません。</string>
+  <key>NSMicrophoneUsageDescription</key><string>会議を録音し、文字起こしするためにマイクを使います。クラウド文字起こしを許可した場合は、録音音声をGoogleへ送信します。</string>
+  <key>NSSpeechRecognitionUsageDescription</key><string>ライブ文字起こしをこのMac内で処理するために使います。別途クラウド文字起こしを許可した場合はGoogleへ録音音声を送信します。</string>
   <key>NSAppleEventsUsageDescription</key><string>前面アプリの文脈（開いている書類名など）を読むために使います。</string>
   <key>NSCameraUsageDescription</key><string>使いません。</string>
   <key>NSCalendarsUsageDescription</key><string>会議の予定を文脈として読むために、カレンダーを使います。</string>
+  <!-- 自動更新（Sparkle）。release-macos.sh と同じ鍵と配布先。これが無いと SoftwareUpdate は起動せず、
+       UI Atlas の system.update-available / up-to-date（sysshots）を撮れない。
+       検証用の .app なので、起動時の自動チェックは切る（hands-on gate の途中で更新の窓を出さない）。 -->
+  <key>SUFeedURL</key><string>${ASTRA_UPDATE_FEED:-https://github.com/FORIFOR/astra/releases/latest/download/appcast.xml}</string>
+  <key>SUPublicEDKey</key><string>${ASTRA_UPDATE_PUBKEY:-b61dWnFNEdpzAWG/V5SMb4bZGrqgzJwMDAcuw/564cs=}</string>
+  <key>SUEnableAutomaticChecks</key><false/>
 </dict></plist>
 PLIST
+# ja.lproj に実体を置く（中身の無い lproj は localization として数えられない）。Sparkle は
+# メインバンドルの言語に合わせて自分の窓を出す。
+printf 'CFBundleName = "Astra";\n' > "$APP/Contents/Resources/ja.lproj/InfoPlist.strings"
 # Sparkle を同梱する。**入れないと起動できない**（実行体が @rpath/Sparkle.framework を要求し、
 # dyld が "Library not loaded" で落とす）。Sparkle を入れた後もこの台本は更新されておらず、
 # ここで作った .app は起動即クラッシュしていた —— TCC を要る検証が全部できない状態だった。

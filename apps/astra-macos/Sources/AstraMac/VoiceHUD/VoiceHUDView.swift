@@ -19,10 +19,13 @@ import SwiftUI
 ///
 /// 高さが変わるときは **上辺の Y を固定**して下へ伸ばす（`WindowCoordinator`）。
 struct VoiceTaskDockView: View {
+    @ObservedObject var screenLayout: DockScreenLayout = DockScreenLayout()
     /// §10 Interface Size を変えたら描き直す（購読していないと変わらない）。
     @ObservedObject private var uiScale = UIScale.shared
     @ObservedObject private var store = AstraStateStore.shared
     @ObservedObject private var state = VoiceHUDState.shared
+    /// スクショの chip で idle の幅が変わる。購読していないと `size` が古いまま、窓が 220 のまま中身が切れる（実測）。
+    @ObservedObject private var visual = VisualContextStore.shared
     @Environment(\.colorScheme) private var scheme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private var dark: Bool { scheme == .dark }
@@ -34,13 +37,15 @@ struct VoiceTaskDockView: View {
         ZStack(alignment: .top) {
             DockSurface()
             content
+                .frame(width: size.width, height: size.height, alignment: .top)
+                .padding(.top, screenLayout.topInset)
                 .opacity(contentVisible ? 1 : 0)
                 .animation(reduceMotion ? nil : .easeOut(duration: 0.12), value: contentVisible)
         }
         // 地が暗いので、中身も暗色側の配色で描く。
         // 各 View は `@Environment(\.colorScheme)` を見ているので、ここで一括して切り替わる。
         .environment(\.colorScheme, .dark)
-        .frame(width: size.width, height: size.height)
+        .frame(width: size.width, height: size.height + screenLayout.topInset)
         .onChange(of: store.dock) { old, new in
             guard !reduceMotion else { return }
             // 会議 Dock の中で板（メモ / 字幕 / Ask）が開閉するだけのときは、変わらない見出し
@@ -87,45 +92,111 @@ typealias VoiceHUDView = VoiceTaskDockView
 
 // MARK: - 1. Idle / Presence
 
-/// いちばん静かな姿。名前も説明も出さない。押すと開く。
+/// 小さな入口。Astra の操作と録音を別々に押せる。
 private struct IdleDock: View {
     @Environment(\.colorScheme) private var scheme
+    @ObservedObject private var visual = VisualContextStore.shared
     var body: some View {
+        // 撮影直後から、画像に対する質問へ直接進める。押すまでは focus を奪わない。
+        if let shot = visual.justCaptured {
+            // × は chip と同じ位置に（一瞬の面でも、消す手が同じ場所にあること — 盲検の consistency）。
+            screenshotChip(shot: shot, tint: Palette.accent(scheme == .dark),
+                           meta: Facts.screenshotDetected, dismiss: shot.id, id: "screenshotContextChip", metaIsState: true)
+                .help(VisualEgressPolicy.current.disclosure)
+        } else if let shot = visual.offeredCapture {
+            // 質問で添えたあとは出所（初回「質問したときだけ Claude に送信」、以降「Claude に送信 · たった今」）。
+            screenshotChip(shot: shot, tint: Palette.muted(scheme == .dark),
+                           meta: visual.lastProvenance.map { $0.contains("質問") ? $0 : "\($0) · \(shot.ageLabel())" } ?? shot.ageLabel(),
+                           dismiss: shot.id, id: "screenshotContextChipSmall")
+                .help(VisualEgressPolicy.current.disclosure)
+        } else {
         HStack(spacing: 7) {
-            AstraOrb()
-            Text("Astra")
-                .font(.system(size: S.type(Metrics.dockPrimarySize), weight: .medium))
-                .foregroundStyle(Palette.muted(scheme == .dark))
+            Button { VoiceHUDState.shared.toggleQuickActions() } label: {
+                HStack(spacing: 7) {
+                    AstraVoiceMark()
+                    Text("Astra")
+                        .font(.system(size: S.type(Metrics.dockPrimarySize), weight: .medium))
+                }
+                .foregroundStyle(Palette.text(scheme == .dark))
+                .frame(maxHeight: .infinity)
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("dockOpenActions")
+            .accessibilityLabel("Astraの操作を開く")
             Spacer(minLength: 0)
-            // **効かないショートカットを案内しない。**
-            // 入力監視の許可が無いと ⌥Space は黙って何も起きない。それでも
-            // 「⌥ space」と出していたため、初見の人はそれを押し、何も起きず、
-            // 他に道が見えないまま詰まる（実装を知らない評価者が実際にそうなった）。
-            // 許可が無い間は、その場で効く道——クリック——だけを案内する。
-            // 見るのは権限の preflight ではなく**実際に登録できたか**。
-            // preflight が true でも登録に失敗することがある。
-            if GlobalShortcut.shared.isRegistered {
-                ForEach(UserShortcut.globalRecordingBadges, id: \.self) { KeyBadge($0) }
-            } else {
-                Text(Facts.hudClickHint)
-                    .font(.system(size: S.type(Metrics.dockMetaSize)))
-                    .foregroundStyle(Palette.muted(scheme == .dark))
+            Button { WindowCoordinator.shared.toggleRecording() } label: {
+                Label(Facts.dockRecord, systemImage: "record.circle")
+                    .font(.system(size: S.type(Metrics.dockMetaSize), weight: .medium))
+                    .frame(height: 32)
+            }
+            .buttonStyle(AstraControlStyle(radius: 7, base: 0))
+            .accessibilityIdentifier("dockStartRecording")
+            .help(GlobalShortcut.shared.isRegistered
+                  ? Facts.recordingMenuStart + " · " + GlobalShortcut.label() : Facts.recordingMenuStart)
+        }
+        .padding(.horizontal, S.metric(Metrics.dockPadH))
+        .frame(maxHeight: .infinity)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("dockIdle")
+        }   // else（スクショ chip でないとき = 通常の idle）
+    }
+
+    /// 1 行目は画像について質問する入口、2 行目は撮影元と時刻。
+    /// 先頭は**その画像の縮小**（どの絵の話かが一目で分かる。記号だけだと「何かの通知」に見える — 盲検の指摘）。
+    /// `metaIsState`: 2 行目が「いま起きたこと」（認識の一瞬）なら本文色で出す（薄い灰では状態の変化に気づけない — 盲検）。
+    private func screenshotChip(shot: VisualContextArtifact, tint: Color, meta: String, dismiss: UUID?, id: String, metaIsState: Bool = false) -> some View {
+        HStack(spacing: 10) {
+            Button { MainWindowController.shared.askAboutScreenshot(shot) } label: {
+                HStack(spacing: 10) {
+                    ScreenshotThumb(url: shot.imageURL, tint: tint)
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text("この画像について質問")
+                            .font(.system(size: S.type(Metrics.dockPrimarySize), weight: .medium))
+                            .foregroundStyle(Palette.accent(scheme == .dark))
+                            .lineLimit(1)
+                        Text("\(shot.kind == .clipboardImage ? "コピーした画像" : Facts.screenshotChip) · \(shot.ageLabel())")
+                            .font(.system(size: S.type(Metrics.dockMetaSize)))
+                            .foregroundStyle(metaIsState ? Palette.text(scheme == .dark) : Palette.muted(scheme == .dark))
+                            .lineLimit(1)
+                    }
+                }
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("screenshotOpenActions")
+            .accessibilityLabel("この画像について質問")
+            .help("画像を添えた質問欄を開きます。送信するまでAIには渡しません。")
+            Spacer(minLength: 0)
+            if let dismiss {
+                Button { VisualContextStore.shared.remove(dismiss) } label: {
+                    Image(systemName: "xmark").font(.system(size: 10)).foregroundStyle(Palette.muted(scheme == .dark))
+                }.buttonStyle(AstraControlStyle(radius: 6, base: 0.0))
+                    .accessibilityIdentifier("dismissScreenshot")
+                    .accessibilityLabel("スクリーンショットの案内を閉じる")
             }
         }
         .padding(.horizontal, S.metric(Metrics.dockPadH))
         .frame(maxHeight: .infinity)
-        .contentShape(Rectangle())
-        .onTapGesture { VoiceHUDState.shared.toggleQuickActions() }
-        // Quick Actions を挟まずに 1 手で開く道も用意する（2 クリックが要るのは面倒）。
-        .simultaneousGesture(TapGesture().modifiers(.command).onEnded {
-            MainWindowController.shared.showSection(.home)
-            AstraStateStore.shared.workspaceOpened()
-        })
-        .help(GlobalShortcut.shared.isRegistered
-              ? "クリックで操作、\(GlobalShortcut.label()) でどこからでも、⌘クリックで Astra を開く"
-              : "クリックで操作、⌘クリックで Astra を開く")
         .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("dockIdle")
+        .accessibilityIdentifier(id)
+    }
+}
+
+/// スクショの縮小（28×20、角丸 4、細い縁）。読めなければ記号に落ちる。
+struct ScreenshotThumb: View {
+    let url: URL
+    let tint: Color
+    var body: some View {
+        Group {
+            if let img = NSImage(contentsOf: url) {
+                Image(nsImage: img).resizable().aspectRatio(contentMode: .fill)
+            } else {
+                Image(systemName: "photo").font(.system(size: 12)).foregroundStyle(tint)
+            }
+        }
+        .frame(width: 28, height: 20)
+        .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 4, style: .continuous).stroke(Color.white.opacity(0.22), lineWidth: 1))
+        .accessibilityHidden(true)
     }
 }
 
@@ -179,7 +250,12 @@ struct AppContextDock: View {
                     VStack(alignment: .leading, spacing: 1) {
                         ForEach(summary.suggestions, id: \.self) { s in
                             Button { VoiceHUDState.shared.runSuggestion(s) } label: {
-                                HStack(spacing: 0) {
+                                HStack(spacing: 8) {
+                                    // 押せる行だと分かるよう、各行に控えめなアイコン（Raycast の作法）。
+                                    Image(systemName: "arrow.turn.down.right")
+                                        .font(.system(size: 11))
+                                        .foregroundStyle(Palette.muted(dark))
+                                        .frame(width: 14)
                                     Text(s)
                                         .font(.system(size: S.type(Metrics.dockRowSize)))
                                         .foregroundStyle(Palette.text(dark))
@@ -220,8 +296,11 @@ struct ListeningDock: View {
             HStack(spacing: 9) {
                 // 取り込みが生きるまでは光らせない（「聞いている」の合図なので）。
                 AstraOrb(active: !voice.listeningAwaitingAudio)
-                MiniWaveform()
-                    .frame(width: 44, height: 16)
+                // 準備中は波形を出さず、AstraOrb の pulse だけ（「聞いている」と紛れさせない）。
+                if !voice.listeningAwaitingAudio {
+                    MiniWaveform()
+                        .frame(width: 44, height: 16)
+                }
                 // **取り込みが生きるまで「聞いています…」と名乗らない。**
                 // 切り替えるのは最初の音声フレームの到着（`listeningAwaitingAudio`）で、タイマーではない。
                 Text(partial.isEmpty
@@ -257,34 +336,33 @@ struct ContextStrip: View {
     @ObservedObject private var store = AstraStateStore.shared
 
     var body: some View {
-        HStack(spacing: 12) {
-            ForEach(store.state.context.items) { item in
-                HStack(spacing: 4) {
-                    // 色を増やさない。印は形（✓）で伝え、色は orb だけに持たせる。
-                    Image(systemName: "checkmark")
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(Palette.muted(dark))
-                    Text(item.application)
-                        .font(.system(size: S.type(Metrics.dockMetaSize)))
-                        .foregroundStyle(Palette.text(dark))
+        // 文脈が無いときは下段を**出さない**（「見えている文脈はありません」の否定文を出すと冷たく、
+        // 情報量も 0。preparing/listening が 1 行に畳まれる）。文脈があるときだけ棚を出す。
+        if store.state.context.items.isEmpty {
+            EmptyView()
+        } else {
+            HStack(spacing: 12) {
+                ForEach(store.state.context.items) { item in
+                    HStack(spacing: 4) {
+                        // 色を増やさない。印は形（✓）で伝え、色は orb だけに持たせる。
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(Palette.muted(dark))
+                        Text(item.application)
+                            .font(.system(size: S.type(Metrics.dockMetaSize)))
+                            .foregroundStyle(Palette.text(dark))
+                    }
                 }
-            }
-            if store.state.context.items.isEmpty {
-                Text("見えている文脈はありません")
-                    .font(.system(size: S.type(Metrics.dockMetaSize)))
-                    .foregroundStyle(Palette.muted(dark))
-            }
-            if !store.state.context.items.isEmpty {
                 Image(systemName: "chevron.down")
                     .font(.system(size: 8, weight: .semibold))
                     .foregroundStyle(Palette.muted(dark))
+                Spacer(minLength: 0)
             }
-            Spacer(minLength: 0)
+            .contentShape(Rectangle())
+            // Dropover の作法。棚を押すと、棚そのものが詳細へ広がる。
+            .onTapGesture { VoiceHUDState.shared.mode = .contextDetail }
+            .accessibilityIdentifier("contextStrip")
         }
-        .contentShape(Rectangle())
-        // Dropover の作法。棚を押すと、棚そのものが詳細へ広がる。
-        .onTapGesture { VoiceHUDState.shared.mode = .contextDetail }
-        .accessibilityIdentifier("contextStrip")
     }
 }
 
@@ -557,7 +635,7 @@ struct ConfirmationDock: View {
             }
 
             // ② 何が起きるか。
-            Text(confirmation.title)
+            Text(editing ? Facts.confirmationEditTitle : confirmation.title)
                 .font(.system(size: S.type(Metrics.dockTitleSize), weight: .semibold))
                 .tracking(-0.2)
                 .foregroundStyle(Palette.text(dark))
@@ -566,10 +644,10 @@ struct ConfirmationDock: View {
             // 「外部に出る」は宛先の並びでも題でもない。**独立した補助の段**にする。
             do {
                 HStack(spacing: 5) {
-                    Image(systemName: "arrow.up.forward")
+                    Image(systemName: editing ? "arrow.uturn.backward" : "arrow.up.forward")
                         .font(.system(size: ActionConfirmation.Glyph.criticalSize,
                                       weight: ActionConfirmation.Glyph.criticalWeight))
-                    Text(confirmation.risk.label)
+                    Text(editing ? Facts.confirmationEditReturn : confirmation.risk.label)
                     Spacer(minLength: 0)
                 }
                 .font(.system(size: S.type(Metrics.dockLabelSize)))
@@ -585,11 +663,13 @@ struct ConfirmationDock: View {
                 // 鍵は効いていても、書いていなければ無いのと同じ（Listening の esc と同じ理由、
                 // journeys/panel1）。外へ出る面ほど、逃げ道と実行の鍵を先に見せる。
                 if !editing {
+                    // 語はボタンだけに置く。ここは鍵記号だけ（「やめる」がヒントとボタンで二重だった）。
+                    // 破壊操作（r3）は鍵で実行させないので、実行の鍵ヒントも出さない。
                     HStack(spacing: 4) {
                         KeyBadge(UserShortcut.cancel.display)
-                        Text(Facts.confirmationCancel)
-                        KeyBadge(UserShortcut.confirm.display).padding(.leading, 6)
-                        Text(confirmation.confirmLabel)
+                        if confirmation.risk != .r3 {
+                            KeyBadge(UserShortcut.confirm.display).padding(.leading, 6)
+                        }
                     }
                     .font(.system(size: S.type(Metrics.dockLabelSize)))
                     .foregroundStyle(Palette.muted(dark).opacity(0.72))
@@ -619,8 +699,10 @@ struct ConfirmationDock: View {
                         .foregroundStyle(Palette.muted(dark))
                         .frame(height: 32).padding(.horizontal, 14)
                         .buttonStyle(AstraControlStyle(radius: 7, base: 0.0))
-                    if !confirmation.params.isEmpty || confirmation.preview != nil {
-                        Button(Facts.confirmationEdit) { editing = true }
+                    if confirmation.risk != .r3, !confirmation.params.isEmpty || confirmation.preview != nil {
+                        // 検査から押せる目印付き（Atlas dock.confirmation-edit）。走るものは 1 本。
+                        // 破壊（r3・捨てる等）は二択にする。「直す」は出さない。
+                        ProbeButton(id: "confirmEdit", action: { editing = true }) { Text(Facts.confirmationEdit) }
                             .font(.system(size: S.type(Metrics.dockRowSize)))
                             // 「目を引くものは 1 つだけ」と考えて静かにしてみたが、
                             // 測ると control_visibility が 0-3 で落ちた。
@@ -629,7 +711,6 @@ struct ConfirmationDock: View {
                             .foregroundStyle(Palette.accent(dark))
                             .frame(height: 32).padding(.horizontal, 14)
                             .buttonStyle(AstraControlStyle(radius: 7, base: 0.0))
-                            .accessibilityIdentifier("confirmEdit")
                     }
                     // 外へ出る操作は、押す先が一目で分かる面にする。
                     //
@@ -637,7 +718,7 @@ struct ConfirmationDock: View {
                     // 「送る」は 2 文字なので、padding だけ足しても 70pt にしかならず、
                     // 6 文字の Cancel（76pt）に負けていた（実測）。字数で重さが
                     // 決まってしまうので、最小幅で下から支える。
-                    ProbeButton(id: "confirmProceed", action: { AstraStateStore.shared.resolveConfirmation(approved: true) }) {
+                    ProbeButton(id: "confirmProceed", action: { AstraStateStore.shared.resolveConfirmation(approved: true, edits: edited) }) {
                         Text(confirmation.confirmLabel)
                     }
                         .font(.system(size: S.type(Metrics.dockRowSize), weight: .semibold))
@@ -659,12 +740,16 @@ struct ConfirmationDock: View {
             else { AstraStateStore.shared.resolveConfirmation(approved: false) }
         }
         // Return では実行しない。**押し慣れた鍵で外へ出る操作が走るのは危ない。**
-        // 実行は ⌘Return だけ。
+        // 実行は ⌘Return だけ。**さらに破壊（r3・元に戻せない）は鍵で実行させない**（既定は安全側=やめる）。
         .background(
-            Button("") { AstraStateStore.shared.resolveConfirmation(approved: true) }
-                .keyboardShortcut(UserShortcut.confirm.key, modifiers: UserShortcut.confirm.modifiers)
-                .opacity(0)
-                .accessibilityHidden(true)
+            Group {
+                if confirmation.risk != .r3 {
+                    Button("") { AstraStateStore.shared.resolveConfirmation(approved: true) }
+                        .keyboardShortcut(UserShortcut.confirm.key, modifiers: UserShortcut.confirm.modifiers)
+                        .opacity(0)
+                        .accessibilityHidden(true)
+                }
+            }
         )
     }
 
@@ -834,8 +919,9 @@ struct MeetingDock: View {
             VStack(alignment: .leading, spacing: 1) {
                 // **実際に 1 サンプル入るまでは「準備中…」。**タイマーではなく
                 // 最初の音声フレームの到着（`awaitingAudio`）で切り替える。
-                Text(recording.awaitingAudio
-                     ? Facts.recordingHeroPreparing
+                // 一時停止中は見出しでもそう言う（点が灰になるだけでは、止まっていると分からなかった）。
+                Text(recording.isPaused ? Facts.recordingHeroPaused
+                     : recording.awaitingAudio ? Facts.recordingHeroPreparing
                      : (store.state.meeting.detectedApp ?? Facts.recordingHeroRecording))
                     .font(.system(size: S.type(Metrics.dockPrimarySize), weight: .semibold))
                     .foregroundStyle(Palette.text(dark))
@@ -844,8 +930,12 @@ struct MeetingDock: View {
                     .font(.system(size: S.type(Metrics.dockMetaSize), design: .monospaced))
                     .foregroundStyle(Palette.muted(dark))
             }
-            Waveform(levels: recording.audioLevels, awaitingInput: recording.awaitingAudio)
-                .frame(width: 56, height: 16)
+            // 状態を造形でも分ける: 準備中=波形を出さない / 一時停止=平坦 / 録音中=実振幅。
+            if !recording.awaitingAudio {
+                Waveform(levels: recording.isPaused ? [] : recording.audioLevels, awaitingInput: false)
+                    .frame(width: 56, height: 16)
+                    .opacity(recording.isPaused ? 0.5 : 1)
+            }
             Spacer(minLength: 0)
             ForEach(DockPresentation.MeetingPanel.allCases, id: \.self) { panel in
                 Button { VoiceHUDState.shared.toggleMeetingPanel(panel) } label: {
@@ -859,6 +949,8 @@ struct MeetingDock: View {
                 .buttonStyle(AstraControlStyle(radius: 8, base: open == panel ? 0.07 : 0.0))
                 .accessibilityIdentifier("meetingPanel-\(panel.rawValue)")
             }
+            // ここから先はアイコンだけのモード/操作。板タブ（ラベル付き）と種類が違うので仕切る。
+            Divider().frame(height: 18).padding(.horizontal, 2)
             // シークレット: 画面共有・録画に Astra を映さない。会議中こそ要る。
             Button { SecretMode.shared.toggle() } label: {
                 Image(systemName: secret.isOn ? "eye.slash.fill" : "eye")
@@ -869,6 +961,16 @@ struct MeetingDock: View {
             .buttonStyle(AstraControlStyle(radius: 8, base: secret.isOn ? 0.07 : 0.0))
             .help(secret.isOn ? "画面共有に映りません" : "画面共有に映ります")
             .accessibilityIdentifier("secretToggle")
+            // 一時停止 / 再開。手は録音面の pill にしか無く、Dock からは止められなかった（Atlas meeting.paused）。
+            ProbeButton(id: "pauseRecording", action: { recording.togglePause() }) {
+                Image(systemName: recording.isPaused ? "play.fill" : "pause.fill")
+                    .font(.system(size: 12))
+                    .foregroundStyle(recording.isPaused ? Palette.accent(dark) : Palette.muted(dark))
+                    .frame(width: 32, height: 30)
+            }
+            .buttonStyle(AstraControlStyle(radius: 8, base: recording.isPaused ? 0.07 : 0.0))
+            .help(recording.isPaused ? Facts.recordingResume : Facts.recordingPause)
+            .accessibilityLabel(recording.isPaused ? Facts.recordingResume : Facts.recordingPause)
             StopRecordingButton { WindowCoordinator.shared.toggleRecording() }
         }
         .padding(.horizontal, S.metric(Metrics.dockPadH))
@@ -886,7 +988,10 @@ private struct MeetingPanelBody: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 8) {
-                DockLabel(text: panel == .notes ? Facts.meetingNotesPanelTitle : panel.title)
+                // captions は controller のタブ名（字幕）と重複するのでパネル見出しを出さない。
+                if panel != .captions {
+                    DockLabel(text: panel == .notes ? Facts.meetingNotesPanelTitle : panel.title)
+                }
                 Spacer(minLength: 0)
                 // 両方同時に見たいときだけ、大きな面へ出す（既定では出さない）。
                 Button { WindowCoordinator.shared.detachMeetingSurface() } label: {
@@ -904,56 +1009,61 @@ private struct MeetingPanelBody: View {
             content
             Spacer(minLength: 0)
         }
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("meetingPanelBody")
+    }
+
+    /// 字幕・文字起こしがまだ空のとき。翻訳タブの「まだ訳すものがありません。」と同じ姿。
+    private var captionsEmptyLine: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if RecordingRuntime.shared.transcriptionUnavailable {
+                // 黙って空にしない。理由と、直しに行く道（Atlas system.stt-unavailable）。
+                Label(RecordingRuntime.shared.transcriptionFailureMessage, systemImage: "text.badge.xmark")
+                    .font(.system(size: S.type(Metrics.dockRowSize)))
+                    .foregroundStyle(Palette.danger(dark))
+                ProbeButton(id: "openDictationSettings", action: {
+                    if RecordingRuntime.shared.liveTranscriptionFailure != nil { RecordingRuntime.shared.retryLiveTranscription() }
+                    else { Permissions.openDictationSettings() }
+                }) {
+                    Text(RecordingRuntime.shared.liveTranscriptionFailure != nil
+                         ? Facts.liveRetry : "\(Facts.resultOpenSettings)（音声入力）")
+                }
+                .font(.system(size: S.type(Metrics.dockRowSize), weight: .medium))
+                .foregroundStyle(Palette.accent(dark))
+                .frame(height: 30).padding(.horizontal, 10)
+                .buttonStyle(AstraControlStyle(radius: 8, base: 0.0))
+            } else {
+                Text(Facts.captionsEmpty)
+                    .font(.system(size: S.type(Metrics.dockRowSize)))
+                    .foregroundStyle(Palette.muted(dark))
+            }
+        }
     }
 
     @ViewBuilder private var content: some View {
         switch panel {
         case .captions:
             // 切替は Dock の中に置く。以前は大きな面へ detach しないと
-            // 翻訳・字幕へ行けなかった（既定の経路から到達できない機能になっていた）。
+            // 翻訳へ行けなかった（既定の経路から到達できない機能になっていた）。
             VStack(alignment: .leading, spacing: 10) {
                 RecordingToolPalette(selection: Binding(
                     get: { recording.selectedTool },
-                    set: { tool in
-                        recording.selectedTool = tool
-                        if tool == .translation, recording.translatedText.isEmpty { recording.translate() }
-                    }))
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 9) {
-                        switch recording.selectedTool {
-                        case .transcript:
+                    set: recording.selectTool))
+                if RecordingRuntime.shared.liveTranscriptionFailure != nil { captionsEmptyLine }
+                if recording.selectedTool == .translation {
+                    MeetingTranslationView(model: recording.translation, compact: true)
+                } else {
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 9) {
+                            // 空のまま黙らない。メモ（`.notes`）・翻訳と同じ 1 行を出す。
+                            if recording.transcript.isEmpty && RecordingRuntime.shared.liveTranscriptionFailure == nil { captionsEmptyLine }
                             ForEach(recording.transcript.suffix(8)) { line in
-                                captionLine(speaker: line.speaker, text: line.text, interim: line.interim)
-                            }
-                        case .translation:
-                            if recording.translating {
-                                Text("翻訳しています…")
-                                    .font(.system(size: S.type(Metrics.dockRowSize)))
-                                    .foregroundStyle(Palette.muted(dark))
-                            } else if recording.translatedText.isEmpty {
-                                Text("まだ訳すものがありません。")
-                                    .font(.system(size: S.type(Metrics.dockRowSize)))
-                                    .foregroundStyle(Palette.muted(dark))
-                            } else {
-                                Text(recording.translatedText)
-                                    .font(.system(size: S.type(Metrics.dockRowSize)))
-                                    .foregroundStyle(Palette.text(dark))
-                                    .fixedSize(horizontal: false, vertical: true)
-                            }
-                        case .captions:
-                            // 字幕は話者名を出さず、直近の発言だけを大きく読ませる。
-                            ForEach(recording.transcript.suffix(3)) { line in
-                                Text(line.text)
-                                    .font(.system(size: S.type(Metrics.dockSpeechSize), weight: .medium))
-                                    .foregroundStyle(line.interim ? Palette.muted(dark) : Palette.text(dark))
-                                    .fixedSize(horizontal: false, vertical: true)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                captionLine(speaker: line.speaker, at: line.timeLabel, text: line.text, interim: line.interim)
                             }
                         }
                     }
+                    .scrollIndicators(.never)
                 }
-                .scrollIndicators(.never)
             }
         case .notes:
             let canvas = store.state.meeting.canvas
@@ -980,11 +1090,16 @@ private struct MeetingPanelBody: View {
         }
     }
 
-    private func captionLine(speaker: String, text: String, interim: Bool) -> some View {
+    private func captionLine(speaker: String, at: String, text: String, interim: Bool) -> some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(speaker)
-                .font(.system(size: S.type(Metrics.dockMetaSize), weight: .semibold))
-                .foregroundStyle(Palette.accent(dark))
+            HStack(spacing: 6) {
+                Text(speaker)
+                    .font(.system(size: S.type(Metrics.dockMetaSize), weight: .semibold))
+                    .foregroundStyle(Palette.accent(dark))
+                Text(at)   // 話者 · 時刻。どこで言われたかが分かると、後から音に戻れる。
+                    .font(.system(size: S.type(Metrics.dockMetaSize), design: .monospaced))
+                    .foregroundStyle(Palette.muted(dark))
+            }
             Text(text)
                 .font(.system(size: S.type(Metrics.dockRowSize)))
                 .foregroundStyle(interim ? Palette.muted(dark) : Palette.text(dark))
@@ -1060,6 +1175,29 @@ private struct AskInDockField: View {
                     .font(.system(size: S.type(Metrics.dockRowSize)))
                     .foregroundStyle(Palette.text(dark))
                     .fixedSize(horizontal: false, vertical: true)
+            } else {
+                // 空欄 + 巨大な余白にしない。左寄せの compact な候補行で「何を聞けるか」を示す
+                // （pill を 4 つ並べる AI 製品の見た目は避ける）。
+                VStack(alignment: .leading, spacing: 7) {
+                    Text("よく聞くこと")
+                        .font(.system(size: S.type(Metrics.dockMetaSize), weight: .semibold))
+                        .foregroundStyle(Palette.muted(dark))
+                    ForEach(["決まったことは？", "私のやることは？", "反対意見や懸念は？"], id: \.self) { q in
+                        Button { question = q; ask() } label: {
+                            HStack(spacing: 8) {
+                                Image(systemName: "arrow.turn.down.right")
+                                    .font(.system(size: 11)).foregroundStyle(Palette.muted(dark))
+                                Text(q)
+                                    .font(.system(size: S.type(Metrics.dockRowSize)))
+                                    .foregroundStyle(Palette.text(dark))
+                                Spacer(minLength: 0)
+                            }
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityIdentifier("askSuggestion-\(q)")
+                    }
+                }
+                .padding(.top, 2)
             }
         }
     }
@@ -1113,7 +1251,8 @@ struct ResultDock: View {
                     // Session の状態をそのまま出す。読み取り中は「何をしているか」を言う。
                     Text(sessionLine)
                         .font(.system(size: S.type(Metrics.dockMetaSize)))
-                        .foregroundStyle(Palette.muted(dark))
+                        // 失敗の理由は補足ではなく本文。灰にすると題より読めない（盲検 3/3）。
+                        .foregroundStyle(result.failed ? Palette.text(dark) : Palette.muted(dark))
                 }
                 Spacer(minLength: 0)
             }
@@ -1232,11 +1371,15 @@ struct QuickActionsDock: View {
     }
 
     private var items: [Item] {
-        [
+        var actions = [
             Item(icon: "sparkles", title: "聞く") { state.beginListening() },
-            Item(icon: "record.circle", title: "録音") { WindowCoordinator.shared.toggleRecording() },
+            Item(icon: "record.circle", title: Facts.dockRecord) { WindowCoordinator.shared.toggleRecording() },
             Item(icon: "square.grid.2x2", title: Facts.resultOpen) { MainWindowController.shared.show() },
         ]
+        if let summary = AppContextResolver.current(), !summary.suggestions.isEmpty {
+            actions.append(Item(icon: "rectangle.inset.filled", title: Facts.dockRelated) { state.mode = .appContextExpanded(summary) })
+        }
+        return actions
     }
 
     var body: some View {
@@ -1257,6 +1400,9 @@ struct QuickActionsDock: View {
         }
         .padding(.horizontal, 8)
         .frame(maxHeight: .infinity)
+        // クイック操作が作業領域に重なるときは、Escape で一手で静かな Dock に戻す。
+        // ボタンを増やして閉じる専用の面を作らず、Astra 全体の逃げ道の鍵に揃える。
+        .escapeKey { state.mode = .idle }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("dockQuickActions")
     }

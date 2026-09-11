@@ -1,0 +1,13 @@
+{
+  "key": {
+    "52D3": "main.home-work-context",
+    "56A1": "main.home-work-why",
+    "1533": "main.apps-connectors"
+  },
+  "order": [
+    "1533",
+    "52D3",
+    "56A1"
+  ],
+  "batch": 6
+}

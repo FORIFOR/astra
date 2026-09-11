@@ -11,6 +11,7 @@ import SQLite3
 /// 列が無ければ、後から「つい入れてしまう」ことができない。
 final class LocalStore {
     static let shared = LocalStore()
+    static let tasksChanged = Notification.Name("AstraLocalTasksChanged")
 
     private var db: OpaquePointer?
     private(set) var path: String = ""
@@ -56,7 +57,7 @@ final class LocalStore {
 
     /// §24 のテーブル一式。画像・音声・本文の列は**意図的に無い**。
     static let tables = [
-        "tasks", "conversations", "context_metadata",
+        "tasks", "task_requests", "conversations", "context_metadata",
         "meetings", "transcripts", "meeting_notes", "artifacts", "plugin_permissions",
     ]
 
@@ -67,6 +68,7 @@ final class LocalStore {
         CREATE TABLE IF NOT EXISTS tasks (
           id TEXT PRIMARY KEY, title TEXT NOT NULL, status TEXT NOT NULL,
           started_at REAL NOT NULL, steps_json TEXT NOT NULL);
+        CREATE TABLE IF NOT EXISTS task_requests (task_id TEXT PRIMARY KEY, record_json TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS conversations (
           id TEXT PRIMARY KEY, started_at REAL NOT NULL, last_turn_at REAL);
         -- 文脈は **metadata だけ**。summary/本文の列は作らない（§25）。
@@ -169,24 +171,45 @@ final class LocalStore {
 
     // MARK: - tasks（§23 UI を閉じても消えない）
 
-    func save(_ task: AgentTask) {
-        let steps = task.steps.map { "\($0.tool)\u{1}\($0.title)\u{1}\($0.state.rawValue)" }
-            .joined(separator: "\u{2}")
+    @discardableResult
+    func save(_ task: AgentTask) -> Bool {
+        // Preserve the actual step details. The legacy delimiter format silently
+        // discarded failures and work results on relaunch, and broke on control characters.
+        let rows = task.steps.map { ["tool": $0.tool, "title": $0.title, "state": $0.state.rawValue, "detail": $0.detail] }
+        guard let data = try? JSONSerialization.data(withJSONObject: rows),
+              let steps = String(data: data, encoding: .utf8) else { return false }
+        guard exec("BEGIN IMMEDIATE") else { return false }
+        var committed = false
+        defer { if !committed { _ = exec("ROLLBACK") } }
         let sql = "INSERT OR REPLACE INTO tasks (id,title,status,started_at,steps_json) VALUES (?,?,?,?,?)"
         var stmt: OpaquePointer?
-        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return }
+        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return false }
         bind(stmt, 1, task.id.uuidString)
         bind(stmt, 2, task.title)
         bind(stmt, 3, task.status.rawValue)
         sqlite3_bind_double(stmt, 4, task.startedAt.timeIntervalSince1970)
         bind(stmt, 5, steps)
-        sqlite3_step(stmt)
+        let saved = sqlite3_step(stmt) == SQLITE_DONE
         sqlite3_finalize(stmt)
+        guard saved else { return false }
+        if let record = task.requestRecord {
+            guard let data = try? JSONEncoder().encode(record), let json = String(data: data, encoding: .utf8) else { return false }
+            var recordStmt: OpaquePointer?
+            guard sqlite3_prepare_v2(db, "INSERT OR REPLACE INTO task_requests (task_id,record_json) VALUES (?,?)", -1, &recordStmt, nil) == SQLITE_OK else { return false }
+            bind(recordStmt, 1, task.id.uuidString); bind(recordStmt, 2, json)
+            let savedRecord = sqlite3_step(recordStmt) == SQLITE_DONE
+            sqlite3_finalize(recordStmt)
+            guard savedRecord else { return false }
+        }
+        guard exec("COMMIT") else { return false }
+        committed = true
+        NotificationCenter.default.post(name: Self.tasksChanged, object: self)
+        return true
     }
 
     /// 走っていた task を読み戻す（§23 Dock を開き直したら状態が戻る）。
     func loadTasks(status: AgentRunState? = nil) -> [AgentTask] {
-        var sql = "SELECT id,title,status,started_at,steps_json FROM tasks"
+        var sql = "SELECT t.id,t.title,t.status,t.started_at,t.steps_json,r.record_json FROM tasks t LEFT JOIN task_requests r ON r.task_id=t.id"
         if status != nil { sql += " WHERE status = ?" }
         sql += " ORDER BY started_at DESC"
         var stmt: OpaquePointer?
@@ -201,12 +224,24 @@ final class LocalStore {
                   let run = AgentRunState(rawValue: statusText) else { continue }
             let started = Date(timeIntervalSince1970: sqlite3_column_double(stmt, 3))
             let stepsText = sqlite3_column_text(stmt, 4).map { String(cString: $0) } ?? ""
-            let steps: [AgentStep] = stepsText.split(separator: "\u{2}").compactMap { chunk in
+            let steps: [AgentStep]
+            if let rows = (try? JSONSerialization.jsonObject(with: Data(stepsText.utf8))) as? [[String: String]] {
+                steps = rows.compactMap { row in
+                    guard let title = row["title"], let tool = row["tool"],
+                          let raw = row["state"], let state = AgentRunState(rawValue: raw) else { return nil }
+                    return AgentStep(title: title, tool: tool, detail: row["detail"] ?? "", state: state)
+                }
+            } else {
+                steps = stepsText.split(separator: "\u{2}").compactMap { chunk in
                 let parts = chunk.split(separator: "\u{1}", omittingEmptySubsequences: false)
                 guard parts.count == 3, let st = AgentRunState(rawValue: String(parts[2])) else { return nil }
                 return AgentStep(title: String(parts[1]), tool: String(parts[0]), state: st)
+                }
             }
-            out.append(AgentTask(id: id, title: title, status: run, steps: steps,
+            let record = sqlite3_column_text(stmt, 5).flatMap { json in
+                try? JSONDecoder().decode(TaskRequestRecord.self, from: Data(String(cString: json).utf8))
+            }
+            out.append(AgentTask(requestRecord: record, id: id, title: title, status: run, steps: steps,
                                  startedAt: started, context: ContextBundle()))
         }
         sqlite3_finalize(stmt)

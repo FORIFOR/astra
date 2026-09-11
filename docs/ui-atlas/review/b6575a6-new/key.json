@@ -1,0 +1,21 @@
+{
+  "key": {
+    "EC85": "screenshot.detected",
+    "7838": "screenshot.attached-cloud",
+    "3DF9": "guided-setup.intro",
+    "2343": "guided-setup.target-highlighted",
+    "FB32": "guided-setup.target-missing",
+    "5BB3": "guided-setup.granted",
+    "F7F7": "guided-setup.denied"
+  },
+  "order": [
+    "2343",
+    "3DF9",
+    "5BB3",
+    "7838",
+    "EC85",
+    "F7F7",
+    "FB32"
+  ],
+  "batch": 6
+}

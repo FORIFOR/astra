@@ -38,6 +38,9 @@ final class StatusBarController {
         open.target = self
         menu.addItem(open)
 
+        let controls = NSMenuItem(title: Facts.menuShowControls, action: #selector(showControls), keyEquivalent: "")
+        controls.target = self
+        menu.addItem(controls)
         let recording = WindowCoordinator.shared.isRecording
         let rec = NSMenuItem(
             title: recording ? Facts.recordingMenuStop : Facts.recordingMenuStart,
@@ -64,6 +67,11 @@ final class StatusBarController {
         let guide = NSMenuItem(title: Facts.menuGuide, action: #selector(openGuide), keyEquivalent: "")
         guide.target = self
         menu.addItem(guide)
+
+        // Guided Setup。権限は変えず、右下のアバターが System Settings の対象を案内する。
+        let guided = NSMenuItem(title: Facts.menuGuidedSetup, action: #selector(startGuidedSetup), keyEquivalent: "")
+        guided.target = self
+        menu.addItem(guided)
 
         // 自動更新は起動時に黙って見るだけだった（SoftwareUpdate.checkNow() に導線が無い、宣言だけの口）。
         // 確認できない実行体では灰色にせず、押したら理由と配布ページへの一手を出す。
@@ -97,14 +105,25 @@ final class StatusBarController {
     }
 
     @objc private func openMain() { MainWindowController.shared.showSection(.home) }
+    @objc private func showControls() { WindowCoordinator.shared.restoreControls() }
     @objc private func toggleRecording() { WindowCoordinator.shared.toggleRecording() }
     @objc private func openSettings() { SettingsWindowController.shared.show() }
     @objc private func openGuide() { NSWorkspace.shared.open(Self.guideURL) }
+    @objc private func startGuidedSetup() { SettingsWindowController.shared.show() }
     @objc private func checkUpdates() {
         guard let reason = SoftwareUpdate.shared.checkNow() else { return }
+        Self.presentUpdateUnavailable(reason: reason)
+    }
+
+    /// 更新を確かめられない理由を出す。メニューと検査（Atlas system.update-unavailable）が同じ面を通る。
+    static func presentUpdateUnavailable(reason: String) {
         let alert = NSAlert()
         alert.messageText = Facts.updateUnavailableTitle
-        alert.informativeText = "\(reason)。新しい版は配布ページで確かめられます。"
+        // 利用者の言葉で、事実といまの版、次の一手だけ。内向きの理由（SUFeedURL 等）は画面に出さず log へ
+        // （4 行が同じ見た目で並ぶと、どれが理由でどれが状態か切り分けられない、盲検 2/2）。
+        let version = SoftwareUpdate.currentVersion ?? "不明"
+        NSLog("update unavailable: \(reason)")
+        alert.informativeText = "この版は \(version) です。新しい版は配布ページで確かめられます。"
         alert.addButton(withTitle: Facts.updateOpenReleases)
         alert.addButton(withTitle: Facts.updateClose)
         NSApp.activate(ignoringOtherApps: true)

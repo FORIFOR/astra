@@ -1,0 +1,148 @@
+{
+  "pages": {
+    "9F6D": {
+      "visible_text": [
+        "Home",
+        "Work",
+        "Library",
+        "Apps",
+        "こんばんは",
+        "何を終わらせますか",
+        "録音を始める",
+        "Product Weekly",
+        "A社商談",
+        "ui-check"
+      ],
+      "observation": {
+        "happening": "Home screen displaying greeting, task prompt, upcoming meetings, and recent activity suggestions in a two-panel sidebar+content layout",
+        "most_important": "Clear primary action (input field asking what to finish) with contextual suggestions (upcoming meetings, recording option) and status indicators",
+        "next_action": "User can input a task, click on scheduled meetings, or start a recording session",
+        "anomalies": [
+          "Slight misalignment between 'これからの予定' header and event list spacing"
+        ]
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "A779": {
+      "visible_text": [
+        "聞いています",
+        "見えている文脈はあります",
+        "ESC"
+      ],
+      "observation": {
+        "happening": "System listening indicator showing AI is actively processing audio input and has detected contextual information",
+        "most_important": "Status feedback that AI comprehends the current context (not just passively recording)",
+        "next_action": "User continues speaking or presses ESC to dismiss",
+        "anomalies": []
+      },
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "concerns": [],
+      "confidence": "medium"
+    },
+    "B274": {
+      "visible_text": [
+        "04:21",
+        "会議",
+        "OAuth",
+        "文字起こし",
+        "翻訳",
+        "字幕",
+        "田中",
+        "あなた",
+        "決まったこと",
+        "AI が見ている資料 3 件"
+      ],
+      "observation": {
+        "happening": "Active meeting recording interface showing live transcription on right panel, discussion points on left, with full recording controls at top and document reference indicator at bottom",
+        "most_important": "Real-time dual-view of meeting (notes + transcription) plus AI-aware related document count, showing system understands meeting context",
+        "next_action": "User can continue speaking, navigate transcript, view documents, or configure output settings",
+        "anomalies": [
+          "Discussion point text appears to truncate mid-line in some entries; transcript text density high"
+        ]
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "B30F": {
+      "visible_text": [
+        "Apps",
+        "Plugins",
+        "Connectors",
+        "Gmail",
+        "設定が必要",
+        "Google Calendar",
+        "Finder",
+        "本機能"
+      ],
+      "observation": {
+        "happening": "Connectors configuration page showing three service integrations (Gmail, Google Calendar, Finder) with setup status badges (needs setup / ready)",
+        "most_important": "Visual status of each connector (requires authentication vs. ready) with explanatory text about service connectivity",
+        "next_action": "User can click any connector card to configure authentication",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "B585": {
+      "visible_text": [
+        "新しい録音",
+        "Microphone",
+        "MacBook Microphone",
+        "System Audio",
+        "Template",
+        "Meeting Notes",
+        "Save to",
+        "自分だけ",
+        "Project",
+        "なし",
+        "やめる",
+        "録音を始める"
+      ],
+      "observation": {
+        "happening": "Modal dialog for configuring a new recording session with microphone selection, template choice, save destination, and project assignment",
+        "most_important": "Pre-recording configuration with sensible defaults (Meeting Notes, private save, no project assigned)",
+        "next_action": "User confirms settings and starts recording or cancels",
+        "anomalies": [
+          "Blue toggle switch appears next to System Audio option but its purpose is unclear—does not align with radio-button microphone selection pattern"
+        ]
+      },
+      "verdict": "FIX",
+      "concerns": [
+        {
+          "axis": "state legibility",
+          "what": "Toggle switch next to 'System Audio' violates microphone selection pattern; unclear whether this toggle enables/disables System Audio or controls something unrelated",
+          "where": "Modal dialog, System Audio row with blue toggle switch"
+        }
+      ],
+      "confidence": "medium"
+    },
+    "B67C": {
+      "visible_text": [
+        "録音中",
+        "00:02",
+        "メモ",
+        "字幕",
+        "Ask Astra"
+      ],
+      "observation": {
+        "happening": "Compact recording status bar showing elapsed time with quick-action buttons for notes, subtitles, and AI assistance",
+        "most_important": "Clear recording-active state with elapsed time and immediate access to meeting features",
+        "next_action": "User can add notes, enable subtitles, ask AI questions, or stop recording",
+        "anomalies": []
+      },
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "concerns": [],
+      "confidence": "medium"
+    }
+  },
+  "_judge": {
+    "model": "haiku",
+    "cost_usd": 0.0525431,
+    "turns": 7,
+    "duration_ms": 41910
+  }
+}

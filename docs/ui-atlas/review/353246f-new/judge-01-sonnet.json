@@ -1,0 +1,171 @@
+{
+  "pages": {
+    "2C62": {
+      "visible_text": [
+        "画面収録とシステムオーディオ録音",
+        "ほかのアプリケーションの使用中でも、下のアプリケーションに画面とオーディオの内容の記録を許可。",
+        "2.1.260",
+        "AnyDesk",
+        "AstraDbg",
+        "ChatGPT",
+        "Claude",
+        "Codex Computer Use",
+        "DeepNote Desktop",
+        "Google Chrome",
+        "OBS",
+        "VoiceOS",
+        "ターミナル",
+        "Shuhei Horio"
+      ],
+      "observation": {
+        "happening": "macOSのシステム設定「プライバシーとセキュリティ」内、画面収録とシステムオーディオ録音の許可アプリ一覧が表示されている。",
+        "most_important": "どのアプリに画面収録権限が与えられているか(トグルON/OFF)。VoiceOSのみOFF、他は全てON。",
+        "next_action": "各アプリのトグルを切り替える、または下部の+/-でアプリを追加/削除する。",
+        "anomalies": [
+          "リスト先頭のアプリ名が「2.1.260」というバージョン番号のような文字列で、他のアプリ名と体裁が揃っていない",
+          "「AstraDbg」という開発用らしき名前のアプリは登録済みだが「Astra」本体は見当たらない"
+        ]
+      },
+      "verdict": "FIX",
+      "concerns": [
+        {
+          "axis": "trust-provenance",
+          "what": "アプリ名の欄にバージョン番号らしき「2.1.260」がそのまま表示されており、どのアプリを指すか利用者が判別できない",
+          "where": "リスト最上段の項目名"
+        }
+      ],
+      "confidence": "medium"
+    },
+    "3FF0": {
+      "visible_text": [
+        "ディスプレイ",
+        "デスクトップとDock",
+        "メニューバー",
+        "ターミナル",
+        "「+」から Astra を追加してください"
+      ],
+      "observation": {
+        "happening": "システム設定のサイドバー下部とアプリ一覧の一部に重なる形で、「+」ボタンを指すコーチマーク(吹き出し)が表示され、Astraを追加するよう案内している。",
+        "most_important": "「+」ボタンからAstraを追加するようにという指示テキストと、その対象を丸で囲んだハイライト。",
+        "next_action": "「+」ボタンをクリックしてAstraを選択・追加する。",
+        "anomalies": [
+          "画像自体が上部を大きく欠いた極端なクロップで、吹き出しがどの位置関係でウィンドウに付随しているか全体像が分からない"
+        ]
+      },
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "concerns": [],
+      "confidence": "low"
+    },
+    "6D00": {
+      "visible_text": [
+        "設定画面で",
+        "Astra",
+        "を",
+        "オンにしてください",
+        "×"
+      ],
+      "observation": {
+        "happening": "「設定画面でAstraをオンにしてください」という指示だけを表示するフローティング型のトースト通知。",
+        "most_important": "Astraを設定でオンにする必要があるという指示。",
+        "next_action": "×で閉じる、または自分でシステム設定を開いてAstraを探してオンにする。",
+        "anomalies": [
+          "設定画面へ直接遷移するボタンやリンクがなく、テキストのみで自力操作を要求している",
+          "アイコンが波形(音声)風で、「オンにする」という指示内容との対応が読み取りにくい"
+        ]
+      },
+      "verdict": "FIX",
+      "concerns": [
+        {
+          "axis": "primary-action-clarity",
+          "what": "設定を開く導線ボタンがなく、テキスト指示のみで具体的な操作アクションが提供されていない",
+          "where": "トースト本体"
+        }
+      ],
+      "confidence": "medium"
+    },
+    "6FFE": {
+      "visible_text": [
+        "画面収録とシステムオーディオ録音",
+        "2.1.260",
+        "AnyDesk",
+        "AstraDbg",
+        "ChatGPT",
+        "Claude",
+        "Codex Computer Use",
+        "DeepNote Desktop",
+        "Google Chrome",
+        "OBS",
+        "VoiceOS",
+        "ターミナル",
+        "「+」から Astra を追加してください"
+      ],
+      "observation": {
+        "happening": "画面収録許可リストの上に、「+」ボタンをハイライトしてAstraを追加するよう促すコーチマークが重ねて表示されている。",
+        "most_important": "リストに「Astra」自体は無く(似た名前の「AstraDbg」はある)、+から追加が必要という案内。",
+        "next_action": "+をクリックしてAstraを一覧に追加する。",
+        "anomalies": [
+          "「AstraDbg」がすでに許可済みなのに本体の「Astra」は未追加という状態で、利用者が両者の違いを理解できるか不明瞭",
+          "「2.1.260」という名称の項目が引き続き残っている"
+        ]
+      },
+      "verdict": "FIX",
+      "concerns": [
+        {
+          "axis": "consistency",
+          "what": "「AstraDbg」と「Astra」という紛らわしい2つの項目が並び、どちらが案内対象か混乱を招く",
+          "where": "アプリ一覧とコーチマークの関係"
+        }
+      ],
+      "confidence": "medium"
+    },
+    "8516": {
+      "visible_text": [
+        "画面収録を使うため、",
+        "1つ設定してください",
+        "×"
+      ],
+      "observation": {
+        "happening": "「画面収録を使うため、1つ設定してください」とだけ表示するフローティングトースト通知。",
+        "most_important": "画面収録機能を使うために何か1つの設定変更が必要という警告。",
+        "next_action": "×で閉じる、または自分で設定画面を探して該当項目を有効化する。",
+        "anomalies": [
+          "「1つ」が具体的に何を指すか名指しされておらず、どの項目を設定すればよいか本文だけでは特定できない",
+          "設定画面へ飛ぶボタンが無い"
+        ]
+      },
+      "verdict": "FIX",
+      "concerns": [
+        {
+          "axis": "error-recovery-clarity",
+          "what": "「1つ設定してください」が対象を明示しておらず、利用者がどの設定を直せばよいか分からない",
+          "where": "トースト本文"
+        }
+      ],
+      "confidence": "medium"
+    },
+    "8FA7": {
+      "visible_text": [
+        "スクリーンショット",
+        "質問したときだけ",
+        "Claude",
+        "に送信",
+        "×"
+      ],
+      "observation": {
+        "happening": "ダーク調のステータス表示で、スクリーンショット機能がオンだが「質問したときだけClaudeに送信」される旨を説明している。",
+        "most_important": "スクリーンショットは常時送信ではなく、ユーザーが質問した時のみClaudeに送られるというプライバシー上の説明。",
+        "next_action": "×で閉じる、またはそのまま作業を継続する。",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    }
+  },
+  "_judge": {
+    "model": "sonnet",
+    "cost_usd": 0.1715446,
+    "turns": 7,
+    "duration_ms": 81052
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "01-waiting-dark" : {
+    "height" : 492,
+    "scale" : 2,
+    "width" : 820,
+    "y" : 625
+  },
+  "01-waiting-light" : {
+    "height" : 492,
+    "scale" : 2,
+    "width" : 820,
+    "y" : 625
+  },
+  "02-english-dark" : {
+    "height" : 492,
+    "scale" : 2,
+    "width" : 820,
+    "y" : 625
+  },
+  "02-english-light" : {
+    "height" : 492,
+    "scale" : 2,
+    "width" : 820,
+    "y" : 625
+  },
+  "03-original-dark" : {
+    "height" : 492,
+    "scale" : 2,
+    "width" : 820,
+    "y" : 625
+  },
+  "03-original-light" : {
+    "height" : 492,
+    "scale" : 2,
+    "width" : 820,
+    "y" : 625
+  },
+  "04-large-captions-dark" : {
+    "height" : 492,
+    "scale" : 2,
+    "width" : 820,
+    "y" : 625
+  },
+  "04-large-captions-light" : {
+    "height" : 492,
+    "scale" : 2,
+    "width" : 820,
+    "y" : 625
+  },
+  "05-japanese-dark" : {
+    "height" : 492,
+    "scale" : 2,
+    "width" : 820,
+    "y" : 625
+  },
+  "05-japanese-light" : {
+    "height" : 492,
+    "scale" : 2,
+    "width" : 820,
+    "y" : 625
+  }
+}

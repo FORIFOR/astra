@@ -5,7 +5,7 @@
  *
  * Temporal は @temporalio/testing のローカルサーバを使う（Docker 不要）。
  */
-import { mkdtemp, rm } from 'node:fs/promises';
+import { appendFile, mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -76,7 +76,34 @@ describe.skipIf(!url)('task runtime end to end', () => {
 
     env = await TestWorkflowEnvironment.createLocal();
     worker = await createTaskWorker(
-      { db, library, publisher: { async publish() {} } },
+      {
+        db,
+        library,
+        publisher: { async publish() {} },
+        // 暫定の障害注入。実OAuth identity未設定というP0検証のブロッカーを回避する。
+        // このテストだけで「受付済み→応答喪失」を作る。Live PASSには数えない。
+        // Google/Microsoftの実応答喪失Gateが稼働したら、この代役と受付ファイルを撤去する。
+        hostExecutor: {
+          async execute(input) {
+            await appendFile(path.join(storeRoot, `${input.taskId}.accepted`), 'accepted\n');
+            throw new DOMException('response lost after acceptance', 'TimeoutError');
+          },
+        },
+        automation: {
+          browser: {
+            async execute(input) {
+              await appendFile(path.join(storeRoot, `${input.taskId}.fallback`), 'browser\n');
+              throw new Error('unexpected fallback');
+            },
+          },
+          screen: {
+            async execute(input) {
+              await appendFile(path.join(storeRoot, `${input.taskId}.fallback`), 'screen\n');
+              throw new Error('unexpected fallback');
+            },
+          },
+        },
+      },
       {
         connection: env.nativeConnection,
         namespace: env.client.options.namespace,
@@ -215,6 +242,37 @@ describe.skipIf(!url)('task runtime end to end', () => {
   });
 
   describe('approval', () => {
+    for (const source of ['gmail', 'outlook_mail']) {
+      it(`does not replay ${source} after acceptance and response loss`, async () => {
+        const { task } = await service.create({
+          tenantId,
+          userId,
+          request: {
+            kind: 'mail.send',
+            input: {
+              source,
+              to: ['verification@example.invalid'],
+              subject: 'response-loss regression',
+              body: 'No provider delivery in this fault-injection test.',
+              in_reply_to: uuidv7(),
+            },
+          },
+          idempotencyKey: uuidv7(),
+        });
+        const receipt = path.join(storeRoot, `${task.id}.accepted`);
+        const approval = await waitForApproval(db, tenantId, task.id);
+        // 承認前に副作用はない。
+        await expect(readFile(receipt)).rejects.toMatchObject({ code: 'ENOENT' });
+        await service.decideApproval(tenantId, task.id, userId, approval, 'APPROVED');
+        await expect(waitForWorkflow(task.id)).rejects.toThrow();
+        expect((await service.get(tenantId, task.id)).status).toBe('FAILED');
+        expect(await readFile(receipt, 'utf8')).toBe('accepted\n');
+        await expect(readFile(path.join(storeRoot, `${task.id}.fallback`))).rejects.toMatchObject({
+          code: 'ENOENT',
+        });
+      }, 60_000);
+    }
+
     it('waits, then completes when approved', async () => {
       const { task } = await service.create({
         tenantId,

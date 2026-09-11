@@ -7,6 +7,7 @@
  * 同じイベントループに乗せたくないため。
  */
 import path from 'node:path';
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { NativeConnection } from '@temporalio/worker';
 import { createDb, dbConfigFromEnv, withTenant, type DbHandle } from '@astra/db';
 import { createLogger } from '@astra/telemetry';
@@ -16,7 +17,7 @@ import {
   researchExecutors,
   generalExecutors,
   researchProvidersFromEnv,
-  setModelContext,
+  withModelContext,
 } from '@astra/service-research';
 import {
   FsRecordingStore,
@@ -25,6 +26,11 @@ import {
   meetingProvidersFromEnv,
   HostMeetingSummarizer,
 } from '@astra/service-meeting';
+import {
+  meetingArtifacts,
+  WorkContextService,
+  WorldModelService,
+} from '@astra/service-world-model';
 // 数え方は gateway と同じものを使う。別々に数えると片方だけ見落とす。
 import { assertReadyForProduction, canonicalSha256 } from '@astra/contracts';
 import { capabilityReport, capabilitySummary } from '@astra/service-capabilities';
@@ -72,8 +78,9 @@ async function main(): Promise<void> {
    * 会議の要約は step の中で起きるので、受け渡しに載せる先が要る。
    * 調査の側は `setModelContext` が同じものを持つ。
    */
-  let here: { taskId: string; tenantId: string; userId: string; stepIndex: number } | null = null;
-  const modelContext = (): typeof here => here;
+  type StepContext = { taskId: string; tenantId: string; userId: string; stepIndex: number };
+  const here = new AsyncLocalStorage<StepContext>();
+  const modelContext = (): StepContext | null => here.getStore() ?? null;
 
   const hostExecutor = new HostStepExecutor({
     bridge: hostBridge,
@@ -139,10 +146,7 @@ async function main(): Promise<void> {
       hostExecutor,
       hosts: hostBridge,
       // step ごとに「いまここ」を置く。言語モデルはこの中から呼ばれる。
-      onStep: (where) => {
-        here = where;
-        setModelContext(where);
-      },
+      withStepContext: (where, run) => here.run(where, () => withModelContext(where, run)),
       executors: {
         ...researchExecutors(research),
         /*
@@ -172,6 +176,10 @@ async function main(): Promise<void> {
         ...meetingExecutors({
           meetings,
           library,
+          // 会議の結論を Work Graph へ（MEETING_WORK_LOOP）。id は安定、再 finalize でも増えない。
+          sink: meetingArtifactSink(
+            new WorkContextService({ db, world: new WorldModelService({ db }) }),
+          ),
           recordings: new FsRecordingStore(recordingRoot),
           batch: meetingProviders.batch,
           /*
@@ -260,6 +268,7 @@ async function approvalProof(
  */
 const OPERATION_FOR: Readonly<Record<string, string>> = {
   'mail.send': 'gmail.send',
+  'outlook.mail.reply': 'outlook.mail.reply',
   'mail.trash': 'gmail.trash',
   'calendar.create_event': 'calendar.create',
 };
@@ -269,3 +278,45 @@ main().catch((error: unknown) => {
   console.error(error);
   process.exit(1);
 });
+
+/** 会議の bundle → 安定 id の artifact → work_artifacts（upsert）。 */
+function meetingArtifactSink(work: WorkContextService) {
+  return {
+    async publish(input: {
+      tenantId: string;
+      userId: string;
+      meeting: {
+        id: string;
+        title: string;
+        started_at: string;
+        ended_at: string | null;
+        recording_artifact_id: string | null;
+      };
+      bundle: Parameters<typeof meetingArtifacts>[0]['bundle'];
+      segments: Parameters<typeof meetingArtifacts>[0]['segments'];
+      speakers: Parameters<typeof meetingArtifacts>[0]['speakers'];
+    }): Promise<{ published: number }> {
+      const artifacts = meetingArtifacts({
+        meetingId: input.meeting.id,
+        title: input.meeting.title,
+        startedAt: input.meeting.started_at,
+        endedAt: input.meeting.ended_at,
+        bundle: input.bundle,
+        segments: input.segments,
+        speakers: input.speakers,
+        projectHint: null,
+        recordingArtifactId: input.meeting.recording_artifact_id,
+        transcriptArtifactId: null,
+        observedAt: new Date().toISOString(),
+      });
+      if (artifacts.length === 0) return { published: 0 };
+      await work.ingest(input.tenantId, input.userId, {
+        source: 'meeting',
+        cursor: null,
+        watermark: null,
+        artifacts,
+      });
+      return { published: artifacts.length };
+    },
+  };
+}

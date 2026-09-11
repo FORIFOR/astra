@@ -1,0 +1,450 @@
+{
+  "rc": "b7eafe2",
+  "pages": [
+    {
+      "id": "system.confirm-cancel",
+      "blind_id": "00F3",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "components.pressed",
+      "blind_id": "04D5",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "main.home-personalization",
+      "blind_id": "058D",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "dock.confirmation",
+      "blind_id": "076B",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "guided-setup.target-highlighted",
+      "blind_id": "08F6",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "settings.permissions",
+      "blind_id": "1616",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "screenshot.detected",
+      "blind_id": "1640",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "system.after-sharing",
+      "blind_id": "1D9C",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "voice.quick-actions",
+      "blind_id": "21D8",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "session.recording",
+      "blind_id": "2308",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "dock.context-detail",
+      "blind_id": "232F",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "components.focus",
+      "blind_id": "28DF",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "meeting.paused",
+      "blind_id": "2EF3",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "recording.rag",
+      "blind_id": "380C",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "guided-setup.denied",
+      "blind_id": "39D8",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "system.update-unavailable",
+      "blind_id": "3F19",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "dock.confirmation-edit",
+      "blind_id": "43A5",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "voice.listening",
+      "blind_id": "457D",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "voice.context-expanded",
+      "blind_id": "4908",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "system.stt-unavailable",
+      "blind_id": "4C50",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "recording.agent-timeline",
+      "blind_id": "50D2",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "system.interrupted",
+      "blind_id": "5495",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "main.home-upcoming",
+      "blind_id": "61EF",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "session.processing",
+      "blind_id": "6743",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "recording.workspace",
+      "blind_id": "6794",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "provenance.library-after-end",
+      "blind_id": "688D",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "dock.result-failed",
+      "blind_id": "7049",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "voice.preparing",
+      "blind_id": "71AC",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "meeting.notes",
+      "blind_id": "727A",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "main.work-tasks",
+      "blind_id": "787A",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "main.new-recording-sheet",
+      "blind_id": "7C4E",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "provenance.reopened",
+      "blind_id": "80F7",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "guided-setup.target-missing",
+      "blind_id": "81B8",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "components.hover",
+      "blind_id": "834A",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "provenance.meeting-detail",
+      "blind_id": "8B58",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "recording.meeting-canvas",
+      "blind_id": "8B5A",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "system.generic-failure",
+      "blind_id": "8C88",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "main.home",
+      "blind_id": "8D40",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "system.mic-denied",
+      "blind_id": "905F",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "main.apps-plugins",
+      "blind_id": "908B",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "session.ready",
+      "blind_id": "97A1",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "screenshot.attached-cloud",
+      "blind_id": "992D",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "main.library-files",
+      "blind_id": "9B6E",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "session.project",
+      "blind_id": "9B83",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "main.home-recording-now",
+      "blind_id": "9F74",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "meeting.workspace",
+      "blind_id": "A0AB",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "main.home-work-why",
+      "blind_id": "A2B9",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "guided-setup.granted",
+      "blind_id": "A59E",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "system.mic-recovered",
+      "blind_id": "A804",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "main.apps-connectors",
+      "blind_id": "ADAF",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "system.resumed",
+      "blind_id": "AE83",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "system.calendar-permission",
+      "blind_id": "B2CD",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "system.speech-permission",
+      "blind_id": "B348",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "session.detail",
+      "blind_id": "B547",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "voice.context",
+      "blind_id": "B8F6",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "dock.result",
+      "blind_id": "BA7D",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "main.home-meeting-brief",
+      "blind_id": "C215",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "meeting.captions",
+      "blind_id": "CC0C",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "components.neutral",
+      "blind_id": "CCF5",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "system.update-available",
+      "blind_id": "CDBA",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "main.work-agents",
+      "blind_id": "D00F",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "provenance.source",
+      "blind_id": "D0BC",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "meeting.ask",
+      "blind_id": "E8B9",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "meeting.preparing",
+      "blind_id": "E9DC",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "main.home-work-context",
+      "blind_id": "EC85",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "recording.transcript",
+      "blind_id": "ED86",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "voice.thinking",
+      "blind_id": "EEF3",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "main.library-meetings",
+      "blind_id": "EF0F",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "guided-setup.intro",
+      "blind_id": "F05B",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "voice.idle",
+      "blind_id": "F0D6",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "meeting.controller",
+      "blind_id": "FA49",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "system.accessibility-permission",
+      "blind_id": "FCA8",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    },
+    {
+      "id": "dock.running",
+      "blind_id": "FE50",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": []
+    }
+  ],
+  "summary": {
+    "keep": 0,
+    "fix_candidate": 0,
+    "not_enough_evidence": 73,
+    "models": []
+  },
+  "gate": "FAIL"
+}

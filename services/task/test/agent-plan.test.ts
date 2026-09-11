@@ -96,3 +96,55 @@ describe('planInstalledAgent', () => {
     expect(plan.steps).toEqual([]);
   });
 });
+
+describe('declared workflow conditions', () => {
+  const withWorkflow = agent({
+    tools: [
+      { id: 'general.answer', risk: 'READ', surface: 'cloud', requiresConfirmation: false },
+      { id: 'general.compose', risk: 'READ', surface: 'cloud', requiresConfirmation: false },
+    ],
+    grantedScopes: [],
+    requiredScopes: [],
+    workflow: {
+      steps: [
+        {
+          tool: 'general.answer',
+          message: '答えをまとめています',
+          applies: true,
+          condition: { when: 'input_absent', key: 'instruction' },
+        },
+        {
+          tool: 'general.compose',
+          message: '文章を書いています',
+          applies: true,
+          condition: { when: 'input_present', key: 'instruction' },
+        },
+      ],
+    },
+  });
+
+  it('evaluates step conditions against the task input, so a question only runs answer', () => {
+    // 以前は applies: true 固定で、質問の答えが compose の下書きに上書きされていた。
+    const plan = planInstalledAgent(withWorkflow, { question: 'これ何？', message: 'これ何？' });
+    expect(plan.steps.map((s) => s.toolId)).toEqual(['general.answer']);
+  });
+
+  it('runs compose only when an instruction is present', () => {
+    const plan = planInstalledAgent(withWorkflow, {
+      instruction: '案内文を書いて',
+      message: '案内文を書いて',
+    });
+    expect(plan.steps.map((s) => s.toolId)).toEqual(['general.compose']);
+  });
+
+  it('still honours a pre-evaluated applies flag when no condition is declared', () => {
+    const plan = planInstalledAgent(
+      agent({
+        tools: [{ id: 'crm.search', risk: 'READ', surface: 'cloud', requiresConfirmation: false }],
+        workflow: { steps: [{ tool: 'crm.search', message: '見ています', applies: false }] },
+      }),
+      { message: 'x' },
+    );
+    expect(plan.steps).toEqual([]);
+  });
+});

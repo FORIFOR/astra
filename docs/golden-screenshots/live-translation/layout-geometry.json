@@ -1,0 +1,50 @@
+{
+  "error-320-dark" : {
+    "height" : 330,
+    "width" : 320
+  },
+  "error-320-light" : {
+    "height" : 330,
+    "width" : 320
+  },
+  "error-720-dark" : {
+    "height" : 330,
+    "width" : 720
+  },
+  "error-720-light" : {
+    "height" : 330,
+    "width" : 720
+  },
+  "pending-320-dark" : {
+    "height" : 330,
+    "width" : 320
+  },
+  "pending-320-light" : {
+    "height" : 330,
+    "width" : 320
+  },
+  "pending-720-dark" : {
+    "height" : 330,
+    "width" : 720
+  },
+  "pending-720-light" : {
+    "height" : 330,
+    "width" : 720
+  },
+  "ready-320-dark" : {
+    "height" : 330,
+    "width" : 320
+  },
+  "ready-320-light" : {
+    "height" : 330,
+    "width" : 320
+  },
+  "ready-720-dark" : {
+    "height" : 330,
+    "width" : 720
+  },
+  "ready-720-light" : {
+    "height" : 330,
+    "width" : 720
+  }
+}

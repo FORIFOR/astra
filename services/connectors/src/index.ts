@@ -14,3 +14,5 @@ export * from './mime.js';
 export * from './calendar.js';
 export * from './gmail.js';
 export * from './scopes.js';
+export * from './microsoft.js';
+export * from './normalize.js';

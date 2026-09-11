@@ -162,6 +162,29 @@ pub fn api_reachable(base_url: String) -> bool {
 mod tests {
     use super::*;
 
+    /// SCREENSHOT_EGRESS_TRUTH: gateway へ行く turn に画素が無い。添付は id / kind / label だけ。
+    #[test]
+    fn turn_body_carries_ids_and_labels_but_never_pixels() {
+        let atts = vec![TurnAttachment {
+            id: "0a1b2c3d-0000-4000-8000-000000000001".into(),
+            kind: "screenshot".into(),
+            label: "スクリーンショット（たった今）".into(),
+        }];
+        let body = turn_body("これ何？", &atts);
+        let obj = body.as_object().expect("object");
+        let mut keys: Vec<&String> = obj.keys().collect();
+        keys.sort();
+        assert_eq!(keys, vec!["attachments", "interrupt", "modality", "text"]);
+        let att = body["attachments"][0].as_object().expect("attachment object");
+        let mut att_keys: Vec<&String> = att.keys().collect();
+        att_keys.sort();
+        assert_eq!(att_keys, vec!["id", "kind", "label"]);
+        for (_, v) in att { assert!(v.is_string(), "attachment fields are short strings, never bytes"); }
+        let serialized = body.to_string();
+        assert!(serialized.len() < 512, "a turn with an attachment stays tiny: {} bytes", serialized.len());
+        assert!(!serialized.contains("data:image") && !serialized.contains("base64"));
+    }
+
     fn gateway() -> Option<String> {
         std::env::var("ASTRA_GATEWAY_URL").ok().filter(|s| !s.is_empty())
     }
@@ -316,6 +339,22 @@ pub struct TurnOutcome {
     pub task_id: String,
     /// 仕事を起こさなかった理由・一言（無ければ空）。
     pub notice: String,
+    /// 返信案なら、宛先・出所・何を踏まえたか（`ReplyDraftMeta` の JSON。無ければ空）。
+    pub reply_json: String,
+}
+
+/// この turn に添えた端末内の画像（スクショ / クリップボード画像）。
+///
+/// **画素はここを通らない。**cloud へ渡すのは id とラベルだけで、実体は端末の
+/// `visual-context/<id>.png` にあり、端末で走るモデル呼び出しがそこから読む。
+#[derive(uniffi::Record, Clone, Debug, serde::Serialize)]
+pub struct TurnAttachment {
+    /// 端末側の受け渡しファイル名になる（`[A-Za-z0-9-]{1,64}`）。
+    pub id: String,
+    /// "screenshot" | "clipboard_image"
+    pub kind: String,
+    /// 「スクリーンショット（たった今）」など。指示語の解決に使う。
+    pub label: String,
 }
 
 #[uniffi::export]
@@ -324,6 +363,28 @@ pub fn api_send_turn(
     access_token: String,
     conversation_id: String,
     text: String,
+) -> Result<TurnOutcome, ApiError> {
+    api_send_turn_with_attachments(base_url, access_token, conversation_id, text, Vec::new())
+}
+
+/// turn の本文。**画素はここに無い。**添付は id / kind / label の 3 つだけ（検査で固定する）。
+pub fn turn_body(text: &str, attachments: &[TurnAttachment]) -> serde_json::Value {
+    serde_json::json!({
+        "text": text,
+        "modality": "text",
+        "interrupt": true,
+        "attachments": attachments,
+    })
+}
+
+/// 依頼を送る。端末内の画像を添えるとき（「これ何？」）はこちら。撮っただけでは呼ばない。
+#[uniffi::export]
+pub fn api_send_turn_with_attachments(
+    base_url: String,
+    access_token: String,
+    conversation_id: String,
+    text: String,
+    attachments: Vec<TurnAttachment>,
 ) -> Result<TurnOutcome, ApiError> {
     #[derive(Deserialize)]
     struct Resp {
@@ -334,6 +395,8 @@ pub fn api_send_turn(
         task_id: Option<String>,
         #[serde(default)]
         notice: Option<String>,
+        #[serde(default)]
+        reply: Option<serde_json::Value>,
     }
     let resp: Resp = ureq::post(&format!(
         "{}/v1/conversations/{}/turns",
@@ -341,7 +404,7 @@ pub fn api_send_turn(
         conversation_id
     ))
     .set("Authorization", &format!("Bearer {access_token}"))
-    .send_json(ureq::json!({ "text": text, "modality": "text", "interrupt": true }))
+    .send_json(turn_body(&text, &attachments))
     .map_err(map_transport)?
     .into_json()
     .map_err(|e| ApiError::Decode { message: e.to_string() })?;
@@ -350,6 +413,54 @@ pub fn api_send_turn(
         answer: resp.answer.unwrap_or_default(),
         task_id: resp.task_id.unwrap_or_default(),
         notice: resp.notice.unwrap_or_default(),
+        reply_json: resp.reply.map(|v| v.to_string()).unwrap_or_default(),
+    })
+}
+
+/// 「これ返して」の候補つきで依頼を送る。候補は `ReplyCandidate` の JSON 配列（端末が決めた順）。
+#[uniffi::export]
+pub fn api_send_turn_with_reply_candidates(
+    base_url: String,
+    access_token: String,
+    conversation_id: String,
+    text: String,
+    attachments: Vec<TurnAttachment>,
+    reply_candidates_json: String,
+) -> Result<TurnOutcome, ApiError> {
+    #[derive(Deserialize)]
+    struct Resp {
+        needs_clarification: bool,
+        #[serde(default)]
+        answer: Option<String>,
+        #[serde(default)]
+        task_id: Option<String>,
+        #[serde(default)]
+        notice: Option<String>,
+        #[serde(default)]
+        reply: Option<serde_json::Value>,
+    }
+    let candidates: serde_json::Value =
+        serde_json::from_str(&reply_candidates_json).unwrap_or(serde_json::json!([]));
+    let mut body = turn_body(&text, &attachments);
+    if let serde_json::Value::Object(ref mut map) = body {
+        map.insert("reply_candidates".to_string(), candidates);
+    }
+    let resp: Resp = ureq::post(&format!(
+        "{}/v1/conversations/{}/turns",
+        base(&base_url),
+        conversation_id
+    ))
+    .set("Authorization", &format!("Bearer {access_token}"))
+    .send_json(body)
+    .map_err(map_transport)?
+    .into_json()
+    .map_err(|e| ApiError::Decode { message: e.to_string() })?;
+    Ok(TurnOutcome {
+        needs_clarification: resp.needs_clarification,
+        answer: resp.answer.unwrap_or_default(),
+        task_id: resp.task_id.unwrap_or_default(),
+        notice: resp.notice.unwrap_or_default(),
+        reply_json: resp.reply.map(|v| v.to_string()).unwrap_or_default(),
     })
 }
 
@@ -496,4 +607,247 @@ pub fn api_meeting_segment_count(
         .into_json()
         .map_err(|e| ApiError::Decode { message: e.to_string() })?;
     Ok(resp.items.len() as u32)
+}
+
+// ---------------------------------------------------------------- Work Context
+
+/// 認証つき GET。本文をそのまま返す（JSON は Swift 側で Codable に写す）。
+///
+/// Work Context は入れ子の深い構造（priority → factors → sources）で、uniffi の Record に
+/// 写すと Rust と Swift の両方に同じ形を 2 度書くことになる。契約の正本は TypeScript 側
+/// （`@astra/contracts` の zod）なので、ここは運ぶだけにして形を持たない。
+fn get_json(base_url: &str, access_token: &str, path: &str) -> Result<String, ApiError> {
+    ureq::get(&format!("{}{}", base(base_url), path))
+        .set("Authorization", &format!("Bearer {access_token}"))
+        .call()
+        .map_err(map_transport)?
+        .into_string()
+        .map_err(|e| ApiError::Decode { message: e.to_string() })
+}
+
+/// path の 1 区切りにする（RFC 3986 unreserved 以外は %XX）。
+/// item id は `owed:gmail:m1` のような形で、そのまま入れると経路が変わる。
+fn path_segment(value: &str) -> String {
+    value
+        .bytes()
+        .map(|b| match b {
+            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => (b as char).to_string(),
+            _ => format!("%{:02X}", b),
+        })
+        .collect()
+}
+
+/// Home の Work Context（GET /v1/work/context）。JSON 本文。
+#[uniffi::export]
+pub fn api_work_context(base_url: String, access_token: String) -> Result<String, ApiError> {
+    get_json(&base_url, &access_token, "/v1/work/context")
+}
+
+/// 1 件の出所（GET /v1/work/evidence/:itemId）。JSON 本文。
+#[uniffi::export]
+pub fn api_work_evidence(
+    base_url: String,
+    access_token: String,
+    item_id: String,
+) -> Result<String, ApiError> {
+    get_json(&base_url, &access_token, &format!("/v1/work/evidence/{}", path_segment(&item_id)))
+}
+
+/// 本人の訂正（POST /v1/work/corrections）。1 操作。
+#[uniffi::export]
+pub fn api_work_correct(
+    base_url: String,
+    access_token: String,
+    item_id: String,
+    action: String,
+    note: String,
+) -> Result<(), ApiError> {
+    let body = ureq::json!({
+        "item_id": item_id,
+        "action": action,
+        "note": if note.is_empty() { serde_json::Value::Null } else { serde_json::Value::String(note) },
+    });
+    ureq::post(&format!("{}/v1/work/corrections", base(&base_url)))
+        .set("Authorization", &format!("Bearer {access_token}"))
+        .send_json(body)
+        .map_err(map_transport)?;
+    Ok(())
+}
+
+/// Astra が使っている本人の情報（GET /v1/personalization）。JSON 本文。
+#[uniffi::export]
+pub fn api_personalization(base_url: String, access_token: String) -> Result<String, ApiError> {
+    get_json(&base_url, &access_token, "/v1/personalization")
+}
+
+/// 確認・使わない・全体の停止（PUT /v1/personalization）。更新後の profile を JSON で返す。
+#[uniffi::export]
+pub fn api_personalization_update(
+    base_url: String,
+    access_token: String,
+    update_json: String,
+) -> Result<String, ApiError> {
+    let update: serde_json::Value =
+        serde_json::from_str(&update_json).map_err(|e| ApiError::Decode { message: e.to_string() })?;
+    ureq::put(&format!("{}/v1/personalization", base(&base_url)))
+        .set("Authorization", &format!("Bearer {access_token}"))
+        .send_json(update)
+        .map_err(map_transport)?
+        .into_string()
+        .map_err(|e| ApiError::Decode { message: e.to_string() })
+}
+
+#[cfg(test)]
+mod work_tests {
+    use super::*;
+
+    #[test]
+    fn evidence_ids_with_colons_are_escaped_in_the_path() {
+        assert_eq!(path_segment("owed:gmail:m1/x"), "owed%3Agmail%3Am1%2Fx");
+        assert_eq!(path_segment("project:MOPITA"), "project%3AMOPITA");
+        assert_eq!(path_segment("plain-id_1.0~"), "plain-id_1.0~");
+    }
+}
+
+// ---------------------------------------------------------------- connections
+
+/// plugin の接続記録（GET /v1/plugins/:id/connections）。JSON 本文（`items`）。
+#[uniffi::export]
+pub fn api_plugin_connections(
+    base_url: String,
+    access_token: String,
+    plugin_id: String,
+) -> Result<String, ApiError> {
+    get_json(&base_url, &access_token, &format!("/v1/plugins/{}/connections", path_segment(&plugin_id)))
+}
+
+/// 繋いだことを cloud に記録する（POST /v1/plugins/:id/connect）。**参照だけ。値は渡さない。**
+#[uniffi::export]
+pub fn api_plugin_connect(
+    base_url: String,
+    access_token: String,
+    plugin_id: String,
+    connect_json: String,
+) -> Result<String, ApiError> {
+    let body: serde_json::Value =
+        serde_json::from_str(&connect_json).map_err(|e| ApiError::Decode { message: e.to_string() })?;
+    ureq::post(&format!("{}/v1/plugins/{}/connect", base(&base_url), path_segment(&plugin_id)))
+        .set("Authorization", &format!("Bearer {access_token}"))
+        .send_json(body)
+        .map_err(map_transport)?
+        .into_string()
+        .map_err(|e| ApiError::Decode { message: e.to_string() })
+}
+
+/// 接続を切る（DELETE /v1/plugins/:id/connections/:connector）。
+#[uniffi::export]
+pub fn api_plugin_disconnect(
+    base_url: String,
+    access_token: String,
+    plugin_id: String,
+    connector_id: String,
+) -> Result<(), ApiError> {
+    ureq::delete(&format!(
+        "{}/v1/plugins/{}/connections/{}",
+        base(&base_url),
+        path_segment(&plugin_id),
+        path_segment(&connector_id)
+    ))
+    .set("Authorization", &format!("Bearer {access_token}"))
+    .call()
+    .map_err(map_transport)?;
+    Ok(())
+}
+
+// ---------------------------------------------------------------- reply / brief / approvals
+
+/** 返信を送る task を起こす（POST /v1/work/reply/send）。承認は別（`api_task_approve`）。task id を返す。 */
+#[uniffi::export]
+pub fn api_work_reply_send(
+    base_url: String,
+    access_token: String,
+    send_json: String,
+) -> Result<String, ApiError> {
+    let body: serde_json::Value =
+        serde_json::from_str(&send_json).map_err(|e| ApiError::Decode { message: e.to_string() })?;
+    #[derive(Deserialize)]
+    struct Resp { task_id: String }
+    let resp: Resp = ureq::post(&format!("{}/v1/work/reply/send", base(&base_url)))
+        .set("Authorization", &format!("Bearer {access_token}"))
+        .send_json(body)
+        .map_err(map_transport)?
+        .into_json()
+        .map_err(|e| ApiError::Decode { message: e.to_string() })?;
+    Ok(resp.task_id)
+}
+
+/** 次の会議の brief（GET /v1/work/brief/next）。無ければ空文字。 */
+#[uniffi::export]
+pub fn api_work_brief_next(base_url: String, access_token: String) -> Result<String, ApiError> {
+    let resp = ureq::get(&format!("{}/v1/work/brief/next", base(&base_url)))
+        .set("Authorization", &format!("Bearer {access_token}"))
+        .call()
+        .map_err(map_transport)?;
+    if resp.status() == 204 {
+        return Ok(String::new());
+    }
+    resp.into_string().map_err(|e| ApiError::Decode { message: e.to_string() })
+}
+
+/** 答えを待っている承認（GET /v1/tasks/:id/approvals）。JSON 本文。 */
+#[uniffi::export]
+pub fn api_task_approvals(
+    base_url: String,
+    access_token: String,
+    task_id: String,
+) -> Result<String, ApiError> {
+    get_json(&base_url, &access_token, &format!("/v1/tasks/{}/approvals", path_segment(&task_id)))
+}
+
+/** 承認に答える（POST /v1/tasks/:id/approve）。decision は APPROVED / REJECTED。 */
+#[uniffi::export]
+pub fn api_task_approve(
+    base_url: String,
+    access_token: String,
+    task_id: String,
+    approval_id: String,
+    decision: String,
+) -> Result<(), ApiError> {
+    ureq::post(&format!("{}/v1/tasks/{}/approve", base(&base_url), path_segment(&task_id)))
+        .set("Authorization", &format!("Bearer {access_token}"))
+        .send_json(ureq::json!({ "approval_id": approval_id, "decision": decision }))
+        .map_err(map_transport)?;
+    Ok(())
+}
+
+/// 仕事そのもの（GET /v1/tasks/:id）。JSON 本文。失敗の理由（error.code）を読むために使う。
+#[uniffi::export]
+pub fn api_task_json(base_url: String, access_token: String, task_id: String) -> Result<String, ApiError> {
+    get_json(&base_url, &access_token, &format!("/v1/tasks/{}", path_segment(&task_id)))
+}
+
+/// One-time initial profile; only the four user-facing operations are exposed.
+#[uniffi::export]
+pub fn api_initial_profile(
+    base_url: String,
+    access_token: String,
+    operation: String,
+    body_json: String,
+) -> Result<String, ApiError> {
+    let path = "/v1/work/initial-profile";
+    if operation == "get" { return get_json(&base_url, &access_token, path); }
+    let (method, suffix) = match operation.as_str() {
+        "begin" => ("POST", ""),
+        "confirm" => ("PUT", ""),
+        "retry" => ("POST", "/retry"),
+        _ => return Err(ApiError::Decode { message: "unsupported initial profile operation".into() }),
+    };
+    let body: serde_json::Value = serde_json::from_str(&body_json)
+        .map_err(|e| ApiError::Decode { message: e.to_string() })?;
+    let response = ureq::request(method, &format!("{}{}{}", base(&base_url), path, suffix))
+        .timeout(std::time::Duration::from_secs(20))
+        .set("Authorization", &format!("Bearer {access_token}"))
+        .send_json(body).map_err(map_transport)?;
+    if response.status() == 204 { return Ok("{}".into()); }
+    response.into_string().map_err(|e| ApiError::Decode { message: e.to_string() })
 }

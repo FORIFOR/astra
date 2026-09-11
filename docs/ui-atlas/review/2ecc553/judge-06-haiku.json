@@ -1,0 +1,147 @@
+{
+  "pages": {
+    "7466": {
+      "visible_text": [
+        "Home",
+        "Work",
+        "Library",
+        "Apps",
+        "おはようございます",
+        "何を終わらせますか？",
+        "録音を始める",
+        "予定から録音を始める",
+        "まだ何もありません"
+      ],
+      "observation": {
+        "happening": "Home screen with greeting and task/suggestion panel. Left sidebar navigation fully visible. Input field for natural language task entry.",
+        "most_important": "Clear entry point for users to start recording meetings or create tasks. Onboarding-friendly with suggested actions.",
+        "next_action": "User can speak command, select a suggestion, or navigate to other sections",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "74A2": {
+      "visible_text": [
+        "録音中",
+        "00:02",
+        "メモ",
+        "字幕",
+        "Ask Astra",
+        "pause",
+        "stop"
+      ],
+      "observation": {
+        "happening": "Recording status indicator bar at top. Dark background with clear recording state and elapsed time. Control buttons (pause/stop) and feature shortcuts visible.",
+        "most_important": "Recording state is unmistakable—red dot, elapsed time counter, and label all reinforce active capture.",
+        "next_action": "User can pause, stop, or access memo/subtitle/Ask features during recording",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "7B1F": {
+      "visible_text": [
+        "Slack",
+        "このメッセージを送ります？",
+        "外部に出る",
+        "#sales",
+        "あなた",
+        "やめる",
+        "直す",
+        "送る"
+      ],
+      "observation": {
+        "happening": "Confirmation dialog for sending a message to Slack #sales channel. Three button actions at bottom, warning that message will go outside (外部に出る).",
+        "most_important": "Safety confirmation before external message send. Clear action outcomes (Cancel/Revise/Send).",
+        "next_action": "User confirms or cancels sending, or revises message before send",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "7E46": {
+      "visible_text": [
+        "A社新規提案",
+        "要約",
+        "先方は10月導入を希望。最大の懸念は初期費用。",
+        "決まったこと",
+        "導入時期を10月で検討",
+        "やること",
+        "伊藤 修正版見積を送付 明日",
+        "文字起こし",
+        "録音",
+        "関連ファイル",
+        "出所"
+      ],
+      "observation": {
+        "happening": "Meeting details view with summary, structured action items (決まったこと/やること), and transcript with participant names and timestamps. Right panel shows recent messages.",
+        "most_important": "Structured capture of meeting outcomes and next steps. Clear distinction between decisions and action items. Transcript is timestamped and attributed.",
+        "next_action": "User can review transcript, view related files, access recording, or take action on items",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "8C66": {
+      "visible_text": [
+        "10:24 の会議",
+        "決まったこと 0",
+        "やること 0",
+        "文字起こし",
+        "録音",
+        "関連ファイル",
+        "出所",
+        "00:12",
+        "Ken",
+        "落ちる前の勢いです。"
+      ],
+      "observation": {
+        "happening": "Meeting view showing sparse content: zero decisions, zero action items, single transcript line from Ken at 00:12. Tab navigation and metadata buttons present.",
+        "most_important": "Meeting capture is working, but shows minimal extracted structure—could indicate short/unproductive meeting or early in meeting lifecycle.",
+        "next_action": "User can view full transcript, recording, or navigate away",
+        "anomalies": [
+          "Large amount of empty space below single transcript line suggests content sparsity or placeholder layout"
+        ]
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "8CB1": {
+      "visible_text": [
+        "録音中",
+        "04:21",
+        "会議",
+        "OAuth だけ確認お願いします",
+        "決まったこと",
+        "やること",
+        "この会議について聞く",
+        "文字起こし",
+        "翻訳",
+        "字幕",
+        "要約",
+        "決まったこと"
+      ],
+      "observation": {
+        "happening": "Live recording view with dual pane: left shows meeting agenda (OAuth, 決まったこと, やること), right shows real-time transcript. Controls at top and bottom for navigation, export, and queries.",
+        "most_important": "Real-time dual-pane display captures both structure (agenda items) and unfolding conversation (transcript). Recording indicator confirms capture in progress.",
+        "next_action": "User watches transcript flow, hears audio, can ask questions or navigate to summary views",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    }
+  },
+  "_judge": {
+    "model": "haiku",
+    "cost_usd": 0.0545566,
+    "turns": 7,
+    "duration_ms": 35331
+  }
+}

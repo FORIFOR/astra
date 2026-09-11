@@ -968,6 +968,9 @@ importers:
       '@astra/service-task':
         specifier: workspace:*
         version: link:../../services/task
+      '@astra/service-world-model':
+        specifier: workspace:*
+        version: link:../../services/world-model
       '@astra/telemetry':
         specifier: workspace:*
         version: link:../../packages/telemetry

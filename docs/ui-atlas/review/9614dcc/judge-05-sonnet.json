@@ -1,0 +1,179 @@
+{
+  "pages": {
+    "5DA5": {
+      "visible_text": [
+        "Home",
+        "こんにちは",
+        "何を終わらせますか?",
+        "録音を始める",
+        "前回の設定でその場で録り始めます",
+        "これからの予定",
+        "Product Weekly",
+        "10:00 Google Meet",
+        "A社 商談",
+        "13:30 Zoom",
+        "最近の会議",
+        "Q4 移行計画の打ち合わせ"
+      ],
+      "observation": {
+        "happening": "ホーム画面。挨拶文、タスク入力欄、録音開始の主要CTA、今後の予定リスト、直近会議の要約カードが縦に並んでいる。",
+        "most_important": "「録音を始める」ボタンと、各予定に付いた赤丸+「録音」チップ",
+        "next_action": "録音を始めるを押す、個別の予定の録音チップを押す、またはQ4の会議カードを開く",
+        "anomalies": [
+          "各予定行の「録音」チップが主要CTAと同じ赤色・同じ文言で、ボタンなのかステータス表示なのか区別しづらい",
+          "最後のカードの下に大きな余白がある"
+        ]
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "medium"
+    },
+    "6093": {
+      "visible_text": [
+        "Q4 移行計画の打ち合わせ",
+        "要約",
+        "決まったこと 2",
+        "やること 3",
+        "文字起こし",
+        "録音",
+        "関連ファイル",
+        "出所",
+        "あなた",
+        "田中",
+        "鈴木",
+        "今日・42分・5人"
+      ],
+      "observation": {
+        "happening": "会議詳細画面。要約、決まったこと、やることのリスト（各項目に引用番号付き）と、下部タブで文字起こしを表示中。",
+        "most_important": "決まったこと/やることの箇条書きと、文字起こしへのジャンプリンク[1]〜[5]",
+        "next_action": "引用番号をクリックして該当の発言箇所へ移動する、または録音/関連ファイル/出所タブへ切り替える",
+        "anomalies": [
+          "文字起こしリストの下に大きな空白領域があり、コンテンツが画面下部を占有していない"
+        ]
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "medium"
+    },
+    "6461": {
+      "visible_text": [
+        "Notion",
+        "Q3 Product Roadmap",
+        "SUGGESTED",
+        "Summarize page",
+        "Extract action items",
+        "Find unresolved decisions",
+        "Ask about this page"
+      ],
+      "observation": {
+        "happening": "Notionページ上に表示された小さなアシスタント用ポップアップ。ページタイトルと4つの提案アクションが縦に並んでいる。",
+        "most_important": "4つの提案アクション（Summarize page等）",
+        "next_action": "いずれかの提案項目をクリックして実行する、または右上の矢印で折りたたむ",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "690D": {
+      "visible_text": [
+        "Home",
+        "録音中",
+        "11:10の会議",
+        "Google Meet",
+        "00:01",
+        "ライブメモを開く",
+        "Ask Astra",
+        "止める",
+        "何を終わらせますか?"
+      ],
+      "observation": {
+        "happening": "録音中の会議を示すバナーがホーム画面上部に表示され、経過時間00:01、会議名、2つのアクションリンクと停止ボタンがある。",
+        "most_important": "録音中であることと「止める」ボタン",
+        "next_action": "ライブメモを開く、Astraに質問する、または録音を止める",
+        "anomalies": [
+          "「ライブメモを開く」は青いリンク風の文字色だが、隣の「Ask Astra」は黒太字でリンクらしい装飾がなく、どちらも押せる操作なのか区別しにくい"
+        ]
+      },
+      "verdict": "FIX",
+      "concerns": [
+        {
+          "axis": "consistency",
+          "what": "同じ機能グループ内のアクション（ライブメモを開く/Ask Astra）で片方だけリンク色、もう片方は通常テキストの太字になっており、クリック可能性の見た目が揃っていない",
+          "where": "録音中バナー内、左下の2つのテキストアクション"
+        }
+      ],
+      "confidence": "medium"
+    },
+    "6B8C": {
+      "visible_text": [
+        "Home",
+        "こんにちは",
+        "何を終わらせますか?",
+        "録音を始める",
+        "これからの予定",
+        "落ちた会議",
+        "途中で終わっています",
+        "開くと、確定した行までしか見られません",
+        "自分だけ",
+        "プロジェクト無し",
+        "Q4 移行計画の打ち合わせ"
+      ],
+      "observation": {
+        "happening": "ホーム画面をスクロールした状態。最近の会議欄に「落ちた会議」という失敗状態のカードが表示され、状況説明文とタグが付いている。",
+        "most_important": "「落ちた会議」カードの警告アイコンと説明文（途中で終わっています）",
+        "next_action": "「落ちた会議」カードを開いて確定済みの内容を確認する",
+        "anomalies": [
+          "「落ちた会議」カードには他のカード（Q4の会議など）にある「…」の追加操作メニューが見当たらない"
+        ]
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "low"
+    },
+    "6FC9": {
+      "visible_text": [
+        "Apps",
+        "Plugins",
+        "Connectors",
+        "外部サービスとの接続。つなぐまでAstraはそのサービスを読みません",
+        "Gmail",
+        "設定が必要",
+        "接続に使うclient IDがまだ設定されていません",
+        "Google Calendar",
+        "Finder",
+        "未接続",
+        "つなぐと、このMacのファイルを探せます"
+      ],
+      "observation": {
+        "happening": "設定画面のConnectorsタブ。Gmail、Google Calendar、Finderの3つの外部連携カードが並び、それぞれの接続状態が表示されている。",
+        "most_important": "GmailとGoogle Calendarが「設定が必要」（client ID未設定）というエラー状態にあること",
+        "next_action": "いずれかのカードをクリックして接続設定を行う（と推測されるが明示的な操作ボタンは見えない）",
+        "anomalies": [
+          "「設定が必要」カードにエラー内容は書かれているが、設定する/接続するといった具体的な操作ボタンがカード内に見当たらない",
+          "Finderは中立的な白丸アイコンで「未接続」、Gmail/Calendarは赤い警告三角で「設定が必要」と、同じ「未使用可能」状態でもアイコンの意味付けが揃っていない"
+        ]
+      },
+      "verdict": "FIX",
+      "concerns": [
+        {
+          "axis": "error-recovery clarity",
+          "what": "client ID未設定というエラーメッセージのみでカード内に修正操作（設定ボタン等）が見えず、次に何をすればよいか画面から読み取れない",
+          "where": "Gmail・Google Calendarカードのステータス行"
+        },
+        {
+          "axis": "consistency",
+          "what": "同じ「未接続・利用不可」を表すのに警告三角（赤）と白丸（グレー）という異なるアイコン言語が使われている",
+          "where": "Gmail/Google Calendarのステータスアイコン vs Finderのステータスアイコン"
+        }
+      ],
+      "confidence": "medium"
+    }
+  },
+  "_judge": {
+    "model": "sonnet",
+    "cost_usd": 0.2012874,
+    "turns": 7,
+    "duration_ms": 113337
+  }
+}

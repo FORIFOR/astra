@@ -1,0 +1,125 @@
+{
+  "artifacts" : [
+    "01-denied.png",
+    "02-recovered.png",
+    "03-after-sharing.png",
+    "04-confirm.png",
+    "05-interrupted.png",
+    "06-resumed.png"
+  ],
+  "errors" : [
+
+  ],
+  "focusTheft" : 0,
+  "interactions" : 4,
+  "journey" : "JC",
+  "notMeasured" : [
+    "kill -9 を挟んだ全体（scripts\/verify-recording-experience.sh）",
+    "実際の TCC 拒否（端末の許可は自動で変えない。simulatedMicrophone で作る）"
+  ],
+  "observations" : [
+
+  ],
+  "product" : "Astra",
+  "startedAt" : "2026-09-06T01:20:11Z",
+  "steps" : [
+    {
+      "front" : "com.apple.Terminal",
+      "ids" : {
+        "reason" : "dock:録音を始められません",
+        "recovery" : "openSettings"
+      },
+      "interactions" : 1,
+      "keyWindow" : false,
+      "ms" : 1168,
+      "name" : "マイク拒否",
+      "surface" : {
+        "h" : 129,
+        "key" : false,
+        "w" : 520,
+        "x" : 1020,
+        "y" : 1311
+      },
+      "transitionMs" : 195,
+      "windows" : 1
+    },
+    {
+      "front" : "com.apple.Terminal",
+      "ids" : {
+        "session" : "meeting-1788657613"
+      },
+      "interactions" : 1,
+      "keyWindow" : false,
+      "ms" : 1242,
+      "name" : "回復",
+      "surface" : {
+        "h" : 76,
+        "key" : false,
+        "w" : 820,
+        "x" : 870,
+        "y" : 1364
+      },
+      "windows" : 1
+    },
+    {
+      "front" : "com.apple.Terminal",
+      "ids" : {
+        "backAfterSharing" : "true",
+        "hiddenWhileSharing" : "true"
+      },
+      "interactions" : 0,
+      "keyWindow" : false,
+      "ms" : 1489,
+      "name" : "共有のあと",
+      "surface" : {
+        "h" : 76,
+        "key" : false,
+        "w" : 820,
+        "x" : 870,
+        "y" : 1364
+      },
+      "windows" : 1
+    },
+    {
+      "front" : "com.apple.Terminal",
+      "ids" : {
+        "answered" : "false",
+        "surfaces" : "1"
+      },
+      "interactions" : 1,
+      "keyWindow" : false,
+      "ms" : 1263,
+      "name" : "確認（やめる）",
+      "surface" : {
+        "h" : 76,
+        "key" : false,
+        "w" : 820,
+        "x" : 870,
+        "y" : 1364
+      },
+      "windows" : 1
+    },
+    {
+      "front" : "com.astra.desktop",
+      "ids" : {
+        "status" : "interrupted",
+        "transcriptRows" : "1"
+      },
+      "interactions" : 1,
+      "keyWindow" : true,
+      "ms" : 2227,
+      "name" : "落ちて再開",
+      "surface" : {
+        "h" : 820,
+        "key" : true,
+        "w" : 1240,
+        "x" : 660,
+        "y" : 466
+      },
+      "windows" : 2
+    }
+  ],
+  "success" : true,
+  "totalMs" : 7403,
+  "windowsOpened" : 0
+}

@@ -1,0 +1,22 @@
+
+> @astra/service-research@0.0.0 test /Users/shuhei/Projects/astra/services/research
+> vitest run --passWithNoTests
+
+
+ RUN  v3.2.7 /Users/shuhei/Projects/astra/services/research
+
+ ✓ test/quality.test.ts (20 tests) 4ms
+ ✓ test/general.test.ts (10 tests) 4ms
+ ✓ test/search.test.ts (23 tests) 8ms
+ ✓ test/anthropic.test.ts (16 tests) 10ms
+ ✓ test/factory.test.ts (4 tests) 2ms
+ ✓ test/host-search.test.ts (8 tests) 6ms
+ ✓ test/host-model.test.ts (15 tests) 7ms
+ ✓ test/model-context.test.ts (1 test) 33ms
+ ✓ test/report.test.ts (5 tests) 2ms
+
+ Test Files  9 passed (9)
+      Tests  102 passed (102)
+   Start at  13:44:23
+   Duration  467ms (transform 330ms, setup 0ms, collect 1.37s, tests 75ms, environment 1ms, prepare 364ms)
+

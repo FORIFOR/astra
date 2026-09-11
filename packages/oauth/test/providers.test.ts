@@ -8,7 +8,9 @@ import {
   OAUTH_PROVIDERS,
   clientIdVar,
   configuredProviders,
+  connectorProviderConfig,
   providerConfig,
+  refresh,
   unconfiguredProviders,
 } from '../src/index.js';
 
@@ -42,12 +44,41 @@ describe('building the config', () => {
     expect(config.scopes).toEqual(['mail.read']);
   });
 
-  it('never carries a client secret', () => {
+  it('does not invent a client secret when none is configured', () => {
     for (const provider of OAUTH_PROVIDERS) {
       const config = providerConfig(provider, [], { [clientIdVar(provider)]: 'x' })!;
       // native app は秘密を保てない（RFC 8252 §8.5）
       expect(config.clientSecret).toBeUndefined();
     }
+  });
+
+  it('passes the configured Google Desktop credential to the refresh endpoint', async () => {
+    const config = providerConfig('google', ['mail.read'], {
+      ASTRA_OAUTH_GOOGLE_CLIENT_ID: 'desktop-test',
+      ASTRA_OAUTH_GOOGLE_CLIENT_SECRET: 'test-only-desktop-credential',
+    })!;
+    await refresh(
+      { ...config, redirectUri: 'http://127.0.0.1:1234/callback' },
+      'test-refresh',
+      async (url, init) => {
+        expect(url).toBe('https://oauth2.googleapis.com/token');
+        const body = new URLSearchParams(String(init.body));
+        expect(body.get('client_secret')).toBe('test-only-desktop-credential');
+        expect(body.get('grant_type')).toBe('refresh_token');
+        return new Response(JSON.stringify({ access_token: 'test-access', scope: 'mail.read' }), {
+          status: 200,
+        });
+      },
+    );
+  });
+
+  it('does not forward Google credentials to Microsoft', () => {
+    expect(
+      providerConfig('microsoft', [], {
+        ASTRA_OAUTH_MICROSOFT_CLIENT_ID: 'ms-test',
+        ASTRA_OAUTH_GOOGLE_CLIENT_SECRET: 'google-test-only',
+      })!.clientSecret,
+    ).toBeUndefined();
   });
 
   it('points at the real endpoints, over https', () => {
@@ -56,5 +87,65 @@ describe('building the config', () => {
       expect(config.authorizeUrl.startsWith('https://')).toBe(true);
       expect(config.tokenUrl.startsWith('https://')).toBe(true);
     }
+  });
+});
+
+describe('Microsoft connection isolation', () => {
+  const env = {
+    ASTRA_OAUTH_MICROSOFT_CLIENT_ID: 'legacy',
+    ASTRA_OAUTH_MICROSOFT_READ_CLIENT_ID: 'read-client',
+    ASTRA_OAUTH_MICROSOFT_WRITE_CLIENT_ID: 'send-client',
+  };
+  it('uses distinct clients for read and send connections', () => {
+    expect(connectorProviderConfig('microsoft', 'outlook-mail', ['Mail.Read'], env)?.clientId).toBe(
+      'read-client',
+    );
+    expect(
+      connectorProviderConfig('microsoft', 'outlook-mail-actions', ['Mail.Send'], env)?.clientId,
+    ).toBe('send-client');
+  });
+  it('requires migration from the shared client', () => {
+    expect(
+      connectorProviderConfig('microsoft', 'outlook-mail', ['Mail.Read'], {
+        ASTRA_OAUTH_MICROSOFT_CLIENT_ID: 'legacy',
+      }),
+    ).toBeNull();
+    expect(
+      connectorProviderConfig('microsoft', 'outlook-mail', ['Mail.Read'], {
+        ...env,
+        ASTRA_OAUTH_MICROSOFT_WRITE_CLIENT_ID: 'read-client',
+      }),
+    ).toBeNull();
+  });
+  it.each(['Mail.Send', 'Mail.ReadWrite', 'Calendars.ReadWrite'])(
+    'rejects %s on a read connection',
+    (scope) => {
+      expect(
+        connectorProviderConfig('microsoft', 'outlook-mail', ['Mail.Read', scope], env),
+      ).toBeNull();
+    },
+  );
+  it('rejects empty or read scopes on a send connection', () => {
+    expect(connectorProviderConfig('microsoft', 'outlook-mail-actions', [], env)).toBeNull();
+    expect(
+      connectorProviderConfig('microsoft', 'outlook-mail-actions', ['Mail.Send', 'Mail.Read'], env),
+    ).toBeNull();
+  });
+  it('accepts Graph scope URIs and identity scopes', () => {
+    expect(
+      connectorProviderConfig(
+        'microsoft',
+        'outlook-mail',
+        ['https://graph.microsoft.com/Mail.Read', 'User.Read', 'offline_access'],
+        env,
+      )?.clientId,
+    ).toBe('read-client');
+  });
+  it('preserves Google client configuration', () => {
+    expect(
+      connectorProviderConfig('google', 'gmail-actions', ['mail.send'], {
+        ASTRA_OAUTH_GOOGLE_CLIENT_ID: 'google',
+      })?.clientId,
+    ).toBe('google');
   });
 });

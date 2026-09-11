@@ -108,16 +108,19 @@ export class HostStepLoop {
     const idleMs = this.#options.idleMs ?? DEFAULT_IDLE_MS;
     const sleep = this.#options.sleep ?? ((ms: number) => new Promise((r) => setTimeout(r, ms)));
 
+    let failures = 0;
     while (!this.#stopping) {
       let did = false;
       try {
         did = await this.tick(hostId);
+        failures = 0;
       } catch (error) {
-        // 取りに行けなかっただけ。次の周で試す。
+        failures++;
+        // Back off unavailable authentication/network instead of polling every two seconds.
         this.#options.onError?.(error instanceof Error ? error : new Error(String(error)));
       }
       // 続けて仕事があるうちは待たない
-      if (!did) await sleep(idleMs);
+      if (!did) await sleep(Math.min(60_000, idleMs * 2 ** Math.min(failures, 5)));
     }
     this.#running = false;
   }

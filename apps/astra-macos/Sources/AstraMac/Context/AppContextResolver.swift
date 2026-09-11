@@ -8,12 +8,12 @@ import AppKit
 enum AppContextResolver {
     /// アプリごとに頼めること。ここに無いアプリは提案なしで名前だけ出す。
     static let suggestions: [String: [String]] = [
-        "Notion": ["Summarize page", "Extract action items", "Find unresolved decisions", "Ask about this page"],
-        "Google Chrome": ["Summarize page", "Extract action items", "Ask about this page"],
-        "Safari": ["Summarize page", "Ask about this page"],
-        "Slack": ["Summarize thread", "Draft a reply"],
-        "Mail": ["Summarize thread", "Draft a reply"],
-        "Xcode": ["Explain this file", "Find related tests"],
+        "Notion": ["ページを要約", "やることを抽出", "未決の決定を探す", "このページに質問"],
+        "Google Chrome": ["ページを要約", "やることを抽出", "このページに質問"],
+        "Safari": ["ページを要約", "このページに質問"],
+        "Slack": ["スレッドを要約", "返信の下書き"],
+        "Mail": ["スレッドを要約", "返信の下書き"],
+        "Xcode": ["このファイルを説明", "関連するテストを探す"],
     ]
 
     static func current(now: Date = Date()) -> AppContextSummary? {

@@ -1,0 +1,29 @@
+{
+  "date": "2026-09-10",
+  "commit": "e764155",
+  "command": "PATH=/opt/homebrew/opt/libpq/bin:$PATH pnpm smoke",
+  "infra": {
+    "runtime": "Colima Docker",
+    "postgres": "localhost:5433",
+    "redis": "localhost:6380",
+    "temporal": "localhost:7233"
+  },
+  "result": "SMOKE PASSED",
+  "pass": [
+    "real gateway and worker startup",
+    "healthz and readyz",
+    "tenant provisioning",
+    "14-plugin catalog",
+    "Temporal task completion",
+    "idempotency key reuse",
+    "artifact checksum",
+    "plugin dashboard",
+    "clarification and resolution",
+    "agent task",
+    "capability agreement",
+    "meeting websocket recording",
+    "quiet brief",
+    "tenant isolation"
+  ],
+  "oauth_live_work_context": "requires dedicated refresh-token test identities"
+}

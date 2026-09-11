@@ -81,26 +81,36 @@ export function resolveReferences(text: string, context: ResolutionContext): Ref
     });
   }
 
-  // 「それ」「あれ」。**単独で立つ指示語**は、直近の referent。
+  // 「それ」「あれ」「これ」。**単独で立つ指示語**は、直近の referent。
   const anaphor = ANAPHORA.find((word) => text.includes(word));
   if (anaphor) {
     const nearest = context.referents[0] ?? null;
+    /*
+     * 「これ」は近くのもの。会話に何も無くても、**いま画面に出ているもの**
+     * （撮ったばかりのスクショ等）があれば解ける。「それ」「あれ」は会話のもの。
+     * 「この◯◯」と同じく、解けたことだけ伝え、どれかは呼び出し側の文脈が持つ。
+     */
+    const onScreen = anaphor === 'これ' && (context.contextLabels?.length ?? 0) > 0;
     out.push({
       phrase: anaphor,
       resolved: nearest,
-      reason: nearest ? null : 'nothing has been referred to yet',
+      reason: nearest || onScreen ? null : 'nothing has been referred to yet',
     });
   }
 
-  // 「昨日の続き」。時間で遡る。
-  for (const { pattern } of TEMPORAL) {
+  // 「昨日の続き」「さっきの」。時間で遡る。
+  for (const { pattern, days } of TEMPORAL) {
     const match = pattern.exec(text);
     if (!match) continue;
-    // 時間で絞る材料はここには無い。**推測で直近を当てない。**
+    /*
+     * 「さっきの」は、いま画面に出ているもの（直前に撮ったスクショ等）で解ける。
+     * 日を跨ぐものは、時間で絞る材料がここには無い。**推測で直近を当てない。**
+     */
+    const onScreen = days === 0 && (context.contextLabels?.length ?? 0) > 0;
     out.push({
       phrase: match[0],
       resolved: null,
-      reason: 'referring back in time needs the conversation history',
+      reason: onScreen ? null : 'referring back in time needs the conversation history',
     });
   }
 

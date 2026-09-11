@@ -1,0 +1,194 @@
+{
+  "pages": {
+    "1A32": {
+      "visible_text": [
+        "設定画面を開けませんでした。",
+        "システム設定から",
+        "Astra",
+        "をオンにしてください",
+        "!",
+        "×"
+      ],
+      "observation": {
+        "happening": "エラートースト。アプリ内設定画面が開けなかったため、システム設定からAstraを手動でオンにするよう促している。",
+        "most_important": "「システム設定から Astra をオンにしてください」という代替導線の指示と、丸アイコン中央の赤系「!」による失敗ステータス表示。",
+        "next_action": "システム設定アプリを開いてAstraのトグルをオンにする、または右の丸をタップして閉じる。",
+        "anomalies": [
+          "同じ丸の中に、状態を表す「!」（中央・大）と、閉じる「×」（右上角・小）が重なって同居しており、丸自体が『閉じるボタン』なのか『状態バッジ』なのか一見で判別しにくい。"
+        ]
+      },
+      "scores": {
+        "hierarchy": 3,
+        "density": 4,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 3,
+        "calmness": 4,
+        "craft": 3,
+        "distinctiveness": 3
+      },
+      "ai_look": [],
+      "verdict": "COMPETITIVE",
+      "why": "文言と失敗理由の説明は明快で、フォールバック導線（アプリ内設定→システム設定）を用意している点は丁寧だが、状態アイコンと閉じるボタンが同一の丸に同居していて役割が曖昧。一線級ほどの精緻さではない。",
+      "confidence": "medium"
+    },
+    "39EE": {
+      "visible_text": [
+        "スクリーンショット",
+        "認識しました",
+        "・",
+        "そのまま聞いてください"
+      ],
+      "observation": {
+        "happening": "ダーク背景の確認トースト。スクリーンショットが認識されたことを伝え、ユーザーはそのまま話し続けてよいと案内している。",
+        "most_important": "「認識しました・そのまま聞いてください」というアクション不要の案内文。",
+        "next_action": "特に操作不要。ユーザーは音声での質問を続ける。",
+        "anomalies": [
+          "他5枚は『グレーの吹き出し＋右側の丸ボタン（×付き)』という共通フォーマットだが、これだけ単一のダーク角丸カードで、閉じるボタンや状態丸が存在しない。ファミリー内でシェイプ言語が一貫していない。"
+        ]
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 4,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 3,
+        "calmness": 5,
+        "craft": 4,
+        "distinctiveness": 4
+      },
+      "ai_look": [],
+      "verdict": "COMPETITIVE",
+      "why": "アイコン＋太字見出し＋補足文の組み立ては端正で、中黒(・)を使った1行への畳み込みも上品。ただし同じプロダクト内の他トーストと形状文法が異なり、システムとしての一貫性に疑問が残る。",
+      "confidence": "medium"
+    },
+    "4B36": {
+      "visible_text": [
+        "設定画面で",
+        "Astra",
+        "をオンにしてください",
+        "×"
+      ],
+      "observation": {
+        "happening": "グレーの吹き出しで、設定画面上でAstraをオンにするよう指示。右に紫リング付きの波形アイコンの丸。",
+        "most_important": "「Astra をオンにしてください」という具体的な操作指示。",
+        "next_action": "設定画面内のAstraのトグルをオンにする。",
+        "anomalies": [
+          "1A32の文言「システム設定から Astra をオンにしてください」とほぼ同じ意味だが言い回しが微妙に異なり（『設定画面で』 vs 『システム設定から』）、どちらが正規の文言か静止画だけでは判断できない。"
+        ]
+      },
+      "scores": {
+        "hierarchy": 3,
+        "density": 4,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 3,
+        "calmness": 4,
+        "craft": 3,
+        "distinctiveness": 3
+      },
+      "ai_look": [],
+      "verdict": "COMPETITIVE",
+      "why": "指示は簡潔で、紫リングのブランドカラーが状態アイコンに一貫して使われている点は良い。ただし文言のブレや小さすぎる×のヒット領域が気になり、一線級には一歩届かない。",
+      "confidence": "medium"
+    },
+    "6313": {
+      "visible_text": [
+        "ディスプレイ",
+        "デスクトップとDock",
+        "メニューバー",
+        "ターミナル",
+        "←",
+        "+",
+        "「+」から",
+        "Astra を追加してください"
+      ],
+      "observation": {
+        "happening": "macOSシステム設定（おそらく画面収録の許可アプリ一覧）に重ねられたコーチマーク。矢印と紫の丸で『+』ボタンを指し示し、Astraを追加するよう案内している。",
+        "most_important": "矢印付きの紫丸でハイライトされた『+』ボタンと、それに対応する指示文『「+」からAstraを追加してください』。",
+        "next_action": "『+』をクリックしてAstraを画面収録許可リストに追加する。",
+        "anomalies": [
+          "矢印『←』が吹き出し左端でやや途切れて見え、クロップの都合か本来のUIかが静止画からは判別できない。",
+          "リスト内『ターミナル』のトグルが既にON（青）になっており、これから追加しようとしているAstraとの対比が視覚的に紛らわしい。"
+        ]
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 4,
+        "typography": 4,
+        "geometry": 3,
+        "state_clarity": 4,
+        "calmness": 3,
+        "craft": 4,
+        "distinctiveness": 3
+      },
+      "ai_look": [],
+      "verdict": "COMPETITIVE",
+      "why": "ネイティブのシステム設定UIに対し、ブランドカラー（紫）で自然にコーチマークを重ねている統合力は高い。ただし矢印の切れ方や既存トグルとの視覚的競合でcalmnessがやや下がる。",
+      "confidence": "medium"
+    },
+    "6479": {
+      "visible_text": [
+        "設定できました",
+        "✓"
+      ],
+      "observation": {
+        "happening": "成功トースト。設定が完了したことを伝えている。右の丸には緑のチェックマークアイコン。",
+        "most_important": "設定完了の確定的な成功通知。",
+        "next_action": "特になし。×で閉じるか、そのままフローが進む。",
+        "anomalies": [
+          "テキスト内に「✓」、丸アイコンにも別の緑チェックマークがあり、同じ『成功』を示す記号が二重に表示されている（やや冗長）。"
+        ]
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 4,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 5,
+        "calmness": 5,
+        "craft": 3,
+        "distinctiveness": 3
+      },
+      "ai_look": [],
+      "verdict": "COMPETITIVE",
+      "why": "状態の明快さは6枚中最も高いが、テキストとアイコンで同じチェックマークを二重使用しているのは細部の詰めが甘い。",
+      "confidence": "medium"
+    },
+    "935E": {
+      "visible_text": [
+        "画面収録を使うため、",
+        "1つ設定してください",
+        "×"
+      ],
+      "observation": {
+        "happening": "オンボーディング開始のトースト。画面収録機能を使うために追加の設定が1つ必要であることを伝えている。右に紫リング付き波形アイコン。",
+        "most_important": "『1つ設定してください』という残りステップ数を明示した誘導文。",
+        "next_action": "案内に従い設定フロー（6313のような画面）に進む。",
+        "anomalies": [
+          "『1つ』という数量表現があるが、実際に必要な手順が1ステップで完結するのか、他の画像（1A32のフォールバックなど）を踏まえると複数ステップに分岐しうるように見え、数の正確性が静止画だけでは検証できない。"
+        ]
+      },
+      "scores": {
+        "hierarchy": 3,
+        "density": 4,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 3,
+        "calmness": 4,
+        "craft": 3,
+        "distinctiveness": 3
+      },
+      "ai_look": [],
+      "verdict": "COMPETITIVE",
+      "why": "残ステップ数を明示するマイクロコピーは丁寧だが、シリーズ内の他画像を見るとフォールバック分岐があり『1つ』の正確性が怪しい。閉じるボタンの小ささも含め一線級には僅かに届かない。",
+      "confidence": "medium"
+    }
+  },
+  "_judge": {
+    "model": "sonnet",
+    "cost_usd": 0.19909040000000003,
+    "turns": 8,
+    "duration_ms": 124505
+  }
+}

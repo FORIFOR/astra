@@ -5,6 +5,16 @@ import Foundation
 /// Plugin が「できること」を宣言しても、それだけでは呼べない。
 /// 呼べるのは、その plugin にその権限が許されているときだけ。
 /// 許諾は `plugin_permissions`（§24）に残り、次の起動でも効く。
+/// manifest の接続 1 つ（同意画面 1 回）。`grants` が全部 `.read` なら「読むだけ」の接続。
+struct ConnectorDecl: Equatable {
+    let id: String
+    let provider: String
+    let grants: [String]
+    let scopes: [String]
+    let purpose: String?
+    var readOnly: Bool { !grants.isEmpty && grants.allSatisfy { $0.hasSuffix(".read") } }
+}
+
 struct PluginManifest: Equatable {
     let id: String
     let name: String
@@ -15,8 +25,58 @@ struct PluginManifest: Equatable {
     let executionSurfaces: [String]
     let permissions: [String]
     let tools: [String]
+    /// 外部サービスへの接続（capability 単位）。無い plugin は空。
+    var connectors: [ConnectorDecl] = []
 
     var runsLocallyOnly: Bool { executionSurfaces == ["local"] }
+    /// Work Context が使う「読むだけ」の接続。無ければ nil。
+    var readConnector: ConnectorDecl? { connectors.first { $0.readOnly } }
+
+    /// `connectors:` の塊だけを読む（`- id:` で始まる map の並び。中の `grants:` / `scopes:` は list）。
+    static func parseConnectors(_ yaml: String) -> [ConnectorDecl] {
+        var out: [ConnectorDecl] = []
+        var inBlock = false
+        var cur: [String: String] = [:]
+        var lists: [String: [String]] = [:]
+        var listKey: String?
+        func flush() {
+            if let id = cur["id"], let provider = cur["provider"] {
+                out.append(ConnectorDecl(id: id, provider: provider,
+                                         grants: lists["grants"] ?? [], scopes: lists["scopes"] ?? [],
+                                         purpose: cur["purpose"]))
+            }
+            cur = [:]; lists = [:]; listKey = nil
+        }
+        for rawLine in yaml.split(separator: "\n", omittingEmptySubsequences: false) {
+            let line = String(rawLine)
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.isEmpty || trimmed.hasPrefix("#") { continue }
+            let indented = line.hasPrefix(" ")
+            if !indented {
+                if inBlock { flush(); inBlock = false }
+                if trimmed == "connectors:" { inBlock = true }
+                continue
+            }
+            guard inBlock else { continue }
+            if trimmed.hasPrefix("- ") {
+                let rest = String(trimmed.dropFirst(2)).trimmingCharacters(in: .whitespaces)
+                if let colon = rest.firstIndex(of: ":"), rest.hasPrefix("id") {
+                    flush()
+                    cur["id"] = String(rest[rest.index(after: colon)...]).trimmingCharacters(in: CharacterSet(charactersIn: "\"' "))
+                } else if let key = listKey {
+                    lists[key, default: []].append(rest.trimmingCharacters(in: CharacterSet(charactersIn: "\"' ")))
+                }
+                continue
+            }
+            guard let colon = trimmed.firstIndex(of: ":") else { continue }
+            let key = String(trimmed[trimmed.startIndex..<colon])
+            let value = String(trimmed[trimmed.index(after: colon)...]).trimmingCharacters(in: .whitespaces)
+            if value.isEmpty { listKey = key; lists[key] = [] }
+            else { listKey = nil; cur[key] = value.trimmingCharacters(in: CharacterSet(charactersIn: "\"'")) }
+        }
+        if inBlock { flush() }
+        return out
+    }
 
     /// plugin.yaml のうち、実行に要る項目だけを読む（YAML 全体の実装はしない）。
     /// 読めない・欠けている項目は**推測で埋めない**。
@@ -63,7 +123,8 @@ struct PluginManifest: Equatable {
             verified: scalars["verified"] == "true",
             executionSurfaces: lists["execution_surfaces"] ?? [],
             permissions: lists["permissions"] ?? [],
-            tools: lists["jobs"] ?? []
+            tools: lists["jobs"] ?? [],
+            connectors: parseConnectors(yaml)
         )
     }
 }

@@ -1,0 +1,17 @@
+{
+  "key": {
+    "7242": "guided-setup.intro",
+    "49F1": "guided-setup.target-highlighted",
+    "172D": "guided-setup.target-missing",
+    "32C8": "guided-setup.granted",
+    "9BD2": "guided-setup.denied"
+  },
+  "order": [
+    "172D",
+    "32C8",
+    "49F1",
+    "7242",
+    "9BD2"
+  ],
+  "batch": 6
+}

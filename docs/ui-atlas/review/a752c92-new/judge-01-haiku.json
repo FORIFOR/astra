@@ -1,0 +1,71 @@
+{
+  "pages": {
+    "093B": {
+      "visible_text": [
+        "こんにちは",
+        "何を終わらせますか?",
+        "録音を始める",
+        "MOPITA",
+        "明日 15:00",
+        "出所を見る",
+        "要件定義書のレビューを返す",
+        "面接の日程候補を2名に返す",
+        "待っていること",
+        "返すもの"
+      ],
+      "observation": {
+        "happening": "Task and agenda dashboard displaying multiple action items from integrated sources (Gmail, Outlook, MOPITA). User can trigger voice input or select tasks to complete.",
+        "most_important": "Unified task management pulling from multiple calendar/email systems. Clear visual hierarchy with sections for urgent tasks, reminders, and follow-ups.",
+        "next_action": "Select a task card, trigger voice recording, or dismiss/mark items as complete",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "3A6D": {
+      "visible_text": [
+        "こんにちは",
+        "何を終わらせますか?",
+        "Astraが提ているあなたのための情報",
+        "推測を使っています",
+        "聞き方",
+        "短く、要点から",
+        "仕事のパターン",
+        "火・木は会議が多い",
+        "午前は集中作業が多い",
+        "MOPITA (案件)"
+      ],
+      "observation": {
+        "happening": "Right sidebar panel has appeared showing context-aware recommendations and work patterns. Panel includes toggles to enable/disable inference-based suggestions about work habits and task patterns.",
+        "most_important": "System is surfacing personalization rules and reasoning (work pattern inference) with opt-in controls. Attempting to explain WHY recommendations are made.",
+        "next_action": "User can toggle individual recommendations on/off or dismiss entire recommendation panel",
+        "anomalies": [
+          "Text-based toggle controls ('このとおり', 'この推奨を使わない') lack clear interactive affordance",
+          "Inconsistent formatting in recommendation list - some items have 'ロ推奨' badge, others don't",
+          "Relationship between source attribution ('出所1') and toggle options unclear"
+        ]
+      },
+      "verdict": "FIX",
+      "concerns": [
+        {
+          "axis": "state legibility",
+          "what": "Toggle controls styled as plain text links rather than buttons, reducing discoverability of interactivity",
+          "where": "Right panel recommendations - 'このとおり' / 'この推奨を使わない' text"
+        },
+        {
+          "axis": "hierarchy",
+          "what": "Unclear relationship between recommendation headers, source attributions, and toggle actions",
+          "where": "Entire right panel structure - nesting and visual grouping of related controls"
+        }
+      ],
+      "confidence": "high"
+    }
+  },
+  "_judge": {
+    "model": "haiku",
+    "cost_usd": 0.0454458,
+    "turns": 3,
+    "duration_ms": 32789
+  }
+}

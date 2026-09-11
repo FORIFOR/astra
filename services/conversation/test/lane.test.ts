@@ -48,6 +48,32 @@ describe('routeLane', () => {
     }
   });
 
+  it('creates written deliverables without mistaking them for external actions', () => {
+    for (const text of [
+      '動画の構成案の文章だけを作成してください。',
+      'Webサイトの改善提案をまとめてください。会社の説明は以下です。',
+      'アイデアを小さく検証する計画にしてください。',
+      '短い動画の構成を3案つくってください。',
+      'チーム内レビュー用の案内文を日本語で作成してください。件名と本文を分けてください。',
+      '新商品の紹介文を作成してください。',
+      'メールを作成してください。',
+      'メールの下書きを作成してください。送信しないでください。',
+      '新規登録についての案内文を書いてください。',
+      '予約についてのメールを作成して。送ってはいけません。',
+      '顧客に送るメールの文面を書いてください。',
+      'SNS投稿文を書いてください。',
+      '新しいものを作成してください。',
+    ])
+      expect(lane(text).lane, text).toBe('chat');
+  });
+
+  it('keeps research and external actions distinct from drafting', () => {
+    expect(lane('競合を調べて企画書を作成してください').lane).toBe('research');
+    expect(lane('メールの下書きを作成して顧客に送って').lane).toBe('action');
+    expect(lane('カレンダーに予定を作成して').lane).toBe('action');
+    expect(lane('新しいアカウントを作成してください').lane).toBe('action');
+  });
+
   it('can always say why', () => {
     for (const text of ['調べて', '送信して', 'こんにちは']) {
       expect(lane(text).reason.length, text).toBeGreaterThan(0);

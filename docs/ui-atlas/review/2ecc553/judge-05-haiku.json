@@ -1,0 +1,133 @@
+{
+  "pages": {
+    "620B": {
+      "visible_text": [
+        "Home",
+        "おはようございます",
+        "何を終わらせますか？",
+        "録音を始める",
+        "Microphone",
+        "MacBook Microphone",
+        "System Audio",
+        "Template",
+        "Meeting Notes",
+        "Save to"
+      ],
+      "observation": {
+        "happening": "Modal dialog for new recording configuration overlays the home screen. User can select microphone source, audio system, template type, save location, and project assignment.",
+        "most_important": "Recording setup form with clear input controls and binary states (toggle for System Audio enabled, dropdown selectors for template and destination).",
+        "next_action": "Configure audio source and template, then click 'Start Recording' or dismiss with 'Cancel'.",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "6490": {
+      "visible_text": [
+        "Google Meet",
+        "00:00",
+        "メモ",
+        "字幕",
+        "Ask Astra"
+      ],
+      "observation": {
+        "happening": "Horizontal control bar for active Google Meet session. Shows elapsed time (00:00), action buttons for notes, captions, AI assistant access, and recording toggle.",
+        "most_important": "Meeting control interface integrating productivity features (note-taking, transcription) and AI collaboration (Ask Astra) in compact form.",
+        "next_action": "Access any of the action buttons (notes, captions, Ask Astra) or toggle recording.",
+        "anomalies": [
+          "Fragment only — control bar without broader screen context"
+        ]
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "68B0": {
+      "visible_text": [
+        "04:21",
+        "録音中",
+        "会議",
+        "字幕",
+        "認める",
+        "決まったこと",
+        "やること",
+        "AI が見ている資料 3 件"
+      ],
+      "observation": {
+        "happening": "Live meeting recording view with split-panel layout. Left panel shows meeting summary sections (decisions, action items). Right panel displays live transcription with speaker names and timestamps. Top bar shows elapsed time and action controls.",
+        "most_important": "Real-time meeting documentation combining AI-generated summaries with live transcript for simultaneous note review during call.",
+        "next_action": "Review or edit meeting notes, access linked documents, or continue recording.",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "6941": {
+      "visible_text": [
+        "Apps",
+        "Plugins",
+        "Connectors",
+        "Architecture",
+        "Google Calendar",
+        "Care Support",
+        "EHR Assist",
+        "Finder",
+        "General Assistant"
+      ],
+      "observation": {
+        "happening": "Plugin marketplace view in grid layout showing available AI assistant modules. Each card displays plugin name, vendor (astra), version (0.1.0), brief description, capabilities list, and enabled status indicator.",
+        "most_important": "Consistent card-based plugin discovery interface with clear capability labels and status visibility across 8+ available integrations.",
+        "next_action": "Scroll to explore all plugins, or activate/configure any visible plugin.",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "69B0": {
+      "visible_text": [
+        "準備中...",
+        "見ていない文脈があります",
+        "ESC"
+      ],
+      "observation": {
+        "happening": "System status notification bar indicating preparation in progress. Secondary text alerts that some contexts have not been reviewed yet. ESC key hint shows dismissal method.",
+        "most_important": "Non-blocking status indicator with clear dismissal option and transparent communication of system state.",
+        "next_action": "Dismiss via ESC or wait for preparation to complete.",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "6C57": {
+      "visible_text": [
+        "Home",
+        "おはようございます",
+        "何を終わらせますか？",
+        "録音を始める",
+        "Product Weekly",
+        "10:00 Google Meet",
+        "A社商談",
+        "13:30 Zoom"
+      ],
+      "observation": {
+        "happening": "Home screen dashboard showing greeting, task input field, recording start section, and calendar of upcoming events with times and meeting titles.",
+        "most_important": "Primary dashboard integrating task input, quick recording launch, and forward-looking calendar context in single view.",
+        "next_action": "Enter task in input field, start recording session, or navigate to calendar event.",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    }
+  },
+  "_judge": {
+    "model": "haiku",
+    "cost_usd": 0.0647795,
+    "turns": 7,
+    "duration_ms": 58875
+  }
+}

@@ -34,7 +34,16 @@ const TABLE_OWNERS = {
   'services/share': ['shares', 'share_access_logs'],
   'services/meeting': ['meetings', 'meeting_segments', 'meeting_speakers', 'translations'],
   'services/research': ['research_runs', 'evidence'],
-  'services/world-model': ['world_entities', 'world_edges', 'world_facts', 'world_events'],
+  'services/world-model': [
+    'world_entities',
+    'world_edges',
+    'world_facts',
+    'world_events',
+    'work_artifacts',
+    'work_corrections',
+    'work_profiles',
+    'work_sync_state',
+  ],
   'services/plugin-registry': [
     'plugins',
     'plugin_versions',
@@ -224,9 +233,30 @@ async function checkBuiltinPlugins() {
   // 8 つ目は Video（正本 §15.2）、9 つ目は Care Support（§15.4）、
   // 10 個目は EHR Assist（§15.5）、11 個目は Architecture（§15.6）、
   // 12 個目は Stock Research（§15.7）。これで §15 の 7 領域が揃う。
-  const EXPECTED = 12;
-  if (dirs.length !== EXPECTED) {
-    fail('plugins/builtin', 0, `expected ${EXPECTED} bundled plugins, found ${dirs.length}`);
+  // Work Context に追加したOutlook / Microsoft To Doも名前で検証する。
+  // 件数だけでは、1件を別pluginへ取り替えても通ってしまう。
+  const expected = new Set([
+    'architecture',
+    'calendar',
+    'care',
+    'ehr',
+    'finder',
+    'general',
+    'gmail',
+    'meeting',
+    'microsoft-todo',
+    'outlook',
+    'research',
+    'sales-crm',
+    'stock',
+    'video',
+  ]);
+  const actual = new Set(dirs.map((dir) => dir.name));
+  for (const name of expected) {
+    if (!actual.has(name)) fail('plugins/builtin', 0, `missing bundled plugin: ${name}`);
+  }
+  for (const name of actual) {
+    if (!expected.has(name)) fail('plugins/builtin', 0, `unexpected bundled plugin: ${name}`);
   }
 }
 

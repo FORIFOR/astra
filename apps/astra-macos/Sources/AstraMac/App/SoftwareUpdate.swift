@@ -19,6 +19,16 @@ final class SoftwareUpdate {
 
     private var controller: SPUStandardUpdaterController?
 
+    /// 検査用の差し替え口（`ASTRA_SELFTEST_FEED_URL`）。**本番では nil。**
+    /// Atlas の system.update-available / up-to-date を**本物の Sparkle の窓**で撮るためだけにある。
+    /// 差し替えるのは appcast の場所だけで、鍵の検証と入れ替えの手順は本番と同じ。
+    private let feedOverride: SparkleFeedOverride? = {
+        guard let f = ProcessInfo.processInfo.environment["ASTRA_SELFTEST_FEED_URL"], !f.isEmpty else { return nil }
+        return SparkleFeedOverride(feed: f)
+    }()
+    /// 検査の途中で appcast を替える（「新しい版がある」→「最新です」）。差し替え口が無ければ何もしない。
+    func setSelfTestFeed(_ url: String) { feedOverride?.feed = url }
+
     /// いま動いている版。バンドル外（`swift build` の実行体）では nil。
     static var currentVersion: String? {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
@@ -47,7 +57,7 @@ final class SoftwareUpdate {
         guard Self.misconfiguration() == nil else { return false }
         // 落としてくるのは利用者が決める。起動直後に勝手に入れ替えない。
         controller = SPUStandardUpdaterController(
-            startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
+            startingUpdater: true, updaterDelegate: feedOverride, userDriverDelegate: nil)
         return true
     }
 
@@ -57,11 +67,26 @@ final class SoftwareUpdate {
     /// ガイドの絵（menutitles から描く）で灰色に写ってしまう。
     @discardableResult
     func checkNow() -> String? {
-        guard let controller else { return Self.misconfiguration() ?? "更新の口が起動していない" }
+        guard let controller else { return Self.misconfiguration() ?? "更新の確認が起動していません" }
         controller.checkForUpdates(nil)
         return nil
     }
 
     /// 設定が揃っていて、更新の確認ができる状態か。
     var isAvailable: Bool { controller != nil }
+    /// Sparkle がいま確認を受け付けるか（起動直後・確認の途中は false）。検査が待つために使う。
+    var canCheckForUpdates: Bool { controller?.updater.canCheckForUpdates ?? false }
+}
+
+/// 検査用: appcast の場所を差し替える（`SoftwareUpdate.feedOverride`）。
+private final class SparkleFeedOverride: NSObject, SPUUpdaterDelegate {
+    var feed: String
+    init(feed: String) { self.feed = feed }
+    func feedURLString(for updater: SPUUpdater) -> String? { feed }
+    // 検査のあいだだけ、Sparkle が何を決めたかを stdout に言う（窓が出ない理由を絵の外で読むため）。
+    func updater(_ updater: SPUUpdater, didFindValidUpdate item: SUAppcastItem) { print("SPARKLE found \(item.displayVersionString)") }
+    func updaterDidNotFindUpdate(_ updater: SPUUpdater, error: any Error) { print("SPARKLE none: \(error)") }
+    func updater(_ updater: SPUUpdater, didAbortWithError error: any Error) { print("SPARKLE abort: \(error)") }
+    func updater(_ updater: SPUUpdater, didFinishUpdateCycleFor updateCheck: SPUUpdateCheck, error: (any Error)?) { print("SPARKLE cycle end \(updateCheck.rawValue) \(error.map { "\($0)" } ?? "ok")") }
+    func updater(_ updater: SPUUpdater, failedToDownloadUpdate item: SUAppcastItem, error: any Error) { print("SPARKLE download failed: \(error)") }
 }

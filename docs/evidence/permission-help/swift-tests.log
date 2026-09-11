@@ -1,0 +1,456 @@
+[0/1] Planning build
+Building for debugging...
+[0/6] Write sources
+[2/6] Write swift-version--58304C5D6DBC2206.txt
+[4/9] Compiling AstraMac PermissionGuideCoordinator.swift
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/GuidedSetup/PermissionGuideCoordinator.swift:47:74: warning: passing non-Sendable parameter 'block' to function expecting a '@Sendable' closure
+ 44 |         }
+ 45 |         /// 遅延実行。検査では即時。
+ 46 |         var after: (TimeInterval, @escaping () -> Void) -> Void = { s, block in
+    |                                                                        `- note: parameter 'block' is implicitly non-Sendable
+ 47 |             DispatchQueue.main.asyncAfter(deadline: .now() + s, execute: block)
+    |                                                                          `- warning: passing non-Sendable parameter 'block' to function expecting a '@Sendable' closure
+ 48 |         }
+ 49 |         var now: () -> Date = Date.init
+[5/15] Compiling AstraMac SettingsView.swift
+[6/15] Compiling AstraMac ApplicationMenu.swift
+[7/15] Compiling AstraMac GuidedSetupSelfTest.swift
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/GuidedSetup/GuidedSetupSelfTest.swift:144:21: warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+142 |         // アバターの姿を残す（目視用）。
+143 |         if let win = overlay.avatar.window,
+144 |            let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, CGWindowID(win.windowNumber), [.boundsIgnoreFraming, .bestResolution]) {
+    |                     `- warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+145 |             let png = NSBitmapImageRep(cgImage: cg).representation(using: .png, properties: [:])
+146 |             try? png?.write(to: URL(fileURLWithPath: "\(outDir)/guided-setup-avatar.png"))
+
+[#DeprecatedDeclaration]: <https://docs.swift.org/compiler/documentation/diagnostics/deprecated-declaration>
+[8/15] Compiling AstraMac SelfTestPermissionHelp.swift
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/App/SelfTestPermissionHelp.swift:24:31: warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+22 |             window.displayIfNeeded()
+23 |             try? await Task.sleep(for: .milliseconds(600))
+24 |             guard let image = CGWindowListCreateImage(.null, .optionIncludingWindow,
+   |                               `- warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+25 |                 CGWindowID(window.windowNumber), [.boundsIgnoreFraming, .nominalResolution]),
+26 |                 let data = NSBitmapImageRep(cgImage: image).representation(using: .png, properties: [:]) else {
+
+[#DeprecatedDeclaration]: <https://docs.swift.org/compiler/documentation/diagnostics/deprecated-declaration>
+[9/15] Compiling AstraMac GuidedSetupShots.swift
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/GuidedSetup/GuidedSetupShots.swift:57:20: warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+ 55 |         func windowImage(_ win: NSWindow?) -> CGImage? {
+ 56 |             guard let win else { return nil }
+ 57 |             return CGWindowListCreateImage(.null, .optionIncludingWindow, CGWindowID(win.windowNumber), [.boundsIgnoreFraming, .bestResolution])
+    |                    `- warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+ 58 |         }
+ 59 |         /// Apple の窓（System Settings）と Astra の窓を、**それだけ**で合成する（机の上の他の窓や壁紙は入れない）。
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/GuidedSetup/GuidedSetupShots.swift:84:31: warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+ 82 |             }
+ 83 |             let union = layers.map(\.1).reduce(CGRect.null) { $0.union($1) }
+ 84 |             guard let first = CGWindowListCreateImage(.null, .optionIncludingWindow, settingsID, [.boundsIgnoreFraming, .bestResolution]) else {
+    |                               `- warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+ 85 |                 report.append("composite: cannot capture settings window"); return nil
+ 86 |             }
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/GuidedSetup/GuidedSetupShots.swift:93:60: warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+ 91 |                                       space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
+ 92 |             for (id, b) in layers {
+ 93 |                 guard let img = id == settingsID ? first : CGWindowListCreateImage(.null, .optionIncludingWindow, id, [.boundsIgnoreFraming, .bestResolution]) else {
+    |                                                            `- warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+ 94 |                     report.append("composite: window \(id) not capturable at \(b)"); continue
+ 95 |                 }
+
+[#DeprecatedDeclaration]: <https://docs.swift.org/compiler/documentation/diagnostics/deprecated-declaration>
+[10/15] Compiling AstraMac StatusBarController.swift
+[11/15] Emitting module AstraMac
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/GuidedSetup/GuidedSetupSelfTest.swift:144:21: warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+142 |         // アバターの姿を残す（目視用）。
+143 |         if let win = overlay.avatar.window,
+144 |            let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, CGWindowID(win.windowNumber), [.boundsIgnoreFraming, .bestResolution]) {
+    |                     `- warning: 'CGWindowListCreateImage' was deprecated in macOS 14.0: Please use ScreenCaptureKit instead. [#DeprecatedDeclaration]
+145 |             let png = NSBitmapImageRep(cgImage: cg).representation(using: .png, properties: [:])
+146 |             try? png?.write(to: URL(fileURLWithPath: "\(outDir)/guided-setup-avatar.png"))
+
+/Users/shuhei/Projects/astra/apps/astra-macos/Sources/AstraMac/GuidedSetup/PermissionGuideCoordinator.swift:47:74: warning: passing non-Sendable parameter 'block' to function expecting a '@Sendable' closure
+ 44 |         }
+ 45 |         /// 遅延実行。検査では即時。
+ 46 |         var after: (TimeInterval, @escaping () -> Void) -> Void = { s, block in
+    |                                                                        `- note: parameter 'block' is implicitly non-Sendable
+ 47 |             DispatchQueue.main.asyncAfter(deadline: .now() + s, execute: block)
+    |                                                                          `- warning: passing non-Sendable parameter 'block' to function expecting a '@Sendable' closure
+ 48 |         }
+ 49 |         var now: () -> Date = Date.init
+
+[#DeprecatedDeclaration]: <https://docs.swift.org/compiler/documentation/diagnostics/deprecated-declaration>
+[12/15] Compiling AstraMac AvatarHUDView.swift
+[12/17] Write Objects.LinkFileList
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[355](25ac62e5b3c53843-curve25519.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[356](0bbbd18bda93c05b-aes_nohw.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[357](00c879ee3285a50d-montgomery.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[358](00c879ee3285a50d-montgomery_inv.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[359](a0330e891e733f4e-ecp_nistz.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[361](a0330e891e733f4e-gfp_p384.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[363](aaa1ba3e455ee2e1-limbs.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[364](a4019cc0736b0423-mem.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[365](d5a9841f3dc6e253-poly1305.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[366](a0330e891e733f4e-p256-nistz.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[367](c322a0bcc369f531-chacha-armv8-ios64.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[368](c322a0bcc369f531-chacha20_poly1305_armv8-ios64.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[369](c322a0bcc369f531-aesv8-armx-ios64.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[370](c322a0bcc369f531-aesv8-gcm-armv8-ios64.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[371](c322a0bcc369f531-ghash-neon-armv8-ios64.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[372](c322a0bcc369f531-ghashv8-armx-ios64.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[373](c322a0bcc369f531-vpaes-armv8-ios64.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[374](c322a0bcc369f531-armv8-mont-ios64.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[375](c322a0bcc369f531-p256-armv8-asm-ios64.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[376](c322a0bcc369f531-sha512-armv8-ios64.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[377](c322a0bcc369f531-sha256-armv8-ios64.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+[13/17] Linking AstraMac
+[14/17] Applying AstraMac
+[16/22] Compiling AstraMacTests PermissionGuideStateTests.swift
+[17/22] Emitting module AstraMacTests
+[18/22] Compiling AstraMacTests GuideCoordinatorTests.swift
+[19/22] Compiling AstraMacTests GuidedSetupMocks.swift
+/Users/shuhei/Projects/astra/apps/astra-macos/Tests/AstraMacTests/GuidedSetup/GuidedSetupMocks.swift:112:13: warning: variable 'running' was never mutated; consider changing to 'let' constant
+110 |         let o = MockObserver()
+111 |         let v = MockOverlay()
+112 |         var running = settingsRunning
+    |             `- warning: variable 'running' was never mutated; consider changing to 'let' constant
+113 |         let box = Box(running)
+114 |         var deps = PermissionGuideCoordinator.Dependencies(
+[20/22] Compiling AstraMacTests PermissionHelpTests.swift
+[20/22] Write Objects.LinkFileList
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[355](25ac62e5b3c53843-curve25519.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[356](0bbbd18bda93c05b-aes_nohw.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[357](00c879ee3285a50d-montgomery.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[358](00c879ee3285a50d-montgomery_inv.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[359](a0330e891e733f4e-ecp_nistz.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[361](a0330e891e733f4e-gfp_p384.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[363](aaa1ba3e455ee2e1-limbs.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[364](a4019cc0736b0423-mem.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[365](d5a9841f3dc6e253-poly1305.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[366](a0330e891e733f4e-p256-nistz.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[367](c322a0bcc369f531-chacha-armv8-ios64.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[368](c322a0bcc369f531-chacha20_poly1305_armv8-ios64.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[369](c322a0bcc369f531-aesv8-armx-ios64.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[370](c322a0bcc369f531-aesv8-gcm-armv8-ios64.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[371](c322a0bcc369f531-ghash-neon-armv8-ios64.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[372](c322a0bcc369f531-ghashv8-armx-ios64.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[373](c322a0bcc369f531-vpaes-armv8-ios64.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[374](c322a0bcc369f531-armv8-mont-ios64.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[375](c322a0bcc369f531-p256-armv8-asm-ios64.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[376](c322a0bcc369f531-sha512-armv8-ios64.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+ld: warning: object file (/Users/shuhei/Projects/astra/core/astra-core/target/debug/libastra_core.a[377](c322a0bcc369f531-sha256-armv8-ios64.o)) was built for newer 'macOS' version (26.5) than being linked (14.0)
+[21/22] Linking astra-macosPackageTests
+Build complete! (7.48s)
+Test Suite 'All tests' started at 2026-09-11 15:22:31.076.
+Test Suite 'astra-macosPackageTests.xctest' started at 2026-09-11 15:22:31.077.
+Test Suite 'AXElementServiceTests' started at 2026-09-11 15:22:31.077.
+Test Case '-[AstraMacTests.AXElementServiceTests testAvatarSitsAtBottomRightInset24]' started.
+Test Case '-[AstraMacTests.AXElementServiceTests testAvatarSitsAtBottomRightInset24]' passed (0.001 seconds).
+Test Case '-[AstraMacTests.AXElementServiceTests testAXToAppKitOnDisplayAboveAndLeftOfPrimary]' started.
+Test Case '-[AstraMacTests.AXElementServiceTests testAXToAppKitOnDisplayAboveAndLeftOfPrimary]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.AXElementServiceTests testAXToAppKitOnPrimaryDisplay]' started.
+Test Case '-[AstraMacTests.AXElementServiceTests testAXToAppKitOnPrimaryDisplay]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.AXElementServiceTests testCalloutIsClampedInsideTheScreenWhenNothingFits]' started.
+Test Case '-[AstraMacTests.AXElementServiceTests testCalloutIsClampedInsideTheScreenWhenNothingFits]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.AXElementServiceTests testCalloutPrefersAboveThenFallsBackWhenNoRoom]' started.
+Test Case '-[AstraMacTests.AXElementServiceTests testCalloutPrefersAboveThenFallsBackWhenNoRoom]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.AXElementServiceTests testHighlightFramePadsTheTarget]' started.
+Test Case '-[AstraMacTests.AXElementServiceTests testHighlightFramePadsTheTarget]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.AXElementServiceTests testLocatorConvertsToAppKitCoordinates]' started.
+Test Case '-[AstraMacTests.AXElementServiceTests testLocatorConvertsToAppKitCoordinates]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.AXElementServiceTests testLocatorReportsWhyWhenTargetIsMissingOrHasNoFrame]' started.
+Test Case '-[AstraMacTests.AXElementServiceTests testLocatorReportsWhyWhenTargetIsMissingOrHasNoFrame]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.AXElementServiceTests testLocatorReturnsNothingWhenNotTrustedAndDoesNotWalk]' started.
+Test Case '-[AstraMacTests.AXElementServiceTests testLocatorReturnsNothingWhenNotTrustedAndDoesNotWalk]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.AXElementServiceTests testPaneSelectorsCoverJapaneseAndEnglish]' started.
+Test Case '-[AstraMacTests.AXElementServiceTests testPaneSelectorsCoverJapaneseAndEnglish]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.AXElementServiceTests testSelectorMatchesIdentifierListAndValue]' started.
+Test Case '-[AstraMacTests.AXElementServiceTests testSelectorMatchesIdentifierListAndValue]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.AXElementServiceTests testSelectorMatchesOnCombinedConditionsNotJustOneString]' started.
+Test Case '-[AstraMacTests.AXElementServiceTests testSelectorMatchesOnCombinedConditionsNotJustOneString]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.AXElementServiceTests testSelectorsAreTriedInOrderAndTheFirstThatMatchesWins]' started.
+Test Case '-[AstraMacTests.AXElementServiceTests testSelectorsAreTriedInOrderAndTheFirstThatMatchesWins]' passed (0.000 seconds).
+Test Suite 'AXElementServiceTests' passed at 2026-09-11 15:22:31.081.
+	 Executed 13 tests, with 0 failures (0 unexpected) in 0.003 (0.004) seconds
+Test Suite 'CloudTranscriptionTests' started at 2026-09-11 15:22:31.081.
+Test Case '-[AstraMacTests.CloudTranscriptionTests testLiveConsentRevocationAndInsecureEndpoint]' started.
+Test Case '-[AstraMacTests.CloudTranscriptionTests testLiveConsentRevocationAndInsecureEndpoint]' passed (0.005 seconds).
+Test Case '-[AstraMacTests.CloudTranscriptionTests testResultDecodingPreservesTimingAndUnknownSpeaker]' started.
+Test Case '-[AstraMacTests.CloudTranscriptionTests testResultDecodingPreservesTimingAndUnknownSpeaker]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.CloudTranscriptionTests testRevokedConsentStopsBeforeReadingOrSendingAudio]' started.
+Test Case '-[AstraMacTests.CloudTranscriptionTests testRevokedConsentStopsBeforeReadingOrSendingAudio]' passed (0.001 seconds).
+Test Suite 'CloudTranscriptionTests' passed at 2026-09-11 15:22:31.086.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 0.006 (0.006) seconds
+Test Suite 'ConnectorConfigurationTests' started at 2026-09-11 15:22:31.086.
+Test Case '-[AstraMacTests.ConnectorConfigurationTests testGoogleKeepsItsConfiguredClient]' started.
+Test Case '-[AstraMacTests.ConnectorConfigurationTests testGoogleKeepsItsConfiguredClient]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.ConnectorConfigurationTests testMicrosoftRejectsBroaderOrMissingScopeAttestations]' started.
+Test Case '-[AstraMacTests.ConnectorConfigurationTests testMicrosoftRejectsBroaderOrMissingScopeAttestations]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.ConnectorConfigurationTests testMicrosoftRequiresDistinctReadAndSendClients]' started.
+Test Case '-[AstraMacTests.ConnectorConfigurationTests testMicrosoftRequiresDistinctReadAndSendClients]' passed (0.000 seconds).
+Test Suite 'ConnectorConfigurationTests' passed at 2026-09-11 15:22:31.087.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 0.001 (0.001) seconds
+Test Suite 'CoreBridgeTests' started at 2026-09-11 15:22:31.087.
+Test Case '-[AstraMacTests.CoreBridgeTests testSessionWritesFragments]' started.
+Test Case '-[AstraMacTests.CoreBridgeTests testSessionWritesFragments]' passed (0.047 seconds).
+Test Case '-[AstraMacTests.CoreBridgeTests testSnapshotDerivedByCore]' started.
+Test Case '-[AstraMacTests.CoreBridgeTests testSnapshotDerivedByCore]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.CoreBridgeTests testVersionRoundTrip]' started.
+Test Case '-[AstraMacTests.CoreBridgeTests testVersionRoundTrip]' passed (0.000 seconds).
+Test Suite 'CoreBridgeTests' passed at 2026-09-11 15:22:31.135.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 0.048 (0.048) seconds
+Test Suite 'DictationTests' started at 2026-09-11 15:22:31.135.
+Test Case '-[AstraMacTests.DictationTests testCaretUsesUTF16AfterEmoji]' started.
+Test Case '-[AstraMacTests.DictationTests testCaretUsesUTF16AfterEmoji]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.DictationTests testEmojiSelectionCanBeReplaced]' started.
+Test Case '-[AstraMacTests.DictationTests testEmojiSelectionCanBeReplaced]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.DictationTests testEmptyFieldAndEndOfField]' started.
+Test Case '-[AstraMacTests.DictationTests testEmptyFieldAndEndOfField]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.DictationTests testInvalidOrSplitSurrogateRangeDoesNotWrite]' started.
+Test Case '-[AstraMacTests.DictationTests testInvalidOrSplitSurrogateRangeDoesNotWrite]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.DictationTests testSelectionIsReplacedRatherThanAppendedAfter]' started.
+Test Case '-[AstraMacTests.DictationTests testSelectionIsReplacedRatherThanAppendedAfter]' passed (0.000 seconds).
+Test Suite 'DictationTests' passed at 2026-09-11 15:22:31.136.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.001 (0.001) seconds
+Test Suite 'GatewaySessionTests' started at 2026-09-11 15:22:31.136.
+Test Case '-[AstraMacTests.GatewaySessionTests testAccessTokenIsNotReturnedIfRotatedCredentialsCannotBeSaved]' started.
+Test Case '-[AstraMacTests.GatewaySessionTests testAccessTokenIsNotReturnedIfRotatedCredentialsCannotBeSaved]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.GatewaySessionTests testConcurrentRenewalAndRelaunchPreserveDeviceAndUseRotatedToken]' started.
+Test Case '-[AstraMacTests.GatewaySessionTests testConcurrentRenewalAndRelaunchPreserveDeviceAndUseRotatedToken]' passed (0.051 seconds).
+Test Case '-[AstraMacTests.GatewaySessionTests testInterruptedRenewalIsNotReplayedAfterRestart]' started.
+Test Case '-[AstraMacTests.GatewaySessionTests testInterruptedRenewalIsNotReplayedAfterRestart]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.GatewaySessionTests testLostRefreshResponseNeverReplaysRefreshOrCreatesAnotherDevice]' started.
+Test Case '-[AstraMacTests.GatewaySessionTests testLostRefreshResponseNeverReplaysRefreshOrCreatesAnotherDevice]' passed (0.000 seconds).
+Test Suite 'GatewaySessionTests' passed at 2026-09-11 15:22:31.188.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.051 (0.052) seconds
+Test Suite 'GuideAlreadyOnTests' started at 2026-09-11 15:22:31.188.
+Test Case '-[AstraMacTests.GuideAlreadyOnTests testASwitchThatIsAlreadyOnIsNotAskedToBeTurnedOn]' started.
+Test Case '-[AstraMacTests.GuideAlreadyOnTests testASwitchThatIsAlreadyOnIsNotAskedToBeTurnedOn]' passed (0.039 seconds).
+Test Case '-[AstraMacTests.GuideAlreadyOnTests testCalloutTailAimsAtTheTargetCentre]' started.
+Test Case '-[AstraMacTests.GuideAlreadyOnTests testCalloutTailAimsAtTheTargetCentre]' passed (0.000 seconds).
+Test Suite 'GuideAlreadyOnTests' passed at 2026-09-11 15:22:31.226.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 0.039 (0.039) seconds
+Test Suite 'GuideCoordinatorTests' started at 2026-09-11 15:22:31.226.
+Test Case '-[AstraMacTests.GuideCoordinatorTests testAddButtonIsGuidedWhenAstraRowIsMissing]' started.
+Test Case '-[AstraMacTests.GuideCoordinatorTests testAddButtonIsGuidedWhenAstraRowIsMissing]' passed (0.007 seconds).
+Test Case '-[AstraMacTests.GuideCoordinatorTests testFallbackTickRelocatesOnlyWhenObserverIsUnavailable]' started.
+Test Case '-[AstraMacTests.GuideCoordinatorTests testFallbackTickRelocatesOnlyWhenObserverIsUnavailable]' passed (0.001 seconds).
+Test Case '-[AstraMacTests.GuideCoordinatorTests testFloatingPanelIsTransparentNonActivatingAndPassesClicks]' started.
+Test Case '-[AstraMacTests.GuideCoordinatorTests testFloatingPanelIsTransparentNonActivatingAndPassesClicks]' passed (0.024 seconds).
+Test Case '-[AstraMacTests.GuideCoordinatorTests testGuideFollowsWhenSystemSettingsMoves]' started.
+Test Case '-[AstraMacTests.GuideCoordinatorTests testGuideFollowsWhenSystemSettingsMoves]' passed (0.001 seconds).
+Test Case '-[AstraMacTests.GuideCoordinatorTests testHighlightAndCalloutNeverTakeMouseEventsAndStayOnScreen]' started.
+Test Case '-[AstraMacTests.GuideCoordinatorTests testHighlightAndCalloutNeverTakeMouseEventsAndStayOnScreen]' passed (0.017 seconds).
+Test Case '-[AstraMacTests.GuideCoordinatorTests testMissingTargetShowsOnlyTheGeneralGuideAndDoesNotCrash]' started.
+Test Case '-[AstraMacTests.GuideCoordinatorTests testMissingTargetShowsOnlyTheGeneralGuideAndDoesNotCrash]' passed (0.001 seconds).
+Test Case '-[AstraMacTests.GuideCoordinatorTests testRealOverlayStackReleasesEveryPanel]' started.
+Test Case '-[AstraMacTests.GuideCoordinatorTests testRealOverlayStackReleasesEveryPanel]' passed (0.025 seconds).
+Test Case '-[AstraMacTests.GuideCoordinatorTests testStopReleasesPanelsObserversAndReturnsToIdle]' started.
+Test Case '-[AstraMacTests.GuideCoordinatorTests testStopReleasesPanelsObserversAndReturnsToIdle]' passed (0.000 seconds).
+Test Suite 'GuideCoordinatorTests' passed at 2026-09-11 15:22:31.302.
+	 Executed 8 tests, with 0 failures (0 unexpected) in 0.075 (0.076) seconds
+Test Suite 'InitialProfileTests' started at 2026-09-11 15:22:31.302.
+Test Case '-[AstraMacTests.InitialProfileTests testAbsentProfileDoesNotShowSetupAgain]' started.
+Test Case '-[AstraMacTests.InitialProfileTests testAbsentProfileDoesNotShowSetupAgain]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.InitialProfileTests testEditsRespectFieldLimitsAndAllowNoInferredData]' started.
+Test Case '-[AstraMacTests.InitialProfileTests testEditsRespectFieldLimitsAndAllowNoInferredData]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.InitialProfileTests testEmojiUsesTheSameUTF16LimitAsTheAPI]' started.
+Test Case '-[AstraMacTests.InitialProfileTests testEmojiUsesTheSameUTF16LimitAsTheAPI]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.InitialProfileTests testRejectsReadyWithoutRealResult]' started.
+Test Case '-[AstraMacTests.InitialProfileTests testRejectsReadyWithoutRealResult]' passed (0.000 seconds).
+Test Suite 'InitialProfileTests' passed at 2026-09-11 15:22:31.303.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.001 (0.001) seconds
+Test Suite 'MeetingAICostTests' started at 2026-09-11 15:22:31.303.
+Test Case '-[AstraMacTests.MeetingAICostTests testKnownFailedJobCanBeExplicitlySubmittedAgain]' started.
+Test Case '-[AstraMacTests.MeetingAICostTests testKnownFailedJobCanBeExplicitlySubmittedAgain]' passed (0.001 seconds).
+Test Case '-[AstraMacTests.MeetingAICostTests testLostPollResponseResumesSameJobWithoutResubmitting]' started.
+Test Case '-[AstraMacTests.MeetingAICostTests testLostPollResponseResumesSameJobWithoutResubmitting]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.MeetingAICostTests testNoSpeechAndRepeatedSuccessfulActionAvoidNewRequests]' started.
+Test Case '-[AstraMacTests.MeetingAICostTests testNoSpeechAndRepeatedSuccessfulActionAvoidNewRequests]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.MeetingAICostTests testRepeatedClicksWhileGenerationRunsDoNotSubmit]' started.
+Test Case '-[AstraMacTests.MeetingAICostTests testRepeatedClicksWhileGenerationRunsDoNotSubmit]' passed (0.000 seconds).
+Test Suite 'MeetingAICostTests' passed at 2026-09-11 15:22:31.305.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.002 (0.002) seconds
+Test Suite 'MeetingReminderTests' started at 2026-09-11 15:22:31.305.
+Test Case '-[AstraMacTests.MeetingReminderTests testConfirmedExitRearmsNextMeeting]' started.
+Test Case '-[AstraMacTests.MeetingReminderTests testConfirmedExitRearmsNextMeeting]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.MeetingReminderTests testDistinctBrowserCallsRearmAfterTheFirstTabCloses]' started.
+Test Case '-[AstraMacTests.MeetingReminderTests testDistinctBrowserCallsRearmAfterTheFirstTabCloses]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.MeetingReminderTests testMeetingIdentityRejectsUnrelatedAndLookalikeHosts]' started.
+Test Case '-[AstraMacTests.MeetingReminderTests testMeetingIdentityRejectsUnrelatedAndLookalikeHosts]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.MeetingReminderTests testNoPromptForLaunchLobbyOrUnknownPermission]' started.
+Test Case '-[AstraMacTests.MeetingReminderTests testNoPromptForLaunchLobbyOrUnknownPermission]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.MeetingReminderTests testOnePromptDespiteFocusSwitchAndRepeatedObservations]' started.
+Test Case '-[AstraMacTests.MeetingReminderTests testOnePromptDespiteFocusSwitchAndRepeatedObservations]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.MeetingReminderTests testOnlyLeaveCallControlsCount]' started.
+Test Case '-[AstraMacTests.MeetingReminderTests testOnlyLeaveCallControlsCount]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.MeetingReminderTests testProvidersIncludeNativeAndBrowserMeetings]' started.
+Test Case '-[AstraMacTests.MeetingReminderTests testProvidersIncludeNativeAndBrowserMeetings]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.MeetingReminderTests testRecordingConsumesReminderWithoutPromptingAgainAfterStop]' started.
+Test Case '-[AstraMacTests.MeetingReminderTests testRecordingConsumesReminderWithoutPromptingAgainAfterStop]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.MeetingReminderTests testTerminatedAppInvalidatesOldActionAndRearms]' started.
+Test Case '-[AstraMacTests.MeetingReminderTests testTerminatedAppInvalidatesOldActionAndRearms]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.MeetingReminderTests testTransientMissingControlsDoNotRearm]' started.
+Test Case '-[AstraMacTests.MeetingReminderTests testTransientMissingControlsDoNotRearm]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.MeetingReminderTests testUndeliveredReminderRetriesWithoutInvalidatingNewerSession]' started.
+Test Case '-[AstraMacTests.MeetingReminderTests testUndeliveredReminderRetriesWithoutInvalidatingNewerSession]' passed (0.000 seconds).
+Test Suite 'MeetingReminderTests' passed at 2026-09-11 15:22:31.307.
+	 Executed 11 tests, with 0 failures (0 unexpected) in 0.001 (0.002) seconds
+Test Suite 'MeetingTranslationHTTPTests' started at 2026-09-11 15:22:31.307.
+Test Case '-[AstraMacTests.MeetingTranslationHTTPTests testAlreadyEnglishDoesNotCallTheModelOrRewriteText]' started.
+Test Case '-[AstraMacTests.MeetingTranslationHTTPTests testAlreadyEnglishDoesNotCallTheModelOrRewriteText]' passed (0.005 seconds).
+Test Case '-[AstraMacTests.MeetingTranslationHTTPTests testLongUtterancePreservesTailAndCannotInvokeTools]' started.
+Test Case '-[AstraMacTests.MeetingTranslationHTTPTests testLongUtterancePreservesTailAndCannotInvokeTools]' passed (0.005 seconds).
+Test Case '-[AstraMacTests.MeetingTranslationHTTPTests testRetryOfLongUtteranceDoesNotResendSuccessfulChunks]' started.
+Test Case '-[AstraMacTests.MeetingTranslationHTTPTests testRetryOfLongUtteranceDoesNotResendSuccessfulChunks]' passed (0.005 seconds).
+Test Case '-[AstraMacTests.MeetingTranslationHTTPTests testServiceErrorAndRedirectAreNotSuccessfulTranslation]' started.
+Test Case '-[AstraMacTests.MeetingTranslationHTTPTests testServiceErrorAndRedirectAreNotSuccessfulTranslation]' passed (0.002 seconds).
+Test Suite 'MeetingTranslationHTTPTests' passed at 2026-09-11 15:22:31.324.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.017 (0.017) seconds
+Test Suite 'MeetingTranslationTests' started at 2026-09-11 15:22:31.324.
+Test Case '-[AstraMacTests.MeetingTranslationTests testAutoOffRetainsSubmittedResultButDoesNotStartBacklog]' started.
+Test Case '-[AstraMacTests.MeetingTranslationTests testAutoOffRetainsSubmittedResultButDoesNotStartBacklog]' passed (0.032 seconds).
+Test Case '-[AstraMacTests.MeetingTranslationTests testEmptyTranslationIsAnErrorNotSuccess]' started.
+Test Case '-[AstraMacTests.MeetingTranslationTests testEmptyTranslationIsAnErrorNotSuccess]' passed (0.007 seconds).
+Test Case '-[AstraMacTests.MeetingTranslationTests testEndpointRulesPreventAccidentalExternalLocalTranslation]' started.
+Test Case '-[AstraMacTests.MeetingTranslationTests testEndpointRulesPreventAccidentalExternalLocalTranslation]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.MeetingTranslationTests testEngineSwitchDoesNotMixResults]' started.
+Test Case '-[AstraMacTests.MeetingTranslationTests testEngineSwitchDoesNotMixResults]' passed (0.013 seconds).
+Test Case '-[AstraMacTests.MeetingTranslationTests testLanguageSwitchFinishesOneRequestAndReusesItsPaidResult]' started.
+Test Case '-[AstraMacTests.MeetingTranslationTests testLanguageSwitchFinishesOneRequestAndReusesItsPaidResult]' passed (0.020 seconds).
+Test Case '-[AstraMacTests.MeetingTranslationTests testMalformedTruncatedAndEmptyResponsesFailClosed]' started.
+Test Case '-[AstraMacTests.MeetingTranslationTests testMalformedTruncatedAndEmptyResponsesFailClosed]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.MeetingTranslationTests testOutputLimitMatchesDirectOpenAIAndLocalProtocol]' started.
+Test Case '-[AstraMacTests.MeetingTranslationTests testOutputLimitMatchesDirectOpenAIAndLocalProtocol]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.MeetingTranslationTests testRepeatedSelectionDoesNotAutomaticallyRetryFailure]' started.
+Test Case '-[AstraMacTests.MeetingTranslationTests testRepeatedSelectionDoesNotAutomaticallyRetryFailure]' passed (0.013 seconds).
+Test Case '-[AstraMacTests.MeetingTranslationTests testRetryKeepsCompletedRowsAndProcessesOnlyBacklog]' started.
+Test Case '-[AstraMacTests.MeetingTranslationTests testRetryKeepsCompletedRowsAndProcessesOnlyBacklog]' passed (0.013 seconds).
+Test Case '-[AstraMacTests.MeetingTranslationTests testSelectBeforeSpeechThenIncrementalFinals]' started.
+Test Case '-[AstraMacTests.MeetingTranslationTests testSelectBeforeSpeechThenIncrementalFinals]' passed (0.013 seconds).
+Test Suite 'MeetingTranslationTests' passed at 2026-09-11 15:22:31.436.
+	 Executed 10 tests, with 0 failures (0 unexpected) in 0.112 (0.112) seconds
+Test Suite 'PanelPositionerTests' started at 2026-09-11 15:22:31.436.
+Test Case '-[AstraMacTests.PanelPositionerTests testContentClearsCameraWhileBackgroundRemainsAttached]' started.
+Test Case '-[AstraMacTests.PanelPositionerTests testContentClearsCameraWhileBackgroundRemainsAttached]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.PanelPositionerTests testExternalScreenUsesItsOwnCoordinatesWithoutCameraBand]' started.
+Test Case '-[AstraMacTests.PanelPositionerTests testExternalScreenUsesItsOwnCoordinatesWithoutCameraBand]' passed (0.000 seconds).
+Test Suite 'PanelPositionerTests' passed at 2026-09-11 15:22:31.437.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'PermissionGuideStateTests' started at 2026-09-11 15:22:31.437.
+Test Case '-[AstraMacTests.PermissionGuideStateTests testDeniedMicrophoneGuidesToSettingsInsteadOfFinishing]' started.
+Test Case '-[AstraMacTests.PermissionGuideStateTests testDeniedMicrophoneGuidesToSettingsInsteadOfFinishing]' passed (0.001 seconds).
+Test Case '-[AstraMacTests.PermissionGuideStateTests testEverythingGrantedCompletesImmediately]' started.
+Test Case '-[AstraMacTests.PermissionGuideStateTests testEverythingGrantedCompletesImmediately]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.PermissionGuideStateTests testFullHappyPathThroughAllThreePermissions]' started.
+Test Case '-[AstraMacTests.PermissionGuideStateTests testFullHappyPathThroughAllThreePermissions]' passed (0.001 seconds).
+Test Case '-[AstraMacTests.PermissionGuideStateTests testNotDeterminedMicrophoneRefusedFallsBackToSettings]' started.
+Test Case '-[AstraMacTests.PermissionGuideStateTests testNotDeterminedMicrophoneRefusedFallsBackToSettings]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.PermissionGuideStateTests testPlanSkipsGrantedPermissionsAndKeepsOrder]' started.
+Test Case '-[AstraMacTests.PermissionGuideStateTests testPlanSkipsGrantedPermissionsAndKeepsOrder]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.PermissionGuideStateTests testRecheckDoesNothingUnlessGranted]' started.
+Test Case '-[AstraMacTests.PermissionGuideStateTests testRecheckDoesNothingUnlessGranted]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.PermissionGuideStateTests testSettingsNeverAppearingFails]' started.
+Test Case '-[AstraMacTests.PermissionGuideStateTests testSettingsNeverAppearingFails]' passed (0.001 seconds).
+Test Case '-[AstraMacTests.PermissionGuideStateTests testStartIsIgnoredWhileRunning]' started.
+Test Case '-[AstraMacTests.PermissionGuideStateTests testStartIsIgnoredWhileRunning]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.PermissionGuideStateTests testStateKnowsItsPermissionAndWhetherItWaits]' started.
+Test Case '-[AstraMacTests.PermissionGuideStateTests testStateKnowsItsPermissionAndWhetherItWaits]' passed (0.000 seconds).
+Test Suite 'PermissionGuideStateTests' passed at 2026-09-11 15:22:31.441.
+	 Executed 9 tests, with 0 failures (0 unexpected) in 0.004 (0.005) seconds
+Test Suite 'PermissionHelpTests' started at 2026-09-11 15:22:31.441.
+Test Case '-[AstraMacTests.PermissionHelpTests testAnOnLookingSwitchCannotEstablishPermission]' started.
+Test Case '-[AstraMacTests.PermissionHelpTests testAnOnLookingSwitchCannotEstablishPermission]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.PermissionHelpTests testApplicationMenuHasAWiredPermissionGuide]' started.
+Test Case '-[AstraMacTests.PermissionHelpTests testApplicationMenuHasAWiredPermissionGuide]' passed (0.004 seconds).
+Test Case '-[AstraMacTests.PermissionHelpTests testMissingMicrophoneDoesNotSendUserToScreenRecording]' started.
+Test Case '-[AstraMacTests.PermissionHelpTests testMissingMicrophoneDoesNotSendUserToScreenRecording]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.PermissionHelpTests testOnlyExistingAppDirectoriesCanBeOfferedAndPayloadKeepsExactPath]' started.
+Test Case '-[AstraMacTests.PermissionHelpTests testOnlyExistingAppDirectoriesCanBeOfferedAndPayloadKeepsExactPath]' passed (0.001 seconds).
+Test Case '-[AstraMacTests.PermissionHelpTests testPreviousSuccessCallbackCannotAdvanceANewGuide]' started.
+Test Case '-[AstraMacTests.PermissionHelpTests testPreviousSuccessCallbackCannotAdvanceANewGuide]' passed (0.001 seconds).
+Test Case '-[AstraMacTests.PermissionHelpTests testSelectedPermissionDoesNotRequestOtherAccess]' started.
+Test Case '-[AstraMacTests.PermissionHelpTests testSelectedPermissionDoesNotRequestOtherAccess]' passed (0.001 seconds).
+Test Suite 'PermissionHelpTests' passed at 2026-09-11 15:22:31.448.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.007 (0.007) seconds
+Test Suite 'RecordingAudioBufferTests' started at 2026-09-11 15:22:31.448.
+Test Case '-[AstraMacTests.RecordingAudioBufferTests testBacklogIsBoundedAndPauseResetDropsOldAudio]' started.
+Test Case '-[AstraMacTests.RecordingAudioBufferTests testBacklogIsBoundedAndPauseResetDropsOldAudio]' passed (0.004 seconds).
+Test Case '-[AstraMacTests.RecordingAudioBufferTests testDifferentCallbackSizesRetainOrder]' started.
+Test Case '-[AstraMacTests.RecordingAudioBufferTests testDifferentCallbackSizesRetainOrder]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.RecordingAudioBufferTests testMissingMicrophoneDoesNotAttenuateVideoAndMixCannotClip]' started.
+Test Case '-[AstraMacTests.RecordingAudioBufferTests testMissingMicrophoneDoesNotAttenuateVideoAndMixCannotClip]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.RecordingAudioBufferTests testTwoInputsProduceOneRecordingTimeline]' started.
+Test Case '-[AstraMacTests.RecordingAudioBufferTests testTwoInputsProduceOneRecordingTimeline]' passed (0.000 seconds).
+Test Suite 'RecordingAudioBufferTests' passed at 2026-09-11 15:22:31.453.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.005 (0.005) seconds
+Test Suite 'RecordingUXTests' started at 2026-09-11 15:22:31.453.
+Test Case '-[AstraMacTests.RecordingUXTests testForegroundContextDoesNotReplaceRecordingEntryOrActiveWork]' started.
+Test Case '-[AstraMacTests.RecordingUXTests testForegroundContextDoesNotReplaceRecordingEntryOrActiveWork]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.RecordingUXTests testOnlyActualSharingControlsTriggerHiding]' started.
+Test Case '-[AstraMacTests.RecordingUXTests testOnlyActualSharingControlsTriggerHiding]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.RecordingUXTests testRestoreControlsHasARealMenuAction]' started.
+Test Case '-[AstraMacTests.RecordingUXTests testRestoreControlsHasARealMenuAction]' passed (0.000 seconds).
+Test Suite 'RecordingUXTests' passed at 2026-09-11 15:22:31.454.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 0.001 (0.001) seconds
+Test Suite 'ScreenshotWatcherTests' started at 2026-09-11 15:22:31.454.
+Test Case '-[AstraMacTests.ScreenshotWatcherTests testBlockedDirectoryReadDoesNotBlockMainThreadOrStop]' started.
+Test Case '-[AstraMacTests.ScreenshotWatcherTests testBlockedDirectoryReadDoesNotBlockMainThreadOrStop]' passed (0.001 seconds).
+Test Suite 'ScreenshotWatcherTests' passed at 2026-09-11 15:22:31.455.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.001 (0.001) seconds
+Test Suite 'SessionFileLockTests' started at 2026-09-11 15:22:31.455.
+Test Case '-[AstraMacTests.SessionFileLockTests testIndependentSessionsSerializeTheirRefreshCriticalSections]' started.
+Test Case '-[AstraMacTests.SessionFileLockTests testIndependentSessionsSerializeTheirRefreshCriticalSections]' passed (0.086 seconds).
+Test Suite 'SessionFileLockTests' passed at 2026-09-11 15:22:31.541.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.086 (0.086) seconds
+Test Suite 'SystemAudioFormatTests' started at 2026-09-11 15:22:31.541.
+Test Case '-[AstraMacTests.SystemAudioFormatTests testInvalidDescriptionIsRejectedBeforeAllocatingPCMBuffer]' started.
+Test Case '-[AstraMacTests.SystemAudioFormatTests testInvalidDescriptionIsRejectedBeforeAllocatingPCMBuffer]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.SystemAudioFormatTests testScreenAudioPCMFormatIsPreserved]' started.
+Test Case '-[AstraMacTests.SystemAudioFormatTests testScreenAudioPCMFormatIsPreserved]' passed (0.000 seconds).
+Test Suite 'SystemAudioFormatTests' passed at 2026-09-11 15:22:31.542.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 0.001 (0.001) seconds
+Test Suite 'TaskOutcomeTests' started at 2026-09-11 15:22:31.542.
+Test Case '-[AstraMacTests.TaskOutcomeTests testAtomicSaveRollsBackIfResultCannotBeSaved]' started.
+Test Case '-[AstraMacTests.TaskOutcomeTests testAtomicSaveRollsBackIfResultCannotBeSaved]' passed (0.001 seconds).
+Test Case '-[AstraMacTests.TaskOutcomeTests testBackendFailureCancellationAndEmptyOutputAreNeverSuccess]' started.
+Test Case '-[AstraMacTests.TaskOutcomeTests testBackendFailureCancellationAndEmptyOutputAreNeverSuccess]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.TaskOutcomeTests testClarificationIsNotReportedAsACompletedArtifact]' started.
+Test Case '-[AstraMacTests.TaskOutcomeTests testClarificationIsNotReportedAsACompletedArtifact]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.TaskOutcomeTests testLegacyDatabaseMigratesWithoutRemovingHistory]' started.
+Test Case '-[AstraMacTests.TaskOutcomeTests testLegacyDatabaseMigratesWithoutRemovingHistory]' passed (0.001 seconds).
+Test Case '-[AstraMacTests.TaskOutcomeTests testOnlyKnownUnfinishedJobsCanBeRefreshed]' started.
+Test Case '-[AstraMacTests.TaskOutcomeTests testOnlyKnownUnfinishedJobsCanBeRefreshed]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.TaskOutcomeTests testRequestAndResultSurviveRestartAndExportWithoutModel]' started.
+Test Case '-[AstraMacTests.TaskOutcomeTests testRequestAndResultSurviveRestartAndExportWithoutModel]' passed (0.013 seconds).
+Test Suite 'TaskOutcomeTests' passed at 2026-09-11 15:22:31.559.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.016 (0.016) seconds
+Test Suite 'VisualEgressProviderTests' started at 2026-09-11 15:22:31.559.
+Test Case '-[AstraMacTests.VisualEgressProviderTests testSelectedCliDeterminesDisclosure]' started.
+Test Case '-[AstraMacTests.VisualEgressProviderTests testSelectedCliDeterminesDisclosure]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.VisualEgressProviderTests testUnconfiguredProviderKeepsSendConditionInCompactProvenance]' started.
+Test Case '-[AstraMacTests.VisualEgressProviderTests testUnconfiguredProviderKeepsSendConditionInCompactProvenance]' passed (0.000 seconds).
+Test Suite 'VisualEgressProviderTests' passed at 2026-09-11 15:22:31.559.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'WorkspaceUXTests' started at 2026-09-11 15:22:31.559.
+Test Case '-[AstraMacTests.WorkspaceUXTests testDraftSurvivesNavigationAndTaskDetailsClose]' started.
+Test Case '-[AstraMacTests.WorkspaceUXTests testDraftSurvivesNavigationAndTaskDetailsClose]' passed (0.001 seconds).
+Test Case '-[AstraMacTests.WorkspaceUXTests testEmptyAndUnavailableRequestsAreNotAccepted]' started.
+Test Case '-[AstraMacTests.WorkspaceUXTests testEmptyAndUnavailableRequestsAreNotAccepted]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.WorkspaceUXTests testLegacyTaskRowsRemainReadable]' started.
+Test Case '-[AstraMacTests.WorkspaceUXTests testLegacyTaskRowsRemainReadable]' passed (0.001 seconds).
+Test Case '-[AstraMacTests.WorkspaceUXTests testSearchCombinesStateAndDetailsWithoutExecutingWork]' started.
+Test Case '-[AstraMacTests.WorkspaceUXTests testSearchCombinesStateAndDetailsWithoutExecutingWork]' passed (0.000 seconds).
+Test Case '-[AstraMacTests.WorkspaceUXTests testStoredDetailsSurviveRestartAndSpecialCharacters]' started.
+Test Case '-[AstraMacTests.WorkspaceUXTests testStoredDetailsSurviveRestartAndSpecialCharacters]' passed (0.006 seconds).
+Test Suite 'WorkspaceUXTests' passed at 2026-09-11 15:22:31.568.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.008 (0.008) seconds
+Test Suite 'astra-macosPackageTests.xctest' passed at 2026-09-11 15:22:31.568.
+	 Executed 115 tests, with 0 failures (0 unexpected) in 0.484 (0.491) seconds
+Test Suite 'All tests' passed at 2026-09-11 15:22:31.568.
+	 Executed 115 tests, with 0 failures (0 unexpected) in 0.484 (0.492) seconds
+◇ Test run started.
+↳ Testing Library Version: 1902
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.

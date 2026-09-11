@@ -1,4 +1,11 @@
 import AppKit
+import Combine
+
+/// The physical camera band belongs to the screen, not to the content tokens.
+@MainActor
+final class DockScreenLayout: ObservableObject {
+    @Published var topInset: CGFloat = 0
+}
 
 /// Window の置き場所。Task Dock は画面最上端、録音 Workspace は画面中央。
 enum PanelPositioner {
@@ -9,12 +16,17 @@ enum PanelPositioner {
     /// （以前ここを visibleFrame にしたのは level が低く裏へ潜っていたときの手当て）。
     static func voiceHUDFrame(screen: NSScreen,
                               size: CGSize = CGSize(width: Metrics.hudWidth, height: Metrics.hudHeight)) -> NSRect {
-        // **top anchor 固定**。高さが変わっても上辺は画面の縁のまま、下へ伸びる。
-        NSRect(
-            x: (screen.frame.midX - size.width / 2).rounded(),
-            y: screen.frame.maxY - size.height,
+        voiceHUDFrame(screenFrame: screen.frame, topInset: screen.safeAreaInsets.top, size: size)
+    }
+
+    static func voiceHUDFrame(screenFrame: NSRect, topInset: CGFloat, size: CGSize) -> NSRect {
+        let height = size.height + max(0, topInset)
+        // Keep the substrate attached; only the content sits below the camera band.
+        return NSRect(
+            x: (screenFrame.midX - size.width / 2).rounded(),
+            y: screenFrame.maxY - height,
             width: size.width,
-            height: size.height
+            height: height
         )
     }
 

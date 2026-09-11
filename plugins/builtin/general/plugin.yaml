@@ -31,6 +31,10 @@ agents:
   - id: assistant
     skill: skills/assistant.md
     tools: [general.answer, general.compose]
+# 問いには answer だけ、書く指示（instruction）には compose だけ。
+# workflow が無い間は「宣言順に全部」が走り、質問の答えが compose の下書き（「※ 下書きです」）に上書きされていた。
+workflows:
+  - workflows/assistant.json
 dashboards: []
 data_sources: []
 policies:

@@ -19,19 +19,19 @@
     "体感の複雑さ（層 C）: 段は 5、面は 1 枚、増えた窓 0"
   ],
   "product" : "Astra",
-  "startedAt" : "2026-09-03T03:25:38Z",
+  "startedAt" : "2026-09-11T16:57:35Z",
   "steps" : [
     {
       "interactions" : 0,
       "keyWindow" : false,
-      "ms" : 13,
+      "ms" : 50,
       "name" : "Home（Dock は待機）",
       "surface" : {
-        "h" : 44,
+        "h" : 76,
         "key" : false,
         "w" : 220,
-        "x" : 1170,
-        "y" : 1396
+        "x" : 754,
+        "y" : 1041
       },
       "windows" : 2
     },
@@ -41,40 +41,40 @@
       "keys" : {
         "esc" : "listening→idle"
       },
-      "ms" : 1137,
+      "ms" : 1192,
       "name" : "Listening",
       "surface" : {
-        "h" : 44,
+        "h" : 76,
         "key" : false,
         "w" : 220,
-        "x" : 1170,
-        "y" : 1396
+        "x" : 754,
+        "y" : 1041
       },
-      "transitionMs" : 170,
+      "transitionMs" : 216,
       "windows" : 2
     },
     {
       "ids" : {
-        "task" : "C2424218-A5D8-4A5F-8B4A-26D439F50B34"
+        "task" : "3D7C3C9B-8CFD-478D-A303-955948185B7E"
       },
       "interactions" : 0,
       "keyWindow" : false,
-      "ms" : 1027,
+      "ms" : 1102,
       "name" : "Running",
       "surface" : {
-        "h" : 255,
+        "h" : 287,
         "key" : false,
         "w" : 720,
-        "x" : 920,
-        "y" : 1185
+        "x" : 504,
+        "y" : 830
       },
-      "transitionMs" : 167,
+      "transitionMs" : 192,
       "windows" : 2
     },
     {
       "ids" : {
-        "confirmation" : "4BCC11C7-4B02-459D-9047-6072CC2A9FB4",
-        "resolved" : "4BCC11C7-4B02-459D-9047-6072CC2A9FB4"
+        "confirmation" : "4587DDB1-B8AB-4AA9-9B93-CC698A43E0CD",
+        "resolved" : "4587DDB1-B8AB-4AA9-9B93-CC698A43E0CD"
       },
       "interactions" : 2,
       "keyWindow" : false,
@@ -82,16 +82,16 @@
         "cmdReturn" : "approved",
         "return" : "no-op"
       },
-      "ms" : 1592,
+      "ms" : 1828,
       "name" : "Confirmation",
       "surface" : {
-        "h" : 44,
+        "h" : 76,
         "key" : false,
         "w" : 220,
-        "x" : 1170,
-        "y" : 1396
+        "x" : 754,
+        "y" : 1041
       },
-      "transitionMs" : 0,
+      "transitionMs" : 206,
       "windows" : 2
     },
     {
@@ -100,20 +100,20 @@
       "keys" : {
         "esc" : "result→idle"
       },
-      "ms" : 1233,
+      "ms" : 1268,
       "name" : "Done",
       "surface" : {
-        "h" : 44,
+        "h" : 76,
         "key" : false,
         "w" : 220,
-        "x" : 1170,
-        "y" : 1396
+        "x" : 754,
+        "y" : 1041
       },
-      "transitionMs" : 166,
+      "transitionMs" : 185,
       "windows" : 2
     }
   ],
   "success" : true,
-  "totalMs" : 5004,
+  "totalMs" : 5442,
   "windowsOpened" : 0
 }

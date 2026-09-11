@@ -33,6 +33,16 @@ final class RecordingRuntime {
         if Thread.isMainThread { listening.insert(ch) }
         else { DispatchQueue.main.async { self.listening.insert(ch) } }
     }
+    /// 録音を始める瞬間に「届いている経路」を空にする。前の録音で届いていた事実は、
+    /// 次の録音の証拠にならない（以前は消えず、2 回目から最初の 1 フレーム前に
+    /// 「聞いています」と名乗っていた）。検査もここを通る（`shots` 09）。
+    func resetListening() {
+        if Thread.isMainThread { listening = [] }
+        else { DispatchQueue.main.async { self.listening = [] } }
+    }
+    /// §17 固定画面用: 「この Mac ではオンデバイス文字起こしを使えません」の姿を作る。
+    /// 本番はオンデバイス STT の起動失敗だけがここを立てる（`begin`）。
+    func setTranscriptionUnavailableForShot(_ on: Bool) { transcriptionUnavailable = on }
     /// マイクは 1 台を使い回す（録音のたびに新しい engine を作ると起動が 200〜770ms かかる）。
     /// start / stop はこの直列 queue でだけ触る（主スレッドを止めない・同時に触らない）。
     private let micCapture = MicCapture()
@@ -41,6 +51,58 @@ final class RecordingRuntime {
     private var micGeneration = 0
     private var sysAudio: AnyObject?
     private var speech: SpeechTranscriber?
+    private var remoteSpeech: SpeechTranscriber?
+    private var googleMic: GoogleLiveTranscriber?
+    private var googleRemote: GoogleLiveTranscriber?
+    private(set) var liveTranscriptionFailure: String?
+    var transcriptionFailureMessage: String { liveTranscriptionFailure ?? Facts.transcriptionOnDeviceUnavailable }
+
+    func retryLiveTranscription() {
+        guard session != nil, cloudRequestedForRecording, Self.cloudTranscriptionAllowed else { return }
+        googleMic?.cancel(); googleRemote?.cancel()
+        googleMic = nil; googleRemote = nil
+        liveTranscriptionFailure = nil; transcriptionUnavailable = false
+        startGoogleLive()
+        if paused { googleMic?.setPaused(true); googleRemote?.setPaused(true) }
+    }
+
+    private func startGoogleLive() {
+        guard let base = apiBase, let token = accessToken else {
+            liveTranscriptionFailure = "Googleのライブ文字起こしに接続されていません。Astra Homeを開いて接続を確認してください。"
+            transcriptionUnavailable = true
+            return
+        }
+        func make(_ channel: SpeakerChannel) -> GoogleLiveTranscriber? {
+            let client = GoogleLiveTranscriber(base: base, token: token)
+            client.onTranscript = { [weak self] text, final in
+                guard let self else { return }
+                self.lastTranscriptChannel = channel
+                self.onTranscript?(text, final)
+            }
+            client.onFailure = { [weak self] message in
+                self?.liveTranscriptionFailure = message
+                self?.transcriptionUnavailable = true
+            }
+            do { try client.start(); return client }
+            catch {
+                liveTranscriptionFailure = "Googleのライブ文字起こしを開始できません。接続と送信設定を確認してください。"
+                transcriptionUnavailable = true
+                return nil
+            }
+        }
+        googleMic = make(.localUser)
+        if systemAudioWanted { googleRemote = make(.remoteAudio) }
+    }
+    private var remoteVad = VoiceActivityDetector()
+    private var systemAudioWanted = false
+    private var audioGeneration = 0
+    private var audioBuffer = RecordingAudioBuffer()
+    private var mixTimer: Timer?
+    private var mixClock: TimeInterval?
+    private var mixedFrames = 0
+    private(set) var systemAudioFrames = 0
+    private(set) var systemAudioPeak: Float = 0
+    var onSystemAudioFailure: (() -> Void)?
     /// Listening（声で頼む）の取り込み。録音とは別で、ディスクには残さない。
     private var voiceSpeech: SpeechTranscriber?
     private var voiceVad = VoiceActivityDetector()
@@ -52,6 +114,58 @@ final class RecordingRuntime {
     private var paused = false
     /// 途中経過/確定の文字起こしを UI へ渡す（オンデバイス STT）。
     var onTranscript: ((String, Bool) -> Void)?
+    /// この録音で文字起こしを頼まれているか（許可の答えが遅れて来たときに始めるため）。
+    private var speechWanted = false
+    /// 診断: 確定した発話の数 / 受け取った partial の数（REAL_MEETING の result.json）。録音中だけ意味を持つ。
+    var sttFinals: Int { (googleMic?.finals ?? 0) + (googleRemote?.finals ?? 0) + (speech?.finalsEmitted ?? 0) + (remoteSpeech?.finalsEmitted ?? 0) }
+    var sttPartials: Int { (googleMic?.partials ?? 0) + (googleRemote?.partials ?? 0) + (speech?.partialsSeen ?? 0) + (remoteSpeech?.partialsSeen ?? 0) }
+
+    /// オンデバイス STT を始める。録音の開始時、または音声認識の許可が下りた瞬間に呼ぶ。
+    private func startSpeech() {
+        guard !cloudRequestedForRecording, speech == nil, session != nil else { return }
+        let st = SpeechTranscriber()
+        st.onFailure = { [weak self] _ in self?.transcriptionUnavailable = true }
+        do {
+            try st.start { [weak self] live in
+                // §12 partial は final を待たずに UI へ。出るまでの時間を実測しておく。
+                let started = self?.speechStartedAt
+                let channel = SpeakerChannel.localUser
+                let deliver = {
+                    if let started { self?.lastPartialLatencyMs = Date().timeIntervalSince(started) * 1000 }
+                    self?.lastTranscriptChannel = channel
+                    self?.onTranscript?(live.text, live.isFinal)
+                    // Dock が listening のときは、そこにも途中経過を出す。
+                    if !live.isFinal { VoiceHUDState.shared.updatePartial(live.text) }
+                }
+                if Thread.isMainThread { deliver() } else { DispatchQueue.main.async(execute: deliver) }
+            }
+            self.speech = st
+            if systemAudioWanted {
+                let remote = SpeechTranscriber()
+                remote.onFailure = { [weak self] _ in self?.transcriptionUnavailable = true }
+                try remote.start { [weak self] live in
+                    let deliver = {
+                        self?.lastTranscriptChannel = .remoteAudio
+                        self?.onTranscript?(live.text, live.isFinal)
+                    }
+                    if Thread.isMainThread { deliver() } else { DispatchQueue.main.async(execute: deliver) }
+                }
+                remoteSpeech = remote
+            }
+        } catch {
+            // オンデバイス資産が無い / 認識器が無い。録音だけ続け、画面に理由を出す。
+            // ここで `requiresOnDeviceRecognition = false` にして取り直すことはしない。
+            transcriptionUnavailable = true
+            NSLog("on-device STT unavailable (recording continues, no server fallback): \(error)")
+        }
+    }
+
+    /// 音声認識の許可の答えが来た（会議の許可要求の完了。求めるのは PermissionCenter だけ）。録音中で、
+    /// 文字起こしを頼まれていて、まだ始まっていなければ、ここから始める。
+    func speechAuthorizationChanged() {
+        guard !cloudRequestedForRecording, speechWanted, speech == nil, SpeechTranscriber.authorization == .authorized else { return }
+        startSpeech()
+    }
     /// マイクの音量（0..1）を UI（波形）へ渡す。
     var onLevel: ((Float) -> Void)?
     /// 実 gateway に作った会議（サインイン時のみ）。無ければローカル録音だけ。
@@ -60,6 +174,9 @@ final class RecordingRuntime {
     private(set) var activeMeetingId: String = "adhoc"
     private var apiBase: String?
     private var accessToken: String?
+    private(set) var cloudTranscriptionFailure: String?
+    private(set) var cloudPendingIds: Set<String> = []
+    private var cloudRequestedForRecording = false
 
     /// 録音を gateway へ**自動で**送ってよいか。既定 OFF、dev 専用。
     ///
@@ -73,6 +190,30 @@ final class RecordingRuntime {
         #else
         return false
         #endif
+    }
+
+    /// 明示的に許可されたときだけ、録音音声を Gateway へ送り Google STT の
+    /// ライブ文字起こしを表示する。オフのときだけ端末内 Speech を使う。
+    ///
+    /// UserDefaults の既定値は OFF。テスト用の dev upload は従来どおり有効にする。
+    static let cloudTranscriptionDefaultsKey = "astra.transcription.cloudGoogleSTT"
+    static func cloudConsentValue(_ stored: Any?, developmentUpload: Bool) -> Bool {
+        stored as? Bool ?? developmentUpload
+    }
+    static var cloudTranscriptionAllowed: Bool {
+        cloudConsentValue(UserDefaults.standard.object(forKey: cloudTranscriptionDefaultsKey),
+                          developmentUpload: devAutoUploadEnabled)
+    }
+    static func setCloudTranscriptionAllowed(_ allowed: Bool) {
+        if CommandLine.arguments.contains("--selftest") {
+            // A test may be killed before cleanup. Its choices must never persist
+            // over the user's consent, including a launch-time NO override.
+            var arguments = UserDefaults.standard.volatileDomain(forName: UserDefaults.argumentDomain)
+            arguments[cloudTranscriptionDefaultsKey] = allowed
+            UserDefaults.standard.setVolatileDomain(arguments, forName: UserDefaults.argumentDomain)
+        } else {
+            UserDefaults.standard.set(allowed, forKey: cloudTranscriptionDefaultsKey)
+        }
     }
 
     /// サインイン済みなら、実バックエンドの会議 id を使って録音する。
@@ -95,8 +236,11 @@ final class RecordingRuntime {
         try? FileManager.default.createDirectory(
             atPath: root, withIntermediateDirectories: true)
         // サインイン済みなら実 gateway に会議を作り、その id で録音する（Tauri を介さない）
+        cloudRequestedForRecording = Self.cloudTranscriptionAllowed
+        cloudTranscriptionFailure = nil
+        liveTranscriptionFailure = nil
         var id = localId
-        if let base = apiBase, let token = accessToken,
+        if Self.devAutoUploadEnabled, let base = apiBase, let token = accessToken,
            let created = try? AstraCoreBridge.createMeeting(base, accessToken: token, title: "会議", language: "ja-JP") {
             id = created
             self.meetingId = created
@@ -105,31 +249,27 @@ final class RecordingRuntime {
             return false
         }
         self.session = session
-        self.activeMeetingId = id
-        transcriptionUnavailable = false
-        if transcribe, SpeechTranscriber.authorization == .authorized {
-            let st = SpeechTranscriber()
-            do {
-                try st.start { [weak self] live in
-                    // §12 partial は final を待たずに UI へ。出るまでの時間を実測しておく。
-                    let started = self?.speechStartedAt
-                    let channel = self?.currentChannel ?? .localUser
-                    DispatchQueue.main.async {
-                        if let started { self?.lastPartialLatencyMs = Date().timeIntervalSince(started) * 1000 }
-                        self?.lastTranscriptChannel = channel
-                        self?.onTranscript?(live.text, live.isFinal)
-                        // Dock が listening のときは、そこにも途中経過を出す。
-                        if !live.isFinal { VoiceHUDState.shared.updatePartial(live.text) }
-                    }
-                }
-                self.speech = st
-            } catch {
-                // オンデバイス資産が無い / 認識器が無い。録音だけ続け、画面に理由を出す。
-                // ここで `requiresOnDeviceRecognition = false` にして取り直すことはしない。
-                transcriptionUnavailable = true
-                NSLog("on-device STT unavailable (recording continues, no server fallback): \(error)")
+        audioGeneration += 1
+        let generation = audioGeneration
+        paused = false
+        systemAudioWanted = captureSystemAudio
+        systemAudioFrames = 0; systemAudioPeak = 0
+        audioBuffer = RecordingAudioBuffer()
+        if captureSystemAudio {
+            mixClock = ProcessInfo.processInfo.systemUptime; mixedFrames = 0
+            mixTimer = Timer.scheduledTimer(withTimeInterval: 0.02, repeats: true) { [weak self] _ in
+                self?.drainMixedAudio()
             }
         }
+        self.activeMeetingId = id
+        transcriptionUnavailable = false
+        resetListening()
+        speechWanted = transcribe
+        if transcribe, cloudRequestedForRecording { startGoogleLive() }
+        else if transcribe, SpeechTranscriber.authorization == .authorized { startSpeech() }
+        // 未確認なら、許可の答えが来てから始める（`speechAuthorizationChanged`）。以前は答えを待たず
+        // 「認可済みのときだけ」で、初回は**誰も音声認識を求めていなかった**ので、文字起こしが一度も
+        // 動かなかった（REAL_MEETING の実マイク経路で 0 行。音は 45 秒届いていた）。
         if captureMic {
             let mic = micCapture
             // AVAudioEngine の起動を主スレッドで待つと、⌥Space から Dock が動くまでがそのぶん遅れる
@@ -138,23 +278,12 @@ final class RecordingRuntime {
             micGeneration += 1
             let gen = micGeneration
             micActive = true
-            micQueue.async { [weak self, weak session] in
+            micQueue.async { [weak self] in
                 do {
                     try mic.start { frame in
-                        _ = session?.pushSamples(samples: frame, sampleRate: 16_000)
-                        // §12 VAD: 声が乗っているフレームだけ STT へ流す（無音を延々と認識させない）。
-                        // 一時停止中は文字起こしもしない（session 側は core が sample を捨てる）。
-                        if self?.paused != true, self?.vad.accept(frame) == true {
-                            self?.currentChannel = .localUser
-                            self?.markListening(.localUser)
-                            if self?.speechStartedAt == nil { self?.speechStartedAt = Date() }
-                            self?.speech?.append(frame, sampleRate: 16_000)
+                        DispatchQueue.main.async {
+                            self?.receiveAudio(frame, channel: .localUser, generation: generation)
                         }
-                        // 波形用の音量（peak）を出す。
-                        var peak: Float = 0
-                        for v in frame { let a = abs(v); if a > peak { peak = a } }
-                        let level = min(1, peak * 1.6)   // 見やすさのため少し持ち上げる
-                        DispatchQueue.main.async { self?.onLevel?(level) }
                     }
                 } catch {
                     // マイクが開けなくてもセッションは成り立たせる（サンプルは外から push できる）
@@ -170,26 +299,66 @@ final class RecordingRuntime {
         if captureSystemAudio, #available(macOS 13.0, *) {
             let sys = SystemAudioCapture()
             self.sysAudio = sys
-            Task { [weak session] in
+            Task { [weak self] in
+                guard self?.audioGeneration == generation else { return }
                 do {
                     try await sys.start { [weak self] frame in
-                        _ = session?.pushSamples(samples: frame, sampleRate: 16_000)
-                        // §19 相手の声は remote_audio として扱う。混ぜてから起こすと主語が消える。
-                        self?.currentChannel = .remoteAudio
-                        self?.markListening(.remoteAudio)
+                        DispatchQueue.main.async {
+                            self?.receiveAudio(frame, channel: .remoteAudio, generation: generation)
+                        }
                     }
+                    if self?.audioGeneration != generation { await sys.stop() }
                 } catch {
                     // 画面収録許可が無ければ system audio 無しで続ける（mic だけで成り立つ）
                     NSLog("system audio capture unavailable: \(error)")
+                    if self?.audioGeneration == generation { self?.onSystemAudioFailure?() }
                 }
             }
         }
         return true
     }
 
+    private func receiveAudio(_ frame: [Float], channel: SpeakerChannel, generation: Int) {
+        guard generation == audioGeneration, session != nil, !paused else { return }
+        markListening(channel)
+        let peak = frame.reduce(Float(0)) { max($0, abs($1)) }
+        if channel == .remoteAudio {
+            systemAudioFrames += frame.count
+            systemAudioPeak = max(systemAudioPeak, peak)
+        }
+        onLevel?(min(1, peak * 1.6))
+        if systemAudioWanted { audioBuffer.append(frame, channel: channel) }
+        else { _ = session?.pushSamples(samples: frame, sampleRate: 16_000) }
+        currentChannel = channel
+        if channel == .localUser { googleMic?.append(frame) }
+        else { googleRemote?.append(frame) }
+        if channel == .localUser, vad.accept(frame) {
+            if speechStartedAt == nil { speechStartedAt = Date() }
+            speech?.append(frame, sampleRate: 16_000)
+        } else if channel == .remoteAudio, remoteVad.accept(frame) {
+            remoteSpeech?.append(frame, sampleRate: 16_000)
+        }
+    }
+
+    private func drainMixedAudio() {
+        guard systemAudioWanted, !paused, let clock = mixClock else { return }
+        let due = max(0, Int(max(0, ProcessInfo.processInfo.systemUptime - clock) * 16_000) - mixedFrames)
+        guard due > 0 else { return }
+        // Drain in bounded chunks even if the main run loop was delayed.
+        var remaining = due
+        while remaining > 0 {
+            let count = min(remaining, 16_000)
+            _ = session?.pushSamples(samples: audioBuffer.take(count), sampleRate: 16_000)
+            remaining -= count
+        }
+        mixedFrames += due
+    }
+
     /// テスト・外部音源用に直接サンプルを流す（headless E2E で使う）。
     func push(_ samples: [Float], sampleRate: UInt32) {
+        guard !paused else { return }
         _ = session?.pushSamples(samples: samples, sampleRate: sampleRate)
+        if sampleRate == 16_000 { googleMic?.append(samples) }
     }
 
     func snapshot() -> RecordingSnapshot? { session?.snapshot() }
@@ -266,35 +435,96 @@ final class RecordingRuntime {
         micQueue.async { [micCapture] in micCapture.stop(); micCapture.prewarm() }
     }
     func setPaused(_ paused: Bool) {
+        if paused { drainMixedAudio() }
         self.paused = paused
         session?.setPaused(paused: paused)
+        googleMic?.setPaused(paused); googleRemote?.setPaused(paused)
+        if paused {
+            speech?.pause()
+            remoteSpeech?.pause()
+        } else {
+            do {
+                try speech?.resume()
+                try remoteSpeech?.resume()
+            } catch {
+                transcriptionUnavailable = true
+                NSLog("on-device STT resume unavailable: \(error)")
+            }
+        }
+        audioBuffer = RecordingAudioBuffer()
+        mixClock = ProcessInfo.processInfo.systemUptime; mixedFrames = 0
+        vad.reset(); remoteVad.reset()
     }
 
     /// 停止して確定。書けた断片は残り、回復候補になる。
-    func end() {
+    func end(cloudCompletion: ((String, String?) -> Void)? = nil, completion: (() -> Void)? = nil) {
+        drainMixedAudio()
+        mixTimer?.invalidate(); mixTimer = nil; mixClock = nil
+        audioGeneration += 1
         vad.reset()
+        remoteVad.reset()
         speechStartedAt = nil
         if micActive {
             micActive = false
             // 止めたあと次の録音のために資源だけ確保し直す（IO は始めない）。
             micQueue.async { [micCapture] in micCapture.stop(); micCapture.prewarm() }
         }
-        speech?.finish(); speech = nil
+        let transcribers = [speech, remoteSpeech].compactMap { $0 }
         transcriptionUnavailable = false
         if #available(macOS 13.0, *), let sys = sysAudio as? SystemAudioCapture {
             Task { await sys.stop() }
         }
         sysAudio = nil
-        try? session?.finish()
-        session = nil
-        // 実 gateway の会議なら、録音を送ってから finalize を投げる（作成→録音→送信→終了）
-        if let base = apiBase, let token = accessToken, let id = meetingId {
-            if let _ = try? AstraCoreBridge.uploadMeetingAudio(base, accessToken: token, meetingId: id, journalRoot: root) {
-                _ = try? AstraCoreBridge.finishMeeting(base, accessToken: token, meetingId: id)
-                AstraCoreBridge.markUploaded(root: root, meetingId: id)  // 二重回復を防ぐ
-            }
+        let finishSession = { [self] in
+            speech = nil
+            remoteSpeech = nil
+            try? session?.finish()
+            session = nil
+            let id = activeMeetingId
+            meetingId = nil
+            // Live results already went through onTranscript and the local transcript store.
+            // Do not submit recording audio for a second, post-meeting recognition pass.
+            completion?()
+
         }
-        meetingId = nil
+        let liveClients = [googleMic, googleRemote].compactMap { $0 }
+        googleMic = nil; googleRemote = nil
+        if !liveClients.isEmpty {
+            Task {
+                for client in liveClients { await client.finish() }
+                finishSession()
+            }
+        } else if completion != nil, !transcribers.isEmpty {
+            var remaining = transcribers.count
+            for transcriber in transcribers {
+                transcriber.finishAsync {
+                    remaining -= 1
+                    if remaining == 0 { finishSession() }
+                }
+            }
+        } else {
+            for transcriber in transcribers { transcriber.finish() }
+            finishSession()
+        }
+    }
+
+    func retryCloudTranscription(id: String, completion: @escaping (String?) -> Void) {
+        guard !cloudPendingIds.contains(id), session == nil || activeMeetingId != id else { return }
+        cloudPendingIds.insert(id)
+        CloudMeetingTranscription.setPending(true, id: id)
+        Task {
+            var failure: String?
+            do {
+                guard Self.cloudTranscriptionAllowed, let base = apiBase, let token = accessToken else {
+                    throw CloudMeetingTranscription.Failure(message: "設定でクラウド文字起こしをオンにし、サーバーへの接続を確認してください。")
+                }
+                try await CloudMeetingTranscription.finalize(base: base, token: token, localId: id, root: root)
+            } catch { failure = error.localizedDescription }
+            CloudMeetingTranscription.saveFailure(failure, id: id)
+            CloudMeetingTranscription.setPending(false, id: id)
+            cloudPendingIds.remove(id)
+            completion(failure)
+        }
     }
 
     /// 録りかけを 1 件捨てる。**音は消える。戻せない。**
@@ -340,7 +570,7 @@ final class RecordingRuntime {
     /// 新しく会議を作り、journal ディレクトリをその id にリネームしてから送る（でないと永久に候補に残る）。
     @discardableResult
     func recover(meetingId id: String) -> UInt64 {
-        guard let base = apiBase, let token = accessToken else { return 0 }
+        guard Self.cloudTranscriptionAllowed, let base = apiBase, let token = accessToken else { return 0 }
         var uploadId = id
         if id.hasPrefix("meeting-") {   // オフライン録音 → 新しい gateway 会議を作って紐付ける
             guard let created = try? AstraCoreBridge.createMeeting(base, accessToken: token, title: "会議（復旧）", language: "ja-JP") else { return 0 }
@@ -349,7 +579,7 @@ final class RecordingRuntime {
             uploadId = created
         }
         let sent = (try? AstraCoreBridge.uploadMeetingAudio(base, accessToken: token, meetingId: uploadId, journalRoot: root)) ?? 0
-        _ = try? AstraCoreBridge.finishMeeting(base, accessToken: token, meetingId: uploadId)
+        guard sent > 0, (try? AstraCoreBridge.finishMeeting(base, accessToken: token, meetingId: uploadId)) != nil else { return 0 }
         if sent > 0 { AstraCoreBridge.markUploaded(root: root, meetingId: uploadId) }  // 二重回復を防ぐ
         return sent
     }

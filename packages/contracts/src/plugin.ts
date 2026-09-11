@@ -69,6 +69,8 @@ export const PERMISSION_SCOPES = [
   'code.execute',
   'crm.read',
   'crm.write',
+  /** To Do / Planner のタスクを読む（Microsoft Graph `Tasks.Read`）。書かない。 */
+  'tasks.read',
 ] as const;
 
 /**
@@ -128,6 +130,7 @@ export const PERMISSION_SCOPE_LABEL: Readonly<Record<(typeof PERMISSION_SCOPES)[
     'code.execute': 'コードを実行する',
     'crm.read': 'CRM を読む',
     'crm.write': 'CRM に書く',
+    'tasks.read': 'タスク（To Do）を読む',
   };
 
 export const PermissionScope = z.enum(PERMISSION_SCOPES);
@@ -204,6 +207,16 @@ export const ConnectorDecl = z.object({
   auth: z.enum(['oauth2', 'api-key', 'os-permission', 'none']),
   provider: z.string().min(1),
   scopes: z.array(z.string()).default([]),
+  /**
+   * この接続（同意画面 1 回）が与える Astra の許可。**capability 単位で同意を分ける**ための欄。
+   *
+   * 「読むだけ」の接続と「送る・動かす」接続を同じ plugin の中で分け、Work Context の同期は
+   * 読む接続だけを使う。送る接続は、送る操作が要ったときに初めて（purpose を見せてから）求める。
+   * 空なら plugin の permissions 全部（接続が 1 つの plugin の従来の形）。
+   */
+  grants: z.array(PermissionScope).default([]),
+  /** 同意画面を出す前に見せる理由。書く・送る接続には**必須**（purpose-first、UI/UX §22）。 */
+  purpose: z.string().min(1).max(200).nullable().default(null),
 });
 
 export type ConnectorDecl = z.infer<typeof ConnectorDecl>;
@@ -310,6 +323,51 @@ export const PluginManifest = manifestShape.superRefine((m, ctx) => {
       path: ['policies'],
       message: `compliance_profile ${m.compliance_profile} requires at least one policy document`,
     });
+  }
+
+  // 4b. 接続を capability で分けるなら、許可は接続に漏れなく・重なりなく割り当てられていること。
+  //     書く・送る接続には purpose が要る（同意画面の前に理由を見せる）。
+  const tiered = m.connectors.filter((c) => c.grants.length > 0);
+  if (tiered.length > 0) {
+    const declared = new Set(m.permissions);
+    const seen = new Map<string, string>();
+    for (const [i, c] of m.connectors.entries()) {
+      for (const [j, g] of c.grants.entries()) {
+        if (!declared.has(g)) {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['connectors', i, 'grants', j],
+            message: `connector "${c.id}" grants "${g}" which the plugin does not declare`,
+          });
+        }
+        const other = seen.get(g);
+        if (other && other !== c.id) {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['connectors', i, 'grants', j],
+            message: `permission "${g}" is granted by both "${other}" and "${c.id}"`,
+          });
+        }
+        seen.set(g, c.id);
+      }
+      const writes = c.grants.some((g) => !g.endsWith('.read'));
+      if (writes && !c.purpose) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['connectors', i, 'purpose'],
+          message: `connector "${c.id}" grants a write permission and must say why (purpose)`,
+        });
+      }
+    }
+    for (const p of m.permissions) {
+      if (!seen.has(p)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['connectors'],
+          message: `permission "${p}" is granted by no connector`,
+        });
+      }
+    }
   }
 
   // 5. agents が参照する tool は宣言済みであること

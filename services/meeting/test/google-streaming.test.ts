@@ -21,12 +21,17 @@ function fakeStream(): DuplexStream & {
   emitError(error: Error): void;
   emitEnd(): void;
   ended: boolean;
+  destroyed: boolean;
 } {
   const listeners: Record<string, ((value: never) => void)[]> = {};
   const written: unknown[] = [];
   return {
     written,
     ended: false,
+    destroyed: false,
+    destroy() {
+      this.destroyed = true;
+    },
     write(chunk: unknown) {
       written.push(chunk);
     },
@@ -282,6 +287,43 @@ describe('the session', () => {
     expect(results[0]!.source).toBe('system');
   });
 
+  it.each([3, 7, 8, 16])('does not reopen for permanent/quota error %i', async (code) => {
+    const stream = fakeStream();
+    const open = vi.fn(() => stream);
+    const session = await new GoogleStreamingV2Transcriber({
+      recognizer: RECOGNIZER,
+      client: { streamingRecognize: open },
+    }).start({ language: 'ja-JP' });
+    stream.emitError(Object.assign(new Error('request rejected'), { code }));
+    expect(open).toHaveBeenCalledTimes(1);
+    expect(stream.destroyed).toBe(true);
+    await expect(session.push(new Uint8Array([1]), 0)).rejects.toThrow('rejected');
+  });
+  it('destroys a hung stream at finish and never reopens or sends again', async () => {
+    vi.useFakeTimers();
+    try {
+      const stream = fakeStream();
+      const open = vi.fn(() => stream);
+      const session = await new GoogleStreamingV2Transcriber({
+        recognizer: RECOGNIZER,
+        model: 'chirp_3',
+        client: { streamingRecognize: open },
+      }).start({ language: 'ja-JP' });
+      const finishing = session.finish();
+      const secondFinish = session.finish();
+      await vi.advanceTimersByTimeAsync(2000);
+      await finishing;
+      await secondFinish;
+      expect(stream.destroyed).toBe(true);
+      stream.emitError(new Error('model does not exist in the location'));
+      stream.emitData({ results: [{ alternatives: [{ transcript: 'late' }], isFinal: true }] });
+      await expect(session.push(new Uint8Array([1]), 0)).rejects.toThrow('closed');
+      expect(open).toHaveBeenCalledTimes(1);
+      expect(await session.finish()).toEqual([]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
   it('refuses to start without a recognizer', () => {
     expect(
       () =>

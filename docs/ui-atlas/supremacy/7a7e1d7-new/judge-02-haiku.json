@@ -1,0 +1,37 @@
+{
+  "pages": {
+    "F5DF": {
+      "visible_text": [
+        "スクリーンショット",
+        "質問したときだけ Claude に送信",
+        "×"
+      ],
+      "observation": {
+        "happening": "スクリーンショットキャプチャ直後の確認トースト。Claude へのプライバシー送信ポリシーを通知している",
+        "most_important": "プライバシー保護の約束を明確に表示し、ユーザーに即座に安心感を与える",
+        "next_action": "クローズボタンで通知を閉じる、または自動消失",
+        "anomalies": []
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 5,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 5,
+        "calmness": 5,
+        "craft": 4,
+        "distinctiveness": 3
+      },
+      "ai_look": [],
+      "verdict": "COMPETITIVE",
+      "why": "情報設計とプライバシー通知の丁寧さで信頼感を構築し、トーストとしての色調・タイポグラフィは適切。ただし通知パターンの一般性が高く、製品固有のデザイン個性に欠ける。欠陥なし、差の問題",
+      "confidence": "high"
+    }
+  },
+  "_judge": {
+    "model": "haiku",
+    "cost_usd": 0.0414225,
+    "turns": 2,
+    "duration_ms": 22260
+  }
+}

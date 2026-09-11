@@ -1,0 +1,124 @@
+{
+  "artifacts" : [
+    "01-home.png",
+    "02-listening.png",
+    "03-running.png",
+    "04-confirmation.png",
+    "05-done.png"
+  ],
+  "errors" : [
+
+  ],
+  "focusTheft" : 0,
+  "interactions" : 4,
+  "journey" : "JA",
+  "notMeasured" : [
+    "実際の声（STT は別 selftest）／実際の送信（外部サービス）"
+  ],
+  "observations" : [
+    "体感の複雑さ（層 C）: 段は 5、面は 1 枚、増えた窓 0"
+  ],
+  "product" : "Astra",
+  "startedAt" : "2026-09-06T01:19:53Z",
+  "steps" : [
+    {
+      "front" : "com.astra.desktop",
+      "interactions" : 0,
+      "keyWindow" : true,
+      "ms" : 20,
+      "name" : "Home（Dock は待機）",
+      "surface" : {
+        "h" : 44,
+        "key" : false,
+        "w" : 220,
+        "x" : 1170,
+        "y" : 1396
+      },
+      "windows" : 2
+    },
+    {
+      "front" : "com.astra.desktop",
+      "interactions" : 1,
+      "keyWindow" : true,
+      "keys" : {
+        "esc" : "listening→idle"
+      },
+      "ms" : 1245,
+      "name" : "Listening",
+      "surface" : {
+        "h" : 44,
+        "key" : true,
+        "w" : 220,
+        "x" : 1170,
+        "y" : 1396
+      },
+      "transitionMs" : 262,
+      "windows" : 2
+    },
+    {
+      "front" : "com.astra.desktop",
+      "ids" : {
+        "task" : "87644158-5BCA-4195-A981-04C4D6478FF3"
+      },
+      "interactions" : 0,
+      "keyWindow" : true,
+      "ms" : 1060,
+      "name" : "Running",
+      "surface" : {
+        "h" : 255,
+        "key" : true,
+        "w" : 720,
+        "x" : 920,
+        "y" : 1185
+      },
+      "transitionMs" : 185,
+      "windows" : 2
+    },
+    {
+      "front" : "com.astra.desktop",
+      "ids" : {
+        "confirmation" : "A0D89723-7017-410C-A327-AB75017B1DEB",
+        "resolved" : "A0D89723-7017-410C-A327-AB75017B1DEB"
+      },
+      "interactions" : 2,
+      "keyWindow" : true,
+      "keys" : {
+        "cmdReturn" : "approved",
+        "return" : "no-op"
+      },
+      "ms" : 1782,
+      "name" : "Confirmation",
+      "surface" : {
+        "h" : 44,
+        "key" : true,
+        "w" : 220,
+        "x" : 1170,
+        "y" : 1396
+      },
+      "transitionMs" : 191,
+      "windows" : 2
+    },
+    {
+      "front" : "com.astra.desktop",
+      "interactions" : 1,
+      "keyWindow" : true,
+      "keys" : {
+        "esc" : "result→idle"
+      },
+      "ms" : 1295,
+      "name" : "Done",
+      "surface" : {
+        "h" : 44,
+        "key" : true,
+        "w" : 220,
+        "x" : 1170,
+        "y" : 1396
+      },
+      "transitionMs" : 177,
+      "windows" : 2
+    }
+  ],
+  "success" : true,
+  "totalMs" : 5405,
+  "windowsOpened" : 0
+}

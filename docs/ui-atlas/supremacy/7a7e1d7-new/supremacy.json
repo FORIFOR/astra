@@ -1,0 +1,302 @@
+{
+  "rc": "7a7e1d7",
+  "mode": "self-supremacy",
+  "pages": [
+    {
+      "id": "guided-setup.granted",
+      "blind_id": "1FA3",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4,
+        "density": 4.33,
+        "typography": 3.67,
+        "geometry": 3.67,
+        "state_clarity": 4.67,
+        "calmness": 4.67,
+        "craft": 4,
+        "distinctiveness": 2.67
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "Polished, minimal success notification with clear state signaling. Follows proven pattern but lacks distinctive personality."
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "成功の伝達は一文で完結し、色・アイコン・余白の節度も高い。ただし本文1行＋×だけで、一線級（Granola/Raycast）が成功トーストに添える「次の一手」や取り消し導線が無く、pill＋オーブの結合部の造形も他カットと比べて説明が弱い"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "定型的なグレーのピル型トースト",
+            "既定色に近い緑チェックアイコン"
+          ],
+          "why": "状態は明確で、円形アイコンの縁色を成功=緑にする芸の細かさはあるが、トースト単体としては非常に汎用的でLinear/Raycast級の作り込みとは言えない"
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.target-highlighted",
+      "blind_id": "4E95",
+      "verdict": "BELOW_BAR",
+      "avg": {
+        "hierarchy": 3,
+        "density": 3.33,
+        "typography": 3.33,
+        "geometry": 2.67,
+        "state_clarity": 2.67,
+        "calmness": 2.67,
+        "craft": 2.67,
+        "distinctiveness": 2.33
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "generic settings list template",
+            "toggle controls follow standard mobile pattern without refinement"
+          ],
+          "why": "Warning message placement creates visual confusion; text wrapping and alignment issues reduce craft. State clarity of warning vs. configuration is ambiguous."
+        },
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "OS 画面に自前のツールチップと枠を重ねる、コーチマーク的な後付け感"
+          ],
+          "why": "吹き出しが対象行の文字を覆い隠しており、ユーザーが今どの行を操作したのか絵の上で確認できない。加えて左の赤丸「1」バッジは意味不明で、指示（再起動）を実行する導線もこの画面に存在しない"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [],
+          "why": "他画像で一貫して『Astra』と名乗るブランドが、ここでは『AstraDbg』というデバッグ名でユーザー向け案内に露出しており、これがオンボーディング用スクリーンショットなら具体的な欠陥。ただしデバッグビルドの一時的な撮影である可能性もあり、その点は未確認"
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.denied",
+      "blind_id": "50D2",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4,
+        "density": 4,
+        "typography": 3.67,
+        "geometry": 3.33,
+        "state_clarity": 3.67,
+        "calmness": 3.67,
+        "craft": 3.67,
+        "distinctiveness": 2.67
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "Well-executed error notification with clear problem statement and recovery action. Professional craft but follows standard error notification pattern."
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "失敗＋復旧手段＋手動経路を一行ずつ積む構成は良い。ただし赤リングのオーブと橙警告と青ボタンで色の意味が三つに割れており、状態の読みが一瞬詰まる"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "エラー内容・原因パス・リトライ導線が一目で分かる構成は良いが、視覚表現自体は一般的なシステムトーストの域を出ない"
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.target-missing",
+      "blind_id": "69AE",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4,
+        "density": 4,
+        "typography": 3.67,
+        "geometry": 3.67,
+        "state_clarity": 3.67,
+        "calmness": 4,
+        "craft": 3.67,
+        "distinctiveness": 2.67
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "Clear instructional design with hierarchical messaging. Well-proportioned and calm. Lacks distinctive design but achieves usability goals effectively."
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "同一レイアウトの色替え反復（9AE8 とほぼ同じ型）"
+          ],
+          "why": "文言は具体的で、何をすべきかが一読で分かる水準。ただし「失敗」と「未許可」が同じ無彩色トーストで表現され、状態の見分けが文字読解に依存している"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "何をすべきかは明確に伝わるが、ボタン配色の使い分けルールが読み取れず、一線級製品ほどの一貫性の説得力はない"
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.intro",
+      "blind_id": "9AE8",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4,
+        "density": 4,
+        "typography": 3.67,
+        "geometry": 3.67,
+        "state_clarity": 3.67,
+        "calmness": 4,
+        "craft": 3.67,
+        "distinctiveness": 2.67
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "Polished permission notification with actionable messaging. Professional presentation but follows standard system notification pattern."
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "69AE との型の反復"
+          ],
+          "why": "見出し／説明／行動の3層が短く整っており、文言も命令形で具体的。ただし阻害状態が視覚的に無標で、成功・失敗・未許可がすべて同じ灰色 pill に収まっている点が一線級との差"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "状態と主要アクションが明快で、青ボタンにより優先度が伝わるが、これも汎用的なシステムトーストの範疇"
+        }
+      ]
+    },
+    {
+      "id": "screenshot.detected",
+      "blind_id": "E3EE",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4,
+        "density": 4,
+        "typography": 4,
+        "geometry": 3,
+        "state_clarity": 3,
+        "calmness": 3.5,
+        "craft": 3,
+        "distinctiveness": 3
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "BELOW_BAR",
+          "valid": false,
+          "ai_look": [],
+          "why": "Text rendering failure or corruption makes message illegible. State clarity is broken—users cannot confirm what was completed or what to do next. This is a defect, not a minor weakness."
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [
+            "『認識しました・そのまま聞けます』のような、能力を宣言するだけで導線を伴わない文"
+          ],
+          "why": "取り込み完了を短く伝える判断は良く、暗色地も落ち着いている。ただし同じ製品の他トーストと地色系統が割れており、「そのまま聞けます」の受け皿が絵の中に無いため、次の一手が想像に委ねられる"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [],
+          "why": "単体の見た目は悪くないが、同シリーズの他5枚が一貫して明るいグレーのトーストである中でこれだけダークテーマになっており、通知システムとしての一貫性が絵から明確に崩れている"
+        }
+      ]
+    },
+    {
+      "id": "screenshot.attached-cloud",
+      "blind_id": "F5DF",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 3.67,
+        "density": 4,
+        "typography": 3.67,
+        "geometry": 3,
+        "state_clarity": 4,
+        "calmness": 4.67,
+        "craft": 3.33,
+        "distinctiveness": 2.33
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "情報設計とプライバシー通知の丁寧さで信頼感を構築し、トーストとしての色調・タイポグラフィは適切。ただし通知パターンの一般性が高く、製品固有のデザイン個性に欠ける。欠陥なし、差の問題"
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "1行見出し＋条件説明＋取り消しという構成は簡潔で、暗色で静かにまとまっており文言も具体的（空語や説明過多はない）。一線級と比べた差は幾何の詰めで、× が右端に遠く置かれてテキストブロックとの間に不自然な空きが残り、サムネイルの垂直中心も2行組の中心と微妙にずれて見える。またサムネイル内の左下要素が意味不明で、絵として読めないディテールが残る。欠陥ではなく仕上げの差。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "NOT_ENOUGH_EVIDENCE",
+          "valid": true,
+          "ai_look": [
+            "説明文が汎用的な安心訴求コピーで、機能名以上の個性がない",
+            "アイコン+タイトル+サブテキスト+×という定型パターン"
+          ],
+          "why": "画像は極端に小さいクロップ(通知/ポップオーバーの一部のみ)で、全体のレイアウト・周辺コンテキスト・インタラクションが見えないため、単体UIとしての完成度を一線級製品と比較評価できない。"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "supreme": 0,
+    "competitive": 6,
+    "below_bar": 1,
+    "not_enough_evidence": 0,
+    "models": [
+      "haiku",
+      "opus",
+      "sonnet"
+    ]
+  },
+  "gate": "FAIL",
+  "ab_competitor": "AUTOMATION_MISSING: 競合の実 UI 画像（ASTRA_COMPETITORS_DIR）が無い。画面収録 TCC と driver が要る"
+}

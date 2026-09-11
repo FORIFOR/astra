@@ -1,0 +1,62 @@
+{
+  "meetingPanel-ask" : {
+    "h" : 30,
+    "w" : 107.5,
+    "x" : 550.5,
+    "y" : 55
+  },
+  "meetingPanel-captions" : {
+    "h" : 30,
+    "w" : 68.5,
+    "x" : 470,
+    "y" : 55
+  },
+  "meetingPanel-notes" : {
+    "h" : 30,
+    "w" : 67,
+    "x" : 391,
+    "y" : 55
+  },
+  "pauseRecording" : {
+    "h" : 30,
+    "w" : 32,
+    "x" : 731,
+    "y" : 55
+  },
+  "secretToggle" : {
+    "h" : 30,
+    "w" : 32,
+    "x" : 687,
+    "y" : 55
+  },
+  "stopRecording" : {
+    "h" : 25,
+    "w" : 25,
+    "x" : 775,
+    "y" : 57.5
+  },
+  "text:Google Meet" : {
+    "h" : 19,
+    "w" : 96,
+    "x" : 41,
+    "y" : 52
+  },
+  "voiceHUD" : {
+    "h" : 108.5,
+    "w" : 820.5,
+    "x" : -0.5,
+    "y" : -0.5
+  },
+  "window:AstraPanel<VoiceTaskDockView>" : {
+    "h" : 108,
+    "w" : 820,
+    "x" : 0,
+    "y" : 0
+  },
+  "window:AstraPanel<VoiceTaskDockView>:topOffset" : {
+    "h" : 0,
+    "w" : 0,
+    "x" : 0,
+    "y" : 0
+  }
+}

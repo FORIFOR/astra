@@ -1,0 +1,34 @@
+# Connector Plugin — product spec §2.4、Work Context 仕様
+id: com.astra.microsoft-todo
+name: Microsoft To Do
+version: 0.1.0
+publisher: astra
+verified: true
+min_core_version: 0.1.0
+category: connector
+compliance_profile: GENERAL
+execution_surfaces: [local]
+# 読むだけ。タスクを作る・消すは持たない。
+permissions:
+  - tasks.read
+jobs:
+  - To Do の未完了タスクを読んで、期限と案件を Work Context に写す
+data_accessed:
+  - To Do の一覧名・タスクの題名・期限・状態・冒頭の抜粋
+connectors:
+  - id: microsoft-todo
+    auth: oauth2
+    provider: microsoft
+    grants:
+      - tasks.read
+    purpose: To Do の未完了タスクと期限を読んで Work Context に写す。タスクは作らない・変えない
+    scopes:
+      - Tasks.Read
+      - offline_access
+tools:
+  - id: todo.list_tasks
+    surface: local
+    risk: READ
+agents: []
+dashboards: []
+policies: []

@@ -1,0 +1,40 @@
+{
+  "date": "2026-09-12",
+  "verify_all": "pass",
+  "swift_tests": 130,
+  "swift_failures": 0,
+  "skipped_native_checks": [
+    "SELFTEST_SKIP fulllifecycle: mic not granted",
+    "SELFTEST_SKIP e2e001: mic not granted",
+    "SELFTEST_SKIP screenshot: screen recording not granted",
+    "SELFTEST_SKIP waveform: microphone not granted",
+    "SELFTEST_SKIP livemic: microphone not granted (status=未確認)",
+    "SELFTEST_SKIP livemeeting: microphone not granted",
+    "SELFTEST_SKIP livescreen: screen recording not granted",
+    "SELFTEST_SKIP sttrecognize: speech not authorized",
+    "SELFTEST_SKIP sttstream: speech not authorized",
+    "SELFTEST_SKIP axtree: AX not trusted",
+    "SELFTEST_SKIP a11ynames: AX not trusted",
+    "SELFTEST_SKIP calendarask: mapping OK, AX not trusted",
+    "SELFTEST_SKIP dictation: AX not trusted",
+    "SELFTEST_SKIP vad: speech not authorized (VAD の判定は上で PASS)",
+    "SELFTEST_SKIP invocation: マイク未許可（実 Mac + 許可でだけ測れる）",
+    "SELFTEST_SKIP invocationaudio: マイク未許可（実 Mac + 許可でだけ測れる）",
+    "SELFTEST_SKIP secret: screencapture が使えない",
+    "SELFTEST_SKIP recordbutton: actual recording requires microphone grant; pre-permission explanation/cancel is covered by journey JC",
+    "SELFTEST_SKIP acceptance: recording lifecycle requires microphone grant; permission gating is covered separately"
+  ],
+  "local_host_helper": "isolated dev identity + capability installation + local host registration + graceful SIGTERM passed",
+  "secret_scan": {
+    "history_findings": 0,
+    "indexed_tree_findings": 0,
+    "indexed_text_bytes": 21825323
+  },
+  "format_check": "pass",
+  "typescript_build": "pass",
+  "typescript_test_typecheck": "pass",
+  "website": "https://astra-forifor.forifor.chatgpt.site",
+  "website_access": "public; unauthenticated HTTP 200",
+  "global_release_decision": "hold; developer preview only",
+  "verify_log_sha256": "1da08d7a57045686b0484f4eaf6a67fb0077ec356f7fcda1eaaeed0a97b829f6"
+}

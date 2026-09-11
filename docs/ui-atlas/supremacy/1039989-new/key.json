@@ -1,0 +1,21 @@
+{
+  "key": {
+    "CE5A": "screenshot.detected",
+    "3680": "screenshot.attached-cloud",
+    "91BE": "guided-setup.intro",
+    "3E91": "guided-setup.target-highlighted",
+    "3A79": "guided-setup.target-missing",
+    "AF8F": "guided-setup.granted",
+    "3072": "guided-setup.denied"
+  },
+  "order": [
+    "3072",
+    "3680",
+    "3A79",
+    "3E91",
+    "91BE",
+    "AF8F",
+    "CE5A"
+  ],
+  "batch": 6
+}

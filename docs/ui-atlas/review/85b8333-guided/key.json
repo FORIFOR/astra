@@ -1,0 +1,17 @@
+{
+  "key": {
+    "00B9": "guided-setup.intro",
+    "EC16": "guided-setup.target-highlighted",
+    "A07F": "guided-setup.target-missing",
+    "7C3E": "guided-setup.granted",
+    "0474": "guided-setup.denied"
+  },
+  "order": [
+    "00B9",
+    "0474",
+    "7C3E",
+    "A07F",
+    "EC16"
+  ],
+  "batch": 6
+}

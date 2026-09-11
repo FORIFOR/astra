@@ -9,6 +9,10 @@ enum Permissions {
     /// 検査用の上書き。**本番では nil。** 拒否された端末は手元に無いので、
     /// 「拒否されたときに何が出るか」を測るにはここから拒否を作るしかない。
     static var simulatedMicrophone: State?
+    /// 同じく検査用。**本番では nil。** この Mac は許可済みなので、「⌥Space が効かないとき Home が
+    /// 何を言うか」「設定の『許可…』が在る姿」はここから未確認を作るしかない。
+    static var simulatedInputMonitoring: State?
+    static var simulatedAccessibility: State?
 
     static var microphone: State {
         if let s = simulatedMicrophone { return s }
@@ -21,6 +25,10 @@ enum Permissions {
     }
 
     static func requestMicrophone(_ done: @escaping (Bool) -> Void) {
+        if let simulatedMicrophone {
+            DispatchQueue.main.async { done(simulatedMicrophone == .granted) }
+            return
+        }
         AVCaptureDevice.requestAccess(for: .audio) { ok in DispatchQueue.main.async { done(ok) } }
     }
 
@@ -30,8 +38,40 @@ enum Permissions {
         }
     }
 
+    /// オンデバイス文字起こし（Apple Speech）は、音声入力の言語を入れると使える。その設定へ。
+    static func openDictationSettings() {
+        if let url = URL(string: "x-apple.systempreferences:com.apple.Keyboard-Settings.extension?Dictation") {
+            NSWorkspace.shared.open(url)
+        }
+    }
+
+    /// 音声認識（Apple Speech、手元の文字起こし）。マイクとは**別の許可**。
+    static var simulatedSpeechRecognition: State?
+    static var speechRecognition: State {
+        if let s = simulatedSpeechRecognition { return s }
+        switch SpeechTranscriber.authorization {
+        case .authorized: return .granted
+        case .denied: return .denied
+        case .restricted: return .restricted
+        default: return .notDetermined
+        }
+    }
+    static func requestSpeechRecognition(_ done: @escaping (Bool) -> Void) {
+        if let simulatedSpeechRecognition {
+            DispatchQueue.main.async { done(simulatedSpeechRecognition == .granted) }
+            return
+        }
+        SpeechTranscriber.requestAuthorization(done)
+    }
+    static func openSpeechRecognitionSettings() {
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_SpeechRecognition") {
+            NSWorkspace.shared.open(url)
+        }
+    }
+
     static var accessibility: State {
-        AXIsProcessTrusted() ? .granted : .notDetermined
+        if let s = simulatedAccessibility { return s }
+        return AXIsProcessTrusted() ? .granted : .notDetermined
     }
 
     static func openAccessibilitySettings() {
@@ -47,7 +87,8 @@ enum Permissions {
     /// **イベントが 1 つも届かない**（黙って効かないショートカットになる）。
     /// 実際、Accessibility は許可済みのままショートカットだけが動かない状態を踏んだ。
     static var inputMonitoring: State {
-        CGPreflightListenEventAccess() ? .granted : .notDetermined
+        if let s = simulatedInputMonitoring { return s }
+        return CGPreflightListenEventAccess() ? .granted : .notDetermined
     }
 
     /// 許可を求める。初回は OS のダイアログが出る。
@@ -62,13 +103,22 @@ enum Permissions {
         }
     }
 
+    static var simulatedScreenRecording: State?
     static var screenRecording: State {
+        if let s = simulatedScreenRecording { return s }
         // CGPreflightScreenCaptureAccess は macOS 11+。true=許可済み
-        CGPreflightScreenCaptureAccess() ? .granted : .notDetermined
+        return CGPreflightScreenCaptureAccess() ? .granted : .notDetermined
     }
 
     static func requestScreenRecording() {
         _ = CGRequestScreenCaptureAccess()
+    }
+
+    /// 「画面収録とシステムオーディオ録音」の設定面へ。Guided Setup がここで Astra 行を案内する。
+    static func openScreenRecordingSettings() {
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
+            NSWorkspace.shared.open(url)
+        }
     }
 
     /// 検査用の上書き（`simulatedMicrophone` と同じ）。**本番では nil。** この Mac は許可済みなので、

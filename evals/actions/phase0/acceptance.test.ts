@@ -443,6 +443,8 @@ describe.skipIf(!url)('Phase 0 acceptance', () => {
         'com.astra.gmail',
         'com.astra.google-calendar',
         'com.astra.meeting',
+        'com.astra.microsoft-todo',
+        'com.astra.outlook',
         'com.astra.research',
         'com.astra.sales-crm',
         'com.astra.stock',

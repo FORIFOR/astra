@@ -1,0 +1,475 @@
+{
+  "rc": "b10b7ca",
+  "pages": [
+    {
+      "id": "guided-setup.denied",
+      "blind_id": "1566",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "error-recovery clarity",
+              "what": "「開けませんでした」という失敗に対して、唯一の行動が同じ「システム設定を開く」であり、原因も代替手順も示されていないため、押しても同じ結果になる可能性が読み取れない",
+              "where": "pill 内の本文とその右の青紫ボタン"
+            },
+            {
+              "axis": "primary-action clarity",
+              "what": "再試行なのか別経路なのかがボタン文言から区別できない",
+              "where": "「システム設定を開く」ボタン"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "screen occupation",
+              "what": "赤い警告アイコンがピルの右端で切れて表示されている",
+              "where": "通知ピル右端"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.target-highlighted",
+      "blind_id": "36AE",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "trust-provenance",
+              "what": "システム設定の一覧の上に重ねられた吹き出しに、発信元を示すアイコン・名前・尻尾がなく、システム自身の表示なのかアプリの表示なのか判別できない",
+              "where": "AstraDbg 行に重なった灰色の吹き出し"
+            },
+            {
+              "axis": "state legibility",
+              "what": "「再起動すると使えます」とあるが、何を再起動するのか（アプリか Mac か）が文言から特定できない",
+              "where": "吹き出しの後半のテキスト"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "low",
+          "concerns": [
+            {
+              "axis": "screen occupation",
+              "what": "通知バッジが画像の角で切れて全体が見えない",
+              "where": "左上の赤い丸バッジ"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "screenshot.detected",
+      "blind_id": "4DAD",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": false,
+          "why": "照合 1/2（画面に無い文字）",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        },
+        {
+          "model": "sonnet",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.target-missing",
+      "blind_id": "586C",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "alignment",
+              "what": "右端の円形アイコンが画像枠で途切れている",
+              "where": "ピル右端の丸アイコン"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.intro",
+      "blind_id": "6172",
+      "verdict": "FIX_CANDIDATE",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": false,
+          "why": "照合 0/2（画面に無い文字）",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": [
+            {
+              "axis": "primary-action clarity",
+              "what": "本文がシステム設定を開くことを求めているのに、実行できるボタンが無く、押せるのは閉じる × だけ",
+              "where": "pill の右側、テキストと × の間の空き領域"
+            },
+            {
+              "axis": "consistency",
+              "what": "同じ「システム設定でオンにする」依頼を出す別の pill にはボタンがあるのに、こちらは文面だけで操作導線が欠けている",
+              "where": "pill 全体の構成"
+            },
+            {
+              "axis": "error-recovery clarity",
+              "what": "設定のどの項目（画面収録の一覧）へ行けばよいかの経路が示されていない",
+              "where": "本文 2 行目"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "primary-action clarity",
+              "what": "設定をオンにするよう指示しているのに、直接遷移できるボタンがない",
+              "where": "通知ピル全体"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.target-found",
+      "blind_id": "6AE4",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "state legibility",
+              "what": "「オンです」と書かれた行のトグルだけが白く、同じ一覧でオンの他のトグルの青と異なる見え方をしており、オンなのかオフなのかが絵から読み取れない",
+              "where": "AstraDbg 行のトグル（吹き出しのすぐ右）"
+            },
+            {
+              "axis": "trust-provenance",
+              "what": "システム設定のウインドウ内に、発信元の名前もアイコンも無い吹き出しが重ねられており、OS の表示と区別できない",
+              "where": "AstraDbg 行に重なった灰色の吹き出し"
+            },
+            {
+              "axis": "consistency",
+              "what": "一覧の先頭項目だけが名前ではなくバージョン番号のような文字列で、他の行の表記規則と揃っていない",
+              "where": "リスト最上部の「2.1.260」の行"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.granted",
+      "blind_id": "C9E7",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": false,
+          "why": "照合 1/3（画面に無い文字）",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": false,
+          "why": "照合 1/2（画面に無い文字）",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "consistency",
+              "what": "成功を伝える面が、白い角丸の帯と薄緑の円という別々の島に割れていて、ひとつの通知として読めない。チェックだけが別の色面に乗っている",
+              "where": "帯の右端と、その右にある緑チェックの円との境目"
+            },
+            {
+              "axis": "hierarchy",
+              "what": "帯の中で一番目立つのは離れた位置にある大きな緑チェックで、実際の情報である文言より先に目が行く。閉じる × はチェックより手前にあり、順序が読み取りづらい",
+              "where": "帯全体（文言・×・チェックの並び）"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "KEEP",
+          "valid": false,
+          "why": "照合 1/2（画面に無い文字）",
+          "confidence": "high",
+          "concerns": []
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.target-add",
+      "blind_id": "CA27",
+      "verdict": "FIX_CANDIDATE",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": [
+            {
+              "axis": "state legibility",
+              "what": "VoiceOS toggle is OFF while all visible neighbors are ON, but no hint text or status indicator explains why this app alone is disabled",
+              "where": "VoiceOS row, approximately middle of the app list"
+            },
+            {
+              "axis": "consistency",
+              "what": "Left sidebar and right content panel have noticeably different background colors (dark vs. light gray), creating visual separation that may fragment the UI coherence",
+              "where": "Panel division down the center of the window"
+            }
+          ]
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "trust-provenance",
+              "what": "案内が指す名前「Astra」と、リストに実在する「AstraDbg」が一致しない。利用者はどちらを追加すべきか、あるいは既に入っているのかを判断できない",
+              "where": "下端の案内帯の文言と、リスト3行目の「AstraDbg」"
+            },
+            {
+              "axis": "screen-occupation",
+              "what": "案内帯がシステム設定ウインドウの枠外・下端にはみ出して浮いており、ウインドウの角丸と重なって切れて見える。どのウインドウに属する案内かが不明瞭",
+              "where": "画像下端中央、「+」ボタンの下"
+            },
+            {
+              "axis": "alignment",
+              "what": "案内帯が強調された「+」の真下でなく右にずれて置かれ、指し示す矢印や接続もないため、指示と対象の結び付きが弱い",
+              "where": "左下の「+」と下端の案内帯の位置関係"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "trust-provenance",
+              "what": "アプリ一覧の先頭項目がバージョン番号らしき「2.1.260」という文字列で表示されており、どのアプリの許可設定か利用者が識別できない",
+              "where": "アプリリスト最上部の1行目"
+            },
+            {
+              "axis": "consistency",
+              "what": "下部ヒントの「Astra」とリスト項目「AstraDbg」で名称が一致しておらず、同一アプリを指しているのか判断できない",
+              "where": "画面下部のツールチップ文言とリスト内「AstraDbg」行"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "screenshot.attached-cloud",
+      "blind_id": "CC32",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": false,
+          "why": "照合 2/2（画面に無い文字）",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        },
+        {
+          "model": "sonnet",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.repositioned",
+      "blind_id": "E229",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "state-legibility",
+              "what": "文言は「オンです」と言うのに、強調されたスイッチは他行の塗りつぶされた青いスイッチと見た目が異なり、白く抜けてオフのように読める。状態表示と説明文が矛盾して見える",
+              "where": "「AstraDbg」行の右端のスイッチと、その左の「オンです・再起動すると使えます」"
+            },
+            {
+              "axis": "error-recovery-clarity",
+              "what": "「再起動すると使えます」とだけ言い、何を再起動するのか（対象アプリか Mac か）も、再起動を始める手段も画面上に無い。次の一歩が利用者任せになる",
+              "where": "案内帯の文言"
+            },
+            {
+              "axis": "density",
+              "what": "案内帯が「AstraDbg」行の上に直接重なり、行の名前と操作部の間の余白を潰している。リストの行構造が一時的に読めなくなる",
+              "where": "リスト3行目「AstraDbg」の中央から右にかけて"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "trust-provenance",
+              "what": "アプリ一覧の先頭項目が「2.1.260」というバージョン番号のような文字列のままで、どのアプリかを利用者が識別できない",
+              "where": "アプリリスト最上部の1行目"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "keep": 7,
+    "fix_candidate": 2,
+    "not_enough_evidence": 1,
+    "models": [
+      "haiku",
+      "opus",
+      "sonnet"
+    ]
+  },
+  "gate": "FAIL"
+}

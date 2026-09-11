@@ -1,0 +1,21 @@
+{
+  "key": {
+    "35E3": "screenshot.detected",
+    "ECAD": "screenshot.attached-cloud",
+    "BCCA": "guided-setup.intro",
+    "47EE": "guided-setup.target-highlighted",
+    "5788": "guided-setup.target-missing",
+    "4D14": "guided-setup.granted",
+    "5CB4": "guided-setup.denied"
+  },
+  "order": [
+    "35E3",
+    "47EE",
+    "4D14",
+    "5788",
+    "5CB4",
+    "BCCA",
+    "ECAD"
+  ],
+  "batch": 6
+}

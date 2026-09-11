@@ -1,0 +1,153 @@
+{
+  "rc": "6605c95",
+  "pages": [
+    {
+      "id": "main.home-work-context",
+      "blind_id": "3A2D",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "primary-action-clarity",
+              "what": "同一行内の2つのテキストリンク（なぜ重要?／優先ではない）が同色・同ウェイトで、優先すべき操作が視覚的に区別できない",
+              "where": "各タスクカード右端のアクションリンク"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "main.home-work-why",
+      "blind_id": "5472",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "primary-action-clarity",
+              "what": "3A2Dと同様、「閉じる」と「優先ではない」が同色同ウェイトのリンクで並び、主アクションが区別されない",
+              "where": "展開カード右端のアクションリンク"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "main.apps-connectors",
+      "blind_id": "65E2",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": [
+            {
+              "axis": "error-recovery clarity",
+              "what": "4 件すべてが「設定が必要」なのに、そこから復旧する手段が画面上に無い。文言は内部の環境変数名（ASTRA_OAUTH_GOOGLE_CLIENT_ID / ASTRA_OAUTH_MICROSOFT_CLIENT_ID）だけで、利用者が次に何をするかが書かれていない",
+              "where": "「仕事のコンテキスト」枠内の Gmail / Google Calendar / Outlook / Microsoft To Do の 4 行"
+            },
+            {
+              "axis": "primary-action clarity",
+              "what": "この画面の主目的は「つなぐ」ことのはずだが、押せると分かる要素が無い。行頭の空の丸がボタンなのか状態表示なのか絵から判別できない",
+              "where": "各サービス行の左端の丸印"
+            },
+            {
+              "axis": "consistency",
+              "what": "同じ「未接続のコネクタ」なのに、上 4 件は罫線区切りの行・アイコン無し、Finder だけ枠付きカード・アイコン付きで、表現が二通りに割れている。Finder には所属を示す見出しも無い",
+              "where": "「仕事のコンテキスト」枠と、その下の Finder カード"
+            },
+            {
+              "axis": "screen occupation",
+              "what": "Finder カードが左半分の幅しかなく右が空き、その下は画面の 3 分の 1 ほどが空白のまま。広い窓に対して中身が下方向・右方向とも埋まっていない",
+              "where": "Finder カードの右側および画面下部"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": [
+            {
+              "axis": "error-recovery clarity",
+              "what": "「設定が必要」と表示されるだけで、それを解消するための入力欄・ボタン・リンクが画面に存在せず、ユーザーが次に何をすればよいか分からない",
+              "where": "Gmail/Google Calendar/Outlook/Microsoft To Doの各行"
+            },
+            {
+              "axis": "consistency",
+              "what": "Finderのみ枠付きカードのスタイルで表示され、リスト形式の他4接続と視覚的な扱いが異なる",
+              "where": "画面下部のFinderカード"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "keep": 3,
+    "fix_candidate": 0,
+    "not_enough_evidence": 0,
+    "models": [
+      "haiku",
+      "opus",
+      "sonnet"
+    ]
+  },
+  "gate": "PASS"
+}

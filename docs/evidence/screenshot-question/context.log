@@ -1,0 +1,1 @@
+SCREENSHOT_CONTEXT_GATE=PASS  検知<24ms・監視経路54ms・会話紐付け・参照解決(これ/さっきの/2枚/3枚/さっきのと今の)・二重0・部分0・窓0・focus0・質問前に画像が動かない・受け渡し=添付時のみ・外す1操作・TTL30分/20件/200MB/起動時掃除・会話閉じで削除・別会話0・path traversal 0・期限切れ可読0・0700/0600・symlink拒否・regular only

@@ -1,0 +1,205 @@
+{
+  "pages": {
+    "097C": {
+      "visible_text": [
+        "Home",
+        "Work",
+        "Library",
+        "Apps",
+        "録音中",
+        "Q4移行計画の打ち合わせ",
+        "42:01",
+        "Ask Astra",
+        "止める",
+        "Product Weekly",
+        "A社 商談"
+      ],
+      "observation": {
+        "happening": "Google Calendar-like interface showing home dashboard with an active recording session for a meeting displayed prominently in pink.",
+        "most_important": "Current meeting state is visually differentiated via background color; next scheduled meetings are listed below with time and platform info.",
+        "next_action": "Continue meeting, view upcoming agenda, or open live notes.",
+        "anomalies": []
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 3,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 4,
+        "calmness": 4,
+        "craft": 3,
+        "distinctiveness": 3
+      },
+      "ai_look": [],
+      "verdict": "COMPETITIVE",
+      "why": "Functional and clear information hierarchy with good use of color to distinguish active state. Lacks distinctive design touches; resembles standard Google calendar interface.",
+      "confidence": "high"
+    },
+    "0A00": {
+      "visible_text": [
+        "23:27の会議",
+        "決まったこと",
+        "macOSを先に出すことに決めました",
+        "やること",
+        "Windowsはいつ出しますか",
+        "メモ",
+        "文字起こし",
+        "録音",
+        "関連ファイル",
+        "出所"
+      ],
+      "observation": {
+        "happening": "Meeting transcript detail view with structured categories (decisions, action items, memos, questions) cross-referenced with numbered footnotes to timestamps in right-side chat view.",
+        "most_important": "Bidirectional linking between categorized summary (left) and timestamped transcript (right) enables tracking decisions back to speakers.",
+        "next_action": "Review full transcript, edit categories, or share summary.",
+        "anomalies": []
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 4,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 5,
+        "calmness": 3,
+        "craft": 4,
+        "distinctiveness": 3
+      },
+      "ai_look": [],
+      "verdict": "COMPETITIVE",
+      "why": "Well-structured information with effective cross-referencing system. Handles high text density without sacrificing readability, but design approach feels familiar to standard note-taking apps.",
+      "confidence": "high"
+    },
+    "0DD0": {
+      "visible_text": [
+        "録音中",
+        "04:21",
+        "原文",
+        "翻訳",
+        "ライブ",
+        "会議",
+        "決まったこと",
+        "やること",
+        "質問",
+        "AIが見ている資料3件"
+      ],
+      "observation": {
+        "happening": "Live meeting transcript with AI-driven automatic categorization into decisions, action items, and questions. Playback controls at top; dual-pane layout with categorized summary left and timestamped transcript right.",
+        "most_important": "AI-assisted auto-classification of meeting content into actionable categories, with full timestamp traceability and expandable sections.",
+        "next_action": "Play/pause recording, ask AI about meeting content, review referenced materials.",
+        "anomalies": []
+      },
+      "scores": {
+        "hierarchy": 5,
+        "density": 4,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 5,
+        "calmness": 3,
+        "craft": 5,
+        "distinctiveness": 4
+      },
+      "ai_look": [],
+      "verdict": "SUPREME",
+      "why": "Combines intelligent auto-categorization with clean dual-pane architecture. Playback state, AI processing, and cross-references are all clear. The automatic meeting classification differentiates this from commodity note apps.",
+      "confidence": "high"
+    },
+    "1078": {
+      "visible_text": [
+        "聞いています...",
+        "ESC"
+      ],
+      "observation": {
+        "happening": "Dark overlay modal showing listening state for voice input. Blue dot indicator and waveform icon signal active audio capture.",
+        "most_important": "Minimal visual language reduces cognitive load during voice input; ESC affordance visible for exit.",
+        "next_action": "Speak or press ESC to cancel.",
+        "anomalies": []
+      },
+      "scores": {
+        "hierarchy": 5,
+        "density": 1,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 5,
+        "calmness": 5,
+        "craft": 4,
+        "distinctiveness": 3
+      },
+      "ai_look": [],
+      "verdict": "SUPREME",
+      "why": "Intentional minimalism for listening state. Single focal point, clear affordance, high calmness. Waiting states are often mishandled; this is polished and focused.",
+      "confidence": "high"
+    },
+    "11E0": {
+      "visible_text": [
+        "Home",
+        "こんばんは",
+        "何を終わらせますか",
+        "録音を始める",
+        "これからの予定",
+        "Product Weekly",
+        "A社商談",
+        "最近の会議",
+        "Q4移行計画の打ち合わせ",
+        "やること3"
+      ],
+      "observation": {
+        "happening": "Home dashboard showing time-aware greeting ('こんばんは' for evening), suggested action (start recording), upcoming meetings, and recent meeting details with metadata (participant count, decision/action counts).",
+        "most_important": "Contextual greeting and proactive call-to-action (start recording) adapt to time of day and user state.",
+        "next_action": "Begin new recording session or review recent meeting details.",
+        "anomalies": []
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 3,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 4,
+        "calmness": 3,
+        "craft": 3,
+        "distinctiveness": 2
+      },
+      "ai_look": [],
+      "verdict": "COMPETITIVE",
+      "why": "Time-aware personalization is thoughtful, but overall layout and component choices remain familiar. Functionally solid but lacks distinctive visual identity compared to 0DD0.",
+      "confidence": "high"
+    },
+    "186F": {
+      "visible_text": [
+        "Slack",
+        "このメッセージを送ります？",
+        "外部に出る",
+        "宛先",
+        "#sales",
+        "明日の会議、資料を先に共有します。",
+        "やめる",
+        "直し終える"
+      ],
+      "observation": {
+        "happening": "Slack outbound message confirmation dialog in dark mode. Message preview shown; 'external' risk badge highlights that channel is external-facing.",
+        "most_important": "External-channel warning is visually prominent and linguistically precise ('外部に出る'), making risk explicit before send.",
+        "next_action": "Confirm send ('直し終える') or cancel ('やめる').",
+        "anomalies": []
+      },
+      "scores": {
+        "hierarchy": 5,
+        "density": 2,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 5,
+        "calmness": 4,
+        "craft": 4,
+        "distinctiveness": 3
+      },
+      "ai_look": [],
+      "verdict": "SUPREME",
+      "why": "Excellent risk-mitigation UX. External warning is immediate and unambiguous; confirmation language is decisive. Modal hierarchy and affordances are clear. This is how security warnings should look.",
+      "confidence": "high"
+    }
+  },
+  "_judge": {
+    "model": "haiku",
+    "cost_usd": 0.0836984,
+    "turns": 7,
+    "duration_ms": 81086
+  }
+}

@@ -29,6 +29,8 @@ const ix = tokens.interaction;
 
 /** Swift/C# が使う名前 → 値。名前は両 OS で共通にして、生成物の差を値だけにする。 */
 const FIELDS = [
+  ['homeComposerEditorHeight', tokens.homeComposer.editorHeight],
+  ['homeContentWidth', tokens.homeComposer.contentWidth],
   ['workspaceWidth', w.width],
   ['workspaceHeight', w.height],
   ['workspaceRadius', w.cornerRadius],

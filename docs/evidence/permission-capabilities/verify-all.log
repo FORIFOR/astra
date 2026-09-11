@@ -1,0 +1,480 @@
+== current macOS debug candidate ==
+[0/1] Planning build
+Building for debugging...
+[0/3] Write swift-version--58304C5D6DBC2206.txt
+Build complete! (0.18s)
+[0/1] Planning build
+Building for production...
+[0/2] Write swift-version--58304C5D6DBC2206.txt
+Build complete! (0.17s)
+/Users/shuhei/Projects/astra/apps/astra-macos/.build/Astra.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate: replacing existing signature
+/Users/shuhei/Projects/astra/apps/astra-macos/.build/Astra.app/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app: replacing existing signature
+/Users/shuhei/Projects/astra/apps/astra-macos/.build/Astra.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc: replacing existing signature
+/Users/shuhei/Projects/astra/apps/astra-macos/.build/Astra.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc: replacing existing signature
+/Users/shuhei/Projects/astra/apps/astra-macos/.build/Astra.app/Contents/Frameworks/Sparkle.framework/Autoupdate: replacing existing signature
+/Users/shuhei/Projects/astra/apps/astra-macos/.build/Astra.app/Contents/Frameworks/Sparkle.framework/Updater.app: replacing existing signature
+/Users/shuhei/Projects/astra/apps/astra-macos/.build/Astra.app/Contents/Frameworks/Sparkle.framework: replacing existing signature
+/Users/shuhei/Projects/astra/apps/astra-macos/.build/Astra.app: replacing existing signature
+--prepared:/Users/shuhei/Projects/astra/apps/astra-macos/.build/Astra.app/Contents/Frameworks/Sparkle.framework/Versions/Current/.
+--validated:/Users/shuhei/Projects/astra/apps/astra-macos/.build/Astra.app/Contents/Frameworks/Sparkle.framework/Versions/Current/.
+/Users/shuhei/Projects/astra/apps/astra-macos/.build/Astra.app: valid on disk
+/Users/shuhei/Projects/astra/apps/astra-macos/.build/Astra.app: satisfies its Designated Requirement
+Identifier=com.astra.desktop
+Authority=Apple Development: Shuhei Horio (N5DXXRWC3M)
+TeamIdentifier=6RR7572ZLU
+launch: OK（実行体は起動する）
+packaged: /Users/shuhei/Projects/astra/apps/astra-macos/.build/Astra.app
+実 Calendar 検証: open "/Users/shuhei/Projects/astra/apps/astra-macos/.build/Astra.app" --args --selftest calendarlive  → プロンプトで許可 → 結果は /tmp/astra-calendarlive.txt
+
+== astra-core tests ==
+test result: ok. 38 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+
+== Tauri Rust regression ==
+test result: ok. 67 passed; 0 failed; 3 ignored; 0 measured; 0 filtered out; finished in 0.32s
+
+== Tauri desktop JS regression ==
+      Tests  352 passed (352)
+
+== TCC usage descriptions ==
+USAGE_DESCRIPTIONS_OK: 要求しうる権限の用途説明が揃っている (5 件)
+
+== release consistency ==
+  package.json=0.1.2 tauri.conf.json=0.1.2 src-tauri/Cargo.toml=0.1.2 astra-core/Cargo.toml=0.1.2
+RELEASE_CONSISTENCY_OK: 版番号 0.1.2 で一致・配布物は外部 dylib を掴まない・Developer ID + hardened runtime
+
+== release aggregation regression ==
+.......................
+----------------------------------------------------------------------
+Ran 23 tests in 6.993s
+
+OK
+
+== UI taste ==
+== UI の癖 ==
+  gradient               2 /   4
+  角丸 >28pt           0 /   0
+  material/blur: actual=10, reviewed additions=2 (content-bound)
+  material/blur          8 /   8
+  sparkles アイコン   4 /   6
+  Capsule: actual=26, reviewed additions=6 (content-bound)
+  Capsule               20 /  20
+  shadow                 6 /   9
+  40字超の文言      5 /   6
+
+UI_TASTE_OK: 癖は上限内
+
+== permission JIT ==
+  起動経路（AppDelegate）で権限を求めていない OK
+  求めている場所:
+    apps/astra-macos/Sources/AstraMac/GuidedSetup/PermissionManager.swift:41:        Permissions.requestMicrophone(done)
+    apps/astra-macos/Sources/AstraMac/Settings/PermissionCenter.swift:88:            case .microphone: Permissions.requestMicrophone { _ in done() }
+    apps/astra-macos/Sources/AstraMac/Settings/PermissionCenter.swift:89:            case .screenRecording: Permissions.requestScreenRecording(); done()
+    apps/astra-macos/Sources/AstraMac/Settings/PermissionCenter.swift:91:            case .calendar: Permissions.requestCalendar { _ in done() }
+    apps/astra-macos/Sources/AstraMac/Settings/PermissionCenter.swift:92:            case .speechRecognition: Permissions.requestSpeechRecognition { _ in done() }
+    apps/astra-macos/Sources/AstraMac/Settings/SettingsView.swift:46:                              request: { Permissions.requestSpeechRecognition { _ in speech = Permissions.speechRecognition } })
+    apps/astra-macos/Sources/AstraMac/Settings/SettingsView.swift:48:                              request: { Permissions.requestCalendar { _ in cal = Permissions.calendar } })
+    apps/astra-macos/Sources/AstraMac/Settings/SettingsView.swift:52:                    if !Permissions.requestInputMonitoring() { Permissions.openInputMonitoringSettings() }
+    apps/astra-macos/Sources/AstraMac/Home/HomeView.swift:440:                PermissionCenter.request(.schedule) {
+    apps/astra-macos/Sources/AstraMac/RecordingWorkspace/RecordingWorkspaceState.swift:310:            PermissionCenter.request(.meeting) {
+    apps/astra-macos/Sources/AstraMac/RecordingWorkspace/RecordingWorkspaceState.swift:339:        if screenAudio && requestPermissions { PermissionCenter.request(.meetingAudio) }
+  求める場所は機能の入口だけ OK
+  取扱説明書も「使うときに要るものだけ」 OK
+
+PERMISSION_JIT_OK: 起動時に求めず、使う直前に求める
+
+== privacy egress ==
+== PRIVACY_EGRESS_GATE ==
+  recording upload requires explicit cloud consent PASS
+  silent Apple STT fallback                0
+  screen audio permission follows selection PASS
+  connector egress requires user action    PASS
+  external action confirmation             PASS (Confirm.ask ×5; 面は CONFIRMATION_GATE)
+  transcription egress guide               consistent
+  runtime (--selftest egress)              autoUpload=off cloudSTTConsent=off meeting=[microphone] sttNoFallback=NOT_MEASURED
+
+PRIVACY_EGRESS_GATE=PASS
+
+== no contradiction ==
+scripts/verify-no-contradiction.sh: line 28: 28857 Terminated: 15          "$BIN" --selftest hold-meeting 25 silent > /dev/null 2>&1
+NO_CONTRADICTION_OK: 画面の中で言っていることが食い違わない
+
+== confirmation surface ==
+== CONFIRMATION_GATE ==
+
+  · 面の寸法 560x286pt
+  ✓ 幅 <= 620pt
+  ✓ 高さ <= 360pt
+  ✓ ① どのアプリ / どこへ
+  ✓ ② 何が起きるか
+  ✓ ③ 決定的な値
+  ✓ ④ 中身の下見
+  ✓ ⑤ 出所
+  ✓ ⑥ 取消
+  ✓ ⑥ 直す
+  ✓ ⑥ 実行
+  ✓ 決断に不要なもの（履歴・会議ノート・sidebar）が無い
+  ✓ 主たる操作 96x32pt が逃げ道 72pt（やめる）以上
+  ✓ 中身の間の中央値 = 11.9pt（操作の手前 28.0pt は区切りとして除外）
+  ✓ 窓を増やしていない（同じ面が morph）
+
+  ✓ 窓を増やさない・焦点を奪わない・560x254pt・高さは中身で決まる（254→163）・取り消しで戻る
+
+CONFIRMATION_GATE=PASS
+
+== screen terms (one word each) ==
+TERMS_OK: 画面の語は 1 語ずつ
+
+== guide facts (app words only) ==
+  facts 126 件 / ガイドが引く key 62 件 / 文字で書かれた protected 0 件 / 一字違い 0 件 / 古い綴り 0 件
+SELFTEST_OK shots: 16面を実アプリで撮影・geometry OK・面どうしが別の絵
+  guide build: written 902 KB / facts used 62
+GUIDE_FACTS_OK: ガイドの語はアプリの表示（UserFacingFacts）だけから来ている
+
+== guide facts selfcheck ==
+  selfcheck 1 一字違いの古い写し:
+    FAIL: protected の語「録音」(dock.record) がガイドに文字で書かれている（build.py:131 付近）。fact("dock.record") で引く
+    FAIL: 「録音の開始 / 停止」はアプリの語「録音を開始 / 停止」(settings.shortcutRow) と一字違い（build.py:131 付近）。古い写し。fact("settings.shortcutRow") で引く
+  selfcheck 2 許可名を文字で:
+    FAIL: protected の語「画面収録」(permission.screenRecording) がガイドに文字で書かれている（build.py:141 付近）。fact("permission.screenRecording") で引く
+  selfcheck 3 知らない key:
+    FAIL: ガイドが知らない fact を引いている: settings.noSuchRow
+GUIDE_FACTS_SELFCHECK_OK: 3 つの書き戻しを全部捕まえた
+
+== design tokens fresh ==
+design tokens are current
+
+== type scale (no literals) ==
+TYPE_LITERALS_OK: 6 つの型の view に字の大きさの直書きは無い（5 scope）
+
+== swift bindings fresh ==
+swift bindings are current
+
+== workspace fixture fresh ==
+recording-workspace fixture is current
+
+== conventions ==
+convention check passed
+
+== C ABI contract (3-way) ==
+C ABI contract ok: Rust 21 = header 21, C# が呼ぶ 21 個すべて一致
+
+== native path Tauri-free ==
+native product path is Tauri-free: 168 Swift files + astra-core に Tauri 依存なし (Done#8)
+
+== WinUI XAML well-formed ==
+xaml well-formed: 5 WinUI .xaml files OK
+
+== C# bridge -> core + gateway ==
+CS_OK gateway(AstraSession): signedIn apps=14 library=0 echoArtifact=52bytes
+CS_OK bridge->core: version=0.1.2 pkce=S256 authorizeUrl parseCallback elapsed=01:05; geometry matches shared fixture
+
+== Windows C# logic type-check ==
+CSLOGIC_OK: Windows C# 実ロジック全体(Window code-behind 含む)が型検査を通過
+
+== C ABI round-trip (C) ==
+CABI_OK connector: pkce=S256 authorizeUrl ok nonLoopbackRejected parseCallback ok
+CABI_OK api: me=owner meeting=ok agent=COMPLETED apps=[... library=[...
+CABI_OK closed=1 ms=5000 fragmentBytes=160000 markedUploaded=1
+
+== macOS recording + live E2E ==
+SELFTEST_OK record: closed=1 fragmentBytes=160000 elapsed=00:05 recoverable=1
+SELFTEST_OK lifecycle: elapsed=00:05 recovered=true
+SELFTEST_OK shortcut: registered=true combo=⌥Space matcher=ok receivedSyntheticPress=true
+SELFTEST_OK sysaudio: capturesAudio=true sampleRate=48000 channels=2 excludesSelf=true
+SELFTEST_OK calendar: status=未確認 upcoming=0
+SELFTEST_OK screen: width=1280 height=800 pixelFormat=BGRA audio=false
+SELFTEST_OK rag: order=a,c,b topScore=1.00 reason=語が 1 件一致 · 新しい · このプロジェクト
+SELFTEST_OK keychain: roundtrip ok, absent=nil, delete idempotent, service=com.astra.mac
+SELFTEST_OK files: candidates=2(binary除外) top=oauth.txt score=0.72
+SELFTEST_OK ax: trusted=true selection=nil candidates=0
+SELFTEST_OK speech: auth=0 onDeviceCapable=true started=false appendedFrames=false serverFallback=never
+SELFTEST_OK connector: pkce=S256✓ authorizeUrl✓ nonLoopbackRejected✓ configured=0
+SELFTEST_OK permissions: mic=許可済み screen=許可済み ax=許可済み calendar=未確認 speech=0
+SELFTEST_OK shape: path matches shared fixture (14 segments); taskDock content 296.0pt fits dockWidth 296.0pt
+SELFTEST_OK hudlifecycle: HUD→Recording→保存→HUD 復帰 の window 状態遷移 OK
+SELFTEST_OK panel: 全Space=true fullscreen補助=true borderless=true 透過=true notMain=true
+SELFTEST_OK render: VoiceHUD:c139/o0.99 IntentBar:c89/o1.00 RecordingIndicator:c168/o1.00 ConfirmationCard:c90/o0.94 MeetingArtifact:c99/o1.00 ResearchResult:c122/o0.81 MeetingSurface:c57/o1.00 LineagePanel:c126/o0.82 ApprovalCard:c106/o0.77 EvidenceSummary:c133/o0.70 WorkSurface:c123/o0.80 ContextLens:c100/o0.88 HomeView:c67/o1.00 RecordingWorkspace:c52/o0.99 MainWindow:c62/o1.00 Settings:c8/o0.11
+SELFTEST_OK pause: 停止中は録音が進まない before=5000 pause=5000 resume=10000
+SELFTEST_OK timer: 経過が進む running=2 停止で止まる paused=2 再開で進む resumed=3
+SELFTEST_OK aiaction: Agent 応答="「プロジェクト X」のリリースは 9 月 12 日とし、OAuth の確認を鈴木…"
+SELFTEST_OK translate: local model preserved Friday and 3 pm
+SELFTEST_OK recovery: 検出→復旧 uploadedBytes=192000 復旧後は候補から消える(stillThere=false)
+SELFTEST_OK connectorflow: loopback 受理 code=abc123 state=xyz789 port=50202
+SELFTEST_OK connectorstate: mapping ok, canConnect gated by client_id (google env=false)
+SELFTEST_OK connectorexchange: Swift→core→実HTTP 交換 tokens 取得+Keychain 保管 (verifier 送信=true)
+SELFTEST_OK voiceask: thinking=true→idle Agent 応答="Astra のレビューは金曜日 15 時です。…"
+SELFTEST_OK recoveryoffline: オフライン録音を新規会議に紐付けて復旧 sent=192000 local消滅=true
+SELFTEST_SKIP fulllifecycle: mic not granted
+SELFTEST_SKIP e2e001: mic not granted
+light: SELFTEST_OK shots: 16面を実アプリで撮影・geometry OK・面どうしが別の絵
+STATE hover diff=2.629%
+STATE focus diff=0.642%
+STATE pressed diff=2.560%
+SELFTEST_OK golden: 10面が committed の golden と一致
+dark: SELFTEST_OK shots: 16面を実アプリで撮影・geometry OK・面どうしが別の絵
+STATE hover diff=2.647%
+STATE focus diff=0.644%
+STATE pressed diff=2.621%
+SELFTEST_OK golden: 10面が committed の golden と一致
+SELFTEST_OK geometry: 6状態の位置・寸法が基準と 2pt 以内
+OCCUPATION 01-idle VoiceTaskDockView: 220x76pt = 1.3% of 1440x900（上限 220x76）
+OCCUPATION 02-listening VoiceTaskDockView: 600x85pt = 3.9% of 1440x900（上限 600x152）
+OCCUPATION 03-task-dock VoiceTaskDockView: 720x323pt = 17.9% of 1440x900（上限 720x330）
+OCCUPATION 04-meeting VoiceTaskDockView: 820x108pt = 6.8% of 1440x900（上限 820x108）
+OCCUPATION 05-meeting-notes VoiceTaskDockView: 820x389pt = 24.6% of 1440x900（上限 820x492）
+OCCUPATION 06-workspace VoiceTaskDockView: 820x389pt = 24.6% of 1440x900（上限 820x492）
+OCCUPATION 06-workspace RecordingWorkspaceView: 1080x680pt = 56.7% of 1440x900（上限 1080x680）
+SELFTEST_OK occupation: 7面の実寸が token の上限以内
+SELFTEST_OK density: 16面が基準以下（最も詰まっている 09c-speech-denied 57.1% / 最も空いている 02b-voice-hud-preparing 94.3%）
+SELFTEST_OK plugins: manifest 14 件・宣言だけでは呼べない・許諾で呼べる・取り消せる・manifest 外は通らない
+light: SELFTEST_OK sessionshots: 16面を実遷移で撮影・同じ id が姿を変える
+dark: SELFTEST_OK sessionshots: 16面を実遷移で撮影・同じ id が姿を変える
+light: SELFTEST_OK dock8: 19状態を実遷移で撮影・top anchor 固定・窓は常に1枚・idle 220pt→agent 720pt
+dark: SELFTEST_OK dock8: 19状態を実遷移で撮影・top anchor 固定・窓は常に1枚・idle 220pt→agent 720pt
+SELFTEST_SKIP screenshot: screen recording not granted
+SELFTEST_SKIP waveform: microphone not granted
+SELFTEST_SKIP livemic: microphone not granted (status=未確認)
+SELFTEST_SKIP livemeeting: microphone not granted
+SELFTEST_SKIP livescreen: screen recording not granted
+SELFTEST_SKIP sttrecognize: speech not authorized
+SELFTEST_SKIP sttstream: speech not authorized
+SELFTEST_OK guishot: 実提示 HUD=220x44/c68 Workspace=1080x680/c35 Main=940x704/c45 IntentBar=560x56/c49 png=/var/folders/xn/mdmvpkwd0yx4tcr7rvn_3xv80000gn/T/astra-guishot-workspace-30998.png
+SELFTEST_OK axtree: Main 4セクション + Workspace 統合サーフェス7件を実アクセシブル要素として検出 (main=116 ws=216)
+A11Y_ENV	fullKeyboardAccess=false	keyboardNavigation=false	macOS=バージョン26.6.2（ビルド25G83）
+A11Y_SURFACE	dock-idle	controls=2	nameless=0	latinOnly=0	images=0	imagesNamed=0
+A11Y_CONTROL	dock-idle	AXButton	sub=	name=Astraの操作を開く	id=dockOpenActions	frame=775,44,58x19	press=true
+A11Y_CONTROL	dock-idle	AXButton	sub=	name=録音	id=dockStartRecording	frame=906,38,48x32	press=true
+A11Y_SURFACE	dock-listening	controls=0	nameless=0	latinOnly=0	images=0	imagesNamed=0
+A11Y_SURFACE	dock-agent	controls=2	nameless=0	latinOnly=0	images=2	imagesNamed=2
+A11Y_CONTROL	dock-agent	AXButton	sub=	name=止める	id=stopAgent	frame=524,243,85x28	press=true
+A11Y_CONTROL	dock-agent	AXButton	sub=	name=作業画面で続ける	id=openWorkspace	frame=1072,243,131x28	press=true
+A11Y_SURFACE	dock-confirmation	controls=4	nameless=0	latinOnly=0	images=2	imagesNamed=2
+A11Y_CONTROL	dock-confirmation	AXButton	sub=	name=出所、週次同期 · 田中 · 10:42	id=confirmSource	frame=604,182,520x14	press=true
+A11Y_CONTROL	dock-confirmation	AXButton	sub=	name=やめる	id=confirmCancel	frame=900,220,42x19	press=true
+A11Y_CONTROL	dock-confirmation	AXButton	sub=	name=直す	id=confirmEdit	frame=978,220,28x19	press=true
+A11Y_CONTROL	dock-confirmation	AXButton	sub=	name=送る	id=confirmProceed	frame=1062,220,28x19	press=true
+A11Y_SURFACE	dock-meeting	controls=5	nameless=0	latinOnly=0	images=0	imagesNamed=0
+A11Y_CONTROL	dock-meeting	AXButton	sub=	name=Astraの操作を開く	id=dockOpenActions	frame=775,44,58x19	press=true
+A11Y_CONTROL	dock-meeting	AXButton	sub=	name=録音	id=dockStartRecording	frame=906,38,48x32	press=true
+A11Y_CONTROL	dock-meeting	AXButton	sub=	name=案内をやめる	id=guideAvatarClose	frame=1662,845,22x22	press=true
+A11Y_CONTROL	dock-meeting	AXButton	sub=	name=マイクを許可する	id=guideAvatarAction	frame=1412,953,113x27	press=true
+A11Y_CONTROL	dock-meeting	AXButton	sub=	name=あとで	id=guideLater	frame=1412,986,30x14	press=true
+A11Y_RECORDING	found=true	names=録音
+A11Y_SURFACE	workspace	controls=19	nameless=0	latinOnly=2	images=4	imagesNamed=4
+A11Y_CONTROL	workspace	AXButton	sub=	name=一時停止	id=recordingWorkspace	frame=813,208,28x28	press=true
+A11Y_CONTROL	workspace	AXButton	sub=	name=キャプション	id=recordingWorkspace	frame=851,208,28x28	press=true
+A11Y_CONTROL	workspace	AXButton	sub=	name=スキャン	id=recordingWorkspace	frame=889,208,28x28	press=true
+A11Y_CONTROL	workspace	AXButton	sub=	name=さらに表示	id=recordingWorkspace	frame=927,208,28x28	press=true
+A11Y_CONTROL	workspace	AXButton	sub=	name=録音を止める	id=recordingWorkspace	frame=976,209,25x25	press=true
+A11Y_CONTROL	workspace	AXButton	sub=	name=原文	id=tool-transcript	frame=667,321,66x32	press=true
+A11Y_CONTROL	workspace	AXButton	sub=	name=翻訳	id=tool-translation	frame=735,321,67x32	press=true
+A11Y_CONTROL	workspace	AXTextField	sub=	name=この会議について聞く	id=recordingWorkspace	frame=383,616,741x17	press=false
+A11Y_CONTROL	workspace	AXButton	sub=	name=要約	id=recordingWorkspace	frame=1134,611,40x28	press=true
+A11Y_CONTROL	workspace	AXButton	sub=	name=決まったこと	id=recordingWorkspace	frame=1179,611,84x28	press=true
+A11Y_CONTROL	workspace	AXButton	sub=	name=やること	id=recordingWorkspace	frame=1267,611,62x28	press=true
+A11Y_CONTROL	workspace	AXButton	sub=	name=マイク	id=recordingWorkspace	frame=1340,611,28x28	press=true
+A11Y_CONTROL	workspace	AXButton	sub=	name=閉じる	id=recordingWorkspace	frame=1356,669,10x10	press=true
+A11Y_CONTROL	workspace	AXButton	sub=	name=ファイル	id=recordingWorkspace	frame=360,706,86x28	press=true
+A11Y_CONTROL	workspace	AXButton	sub=	name=Gmail	id=recordingWorkspace	frame=454,706,78x28	press=true
+A11Y_CONTROL	workspace	AXButton	sub=	name=Drive	id=recordingWorkspace	frame=540,706,76x28	press=true
+A11Y_CONTROL	workspace	AXButton	sub=	name=案内をやめる	id=guideAvatarClose	frame=1662,845,22x22	press=true
+A11Y_CONTROL	workspace	AXButton	sub=	name=マイクを許可する	id=guideAvatarAction	frame=1412,953,113x27	press=true
+A11Y_CONTROL	workspace	AXButton	sub=	name=あとで	id=guideLater	frame=1412,986,30x14	press=true
+A11Y_TAB	workspace	step=1	role=AXGroup	name=	id=	moved=false	visible=no
+A11Y_TAB	workspace	step=2	role=AXGroup	name=	id=	moved=false	visible=no
+A11Y_TAB	workspace	step=3	role=AXGroup	name=	id=	moved=false	visible=no
+A11Y_TAB	workspace	step=4	role=AXGroup	name=	id=	moved=false	visible=no
+A11Y_TAB	workspace	step=5	role=AXGroup	name=	id=	moved=false	visible=no
+A11Y_TAB	workspace	step=6	role=AXGroup	name=	id=	moved=false	visible=no
+A11Y_TAB	workspace	step=7	role=AXTextField	name=この会議について聞く	id=recordingWorkspace	moved=true	visible=yes
+A11Y_TAB	workspace	step=8	role=AXGroup	name=	id=	moved=true	visible=yes
+A11Y_TAB	workspace	step=9	role=AXGroup	name=	id=	moved=false	visible=no
+A11Y_TAB	workspace	step=10	role=AXGroup	name=	id=	moved=false	visible=no
+A11Y_TAB	workspace	step=11	role=AXGroup	name=	id=	moved=false	visible=no
+A11Y_TAB	workspace	step=12	role=AXGroup	name=	id=	moved=false	visible=no
+A11Y_TAB	workspace	step=13	role=AXGroup	name=	id=	moved=false	visible=no
+A11Y_TAB	workspace	step=14	role=AXGroup	name=	id=	moved=false	visible=no
+A11Y_SURFACE	main-home	controls=8	nameless=0	latinOnly=1	images=0	imagesNamed=0
+A11Y_CONTROL	main-home	AXButton	sub=	name=設定	id=mainSettings	frame=262,851,240x32	press=true
+A11Y_CONTROL	main-home	AXButton	sub=	name=サイドバーを非表示	id=	frame=465,81,47x52	press=true
+A11Y_CONTROL	main-home	AXButton	sub=	name=録音中の会議	id=mainRecording	frame=1315,81,121x52	press=true
+A11Y_CONTROL	main-home	AXButton	sub=	name=エージェントの動きを表示／非表示	id=toggleActivity	frame=1436,81,44x52	press=true
+A11Y_CONTROL	main-home	AXButton	sub=AXCloseButton	name=	id=	frame=262,99,16x16	press=true
+A11Y_CONTROL	main-home	AXButton	sub=AXFullScreenButton	name=	id=	frame=308,99,16x16	press=true
+A11Y_CONTROL	main-home	AXButton	sub=AXMinimizeButton	name=	id=	frame=285,99,16x16	press=true
+A11Y_CONTROL	main-home	AXStaticText	sub=	name=Home	id=	frame=516,81,799x52	press=true
+A11Y_TAB	main-home	step=1	role=AXTextArea	name=何を終わらせますか？	id=homeIntentField	moved=true	visible=yes
+A11Y_TAB	main-home	step=2	role=AXTextArea	name=何を終わらせますか？	id=homeIntentField	moved=false	visible=yes
+A11Y_TAB	main-home	step=3	role=AXTextArea	name=何を終わらせますか？	id=homeIntentField	moved=false	visible=yes
+A11Y_TAB	main-home	step=4	role=AXTextArea	name=何を終わらせますか？	id=homeIntentField	moved=false	visible=yes
+A11Y_TAB	main-home	step=5	role=AXTextArea	name=何を終わらせますか？	id=homeIntentField	moved=false	visible=yes
+A11Y_TAB	main-home	step=6	role=AXTextArea	name=何を終わらせますか？	id=homeIntentField	moved=false	visible=yes
+A11Y_TAB	main-home	step=7	role=AXTextArea	name=何を終わらせますか？	id=homeIntentField	moved=false	visible=yes
+A11Y_TAB	main-home	step=8	role=AXTextArea	name=何を終わらせますか？	id=homeIntentField	moved=false	visible=yes
+A11Y_TAB	main-home	step=9	role=AXTextArea	name=何を終わらせますか？	id=homeIntentField	moved=false	visible=yes
+A11Y_TAB	main-home	step=10	role=AXTextArea	name=何を終わらせますか？	id=homeIntentField	moved=false	visible=yes
+A11Y_TAB	main-home	step=11	role=AXTextArea	name=何を終わらせますか？	id=homeIntentField	moved=false	visible=yes
+A11Y_TAB	main-home	step=12	role=AXTextArea	name=何を終わらせますか？	id=homeIntentField	moved=false	visible=yes
+A11Y_TAB	main-home	step=13	role=AXTextArea	name=何を終わらせますか？	id=homeIntentField	moved=false	visible=yes
+A11Y_TAB	main-home	step=14	role=AXTextArea	name=何を終わらせますか？	id=homeIntentField	moved=false	visible=yes
+A11Y_SURFACE	main-work	controls=12	nameless=0	latinOnly=3	images=0	imagesNamed=0
+A11Y_CONTROL	main-work	AXButton	sub=	name=設定	id=mainSettings	frame=262,851,240x32	press=true
+A11Y_CONTROL	main-work	AXButton	sub=	name=Tasks	id=subnav-tasks	frame=540,149,58x25	press=true
+A11Y_CONTROL	main-work	AXButton	sub=	name=Agents	id=subnav-agents	frame=606,149,65x25	press=true
+A11Y_CONTROL	main-work	AXButton	sub=	name=新しく依頼する	id=tasksNewRequest	frame=1275,202,108x24	press=true
+A11Y_CONTROL	main-work	AXButton	sub=	name=依頼を書く	id=emptyPrimary	frame=540,345,110x36	press=true
+A11Y_CONTROL	main-work	AXButton	sub=	name=サイドバーを非表示	id=	frame=465,81,47x52	press=true
+A11Y_CONTROL	main-work	AXButton	sub=	name=録音中の会議	id=mainRecording	frame=1315,81,121x52	press=true
+A11Y_CONTROL	main-work	AXButton	sub=	name=エージェントの動きを表示／非表示	id=toggleActivity	frame=1436,81,44x52	press=true
+A11Y_CONTROL	main-work	AXButton	sub=AXCloseButton	name=	id=	frame=262,99,16x16	press=true
+A11Y_CONTROL	main-work	AXButton	sub=AXFullScreenButton	name=	id=	frame=308,99,16x16	press=true
+A11Y_CONTROL	main-work	AXButton	sub=AXMinimizeButton	name=	id=	frame=285,99,16x16	press=true
+A11Y_CONTROL	main-work	AXStaticText	sub=	name=Work	id=	frame=516,81,799x52	press=true
+A11Y_SURFACE	main-library	controls=11	nameless=0	latinOnly=3	images=3	imagesNamed=3
+A11Y_CONTROL	main-library	AXButton	sub=	name=設定	id=mainSettings	frame=262,851,240x32	press=true
+A11Y_CONTROL	main-library	AXButton	sub=	name=Meetings	id=subnav-meetings	frame=540,149,82x25	press=true
+A11Y_CONTROL	main-library	AXButton	sub=	name=Files	id=subnav-files	frame=630,149,50x25	press=true
+A11Y_CONTROL	main-library	AXButton	sub=	name=録音を始める	id=emptyPrimary	frame=540,345,125x36	press=true
+A11Y_CONTROL	main-library	AXButton	sub=	name=サイドバーを非表示	id=	frame=465,81,47x52	press=true
+A11Y_CONTROL	main-library	AXButton	sub=	name=録音中の会議	id=mainRecording	frame=1315,81,121x52	press=true
+A11Y_CONTROL	main-library	AXButton	sub=	name=エージェントの動きを表示／非表示	id=toggleActivity	frame=1436,81,44x52	press=true
+A11Y_CONTROL	main-library	AXButton	sub=AXCloseButton	name=	id=	frame=262,99,16x16	press=true
+A11Y_CONTROL	main-library	AXButton	sub=AXFullScreenButton	name=	id=	frame=308,99,16x16	press=true
+A11Y_CONTROL	main-library	AXButton	sub=AXMinimizeButton	name=	id=	frame=285,99,16x16	press=true
+A11Y_CONTROL	main-library	AXStaticText	sub=	name=Library	id=	frame=516,81,799x52	press=true
+A11Y_SURFACE	main-apps	controls=15	nameless=0	latinOnly=3	images=2	imagesNamed=2
+A11Y_CONTROL	main-apps	AXButton	sub=	name=設定	id=mainSettings	frame=262,851,240x32	press=true
+A11Y_CONTROL	main-apps	AXButton	sub=	name=Connections	id=subnav-connectors	frame=540,149,105x25	press=true
+A11Y_CONTROL	main-apps	AXButton	sub=	name=Plugins	id=subnav-plugins	frame=653,149,67x25	press=true
+A11Y_CONTROL	main-apps	AXButton	sub=	name=接続	id=connect-com.astra.gmail	frame=1317,363,48x24	press=true
+A11Y_CONTROL	main-apps	AXButton	sub=	name=接続	id=connect-com.astra.google-calendar	frame=1317,425,48x24	press=true
+A11Y_CONTROL	main-apps	AXButton	sub=	name=接続	id=connect-com.astra.outlook	frame=1317,585,48x24	press=true
+A11Y_CONTROL	main-apps	AXButton	sub=	name=接続	id=connect-com.astra.microsoft-todo	frame=1317,647,48x24	press=true
+A11Y_CONTROL	main-apps	AXDisclosureTriangle	sub=	name=詳しい接続情報	id=connectionDiagnostics	frame=517,761,124x17	press=true
+A11Y_CONTROL	main-apps	AXButton	sub=	name=サイドバーを非表示	id=	frame=465,81,47x52	press=true
+A11Y_CONTROL	main-apps	AXButton	sub=	name=録音中の会議	id=mainRecording	frame=1315,81,121x52	press=true
+A11Y_CONTROL	main-apps	AXButton	sub=	name=エージェントの動きを表示／非表示	id=toggleActivity	frame=1436,81,44x52	press=true
+A11Y_CONTROL	main-apps	AXButton	sub=AXCloseButton	name=	id=	frame=262,99,16x16	press=true
+A11Y_CONTROL	main-apps	AXButton	sub=AXFullScreenButton	name=	id=	frame=308,99,16x16	press=true
+A11Y_CONTROL	main-apps	AXButton	sub=AXMinimizeButton	name=	id=	frame=285,99,16x16	press=true
+A11Y_CONTROL	main-apps	AXStaticText	sub=	name=Apps	id=	frame=516,81,799x52	press=true
+A11Y_SURFACE	main-meeting-detail	controls=24	nameless=0	latinOnly=3	images=0	imagesNamed=0
+A11Y_CONTROL	main-meeting-detail	AXButton	sub=	name=設定	id=mainSettings	frame=262,851,240x32	press=true
+A11Y_CONTROL	main-meeting-detail	AXButton	sub=	name=戻る	id=meetingArtifact	frame=530,151,30x30	press=true
+A11Y_CONTROL	main-meeting-detail	AXButton	sub=	name=[1]	id=meetingArtifact	frame=859,226,24x24	press=true
+A11Y_CONTROL	main-meeting-detail	AXButton	sub=	name=[2]	id=meetingArtifact	frame=688,295,26x24	press=true
+A11Y_CONTROL	main-meeting-detail	AXButton	sub=	name=[3]	id=meetingArtifact	frame=722,364,26x24	press=true
+A11Y_CONTROL	main-meeting-detail	AXButton	sub=	name=文字起こし	id=meetingArtifact	frame=530,412,75x28	press=true
+A11Y_CONTROL	main-meeting-detail	AXButton	sub=	name=録音	id=meetingArtifact	frame=611,412,42x28	press=true
+A11Y_CONTROL	main-meeting-detail	AXButton	sub=	name=関連ファイル	id=meetingArtifact	frame=660,412,86x28	press=true
+A11Y_CONTROL	main-meeting-detail	AXButton	sub=	name=出所	id=meetingArtifact	frame=752,412,42x28	press=true
+A11Y_CONTROL	main-meeting-detail	AXButton	sub=	name=00:42、あなた、本日はお時間ありがとうございます。前回の提案書 v3 をもとに進めます。	id=meetingArtifact	frame=530,464,615x27	press=true
+A11Y_CONTROL	main-meeting-detail	AXButton	sub=	name=01:10、田中、はい。社内では 10 月の導入で調整しています。	id=meetingArtifact	frame=530,495,615x27	press=true
+A11Y_CONTROL	main-meeting-detail	AXButton	sub=	name=13:05、田中、初期費用の内訳をもう少し細かく見せてもらえますか。	id=meetingArtifact	frame=530,526,615x27	press=true
+A11Y_CONTROL	main-meeting-detail	AXButton	sub=	name=13:40、伊藤、ライセンスと導入支援に分けてお出しします。	id=meetingArtifact	frame=530,557,615x27	press=true
+A11Y_CONTROL	main-meeting-detail	AXButton	sub=	name=14:18、田中、初期費用が少し気になっています。	id=meetingArtifact	frame=530,588,615x27	press=true
+A11Y_CONTROL	main-meeting-detail	AXButton	sub=	name=14:22、鈴木、10 月からでしたら枠を取れます。	id=meetingArtifact	frame=530,619,615x27	press=true
+A11Y_CONTROL	main-meeting-detail	AXButton	sub=	name=14:31、伊藤、修正版の見積を明日お送りします。	id=meetingArtifact	frame=530,650,615x27	press=true
+A11Y_CONTROL	main-meeting-detail	AXButton	sub=	name=41:50、田中、では明日の見積を待って、社内で回します。	id=meetingArtifact	frame=530,681,615x27	press=true
+A11Y_CONTROL	main-meeting-detail	AXButton	sub=	name=サイドバーを非表示	id=	frame=465,81,47x52	press=true
+A11Y_CONTROL	main-meeting-detail	AXButton	sub=	name=録音中の会議	id=mainRecording	frame=1315,81,121x52	press=true
+A11Y_CONTROL	main-meeting-detail	AXButton	sub=	name=エージェントの動きを表示／非表示	id=toggleActivity	frame=1436,81,44x52	press=true
+A11Y_CONTROL	main-meeting-detail	AXButton	sub=AXCloseButton	name=	id=	frame=262,99,16x16	press=true
+A11Y_CONTROL	main-meeting-detail	AXButton	sub=AXFullScreenButton	name=	id=	frame=308,99,16x16	press=true
+A11Y_CONTROL	main-meeting-detail	AXButton	sub=AXMinimizeButton	name=	id=	frame=285,99,16x16	press=true
+A11Y_CONTROL	main-meeting-detail	AXStaticText	sub=	name=A社 新規提案	id=	frame=516,81,799x52	press=true
+A11Y_SURFACE	settings	controls=11	nameless=0	latinOnly=3	images=3	imagesNamed=3
+A11Y_CONTROL	settings	AXRadioButton	sub=AXSegment	name=Compact	id=	frame=658,320,96x24	press=true
+A11Y_CONTROL	settings	AXRadioButton	sub=AXSegment	name=Comfortable	id=	frame=755,320,95x24	press=true
+A11Y_CONTROL	settings	AXRadioButton	sub=AXSegment	name=Large	id=	frame=852,320,95x24	press=true
+A11Y_CONTROL	settings	AXButton	sub=	name=Astraと話すを有効にする	id=permissionGuide-microphone	frame=999,392,71x20	press=true
+A11Y_CONTROL	settings	AXButton	sub=	name=画面を理解するを有効にする	id=permissionGuide-screenCapture	frame=999,441,71x20	press=true
+A11Y_CONTROL	settings	AXButton	sub=	name=Macを操作するを試す	id=permissionGuide-accessibility	frame=1029,490,40x20	press=true
+A11Y_CONTROL	settings	AXDisclosureTriangle	sub=	name=その他の許可	id=	frame=635,542,106x16	press=true
+A11Y_CONTROL	settings	AXCheckBox	sub=AXSwitch	name=ライブ文字起こし（Google STT）	id=cloudTranscriptionToggle	frame=848,599,54x24	press=true
+A11Y_CONTROL	settings	AXButton	sub=AXCloseButton	name=	id=	frame=642,159,16x16	press=true
+A11Y_CONTROL	settings	AXButton	sub=AXZoomButton	name=	id=	frame=688,159,16x16	press=true
+A11Y_CONTROL	settings	AXButton	sub=AXMinimizeButton	name=	id=	frame=665,159,16x16	press=true
+A11Y_TAB	settings	step=1	role=AXWindow	name=Astra 設定	id=	moved=false	visible=no
+A11Y_TAB	settings	step=2	role=AXWindow	name=Astra 設定	id=	moved=false	visible=no
+A11Y_TAB	settings	step=3	role=AXWindow	name=Astra 設定	id=	moved=false	visible=no
+A11Y_TAB	settings	step=4	role=AXWindow	name=Astra 設定	id=	moved=false	visible=no
+A11Y_TAB	settings	step=5	role=AXWindow	name=Astra 設定	id=	moved=false	visible=no
+A11Y_TAB	settings	step=6	role=AXWindow	name=Astra 設定	id=	moved=false	visible=no
+A11Y_TAB	settings	step=7	role=AXWindow	name=Astra 設定	id=	moved=false	visible=no
+A11Y_TAB	settings	step=8	role=AXWindow	name=Astra 設定	id=	moved=false	visible=no
+A11Y_TAB	settings	step=9	role=AXWindow	name=Astra 設定	id=	moved=false	visible=no
+A11Y_TAB	settings	step=10	role=AXWindow	name=Astra 設定	id=	moved=false	visible=no
+A11Y_TAB	settings	step=11	role=AXWindow	name=Astra 設定	id=	moved=false	visible=no
+A11Y_TAB	settings	step=12	role=AXWindow	name=Astra 設定	id=	moved=false	visible=no
+A11Y_TAB	settings	step=13	role=AXWindow	name=Astra 設定	id=	moved=false	visible=no
+A11Y_TAB	settings	step=14	role=AXWindow	name=Astra 設定	id=	moved=false	visible=no
+SELFTEST_OK a11ynames: controls=113 nameless=0 | tab(fullKeyboardAccess=false): workspace moved=2 visible=2 invisible=0 unmeasured=0; main-home moved=1 visible=1 invisible=0 unmeasured=0; settings moved=0 visible=0 invisible=0 unmeasured=0 | 測っただけ（判定は持たない）
+SELFTEST_SKIP calendarask: mapping OK; own-process SwiftUI content tree unavailable (menu nodes are not a Home measurement)
+SELFTEST_OK egress: autoUpload=off cloudSTTConsent=off meeting=[microphone] sttNoFallback=NOT_MEASURED
+SELFTEST_OK navtitle: 5面の見出しが状態と一致し、面ごとに実際に描き変わる。1 件を開いても sidebar で出られる
+SELFTEST_OK recoveryui: 録りかけを捨てられる・置き場の外は消さない・録音中のものは捨てない
+SELFTEST_OK focus: Dock は出ても姿を変えても、前面のアプリから焦点を奪わない
+SELFTEST_OK upgrade: 古い DB に列を足して開ける・保存できる・昔の行を失わない
+SELFTEST_OK breakpoints: >=1280 3-column / 960-1279 inspector drawer / <960 sidebar collapsed; render c9/c9/c7
+SELFTEST_OK dictation: focused text field へ挿入 value="会議の要点をまとめて" / テキストでない要素には書かない
+SELFTEST_OK state: 状態は AstraStateStore 1 箇所・dock↔mode 連動・R0/R1 は無確認 R2/R3 は確認・文脈は出所優先・EventBus 到達
+SELFTEST_OK presence: 会議検出（Zoom/Meet/Huddle）・検出しても録音は始まらない・共有中は Dock を出さない・許可は機能ごとに最小・マイク不可なら録音状態にしない・AX は推測で埋めない mic denial/restriction/pending: no recording or session
+PERF dock=46ms ax=11ms app=0ms mem=16MB cpu1s=1.1% cpu5s=0.04%
+SELFTEST_OK perf: §29 の実測が目標内 (dock=46ms ax=11ms app=0ms mem=16MB cpu1s=1.1% cpu5s=0.04%)
+SELFTEST_OK storage: §24 の7テーブル・画像/音声/本文の列を持たない・UI を閉じても task が残る・§11 通常時 0fps/上限3fps・§14 Vision は最後の手段
+SELFTEST_OK meetingiq: 増分だけ投入（全文再投入なし）・Canvas は構造データ・State/EventBus へ反映
+SELFTEST_SKIP vad: speech not authorized (VAD の判定は上で PASS)
+SELFTEST_OK browser: フレーム形式・全文は受け取らない・Notion のページを特定・DOM は AX より優先
+SELFTEST_OK dockanim: Presence→Listening 209ms・遷移中も上辺 Y は不動・滑らかに拡大
+INVOCATION idle screen occupation: 0.87%  target < 1%  PASS  （220x76pt / 1728x1117; 1440x900 なら 1.29%）
+SELFTEST_SKIP invocation: マイク未許可（実 Mac + 許可でだけ測れる）
+SELFTEST_SKIP invocationaudio: マイク未許可（実 Mac + 許可でだけ測れる）
+SELFTEST_OK entry: メニュー(⌘O)・Dock・結果面のどれからも Main View が実際に開く
+SELFTEST_OK update: 設定済み・設定が無ければ動かない・版=1.0
+could not create image from rect
+could not create image from rect
+could not create image from rect
+SELFTEST_SKIP secret: screencapture が使えない
+SELFTEST_SKIP recordbutton: actual recording requires microphone grant; pre-permission explanation/cancel is covered by journey JC
+SELFTEST_OK session: 開始で保存・同じ id が recording→processing→ready・保存先/project を後から変更・再起動で復元・落ちたら interrupted・予定から継承
+SELFTEST_OK uiscale: 3段が別々に効く（文字 x1.12 / 寸法 x1.18）・既定は素の値・設定は残る
+SELFTEST_SKIP acceptance: recording lifecycle requires microphone grant; permission gating is covered separately
+SELFTEST_OK sessionsync: Dock/Home/DB が同じ id・面切替と Scale で録音を失わない・停止はどちらからでも両方へ届く・DB と UI が一致
+FOCUS_STATE home active=true key=12591 main=12591 visible=12590:,12591:Home
+FOCUS_STATE notes active=true key=12590 main=12591 visible=12590:,12591:Home
+FOCUS_STATE passive active=true key=12591 main=12591 visible=12590:,12591:Home
+FOCUS_STATE ask active=true key=12590 main=12591 visible=12590:,12591:Home
+FOCUS_STATE sharing active=true key=12591 main=12591 visible=12591:Home
+SELFTEST_OK home-meeting-focus: explicit Notes/Ask use existing Dock key window; passive updates preserve Home; sharing stays hidden
+
+== initial profile native UI ==
+SELFTEST_OK initialprofile: 6 native captures; review/edit actions present; no external data or send
+
+== recording experience E2E ==
+  録音開始           id=meeting-7ddd70c9-7e0b-4a13-b0f7-51f720e8267f (停止前に DB へ recording を確認済み)
+  強制終了           kill -9（正常終了の経路を通さない）
+  DB(kill 直後)        meeting-7ddd70c9-7e0b-4a13-b0f7-51f720e8267f=recording
+  再起動              meeting-7ddd70c9-7e0b-4a13-b0f7-51f720e8267f=interrupted
+  続きから処理     id=meeting-7ddd70c9-7e0b-4a13-b0f7-51f720e8267f status=ready actions=1
+  再々起動           meeting-7ddd70c9-7e0b-4a13-b0f7-51f720e8267f=ready (同じ id)
+RECORDING_EXPERIENCE_OK: 録音 → kill → interrupted → 続きから ready → 再起動で保持 (id=meeting-7ddd70c9-7e0b-4a13-b0f7-51f720e8267f)
+
+== journeys JA/JB/JC ==
+  JOURNEY JA success=true ms=5476 interactions=4 windows=0 focusTheft=0 errors=0
+  JOURNEY JB success=true ms=9970 interactions=7 windows=0 focusTheft=0 errors=0
+  JOURNEY JC success=true ms=7352 interactions=4 windows=0 focusTheft=0 errors=0
+  MOTION T0-idle-to-listening frames=38 captured=38 fps=53 maxGap=56ms sameId=100% windows+0 focusTheft=0 top=0.0pt center=0.5pt missing=0 heightRev=0 maxStep=0.56 contentΔmax=1.5 other(shift=0.0pt alphaRev=0) settled=183ms
+  MOTION T3-dock-to-running frames=40 captured=40 fps=56 maxGap=43ms sameId=100% windows+0 focusTheft=0 top=0.0pt center=0.5pt missing=0 heightRev=0 maxStep=0.37 contentΔmax=12.7 other(shift=0.0pt alphaRev=0) settled=200ms
+  MOTION T4-running-to-confirmation frames=40 captured=40 fps=56 maxGap=49ms sameId=100% windows+0 focusTheft=0 top=0.0pt center=0.5pt missing=0 heightRev=0 maxStep=0.37 contentΔmax=10.7 other(shift=0.0pt alphaRev=0) settled=233ms
+  MOTION T1-meeting-to-notes frames=41 captured=41 fps=57 maxGap=33ms sameId=100% windows+0 focusTheft=0 top=0.0pt center=0.0pt missing=0 heightRev=0 maxStep=0.24 contentΔmax=6.5 other(shift=0.0pt alphaRev=0) settled=200ms
+  MOTION T2-notes-to-workspace frames=36 captured=36 fps=50 maxGap=98ms sameId=100% windows+0 focusTheft=0 top=0.0pt center=0.0pt missing=0 heightRev=0 maxStep=0.00 contentΔmax=139.9 other(shift=0.0pt alphaRev=0) settled=200ms
+  NOT_MEASURED T2-notes-to-workspace: 実効 50fps（60 に届かない。frame pacing は参考値）
+SURFACE_CONTINUITY_MOTION=PASS
+PERCEIVED_SURFACE_CONTINUITY=LAYER_B（この selftest では測らない。判定は journeys/perceived/answers/aggregate.md）
+JOURNEYS_OK: 3 本とも最後まで通った（J-B の遷移中も 60fps で連続）
+
+== macOS swift unit tests ==
+	 Executed 123 tests, with 0 failures (0 unexpected) in 0.588 (0.598) seconds
+
+VERIFY_ALL_OK: この環境で検証できる全ゲートが緑

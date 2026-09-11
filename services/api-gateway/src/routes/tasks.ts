@@ -101,6 +101,11 @@ export function registerTaskRoutes(app: App, deps: TaskRouteDeps): void {
     return deps.tasks.cancel(principal.tenantId, request.params.taskId, body.reason);
   });
 
+  app.get<{ Params: { taskId: string } }>('/v1/tasks/:taskId/approvals', async (request) => {
+    const principal = requirePrincipal();
+    return { items: await deps.tasks.pendingApprovals(principal.tenantId, request.params.taskId) };
+  });
+
   app.post<{ Params: { taskId: string } }>('/v1/tasks/:taskId/approve', async (request, reply) => {
     const principal = requirePrincipal();
     const body = ApprovalDecision.parse(request.body ?? {});

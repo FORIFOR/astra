@@ -1,0 +1,122 @@
+{
+  "rc": "a752c92",
+  "pages": [
+    {
+      "id": "main.home-work-context",
+      "blind_id": "093B",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "screen occupation",
+              "what": "サイドバーとコンテンツの後、ウィンドウ右側におよそ画面幅の3割ほどが恒常的な空白になっており、レイアウトが左に偏って見える",
+              "where": "メインコンテンツ領域の右側全体"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "main.home-personalization",
+      "blind_id": "3A6D",
+      "verdict": "FIX_CANDIDATE",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": [
+            {
+              "axis": "state legibility",
+              "what": "Toggle controls styled as plain text links rather than buttons, reducing discoverability of interactivity",
+              "where": "Right panel recommendations - 'このとおり' / 'この推奨を使わない' text"
+            },
+            {
+              "axis": "hierarchy",
+              "what": "Unclear relationship between recommendation headers, source attributions, and toggle actions",
+              "where": "Entire right panel structure - nesting and visual grouping of related controls"
+            }
+          ]
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "consistency",
+              "what": "同じ「項目＋操作」行なのに操作の並びが2種類ある。「短く要点から」は右にラベル「確認済み」だけで、「この推測を使わない」が下の行に単独で落ちている。一方「火・木は会議が多い」以下は「出所 1／そのとおり／この推測を使わない」が1行に並ぶ。同種の行が違う形をしていて、何が押せる行なのかを毎回読み直すことになる。",
+              "where": "右パネル「働き方」の「短く要点から」行と、その直下「仕事のパターン」以降の各行の比較"
+            },
+            {
+              "axis": "alignment",
+              "what": "右端のラベル（推測／観測／確認済み）が右揃えのため左端が語ごとにバラつき、その下の操作テキスト列（そのとおり／この推測を使わない）とも縦の基準線が一致していない。列として読めない。",
+              "where": "右パネル各項目の右側、「確認済み」「推測」「観測」と「そのとおり」「この推測を使わない」の縦位置"
+            },
+            {
+              "axis": "density",
+              "what": "パネルを開くと中央カラムが押し縮められ、最重要カードの説明文が「…」で切れる。パネルは補助情報なのに、主要情報のほうが欠ける。",
+              "where": "中央カラム1枚目のカード「MTI からの返信待ち（3 日）・明日 15:00 定例 …」"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "state legibility",
+              "what": "サイドパネルを開くとメインカードの重要な説明文（未返信の対象や締切内容）が省略記号で切れて読めなくなる",
+              "where": "「今日、気にした方がいいこと」内のMOPITAカードの説明行"
+            },
+            {
+              "axis": "density",
+              "what": "パネル内の各推測項目に付随する操作リンク群が小さく詰まって配置され、読みにくい",
+              "where": "右パネルの「仕事のパターン」「よく出る人・案件」各項目の下段リンク行"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "keep": 1,
+    "fix_candidate": 1,
+    "not_enough_evidence": 0,
+    "models": [
+      "haiku",
+      "opus",
+      "sonnet"
+    ]
+  },
+  "gate": "FAIL"
+}

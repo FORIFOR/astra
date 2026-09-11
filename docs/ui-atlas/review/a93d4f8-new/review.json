@@ -1,0 +1,492 @@
+{
+  "rc": "a93d4f8",
+  "pages": [
+    {
+      "id": "screenshot.detected",
+      "blind_id": "3C7C",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": false,
+          "why": "照合 1/3（画面に無い文字）",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "consistency",
+              "what": "同系統の通知(5D27)には閉じるボタンがあるのに、この通知には無く操作可否が不揃い",
+              "where": "ピル右端"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.granted",
+      "blind_id": "48CE",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": false,
+          "why": "照合 1/2（画面に無い文字）",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "KEEP",
+          "valid": false,
+          "why": "照合 1/2（画面に無い文字）",
+          "confidence": "medium",
+          "concerns": []
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "consistency",
+              "what": "ラベルのない緑チェックアイコンがピルと分離して配置され、グルーピングと役割が不明瞭",
+              "where": "ピル右側の余白を挟んだ丸アイコン"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "screenshot.attached-cloud",
+      "blind_id": "5D27",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        },
+        {
+          "model": "sonnet",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.target-missing",
+      "blind_id": "5D42",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "primary-action clarity",
+              "what": "ラベルの無い丸アイコンボタンが本体ピルから離れて配置され、押した際の動作が読み取れない",
+              "where": "ピル右端の丸アイコン"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.target-found",
+      "blind_id": "AA02",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": [
+            {
+              "axis": "alignment",
+              "what": "誘導の吹き出しがウィンドウ境界の外にはみ出し、ウィンドウ枠と重なって配置されている。矢印は左を指すが対象トグルまで距離があり、指し先が絵の上でつながっていない。",
+              "where": "ウィンドウ右辺、AstraDbg 行の高さにある「← AstraDbg をオンにしてください」の吹き出し"
+            },
+            {
+              "axis": "trust-provenance",
+              "what": "オンにするよう求めているアプリ名が「AstraDbg」で、開発／デバッグビルドの名前に見える。ユーザーが画面収録許可を与える相手として同定しづらい。",
+              "where": "一覧の3行目および吹き出しの本文"
+            },
+            {
+              "axis": "state legibility",
+              "what": "一覧の先頭行が「2.1.260」というバージョン番号様の文字列で、アプリ名として読めない。アイコンも汎用の白い書類アイコン。",
+              "where": "アプリ一覧の1行目"
+            },
+            {
+              "axis": "consistency",
+              "what": "リスト右端に、リスト枠を上下にはみ出す濃い縦長バーが重なっている。ウィンドウ内のスクロールバー（左サイドバー・本文）とは別物で、位置も枠外にかかる。",
+              "where": "アプリ一覧の右側、ウィンドウ右端寄りの縦バー"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "trust-provenance",
+              "what": "権限一覧に製品名ではなく「AstraDbg」「2.1.260」のような開発用/バージョン番号名が表示され、他画面の「Astra」という案内文言と食い違うためユーザーが対象行を見つけにくい",
+              "where": "アプリ一覧の該当行と吹き出し文言"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.intro",
+      "blind_id": "B1AD",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "primary-action clarity",
+              "what": "システム設定を開くよう指示しているが、画面上の操作子は閉じる × だけで、指示を実行する手段が用意されていない。",
+              "where": "ピル右端。テキストと × の間の空白部分にボタンが無い"
+            },
+            {
+              "axis": "error-recovery clarity",
+              "what": "権限が無いという問題提起で終わっており、解決までの導線が絵の中に存在しない。閉じると手がかりが消える。",
+              "where": "ピル全体"
+            },
+            {
+              "axis": "density",
+              "what": "文が2行に折り返される一方で2行目右側が大きく空き、テキスト塊と × の間に説明のつかない空白が残る。",
+              "where": "ピル下段「オンにしてください」の右側"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "consistency",
+              "what": "5D42と同じ趣旨の依頼なのに「システム設定を開く」ショートカットボタンが無く、対応手段が画面によって不揃い",
+              "where": "ピル本文とボタン有無"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.repositioned",
+      "blind_id": "C87B",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "state legibility",
+              "what": "指示は「オンにしてください」だが、ハイライトされたトグルの見え方が同一画面内の OFF（VoiceOS）とも ON（他の青いトグル）とも一致せず、今どちらなのか断定できない",
+              "where": "リスト中央 AstraDbg 行の右端トグル（紫の枠内）"
+            },
+            {
+              "axis": "alignment",
+              "what": "指示の矢印と対象トグルの間に、説明のつかない濃い縦帯が挟まっており、指し示しの線が途切れて見える",
+              "where": "リスト右端とバルーンの間の縦帯"
+            },
+            {
+              "axis": "trust-provenance",
+              "what": "浮いた吹き出しに発信元（アプリ名・アイコン）が無く、OS の表示か第三者アプリの表示か区別できない",
+              "where": "右側の吹き出し"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "state legibility",
+              "what": "トグルの見た目上の状態(オン相当の青色)と案内文(オンにしてください)が食い違って見える",
+              "where": "AstraDbg行のトグルとその右の吹き出し"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.target-add",
+      "blind_id": "D5DA",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "alignment",
+              "what": "「↑」が対象の「+」ボタンの真下に無く、左に大きくずれているため、どの要素を指しているのか矢印だけでは分からない",
+              "where": "ウィンドウ下辺の吹き出し左端の矢印と、リスト左下の「+」"
+            },
+            {
+              "axis": "consistency",
+              "what": "指示中の名称「Astra」と一覧の「AstraDbg」が一致せず、同じ対象を指すのか判断できない",
+              "where": "吹き出しの文言とリスト 3 行目"
+            },
+            {
+              "axis": "error-recovery clarity",
+              "what": "既に同名らしき行が存在しオンに見える状態で『追加してください』とだけ言われるため、利用者が次に何をすれば正解か確信を持てない",
+              "where": "吹き出しの文言全体"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "consistency",
+              "what": "既存項目名『AstraDbg』と案内文の『Astra』という表記が一致せず、同じアプリを指すのか別の追加項目なのか不明瞭",
+              "where": "リスト内のAstraDbg行と下部の追加案内吹き出し"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.target-highlighted",
+      "blind_id": "DEC3",
+      "verdict": "FIX_CANDIDATE",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": false,
+          "why": "照合 1/2（画面に無い文字）",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "state legibility",
+              "what": "対象トグルが既にオンの見た目（塗り＋ノブ右）なのに『オンにしてください』と書かれており、指示と現在状態が矛盾して読める",
+              "where": "中央の紫枠のトグル"
+            },
+            {
+              "axis": "alignment",
+              "what": "吹き出しの矢印と対象の間に説明のつかない縦帯が挟まり、対応関係が視覚的に切れている",
+              "where": "トグル列と吹き出しの間"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "state legibility",
+              "what": "トグルの視覚状態(オン相当)と指示文(オンにしてください)が矛盾して見える",
+              "where": "中央のハイライトされたトグルと吹き出し"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.denied",
+      "blind_id": "E23F",
+      "verdict": "FIX_CANDIDATE",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": [
+            {
+              "axis": "alignment",
+              "what": "エラーアイコン（赤い感嘆符）がテキストとメッセージボックスから分離し、垂直・水平アライメントが取れていない",
+              "where": "ダイアログボックスの右側。感嘆符が単独で浮いており、『設定画面を開けませんでした』というテキストとの関係が不明確"
+            },
+            {
+              "axis": "hierarchy",
+              "what": "感嘆符アイコンと情報テキストの視覚的な関係が弱く、エラーメッセージとしての統一感が失われている",
+              "where": "メッセージボックス全体の構成。アイコンがテキストの装飾ではなく独立した要素に見える"
+            }
+          ]
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "alignment",
+              "what": "エラーを示す「!」アイコンが通知バーから離れて右側に単独で浮いており、メッセージとの結び付きが視覚的に切れている",
+              "where": "バー右外の丸いアイコン"
+            },
+            {
+              "axis": "contrast",
+              "what": "唯一の復帰アクション「システム設定を開く」の文字と塗りの明度差が小さく、隣の「×」より弱く見える",
+              "where": "バー中央のボタン"
+            },
+            {
+              "axis": "error-recovery clarity",
+              "what": "『開けませんでした』だけで原因が示されず、ボタンを押しても同じ失敗になるのか判断できない",
+              "where": "バー左のメッセージ文"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": false,
+          "why": "照合 2/2（画面に無い文字）",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "alignment",
+              "what": "警告アイコンの角丸がピル本体の丸みと揃っておらず、継ぎ目のような段差が見える",
+              "where": "ピル右端のアイコン接合部"
+            },
+            {
+              "axis": "error-recovery clarity",
+              "what": "『設定画面を開けませんでした』とあるが、どの設定(システム全体かアプリ固有か)が開けなかったのか特定できる情報がない",
+              "where": "エラーメッセージ本文"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "keep": 7,
+    "fix_candidate": 2,
+    "not_enough_evidence": 1,
+    "models": [
+      "haiku",
+      "opus",
+      "sonnet"
+    ]
+  },
+  "gate": "FAIL"
+}

@@ -1,0 +1,64 @@
+# Connector Plugin — product spec §2.4、Work Context 仕様
+id: com.astra.outlook
+name: Outlook
+version: 0.1.0
+publisher: astra
+verified: true
+min_core_version: 0.1.0
+category: connector
+compliance_profile: GENERAL
+# 端末で走る。**資格情報は端末の Keychain にしかない**ので、
+# cloud で呼べる道は作らない（正本 §16.1・§21）。
+execution_surfaces: [local]
+# **読むだけ。**Work Context は読めれば成り立つ。
+# 送る・動かすは別の許可で、別の同意画面を通す（read-only scopes first）。
+permissions:
+  - email.read
+  - calendar.read
+  - email.send
+jobs:
+  - メールと予定を読んで、今の仕事の文脈（Work Context）に写す
+  - 確認した返信を送る
+data_accessed:
+  - Outlook の受信箱・送信済みの件名・差出人・宛先・冒頭の抜粋（本文は取らない）
+  - 予定の題名・時間・参加者・場所・会議リンク
+connectors:
+  - id: outlook
+    auth: oauth2
+    provider: microsoft
+    grants:
+      - email.read
+      - calendar.read
+    purpose: メールの件名・差出人・冒頭と、予定の題名・時間・参加者を読んで Work Context に写す。送らない・変えない
+    scopes:
+      - Mail.Read
+      - Calendars.Read
+      - offline_access
+  # 送る接続。「これ返して」の [送る] で初めて、理由を見せてから求める（JIT）。
+  # 既存メッセージへの返信は delegated の Mail.Send だけで足りる（Mail.ReadWrite は要らない）。
+  - id: outlook-actions
+    auth: oauth2
+    provider: microsoft
+    grants:
+      - email.send
+    purpose: 確認した返信を Outlook から送信するため
+    scopes:
+      - Mail.Send
+      - offline_access
+tools:
+  - id: outlook.mail.search
+    surface: local
+    risk: READ
+  - id: outlook.mail.read
+    surface: local
+    risk: READ
+  - id: outlook.calendar.list_events
+    surface: local
+    risk: READ
+  - id: outlook.mail.reply
+    surface: local
+    risk: EXTERNAL_COMMIT
+    requires_confirmation: true
+agents: []
+dashboards: []
+policies: []

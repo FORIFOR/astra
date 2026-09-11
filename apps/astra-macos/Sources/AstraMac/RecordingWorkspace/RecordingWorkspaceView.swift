@@ -56,6 +56,11 @@ enum Fixture: String {
 /// 生ログは消さずに右へ控えさせ、`[ノート|文字起こし]` で入れ替えられる。
 struct RecordingWorkspaceView: View {
     @StateObject private var state = RecordingWorkspaceState.shared
+    @ObservedObject private var store = AstraStateStore.shared
+
+    // 抽出がまだ 0 件の間は、空のノート列のために場所を予約せず、生ログ（transcript）を主役にする。
+    // 最初の決定/やることが出た瞬間、右列が畳まりノート列が広がる（content-adaptive、morph）。
+    private var canvasEmpty: Bool { store.state.meeting.canvas.isEmpty }
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -67,9 +72,6 @@ struct RecordingWorkspaceView: View {
         }
         .frame(width: Metrics.workspaceWidth, height: Metrics.workspaceHeight)
         .animation(.easeOut(duration: Motion.drawerMs), value: state.ragOpen)
-        .onChange(of: state.selectedTool) { _, tool in
-            if tool == .translation, state.translatedText.isEmpty { state.translate() }
-        }
         .accessibilityIdentifier("recordingWorkspace")
     }
 
@@ -84,17 +86,20 @@ struct RecordingWorkspaceView: View {
 
             HStack(alignment: .top, spacing: Metrics.wsColumnGap) {
                 // 主列: 書かれていくノート。会議のあとに読み返すのはこちら。
+                // 抽出が空の間はノート列に場所を予約しない。ノートを細くし（大きな空白を作らない）、
+                // 生ログ（transcript）を主役として広げる。最初の抽出でノートが広がり右が畳まる（morph）。
                 MeetingNotesCanvas(state: state)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .frame(maxWidth: canvasEmpty ? 300 : .infinity, maxHeight: .infinity, alignment: .topLeading)
 
-                // 右: 生ログと AI の答え。脇に控えさせる（消しはしない）。
-                // AI に頼む操作は下の Ask 入力の横（`AIActionsPalette`）。
+                // 右: 生ログと AI の答え。抽出が空の間は主役（広い）、出たら脇に控える（320）。
                 RecordingSideRail(state: state)
-                    .frame(width: Metrics.wsRightColumn)
+                    .frame(minWidth: Metrics.wsRightColumn,
+                           maxWidth: canvasEmpty ? .infinity : Metrics.wsRightColumn, maxHeight: .infinity)
             }
             .padding(.horizontal, Metrics.wsGutter)
             .padding(.top, 10)
             .frame(maxHeight: .infinity)
+            .animation(.easeOut(duration: Motion.drawerMs), value: canvasEmpty)
 
             AskAstraBar(state: state)
                 .padding(.horizontal, Metrics.wsGutter)
@@ -151,7 +156,7 @@ private struct RecordingStatusBar: View {
     @ObservedObject var state: RecordingWorkspaceState
     @ObservedObject private var store = AstraStateStore.shared
 
-    private var silent: Bool { state.permissionIssue != nil }
+    private var silent: Bool { state.silent }
 
     var body: some View {
         HStack(spacing: 12) {
@@ -159,7 +164,8 @@ private struct RecordingStatusBar: View {
                 .font(.system(size: TypeScale.bodySize, weight: .semibold))
                 .foregroundStyle(Palette.text(dark))
             // 波形は「録れている」ことの小さな印にとどめる。
-            Waveform(levels: silent ? Array(repeating: 0.04, count: state.audioLevels.count) : state.audioLevels)
+            // 一時停止は平坦、無音は細線、録音中は実振幅（状態を造形でも分ける）。
+            Waveform(levels: (state.isPaused || silent) ? [] : state.audioLevels, awaitingInput: silent)
                 .frame(width: 60, height: 16)
                 .opacity(silent ? 0.4 : 1)
             Spacer(minLength: 0)
@@ -175,7 +181,7 @@ private struct RecordingSideRail: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             PermissionBanner(state: state)
-            RecordingToolPalette(selection: $state.selectedTool)
+            RecordingToolPalette(selection: Binding(get: { state.selectedTool }, set: state.selectTool))
             TranscriptPanel(state: state)
                 .frame(maxHeight: .infinity)
             TaskTimelineView()
@@ -231,10 +237,26 @@ private struct MeetingNotesCanvas: View {
                     }
                     .padding(.vertical, 2)
                 }
-                group(Facts.notesDecisions, canvas.decisions,
-                      waiting: "\(Facts.notesDecisions)を待っています…")
-                group(Facts.notesActions, canvas.actions,
-                      waiting: "\(Facts.notesActions)を待っています…")
+                // 決定・やることが両方まだ空なら、「まだありません」を 2 回繰り返さず 1 行にまとめる
+                // （反復は AI 生成感として盲検で指摘された）。一時停止中は出さない。
+                if canvas.decisions.isEmpty && canvas.actions.isEmpty {
+                    if !state.isPaused {
+                        HStack(spacing: 6) {
+                            Text("\(Facts.notesDecisions)・\(Facts.notesActions)")
+                                .font(.system(size: TypeScale.microSize, weight: .semibold))
+                                .foregroundStyle(Palette.muted(dark)).tracking(0.4)
+                            Text("· まだありません")
+                                .font(.system(size: TypeScale.microSize))
+                                .foregroundStyle(Palette.muted(dark).opacity(0.6))
+                            Spacer(minLength: 0)
+                        }
+                    }
+                } else {
+                    group(Facts.notesDecisions, canvas.decisions,
+                          waiting: state.isPaused ? nil : "\(Facts.notesDecisions)を待っています…")
+                    group(Facts.notesActions, canvas.actions,
+                          waiting: state.isPaused ? nil : "\(Facts.notesActions)を待っています…")
+                }
                 if !canvas.questions.isEmpty { group(Facts.notesQuestions, canvas.questions, waiting: nil) }
                 if !canvas.concerns.isEmpty { group(Facts.notesConcerns, canvas.concerns, waiting: nil) }
                 // メモ。**描かないと、拾ったのに画面から消える。**
@@ -441,8 +463,12 @@ private struct MeetingNotesCanvas: View {
     /// 音が来ていないことは**本文（liveLine）が言う**ので、ここでは言わない。
     /// 見出しと本文が同じことを二重に言い、片方が赤字で、同じ画面に
     /// 「音が届いていません」「まだ音が届いていません」が並んでいた。
+    /// 見出し・本文・hero は同じ真実（`RecordingWorkspaceState.liveChannels`）から組む（Atlas F2）。
+    private var liveChannels: Set<SpeakerChannel> { state.liveChannels }
+
     private var listeningLabel: String? {
-        let ch = RecordingRuntime.shared.listening
+        if state.isPaused { return nil }   // 止まっているのに「聞いています」と言わない
+        let ch = liveChannels
         if ch.isEmpty { return nil }
         var parts: [String] = []
         if ch.contains(.localUser) { parts.append(Facts.permissionMicrophone) }
@@ -481,7 +507,12 @@ private struct MeetingNotesCanvas: View {
 
     /// いま聞こえていること。ここが動いていれば「聞いている」と分かる。
     @ViewBuilder private var liveLine: some View {
-        if let last = state.transcript.last {
+        if state.isPaused {
+            // 一時停止中は「聞いています/待っています」と言わず、止まっている事実だけを言う。
+            Label("一時停止中 — 再開するまで聞きません", systemImage: "pause.fill")
+                .font(.system(size: TypeScale.microSize))
+                .foregroundStyle(Palette.muted(dark))
+        } else if let last = state.transcript.last {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Text(last.speaker)
                     .font(.system(size: TypeScale.microSize, weight: .semibold))
@@ -494,10 +525,36 @@ private struct MeetingNotesCanvas: View {
         } else if RecordingRuntime.shared.transcriptionUnavailable, state.isRecording {
             // 音は届いていて録れているが、この Mac ではオンデバイス文字起こしが始められない。
             // サーバへは出さない（`SpeechTranscriber`）。空のまま「聞いています」と言わず、理由を言う。
-            Label(Facts.transcriptionOnDeviceUnavailable, systemImage: "text.badge.xmark")
+            VStack(alignment: .leading, spacing: 10) {
+                Label(RecordingRuntime.shared.transcriptionFailureMessage, systemImage: "text.badge.xmark")
+                    .font(.system(size: TypeScale.microSize))
+                    .foregroundStyle(Palette.danger(dark))
+                    .fixedSize(horizontal: false, vertical: true)
+                // 狭い列でも理由と復旧操作を省略しないよう、操作は独立した段に置く。
+                ProbeButton(id: "openDictationSettings", action: {
+                    if RecordingRuntime.shared.liveTranscriptionFailure != nil { RecordingRuntime.shared.retryLiveTranscription() }
+                    else { Permissions.openDictationSettings() }
+                }) {
+                    Text(RecordingRuntime.shared.liveTranscriptionFailure != nil
+                         ? Facts.liveRetry : "\(Facts.resultOpenSettings)（音声入力）")
+                }
+                .font(.system(size: TypeScale.microSize, weight: .medium))
+                .foregroundStyle(Palette.accent(dark))
+                .frame(height: 24).padding(.horizontal, 8)
+                .buttonStyle(AstraControlStyle(radius: 6, base: 0.0))
+                .help(Facts.transcriptionRecoveryHint)
+            }
+        } else if liveChannels.isEmpty, state.permissionIssue != nil {
+            // 許可が無くて何も届いていない。理由は banner と transcript が既に言っている。
+            // ここで三度目を言わず、「聞いています…」とも言わない。
+            EmptyView()
+        } else if let issue = state.permissionIssue, issue.channel == nil {
+            // 音は届いているが文字にできない（音声認識の許可が無い）。
+            // 「聞いています…」は文字起こしが動いていると読める。止まっている事実をここで言う（盲検 3/3）。
+            Label("音は録れています。文字起こしは止まっています", systemImage: "text.badge.xmark")
                 .font(.system(size: TypeScale.microSize))
-                .foregroundStyle(Palette.danger(dark))
-        } else if RecordingRuntime.shared.listening.isEmpty, state.isRecording {
+                .foregroundStyle(Palette.warning(dark))
+        } else if liveChannels.isEmpty, state.isRecording {
             // **音が来ていないのに「聞いています」と言わない。**
             // 見出しが「音が届いていません」と言う横で、ここが「聞いています…」と
             // 言っていた。同じ画面の中で食い違うと、どちらも信じられなくなる。
@@ -513,31 +570,18 @@ private struct MeetingNotesCanvas: View {
 
     @ViewBuilder private func group(_ title: String, _ lines: [CanvasItem],
                                     waiting: String?) -> some View {
-        if lines.isEmpty, let waiting {
-            // 何も無いことを隠さない。**偽の skeleton は置かない。**
-            VStack(alignment: .leading, spacing: 7) {
-                HStack(spacing: 6) {
-                    // decoration: 意味を持たない飾りを足す
-                    if Fixture.current == .decoration {
-                        Image(systemName: "sparkles")
-                            .foregroundStyle(LinearGradient(colors: [.purple, .pink],
-                                                            startPoint: .leading, endPoint: .trailing))
-                        Image(systemName: "star.fill").foregroundStyle(.yellow)
-                    }
-                    Text(title)
-                        .font(.system(size: TypeScale.microSize, weight: .semibold))
-                        .foregroundStyle(Fixture.current == .decoration
-                                         ? AnyShapeStyle(LinearGradient(colors: [.purple, .orange],
-                                             startPoint: .leading, endPoint: .trailing))
-                                         : AnyShapeStyle(Palette.muted(dark)))
-                        .tracking(0.4)
-                    if Fixture.current == .decoration {
-                        Image(systemName: "flame.fill").foregroundStyle(.orange)
-                    }
-                }
-                Text(waiting)
-                    .font(.system(size: TypeScale.secondarySize))
-                    .foregroundStyle(Palette.muted(dark).opacity(0.7))
+        if lines.isEmpty, waiting != nil {
+            // **空の情報構造のために場所を予約しない。** 1 行に畳む（内容が出たら場所を与える）。
+            // 大きな空箱・偽 skeleton は置かない。「決まったこと · まだありません」の 1 行だけ。
+            HStack(spacing: 6) {
+                Text(title)
+                    .font(.system(size: TypeScale.microSize, weight: .semibold))
+                    .foregroundStyle(Palette.muted(dark))
+                    .tracking(0.4)
+                Text("· まだありません")
+                    .font(.system(size: TypeScale.microSize))
+                    .foregroundStyle(Palette.muted(dark).opacity(0.6))
+                Spacer(minLength: 0)
             }
         } else if !lines.isEmpty {
             VStack(alignment: .leading, spacing: 7) {

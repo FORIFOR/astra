@@ -1,0 +1,173 @@
+{
+  "pages": {
+    "1214": {
+      "visible_text": [
+        "Astra",
+        "この録音を捨てますか?",
+        "不都合なし",
+        "文字起こしと拾ったものも消えます",
+        "やめる",
+        "直す",
+        "捨てる"
+      ],
+      "observation": {
+        "happening": "Deletion confirmation dialog for a recording. User is warned that transcription and captured items will also be deleted.",
+        "most_important": "Clear consequences displayed. Primary destructive action (red delete button) is visually distinct from cancel.",
+        "next_action": "User must confirm deletion or cancel the operation.",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "12DB": {
+      "visible_text": [
+        "Home",
+        "Work",
+        "Library",
+        "Apps",
+        "こんばんは",
+        "何を終わらせますか?",
+        "録音を始める",
+        "前回の設定でその場で録り始めます",
+        "まだ何もありません",
+        "ui-check"
+      ],
+      "observation": {
+        "happening": "Home screen showing empty/initial state with personalized greeting (こんばんは). Navigation sidebar on left with four main sections.",
+        "most_important": "Clear entry point: red-dot-marked 'Start Recording' action. Sidebar navigation is immediately visible and organized.",
+        "next_action": "Start recording or navigate via sidebar.",
+        "anomalies": [
+          "Significant white space below suggestions — appropriate for empty state"
+        ]
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "1335": {
+      "visible_text": [
+        "01:00の会議",
+        "今日・0分・2人",
+        "出席[1]",
+        "10:42 Ken",
+        "macOSを先に出すことに決めました",
+        "決まったこと",
+        "やること",
+        "メモ",
+        "Windowsはいつ出しますか",
+        "文字起こし",
+        "時間",
+        "関連ファイル",
+        "出所"
+      ],
+      "observation": {
+        "happening": "Meeting transcript view showing structured notes with decisions, action items, and Q&A. Multiple participant timestamps visible.",
+        "most_important": "Clear organizational hierarchy: decisions and action items are clearly separated and labeled. Timestamps and speakers are identifiable.",
+        "next_action": "Review transcript, browse related files, or reference decisions/actions.",
+        "anomalies": [
+          "Meeting title displayed at two different scales/positions"
+        ]
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "1635": {
+      "visible_text": [
+        "Home",
+        "Work",
+        "Library",
+        "Apps",
+        "録音中",
+        "Product Weekly",
+        "Google Meet・Product",
+        "00:01",
+        "ライブメモを開く",
+        "Ask Astra",
+        "止める",
+        "これからの予定",
+        "10:00 Google Meet",
+        "A社商談",
+        "13:30 Zoom"
+      ],
+      "observation": {
+        "happening": "Home screen with active recording prominently displayed in a pink/light-colored widget at top. Live timer shows 00:01. Upcoming meetings listed below.",
+        "most_important": "Recording status is immediately visible with clear time counter and meeting context. Action buttons are accessible and relevant to live state.",
+        "next_action": "Stop recording, open live notes, ask assistant, or view upcoming schedule.",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "2276": {
+      "visible_text": [
+        "録音中",
+        "会議",
+        "マイクと画面の音を聞いています",
+        "聞いています",
+        "決まったこと",
+        "決まったことを待っています",
+        "やること",
+        "やることを待っています",
+        "この会議について聞く",
+        "要約",
+        "決まったこと",
+        "やること"
+      ],
+      "observation": {
+        "happening": "Live transcription interface during active meeting. System is listening for input and waiting for decisions/actions to capture.",
+        "most_important": "Status 'マイクと画面の音を聞いています' clearly indicates system is active and capturing. Waiting states are appropriate for real-time capture.",
+        "next_action": "Participants speak to generate transcript content; content appears in decision/action sections as meeting progresses.",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "2728": {
+      "visible_text": [
+        "録音中",
+        "会議",
+        "マイクと画面の音を聞いています",
+        "聞いています",
+        "決まったこと",
+        "決まったことを待っています",
+        "やること",
+        "やることを待っています",
+        "音声認識の許可が無いため",
+        "文字にできません",
+        "録音は続いていま す",
+        "設定を開く",
+        "文字起こし",
+        "翻訳",
+        "字幕",
+        "AIが整理している資料 — まだ準備ません"
+      ],
+      "observation": {
+        "happening": "Live transcription view with error state. Right panel displays permission warning about audio recognition. AI preparation status shown at bottom.",
+        "most_important": "System indicates recording continues despite transcript unavailability due to missing permissions. Warning is displayed but relegated to secondary panel.",
+        "next_action": "User should open settings to grant permissions; recording will not produce transcript until permission granted.",
+        "anomalies": [
+          "Grammar error in message 'まだ準備ません' — should be 'まだ準備できていません' or 'まだ準備中です'. Reduces trust in product quality."
+        ]
+      },
+      "verdict": "FIX",
+      "concerns": [
+        {
+          "axis": "trust-provenance",
+          "what": "Visible Japanese grammar/spelling error in UI message",
+          "where": "Bottom section text: 'AIが整理している資料 — まだ準備ません'"
+        }
+      ],
+      "confidence": "high"
+    }
+  },
+  "_judge": {
+    "model": "haiku",
+    "cost_usd": 0.06726309999999999,
+    "turns": 7,
+    "duration_ms": 58316
+  }
+}

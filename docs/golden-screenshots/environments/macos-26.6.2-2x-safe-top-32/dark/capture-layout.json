@@ -1,0 +1,52 @@
+{
+  "01-voice-hud-idle": {
+    "height": 76,
+    "topInsetPx": 32,
+    "width": 220
+  },
+  "02-voice-hud-listening": {
+    "height": 85,
+    "topInsetPx": 32,
+    "width": 600
+  },
+  "02b-voice-hud-preparing": {
+    "height": 85,
+    "topInsetPx": 32,
+    "width": 600
+  },
+  "03-recording-workspace": {
+    "height": 680,
+    "topInsetPx": 0,
+    "width": 1080
+  },
+  "04-recording-transcript": {
+    "height": 680,
+    "topInsetPx": 0,
+    "width": 1080
+  },
+  "05-recording-rag": {
+    "height": 680,
+    "topInsetPx": 0,
+    "width": 1080
+  },
+  "08-meeting-detail": {
+    "height": 820,
+    "topInsetPx": 0,
+    "width": 1240
+  },
+  "09-permission-denied": {
+    "height": 680,
+    "topInsetPx": 0,
+    "width": 1080
+  },
+  "10-agent-timeline": {
+    "height": 680,
+    "topInsetPx": 0,
+    "width": 1080
+  },
+  "11-meeting-canvas": {
+    "height": 680,
+    "topInsetPx": 0,
+    "width": 1080
+  }
+}

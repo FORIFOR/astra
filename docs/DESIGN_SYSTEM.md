@@ -40,6 +40,13 @@ recovery / keyboard safety / perceived complexity）。ここには **決まっ�
 
 ## 1. 面の高さは中身で決まる（DS-01）
 
+- ノッチのある macOS 画面では、Dock の窓の高さにその画面の
+  `NSScreen.safeAreaInsets.top` を加える。背景の上端は画面上端のまま、
+  中身は安全領域の下へ置く。token は中身の寸法であり、機種固有の値は写さない。
+  2026-09-08 の実機では 32pt。18 Dock 状態で移動後の中身が画素比較で一致し、
+  外部画面の inset=0 は配置テストで確認した。AX 要素測定は許可後に6状態で
+  再測定・照合済み。実ディスプレイ間の移動確認は未完了。記録: `docs/ux-benchmark/compare/notch-safe-area/ROUND.md`。
+
 - Dock のどの状態も **高さ = 中身の実寸 + inset**。推定式を持たない
   （`DockContentMeasure`）。固定値は Dynamic Island そのもの（idle 44 / 棚 52）と、
   生きて増える一覧を scroll で見せる会議の展開面 460 だけ。

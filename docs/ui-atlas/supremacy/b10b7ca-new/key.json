@@ -1,0 +1,27 @@
+{
+  "key": {
+    "F22B": "screenshot.detected",
+    "0EF4": "screenshot.attached-cloud",
+    "2B9C": "guided-setup.intro",
+    "77C0": "guided-setup.target-found",
+    "46A5": "guided-setup.target-add",
+    "1751": "guided-setup.target-highlighted",
+    "75BB": "guided-setup.repositioned",
+    "FB3E": "guided-setup.target-missing",
+    "AEDE": "guided-setup.granted",
+    "4946": "guided-setup.denied"
+  },
+  "order": [
+    "0EF4",
+    "1751",
+    "2B9C",
+    "46A5",
+    "4946",
+    "75BB",
+    "77C0",
+    "AEDE",
+    "F22B",
+    "FB3E"
+  ],
+  "batch": 6
+}

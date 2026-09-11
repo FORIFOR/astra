@@ -29,8 +29,31 @@ export interface MeetingExecutorResult {
   artifact?: { title: string; markdown: string };
 }
 
+/**
+ * 会議の結論を Work Graph へ流す口（MEETING_WORK_LOOP）。
+ * bundle ができた瞬間に、決定 / やることを安定 id の artifact として渡す。無ければ流さない（黙って落とさず、無いと分かる）。
+ */
+export interface MeetingArtifactSink {
+  publish(input: {
+    readonly tenantId: string;
+    readonly userId: string;
+    readonly meeting: {
+      id: string;
+      title: string;
+      started_at: string;
+      ended_at: string | null;
+      recording_artifact_id: string | null;
+    };
+    readonly bundle: MeetingBundle;
+    readonly segments: readonly MeetingSegment[];
+    readonly speakers: readonly { speaker_tag: number; display_name: string }[];
+  }): Promise<{ published: number }>;
+}
+
 export interface MeetingExecutorDeps {
   readonly meetings: MeetingService;
+  /** 決定 / やることを Work Graph へ。無ければ bundle は Library にだけ残る。 */
+  readonly sink?: MeetingArtifactSink;
   readonly library: LibraryService;
   readonly recordings: RecordingStore;
   readonly batch: BatchTranscriber;
@@ -111,6 +134,7 @@ export function meetingExecutors(deps: MeetingExecutorDeps): Record<
 
         const audio = await recordings.seal(meetingId);
         const results = await batch.transcribe(audio, { language: meeting.language });
+        await meetings.applyFinalPass(input.tenantId, meetingId, results);
         return { result: { results: results.length }, detail: `${results.length} segments` };
       },
     },
@@ -124,11 +148,9 @@ export function meetingExecutors(deps: MeetingExecutorDeps): Record<
       async execute(input, step) {
         const meetingId = meetingIdOf(input, step);
         const meeting = await meetings.get(input.tenantId, meetingId);
-        const audio = await recordings.seal(meetingId);
-        const results = await batch.transcribe(audio, { language: meeting.language });
-        const saved = await meetings.applyFinalPass(input.tenantId, meetingId, results);
-
+        // The transcribe step already persisted final rows. Do not bill the same audio twice.
         const final = await meetings.segments(input.tenantId, meetingId, 'final');
+        const saved: readonly MeetingSegment[] = [];
         return {
           result: { added: saved.length, total: final.length },
           detail: `${speakerCount(final)} speakers`,
@@ -165,26 +187,71 @@ export function meetingExecutors(deps: MeetingExecutorDeps): Record<
         const meetingId = meetingIdOf(input, step);
         const meeting = await meetings.get(input.tenantId, meetingId);
         const segments = await meetings.segments(input.tenantId, meetingId);
-        const draft = await summarizer.summarize(segments);
-        const cited = withCitations(draft, segments);
+        const saved = step.args['summary_result'];
+        // Old workflow histories and direct calls can lack a previous step.
+        // New workflows always pass the persisted result, including empty arrays.
+        const cited =
+          saved === undefined
+            ? withCitations(await summarizer.summarize(segments), segments)
+            : null;
+        const summary =
+          saved === undefined
+            ? {
+                summary: cited!.summary,
+                decisions: cited!.decisions,
+                action_items: cited!.actionItems,
+                open_questions: cited!.openQuestions,
+              }
+            : (saved as Record<string, unknown>);
 
         const bundle = MeetingBundle.parse({
           meeting_id: meetingId,
           title: meeting.title,
           duration_ms: durationMs(segments),
           speaker_count: speakerCount(segments),
-          summary: cited.summary,
-          decisions: cited.decisions,
-          action_items: cited.actionItems,
-          open_questions: cited.openQuestions,
+          summary: summary['summary'],
+          decisions: summary['decisions'],
+          action_items: summary['action_items'],
+          open_questions: summary['open_questions'],
         });
 
         const speakers = await meetings.speakers(input.tenantId, meetingId);
         const markdown = renderBundle(bundle, segments, speakers);
 
+        /*
+         * 決定 / やることを Work Graph へ（MEETING_WORK_LOOP）。
+         * **議事録を保存したのに Work Graph が知らない**状態を作らない。id は安定なので、
+         * Recovery 後の再 finalize や Live Notes の修正でも同じものが更新されるだけ。
+         * 流せなくても議事録は残す（失敗は理由つきで detail に）。
+         */
+        let published = 0;
+        let sinkNote = '';
+        if (deps.sink) {
+          try {
+            published = (
+              await deps.sink.publish({
+                tenantId: input.tenantId,
+                userId: input.userId,
+                meeting: {
+                  id: meeting.id,
+                  title: meeting.title,
+                  started_at: meeting.started_at,
+                  ended_at: meeting.ended_at ?? null,
+                  recording_artifact_id: meeting.recording_artifact_id ?? null,
+                },
+                bundle,
+                segments,
+                speakers,
+              })
+            ).published;
+          } catch (error) {
+            sinkNote = ` · Work Graph へ流せませんでした（${error instanceof Error ? error.message : String(error)}）`;
+          }
+        }
+
         return {
-          result: bundle,
-          detail: `${segments.length} segments`,
+          result: { ...bundle, work_artifacts: published },
+          detail: `${segments.length} segments · ${published} to Work Graph${sinkNote}`,
           artifact: { title: meeting.title, markdown },
         };
       },

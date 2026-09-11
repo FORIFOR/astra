@@ -1,0 +1,198 @@
+{
+  "pages": {
+    "1FA3": {
+      "visible_text": [
+        "画面収録を設定できました",
+        "×"
+      ],
+      "observation": {
+        "happening": "成功トースト。緑のチェックマークとともに『画面収録を設定できました』と表示され、右側に緑のリングで縁取られた円形の波形（オーディオ/リスニング）アイコンが並んでいる。",
+        "most_important": "設定完了を知らせる緑チェックのメッセージ",
+        "next_action": "×で閉じる、または自動で消える想定。円形アイコン自体は常駐ウィジェットの可能性",
+        "anomalies": [
+          "トースト本体と右側の円形アイコンの間に余白があり、両者の関係（同一コンポーネントか別ウィジェットか）が絵からは判断しづらい",
+          "他の4枚（50D2/69AE/9AE8）と比べ、ここだけCTAボタンが無く『閉じるのみ』という設計"
+        ]
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 4,
+        "typography": 3,
+        "geometry": 3,
+        "state_clarity": 4,
+        "calmness": 4,
+        "craft": 4,
+        "distinctiveness": 2
+      },
+      "ai_look": [
+        "定型的なグレーのピル型トースト",
+        "既定色に近い緑チェックアイコン"
+      ],
+      "verdict": "COMPETITIVE",
+      "why": "状態は明確で、円形アイコンの縁色を成功=緑にする芸の細かさはあるが、トースト単体としては非常に汎用的でLinear/Raycast級の作り込みとは言えない",
+      "confidence": "medium"
+    },
+    "4E95": {
+      "visible_text": [
+        "1",
+        "AnyDesk",
+        "AstraDbg",
+        "AstraDbg を再起動すると使えます",
+        "ChatGPT"
+      ],
+      "observation": {
+        "happening": "macOSシステム設定の『画面収録』許可リスト。AnyDesk/AstraDbg/ChatGPTが並び、AstraDbgのトグルが青いフォーカスリングと吹き出し『AstraDbgを再起動すると使えます』で強調されている。左上に赤い丸バッジ『1』。",
+        "most_important": "AstraDbgのトグルをオンにした後は再起動が必要という案内",
+        "next_action": "アプリを再起動する",
+        "anomalies": [
+          "リスト上のアプリ名が『AstraDbg』となっており、同シリーズの他トーストで使われているブランド名『Astra』と一致しない（デバッグビルド名が案内画面に写り込んでいる可能性）",
+          "左上の赤い『1』バッジが何を指しているか絵から読み取れない（オンボーディングのステップ番号らしきものが枠外に切れて配置されている）"
+        ]
+      },
+      "scores": {
+        "hierarchy": 3,
+        "density": 3,
+        "typography": 3,
+        "geometry": 3,
+        "state_clarity": 3,
+        "calmness": 3,
+        "craft": 3,
+        "distinctiveness": 2
+      },
+      "ai_look": [],
+      "verdict": "BELOW_BAR",
+      "why": "他画像で一貫して『Astra』と名乗るブランドが、ここでは『AstraDbg』というデバッグ名でユーザー向け案内に露出しており、これがオンボーディング用スクリーンショットなら具体的な欠陥。ただしデバッグビルドの一時的な撮影である可能性もあり、その点は未確認",
+      "confidence": "medium"
+    },
+    "50D2": {
+      "visible_text": [
+        "設定画面を開けませんでした",
+        "プライバシーとセキュリティ",
+        "画面収録",
+        "もう一度開く",
+        "×"
+      ],
+      "observation": {
+        "happening": "エラートースト。オレンジの警告アイコンとともに『設定画面を開けませんでした』、下に薄いグレーでパンくず『プライバシーとセキュリティ › 画面収録』、青いボタン『もう一度開く』、×で閉じる。右に橙色リングの円形アイコン。",
+        "most_important": "設定画面が開けなかったというエラーとリトライ導線",
+        "next_action": "『もう一度開く』をクリックして再試行",
+        "anomalies": [
+          "円形アイコンのリング色がオレンジになっており、状態（警告）と連動している点は良い意匠だが、他画像との整合は絵単体からは断定不可"
+        ]
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 4,
+        "typography": 3,
+        "geometry": 3,
+        "state_clarity": 4,
+        "calmness": 4,
+        "craft": 4,
+        "distinctiveness": 2
+      },
+      "ai_look": [],
+      "verdict": "COMPETITIVE",
+      "why": "エラー内容・原因パス・リトライ導線が一目で分かる構成は良いが、視覚表現自体は一般的なシステムトーストの域を出ない",
+      "confidence": "medium"
+    },
+    "69AE": {
+      "visible_text": [
+        "Astra を自動で見つけられません",
+        "画面収録の一覧で",
+        "Astra",
+        "をオンにしてください",
+        "システム設定を開く",
+        "×"
+      ],
+      "observation": {
+        "happening": "案内トースト。『Astraを自動で見つけられません』、補足で『画面収録の一覧でAstraをオンにしてください』、濃色の塗りボタン『システム設定を開く』、×で閉じる。右に紫リングの円形アイコン。",
+        "most_important": "手動でAstraを画面収録リストから有効化するよう促す案内",
+        "next_action": "『システム設定を開く』を押してから手動でトグルをオンにする",
+        "anomalies": [
+          "ボタンが黒系の塗りで、同系統の9AE8トースト（青塗りボタン）と配色が異なる。これは重要度による意図的な差別化（軽度=黒、必須=青）の可能性もあり、絵だけでは欠陥と断定できない"
+        ]
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 4,
+        "typography": 3,
+        "geometry": 3,
+        "state_clarity": 4,
+        "calmness": 4,
+        "craft": 3,
+        "distinctiveness": 2
+      },
+      "ai_look": [],
+      "verdict": "COMPETITIVE",
+      "why": "何をすべきかは明確に伝わるが、ボタン配色の使い分けルールが読み取れず、一線級製品ほどの一貫性の説得力はない",
+      "confidence": "medium"
+    },
+    "9AE8": {
+      "visible_text": [
+        "画面収録が未許可です",
+        "システム設定で",
+        "Astra",
+        "をオンにしてください",
+        "システム設定を開く",
+        "×"
+      ],
+      "observation": {
+        "happening": "許可待ちトースト。『画面収録が未許可です』、補足『システム設定でAstraをオンにしてください』、青塗りボタン『システム設定を開く』、×で閉じる。右に紫リングの円形アイコン。",
+        "most_important": "画面収録の権限がまだ許可されていないという状態と、青い主要CTA",
+        "next_action": "『システム設定を開く』をクリックして権限を付与",
+        "anomalies": [
+          "69AEとほぼ同文脈だがボタン配色が異なる（黒系→青系）。用途の違いを表す意図的な階層かもしれないが、絵だけでは判断できない"
+        ]
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 4,
+        "typography": 3,
+        "geometry": 3,
+        "state_clarity": 4,
+        "calmness": 4,
+        "craft": 3,
+        "distinctiveness": 2
+      },
+      "ai_look": [],
+      "verdict": "COMPETITIVE",
+      "why": "状態と主要アクションが明快で、青ボタンにより優先度が伝わるが、これも汎用的なシステムトーストの範疇",
+      "confidence": "medium"
+    },
+    "E3EE": {
+      "visible_text": [
+        "スクリーンショット",
+        "認識しました・そのまま聞けます",
+        "×"
+      ],
+      "observation": {
+        "happening": "ダークテーマのトースト。『スクリーンショット』という見出しと×、下に『認識しました・そのまま聞けます』という説明文。スクリーンショットの内容が認識され、そのまま会話・質問を続けられることを示唆。",
+        "most_important": "スクリーンショットが認識され、続けて音声/対話操作が可能という状態",
+        "next_action": "そのまま話しかける、または×で閉じる",
+        "anomalies": [
+          "このトーストだけ背景がダーク（黒系）で、他5枚すべての明るいグレーのピル型トーストと配色テーマが完全に異なる。同一プロダクトの通知コンポーネントとして意匠が分裂している"
+        ]
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 4,
+        "typography": 4,
+        "geometry": 3,
+        "state_clarity": 3,
+        "calmness": 3,
+        "craft": 3,
+        "distinctiveness": 3
+      },
+      "ai_look": [],
+      "verdict": "BELOW_BAR",
+      "why": "単体の見た目は悪くないが、同シリーズの他5枚が一貫して明るいグレーのトーストである中でこれだけダークテーマになっており、通知システムとしての一貫性が絵から明確に崩れている",
+      "confidence": "medium"
+    }
+  },
+  "_judge": {
+    "model": "sonnet",
+    "cost_usd": 0.1949642,
+    "turns": 7,
+    "duration_ms": 116393
+  }
+}

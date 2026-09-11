@@ -468,6 +468,22 @@ ALTER TABLE ONLY public.host_step_requests FORCE ROW LEVEL SECURITY;
 
 
 --
+-- Name: initial_profiles; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.initial_profiles (
+    tenant_id uuid NOT NULL,
+    user_id uuid NOT NULL,
+    payload jsonb NOT NULL,
+    lease_id uuid,
+    lease_until timestamp with time zone,
+    artifact_snapshot jsonb DEFAULT '[]'::jsonb NOT NULL
+);
+
+ALTER TABLE ONLY public.initial_profiles FORCE ROW LEVEL SECURITY;
+
+
+--
 -- Name: job_checkpoints; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -967,6 +983,83 @@ ALTER TABLE ONLY public.users FORCE ROW LEVEL SECURITY;
 
 
 --
+-- Name: work_artifacts; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.work_artifacts (
+    id text NOT NULL,
+    tenant_id uuid NOT NULL,
+    user_id uuid NOT NULL,
+    source text NOT NULL,
+    kind text NOT NULL,
+    occurred_at timestamp with time zone NOT NULL,
+    due_at timestamp with time zone,
+    thread_id text,
+    body jsonb NOT NULL,
+    observed_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT work_artifacts_kind_check CHECK ((kind = ANY (ARRAY['email'::text, 'calendar_event'::text, 'task'::text, 'meeting'::text, 'file'::text, 'message'::text, 'commitment'::text, 'decision'::text, 'action_item'::text]))),
+    CONSTRAINT work_artifacts_source_check CHECK ((source = ANY (ARRAY['gmail'::text, 'google_calendar'::text, 'google_tasks'::text, 'outlook_mail'::text, 'outlook_calendar'::text, 'microsoft_todo'::text, 'planner'::text, 'meeting'::text, 'screenshot'::text, 'file'::text, 'astra_task'::text, 'browser'::text])))
+);
+
+ALTER TABLE ONLY public.work_artifacts FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: work_corrections; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.work_corrections (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    user_id uuid NOT NULL,
+    item_id text NOT NULL,
+    action text NOT NULL,
+    note text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT work_corrections_action_check CHECK ((action = ANY (ARRAY['dismiss'::text, 'not_priority'::text, 'done'::text, 'wrong_project'::text])))
+);
+
+ALTER TABLE ONLY public.work_corrections FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: work_profiles; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.work_profiles (
+    tenant_id uuid NOT NULL,
+    user_id uuid NOT NULL,
+    inference_enabled boolean DEFAULT true NOT NULL,
+    overrides jsonb DEFAULT '{}'::jsonb NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+ALTER TABLE ONLY public.work_profiles FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: work_sync_state; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.work_sync_state (
+    tenant_id uuid NOT NULL,
+    user_id uuid NOT NULL,
+    source text NOT NULL,
+    cursor text,
+    last_synced_at timestamp with time zone,
+    artifact_count integer DEFAULT 0 NOT NULL,
+    watermark timestamp with time zone,
+    last_attempt_at timestamp with time zone,
+    last_error text,
+    schema_version integer DEFAULT 1 NOT NULL,
+    CONSTRAINT work_sync_state_artifact_count_check CHECK ((artifact_count >= 0)),
+    CONSTRAINT work_sync_state_schema_version_check CHECK ((schema_version >= 1))
+);
+
+ALTER TABLE ONLY public.work_sync_state FORCE ROW LEVEL SECURITY;
+
+
+--
 -- Name: world_edges; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1196,6 +1289,14 @@ ALTER TABLE ONLY public.host_step_requests
 
 
 --
+-- Name: initial_profiles initial_profiles_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.initial_profiles
+    ADD CONSTRAINT initial_profiles_pkey PRIMARY KEY (tenant_id, user_id);
+
+
+--
 -- Name: job_checkpoints job_checkpoints_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1393,6 +1494,38 @@ ALTER TABLE ONLY public.user_identities
 
 ALTER TABLE ONLY public.users
     ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: work_artifacts work_artifacts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.work_artifacts
+    ADD CONSTRAINT work_artifacts_pkey PRIMARY KEY (tenant_id, user_id, id);
+
+
+--
+-- Name: work_corrections work_corrections_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.work_corrections
+    ADD CONSTRAINT work_corrections_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: work_profiles work_profiles_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.work_profiles
+    ADD CONSTRAINT work_profiles_pkey PRIMARY KEY (tenant_id, user_id);
+
+
+--
+-- Name: work_sync_state work_sync_state_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.work_sync_state
+    ADD CONSTRAINT work_sync_state_pkey PRIMARY KEY (tenant_id, user_id, source);
 
 
 --
@@ -1831,6 +1964,20 @@ CREATE INDEX user_identities_by_user ON public.user_identities USING btree (user
 --
 
 CREATE UNIQUE INDEX users_email_key ON public.users USING btree (email) WHERE (deleted_at IS NULL);
+
+
+--
+-- Name: work_artifacts_recent; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX work_artifacts_recent ON public.work_artifacts USING btree (tenant_id, user_id, occurred_at DESC);
+
+
+--
+-- Name: work_corrections_user; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX work_corrections_user ON public.work_corrections USING btree (tenant_id, user_id, created_at DESC);
 
 
 --
@@ -2346,6 +2493,22 @@ ALTER TABLE ONLY public.host_step_requests
 
 
 --
+-- Name: initial_profiles initial_profiles_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.initial_profiles
+    ADD CONSTRAINT initial_profiles_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+
+--
+-- Name: initial_profiles initial_profiles_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.initial_profiles
+    ADD CONSTRAINT initial_profiles_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
 -- Name: job_checkpoints job_checkpoints_task_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2802,6 +2965,38 @@ ALTER TABLE ONLY public.user_identities
 
 
 --
+-- Name: work_artifacts work_artifacts_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.work_artifacts
+    ADD CONSTRAINT work_artifacts_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+
+--
+-- Name: work_corrections work_corrections_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.work_corrections
+    ADD CONSTRAINT work_corrections_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+
+--
+-- Name: work_profiles work_profiles_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.work_profiles
+    ADD CONSTRAINT work_profiles_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+
+--
+-- Name: work_sync_state work_sync_state_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.work_sync_state
+    ADD CONSTRAINT work_sync_state_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+
+--
 -- Name: world_edges world_edges_from_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3100,6 +3295,19 @@ CREATE POLICY host_step_requests_tenant_isolation ON public.host_step_requests U
 
 
 --
+-- Name: initial_profiles; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.initial_profiles ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: initial_profiles initial_profiles_tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY initial_profiles_tenant_isolation ON public.initial_profiles USING ((tenant_id = public.astra_current_tenant())) WITH CHECK ((tenant_id = public.astra_current_tenant()));
+
+
+--
 -- Name: job_checkpoints; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -3351,6 +3559,58 @@ CREATE POLICY users_tenant_isolation ON public.users USING ((EXISTS ( SELECT 1
 
 
 --
+-- Name: work_artifacts; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.work_artifacts ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: work_artifacts work_artifacts_tenant; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY work_artifacts_tenant ON public.work_artifacts USING ((tenant_id = public.astra_current_tenant())) WITH CHECK ((tenant_id = public.astra_current_tenant()));
+
+
+--
+-- Name: work_corrections; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.work_corrections ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: work_corrections work_corrections_tenant; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY work_corrections_tenant ON public.work_corrections USING ((tenant_id = public.astra_current_tenant())) WITH CHECK ((tenant_id = public.astra_current_tenant()));
+
+
+--
+-- Name: work_profiles; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.work_profiles ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: work_profiles work_profiles_tenant; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY work_profiles_tenant ON public.work_profiles USING ((tenant_id = public.astra_current_tenant())) WITH CHECK ((tenant_id = public.astra_current_tenant()));
+
+
+--
+-- Name: work_sync_state; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.work_sync_state ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: work_sync_state work_sync_state_tenant; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY work_sync_state_tenant ON public.work_sync_state USING ((tenant_id = public.astra_current_tenant())) WITH CHECK ((tenant_id = public.astra_current_tenant()));
+
+
+--
 -- Name: world_edges; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -3435,3 +3695,7 @@ INSERT INTO schema_migrations (version) VALUES ('20260827093000');
 INSERT INTO schema_migrations (version) VALUES ('20260827103000');
 INSERT INTO schema_migrations (version) VALUES ('20260827120000');
 INSERT INTO schema_migrations (version) VALUES ('20260827150000');
+INSERT INTO schema_migrations (version) VALUES ('20260907090000');
+INSERT INTO schema_migrations (version) VALUES ('20260907170000');
+INSERT INTO schema_migrations (version) VALUES ('20260909120000');
+INSERT INTO schema_migrations (version) VALUES ('20260910003000');

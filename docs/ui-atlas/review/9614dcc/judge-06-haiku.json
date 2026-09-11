@@ -1,0 +1,145 @@
+{
+  "pages": {
+    "74B2": {
+      "visible_text": [
+        "録音中",
+        "04:21",
+        "会議",
+        "OAuth だけ確認お願いします",
+        "決まったこと",
+        "やること",
+        "この会議について聞く",
+        "AI が見ている資料 3 件",
+        "文字起こし",
+        "翻訳",
+        "字幕"
+      ],
+      "observation": {
+        "happening": "Live meeting recording in progress with real-time transcription and categorization of discussion items",
+        "most_important": "Structured conversation capture with organized sections (decided items, action items) and control bar at top showing elapsed time and recording status",
+        "next_action": "User can pause, add notes, or access transcription/translation features",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "74EF": {
+      "visible_text": [
+        "11:12 の会議",
+        "Home",
+        "Work",
+        "Library",
+        "Apps",
+        "決まったこと 1",
+        "macOS を先に出すことに決めました",
+        "やること 0",
+        "メモ 2",
+        "Windows はいつ出しますか",
+        "文字起こし",
+        "議論"
+      ],
+      "observation": {
+        "happening": "Meeting transcript viewer showing structured discussion with categorized content sections (decided items, action items, memos)",
+        "most_important": "Clear hierarchical display with meeting duration/participant count, organized discussion topics with timestamps and speaker attribution in right sidebar",
+        "next_action": "User can view transcription details, access related discussion, or view source materials",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "76B1": {
+      "visible_text": [
+        "A 社 新規提案",
+        "Home",
+        "Work",
+        "Library",
+        "Apps",
+        "42:18・3 人",
+        "要約",
+        "先方は 10 月導入を希望",
+        "決まったこと 1",
+        "導入時期を 10 月で検討",
+        "やること 1",
+        "伊藤 修正版見積を送付"
+      ],
+      "observation": {
+        "happening": "Meeting proposal document showing discussion summary with structured decision items and action items",
+        "most_important": "Meeting context (Company A proposal, 42:18 duration, 3 participants), key summary about October implementation and cost concerns, clear action assignment with deadline",
+        "next_action": "User can expand sections, access transcription, or track implementation of decided items",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "7A6E": {
+      "visible_text": [
+        "先方へ見積の返信を送る",
+        "ボタン で止まりました",
+        "接続が切れた",
+        "やり直す"
+      ],
+      "observation": {
+        "happening": "Error state notification banner appearing over content",
+        "most_important": "Dark alert banner communicating that quote response sending was interrupted due to connection loss, with clear recovery action available",
+        "next_action": "User can click 'やり直す' (Retry) button or dismiss with X button",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "7CB8": {
+      "visible_text": [
+        "Library",
+        "Files",
+        "会議以外の成果と資料",
+        "All",
+        "Report",
+        "Document",
+        "Image",
+        "Video",
+        "Other",
+        "まだ資料はありません",
+        "仕事の成果や会議の資料がここに残ります"
+      ],
+      "observation": {
+        "happening": "Empty Library view with Files tab active, showing categorization filters and empty state messaging",
+        "most_important": "Clean empty state with clear explanation of future content, multiple filter options available for organizing file types",
+        "next_action": "User can switch to Meetings tab or wait for files to be added from meetings",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "921B": {
+      "visible_text": [
+        "Home",
+        "こんにちは",
+        "何を終わらせますか",
+        "録音を始める",
+        "前回の設定でその場で録り始めます",
+        "まだ何もありません",
+        "⌘Space でこのウインドウでも始めたれます"
+      ],
+      "observation": {
+        "happening": "Home screen showing greeting and primary input interface for meeting start or task entry",
+        "most_important": "Clear entry point with greeting, prominent input field with microphone affordance, and quick-start section explaining recording functionality and keyboard shortcut access",
+        "next_action": "User can type query, use microphone for voice input, or use keyboard shortcut to open recording in any window",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    }
+  },
+  "_judge": {
+    "model": "haiku",
+    "cost_usd": 0.0612408,
+    "turns": 7,
+    "duration_ms": 46459
+  }
+}

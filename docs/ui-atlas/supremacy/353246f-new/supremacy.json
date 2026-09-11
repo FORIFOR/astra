@@ -1,0 +1,392 @@
+{
+  "rc": "353246f",
+  "mode": "self-supremacy",
+  "pages": [
+    {
+      "id": "guided-setup.denied",
+      "blind_id": "1A32",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 3,
+        "density": 3,
+        "typography": 3.5,
+        "geometry": 3,
+        "state_clarity": 3.5,
+        "calmness": 3,
+        "craft": 2.5,
+        "distinctiveness": 2.5
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "centered floating bubble",
+            "generic error iconography",
+            "disconnected icon-text relationship",
+            "excessive whitespace pattern"
+          ],
+          "why": "Icon circle and message text don't integrate spatially; alignment and proportions feel loose and improvised; generic error dialog treatment without distinctive character"
+        },
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": false,
+          "ai_look": [
+            "エラー文が説明過多で、押せる導線ではなく手順文で解決させている"
+          ],
+          "why": "「システム設定か/ら」という単語途中の改行が絵から明確に読め、日本語組版として一線級では起きない欠陥。加えて失敗状態でありながら再試行や設定を開くための操作子が見当たらず、ユーザーを文章だけで放り出している。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "文言と失敗理由の説明は明快で、フォールバック導線（アプリ内設定→システム設定）を用意している点は丁寧だが、状態アイコンと閉じるボタンが同一の丸に同居していて役割が曖昧。一線級ほどの精緻さではない。"
+        }
+      ]
+    },
+    {
+      "id": "screenshot.detected",
+      "blind_id": "39EE",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4,
+        "density": 4,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 3.5,
+        "calmness": 4.5,
+        "craft": 4,
+        "distinctiveness": 3.5
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": false,
+          "ai_look": [
+            "dark background overuse",
+            "minimal styling avoidance"
+          ],
+          "why": "Functional and calm; efficient space use. Lacks distinctive visual character—could be any generic notification. Minimal UI works but feels intentionally flat rather than intentionally refined"
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "見出し＋補足の2段構成、余白、コントラストが破綻なく整っており、そのまま出せる品質。ただし形も色も汎用的なダークトーストの域を出ず、一線級と並べたとき記憶に残る固有性は無い。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "アイコン＋太字見出し＋補足文の組み立ては端正で、中黒(・)を使った1行への畳み込みも上品。ただし同じプロダクト内の他トーストと形状文法が異なり、システムとしての一貫性に疑問が残る。"
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.target-missing",
+      "blind_id": "4B36",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "avg": {
+        "hierarchy": 3,
+        "density": 4,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 3,
+        "calmness": 4,
+        "craft": 3,
+        "distinctiveness": 3
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "BELOW_BAR",
+          "valid": false,
+          "ai_look": [
+            "rounded circle as generic decorative icon",
+            "floating unintegrated visual element",
+            "sparse centered layout",
+            "proportional disconnection between icon and text"
+          ],
+          "why": "Visual elements (blue circle, text) lack spatial integration; proportions feel arbitrary; generic circular icon decoration without purpose; sparse whitespace suggests auto-layout default rather than intentional composition"
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": false,
+          "ai_look": [
+            "薄紫のグロー리ングでブランド感を出そうとしている"
+          ],
+          "why": "1行に絞った文言と静かな配色は破綻していないが、「どの設定画面か」が示されず × の帰属も曖昧で、一線級の誘導の精度には届かない。欠陥というより差の範囲。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "指示は簡潔で、紫リングのブランドカラーが状態アイコンに一貫して使われている点は良い。ただし文言のブレや小さすぎる×のヒット領域が気になり、一線級には一歩届かない。"
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.target-highlighted",
+      "blind_id": "6313",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4,
+        "density": 3.67,
+        "typography": 3.67,
+        "geometry": 3.33,
+        "state_clarity": 4,
+        "calmness": 3.33,
+        "craft": 3.33,
+        "distinctiveness": 2.67
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "Clear hierarchy and functional organization following standard macOS settings patterns. Well-structured navigation and toggle state visibility. Lacks distinctive design treatment—feels like default OS pattern rather than crafted product design"
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "OS の実画面上で対象を1点だけリングで囲み、短い指示を添えるコーチマークとして機能が成立している。ただし矢印が文字流用でピルの浮きも弱く、仕上げの詰めは一線級に一歩届かない。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "ネイティブのシステム設定UIに対し、ブランドカラー（紫）で自然にコーチマークを重ねている統合力は高い。ただし矢印の切れ方や既存トグルとの視覚的競合でcalmnessがやや下がる。"
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.granted",
+      "blind_id": "6479",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "avg": {},
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "COMPETITIVE",
+          "valid": false,
+          "ai_look": [
+            "centered checkmark success dialog pattern",
+            "excessive whitespace typical of AI-generated minimal UIs"
+          ],
+          "why": "Success state is unambiguous (checkmark + text). Clean and calm. However, uses extremely generic centered success pattern; vast whitespace feels like default template behavior; lacks personality or craft"
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": false,
+          "ai_look": [
+            "チェックマークの重複という定型的な冗長"
+          ],
+          "why": "成功状態が短文と緑チェックで明確に伝わり、静かで邪魔をしない。ただしチェックが二重で、対象が何かも書かれておらず、完了後の次の一手も無いため一線級の締めには足りない。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": false,
+          "ai_look": [],
+          "why": "状態の明快さは6枚中最も高いが、テキストとアイコンで同じチェックマークを二重使用しているのは細部の詰めが甘い。"
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.intro",
+      "blind_id": "935E",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "avg": {
+        "hierarchy": 3,
+        "density": 4,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 3,
+        "calmness": 4,
+        "craft": 3,
+        "distinctiveness": 3
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "BELOW_BAR",
+          "valid": false,
+          "ai_look": [
+            "floating blue circle decorative icon",
+            "disconnected visual elements",
+            "centered sparse layout",
+            "icon-text spatial disconnection"
+          ],
+          "why": "Blue circle icon with bars floats without clear relationship to message; visual composition feels arbitrary rather than integrated; sparse centered layout; decorative icon adds no meaning; proportions and spacing suggest auto-layout defaults"
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": false,
+          "ai_look": [
+            "「1つ設定してください」という中身の無い言い回しで具体を回避している"
+          ],
+          "why": "理由と残数を1行で言い切る簡潔さは良く、静かで破綻もない。ただし対象が特定されず開始する操作子も見えないため、一線級の許可フローが持つ「押せば進む」明快さに届かない。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "残ステップ数を明示するマイクロコピーは丁寧だが、シリーズ内の他画像を見るとフォールバック分岐があり『1つ』の正確性が怪しい。閉じるボタンの小ささも含め一線級には僅かに届かない。"
+        }
+      ]
+    },
+    {
+      "id": "screenshot.attached-cloud",
+      "blind_id": "B0F0",
+      "verdict": "COMPETITIVE",
+      "avg": {
+        "hierarchy": 4,
+        "density": 4,
+        "typography": 3.5,
+        "geometry": 4,
+        "state_clarity": 3,
+        "calmness": 4.5,
+        "craft": 3.5,
+        "distinctiveness": 2.5
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "BELOW_BAR",
+          "valid": false,
+          "ai_look": [
+            "Text quality inconsistent with shipping UI—awkward phrasing suggests draft or poor localization"
+          ],
+          "why": "Localization/phrasing defect makes intent unclear. A line-class product would validate translation quality. Lacks visible action buttons for a modal."
+        },
+        {
+          "model": "opus",
+          "verdict": "COMPETITIVE",
+          "valid": true,
+          "ai_look": [],
+          "why": "文言が具体で、送信条件を一行で言い切っている点は良い。角丸と余白も落ち着いており AI 生成臭は無い。ただし × 以外の出口が無く、この要素が通知なのか設定行なのかの状態表示が弱い。一線級（Granola / Raycast のプライバシー行）なら状態と設定導線を同居させる。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "NOT_ENOUGH_EVIDENCE",
+          "valid": true,
+          "ai_look": [],
+          "why": "単体の小さな通知チップで、これが正しく機能しているか（クリック時の挙動、他の通知との重なり方、頻度制御）は静止画からは判断できない。要素自体はシンプルで欠陥は見えないが判断材料が乏しい。"
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.target-found",
+      "blind_id": "F17D",
+      "verdict": "BELOW_BAR",
+      "avg": {
+        "hierarchy": 3,
+        "density": 3.33,
+        "typography": 3.33,
+        "geometry": 2.67,
+        "state_clarity": 2,
+        "calmness": 3,
+        "craft": 2.33,
+        "distinctiveness": 2
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "Orphaned version string '2.1.260' as list entry—suggests incomplete refactor or data binding error",
+            "Cryptic footer instruction with placeholder notation breaks UX polish"
+          ],
+          "why": "Visible data defect ('2.1.260' as app entry) + cryptic, non-actionable footer instruction. A production settings pane should not expose version strings or unclear affordances. State clarity is broken."
+        },
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "紫の強調リング＋ピル型吹き出しという、既製オンボーディング部品をそのまま貼った感じ",
+            "OS の実画面の上に、OS の形状言語と揃わない要素を重ねている"
+          ],
+          "why": "案内吹き出しが「−」ボタンとリスト下境界に重なって OS のコントロールを隠しており、閉じる手段も見えない。さらに最上段の「2.1.260」という版数らしき行の存在で、既に追加済みなのか未追加なのかという状態が矛盾して読める。一線級（1Password / Loom の権限オンボーディング）はターゲットを覆わず、状態の言い切りも一つに定める。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [],
+          "why": "これはApple純正のシステム設定画面であり、サードパーティ製アプリのアイコンが統一されたガイドラインなしに雑多に並ぶため、視覚的な一貫性が崩れている（絵から明確に言える階層/geometry上の欠陥）。加えて「Astra」への追加誘導テキストが既存の「AstraDbg」項目と名称が似て紛らわしく、状態の理解を妨げる。"
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.repositioned",
+      "blind_id": "F2A8",
+      "verdict": "BELOW_BAR",
+      "avg": {
+        "hierarchy": 3.67,
+        "density": 3.67,
+        "typography": 3.67,
+        "geometry": 3.33,
+        "state_clarity": 3.33,
+        "calmness": 3.67,
+        "craft": 3,
+        "distinctiveness": 1.67
+      },
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [
+            "Same '2.1.260' orphaned entry remains—unresolved data defect",
+            "Unlabeled '+' button is minimal but risks ambiguity in small-screen/accessibility contexts"
+          ],
+          "why": "Data defect ('2.1.260') unresolved from F17D. Unlabeled '+' button improves over cryptic footer but is less discoverable than labeled action. Production settings would not surface version strings in the app list."
+        },
+        {
+          "model": "opus",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [],
+          "why": "OS 側の枠は一線級だが、この画面に載っている項目の craft が落ちている。「2.1.260」という版数がアプリ名の位置に出ており、「AstraDbg」という内部デバッグ名も同居する。ユーザーはどれが自分のアプリかを名前から判定できず、許可の付与先が特定できない。バンドル名の設定漏れが絵から言える欠陥。"
+        },
+        {
+          "model": "sonnet",
+          "verdict": "BELOW_BAR",
+          "valid": true,
+          "ai_look": [],
+          "why": "F17Dと同じ画面で、サードパーティアイコンのスタイル不統一という具体的な欠陥が絵から確認できる。これはApple自身のシステムUIであり本来一線級のはずだが、アプリ提供元に依存するアイコン品質のばらつきがそのまま露出しており、リストの視覚的整合性を下げている。"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "supreme": 0,
+    "competitive": 4,
+    "below_bar": 2,
+    "not_enough_evidence": 3,
+    "models": [
+      "haiku",
+      "opus",
+      "sonnet"
+    ]
+  },
+  "gate": "FAIL",
+  "ab_competitor": "AUTOMATION_MISSING: 競合の実 UI 画像（ASTRA_COMPETITORS_DIR）が無い。画面収録 TCC と driver が要る"
+}

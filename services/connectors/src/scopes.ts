@@ -95,3 +95,72 @@ export function withheldPermissions(
   const allowed = new Set(permissionsFromGoogleScopes(granted));
   return requested.filter((p) => !allowed.has(p));
 }
+
+// ------------------------------------------------------------ Microsoft
+
+/**
+ * Astra の許可 1 つに要る Microsoft Graph scope。**読むものだけ。**
+ *
+ * Work Context は読むだけで成り立つ。送る・書くは別の許可で、
+ * 別の同意画面を通す（正本 §21、Work Context 仕様「read-only scopes first」）。
+ */
+const MICROSOFT_GRANTS: Readonly<Partial<Record<PermissionScope, string>>> = {
+  'email.read': 'Mail.Read',
+  'email.send': 'Mail.Send',
+  'email.modify': 'Mail.ReadWrite',
+  'calendar.read': 'Calendars.Read',
+  'calendar.write': 'Calendars.ReadWrite',
+  'contacts.read': 'Contacts.Read',
+  'tasks.read': 'Tasks.Read',
+  'drive.read': 'Files.Read',
+  'drive.write': 'Files.ReadWrite',
+};
+
+const MICROSOFT_IMPLIED: Readonly<Record<string, readonly PermissionScope[]>> = {
+  'Mail.ReadWrite': ['email.read', 'email.modify'],
+  'Calendars.ReadWrite': ['calendar.read', 'calendar.write'],
+  'Files.ReadWrite': ['drive.read', 'drive.write'],
+  'Tasks.ReadWrite': ['tasks.read'],
+};
+
+/**
+ * refresh token を貰うために要る。Google の `access_type=offline` にあたる。
+ * 無いと 1 時間で黙って切れ、Work Context の同期が止まる。
+ */
+export const MICROSOFT_OFFLINE_SCOPE = 'offline_access';
+
+/** 要求する Microsoft Graph scope。対応の無い許可は要求しない。 */
+export function microsoftScopesFor(permissions: readonly PermissionScope[]): string[] {
+  const wanted = new Set<string>();
+  for (const permission of permissions) {
+    const scope = MICROSOFT_GRANTS[permission];
+    if (scope) wanted.add(scope);
+  }
+  const covered = new Set<PermissionScope>();
+  for (const scope of wanted) {
+    for (const implied of MICROSOFT_IMPLIED[scope] ?? []) {
+      if (MICROSOFT_GRANTS[implied] !== scope) covered.add(implied);
+    }
+  }
+  const redundant = new Set(
+    [...covered].map((p) => MICROSOFT_GRANTS[p]).filter((s): s is string => Boolean(s)),
+  );
+  const out = [...wanted].filter((scope) => !redundant.has(scope));
+  return out.length === 0 ? [] : [...out, MICROSOFT_OFFLINE_SCOPE].sort();
+}
+
+/** 同意画面の結果（空白区切り）から、実際に許された Astra の許可を出す。 */
+export function permissionsFromMicrosoftScopes(granted: string): PermissionScope[] {
+  const scopes = new Set(granted.split(/\s+/).filter((s) => s.length > 0));
+  const out = new Set<PermissionScope>();
+  for (const [permission, scope] of Object.entries(MICROSOFT_GRANTS) as [
+    PermissionScope,
+    string,
+  ][]) {
+    if (scopes.has(scope)) out.add(permission);
+  }
+  for (const scope of scopes) {
+    for (const implied of MICROSOFT_IMPLIED[scope] ?? []) out.add(implied);
+  }
+  return [...out].sort();
+}

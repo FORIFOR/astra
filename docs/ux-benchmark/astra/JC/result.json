@@ -21,43 +21,44 @@
 
   ],
   "product" : "Astra",
-  "startedAt" : "2026-09-03T03:25:56Z",
+  "startedAt" : "2026-09-11T16:57:53Z",
   "steps" : [
     {
       "front" : "com.apple.finder",
       "ids" : {
-        "reason" : "dock:録音を始められません",
-        "recovery" : "openSettings"
+        "enable" : "true",
+        "later" : "true",
+        "state" : "microphoneIntro"
       },
       "interactions" : 1,
-      "keyWindow" : false,
-      "ms" : 1132,
-      "name" : "マイク拒否",
+      "keyWindow" : true,
+      "ms" : 1072,
+      "name" : "マイクの説明",
       "surface" : {
-        "h" : 129,
-        "key" : false,
-        "w" : 520,
-        "x" : 1020,
-        "y" : 1311
+        "h" : 189,
+        "key" : true,
+        "w" : 312,
+        "x" : 1392,
+        "y" : 98
       },
-      "transitionMs" : 172,
-      "windows" : 1
+      "transitionMs" : 80,
+      "windows" : 2
     },
     {
       "front" : "com.apple.finder",
       "ids" : {
-        "session" : "meeting-1788405958"
+        "session" : "meeting-9096ba8f-f007-449b-a384-8e73b53c2102"
       },
       "interactions" : 1,
-      "keyWindow" : false,
-      "ms" : 1393,
+      "keyWindow" : true,
+      "ms" : 1154,
       "name" : "回復",
       "surface" : {
-        "h" : 76,
-        "key" : false,
+        "h" : 108,
+        "key" : true,
         "w" : 820,
-        "x" : 870,
-        "y" : 1364
+        "x" : 454,
+        "y" : 1009
       },
       "windows" : 1
     },
@@ -69,14 +70,14 @@
       },
       "interactions" : 0,
       "keyWindow" : false,
-      "ms" : 1452,
+      "ms" : 1445,
       "name" : "共有のあと",
       "surface" : {
-        "h" : 76,
+        "h" : 108,
         "key" : false,
         "w" : 820,
-        "x" : 870,
-        "y" : 1364
+        "x" : 454,
+        "y" : 1009
       },
       "windows" : 1
     },
@@ -88,14 +89,14 @@
       },
       "interactions" : 1,
       "keyWindow" : false,
-      "ms" : 1222,
+      "ms" : 1270,
       "name" : "確認（やめる）",
       "surface" : {
-        "h" : 76,
+        "h" : 108,
         "key" : false,
         "w" : 820,
-        "x" : 870,
-        "y" : 1364
+        "x" : 454,
+        "y" : 1009
       },
       "windows" : 1
     },
@@ -106,19 +107,19 @@
       },
       "interactions" : 1,
       "keyWindow" : false,
-      "ms" : 2145,
+      "ms" : 2317,
       "name" : "落ちて再開",
       "surface" : {
         "h" : 820,
         "key" : false,
         "w" : 1240,
-        "x" : 660,
-        "y" : 466
+        "x" : 244,
+        "y" : 216
       },
       "windows" : 2
     }
   ],
   "success" : true,
-  "totalMs" : 7368,
+  "totalMs" : 7271,
   "windowsOpened" : 0
 }

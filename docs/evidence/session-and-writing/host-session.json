@@ -1,0 +1,8 @@
+{
+  "result": "PASS",
+  "realGateway": true,
+  "concurrentReads": 12,
+  "rotations": 2,
+  "hostIdentityPreserved": true,
+  "refreshTokensNeverReplayed": true
+}

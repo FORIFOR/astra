@@ -1786,6 +1786,108 @@ public func FfiConverterTypeTokens_lower(_ value: Tokens) -> RustBuffer {
 
 
 /**
+ * この turn に添えた端末内の画像（スクショ / クリップボード画像）。
+ *
+ * **画素はここを通らない。**cloud へ渡すのは id とラベルだけで、実体は端末の
+ * `visual-context/<id>.png` にあり、端末で走るモデル呼び出しがそこから読む。
+ */
+public struct TurnAttachment {
+    /**
+     * 端末側の受け渡しファイル名になる（`[A-Za-z0-9-]{1,64}`）。
+     */
+    public var id: String
+    /**
+     * "screenshot" | "clipboard_image"
+     */
+    public var kind: String
+    /**
+     * 「スクリーンショット（たった今）」など。指示語の解決に使う。
+     */
+    public var label: String
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * 端末側の受け渡しファイル名になる（`[A-Za-z0-9-]{1,64}`）。
+         */id: String, 
+        /**
+         * "screenshot" | "clipboard_image"
+         */kind: String, 
+        /**
+         * 「スクリーンショット（たった今）」など。指示語の解決に使う。
+         */label: String) {
+        self.id = id
+        self.kind = kind
+        self.label = label
+    }
+}
+
+#if compiler(>=6)
+extension TurnAttachment: Sendable {}
+#endif
+
+
+extension TurnAttachment: Equatable, Hashable {
+    public static func ==(lhs: TurnAttachment, rhs: TurnAttachment) -> Bool {
+        if lhs.id != rhs.id {
+            return false
+        }
+        if lhs.kind != rhs.kind {
+            return false
+        }
+        if lhs.label != rhs.label {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+        hasher.combine(kind)
+        hasher.combine(label)
+    }
+}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeTurnAttachment: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TurnAttachment {
+        return
+            try TurnAttachment(
+                id: FfiConverterString.read(from: &buf), 
+                kind: FfiConverterString.read(from: &buf), 
+                label: FfiConverterString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: TurnAttachment, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.id, into: &buf)
+        FfiConverterString.write(value.kind, into: &buf)
+        FfiConverterString.write(value.label, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTurnAttachment_lift(_ buf: RustBuffer) throws -> TurnAttachment {
+    return try FfiConverterTypeTurnAttachment.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTurnAttachment_lower(_ value: TurnAttachment) -> RustBuffer {
+    return FfiConverterTypeTurnAttachment.lower(value)
+}
+
+
+/**
  * 依頼を送る（POST /v1/conversations/:id/turns）。Agent が仕事を起こしたら task_id。
  */
 public struct TurnOutcome {
@@ -1802,6 +1904,10 @@ public struct TurnOutcome {
      * 仕事を起こさなかった理由・一言（無ければ空）。
      */
     public var notice: String
+    /**
+     * 返信案なら、宛先・出所・何を踏まえたか（`ReplyDraftMeta` の JSON。無ければ空）。
+     */
+    public var replyJson: String
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
@@ -1814,11 +1920,15 @@ public struct TurnOutcome {
          */taskId: String, 
         /**
          * 仕事を起こさなかった理由・一言（無ければ空）。
-         */notice: String) {
+         */notice: String, 
+        /**
+         * 返信案なら、宛先・出所・何を踏まえたか（`ReplyDraftMeta` の JSON。無ければ空）。
+         */replyJson: String) {
         self.needsClarification = needsClarification
         self.answer = answer
         self.taskId = taskId
         self.notice = notice
+        self.replyJson = replyJson
     }
 }
 
@@ -1841,6 +1951,9 @@ extension TurnOutcome: Equatable, Hashable {
         if lhs.notice != rhs.notice {
             return false
         }
+        if lhs.replyJson != rhs.replyJson {
+            return false
+        }
         return true
     }
 
@@ -1849,6 +1962,7 @@ extension TurnOutcome: Equatable, Hashable {
         hasher.combine(answer)
         hasher.combine(taskId)
         hasher.combine(notice)
+        hasher.combine(replyJson)
     }
 }
 
@@ -1864,7 +1978,8 @@ public struct FfiConverterTypeTurnOutcome: FfiConverterRustBuffer {
                 needsClarification: FfiConverterBool.read(from: &buf), 
                 answer: FfiConverterString.read(from: &buf), 
                 taskId: FfiConverterString.read(from: &buf), 
-                notice: FfiConverterString.read(from: &buf)
+                notice: FfiConverterString.read(from: &buf), 
+                replyJson: FfiConverterString.read(from: &buf)
         )
     }
 
@@ -1873,6 +1988,7 @@ public struct FfiConverterTypeTurnOutcome: FfiConverterRustBuffer {
         FfiConverterString.write(value.answer, into: &buf)
         FfiConverterString.write(value.taskId, into: &buf)
         FfiConverterString.write(value.notice, into: &buf)
+        FfiConverterString.write(value.replyJson, into: &buf)
     }
 }
 
@@ -2510,6 +2626,31 @@ fileprivate struct FfiConverterSequenceTypeRecoverableMeeting: FfiConverterRustB
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterSequenceTypeTurnAttachment: FfiConverterRustBuffer {
+    typealias SwiftType = [TurnAttachment]
+
+    public static func write(_ value: [TurnAttachment], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeTurnAttachment.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [TurnAttachment] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [TurnAttachment]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeTurnAttachment.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterDictionaryStringString: FfiConverterRustBuffer {
     public static func write(_ value: [String: String], into buf: inout [UInt8]) {
         let len = Int32(value.count)
@@ -2595,6 +2736,19 @@ public func apiFinishMeeting(baseUrl: String, accessToken: String, meetingId: St
 })
 }
 /**
+ * One-time initial profile; only the four user-facing operations are exposed.
+ */
+public func apiInitialProfile(baseUrl: String, accessToken: String, operation: String, bodyJson: String)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeApiError_lift) {
+    uniffi_astra_core_fn_func_api_initial_profile(
+        FfiConverterString.lower(baseUrl),
+        FfiConverterString.lower(accessToken),
+        FfiConverterString.lower(operation),
+        FfiConverterString.lower(bodyJson),$0
+    )
+})
+}
+/**
  * Library（GET /v1/artifacts）。title の一覧（UI が並べる分）。
  */
 public func apiLibrary(baseUrl: String, accessToken: String)throws  -> [String]  {
@@ -2629,6 +2783,29 @@ public func apiMeetingSegmentCount(baseUrl: String, accessToken: String, meeting
 })
 }
 /**
+ * Astra が使っている本人の情報（GET /v1/personalization）。JSON 本文。
+ */
+public func apiPersonalization(baseUrl: String, accessToken: String)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeApiError_lift) {
+    uniffi_astra_core_fn_func_api_personalization(
+        FfiConverterString.lower(baseUrl),
+        FfiConverterString.lower(accessToken),$0
+    )
+})
+}
+/**
+ * 確認・使わない・全体の停止（PUT /v1/personalization）。更新後の profile を JSON で返す。
+ */
+public func apiPersonalizationUpdate(baseUrl: String, accessToken: String, updateJson: String)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeApiError_lift) {
+    uniffi_astra_core_fn_func_api_personalization_update(
+        FfiConverterString.lower(baseUrl),
+        FfiConverterString.lower(accessToken),
+        FfiConverterString.lower(updateJson),$0
+    )
+})
+}
+/**
  * Apps（GET /v1/plugins/catalog）。name の一覧だけ（UI が並べる分）。
  */
 public func apiPluginCatalog(baseUrl: String, accessToken: String)throws  -> [String]  {
@@ -2638,6 +2815,43 @@ public func apiPluginCatalog(baseUrl: String, accessToken: String)throws  -> [St
         FfiConverterString.lower(accessToken),$0
     )
 })
+}
+/**
+ * 繋いだことを cloud に記録する（POST /v1/plugins/:id/connect）。**参照だけ。値は渡さない。**
+ */
+public func apiPluginConnect(baseUrl: String, accessToken: String, pluginId: String, connectJson: String)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeApiError_lift) {
+    uniffi_astra_core_fn_func_api_plugin_connect(
+        FfiConverterString.lower(baseUrl),
+        FfiConverterString.lower(accessToken),
+        FfiConverterString.lower(pluginId),
+        FfiConverterString.lower(connectJson),$0
+    )
+})
+}
+/**
+ * plugin の接続記録（GET /v1/plugins/:id/connections）。JSON 本文（`items`）。
+ */
+public func apiPluginConnections(baseUrl: String, accessToken: String, pluginId: String)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeApiError_lift) {
+    uniffi_astra_core_fn_func_api_plugin_connections(
+        FfiConverterString.lower(baseUrl),
+        FfiConverterString.lower(accessToken),
+        FfiConverterString.lower(pluginId),$0
+    )
+})
+}
+/**
+ * 接続を切る（DELETE /v1/plugins/:id/connections/:connector）。
+ */
+public func apiPluginDisconnect(baseUrl: String, accessToken: String, pluginId: String, connectorId: String)throws   {try rustCallWithError(FfiConverterTypeApiError_lift) {
+    uniffi_astra_core_fn_func_api_plugin_disconnect(
+        FfiConverterString.lower(baseUrl),
+        FfiConverterString.lower(accessToken),
+        FfiConverterString.lower(pluginId),
+        FfiConverterString.lower(connectorId),$0
+    )
+}
 }
 /**
  * gateway に届くか（GET /v1/auth/providers, 認証不要）。オフライン判定に。
@@ -2660,6 +2874,35 @@ public func apiSendTurn(baseUrl: String, accessToken: String, conversationId: St
 })
 }
 /**
+ * 依頼を送る。端末内の画像を添えるとき（「これ何？」）はこちら。撮っただけでは呼ばない。
+ */
+public func apiSendTurnWithAttachments(baseUrl: String, accessToken: String, conversationId: String, text: String, attachments: [TurnAttachment])throws  -> TurnOutcome  {
+    return try  FfiConverterTypeTurnOutcome_lift(try rustCallWithError(FfiConverterTypeApiError_lift) {
+    uniffi_astra_core_fn_func_api_send_turn_with_attachments(
+        FfiConverterString.lower(baseUrl),
+        FfiConverterString.lower(accessToken),
+        FfiConverterString.lower(conversationId),
+        FfiConverterString.lower(text),
+        FfiConverterSequenceTypeTurnAttachment.lower(attachments),$0
+    )
+})
+}
+/**
+ * 「これ返して」の候補つきで依頼を送る。候補は `ReplyCandidate` の JSON 配列（端末が決めた順）。
+ */
+public func apiSendTurnWithReplyCandidates(baseUrl: String, accessToken: String, conversationId: String, text: String, attachments: [TurnAttachment], replyCandidatesJson: String)throws  -> TurnOutcome  {
+    return try  FfiConverterTypeTurnOutcome_lift(try rustCallWithError(FfiConverterTypeApiError_lift) {
+    uniffi_astra_core_fn_func_api_send_turn_with_reply_candidates(
+        FfiConverterString.lower(baseUrl),
+        FfiConverterString.lower(accessToken),
+        FfiConverterString.lower(conversationId),
+        FfiConverterString.lower(text),
+        FfiConverterSequenceTypeTurnAttachment.lower(attachments),
+        FfiConverterString.lower(replyCandidatesJson),$0
+    )
+})
+}
+/**
  * 会話を始める（POST /v1/conversations）。会話 id を返す。
  */
 public func apiStartConversation(baseUrl: String, accessToken: String)throws  -> String  {
@@ -2667,6 +2910,43 @@ public func apiStartConversation(baseUrl: String, accessToken: String)throws  ->
     uniffi_astra_core_fn_func_api_start_conversation(
         FfiConverterString.lower(baseUrl),
         FfiConverterString.lower(accessToken),$0
+    )
+})
+}
+/**
+ * 答えを待っている承認（GET /v1/tasks/:id/approvals）。JSON 本文。
+ */
+public func apiTaskApprovals(baseUrl: String, accessToken: String, taskId: String)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeApiError_lift) {
+    uniffi_astra_core_fn_func_api_task_approvals(
+        FfiConverterString.lower(baseUrl),
+        FfiConverterString.lower(accessToken),
+        FfiConverterString.lower(taskId),$0
+    )
+})
+}
+/**
+ * 承認に答える（POST /v1/tasks/:id/approve）。decision は APPROVED / REJECTED。
+ */
+public func apiTaskApprove(baseUrl: String, accessToken: String, taskId: String, approvalId: String, decision: String)throws   {try rustCallWithError(FfiConverterTypeApiError_lift) {
+    uniffi_astra_core_fn_func_api_task_approve(
+        FfiConverterString.lower(baseUrl),
+        FfiConverterString.lower(accessToken),
+        FfiConverterString.lower(taskId),
+        FfiConverterString.lower(approvalId),
+        FfiConverterString.lower(decision),$0
+    )
+}
+}
+/**
+ * 仕事そのもの（GET /v1/tasks/:id）。JSON 本文。失敗の理由（error.code）を読むために使う。
+ */
+public func apiTaskJson(baseUrl: String, accessToken: String, taskId: String)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeApiError_lift) {
+    uniffi_astra_core_fn_func_api_task_json(
+        FfiConverterString.lower(baseUrl),
+        FfiConverterString.lower(accessToken),
+        FfiConverterString.lower(taskId),$0
     )
 })
 }
@@ -2708,6 +2988,65 @@ public func apiWaitTask(baseUrl: String, accessToken: String, taskId: String, ti
         FfiConverterString.lower(accessToken),
         FfiConverterString.lower(taskId),
         FfiConverterUInt64.lower(timeoutMs),$0
+    )
+})
+}
+/**
+ * 次の会議の brief（GET /v1/work/brief/next）。無ければ空文字。
+ */
+public func apiWorkBriefNext(baseUrl: String, accessToken: String)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeApiError_lift) {
+    uniffi_astra_core_fn_func_api_work_brief_next(
+        FfiConverterString.lower(baseUrl),
+        FfiConverterString.lower(accessToken),$0
+    )
+})
+}
+/**
+ * Home の Work Context（GET /v1/work/context）。JSON 本文。
+ */
+public func apiWorkContext(baseUrl: String, accessToken: String)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeApiError_lift) {
+    uniffi_astra_core_fn_func_api_work_context(
+        FfiConverterString.lower(baseUrl),
+        FfiConverterString.lower(accessToken),$0
+    )
+})
+}
+/**
+ * 本人の訂正（POST /v1/work/corrections）。1 操作。
+ */
+public func apiWorkCorrect(baseUrl: String, accessToken: String, itemId: String, action: String, note: String)throws   {try rustCallWithError(FfiConverterTypeApiError_lift) {
+    uniffi_astra_core_fn_func_api_work_correct(
+        FfiConverterString.lower(baseUrl),
+        FfiConverterString.lower(accessToken),
+        FfiConverterString.lower(itemId),
+        FfiConverterString.lower(action),
+        FfiConverterString.lower(note),$0
+    )
+}
+}
+/**
+ * 1 件の出所（GET /v1/work/evidence/:itemId）。JSON 本文。
+ */
+public func apiWorkEvidence(baseUrl: String, accessToken: String, itemId: String)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeApiError_lift) {
+    uniffi_astra_core_fn_func_api_work_evidence(
+        FfiConverterString.lower(baseUrl),
+        FfiConverterString.lower(accessToken),
+        FfiConverterString.lower(itemId),$0
+    )
+})
+}
+/**
+ * 返信を送る task を起こす（POST /v1/work/reply/send）。承認は別（`api_task_approve`）。task id を返す。
+ */
+public func apiWorkReplySend(baseUrl: String, accessToken: String, sendJson: String)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeApiError_lift) {
+    uniffi_astra_core_fn_func_api_work_reply_send(
+        FfiConverterString.lower(baseUrl),
+        FfiConverterString.lower(accessToken),
+        FfiConverterString.lower(sendJson),$0
     )
 })
 }
@@ -2781,6 +3120,17 @@ public func connectorPkceChallenge(verifier: String) -> String  {
     return try!  FfiConverterString.lift(try! rustCall() {
     uniffi_astra_core_fn_func_connector_pkce_challenge(
         FfiConverterString.lower(verifier),$0
+    )
+})
+}
+/**
+ * 提供者の token endpoint。交換は core（`connector_exchange_code`）が行うが、
+ * 端末側が mock と本物を同じ口で呼べるように URL を 1 箇所から出す。
+ */
+public func connectorTokenUrl(providerId: String) -> String?  {
+    return try!  FfiConverterOptionString.lift(try! rustCall() {
+    uniffi_astra_core_fn_func_connector_token_url(
+        FfiConverterString.lower(providerId),$0
     )
 })
 }
@@ -2880,6 +3230,9 @@ private let initializationResult: InitializationResult = {
     if (uniffi_astra_core_checksum_func_api_finish_meeting() != 33249) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_astra_core_checksum_func_api_initial_profile() != 22725) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_astra_core_checksum_func_api_library() != 21570) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -2889,7 +3242,22 @@ private let initializationResult: InitializationResult = {
     if (uniffi_astra_core_checksum_func_api_meeting_segment_count() != 49591) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_astra_core_checksum_func_api_personalization() != 22756) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_astra_core_checksum_func_api_personalization_update() != 21167) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_astra_core_checksum_func_api_plugin_catalog() != 40736) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_astra_core_checksum_func_api_plugin_connect() != 31278) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_astra_core_checksum_func_api_plugin_connections() != 36870) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_astra_core_checksum_func_api_plugin_disconnect() != 38051) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_astra_core_checksum_func_api_reachable() != 45391) {
@@ -2898,7 +3266,22 @@ private let initializationResult: InitializationResult = {
     if (uniffi_astra_core_checksum_func_api_send_turn() != 50231) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_astra_core_checksum_func_api_send_turn_with_attachments() != 34022) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_astra_core_checksum_func_api_send_turn_with_reply_candidates() != 17486) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_astra_core_checksum_func_api_start_conversation() != 27882) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_astra_core_checksum_func_api_task_approvals() != 52972) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_astra_core_checksum_func_api_task_approve() != 17739) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_astra_core_checksum_func_api_task_json() != 65389) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_astra_core_checksum_func_api_task_status() != 37298) {
@@ -2908,6 +3291,21 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_astra_core_checksum_func_api_wait_task() != 17601) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_astra_core_checksum_func_api_work_brief_next() != 6628) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_astra_core_checksum_func_api_work_context() != 24612) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_astra_core_checksum_func_api_work_correct() != 28394) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_astra_core_checksum_func_api_work_evidence() != 12987) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_astra_core_checksum_func_api_work_reply_send() != 23683) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_astra_core_checksum_func_astra_core_version() != 51046) {
@@ -2926,6 +3324,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_astra_core_checksum_func_connector_pkce_challenge() != 40473) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_astra_core_checksum_func_connector_token_url() != 10630) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_astra_core_checksum_func_format_elapsed() != 55286) {

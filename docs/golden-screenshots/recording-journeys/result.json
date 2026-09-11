@@ -1,0 +1,24 @@
+{
+  "checks" : [
+    "PASS: idle stays within 220x44 points",
+    "PASS: unavailable app suggestions cannot replace recording entry",
+    "PASS: quick actions reachable",
+    "PASS: hidden controls restore from menu action",
+    "PASS: menu restore action wired",
+    "PASS: meeting itself is not a screen-share signal",
+    "PASS: active sharing has an explicit stop control",
+    "PASS: offline start explains the failure while recording continues",
+    "PASS: retry keeps the same recording",
+    "PASS: Google text reaches the visible transcript before stop",
+    "PASS: pause excludes audio",
+    "PASS: rapid pause\/resume produces new final speech",
+    "PASS: app refresh preserves recording controls",
+    "PASS: stop saves recognized words under the original meeting",
+    "PASS: stopped session becomes ready",
+    "PASS: second recording starts empty with a new ID",
+    "PASS: first recording survives second recording"
+  ],
+  "failures" : [
+
+  ]
+}

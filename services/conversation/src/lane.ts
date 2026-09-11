@@ -39,15 +39,20 @@ const RESEARCH = [
 
 /** 外に対して何かを起こしてほしいと言っている。 */
 const ACTION = [
-  /送(信|って|る)/,
-  /予約/,
-  /登録/,
-  /更新して/,
-  /削除して/,
-  /作成して/,
-  /申請/,
-  /発注/,
+  /(?:送信|予約|登録|更新|削除|申請|発注)(?:して(?!はいけ|はだめ|はダメ|いない|ない)|を(?:お願い|実行)|する(?:[。！!]|$))/,
+  /送って(?!はいけ|はだめ|はダメ|いない|ない)/,
+  /送る(?:[。！!]|$)/,
+  /^(?:送信|予約|登録|申請|発注)$/,
+  /(?:予定|イベント|アカウント|タスク|レコード).{0,16}作成して(?!はいけ|はだめ|はダメ|いない|ない)/,
 ];
+
+/** Writing a deliverable is local composition, not an external side effect.
+ * Explicit outward actions still win, including a draft followed by sending it.
+ * A research verb still requests research; "まとめてください" alone does not.
+ */
+const COMPOSITION =
+  /(?:文章|文面|案内文|紹介文|説明文|投稿文|メール|お知らせ|レポート|記事|構成案?|台本|企画書|提案書|改善提案|下書き|計画).{0,50}(?:作成|つくって|作って|書いて|まとめて|してください|にして)/;
+const EXPLICIT_RESEARCH = [/調べ(て|る)/, /調査して/, /比較して/, /リサーチして/];
 
 /** 手元のものを直してほしいと言っている。 */
 const EDIT = [/直して/, /修正して/, /書き換え/, /言い換え/, /短くして/, /整えて/];
@@ -93,10 +98,18 @@ export function routeLane(input: LaneInput): LaneDecision {
   if (matches(text, ACTION)) {
     return { lane: 'action', reason: 'asked to do something outward' };
   }
+  if (isDocumentRequest(text)) {
+    return { lane: 'chat', reason: 'asked to write a document from the supplied context' };
+  }
   if (matches(text, RESEARCH)) {
     return { lane: 'research', reason: 'asked to look something up' };
   }
 
   // 規則で決まらないものは chat。**推測で振り分けない。**
   return { lane: 'chat', reason: 'nothing more specific applies' };
+}
+
+/** Also used to select the writing step, without exposing internal modes to users. */
+export function isDocumentRequest(text: string): boolean {
+  return COMPOSITION.test(text) && !matches(text, ACTION) && !matches(text, EXPLICIT_RESEARCH);
 }

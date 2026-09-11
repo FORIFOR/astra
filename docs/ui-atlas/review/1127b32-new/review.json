@@ -1,0 +1,116 @@
+{
+  "rc": "1127b32",
+  "pages": [
+    {
+      "id": "main.home-work-context",
+      "blind_id": "0B33",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        },
+        {
+          "model": "sonnet",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        }
+      ]
+    },
+    {
+      "id": "main.home-personalization",
+      "blind_id": "EE44",
+      "verdict": "FIX_CANDIDATE",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "state legibility",
+              "what": "複数の選択肢ボタンが存在する場合、現在有効な状態が視覚的に明確でない。『推測を使っています』はステータステキストに見えるが、実際の UI トグルとの関係が不明確。",
+              "where": "パネル上部の『推測を使っています』『推測を使わない』セクション、および各カテゴリの『その他より』『この機能を使わない』ボタン"
+            },
+            {
+              "axis": "primary-action clarity",
+              "what": "各設定項目に複数の選択肢がある場合、どちらが推奨/デフォルト選択肢なのか、どちらが現在の設定なのかが視覚的に区別されていない。ボタンの色、太さ、背景の違いが見当たらない。",
+              "where": "全カテゴリの『その他より』『この機能を使わない』ボタンペア"
+            }
+          ]
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "state legibility",
+              "what": "「確認済み」の項目で「そのとおり」が濃い塗りボタン、未確認の項目では薄いボタンになっており、済んでいる方が強く押せそうに見えて状態と強調が逆転している",
+              "where": "右パネル「働き方」の「短く要点から」カードと、その下の「火・木は会議が多い」「午前は集中作業が多い」カードの比較"
+            },
+            {
+              "axis": "trust-provenance",
+              "what": "他の項目には「出所 1」バッジがあるのに、「短く要点から」にだけ無く、なぜそう判断されたのか辿れない",
+              "where": "右パネル「働き方」の「短く要点から」カード右上（「確認済み」のみ）"
+            },
+            {
+              "axis": "consistency",
+              "what": "パネルを開くと左本文が狭まり、同じカードの文が 0B33 では 1 行のところ 2 行に折り返して、カードの高さと情報の見え方が変わる",
+              "where": "左本文 1 枚目のカード「MTI からの返信待ち（3 日）· … · 見積 / v2 の確認が未返信」"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "state legibility",
+              "what": "最下行のテキストが画面下端でそのまま切れていて続きの有無が分からない",
+              "where": "メインカラム最下部の『返すもの』リスト最終行"
+            },
+            {
+              "axis": "primary-action clarity",
+              "what": "パネル全体の『推測を使わない』ボタンと各カード内の『この推測を使わない』ボタンが酷似した文言で並んでおり、作用範囲(全体か個別か)が視覚的に区別しにくい",
+              "where": "右パネル右上の切替ボタンと各推測カード内のボタン"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "keep": 1,
+    "fix_candidate": 1,
+    "not_enough_evidence": 0,
+    "models": [
+      "haiku",
+      "opus",
+      "sonnet"
+    ]
+  },
+  "gate": "FAIL"
+}

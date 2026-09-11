@@ -13,6 +13,9 @@ import {
   CONNECTOR_RECOVERY,
   GmailConnector,
   GoogleCalendarConnector,
+  MicrosoftTodoConnector,
+  OutlookCalendarConnector,
+  OutlookMailConnector,
   type ApprovalProof,
   type CreateEventInput,
   type DraftMessage,
@@ -46,13 +49,96 @@ export interface ConnectorRuntimeDeps {
   /** 実際に許された scope。**要求した scope ではない。** */
   readonly grantedScopes: (pluginId: string) => readonly string[];
   /** トークンを更新するための設定。無ければ更新しない（切れたら繋ぎ直しを促す）。 */
-  readonly refreshConfig?: (provider: string) => ProviderConfig | null;
+  readonly refreshConfig?: (
+    provider: string,
+    connectorId: string,
+    scopes: readonly string[],
+  ) => ProviderConfig | null;
   readonly fetch?: typeof globalThis.fetch;
   readonly now?: () => Date;
 }
 
-const GMAIL_PLUGIN = 'com.astra.gmail';
-const CALENDAR_PLUGIN = 'com.astra.google-calendar';
+/**
+ * この端末が扱う接続。**tool → 接続の表。**
+ *
+ * 同意は capability 単位（manifest の `connectors[].grants`）。Gmail は「読む」接続と
+ * 「下書き・送信・整理」接続に分かれ、**読む tool は読む接続のトークンしか触らない。**
+ * Work Context の同期が使うのも読む接続だけ。送る接続が無ければ、送る tool は
+ * 「何のために繋ぐか」を添えて `not_connected` を返す（purpose-first、JIT）。
+ */
+export const CONNECTORS = {
+  gmail: {
+    pluginId: 'com.astra.gmail',
+    connectorId: 'gmail',
+    provider: 'google',
+    label: 'Gmail（読むだけ）',
+    purpose: 'メールを読む',
+  },
+  'gmail-actions': {
+    pluginId: 'com.astra.gmail',
+    connectorId: 'gmail-actions',
+    provider: 'google',
+    label: 'Gmail（下書き・送信・整理）',
+    purpose: '返事を下書きし、承認したメールを送り、受信箱を整理する',
+  },
+  'google-calendar': {
+    pluginId: 'com.astra.google-calendar',
+    connectorId: 'google-calendar',
+    provider: 'google',
+    label: 'Google Calendar（読むだけ）',
+    purpose: '予定を読む',
+  },
+  'google-calendar-actions': {
+    pluginId: 'com.astra.google-calendar',
+    connectorId: 'google-calendar-actions',
+    provider: 'google',
+    label: 'Google Calendar（予定を作る）',
+    purpose: '承認した予定を作る',
+  },
+  outlook: {
+    pluginId: 'com.astra.outlook',
+    connectorId: 'outlook',
+    provider: 'microsoft',
+    label: 'Outlook（読むだけ）',
+    purpose: 'メールと予定を読む',
+  },
+  'outlook-actions': {
+    pluginId: 'com.astra.outlook',
+    connectorId: 'outlook-actions',
+    provider: 'microsoft',
+    label: 'Outlook（返信を送る）',
+    purpose: '確認した返信を Outlook から送信する',
+  },
+  'microsoft-todo': {
+    pluginId: 'com.astra.microsoft-todo',
+    connectorId: 'microsoft-todo',
+    provider: 'microsoft',
+    label: 'Microsoft To Do（読むだけ）',
+    purpose: 'タスクを読む',
+  },
+} as const;
+export type ConnectorKey = keyof typeof CONNECTORS;
+
+/** どの tool がどの接続のトークンで動くか。**読む tool を送る接続に結ばない。** */
+export const TOOL_CONNECTOR: Readonly<Record<string, ConnectorKey>> = {
+  'mail.search': 'gmail',
+  'mail.read': 'gmail',
+  'mail.draft.create': 'gmail-actions',
+  'mail.send': 'gmail-actions',
+  'mail.trash': 'gmail-actions',
+  'calendar.list_events': 'google-calendar',
+  'calendar.get_event': 'google-calendar',
+  'calendar.create_event': 'google-calendar-actions',
+  'outlook.mail.search': 'outlook',
+  'outlook.mail.read': 'outlook',
+  'outlook.calendar.list_events': 'outlook',
+  'outlook.mail.reply': 'outlook-actions',
+  'todo.list_tasks': 'microsoft-todo',
+};
+
+export function connectorForTool(toolId: string): ConnectorKey | null {
+  return TOOL_CONNECTOR[toolId] ?? null;
+}
 
 export class ConnectorRuntime {
   readonly #deps: ConnectorRuntimeDeps;
@@ -65,7 +151,22 @@ export class ConnectorRuntime {
 
   /** この端末はこの step を扱えるか。**扱えないものを引き受けない。** */
   handles(toolId: string): boolean {
-    return toolId.startsWith('mail.') || toolId.startsWith('calendar.');
+    return connectorForTool(toolId) !== null;
+  }
+
+  /**
+   * この接続のトークンが端末にあるか。**値は返さない。**
+   * Work Context の同期が、繋いでいないサービスを黙って飛ばすために見る。
+   */
+  async connected(key: ConnectorKey): Promise<boolean> {
+    const { pluginId, connectorId } = CONNECTORS[key];
+    const tokens = await this.#tokens.load(this.#deps.credentialRefFor(pluginId, connectorId));
+    return tokens !== null;
+  }
+
+  /** この接続の plugin に実際に許された Astra の許可。 */
+  granted(key: ConnectorKey): readonly string[] {
+    return this.#deps.grantedScopes(CONNECTORS[key].pluginId);
   }
 
   /**
@@ -88,13 +189,16 @@ export class ConnectorRuntime {
         };
       }
       if (error instanceof ConnectorError) {
+        const key = connectorForTool(step.toolId);
+        const message =
+          error.reason === 'not_connected' && key
+            ? // どの接続が、何のために要るかを言う（purpose-first）。送る接続は JIT で求める。
+              `${CONNECTORS[key].purpose}には「${CONNECTORS[key].label}」の接続が要ります。`
+            : // tool 側の文言をそのまま出さない（§7.2）。何をすれば直るかを言う。
+              CONNECTOR_RECOVERY[error.reason];
         return {
           ok: false,
-          error: {
-            code: `connector.${error.reason}`,
-            // tool 側の文言をそのまま出さない（§7.2）。何をすれば直るかを言う。
-            message: CONNECTOR_RECOVERY[error.reason],
-          },
+          error: { code: `connector.${error.reason}`, message },
         };
       }
       return {
@@ -112,7 +216,7 @@ export class ConnectorRuntime {
 
     switch (step.toolId) {
       case 'mail.search':
-        return (await this.#gmail()).list(
+        return this.gmail().list(
           {
             ...(typeof args['query'] === 'string' ? { query: args['query'] } : {}),
             ...(typeof args['max_results'] === 'number' ? { maxResults: args['max_results'] } : {}),
@@ -120,19 +224,28 @@ export class ConnectorRuntime {
           signal,
         );
       case 'mail.read':
-        return (await this.#gmail()).get(requireString(args, 'message_id'), signal);
+        return this.gmail().get(requireString(args, 'message_id'), signal);
       case 'mail.draft.create':
-        return (await this.#gmail()).draft(draftFrom(args), signal);
+        return this.gmailActions().draft(draftFrom(args), signal);
       case 'mail.send':
-        return (await this.#gmail()).send(draftFrom(args), step.approval ?? undefined, signal);
+        if (typeof args['in_reply_to'] === 'string' && args['in_reply_to']) {
+          return this.gmailActions().reply(
+            args['in_reply_to'],
+            draftFrom(args),
+            step.approval ?? undefined,
+            typeof args['thread_id'] === 'string' ? args['thread_id'] : undefined,
+            signal,
+          );
+        }
+        return this.gmailActions().send(draftFrom(args), step.approval ?? undefined, signal);
       case 'mail.trash':
-        return (await this.#gmail()).trash(
+        return this.gmailActions().trash(
           requireString(args, 'message_id'),
           step.approval ?? undefined,
           signal,
         );
       case 'calendar.list_events':
-        return (await this.#calendar()).list(
+        return this.googleCalendar().list(
           {
             timeMin: requireString(args, 'time_min'),
             timeMax: requireString(args, 'time_max'),
@@ -141,31 +254,105 @@ export class ConnectorRuntime {
           signal,
         );
       case 'calendar.get_event':
-        return (await this.#calendar()).get({ eventId: requireString(args, 'event_id') }, signal);
+        return this.googleCalendar().get({ eventId: requireString(args, 'event_id') }, signal);
       case 'calendar.create_event':
-        return (await this.#calendar()).create(eventFrom(args), step.approval ?? undefined, signal);
+        return this.googleCalendarActions().create(
+          eventFrom(args),
+          step.approval ?? undefined,
+          signal,
+        );
+      case 'outlook.mail.search':
+        return this.outlookMail().list(
+          {
+            ...(typeof args['query'] === 'string' ? { query: args['query'] } : {}),
+            ...(typeof args['max_results'] === 'number' ? { maxResults: args['max_results'] } : {}),
+            ...(args['folder'] === 'sentitems' ? { folder: 'sentitems' as const } : {}),
+            ...(typeof args['since'] === 'string' ? { since: args['since'] } : {}),
+          },
+          signal,
+        );
+      case 'outlook.mail.read':
+        return this.outlookMail().get(requireString(args, 'message_id'), signal);
+      case 'outlook.calendar.list_events':
+        return this.outlookCalendar().list(
+          { timeMin: requireString(args, 'time_min'), timeMax: requireString(args, 'time_max') },
+          signal,
+        );
+      case 'outlook.mail.reply':
+        return this.outlookMailActions().reply(
+          requireString(args, 'message_id'),
+          requireString(args, 'comment'),
+          step.approval ?? undefined,
+          signal,
+        );
+      case 'todo.list_tasks':
+        return this.todo().list(
+          { ...(args['include_completed'] === true ? { includeCompleted: true } : {}) },
+          signal,
+        );
       default:
         // 知らない step を、何もせず成功にしない
         throw new ConnectorError('not_found', `this device does not handle ${step.toolId}`);
     }
   }
 
-  async #gmail(): Promise<GmailConnector> {
-    return new GmailConnector({
-      token: () => this.#accessToken(GMAIL_PLUGIN, 'gmail', 'google'),
-      grantedScopes: this.#deps.grantedScopes(GMAIL_PLUGIN),
-      ...(this.#deps.fetch ? { fetch: this.#deps.fetch } : {}),
-      ...(this.#deps.now ? { now: this.#deps.now } : {}),
-    });
+  /** 読む接続。Work Context の同期はこれだけを使う。 */
+  gmail(): GmailConnector {
+    return new GmailConnector(this.#googleDeps('gmail'));
   }
 
-  async #calendar(): Promise<GoogleCalendarConnector> {
-    return new GoogleCalendarConnector({
-      token: () => this.#accessToken(CALENDAR_PLUGIN, 'google-calendar', 'google'),
-      grantedScopes: this.#deps.grantedScopes(CALENDAR_PLUGIN),
+  /** 下書き・送信・整理の接続。無ければ `not_connected`（送る前に理由を見せて求める）。 */
+  gmailActions(): GmailConnector {
+    return new GmailConnector(this.#googleDeps('gmail-actions'));
+  }
+
+  googleCalendar(): GoogleCalendarConnector {
+    return new GoogleCalendarConnector(this.#googleDeps('google-calendar'));
+  }
+
+  googleCalendarActions(): GoogleCalendarConnector {
+    return new GoogleCalendarConnector(this.#googleDeps('google-calendar-actions'));
+  }
+
+  outlookMail(): OutlookMailConnector {
+    return new OutlookMailConnector(this.#microsoftDeps('outlook'));
+  }
+
+  /** 送る接続。無ければ `not_connected`（送る前に理由を見せて求める）。 */
+  outlookMailActions(): OutlookMailConnector {
+    return new OutlookMailConnector(this.#microsoftDeps('outlook-actions'));
+  }
+
+  outlookCalendar(): OutlookCalendarConnector {
+    return new OutlookCalendarConnector(this.#microsoftDeps('outlook'));
+  }
+
+  todo(): MicrosoftTodoConnector {
+    return new MicrosoftTodoConnector(this.#microsoftDeps('microsoft-todo'));
+  }
+
+  #googleDeps(key: ConnectorKey): ConstructorParameters<typeof GmailConnector>[0] {
+    const { pluginId, connectorId } = CONNECTORS[key];
+    return {
+      token: () => this.#accessToken(pluginId, connectorId, 'google'),
+      /*
+       * scope の検査は接続ごとの grants ではなく plugin の許可で見る。
+       * 読む接続に送る scope が付くことは無い（トークンが別）ので、ここは足りているかの検査だけ。
+       */
+      grantedScopes: this.#deps.grantedScopes(pluginId),
       ...(this.#deps.fetch ? { fetch: this.#deps.fetch } : {}),
       ...(this.#deps.now ? { now: this.#deps.now } : {}),
-    });
+    };
+  }
+
+  #microsoftDeps(key: ConnectorKey): ConstructorParameters<typeof OutlookMailConnector>[0] {
+    const { pluginId, connectorId } = CONNECTORS[key];
+    return {
+      token: () => this.#accessToken(pluginId, connectorId, 'microsoft'),
+      grantedScopes: this.#deps.grantedScopes(pluginId),
+      ...(this.#deps.fetch ? { fetch: this.#deps.fetch } : {}),
+      ...(this.#deps.now ? { now: this.#deps.now } : {}),
+    };
   }
 
   /**
@@ -180,11 +367,19 @@ export class ConnectorRuntime {
     const tokens = await this.#tokens.load(ref);
     if (!tokens) throw new ConnectorError('not_connected', `${pluginId} is not connected`);
 
+    const config = this.#deps.refreshConfig?.(provider, connectorId, tokens.grantedScopes ?? []);
+    if (
+      provider === 'microsoft' &&
+      this.#deps.refreshConfig &&
+      (!config || tokens.clientId !== config.clientId)
+    ) {
+      throw new ConnectorError('not_connected', `${pluginId} needs its dedicated connection again`);
+    }
+
     const now = (this.#deps.now ?? (() => new Date()))().getTime();
     const expired = tokens.expiresAt !== null && Date.parse(tokens.expiresAt) <= now;
     if (!expired && !needsRefresh(tokens, now)) return tokens.accessToken;
 
-    const config = this.#deps.refreshConfig?.(provider);
     if (!config || !tokens.refreshToken) {
       /*
        * 更新できない。**切れたトークンで呼びに行かない。**
@@ -203,6 +398,16 @@ export class ConnectorRuntime {
       this.#deps.fetch ?? globalThis.fetch,
       () => now,
     );
+    if (
+      provider === 'microsoft' &&
+      this.#deps.refreshConfig &&
+      !this.#deps.refreshConfig(provider, connectorId, renewed.grantedScopes)
+    ) {
+      throw new ConnectorError(
+        'provider_error',
+        'Microsoft returned scopes outside this connection',
+      );
+    }
     await this.#tokens.save(pluginId, connectorId, renewed);
     return renewed.accessToken;
   }

@@ -1,7 +1,10 @@
 import AppKit
 
 final class AstraAppDelegate: NSObject, NSApplicationDelegate {
+    private var permissionRefreshObserver: NSObjectProtocol?
+
     func applicationDidFinishLaunching(_ notification: Notification) {
+        ApplicationMenu.shared.install()
         // headless の自己検証（Swift → core → ディスク）。UI を出さずに終了する。
         if SelfTest.run(CommandLine.arguments) { return }
         // §9 Chrome の Native Messaging host として起動されたとき。UI は出さない。
@@ -20,6 +23,26 @@ final class AstraAppDelegate: NSObject, NSApplicationDelegate {
         WindowCoordinator.shared.start(demo: demo)
         // Dock アイコンが無いので、ここが起動後の唯一の入口になる（Main/録音/設定/終了）。
         StatusBarController.shared.install()
+        // Prepare live transcription even when recording starts directly from the Dock.
+        Task { @MainActor in MainData.shared.load() }
+
+        // Speech authorization is often granted in System Settings while the
+        // recording workspace remains alive.  The authorization callback is
+        // not delivered for that manual Settings change, so refresh the live
+        // session whenever Astra becomes active again.  Without this, a
+        // recording that started before approval keeps an empty transcript
+        // until the user stops and starts a new recording.
+        permissionRefreshObserver = NotificationCenter.default.addObserver(
+            forName: NSApplication.didBecomeActiveNotification,
+            object: nil,
+            queue: .main
+        ) { _ in
+            MainActor.assumeIsolated {
+                MainData.shared.load()
+                RecordingRuntime.shared.speechAuthorizationChanged()
+                RecordingWorkspaceState.shared.refreshSpeechPermission()
+            }
+        }
         // focus リングは Tab / 矢印を押してから見せる（開いた瞬間に出さない）。
         KeyboardNavigation.shared.install()
         // 自動更新。配布先と公開鍵が Info.plist に入っていなければ何もしない
@@ -45,6 +68,9 @@ final class AstraAppDelegate: NSObject, NSApplicationDelegate {
                 MeetingDetector.refresh()
             }
         }
+        // スクショを撮った瞬間、それを直近の会話コンテキストとして自動で持つ（保存先 + クリップボード監視）。
+        ScreenshotDetectionService.shared.start()
+        MeetingRecordingReminder.shared.start()
         // §22 画面共有が始まったら Astra を出さない。
         PresentationGuard.shared.start()
         // グローバル音声ショートカット（⌥Space）で録音を出し入れする。

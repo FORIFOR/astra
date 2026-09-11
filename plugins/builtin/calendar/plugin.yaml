@@ -18,10 +18,24 @@ jobs:
   - 予定を作る（確認あり）
 data_accessed:
   - 予定の内容・参加者・場所・会議リンク
+# 同意は capability 単位で 2 回に分ける（read-only first）。
+#   google-calendar          読むだけ。Work Context と Home の「これからの予定」はこれだけで動く
+#   google-calendar-actions  予定を作る（招待が相手へ届く）。作る操作が要ったときに初めて求める
 connectors:
   - id: google-calendar
     auth: oauth2
     provider: google
+    grants:
+      - calendar.read
+    purpose: 予定の題名・時間・参加者を読んで、今週の負荷と会議の準備に使う。予定は変えない
+    scopes:
+      - https://www.googleapis.com/auth/calendar.readonly
+  - id: google-calendar-actions
+    auth: oauth2
+    provider: google
+    grants:
+      - calendar.write
+    purpose: あなたが承認した予定を作る（招待が同席者へ届く）
     scopes:
       - https://www.googleapis.com/auth/calendar.events
 tools:

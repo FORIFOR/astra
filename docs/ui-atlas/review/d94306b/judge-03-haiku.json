@@ -1,0 +1,148 @@
+{
+  "pages": {
+    "271B": {
+      "visible_text": [
+        "録音中",
+        "会議",
+        "マイクと画面の音を聞いています",
+        "承知しました",
+        "決まったこと",
+        "やること",
+        "文字起こし",
+        "翻訳",
+        "字幕",
+        "AI が見ている資料 5 件"
+      ],
+      "observation": {
+        "happening": "Real-time meeting transcription interface with dual-pane layout showing notes (left) and transcript with timestamps (right). Recording is active at 04:21.",
+        "most_important": "Clear visual separation between note-taking and transcript playback; speaker names and timestamps are legible; AI analysis summary prominently displayed.",
+        "next_action": "User can review transcribed text, edit notes, or play recording segments.",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "2954": {
+      "visible_text": [
+        "聞く",
+        "録音",
+        "開く"
+      ],
+      "observation": {
+        "happening": "Minimal dark control bar with three navigation verbs. Appears to be a collapsed or widget-like UI element, not a full screen.",
+        "most_important": "Cannot assess full interface design from a single thin strip with only navigation labels.",
+        "next_action": "Unknown—appears to be a transient control element.",
+        "anomalies": [
+          "Only 3 buttons visible; unclear if this is the full interface or a partial view"
+        ]
+      },
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "concerns": [
+        {
+          "axis": "screen occupation",
+          "what": "Insufficient context to judge full UI; this appears to be a control bar fragment",
+          "where": "Entire image"
+        }
+      ],
+      "confidence": "low"
+    },
+    "2F3C": {
+      "visible_text": [
+        "Home",
+        "Work",
+        "Library",
+        "Apps",
+        "こんばんは",
+        "何を終わらせますか?",
+        "録音を始める",
+        "Product Weekly",
+        "A社 商談",
+        "ui-check"
+      ],
+      "observation": {
+        "happening": "Dashboard/home screen of a macOS desktop application. Shows sidebar navigation, upcoming meetings, and a greeting with prompt to record or review past meetings.",
+        "most_important": "Clear information hierarchy: navigation on left, contextual content on right; upcoming events clearly labeled with times; primary action (record) visually distinct.",
+        "next_action": "User can select upcoming meeting, start recording, or navigate to different sections.",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "3650": {
+      "visible_text": [
+        "Product Weekly",
+        "今日・0分・5人",
+        "要約",
+        "Q4移行計画とトレーニングコストを議論",
+        "決まったこと",
+        "やること",
+        "文字起こし",
+        "録音",
+        "関連ファイル",
+        "出所"
+      ],
+      "observation": {
+        "happening": "Meeting details view showing transcription, notes organized by decision/action, and metadata (participant count, duration). Tab navigation allows switching between transcript, recording, related files.",
+        "most_important": "Well-structured note-taking: summary, decisions, and action items clearly separated; numbered items with inline timestamps for each speaker contribution; tab organization supports multiple content modes.",
+        "next_action": "User can review transcript, switch tabs to related files/audio, or edit notes.",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "38BB": {
+      "visible_text": [
+        "Astra",
+        "space"
+      ],
+      "observation": {
+        "happening": "Very minimal control element showing an application or command name 'Astra' with a space bar indicator. Appears to be a launcher, search bar, or command palette widget.",
+        "most_important": "Cannot assess interface design; insufficient surface area and context.",
+        "next_action": "Unknown—this is likely a transient input or launcher UI.",
+        "anomalies": [
+          "Only two visible elements; entire interface occupies minimal screen space"
+        ]
+      },
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "concerns": [
+        {
+          "axis": "screen occupation",
+          "what": "Too small and minimal to evaluate interface design principles",
+          "where": "Entire image"
+        }
+      ],
+      "confidence": "low"
+    },
+    "3A96": {
+      "visible_text": [
+        "録音中",
+        "会議",
+        "承知しました",
+        "決まったこと",
+        "やること",
+        "文字起こし",
+        "翻訳",
+        "字幕",
+        "AI が見ている資料 3件"
+      ],
+      "observation": {
+        "happening": "Meeting transcription interface identical in layout to 271B, showing ongoing recording (04:21). Left pane shows meeting notes/decisions; right pane shows transcript with speaker names and timestamps.",
+        "most_important": "Consistent design with 271B; transcript is legible with clear speaker/timestamp markers; note sections are distinct; AI summary badge at bottom.",
+        "next_action": "User can review notes, edit, or navigate transcript.",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    }
+  },
+  "_judge": {
+    "model": "haiku",
+    "cost_usd": 0.0580677,
+    "turns": 7,
+    "duration_ms": 40617
+  }
+}

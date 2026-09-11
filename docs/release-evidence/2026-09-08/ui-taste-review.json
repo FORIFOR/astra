@@ -1,0 +1,53 @@
+{
+  "entries": [
+    {
+      "kind": "material/blur",
+      "file": "GuidedSetup/Overlay/GuideCalloutView.swift",
+      "sha256": "bab26f44e4400667af955c422608fd80fef5617b7e6ca9dfbd6521173d95a1b4",
+      "count": 1,
+      "reason": "Permission guidance is a transient system-style callout; the material separates the instructional overlay from the app surface."
+    },
+    {
+      "kind": "material/blur",
+      "file": "GuidedSetup/Overlay/AvatarHUDView.swift",
+      "sha256": "8e310117d1d5d4ac1d71c33d5fa2d4b37c7a2fc716e345f4b6c90248e490c31b",
+      "count": 1,
+      "reason": "Re-reviewed 2026-09-11 for permission-capabilities: the same one regularMaterial boundary remains on the existing 300pt transient guide. Purpose, waiting, optional repair and ready reuse that surface. Native light/dark captures and fitted geometry are in docs/golden-screenshots/permission-capabilities. No material allowance increase; this is a scoped implementation audit, not an independent product-wide review."
+    },
+    {
+      "kind": "Capsule",
+      "file": "Home/WorkPressureView.swift",
+      "sha256": "e2a93d0bdf63201dee58e270d3ffe696ce56c210a24feb42f0ab412bd73da337",
+      "count": 2,
+      "reason": "The two capsules are compact severity/status indicators; they encode bounded state rather than decorative cards."
+    },
+    {
+      "kind": "Capsule",
+      "file": "Home/SessionCard.swift",
+      "sha256": "c3b03fef620635fbc19a1151f7b68ed544c0628e119c291c6ffedf1adddea2d7",
+      "count": 1,
+      "reason": "The capsule is the session metadata tag and remains within the card row."
+    },
+    {
+      "kind": "Capsule",
+      "file": "Home/WorkContextCard.swift",
+      "sha256": "79c7f6a84448bb5b89297b33625a31b6823ad1598f37c972cbcfbeb1a052d29a",
+      "count": 1,
+      "reason": "Existing priority severity capsule unchanged. Workspace UX audit hides zero-valued pressure bars; native light/dark captures and source review show no new pill surfaces."
+    },
+    {
+      "kind": "Capsule",
+      "file": "Home/PersonalizationInspector.swift",
+      "sha256": "9692ab33f7a0329971491339b0341c7042f09e1b87fafe26f7ce299672c7c59c",
+      "count": 1,
+      "reason": "The capsule is a selected profile value indicator and is limited to the inspector row."
+    },
+    {
+      "kind": "Capsule",
+      "file": "VoiceHUD/VoiceHUDView.swift",
+      "sha256": "5e0fec724b9b429c33d28e0d20035ed61060d4373b70cbf3ce685cbc0cd337c9",
+      "count": 1,
+      "reason": "Re-reviewed 2026-09-12 for screenshot questions: existing task progress Capsules are unchanged. The 320x52 Dock now has one question action plus dismiss; the duplicate action is removed. Three-scale native captures confirm the complete label fits. No Capsule, shadow, material or allowance increase; scoped implementation review only."
+    }
+  ]
+}

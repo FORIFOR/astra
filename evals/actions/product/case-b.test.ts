@@ -273,13 +273,20 @@ describe.skipIf(!url)('Case B — record it, and get minutes you can read', () =
 
   it('5. the English comes per settled sentence, not per keystroke', async () => {
     const segments = await meetings.segments(tenantId, meeting.id, 'live');
-    await meetings.translate(tenantId, meeting.id, segments[0]!, 'en-US');
+    const first = await meetings.translate(tenantId, meeting.id, segments[0]!, 'en-US');
     // 訳し直しても増えない
-    await meetings.translate(tenantId, meeting.id, segments[0]!, 'en-US');
+    const repeated = await meetings.translate(tenantId, meeting.id, segments[0]!, 'en-US');
+    expect(first).toBeTruthy();
+    expect(repeated).toBe(first);
 
     const events = await meetings.eventsAfter(tenantId, meeting.id, 0);
     const translated = events.filter((e) => e.type === 'meeting.translation.final');
-    expect(translated).toHaveLength(2);
+    expect(translated).toHaveLength(1);
+    expect(translated[0]!.payload).toMatchObject({
+      segment_id: segments[0]!.id,
+      target_language: 'en-US',
+      text: first,
+    });
     // 途中経過は訳さない。画面が揺れる。
     expect(
       events.some(

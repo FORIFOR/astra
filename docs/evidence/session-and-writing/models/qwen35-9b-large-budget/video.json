@@ -1,0 +1,13 @@
+{
+  "id": "video",
+  "result": {
+    "ok": false,
+    "error": {
+      "code": "evaluation.cancelled",
+      "message": "Stopped after more than 3 minutes; interfered with ordinary local inference. Configuration rejected."
+    }
+  },
+  "maxOutputTokens": 8192,
+  "timeoutMs": 240000,
+  "adopted": false
+}

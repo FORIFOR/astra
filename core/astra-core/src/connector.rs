@@ -441,6 +441,13 @@ pub fn connector_exchange_code(
     }
 }
 
+/// 提供者の token endpoint。交換は core（`connector_exchange_code`）が行うが、
+/// 端末側が mock と本物を同じ口で呼べるように URL を 1 箇所から出す。
+#[uniffi::export]
+pub fn connector_token_url(provider_id: String) -> Option<String> {
+    OauthProvider::from_id(&provider_id).map(|p| p.token_url().to_string())
+}
+
 /// 繋げる提供者の id 一覧（client_id が env にあるものだけ）。
 #[uniffi::export]
 pub fn connector_configured_provider_ids(client_ids: std::collections::HashMap<String, String>) -> Vec<String> {

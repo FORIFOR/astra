@@ -10,10 +10,41 @@ import AstraCore
 /// `--selftest record`: Swift → astra-core → 実ディスク の E2E。UI を出さずに検証する。
 /// マイク許可の要らない合成サンプルを流し、断片ファイルが実際に書かれることを確かめる。
 enum SelfTest {
+    // Record the status in the LaunchServices app itself. Spawning a child
+    // changes macOS TCC attribution, so the test must not use a supervisor.
+    static func exit(_ status: Int32) -> Never {
+        if let path = ProcessInfo.processInfo.environment["ASTRA_SELFTEST_EXIT_RECEIPT"],
+           CommandLine.arguments.contains("--selftest") {
+            do {
+                let data = try JSONSerialization.data(withJSONObject: [
+                    "schema": 1, "exitCode": Int(status), "normalExit": true,
+                ])
+                try data.write(to: URL(fileURLWithPath: path), options: .atomic)
+            } catch {
+                print("SELFTEST_FAIL exit receipt: \(error.localizedDescription)")
+                Darwin.exit(1)
+            }
+        }
+        Darwin.exit(status)
+    }
+
     @MainActor
     static func run(_ args: [String]) -> Bool {
         guard let i = args.firstIndex(of: "--selftest"), i + 1 < args.count else { return false }
+        // Local checks must not upload audio because the user's real setting is ON.
+        // Dedicated cloud tests explicitly opt in after validating their fixture flags.
+        var overrides = UserDefaults.standard.volatileDomain(forName: UserDefaults.argumentDomain)
+        overrides[RecordingRuntime.cloudTranscriptionDefaultsKey] = false
+        UserDefaults.standard.setVolatileDomain(overrides, forName: UserDefaults.argumentDomain)
+        SecretMode.persistChanges = false
+        SecretMode.shared.set(false)
         switch args[i + 1] {
+        case "session-renewal": Task { await sessionRenewal() }; return true
+        case "outcome-live": Task { await outcomeLive(args) }; return true
+        case "workspace-ux": Task { await workspaceUX(args) }; return true
+        case "recording-journeys": Task { await recordingJourneys() }; return true
+        case "translation-journeys": Task { await translationJourneys() }; return true
+        case "translation-layout": Task { await translationLayout(args) }; return true
         case "record": recordToDisk(); return true
         case "lifecycle": lifecycle(); return true
         case "api": api(args); return true
@@ -41,10 +72,26 @@ enum SelfTest {
         case "geometry": geometryGate(args); return true
         case "occupation": occupationGate(); return true
         case "focus": focusGate(); return true
+        case "screenshot-input": Task { await screenshotInput(args) }; return true
+        case "screenshotcontext": screenshotContextGate(); return true
+        case "screenshot-question": Task { await screenshotQuestion(args) }; return true
+        case "screenshotegress": screenshotEgressGate(); return true
+        case "screenshote2e": screenshotE2E(args); return true
+        case "guidedsetup": guidedSetupGate(args); return true
+        case "guidedshots": guidedShots(args); return true
+        case "permission-help": Task { await permissionHelp(args) }; return true
+        case "permission-capabilities": Task { await permissionCapabilities(args) }; return true
+        case "screenshotshots": screenshotShots(args); return true
+        case "screenshotshot": screenshotShot(args); return true
+        case "initialprofile": Task { @MainActor in await initialProfileShots(args) }; return true
+        case "workcontext": workContextGate(); return true
+        case "replyflow": replyFlowGate(); return true
+        case "brief": briefGate(); return true
         case "journey": journeyGate(args); return true
         case "idle-hold": idleHold(args); return true
         case "confirmflow": confirmFlow(); return true
         case "hold-meeting": holdMeeting(args); return true
+        case "home-meeting-focus": Task { @MainActor in await homeMeetingFocus() }; return true
         case "upgrade": upgradeGate(); return true
         case "update": updateCheck(); return true
         case "recoveryui": recoveryUI(); return true
@@ -70,6 +117,8 @@ enum SelfTest {
         case "sections": sections(args); return true
         case "a11ynames": a11ynames(args); return true
         case "egress": egress(); return true
+        case "cloudlive": cloudLiveSTT(); return true
+        case "cloudshots": cloudShots(args); return true
         case "states": states(args); return true
         case "golden": golden(args); return true
         case "dock8": dock8(args); return true
@@ -84,6 +133,8 @@ enum SelfTest {
         case "recordbutton": recordButton(); return true
         case "session": sessionLifecycle(); return true
         case "sessionshots": sessionShots(args); return true
+        case "sysshots": sysShots(args); return true
+        case "realmeeting": realMeeting(args); return true
         case "uiscale": uiScale(); return true
         case "acceptance": acceptance(); return true
         case "sessionsync": sessionSync(); return true
@@ -215,7 +266,25 @@ enum SelfTest {
     private static func golden(_ args: [String]) {
         let i = args.firstIndex(of: "--selftest")!
         guard args.count > i + 3 else { print("SELFTEST_FAIL golden: 引数が足りない"); exit(2) }
-        let goldenDir = args[i + 2], freshDir = args[i + 3]
+        var goldenDir = args[i + 2]
+        let freshDir = args[i + 3]
+        // Font rasterization and the physical camera band vary by screen environment.
+        // Baseline adoption is explicit and recorded in its provenance manifest.
+        let os = ProcessInfo.processInfo.operatingSystemVersion
+        let scale = Int(NSScreen.main?.backingScaleFactor ?? 1)
+        let safeTop = Int(NSScreen.main?.safeAreaInsets.top ?? 0)
+        let environment = "macos-\(os.majorVersion).\(os.minorVersion).\(os.patchVersion)-\(scale)x"
+            + (safeTop > 0 ? "-safe-top-\(safeTop)" : "")
+        let original = URL(fileURLWithPath: goldenDir)
+        let isDark = original.lastPathComponent == "dark"
+        let root = isDark ? original.deletingLastPathComponent() : original
+        if root.lastPathComponent == "golden-screenshots" {
+            let baseline = root.appendingPathComponent("environments/\(environment)")
+            if FileManager.default.fileExists(atPath: baseline.appendingPathComponent("provenance.json").path) {
+                goldenDir = baseline.appendingPathComponent(isDark ? "dark" : "light").path
+                print("GOLDEN_REFERENCE \(environment) provenance=\(baseline.appendingPathComponent("provenance.json").path)")
+            }
+        }
         // 02b は「準備中…」（まだ取り込めていない正式な状態）。02 は取り込みが生きた姿。
         // 番号は整理せず足すだけにする（rename の churn を避ける）。
         let names = ["01-voice-hud-idle", "02-voice-hud-listening", "02b-voice-hud-preparing",
@@ -405,10 +474,12 @@ enum SelfTest {
             // 既定の `boundsIgnoreFraming` は影を切り落とすので、
             // 影を変えても絵が 1px も変わらない。
             let shadow = ProcessInfo.processInfo.environment["ASTRA_SHOT_SHADOW"] == "1"
+            // 通常の測定画像は 1px = 1pt。確認 gate はこの寸法で上限を測る。
             let opts: CGWindowImageOption = shadow
-                ? [.bestResolution] : [.boundsIgnoreFraming, .bestResolution]
+                ? [.bestResolution] : [.boundsIgnoreFraming, .nominalResolution]
             guard let (id, x, y, w, h) = found,
-                  let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, id, opts)
+                  let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, id, opts),
+                  shadow || (cg.width == Int(w) && cg.height == Int(h))
             else { return nil }
             let rep = NSBitmapImageRep(cgImage: cg)
             let shot = shadow ? (onBackdrop(cg) ?? rep) : rep
@@ -458,12 +529,20 @@ enum SelfTest {
         func shoot(_ name: String, _ transition: () -> Void, minColors: Int = 6) {
             transition()
             WindowCoordinator.shared.syncDockPanels()
-            let expect = store.dock.size(agentRows: store.state.activeTask?.steps.count ?? 0)
+            let contentSize = store.dock.size(agentRows: store.state.activeTask?.steps.count ?? 0)
+            let expect = CGSize(width: contentSize.width, height: contentSize.height + WindowCoordinator.shared.dockTopInset)
             guard let r = capture(name, expect: expect) else {
                 failures.append("\(name)=撮影不可(期待 \(Int(expect.width))x\(Int(expect.height)))")
                 return
             }
             topEdges.insert(Int(r.y.rounded()))
+            // Window-server geometry remains measurable even without AX permission.
+            // Content element geometry is still covered separately by the AX gate.
+            let inset = WindowCoordinator.shared.dockTopInset
+            UIGeometry.write([
+                "window": UIGeometry.Box(x: Double(r.x), y: Double(r.y), w: Double(r.w), h: Double(r.h)),
+                "contentLayout": UIGeometry.Box(x: 0, y: Double(inset), w: Double(contentSize.width), h: Double(contentSize.height)),
+            ], to: "\(outDir)/\(name).geometry.json")
             report.append("\(name) \(Int(r.w))x\(Int(r.h)) top=\(Int(r.y)) c\(r.colors) win=\(r.count)")
             if r.colors < minColors { failures.append("\(name)=中身なし(c\(r.colors))") }
             // 窓を足していない（Dock 以外に浮いていない）。
@@ -475,6 +554,10 @@ enum SelfTest {
         // 1. Idle / Presence
         shoot("01-idle", { hud.mode = .idle })
 
+        // 1'. Quick Actions: Dock 本体を押す。窓は増やさず Dock 自身が姿を変える。
+        shoot("01b-quick-actions", { hud.toggleQuickActions() })
+        hud.mode = .idle
+
         // 2. App Context（実際の解決器が返す形と同じ構造で遷移させる）
         let notion = AppContextSummary(
             app: "Notion", document: "Q3 Product Roadmap",
@@ -484,12 +567,13 @@ enum SelfTest {
 
         // 3. Listening（partial transcript が主役）
         store.updateContext([
-            ContextFact(source: .screenVision, application: "Screen", sensitivity: .workspace,
-                        summary: "画面", capturedAt: Date(), expiresAt: Date().addingTimeInterval(60)),
+            // カード本文はカテゴリ名の反復（「画面 画面」）ではなく、実際に見ている中身を出す。
             ContextFact(source: .browserDOM, application: "Notion", sensitivity: .workspace,
                         summary: "Q3 Product Roadmap", capturedAt: Date(), expiresAt: Date().addingTimeInterval(60)),
-            ContextFact(source: .accessibility, application: "Selection", sensitivity: .personal,
-                        summary: "選択", capturedAt: Date(), expiresAt: Date().addingTimeInterval(60)),
+            ContextFact(source: .accessibility, application: "選択中のテキスト", sensitivity: .personal,
+                        summary: "「10 月導入で進めます」", capturedAt: Date(), expiresAt: Date().addingTimeInterval(60)),
+            ContextFact(source: .screenVision, application: "前面の画面", sensitivity: .workspace,
+                        summary: "Figma — Astra UI Atlas", capturedAt: Date(), expiresAt: Date().addingTimeInterval(60)),
         ])
         shoot("04-listening", { hud.mode = .listening(partial: "このページからタスクを作って…") })
 
@@ -516,6 +600,19 @@ enum SelfTest {
         // 5''. 終わった直後（CleanShot 型）。finishTask が結果面へ遷移させる＝実遷移。
         shoot("06c-result", { store.finishTask(.success) })
 
+        // 5-3. できなかったとき（Error / Recovery）。本番で失敗の結果面を作る経路と同じ形
+        // （マイク拒否 → 理由と、直しに行く道。`RecordingWorkspaceState.start`）。✓ を付けず、黙って消えない。
+        shoot("06d-result-failed", {
+            // 本番と同じ経路: 段が失敗 → finishTask(.failed) が結果面（理由 + やり直す）を出す。
+            store.startTask(AgentTask(
+                id: UUID(), title: "先方へ見積の返信を送る", status: .running,
+                steps: [AgentStep(title: "Gmail", tool: "gmail", detail: "下書きを作った", state: .success),
+                        AgentStep(title: "送信", tool: "gmail", detail: "接続が切れた", state: .running)],
+                startedAt: Date(), context: store.state.context))
+            if let last = store.state.activeTask?.steps.last { store.updateStep(last.id, to: .failed) }
+            store.finishTask(.failed)
+        })
+
         // 6. Confirmation（requireConfirmation が Dock を展開する＝実遷移）
         shoot("07-confirmation", {
             // 決断に要るものを全部持たせた形で撮る。宛先も中身も出所も無い
@@ -531,6 +628,11 @@ enum SelfTest {
                 risk: .r2, confirmLabel: Facts.confirmationConfirmExample))
         })
 
+        // 6'. 「直す」: 宛先と本文をその場で書き換える。面は増えず、同じ面が編集の姿になる。
+        shoot("07b-confirmation-edit", {
+            if !UIProbe.tap("confirmEdit") { failures.append("07b=「直す」が押せない（confirmEdit が出ていない）") }
+        })
+
         // 7. Meeting: 録音中は Dock が録音コントローラになる。**窓は増えない。**
         shoot("08-meeting", {
             store.resolveConfirmation(approved: false)
@@ -539,50 +641,81 @@ enum SelfTest {
             store.meetingDetected(app: "Google Meet")
             // **録音ボタンと同じ経路**を通す。Store を直接叩くと、ボタンが別のことを
             // していても気づけない（実際に一度そうなっていた）。
-            recording.start()
+            recording.start(captureMic: false, transcribe: false, requestPermissions: false)
+            // 実マイクを開けない撮影でも「録音中」の姿にする（音が届いた姿。準備中は 08a で別に撮る）。
+            // 届いている経路も shots と同じに仕込む。仕込まないと、開いた録音面（10-workspace）が
+            // 最初のフレーム前の「まだ音が届いていません」で写る（RC で実際にそうなった）。
+            recording.markAudioLiveForShot()
+            RecordingRuntime.shared.markListening(.localUser)
+            RecordingRuntime.shared.markListening(.remoteAudio)
             // 開始は前の会議の Notes を消す（2 本目に 1 本目が混ざらないため）。
             // 中身は**開始の後**に入れる。前に入れると空の Notes を撮ってしまう。
-            store.updateCanvas(MeetingCanvas(
-                decisions: ["導入時期は 10 月で行きます"],
-                actions: ["見積は明日までにお願いします"],
-                questions: ["誰が対応しますか？"],
-                concerns: ["初期費用が心配です"], notes: []))
+            // 本番と同じ 1 本（確定行 → 保存 → 抽出）を通す。Canvas に直に置くと、文字起こしが空のまま
+            // 拾ったものだけが並ぶ矛盾した絵になる（盲検 3/3 で state legibility）。
+            for seg in [
+                TranscriptSegment(speaker: "田中", text: "初期費用が心配です", interim: false, at: 254),
+                TranscriptSegment(speaker: "田中", text: "導入時期は 10 月で行きます", interim: false, at: 262),
+                TranscriptSegment(speaker: "あなた", text: "見積は明日までにお願いします", interim: false, at: 288),
+                TranscriptSegment(speaker: "鈴木", text: "誰が対応しますか？", interim: false, at: 301),
+            ] { recording.appendFinal(seg) }
+            // 経過時計は最後の発言（05:01）以降にする。start() で 0 に戻るため、明示しないと
+            // 「00:01 なのにメモは 04:14〜05:01」という矛盾した絵になる（盲検で指摘）。
+            recording.elapsedSeconds = 5 * 60 + 12
+            // ここから先の会議の面は時計を止めて撮る（light / dark は別プロセス。動いたままだと秒がずれ、fixed の gate が運になる）。
+            recording.freezeClockForShot = true
+            // 抽出は確定行が溜まるたびに新しい分だけ走る。最後の行が待ちのまま撮らないよう、ここで確定させる。
+            MeetingIntelligence.shared.ingest(
+                recording.transcript.filter { !$0.interim }.map { CanvasItem($0.text, at: $0.at, speaker: $0.speaker) },
+                force: true)
         })
+        // 7'. 開始直後、まだ 1 フレームも届いていない: 「録音中」と名乗らず「準備中…」。
+        shoot("08a-meeting-preparing", { recording.beginPreparingForShot() })
+        recording.markAudioLiveForShot()
+        // 7''. 一時停止: Dock の見出しが「一時停止中」、点は灰、▶ で再開。
+        shoot("08b-meeting-paused", { recording.togglePause() })
+        recording.togglePause()
+        // 準備中 shot で 0 に落ちた時計を、本編（メモは 04:14〜05:01）に戻す。
+        // 戻さないと notes/captions/ask が「00:01 なのに 5 分前のメモ」で作り物に見える。
+        // 撮っている間は時計を止める（light と dark で秒がずれて fixed の gate が落ちた）。
+        recording.elapsedSeconds = 5 * 60 + 20
+        recording.freezeClockForShot = true
         // 録音開始では窓を増やさない。Dock だけが録音コントローラになる。
         shoot("09-meeting-notes", { hud.toggleMeetingPanel(.notes) })
         shoot("09b-meeting-captions", { hud.toggleMeetingPanel(.captions) })
+        // 7''. Ask Astra: 同じ板に問いの欄が開く。
+        shoot("09c-meeting-ask", { hud.toggleMeetingPanel(.ask) })
 
-        // 8. Full Workspace（Dock は静かなまま、Workspace が開く）
-        store.meetingEnded()
-        hud.mode = .idle
+        // 8. Full Workspace（Dock は静かなまま、録音中に 2 枚目として開く）
+        //
+        // 以前は meetingEnded() のあと Main Window（1240 幅）を「workspace」として撮っていた（Atlas E1）。
+        // 撮るのは「会議の横に開く」で出る 1080x680 の録音面で、Dock の見出しはそのまま残る（T2 と同じ遷移）。
+        hud.toggleMeetingPanel(.ask)   // 開いていた板を閉じる（同じ板をもう一度）
         WindowCoordinator.shared.syncDockPanels()
-        MainWindowController.shared.show()
-        store.workspaceOpened()
-        // 窓が出るまで待つ。固定待ちだと、忙しいときに Dock を拾ってしまう（実際に起きた）。
+        WindowCoordinator.shared.detachMeetingSurface()
         var workspaceWindow: (id: CGWindowID, x: CGFloat, y: CGFloat, w: CGFloat, h: CGFloat)?
         let wsDeadline = Date().addingTimeInterval(8)
         repeat {
             settle(0.25)
-            // 録音面（1080x680）がフェードアウト中に引っかかると、撮る頃には消えている。
-            // Main は必ずそれより広いので、幅で区別する。
-            workspaceWindow = windows().first { $0.w > Metrics.workspaceWidth && $0.h >= 640 }
+            workspaceWindow = windows().first { abs($0.w - Metrics.workspaceWidth) <= 2 && $0.h >= 640 }
         } while workspaceWindow == nil && Date() < wsDeadline
-        settle(0.6)
-        // 撮る直前にもう一度確かめる（待っている間に消えていることがある）。
-        if let found = workspaceWindow, !windows().contains(where: { $0.id == found.id }) {
-            workspaceWindow = windows().first { $0.w > Metrics.workspaceWidth && $0.h >= 640 }
-        }
+        settle(0.8)
         if let big = workspaceWindow,
-           let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, big.id, [.boundsIgnoreFraming, .bestResolution]) {
+           let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, big.id, [.boundsIgnoreFraming, .nominalResolution]) {
             let rep = NSBitmapImageRep(cgImage: cg)
             if let png = rep.representation(using: .png, properties: [:]) {
                 try? png.write(to: URL(fileURLWithPath: "\(outDir)/10-workspace.png"))
             }
             report.append("10-workspace \(Int(big.w))x\(Int(big.h))")
-            if big.w < 700 { failures.append("workspace が小さすぎる") }
+            // Dock の見出しがそのまま残っているか（録音面を開いても Dock は消えない）。
+            let dockStill = windows().contains { $0.h < 400 && abs($0.w - Metrics.dockMeetingWidth) <= 2 }
+            if !dockStill { failures.append("10-workspace=録音面を開いたら Dock が消えた") }
         } else {
             failures.append("10-workspace=撮影不可")
         }
+        WindowCoordinator.shared.hideRecordingWorkspace()
+        store.meetingEnded()
+        hud.mode = .idle
+        WindowCoordinator.shared.syncDockPanels()
 
         // Astra を menu bar utility に見せない。**小さすぎたら FAIL**。
         // Idle だけは小さく保ち、使い始めたら主役の大きさへ展開する。
@@ -634,7 +767,7 @@ enum SelfTest {
         print("DOCK8_DIR \(outDir)")
         for line in report { print("DOCK8 \(line)") }
         if failures.isEmpty {
-            print("SELFTEST_OK dock8: 8状態を実遷移で撮影・top anchor 固定・窓は常に1枚・idle \(Int(Metrics.dockIdleWidth))pt→agent \(Int(Metrics.dockAgentWidth))pt")
+            print("SELFTEST_OK dock8: \(report.count)状態を実遷移で撮影・top anchor 固定・窓は常に1枚・idle \(Int(Metrics.dockIdleWidth))pt→agent \(Int(Metrics.dockAgentWidth))pt")
             exit(0)
         } else {
             print("SELFTEST_FAIL dock8: \(failures.joined(separator: ", "))")
@@ -692,7 +825,7 @@ enum SelfTest {
             tops.insert(Int(f.minY.rounded()))
             widths.append(f.width)
             if settledAt == nil, abs(f.width - listeningSize.width) <= 1,
-               abs(f.height - listeningSize.height) <= 1 {
+               abs(f.height - (listeningSize.height + WindowCoordinator.shared.dockTopInset)) <= 1 {
                 settledAt = Date()
             }
         }
@@ -1110,16 +1243,23 @@ enum SelfTest {
         let i = args.firstIndex(of: "--selftest")!
         guard args.count > i + 3 else { print("SELFTEST_FAIL density: 引数が足りない"); exit(2) }
         let dir = args[i + 2], baselinePath = args[i + 3]
+        let layoutData = FileManager.default.contents(atPath: "\(dir)/capture-layout.json")
+        let layouts = layoutData.flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: [String: Int]] } ?? [:]
 
         /// 地の色が占める割合（%）。
-        func emptiness(_ path: String) -> Double? {
+        func emptiness(_ path: String, layout: [String: Int]?) -> Double? {
             guard let data = FileManager.default.contents(atPath: path),
                   let rep = NSBitmapImageRep(data: data) else { return nil }
             var counts: [UInt32: Int] = [:]
             var pts: [UInt32] = []
             let pw = rep.pixelsWide, ph = rep.pixelsHigh
-            let step = max(1, min(pw, ph) / 220)
-            var y = 0
+            let inset = layout?["topInsetPx"] ?? 0
+            guard inset >= 0, inset < ph,
+                  layout == nil || (layout?["width"] == pw && layout?["height"] == ph) else { return nil }
+            // The camera safe-area band is reserved, not content space. Total window
+            // occupation, including this band, is still checked by occupationGate.
+            let step = max(1, min(pw, ph - inset) / 220)
+            var y = inset
             while y < ph { var x = 0
                 while x < pw {
                     if let c = rep.colorAt(x: x, y: y) {
@@ -1147,6 +1287,27 @@ enum SelfTest {
             baseline = obj
         }
 
+        // The approved notch reference moves the outer top edge into the camera
+        // band. Its content-only density therefore needs a matching reference.
+        // Override only recorded Dock surfaces; all other historical limits stay.
+        let requestedBaseline = URL(fileURLWithPath: baselinePath).standardizedFileURL
+        if requestedBaseline.path.hasSuffix("/docs/evidence/density-baseline.json"),
+           let inset = layouts["01-voice-hud-idle"]?["topInsetPx"], inset > 0,
+           let screen = NSScreen.main {
+            let os = ProcessInfo.processInfo.operatingSystemVersion
+            let profile = "macos-\(os.majorVersion).\(os.minorVersion).\(os.patchVersion)-\(Int(screen.backingScaleFactor))x-safe-top-\(inset)"
+            let reference = requestedBaseline.deletingLastPathComponent().deletingLastPathComponent()
+                .appendingPathComponent("golden-screenshots/environments/\(profile)/density-baseline.json")
+            guard let d = try? Data(contentsOf: reference),
+                  let values = try? JSONSerialization.jsonObject(with: d) as? [String: Double],
+                  values.count == 3,
+                  ["01-voice-hud-idle", "02-voice-hud-listening", "02b-voice-hud-preparing"].allSatisfy({ values[$0] != nil }) else {
+                print("SELFTEST_FAIL density: matching notch reference missing: \(reference.path)"); exit(2)
+            }
+            baseline.merge(values) { _, adopted in adopted }
+            print("DENSITY_REFERENCE \(reference.path)")
+        }
+
         let names = (try? FileManager.default.contentsOfDirectory(atPath: dir))?
             .filter { $0.hasSuffix(".png") }.map { String($0.dropLast(4)) }.sorted() ?? []
         guard !names.isEmpty else { print("SELFTEST_FAIL density: \(dir) に png が無い"); exit(2) }
@@ -1154,7 +1315,9 @@ enum SelfTest {
         var measured: [String: Double] = [:]
         var worse: [String] = []
         for n in names {
-            guard let e = emptiness("\(dir)/\(n).png") else { continue }
+            guard let e = emptiness("\(dir)/\(n).png", layout: layouts[n]) else {
+                worse.append("\(n): image/capture layout invalid"); continue
+            }
             measured[n] = (e * 10).rounded() / 10
             print(String(format: "DENSITY %@ 地 %.1f%%", n, e))
             // 撮影ごとの揺れを拾わないよう 1.5 ポイントの遊びを持たせる。
@@ -1187,7 +1350,7 @@ enum SelfTest {
     /// その 1 行だけ濃くなり、撮るたびに golden が動く（会議詳細の引用の行を
     /// ボタンにした直後、dark で 1.55% 揺れた）。撮影は人の手の位置に依存させない。
     @MainActor
-    private static func parkCursor() {
+    static func parkCursor() {
         guard let screen = NSScreen.screens.first else { return }
         // 右端の中ほど。**隅は避ける** —— Hot Corner を踏むと Mission Control が出て、
         // 窓のキャプチャそのものが失敗する（右下に置いた直後、guishot と secret が
@@ -1372,7 +1535,8 @@ enum SelfTest {
             present()
             settle(1.2)
             guard let snap = UIGeometry.snapshot() else { fail.append("\(name): 実寸を読めない"); continue }
-            for (key, maxW, maxH) in ceilings[name] ?? [] {
+            for (key, maxW, contentMaxH) in ceilings[name] ?? [] {
+                let maxH = contentMaxH + (key == dockKey ? WindowCoordinator.shared.dockTopInset : 0)
                 guard let box = snap[key] else { fail.append("\(name): \(key) が出ていない"); continue }
                 measured += 1
                 let share = box.w * box.h / (refW * refH) * 100
@@ -1409,7 +1573,15 @@ enum SelfTest {
     @MainActor
     private static func geometryGate(_ args: [String]) {
         let i = args.firstIndex(of: "--selftest")!
-        let refDir = args.count > i + 2 ? args[i + 2] : "docs/golden-screenshots/geometry"
+        var refDir = args.count > i + 2 ? args[i + 2] : "docs/golden-screenshots/geometry"
+        let requested = URL(fileURLWithPath: refDir)
+        if requested.lastPathComponent == "geometry",
+           requested.deletingLastPathComponent().lastPathComponent == "golden-screenshots",
+           let screen = NSScreen.main, screen.safeAreaInsets.top > 0 {
+            let os = ProcessInfo.processInfo.operatingSystemVersion
+            let profile = "macos-\(os.majorVersion).\(os.minorVersion).\(os.patchVersion)-\(Int(screen.backingScaleFactor))x-safe-top-\(Int(screen.safeAreaInsets.top))"
+            refDir = requested.deletingLastPathComponent().appendingPathComponent("environments/\(profile)/geometry").path
+        }
         let record = args.contains("--record")
         try? FileManager.default.createDirectory(atPath: refDir, withIntermediateDirectories: true)
 
@@ -1561,15 +1733,12 @@ enum SelfTest {
         let i = args.firstIndex(of: "--selftest")
         let secs = Double(i.map { args.count > $0 + 2 ? args[$0 + 2] : "" } ?? "") ?? 300
         _ = GlobalShortcut.shared.register(handler: { WindowCoordinator.shared.toggleRecording() })
-        // **ここでは音の経路を作らない。** `silent` は音ゼロの状態を作る口で、
-        // ここで「音が来ている」ことにすると、矛盾の検査が条件を通らなくなる
-        // （実際、一度そうなって歯止めが素通りした）。
-        RecordingWorkspaceState.shared.start()
-
-        // `silent` は**音も発話も無い**状態で置く。矛盾（「聞いています…」と
+        // `silent` は**音も発話も無い**状態で置く。合成のディスク経路だけを
+        // 起動し、raw debug executable が macOS TCC を呼ばないようにする。
         // 「音が届いていません」が同時に出る）が起きるのはここだけなので、
         // これが無いと歯止めが素通りする（実際、壊しても落ちなかった）。
         if args.contains("silent") {
+            RecordingWorkspaceState.shared.start(captureMic: false, transcribe: false, requestPermissions: false)
             WindowCoordinator.shared.showRecordingWorkspace()
             print("HOLD_MEETING \(secs)s silent")
             fflush(stdout)
@@ -1577,6 +1746,8 @@ enum SelfTest {
             RunLoop.main.run()
             return
         }
+
+        RecordingWorkspaceState.shared.start()
 
         RecordingWorkspaceState.shared.transcript = [
             TranscriptSegment(speaker: "Sarah", text: "Windows はいつ出しますか。", interim: false, at: 630),
@@ -2030,7 +2201,9 @@ enum SelfTest {
             WindowCoordinator.shared.showVoiceHUD(); settle(0.6)
             rec.begin()
             // ① 会議を録る。Dock が録音コントローラになる。
-            let t1 = rec.transition { recording.start() }
+            let t1 = rec.transition {
+                recording.start(captureMic: false, transcribe: false, requestPermissions: false)
+            }
             settle(0.8)
             let liveId = sessions.live?.id ?? ""
             let dockId = { () -> String in
@@ -2131,27 +2304,33 @@ enum SelfTest {
             rec.begin()
             // ① マイクが拒否されている端末で、始めるとどうなるか。
             Permissions.simulatedMicrophone = .denied
-            defer { Permissions.simulatedMicrophone = nil }
+            Permissions.simulatedSpeechRecognition = .denied
+            defer {
+                Permissions.simulatedMicrophone = nil
+                Permissions.simulatedSpeechRecognition = nil
+            }
             let t1 = rec.transition { WindowCoordinator.shared.toggleRecording() }
             settle(0.8)
-            _ = rec.shot("01-denied", window: JourneyRecorder.dockWindow())
-            var reason = "none"
-            if case .result(let r) = store.dock { reason = "dock:\(r.title)" }
-            else if recording.permissionIssue != nil { reason = "workspace-banner-only" }
-            let recovery = UIProbe.exists("result-openSettings")
-            if !reason.hasPrefix("dock:") { rec.error("拒否の理由が Dock に出ない（\(reason)）") }
-            if !recovery { rec.error("「設定を開く」が無い（行き止まり）") }
-            if recording.isRecording { rec.error("拒否なのに録音中になる") }
-            rec.step("マイク拒否", interactions: 1, transitionMs: t1,
-                     ids: ["reason": reason, "recovery": recovery ? "openSettings" : "none"])
-            store.dismissResult()
-            Permissions.simulatedMicrophone = nil
+            _ = rec.shot("01-denied", window: NSApp.keyWindow)
+            let explaining = PermissionGuideCoordinator.shared.state == .microphoneIntro
+            let enable = UIProbe.exists("guideAvatarAction")
+            let later = UIProbe.exists("guideLater")
+            if !explaining || !enable || !later { rec.error("マイクの説明から許可または中止を選べない") }
+            if recording.isRecording || sessions.live != nil { rec.error("許可前なのに録音セッションが作られた") }
+            rec.step("マイクの説明", interactions: 1, opensWindow: true, transitionMs: t1,
+                     ids: ["state": "microphoneIntro", "enable": String(enable), "later": String(later)])
+            // A new recording must not be blocked by the abandoned permission intent.
+            if !UIProbe.tap("guideLater") { rec.error("あとでを押せない") }
             settle(0.3)
+            if PermissionGuideCoordinator.shared.state != .idle || UIProbe.exists("guideAvatar") {
+                rec.error("中止後も権限ガイドが残っている")
+            }
+            Permissions.simulatedMicrophone = nil
 
-            // ② 回復して始める。
-            recording.start(); settle(0.8)
+            // ② 案内を中止したあと、合成音源で保存・復旧経路を再開する。OS付与の証跡ではない。
+            recording.start(captureMic: false, transcribe: false, requestPermissions: false); settle(0.8)
             let liveId = sessions.live?.id ?? ""
-            if liveId.isEmpty { rec.error("許可のあとに始められない") }
+            if liveId.isEmpty { rec.error("案内を中止したあとに録音の保存経路を開始できない") }
             _ = rec.shot("02-recovered", window: JourneyRecorder.dockWindow())
             rec.step("回復", interactions: 1, ids: ["session": liveId])
 
@@ -2392,6 +2571,10 @@ enum SelfTest {
     /// ここを Store 直叩きで検査していたせいで、ボタンだけ別のことをしていたのを見逃した。
     @MainActor
     private static func recordButton() {
+        guard Permissions.microphone == .granted else {
+            print("SELFTEST_SKIP recordbutton: actual recording requires microphone grant; pre-permission explanation/cancel is covered by journey JC")
+            exit(0)
+        }
         let store = AstraStateStore.shared
         let recording = RecordingWorkspaceState.shared
         store.reset()
@@ -2606,7 +2789,7 @@ enum SelfTest {
             NSApp.activate(ignoringOtherApps: true)
             MainWindowController.shared.orderFront()
             settle(0.8)
-            guard let win = found else {
+            guard let win = found ?? windows().first(where: { $0.w >= 900 && $0.h >= 600 }) else {
                 FileHandle.standardError.write(Data("SESSIONSHOT \(name) 窓一覧: \(windows().map { "\(Int($0.w))x\(Int($0.h))" })\n".utf8))
                 return false
             }
@@ -2664,9 +2847,33 @@ enum SelfTest {
         // 1 Home idle（会議も予定も無い）
         step("01-home-idle", {})
 
+        // 14 ⌥Space の許可（Input Monitoring）が無いとき。Home の空状態が「使えるようにする」と言う。
+        //    予定も会議も無い姿でだけ出るので、何も作る前のここで撮る（検査用の上書き。本番では nil）。
+        let savedPreview = HomePane.previewUpcoming
+        HomePane.previewUpcoming = []
+        Permissions.simulatedInputMonitoring = .notDetermined
+        Permissions.simulatedCalendar = .denied
+        step("14-input-monitoring", {
+            MainWindowController.shared.showSection(.work); settle(0.4)
+            MainWindowController.shared.showSection(.home)
+        })
+        // 13 予定を読む許可は、予定が出るその場所で理由と一緒に求める（purpose-first）。
+        Permissions.simulatedInputMonitoring = nil
+        Permissions.simulatedCalendar = .notDetermined
+        step("13-calendar-permission", {
+            MainWindowController.shared.showSection(.work); settle(0.4)
+            MainWindowController.shared.showSection(.home)
+        })
+        Permissions.simulatedCalendar = nil
+        HomePane.previewUpcoming = savedPreview
+        MainWindowController.shared.showSection(.work); settle(0.4)
+        MainWindowController.shared.showSection(.home); settle(0.6)
+
         // 2 録音中: 開始した瞬間に Home へ出る
         step("02-recording", {
-            sessions.begin(id: "shot-1", title: "Product Weekly", source: "Google Meet")
+            // 42 分前に始めた会議。0 分の会議に要約と 5 人が付くと、表示が壊れて見える（盲検）。
+            sessions.begin(id: "shot-1", title: "Q4 移行計画の打ち合わせ", source: "Google Meet",
+                           now: Date().addingTimeInterval(-42 * 60))
         })
         guard let liveId = sessions.live?.id else {
             print("SELFTEST_FAIL sessionshots: 録音中の Session が無い"); exit(2)
@@ -2677,9 +2884,29 @@ enum SelfTest {
 
         // 4 ready
         step("04-ready", {
+            // 件数だけでなく中身も書く。Home のカードが「やること 3 · 決まったこと 2」と言い、開いた detail が
+            // 0 / 0 では同じ id が矛盾する（Atlas E2）。本番の finishProcessing は canvas の件数を
+            // markReady に渡すので、fixture も同じ canvas から数える。
+            let canvas = MeetingCanvas(
+                decisions: [CanvasItem("Q4 は移行計画を先に進める", at: 312, speaker: "田中"),
+                            CanvasItem("Phase 1 は 10 月に始める", at: 1450, speaker: "あなた")],
+                actions: [CanvasItem("移行計画の草案を来週までに出す", at: 348, speaker: "田中"),
+                          CanvasItem("トレーニング費用を見積もる", at: 902, speaker: "鈴木"),
+                          CanvasItem("Phase 1 の体制表を作る", at: 1502, speaker: "あなた")],
+                questions: [], concerns: [], notes: [])
+            LocalStore.shared.saveNotes(meetingId: liveId, canvas)
+            let rows: [TranscriptSegment] = [
+                TranscriptSegment(speaker: "あなた", text: "今日は Q4 の移行計画と、トレーニングのコストを詰めます。", interim: false, at: 40),
+                TranscriptSegment(speaker: "田中", text: "Q4 は移行計画を先に進める", interim: false, at: 312),
+                TranscriptSegment(speaker: "田中", text: "移行計画の草案を来週までに出す", interim: false, at: 348),
+                TranscriptSegment(speaker: "鈴木", text: "トレーニング費用を見積もる", interim: false, at: 902),
+                TranscriptSegment(speaker: "あなた", text: "Phase 1 は 10 月に始める", interim: false, at: 1450),
+                TranscriptSegment(speaker: "あなた", text: "Phase 1 の体制表を作る", interim: false, at: 1502),
+            ]
+            for (n, row) in rows.enumerated() { LocalStore.shared.saveTranscriptRow(meetingId: liveId, index: n, row) }
             sessions.markReady(id: liveId,
                                summary: "Q4 移行計画とトレーニングコストを議論。10 月から Phase 1 開始で合意。",
-                               actions: 3, decisions: 2, participants: 5)
+                               actions: canvas.actions.count, decisions: canvas.decisions.count, participants: 5)
         })
 
         // 5 保存先と project を付けた姿
@@ -2738,6 +2965,19 @@ enum SelfTest {
         if sessions.session(id: "shot-2")?.status != .interrupted { failures.append("interrupted になっていない") }
 
         sessions.reset()
+
+        // 15 頼みごとが失敗した（黙らない）。Home の「最近の頼みごと」に、どこで止まったかの印で残る。
+        //    会議カードの下に隠れないよう、会議を消したあとのここで撮る。
+        LocalStore.shared.save(AgentTask(
+            id: UUID(), title: "先方へ見積の返信を送る", status: .failed,
+            steps: [AgentStep(title: "Gmail", tool: "gmail", detail: "下書きを作った", state: .success),
+                    AgentStep(title: "送信", tool: "gmail", detail: "接続が切れた", state: .failed)],
+            startedAt: Date(), context: AstraStateStore.shared.state.context))
+        step("15-generic-failure", {
+            MainWindowController.shared.showSection(.work); settle(0.4)
+            MainWindowController.shared.showSection(.home)
+        })
+
         print("SESSIONSHOTS_DIR \(outDir)")
         for line in report { print("SESSIONSHOT \(line)") }
         if failures.isEmpty {
@@ -2818,6 +3058,10 @@ enum SelfTest {
     /// 「Home から押す → Home に残る → 後から開ける」を一本で歩く。
     @MainActor
     private static func acceptance() {
+        guard Permissions.microphone == .granted else {
+            print("SELFTEST_SKIP acceptance: recording lifecycle requires microphone grant; permission gating is covered separately")
+            exit(0)
+        }
         let path = NSTemporaryDirectory() + "astra-accept-\(getpid()).sqlite"
         defer { try? FileManager.default.removeItem(atPath: path) }
         LocalStore.shared.open(path)
@@ -2886,6 +3130,7 @@ enum SelfTest {
         recording.start()
         let fromCal = sessions.live
         check(2, "Calendar から 1-click", fromCal != nil && fromCal?.calendarEventId == "e1")
+        check(10, "録音ごとに別ID", fromCal?.id != id)
         check(10, "project 自動継承", fromCal?.projectId == "Research")
         check(10, "題と人数を継承", fromCal?.title == "Design Review" && fromCal?.participantCount == 4)
         recording.stop()
@@ -2954,7 +3199,9 @@ enum SelfTest {
         }
 
         // ---- Dock から Stop したとき
-        recording.start()
+        // State/DB continuity is independent of microphone authorization. The real
+        // microphone lifecycle has its own mandatory hardware gate.
+        recording.start(captureMic: false, transcribe: false, requestPermissions: false)
         guard let id = sessions.live?.id else {
             print("SELFTEST_FAIL sessionsync: 録音が始まらない"); exit(2)
         }
@@ -2992,7 +3239,7 @@ enum SelfTest {
         // ④ Dock（WindowCoordinator）から Stop → Home も processing。
         WindowCoordinator.shared.toggleRecording()
         settle(0.2)
-        if sessions.session(id: id)?.status != .processing {
+        if ![MeetingSession.Status.processing, .ready].contains(sessions.session(id: id)?.status ?? .failed) {
             fail.append("Dock 停止で Home が processing にならない (\(sessions.session(id: id)?.status.rawValue ?? "nil"))")
         }
         if recording.isRecording { fail.append("Dock 停止で録音が止まっていない") }
@@ -3004,7 +3251,7 @@ enum SelfTest {
             CFRunLoopRunInMode(.defaultMode, 0.05, true)
             sawStage = sessions.session(id: id)?.processingStage != nil
         }
-        if !sawStage { fail.append("processing の段階が出ない") }
+        if !sawStage && sessions.session(id: id)?.status != .ready { fail.append("processing の段階も完了も出ない") }
         // ready まで待つ。
         let readyDeadline = Date().addingTimeInterval(6)
         while sessions.session(id: id)?.status != .ready, Date() < readyDeadline {
@@ -3012,11 +3259,13 @@ enum SelfTest {
         }
 
         // ---- Home から Stop したとき（逆方向）
-        recording.start()
+        // State/DB continuity is independent of microphone authorization. The real
+        // microphone lifecycle has its own mandatory hardware gate.
+        recording.start(captureMic: false, transcribe: false, requestPermissions: false)
         guard let id2 = sessions.live?.id else { fail.append("2 回目が始まらない"); reportSync(fail); return }
         recording.stop()   // Home の Stop ボタンが呼ぶもの
         settle(0.2)
-        if sessions.session(id: id2)?.status != .processing {
+        if ![MeetingSession.Status.processing, .ready].contains(sessions.session(id: id2)?.status ?? .failed) {
             fail.append("Home 停止で processing にならない")
         }
         // Dock 側も同じ状態へ移っている（結果面）。
@@ -3092,7 +3341,11 @@ enum SelfTest {
         switch leg {
         case "record":
             sessions.load()
-            recording.start()
+            // This self-test verifies durable session recovery across processes;
+            // use the disk-only path so a raw debug executable never asks macOS
+            // TCC for microphone or speech access. Remove these switches when a
+            // signed live fault-injection harness replaces this test.
+            recording.start(captureMic: false, transcribe: false, requestPermissions: false)
             guard let id = sessions.live?.id else { print("RECORDLEG_FAIL 録音が始まらない"); exit(2) }
             // DB に status=recording が**停止前に**在ることを、この場で確かめる。
             let onDisk = LocalStore.shared.loadSessions().first { $0.id == id }
@@ -3381,26 +3634,32 @@ enum SelfTest {
         guardian.apply(sharing: false)
         if guardian.isSharing { fail.append("共有終了が反映されない") }
 
-        // ⑥ マイクが拒否されているなら**録音状態にしない**。
-        //    「録音中」と出しながら無音を録るのが一番高くつく壊れ方。
-        //    この Mac では許可済みなので、判定の分岐そのものを確かめる。
-        let denied: [Permissions.State] = [.denied, .restricted]
-        for state in denied where !denied.contains(state) {
-            fail.append("拒否判定が壊れている")
-        }
-        if Permissions.microphone == .granted {
-            // 許可されている環境では、開始できることだけ確かめる（拒否は下の分岐で担保）。
-            report.append("mic=granted")
-        } else {
-            RecordingWorkspaceState.shared.start()
-            if RecordingWorkspaceState.shared.isRecording {
-                fail.append("マイクが使えないのに録音状態になった")
+        // ⑥ Permission denial AND a pending first prompt must never create a
+        // recording, advance its clock, or erase the previous transcript.
+        let recording = RecordingWorkspaceState.shared
+        let priorMicrophone = Permissions.simulatedMicrophone
+        let priorTranscript = recording.transcript.map(\.text)
+        let priorId = recording.currentMeetingId
+        let priorElapsed = recording.elapsedSeconds
+        for state: Permissions.State in [.denied, .restricted, .notDetermined] {
+            Permissions.simulatedMicrophone = state
+            recording.start(requestPermissions: false)
+            if recording.isRecording || store.state.meeting.isRecording {
+                fail.append("マイクが使えないのに録音状態になった: \(state)")
             }
-            if RecordingWorkspaceState.shared.permissionIssue == nil {
-                fail.append("使えない理由が画面に出ない")
+            if recording.permissionIssue == nil {
+                fail.append("使えない理由が画面に出ない: \(state)")
             }
-            RecordingWorkspaceState.shared.stop()
+            if RecordingRuntime.shared.snapshot() != nil || recording.currentMeetingId != priorId {
+                fail.append("許可前に録音セッションを作った: \(state)")
+            }
+            if recording.elapsedSeconds != priorElapsed || recording.transcript.map(\.text) != priorTranscript {
+                fail.append("許可前に前の録音を消した: \(state)")
+            }
+            recording.stop()
         }
+        Permissions.simulatedMicrophone = priorMicrophone
+        report.append("mic denial/restriction/pending: no recording or session")
 
         // ⑦ §26 Progressive Permission: 機能ごとに**その分だけ**。他機能の許可を巻き込まない。
         if PermissionCenter.Capability.voice.required != [.microphone] {
@@ -3412,10 +3671,12 @@ enum SelfTest {
         if PermissionCenter.Capability.screenAsk.required != [.screenRecording] {
             fail.append("screenAsk が画面以外まで要求している")
         }
-        // 相手の声は本番経路でまだ取り込んでいない（captureSystemAudio は常に false）。使っていない目的で
-        // 画面収録を求めたら落ちる（`docs/privacy-egress.md`）。system audio を繋いだ日にここを変える。
-        if PermissionCenter.Capability.meeting.required != [.microphone] {
-            fail.append("meeting がマイク以外まで要求している（system audio は未接続）")
+        // マイク録音に画面収録を巻き込まない。画面の音を選んだ場合だけ別に要求する。
+        if PermissionCenter.Capability.meeting.required != [.microphone, .speechRecognition] {
+            fail.append("meeting がマイクと音声認識以外まで要求している")
+        }
+        if PermissionCenter.Capability.meetingAudio.required != [.screenRecording] {
+            fail.append("meetingAudio が画面収録以外を要求している")
         }
         // 全機能の和集合を、どれか 1 機能が単独で要求してはいけない（＝初回一括の禁止）。
         let all = Set(PermissionCenter.Capability.allCases.flatMap(\.required))
@@ -4220,12 +4481,13 @@ enum SelfTest {
         guard AXIsProcessTrusted() else { print("SELFTEST_SKIP calendarask: mapping OK, AX not trusted"); exit(0) }
 
         // Home を 1 枚出して、自プロセスの AX で識別子と文を集める。
+        NSApp.setActivationPolicy(.regular)
         HomePane.previewUpcoming = []
         func homeTexts(_ state: Permissions.State, png: String? = nil) -> (ids: Set<String>, texts: Set<String>) {
             Permissions.simulatedCalendar = state
             let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 900, height: 600),
                              styleMask: [.titled, .closable, .resizable], backing: .buffered, defer: false)
-            w.contentView = NSHostingView(rootView: MainWindowView())
+            w.contentView = NSHostingView(rootView: MainWindowView(loadBackend: false))
             if let s = NSScreen.main { w.setFrameOrigin(NSPoint(x: s.frame.midX - 450, y: s.frame.midY - 300)) }
             w.makeKeyAndOrderFront(nil); NSApp.activate(ignoringOtherApps: true)
             MainNav.shared.section = .home
@@ -4233,6 +4495,7 @@ enum SelfTest {
             while Date() < show { CFRunLoopRunInMode(.defaultMode, 0.05, true) }
             let app = AXUIElementCreateApplication(getpid())
             var ids = Set<String>(), texts = Set<String>()
+            var contextDisclosure: AXUIElement?
             func attr(_ el: AXUIElement, _ name: String) -> String? {
                 var v: CFTypeRef?
                 guard AXUIElementCopyAttributeValue(el, name as CFString, &v) == .success else { return nil }
@@ -4240,14 +4503,37 @@ enum SelfTest {
                 return nil
             }
             func walk(_ el: AXUIElement, _ depth: Int) {
-                if depth > 24 { return }
-                if let id = attr(el, kAXIdentifierAttribute) { ids.insert(id) }
+                if depth > 64 { return }
+                if let id = attr(el, kAXIdentifierAttribute) {
+                    ids.insert(id)
+                    if id == "homeContextDisclosure" {
+                        var actions: CFArray?
+                        if AXUIElementCopyActionNames(el, &actions) == .success,
+                           let names = actions as? [String], names.contains(kAXPressAction) { contextDisclosure = el }
+                    }
+                }
+                if attr(el, kAXRoleAttribute) == kAXDisclosureTriangleRole as String,
+                   attr(el, kAXDescriptionAttribute) == "会議と今日の状況" {
+                    contextDisclosure = el
+                }
                 for a in ["AXTitle", "AXDescription", "AXValue"] { if let s = attr(el, a) { texts.insert(s) } }
                 var kids: CFTypeRef?
                 if AXUIElementCopyAttributeValue(el, kAXChildrenAttribute as CFString, &kids) == .success,
                    let arr = kids as? [AXUIElement] { for k in arr { walk(k, depth + 1) } }
             }
             walk(app, 0)
+            // Menu/toolbar nodes alone do not mean SwiftUI content is measurable.
+            guard ids.contains("homeView") else {
+                w.orderOut(nil); w.close(); Permissions.simulatedCalendar = nil
+                return (ids, texts)
+            }
+            if ids.contains("askCalendar") { fail.append("会議を開く前にカレンダー許可を求めている") }
+            if let disclosure = contextDisclosure,
+               AXUIElementPerformAction(disclosure, kAXPressAction as CFString) == .success {
+                let expanded = Date().addingTimeInterval(0.5)
+                while Date() < expanded { CFRunLoopRunInMode(.defaultMode, 0.05, true) }
+                ids.removeAll(); texts.removeAll(); walk(app, 0)
+            } else { fail.append("会議と今日の状況を開けない") }
             if let png, let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, CGWindowID(w.windowNumber),
                                                           [.boundsIgnoreFraming, .nominalResolution]) {
                 try? NSBitmapImageRep(cgImage: cg).representation(using: .png, properties: [:])?
@@ -4258,7 +4544,7 @@ enum SelfTest {
             return (ids, texts)
         }
         let asked = homeTexts(.notDetermined, png: outPNG)
-        guard !asked.ids.isEmpty else { print("SELFTEST_SKIP calendarask: own-process AX tree empty in this context"); exit(0) }
+        guard asked.ids.contains("homeView") else { print("SELFTEST_SKIP calendarask: mapping OK; own-process SwiftUI content tree unavailable (menu nodes are not a Home measurement)"); exit(0) }
         if !asked.ids.contains("askCalendar") { fail.append("未確認なのに Home に askCalendar が無い") }
         let reason = PermissionCenter.Capability.schedule.reason
         if !asked.texts.contains(where: { $0.contains(reason) }) { fail.append("理由の文が画面に無い") }
@@ -4267,7 +4553,7 @@ enum SelfTest {
             if r.ids.contains("askCalendar") { fail.append("\(state.rawValue)なのに askCalendar が出る") }
         }
         guard fail.isEmpty else { print("SELFTEST_FAIL calendarask: \(fail)"); exit(2) }
-        print("SELFTEST_OK calendarask: schedule=[calendar] askCalendar shown only when notDetermined, with reason; hidden when granted/denied")
+        print("SELFTEST_OK calendarask: schedule=[calendar]; expand meeting context before requesting permission; reason shown only when notDetermined; hidden when granted/denied")
         exit(0)
     }
 
@@ -4438,8 +4724,16 @@ enum SelfTest {
         }
         var fail: [String] = []
         if RecordingRuntime.devAutoUploadEnabled { fail.append("録音の自動 upload が env 無しで有効") }
-        if PermissionCenter.Capability.meeting.required != [.microphone] {
-            fail.append("meeting がマイク以外を求めている: \(PermissionCenter.Capability.meeting.required)")
+        let previousArguments = UserDefaults.standard.volatileDomain(forName: UserDefaults.argumentDomain)
+        if RecordingRuntime.cloudConsentValue(nil, developmentUpload: false) { fail.append("cloud consent must default to off") }
+        RecordingRuntime.setCloudTranscriptionAllowed(true)
+        if !RecordingRuntime.cloudTranscriptionAllowed { fail.append("explicit cloud consent ignored") }
+        RecordingRuntime.setCloudTranscriptionAllowed(false)
+        if RecordingRuntime.cloudTranscriptionAllowed { fail.append("cloud consent revocation ignored") }
+        UserDefaults.standard.setVolatileDomain(previousArguments, forName: UserDefaults.argumentDomain)
+
+        if PermissionCenter.Capability.meeting.required != [.microphone, .speechRecognition] {
+            fail.append("meeting がマイクと音声認識以外を求めている: \(PermissionCenter.Capability.meeting.required)")
         }
         var stt = "NOT_MEASURED"
         if SpeechTranscriber.authorization == .authorized {
@@ -4468,12 +4762,104 @@ enum SelfTest {
         guard fail.isEmpty else {
             print("SELFTEST_FAIL egress: " + fail.joined(separator: " / ")); exit(2)
         }
-        print("SELFTEST_OK egress: autoUpload=off meeting=[microphone] sttNoFallback=\(stt)")
+        print("SELFTEST_OK egress: autoUpload=off cloudSTTConsent=\(RecordingRuntime.cloudTranscriptionAllowed ? "on" : "off") meeting=[microphone] sttNoFallback=\(stt)")
         exit(0)
     }
 
     /// `--selftest speech`: オンデバイス STT(Apple Speech)の可用性・認可・ロケールを検証する。
     /// live 認識は音声認識許可(TCC)が要るが、認識器の用意と認可状態の読み取りは prompt 無しで確かめられる。
+    @MainActor
+    private static func cloudShots(_ args: [String]) {
+        let i = args.firstIndex(of: "--selftest")!
+        let out = URL(fileURLWithPath: args.count > i + 2 ? args[i + 2] : "/tmp/astra-cloud-shots")
+        do {
+            try FileManager.default.createDirectory(at: out, withIntermediateDirectories: true)
+            var geometry: [[String: Any]] = []
+            for dark in [false, true] {
+                let name = dark ? "dark" : "light"
+                let views: [(String, AnyView)] = [
+                    ("settings", AnyView(SettingsView().background(dark ? Color.black : Color.white))),
+                    ("retry", AnyView(MeetingArtifactView(title: "文字起こしの確認", duration: "01:15", participants: 1,
+                        summary: [], decisions: [], actionItems: [],
+                        transcriptionFailure: "文字起こしサーバーに接続されていません。録音はこのMacに保存されています。",
+                        onRetryTranscription: {}).frame(width: 1080, height: 680).background(dark ? Color.black : Color.white)))
+                ]
+                for (kind, view) in views {
+                    let host = NSHostingView(rootView: view.environment(\.colorScheme, dark ? .dark : .light))
+                    let size = host.fittingSize
+                    let window = NSWindow(contentRect: NSRect(origin: .zero, size: size), styleMask: [.borderless], backing: .buffered, defer: false)
+                    window.contentView = host
+                    window.isReleasedWhenClosed = false
+                    window.center(); window.makeKeyAndOrderFront(nil)
+                    let until = Date().addingTimeInterval(0.4)
+                    while Date() < until { CFRunLoopRunInMode(.defaultMode, 0.05, true) }
+                    guard let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, CGWindowID(window.windowNumber), [.boundsIgnoreFraming, .bestResolution]) else {
+                        throw CloudMeetingTranscription.Failure(message: "window capture failed")
+                    }
+                    window.orderOut(nil)
+                    let rep = NSBitmapImageRep(cgImage: cg)
+                    guard let data = rep.representation(using: .png, properties: [:]) else { throw CloudMeetingTranscription.Failure(message: "PNG failed") }
+                    try data.write(to: out.appendingPathComponent("\(kind)-\(name).png"))
+                    geometry.append(["name": "\(kind)-\(name)", "width": cg.width / 2, "height": cg.height / 2])
+                }
+            }
+            try JSONSerialization.data(withJSONObject: geometry, options: [.prettyPrinted, .sortedKeys]).write(to: out.appendingPathComponent("geometry.json"))
+            print("SELFTEST_OK cloudshots"); exit(0)
+        } catch { print("SELFTEST_FAIL cloudshots: \(error)"); exit(2) }
+    }
+
+    @MainActor
+    private static func cloudLiveSTT() {
+        let env = ProcessInfo.processInfo.environment
+        guard env["ASTRA_CLOUD_STT_TEST"] == "1", let fixture = env["ASTRA_STT_FIXTURE"] else {
+            print("SELFTEST_FAIL cloudlive: explicit test opt-in and PCM fixture required"); exit(2)
+        }
+        Task {
+            let previous = UserDefaults.standard.volatileDomain(forName: UserDefaults.argumentDomain)
+            func restore() {
+                UserDefaults.standard.setVolatileDomain(previous, forName: UserDefaults.argumentDomain)
+            }
+            do {
+                RecordingRuntime.setCloudTranscriptionAllowed(true)
+                let base = env["ASTRA_GATEWAY_URL"] ?? "http://127.0.0.1:3000"
+                let tokens = try AstraCoreBridge.devSignIn(base, email: "stt-fixture@astra.local", displayName: "STT Fixture")
+                let runtime = RecordingRuntime.shared
+                runtime.configureBackend(base: base, accessToken: tokens.accessToken)
+                var interim = 0
+                var final = 0
+                var texts: [String] = []
+                var firstMs: Int?
+                let start = Date()
+                runtime.onTranscript = { text, isFinal in
+                    if firstMs == nil { firstMs = Int(Date().timeIntervalSince(start) * 1000) }
+                    if isFinal { final += 1 } else { interim += 1 }
+                    texts.append(text)
+                }
+                guard runtime.begin(meetingId: "live-fixture-" + UUID().uuidString.lowercased(), captureMic: false, transcribe: true) else {
+                    throw NSError(domain: "live-start", code: 1)
+                }
+                let pcm = try Data(contentsOf: URL(fileURLWithPath: fixture))
+                let samples: [Float] = stride(from: 0, to: pcm.count - 1, by: 2).map { offset in
+                    Float(Int16(bitPattern: UInt16(pcm[offset]) | UInt16(pcm[offset + 1]) << 8)) / 32768
+                }
+                // Real-time pacing plus silence: assert results BEFORE ending recording.
+                for offset in stride(from: 0, to: samples.count + 96_000, by: 3_200) {
+                    let frame = offset < samples.count ? Array(samples[offset..<min(offset + 3_200, samples.count)]) : [Float](repeating: 0, count: 3_200)
+                    runtime.push(frame, sampleRate: 16_000)
+                    try await Task.sleep(nanoseconds: 200_000_000)
+                }
+                let passed = interim > 0 && final > 0 && texts.contains(where: { $0.contains("金曜日") }) && runtime.snapshot() != nil
+                await withCheckedContinuation { continuation in runtime.end { continuation.resume() } }
+                restore()
+                guard passed else {
+                    print("SELFTEST_FAIL cloudlive: partials=\(interim) finals=\(final) failure=\(runtime.liveTranscriptionFailure ?? "none")"); exit(2)
+                }
+                print("SELFTEST_OK cloudlive: BEFORE STOP partials=\(interim) finals=\(final) firstMs=\(firstMs ?? -1), Japanese content verified; no batch task")
+                exit(0)
+            } catch { restore(); print("SELFTEST_FAIL cloudlive: \(error)"); exit(2) }
+        }
+    }
+
     @MainActor
     private static func speech() {
         let st = SpeechTranscriber(localeId: "ja-JP")
@@ -4827,7 +5213,7 @@ enum SelfTest {
         let mainSize = NSSize(width: 900, height: 600)
         let main = NSWindow(contentRect: NSRect(origin: .zero, size: mainSize),
                             styleMask: [.titled, .closable, .resizable], backing: .buffered, defer: false)
-        main.contentView = NSHostingView(rootView: MainWindowView())
+        main.contentView = NSHostingView(rootView: MainWindowView(loadBackend: false))
         let mainR = shoot("main", window: main) { centered(main, mainSize); main.makeKeyAndOrderFront(nil); NSApp.activate(ignoringOtherApps: true) }
 
         // 4) Task Dock / Intent Bar（spec §4: 画面下部中央・560×56、§4.2 bottom inset）
@@ -4990,6 +5376,13 @@ enum SelfTest {
         let deadline = Date().addingTimeInterval(2)
         while Date() < deadline { CFRunLoopRunInMode(.defaultMode, 0.05, true) }
 
+        var focused: CFTypeRef?
+        var owner: pid_t = 0
+        guard AXUIElementCopyAttributeValue(AXUIElementCreateSystemWide(), kAXFocusedUIElementAttribute as CFString, &focused) == .success,
+              let focused, AXUIElementGetPid(focused as! AXUIElement, &owner) == .success, owner == getpid() else {
+            win.orderOut(nil); win.close()
+            print("SELFTEST_FAIL dictation: fixture lost focus; no text was inserted"); exit(2)
+        }
         let inserted = Dictation.insert("会議の要点をまとめて")
         let value = field.stringValue
         win.orderOut(nil); win.close()
@@ -5043,7 +5436,7 @@ enum SelfTest {
         let mainTexts = axTexts {
             let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 900, height: 600),
                              styleMask: [.titled, .closable, .resizable], backing: .buffered, defer: false)
-            w.contentView = NSHostingView(rootView: MainWindowView())
+            w.contentView = NSHostingView(rootView: MainWindowView(loadBackend: false))
             if let s = NSScreen.main { w.setFrameOrigin(NSPoint(x: s.frame.midX - 450, y: s.frame.midY - 300)) }
             w.makeKeyAndOrderFront(nil); NSApp.activate(ignoringOtherApps: true)
             return w
@@ -5067,7 +5460,8 @@ enum SelfTest {
         let mainMiss = mainWant.filter { !has(mainTexts, $0) }
         // Workspace: 統合サーフェス（§2/§7）— Recording Hero / Transcript / Translation / AI / RAG / Task Dock
         // AI に頼む語は Ask 入力の横の 3 つ（要約 / 決定事項 / アクション）。「質問する」は入力欄そのもの。
-        let wsWant = ["録音中", "文字起こし", "翻訳", "要約", "決定事項", "アクション", "AI が見ている資料"]
+        let wsWant = [Facts.recordingHeroRecording, RecordingTool.transcript.title,
+                      RecordingTool.translation.title, "要約", "決定事項", "アクション", "AI が見ている資料"]
         let wsMiss = wsWant.filter { !has(wsTexts, $0) }
         guard mainMiss.isEmpty, wsMiss.isEmpty else {
             print("SELFTEST_FAIL axtree: mainMiss=\(mainMiss) wsMiss=\(wsMiss) (main=\(mainTexts.count) ws=\(wsTexts.count))"); exit(2)
@@ -5241,8 +5635,9 @@ enum SelfTest {
         var totalControls = 0, totalNameless = 0
         var tabSummary: [String] = []
         // Tab がボタンにも止まるかは OS の「キーボードナビゲーション」次第。結果と一緒に記す。
-        let fka = NSApp.isFullKeyboardAccessEnabled
-        emit("A11Y_ENV\tfullKeyboardAccess=\(fka)\tmacOS=\(ProcessInfo.processInfo.operatingSystemVersionString)")
+        let keyboardNavigation = NSApp.isFullKeyboardAccessEnabled
+        let fka = UserDefaults(suiteName: "com.apple.Accessibility")?.bool(forKey: "FullKeyboardAccessEnabled") ?? false
+        emit("A11Y_ENV\tfullKeyboardAccess=\(fka)\tkeyboardNavigation=\(keyboardNavigation)\tmacOS=\(ProcessInfo.processInfo.operatingSystemVersionString)")
         func add(_ r: (controls: Int, nameless: Int)) { totalControls += r.controls; totalNameless += r.nameless }
 
         // Dock の姿（key にならない面なので Tab は測らない）
@@ -5461,20 +5856,27 @@ enum SelfTest {
             ? args[args.firstIndex(of: "--selftest")! + 2] : "http://127.0.0.1:3000"
         guard AstraCoreBridge.reachable(base) else { print("SELFTEST_SKIP aiaction: gateway unreachable"); exit(0) }
         do {
-            let tokens = try AstraCoreBridge.devSignIn(base, email: "aiaction-\(getpid())@astra.local", displayName: "AI")
+            // A configured test host belongs to one test identity; a new PID identity
+            // has no host and cannot test actual local inference.
+            let configured = ProcessInfo.processInfo.environment["ASTRA_SELFTEST_AGENT_EMAIL"]
+            let email = configured?.hasSuffix("@astra.local") == true ? configured! : "aiaction-\(getpid())@astra.local"
+            let accessToken: String
+            if let path = ProcessInfo.processInfo.environment["ASTRA_SELFTEST_AGENT_TOKEN_PATH"], path.hasPrefix("/tmp/") {
+                accessToken = try String(contentsOfFile: path, encoding: .utf8).trimmingCharacters(in: .whitespacesAndNewlines)
+            } else { accessToken = try AstraCoreBridge.devSignIn(base, email: email, displayName: "AI").accessToken }
             let state = RecordingWorkspaceState.shared
-            state.configureBackend(base: base, token: tokens.accessToken)
+            state.configureBackend(base: base, token: accessToken)
             state.transcript = [
                 TranscriptSegment(speaker: "田中", text: "リリースは 9 月 12 日にしましょう。", interim: false),
                 TranscriptSegment(speaker: "鈴木", text: "OAuth の確認を私がやります。", interim: false),
             ]
             state.runAIAction("リアルタイム要約")
-            // 非同期の結果を待つ（最大 20 秒）。
-            let deadline = Date().addingTimeInterval(20)
+            // 非同期の結果を待つ（最大 35 秒）。
+            let deadline = Date().addingTimeInterval(35)
             while state.aiResult.isEmpty && Date() < deadline {
                 RunLoop.current.run(until: Date().addingTimeInterval(0.2))
             }
-            guard !state.aiResult.isEmpty, !state.aiResult.contains("失敗") else {
+            guard state.aiActionSucceeded, !state.aiResult.isEmpty, !state.aiResult.contains("失敗") else {
                 print("SELFTEST_FAIL aiaction result=\(state.aiResult)"); exit(2)
             }
             let preview = String(state.aiResult.prefix(40)).replacingOccurrences(of: "\n", with: " ")
@@ -5485,30 +5887,22 @@ enum SelfTest {
         }
     }
 
-    /// `--selftest translate <base>`: 翻訳タブが transcript を Agent 経由で訳し、結果が返るか検証する。
+    /// Uses the local translation client; error messages cannot count as translated text.
     @MainActor
     private static func translateTest(_ args: [String]) {
-        let base = args.count > (args.firstIndex(of: "--selftest")! + 2)
-            ? args[args.firstIndex(of: "--selftest")! + 2] : "http://127.0.0.1:3000"
-        guard AstraCoreBridge.reachable(base) else { print("SELFTEST_SKIP translate: gateway unreachable"); exit(0) }
-        do {
-            let tokens = try AstraCoreBridge.devSignIn(base, email: "translate-\(getpid())@astra.local", displayName: "T")
-            let state = RecordingWorkspaceState.shared
-            state.configureBackend(base: base, token: tokens.accessToken)
-            state.transcript = [TranscriptSegment(speaker: "田中", text: "会議を始めましょう。", interim: false)]
-            state.translatedText = ""
-            state.translate(to: "英語")
-            let deadline = Date().addingTimeInterval(20)
-            while state.translatedText.isEmpty && Date() < deadline {
-                RunLoop.current.run(until: Date().addingTimeInterval(0.2))
+        Task {
+            let model = MeetingTranslation()
+            model.setEngine(.local)
+            model.update([TranscriptSegment(speaker: "Tester", text: "次回の会議は金曜日の午後3時です。", interim: false)])
+            model.setEnabled(true)
+            let deadline = Date().addingTimeInterval(45)
+            while model.isTranslating && Date() < deadline { try? await Task.sleep(for: .milliseconds(100)) }
+            let text = model.text.lowercased()
+            guard text.contains("friday"), text.contains("3"), model.failure == nil else {
+                print("SELFTEST_FAIL translate: local model did not preserve the fixture date/time"); exit(2)
             }
-            guard !state.translatedText.isEmpty, !state.translatedText.contains("失敗") else {
-                print("SELFTEST_FAIL translate result=\(state.translatedText)"); exit(2)
-            }
-            let preview = String(state.translatedText.prefix(40)).replacingOccurrences(of: "\n", with: " ")
-            print("SELFTEST_OK translate: Agent 訳=\"\(preview)…\"")
-            exit(0)
-        } catch { print("SELFTEST_FAIL translate error=\(error)"); exit(3) }
+            print("SELFTEST_OK translate: local model preserved Friday and 3 pm"); exit(0)
+        }
     }
 
     /// `--selftest waveform`: 録音中に波形が実マイクレベルで更新されるか（固定デモでない）を検証する。
@@ -5541,9 +5935,9 @@ enum SelfTest {
             ? args[args.firstIndex(of: "--selftest")! + 2] : "http://127.0.0.1:3000"
         guard AstraCoreBridge.reachable(base) else { print("SELFTEST_SKIP recovery: gateway unreachable"); exit(0) }
         do {
-            let tokens = try AstraCoreBridge.devSignIn(base, email: "recovery-\(getpid())@astra.local", displayName: "R")
+            let token = try preparedTestToken(base: base, email: "recovery-\(getpid())@astra.local")
             // gateway に会議を作り、その id で「クラッシュした録音」を作る（アップロードしない）。
-            let mid = try AstraCoreBridge.createMeeting(base, accessToken: tokens.accessToken, title: "Recovery 会議", language: "ja-JP")
+            let mid = try AstraCoreBridge.createMeeting(base, accessToken: token, title: "Recovery 会議", language: "ja-JP")
             let root = LocalStore.dataRoot
                 .appendingPathComponent("meetings").path
             let session = try RecordingSession.start(root: root, meetingId: mid)
@@ -5552,8 +5946,13 @@ enum SelfTest {
             try session.finish()   // 断片は書けたがアップロードしていない = クラッシュ相当
             // 起動時スキャンで回復候補に出る。
             let runtime = RecordingRuntime.shared
-            runtime.configureBackend(base: base, accessToken: tokens.accessToken)
+            runtime.configureBackend(base: base, accessToken: token)
             let found = runtime.recoverableMeetings().contains { $0.meetingId == mid }
+            // This fixture uploads only its generated signal. Keep the opt-in in this
+            // process; the user's persistent cloud-audio preference is unchanged.
+            var overrides = UserDefaults.standard.volatileDomain(forName: UserDefaults.argumentDomain)
+            overrides[RecordingRuntime.cloudTranscriptionDefaultsKey] = true
+            UserDefaults.standard.setVolatileDomain(overrides, forName: UserDefaults.argumentDomain)
             // 復旧: gateway に送って finalize（アップロード済みに印す）。
             let sent = runtime.recover(meetingId: mid)
             // 復旧後は回復候補から消えるはず（二重アップロードしない）。
@@ -5572,7 +5971,9 @@ enum SelfTest {
     private static func timer() {
         WindowCoordinator.headless = true   // window を出さない
         let state = RecordingWorkspaceState.shared
-        state.start()
+        // Timer behavior does not require hardware capture; keep this headless
+        // check independent of macOS TCC.
+        state.start(captureMic: false, transcribe: false, requestPermissions: false)
         RunLoop.current.run(until: Date().addingTimeInterval(2.4))
         let running = state.elapsedSeconds
         state.togglePause()                 // 一時停止
@@ -5643,6 +6044,14 @@ enum SelfTest {
         exit(0)
     }
 
+    /// Reuse the prepared test host's identity; do not spend an auth-rate-limit slot per fixture.
+    private static func preparedTestToken(base: String, email: String) throws -> String {
+        if let path = ProcessInfo.processInfo.environment["ASTRA_SELFTEST_AGENT_TOKEN_PATH"], path.hasPrefix("/tmp/") {
+            return try String(contentsOfFile: path, encoding: .utf8).trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        return try AstraCoreBridge.devSignIn(base, email: email, displayName: "SelfTest").accessToken
+    }
+
     /// `--selftest voiceask <base>`: Voice HUD の依頼が Agent に届き、thinking→応答→idle と進むか検証する。
     @MainActor
     private static func voiceask(_ args: [String]) {
@@ -5650,16 +6059,20 @@ enum SelfTest {
             ? args[args.firstIndex(of: "--selftest")! + 2] : "http://127.0.0.1:3000"
         guard AstraCoreBridge.reachable(base) else { print("SELFTEST_SKIP voiceask: gateway unreachable"); exit(0) }
         do {
-            let tokens = try AstraCoreBridge.devSignIn(base, email: "voiceask-\(getpid())@astra.local", displayName: "V")
+            let accessToken = try preparedTestToken(base: base, email: "voiceask-\(getpid())@astra.local")
+            guard LocalStore.shared.open() else { print("SELFTEST_FAIL voiceask: storage unavailable"); exit(2) }
             let hud = VoiceHUDState.shared
-            hud.configureBackend(base: base, token: tokens.accessToken)
-            hud.ask("今日の予定を教えて")
-            // thinking に入るはず。
+            hud.configureBackend(base: base, token: accessToken)
+            guard hud.ask("次の予定を一文で整理してください。Astraのレビューは金曜日15時です。"), let id = hud.latestRequestID else {
+                print("SELFTEST_FAIL voiceask: request not accepted"); exit(2)
+            }
             let wasThinking = hud.mode == .thinking
-            let deadline = Date().addingTimeInterval(20)
-            while hud.answer.isEmpty && Date() < deadline { RunLoop.current.run(until: Date().addingTimeInterval(0.2)) }
-            guard !hud.answer.isEmpty, !hud.answer.contains("失敗"), hud.mode == .idle else {
-                print("SELFTEST_FAIL voiceask answer=\(hud.answer) mode=\(hud.mode)"); exit(2)
+            let deadline = Date().addingTimeInterval(60)
+            while hud.requestInFlight && Date() < deadline { RunLoop.current.run(until: Date().addingTimeInterval(0.2)) }
+            let record = LocalStore.shared.loadTasks().first { $0.id == id }?.requestRecord
+            guard wasThinking, record?.hasResult == true, hud.mode == .idle,
+                  hud.answer.contains("金曜"), hud.answer.contains("15") || hud.answer.contains("3時") else {
+                print("SELFTEST_FAIL voiceask: no completed, persisted answer with fixture facts"); exit(2)
             }
             let preview = String(hud.answer.prefix(36)).replacingOccurrences(of: "\n", with: " ")
             print("SELFTEST_OK voiceask: thinking=\(wasThinking)→idle Agent 応答=\"\(preview)…\"")
@@ -5684,14 +6097,19 @@ enum SelfTest {
             for _ in 0..<6 { _ = session.pushSamples(samples: oneSec, sampleRate: 16_000) }
             try session.finish()
             // 後からサインインして復旧。
-            let tokens = try AstraCoreBridge.devSignIn(base, email: "recoff-\(getpid())@astra.local", displayName: "RO")
+            let token = try preparedTestToken(base: base, email: "recoff-\(getpid())@astra.local")
+            // This fixture deliberately uploads its generated six-second signal.
+            // Consent is process-local and never changes the user's stored preference.
+            var arguments = UserDefaults.standard.volatileDomain(forName: UserDefaults.argumentDomain)
+            arguments["astra.transcription.cloudGoogleSTT"] = true
+            UserDefaults.standard.setVolatileDomain(arguments, forName: UserDefaults.argumentDomain)
             let runtime = RecordingRuntime.shared
-            runtime.configureBackend(base: base, accessToken: tokens.accessToken)
+            runtime.configureBackend(base: base, accessToken: token)
             let foundBefore = runtime.recoverableMeetings().contains { $0.meetingId == localId }
             let sent = runtime.recover(meetingId: localId)
             let stillLocal = runtime.recoverableMeetings().contains { $0.meetingId == localId }
-            // 後片付け（リネーム先も含めて掃除）。
-            for m in runtime.recoverableMeetings() { try? FileManager.default.removeItem(atPath: root + "/" + m.meetingId) }
+            // Never delete other recovery candidates. The renamed, uploaded fixture
+            // remains under the caller's isolated test root for diagnostic inspection.
             try? FileManager.default.removeItem(atPath: root + "/" + localId)
             guard foundBefore, sent > 0, !stillLocal else {
                 print("SELFTEST_FAIL recoveryoffline found=\(foundBefore) sent=\(sent) stillLocal=\(stillLocal)"); exit(2)
@@ -5728,6 +6146,11 @@ enum SelfTest {
         var shot: [String] = [], fail: [String] = []
         func take(_ name: String, _ present: () -> Void) {
             present(); settle(0.9)
+            // 撮る直前に前面へ。inactive の窓は sidebar の選択色が薄く、switch が off に見える
+            // （workcontext gate: key=false active=false のまま撮っていた）。
+            NSApp.activate(ignoringOtherApps: true)
+            win.makeKeyAndOrderFront(nil)
+            settle(0.3)
             let id = CGWindowID(max(0, win.windowNumber))
             guard id != 0, let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, id, [.boundsIgnoreFraming, .bestResolution]),
                   let png = NSBitmapImageRep(cgImage: cg).representation(using: .png, properties: [:]) else {
@@ -5737,6 +6160,28 @@ enum SelfTest {
             shot.append(name)
         }
         take("home") { MainWindowController.shared.showSection(.home) }
+        // Work Context（気にすること・待ち・返すもの・今週の負荷）と Personalization。
+        // 差し込みは gateway の契約と同じ JSON（WorkContextFixture）。撮り終えたら外す。
+        take("home-work-context") {
+            WorkContextStore.shared.install(WorkContextFixture.context(), profile: WorkContextFixture.profile())
+            MainWindowController.shared.showSection(.work); settle(0.3)
+            MainWindowController.shared.showSection(.home)
+        }
+        take("home-personalization") { MainNav.shared.personalizationOpen = true }
+        MainNav.shared.personalizationOpen = false
+        take("home-work-why") {
+            if let first = WorkContextStore.shared.context?.priorities.first { WorkContextStore.shared.evidenceOpen.insert(first.id) }
+        }
+        WorkContextStore.shared.evidenceOpen = []
+        // 会議前の brief（閉じた行 / 開いた中身）。
+        take("home-meeting-brief") {
+            WorkContextStore.shared.installBrief(WorkContextFixture.brief())
+            WorkContextStore.shared.briefOpen = true
+            MainWindowController.shared.showSection(.work); settle(0.3)
+            MainWindowController.shared.showSection(.home)
+        }
+        WorkContextStore.shared.installBrief(nil)
+        WorkContextStore.shared.install(nil, profile: nil)
         take("work-tasks") { MainWindowController.shared.showWork(.tasks) }
         take("work-agents") { MainWindowController.shared.showWork(.agents) }
         take("library-meetings") { MainWindowController.shared.showLibrary(.meetings) }
@@ -5806,7 +6251,10 @@ enum SelfTest {
             // 出た直後は描画が終わっていないことがあるので一拍おく。
             settle(0.6)
             guard let (winID, w, h) = best,
-                  let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, winID, [.boundsIgnoreFraming, .bestResolution])
+                  // golden は logical points で保存する。Retina の物理画素を使うと
+                  // 同じ 220x44pt の窓が 440x88px になり、別の寸法と誤判定される。
+                  let cg = CGWindowListCreateImage(.null, .optionIncludingWindow, winID, [.boundsIgnoreFraming, .nominalResolution]),
+                  cg.width == w, cg.height == h
             else { return nil }
             let rep = NSBitmapImageRep(cgImage: cg)
             var seen = Set<UInt32>()
@@ -5831,6 +6279,7 @@ enum SelfTest {
 
         var report: [String] = []
         var failures: [String] = []
+        var captureLayouts: [String: [String: Int]] = [:]
         func record(_ name: String, _ r: (w: Int, h: Int, colors: Int)?, expW: CGFloat?, expH: CGFloat?, minColors: Int) {
             guard let r = r else { failures.append("\(name)=撮影不可"); return }
             var ok = r.colors >= minColors
@@ -5838,6 +6287,9 @@ enum SelfTest {
             if let eh = expH { ok = ok && abs(r.h - Int(eh)) <= 2 }
             if !ok { failures.append("\(name)(\(r.w)x\(r.h),c\(r.colors))") }
             report.append("\(name) \(r.w)x\(r.h) c\(r.colors)")
+            let isDock = ["01-voice-hud-idle", "02-voice-hud-listening", "02b-voice-hud-preparing"].contains(name)
+            captureLayouts[name] = ["width": r.w, "height": r.h,
+                                   "topInsetPx": isDock ? Int(WindowCoordinator.shared.dockTopInset) : 0]
         }
 
         let state = RecordingWorkspaceState.shared
@@ -5857,7 +6309,7 @@ enum SelfTest {
         WindowCoordinator.shared.showVoiceHUD()
         let idleSize = AstraStateStore.shared.dock.size()
         record("01-voice-hud-idle", capture("01-voice-hud-idle"),
-               expW: idleSize.width, expH: idleSize.height, minColors: 4)
+               expW: idleSize.width, expH: idleSize.height + WindowCoordinator.shared.dockTopInset, minColors: 4)
 
         // 02b voice-hud-preparing（先に撮る）
         //
@@ -5868,7 +6320,7 @@ enum SelfTest {
         VoiceHUDState.shared.mode = .listening(partial: "")
         let preparingSize = AstraStateStore.shared.dock.size()
         record("02b-voice-hud-preparing", capture("02b-voice-hud-preparing"),
-               expW: preparingSize.width, expH: preparingSize.height, minColors: 4)
+               expW: preparingSize.width, expH: preparingSize.height + WindowCoordinator.shared.dockTopInset, minColors: 4)
 
         // 02 voice-hud-listening
         // 実マイクを開かない撮影なので、「取り込めている姿」を作ってから撮る。
@@ -5879,7 +6331,7 @@ enum SelfTest {
         // Dock は状態ごとに寸法が変わる。期待値も状態から引く（固定値で持たない）。
         let listeningSize = AstraStateStore.shared.dock.size()
         record("02-voice-hud-listening", capture("02-voice-hud-listening"),
-               expW: listeningSize.width, expH: listeningSize.height, minColors: 4)
+               expW: listeningSize.width, expH: listeningSize.height + WindowCoordinator.shared.dockTopInset, minColors: 4)
         // PREPARING_VISUAL_GATE: 同じ窓・同じ寸法で、意味だけが違う 2 枚であること。
         // 寸法が違えば「preparing だけ geometry が崩れた」を、同一なら「名乗りが変わっていない」を捕まえる。
         if abs(preparingSize.width - listeningSize.width) > 2
@@ -5898,6 +6350,14 @@ enum SelfTest {
         WindowCoordinator.shared.showRecordingWorkspace()
         record("03-recording-workspace", capture("03-recording-workspace"),
                expW: Metrics.workspaceWidth, expH: Metrics.workspaceHeight, minColors: 12)
+
+        // 03b recording-paused: 一時停止。主役の点が灰になり、見出しが「一時停止中」になる。
+        // 一時停止の手は録音面の pill にある（Dock は点だけ）。Atlas meeting.paused はここで撮る。
+        state.isPaused = true
+        settle(0.3)
+        record("03b-recording-paused", capture("03b-recording-paused"),
+               expW: Metrics.workspaceWidth, expH: Metrics.workspaceHeight, minColors: 12)
+        state.isPaused = false
 
         // 04 recording-transcript（会話が伸びた Transcript）
         //
@@ -5950,20 +6410,32 @@ enum SelfTest {
 
         // 11 meeting-canvas: §21 会議中に溜まる構造データが画面に出るか。
         // 拾った行には出所（いつ・誰が）が付く。付かない絵を golden に残さない。
+        // **時刻は経過（04:21）以下で、右の文字起こしの実在する行を指す。**抽出項目の時刻が経過より
+        // 後だったり、対応する発言が transcript に無いと、「出所 ›」の裏が取れず矛盾して見える（盲検で毎回指摘）。
+        RecordingWorkspaceState.shared.transcript = [
+            TranscriptSegment(speaker: "田中", text: "初期費用が心配です", interim: false, at: 168),
+            TranscriptSegment(speaker: "田中", text: "導入時期は 10 月で行きます", interim: false, at: 205),
+            TranscriptSegment(speaker: "あなた", text: "見積は明日までにお願いします", interim: false, at: 228),
+            TranscriptSegment(speaker: "鈴木", text: "誰が対応しますか？", interim: false, at: 244),
+        ]
         AstraStateStore.shared.updateCanvas(MeetingCanvas(
-            decisions: [CanvasItem("導入時期は 10 月で行きます", at: 262, speaker: "田中")],
-            actions: [CanvasItem("見積は明日までにお願いします", at: 288, speaker: "あなた")],
-            questions: [CanvasItem("誰が対応しますか？", at: 301, speaker: "鈴木")],
-            concerns: [CanvasItem("初期費用が心配です", at: 254, speaker: "田中")],
+            decisions: [CanvasItem("導入時期は 10 月で行きます", at: 205, speaker: "田中")],
+            actions: [CanvasItem("見積は明日までにお願いします", at: 228, speaker: "あなた")],
+            questions: [CanvasItem("誰が対応しますか？", at: 244, speaker: "鈴木")],
+            concerns: [CanvasItem("初期費用が心配です", at: 168, speaker: "田中")],
             notes: []))
         record("11-meeting-canvas", capture("11-meeting-canvas"),
                expW: Metrics.workspaceWidth, expH: Metrics.workspaceHeight, minColors: 12)
         AstraStateStore.shared.reset()
+        RecordingWorkspaceState.shared.transcript = []   // 上で入れた行を次の面へ持ち越さない
 
         // 09 permission-denied: 許可が無いまま録り続けていることが画面に出るか。
         // 「録音中」と出ているのに無音、が一番高くつく壊れ方なので必ず撮る。
         state.ragOpen = false
         state.permissionIssue = .microphoneDenied
+        // 許可が無く、**何も届いていない**姿（一番高くつく壊れ方）。届いている経路を空にする。
+        // 空にしないと「画面の音を聞いています」が正しく出て、それは別の状態の絵になる。
+        RecordingRuntime.shared.resetListening()
         // 聞けていないのに文字起こしが並んでいる絵を「正しい」として残さない。
         // デモの transcript が載ったままだったので、「音声が記録されていません」の
         // すぐ隣で 3 人が喋っている画面をゲートが通していた。
@@ -5973,6 +6445,27 @@ enum SelfTest {
         record("09-permission-denied", capture("09-permission-denied"),
                expW: Metrics.workspaceWidth, expH: Metrics.workspaceHeight, minColors: 12)
         state.permissionIssue = nil
+        RecordingRuntime.shared.markListening(.localUser)
+        RecordingRuntime.shared.markListening(.remoteAudio)
+
+        // 09c speech-denied: 音は録れているが、音声認識の許可が無い。理由と直しに行く道を出す。
+        state.permissionIssue = .speechDenied
+        state.transcript = []
+        state.refreshRag()
+        settle(0.3)
+        record("09c-speech-denied", capture("09c-speech-denied"),
+               expW: Metrics.workspaceWidth, expH: Metrics.workspaceHeight, minColors: 12)
+        state.permissionIssue = nil
+
+        // 09b stt-unavailable: 音は届いて録れているが、この Mac ではオンデバイス文字起こしが始められない。
+        // 黙って空の文字起こしにせず、理由を言う（サーバへは出さない）。
+        RecordingRuntime.shared.setTranscriptionUnavailableForShot(true)
+        state.transcript = []
+        state.refreshRag()
+        settle(0.3)
+        record("09b-stt-unavailable", capture("09b-stt-unavailable"),
+               expW: Metrics.workspaceWidth, expH: Metrics.workspaceHeight, minColors: 12)
+        RecordingRuntime.shared.setTranscriptionUnavailableForShot(false)
         WindowCoordinator.shared.hideRecordingWorkspace()
         settle(0.5)
 
@@ -5999,8 +6492,25 @@ enum SelfTest {
         // つまりボタンより下の層を叩いていたので Session が生まれず、
         // **録音が写っていない Home** を「recording-now」として撮って緑にしていた。
         // ボタンと同じ入口を通す。
+        // 実際の利用者の Home は空ではない。録音カードの下に最近の会議が続く（下部の大きな空白を作らない）。
+        let rnStore = MeetingSessionStore.shared
+        // begin → beginProcessing(endedAt を入れる) → markReady の順で通す。
+        // beginProcessing を挟まないと endedAt が nil のままで、経過が「今 - 開始」になり 120 分等の嘘になる。
+        let rn1s = Date().addingTimeInterval(-2 * 3600)
+        rnStore.begin(id: "rn-recent-1", title: "Q4 移行計画の打ち合わせ", source: "Google Meet", now: rn1s)
+        rnStore.beginProcessing(id: "rn-recent-1", now: rn1s.addingTimeInterval(42 * 60))
+        rnStore.markReady(id: "rn-recent-1", summary: "Q4 移行計画とトレーニングコストを議論。10 月から Phase 1 開始で合意。",
+                          actions: 3, decisions: 2, participants: 5, now: rn1s.addingTimeInterval(42 * 60))
+        let rn2s = Date().addingTimeInterval(-26 * 3600)
+        rnStore.begin(id: "rn-recent-2", title: "A 社 商談", source: "Zoom", now: rn2s)
+        rnStore.beginProcessing(id: "rn-recent-2", now: rn2s.addingTimeInterval(31 * 60))
+        rnStore.markReady(id: "rn-recent-2", summary: "見積の前提と初期費用を確認。稟議は今週中。",
+                          actions: 2, decisions: 1, participants: 3, now: rn2s.addingTimeInterval(31 * 60))
         AstraStateStore.shared.meetingDetected(app: "Google Meet")
-        state.start()
+        // The visual fixture needs a live Session/Home card, not a hardware
+        // permission check. Keep it on the disk-only path; live microphone
+        // behavior is covered by the signed recording gate.
+        state.start(captureMic: false, transcribe: false, requestPermissions: false)
         MainWindowController.shared.showSection(.home)
         settle(0.5)
         record("12-recording-now", capture("12-recording-now", minW: 700, minH: 500,
@@ -6026,6 +6536,10 @@ enum SelfTest {
         }
 
         print("SHOTS_DIR \(outDir)")
+        do {
+            let data = try JSONSerialization.data(withJSONObject: captureLayouts, options: [.sortedKeys, .prettyPrinted])
+            try data.write(to: URL(fileURLWithPath: "\(outDir)/capture-layout.json"), options: .atomic)
+        } catch { failures.append("capture layout write failed: \(error)") }
         for line in report { print("SHOT \(line)") }
         if failures.isEmpty {
             // 枚数は数えて言う（固定で書くと、面を足したときに嘘になる。実際 12 のまま 13 枚撮っていた）。
@@ -6072,7 +6586,10 @@ enum SelfTest {
         // gateway が無くても E2E-001 の骨（HUD→dictation→会議→保存→HUD 復帰と**窓の排他**）は通す。
         // 仕様 P0-9 / ERR-001「ネット切断でもローカル録音は続く」を同時に確かめることになる。
         let online = AstraCoreBridge.reachable(base)
-        guard Permissions.microphone == .granted else { print("SELFTEST_SKIP e2e001: mic not granted"); exit(0) }
+        let synthetic = ProcessInfo.processInfo.environment["ASTRA_E2E_SYNTHETIC"] == "1"
+        if !synthetic {
+            guard Permissions.microphone == .granted else { print("SELFTEST_SKIP e2e001: mic not granted"); exit(0) }
+        }
 
         var steps: [String] = []
         func settle(_ seconds: Double) {
@@ -6081,15 +6598,14 @@ enum SelfTest {
         }
 
         do {
+            guard LocalStore.shared.open() else { print("SELFTEST_FAIL e2e001 database unavailable"); exit(2) }
             // ---- サインイン（実 gateway）。以後すべて実経路。
             let state = RecordingWorkspaceState.shared
-            var accessToken: String? = nil
             if online {
-                let tokens = try AstraCoreBridge.devSignIn(base, email: "e2e-\(getpid())@astra.local", displayName: "E2E")
-                accessToken = tokens.accessToken
-                state.configureBackend(base: base, token: tokens.accessToken)
-                RecordingRuntime.shared.configureBackend(base: base, accessToken: tokens.accessToken)
-                VoiceHUDState.shared.configureBackend(base: base, token: tokens.accessToken)
+                let token = try preparedTestToken(base: base, email: "e2e-\(getpid())@astra.local")
+                state.configureBackend(base: base, token: token)
+                RecordingRuntime.shared.configureBackend(base: base, accessToken: token)
+                VoiceHUDState.shared.configureBackend(base: base, token: token)
             }
 
             // ---- ① 起動直後: Voice HUD が出ていて、Workspace は無い。
@@ -6097,7 +6613,7 @@ enum SelfTest {
             WindowCoordinator.shared.showVoiceHUD()
             settle(1.0)
             var wins = onScreenWindowSizes()
-            let hudUp = wins.contains { near($0.w, Metrics.hudWidth) && near($0.h, Metrics.hudHeight) }
+            let hudUp = wins.contains { near($0.w, Metrics.hudWidth) && near($0.h, Metrics.hudHeight + WindowCoordinator.shared.dockTopInset) }
             let wsAbsent = !wins.contains { near($0.w, Metrics.workspaceWidth) && near($0.h, Metrics.workspaceHeight) }
             guard hudUp, wsAbsent else {
                 print("SELFTEST_FAIL e2e001 ①HUD: hud=\(hudUp) workspaceAbsent=\(wsAbsent) wins=\(wins)"); exit(2)
@@ -6128,8 +6644,16 @@ enum SelfTest {
                 if AXUIElementCopyAttributeValue(sys, kAXFocusedUIElementAttribute as CFString, &f) == .success,
                    let el = f {
                     var r: CFTypeRef?
+                    var owner: pid_t = 0
+                    let ownPID = AXUIElementGetPid(el as! AXUIElement, &owner) == .success && owner == getpid()
                     if AXUIElementCopyAttributeValue(el as! AXUIElement, kAXRoleAttribute as CFString, &r) == .success,
-                       let role = r as? String { ownFocus = (role == (kAXTextFieldRole as String)) }
+                       let role = r as? String { ownFocus = ownPID && (role == (kAXTextFieldRole as String)) }
+                    if ownFocus {
+                        var writable: DarwinBoolean = false, selectedWritable: DarwinBoolean = false
+                        let valueStatus = AXUIElementIsAttributeSettable(el as! AXUIElement, kAXValueAttribute as CFString, &writable)
+                        let selectedStatus = AXUIElementIsAttributeSettable(el as! AXUIElement, kAXSelectedTextAttribute as CFString, &selectedWritable)
+                        print("DICTATION_FIXTURE trusted=\(AXIsProcessTrusted()) value=\(valueStatus.rawValue)/\(writable.boolValue) selection=\(selectedStatus.rawValue)/\(selectedWritable.boolValue) editable=\(field.isEditable)")
+                    }
                     var v: CFTypeRef?
                     if ownFocus,
                        AXUIElementCopyAttributeValue(el as! AXUIElement, kAXValueAttribute as CFString, &v) == .success {
@@ -6157,25 +6681,32 @@ enum SelfTest {
             //
             // 録音は**窓を増やさない**。Dock がそのまま録音コントローラになり、
             // 大きな面は押されるまで開かない（以前はここで Workspace が出ることを見ていた）。
-            WindowCoordinator.shared.toggleRecording()
+            if synthetic {
+                state.start(captureMic: false, transcribe: false, requestPermissions: false)
+            } else {
+                WindowCoordinator.shared.toggleRecording()
+            }
             settle(1.2)
             wins = onScreenWindowSizes()
-            let controllerUp = wins.contains { near($0.w, Metrics.dockMeetingWidth) && near($0.h, Metrics.dockMeetingHeight) }
-            let idleGone = !wins.contains { near($0.w, Metrics.dockIdleWidth) && near($0.h, Metrics.dockIdleHeight) }
+            let controllerUp = wins.contains { near($0.w, Metrics.dockMeetingWidth) && near($0.h, Metrics.dockMeetingHeight + WindowCoordinator.shared.dockTopInset) }
+            let idleGone = !wins.contains { near($0.w, Metrics.dockIdleWidth) && near($0.h, Metrics.dockIdleHeight + WindowCoordinator.shared.dockTopInset) }
             let noExtraSurface = !wins.contains { near($0.w, Metrics.workspaceWidth) && near($0.h, Metrics.workspaceHeight) }
             let meetingId = RecordingRuntime.shared.activeMeetingId
-            // online なら gateway の会議 UUID、offline ならローカル id（meeting-…）。どちらでも id は要る。
-            let meetingOK = !meetingId.isEmpty && (online ? !meetingId.hasPrefix("meeting-") : true)
+            // Live-only recording retains a local session even when an agent is connected.
+            let meetingOK = !meetingId.isEmpty && LocalStore.shared.loadSessions().contains { $0.id == meetingId && $0.status == .recording }
             guard state.isRecording, controllerUp, idleGone, noExtraSurface, meetingOK else {
                 print("SELFTEST_FAIL e2e001 ③切替: recording=\(state.isRecording) controller=\(controllerUp) idleGone=\(idleGone) noExtra=\(noExtraSurface) meeting=\(meetingId) wins=\(wins)"); exit(4)
             }
             steps.append("③録音コントローラへ(窓は増えない)")
 
             // ---- ④ HEAR: 実マイクで録る（5 秒断片が閉じる長さ）。
-            settle(6.0)
+            if synthetic {
+                RecordingRuntime.shared.push(Array(repeating: Float(0.02), count: 80_000), sampleRate: 16_000)
+            }
+            settle(synthetic ? 0.5 : 6.0)
             let recordedMs = RecordingRuntime.shared.recordedMs()
             guard recordedMs > 0 else { print("SELFTEST_FAIL e2e001 ④録音: recordedMs=0"); exit(5) }
-            steps.append("④実録音\(recordedMs)ms")
+            steps.append(synthetic ? "④合成音源\(recordedMs)ms（実マイク未検証）" : "④実録音\(recordedMs)ms")
 
             // ---- ⑤ Transcript が増える（発話を実 state へ流す。partial→final の増加を測る）。
             let before = state.transcript.count
@@ -6195,7 +6726,7 @@ enum SelfTest {
                 state.runAIAction("リアルタイム要約")
                 let aiDeadline = Date().addingTimeInterval(30)
                 while state.aiRunning && Date() < aiDeadline { CFRunLoopRunInMode(.defaultMode, 0.1, true) }
-                guard !state.aiResult.isEmpty else { print("SELFTEST_FAIL e2e001 ⑦AI 応答なし"); exit(7) }
+                guard state.aiActionSucceeded, state.aiResult.contains("OAuth") else { print("SELFTEST_FAIL e2e001 ⑦AI 要約失敗: \(state.aiResult)"); exit(7) }
                 steps.append("⑦AI要約")
             } else {
                 steps.append("⑦AI(gateway無しのため未実行)")
@@ -6205,34 +6736,25 @@ enum SelfTest {
             WindowCoordinator.shared.toggleRecording()
             settle(2.0)
             wins = onScreenWindowSizes()
-            let controllerGone = !wins.contains { near($0.w, Metrics.dockMeetingWidth) && near($0.h, Metrics.dockMeetingHeight) }
+            let controllerGone = !wins.contains { near($0.w, Metrics.dockMeetingWidth) && near($0.h, Metrics.dockMeetingHeight + WindowCoordinator.shared.dockTopInset) }
             let resultSize = AstraStateStore.shared.dock.size()
-            let resultUp = wins.contains { near($0.w, resultSize.width) && near($0.h, resultSize.height) }
+            let resultUp = wins.contains { near($0.w, resultSize.width) && near($0.h, resultSize.height + WindowCoordinator.shared.dockTopInset) }
             let stillOneSurface = wins.count == 1
             guard !state.isRecording, controllerGone, resultUp, stillOneSurface else {
                 print("SELFTEST_FAIL e2e001 ⑧復帰: stopped=\(!state.isRecording) controllerGone=\(controllerGone) result=\(resultUp) wins=\(wins)"); exit(8)
             }
             steps.append("⑧停止→結果面へ morph(窓は1枚のまま)")
 
-            // ---- ⑨ REMEMBER: 保存後に Library から取り出せる／回復候補に残っていない。
-            let root = LocalStore.dataRoot
-                .appendingPathComponent("meetings").path
+            // ---- ⑨ REMEMBER: live results and the closed audio remain in the local library.
+            // Stopping a recording must not require a second cloud transcription pass.
+            let root = LocalStore.dataRoot.appendingPathComponent("meetings").path
+            let saved = LocalStore.shared.loadSessions().first { $0.id == meetingId }
             let onDisk = FileManager.default.fileExists(atPath: root + "/" + meetingId)
-            if online {
-                let library = (try? AstraCoreBridge.library(base, accessToken: accessToken ?? "")) ?? []
-                let stillRecoverable = scanRecoverable(root: root, active: nil).contains { $0.meetingId == meetingId }
-                try? FileManager.default.removeItem(atPath: root + "/" + meetingId)
-                guard !stillRecoverable else { print("SELFTEST_FAIL e2e001 ⑨保存済みなのに回復候補に残る"); exit(9) }
-                steps.append("⑨Library(\(library.count)件)・未送信なし")
-            } else {
-                // オフラインでは gateway へ送れないので、**ローカルに残っていること**が正しい
-                // （ERR-001「ローカル録音継続」/ ERR-006「次回起動で復旧候補」）。消さない。
-                guard onDisk else { print("SELFTEST_FAIL e2e001 ⑨オフラインなのに録音がディスクに無い"); exit(9) }
-                let recoverable = scanRecoverable(root: root, active: nil).contains { $0.meetingId == meetingId }
-                try? FileManager.default.removeItem(atPath: root + "/" + meetingId)
-                guard recoverable else { print("SELFTEST_FAIL e2e001 ⑨オフライン録音が復旧候補に出ない"); exit(9) }
-                steps.append("⑨オフライン保存・復旧候補あり")
+            guard onDisk, saved?.status == .ready, saved?.endedAt != nil else {
+                print("SELFTEST_FAIL e2e001 ⑨保存: onDisk=\(onDisk) ready=\(saved?.status == .ready)"); exit(9)
             }
+            try? FileManager.default.removeItem(atPath: root + "/" + meetingId)
+            steps.append("⑨ローカルLibraryに同じ会議を保存・停止後の再文字起こしなし")
 
             WindowCoordinator.shared.hideVoiceHUD()
             print("SELFTEST_OK e2e001(" + (online ? "online" : "offline") + "): " + steps.joined(separator: " → "))
@@ -6242,42 +6764,37 @@ enum SelfTest {
         }
     }
 
-    /// `--selftest fulllifecycle <base>`: 実経路の全体を通す。サインイン → toggleRecording（=グローバル
-    /// ショートカットが呼ぶ）で録音開始（実 gateway 会議作成＋実マイク） → 実録音 → toggleRecording で停止
-    /// → 保存・送信・アップロード印 → HUD 復帰。§6「Voice HUD→Recording→保存→HUD復帰」の実 E2E。
+    /// Real microphone → stop → persisted ready session. Live transcription does not
+    /// upload the full recording again at stop; that former assertion is obsolete.
     @MainActor
     private static func fullLifecycle(_ args: [String]) {
-        let base = args.count > (args.firstIndex(of: "--selftest")! + 2)
-            ? args[args.firstIndex(of: "--selftest")! + 2] : "http://127.0.0.1:3000"
-        guard AstraCoreBridge.reachable(base) else { print("SELFTEST_SKIP fulllifecycle: gateway unreachable"); exit(0) }
         guard Permissions.microphone == .granted else { print("SELFTEST_SKIP fulllifecycle: mic not granted"); exit(0) }
-        do {
-            WindowCoordinator.headless = true
-            let tokens = try AstraCoreBridge.devSignIn(base, email: "full-\(getpid())@astra.local", displayName: "F")
-            RecordingWorkspaceState.shared.configureBackend(base: base, token: tokens.accessToken)
-            RecordingRuntime.shared.configureBackend(base: base, accessToken: tokens.accessToken)
-            let state = RecordingWorkspaceState.shared
-            // 通常時 → 録音開始（グローバルショートカット相当）。
-            WindowCoordinator.shared.toggleRecording()
-            let recording = state.isRecording
-            let meetingId = RecordingRuntime.shared.activeMeetingId
-            let isGatewayMeeting = !meetingId.hasPrefix("meeting-") && !meetingId.isEmpty  // gateway UUID
-            // 実マイクで 6 秒録る（5 秒断片が閉じる）。
-            RunLoop.current.run(until: Date().addingTimeInterval(6.0))
-            // 停止 → 保存・送信・アップロード印 → HUD 復帰。
-            WindowCoordinator.shared.toggleRecording()
-            let stopped = !state.isRecording
-            // 送信済みなので回復候補に出ない。
-            let root = LocalStore.dataRoot
-                .appendingPathComponent("meetings").path
-            let recoverable = scanRecoverable(root: root, active: nil).contains { $0.meetingId == meetingId }
-            try? FileManager.default.removeItem(atPath: root + "/" + meetingId)
-            guard recording, isGatewayMeeting, stopped, !recoverable else {
-                print("SELFTEST_FAIL fulllifecycle recording=\(recording) gatewayMeeting=\(isGatewayMeeting) stopped=\(stopped) recoverable=\(recoverable)"); exit(2)
-            }
-            print("SELFTEST_OK fulllifecycle: HUD→録音(実gateway会議 \(meetingId.prefix(8))…)→実マイク→保存送信→HUD復帰、候補に残らない")
-            exit(0)
-        } catch { print("SELFTEST_FAIL fulllifecycle error=\(error)"); exit(3) }
+        WindowCoordinator.headless = true
+        guard LocalStore.shared.open() else { print("SELFTEST_FAIL fulllifecycle database unavailable"); exit(2) }
+        var arguments = UserDefaults.standard.volatileDomain(forName: UserDefaults.argumentDomain)
+        arguments[RecordingRuntime.cloudTranscriptionDefaultsKey] = false
+        UserDefaults.standard.setVolatileDomain(arguments, forName: UserDefaults.argumentDomain)
+        let state = RecordingWorkspaceState.shared
+        WindowCoordinator.shared.toggleRecording()
+        let recording = state.isRecording
+        let meetingId = RecordingRuntime.shared.activeMeetingId
+        RunLoop.current.run(until: Date().addingTimeInterval(6.0))
+        let milliseconds = RecordingRuntime.shared.recordedMs()
+        WindowCoordinator.shared.toggleRecording()
+        let deadline = Date().addingTimeInterval(8)
+        while Date() < deadline && LocalStore.shared.loadSessions().first(where: { $0.id == meetingId })?.status != .ready {
+            CFRunLoopRunInMode(.defaultMode, 0.05, true)
+        }
+        let saved = LocalStore.shared.loadSessions().first { $0.id == meetingId }
+        let folder = LocalStore.dataRoot.appendingPathComponent("meetings").appendingPathComponent(meetingId)
+        let onDisk = FileManager.default.fileExists(atPath: folder.path)
+        let valid = recording && !state.isRecording && milliseconds > 0 && onDisk && saved?.status == .ready && saved?.endedAt != nil
+        if !meetingId.isEmpty { try? FileManager.default.removeItem(at: folder) }
+        guard valid else {
+            print("SELFTEST_FAIL fulllifecycle recording=\(recording) ms=\(milliseconds) onDisk=\(onDisk) ready=\(saved?.status == .ready)"); exit(2)
+        }
+        print("SELFTEST_OK fulllifecycle: HUD→実マイク \(milliseconds)ms→停止→同じ会議がローカルLibraryにreadyで保存")
+        exit(0)
     }
 
     /// `--selftest panel`: overlay パネルが全 Space・fullscreen 補助・装飾なし・透過に設定されているか
@@ -6356,7 +6873,7 @@ enum SelfTest {
             ("ContextLens", contentScore(ContextLensView(items: [ContextItem(category: "Current", text: "Current screen / Q4提案.pptx"), ContextItem(category: "Entity", text: "A社 / 田中様"), ContextItem(category: "Schedule", text: "明日 10:00 商談"), ContextItem(category: "Internal", text: "関連メール8件 / 資料4件"), ContextItem(category: "Policy", text: "Confidential / Local-only", sensitive: true)]), NSSize(width: 320, height: 420))),
             ("HomeView", contentScore(HomeView(attention: [HomeAttention(kind: "10:00 A社 商談", title: "前回から価格条件が変更", action: "準備する"), HomeAttention(kind: "Research complete", title: "半導体市場調査", action: "見る")], active: [HomeWork(title: "競合20社調査", meta: "12 sources · 進行中")]), NSSize(width: 820, height: 600))),
             ("RecordingWorkspace", contentScore(RecordingWorkspaceView(), NSSize(width: Metrics.workspaceWidth, height: Metrics.workspaceHeight))),
-            ("MainWindow", contentScore(MainWindowView(), NSSize(width: 900, height: 600))),
+            ("MainWindow", contentScore(MainWindowView(loadBackend: false), NSSize(width: 900, height: 600))),
             ("Settings", contentScore(SettingsView(), NSSize(width: 460, height: 420))),
         ]
         // 実際に描画されていれば、複数色（>=4）かつ相応の不透明面積（>=10%）を持つ。

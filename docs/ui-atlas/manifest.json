@@ -1,0 +1,4725 @@
+{
+  "$comment": "UI Atlas の正本。画面の一覧と説明はここに書く。image / sha256 / size / rc は scripts/ui-atlas/build.py が RC の撮影結果から埋める（手で書かない）。capture が null の画面は RC .app に描かせる経路が無い。モックや Figma で埋めてはいけない。required のまま置いて UI_ATLAS_GATE を落とす。 appearance_policy: fixed は Dock / HUD（OS の外観に関わらず同じ ambient surface。light == dark が仕様）、adaptive は Main / Workspace（light != dark が仕様）。gate が両方向を確かめる。 reality の AUTOMATION_MISSING は「人が要るから測っていない」ではなく「測定器がまだ無い」。人を呼ばず測定器を作る（HUMAN_INTERVENTION=0、scripts/ideal-release-gate.sh）。",
+  "rc": {
+    "sha": "b7eafe2",
+    "app": "apps/astra-macos/.build/Astra.app",
+    "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+    "built": "2026-09-07T22:09:32+09:00",
+    "codesign_identifier": "com.astra.desktop",
+    "team": "6RR7572ZLU",
+    "captured_at": "2026-09-07T22:09:33+09:00"
+  },
+  "groups": [
+    {
+      "id": "ambient",
+      "title": "1. Ambient / Voice",
+      "note": "⌥Space で呼ぶ 1 枚の面（One Surface の Dock）。窓は増えない。"
+    },
+    {
+      "id": "dock",
+      "title": "2. Task Dock",
+      "note": "同じ Dock が依頼→実行→確認→結果へ姿を変える。"
+    },
+    {
+      "id": "meeting",
+      "title": "3. Meeting",
+      "note": "会議を録っている間の Dock と、その中で開く板（メモ / 字幕 / Ask）、広げた Workspace。"
+    },
+    {
+      "id": "main",
+      "title": "4. Main Window",
+      "note": "Home / Work / Library / Apps。sidebar は 4 項目。"
+    },
+    {
+      "id": "provenance",
+      "title": "5. Post-meeting / Provenance",
+      "note": "録り終えたあと。要約・決定・文字起こし・出典へ戻る。"
+    },
+    {
+      "id": "system",
+      "title": "6. System / Recovery",
+      "note": "許可・落ちたあと・更新。ここが弱いと信用を失う。"
+    },
+    {
+      "id": "components",
+      "title": "7. Control states",
+      "note": "hover / focus / pressed が実画面で neutral と違うこと。"
+    }
+  ],
+  "screens": [
+    {
+      "id": "voice.idle",
+      "group": "ambient",
+      "title": "Voice HUD — Idle",
+      "required": true,
+      "capture": {
+        "selftest": "shots",
+        "file": "01-voice-hud-idle.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "⌥Space（Input Monitoring 許可あり）。許可が無い端末では案内が「クリック」に変わる。",
+      "meaning": "待機。何も聞いていない。マイクは閉じている。",
+      "primary": "話しかける（⌥Space をもう一度、または面をクリック）",
+      "secondary": "Esc で閉じる",
+      "states": "idle",
+      "keys": "⌥Space → Preparing。Esc → 閉じる。",
+      "privacy": "マイク OFF。外部送信なし。",
+      "prev": [],
+      "next": [
+        "voice.preparing"
+      ],
+      "window": "Dock（1 枚、top anchor 固定）",
+      "invariant": "recording indicator = OFF。「聞いています…」を出さない。",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "shots",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "appearance_policy": "fixed",
+      "image": {
+        "sha256": {
+          "light": "94f074bb0e8f414add8dd6fdbad3272d5f7241dc1effba2d94f217645371dae3",
+          "dark": "94f074bb0e8f414add8dd6fdbad3272d5f7241dc1effba2d94f217645371dae3"
+        },
+        "size": {
+          "light": {
+            "w": 220,
+            "h": 44
+          },
+          "dark": {
+            "w": 220,
+            "h": 44
+          }
+        },
+        "light": "screens/voice.idle.light.png",
+        "dark": "screens/voice.idle.dark.png"
+      }
+    },
+    {
+      "id": "voice.preparing",
+      "group": "ambient",
+      "title": "Voice HUD — Preparing",
+      "required": true,
+      "capture": {
+        "selftest": "shots",
+        "file": "02b-voice-hud-preparing.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "⌥Space / Home のマイク。mode は .listening だが最初の音声フレームがまだ届いていない。",
+      "meaning": "マイクを準備中。まだ音声は取り込めていない。",
+      "primary": "（待つ。最初の音声フレームで自動的に Listening へ）",
+      "secondary": "Esc でやめる（マイクは閉じる）",
+      "states": "preparing（captureLive == false）",
+      "keys": "Esc → Idle。",
+      "privacy": "マイクを開こうとしている。まだ 1 フレームも取り込んでいない。外部送信なし。",
+      "prev": [
+        "voice.idle"
+      ],
+      "next": [
+        "voice.listening"
+      ],
+      "window": "Dock（1 枚、同じ窓）",
+      "invariant": "この状態で「聞いています…」を表示してはいけない（INVOCATION_AUDIO_TRUTH: claimedLiveWhileDeaf = false）。",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "shots",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "appearance_policy": "fixed",
+      "image": {
+        "sha256": {
+          "light": "d113a42ec3772c8d2855ccde3de869876bfb5a414a917b46ee453a780dfcc3a2",
+          "dark": "d113a42ec3772c8d2855ccde3de869876bfb5a414a917b46ee453a780dfcc3a2"
+        },
+        "size": {
+          "light": {
+            "w": 600,
+            "h": 53
+          },
+          "dark": {
+            "w": 600,
+            "h": 53
+          }
+        },
+        "light": "screens/voice.preparing.light.png",
+        "dark": "screens/voice.preparing.dark.png"
+      }
+    },
+    {
+      "id": "voice.listening",
+      "group": "ambient",
+      "title": "Voice HUD — Listening",
+      "required": true,
+      "capture": {
+        "selftest": "shots",
+        "file": "02-voice-hud-listening.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "最初の音声フレームが届いた瞬間（固定タイマーではない）。",
+      "meaning": "実際に mic capture が生きている。話した言葉が partial として面に出る。",
+      "primary": "話す（partial が出る）→ 黙ると Thinking へ",
+      "secondary": "Esc でやめる",
+      "states": "listening(partial:)",
+      "keys": "Esc → Idle（micClosedAfterCancel = true）。",
+      "privacy": "マイク ON。音声は端末内の STT へ。外部送信なし。",
+      "prev": [
+        "voice.preparing"
+      ],
+      "next": [
+        "voice.thinking"
+      ],
+      "window": "Dock（1 枚、同じ窓）",
+      "invariant": "「聞いています…」表示中は captureLive == true。",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "shots",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "appearance_policy": "fixed",
+      "image": {
+        "sha256": {
+          "light": "0ab0f37540fa9a13f084975fd6d41572e877f13b04a20a14ce573a6cf70f6085",
+          "dark": "0ab0f37540fa9a13f084975fd6d41572e877f13b04a20a14ce573a6cf70f6085"
+        },
+        "size": {
+          "light": {
+            "w": 600,
+            "h": 53
+          },
+          "dark": {
+            "w": 600,
+            "h": 53
+          }
+        },
+        "light": "screens/voice.listening.light.png",
+        "dark": "screens/voice.listening.dark.png"
+      }
+    },
+    {
+      "id": "voice.thinking",
+      "group": "ambient",
+      "title": "Voice HUD — Thinking",
+      "required": true,
+      "capture": {
+        "selftest": "dock8",
+        "file": "05-thinking.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "発話が終わった（または Enter）。",
+      "meaning": "依頼を理解している。まだ何も実行していない。",
+      "primary": "（待つ）",
+      "secondary": "Esc でやめる",
+      "states": "thinking",
+      "keys": "Esc → Idle。",
+      "privacy": "マイクは閉じる。言語モデルは端末内。",
+      "prev": [
+        "voice.listening"
+      ],
+      "next": [
+        "dock.running",
+        "dock.confirmation"
+      ],
+      "window": "Dock（1 枚、同じ窓）",
+      "invariant": "実行はまだ始まっていない（外部への副作用ゼロ）。",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "dock8",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "appearance_policy": "fixed",
+      "image": {
+        "sha256": {
+          "light": "b10783c8fd32881b5ec4e60069d678b0a9f37bb34a656da6c97f722f3da8dafc",
+          "dark": "b10783c8fd32881b5ec4e60069d678b0a9f37bb34a656da6c97f722f3da8dafc"
+        },
+        "size": {
+          "light": {
+            "w": 560,
+            "h": 51
+          },
+          "dark": {
+            "w": 560,
+            "h": 51
+          }
+        },
+        "light": "screens/voice.thinking.light.png",
+        "dark": "screens/voice.thinking.dark.png"
+      }
+    },
+    {
+      "id": "voice.context",
+      "group": "ambient",
+      "title": "Voice HUD — Context detected (compact)",
+      "required": true,
+      "capture": {
+        "selftest": "dock8",
+        "file": "02-app-context.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "前面アプリの文脈（例: Notion のページ）を掴んだ。",
+      "meaning": "いま見ているものを Astra が分かっていることを 1 行で示す。",
+      "primary": "そのまま話す（文脈つきで依頼になる）",
+      "secondary": "文脈を開く（展開）",
+      "states": "appContext(summary)",
+      "keys": "Esc → Idle。",
+      "privacy": "画面 / DOM の要約は端末内。外部送信なし。",
+      "prev": [
+        "voice.idle"
+      ],
+      "next": [
+        "voice.context-expanded",
+        "voice.listening"
+      ],
+      "window": "Dock（1 枚）",
+      "invariant": "文脈の出どころ（screen / browser DOM）と機微度が読める。",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "dock8",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "appearance_policy": "fixed",
+      "image": {
+        "sha256": {
+          "light": "cbb81b33a4d79f627ce2b142c1b8df7096a9d543a57a4e971e81578a6d1908ee",
+          "dark": "cbb81b33a4d79f627ce2b142c1b8df7096a9d543a57a4e971e81578a6d1908ee"
+        },
+        "size": {
+          "light": {
+            "w": 320,
+            "h": 52
+          },
+          "dark": {
+            "w": 320,
+            "h": 52
+          }
+        },
+        "light": "screens/voice.context.light.png",
+        "dark": "screens/voice.context.dark.png"
+      }
+    },
+    {
+      "id": "voice.context-expanded",
+      "group": "ambient",
+      "title": "Voice HUD — Context expanded",
+      "required": true,
+      "capture": {
+        "selftest": "dock8",
+        "file": "03-app-context-expanded.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "compact の文脈をクリック。",
+      "meaning": "掴んだ文脈の中身（source / application / sensitivity）を一覧で見せる。",
+      "primary": "閉じる（compact へ戻る）",
+      "secondary": "そのまま話す",
+      "states": "appContextExpanded(summary)",
+      "keys": "Esc → Idle。",
+      "privacy": "同上。",
+      "prev": [
+        "voice.context"
+      ],
+      "next": [
+        "voice.context"
+      ],
+      "window": "Dock（1 枚、高さだけ変わる）",
+      "invariant": "上辺 Y は動かない。",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "dock8",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "appearance_policy": "fixed",
+      "image": {
+        "sha256": {
+          "light": "33f572f3eb66e654208760bad3c62670867f175819ed203e620f10111599f01e",
+          "dark": "33f572f3eb66e654208760bad3c62670867f175819ed203e620f10111599f01e"
+        },
+        "size": {
+          "light": {
+            "w": 700,
+            "h": 279
+          },
+          "dark": {
+            "w": 700,
+            "h": 279
+          }
+        },
+        "light": "screens/voice.context-expanded.light.png",
+        "dark": "screens/voice.context-expanded.dark.png"
+      }
+    },
+    {
+      "id": "voice.quick-actions",
+      "group": "ambient",
+      "title": "Voice HUD — Quick actions",
+      "required": true,
+      "capture": {
+        "selftest": "dock8",
+        "file": "01b-quick-actions.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "status": "CAPTURED",
+      "note": "DockPresentation.quickActions は実装にあるが、RC .app にこの面を撮らせる selftest が無い。次 RC で dock8 に 1 面足す（test code のみ）。",
+      "trigger": "Idle で quick actions を切り替える。",
+      "meaning": "よく使う依頼を並べる。",
+      "primary": "1 つ選ぶ",
+      "secondary": "Esc",
+      "states": "quickActions",
+      "keys": "Esc → Idle。",
+      "privacy": "外部送信なし。",
+      "prev": [
+        "voice.idle"
+      ],
+      "next": [
+        "dock.running"
+      ],
+      "window": "Dock（1 枚）",
+      "invariant": "—",
+      "source": "RC",
+      "appearance_policy": "fixed",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "dock8",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "image": {
+        "sha256": {
+          "light": "45665e227b94d5e71510425bf2ab5020b77344ceca300d3334c740214273aef9",
+          "dark": "45665e227b94d5e71510425bf2ab5020b77344ceca300d3334c740214273aef9"
+        },
+        "size": {
+          "light": {
+            "w": 560,
+            "h": 36
+          },
+          "dark": {
+            "w": 560,
+            "h": 36
+          }
+        },
+        "light": "screens/voice.quick-actions.light.png",
+        "dark": "screens/voice.quick-actions.dark.png"
+      }
+    },
+    {
+      "id": "screenshot.detected",
+      "title": "Screenshot — Recognized (1 s)",
+      "group": "ambient",
+      "required": true,
+      "appearance_policy": "fixed",
+      "trigger": "⌘⇧4 / ⌘⇧3 / ⌃⌘⇧4 で撮った。保存先（または clipboard）を Astra が検知した（監視経路 ~55ms）。",
+      "meaning": "「スクリーンショット / 認識しました · そのまま聞いてください」を idle Dock が 1 秒だけ出す。窓は増えない。focus は動かない。",
+      "primary": "そのまま「これ何？」と聞く（添付・保存先・ドラッグは要らない）",
+      "secondary": "× で文脈から外す（1 操作）",
+      "states": "idle + justCaptured（1 秒で chip へ）",
+      "keys": "⌥Space → 聞く。Esc → 閉じる。",
+      "privacy": "撮っただけでは何も送らない。質問したときだけ、その画像を Claude（利用者の Claude Code）へ送る。gateway には id とラベルだけ。",
+      "window": "Dock（1 枚、320×52）",
+      "invariant": "推測位置に何も出さない。1 秒で消え、chip だけ残る。新しい窓 0、focus theft 0。",
+      "prev": [
+        "voice.idle"
+      ],
+      "next": [
+        "screenshot.attached-cloud"
+      ],
+      "capture": {
+        "selftest": "screenshotshots",
+        "file": "screenshot-detected.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "status": "CAPTURED",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "screenshotshots",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "image": {
+        "sha256": {
+          "light": "c710f1113033ff889bd5eeecc86c316e8b7d8308d46e1fab478df3dabd0f86ef",
+          "dark": "c710f1113033ff889bd5eeecc86c316e8b7d8308d46e1fab478df3dabd0f86ef"
+        },
+        "size": {
+          "light": {
+            "w": 320,
+            "h": 52
+          },
+          "dark": {
+            "w": 320,
+            "h": 52
+          }
+        },
+        "light": "screens/screenshot.detected.light.png",
+        "dark": "screens/screenshot.detected.dark.png"
+      }
+    },
+    {
+      "id": "screenshot.attached-cloud",
+      "title": "Screenshot — Attached (cloud provenance, first time)",
+      "group": "ambient",
+      "required": true,
+      "appearance_policy": "fixed",
+      "trigger": "「これ何？」と聞いた。直近のスクショが質問に添えられた（初回）。",
+      "meaning": "「スクリーンショット / 質問したときだけ Claude に送信」。画像がどこへ行くかを、初回だけ明示する（以降は「Claude に送信 · たった今」の compact）。",
+      "primary": "そのまま答えを待つ",
+      "secondary": "× で文脈から外す",
+      "states": "idle + recent(attached) + lastProvenance",
+      "keys": "⌥Space → 続けて聞く。",
+      "privacy": "撮っただけでは何も送らない。質問したときだけ、その画像を Claude（利用者の Claude Code）へ送る。gateway には id とラベルだけ。 端末内モデルなら「画像は端末の外へ送りません」。",
+      "window": "Dock（1 枚、320×52）",
+      "invariant": "「画像は端末から出ない」とは言わない。大きな説明カードや警告ダイアログにしない（高頻度操作）。",
+      "prev": [
+        "screenshot.detected"
+      ],
+      "next": [
+        "voice.thinking"
+      ],
+      "capture": {
+        "selftest": "screenshotshots",
+        "file": "screenshot-attached-cloud.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "status": "CAPTURED",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "screenshotshots",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "image": {
+        "sha256": {
+          "light": "9c81091b21d8456825bf4960c87ee2a47c88c09c3c5596784efb651b865d4118",
+          "dark": "9c81091b21d8456825bf4960c87ee2a47c88c09c3c5596784efb651b865d4118"
+        },
+        "size": {
+          "light": {
+            "w": 320,
+            "h": 52
+          },
+          "dark": {
+            "w": 320,
+            "h": 52
+          }
+        },
+        "light": "screens/screenshot.attached-cloud.light.png",
+        "dark": "screens/screenshot.attached-cloud.dark.png"
+      }
+    },
+    {
+      "id": "dock.running",
+      "group": "dock",
+      "title": "Task Dock — Running (agent steps)",
+      "required": true,
+      "capture": {
+        "selftest": "dock8",
+        "file": "06-agent.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "依頼が実行に入った（例: 週次ブリーフィングを作る）。",
+      "meaning": "いまどの道具（Calendar / Gmail / Notion…）を使っていて、どこまで済んだか。",
+      "primary": "（見守る）",
+      "secondary": "文脈を見る / 止める",
+      "states": "agent（steps: success / running / pending）",
+      "keys": "Esc → 閉じる（実行は続く）。",
+      "privacy": "connector は端末で動く。外部へ書くものは Confirmation を通る。",
+      "prev": [
+        "voice.thinking"
+      ],
+      "next": [
+        "dock.confirmation",
+        "dock.result"
+      ],
+      "window": "Dock（1 枚、幅 idle→agent）",
+      "invariant": "窓は常に 1 枚。上辺 Y 固定。",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "dock8",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "appearance_policy": "fixed",
+      "image": {
+        "sha256": {
+          "light": "21e892964d8c9f65c5534a601bd56d126b5acf1858cc88752f0d77fae419ef5c",
+          "dark": "21e892964d8c9f65c5534a601bd56d126b5acf1858cc88752f0d77fae419ef5c"
+        },
+        "size": {
+          "light": {
+            "w": 720,
+            "h": 411
+          },
+          "dark": {
+            "w": 720,
+            "h": 411
+          }
+        },
+        "light": "screens/dock.running.light.png",
+        "dark": "screens/dock.running.dark.png"
+      }
+    },
+    {
+      "id": "dock.context-detail",
+      "group": "dock",
+      "title": "Task Dock — Context detail",
+      "required": true,
+      "capture": {
+        "selftest": "dock8",
+        "file": "06b-context-detail.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "Running から「文脈」を開く。",
+      "meaning": "この依頼が何を読んで動いているか（出どころ）。",
+      "primary": "戻る",
+      "secondary": "—",
+      "states": "contextDetail",
+      "keys": "Esc → 戻る。",
+      "privacy": "読んだものの一覧。外部送信なし。",
+      "prev": [
+        "dock.running"
+      ],
+      "next": [
+        "dock.running"
+      ],
+      "window": "Dock（1 枚）",
+      "invariant": "出どころが空なら「無し」と言う（作らない）。",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "dock8",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "appearance_policy": "fixed",
+      "image": {
+        "sha256": {
+          "light": "1d7658c611ed77c072e984cca94cacb5d34bb9629761f332e50548173b568bda",
+          "dark": "1d7658c611ed77c072e984cca94cacb5d34bb9629761f332e50548173b568bda"
+        },
+        "size": {
+          "light": {
+            "w": 700,
+            "h": 188
+          },
+          "dark": {
+            "w": 700,
+            "h": 188
+          }
+        },
+        "light": "screens/dock.context-detail.light.png",
+        "dark": "screens/dock.context-detail.dark.png"
+      }
+    },
+    {
+      "id": "dock.confirmation",
+      "group": "dock",
+      "title": "Task Dock — Confirmation (before side effect)",
+      "required": true,
+      "capture": {
+        "selftest": "dock8",
+        "file": "07-confirmation.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "外部へ書く直前（例: メールを送る、risk R2）。",
+      "meaning": "何を、どこへ、どう書くかを見せて、押されるまで実行しない。",
+      "primary": "送る（confirmLabel）",
+      "secondary": "直す / やめる",
+      "states": "confirmation(action)",
+      "keys": "Esc → やめる。Enter は送らない（明示クリックのみ）。",
+      "privacy": "ここを通らずに外部へ書かない（verify-confirmation.sh）。",
+      "prev": [
+        "dock.running"
+      ],
+      "next": [
+        "dock.confirmation-edit",
+        "dock.result"
+      ],
+      "window": "Dock（1 枚、幅 confirmation）",
+      "invariant": "risk と宛先が読める。既定は実行しない側。",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "dock8",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "appearance_policy": "fixed",
+      "image": {
+        "sha256": {
+          "light": "209b4486ac322bf9b7477122d613b34ec1ff0e24db41f4faf5405a2433fe8d2c",
+          "dark": "209b4486ac322bf9b7477122d613b34ec1ff0e24db41f4faf5405a2433fe8d2c"
+        },
+        "size": {
+          "light": {
+            "w": 560,
+            "h": 254
+          },
+          "dark": {
+            "w": 560,
+            "h": 254
+          }
+        },
+        "light": "screens/dock.confirmation.light.png",
+        "dark": "screens/dock.confirmation.dark.png"
+      }
+    },
+    {
+      "id": "dock.confirmation-edit",
+      "group": "dock",
+      "title": "Task Dock — Edit confirmation",
+      "required": true,
+      "capture": {
+        "selftest": "dock8",
+        "file": "07b-confirmation-edit.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "status": "CAPTURED",
+      "note": "「直す」は検査から押せる目印付き（ProbeButton confirmEdit）。走るものは画面と同じ 1 本。",
+      "trigger": "Confirmation で「直す」。",
+      "meaning": "送る前に本文を書き換える。",
+      "primary": "完了",
+      "secondary": "やめる",
+      "states": "confirmation（編集中）",
+      "keys": "Esc → やめる。",
+      "privacy": "まだ送っていない。",
+      "prev": [
+        "dock.confirmation"
+      ],
+      "next": [
+        "dock.confirmation"
+      ],
+      "window": "Dock（1 枚）",
+      "invariant": "—",
+      "source": "RC",
+      "appearance_policy": "fixed",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "dock8",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "image": {
+        "sha256": {
+          "light": "f4f1ea5e8dfc9d3eea3a9d32039262207c35035dc24d80dae9f18beed65f23f7",
+          "dark": "f4f1ea5e8dfc9d3eea3a9d32039262207c35035dc24d80dae9f18beed65f23f7"
+        },
+        "size": {
+          "light": {
+            "w": 560,
+            "h": 254
+          },
+          "dark": {
+            "w": 560,
+            "h": 254
+          }
+        },
+        "light": "screens/dock.confirmation-edit.light.png",
+        "dark": "screens/dock.confirmation-edit.dark.png"
+      }
+    },
+    {
+      "id": "dock.result",
+      "group": "dock",
+      "title": "Task Dock — Done / Result",
+      "required": true,
+      "capture": {
+        "selftest": "dock8",
+        "file": "06c-result.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "実行が終わった（success）。",
+      "meaning": "何が起きたかを 1 行で返し、開ける先があれば示す。",
+      "primary": "開く（結果へ）",
+      "secondary": "閉じる",
+      "states": "result(success)",
+      "keys": "Esc → 閉じる（dismissResult）。",
+      "privacy": "—",
+      "prev": [
+        "dock.running"
+      ],
+      "next": [
+        "voice.idle",
+        "main.home"
+      ],
+      "window": "Dock（1 枚）",
+      "invariant": "結果面からも Main View が開く（--selftest entry）。",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "dock8",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "appearance_policy": "fixed",
+      "image": {
+        "sha256": {
+          "light": "10aed21f704255ab71dc3fd61a3ace8a219df881818834d05e56714b31ab70fb",
+          "dark": "10aed21f704255ab71dc3fd61a3ace8a219df881818834d05e56714b31ab70fb"
+        },
+        "size": {
+          "light": {
+            "w": 520,
+            "h": 129
+          },
+          "dark": {
+            "w": 520,
+            "h": 129
+          }
+        },
+        "light": "screens/dock.result.light.png",
+        "dark": "screens/dock.result.dark.png"
+      }
+    },
+    {
+      "id": "dock.result-failed",
+      "group": "dock",
+      "title": "Task Dock — Error / Recovery",
+      "required": true,
+      "capture": {
+        "selftest": "dock8",
+        "file": "06d-result-failed.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "status": "CAPTURED",
+      "note": "finishTask(.failed) が結果面を出す（以前は idle に戻って黙って消えていた）。どこで止まったか（失敗した段と detail）を 2 行目に言う。",
+      "trigger": "実行が失敗した / 止まった。",
+      "meaning": "何が失敗したか、次に何ができるか。",
+      "primary": "やり直す（同じ入口でもう一度）",
+      "secondary": "閉じる",
+      "states": "result(failed)",
+      "keys": "Esc → 閉じる。",
+      "privacy": "—",
+      "prev": [
+        "dock.running"
+      ],
+      "next": [
+        "voice.idle"
+      ],
+      "window": "Dock（1 枚）",
+      "invariant": "黙って消えない。理由を返す。",
+      "source": "RC",
+      "appearance_policy": "fixed",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "dock8",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "image": {
+        "sha256": {
+          "light": "e09e291fa0b7d479353242b6b96333c72af918dfdc82012aa6e3c10a44d7c594",
+          "dark": "e09e291fa0b7d479353242b6b96333c72af918dfdc82012aa6e3c10a44d7c594"
+        },
+        "size": {
+          "light": {
+            "w": 520,
+            "h": 129
+          },
+          "dark": {
+            "w": 520,
+            "h": 129
+          }
+        },
+        "light": "screens/dock.result-failed.light.png",
+        "dark": "screens/dock.result-failed.dark.png"
+      }
+    },
+    {
+      "id": "dock.entering-recording",
+      "group": "dock",
+      "title": "Task Dock — Entering recording",
+      "required": false,
+      "capture": null,
+      "status": "NO_CAPTURE_PATH",
+      "note": "DockPresentation.enteringRecording（会議 Dock へ姿を変える途中）。静止画より strip の対象。",
+      "trigger": "「録音を始める」。",
+      "meaning": "Dock が会議 controller へ変わる途中。",
+      "primary": "—",
+      "secondary": "—",
+      "states": "enteringRecording",
+      "keys": "—",
+      "privacy": "—",
+      "prev": [
+        "voice.idle"
+      ],
+      "next": [
+        "meeting.controller"
+      ],
+      "window": "Dock（1 枚）",
+      "invariant": "—",
+      "source": null,
+      "appearance_policy": "fixed"
+    },
+    {
+      "id": "meeting.controller",
+      "group": "meeting",
+      "title": "Meeting — Controller (recording active)",
+      "required": true,
+      "capture": {
+        "selftest": "dock8",
+        "file": "08-meeting.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "会議アプリ（Google Meet）を検出して録音を始めた。音が届いている。",
+      "meaning": "録音中。メモ / 字幕 / Ask Astra / 停止 が 1 行に並ぶ。",
+      "primary": "停止",
+      "secondary": "メモ / 字幕 / Ask Astra / 秘匿トグル",
+      "states": "meeting(expanded: nil)",
+      "keys": "Esc は録音を止めない（板を閉じるだけ）。",
+      "privacy": "マイク ON（.meeting = [.microphone]）。system audio は未接続。",
+      "prev": [
+        "voice.idle",
+        "main.home"
+      ],
+      "next": [
+        "meeting.notes",
+        "meeting.captions",
+        "meeting.ask",
+        "session.processing"
+      ],
+      "window": "Dock（1 枚）",
+      "invariant": "「録音中」は最初の音声フレームが届いてから。届く前は「準備中…」。",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "dock8",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "appearance_policy": "fixed",
+      "image": {
+        "sha256": {
+          "light": "cb68169730b21931d5dc9f7a2a745424b1a3746ab55c2dbd57031b92df1cca6b",
+          "dark": "cb68169730b21931d5dc9f7a2a745424b1a3746ab55c2dbd57031b92df1cca6b"
+        },
+        "size": {
+          "light": {
+            "w": 820,
+            "h": 76
+          },
+          "dark": {
+            "w": 820,
+            "h": 76
+          }
+        },
+        "light": "screens/meeting.controller.light.png",
+        "dark": "screens/meeting.controller.dark.png"
+      }
+    },
+    {
+      "id": "meeting.preparing",
+      "group": "meeting",
+      "title": "Meeting — Recording preparing",
+      "required": true,
+      "capture": {
+        "selftest": "dock8",
+        "file": "08a-meeting-preparing.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "status": "CAPTURED",
+      "note": "RecordingWorkspaceState.beginPreparingForShot で「まだ 1 フレームも届いていない」姿を固定する（実マイクの level で消えないよう撮り終わるまで止める）。",
+      "trigger": "「録音を始める」直後。",
+      "meaning": "マイクを開いている。まだ録れていない。",
+      "primary": "（待つ）",
+      "secondary": "停止",
+      "states": "meeting（captureLive == false）",
+      "keys": "—",
+      "privacy": "マイクを開こうとしている。",
+      "prev": [
+        "dock.entering-recording"
+      ],
+      "next": [
+        "meeting.controller"
+      ],
+      "window": "Dock（1 枚）",
+      "invariant": "「録音中」と名乗らない（stuckPreparingAfterLive = false も同時に）。",
+      "source": "RC",
+      "appearance_policy": "fixed",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "dock8",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "image": {
+        "sha256": {
+          "light": "5d83c39e698d548f7ae8b9e33da45346a3abd45427d977140c79eb0c3a2c27af",
+          "dark": "5d83c39e698d548f7ae8b9e33da45346a3abd45427d977140c79eb0c3a2c27af"
+        },
+        "size": {
+          "light": {
+            "w": 820,
+            "h": 76
+          },
+          "dark": {
+            "w": 820,
+            "h": 76
+          }
+        },
+        "light": "screens/meeting.preparing.light.png",
+        "dark": "screens/meeting.preparing.dark.png"
+      }
+    },
+    {
+      "id": "meeting.paused",
+      "group": "meeting",
+      "title": "Meeting — Paused",
+      "required": true,
+      "capture": {
+        "selftest": "dock8",
+        "file": "08b-meeting-paused.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "status": "CAPTURED",
+      "note": "Dock のコントローラに一時停止 / 再開の手と「一時停止中」の見出しを足した（2026-09-05）。録音面の pill と同じ togglePause を通る。録音面の姿は recording.paused（optional）。",
+      "trigger": "Pause。",
+      "meaning": "録音を止めている（音は入らない）。再開できる。",
+      "primary": "再開（▶）",
+      "secondary": "停止",
+      "states": "meeting（paused）",
+      "keys": "—",
+      "privacy": "マイクは開いたまま音を捨てるのか、閉じるのかを面で言う。",
+      "prev": [
+        "meeting.controller"
+      ],
+      "next": [
+        "meeting.controller"
+      ],
+      "window": "Dock（1 枚）",
+      "invariant": "一時停止中は文字起こしが増えない。",
+      "source": "RC",
+      "appearance_policy": "fixed",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "dock8",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "image": {
+        "sha256": {
+          "light": "ff7edc17f06e37d3c83205c445f7f2f6b39bd615d2c2437b05d1cdef66d126ff",
+          "dark": "ff7edc17f06e37d3c83205c445f7f2f6b39bd615d2c2437b05d1cdef66d126ff"
+        },
+        "size": {
+          "light": {
+            "w": 820,
+            "h": 76
+          },
+          "dark": {
+            "w": 820,
+            "h": 76
+          }
+        },
+        "light": "screens/meeting.paused.light.png",
+        "dark": "screens/meeting.paused.dark.png"
+      }
+    },
+    {
+      "id": "recording.paused",
+      "group": "meeting",
+      "title": "Recording Workspace — Paused",
+      "required": false,
+      "capture": {
+        "selftest": "shots",
+        "file": "03b-recording-paused.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "録音面の pill の一時停止。",
+      "meaning": "止まっている間は文字起こしが増えない。",
+      "primary": "再開（pill の ▶）",
+      "secondary": "停止",
+      "states": "isPaused = true",
+      "keys": "—",
+      "privacy": "—",
+      "prev": [
+        "recording.workspace"
+      ],
+      "next": [
+        "recording.workspace"
+      ],
+      "window": "Workspace（録音面）",
+      "invariant": "見出しが「一時停止中」、点は灰。",
+      "appearance_policy": "adaptive",
+      "status": "CAPTURED",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "shots",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "image": {
+        "sha256": {
+          "light": "d0c45f043d689d80abbdd0b7f6e9a7a6823a78cc45f5b59b3af669e2b66694b2",
+          "dark": "0520fb09fbdb18e4279bccc8207d7e8a4c390789389dd5969b0fe398a256e14d"
+        },
+        "size": {
+          "light": {
+            "w": 1080,
+            "h": 680
+          },
+          "dark": {
+            "w": 1080,
+            "h": 680
+          }
+        },
+        "light": "screens/recording.paused.light.png",
+        "dark": "screens/recording.paused.dark.png"
+      }
+    },
+    {
+      "id": "meeting.notes",
+      "group": "meeting",
+      "title": "Meeting — Live Notes",
+      "required": true,
+      "capture": {
+        "selftest": "dock8",
+        "file": "09-meeting-notes.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "controller の「メモ」。",
+      "meaning": "会議中に決定 / 宿題 / 論点が下へ育つ。見出し行は消えない。",
+      "primary": "メモを読む / 書き足す",
+      "secondary": "字幕 / Ask へ切替、閉じる",
+      "states": "meeting(expanded: .notes)",
+      "keys": "Esc → 板を閉じる（録音は続く）。",
+      "privacy": "要約は端末内の言語モデル。",
+      "prev": [
+        "meeting.controller"
+      ],
+      "next": [
+        "meeting.workspace",
+        "meeting.controller"
+      ],
+      "window": "Dock（1 枚、下へ伸びる）",
+      "invariant": "見出し（録音中・メモ・字幕・Ask・停止）は板が開いても残る（349007f）。",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "dock8",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "appearance_policy": "fixed",
+      "image": {
+        "sha256": {
+          "light": "4011a2edc15c9af012ee9e4b0a723562605b56e40720572c33d361492dc0e2ac",
+          "dark": "4011a2edc15c9af012ee9e4b0a723562605b56e40720572c33d361492dc0e2ac"
+        },
+        "size": {
+          "light": {
+            "w": 820,
+            "h": 357
+          },
+          "dark": {
+            "w": 820,
+            "h": 357
+          }
+        },
+        "light": "screens/meeting.notes.light.png",
+        "dark": "screens/meeting.notes.dark.png"
+      }
+    },
+    {
+      "id": "meeting.captions",
+      "group": "meeting",
+      "title": "Meeting — Captions",
+      "required": true,
+      "capture": {
+        "selftest": "dock8",
+        "file": "09b-meeting-captions.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "controller の「字幕」。",
+      "meaning": "いま話されていることが文字で流れる。",
+      "primary": "読む",
+      "secondary": "メモ / Ask へ切替、閉じる",
+      "states": "meeting(expanded: .captions)",
+      "keys": "Esc → 板を閉じる。",
+      "privacy": "STT は端末内。",
+      "prev": [
+        "meeting.controller"
+      ],
+      "next": [
+        "meeting.controller"
+      ],
+      "window": "Dock（1 枚）",
+      "invariant": "字幕は話者と時刻が付く。",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "dock8",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "appearance_policy": "fixed",
+      "image": {
+        "sha256": {
+          "light": "d50dcf807457c2b7bf805d1e365a2a851ec923e71d6e631cb204ba3b1010aa80",
+          "dark": "d50dcf807457c2b7bf805d1e365a2a851ec923e71d6e631cb204ba3b1010aa80"
+        },
+        "size": {
+          "light": {
+            "w": 820,
+            "h": 460
+          },
+          "dark": {
+            "w": 820,
+            "h": 460
+          }
+        },
+        "light": "screens/meeting.captions.light.png",
+        "dark": "screens/meeting.captions.dark.png"
+      }
+    },
+    {
+      "id": "meeting.ask",
+      "group": "meeting",
+      "title": "Meeting — Ask Astra",
+      "required": true,
+      "capture": {
+        "selftest": "dock8",
+        "file": "09c-meeting-ask.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "status": "CAPTURED",
+      "note": "MeetingPanel.ask（AskInDockField）は実装と geometry（meetingPanel-ask）にあるが、dock8 は notes / captions しか撮らない。次 RC で dock8 に 1 面足す。",
+      "trigger": "controller の「Ask Astra」。",
+      "meaning": "会議の内容について、その場で訊く。",
+      "primary": "送る",
+      "secondary": "閉じる",
+      "states": "meeting(expanded: .ask)",
+      "keys": "Esc → 板を閉じる。",
+      "privacy": "端末内。",
+      "prev": [
+        "meeting.controller"
+      ],
+      "next": [
+        "meeting.controller"
+      ],
+      "window": "Dock（1 枚）",
+      "invariant": "—",
+      "source": "RC",
+      "appearance_policy": "fixed",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "dock8",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "image": {
+        "sha256": {
+          "light": "658fab77979e3d0e219763492db8396e860f42b05dbf095e8f5888a83356c4eb",
+          "dark": "658fab77979e3d0e219763492db8396e860f42b05dbf095e8f5888a83356c4eb"
+        },
+        "size": {
+          "light": {
+            "w": 820,
+            "h": 460
+          },
+          "dark": {
+            "w": 820,
+            "h": 460
+          }
+        },
+        "light": "screens/meeting.ask.light.png",
+        "dark": "screens/meeting.ask.dark.png"
+      }
+    },
+    {
+      "id": "meeting.workspace",
+      "group": "meeting",
+      "title": "Meeting — Expanded Workspace",
+      "required": true,
+      "capture": {
+        "selftest": "dock8",
+        "file": "10-workspace.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "メモから「広げる」。",
+      "meaning": "会議の全体（文字起こし / メモ / 出典）を大きい面で扱う。",
+      "primary": "読む・編集する",
+      "secondary": "Dock へ戻す",
+      "states": "workspaceOpened",
+      "keys": "Esc → 閉じる。",
+      "privacy": "同上。",
+      "prev": [
+        "meeting.notes"
+      ],
+      "next": [
+        "recording.transcript",
+        "recording.rag",
+        "meeting.controller"
+      ],
+      "window": "Workspace（2 枚目。T2 で測る）",
+      "invariant": "Dock の見出しはそのまま残る。",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "dock8",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "appearance_policy": "adaptive",
+      "image": {
+        "sha256": {
+          "light": "00b684faed40627e88357add5a7587c706acf2dc148cfd93ae30ceec65e2a510",
+          "dark": "fa08819577fa70d6ad5de44564b00dfcfef1e5ec86ef6773e006fc1ee52c2d19"
+        },
+        "size": {
+          "light": {
+            "w": 1080,
+            "h": 680
+          },
+          "dark": {
+            "w": 1080,
+            "h": 680
+          }
+        },
+        "light": "screens/meeting.workspace.light.png",
+        "dark": "screens/meeting.workspace.dark.png"
+      }
+    },
+    {
+      "id": "recording.workspace",
+      "group": "meeting",
+      "title": "Recording Workspace — Overview",
+      "required": true,
+      "capture": {
+        "selftest": "shots",
+        "file": "03-recording-workspace.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "showRecordingWorkspace（demo データ）。",
+      "meaning": "録音中の作業面。左に文字起こし、右に道具。",
+      "primary": "文字起こしを追う",
+      "secondary": "RAG / エージェント",
+      "states": "selectedTool = .transcript, ragOpen = false",
+      "keys": "Esc → 閉じる。",
+      "privacy": "端末内。",
+      "prev": [
+        "meeting.workspace"
+      ],
+      "next": [
+        "recording.transcript",
+        "recording.rag"
+      ],
+      "window": "Workspace",
+      "invariant": "—",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "shots",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "appearance_policy": "adaptive",
+      "image": {
+        "sha256": {
+          "light": "90f36ebd2045c1408e837654e663d87c518168c1009113648df6402eeb9adecf",
+          "dark": "4afd023cd271db5c8b553b9c291164aeed9a96ad6e7691fd9f670fb298005e30"
+        },
+        "size": {
+          "light": {
+            "w": 1080,
+            "h": 680
+          },
+          "dark": {
+            "w": 1080,
+            "h": 680
+          }
+        },
+        "light": "screens/recording.workspace.light.png",
+        "dark": "screens/recording.workspace.dark.png"
+      }
+    },
+    {
+      "id": "recording.transcript",
+      "group": "meeting",
+      "title": "Recording Workspace — Long transcript",
+      "required": true,
+      "capture": {
+        "selftest": "shots",
+        "file": "04-recording-transcript.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "文字起こしが長くなった。",
+      "meaning": "長くなっても最新が読める。",
+      "primary": "読む",
+      "secondary": "—",
+      "states": "transcript 多数",
+      "keys": "—",
+      "privacy": "端末内。",
+      "prev": [
+        "recording.workspace"
+      ],
+      "next": [],
+      "window": "Workspace",
+      "invariant": "末尾に追従する。",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "shots",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "appearance_policy": "adaptive",
+      "image": {
+        "sha256": {
+          "light": "0d2ff7118f1e2e56bd5a31b157464e0830af736a79d08abf5d8228495dd56c94",
+          "dark": "a8f065674f17b7a98fc0309b3ca73f3f2f26b4af4792965caeab6801442b83e8"
+        },
+        "size": {
+          "light": {
+            "w": 1080,
+            "h": 680
+          },
+          "dark": {
+            "w": 1080,
+            "h": 680
+          }
+        },
+        "light": "screens/recording.transcript.light.png",
+        "dark": "screens/recording.transcript.dark.png"
+      }
+    },
+    {
+      "id": "recording.rag",
+      "group": "meeting",
+      "title": "Recording Workspace — RAG panel",
+      "required": true,
+      "capture": {
+        "selftest": "shots",
+        "file": "05-recording-rag.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "RAG を開く。",
+      "meaning": "会議中に手元の資料を引く。",
+      "primary": "検索",
+      "secondary": "閉じる",
+      "states": "ragOpen = true",
+      "keys": "Esc → 閉じる。",
+      "privacy": "検索は端末内。",
+      "prev": [
+        "recording.workspace"
+      ],
+      "next": [
+        "recording.workspace"
+      ],
+      "window": "Workspace",
+      "invariant": "—",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "shots",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "appearance_policy": "adaptive",
+      "image": {
+        "sha256": {
+          "light": "ad16e51372fc91e22376372ecd82b4debd8c9ff7cd2394f20133c52ddca465f9",
+          "dark": "1ef1523fcc75b35deea89667cbb1dc8ab380589e57217ab93e7eff5b4bc2d34d"
+        },
+        "size": {
+          "light": {
+            "w": 1080,
+            "h": 680
+          },
+          "dark": {
+            "w": 1080,
+            "h": 680
+          }
+        },
+        "light": "screens/recording.rag.light.png",
+        "dark": "screens/recording.rag.dark.png"
+      }
+    },
+    {
+      "id": "recording.agent-timeline",
+      "group": "meeting",
+      "title": "Recording Workspace — Agent timeline",
+      "required": true,
+      "capture": {
+        "selftest": "shots",
+        "file": "10-agent-timeline.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "会議中に依頼を実行した。",
+      "meaning": "文字起こしを読む → 答えをまとめる、の段が見える。",
+      "primary": "—",
+      "secondary": "—",
+      "states": "task running（steps）",
+      "keys": "—",
+      "privacy": "端末内。",
+      "prev": [
+        "recording.workspace"
+      ],
+      "next": [],
+      "window": "Workspace",
+      "invariant": "—",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "shots",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "appearance_policy": "adaptive",
+      "image": {
+        "sha256": {
+          "light": "9267b6270163557c942894e9f95969b2dbd05c6eef8abe0f0d959e35e10f31b3",
+          "dark": "7b642119f81ab796455dc7338ad5d0139714e560c4b2d17539bd8b5584c79df1"
+        },
+        "size": {
+          "light": {
+            "w": 1080,
+            "h": 680
+          },
+          "dark": {
+            "w": 1080,
+            "h": 680
+          }
+        },
+        "light": "screens/recording.agent-timeline.light.png",
+        "dark": "screens/recording.agent-timeline.dark.png"
+      }
+    },
+    {
+      "id": "recording.meeting-canvas",
+      "group": "meeting",
+      "title": "Recording Workspace — Meeting canvas",
+      "required": true,
+      "capture": {
+        "selftest": "shots",
+        "file": "11-meeting-canvas.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "決定 / 宿題が更新された。",
+      "meaning": "決定・宿題・論点の板。",
+      "primary": "—",
+      "secondary": "—",
+      "states": "canvas（decisions / actions）",
+      "keys": "—",
+      "privacy": "端末内。",
+      "prev": [
+        "recording.workspace"
+      ],
+      "next": [
+        "provenance.meeting-detail"
+      ],
+      "window": "Workspace",
+      "invariant": "—",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "shots",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "appearance_policy": "adaptive",
+      "image": {
+        "sha256": {
+          "light": "eec8c3fedeea4070f0313847848e0581c4a37b267fe096ed8134aaa67aa9b75d",
+          "dark": "acd6de287ea05cc388c724699ed86a56bf3fd42595e8c1ef3ac25bfa009581f8"
+        },
+        "size": {
+          "light": {
+            "w": 1080,
+            "h": 680
+          },
+          "dark": {
+            "w": 1080,
+            "h": 680
+          }
+        },
+        "light": "screens/recording.meeting-canvas.light.png",
+        "dark": "screens/recording.meeting-canvas.dark.png"
+      }
+    },
+    {
+      "id": "main.home",
+      "group": "main",
+      "title": "Main — Home",
+      "required": true,
+      "capture": {
+        "selftest": "sections",
+        "file": "home.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "⌘O / メニュー「Astra を開く」/ Dock アイコン / 結果面。",
+      "meaning": "挨拶、依頼の入口、録音を始める、録りかけ、予定。",
+      "primary": "録音を始める",
+      "secondary": "何を終わらせますか？（依頼）",
+      "states": "idle / recording now / upcoming / 録りかけあり",
+      "keys": "⌘O。",
+      "privacy": "予定はカレンダー許可があるときだけ（purpose-first）。",
+      "prev": [],
+      "next": [
+        "main.home-recording-now",
+        "main.new-recording-sheet",
+        "main.library-meetings"
+      ],
+      "window": "Main Window",
+      "invariant": "sidebar は Home / Work / Library / Apps の 4 つ。",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "sections",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "appearance_policy": "adaptive",
+      "image": {
+        "sha256": {
+          "light": "2e2abdca4131dfb74f25fa52be8edec7f4b0122488787293a0e189e0624c205c",
+          "dark": "8c3cc370ae695a2587776d80c163c278b478616742a0412716c4bd4b56966428"
+        },
+        "size": {
+          "light": {
+            "w": 1240,
+            "h": 820
+          },
+          "dark": {
+            "w": 1240,
+            "h": 820
+          }
+        },
+        "light": "screens/main.home.light.png",
+        "dark": "screens/main.home.dark.png"
+      }
+    },
+    {
+      "id": "main.home-work-context",
+      "group": "main",
+      "title": "Main — Home (Work Context)",
+      "required": true,
+      "capture": {
+        "selftest": "sections",
+        "file": "home-work-context.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "メールや予定を繋いだあと Home を開いた。Work Context は予定より先に出る。",
+      "meaning": "「今日、気にした方がいいこと」最大 3 件（案件 · 期限 · 題 · 状況 1 行 · 件数と理由）、「待っていること」「返すもの」1 行ずつ、「今週の負荷」2×2、Personalization への入口 [編集]。どの行にも [出所を見る] と 1 操作の訂正がある。",
+      "primary": "出所を見る",
+      "secondary": "優先ではない / 外す / 済んだ（1 操作の訂正）、[編集]",
+      "states": "inference_enabled / 推測を止めている（事実だけ）/ 空（つなぐ前）",
+      "keys": "—",
+      "privacy": "出所は抜粋（<= 200 字）だけ。本文はここにも cloud にも無い。点数は決定的な式で LLM は関わらない。",
+      "prev": [
+        "main.home"
+      ],
+      "next": [
+        "main.home-personalization"
+      ],
+      "window": "Main Window",
+      "invariant": "大きな札を並べない（3 件で 1 面）。出所の無い行は 1 つも出さない。",
+      "source": "RC",
+      "appearance_policy": "adaptive",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "sections",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "image": {
+        "sha256": {
+          "light": "4f13d6ef798e44f50c45896439e481687bfdf733f57d80397d82a3422c904dcb",
+          "dark": "c5485c432d389903bdf73644bb9a2eeab24f9eb5a387840c5c1d0efa76d60392"
+        },
+        "size": {
+          "light": {
+            "w": 1240,
+            "h": 820
+          },
+          "dark": {
+            "w": 1240,
+            "h": 820
+          }
+        },
+        "light": "screens/main.home-work-context.light.png",
+        "dark": "screens/main.home-work-context.dark.png"
+      }
+    },
+    {
+      "id": "main.home-personalization",
+      "group": "main",
+      "title": "Main — Home (Personalization)",
+      "required": true,
+      "capture": {
+        "selftest": "sections",
+        "file": "home-personalization.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "Home の Work Context の [編集]。右の Panel に「Astra が使っているあなたの情報」。",
+      "meaning": "働き方 / 仕事のパターン / よく出る人・案件を、観測 · 推測 · 確認済み の 3 段で見せる。行ごとに [そのとおり] と [この推測を使わない]、上に [推測を使わない]（全体）。",
+      "primary": "そのとおり / この推測を使わない",
+      "secondary": "推測を使わない（全体、1 操作）",
+      "states": "推測を使っています / 止めています",
+      "keys": "—",
+      "privacy": "推測を事実として固定しない。止めれば Astra は確認済みも含めて何も使わない。",
+      "prev": [
+        "main.home-work-context"
+      ],
+      "next": [],
+      "window": "Main Window（inspector）",
+      "invariant": "Agent Activity と同じ 1 枚の右 Panel を使う（Panel を増やさない）。",
+      "source": "RC",
+      "appearance_policy": "adaptive",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "sections",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "image": {
+        "sha256": {
+          "light": "da5dba7fd009468192a760a14d3e139700b6e7e3cc3d2a7dbc772a26541a33ee",
+          "dark": "dc83c8f63874e16c4c23680a78ed1a95a9a98c2d6cbb11bae1d09bae421aef12"
+        },
+        "size": {
+          "light": {
+            "w": 1240,
+            "h": 820
+          },
+          "dark": {
+            "w": 1240,
+            "h": 820
+          }
+        },
+        "light": "screens/main.home-personalization.light.png",
+        "dark": "screens/main.home-personalization.dark.png"
+      }
+    },
+    {
+      "id": "main.home-work-why",
+      "group": "main",
+      "title": "Main — Home (なぜ重要？)",
+      "required": true,
+      "capture": {
+        "selftest": "sections",
+        "file": "home-work-why.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "Home の案件の [なぜ重要？]。",
+      "meaning": "その案件がなぜ上位かを、要因の言葉（寄与の大きい順、最大 4 行）と出所で説明する。数式や点数は出さない。",
+      "primary": "なぜ重要？（閉じる）",
+      "secondary": "出所の行（元のメール・会議へ）",
+      "states": "開いている / 閉じている",
+      "keys": "—",
+      "privacy": "出所は抜粋（<= 200 字）だけ。",
+      "prev": [
+        "main.home-work-context"
+      ],
+      "next": [],
+      "window": "Main Window",
+      "invariant": "理由の行は 4 行以内。数式は見せない。",
+      "source": "RC",
+      "appearance_policy": "adaptive",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "sections",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "image": {
+        "sha256": {
+          "light": "42e53afdcc922d5eae4302f2c1041e47d3d0d832805b0aeaf3a19ff1d9595c27",
+          "dark": "f012b9ae0dacce652f333c720c5ba11746faa94a04e849801c0d4af3d567a790"
+        },
+        "size": {
+          "light": {
+            "w": 1240,
+            "h": 820
+          },
+          "dark": {
+            "w": 1240,
+            "h": 820
+          }
+        },
+        "light": "screens/main.home-work-why.light.png",
+        "dark": "screens/main.home-work-why.dark.png"
+      }
+    },
+    {
+      "id": "main.home-meeting-brief",
+      "group": "main",
+      "title": "Main — Home (次の会議の brief)",
+      "required": true,
+      "capture": {
+        "selftest": "sections",
+        "file": "home-meeting-brief.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "次の会議が近い（2 時間以内なら Work Context より上、それより先なら下）。[準備する] で開く。",
+      "meaning": "前回（決定 / やること）・その後（届いたメール）・開いている件・今日確認したいこと（理由と出所つき）。すべて出所つき。[会議を始める] は既存の録音開始（予定を引き継ぐ）。",
+      "primary": "会議を始める",
+      "secondary": "閉じる",
+      "states": "閉じた 1 行 / 開いた中身、未解決 N 件",
+      "keys": "—",
+      "privacy": "事実は artifact から機械で組む（LLM は使わない）。抜粋だけ。",
+      "prev": [
+        "main.home-work-context"
+      ],
+      "next": [
+        "session.recording"
+      ],
+      "window": "Main Window",
+      "invariant": "出所の無い文は 1 つも出さない。質問は 1..3、理由つき。窓を増やさない。",
+      "source": "RC",
+      "appearance_policy": "adaptive",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "sections",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "image": {
+        "sha256": {
+          "light": "85bc29b8e11ca96b122a4914ee0ce552384fb95a3b59418b990d577fda540b53",
+          "dark": "2622ad0353660d2b4bfb0505e68b99f006d3f621530a818d9a564bb260ef2307"
+        },
+        "size": {
+          "light": {
+            "w": 1240,
+            "h": 820
+          },
+          "dark": {
+            "w": 1240,
+            "h": 820
+          }
+        },
+        "light": "screens/main.home-meeting-brief.light.png",
+        "dark": "screens/main.home-meeting-brief.dark.png"
+      }
+    },
+    {
+      "id": "main.home-recording-now",
+      "group": "main",
+      "title": "Main — Home (recording now)",
+      "required": true,
+      "capture": {
+        "selftest": "shots",
+        "file": "12-recording-now.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "録音中に Home を開いた。",
+      "meaning": "いま録れていることが Home でも分かる。",
+      "primary": "停止 / 開く",
+      "secondary": "—",
+      "states": "RecordingNowCard",
+      "keys": "—",
+      "privacy": "—",
+      "prev": [
+        "main.home"
+      ],
+      "next": [
+        "session.recording"
+      ],
+      "window": "Main Window",
+      "invariant": "Dock と同じ状態を言う（矛盾しない）。",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "shots",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "appearance_policy": "adaptive",
+      "image": {
+        "sha256": {
+          "light": "a94a033964022d46f74728637d5d3b0d661bcca060ec730512609f318424113c",
+          "dark": "8abf3a6ebaa70ccedfe22eb7f3ec98bedb833e0fc1ee3dbafa6764654a914093"
+        },
+        "size": {
+          "light": {
+            "w": 1240,
+            "h": 820
+          },
+          "dark": {
+            "w": 1240,
+            "h": 820
+          }
+        },
+        "light": "screens/main.home-recording-now.light.png",
+        "dark": "screens/main.home-recording-now.dark.png"
+      }
+    },
+    {
+      "id": "main.home-upcoming",
+      "group": "main",
+      "title": "Main — Home (upcoming meeting)",
+      "required": true,
+      "capture": {
+        "selftest": "sessionshots",
+        "file": "11-upcoming.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "24 時間以内に予定がある。",
+      "meaning": "次の会議を録音の入口に変える。",
+      "primary": "録音を開始",
+      "secondary": "—",
+      "states": "HomeAttention",
+      "keys": "—",
+      "privacy": "カレンダーは許可後だけ読む。",
+      "prev": [
+        "main.home"
+      ],
+      "next": [
+        "session.recording"
+      ],
+      "window": "Main Window",
+      "invariant": "—",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "sessionshots",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "appearance_policy": "adaptive",
+      "image": {
+        "sha256": {
+          "light": "f5b4212e9bd133fa0afea038d4efbd37cf31b36b338598006028980a4cc14351",
+          "dark": "32427d1b75eae3e1dc0ab20a508797d6e2b0ce55c381bd0ca6cb4acfd44efa5c"
+        },
+        "size": {
+          "light": {
+            "w": 1240,
+            "h": 820
+          },
+          "dark": {
+            "w": 1240,
+            "h": 820
+          }
+        },
+        "light": "screens/main.home-upcoming.light.png",
+        "dark": "screens/main.home-upcoming.dark.png"
+      }
+    },
+    {
+      "id": "main.new-recording-sheet",
+      "group": "main",
+      "title": "Main — New recording sheet",
+      "required": true,
+      "capture": {
+        "selftest": "sessionshots",
+        "file": "12-new-recording.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "「録音を始める」の ⌄。",
+      "meaning": "題名 / 出どころ / プロジェクトを決めて録る。",
+      "primary": "開始",
+      "secondary": "キャンセル",
+      "states": "sheet",
+      "keys": "Esc → 閉じる。",
+      "privacy": "—",
+      "prev": [
+        "main.home"
+      ],
+      "next": [
+        "session.recording"
+      ],
+      "window": "Main Window（sheet）",
+      "invariant": "前回の設定が既定。",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "sessionshots",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "appearance_policy": "adaptive",
+      "image": {
+        "sha256": {
+          "light": "294059b6d89a320dec9786be5c066e52443799a07c1c877d28ef77b47ad6655c",
+          "dark": "0317043bece99ff2fe825fce1f87a44e0ddccc67e7dc28b63c8e5c9c8df40a6a"
+        },
+        "size": {
+          "light": {
+            "w": 1240,
+            "h": 820
+          },
+          "dark": {
+            "w": 1240,
+            "h": 820
+          }
+        },
+        "light": "screens/main.new-recording-sheet.light.png",
+        "dark": "screens/main.new-recording-sheet.dark.png"
+      }
+    },
+    {
+      "id": "main.work-tasks",
+      "group": "main",
+      "title": "Main — Work / Tasks",
+      "required": true,
+      "capture": {
+        "selftest": "sections",
+        "file": "work-tasks.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "sidebar Work。",
+      "meaning": "依頼の一覧と状態。",
+      "primary": "開く",
+      "secondary": "Agents へ",
+      "states": "tasks",
+      "keys": "—",
+      "privacy": "—",
+      "prev": [
+        "main.home"
+      ],
+      "next": [
+        "main.work-agents"
+      ],
+      "window": "Main Window",
+      "invariant": "見出しが状態と一致（--selftest navtitle）。",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "sections",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "appearance_policy": "adaptive",
+      "image": {
+        "sha256": {
+          "light": "f7220e4c936dc9ea0149c93f87ee9328c84359c8aaff00c5e64f9eb5f228043d",
+          "dark": "39fc7182f524044003c8b655069012fce8fe1647e91c79041c49ce7c7ccd2eef"
+        },
+        "size": {
+          "light": {
+            "w": 1240,
+            "h": 820
+          },
+          "dark": {
+            "w": 1240,
+            "h": 820
+          }
+        },
+        "light": "screens/main.work-tasks.light.png",
+        "dark": "screens/main.work-tasks.dark.png"
+      }
+    },
+    {
+      "id": "main.work-agents",
+      "group": "main",
+      "title": "Main — Work / Agents",
+      "required": true,
+      "capture": {
+        "selftest": "sections",
+        "file": "work-agents.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "Work の Agents タブ。",
+      "meaning": "動いている / 動いた agent。",
+      "primary": "開く",
+      "secondary": "—",
+      "states": "agents",
+      "keys": "—",
+      "privacy": "—",
+      "prev": [
+        "main.work-tasks"
+      ],
+      "next": [],
+      "window": "Main Window",
+      "invariant": "—",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "sections",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "appearance_policy": "adaptive",
+      "image": {
+        "sha256": {
+          "light": "04fdd89e8008137b74e1ff40bd5d369fc687de9d6f74c872d9e0343f17545826",
+          "dark": "e9f243abfb62080f70abfebe127fad44cfab4fe3e29c1e9eaed3f1fd26a810d4"
+        },
+        "size": {
+          "light": {
+            "w": 1240,
+            "h": 820
+          },
+          "dark": {
+            "w": 1240,
+            "h": 820
+          }
+        },
+        "light": "screens/main.work-agents.light.png",
+        "dark": "screens/main.work-agents.dark.png"
+      }
+    },
+    {
+      "id": "main.library-meetings",
+      "group": "main",
+      "title": "Main — Library / Meetings",
+      "required": true,
+      "capture": {
+        "selftest": "sections",
+        "file": "library-meetings.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "sidebar Library。",
+      "meaning": "録った会議の一覧。",
+      "primary": "1 件を開く",
+      "secondary": "Files へ",
+      "states": "meetings",
+      "keys": "—",
+      "privacy": "全部端末内。",
+      "prev": [
+        "main.home"
+      ],
+      "next": [
+        "provenance.meeting-detail"
+      ],
+      "window": "Main Window",
+      "invariant": "1 件を開いても sidebar で出られる。",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "sections",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "appearance_policy": "adaptive",
+      "image": {
+        "sha256": {
+          "light": "ad973f7979557b69b395ab936df0dcbec3f187786d3fde415e2e17d6405e88ef",
+          "dark": "752966de722c224291d50fc6ede02642f330dd814c8b339c5980c24b6d5094bf"
+        },
+        "size": {
+          "light": {
+            "w": 1240,
+            "h": 820
+          },
+          "dark": {
+            "w": 1240,
+            "h": 820
+          }
+        },
+        "light": "screens/main.library-meetings.light.png",
+        "dark": "screens/main.library-meetings.dark.png"
+      }
+    },
+    {
+      "id": "main.library-files",
+      "group": "main",
+      "title": "Main — Library / Files",
+      "required": true,
+      "capture": {
+        "selftest": "sections",
+        "file": "library-files.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "Library の Files タブ。",
+      "meaning": "手元の資料（RAG の元）。",
+      "primary": "追加 / 開く",
+      "secondary": "—",
+      "states": "files",
+      "keys": "—",
+      "privacy": "索引は端末内。",
+      "prev": [
+        "main.library-meetings"
+      ],
+      "next": [],
+      "window": "Main Window",
+      "invariant": "—",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "sections",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "appearance_policy": "adaptive",
+      "image": {
+        "sha256": {
+          "light": "bd4f3abaa087cee6862fbe661cbb94b763d8c593ee7aaf89246a49428ac4bb19",
+          "dark": "33d89149ccc6a5418d6432b5220a5d0b52d6fe5bdd35c3892dc95e166be1c089"
+        },
+        "size": {
+          "light": {
+            "w": 1240,
+            "h": 820
+          },
+          "dark": {
+            "w": 1240,
+            "h": 820
+          }
+        },
+        "light": "screens/main.library-files.light.png",
+        "dark": "screens/main.library-files.dark.png"
+      }
+    },
+    {
+      "id": "main.apps-plugins",
+      "group": "main",
+      "title": "Main — Apps / Plugins",
+      "required": true,
+      "capture": {
+        "selftest": "sections",
+        "file": "apps-plugins.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "sidebar Apps。",
+      "meaning": "入れてある plugin と有効 / 無効。",
+      "primary": "有効にする",
+      "secondary": "Connectors へ",
+      "states": "plugins",
+      "keys": "—",
+      "privacy": "plugin は端末で動く。",
+      "prev": [
+        "main.home"
+      ],
+      "next": [
+        "main.apps-connectors"
+      ],
+      "window": "Main Window",
+      "invariant": "—",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "sections",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "appearance_policy": "adaptive",
+      "image": {
+        "sha256": {
+          "light": "efec66356e5947b5e6e6068e8ef704b8d9a201e1dc2bb571c2d6672dd6960fa1",
+          "dark": "da5d3160a916fb04e9a192214caf1dca34a66792a8ec2449f9b2e36a566ce02d"
+        },
+        "size": {
+          "light": {
+            "w": 1240,
+            "h": 820
+          },
+          "dark": {
+            "w": 1240,
+            "h": 820
+          }
+        },
+        "light": "screens/main.apps-plugins.light.png",
+        "dark": "screens/main.apps-plugins.dark.png"
+      }
+    },
+    {
+      "id": "main.apps-connectors",
+      "group": "main",
+      "title": "Main — Apps / Connectors",
+      "required": true,
+      "capture": {
+        "selftest": "sections",
+        "file": "apps-connectors.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "Apps の Connectors タブ。",
+      "meaning": "外部サービスとの接続と状態。",
+      "primary": "接続",
+      "secondary": "切る",
+      "states": "connectors",
+      "keys": "—",
+      "privacy": "鍵は Keychain。端末から出さない。",
+      "prev": [
+        "main.apps-plugins"
+      ],
+      "next": [],
+      "window": "Main Window",
+      "invariant": "接続状態を偽らない（--selftest connectorstate）。",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "sections",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "appearance_policy": "adaptive",
+      "image": {
+        "sha256": {
+          "light": "debea010d438b5797509756fe144af58b5288c65a076265fc8b67f7a52f513e6",
+          "dark": "5c4b718aba8e90f6c001e93553ba05e203682983e22db0e92283659f55958f98"
+        },
+        "size": {
+          "light": {
+            "w": 1240,
+            "h": 820
+          },
+          "dark": {
+            "w": 1240,
+            "h": 820
+          }
+        },
+        "light": "screens/main.apps-connectors.light.png",
+        "dark": "screens/main.apps-connectors.dark.png"
+      }
+    },
+    {
+      "id": "main.scale-compact",
+      "group": "main",
+      "title": "Main — UI scale: compact",
+      "required": false,
+      "capture": {
+        "selftest": "sessionshots",
+        "file": "08-scale-compact.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "UIScale compact。",
+      "meaning": "密度を上げた Home。",
+      "primary": "—",
+      "secondary": "—",
+      "states": "compact",
+      "keys": "—",
+      "privacy": "—",
+      "prev": [
+        "main.home"
+      ],
+      "next": [],
+      "window": "Main Window",
+      "invariant": "—",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "sessionshots",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "appearance_policy": "adaptive",
+      "image": {
+        "sha256": {
+          "light": "520e4662741b40e0d01fcf834a0022f8dc57bf553837153433565f9f9e8f811f",
+          "dark": "83d477f396ccc7504db9a34a5ac37186679681b41643a02ab8c4c05a50bba375"
+        },
+        "size": {
+          "light": {
+            "w": 1240,
+            "h": 820
+          },
+          "dark": {
+            "w": 1240,
+            "h": 820
+          }
+        },
+        "light": "screens/main.scale-compact.light.png",
+        "dark": "screens/main.scale-compact.dark.png"
+      }
+    },
+    {
+      "id": "main.scale-comfortable",
+      "group": "main",
+      "title": "Main — UI scale: comfortable (default)",
+      "required": false,
+      "capture": {
+        "selftest": "sessionshots",
+        "file": "09-scale-comfortable.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "既定。",
+      "meaning": "—",
+      "primary": "—",
+      "secondary": "—",
+      "states": "comfortable",
+      "keys": "—",
+      "privacy": "—",
+      "prev": [
+        "main.home"
+      ],
+      "next": [],
+      "window": "Main Window",
+      "invariant": "—",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "sessionshots",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "appearance_policy": "adaptive",
+      "image": {
+        "sha256": {
+          "light": "f5b4212e9bd133fa0afea038d4efbd37cf31b36b338598006028980a4cc14351",
+          "dark": "32427d1b75eae3e1dc0ab20a508797d6e2b0ce55c381bd0ca6cb4acfd44efa5c"
+        },
+        "size": {
+          "light": {
+            "w": 1240,
+            "h": 820
+          },
+          "dark": {
+            "w": 1240,
+            "h": 820
+          }
+        },
+        "light": "screens/main.scale-comfortable.light.png",
+        "dark": "screens/main.scale-comfortable.dark.png"
+      }
+    },
+    {
+      "id": "main.scale-large",
+      "group": "main",
+      "title": "Main — UI scale: large",
+      "required": false,
+      "capture": {
+        "selftest": "sessionshots",
+        "file": "010-scale-large.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "UIScale large。",
+      "meaning": "—",
+      "primary": "—",
+      "secondary": "—",
+      "states": "large",
+      "keys": "—",
+      "privacy": "—",
+      "prev": [
+        "main.home"
+      ],
+      "next": [],
+      "window": "Main Window",
+      "invariant": "—",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "sessionshots",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "appearance_policy": "adaptive",
+      "image": {
+        "sha256": {
+          "light": "667792e10315cee7137933f42fce7434727a70f5371a2e9f52202f301000188c",
+          "dark": "53e77cb1619157e2f7e863e1291ccdd9a0cd24dbd520a9b6c9f0b669f7ce7704"
+        },
+        "size": {
+          "light": {
+            "w": 1240,
+            "h": 820
+          },
+          "dark": {
+            "w": 1240,
+            "h": 820
+          }
+        },
+        "light": "screens/main.scale-large.light.png",
+        "dark": "screens/main.scale-large.dark.png"
+      }
+    },
+    {
+      "id": "session.recording",
+      "group": "provenance",
+      "title": "Session — Recording (Home card)",
+      "required": true,
+      "capture": {
+        "selftest": "sessionshots",
+        "file": "02-recording.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "sessions.begin（Product Weekly / Google Meet）。",
+      "meaning": "同じ id の会議が Home で「録音中」。",
+      "primary": "停止",
+      "secondary": "開く",
+      "states": "status = recording",
+      "keys": "—",
+      "privacy": "—",
+      "prev": [
+        "main.home"
+      ],
+      "next": [
+        "session.processing"
+      ],
+      "window": "Main Window",
+      "invariant": "同じ id が姿を変える（別カードにならない）。",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "sessionshots",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "appearance_policy": "adaptive",
+      "image": {
+        "sha256": {
+          "light": "c02912d88ecea92dda8deb98e18ba92e17d1db78d3cb757ae4b92e5dda6ebc8b",
+          "dark": "2efe9ef59240dc92e431802ef4a211ab65df8b39d3b64c791f0cbb8a04a03e55"
+        },
+        "size": {
+          "light": {
+            "w": 1240,
+            "h": 820
+          },
+          "dark": {
+            "w": 1240,
+            "h": 820
+          }
+        },
+        "light": "screens/session.recording.light.png",
+        "dark": "screens/session.recording.dark.png"
+      }
+    },
+    {
+      "id": "session.processing",
+      "group": "provenance",
+      "title": "Session — Processing",
+      "required": true,
+      "capture": {
+        "selftest": "sessionshots",
+        "file": "03-processing.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "録り終えて読み取り中。",
+      "meaning": "段階（processingStage）が見える。まだ ready ではない。",
+      "primary": "（待つ）",
+      "secondary": "—",
+      "states": "status = processing",
+      "keys": "—",
+      "privacy": "端末内。",
+      "prev": [
+        "session.recording"
+      ],
+      "next": [
+        "session.ready"
+      ],
+      "window": "Main Window",
+      "invariant": "勝手に ready にしない。",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "sessionshots",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "appearance_policy": "adaptive",
+      "image": {
+        "sha256": {
+          "light": "43eecb673770fb76496a82816925e3195007e7078b48d052d477319547ebe3ca",
+          "dark": "dc49015a402c76051b5a7e1c8c4d656ac7cae3e37497b3ba08e37d739d94ecc7"
+        },
+        "size": {
+          "light": {
+            "w": 1240,
+            "h": 820
+          },
+          "dark": {
+            "w": 1240,
+            "h": 820
+          }
+        },
+        "light": "screens/session.processing.light.png",
+        "dark": "screens/session.processing.dark.png"
+      }
+    },
+    {
+      "id": "session.ready",
+      "group": "provenance",
+      "title": "Session — Ready",
+      "required": true,
+      "capture": {
+        "selftest": "sessionshots",
+        "file": "04-ready.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "読み取りが終わった。",
+      "meaning": "要約が出て、開ける。",
+      "primary": "開く",
+      "secondary": "プロジェクトへ",
+      "states": "status = ready",
+      "keys": "—",
+      "privacy": "—",
+      "prev": [
+        "session.processing"
+      ],
+      "next": [
+        "session.detail"
+      ],
+      "window": "Main Window",
+      "invariant": "—",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "sessionshots",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "appearance_policy": "adaptive",
+      "image": {
+        "sha256": {
+          "light": "f6f8e0f797b9ce50ad97b36151b485561c1680fa57ec5f5f83bcae19f3bdcf5d",
+          "dark": "394cbb8f20dec028813a025f934b3adb268798f6a6037cf77509711fa100c73f"
+        },
+        "size": {
+          "light": {
+            "w": 1240,
+            "h": 820
+          },
+          "dark": {
+            "w": 1240,
+            "h": 820
+          }
+        },
+        "light": "screens/session.ready.light.png",
+        "dark": "screens/session.ready.dark.png"
+      }
+    },
+    {
+      "id": "session.project",
+      "group": "provenance",
+      "title": "Session — Filed to project",
+      "required": true,
+      "capture": {
+        "selftest": "sessionshots",
+        "file": "05-project.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "visibility = workspace, project = Product。",
+      "meaning": "会議がプロジェクトに入った。",
+      "primary": "開く",
+      "secondary": "—",
+      "states": "ready + project",
+      "keys": "—",
+      "privacy": "共有範囲（visibility）が読める。",
+      "prev": [
+        "session.ready"
+      ],
+      "next": [
+        "session.detail"
+      ],
+      "window": "Main Window",
+      "invariant": "—",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "sessionshots",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "appearance_policy": "adaptive",
+      "image": {
+        "sha256": {
+          "light": "f5b4212e9bd133fa0afea038d4efbd37cf31b36b338598006028980a4cc14351",
+          "dark": "32427d1b75eae3e1dc0ab20a508797d6e2b0ce55c381bd0ca6cb4acfd44efa5c"
+        },
+        "size": {
+          "light": {
+            "w": 1240,
+            "h": 820
+          },
+          "dark": {
+            "w": 1240,
+            "h": 820
+          }
+        },
+        "light": "screens/session.project.light.png",
+        "dark": "screens/session.project.dark.png"
+      }
+    },
+    {
+      "id": "session.detail",
+      "group": "provenance",
+      "title": "Session — Detail (opened)",
+      "required": true,
+      "capture": {
+        "selftest": "sessionshots",
+        "file": "06-session-detail.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "MainNav.openSession。",
+      "meaning": "1 件の会議。要約・決定・宿題・文字起こし。",
+      "primary": "出典へ",
+      "secondary": "戻る",
+      "states": "detail",
+      "keys": "—",
+      "privacy": "—",
+      "prev": [
+        "session.ready"
+      ],
+      "next": [
+        "provenance.meeting-detail"
+      ],
+      "window": "Main Window",
+      "invariant": "sidebar で出られる。",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "sessionshots",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "appearance_policy": "adaptive",
+      "image": {
+        "sha256": {
+          "light": "5bc15b6d4de51787849318bdf6042f487deb94e8373ff465b9c1493d0b6cde98",
+          "dark": "f1ba1c7ac57629810bfb7a5cd96355acc13e60946a0f1d1fcf6e2679acaf8247"
+        },
+        "size": {
+          "light": {
+            "w": 1240,
+            "h": 820
+          },
+          "dark": {
+            "w": 1240,
+            "h": 820
+          }
+        },
+        "light": "screens/session.detail.light.png",
+        "dark": "screens/session.detail.dark.png"
+      }
+    },
+    {
+      "id": "provenance.meeting-detail",
+      "group": "provenance",
+      "title": "Meeting detail — Summary / Decisions / Actions",
+      "required": true,
+      "capture": {
+        "selftest": "shots",
+        "file": "08-meeting-detail.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "Library から 1 件（preview データ）。",
+      "meaning": "要約・決定・宿題が出典つきで並ぶ。",
+      "primary": "出典（Source）へ",
+      "secondary": "文字起こし / 音声",
+      "states": "detail",
+      "keys": "—",
+      "privacy": "—",
+      "prev": [
+        "main.library-meetings"
+      ],
+      "next": [
+        "provenance.source"
+      ],
+      "window": "Main Window",
+      "invariant": "決定には出典がある。",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "shots",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "appearance_policy": "adaptive",
+      "image": {
+        "sha256": {
+          "light": "175435d450731ed12b29f240964b983f9ecb7e4fd538b59746263e2bcb2f3f41",
+          "dark": "adfd6ba08fcb10c10ffeebdfaf6d20b26555a41f01838e8e7e35759737187eac"
+        },
+        "size": {
+          "light": {
+            "w": 1240,
+            "h": 820
+          },
+          "dark": {
+            "w": 1240,
+            "h": 820
+          }
+        },
+        "light": "screens/provenance.meeting-detail.light.png",
+        "dark": "screens/provenance.meeting-detail.dark.png"
+      }
+    },
+    {
+      "id": "provenance.library-after-end",
+      "group": "provenance",
+      "title": "Journey B — Library after ending",
+      "required": true,
+      "capture": {
+        "selftest": "journey",
+        "journey": "JB",
+        "file": "05-library.png",
+        "appearances": [
+          "light"
+        ]
+      },
+      "trigger": "会議を終えて Library へ。",
+      "meaning": "いま終えた会議が一覧の先頭に居る。",
+      "primary": "開く",
+      "secondary": "—",
+      "states": "—",
+      "keys": "—",
+      "privacy": "—",
+      "prev": [
+        "meeting.controller"
+      ],
+      "next": [
+        "provenance.source"
+      ],
+      "window": "Main Window",
+      "invariant": "終えた直後に見つかる。",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "journey",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "appearance_policy": "adaptive",
+      "image": {
+        "sha256": {
+          "light": "8711b6609672894e9ba02d354c5dc50415b34dc39a090789c8cf9e8e4cc3a83e"
+        },
+        "size": {
+          "light": {
+            "w": 1240,
+            "h": 820
+          }
+        },
+        "light": "screens/provenance.library-after-end.light.png"
+      }
+    },
+    {
+      "id": "provenance.source",
+      "group": "provenance",
+      "title": "Journey B — Selected source",
+      "required": true,
+      "capture": {
+        "selftest": "journey",
+        "journey": "JB",
+        "file": "06-source.png",
+        "appearances": [
+          "light"
+        ]
+      },
+      "trigger": "決定の [Source]。",
+      "meaning": "その決定がどの発言から来たか。文字起こしの該当行へ飛ぶ。",
+      "primary": "音声へ飛ぶ",
+      "secondary": "戻る",
+      "states": "source selected",
+      "keys": "—",
+      "privacy": "—",
+      "prev": [
+        "provenance.meeting-detail"
+      ],
+      "next": [
+        "provenance.reopened"
+      ],
+      "window": "Main Window",
+      "invariant": "音声の jump は静止画で区別できない。REAL_MEETING の Source jump 行で確かめる。",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "journey",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "appearance_policy": "adaptive",
+      "image": {
+        "sha256": {
+          "light": "49d9da9f031ecba1df74348bb0eb98d6826e844eb76dca5cba3c49ed2f3513e3"
+        },
+        "size": {
+          "light": {
+            "w": 1240,
+            "h": 820
+          }
+        },
+        "light": "screens/provenance.source.light.png"
+      }
+    },
+    {
+      "id": "provenance.reopened",
+      "group": "provenance",
+      "title": "Journey B — Reopened later",
+      "required": true,
+      "capture": {
+        "selftest": "journey",
+        "journey": "JB",
+        "file": "07-reopened.png",
+        "appearances": [
+          "light"
+        ]
+      },
+      "trigger": "閉じて、後で開き直す。",
+      "meaning": "同じものが同じ姿で戻る（Library persistence）。",
+      "primary": "—",
+      "secondary": "—",
+      "states": "—",
+      "keys": "—",
+      "privacy": "—",
+      "prev": [
+        "provenance.source"
+      ],
+      "next": [],
+      "window": "Main Window",
+      "invariant": "—",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "journey",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "appearance_policy": "adaptive",
+      "image": {
+        "sha256": {
+          "light": "1d4e9f305cf3f5b9db46b643f44597c026585ae32796f7076c985dbbf9373ead"
+        },
+        "size": {
+          "light": {
+            "w": 1240,
+            "h": 820
+          }
+        },
+        "light": "screens/provenance.reopened.light.png"
+      }
+    },
+    {
+      "id": "system.mic-denied",
+      "group": "system",
+      "title": "System — Microphone denied",
+      "required": true,
+      "capture": {
+        "selftest": "shots",
+        "file": "09-permission-denied.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "マイク拒否のまま声で頼もうとした。",
+      "meaning": "「声で頼むにはマイクが要ります。」と、回復の道（許可…）。",
+      "primary": "許可…（システム設定へ）",
+      "secondary": "閉じる",
+      "states": "denied",
+      "keys": "Esc → 閉じる。",
+      "privacy": "求めるのは必要になった瞬間だけ（purpose-first）。",
+      "prev": [
+        "voice.idle"
+      ],
+      "next": [
+        "system.mic-recovered"
+      ],
+      "window": "Dock（1 枚）",
+      "invariant": "起動時に一括で求めない。理由が先に読める。",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "shots",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "appearance_policy": "adaptive",
+      "image": {
+        "sha256": {
+          "light": "71b377811347ab96b81b3167e75aa70934d1bd4ef9c73d92a0afa1a24d400ce2",
+          "dark": "8ae10067853a0a73172ec1433f6d6a36fae5116ca0d2e0b7dbd79bd7f5d2549d"
+        },
+        "size": {
+          "light": {
+            "w": 1080,
+            "h": 680
+          },
+          "dark": {
+            "w": 1080,
+            "h": 680
+          }
+        },
+        "light": "screens/system.mic-denied.light.png",
+        "dark": "screens/system.mic-denied.dark.png"
+      }
+    },
+    {
+      "id": "system.mic-recovered",
+      "group": "system",
+      "title": "Journey C — Recovered after permission",
+      "required": true,
+      "capture": {
+        "selftest": "journey",
+        "journey": "JC",
+        "file": "02-recovered.png",
+        "appearances": [
+          "light"
+        ]
+      },
+      "trigger": "許可したあと戻ってきた。",
+      "meaning": "その場で続きが始まる。",
+      "primary": "話す",
+      "secondary": "—",
+      "states": "—",
+      "keys": "—",
+      "privacy": "—",
+      "prev": [
+        "system.mic-denied"
+      ],
+      "next": [
+        "voice.listening"
+      ],
+      "window": "Dock（1 枚）",
+      "invariant": "再起動を求めない。",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "journey",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "appearance_policy": "adaptive",
+      "image": {
+        "sha256": {
+          "light": "fc04ebfacf26efedcaa6ef466eb536a11fc84da5c08cb7361760a511b37b4d44"
+        },
+        "size": {
+          "light": {
+            "w": 820,
+            "h": 76
+          }
+        },
+        "light": "screens/system.mic-recovered.light.png"
+      }
+    },
+    {
+      "id": "system.after-sharing",
+      "group": "system",
+      "title": "Journey C — After sharing (secret mode)",
+      "required": true,
+      "capture": {
+        "selftest": "journey",
+        "journey": "JC",
+        "file": "03-after-sharing.png",
+        "appearances": [
+          "light"
+        ]
+      },
+      "trigger": "画面共有のあと。",
+      "meaning": "共有中に映らない設定が戻る / 戻せる。",
+      "primary": "—",
+      "secondary": "—",
+      "states": "—",
+      "keys": "—",
+      "privacy": "秘匿 ON で画面キャプチャから消える（--selftest secret）。",
+      "prev": [
+        "meeting.controller"
+      ],
+      "next": [],
+      "window": "Dock（1 枚）",
+      "invariant": "—",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "journey",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "appearance_policy": "adaptive",
+      "image": {
+        "sha256": {
+          "light": "653cd7dc1a414701081ef2d458d337c469de2f987a3b0108814a9a9ec866d196"
+        },
+        "size": {
+          "light": {
+            "w": 820,
+            "h": 76
+          }
+        },
+        "light": "screens/system.after-sharing.light.png"
+      }
+    },
+    {
+      "id": "system.confirm-cancel",
+      "group": "system",
+      "title": "Journey C — Confirmation, cancelled",
+      "required": true,
+      "capture": {
+        "selftest": "journey",
+        "journey": "JC",
+        "file": "04-confirm.png",
+        "appearances": [
+          "light"
+        ]
+      },
+      "trigger": "確認で「やめる」。",
+      "meaning": "何も外へ出ていないことが分かる。",
+      "primary": "—",
+      "secondary": "—",
+      "states": "—",
+      "keys": "Esc。",
+      "privacy": "副作用ゼロ。",
+      "prev": [
+        "dock.confirmation"
+      ],
+      "next": [
+        "voice.idle"
+      ],
+      "window": "Dock（1 枚）",
+      "invariant": "—",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "journey",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "appearance_policy": "adaptive",
+      "image": {
+        "sha256": {
+          "light": "735b61450a659578897058df9a0bd2426e2ecc8f7a00869a38648acb808e3043"
+        },
+        "size": {
+          "light": {
+            "w": 560,
+            "h": 182
+          }
+        },
+        "light": "screens/system.confirm-cancel.light.png"
+      }
+    },
+    {
+      "id": "system.interrupted",
+      "group": "system",
+      "title": "System — Interrupted recording (Home)",
+      "required": true,
+      "capture": {
+        "selftest": "sessionshots",
+        "file": "07-interrupted.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "録音中に落ちて、次に開いた。",
+      "meaning": "「途中で終わっています」。ready と混同しない。",
+      "primary": "続きから",
+      "secondary": "破棄（必ず一度聞く）",
+      "states": "status = interrupted",
+      "keys": "—",
+      "privacy": "破棄は音が消えて戻せないので確認する。",
+      "prev": [
+        "session.recording"
+      ],
+      "next": [
+        "system.resumed"
+      ],
+      "window": "Main Window",
+      "invariant": "勝手に ready にしない。直近の録りかけは予定より先に出す。",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "sessionshots",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "appearance_policy": "adaptive",
+      "image": {
+        "sha256": {
+          "light": "ee6e839268e04ea9c49d7b37b4471cfe182a1777c32a59b74493bd023392e031",
+          "dark": "534ffe29d922cd29e70ab3fea714e0d3f275e26b0d4f8267c0e8cc4fc5db7c32"
+        },
+        "size": {
+          "light": {
+            "w": 1240,
+            "h": 820
+          },
+          "dark": {
+            "w": 1240,
+            "h": 820
+          }
+        },
+        "light": "screens/system.interrupted.light.png",
+        "dark": "screens/system.interrupted.dark.png"
+      }
+    },
+    {
+      "id": "system.interrupted-journey",
+      "group": "system",
+      "title": "Journey C — Interrupted",
+      "required": false,
+      "capture": {
+        "selftest": "journey",
+        "journey": "JC",
+        "file": "05-interrupted.png",
+        "appearances": [
+          "light"
+        ]
+      },
+      "trigger": "Astra を kill。",
+      "meaning": "同上（journey での姿）。",
+      "primary": "—",
+      "secondary": "—",
+      "states": "—",
+      "keys": "—",
+      "privacy": "—",
+      "prev": [],
+      "next": [
+        "system.resumed"
+      ],
+      "window": "Main Window",
+      "invariant": "—",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "journey",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "appearance_policy": "adaptive",
+      "image": {
+        "sha256": {
+          "light": "02d0254d2786881c25cc24311c972ed08375578bed3ededa97cb0fbdb98bc6d4"
+        },
+        "size": {
+          "light": {
+            "w": 1240,
+            "h": 820
+          }
+        },
+        "light": "screens/system.interrupted-journey.light.png"
+      }
+    },
+    {
+      "id": "system.resumed",
+      "group": "system",
+      "title": "Journey C — Resumed",
+      "required": true,
+      "capture": {
+        "selftest": "journey",
+        "journey": "JC",
+        "file": "06-resumed.png",
+        "appearances": [
+          "light"
+        ]
+      },
+      "trigger": "続きから。",
+      "meaning": "録りかけが読み取られて ready になる。",
+      "primary": "開く",
+      "secondary": "—",
+      "states": "—",
+      "keys": "—",
+      "privacy": "—",
+      "prev": [
+        "system.interrupted"
+      ],
+      "next": [
+        "session.ready"
+      ],
+      "window": "Main Window",
+      "invariant": "—",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "journey",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "appearance_policy": "adaptive",
+      "image": {
+        "sha256": {
+          "light": "026f489de2f388c75e3f4e8849903f39bf27f0afd020495ec6253020cfb25434"
+        },
+        "size": {
+          "light": {
+            "w": 1240,
+            "h": 820
+          }
+        },
+        "light": "screens/system.resumed.light.png"
+      }
+    },
+    {
+      "id": "system.stt-unavailable",
+      "group": "system",
+      "title": "System — On-device STT unavailable",
+      "required": true,
+      "capture": {
+        "selftest": "shots",
+        "file": "09b-stt-unavailable.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "status": "CAPTURED",
+      "note": "録音面の 1 行と Dock の字幕 / 文字起こしの空状態に、理由と直しに行く道を出す。",
+      "trigger": "STT モデルが無い / 初期化に失敗。",
+      "meaning": "録音はできるが文字にならないことを、録る前に言う。",
+      "primary": "設定を開く（システム設定 > キーボード > 音声入力）",
+      "secondary": "録音は続く（音声は保存される）",
+      "states": "RecordingRuntime.transcriptionUnavailable = true（録音中）",
+      "keys": "—",
+      "privacy": "外へ送って代替しない。",
+      "prev": [
+        "meeting.controller"
+      ],
+      "next": [],
+      "window": "Workspace（録音面）。Dock / Main には出ない",
+      "invariant": "黙って空の文字起こしにしない。",
+      "source": "RC",
+      "appearance_policy": "adaptive",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "shots",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "image": {
+        "sha256": {
+          "light": "419bb74c7426cb50419b14091b3c4532888ab7ea52cf9de1d4412fcb0eca0423",
+          "dark": "9dc35e8a5baf19e55a72acdde2bd84f8f26e2a2bd0b94a1074db7cae1396c3d9"
+        },
+        "size": {
+          "light": {
+            "w": 1080,
+            "h": 680
+          },
+          "dark": {
+            "w": 1080,
+            "h": 680
+          }
+        },
+        "light": "screens/system.stt-unavailable.light.png",
+        "dark": "screens/system.stt-unavailable.dark.png"
+      }
+    },
+    {
+      "id": "system.speech-permission",
+      "group": "system",
+      "title": "System — Speech recognition denied",
+      "required": true,
+      "capture": {
+        "selftest": "shots",
+        "file": "09c-speech-denied.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "録音を始めた瞬間に音声認識（Apple Speech）の許可を求め、断られた。",
+      "meaning": "音は録れている。文字にはできない。理由と直しに行く道が出る。",
+      "primary": "設定を開く（音声認識）",
+      "secondary": "録音は続く",
+      "states": "permissionIssue = speechDenied",
+      "keys": "—",
+      "privacy": "音声認識はこの Mac の中（サーバへは出さない）。求めるのは録音を始めた瞬間だけ。",
+      "prev": [
+        "recording.workspace"
+      ],
+      "next": [
+        "recording.workspace"
+      ],
+      "window": "Workspace（録音面）",
+      "invariant": "黙って空の文字起こしにしない。「まだ発話がありません」と言わない。",
+      "appearance_policy": "adaptive",
+      "status": "CAPTURED",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "shots",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "note": "REAL_MEETING の実マイク経路で発見: 音声認識の許可を誰も求めておらず、初回は文字起こしが一度も動かなかった。PermissionCenter の .meeting に音声認識を足し、拒否ならこの面。",
+      "image": {
+        "sha256": {
+          "light": "f8221c4cd24928be4f8baf46b7ffc9516e0cadd0e411383ac6aec856362f632a",
+          "dark": "3109335e7ce0f4666ad082c84e3f172a53afa62daf0cef5502891440116da20b"
+        },
+        "size": {
+          "light": {
+            "w": 1080,
+            "h": 680
+          },
+          "dark": {
+            "w": 1080,
+            "h": 680
+          }
+        },
+        "light": "screens/system.speech-permission.light.png",
+        "dark": "screens/system.speech-permission.dark.png"
+      }
+    },
+    {
+      "id": "system.calendar-permission",
+      "group": "system",
+      "title": "System — Calendar permission (purpose-first)",
+      "required": true,
+      "capture": {
+        "selftest": "sessionshots",
+        "file": "13-calendar-permission.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "status": "CAPTURED",
+      "note": "Permissions.simulatedCalendar = notDetermined、予定の差し込み無し。Home は開くたびに許可の状態を読み直す（以前は初回の値のままだった）。",
+      "trigger": "Home が予定を出そうとした（未確認）。",
+      "meaning": "理由を先に言ってから求める。",
+      "primary": "許可…",
+      "secondary": "あとで",
+      "states": "notDetermined / denied",
+      "keys": "—",
+      "privacy": "起動経路で求めない（PERMISSION_JIT_OK）。",
+      "prev": [
+        "main.home"
+      ],
+      "next": [
+        "main.home-upcoming"
+      ],
+      "window": "Main Window",
+      "invariant": "許可直後にその場で予定が並ぶ（LIVE_TCC）。",
+      "source": "RC",
+      "appearance_policy": "adaptive",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "sessionshots",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "image": {
+        "sha256": {
+          "light": "bc05609241cbee0e5d68b2e9848c2d6bfe4af3dc093b4fded50d0ed335b96376",
+          "dark": "7bba8ea12bb60fd65bcc71db2f6df8cc4b73e26daf81e3d923ec7837c882a35a"
+        },
+        "size": {
+          "light": {
+            "w": 1240,
+            "h": 820
+          },
+          "dark": {
+            "w": 1240,
+            "h": 820
+          }
+        },
+        "light": "screens/system.calendar-permission.light.png",
+        "dark": "screens/system.calendar-permission.dark.png"
+      }
+    },
+    {
+      "id": "system.accessibility-permission",
+      "group": "system",
+      "title": "System — Input Monitoring（⌥Space）/ Accessibility",
+      "required": true,
+      "capture": {
+        "selftest": "sessionshots",
+        "file": "14-input-monitoring.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "status": "CAPTURED",
+      "note": "アクセシビリティ（入力欄へ書く）の許可を求める面は無い。Capability.control.reason の文はあるが、どの view も読んでいない（製品側の FIX 候補）。",
+      "trigger": "入力欄へ書こうとした / ⌥Space が拾えない。",
+      "meaning": "何のために要るかを先に言う。",
+      "primary": "⌥Space を使えるようにする（許可を求める）",
+      "secondary": "（そのまま使う）",
+      "states": "Permissions.inputMonitoring = notDetermined",
+      "keys": "—",
+      "privacy": "purpose-first。",
+      "prev": [
+        "dock.confirmation"
+      ],
+      "next": [],
+      "window": "Main Window（Home の空状態）。Dock は登録できないとき「クリック」案内に変わる",
+      "invariant": "—",
+      "source": "RC",
+      "appearance_policy": "adaptive",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "sessionshots",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "image": {
+        "sha256": {
+          "light": "97d5dd76c41a0f0a5443badf3d5414fa02d36b9a6389490de05fcc8430660dae",
+          "dark": "941b34f688c5172c2f9151fa15705f7e1803312c3a46e5e922a93d0d5817ad94"
+        },
+        "size": {
+          "light": {
+            "w": 1240,
+            "h": 820
+          },
+          "dark": {
+            "w": 1240,
+            "h": 820
+          }
+        },
+        "light": "screens/system.accessibility-permission.light.png",
+        "dark": "screens/system.accessibility-permission.dark.png"
+      }
+    },
+    {
+      "id": "system.update-available",
+      "group": "system",
+      "title": "System — Update available",
+      "required": true,
+      "capture": {
+        "selftest": "sysshots",
+        "file": "update-available.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "status": "CAPTURED",
+      "note": "本物の Sparkle の窓。capture-rc.sh が 127.0.0.1 の http で配る appcast（版 999.0.0）を読ませる。バンドルが ja.lproj を持つので Sparkle の窓も日本語。",
+      "trigger": "メニュー「更新を確認…」/ 自動。",
+      "meaning": "新しい版があること、何が変わるか、入れるか。",
+      "primary": "更新する",
+      "secondary": "あとで",
+      "states": "available",
+      "keys": "—",
+      "privacy": "appcast の取得だけが外へ出る。",
+      "prev": [],
+      "next": [],
+      "window": "Sparkle window",
+      "invariant": "SUFeedURL / SUPublicEDKey が揃っていないときは「確かめていない」と言う。",
+      "source": "RC",
+      "appearance_policy": "adaptive",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "sysshots",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "image": {
+        "sha256": {
+          "light": "f1fc7b385c1bd41df93e6dcfcfba6ee879bd312168ccc9912ac6cf2181032321",
+          "dark": "b0e06c8ecd3a5a6043344abe16dce9b343216d4112ade7fa548079c7086e361a"
+        },
+        "size": {
+          "light": {
+            "w": 619,
+            "h": 402
+          },
+          "dark": {
+            "w": 619,
+            "h": 402
+          }
+        },
+        "light": "screens/system.update-available.light.png",
+        "dark": "screens/system.update-available.dark.png"
+      }
+    },
+    {
+      "id": "system.update-unavailable",
+      "group": "system",
+      "title": "System — Up to date / cannot check",
+      "required": true,
+      "capture": {
+        "selftest": "sysshots",
+        "file": "update-unavailable.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "status": "CAPTURED",
+      "note": "Astra 自身の alert。理由は実行体の事実（SoftwareUpdate.misconfiguration）。Sparkle の「最新です」は同じプロセスで 2 度目の確認が捨てられるため Atlas では撮らない。",
+      "trigger": "更新を確認…",
+      "meaning": "最新である / 確かめられない、を区別して言う。",
+      "primary": "OK",
+      "secondary": "—",
+      "states": "misconfigured（この実行体で確かめられない）",
+      "keys": "—",
+      "privacy": "—",
+      "prev": [],
+      "next": [],
+      "window": "Sparkle window / alert",
+      "invariant": "確かめていないのに「最新」と言わない。",
+      "source": "RC",
+      "appearance_policy": "adaptive",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "sysshots",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "image": {
+        "sha256": {
+          "light": "88cf5596b8ea835578370c1f690b52b2d68bb9b452608bc5d041c68d04eb96d5",
+          "dark": "6f1b8036f3a5945dff0a26c1d8266680bb6157acea95ab509f148714948b293a"
+        },
+        "size": {
+          "light": {
+            "w": 260,
+            "h": 253
+          },
+          "dark": {
+            "w": 260,
+            "h": 253
+          }
+        },
+        "light": "screens/system.update-unavailable.light.png",
+        "dark": "screens/system.update-unavailable.dark.png"
+      }
+    },
+    {
+      "id": "system.generic-failure",
+      "group": "system",
+      "title": "System — Generic action failure",
+      "required": true,
+      "capture": {
+        "selftest": "sessionshots",
+        "file": "15-generic-failure.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "status": "CAPTURED",
+      "note": "Home の行が失敗した段の理由を言い、同じ入口（AI 操作）でやり直せる。",
+      "trigger": "依頼が失敗した。",
+      "meaning": "何が失敗して、次に何ができるか。",
+      "primary": "やり直す（行の中）",
+      "secondary": "どこで止まったかを読む（失敗した段の文）",
+      "states": "AgentTask.status = failed（LocalStore）",
+      "keys": "—",
+      "privacy": "—",
+      "prev": [
+        "main.home"
+      ],
+      "next": [],
+      "window": "Main Window（Home の「最近の頼みごと」）",
+      "invariant": "黙らない。",
+      "source": "RC",
+      "appearance_policy": "adaptive",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "sessionshots",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "image": {
+        "sha256": {
+          "light": "371001e7b241d1d9228ec12cb504ef1d7facae4edc693eb8bfb27caf78f5be6b",
+          "dark": "759da2c3b112b0b2462050f9adb1fb4ab08250067e1b69e662ad72059ce84aeb"
+        },
+        "size": {
+          "light": {
+            "w": 1240,
+            "h": 820
+          },
+          "dark": {
+            "w": 1240,
+            "h": 820
+          }
+        },
+        "light": "screens/system.generic-failure.light.png",
+        "dark": "screens/system.generic-failure.dark.png"
+      }
+    },
+    {
+      "id": "settings.permissions",
+      "group": "system",
+      "title": "Settings — 許可（OS）/ shortcuts",
+      "required": true,
+      "capture": {
+        "selftest": "sysshots",
+        "file": "settings-permissions.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "status": "CAPTURED",
+      "note": "各行に「何のために要るか」（PermissionCenter.Capability.reason）を添えた。窓は 460×500。予定と ⌥Space を未確認にして「許可…」の在る姿を残す。",
+      "trigger": "⌘, / メニュー。",
+      "meaning": "OS 許可の現状と、ショートカット。",
+      "primary": "許可…",
+      "secondary": "—",
+      "states": "—",
+      "keys": "⌘,。",
+      "privacy": "各許可に理由が書いてある。",
+      "prev": [
+        "main.home"
+      ],
+      "next": [],
+      "window": "Settings window",
+      "invariant": "—",
+      "source": "RC",
+      "appearance_policy": "adaptive",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "sysshots",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "image": {
+        "sha256": {
+          "light": "5cfd628b31023579ba3bfdfb07926a60037a07e9ed7eec41a8dbdae0274b935c",
+          "dark": "0f734008fae07e6bf29bbadcf49acbc581a4452d3bceb4f448c97aae05414282"
+        },
+        "size": {
+          "light": {
+            "w": 460,
+            "h": 572
+          },
+          "dark": {
+            "w": 460,
+            "h": 572
+          }
+        },
+        "light": "screens/settings.permissions.light.png",
+        "dark": "screens/settings.permissions.dark.png"
+      }
+    },
+    {
+      "id": "guided-setup.intro",
+      "title": "Guided Setup — Intro",
+      "group": "system",
+      "required": true,
+      "appearance_policy": "adaptive",
+      "trigger": "メニューバー「権限の設定を案内…」。または機能が権限を要した瞬間。",
+      "meaning": "右下（visibleFrame の右 24pt・下 24pt）に Astra の署名つきの案内カード: 1 行目 = 状態「画面収録が未許可です」、2 行目 = すること、塗りの CTA「システム設定を開く」。独立したアバターの丸は置かない（署名は CTA より弱い階層）。",
+      "primary": "そのまま待つ（System Settings が開く）",
+      "secondary": "× で案内をやめる",
+      "states": "screenCaptureIntro",
+      "keys": "なし（キーボード操作は System Settings 側）。",
+      "privacy": "権限は変えない・求めない。案内するだけ。",
+      "window": "FloatingPanel（案内カード 1 枚、nonactivating、key/main にならない）",
+      "invariant": "System Settings を書き換えない。全画面の透明窓を作らない。",
+      "prev": [],
+      "next": [
+        "guided-setup.target-found"
+      ],
+      "capture": {
+        "selftest": "guidedshots",
+        "file": "guided-setup-intro.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "status": "CAPTURED",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "guidedshots",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "image": {
+        "sha256": {
+          "light": "f1f3cb43d8b12780009899d120ea9be7cedcd2d75a926b7bd7c4ecb1c66c02a3",
+          "dark": "0f319bd4b1f29cbbeac672344e3372e3d8493b8e44f32a9da7fa0a48ab916f61"
+        },
+        "size": {
+          "light": {
+            "w": 312,
+            "h": 134
+          },
+          "dark": {
+            "w": 312,
+            "h": 134
+          }
+        },
+        "light": "screens/guided-setup.intro.light.png",
+        "dark": "screens/guided-setup.intro.dark.png"
+      }
+    },
+    {
+      "id": "guided-setup.target-found",
+      "title": "Guided Setup — Target found (System Settings + highlight + callout)",
+      "group": "system",
+      "required": true,
+      "appearance_policy": "adaptive",
+      "trigger": "System Settings の「画面収録とシステムオーディオ録音」が開き、AX で Astra 行のスイッチ（identifier `<App>_Toggle`）を特定した。",
+      "meaning": "対象の行のスイッチだけを角丸で囲い、その**横**に「← <行の名前> をオンにしてください」。吹き出しは見つけた行の名前で言う（一覧の名前と別名で呼ばない）。上下に置くと隣の行のスイッチを隠すので横に置く。",
+      "primary": "Astra のスイッチをオンにする（System Settings をそのまま操作できる）",
+      "secondary": "× で案内をやめる",
+      "states": "guidingScreenCapture → waitingScreenCapture",
+      "keys": "System Settings のキーボード操作はそのまま効く（Astra の窓は mouse を通す）。",
+      "privacy": "権限は変えない。付与は CGPreflightScreenCaptureAccess で検知する。",
+      "window": "FloatingPanel × 2（ハイライト / 吹き出し。ignoresMouseEvents = true）+ Apple の System Settings 窓（合成）",
+      "invariant": "固定座標 0。見つからなければ推測位置に出さない。highlight ⊇ target、bubble ∩ toggle = ∅（GUIDED_SETUP_GEOMETRY）。",
+      "prev": [
+        "guided-setup.intro"
+      ],
+      "next": [
+        "guided-setup.target-highlighted",
+        "guided-setup.granted"
+      ],
+      "capture": {
+        "selftest": "guidedshots",
+        "file": "guided-setup-target-found.png",
+        "appearances": [
+          "light"
+        ]
+      },
+      "status": "CAPTURED",
+      "note": "System Settings の窓は Apple のもの。Astra が描いたのはハイライトと吹き出しの 2 窓だけ。dark は System Settings が OS の外観のままなので撮らない。 盲検 review の対象外（Apple の窓が大半で、judge が OS の一覧まで採点する）。Astra が描いた部分の盲検は guided-setup.target-highlighted で、幾何は GUIDED_SETUP_GEOMETRY で見る。",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "guidedshots",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "blind_review": false,
+      "image": {
+        "sha256": {
+          "light": "5f129027f65aea1c1c6cc161cc95257937f9e4f5841211e4f93d30fd2369f150"
+        },
+        "size": {
+          "light": {
+            "w": 723,
+            "h": 643
+          }
+        },
+        "light": "screens/guided-setup.target-found.light.png"
+      }
+    },
+    {
+      "id": "guided-setup.target-add",
+      "title": "Guided Setup — Astra not listed yet (add with +)",
+      "group": "system",
+      "required": true,
+      "appearance_policy": "adaptive",
+      "trigger": "System Settings の「画面収録とシステムオーディオ録音」に Astra の行がまだ無い（画面収録を一度も求めていない Mac）。",
+      "meaning": "「+」だけを囲い、その**下**に「「+」から Astra を追加してください」。横に置くと隣の「−」を隠す（盲検 3/3）。",
+      "primary": "「+」で Astra を追加し、スイッチをオンにする",
+      "secondary": "× で案内をやめる",
+      "states": "guidingScreenCapture → waitingScreenCapture（anchor = + ボタン）",
+      "keys": "System Settings のキーボード操作はそのまま効く。",
+      "privacy": "権限は変えない。",
+      "window": "FloatingPanel × 2 + System Settings（合成）",
+      "invariant": "吹き出しが「+」「−」のどちらも隠さない（GUIDED_SETUP_GEOMETRY: bubble ∩ minus = ∅）。行が現れたら行の案内に切り替わる。",
+      "prev": [
+        "guided-setup.intro"
+      ],
+      "next": [
+        "guided-setup.target-found"
+      ],
+      "capture": {
+        "selftest": "guidedshots",
+        "file": "guided-setup-target-add.png",
+        "appearances": [
+          "light"
+        ]
+      },
+      "status": "CAPTURED",
+      "note": "System Settings の窓は Apple のもの。一覧の他の行（第三者アプリ）はこの Mac の環境で、Astra のものではない。 盲検 review の対象外（Apple の窓が大半で、judge が OS の一覧まで採点する）。Astra が描いた部分の盲検は guided-setup.target-highlighted で、幾何は GUIDED_SETUP_GEOMETRY で見る。",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "guidedshots",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "blind_review": false,
+      "image": {
+        "sha256": {
+          "light": "5f129027f65aea1c1c6cc161cc95257937f9e4f5841211e4f93d30fd2369f150"
+        },
+        "size": {
+          "light": {
+            "w": 723,
+            "h": 643
+          }
+        },
+        "light": "screens/guided-setup.target-add.light.png"
+      }
+    },
+    {
+      "id": "guided-setup.target-highlighted",
+      "title": "Guided Setup — Target highlighted (detail)",
+      "group": "system",
+      "required": true,
+      "appearance_policy": "adaptive",
+      "trigger": "同上（対象の周りを 2 倍で切り出し）。",
+      "meaning": "対象行のスイッチとハイライト、吹き出しの矢印の関係を近くで見る。",
+      "primary": "Astra のスイッチをオンにする",
+      "secondary": "—",
+      "states": "guidingScreenCapture",
+      "keys": "—",
+      "privacy": "権限は変えない。",
+      "window": "FloatingPanel × 2 + System Settings の一部",
+      "invariant": "吹き出しがスイッチを隠さない。対象行を誤認させない。",
+      "prev": [
+        "guided-setup.target-found"
+      ],
+      "next": [],
+      "capture": {
+        "selftest": "guidedshots",
+        "file": "guided-setup-target-highlighted.png",
+        "appearances": [
+          "light"
+        ]
+      },
+      "status": "CAPTURED",
+      "note": "target-found の切り出し（同じ capture）。",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "guidedshots",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "image": {
+        "sha256": {
+          "light": "463004bb7ff6e10008ee68c8c7bfe2f3636800fa610ca505a2c053b9646a2c85"
+        },
+        "size": {
+          "light": {
+            "w": 408,
+            "h": 116
+          }
+        },
+        "light": "screens/guided-setup.target-highlighted.light.png"
+      }
+    },
+    {
+      "id": "guided-setup.repositioned",
+      "title": "Guided Setup — Follows the window (repositioned)",
+      "group": "system",
+      "required": true,
+      "appearance_policy": "adaptive",
+      "trigger": "利用者が System Settings の窓をドラッグした（selftest は CGEvent で実ドラッグ）。",
+      "meaning": "AXObserver の出来事で対象を取り直し、ハイライトと吹き出しが新しい位置へ付いて行く。polling しない。",
+      "primary": "Astra のスイッチをオンにする",
+      "secondary": "—",
+      "states": "waitingScreenCapture（追従）",
+      "keys": "—",
+      "privacy": "権限は変えない。",
+      "window": "FloatingPanel × 2 + System Settings",
+      "invariant": "画面端では吹き出しを画面内に clamp。マルチディスプレイでは対象の画面に置く。",
+      "prev": [
+        "guided-setup.target-found"
+      ],
+      "next": [],
+      "capture": {
+        "selftest": "guidedshots",
+        "file": "guided-setup-repositioned.png",
+        "appearances": [
+          "light"
+        ]
+      },
+      "status": "CAPTURED",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "guidedshots",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "blind_review": false,
+      "note": "盲検 review の対象外（Apple の窓が大半で、judge が OS の一覧まで採点する）。Astra が描いた部分の盲検は guided-setup.target-highlighted で、幾何は GUIDED_SETUP_GEOMETRY で見る。",
+      "image": {
+        "sha256": {
+          "light": "fc8f039554a0a983ae789f292b14760086ade1a22119fb2a8eb85894ea2fca79"
+        },
+        "size": {
+          "light": {
+            "w": 723,
+            "h": 643
+          }
+        },
+        "light": "screens/guided-setup.repositioned.light.png"
+      }
+    },
+    {
+      "id": "guided-setup.target-missing",
+      "title": "Guided Setup — Target missing (generic fallback)",
+      "group": "system",
+      "required": true,
+      "appearance_policy": "adaptive",
+      "trigger": "System Settings は開いたが、AX で Astra 行が見つからない（一覧に未追加・OS 更新で構造が変わった・AX 未許可）。",
+      "meaning": "ハイライトも吹き出しも出さず、案内カードだけ「設定画面で Astra をオンにしてください」。推測位置に出さない。",
+      "primary": "設定画面で Astra を探してオンにする",
+      "secondary": "× で案内をやめる",
+      "states": "waitingScreenCapture（anchor = nil）",
+      "keys": "—",
+      "privacy": "権限は変えない。",
+      "window": "FloatingPanel（案内カード 1 枚）",
+      "invariant": "confidence が無いときに近い行を当てない（0 candidates → generic fallback に固定）。",
+      "prev": [
+        "guided-setup.intro"
+      ],
+      "next": [],
+      "capture": {
+        "selftest": "guidedshots",
+        "file": "guided-setup-target-missing.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "status": "CAPTURED",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "guidedshots",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "image": {
+        "sha256": {
+          "light": "d909c5a137080c9a58579be2d50ef7dbc8b159ed45b06cb9f2f0693912324bc8",
+          "dark": "fa0c1325f6e86b10bd78026a7b89d4a6693d7dc83aa955c4a95c9007c1727c52"
+        },
+        "size": {
+          "light": {
+            "w": 312,
+            "h": 134
+          },
+          "dark": {
+            "w": 312,
+            "h": 134
+          }
+        },
+        "light": "screens/guided-setup.target-missing.light.png",
+        "dark": "screens/guided-setup.target-missing.dark.png"
+      }
+    },
+    {
+      "id": "guided-setup.granted",
+      "title": "Guided Setup — Granted",
+      "group": "system",
+      "required": true,
+      "appearance_policy": "adaptive",
+      "trigger": "利用者がスイッチをオンにした。OS API（CGPreflightScreenCaptureAccess / AXIsProcessTrusted / AVCaptureDevice）が許可を返した。",
+      "meaning": "ハイライトと吹き出しが消え、カードが success「設定できました ✓」。次の権限があれば続き、無ければ「すべて設定できました ✓」。",
+      "primary": "何もしなくてよい（自動で次へ）",
+      "secondary": "—",
+      "states": "granted → 次の intro / completed",
+      "keys": "—",
+      "privacy": "権限を読むだけ（変えない）。",
+      "window": "FloatingPanel（案内カード 1 枚）",
+      "invariant": "付与は OS API で確かめる（画面の見た目で判定しない）。",
+      "prev": [
+        "guided-setup.target-found"
+      ],
+      "next": [
+        "voice.idle"
+      ],
+      "capture": {
+        "selftest": "guidedshots",
+        "file": "guided-setup-granted.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "status": "CAPTURED",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "guidedshots",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "image": {
+        "sha256": {
+          "light": "9ca24174f2d2ba4dd6626508a3c1446c4c775bc0e052c0dfb4a1ca36c7af87bc",
+          "dark": "ec2109e3dd2f7bb1d5e60446fc12d6a613508ee6c1abefba78b30cbacfeb0be7"
+        },
+        "size": {
+          "light": {
+            "w": 312,
+            "h": 78
+          },
+          "dark": {
+            "w": 312,
+            "h": 78
+          }
+        },
+        "light": "screens/guided-setup.granted.light.png",
+        "dark": "screens/guided-setup.granted.dark.png"
+      }
+    },
+    {
+      "id": "guided-setup.denied",
+      "title": "Guided Setup — Could not open settings (warning)",
+      "group": "system",
+      "required": true,
+      "appearance_policy": "adaptive",
+      "trigger": "System Settings が 15 秒たっても現れない（開けない）。",
+      "meaning": "カードが warning「設定画面を開けませんでした。システム設定から Astra をオンにしてください」。黙って消えない。",
+      "primary": "システム設定を自分で開いて Astra をオンにする",
+      "secondary": "× で案内をやめる",
+      "states": "failed(設定画面を開けませんでした)",
+      "keys": "—",
+      "privacy": "権限は変えない。",
+      "window": "FloatingPanel（案内カード 1 枚）",
+      "invariant": "失敗を成功に見せない。やり直す道を 1 つ示す。",
+      "prev": [
+        "guided-setup.intro"
+      ],
+      "next": [],
+      "capture": {
+        "selftest": "guidedshots",
+        "file": "guided-setup-denied.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "status": "CAPTURED",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "guidedshots",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "image": {
+        "sha256": {
+          "light": "f7adcb38f268266d899f38edce51aeda7b91dfeaf8a3b9b6410c3bc807a7dec0",
+          "dark": "72814b2bc63a7329d18fb1a0cd8d66fae210172ce32bbc2c8b92bc55b8f0761e"
+        },
+        "size": {
+          "light": {
+            "w": 312,
+            "h": 134
+          },
+          "dark": {
+            "w": 312,
+            "h": 134
+          }
+        },
+        "light": "screens/guided-setup.denied.light.png",
+        "dark": "screens/guided-setup.denied.dark.png"
+      }
+    },
+    {
+      "id": "components.neutral",
+      "group": "components",
+      "title": "Control — neutral",
+      "required": true,
+      "capture": {
+        "selftest": "states",
+        "file": "00-neutral.png",
+        "dark_file": "dark-00-neutral.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "—",
+      "meaning": "基準。",
+      "primary": "—",
+      "secondary": "—",
+      "states": "neutral",
+      "keys": "—",
+      "privacy": "—",
+      "prev": [],
+      "next": [],
+      "window": "—",
+      "invariant": "—",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "states",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "appearance_policy": "adaptive",
+      "image": {
+        "sha256": {
+          "light": "c03c325ee9ef35f8fac561224dc23c7430dea1210b632edd612691b6b744f03e",
+          "dark": "0548147c43bb7c1788312dea4fbe610edbf04e9bddbb4cbc58aa1d40fff1069b"
+        },
+        "size": {
+          "light": {
+            "w": 1080,
+            "h": 680
+          },
+          "dark": {
+            "w": 1080,
+            "h": 680
+          }
+        },
+        "light": "screens/components.neutral.light.png",
+        "dark": "screens/components.neutral.dark.png"
+      }
+    },
+    {
+      "id": "components.hover",
+      "group": "components",
+      "title": "Control — hover",
+      "required": true,
+      "capture": {
+        "selftest": "states",
+        "file": "hover.png",
+        "dark_file": "dark-hover.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "ポインタが乗った。",
+      "meaning": "押せることが分かる。",
+      "primary": "—",
+      "secondary": "—",
+      "states": "hover",
+      "keys": "—",
+      "privacy": "—",
+      "prev": [],
+      "next": [],
+      "window": "—",
+      "invariant": "neutral と画素が違う。",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "states",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "appearance_policy": "adaptive",
+      "image": {
+        "sha256": {
+          "light": "1e2f4b9b83f65221de681be4009e7e6277475a38b5c8a2c4f41e983c4ad2a12a",
+          "dark": "c018eeefb60b70d5287090204157a667af35814fdec56606f321525a43bf153d"
+        },
+        "size": {
+          "light": {
+            "w": 1080,
+            "h": 680
+          },
+          "dark": {
+            "w": 1080,
+            "h": 680
+          }
+        },
+        "light": "screens/components.hover.light.png",
+        "dark": "screens/components.hover.dark.png"
+      }
+    },
+    {
+      "id": "components.focus",
+      "group": "components",
+      "title": "Control — focus",
+      "required": true,
+      "capture": {
+        "selftest": "states",
+        "file": "focus.png",
+        "dark_file": "dark-focus.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "Tab で焦点。",
+      "meaning": "キーボードで今どこか分かる。",
+      "primary": "—",
+      "secondary": "—",
+      "states": "focus",
+      "keys": "Tab。",
+      "privacy": "—",
+      "prev": [],
+      "next": [],
+      "window": "—",
+      "invariant": "focus ring が見える（ACCESSIBILITY）。",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "states",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "appearance_policy": "adaptive",
+      "image": {
+        "sha256": {
+          "light": "24c39ea2b8e7cdd109df0152cbfd0aeb680e08817341c1181d6b1c06ef978003",
+          "dark": "6a874eeed699f6a539d54bbe1a2836a8aa189e0a012187fb1d07f54d6029badf"
+        },
+        "size": {
+          "light": {
+            "w": 1080,
+            "h": 680
+          },
+          "dark": {
+            "w": 1080,
+            "h": 680
+          }
+        },
+        "light": "screens/components.focus.light.png",
+        "dark": "screens/components.focus.dark.png"
+      }
+    },
+    {
+      "id": "components.pressed",
+      "group": "components",
+      "title": "Control — pressed",
+      "required": true,
+      "capture": {
+        "selftest": "states",
+        "file": "pressed.png",
+        "dark_file": "dark-pressed.png",
+        "appearances": [
+          "light",
+          "dark"
+        ]
+      },
+      "trigger": "押している間。",
+      "meaning": "—",
+      "primary": "—",
+      "secondary": "—",
+      "states": "pressed",
+      "keys": "—",
+      "privacy": "—",
+      "prev": [],
+      "next": [],
+      "window": "—",
+      "invariant": "neutral と画素が違う。",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "states",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "appearance_policy": "adaptive",
+      "image": {
+        "sha256": {
+          "light": "005f922fb915dcb2fd43ecbd601e2726d78abf12437d28ddd3a42471bfeba262",
+          "dark": "0d3e0802a17407197d7693b111c4505b64dcafa84826d1475c9735304443e7d2"
+        },
+        "size": {
+          "light": {
+            "w": 1080,
+            "h": 680
+          },
+          "dark": {
+            "w": 1080,
+            "h": 680
+          }
+        },
+        "light": "screens/components.pressed.light.png",
+        "dark": "screens/components.pressed.dark.png"
+      }
+    }
+  ],
+  "strips": [
+    {
+      "id": "strip.idle-preparing-listening",
+      "title": "Idle → Preparing → Listening",
+      "required": true,
+      "capture": {
+        "selftest": "surfacemotion",
+        "dir": "T0-idle-to-listening",
+        "result_key": "T0-idle-to-listening"
+      },
+      "status": "CAPTURED",
+      "frames_ms": [
+        94,
+        200,
+        701
+      ],
+      "sha256": "b1a92c9978d31c69d1634dc4b6982969eac11a3cd6ff322f70cf8c996501ce32",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "surfacemotion",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "image": "strips/strip.idle-preparing-listening.png",
+      "measured": {
+        "top_edge_drift_pt": 0,
+        "center_drift_pt": 0.5,
+        "window_creation": 0,
+        "focus_theft": 0,
+        "effective_fps": 51.4,
+        "frames": 37,
+        "max_gap_ms": 94.5,
+        "same_dock_id_pct": 100,
+        "missing_surface_frames": 0,
+        "expected_windows": 1
+      }
+    },
+    {
+      "id": "strip.dock-running",
+      "title": "Dock → Running",
+      "required": true,
+      "capture": {
+        "selftest": "surfacemotion",
+        "dir": "T3-dock-to-running",
+        "result_key": "T3-dock-to-running"
+      },
+      "status": "CAPTURED",
+      "frames_ms": [
+        61,
+        100,
+        200,
+        700
+      ],
+      "sha256": "2efe6f51e56bc4b9c23d3d84848917922cff7cc269c935068f5417f37e6caaee",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "surfacemotion",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "image": "strips/strip.dock-running.png",
+      "measured": {
+        "top_edge_drift_pt": 0,
+        "center_drift_pt": 0.5,
+        "window_creation": 0,
+        "focus_theft": 0,
+        "effective_fps": 54.3,
+        "frames": 39,
+        "max_gap_ms": 61.0,
+        "same_dock_id_pct": 100,
+        "missing_surface_frames": 0,
+        "expected_windows": 1
+      }
+    },
+    {
+      "id": "strip.running-confirmation",
+      "title": "Running → Confirmation",
+      "required": true,
+      "capture": {
+        "selftest": "surfacemotion",
+        "dir": "T4-running-to-confirmation",
+        "result_key": "T4-running-to-confirmation"
+      },
+      "status": "CAPTURED",
+      "frames_ms": [
+        53,
+        101,
+        200,
+        701
+      ],
+      "sha256": "113ed5833b021ab12f54577098fccd92fa7fc9e675f04dcf17d4ce8410f6cf97",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "surfacemotion",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "image": "strips/strip.running-confirmation.png",
+      "measured": {
+        "top_edge_drift_pt": 0,
+        "center_drift_pt": 0.5,
+        "window_creation": 0,
+        "focus_theft": 0,
+        "effective_fps": 55.6,
+        "frames": 40,
+        "max_gap_ms": 52.7,
+        "same_dock_id_pct": 100,
+        "missing_surface_frames": 0,
+        "expected_windows": 1
+      }
+    },
+    {
+      "id": "strip.controller-notes",
+      "title": "Meeting Controller → Notes",
+      "required": true,
+      "capture": {
+        "selftest": "surfacemotion",
+        "dir": "T1-meeting-to-notes",
+        "result_key": "T1-meeting-to-notes"
+      },
+      "frames_ms": [
+        33,
+        51,
+        101,
+        200,
+        701
+      ],
+      "sha256": "daf09664a54a995f1dc4ddf12e833168d4f9c9a9e353de881b4d2914e2e601b4",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "surfacemotion",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "image": "strips/strip.controller-notes.png",
+      "measured": {
+        "top_edge_drift_pt": 0,
+        "center_drift_pt": 0,
+        "window_creation": 0,
+        "focus_theft": 0,
+        "effective_fps": 57.1,
+        "frames": 41,
+        "max_gap_ms": 32.6,
+        "same_dock_id_pct": 100,
+        "missing_surface_frames": 0,
+        "expected_windows": 1
+      }
+    },
+    {
+      "id": "strip.notes-workspace",
+      "title": "Notes → Workspace",
+      "required": true,
+      "capture": {
+        "selftest": "surfacemotion",
+        "dir": "T2-notes-to-workspace",
+        "result_key": "T2-notes-to-workspace"
+      },
+      "frames_ms": [
+        87,
+        201,
+        701
+      ],
+      "sha256": "a51e85a0b4a6b4e2935ad72fa51e4e7d1a63c5f7d9d3779d10a35ee520dc5d49",
+      "source": "RC",
+      "captured": {
+        "exe_sha256": "26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7",
+        "selftest": "surfacemotion",
+        "at": "2026-09-07T22:09:33+09:00"
+      },
+      "status": "CAPTURED",
+      "image": "strips/strip.notes-workspace.png",
+      "measured": {
+        "top_edge_drift_pt": 0,
+        "center_drift_pt": 0,
+        "window_creation": 0,
+        "focus_theft": 0,
+        "effective_fps": 51.4,
+        "frames": 37,
+        "max_gap_ms": 87.4,
+        "same_dock_id_pct": 100,
+        "missing_surface_frames": 0,
+        "expected_windows": 2
+      }
+    }
+  ],
+  "reality": [
+    {
+      "gate": "REAL_MEETING",
+      "status": "AUTOMATION_MISSING",
+      "where": "scripts/reality/run-real-meeting.sh（2 台自動: PC B が Playwright で Meet に入り固定 WAV を流す）",
+      "rows": [
+        "local voice",
+        "remote voice",
+        "system audio",
+        "transcript",
+        "speaker attribution",
+        "Live Notes",
+        "Pause/Resume",
+        "Stop/Finalize",
+        "Library persistence",
+        "Source jump",
+        "Recovery"
+      ]
+    },
+    {
+      "gate": "ACCESSIBILITY",
+      "status": "AUTOMATION_MISSING",
+      "where": "scripts/reality/run-fka.sh + run-voiceover.sh（CGEvent で Tab / VoiceOver 実起動、AX の role/title/value を証拠に）",
+      "rows": [
+        "VoiceOver A-D",
+        "FKA A-D",
+        "missing accessible name",
+        "unreachable control",
+        "focus lost",
+        "wrong reading order",
+        "keyboard dead end"
+      ]
+    },
+    {
+      "gate": "LIVE_TCC",
+      "status": "AUTOMATION_MISSING",
+      "where": "scripts/reality/run-live-tcc.sh（tccutil reset → 実ダイアログ自動押下 → 拒否 UI → 設定で ON → 復帰）",
+      "rows": [
+        "microphone",
+        "screen recording",
+        "input monitoring",
+        "calendar",
+        "accessibility"
+      ]
+    },
+    {
+      "gate": "WORLD_CLASS hands-on",
+      "status": "AUTOMATION_MISSING",
+      "where": "scripts/reality/run-competitors.sh（競合実 UI を同条件で撮り、3 judge の盲検へ）",
+      "rows": [
+        "Listening",
+        "Task Running",
+        "Recovery"
+      ]
+    }
+  ],
+  "summary": {
+    "required": 76,
+    "required_captured": 76,
+    "required_missing": 0,
+    "strips_required": 5,
+    "strips_captured": 5,
+    "strips_missing": 0,
+    "appearance_invariant": [
+      "voice.idle",
+      "voice.preparing",
+      "voice.listening",
+      "voice.thinking",
+      "voice.context",
+      "voice.context-expanded",
+      "voice.quick-actions",
+      "screenshot.detected",
+      "screenshot.attached-cloud",
+      "dock.running",
+      "dock.context-detail",
+      "dock.confirmation",
+      "dock.confirmation-edit",
+      "dock.result",
+      "dock.result-failed",
+      "meeting.controller",
+      "meeting.preparing",
+      "meeting.paused",
+      "meeting.notes",
+      "meeting.captions",
+      "meeting.ask"
+    ],
+    "appearance_policy": {
+      "fixed": [
+        "voice.idle",
+        "voice.preparing",
+        "voice.listening",
+        "voice.thinking",
+        "voice.context",
+        "voice.context-expanded",
+        "voice.quick-actions",
+        "screenshot.detected",
+        "screenshot.attached-cloud",
+        "dock.running",
+        "dock.context-detail",
+        "dock.confirmation",
+        "dock.confirmation-edit",
+        "dock.result",
+        "dock.result-failed",
+        "dock.entering-recording",
+        "meeting.controller",
+        "meeting.preparing",
+        "meeting.paused",
+        "meeting.notes",
+        "meeting.captions",
+        "meeting.ask"
+      ],
+      "violations": []
+    }
+  }
+}

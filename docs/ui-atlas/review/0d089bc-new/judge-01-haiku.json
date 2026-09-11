@@ -1,0 +1,83 @@
+{
+  "pages": {
+    "C4FC": {
+      "visible_text": [
+        "Home",
+        "こんにちは",
+        "何を終わらせますか？",
+        "録音を始める",
+        "前回の設定でその場で録り始めます",
+        "今日、気にした方がいいこと",
+        "MOPITA 明日 15:00",
+        "MTI に見積の返信、明日 15:00 の正例の前に",
+        "出所を見る",
+        "優先ではない"
+      ],
+      "observation": {
+        "happening": "Home screen of a task/productivity desktop app showing today's tasks and reminders. A right sidebar panel is open displaying AI recommendation information (Astra) with multiple action buttons and category suggestions.",
+        "most_important": "Central task list organized in clear sections (録音を始める, 今日の気にした方がいいこと, 得ていること, 返すもの) with timestamps and status labels. Each task shows source (Gmail, Outlook), duration, and priority.",
+        "next_action": "User can input a task in the text field at top, expand/collapse task sections, or click 'see details' and action buttons. Right panel allows toggling recommendations on/off.",
+        "anomalies": [
+          "Right sidebar is information-dense with multiple competing action buttons (その止める, この推測を使わない) in similar blue styling, unclear which are primary vs secondary actions",
+          "Right panel text hierarchy is complex with many nested labels, categories, and status tags; difficult to parse quickly",
+          "Right sidebar takes up significant screen width, reducing space for main task content"
+        ]
+      },
+      "verdict": "FIX",
+      "concerns": [
+        {
+          "axis": "density",
+          "what": "Right sidebar contains too much concurrent information (multiple task categories, buttons, links, status indicators) creating visual clutter and cognitive load",
+          "where": "Right panel: 約 18% of screen width contains 5+ action buttons, 6+ category sections, and multiple linked text labels"
+        },
+        {
+          "axis": "state legibility",
+          "what": "Action buttons in right sidebar (その止める, この推測を使わない) have identical blue styling but unclear semantic difference; primary vs secondary actions not distinguished",
+          "where": "Right panel button group under each work pattern category"
+        },
+        {
+          "axis": "hierarchy",
+          "what": "Right panel organization is flat; no clear prioritization between recommendation categories (働き方, 短く要点から, 仕事のパターン, etc.) or between action buttons",
+          "where": "Right sidebar: all section headers and buttons appear to have equal visual weight"
+        },
+        {
+          "axis": "screen occupation",
+          "what": "Right panel appears non-critical/advisory and could be hidden by default or toggled, reclaiming horizontal space for the main task list",
+          "where": "Right ~20% of screen is dedicated to scrollable recommendation panel while main content is squeezed"
+        }
+      ],
+      "confidence": "high"
+    },
+    "F3B5": {
+      "visible_text": [
+        "Home",
+        "こんにちは",
+        "何を終わらせますか？",
+        "録音を始める",
+        "前回の設定でその場で録り始めます",
+        "今日、気にした方がいいこと",
+        "MOPITA 明日 15:00",
+        "MTI に見積の返信、明日 15:00 の正例の前に",
+        "出所を見る",
+        "優先ではない"
+      ],
+      "observation": {
+        "happening": "Same home screen and task list as C4FC, but the right sidebar recommendation panel is no longer visible—either hidden, collapsed, or toggled off.",
+        "most_important": "Task list is now clearly visible with full horizontal breathing room. Each task shows source, time, priority, and action links without competing visual elements. Input field and recording option remain prominent at top.",
+        "next_action": "User can input a task, interact with task rows (出所を見る links), or access task actions via the main interface. Sidebar can likely be toggled back if needed.",
+        "anomalies": [
+          "No obvious defects; layout is clean and organized"
+        ]
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    }
+  },
+  "_judge": {
+    "model": "haiku",
+    "cost_usd": 0.05392860000000001,
+    "turns": 3,
+    "duration_ms": 34074
+  }
+}

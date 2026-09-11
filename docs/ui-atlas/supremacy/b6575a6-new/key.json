@@ -1,0 +1,21 @@
+{
+  "key": {
+    "A81F": "screenshot.detected",
+    "9AA3": "screenshot.attached-cloud",
+    "2F2C": "guided-setup.intro",
+    "9E6D": "guided-setup.target-highlighted",
+    "A45A": "guided-setup.target-missing",
+    "EFA1": "guided-setup.granted",
+    "0EF0": "guided-setup.denied"
+  },
+  "order": [
+    "0EF0",
+    "2F2C",
+    "9AA3",
+    "9E6D",
+    "A45A",
+    "A81F",
+    "EFA1"
+  ],
+  "batch": 6
+}

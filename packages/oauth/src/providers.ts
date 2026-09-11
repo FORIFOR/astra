@@ -68,11 +68,40 @@ export function providerConfig(
     clientId,
     scopes,
     ...(endpoints.extra ? { extraAuthorizeParams: endpoints.extra } : {}),
-    /*
-     * client_secret は入れない。native app は秘密を保てない（RFC 8252 §8.5）。
-     * 必要とする提供者は、そもそも native app 向けの client を出していない。
-     */
+    // Google Desktop clients require this value at the token endpoint.
+    // It does not authenticate a native app; PKCE remains required.
+    ...(provider === 'google' && env['ASTRA_OAUTH_GOOGLE_CLIENT_SECRET']
+      ? { clientSecret: env['ASTRA_OAUTH_GOOGLE_CLIENT_SECRET'] }
+      : {}),
   };
+}
+
+/** Microsoft refresh tokens cover consent for a client, so read/write need distinct clients. */
+export function connectorProviderConfig(
+  provider: OauthProvider,
+  connectorId: string,
+  scopes: readonly string[],
+  env: OauthEnv,
+): Omit<ProviderConfig, 'redirectUri'> | null {
+  if (provider !== 'microsoft') return providerConfig(provider, scopes, env);
+  const read = env['ASTRA_OAUTH_MICROSOFT_READ_CLIENT_ID'];
+  const write = env['ASTRA_OAUTH_MICROSOFT_WRITE_CLIENT_ID'];
+  if (read && write && read === write) return null;
+  const writes = connectorId.endsWith('-actions');
+  const clientId = writes ? write : read;
+  if (!clientId || scopes.length === 0) return null;
+  const identity = ['openid', 'profile', 'email', 'offline_access', 'user.read'];
+  const allowed = new Set([
+    ...identity,
+    ...(writes ? ['mail.send'] : ['mail.read', 'calendars.read', 'tasks.read']),
+  ]);
+  if (
+    scopes.some(
+      (s) => !allowed.has(s.replace(/^https:\/\/graph.microsoft.com\//i, '').toLowerCase()),
+    )
+  )
+    return null;
+  return providerConfig(provider, scopes, { ...env, ASTRA_OAUTH_MICROSOFT_CLIENT_ID: clientId });
 }
 
 /** どの提供者が繋げないか。設定名まで含めて言う。 */

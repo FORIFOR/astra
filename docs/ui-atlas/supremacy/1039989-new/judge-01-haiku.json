@@ -1,0 +1,204 @@
+{
+  "pages": {
+    "3072": {
+      "visible_text": [
+        "設定画面を開けませんでした",
+        "プライバシーとセキュリティ画面収録",
+        "もう一度開く",
+        "×",
+        "settings/levels icon"
+      ],
+      "observation": {
+        "happening": "Error notification banner indicating a settings screen failed to open. Contains warning triangle icon, Japanese error message, blue retry action button, close button, and unexplained levels/volume icon on right in circle.",
+        "most_important": "Recovery action is prominent and clear (もう一度開く)",
+        "next_action": "User can retry opening settings or dismiss the notification",
+        "anomalies": [
+          "Levels/volume icon on right doesn't semantically match error context—creates visual confusion about message intent",
+          "Mixed icon semantics: warning triangle + levels icon"
+        ]
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 3,
+        "typography": 4,
+        "geometry": 3,
+        "state_clarity": 2,
+        "calmness": 2,
+        "craft": 2,
+        "distinctiveness": 2
+      },
+      "ai_look": [
+        "Icon choice feels arbitrary rather than semantically motivated"
+      ],
+      "verdict": "COMPETITIVE",
+      "why": "Functional error toast with clear action hierarchy, but the levels icon contradicts error state semantics and creates visual noise. Warning triangle + levels icon feels like mismatched icon pairing.",
+      "confidence": "high"
+    },
+    "3680": {
+      "visible_text": [
+        "スクリーンショット",
+        "質問したときだけ Claude に送信",
+        "file icon",
+        "×"
+      ],
+      "observation": {
+        "happening": "Dark-themed informational toast announcing screenshot capability with explanation. Minimal design: file icon, clear label, supporting text, close button. No action buttons—purely informational.",
+        "most_important": "Transparent communication of data handling (only sends when asked)",
+        "next_action": "User dismisses notification or lets it fade",
+        "anomalies": []
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 5,
+        "typography": 4,
+        "geometry": 5,
+        "state_clarity": 5,
+        "calmness": 5,
+        "craft": 4,
+        "distinctiveness": 2
+      },
+      "ai_look": [],
+      "verdict": "SUPREME",
+      "why": "Exemplary minimal notification. Zero wasted space, dark neutral tone, informative hierarchy, calm presentation. Text reads naturally (not over-explained). Appropriate icon. Only lacks distinctiveness but that's acceptable for system notifications.",
+      "confidence": "high"
+    },
+    "3A79": {
+      "visible_text": [
+        "Astra を自動で見つけられません",
+        "一度設定画面の一覧で Astra をオンにしてください",
+        "システム設定を開く",
+        "×",
+        "levels icon"
+      ],
+      "observation": {
+        "happening": "Error/warning banner for missing Astra configuration. Contains explanatory instruction text in two lines, blue action button to open system settings, close button, and levels icon in purple circle on right.",
+        "most_important": "User must manually enable Astra in system settings",
+        "next_action": "Click 'システム設定を開く' to resolve",
+        "anomalies": [
+          "Levels icon repeats across error messages without clear semantic connection",
+          "Purple tint on circle suggests warning/system level but mixed messaging with two-line instruction"
+        ]
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 3,
+        "typography": 4,
+        "geometry": 3,
+        "state_clarity": 2,
+        "calmness": 3,
+        "craft": 2,
+        "distinctiveness": 2
+      },
+      "ai_look": [
+        "Levels icon reuse across unrelated error types feels systematic but unexplained"
+      ],
+      "verdict": "COMPETITIVE",
+      "why": "Clear instruction and action button, but the levels icon appears inconsistently across different error types, creating uncertainty about its semantic meaning. Icon should reinforce message intent, not create visual ambiguity.",
+      "confidence": "high"
+    },
+    "3E91": {
+      "visible_text": [
+        "AnyDesk",
+        "AstraDbg",
+        "AstraDbg を再起動すると使えます",
+        "ChatGPT",
+        "red badge: 1"
+      ],
+      "observation": {
+        "happening": "Settings panel showing three service toggles (AnyDesk, AstraDbg, ChatGPT), all currently ON (blue switches). AstraDbg row includes secondary text explaining restart needed. Red numbered badge '1' on far left.",
+        "most_important": "Services are configurable via toggles; AstraDbg requires restart to take effect",
+        "next_action": "User can toggle services on/off; must restart AstraDbg for changes",
+        "anomalies": [
+          "Red '1' badge on left edge serves unclear purpose—notification count? Warning? Not explained visually.",
+          "Badge creates asymmetric visual weight on left side"
+        ]
+      },
+      "scores": {
+        "hierarchy": 3,
+        "density": 4,
+        "typography": 4,
+        "geometry": 3,
+        "state_clarity": 3,
+        "calmness": 3,
+        "craft": 3,
+        "distinctiveness": 2
+      },
+      "ai_look": [
+        "Unexplained badge feels like leftover notification indicator or design system artifact"
+      ],
+      "verdict": "COMPETITIVE",
+      "why": "Toggle states are clear and switches work visually, but the red badge creates visual tension without communicating its purpose. The 'restart required' state for AstraDbg is handled well with secondary text, but badge integration feels incomplete.",
+      "confidence": "high"
+    },
+    "91BE": {
+      "visible_text": [
+        "画面収録が未許可です",
+        "システム設定で Astra をオンにしてください",
+        "システム設定を開く",
+        "×",
+        "levels icon"
+      ],
+      "observation": {
+        "happening": "Permission error banner for screen recording. States permission is not granted, instructs user to enable in system settings, provides action button to open settings, includes close button and levels icon in purple circle.",
+        "most_important": "Screen recording permission required; user must enable in system settings",
+        "next_action": "Click 'システム設定を開く' to grant permission",
+        "anomalies": [
+          "Same levels icon appears again—its recurring use suggests either systematic design language or icon selection inconsistency",
+          "Icon doesn't relate to screen recording semantically"
+        ]
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 3,
+        "typography": 4,
+        "geometry": 3,
+        "state_clarity": 2,
+        "calmness": 2,
+        "craft": 2,
+        "distinctiveness": 2
+      },
+      "ai_look": [
+        "Repeated levels icon across all error types creates unresolved design language question"
+      ],
+      "verdict": "COMPETITIVE",
+      "why": "Clear error message and action path, but the levels icon feels semantically wrong for screen recording permissions. Same icon recurrence across 3072, 3A79, and 91BE suggests either intentional system-level notification styling or design system misconfiguration.",
+      "confidence": "high"
+    },
+    "AF8F": {
+      "visible_text": [
+        "画面収録を設定できました",
+        "green checkmark",
+        "×",
+        "levels icon"
+      ],
+      "observation": {
+        "happening": "Success notification banner with green checkmark confirming '画面収録を設定できました' (screen recording successfully configured). Minimal design: checkmark, text, close button, and levels icon in teal circle on right.",
+        "most_important": "Operation completed successfully",
+        "next_action": "User dismisses notification or waits for auto-fade",
+        "anomalies": [
+          "Levels icon appears now in success context with teal color—confirms icon is used across all message types (error/warning/success) without semantic consistency"
+        ]
+      },
+      "scores": {
+        "hierarchy": 5,
+        "density": 5,
+        "typography": 5,
+        "geometry": 5,
+        "state_clarity": 5,
+        "calmness": 5,
+        "craft": 5,
+        "distinctiveness": 2
+      },
+      "ai_look": [],
+      "verdict": "SUPREME",
+      "why": "Exemplary success notification. Single clear message, green checkmark instantly communicates success, teal circle is calming and positive. Minimal density, perfect geometry, zero visual noise. The levels icon here works because success state is unambiguous. Only limitation is lack of distinctiveness, but appropriate for system notifications.",
+      "confidence": "high"
+    }
+  },
+  "_judge": {
+    "model": "haiku",
+    "cost_usd": 0.0636061,
+    "turns": 7,
+    "duration_ms": 59884
+  }
+}

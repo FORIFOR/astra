@@ -1,0 +1,163 @@
+{
+  "rc": "0d089bc",
+  "pages": [
+    {
+      "id": "main.home-personalization",
+      "blind_id": "C4FC",
+      "verdict": "FIX_CANDIDATE",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": [
+            {
+              "axis": "density",
+              "what": "Right sidebar contains too much concurrent information (multiple task categories, buttons, links, status indicators) creating visual clutter and cognitive load",
+              "where": "Right panel: 約 18% of screen width contains 5+ action buttons, 6+ category sections, and multiple linked text labels"
+            },
+            {
+              "axis": "state legibility",
+              "what": "Action buttons in right sidebar (その止める, この推測を使わない) have identical blue styling but unclear semantic difference; primary vs secondary actions not distinguished",
+              "where": "Right panel button group under each work pattern category"
+            },
+            {
+              "axis": "hierarchy",
+              "what": "Right panel organization is flat; no clear prioritization between recommendation categories (働き方, 短く要点から, 仕事のパターン, etc.) or between action buttons",
+              "where": "Right sidebar: all section headers and buttons appear to have equal visual weight"
+            },
+            {
+              "axis": "screen occupation",
+              "what": "Right panel appears non-critical/advisory and could be hidden by default or toggled, reclaiming horizontal space for the main task list",
+              "where": "Right ~20% of screen is dedicated to scrollable recommendation panel while main content is squeezed"
+            }
+          ]
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": false,
+          "why": "照合 10/20（画面に無い文字）",
+          "confidence": "high",
+          "concerns": [
+            {
+              "axis": "alignment",
+              "what": "右パネルの見出しと説明文がカードの左端より外側に出ていて、パネル内の左端基準が二重になっている",
+              "where": "右パネル上部「Astra が使っているあなたの情報」「すべての推測を使っています」と直下の説明文"
+            },
+            {
+              "axis": "state legibility",
+              "what": "「そのとおり」が 1 枚目だけ塗り、他は淡色。押した後の状態なのか、推奨の強調なのかが絵から判別できない",
+              "where": "右パネル「短く要点から」カードと、それ以下の各カードのボタン列"
+            },
+            {
+              "axis": "consistency",
+              "what": "カードごとに付くバッジが「確認済み」だけ／「出所 1 + 推測」／「出所 1 + 観測」とばらつき、同じ一覧なのに読み方が変わる",
+              "where": "右パネル 働き方／仕事のパターン／よく出る人・案件 の各カード右上"
+            },
+            {
+              "axis": "screen occupation",
+              "what": "右パネルが左本文に重なって最下行の文字を途中で断ち切っている",
+              "where": "画面下端、左本文「山田さん 要件定義書 v3 のレビュー」の行"
+            },
+            {
+              "axis": "hierarchy",
+              "what": "上段はカード、下段（待っていること／返すもの）は行だけで、同じ「やること」なのに重要度の差か形式の差か区別がつかない",
+              "where": "左本文の「今日、気にした方がいいこと」以下と「待っていること」以下の境目"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "screen occupation",
+              "what": "右パネルのコンテンツがカード5枚で終わり、パネル下部に大きな空白領域が残っている(左カラムは下端まで内容が続いているのと対照的)",
+              "where": "右カラム下部(Astraパネル)"
+            },
+            {
+              "axis": "state legibility",
+              "what": "最下行のタスク行が画面端で切れており、リストがそこで終わりなのか続きがあるのか判断できない",
+              "where": "左カラム最下行(山田さんの行)"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "main.home-work-context",
+      "blind_id": "F3B5",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": [
+            {
+              "axis": "alignment",
+              "what": "右上のパネル切替アイコンが左の「Home」見出しの行と揃っておらず、上端に置かれた要素同士の基準線が合っていない",
+              "where": "画面最上部、右端のアイコンと左の「Home」"
+            },
+            {
+              "axis": "density",
+              "what": "上半分はカードで余白が広く、下半分（待っていること／返すもの）は枠なしの詰まった行で、同じ画面内で情報の粒度が急に切り替わる",
+              "where": "「今日、気にした方がいいこと」3 枚目の下から画面下端まで"
+            },
+            {
+              "axis": "primary-action clarity",
+              "what": "塗りのボタンが 1 つも無く、「出所を見る」「優先ではない」「外す」「済んだ」がすべて同じ弱さの文字リンク。この画面で最初に押すべきものが決まらない",
+              "where": "各カード右上と、下部一覧の右端"
+            },
+            {
+              "axis": "contrast",
+              "what": "スクロールバーが濃く常時見えていて、右端のパネル切替アイコンと近接し、操作要素と装飾が混ざって見える",
+              "where": "画面右端、上端のアイコン付近"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "density",
+              "what": "右パネルを閉じて広がった横幅が単なる空白として残り、各行の中央に大きな未使用スペースができている(コンテンツが再レイアウトされていない)",
+              "where": "メインリストの各カード行(タスク・待っていること・返すもの)"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "keep": 1,
+    "fix_candidate": 1,
+    "not_enough_evidence": 0,
+    "models": [
+      "haiku",
+      "opus",
+      "sonnet"
+    ]
+  },
+  "gate": "FAIL"
+}

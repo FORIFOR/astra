@@ -223,6 +223,98 @@ interface AudioState {
  * `app.register(websocket)` が済んだスコープでしか登録できない（app.ts の注記）。
  */
 export function registerMeetingAudioRoute(app: App, deps: MeetingRouteDeps): void {
+  // Live-only path: audio is streamed to the recognizer, never queued for a batch task.
+  app.get(
+    '/v1/transcription/live',
+    {
+      websocket: true,
+      config: { auth: false, rateLimit: false },
+      preValidation: async (request, reply) => {
+        const token = bearerToken(request.headers.authorization);
+        try {
+          if (!token) throw new Error('missing token');
+          request.meetingClaims = await deps.tokens.verifyAccessToken(token);
+        } catch {
+          return reply.status(401).send({ error: 'auth.invalid_token' });
+        }
+        return undefined;
+      },
+    },
+    (connection) => {
+      const socket = connection as unknown as {
+        send(data: string): void;
+        close(code?: number, reason?: string): void;
+        on(event: string, listener: (...args: unknown[]) => void): void;
+      };
+      let closed = false;
+      let finished = false;
+      let queuedBytes = 0;
+      let atMs = 0;
+      // Upgrade/ready alone must not open a billable Google stream (e.g. an
+      // unavailable microphone or system-audio source that has no frames).
+      let session: Promise<StreamingSession> | undefined;
+      const getSession = (): Promise<StreamingSession> =>
+        (session ??= deps.transcriber!.start({ language: 'ja-JP' }));
+      const sendResults = (results: readonly unknown[]): void => {
+        if (!closed && results.length) socket.send(JSON.stringify({ type: 'transcript', results }));
+      };
+      const fail = (): void => {
+        if (!closed) {
+          socket.send(
+            JSON.stringify({ type: 'error', message: 'Google live transcription unavailable' }),
+          );
+          socket.close(1011, 'transcription unavailable');
+        }
+        closed = true;
+      };
+      let queue: Promise<void> = Promise.resolve();
+      if (!deps.transcriber || deps.transcriber.isStandIn) {
+        fail();
+        return;
+      }
+      socket.send(JSON.stringify({ type: 'ready' }));
+      socket.on('message', (...args: unknown[]) => {
+        if (closed || finished) return;
+        const binary = args[1] === true;
+        const frame = args[0] as Uint8Array;
+        if (binary) {
+          queuedBytes += frame.byteLength;
+          if (frame.byteLength > 12800 || queuedBytes > 320000) {
+            fail();
+            return;
+          }
+        }
+        queue = queue
+          .then(async () => {
+            if (closed || finished) return;
+            if (binary) {
+              queuedBytes -= frame.byteLength;
+              if (frame.byteLength === 0) return;
+              const recognizer = await getSession();
+              if (closed) return;
+              atMs += frameDurationMs(frame);
+              sendResults(await recognizer.push(frame, atMs));
+            } else if (JSON.parse(String(args[0])).type === 'finish') {
+              finished = true;
+              if (session) sendResults(await (await session).finish());
+              if (!closed) socket.send(JSON.stringify({ type: 'finished' }));
+            }
+          })
+          .catch(fail);
+      });
+      socket.on('close', () => {
+        closed = true;
+        void queue
+          .then(async () => {
+            if (!finished && session) {
+              finished = true;
+              await (await session).finish();
+            }
+          })
+          .catch(() => {});
+      });
+    },
+  );
   app.get<{ Params: { meetingId: string } }>(
     '/v1/meetings/:meetingId/audio',
     {
@@ -257,6 +349,7 @@ export function registerMeetingAudioRoute(app: App, deps: MeetingRouteDeps): voi
     (connection, request) => {
       const socket = connection as unknown as {
         close(code?: number, reason?: string): void;
+        send(data: string): void;
         on(event: string, listener: (...args: unknown[]) => void): void;
       };
       const claims = request.meetingClaims;
@@ -275,6 +368,8 @@ export function registerMeetingAudioRoute(app: App, deps: MeetingRouteDeps): voi
       const pending: AudioItem[] = [];
       let ready: AudioState | null = null;
       let closed = false;
+      let receivedBytes = 0;
+      let uploadFailed = false;
       // 到着順を守る。並行に走らせると録音の中身が入れ替わる。
       let queue: Promise<void> = Promise.resolve();
 
@@ -282,6 +377,14 @@ export function registerMeetingAudioRoute(app: App, deps: MeetingRouteDeps): voi
         if (item.control !== null) {
           const parsed = MeetingControlMessage.safeParse(JSON.parse(item.control));
           if (!parsed.success) return;
+          if (parsed.data.type === 'flush') {
+            socket.send(
+              JSON.stringify({
+                type: uploadFailed ? 'upload_failed' : 'flushed',
+                bytes: receivedBytes,
+              }),
+            );
+          }
           if (parsed.data.type === 'pause') state.paused = true;
           if (parsed.data.type === 'resume') state.paused = false;
           return;
@@ -290,6 +393,7 @@ export function registerMeetingAudioRoute(app: App, deps: MeetingRouteDeps): voi
 
         // **録音を先に残す。**STT が落ちても音は残り、final パスで拾い直せる。
         await deps.recordings.append(meetingId, item.frame);
+        receivedBytes += item.frame.byteLength;
         state.atMs += frameDurationMs(item.frame);
         if (state.sttDown || !state.session) return;
 
@@ -313,7 +417,11 @@ export function registerMeetingAudioRoute(app: App, deps: MeetingRouteDeps): voi
           pending.push(item);
           return;
         }
-        queue = queue.then(() => handle(state, item)).catch(() => undefined);
+        queue = queue
+          .then(() => handle(state, item))
+          .catch(() => {
+            uploadFailed = true;
+          });
       };
 
       socket.on('message', (...args: unknown[]) => {

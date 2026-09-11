@@ -1,0 +1,227 @@
+{
+  "pages": {
+    "ABD9": {
+      "visible_text": [
+        "錄音中",
+        "04:21",
+        "会議",
+        "マイクと画面の音を聞いています",
+        "原文",
+        "翻訳",
+        "ライブ",
+        "OAuth",
+        "決まったことやること",
+        "AI が見ている資料 3 件"
+      ],
+      "observation": {
+        "happening": "会議の字幕リアルタイム表示中。左パネルは会議メタデータ（タイトル・状態・決定事項）、右パネルが字幕エリア（原文/翻訳/ライブタブ）",
+        "most_important": "進行中の会議をリアルタイムで字幕化。AIが参考資料を並行監視。",
+        "next_action": "字幕を追従・スクロール、会議内容を保存、終了・停止",
+        "anomalies": []
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 3,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 4,
+        "calmness": 4,
+        "craft": 4,
+        "distinctiveness": 3
+      },
+      "ai_look": [],
+      "verdict": "COMPETITIVE",
+      "why": "明確な2列レイアウト、状態表示（錄音中）が明快。左パネルは機能的だが余白が多い。個別UI要素は精密だが、全体の洗練度は Linear/Notion レベルに達していない。",
+      "confidence": "high"
+    },
+    "AF57": {
+      "visible_text": [
+        "Work",
+        "Home",
+        "Work",
+        "Library",
+        "Apps",
+        "Tasks",
+        "Agents",
+        "Active",
+        "Waiting",
+        "Done",
+        "Failed",
+        "All",
+        "実行中の仕事はありません",
+        "Task Dock を開く",
+        "できること"
+      ],
+      "observation": {
+        "happening": "タスク管理画面で Agents タブが選択されている。実行中タスクがない空状態。空状態説明とCTA（Task Dock を開く）、キーボードショートカット補足。",
+        "most_important": "空状態が親切に説明されている。「Astra に頼んだ仕事は、UI を閉じても走り続けます」というコンテキスト説明。",
+        "next_action": "Task Dock を開く、新規タスク作成",
+        "anomalies": []
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 2,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 5,
+        "calmness": 5,
+        "craft": 5,
+        "distinctiveness": 3
+      },
+      "ai_look": [],
+      "verdict": "COMPETITIVE",
+      "why": "空状態処理が優れている。状態説明が十分で、ユーザーが次に何をすべきか明確。静止画としては完成度が高い。ただし動きや相互作用が見えないため、NOT_ENOUGH_EVIDENCE の側面もある。",
+      "confidence": "high"
+    },
+    "C5BC": {
+      "visible_text": [
+        "錄音中",
+        "04:21",
+        "会議",
+        "原文",
+        "翻訳",
+        "ライブ",
+        "伊藤",
+        "承知しました",
+        "岡本",
+        "修正版を明日お渡しします",
+        "決まったことやること",
+        "AI が見ている資料 5 件"
+      ],
+      "observation": {
+        "happening": "ABD9 と同じ会議画面だが、進行時間が進んでいる（04:31 等）。複数発話者（伊藤・岡本など）の字幕が表示されている。タイムスタンプが増えている。",
+        "most_important": "複数人の発話が色分けされており、誰が何を言ったかが明確。AI資料数が 3 件から 5 件に増加。",
+        "next_action": "字幕追従、会議継続、終了",
+        "anomalies": []
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 4,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 5,
+        "calmness": 4,
+        "craft": 4,
+        "distinctiveness": 3
+      },
+      "ai_look": [],
+      "verdict": "COMPETITIVE",
+      "why": "ABD9 と同等。複数人の発話が色分けされ、状態遷移（時間進行・AI資料増加）が視覚的に認識できる。引き続き、個別のUI洗練度は一線級より落ちる。",
+      "confidence": "high"
+    },
+    "CAD8": {
+      "visible_text": [
+        "Library",
+        "Meetings",
+        "Files",
+        "Files",
+        "会議以外の成果と資料",
+        "All",
+        "Report",
+        "Document",
+        "Image",
+        "Video",
+        "Other",
+        "まだ資料はありません",
+        "資料を始める",
+        "できること"
+      ],
+      "observation": {
+        "happening": "Library ビューの Files タブが選択されている。空状態。フィルタタブ（All/Report/Document/Image/Video/Other）がある。CTA「資料を始める」。空状態の説明と「できること」の箇条書き。",
+        "most_important": "会議アウトプット（成果物・資料）を一元管理するビュー。空状態でも目的が明確。",
+        "next_action": "資料をアップロード、新規作成、前のタブ（Meetings）に戻る",
+        "anomalies": [
+          "「資料を始める」というテキストが一般的でない。通常は「資料をアップロード」「新規作成」等。画像上は確認できる。"
+        ]
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 2,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 5,
+        "calmness": 5,
+        "craft": 4,
+        "distinctiveness": 3
+      },
+      "ai_look": [],
+      "verdict": "COMPETITIVE",
+      "why": "空状態の説明が充実。フィルタメカニズムが見える。CTA が明確。AF57 と同様に静止画としては完成度が高いが、機能実装時の挙動が見えない（NOT_ENOUGH_EVIDENCE 側面）。",
+      "confidence": "high"
+    },
+    "CF66": {
+      "visible_text": [
+        "Home",
+        "こんばんは",
+        "何を終わらせますか",
+        "録音を始める",
+        "これからの予定",
+        "Product Weekly",
+        "10:00 Google Meet",
+        "A社商談",
+        "13:30 Zoom",
+        "最近の会議",
+        "落ちた会議",
+        "Q4移行計画の打ち合わせ",
+        "決まったこと 2"
+      ],
+      "observation": {
+        "happening": "ホーム画面ダッシュボード。クエリボックス（何を終わらせますか）、クイックアクション（録音を始める）、予定セクション（Product Weekly / A社商談）、最近の会議リスト。赤色警告ラベル「落ちた会議」。",
+        "most_important": "複数の情報層を効率的に集約。進行中・予定・最近・エラー状態が一画面で把握可能。",
+        "next_action": "会議を選択、クエリで検索・フィルタ、クイックアクション実行",
+        "anomalies": [
+          "「落ちた会議」に赤いラベル。これは disconnect/error 状態を示唆。背景色と相まって警告感がある。"
+        ]
+      },
+      "scores": {
+        "hierarchy": 4,
+        "density": 4,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 4,
+        "calmness": 4,
+        "craft": 4,
+        "distinctiveness": 3
+      },
+      "ai_look": [],
+      "verdict": "COMPETITIVE",
+      "why": "ダッシュボードとしてよく設計。複数の情報カテゴリ（予定・最近・エラー）が階層的に配置。密度は高いが、過密ではない。ただし、Linear / Notion ダッシュボード と並べると新規性がない。標準的な情報集約。",
+      "confidence": "high"
+    },
+    "D317": {
+      "visible_text": [
+        "週次ブリーフィングを作る",
+        "2件のリソースから作成しました",
+        "開く",
+        "コピー",
+        "×"
+      ],
+      "observation": {
+        "happening": "トースト通知（またはダイアログ）。背景はダークグレー。タイトル「週次ブリーフィングを作る」、サブテキスト「2件のリソースから作成しました」。アクションボタン 3 つ：「開く」「コピー」「×（閉じる）」",
+        "most_important": "ブリーフィング生成成功を通知。成功状態で、次のアクション（開く or コピー）をユーザーに提示。",
+        "next_action": "開く（新規ウィンドウ/生成物表示）、コピー（クリップボード）、閉じる",
+        "anomalies": []
+      },
+      "scores": {
+        "hierarchy": 2,
+        "density": 5,
+        "typography": 4,
+        "geometry": 4,
+        "state_clarity": 5,
+        "calmness": 4,
+        "craft": 5,
+        "distinctiveness": 3
+      },
+      "ai_look": [],
+      "verdict": "COMPETITIVE",
+      "why": "小さいながら完成度が高い。トースト形式は標準的だが、テキストウェイト・ボタン配置・密度バランスが精密。ただし、全体フロー内での役割（前画面・アニメーション・消滅時間）が見えないため、NOT_ENOUGH_EVIDENCE 側面も。静止画としては COMPETITIVE。",
+      "confidence": "medium"
+    }
+  },
+  "_judge": {
+    "model": "haiku",
+    "cost_usd": 0.08014260000000001,
+    "turns": 7,
+    "duration_ms": 86606
+  }
+}

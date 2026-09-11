@@ -54,7 +54,7 @@ enum LibraryTab: String, CaseIterable, Identifiable {
 
 /// Apps の中の 2 面。
 enum AppsTab: String, CaseIterable, Identifiable {
-    case plugins, connectors
+    case connectors, plugins
     var id: String { rawValue }
     var title: String {
         switch self {
@@ -67,33 +67,90 @@ enum AppsTab: String, CaseIterable, Identifiable {
 /// 実バックエンドから Apps/Library を core 経由で取る（Tauri を介さない）。dev サインインで検証可能。
 @MainActor
 final class MainData: ObservableObject {
+    static let shared = MainData()
     @Published var apps: [String] = []
     @Published var library: [String] = []
     @Published var connected = false
     private let base = ProcessInfo.processInfo.environment["ASTRA_GATEWAY_URL"] ?? "http://127.0.0.1:3000"
 
-    func load() {
-        guard AstraCoreBridge.reachable(base) else { return }
-        Task.detached { [base] in
+    private var session: GatewaySession?
+    private var loading = false
+    private var refreshLoop: Task<Void, Never>?
+    private var configuredToken: String?
+
+    /// A Dock action can arrive before the main window has ever opened.
+    func ensureConnected(reconnect: Bool = false) async -> Bool {
+        if reconnect && loading {
+            for _ in 0..<150 {
+                if !loading { break }
+                guard !Task.isCancelled else { return false }
+                try? await Task.sleep(for: .milliseconds(100))
+            }
+        }
+        load(reauthenticate: reconnect && !connected)
+        for _ in 0..<150 {
+            if !loading { return connected }
+            guard !Task.isCancelled else { return false }
+            try? await Task.sleep(for: .milliseconds(100))
+        }
+        return false
+    }
+
+    func load(reauthenticate: Bool = false) {
+        if refreshLoop == nil {
+            refreshLoop = Task { [weak self] in
+                while !Task.isCancelled {
+                    try? await Task.sleep(for: .seconds(30))
+                    guard !Task.isCancelled else { return }
+                    self?.load()
+                }
+            }
+        }
+        guard !loading else { return }
+        loading = true
+        if session == nil {
+            let isolatedRoot = ProcessInfo.processInfo.environment["ASTRA_DATA_ROOT"]
+            let key = "astra.dev.identity.\(base)" + (isolatedRoot.map { ".data-root.\($0)" } ?? "")
+            let identity = UserDefaults.standard.string(forKey: key) ?? UUID().uuidString.lowercased()
+            UserDefaults.standard.set(identity, forKey: key)
+            session = GatewaySession.desktop(base: base, identity: identity)
+        }
+        guard let session else { loading = false; return }
+        Task {
+            defer { loading = false }
             do {
-                let tokens = try AstraCoreBridge.devSignIn(base, email: "main-\(getpid())@astra.local", displayName: "Astra")
-                let apps = (try? AstraCoreBridge.pluginCatalog(base, accessToken: tokens.accessToken)) ?? []
-                let library = (try? AstraCoreBridge.library(base, accessToken: tokens.accessToken)) ?? []
-                await MainActor.run {
-                    self.apps = apps; self.library = library; self.connected = true
-                    // サインインを AI 操作/翻訳/声の依頼に渡す。どれも人が押してから文面を送る。
-                    RecordingWorkspaceState.shared.configureBackend(base: base, token: tokens.accessToken)
-                    VoiceHUDState.shared.configureBackend(base: base, token: tokens.accessToken)
-                    // 録音の自動 upload（会議作成→停止時に音声全体→落ちた録音の回収）は dev 専用。
-                    // 既定では録音は gateway を知らない。`RecordingRuntime.devAutoUploadEnabled`。
+                if configuredToken == nil {
+                    let reachable = await Task.detached { [base] in AstraCoreBridge.reachable(base) }.value
+                    guard reachable else { return }
+                }
+                let tokens = try await session.tokens(reauthenticate: reauthenticate)
+                guard configuredToken != tokens.accessToken else { return }
+                let renewal = configuredToken != nil
+                configuredToken = tokens.accessToken
+                connected = true
+                RecordingWorkspaceState.shared.configureBackend(base: base, token: tokens.accessToken)
+                VoiceHUDState.shared.configureBackend(base: base, token: tokens.accessToken, renewal: renewal)
+                InitialProfileStore.shared.configureBackend(base: base, token: tokens.accessToken, renewal: renewal)
+                WorkContextStore.shared.configureBackend(base: base, token: tokens.accessToken)
+                ConnectorState.shared.configureBackend(base: base, token: tokens.accessToken)
+                ReplyFlow.shared.configureBackend(base: base, token: tokens.accessToken)
+                RecordingRuntime.shared.configureBackend(base: base, accessToken: tokens.accessToken)
+                if !renewal {
                     if RecordingRuntime.devAutoUploadEnabled {
-                        RecordingRuntime.shared.configureBackend(base: base, accessToken: tokens.accessToken)
-                        let recovered = RecoveryState.shared.recoverAll()
-                        if recovered > 0 { NSLog("astra: recovered %llu bytes of crashed recordings", recovered) }
+                        _ = RecoveryState.shared.recoverAll()
                     }
                 }
+                if apps.isEmpty {
+                    let lists = await Task.detached { [base] in
+                        ((try? AstraCoreBridge.pluginCatalog(base, accessToken: tokens.accessToken)) ?? [],
+                         (try? AstraCoreBridge.library(base, accessToken: tokens.accessToken)) ?? [])
+                    }.value
+                    apps = lists.0; library = lists.1
+                    WorkContextStore.shared.load()
+                }
             } catch {
-                NSLog("main data load failed: \(error)")
+                connected = false
+                NSLog("Astra: 接続の認証を更新できませんでした。再接続が必要です。")
             }
         }
     }
@@ -105,13 +162,40 @@ final class MainNav: ObservableObject {
     static let shared = MainNav()
     /// 右 Panel は既定で閉じる（§Workspace）。
     @Published var activityOpen = false
+    /// 右 Panel に Personalization（Astra が使っている本人の情報）を出す。Home の [編集] から。
+    @Published var personalizationOpen = false
     /// Home の Session Card から開いた会議（§8 Home → Session Detail の導線）。
-    @Published var openSession: String?
+    @Published var openSession: String? {
+        didSet { if openSession != nil { openTask = nil } }
+    }
+    @Published var openTask: AgentTask? {
+        didSet { if openTask != nil { openSession = nil; meetingDetail = false; section = .work; workTab = .tasks } }
+    }
+    /// Keep unsent text when another section is opened; it is never sent by navigation.
+    @Published var intentDraft = ""
+    /// nil uses reference resolution; [] explicitly means the user removed the image.
+    @Published var intentVisualContext: [VisualContextArtifact]?
+    @Published private(set) var intentFocusRequest = UUID()
+
+    func requestIntentFocus() { intentFocusRequest = UUID() }
+
+    func prepareScreenshotQuestion(_ image: VisualContextArtifact) {
+        intentVisualContext = [image]
+        select(.home)
+        requestIntentFocus()
+    }
+
+    func removeIntentScreenshot() { intentVisualContext = [] }
+
+    func finishIntentSubmission() {
+        intentDraft = ""
+        intentVisualContext = nil
+    }
     @Published var section: MainSection = .home
     /// 各面の中の 2 面。撮影や外部導線から選べるように共有にする。
     @Published var workTab: WorkTab = .tasks
     @Published var libraryTab: LibraryTab = .meetings
-    @Published var appsTab: AppsTab = .plugins
+    @Published var appsTab: AppsTab = .connectors
     /// 会議詳細のプレビュー（Library から開いた状態を撮るため）。
     @Published var meetingDetail = false
 
@@ -127,6 +211,7 @@ final class MainNav: ObservableObject {
     /// `openSession = nil` を手で書いていた）。sidebar と `showSection` はここを通る。
     func select(_ s: MainSection) {
         openSession = nil
+        openTask = nil
         meetingDetail = false
         section = s
     }
@@ -137,6 +222,7 @@ final class MainNav: ObservableObject {
     /// 会議詳細は "Meeting" ではなく**その会議の名前**にする。一覧が "Meetings" なので、
     /// 1 文字違いの見出しでは「一覧に居るのか 1 件を開いているのか」が見分けられなかった。
     var title: String {
+        if let task = openTask { return task.title }
         if let id = openSession, let s = MeetingSessionStore.shared.session(id: id) { return s.title }
         if meetingDetail { return meetingTitle }
         return section.title
@@ -145,9 +231,11 @@ final class MainNav: ObservableObject {
 
 /// 4 タブの native シェル。Windows 版は同じ構成を NavigationView + Mica で作る（設計共通・実装別）。
 struct MainWindowView: View {
+    var loadBackend = true
     @StateObject private var nav = MainNav.shared
     @ObservedObject private var uiScale = UIScale.shared
-    @StateObject private var data = MainData()
+    @StateObject private var data = MainData.shared
+    @ObservedObject private var recording = RecordingWorkspaceState.shared
 
     var body: some View {
         NavigationSplitView {
@@ -161,12 +249,14 @@ struct MainWindowView: View {
             }
             .navigationSplitViewColumnWidth(min: S.metric(Metrics.sidebarWidth) - 20, ideal: S.metric(Metrics.sidebarWidth), max: S.metric(Metrics.sidebarWidth) + 40)
             .safeAreaInset(edge: .bottom) {
-                HStack(spacing: 8) {
-                    Circle().fill(Color.astraAccent.opacity(0.2)).frame(width: 26, height: 26)
-                        .overlay(Text("U").font(.system(size: TypeScale.microSize, weight: .semibold)))
-                    Text("ui-check").font(.system(size: TypeScale.secondarySize))
-                    Spacer()
-                }.padding(10)
+                Button { SettingsWindowController.shared.show() } label: {
+                    Label("設定", systemImage: "gearshape")
+                        .font(.system(size: TypeScale.secondarySize))
+                        .frame(maxWidth: .infinity, minHeight: 32, alignment: .leading)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain).padding(10)
+                .accessibilityIdentifier("mainSettings")
             }
         } detail: {
             detailContent
@@ -179,27 +269,47 @@ struct MainWindowView: View {
                 // 見出しを決めるのはここ 1 か所だけにする。
                 .navigationTitle(nav.title)
                 // 右の Agent Activity は **既定で閉じる**。Content を主役にする（Linear の作法）。
-                .inspector(isPresented: $nav.activityOpen) {
-                    AgentActivityPane()
-                        .inspectorColumnWidth(min: S.metric(Metrics.inspectorWidth) - 40, ideal: S.metric(Metrics.inspectorWidth), max: S.metric(Metrics.inspectorWidth) + 60)
+                // 右 Panel は 1 枚。Personalization を開いたときはそれ、そうでなければ Agent Activity。
+                // `.inspector` を 2 つ重ねると、どちらが出るかが SwiftUI の解決順に委ねられる。
+                .inspector(isPresented: Binding(
+                    get: { nav.activityOpen || nav.personalizationOpen },
+                    set: { open in if !open { nav.activityOpen = false; nav.personalizationOpen = false } })) {
+                    Group {
+                        if nav.personalizationOpen { PersonalizationInspector() } else { AgentActivityPane() }
+                    }
+                    .inspectorColumnWidth(min: S.metric(Metrics.inspectorWidth) - 40, ideal: S.metric(Metrics.inspectorWidth), max: S.metric(Metrics.inspectorWidth) + 60)
                 }
                 .toolbar {
                     ToolbarItem {
-                        Button { nav.activityOpen.toggle() } label: {
+                        Button {
+                            if recording.isRecording { WindowCoordinator.shared.showRecordingWorkspace() }
+                            else { recording.start() }
+                        } label: {
+                            Label(recording.isRecording ? "録音中の会議" : "録音", systemImage: recording.isRecording ? "waveform" : "record.circle")
+                                .labelStyle(.titleAndIcon)
+                        }
+                        .help(recording.isRecording ? "録音中の会議を開く" : Facts.recordingStart)
+                        .accessibilityIdentifier("mainRecording")
+                    }
+                    ToolbarItem {
+                        Button { nav.personalizationOpen = false; nav.activityOpen.toggle() } label: {
                             Image(systemName: "sidebar.trailing")
                         }
-                        .help("Agent Activity")
+                        .help("エージェントの動きを表示／非表示")
+                        .accessibilityLabel("エージェントの動きを表示／非表示")
                         .accessibilityIdentifier("toggleActivity")
                     }
                 }
         }
         .frame(minWidth: 940, minHeight: 620)
-        .onAppear { data.load() }
+        .onAppear { if loadBackend { data.load() } }
     }
 
     @ViewBuilder private var detailContent: some View {
         Group {
-            if let id = nav.openSession, let session = MeetingSessionStore.shared.session(id: id) {
+            if let task = nav.openTask {
+                TaskDetailView(task: task).id(task.id)
+            } else if let id = nav.openSession, let session = MeetingSessionStore.shared.session(id: id) {
                 SessionDetailView(session: session)
             } else if nav.meetingDetail {
                 MeetingArtifactView(
@@ -332,14 +442,14 @@ private struct SubNav<Tab: CaseIterable & Identifiable & Hashable>: View where T
     var body: some View {
         HStack(spacing: 8) {
             ForEach(Array(Tab.allCases)) { t in
-                Text(title(t))
+                Button { selected = t } label: { Text(title(t))
                     .font(.system(size: TypeScale.secondarySize, weight: selected == t ? .semibold : .regular))
                     .padding(.horizontal, 10).padding(.vertical, 4)
                     .background(Capsule().fill(selected == t ? Color.astraAccent.opacity(0.15) : Color.clear))
                     .foregroundStyle(selected == t ? Color.astraAccent : Color.secondary)
-                    .contentShape(Capsule())
-                    .onTapGesture { selected = t }
-                    .accessibilityAddTraits(.isButton)
+                    .contentShape(Capsule()) }
+                    .buttonStyle(.plain)
+                    .accessibilityAddTraits(selected == t ? .isSelected : [])
                     .accessibilityIdentifier("subnav-\(t.id)")
             }
             Spacer()
@@ -368,6 +478,7 @@ private struct WorkPane: View {
             }
         }
         .background(Palette.canvas(dark))
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("workPane")
     }
 }
@@ -387,6 +498,7 @@ private struct LibraryPane: View {
             }
         }
         .background(Palette.canvas(dark))
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("libraryPane")
     }
 }
@@ -406,6 +518,7 @@ private struct AppsPane: View {
             }
         }
         .background(Palette.canvas(dark))
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("appsPane")
     }
 }
@@ -430,8 +543,14 @@ private struct AgentsPane: View {
                     Spacer()
                 }
                 // 実タスクが無い間は spec 構造 + 正直な空状態（架空タスクを作らない）。
-                Text("実行中の仕事はありません。Task Dock から「◯◯して」と頼むとここに出ます。")
-                    .font(.system(size: TypeScale.microSize)).foregroundStyle(.secondary)
+                // 空状態の姿は Tasks / Meetings / Files と同じ部品（Atlas F4: ここだけ左寄せ 1 行だった）。
+                WorkspaceEmpty(title: "実行中の仕事はありません",
+                               hint: "Astra に頼んだ仕事は、UI を閉じても走り続けます。",
+                               primaryLabel: "Task Dock を開く",
+                               primaryAction: { WindowCoordinator.shared.showVoiceHUD() },
+                               canDo: ["\(GlobalShortcut.label()) で「◯◯して」と頼む",
+                                       "Active / Waiting / Done で状態を追う",
+                                       "失敗した仕事はその場でやり直す"])
                 Spacer()
             }.padding(24)
         }
@@ -459,8 +578,13 @@ private struct FilesPane: View {
             }.padding(.horizontal, 28).padding(.top, 16)
             if titles.isEmpty {
                 // 架空の 1 枚を出さない。他の面と同じ空状態。
-                WorkspaceEmpty(title: "まだ資料はありません。",
-                               hint: "仕事の成果や会議の資料がここに残ります。")
+                WorkspaceEmpty(title: "まだ資料はありません",
+                               hint: "仕事の成果や会議の資料がここに残ります。",
+                               primaryLabel: "録音を始める",
+                               primaryAction: { NewRecordingSheetOpener.shared.open() },
+                               canDo: ["会議の要約やレポートが成果物として残る",
+                                       "種類（レポート/文書/画像…）で絞り込める",
+                                       "元になった会議・発言へ戻れる"])
                     .padding(.horizontal, 28).padding(.top, 16)
             }
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 200), spacing: 12)], spacing: 12) {
@@ -479,111 +603,110 @@ private struct FilesPane: View {
 }
 
 /// §10 Connectors: 外部サービスとの接続。接続状態は **色だけでなく文字でも**示す（§17）。
-private struct ConnectorsPane: View {
+struct ConnectorsPane: View {
     let apps: [String]
     @ObservedObject private var connectors = ConnectorState.shared
     @Environment(\.colorScheme) private var scheme
     private var dark: Bool { scheme == .dark }
 
-    /// APP-002 の状態。トグル 1 個では「未接続 / 権限が要る / 繋げない」が区別できないので分ける。
-    private enum ConnState {
-        case connected, disconnected, permissionRequired
-        var label: String {
-            switch self {
-            case .connected: return "接続済み"
-            case .disconnected: return "未接続"
-            case .permissionRequired: return "設定が必要"
-            }
-        }
-        /// 止まっている理由を必ず添える。「設定が必要」だけでは何をすればいいか分からない。
-        var reason: String? {
-            switch self {
-            case .permissionRequired: return "接続に使う client ID がまだ設定されていません"
-            case .connected, .disconnected: return nil
-            }
-        }
-        var icon: String {
-            switch self {
-            case .connected: return "checkmark.circle.fill"
-            case .disconnected: return "circle"
-            case .permissionRequired: return "exclamationmark.triangle.fill"
-            }
-        }
-    }
-
-    private func stateOf(_ app: String) -> ConnState {
-        if connectors.connected.contains(app) { return .connected }
-        // provider があるのに繋げない＝client_id 未設定。繋げるつもりにさせない。
-        if ConnectorState.provider(for: app) != nil && !connectors.canConnect(app) { return .permissionRequired }
-        return .disconnected
-    }
-
-    private func tint(_ s: ConnState) -> Color {
-        switch s {
-        case .connected: return Palette.success(dark)
-        case .permissionRequired: return Palette.warning(dark)
-        case .disconnected: return .secondary
-        }
-    }
-
     var body: some View {
-        let apps = self.apps.isEmpty ? ["Gmail", "Google Calendar", "Finder"] : self.apps
-        return ScrollView {
-            WorkspaceHeader(title: Facts.appsConnectors,
-                            subtitle: "外部サービスとの接続。つなぐまで Astra はそのサービスを読みません。")
-                .padding(.horizontal, 28).padding(.top, 28)
-
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 260), spacing: 12)], spacing: 12) {
-                ForEach(apps, id: \.self) { a in
-                    let st = stateOf(a)
-                    HStack(spacing: 10) {
-                        RoundedRectangle(cornerRadius: 7).fill(Color.astraAccent.opacity(0.85))
-                            .frame(width: 27, height: 27)
-                            .overlay(Text(String(a.prefix(1))).font(.system(size: TypeScale.microSize, weight: .bold)).foregroundStyle(.white))
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(a).font(.system(size: TypeScale.microSize, weight: .semibold))
-                            HStack(spacing: 4) {
-                                Image(systemName: st.icon).font(.system(size: 9))
-                                Text(st.label).font(.system(size: TypeScale.captionSize))
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                WorkspaceHeader(title: Facts.appsConnectors,
+                    subtitle: "普段使うサービスをつないで、Astra に仕事の文脈を伝えます。")
+                ForEach(["google", "microsoft"], id: \.self) { provider in
+                    let sources = connectors.sources.filter { $0.provider == provider }
+                    if !sources.isEmpty {
+                        VStack(alignment: .leading, spacing: 16) {
+                            HStack(spacing: 12) {
+                                Image(systemName: provider == "google" ? "envelope" : "square.grid.2x2")
+                                    .font(.system(size: 20)).foregroundStyle(Palette.muted(dark))
+                                    .frame(width: 32, height: 32)
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(provider == "google" ? "Google Workspace" : "Microsoft 365")
+                                        .font(.system(size: TypeScale.cardTitleSize, weight: .medium))
+                                    Text(provider == "google" ? "メールと予定から、今日必要なことを整理" : "メール・予定・タスクをまとめて確認")
+                                        .font(.system(size: TypeScale.secondarySize)).foregroundStyle(Palette.muted(dark))
+                                }
                             }
-                            .foregroundStyle(tint(st))
-                            if let reason = st.reason {
-                                Text(reason).font(.system(size: TypeScale.captionSize)).foregroundStyle(.secondary)
-                                    .fixedSize(horizontal: false, vertical: true)
-                            }
+                            ForEach(sources) { source in sourceRow(source) }
                         }
-                        Spacer(minLength: 0)
-                        // 繋げるものだけ操作を出す。繋げないものに操作を出して失敗させない。
-                        if st == .connected {
-                            Button("切断") {
-                                // §16 R2: 外部サービスとの接続を切る＝外部への副作用。
-                                guard Confirm.ask(ActionConfirmation(
-                                    title: "\(a) との接続を切ります",
-                                    details: ["Astra はこのアプリを読めなくなります",
-                                              "使うにはもう一度つなぎ直してください"],
-                                    risk: .r2,
-                                    confirmLabel: "切断する")) else { return }
-                                connectors.connected.remove(a)
+                        .padding(Space.cardPadding)
+                        .background(Palette.surface(dark), in: RoundedRectangle(cornerRadius: Metrics.paletteRadius))
+                        .overlay(RoundedRectangle(cornerRadius: Metrics.paletteRadius).stroke(Palette.border(dark)))
+                        .accessibilityElement(children: .contain)
+                        .accessibilityIdentifier("connectionGroup-\(provider)")
+                    }
+                }
+                Text("送信や変更は、操作が必要なときに許可を確認します。")
+                    .font(.system(size: TypeScale.secondarySize)).foregroundStyle(Palette.muted(dark))
+                DisclosureGroup("詳しい接続情報") {
+                    VStack(alignment: .leading, spacing: 12) {
+                        ForEach(connectors.sources) { source in
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(source.name).fontWeight(.medium)
+                                Text(source.purpose)
+                                if connectors.status[source.statusKey] == .cannotConnect {
+                                    Text("接続設定が未完了: " + clientKey(source))
+                                }
+                                if case .failed(let reason) = connectors.status[source.statusKey] { Text(reason) }
                             }
-                                .font(.system(size: TypeScale.microSize))
-                                .foregroundStyle(.secondary)
-                                .frame(height: 28).padding(.horizontal, 8)
-                                .buttonStyle(AstraControlStyle(radius: 8, base: 0.0))
-                        } else if connectors.canConnect(a) {
-                            Button("接続") { _ = connectors.connect(a) }
-                                .font(.system(size: TypeScale.microSize, weight: .medium))
-                                .foregroundStyle(Color.astraAccent(dark))
-                                .frame(height: 28).padding(.horizontal, 8)
-                                .buttonStyle(AstraControlStyle(radius: 8, base: 0.0))
                         }
                     }
-                    .padding(12)
-                    // 枠線を黒で直書きしていたため dark でカードの縁が消えていた（実機で判明）。
-                    .background(RoundedRectangle(cornerRadius: 10).fill(Color.cardSurface(dark).opacity(dark ? 0.5 : 0)))
-                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.hairline(dark)))
-                    .accessibilityIdentifier("connector-\(a)")
+                    .font(.system(size: TypeScale.microSize)).foregroundStyle(Palette.muted(dark))
+                    .textSelection(.enabled).padding(.top, 12)
                 }
-            }.padding(28)
+                .font(.system(size: TypeScale.secondarySize))
+                .accessibilityIdentifier("connectionDiagnostics")
+            }
+            .foregroundStyle(Palette.text(dark)).padding(28)
+            .frame(maxWidth: 900, alignment: .leading).frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .background(Palette.canvas(dark))
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("connectionsPane")
+    }
+
+    private func clientKey(_ source: ConnectorState.Source) -> String {
+        "ASTRA_OAUTH_" + (source.provider == "microsoft" ? "MICROSOFT_READ" : source.provider.uppercased()) + "_CLIENT_ID"
+    }
+
+    private func sourceRow(_ source: ConnectorState.Source) -> some View {
+        let state = connectors.status[source.statusKey] ?? .disconnected
+        return HStack(alignment: .center, spacing: 12) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(source.name).font(.system(size: TypeScale.bodySize))
+                Text(statusText(state))
+                    .font(.system(size: TypeScale.microSize))
+                    .foregroundStyle(state == .connected ? Palette.success(dark) : Palette.muted(dark))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 12)
+            if state == .connected {
+                Button("切断") {
+                    guard Confirm.ask(ActionConfirmation(title: "\(source.name) を切断します", details: ["接続すると、再び利用できます。"], risk: .r2, confirmLabel: "切断する")) else { return }
+                    connectors.disconnect(source.name)
+                }
+                .accessibilityIdentifier("disconnect-\(source.pluginId)")
+            } else {
+                Button(state == .connecting ? "接続中…" : "接続") { _ = connectors.connect(source: source) }
+                    .disabled(state == .connecting || !connectors.canConnect(source.name))
+                    .accessibilityIdentifier("connect-\(source.pluginId)")
+            }
+        }
+        .buttonStyle(.bordered).controlSize(.regular)
+        .padding(.vertical, 4)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("workSource-\(source.pluginId)")
+    }
+
+    private func statusText(_ status: ConnectorState.Status) -> String {
+        switch status {
+        case .connected: return "接続済み"
+        case .disconnected: return "未接続"
+        case .cannotConnect: return "この版の接続設定は準備中です"
+        case .connecting: return "ブラウザで許可すると接続が完了します"
+        case .failed: return "接続を完了できませんでした。もう一度お試しください"
         }
     }
 }

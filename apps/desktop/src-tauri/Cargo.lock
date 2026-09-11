@@ -136,7 +136,7 @@ dependencies = [
 
 [[package]]
 name = "astra-core"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "serde",
  "serde_json",
@@ -149,7 +149,7 @@ dependencies = [
 
 [[package]]
 name = "astra-desktop"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "astra-core",
  "base64 0.22.1",

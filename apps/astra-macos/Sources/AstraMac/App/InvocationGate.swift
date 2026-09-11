@@ -74,7 +74,8 @@ enum InvocationGate {
     /// 枠が 120ms 動かなくなるまで（最後に動いた時刻）を、2ms 刻みで見る。
     struct Timing { var stateMs: Double?; var firstFrameMs: Double?; var settledMs: Double? }
 
-    static func observe(fire: () -> Void, stateReached: () -> Bool, capSec: Double = 2.5) -> Timing {
+    static func observe(fire: () -> Void, stateReached: () -> Bool, capSec: Double = 2.5,
+                        sample: (Double) -> Void = { _ in }) -> Timing {
         var t = Timing()
         let base = dockWindow()?.frame
         var last = base
@@ -85,6 +86,7 @@ enum InvocationGate {
         while Date() < cap {
             CFRunLoopRunInMode(.defaultMode, 0.002, true)
             let now = Date()
+            sample(now.timeIntervalSince(t0) * 1000)
             if t.stateMs == nil, stateReached() { t.stateMs = now.timeIntervalSince(t0) * 1000 }
             let f = dockWindow()?.frame
             if f != last {
@@ -116,7 +118,7 @@ enum InvocationGate {
         try? FileManager.default.createDirectory(atPath: outDir, withIntermediateDirectories: true)
 
         guard Permissions.microphone == .granted else {
-            print("SELFTEST_SKIP invocationaudio: マイク未許可（実 Mac + 許可でだけ測れる）"); exit(0)
+            print("SELFTEST_SKIP invocationaudio: マイク未許可（実 Mac + 許可でだけ測れる）"); SelfTest.exit(0)
         }
         RecordingRuntime.shared.markListening(.localUser)
         _ = LocalStore.shared.open(); MeetingSessionStore.shared.load()
@@ -162,7 +164,7 @@ enum InvocationGate {
         }
         guard let shown = surfaceShownAt, let live = captureLiveAt else {
             WindowCoordinator.shared.toggleRecording()
-            print("SELFTEST_FAIL invocationaudio: 面 \(surfaceShownAt != nil)・取り込み \(captureLiveAt != nil) を捉えられない"); exit(2)
+            print("SELFTEST_FAIL invocationaudio: 面 \(surfaceShownAt != nil)・取り込み \(captureLiveAt != nil) を捉えられない"); SelfTest.exit(2)
         }
         let lossWindowFromSurface = live.timeIntervalSince(shown) * 1000
         let lossWindowFromShortcut = live.timeIntervalSince(t0) * 1000
@@ -268,12 +270,12 @@ enum InvocationGate {
         diag("INVOCATION_AUDIO_TRUTH=\(verdict)（\(outDir)/result.json）")
         if !truthful {
             print("SELFTEST_FAIL invocationaudio: 取り込みが生きる前に録音中を名乗っている（state truth）")
-            exit(1)
+            SelfTest.exit(1)
         }
         print("SELFTEST_OK invocationaudio: \(verdict) — 物理の窓 \(Int(lossWindowFromSurface))ms は残るが、"
             + "その間 UI は「\(Facts.recordingHeroPreparing)」で、録音中を名乗ってから話した音は落ちない"
             + "（+0/+50/+100ms の生の欠けは \(anyLost ? "在り" : "無し")、記録値）")
-        exit(0)
+        SelfTest.exit(0)
     }
 
     // MARK: - 本体
@@ -334,7 +336,7 @@ enum InvocationGate {
         }
 
         WindowCoordinator.shared.showVoiceHUD(); settle(1.0)
-        guard let dock = dockWindow() else { print("SELFTEST_FAIL invocation: Dock が出ていない"); exit(2) }
+        guard let dock = dockWindow() else { print("SELFTEST_FAIL invocation: Dock が出ていない"); SelfTest.exit(2) }
         let windows0 = ownWindowCount()
         var focusTheft = 0
         var extraWindows = 0
@@ -385,21 +387,30 @@ enum InvocationGate {
         WindowCoordinator.shared.toggleRecording(); settle(1.2)   // 止めて次へ（mic を止め切る）
         result.observations.append("初回（cold）: 枠 \(Int(cold.firstFrameMs ?? -1))ms・state \(Int(cold.stateMs ?? -1))ms。以下は 2 回目以降（steady-state）")
 
-        let t0 = Date()
-        var t1 = observe(fire: fireShortcut, stateReached: { recording.isRecording })
+        var t0 = Date()
+        var levelMs: Double?, journalMs: Double?
+        func sampleAudio(_ elapsed: Double) {
+            guard recording.isRecording else { return }
+            if levelMs == nil, !recording.awaitingAudio { levelMs = elapsed }
+            if journalMs == nil, RecordingRuntime.shared.recordedMs() > 0 { journalMs = elapsed }
+        }
+        // Sample audio while observing the animation, rather than starting the
+        // audio clock after the window has settled (including its 120ms wait).
+        var t1 = observe(fire: fireShortcut, stateReached: { recording.isRecording }, sample: sampleAudio)
         if registered, t1.stateMs == nil {
             // tap は登録できたが届かなかった。直接呼び直し、その旨を残す。
             result.observations.append("合成 \(GlobalShortcut.label()) が tap に届かなかった（1.5s）。handler を直接呼んで続ける")
             hop = "direct(tap-miss)"
-            t1 = observe(fire: { WindowCoordinator.shared.toggleRecording() }, stateReached: { recording.isRecording })
+            t0 = Date(); levelMs = nil; journalMs = nil
+            t1 = observe(fire: { WindowCoordinator.shared.toggleRecording() }, stateReached: { recording.isRecording }, sample: sampleAudio)
         }
         guard recording.isRecording else {
             // マイクが無い環境（CI 等）では録音に入れない。落とさず SKIP する
             // （この gate は実 Mac のマイク許可があるときだけ意味を持つ）。
             if Permissions.microphone != .granted {
-                print("SELFTEST_SKIP invocation: マイク未許可（実 Mac + 許可でだけ測れる）"); exit(0)
+                print("SELFTEST_SKIP invocation: マイク未許可（実 Mac + 許可でだけ測れる）"); SelfTest.exit(0)
             }
-            print("SELFTEST_FAIL invocation: \(GlobalShortcut.label()) で録音が始まらない"); exit(2)
+            print("SELFTEST_FAIL invocation: \(GlobalShortcut.label()) で録音が始まらない"); SelfTest.exit(2)
         }
         let hopNote = hop == "tap" ? "合成 \(GlobalShortcut.label()) → CGEventTap → handler（OS の受信を含む）"
                                    : "入力監視なし: handler を直接呼んだ（OS の受信は含まない）"
@@ -415,13 +426,11 @@ enum InvocationGate {
         if Permissions.microphone == .granted {
             // 2 つの合図を別々に見る: 波形の level（audio thread → main）と journal の recordedMs（core）。
             // どちらか早い方を「音が届いた」とし、もう一方も記す（遅れ方が分かる）。
-            var levelMs: Double?, journalMs: Double?
             let cap = Date().addingTimeInterval(3)
             while Date() < cap, levelMs == nil || journalMs == nil {
                 CFRunLoopRunInMode(.defaultMode, 0.002, true)
                 let now = Date().timeIntervalSince(t0) * 1000
-                if levelMs == nil, !recording.awaitingAudio { levelMs = now }
-                if journalMs == nil, RecordingRuntime.shared.recordedMs() > 0 { journalMs = now }
+                sampleAudio(now)
                 if let l = levelMs, let j = journalMs, min(l, j) > 0, now - min(l, j) > 500 { break }
             }
             micMs = [levelMs, journalMs].compactMap { $0 }.min()
@@ -486,7 +495,7 @@ enum InvocationGate {
         line("extra windows", target: "0", value: Double(extraWindows), unit: "n", pass: extraWindows == 0,
              note: "自分の窓 \(windows0) 枚のまま")
 
-        // ---- 内訳（Evidence A）: start() が主スレッドで何に時間を使うか。単体で測る。
+        // ---- 独立した起動プローブ（Evidence A）。別の実行同士を内訳として差し引かない。
         // 録音の外で 1 回ずつ起動して止める。本番の順は begin() の中（STT → マイク）。
         do {
             func ms(_ block: () -> Void) -> Double { let t = Date(); block(); return Date().timeIntervalSince(t) * 1000 }
@@ -496,14 +505,13 @@ enum InvocationGate {
             let st = SpeechTranscriber()
             let sttMs = ms { try? st.start { _ in } }
             st.finish()
-            // begin() 全体（journal 作成 + STT + マイク）。start() の残りは store と @Published の更新。
+            // begin() 全体も別に測る。HAL の状態が異なるので、上の単体値とは加減算できない。
             let rt = RecordingRuntime.shared
             let beginMs = ms { _ = rt.begin(meetingId: "invocation-probe-\(getpid())") }
             let endMs = ms { rt.end() }
-            let rest = (t1.stateMs ?? 0) - beginMs
-            let note = String(format: "RecordingRuntime.begin %.0fms（うち MicCapture.start %.0fms・SpeechTranscriber.start %.0fms、許可 %d）・end %.0fms・start() のそれ以外（store/Published）%.0fms", beginMs, micMs, sttMs, SpeechTranscriber.authorization.rawValue, endMs, rest)
-            diag("INVOCATION breakdown of start(): \(note)")
-            result.observations.append("start() 内訳: \(note)")
+            let note = String(format: "RecordingRuntime.begin %.0fms・MicCapture.start %.0fms・SpeechTranscriber.start %.0fms・end %.0fms（各々別の起動、内訳ではない。許可 %d）", beginMs, micMs, sttMs, endMs, SpeechTranscriber.authorization.rawValue)
+            diag("INVOCATION independent startup probes: \(note)")
+            result.observations.append("独立した起動プローブ: \(note)")
         }
 
         // ---- 判定と記録。
@@ -520,11 +528,11 @@ enum InvocationGate {
         if !regressions.isEmpty {
             for r in regressions { diag("  回帰: \(r)") }
             print("SELFTEST_FAIL invocation: 回帰 \(regressions.count) 件")
-            exit(1)
+            SelfTest.exit(1)
         }
         let miss = worldClassFails.isEmpty ? "" : " — world-class 未達: \(worldClassFails.joined(separator: ", "))（回帰ではない）"
         print("SELFTEST_OK invocation: \(result.verdict) measured \(measured)/\(result.lines.count)\(miss)（\(outDir)/result.json）")
-        exit(0)
+        SelfTest.exit(0)
     }
 
     /// say の音声を VAD → SpeechTranscriber に流し、最初の partial までの ms を返す。

@@ -10,11 +10,11 @@ struct NewRecordingSheet: View {
     @Binding var isPresented: Bool
 
     @AppStorage("astra.recording.systemAudio") private var systemAudio = true
-    @AppStorage("astra.recording.template") private var template = "Meeting Notes"
+    @AppStorage("astra.recording.template") private var template = "会議メモ"
     @AppStorage("astra.recording.visibility") private var visibilityRaw = MeetingSession.Visibility.mySpace.rawValue
     @AppStorage("astra.recording.project") private var project = ""
 
-    private let templates = ["Meeting Notes", "1:1", "Interview", "Standup"]
+    private let templates = ["会議メモ", "1on1", "インタビュー", "朝会"]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -23,27 +23,29 @@ struct NewRecordingSheet: View {
                 .foregroundStyle(Palette.text(dark))
                 .padding(.bottom, 18)
 
-            row("Microphone", value: micName, ok: Permissions.microphone == .granted)
-            row("System Audio", value: systemAudio ? "On" : "Off",
+            row("マイク", value: micName, ok: Permissions.microphone == .granted)
+            // 値はトグルが言う。「On」の文字で同じことを二度言わない（Atlas F5）。
+            row("画面の音", value: Permissions.screenRecording == .granted ? "" : "許可が要ります",
                 ok: Permissions.screenRecording == .granted) {
-                Toggle("", isOn: $systemAudio).labelsHidden().toggleStyle(.switch)
+                Toggle("画面の音", isOn: $systemAudio).labelsHidden().toggleStyle(.switch)
             }
-            picker("Template", selection: $template, options: templates)
-            picker("Save to", selection: Binding(
+            picker("テンプレート", selection: $template, options: templates)
+            picker("保存先", selection: Binding(
                 get: { MeetingSession.Visibility(rawValue: visibilityRaw)?.label ?? "自分だけ" },
                 set: { label in
                     visibilityRaw = (MeetingSession.Visibility.allCases.first { $0.label == label } ?? .mySpace).rawValue
                 }), options: MeetingSession.Visibility.allCases.map(\.label))
-            picker("Project", selection: Binding(
-                get: { project.isEmpty ? "None" : project },
-                set: { project = $0 == "None" ? "" : $0 }),
-                options: ["None"] + Projects.all())
+            picker("プロジェクト", selection: Binding(
+                get: { project.isEmpty ? Facts.projectNone : project },
+                set: { project = $0 == Facts.projectNone ? "" : $0 }),
+                options: [Facts.projectNone] + Projects.all())
 
             Spacer(minLength: 0)
 
             HStack(spacing: 10) {
                 Spacer(minLength: 0)
                 Button(Facts.confirmationCancel) { isPresented = false }
+                    .keyboardShortcut(.cancelAction)
                     .font(.system(size: TypeScale.bodySize))
                     .foregroundStyle(Palette.muted(dark))
                     .frame(height: 36).padding(.horizontal, 18)
@@ -65,7 +67,8 @@ struct NewRecordingSheet: View {
             }
         }
         .padding(26)
-        .frame(width: 620, height: 400)
+        // 5 行 + ボタン列で収まる高さ。400 では下半分が空いていた（盲検 3/3 で density）。
+        .frame(width: 620, height: 330)
         .background(SheetSurface())
         .accessibilityIdentifier("newRecordingSheet")
     }
@@ -98,8 +101,9 @@ struct NewRecordingSheet: View {
             Text(value)
                 .font(.system(size: TypeScale.bodySize))
                 .foregroundStyle(ok ? Palette.text(dark) : Palette.warning(dark))
-            Spacer(minLength: 0)
+            // 操作はどの行も同じ列（ラベルの右）に置く。右端に離すと列が 2 本になる（盲検 3/3 で alignment）。
             trailing()
+            Spacer(minLength: 0)
         }
         .frame(height: 44)
     }
@@ -110,12 +114,13 @@ struct NewRecordingSheet: View {
                 .font(.system(size: TypeScale.bodySize))
                 .foregroundStyle(Palette.muted(dark))
                 .frame(width: 130, alignment: .leading)
-            Picker("", selection: selection) {
+            Picker(title, selection: selection) {
                 ForEach(options, id: \.self) { Text($0).tag($0) }
             }
             .labelsHidden()
             .pickerStyle(.menu)
-            .fixedSize()
+            // 3 つのプルダウンを同じ幅にして 1 本の列に揃える。
+            .frame(width: 220, alignment: .leading)
             .accessibilityIdentifier("sheet-\(title)")
             Spacer(minLength: 0)
         }

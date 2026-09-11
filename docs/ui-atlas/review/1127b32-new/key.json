@@ -1,0 +1,11 @@
+{
+  "key": {
+    "0B33": "main.home-work-context",
+    "EE44": "main.home-personalization"
+  },
+  "order": [
+    "0B33",
+    "EE44"
+  ],
+  "batch": 6
+}

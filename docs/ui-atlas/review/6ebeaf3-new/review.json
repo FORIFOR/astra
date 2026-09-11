@@ -1,0 +1,179 @@
+{
+  "rc": "6ebeaf3",
+  "pages": [
+    {
+      "id": "main.apps-connectors",
+      "blind_id": "1533",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": [
+            {
+              "axis": "primary-action-clarity",
+              "what": "接続開始のボタンが無い。4行とも操作対象が空の丸印だけで、押すと何が起きるか（認証が始まるのか、トグルなのか）が絵から読めない",
+              "where": "「仕事のコンテキスト」カード内の各サービス行の左端の丸"
+            },
+            {
+              "axis": "consistency",
+              "what": "同じ未接続状態が「設定が必要」バッジ（上のグループ）と「○ 未接続」（Finder カード）の二通りで表現され、カードの形も幅も違う",
+              "where": "上部グループカード vs 下部の Finder カード"
+            },
+            {
+              "axis": "alignment",
+              "what": "サービス名と状態バッジの間隔が名前の長さで揃わず、4行のバッジ位置が階段状にずれている",
+              "where": "Gmail / Google Calendar / Outlook / Microsoft To Do の各見出し行"
+            },
+            {
+              "axis": "screen-occupation",
+              "what": "Finder カードの右と下に広い空白があり、内容が上半分に寄って下部が空いている",
+              "where": "画面中央下〜下端"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "primary-action clarity",
+              "what": "「設定が必要」と表示されているのに接続を始めるボタンやトグルスイッチが無く、意味の曖昧な空の丸アイコンしかない",
+              "where": "Gmail/Google Calendar/Outlook/Microsoft To Do各行の左端"
+            },
+            {
+              "axis": "consistency",
+              "what": "Finderのコネクタだけ色付きアイコン+独立カードという別スタイルで、上のリスト項目と統一されていない",
+              "where": "画面下部のFinderカード"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "main.home-work-context",
+      "blind_id": "52D3",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": false,
+          "why": "照合 7/14（画面に無い文字）",
+          "confidence": "high",
+          "concerns": [
+            {
+              "axis": "consistency",
+              "what": "同じ「今やること」なのに、上3件は枠付きカード、下2セクションは枠なしの一行リストで、粒度の違いなのか重要度の違いなのかが絵から判別できない",
+              "where": "「今日、気にした方がいいこと」カード群 と 「待っていること」「返すもの」のリスト"
+            },
+            {
+              "axis": "state-legibility",
+              "what": "期限表示の書式が行ごとに違う（赤の「明日 15:00」／黒の「9/9」／無し）。3件目は期限があるのか無いのか読めない",
+              "where": "各カード上部のメタ行（MOPITA 高／極洋 高 9/9／採用 中）"
+            },
+            {
+              "axis": "primary-action-clarity",
+              "what": "破棄系（外す）と完了系（済んだ）と参照系（出所を見る）が同じ文字リンクの見た目で並び、取り返しのつく操作とそうでない操作の区別が付かない",
+              "where": "「待っていること」「返すもの」各行の右端"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        }
+      ]
+    },
+    {
+      "id": "main.home-work-why",
+      "blind_id": "56A1",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": [
+            {
+              "axis": "trust-provenance",
+              "what": "同一カード内で未返信期間が「（3 日）」と「48 時間未返信」の二つ示され、根拠の数字が食い違って見える。出所提示が売りの画面でこれは信頼を損なう",
+              "where": "先頭カードのサマリ行 と 展開部「なぜ重要？」内の 2 行目"
+            },
+            {
+              "axis": "state-legibility",
+              "what": "展開状態を示す表示が無い。右上の「なぜ重要？」は閉じているときと同じ文字のままで、どこを押せば畳めるのか絵から分からない",
+              "where": "先頭カード右上の「なぜ重要？」と展開ブロックの見出し"
+            },
+            {
+              "axis": "hierarchy",
+              "what": "「なぜ重要？」の本文（明日が期限／48 時間未返信）が、カードのタイトルと同じくらい濃い黒の通常テキストで、見出し「なぜ重要？」「出所」だけが薄く小さいため、ブロックの入れ子関係が読み取りにくい",
+              "where": "先頭カードの展開ブロック全体"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "state legibility",
+              "what": "「なぜ重要？」を展開した後もリンクのラベルが変わらず、現在展開中であることや閉じる方法が示されていない",
+              "where": "1件目タスクカード右上のリンクおよび展開パネル内の見出し"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "keep": 3,
+    "fix_candidate": 0,
+    "not_enough_evidence": 0,
+    "models": [
+      "haiku",
+      "opus",
+      "sonnet"
+    ]
+  },
+  "gate": "PASS"
+}

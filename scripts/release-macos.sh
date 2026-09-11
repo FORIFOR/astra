@@ -24,9 +24,14 @@
 # 「配布できる」と言わない（他人の Mac では開けないので）。
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-OUT="$ROOT/dist"
+# A candidate can be built without replacing the app the user is running.
+OUT="${ASTRA_RELEASE_OUTPUT_DIR:-$ROOT/dist}"
 APP="$OUT/Astra.app"
 NOTARY_PROFILE="${ASTRA_NOTARY_PROFILE:-astra-notary}"
+NOTARY_BACKEND="${ASTRA_NOTARIZATION_BACKEND:-notarytool}"
+[[ "$NOTARY_BACKEND" == notarytool || "$NOTARY_BACKEND" == xcode ]] || {
+  echo "FAIL: unknown ASTRA_NOTARIZATION_BACKEND: $NOTARY_BACKEND" >&2; exit 1; }
+SOURCE_SNAPSHOT="$(python3 "$ROOT/scripts/release-provenance.py" snapshot "$ROOT")"
 
 VERSION="$(node -p "require('$ROOT/package.json').version")"
 [[ -n "$VERSION" ]] || { echo "FAIL: package.json から版番号を取れない" >&2; exit 1; }
@@ -35,7 +40,7 @@ VERSION="$(node -p "require('$ROOT/package.json').version")"
 IDENTITY="${ASTRA_SIGN_IDENTITY:-}"
 if [[ -z "$IDENTITY" ]]; then
   IDENTITY="$(security find-identity -v -p codesigning 2>/dev/null \
-    | grep "Developer ID Application" | head -1 | sed 's/.*"\(.*\)"/\1/')"
+    | awk -F'"' '/"Developer ID Application/ { if (!seen++) print $2 }')"
 fi
 if [[ -z "$IDENTITY" ]]; then
   echo "FAIL: Developer ID Application の証明書が無い。開発署名では配布できない。" >&2
@@ -49,18 +54,28 @@ echo "== build (release) =="
 # panic の位置文字列にはビルドした人の絶対パスがそのまま入る（実測 175 箇所）。
 # 不特定多数へ配るものに開発者のユーザー名を載せない。開発ビルドはそのままにして、
 # 配布ビルドだけ畳む。
-( cd "$ROOT/core/astra-core" \
-  && RUSTFLAGS="--remap-path-prefix=$HOME/.cargo=/cargo --remap-path-prefix=$ROOT=/astra ${RUSTFLAGS:-}" \
-     cargo build --release --quiet )
-export ASTRA_CORE_LIB_DIR="$ROOT/core/astra-core/target/release"
+for target in aarch64-apple-darwin x86_64-apple-darwin; do
+  ( cd "$ROOT/core/astra-core" \
+    && MACOSX_DEPLOYMENT_TARGET=14.0 \
+       RUSTFLAGS="--remap-path-prefix=$HOME/.cargo=/cargo --remap-path-prefix=$ROOT=/astra ${RUSTFLAGS:-}" \
+       cargo build --release --quiet --target "$target" )
+done
+export ASTRA_CORE_LIB_DIR="$ROOT/core/astra-core/target/universal-release"
+mkdir -p "$ASTRA_CORE_LIB_DIR"
+lipo -create \
+  "$ROOT/core/astra-core/target/aarch64-apple-darwin/release/libastra_core.a" \
+  "$ROOT/core/astra-core/target/x86_64-apple-darwin/release/libastra_core.a" \
+  -output "$ASTRA_CORE_LIB_DIR/libastra_core.a"
 [[ -f "$ASTRA_CORE_LIB_DIR/libastra_core.a" ]] || {
   echo "FAIL: release の libastra_core.a が無い" >&2; exit 1; }
 bash "$ROOT/scripts/fetch-sparkle.sh"
-( cd "$ROOT/apps/astra-macos" && swift build -c release )
+( cd "$ROOT/apps/astra-macos" && swift build -c release --arch arm64 --arch x86_64 )
 
 # 実行時に外の dylib を掴んでいないこと。掴んでいたら、その絶対パスが無い
 # 他人の Mac では起動しない（一度そうなっていた）。
-BIN="$ROOT/apps/astra-macos/.build/apple/Products/Release/AstraMac"
+BIN_DIR="$(cd "$ROOT/apps/astra-macos" && swift build -c release --arch arm64 --arch x86_64 --show-bin-path)"
+BIN="$BIN_DIR/AstraMac"
+[[ -x "$BIN" ]] || { echo "FAIL: 今回のuniversal実行体が無い: $BIN" >&2; exit 1; }
 if otool -L "$BIN" | grep -q "astra_core.*dylib"; then
   echo "FAIL: astra_core を dylib で掴んでいる（静的リンクになっていない）" >&2
   otool -L "$BIN" | grep astra_core >&2
@@ -68,7 +83,7 @@ if otool -L "$BIN" | grep -q "astra_core.*dylib"; then
 fi
 
 echo "== bundle =="
-rm -rf "$APP"; mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
+rm -rf "$APP"; mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources/ja.lproj"
 cp "$BIN" "$APP/Contents/MacOS/AstraMac"
 
 # 両アーキ入っているか。片方だけだと、その CPU の人は起動できない。
@@ -121,6 +136,10 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>CFBundleShortVersionString</key><string>${VERSION}</string>
   <key>CFBundleVersion</key><string>${VERSION}</string>
   <key>LSMinimumSystemVersion</key><string>14.0</string>
+  <!-- 画面は日本語。Sparkle は**アプリの**言語に合わせて自分の窓を出すので、
+       ja.lproj を持たないと更新の窓だけ英語になった（Atlas system.update-available）。 -->
+  <key>CFBundleDevelopmentRegion</key><string>ja</string>
+  <key>CFBundleLocalizations</key><array><string>ja</string></array>
   <key>NSHighResolutionCapable</key><true/>
   <key>CFBundleIconFile</key><string>AppIcon</string>
   <!-- Dock アイコンは出さない（常駐の Task Dock が入口）。 -->
@@ -128,13 +147,13 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>LSApplicationCategoryType</key><string>public.app-category.productivity</string>
   <key>NSHumanReadableCopyright</key><string>© 2026 Shuhei Horio</string>
   <key>NSCalendarsFullAccessUsageDescription</key><string>会議の予定を文脈として読むために、カレンダーを使います。読み取りは手元で行い、外部には送りません。</string>
-  <key>NSMicrophoneUsageDescription</key><string>会議を録音し、手元で文字にするためにマイクを使います。音声は端末から出しません。</string>
-  <key>NSSpeechRecognitionUsageDescription</key><string>会議の音声を手元で文字起こしするために使います。音は端末から出しません。</string>
+  <key>NSMicrophoneUsageDescription</key><string>会議を録音し、文字起こしするためにマイクを使います。クラウド文字起こしを許可した場合は、録音音声をGoogleへ送信します。</string>
+  <key>NSSpeechRecognitionUsageDescription</key><string>会議の音声を文字起こしします。設定で許可した場合は高精度化のためGoogle STTへ送信します。</string>
   <key>NSAppleEventsUsageDescription</key><string>前面アプリの文脈（開いている書類名など）を読むために使います。</string>
   <key>NSCameraUsageDescription</key><string>使いません。</string>
   <key>NSCalendarsUsageDescription</key><string>会議の予定を文脈として読むために、カレンダーを使います。</string>
   <!-- 自動更新（Sparkle）。**どちらも空のままでは更新を確かめない。**
-       配布先が決まったら appcast の URL を、`generate_keys` を回したら
+       配布先が決まったら appcast の URL を、generate_keys を回したら
        その公開鍵をここへ入れる。片方だけ入れても SoftwareUpdate は起動しない。 -->
   <key>SUFeedURL</key><string>${ASTRA_UPDATE_FEED:-}</string>
   <key>SUPublicEDKey</key><string>${ASTRA_UPDATE_PUBKEY:-b61dWnFNEdpzAWG/V5SMb4bZGrqgzJwMDAcuw/564cs=}</string>
@@ -143,6 +162,9 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>SUAutomaticallyUpdate</key><false/>
 </dict></plist>
 PLIST
+# ja.lproj に実体を置く（中身の無い lproj は localization として数えられない）。Sparkle は
+# メインバンドルの言語に合わせて自分の窓を出す。
+printf 'CFBundleName = "Astra";\n' > "$APP/Contents/Resources/ja.lproj/InfoPlist.strings"
 
 # hardened runtime で要る権利だけ。付けすぎると審査で不利になるうえ、
 # 「何ができるアプリか」の説明にもならない。
@@ -168,6 +190,20 @@ if [[ -n "$SPARKLE_FW" ]]; then
   echo "sparkle: 同梱した"
 else
   echo "FAIL: Sparkle.framework が見つからない（scripts/fetch-sparkle.sh を先に）" >&2; exit 1
+fi
+
+if [[ "$NOTARY_BACKEND" == xcode ]]; then
+  # Xcode uses its signed-in Apple account; no app-specific password is copied.
+  TEAM="$(printf '%s' "$IDENTITY" | sed -n 's/.*(\([A-Z0-9]*\))$/\1/p')"
+  [[ -n "$TEAM" ]] || { echo "FAIL: Xcode backend requires a named Developer ID identity" >&2; exit 1; }
+  python3 "$ROOT/scripts/release-xcode-notarize.py" "$APP" "$OUT/astra.entitlements" "$TEAM"
+  ZIP="$OUT/Astra-${VERSION}.zip"
+  rm -f "$ZIP"
+  /usr/bin/ditto -c -k --keepParent "$APP" "$ZIP"
+  python3 "$ROOT/scripts/release-provenance.py" create "$ROOT" "$ZIP" "$SOURCE_SNAPSHOT"
+  echo "RELEASE_READINESS=NOTARIZED"
+  echo "artifact: $ZIP"
+  exit 0
 fi
 
 echo "== sign (Developer ID + hardened runtime) =="
@@ -217,5 +253,6 @@ spctl --assess --type execute --verbose=4 "$APP"
 
 rm -f "$ZIP"
 /usr/bin/ditto -c -k --keepParent "$APP" "$ZIP"
+python3 "$ROOT/scripts/release-provenance.py" create "$ROOT" "$ZIP" "$SOURCE_SNAPSHOT"
 echo "RELEASE_READINESS=NOTARIZED"
 echo "artifact: $ZIP"

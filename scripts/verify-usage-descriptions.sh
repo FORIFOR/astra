@@ -12,11 +12,12 @@ declare -a NEEDED=(
   "NSMicrophoneUsageDescription"        # PermissionCenter .voice / .meeting
   "NSSpeechRecognitionUsageDescription" # SpeechTranscriber（手元 STT）
   "NSCalendarsUsageDescription"         # CalendarAccess
+  "NSCalendarsFullAccessUsageDescription" # macOS 14+ CalendarAccess
   "NSAppleEventsUsageDescription"       # AccessibilityContext / Dictation
 )
 
 fail=0
-for script in scripts/package-macos-app.sh scripts/build-macos-app.sh; do
+for script in scripts/package-macos-app.sh scripts/build-macos-app.sh scripts/release-macos.sh; do
   plist_block="$(awk '/Info.plist/,/^PLIST$/' "$ROOT/$script")"
   for key in "${NEEDED[@]}"; do
     if ! grep -q "$key" <<<"$plist_block"; then
@@ -24,6 +25,16 @@ for script in scripts/package-macos-app.sh scripts/build-macos-app.sh; do
       fail=1
     fi
   done
+done
+
+# .appを経由しないdebug selftestにも同じ用途説明が必要。
+DEBUG_PLIST="$ROOT/apps/astra-macos/Support/SelfTest-Info.plist"
+for key in "${NEEDED[@]}"; do
+  value="$(/usr/libexec/PlistBuddy -c "Print :$key" "$DEBUG_PLIST" 2>/dev/null || true)"
+  if [[ -z "$value" ]]; then
+    echo "FAIL: debug selftest の用途説明 $key が無い/空" >&2
+    fail=1
+  fi
 done
 
 # 実際にビルド済みの .app があれば、そちらも見る（配布物が正）。

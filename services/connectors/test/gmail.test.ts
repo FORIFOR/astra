@@ -45,6 +45,38 @@ function fakeFetch(routes: (url: string) => { status?: number; body: unknown }):
 const encode = (s: string): string => toBase64Url(new TextEncoder().encode(s));
 
 describe('GmailConnector', () => {
+  it('resolves Gmail IDs to RFC reply headers and sends the original thread ID', async () => {
+    const { fetch, calls } = fakeFetch((url) => ({
+      body: url.endsWith('/send')
+        ? { id: 'sent', threadId: 'thread-1' }
+        : {
+            id: 'original',
+            threadId: 'thread-1',
+            payload: { headers: [{ name: 'Message-ID', value: '<original@example.invalid>' }] },
+          },
+    }));
+    const gmail = new GmailConnector({
+      token: async () => 'test',
+      fetch,
+      grantedScopes: ALL,
+      now: NOW,
+    });
+    const message = { to: ['me@example.invalid'], subject: 'Re: 日本語', body: '返信' };
+    await expect(gmail.reply('original', message, undefined, 'thread-1')).rejects.toBeInstanceOf(
+      ApprovalRequired,
+    );
+    expect(calls).toHaveLength(0);
+    await gmail.reply('original', message, proof('gmail.send'), 'thread-1');
+    const body = calls[1]!.body as { raw: string; threadId: string };
+    const raw = new TextDecoder().decode(fromBase64Url(body.raw));
+    expect(body.threadId).toBe('thread-1');
+    expect(raw).toContain('In-Reply-To: <original@example.invalid>');
+    expect(raw).toContain('References: <original@example.invalid>');
+    await expect(
+      gmail.reply('original', message, proof('gmail.send'), 'another-thread'),
+    ).rejects.toBeInstanceOf(ConnectorError);
+    expect(calls.filter((c) => c.url.endsWith('/send'))).toHaveLength(1);
+  });
   it('asks for the token at call time and never stores it', async () => {
     const token = vi.fn().mockResolvedValue('tok-1');
     const { fetch, calls } = fakeFetch(() => ({ body: { messages: [] } }));

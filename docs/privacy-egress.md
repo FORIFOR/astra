@@ -1,6 +1,6 @@
 # 何が Mac の外へ出るか（実装から読んだ一覧、2026-09-04）
 
-> **2026-09-04 に閉じた。**下の一覧は見つけた時点の姿。決定と、その後の姿は末尾「決めたこと」。
+> **2026-09-10 更新。**下の一覧は見つけた時点の姿。現在は、利用者が設定で明示的に許可した場合に限り、録音全体をGoogle STTへ送り高精度な確定版を作る。
 > 守るのは `scripts/verify-privacy-egress.sh`（PRIVACY_EGRESS_GATE、verify-all に入っている）と
 > `--selftest egress`（実行体で、既定 OFF と「資産の無いロケールで throw」を確かめる）。
 
@@ -9,13 +9,13 @@
 （呼び手と条件）で一覧にする。spec §22 の label（local-only / cloud-used / external-send）で分類する。
 表示の文言はまだ変えていない（この一覧が正本になってから）。
 
-| 経路                                                         | 出るもの                                                                                                                                                                                                         | 出る条件                                                                                                                                                                                                  | 分類                                                                  | 根拠                                                                                                                                       |
-| ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| Apple の音声認識サーバ                                       | **会議の音声**                                                                                                                                                                                                   | `SFSpeechRecognizer(ja-JP).supportsOnDeviceRecognition == false` のとき。コードが `requiresOnDeviceRecognition` をその値にしているので、日本語のオンデバイス資産が無い Mac では**黙って**サーバ認識になる | cloud-used（利用者に見えない）                                        | `Audio/SpeechTranscriber.swift:53,93`、呼び手 `RecordingWorkspace/RecordingRuntime.swift:82`                                               |
-| gateway（`ASTRA_GATEWAY_URL`、既定 `http://127.0.0.1:3000`） | 開発サインイン（`main-<pid>@astra.local`）、`/v1/me`、会議の作成・終了、**録音した音声の全断片**（WS `/v1/meetings/:id/audio`）、落ちた録音の回復送信、声で頼んだ文（`/v1/conversations/:id/turns`）、タスク作成 | gateway に到達できるとき。Main window を開くと**自動で**サインインし、録音側にも渡す。配布版は既定が 127.0.0.1 なので、利用者が何か立てていない限り到達しない                                             | cloud-used / external-send（gateway の先で何をするかは gateway 次第） | `Main/MainWindowView.swift:35-49`、`RecordingRuntime.swift:70-76,171-175,225-232`、`core/astra-core/src/api.rs:63,111,135,248,297,322,383` |
-| connector の OAuth                                           | 認可コード往復（本文は出ない）                                                                                                                                                                                   | 利用者が接続操作をしたとき                                                                                                                                                                                | external-send（本人操作）                                             | `Context/ConnectorFlow.swift:9-14`                                                                                                         |
-| Sparkle appcast（GitHub Releases）                           | 版・OS の情報                                                                                                                                                                                                    | 起動時 1 回、「更新を確認…」                                                                                                                                                                              | cloud-used                                                            | `App/SoftwareUpdate.swift`                                                                                                                 |
-| 配布ページ / ガイドの URL                                    | なし（ブラウザを開くだけ）                                                                                                                                                                                       | 本人操作                                                                                                                                                                                                  | —                                                                     | `App/StatusBarController.swift`                                                                                                            |
+| 経路                                                         | 出るもの                                                                                                                                                                                                         | 出る条件                                                                                                                                                                                                                     | 分類                                                            | 根拠                                                                                                                                         |
+| ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Apple の音声認識サーバ                                       | **会議の音声**                                                                                                                                                                                                   | `SFSpeechRecognizer(ja-JP).supportsOnDeviceRecognition == false` のとき。コードが `requiresOnDeviceRecognition` をその値にしているので、日本語のオンデバイス資産が無い Mac では**黙って**サーバ認識になる                    | cloud-used（利用者に見えない）                                  | `Audio/SpeechTranscriber.swift:53,93`、呼び手 `RecordingWorkspace/RecordingRuntime.swift:82`                                                 |
+| gateway（`ASTRA_GATEWAY_URL`、既定 `http://127.0.0.1:3000`） | 開発サインイン（`main-<pid>@astra.local`）、`/v1/me`、会議の作成・終了、**録音した音声の全断片**（WS `/v1/meetings/:id/audio`）、落ちた録音の回復送信、声で頼んだ文（`/v1/conversations/:id/turns`）、タスク作成 | gateway に到達できるとき。音声の会議作成・送信・回復は設定の `astra.transcription.cloudGoogleSTT=true`（「高精度クラウド文字起こし」）のときだけ。Main window は接続情報を渡すが、音声送信の判断は `RecordingRuntime` が行う | cloud-used / external-send（Google STT は設定がオンのときだけ） | `Main/MainWindowView.swift:35-49`、`RecordingRuntime.swift:150-185,406-410,475-482`、`core/astra-core/src/api.rs:63,111,135,248,297,322,383` |
+| connector の OAuth                                           | 認可コード往復（本文は出ない）                                                                                                                                                                                   | 利用者が接続操作をしたとき                                                                                                                                                                                                   | external-send（本人操作）                                       | `Context/ConnectorFlow.swift:9-14`                                                                                                           |
+| Sparkle appcast（GitHub Releases）                           | 版・OS の情報                                                                                                                                                                                                    | 起動時 1 回、「更新を確認…」                                                                                                                                                                                                 | cloud-used                                                      | `App/SoftwareUpdate.swift`                                                                                                                   |
+| 配布ページ / ガイドの URL                                    | なし（ブラウザを開くだけ）                                                                                                                                                                                       | 本人操作                                                                                                                                                                                                                     | —                                                               | `App/StatusBarController.swift`                                                                                                              |
 
 ## Apple 音声認識の実測（この Mac、macOS 26.6.2、2026-09-04）
 
@@ -61,13 +61,13 @@ Info.plist の `NSSpeechRecognitionUsageDescription` は「音は端末から出
    （`RecordingWorkspaceView.swift:494`、`Facts.transcriptionOnDeviceUnavailable`、ガイド §7 に行を足した）。
    クラウド文字起こしを足すなら「音声が外部サービスへ送信されます」と言う別の opt-in 機能として作る。
    実測: ar-SA（資産無し）で `start=code3 file=nil`（`--selftest egress`）。
-2. **録音の自動 upload は既定 OFF、dev 専用。** `MainData.load()` は録音側（`RecordingRuntime`）に
-   gateway を渡さない。渡すのは `RecordingRuntime.devAutoUploadEnabled`（`#if DEBUG` かつ
-   `ASTRA_DEV_AUTO_UPLOAD=1`）のときだけ（`Main/MainWindowView.swift:51`）。release ビルドには道が無い。
-   会議の作成・停止時の音声送信・落ちた録音の自動回収は、その旗の中でしか起きない。
-   selftest（e2e001 / recovery / fulllifecycle …）は `configureBackend` を自分で呼ぶので影響しない。
+2. **録音のGoogle STT送信は既定 OFF、明示同意で ON。** `MainData.load()` は接続情報を録音側へ渡すが、
+   録音開始時とフレーム送信時の両方で同意を確認する。「ライブ文字起こし（Google STT）」をONにすると
+   マイクとシステム音声を別々の認識ストリームへ送り、途中経過と確定発話を録音中に表示・ローカル保存する。
+   Gatewayの `/v1/transcription/live` は認証必須で、音声をディスク保存せずGoogleへ逐次転送する。
+   通常の録音停止ではBatchRecognizeも録音全体の再送も実行しない。過去録音の自動送信も行わない。
    AI 操作・翻訳・声で頼む（文字を gateway へ送る）は人が押してから動くので残す。
-3. **`.meeting` はマイクだけ求める**（`Settings/PermissionCenter.swift`）。system audio は本番経路で
+3. **`.meeting` はマイクと音声認識（Apple Speech、手元で完結し端末から出ない）だけ求める**（`Settings/PermissionCenter.swift`）。system audio は本番経路で
    取り込んでいないので、画面収録を求める理由が無かった。本当に繋いだ日に「相手の声も記録する」の
    入口で JIT で求める（Permission B は別途作らない）。ガイドの「（相手の声のために）画面収録」は消した。
 
@@ -77,7 +77,7 @@ Info.plist の `NSSpeechRecognitionUsageDescription` は「音は端末から出
 
 ## 残す実機確認（Privacy とは別の gate: Meeting Capture Reality）
 
-`.meeting` をマイクだけにしたので、Privacy は PASS でも**会議の録れ方**は別に確かめる（本人の指示、2026-09-04）。
+`.meeting` をマイクと音声認識だけにしたので、Privacy は PASS でも**会議の録れ方**は別に確かめる（本人の指示、2026-09-04。音声認識は 2026-09-06 に追加: 求めずにいたので初回は文字起こしが動かなかった）。
 実際の Meet / Zoom で、スピーカー再生の状態で 1 度録って次を見る:
 
 ```
@@ -125,3 +125,51 @@ CALENDAR_PURPOSE_FIRST
 この Mac は許可済みなので、未確認・拒否は `Permissions.simulatedCalendar`（`simulatedMicrophone` と同じ型）で作る。
 **実 TCC ダイアログが出て、許可直後に予定が並ぶ**ところは署名 .app + 未確認の端末でしか確かめられない
 （`--selftest calendarlive` と同じ制約、NOT_MEASURED）。
+
+## スクリーンショット（SCREENSHOT_EGRESS_TRUTH、2026-09-07）
+
+「⌘⇧4 → 『これ何？』」で画像がどこまで行くか。**「画像は端末から出ない」とは言わない。**
+守るのは `--selftest screenshotegress`（SCREENSHOT_EGRESS_TRUTH）、`core/astra-core` の
+`turn_body_carries_ids_and_labels_but_never_pixels`、gateway の `conversations-screenshot.integration.test.ts`
+（`data` 等を持つ添付は 400）、実経路は `scripts/reality/run-screenshot-e2e.sh`。
+
+| 段階                           | 出るもの                                                       | 行き先                                        | 分類          | 根拠                                                                                             |
+| ------------------------------ | -------------------------------------------------------------- | --------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------ |
+| 撮っただけ                     | **なし**（受け渡し場所にも写さない）                           | —                                             | local-only    | `Context/ScreenshotContext.swift` `attachCount==0`、gate capture_only_egress=0                   |
+| 参照表現で尋ねた               | 添付の **id / kind / label** の 3 文字列（画素 0）             | gateway `/v1/conversations/:id/turns`         | cloud-used    | `core/astra-core/src/api.rs` `turn_body`、contracts `TurnAttachment.strict()`                    |
+| 同上（端末内）                 | `<id>.png` の写しを `~/Library/Caches/Astra/VisualContext/` へ | 端末の worker（`workers/agent-host`）が Read  | local-only    | `visual-context.ts` 正規パス検査、TTL 30 分 / 20 件 / 200MB                                      |
+| worker が cloud のモデルで見る | **その画像だけ**（Claude Code CLI が Read した画素）           | 利用者自身の Claude（Claude Code のログイン） | external-send | `llm-steps.ts` `toolsFor` は画像が在るときだけ `Read`。UI の開示は `Facts.screenshotEgressCloud` |
+| worker が端末内モデルで見る    | なし                                                           | —                                             | local-only    | `VisualEgressPolicy.localVision`（端末内で画像を見るモデルはまだ無い）                           |
+
+UI の開示（chip の help）: 「質問したときだけ、その画像を Claude へ送ります」。既定の方針は cloud で、
+端末内モデルが繋がるまで「出ません」は出ない（`VisualEgressPolicy.current`）。
+
+## 2026-09-09: 画面の音を本番録音に接続
+
+上記の未接続という記述は 2026-09-04 時点の記録。現在は「画面の音」の保存値を
+録音開始時に読み、オンの場合だけ `.meetingAudio` の画面収録権限を JIT で要求する。
+マイクだけの `.meeting` は引き続きマイクと音声認識だけを要求する。
+ScreenCaptureKit の音をマイクと同じ 16 kHz の時間軸に混ぜて保存し、文字起こしは
+音源ごとにオンデバイス認識へ渡す。Apple サーバへのフォールバックは追加していない。
+画面音の取り込みが始められない場合は、マイク録音を継続して設定への導線を表示する。
+
+公開 YouTube 会話の実測で remote_audio、非ゼロの音量、相手の文字起こし保存を確認。
+これは会議アプリの自動検出や Google/Microsoft コネクタ認証の検証とは別。
+証跡は `dist/release-validation/system-audio-fix/video-run2/astra/result.json`。
+最終配布物での再検証が終わるまで release=go にはしない。
+
+開始直後の停止では、古い録音の ScreenCaptureKit 起動をキャンセルする。
+音声コールバックとその解除は同じキューに直列化し、マイクの変換器も tap ごとの所有にした。
+終了済み録音が後から音を取り込むことを防ぐ。開始・停止の受け入れ検証19項目は
+修正後に10回連続で合格（`dist/release-validation/system-audio-fix/lifecycle-stress`）。
+
+一時停止ではオンデバイス認識要求も終了し、再開時に新しく開始する。音声だけが
+戻って文字起こしが戻らなかった実測を受けて修正。`video-run6` で再開後の保存2行、
+停止中の音声0フレーム・確定行増加0を確認した。動画途中の広告音声も含むため、
+会議内容の抽出精度の判定には使用しない。
+
+### 2026-09-09 録音停止と音源分離の追検証
+
+録音停止時は取り込みを直ちに停止し、認識器の終端処理を非同期で待ってから文字起こしとノートを保存する。確定中に次の録音を要求した場合は保存完了後に開始する。録音IDはUUIDを使い、同秒内の再録音で上書きしない。受け入れ20項目と停止表示51ms（基準150ms）を確認。
+
+ローカル合成の日本語4発言をafplayで再生し、実CoreAudio→ScreenCaptureKit→オンデバイスSTT→Library保存を通した。分離音源の結果は文字一致度0.78（基準0.55）、決定2/2・作業1/1、停止中の音声フレーム0、再開後2行、保存4行。英語固有名詞は誤認識あり。force検出・相手側1チャンネルのため、会議の自動検出と人物別話者分離は検証対象外。先行した不合格実行では動画音声の混入が疑われ、独立した合格実行と区別して保存した。証拠はdist/release-validation/system-audio-fixture/isolated/。

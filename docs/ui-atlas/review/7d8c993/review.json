@@ -1,0 +1,3292 @@
+{
+  "rc": "7d8c993",
+  "pages": [
+    {
+      "id": "meeting.captions",
+      "blind_id": "0073",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "consistency",
+              "what": "「字幕」というラベルが上段のタブ群と下段のセグメント両方にあり、同じ語が別の階層で別物を指している。利用者はどちらを押せば字幕が出るのか判別できない。",
+              "where": "上部バー中央の「字幕」タブと、その直下の「文字起こし / 翻訳 / 字幕」セグメント"
+            },
+            {
+              "axis": "state legibility",
+              "what": "録音経過が 00:02 と表示されているのに 4 件の発言が既に蓄積されており、タイマーが何を数えているのか信用できない。発言側に時刻表示もないため突き合わせもできない。",
+              "where": "左上の「00:02」と本文の発言リスト"
+            },
+            {
+              "axis": "screen occupation",
+              "what": "パネル下部の広い帯が空のまま終わっており、読み込み中なのか、これで全部なのかが示されていない。",
+              "where": "「誰が対応しますか？」より下からパネル下端まで"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "consistency",
+              "what": "同一ラベル「字幕」がトップのトグルボタンとパネル内タブの両方に使われ、指す対象が違う",
+              "where": "画面右上のボタンと、パネル内の3タブのうち右端のタブ"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "system.interrupted",
+      "blind_id": "04DA",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "state legibility",
+              "what": "会議の所要時間がどちらも「0 分」と出ているのに、内容（要約・5 人・やること 3）は充実しており、表示が壊れているのか本当に 0 分なのか判別できない。",
+              "where": "「最近の会議」の 2 カード右上「今日 · 0 分」"
+            },
+            {
+              "axis": "error-recovery clarity",
+              "what": "「落ちた会議」は問題を知らせているが、復旧の行動（再開・復元・破棄）がその場に無く、赤い説明文だけで次に何をすべきか読み取れない。操作は右下の「…」に隠れている。",
+              "where": "「最近の会議」1 件目のカード"
+            },
+            {
+              "axis": "alignment",
+              "what": "予定カードの操作ボタンは右中央にあるのに、落ちた会議のメニューだけ右下にあり、カード列を縦に目で追ったときにアクション位置が揃わない。",
+              "where": "予定カード右の「録音」ボタン列と、落ちた会議カード右下の「…」"
+            },
+            {
+              "axis": "hierarchy",
+              "what": "挨拶と時刻情報の整合が取れていない（「こんばんは」と午前の予定が同居）ため、「これからの予定」が本当にこれからなのか信用しにくい。",
+              "where": "見出し「こんばんは」と「これからの予定」の 2 カード"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "error-recovery clarity",
+              "what": "「落ちた会議」が何を意味し何が原因で、次に何をすべきかがカード上のテキストだけでは分からない",
+              "where": "最近の会議リストの1件目のカード"
+            },
+            {
+              "axis": "trust-provenance",
+              "what": "経過時間が両方のカードで「0分」と表示されており、実際の時間情報が欠落しているように見える",
+              "where": "最近の会議リストの右上の時刻表示"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "recording.transcript",
+      "blind_id": "0743",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "state legibility",
+              "what": "録音経過時間より後の時刻の発言が表示されており、タイムラインの信頼性が崩れている。どちらの時計が正しいのか利用者には判断できない。",
+              "where": "上部フローティングバーの「04:21」と、右パネル最終行「05:37 伊藤」"
+            },
+            {
+              "axis": "trust-provenance",
+              "what": "文字起こしに決定内容が既に現れているのに、左の「決まったこと」「やること」は待機文のままで、抽出が動いているのか止まっているのか区別できない。",
+              "where": "左パネル「決まったことを待っています...」「やることを待っています...」"
+            },
+            {
+              "axis": "screen occupation",
+              "what": "左右パネルとも下半分が空白のまま、内容が伸びる予定なのか完了なのかの手掛かりがない。画面の広さに対して実際の情報量が薄い。",
+              "where": "左パネル「やること」以下と右パネル「05:37」以下"
+            },
+            {
+              "axis": "consistency",
+              "what": "一部の発言行の先頭にだけ小さなドットが付くが凡例がなく、状態（確定・未確定など）を示すのか読み取れない。",
+              "where": "右パネル 04:18 / 05:09 / 05:37 の行頭"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": [
+            {
+              "axis": "state legibility",
+              "what": "経過時間表示(04:21)より後の05:37時点の発言が文字起こしに存在し、時間表示と内容が矛盾している",
+              "where": "上部オーバーレイの経過時間と右側文字起こしパネル最下部の行"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "components.pressed",
+      "blind_id": "090E",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "state legibility",
+              "what": "セグメント切替の 3 項目すべてが囲み枠を持つため、どれが現在の表示なのかが一目で決まらない。塗りと枠の 2 つの強調が競合している。",
+              "where": "右パネル上部「文字起こし / 翻訳 / 字幕」"
+            },
+            {
+              "axis": "consistency",
+              "what": "同じ録音中画面（0743・0AC0）に存在する「マイク と 画面の音 を聞いています」の状態行がこの画面には無く、何を聞いているかの手掛かりが画面によって消える。",
+              "where": "左パネル見出し「会議」の直下"
+            },
+            {
+              "axis": "hierarchy",
+              "what": "下部中央の「AI が見ている資料 3 件」だけが淡い塗りで浮き上がり、画面の主目的（録音と文字起こし）より目立つ。周辺に同じ強さの要素がなく、なぜここだけ強調されるのか絵から説明がつかない。",
+              "where": "画面下端中央"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        }
+      ]
+    },
+    {
+      "id": "recording.meeting-canvas",
+      "blind_id": "0AC0",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "trust-provenance",
+              "what": "抽出項目の時刻が右の文字起こしのどの行とも対応しておらず、「出所 ›」を押す前に根拠を目で確かめられない。抽出が本当にこの会議の発言から来ているのか画面上で裏取りできない。",
+              "where": "左パネル各項目の時刻（04:22 / 04:48 / 05:01 / 04:14）と右パネルの 03:53〜04:18"
+            },
+            {
+              "axis": "state legibility",
+              "what": "録音経過 04:21 より未来の時刻の項目が確定済みとして並んでおり、時間軸が破綻している。",
+              "where": "上部「04:21」と左パネル「04:48」「05:01」"
+            },
+            {
+              "axis": "density",
+              "what": "同じ話者名が項目本文と直下の補助行で重複表示され、1 項目 2 行分の情報が繰り返しで埋まっている。4 件並ぶと重複が積み上がる。",
+              "where": "左パネル各項目の 1 行目と 2 行目"
+            },
+            {
+              "axis": "screen occupation",
+              "what": "左パネルは下端まで詰まっているのに右パネルは 3 行で大半が空白。左右の情報量が釣り合わず、右の広い領域が遊んでいる。",
+              "where": "右の文字起こしパネル"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": [
+            {
+              "axis": "trust-provenance",
+              "what": "抽出された項目のタイムスタンプ(04:22/04:48/05:01)が、録音経過時間の表示(04:21)や右側文字起こしの最終行(04:18)より後になっている",
+              "where": "左パネルの「決まったこと」「やること」「質問」の各項目のタイムスタンプ"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "main.library-meetings",
+      "blind_id": "0D0E",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "error-recovery clarity",
+              "what": "空状態で次の行動を文章で説明しているだけで、その場から実行できる操作（録音開始ボタン）が無い。利用者は案内を読んだ後、自力で Home を探して移動する必要がある。",
+              "where": "中央の「Home の「録音を始める」か、予定の「録音」から始められます。」"
+            },
+            {
+              "axis": "screen occupation",
+              "what": "空状態のメッセージが上寄りに置かれ、その下からウィンドウ下端まで大きく無内容。広いウィンドウに対して中身が一点しかなく、画面が余っている。",
+              "where": "案内文より下の本文領域全体"
+            },
+            {
+              "axis": "consistency",
+              "what": "上部タブの「Meetings」と大見出しの「Meetings」が同じ語で重なり、階層が二重になっている。",
+              "where": "上部タブ列と、その下の大見出し"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        }
+      ]
+    },
+    {
+      "id": "system.confirm-cancel",
+      "blind_id": "1214",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": [
+            {
+              "axis": "primary-action clarity",
+              "what": "同じ「やめる」「捨てる」が左のキーヒントと右のボタンで二重に出ており、どれが実体のコントロールか判断できない",
+              "where": "ダイアログ最下段の左端と右側"
+            },
+            {
+              "axis": "state legibility",
+              "what": "「直す」の行き先が本文でも一切説明されておらず、破壊的操作の確認画面に意味不明の第三の選択肢が並んでいる",
+              "where": "下段中央、「やめる」と「捨てる」のあいだ"
+            },
+            {
+              "axis": "hierarchy",
+              "what": "「やめる」と「直す」に枠や背景が無く、押せるボタンなのかラベルなのかが見た目で区別できない",
+              "where": "下段のボタン列"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "primary-action-clarity",
+              "what": "二択の破棄確認のはずが、ショートカット表示と重複する形で「やめる」「直す」「捨てる」の3アクションが並び、どれが本来の対になる操作か分かりにくい",
+              "where": "ダイアログ下部のショートカットヒントとボタン行"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "main.home",
+      "blind_id": "12DB",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "screen occupation",
+              "what": "コンテンツが上部 4 割に固まり、残りの広い領域が空のまま。空状態であることは分かるが、この広さに対して置かれているものが少なすぎる",
+              "where": "「まだ何もありません」より下の本文領域全体"
+            },
+            {
+              "axis": "consistency",
+              "what": "同じ形のパネル切り替えアイコンが左上と右上にあり、右上だけ丸い背景が付いていて、同じ機能なのか別物なのか見た目で決まらない",
+              "where": "ウィンドウ左上のサイドバー端と右上隅"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "screen-occupation",
+              "what": "ウィンドウ下半分以上が完全な空白で、コンテンツが画面上部に偏って配置されている",
+              "where": "メインコンテンツエリア下部およびサイドバー下部"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "provenance.reopened",
+      "blind_id": "1335",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "consistency",
+              "what": "同じ出所参照 [1] だけが灰色の箱＋枠付き、[2][3] は枠なしの青文字。選択中を表しているのか種類が違うのかが絵から決められず、参照の読み方が不安定になる",
+              "where": "本文の「macOS を先に出すことに決めました。[1]」と「メモ」の [2] [3]"
+            },
+            {
+              "axis": "trust-provenance",
+              "what": "ヘッダーの「0 分」が、10:30〜10:55 の発言が並ぶ文字起こしと矛盾している。記録の長さという基本情報が信用できなくなる",
+              "where": "タイトル右の「今日 · 0 分 · 2 人」"
+            },
+            {
+              "axis": "alignment",
+              "what": "セクション見出し・本文・タブ・文字起こしの時刻の左端が揃わず、縦のラインが 3 本以上に割れている",
+              "where": "本文左端（決まったこと〜出所タブ〜10:30 の列）"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": [
+            {
+              "axis": "state-legibility",
+              "what": "会議時間が「0分」と表示されているが、実際のタイムラインは25分にわたる発言を含んでおり情報が矛盾している",
+              "where": "ヘッダー右側の「今日・0分・2人」"
+            },
+            {
+              "axis": "typography",
+              "what": "「次の周で追います」の「周」は「週」の誤字と見られる",
+              "where": "メモ2番目の項目およびタイムライン10:55の発言"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "session.recording",
+      "blind_id": "1635",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "state legibility",
+              "what": "録音中の Product Weekly と、下の「これからの予定」の Product Weekly が同じ名前で並び、後者に有効そうな「録音」ボタンが付いている。同じ会議が二重に録れる状態に見える",
+              "where": "上部の赤い録音カードと、その下「これからの予定」1 件目の右端ボタン"
+            },
+            {
+              "axis": "consistency",
+              "what": "「ライブメモを開く」（青）と「Ask Astra」（黒）が同じ行に枠なしで並び、操作要素としての見た目が揃っていない",
+              "where": "赤い録音カードの左下"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": [
+            {
+              "axis": "consistency",
+              "what": "録音中の会議が同時に「これからの予定」に未開始の予定として重複表示され、開始前後の状態が矛盾している",
+              "where": "上部の録音中バナーと直下の予定リスト1件目「Product Weekly 10:00 Google Meet」"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "main.home-upcoming",
+      "blind_id": "2276",
+      "verdict": "FIX_CANDIDATE",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": false,
+          "why": "照合 5/12（画面に無い文字）",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "trust-provenance",
+              "what": "「0 分」と表示された会議に、議論内容の要約と「やること 3・決まったこと 2」が付いている。長さの表示が中身と矛盾し、記録の信頼性が落ちる",
+              "where": "最近の会議カード右上の「今日 · 0 分」と、その下の要約行"
+            },
+            {
+              "axis": "state legibility",
+              "what": "「みんなに公開」（公開範囲）と「Product」（分類）が同じ青文字・同じ大きさで並び、性質の違うものが同じ見た目になっている",
+              "where": "最近の会議カード左下"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "consistency",
+              "what": "同一と思われる「Product Weekly」の予定が、未開始を示す「これからの予定」と完了済みを示す「最近の会議」の両方に矛盾して存在する",
+              "where": "「これからの予定」1件目と「最近の会議」1件目"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "system.speech-permission",
+      "blind_id": "2728",
+      "verdict": "FIX_CANDIDATE",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": [
+            {
+              "axis": "trust-provenance",
+              "what": "Visible Japanese grammar/spelling error in UI message",
+              "where": "Bottom section text: 'AIが整理している資料 — まだ準備ません'"
+            }
+          ]
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": [
+            {
+              "axis": "error-recovery clarity",
+              "what": "同じ許可エラーの文言が右上の警告帯と本文エリアに二重に出ており、しかも左本文は「聞いています...」のままで、いま文字起こしが動いているのか止まっているのかが読み取れない",
+              "where": "右上の警告帯、右パネル本文、左パネルの「聞いています...」"
+            },
+            {
+              "axis": "state legibility",
+              "what": "下部の「要約」「決まったこと」「やること」が薄く表示され使えないように見えるが、その理由（許可が無いから）が近くに書かれていない",
+              "where": "画面下部の入力欄右のボタン列"
+            },
+            {
+              "axis": "alignment",
+              "what": "警告文が 3 行に折り返される一方で「設定を開く」が縦中央にも上端にも揃わず、警告帯の中で行が噛み合っていない",
+              "where": "右上の警告帯"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": [
+            {
+              "axis": "error-recovery-clarity",
+              "what": "同じ権限エラーの文言が2箇所（上部バナーと文字起こしパネル本体）に重複表示され、画面を占有する割に解決手段は「設定を開く」1つだけ",
+              "where": "右パネル上部の警告バナーと直下の文字起こしエリア"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "voice.preparing",
+      "blind_id": "2767",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "NOT_ENOUGH_EVIDENCE",
+          "valid": false,
+          "why": "照合 1/3（画面に無い文字）",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "NOT_ENOUGH_EVIDENCE",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "alignment",
+              "what": "上段のステータステキストと下段の注記テキストの左端インデントが揃っていない",
+              "where": "バー上段と下段のテキスト開始位置"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dock.running",
+      "blind_id": "2DF1",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "state legibility",
+              "what": "経過時間が 00:00 のまま進捗 50% と表示されており、時間表示が動いていないのか未実装なのか読み手が判断できない。少なくともこの一枚では、進行中を示す 2 つの指標が矛盾して見える。",
+              "where": "右上ヘッダの「作業中 00:00 50%」"
+            },
+            {
+              "axis": "trust-provenance",
+              "what": "CONTEXT 行が値だけ（Notion · Selection · Screen）で、これがアシスタントに渡されている情報源なのか説明がなく、何を読まれているのか判断できない。外部サービスを読む製品では出所の明示が要る。",
+              "where": "下部の CONTEXT セクション"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        }
+      ]
+    },
+    {
+      "id": "main.new-recording-sheet",
+      "blind_id": "33D0",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "alignment",
+              "what": "Template / Save to / Project の 3 つのプルダウンが左端は揃うが右端の幅がばらばらで階段状になり、フォームの列としてまとまって見えない。",
+              "where": "「新しい録音」ダイアログ中央のフォーム行"
+            },
+            {
+              "axis": "consistency",
+              "what": "設定項目のラベルが英語（Microphone, System Audio, Template, Save to, Project）なのに値と他画面の文言は日本語で、同じダイアログ内で言語が混ざっている。",
+              "where": "「新しい録音」ダイアログのラベル列"
+            },
+            {
+              "axis": "state legibility",
+              "what": "Microphone の値だけプルダウンではなく素のテキストで、変更可能な設定なのか固定表示なのか区別できない。他の行と操作可能性の見え方が揃っていない。",
+              "where": "ダイアログ 1 行目「Microphone / MacBook Microphone」"
+            },
+            {
+              "axis": "density",
+              "what": "モーダルが背後のカードの見出しとボタンを部分的に隠し、「Product Wee…」「10:00 Google Me…」のように文字が切れて読めない状態が同時に見えている。",
+              "where": "ダイアログと背後の「これからの予定」カードの重なり"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        }
+      ]
+    },
+    {
+      "id": "voice.idle",
+      "blind_id": "3B8A",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "NOT_ENOUGH_EVIDENCE",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "NOT_ENOUGH_EVIDENCE",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        },
+        {
+          "model": "sonnet",
+          "verdict": "NOT_ENOUGH_EVIDENCE",
+          "valid": true,
+          "why": "",
+          "confidence": "low",
+          "concerns": []
+        }
+      ]
+    },
+    {
+      "id": "system.update-available",
+      "blind_id": "402B",
+      "verdict": "FIX_CANDIDATE",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": [
+            {
+              "axis": "error-recovery clarity",
+              "what": "Technical internal note visible to end users: 'UI Atlas用のappcast、入れ替えには使わない。' should not appear in user-facing update dialog",
+              "where": "Center of dialog, between version description and action buttons"
+            }
+          ]
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": [
+            {
+              "axis": "trust-provenance",
+              "what": "「今すぐダウンロードしますか?」と入れ替えを促しているのに、説明欄には「入れ替えには使わない」と書かれており、内容とボタンの意味が正面から矛盾している。しかも 999.0.0 という現実にはあり得ないバージョン番号で、利用者が信用してインストールを押せない。",
+              "where": "本文 2 行目とリリースノート欄、および右下の「アップデートをインストール」"
+            },
+            {
+              "axis": "screen occupation",
+              "what": "リリースノートの枠が 1 行のテキストに対してウィンドウの大半の高さを占め、残りが空白のまま。情報量に対して面積が過大。",
+              "where": "中央の白い枠内"
+            },
+            {
+              "axis": "hierarchy",
+              "what": "アプリアイコンが灰色の格子だけで製品の識別にならず、アップデート元がどのアプリなのかを図として伝えていない。",
+              "where": "左上のアイコン"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": [
+            {
+              "axis": "trust-provenance",
+              "what": "リリースノート欄に実際の更新内容ではなく内部メモらしき文言がそのまま表示されている",
+              "where": "モーダル中央の大きな白いテキストボックス"
+            },
+            {
+              "axis": "density",
+              "what": "1行分のテキストに対してテキストボックスの面積が極端に大きく、余白が支配的",
+              "where": "ダイアログ中央の広いテキストボックス"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "main.apps-connectors",
+      "blind_id": "41A6",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "primary-action clarity",
+              "what": "3 枚とも未接続・要設定の状態なのに、接続や設定を開始する明示的なボタンが画面上に一つもなく、次に何を押せばよいか分からない。",
+              "where": "Gmail / Google Calendar / Finder のカード内"
+            },
+            {
+              "axis": "error-recovery clarity",
+              "what": "エラー文が「接続に使う client ID がまだ設定されていません」という実装用語で、利用者がどこで何をすれば解消できるのかを示していない。",
+              "where": "Gmail と Google Calendar のカード 3 行目"
+            },
+            {
+              "axis": "screen occupation",
+              "what": "コンテンツがウィンドウ最上部の 1 行分のカードだけで、下 3 分の 2 以上が何もない灰色の面のまま残っている。",
+              "where": "カード列より下の本文領域全体"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": [
+            {
+              "axis": "screen occupation",
+              "what": "3枚のカード以外は画面の半分以上が空白のままで、コンテンツが左上に偏っている",
+              "where": "カード群より下の画面全体"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "main.library-files",
+      "blind_id": "43DF",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": [
+            {
+              "axis": "primary-action clarity",
+              "what": "空状態なのに次の一手（資料を追加する導線）が画面上に一つも無く、ユーザーが何をすれば埋まるのか分からない",
+              "where": "本文中央の「まだ資料はありません。」ブロック"
+            },
+            {
+              "axis": "screen-occupation",
+              "what": "コンテンツが上 1/3 に固まり、下側の広い領域が完全な空白として残っている",
+              "where": "本文エリア下半分"
+            },
+            {
+              "axis": "state-legibility",
+              "what": "結果が空であることと、フィルタが効いた結果なのか元々空なのかが区別できない（All 選択中のまま空表示）",
+              "where": "All / Report / Document … のフィルタ行と直下の空状態"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        }
+      ]
+    },
+    {
+      "id": "session.project",
+      "blind_id": "465E",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "state-legibility",
+              "what": "「今日 · 0 分」と表示されながら要約・人数・やること・決まったことが埋まっており、会議の長さの表示が中身と矛盾して見える",
+              "where": "最近の会議 / Product Weekly カード右上の時間表示"
+            },
+            {
+              "axis": "primary-action clarity",
+              "what": "「何を終わらせますか？」の入力欄と「録音を始める」カードが同格の大きさで並び、この画面の第一動作が一つに定まらない",
+              "where": "こんばんは直下の入力欄と、その下の録音カード"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "state legibility",
+              "what": "予定行の「録音」ボタンが灰色背景で押せるボタンなのか無効表示なのか判別しづらい",
+              "where": "これからの予定カード右側の「録音」ピル"
+            },
+            {
+              "axis": "primary-action-clarity",
+              "what": "録音開始の主要動線が複数（トップの録音カードと各予定の録音ボタン）並び、優先度が視覚的に区別されていない",
+              "where": "画面上半分全体"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "system.resumed",
+      "blind_id": "491C",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": [
+            {
+              "axis": "state-legibility",
+              "what": "「0 分 · 0 人」というメタ情報が、タイトルの 01:00 および Ken の発言 1 件と矛盾しており、この会議が正常に記録されたのか失敗したのか読めない",
+              "where": "右上のメタ表示と文字起こし 1 行目"
+            },
+            {
+              "axis": "error-recovery clarity",
+              "what": "内容がほぼ空（決まったこと 0 / やること 0 / 発言 1 行）なのに、なぜ空なのか・どうすれば復旧できるのかを示す文言や操作が無い",
+              "where": "決まったこと 0 / やること 0 の行から本文の空白部"
+            },
+            {
+              "axis": "screen-occupation",
+              "what": "実質 1 行の内容に対して画面の 3/4 以上が空白で、詳細画面としての密度が成立していない",
+              "where": "文字起こし行より下の全域"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "consistency",
+              "what": "会議の長さ「0分・0人」というメタ情報が、実際に表示されている00:12のタイムスタンプ付き発言と矛盾している",
+              "where": "右上のメタ情報表示と文字起こし欄"
+            },
+            {
+              "axis": "screen occupation",
+              "what": "1行の発言以外は画面の大半が空白のまま",
+              "where": "文字起こし欄の下側全体"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "recording.workspace",
+      "blind_id": "4943",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "hierarchy",
+              "what": "フローティング操作バーが下の本文枠に重なり、枠の上辺が途中で隠れて左右の角だけが見えている",
+              "where": "画面最上部中央の操作バーと、その直下のパネル上辺"
+            },
+            {
+              "axis": "consistency",
+              "what": "「決まったこと」「やること」が左の見出しと右下のボタンで同じ字面のまま別機能として並び、押した時に何が起きるか区別できない",
+              "where": "左パネル中段の見出しと、下部入力欄右のボタン列"
+            },
+            {
+              "axis": "state-legibility",
+              "what": "文字起こしは 3 件届いているのに左は「待っています...」のままで、処理中なのか抽出対象が無かったのかが読み取れない",
+              "where": "左パネル「決まったこと」「やること」の直下"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "state legibility",
+              "what": "文字起こしに具体的な依頼内容が出ているのに、決まったこと／やることが「待っています」のまま変化がなく、処理停止なのか未検出なのか判別できない",
+              "where": "左パネルの決まったこと／やることセクション"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "meeting.notes",
+      "blind_id": "4D82",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "state-legibility",
+              "what": "経過時間 00:01 と、メモに並ぶ 04:14〜05:01 の時刻が食い違っており、録音が今始まったのか 5 分経っているのか判断できない",
+              "where": "左上の 00:01 と、各メモ行頭の時刻"
+            },
+            {
+              "axis": "trust-provenance",
+              "what": "同じ列の時刻が昇順でなく上下するため、記録の並びが時間軸として信用できるかが読み取れない",
+              "where": "ライブメモ 4 行の時刻列（04:22 → 04:14 → 04:48 → 05:01）"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "consistency",
+              "what": "経過時間バッジ「00:01」が、既に表示されている04:14〜05:01のメモのタイムスタンプと食い違っている",
+              "where": "ウィジェット左上のタイマー表示"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "components.focus",
+      "blind_id": "5EBB",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": [
+            {
+              "axis": "state-legibility",
+              "what": "現在位置を示すはずの青い枠が画面上のほぼ全ての操作要素に同時に付いており、いま選択されている一つが特定できない",
+              "where": "上部操作バー・右パネルのタブ 3 つ・下部の要約/決まったこと/やること・最下部リンク"
+            },
+            {
+              "axis": "hierarchy",
+              "what": "「文字起こし」タブの選択状態（塗り）と青枠が同じ要素に重なり、選択と焦点の二つの意味が見分けられない",
+              "where": "右パネルのタブ行"
+            },
+            {
+              "axis": "consistency",
+              "what": "同じ録音中画面である 4943 には出ている「マイク と 画面の音 を聞いています」がこの画面では欠けており、録音対象の表示が画面間で揃っていない",
+              "where": "左パネル「会議」の直下"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": [
+            {
+              "axis": "state legibility",
+              "what": "無関係な複数のコントロール（ツールバーアイコン群、3つのタブ、下部ボタン）が同時にフォーカス表示され、どれが選択中/次の操作対象か区別できない",
+              "where": "上部ツールバー、文字起こし/翻訳/字幕タブ、下部「AIが見ている資料」ボタン"
+            },
+            {
+              "axis": "primary-action-clarity",
+              "what": "全コントロールが強調表示されるため、次に押すべき主操作が視覚的に埋没している",
+              "where": "画面全体"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dock.result-failed",
+      "blind_id": "5FD4",
+      "verdict": "FIX_CANDIDATE",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": [
+            {
+              "axis": "typography",
+              "what": "メッセージテキストに日本語の文法エラー（『正止』は意味不明、おそらく誤字）",
+              "where": "ダイアログの説明行、『送信を正止ました』部分"
+            },
+            {
+              "axis": "error-recovery clarity",
+              "what": "エラーの説明（接続が切れた）と回復方法（やり直す）は示されているが、詳細な原因追跡手段がない",
+              "where": "ダイアログ全体"
+            }
+          ]
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "primary-action-clarity",
+              "what": "主要操作「やり直す」に枠・塗り・色が無くただの太字テキストで、押せる要素と読めない。右端の × とも視覚的な階級差が付いていない",
+              "where": "下段左の「やり直す」"
+            },
+            {
+              "axis": "hierarchy",
+              "what": "最も重要な「失敗した」という事実が最小・最低コントラストの灰色行に置かれ、タスク名の方が目立つ",
+              "where": "2行目「「送信」で止まりました・接続が切れた」"
+            },
+            {
+              "axis": "error-recovery-clarity",
+              "what": "失敗理由が一言だけで、再試行が安全か（重複送信にならないか）を判断する材料が絵の中に無い",
+              "where": "本文2行目と「やり直す」の間"
+            },
+            {
+              "axis": "alignment",
+              "what": "下段の「やり直す」と × の間に用途不明の広い空白があり、下段が上段のテキスト列と別のグリッドに乗っているように見える",
+              "where": "カード下段全体"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "primary-action-clarity",
+              "what": "「やり直す」がテキストラベルと区別つかず、クリック可能に見えない",
+              "where": "カード下部左"
+            },
+            {
+              "axis": "contrast",
+              "what": "エラー理由の説明文が暗背景に対して低コントラスト",
+              "where": "タイトル下のサブテキスト"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "system.update-unavailable",
+      "blind_id": "6088",
+      "verdict": "FIX_CANDIDATE",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": [
+            {
+              "axis": "typography",
+              "what": "説明テキストが日本語として不自然。『設定を持たずに作られています』（主語不明）、『新しい口が見えていない』（誤字またはOCRエラーと推定）",
+              "where": "ダイアログの説明段落"
+            },
+            {
+              "axis": "state legibility",
+              "what": "なぜ更新確認ができないのかの根本原因がユーザーに伝わりにくい",
+              "where": "ダイアログ全体"
+            }
+          ]
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "typography",
+              "what": "本文が4行以上ぎっしり続く塊で、事実（更新不可）・原因・現在版・対処が段落として分かれておらず読み下さないと要点が取れない",
+              "where": "見出し下の本文ブロック"
+            },
+            {
+              "axis": "trust-provenance",
+              "what": "「更新の口が起動していない」という内部用語がそのまま露出し、利用者に自分のビルドが壊れているのか正常なのか判断させられない",
+              "where": "本文1〜2行目の括弧内"
+            },
+            {
+              "axis": "alignment",
+              "what": "格子アイコンだけが左寄せで、見出し・本文・全幅ボタンの縦の軸と揃っていない",
+              "where": "モーダル上部のアイコン"
+            },
+            {
+              "axis": "hierarchy",
+              "what": "現在のバージョン番号という参照頻度の高い情報が本文の中間に混ぜ込まれ、独立したラベルになっていない",
+              "where": "本文3行目付近"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "trust-provenance",
+              "what": "「更新の口が起動していない」という不自然な日本語表現が、翻訳・生成過程の粗さを感じさせる",
+              "where": "本文中央のかっこ書き部分"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "system.mic-denied",
+      "blind_id": "69C6",
+      "verdict": "FIX_CANDIDATE",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": [
+            {
+              "axis": "state legibility",
+              "what": "『録音中（音声なし）』と『音声が記録されていません』は同じ問題を二重に表現しており、混乱を招く可能性がある。ユーザーが「今、何が動作していて、何が失敗しているか」を一目で把握しにくい",
+              "where": "画面上部のステータスバーと右側のエラーアラート"
+            },
+            {
+              "axis": "hierarchy",
+              "what": "エラーアラートが右側補助パネルの中にあり、録音中という主要な状態より視認性が低い。エラーの重要性が過小評価される可能性",
+              "where": "右側のピンク背景アラートボックス"
+            }
+          ]
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": [
+            {
+              "axis": "state-legibility",
+              "what": "「録音中」と赤い録画インジケータが正常進行を示すのに、実際は何も記録されていない。上部バーと警告が正反対の状態を同時に主張している",
+              "where": "上部の赤いドット付きバー ↔ 右上の警告文"
+            },
+            {
+              "axis": "error-recovery-clarity",
+              "what": "失敗が起きてもタイマーが 04:21 まで走り続け、権限が無い時点で止める・確認する導線が画面に無い",
+              "where": "上部バーの 04:21"
+            },
+            {
+              "axis": "screen-occupation",
+              "what": "画面の半分以上が空のプレースホルダで占められ、実質の情報は右上の警告1行だけ",
+              "where": "左パネル下部と右パネル下部"
+            },
+            {
+              "axis": "primary-action-clarity",
+              "what": "復旧の唯一の操作「設定を開く」が右上の小さな文字リンクで、下部の目立つボタン群（実際には効かない）より弱い",
+              "where": "右上の警告カード内"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "alignment",
+              "what": "上部の操作バーが本体カードと隙間を空けて浮遊し、同一コンポーネントか別要素か判別しづらい",
+              "where": "画面上部、操作ピルとカードの間"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "recording.agent-timeline",
+      "blind_id": "6BCC",
+      "verdict": "FIX_CANDIDATE",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": false,
+          "why": "照合 9/16（画面に無い文字）",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "density",
+              "what": "同一の発言が左の強調行と右の文字起こし末尾に重複表示され、限られた幅を二重に消費している",
+              "where": "左パネル「鈴木 OAuth だけ…」と右パネル 04:18 行"
+            },
+            {
+              "axis": "screen-occupation",
+              "what": "左パネルの下 1/3 が空で、「決まったこと」「やること」も空のまま。実データは右カラムに偏っている",
+              "where": "左パネル下半分"
+            },
+            {
+              "axis": "state-legibility",
+              "what": "進捗リストの 3 種類のマーカーに凡例が無く、どこまで進んだかが記号から読み取れない。「Zoom」行の役割も不明",
+              "where": "右下「リアルタイム要約」カード"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "low",
+          "concerns": [
+            {
+              "axis": "consistency",
+              "what": "直近発言が左上と右側ログに二重表示され、両者の関係性を示す視覚的リンクがない",
+              "where": "左パネル見出し直下、および右の文字起こしログ最終行"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "meeting.preparing",
+      "blind_id": "8408",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "NOT_ENOUGH_EVIDENCE",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "primary-action clarity",
+              "what": "赤い記録ボタン（●）の役割は推測できるが、『準備中…』という状態でボタンが有効か無効かが画像からは判断できない",
+              "where": "ミニバー全体"
+            }
+          ]
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": false,
+          "why": "照合 4/8（画面に無い文字）",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "typography",
+              "what": "先頭ラベルが「準備中…」の時点で切り詰められており、バーの左端で文字が入りきっていない",
+              "where": "バー左の「準備中…」"
+            },
+            {
+              "axis": "consistency",
+              "what": "右側の操作が「アイコン＋文字」3つと「アイコンのみ」3つに分かれ、同じ帯の中で表記ルールが混在している",
+              "where": "バー右半分、メモ／字幕／Ask Astra と 目／一時停止／停止"
+            },
+            {
+              "axis": "state-legibility",
+              "what": "「準備中」表示・灰色の丸・作動中のタイマー・赤い停止ボタンが、それぞれ別の状態を示唆していて現在どの段階か確定できない",
+              "where": "バー左端から右端まで"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "consistency",
+              "what": "同じツールバー内でラベル付きアイコンとラベルなしアイコンが混在している",
+              "where": "ツールバー中央〜右寄りの目のアイコン"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dock.confirmation-edit",
+      "blind_id": "85CF",
+      "verdict": "FIX_CANDIDATE",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": [
+            {
+              "axis": "error-recovery clarity",
+              "what": "『外部に出る』という警告表現が不明確。これがプライバシーリスクなのか、単なる共有先表示なのかが区別できない。ユーザーが正しく理解して判断できない可能性がある",
+              "where": "ダイアログ上部、『外部に出る』の行"
+            }
+          ]
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": [
+            {
+              "axis": "primary-action-clarity",
+              "what": "不可逆な外部送信の確定ボタンが塗りも枠も無い薄いテキストで、「やめる」との重み付けが色の濃さだけしかない",
+              "where": "右下の「完了」「やめる」"
+            },
+            {
+              "axis": "error-recovery-clarity",
+              "what": "確定ラベルが「完了」で、押した結果が Slack への即時投稿なのか下書き保存なのか文言から確定できない",
+              "where": "右下の「完了」"
+            },
+            {
+              "axis": "trust-provenance",
+              "what": "「外部に出る」という最も重い警告が画面で最も小さい文字で置かれ、送信先の相手・可視範囲の説明も無い",
+              "where": "見出し直下"
+            },
+            {
+              "axis": "alignment",
+              "what": "「宛先」ラベルと値「#sales」の間に説明のつかない空白があり、値が枠の左端とも揃わず浮いている",
+              "where": "宛先行"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "trust-provenance",
+              "what": "「外部に出る」という警告ラベルの意味・対象が説明されておらず、ユーザーが何を確認すべきか分からない",
+              "where": "ダイアログ上部、タイトル直下のオレンジ色のラベル"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "voice.context",
+      "blind_id": "8BE6",
+      "verdict": "NOT_ENOUGH_EVIDENCE",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "NOT_ENOUGH_EVIDENCE",
+          "valid": true,
+          "why": "",
+          "confidence": "low",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "NOT_ENOUGH_EVIDENCE",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        },
+        {
+          "model": "sonnet",
+          "verdict": "NOT_ENOUGH_EVIDENCE",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        }
+      ]
+    },
+    {
+      "id": "session.detail",
+      "blind_id": "8CCC",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "state legibility",
+              "what": "ヘッダーの「0 分」が、25:02 まである文字起こしと食い違って見える。会議の長さとして読むと明らかに誤りに見え、要約の信頼性を落とす",
+              "where": "右上のメタ行「今日 · 0 分 · 5 人」と、下の文字起こしのタイムスタンプ列"
+            },
+            {
+              "axis": "alignment",
+              "what": "文字起こしの本文列の左端が行ごとにずれており、話者名の長さに引きずられて縦線が通っていない",
+              "where": "文字起こしリストの発言テキスト列（00:40〜25:02 の各行）"
+            },
+            {
+              "axis": "screen occupation",
+              "what": "ウィンドウ下部の広い帯が空白のまま。会議詳細という情報量の多い画面で、下 1/4 に何も置かれていない",
+              "where": "文字起こし最終行より下の領域"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "screen occupation",
+              "what": "文字起こしリストの終端以降、画面下半分近くが空白のまま使われていない",
+              "where": "コンテンツ領域下部、文字起こしタブ内の最終行より下"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "meeting.workspace",
+      "blind_id": "9B8C",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "NOT_ENOUGH_EVIDENCE",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "state_legibility",
+              "what": "Speaker names visible but speaker-to-role mapping and visual distinction unclear",
+              "where": "Transcript section with speaker names"
+            }
+          ]
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "error-recovery clarity",
+              "what": "「送信」の行に赤い × が付いているのに、失敗したのか未実行なのかが文字で説明されておらず、やり直す手段も見当たらない。失敗なら最も重要な情報なのに最も小さく扱われている",
+              "where": "右下の「先方へ見積の返信を送る」カード内、Gmail の下の「送信」行"
+            },
+            {
+              "axis": "state legibility",
+              "what": "録音の経過時間が 00:04、見出しが「00:58 の会議」、文字起こし最新が 05:01 と三者三様で、いま何分経ったのかが読み取れない",
+              "where": "上部フローティングバーのタイマー／左カード見出し／右パネルのタイムスタンプ"
+            },
+            {
+              "axis": "hierarchy",
+              "what": "決定・やること・質問・懸念の 4 カードが時刻順でも重要度順でもない順に並び、分類ラベルが本文より小さく薄いため、区切りが読み取りにくい",
+              "where": "左パネルの「決まったこと」「やること」「質問」「懸念」の連続する 4 ブロック"
+            },
+            {
+              "axis": "trust-provenance",
+              "what": "「Notion · Selection · Screen」および下部「AI が見ている資料 4 件」が、何を根拠に参照されているのかラベル無しで並んでおり、出所の意味が読めない",
+              "where": "右下カードの 2 行目、および画面最下部の中央リンク"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "error-recovery clarity",
+              "what": "送信失敗を示す赤い×があるが、原因説明や再試行ボタンが見当たらない",
+              "where": "右下のアクション提案カード、『送信』行"
+            },
+            {
+              "axis": "state legibility",
+              "what": "上部ツールバーの経過時間表示と右パネルの文字起こしタイムスタンプが食い違って見える",
+              "where": "画面上部の録音中ツールバー(00:04)と右側文字起こしパネル(05:01まで表示)"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dock.result",
+      "blind_id": "9CBA",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "NOT_ENOUGH_EVIDENCE",
+          "valid": true,
+          "why": "",
+          "confidence": "low",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "alignment",
+              "what": "「コピー」ボタンの背景板が下方向にずれて食い違い、明るい帯が縁からはみ出している。描画のずれとして見える",
+              "where": "トースト下段、「コピー」ラベルの直下"
+            },
+            {
+              "axis": "primary-action clarity",
+              "what": "「開く」「コピー」が同じ見え方で並び、主要操作が指定されていない",
+              "where": "トースト下段の操作行"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "alignment",
+              "what": "コピー』ボタンと閉じる×の間隔が他要素間より大きく空いており間隔が不揃い",
+              "where": "トースト右側、『コピー』ボタンと×アイコンの間"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "voice.quick-actions",
+      "blind_id": "AF03",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "NOT_ENOUGH_EVIDENCE",
+          "valid": true,
+          "why": "",
+          "confidence": "low",
+          "concerns": [
+            {
+              "axis": "primary_action_clarity",
+              "what": "Duplicate button labels ('開く') create ambiguity about distinct actions",
+              "where": "Left and right buttons"
+            }
+          ]
+        },
+        {
+          "model": "opus",
+          "verdict": "NOT_ENOUGH_EVIDENCE",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "low",
+          "concerns": [
+            {
+              "axis": "density",
+              "what": "3項目に対して帯の余白が広すぎ、内容が薄く間延びして見える",
+              "where": "帯全体、『聞く』『録音』『開く』の間の余白"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "session.ready",
+      "blind_id": "B478",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "state legibility",
+              "what": "「こんばんは」という時間帯の挨拶と、「これからの予定」に並ぶ 10:00 / 13:30 が矛盾しており、予定が未来なのか過去なのか判断できない",
+              "where": "見出し「こんばんは」と、その下の「これからの予定」セクションの 2 行"
+            },
+            {
+              "axis": "state legibility",
+              "what": "最近の会議のメタが「今日 · 0 分」で、記録された会議の長さが 0 と表示されている",
+              "where": "最近の会議カード右上"
+            },
+            {
+              "axis": "screen occupation",
+              "what": "縦に長いウィンドウの下 1/6 以上が空白で、中身は上寄せの細いカラムに収まっている",
+              "where": "最近の会議カードより下の領域"
+            },
+            {
+              "axis": "consistency",
+              "what": "右上のパネル切替アイコンの背景だけが周囲と異なる明るい面として浮き、左上の同種アイコンとは見え方が揃っていない",
+              "where": "ウィンドウ右上隅のアイコン"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "primary-action clarity",
+              "what": "録音を開始するための同等の入口(入力欄マイク、専用カード、予定ごとのボタン)が3種類併存し、どれが主要アクションか判断しづらい",
+              "where": "入力欄右端のマイクアイコン、『録音を始める』カード、『これからの予定』内の各『録音』ボタン"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "voice.thinking",
+      "blind_id": "B562",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "NOT_ENOUGH_EVIDENCE",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        },
+        {
+          "model": "sonnet",
+          "verdict": "NOT_ENOUGH_EVIDENCE",
+          "valid": true,
+          "why": "",
+          "confidence": "low",
+          "concerns": []
+        }
+      ]
+    },
+    {
+      "id": "meeting.controller",
+      "blind_id": "B616",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "consistency",
+              "what": "同一ツールバー内で一部のボタンだけテキストラベルを持ち、他（目・一時停止）はアイコンのみでラベルが無い",
+              "where": "ツールバー右側のアイコン列"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "main.work-agents",
+      "blind_id": "B63D",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "primary-action clarity",
+              "what": "空状態の案内が文章だけで、そこから開始できる押せるものが無い。「Task Dock から頼め」と別の場所へ誘導するだけで、この画面上で次に進む手段が絵に見えない。",
+              "where": "本文中央の「実行中の仕事はありません。/ Task Dock から「○○して」と頼むとここに出ます。」"
+            },
+            {
+              "axis": "screen occupation",
+              "what": "本文の下側が丸ごと空白のまま。空状態でも画面の大部分が使われていない。",
+              "where": "本文領域、案内文より下の全域"
+            },
+            {
+              "axis": "hierarchy",
+              "what": "Tasks/Agents と Active/Waiting/... の2段のタブがどちらも似た形の淡い塗りで、どちらが上位の切り替えか絵から区別しにくい。",
+              "where": "本文上部の2段のタブ列"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        }
+      ]
+    },
+    {
+      "id": "system.accessibility-permission",
+      "blind_id": "B701",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "alignment",
+              "what": "「まだ何もありません」「⌥Space を使えるようにする →」の左端が、真上にある入力欄と録音カードの左端と揃っていない（内側にずれている）。",
+              "where": "本文左側、録音カードのすぐ下の2行"
+            },
+            {
+              "axis": "screen occupation",
+              "what": "コンテンツが上 1/3 に固まり、下 2/3 が空白。空状態でも余白の使い方が決まっていない。",
+              "where": "本文領域、⌥Space リンクより下の全域"
+            },
+            {
+              "axis": "primary-action clarity",
+              "what": "入力欄と「録音を始める」カードのどちらが主たる入口か、絵からは決めきれない。両方とも同じ幅の白い箱で、強い塗りのボタンがどこにも無い。",
+              "where": "本文上部、入力欄と録音カード"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        }
+      ]
+    },
+    {
+      "id": "meeting.ask",
+      "blind_id": "B95D",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "screen occupation",
+              "what": "パネル本体が入力欄1本だけで、下側の広い面積が空白のまま。開いた意味がこの1本に依存している。",
+              "where": "Ask Astra パネル、入力欄より下の全域"
+            },
+            {
+              "axis": "hierarchy",
+              "what": "上部タブの「Ask Astra」と、その直下の小見出し「ASK ASTRA」が同じ語の重複で、どちらが現在地を示すのか冗長。",
+              "where": "バー中央のタブと、その下の左上小見出し"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "screen occupation",
+              "what": "質問入力欄の下に説明のない広大な空白領域があり、画面のほとんどが未使用のまま占有されている",
+              "where": "ASK ASTRAパネルの入力欄より下の全域"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dock.context-detail",
+      "blind_id": "BBC0",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "trust-provenance",
+              "what": "「Screen / 画面 / 画面」は同じ語の繰り返しで、実際に何の画面が見られているのか特定できない。Selection も「選択／画面の要素」で中身が分からず、AI に何が渡っているかの開示として機能していない。",
+              "where": "右の2枚のカード（Selection, Screen）の本文行"
+            },
+            {
+              "axis": "consistency",
+              "what": "カード見出しが英語（Notion / Selection / Screen）、本文が日本語で言語が混在。Notion だけは中身が固有名（Q3 Product Roadmap）で、他2枚と情報の粒度が揃っていない。",
+              "where": "3枚のカードの見出しと本文"
+            },
+            {
+              "axis": "alignment",
+              "what": "カードが3枚で左詰めされ、右端にカード1枚分ほどの空きが残っている。パネル幅に対して列が完結していない。",
+              "where": "Screen カードの右側の余白"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        }
+      ]
+    },
+    {
+      "id": "system.after-sharing",
+      "blind_id": "BD25",
+      "verdict": "FIX_CANDIDATE",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": false,
+          "why": "照合 4/7（画面に無い文字）",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "state legibility",
+              "what": "録音レベルを示すはずの波形が均一な点の列で、音声が実際に取れているのか無音なのかが読み取れない。録音バーで最も知りたい「ちゃんと録れているか」が分からない",
+              "where": "バー左側、「00:02」の右にある点列"
+            },
+            {
+              "axis": "primary-action clarity",
+              "what": "右端の目のアイコンだけテキストラベルが無く、隣の3項目（メモ/字幕/Ask Astra）と表記の仕方が揃っていないため機能を推測できない",
+              "where": "バー右側、「Ask Astra」と一時停止ボタンの間"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "consistency",
+              "what": "Three controls have text labels and three don't, with no visual separator explaining the split",
+              "where": "icon row, right two-thirds of the bar"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "provenance.meeting-detail",
+      "blind_id": "BF54",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "alignment",
+              "what": "出所チップ [1] は直前の文にほぼ密着しているのに、[2] と [3] は前の文字との間隔が明らかに広く、3 つの間隔が揃っていない",
+              "where": "要約行「…初期費用。[1]」と、決まったこと行「導入時期を 10 月で検討 [2]」、やること行「…送付 明日 [3]」"
+            },
+            {
+              "axis": "screen occupation",
+              "what": "文字起こしが 8 行で終わり、その下の画面の半分近くが空白のまま。右の出所パネルも 1 件表示だけで大部分が空いている",
+              "where": "中央カラム 41:50 の行より下、および右パネル「音声 14:18」より下"
+            },
+            {
+              "axis": "density",
+              "what": "文字起こしの時刻が 14:31 から 41:50 へ飛んでいるが、省略されているのか無音だったのかを示す表示がなく、記録の連続性を判断できない",
+              "where": "中央の文字起こし最終 2 行"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "screen occupation",
+              "what": "Citation/source panel uses a small fraction of its allotted space, leaving most of it empty with no fallback content",
+              "where": "right-hand panel"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "main.work-tasks",
+      "blind_id": "C682",
+      "verdict": "FIX_CANDIDATE",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": false,
+          "why": "照合 0/7（画面に無い文字）",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": [
+            {
+              "axis": "primary-action clarity",
+              "what": "空状態で次の一手を促す文（Task Dock から話しかける）があるのに、押せるボタンもリンクも無く、Task Dock がこの画面上のどこなのかも示されていないため、初見では開始できない",
+              "where": "中央「Task Dock から話しかけると、ここに履歴が残ります。」の行"
+            },
+            {
+              "axis": "screen occupation",
+              "what": "空状態のテキスト 2 行だけで、その下の広い領域が完全に空白のまま残っている",
+              "where": "本文中央より下、サイドバー右の全域"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": [
+            {
+              "axis": "primary-action clarity",
+              "what": "Empty state gives no actionable control, only text referencing a feature not shown on screen",
+              "where": "center content area, below 'Tasks' heading"
+            },
+            {
+              "axis": "screen occupation",
+              "what": "Roughly 80% of the vertical space is empty with no content or illustration",
+              "where": "below the two lines of body text"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dock.confirmation",
+      "blind_id": "C704",
+      "verdict": "FIX_CANDIDATE",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": false,
+          "why": "照合 0/8（画面に無い文字）",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "consistency",
+              "what": "「やめる」という同じラベルが同じ行の高さに 2 つ並んでいる（左のショートカット表記と右のボタン）。同じ操作が二重に見え、どちらを押すべきか迷う",
+              "where": "ダイアログ下部、左端「esc やめる」と右側のテキストボタン「やめる」"
+            },
+            {
+              "axis": "hierarchy",
+              "what": "外部送信という取り消せない操作の主ボタン「送る」が淡いオレンジの塗りで、文字色との差が弱く、隣の「直す」より視覚的な強さの差が小さい",
+              "where": "ダイアログ右下の「送る」ボタン"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "consistency",
+              "what": "Only 2 of 3 action buttons show a keyboard-shortcut hint, making it unclear if 直す has one",
+              "where": "bottom row of the dialog"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "system.mic-recovered",
+      "blind_id": "CA26",
+      "verdict": "FIX_CANDIDATE",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": false,
+          "why": "照合 1/10（画面に無い文字）",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "state legibility",
+              "what": "「録音中」と表示されているのに時間が 00:00、かつ波形が平坦な点列で、実際に音を拾えているかが画面から判断できない。録音が失敗していても同じ見た目になりうる",
+              "where": "バー左側「録音中 / 00:00」とその右の点列"
+            },
+            {
+              "axis": "primary-action clarity",
+              "what": "目のアイコンだけラベルが無く、隣接する 3 つのラベル付き項目と表記が揃っていない",
+              "where": "バー右側、「Ask Astra」の右"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "consistency",
+              "what": "Three controls have text labels and three don't, with no visual separator explaining the split",
+              "where": "icon row, right two-thirds of the bar"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "components.hover",
+      "blind_id": "CAA7",
+      "verdict": "FIX_CANDIDATE",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": false,
+          "why": "照合 2/12（画面に無い文字）",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "screen occupation",
+              "what": "左の会議メモは発言 1 行と「待っています…」2 行だけ、右の文字起こしも 3 行で、両パネルとも下半分以上が空白のまま残る",
+              "where": "左パネル「やることを待っています…」より下、右パネル 04:18 の行より下"
+            },
+            {
+              "axis": "hierarchy",
+              "what": "「AI が見ている資料 3 件」がどのパネルにも属さず画面最下部に単独で浮いており、左の会議メモに関するものか右の文字起こしに関するものか、押すと何が起きるのかが読み取れない",
+              "where": "画面最下部中央の青いチップ"
+            },
+            {
+              "axis": "consistency",
+              "what": "上部の浮遊コントロールバー（04:21・一時停止・停止）とアプリ内の要素が別々の面に見え、しかもバー上端が画面外で切れているため、これがこのウィンドウの一部なのか別の浮遊ウィンドウなのか判断しにくい",
+              "where": "画面上端中央の暗いバー"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "consistency",
+              "what": "Floating overlay bar breaks from the flat panel styling used everywhere else on screen",
+              "where": "top of the window, overlapping the 会議 panel border"
+            },
+            {
+              "axis": "hierarchy",
+              "what": "Same transcript line shown in two places with no clear indication of which is authoritative",
+              "where": "left panel vs. right transcript list, timestamp 04:18/鈴木"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "components.neutral",
+      "blind_id": "CAA8",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "screen-occupation",
+              "what": "左右パネルとも内容が上端 1/4 に集中し、残りが恒常的な空白として残っている。3 行の文字起こしのために画面の大半が使われていない",
+              "where": "左「会議」パネルの決まったこと以下、および右の文字起こしリスト下部"
+            },
+            {
+              "axis": "consistency",
+              "what": "同じ録音中画面でありながら、D96E/E149 にある「マイクと画面の音を聞いています」という音源表示がこの画面には無く、同じ状態の説明が画面ごとに違って見える",
+              "where": "左パネル見出し「会議」の直下"
+            },
+            {
+              "axis": "hierarchy",
+              "what": "「AI が見ている資料 3 件」がカードにも入らず最下部に単独で置かれ、リンクなのか状態表示なのか、どの内容を指すのかが位置から読み取れない",
+              "where": "画面最下部中央"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "state legibility",
+              "what": "文字起こしに決定事項らしき発言があるのに左のサマリ欄が反映せず「待っています」のまま",
+              "where": "左パネル「決まったこと」ブロックと右パネル文字起こしの対比"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "main.apps-plugins",
+      "blind_id": "D672",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "consistency",
+              "what": "説明文「この Mac の中だけで動きます」が一部のカードにのみ存在し、有無でカードの内部レイアウトと高さが不揃いになっている。無いカードはローカル動作でないのか、単に未記入なのかが絵から判別できない",
+              "where": "Architecture / Care Support / EHR Assist / General Assistant / Meeting Agent の各カード（Google Calendar・Finder・Gmail との対比）"
+            },
+            {
+              "axis": "trust-provenance",
+              "what": "全カードに同一の緑チェックが付くが、その意味（検証済み・有効・署名済みのいずれか）を示す語が画面上に一切ない。権限を強調した画面でこそ印の意味が要る",
+              "where": "各カード右上のチェックアイコン"
+            },
+            {
+              "axis": "state-legibility",
+              "what": "権限タグの「+1」で残りの権限が隠れる。microphone.capture や email.modify のような重い権限が隠れる側に回りうるが、画面からは総数しか分からない",
+              "where": "Gmail カードと Meeting Agent カードの権限タグ末尾"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "trust-provenance",
+              "what": "外部サービスと自社機能が同一の作者表記・同一スタイルのアイコンで並び、区別がつかない",
+              "where": "各カードのアイコンと「astra・0.1.0」表記"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "system.calendar-permission",
+      "blind_id": "D673",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "screen-occupation",
+              "what": "内容が上端から 3 割ほどで終わり、以下がすべて空白。初回の空状態としても画面の大半が無言のまま残る",
+              "where": "「まだ何もありません」より下、ウィンドウ下端まで"
+            },
+            {
+              "axis": "state-legibility",
+              "what": "「まだ何もありません」がどの領域の空状態なのかを示す見出しが無い。直上の「これからの予定」の続きなのか、別の履歴一覧なのかが絵から判別できない",
+              "where": "「カレンダーを許可」カードの下"
+            },
+            {
+              "axis": "primary-action-clarity",
+              "what": "「録音を始める」の右端にラベルの無い下向き山形があり、押すと録音が始まるのか設定が開くのかが分からない。主要動作のカード内に、正体不明の第二の押し場所が同居している",
+              "where": "「録音を始める」カード右端"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "hierarchy",
+              "what": "カレンダー許可カードと「まだ何もありません」が仕切りなく縦に並び、意味の重複か別セクションか判別しにくい",
+              "where": "「これからの予定」ブロックとその直下のテキストの間"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "voice.context-expanded",
+      "blind_id": "D901",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "NOT_ENOUGH_EVIDENCE",
+          "valid": true,
+          "why": "",
+          "confidence": "low",
+          "concerns": [
+            {
+              "axis": "consistency",
+              "what": "同じ製品群の他画面が日本語 UI なのに対し、ここだけ提案文言が全て英語。ただし、これが別言語設定の画面か、固定英語かは 1 枚では確定できない",
+              "where": "パネル全体（Summarize page 以下の 4 行）"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "NOT_ENOUGH_EVIDENCE",
+          "valid": true,
+          "why": "",
+          "confidence": "low",
+          "concerns": []
+        }
+      ]
+    },
+    {
+      "id": "recording.rag",
+      "blind_id": "D96E",
+      "verdict": "FIX_CANDIDATE",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "state legibility",
+              "what": "Progress bars on resource cards have no visible label or legend explaining their meaning",
+              "where": "Right edge of each resource item in 'AI が探している資料' overlay panel"
+            }
+          ]
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "trust-provenance",
+              "what": "「AI が見ている資料」の 3 件が、右パネルの文字起こし 3 発言と同一文で、資料の出所（ファイル名・送信者・日付）が一切示されない。参照元開示の画面なのに、何を見ているのかが特定できない",
+              "where": "下部「AI が見ている資料」パネルの 3 行と、右の文字起こしリストの対比"
+            },
+            {
+              "axis": "state-legibility",
+              "what": "各行右端の横棒は長さが違うのに、単位も凡例も見出しも無い。関連度なのか一致数なのか読めない",
+              "where": "「AI が見ている資料」パネル各行の右端"
+            },
+            {
+              "axis": "consistency",
+              "what": "「ファイル」タブが選ばれているのに、行の主見出しが発言文であり、タブ名と中身の粒度が一致しない",
+              "where": "「ファイル / Gmail / Drive」タブとその直下の一覧"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "trust-provenance",
+              "what": "「資料」ラベルの中身が外部ドキュメントではなく会話の発言引用であり、ファイル/Gmail/Driveタブとの対応が不明瞭",
+              "where": "「AIが見ている資料」パネルのリスト項目とタブ"
+            },
+            {
+              "axis": "state legibility",
+              "what": "各項目右側の青いバーの長さに凡例がなく、何を表す指標か読み取れない",
+              "where": "リスト各行右端の青いバー"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "system.stt-unavailable",
+      "blind_id": "E149",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "error-recovery-clarity",
+              "what": "文字起こし不能を告げているのに、本文側は「決まったことを待っています...」「まだ発話がありません。」と待機表現を出し続ける。到来しないものを待つ表示になり、失敗が起きた事実が弱まる",
+              "where": "左パネルの決まったこと／やること直下、および右パネルの「まだ発話がありません。」"
+            },
+            {
+              "axis": "state-legibility",
+              "what": "要約／決まったこと／やることの 3 ボタンが淡色だが、無効なのか単に控えめな配色なのかを示す語が無い。押せない理由（文字起こしが無い）も添えられていない",
+              "where": "下部入力欄の右、3 つのボタン"
+            },
+            {
+              "axis": "hierarchy",
+              "what": "エラー行が本文と同じ幅の 1 行として本文欄の中に置かれ、赤色だけが警告の手掛かり。録音が続き音声が保存され続けるという重い状態に対し、扱いが軽い",
+              "where": "左「会議」パネル内、見出し直下の赤字行"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "error-recovery clarity",
+              "what": "文字起こし機能停止時も「決まったこと/やることを待っています」という通常の待機文言のままで、この状態が一時的な処理待ちなのか機能停止による恒久的なブロックなのか見分けがつかない",
+              "where": "左パネルの「決まったこと」「やること」プレースホルダー文言"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "system.generic-failure",
+      "blind_id": "E6D1",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "screen-occupation",
+              "what": "内容が上側に固まり、下側に大きな空白が残っている。ウィンドウの高さを使い切れていない",
+              "where": "本文列の「最近の頼みごと」より下、画面下端まで"
+            },
+            {
+              "axis": "consistency",
+              "what": "同じ形のパネル切り替えアイコンが左上と右上に重複して置かれ、役割の違いが絵から読めない",
+              "where": "ウィンドウ左上（サイドバー内）と右上"
+            },
+            {
+              "axis": "error-recovery-clarity",
+              "what": "失敗の理由と復旧の見込みが一行のみで、「1/2」「0:59」の意味が示されていない。回復操作が「やり直す」の一択に見える",
+              "where": "「最近の頼みごと」の行"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "error-recovery clarity",
+              "what": "失敗理由が「「送信」で止まりました」の一文のみで、「1/2」「0:59」が無説明の数値として並び、何が起きたか・次に何をすべきかが読み取りにくい",
+              "where": "最近の頼みごとカード内の失敗タスク行"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "main.home-recording-now",
+      "blind_id": "E911",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "state-legibility",
+              "what": "タイトルの「00:57」と右上の「00:01」という 2 つの時間表記が並び、どちらが現在の録音経過なのか判別できない",
+              "where": "赤い録音カードの見出しと右上"
+            },
+            {
+              "axis": "consistency",
+              "what": "「ライブメモを開く」は青リンク、「Ask Astra」は黒文字で、同列に並ぶ操作なのに見た目の格が揃っていない",
+              "where": "録音カード下段の左側"
+            },
+            {
+              "axis": "screen-occupation",
+              "what": "本文列の 3 分の 2 以上が空白で、録音中に見たい情報（メモや文字起こし）が何も出ていない",
+              "where": "入力欄より下の領域全体"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "consistency",
+              "what": "「止める」は赤ピル型ボタンなのに「Ask Astra」は装飾のないテキストで、同じ操作列内でアフォーダンスの強さが不揃い",
+              "where": "録音中バナー右下の操作行"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "settings.permissions",
+      "blind_id": "ED35",
+      "verdict": "FIX_CANDIDATE",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": [
+            {
+              "axis": "typography",
+              "what": "Text cramping and cutoff at viewport edges suggests poor responsive design or overflow handling",
+              "where": "Shortcut labels and permission items lose readability; '\\Space' escape notation appears literally instead of rendering"
+            },
+            {
+              "axis": "consistency",
+              "what": "Permission items show inconsistent button styles and labels—some completed states show inline status, others show separate action button",
+              "where": "Permission list (マイク/アクセシビリティ/カレンダー rows)"
+            }
+          ]
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "consistency",
+              "what": "画面見出しは「設定」なのにセクション名だけ「Interface Size」と英語で、言語が混ざっている",
+              "where": "ショートカットの下のセクション見出し"
+            },
+            {
+              "axis": "state-legibility",
+              "what": "許可の状態が、右端の緑文字（許可済み）と灰色文字＋ボタン（未確認）で表現形式が揃わず、行ごとに読み方を変える必要がある",
+              "where": "「許可 (OS)」一覧の右端の列"
+            },
+            {
+              "axis": "density",
+              "what": "「マイク」と「音声認識」の説明文がほぼ同じ内容を繰り返しており、どちらの許可が何のためか区別できない",
+              "where": "許可一覧の 1 行目と 4 行目の説明文"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "low",
+          "concerns": [
+            {
+              "axis": "consistency",
+              "what": "ウィンドウの信号ボタンが赤だけ着色され黄・緑が無色というのは、標準的なmacOSの非アクティブ表示（全て灰色）にもアクティブ表示（全て色付き）にも一致しない中間的な見た目になっている",
+              "where": "ウィンドウ左上の信号ボタン"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "voice.listening",
+      "blind_id": "EE84",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": [
+            {
+              "axis": "state legibility",
+              "what": "Listening mode provides minimal feedback—unclear what user should do or say, and message about missing context is not actionable",
+              "where": "Entire screen; only text is status and keystroke hint"
+            },
+            {
+              "axis": "contrast",
+              "what": "Dark overlay with small white text may reduce readability and create fatigue during active listening",
+              "where": "Background and text color scheme"
+            },
+            {
+              "axis": "primary-action clarity",
+              "what": "No clear indication of what user should do next; only shows how to exit (Esc) rather than what to do while listening",
+              "where": "Lack of instructional text or example prompts"
+            }
+          ]
+        },
+        {
+          "model": "opus",
+          "verdict": "NOT_ENOUGH_EVIDENCE",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "state-legibility",
+              "what": "「聞いています...」という進行中の表示と「見えている文脈はありません」という不在の表示が同時に出ており、静止画では待てばよいのか操作が要るのか決められない。波形が動くかどうかも 1 枚では確認できない",
+              "where": "帯の中央の 2 行"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "low",
+          "concerns": []
+        }
+      ]
+    },
+    {
+      "id": "session.processing",
+      "blind_id": "F48F",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "state-legibility",
+              "what": "進行中（保存しています...）なのに進捗の手がかりが無く、同じ行に「0 分」という完了済みらしい数値が同居していて、状態が矛盾して見える",
+              "where": "「最近の会議」カードの本文と右上の「今日 · 0 分」"
+            },
+            {
+              "axis": "screen-occupation",
+              "what": "内容が上 3/4 に固まり、下側が空白のまま",
+              "where": "「最近の会議」カードより下"
+            },
+            {
+              "axis": "consistency",
+              "what": "左上と右上に同形のサイドバー切り替えアイコンが二重に置かれている",
+              "where": "ウィンドウ左上と右上"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "state legibility",
+              "what": "処理中カードに表示される「0分」が実際の会議時間なのか未確定のプレースホルダーなのか区別がつかず、バグのように見える",
+              "where": "最近の会議カードの右上メタ情報"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "provenance.library-after-end",
+      "blind_id": "FB9B",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "alignment",
+              "what": "文字起こしの本文の開始位置が行ごとにずれている（1 行目だけ左に寄り、2・3 行目と縦に揃っていない）",
+              "where": "文字起こし一覧の 10:30 の行と 10:42 / 10:55 の行"
+            },
+            {
+              "axis": "state-legibility",
+              "what": "タイトルの「01:00 の会議」と右上の「0 分」が矛盾して見え、会議の長さがどちらか判断できない",
+              "where": "詳細見出しと右上のメタ表示"
+            },
+            {
+              "axis": "hierarchy",
+              "what": "「やること 0」が中身も代替文も無い空の見出しとして残り、要約 3 区分の並びの中で意味を持たない行になっている",
+              "where": "「決まったこと」と「メモ」の間"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "trust-provenance",
+              "what": "会議時間が「0分」と表示されているが、下の文字起こしは10:30から10:55まで続いており実際の長さと矛盾するため、メタデータの正確性への信頼を損なう",
+              "where": "画面右上の「今日・0分・2人」表示"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "provenance.source",
+      "blind_id": "FE27",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": [
+            {
+              "axis": "hierarchy",
+              "what": "右側パネルの視覚的優先度が不明確。出席者情報がメインコンテンツと等級で扱われている",
+              "where": "右側の『出席者 [1] Ken』パネルと中央メインコンテンツの境界"
+            },
+            {
+              "axis": "state_legibility",
+              "what": "ボタンラベル『競争』が日本語として理解困難。ユーザーは機能を推測できない",
+              "where": "中央下部のボタン行"
+            }
+          ]
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "screen-occupation",
+              "what": "中央の主要カラムの下半分が完全な空白で、画面の大部分が情報を持たない。会議 1 件・発言 3 行というデータ量に対してレイアウトが縮まらず、スカスカに見える",
+              "where": "中央カラム、文字起こし 10:55 の行より下"
+            },
+            {
+              "axis": "state-legibility",
+              "what": "「やること 0」が見出しと数字だけで、空であることを説明する文も、追加するための入口も無い。空状態か読み込み中か判別できない",
+              "where": "中央カラム「やること 0」の直下"
+            },
+            {
+              "axis": "hierarchy",
+              "what": "ウィンドウ上部と本文でタイトル「01:00 の会議」が重複し、上部のタイトルが情報を足していない",
+              "where": "画面最上部と、戻る矢印の右の見出し"
+            },
+            {
+              "axis": "alignment",
+              "what": "右「出所」パネルにヘッダー行が無く、パネル切替アイコンの下に不揃いな余白ができている。中央カラムのヘッダー（今日 · 0 分 · 2 人 の行）と高さが揃っていない",
+              "where": "右パネル上部、切替アイコンと「出所 [1]」の間"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "consistency",
+              "what": "会議時間の表示が「0分」となっているが、下部の文字起こしは10:30〜10:55の幅がありメタデータと矛盾する",
+              "where": "画面上部「今日・0分・2人」"
+            },
+            {
+              "axis": "screen occupation",
+              "what": "出所情報を表示する右パネルの大半が空白で、コンテンツに対してパネルの面積が過大",
+              "where": "画面右側の出所パネル"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "meeting.paused",
+      "blind_id": "FF87",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "NOT_ENOUGH_EVIDENCE",
+          "valid": true,
+          "why": "",
+          "confidence": "low",
+          "concerns": [
+            {
+              "axis": "consistency",
+              "what": "FE27との視覚的・機能的な関連が不明。同じ製品か別製品か判断不可",
+              "where": "全体"
+            },
+            {
+              "axis": "primary_action_clarity",
+              "what": "各ボタンアイコンが小さく、静止画では機能判断が困難。マウスホバーやツールチップが必要と推定される",
+              "where": "右側のボタン群"
+            }
+          ]
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": false,
+          "why": "照合 4/7（画面に無い文字）",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "consistency",
+              "what": "右側の操作群で、目のアイコンだけテキストラベルが無く、隣の 3 つはアイコン＋ラベル。同じ列に 2 つの表現が混在し、何をするボタンか読めない",
+              "where": "バー右側、「Ask Astra」と ▶ の間のアイコン"
+            },
+            {
+              "axis": "primary-action-clarity",
+              "what": "一時停止中の第一操作は「再開」のはずだが、▶ と ■ が同じ大きさ・同じ丸形で並び、赤い ■ の方が視覚的に強い。誤って停止を押しやすい",
+              "where": "バー右端の 2 つの丸ボタン"
+            },
+            {
+              "axis": "state-legibility",
+              "what": "点線状の波形が左端だけで途切れ、残りが空白。録音済みの長さを表すのか、停止で描画が止まっているのかが絵から判断できない",
+              "where": "「一時停止中 / 00:01」の右、メモの左までの帯"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "primary-action clarity",
+              "what": "録音を再開する再生ボタンと、録音を終了する破壊的な停止ボタンが同じ大きさ・隣接配置で、色以外の差が小さく誤操作のリスクがある",
+              "where": "ツールバー右端の再生ボタンと赤い停止ボタン"
+            },
+            {
+              "axis": "consistency",
+              "what": "同じツールバー内でボタンによってテキストラベルの有無が混在しており、視覚的な統一感がない",
+              "where": "メモ/字幕/Ask Astra(ラベル有)と目・再生・停止(ラベル無)"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "keep": 45,
+    "fix_candidate": 15,
+    "not_enough_evidence": 2,
+    "models": [
+      "haiku",
+      "opus",
+      "sonnet"
+    ]
+  },
+  "gate": "FAIL"
+}

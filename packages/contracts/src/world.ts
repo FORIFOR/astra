@@ -89,6 +89,16 @@ export const FactSource = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('artifact'), artifact_id: ArtifactId }),
   /** 利用者が自分で言った。これも出所として扱う。 */
   z.object({ kind: z.literal('user'), stated_at: Timestamp }),
+  /**
+   * 繋いだサービス（Gmail / Outlook / Calendar / To Do）から。Work Context 層が正規化した artifact の id で辿る。
+   * `source` は WorkSource（work.ts）と同じ語。
+   */
+  z.object({
+    kind: z.literal('connector'),
+    source: z.string().min(1).max(40),
+    external_id: z.string().min(1).max(500),
+    observed_at: Timestamp,
+  }),
 ]);
 export type FactSource = z.infer<typeof FactSource>;
 

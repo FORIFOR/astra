@@ -7,13 +7,14 @@ import SwiftUI
 /// 出していたので、古い会議を開くと直近の録音の中身が出ていた。
 struct SessionDetailView: View {
     let session: MeetingSession
+    @ObservedObject private var sessions = MeetingSessionStore.shared
     @ObservedObject private var store = AstraStateStore.shared
     @ObservedObject private var recording = RecordingWorkspaceState.shared
 
     /// この会議がいま録っている／読み取っている最中か。そのときだけ生の値を出す。
     private var isCurrent: Bool {
         recording.currentMeetingId == session.id
-            && (session.status == .recording || session.status == .processing)
+            && (sessions.session(id: session.id)?.status == .recording || sessions.session(id: session.id)?.status == .processing)
     }
 
     var body: some View {
@@ -22,6 +23,12 @@ struct SessionDetailView: View {
             : LocalStore.shared.loadTranscript(meetingId: session.id)
         let canvas = isCurrent ? store.state.meeting.canvas : LocalStore.shared.loadNotes(meetingId: session.id)
         let cites = SessionCitations(canvas: canvas, transcript: transcript, summary: session.summary)
+        let finalRows = CloudMeetingTranscription.savedRows(id: session.id)
+        let finalCitations = finalRows.map { row in
+            MeetingCitation(number: nil, text: row.text,
+                transcriptTime: String(format: "%02d:%02d", row.start_ms / 60_000, (row.start_ms / 1_000) % 60),
+                speaker: row.speaker_tag.map { "Google STT · 話者 \($0)" } ?? "Google STT")
+        }
         MeetingArtifactView(
             title: session.title,
             duration: session.timeLabel(),
@@ -33,8 +40,20 @@ struct SessionDetailView: View {
             questions: cites.questions,
             concerns: cites.concerns,
             notes: cites.notes,
-            transcript: cites.transcript,
-            hasAudio: false)
+            transcript: finalCitations.isEmpty ? cites.transcript : finalCitations,
+            hasAudio: false,
+            transcriptionFailure: sessions.session(id: session.id)?.status == .processing ? nil : CloudMeetingTranscription.savedFailure(id: session.id),
+            onRetryTranscription: {
+                sessions.beginProcessing(id: session.id)
+                RecordingRuntime.shared.retryCloudTranscription(id: session.id) { failure in
+                    if failure != nil { sessions.markFailed(id: session.id) }
+                    else {
+                        sessions.markReady(id: session.id, summary: session.summary,
+                            actions: session.actionCount, decisions: session.decisionCount,
+                            participants: session.participantCount)
+                    }
+                }
+            })
         .accessibilityIdentifier("sessionDetail")
     }
 }

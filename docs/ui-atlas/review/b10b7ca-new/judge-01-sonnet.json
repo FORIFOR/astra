@@ -1,0 +1,157 @@
+{
+  "pages": {
+    "1566": {
+      "visible_text": [
+        "設定画面を開けませんでした",
+        "システム設定を開く",
+        "×"
+      ],
+      "observation": {
+        "happening": "設定画面を開けなかったというエラー通知が、システム設定を開くボタンと閉じるボタンとともに表示されている",
+        "most_important": "エラーメッセージ本文と「システム設定を開く」ボタン",
+        "next_action": "「システム設定を開く」を押すか、×で通知を閉じる",
+        "anomalies": [
+          "右端に赤い「!」アイコンが半分だけ見えており、枠の外に切れている"
+        ]
+      },
+      "verdict": "FIX",
+      "concerns": [
+        {
+          "axis": "screen occupation",
+          "what": "赤い警告アイコンがピルの右端で切れて表示されている",
+          "where": "通知ピル右端"
+        }
+      ],
+      "confidence": "medium"
+    },
+    "36AE": {
+      "visible_text": [
+        "AnyDesk",
+        "AstraDbg",
+        "オンです・再起動すると使えます",
+        "ChatGPT",
+        "1"
+      ],
+      "observation": {
+        "happening": "権限リストの一部で、AstraDbg行が青い枠で強調され「オンです・再起動すると使えます」という吹き出しが重なっている",
+        "most_important": "AstraDbgがオンになっているが再起動が必要という案内",
+        "next_action": "アプリまたはMacを再起動して権限を反映させる",
+        "anomalies": [
+          "左上に赤い「1」バッジが枠の角で切れている",
+          "リストの上下が途中で切れている（クロップされている）"
+        ]
+      },
+      "verdict": "FIX",
+      "concerns": [
+        {
+          "axis": "screen occupation",
+          "what": "通知バッジが画像の角で切れて全体が見えない",
+          "where": "左上の赤い丸バッジ"
+        }
+      ],
+      "confidence": "low"
+    },
+    "4DAD": {
+      "visible_text": [
+        "スクリーンショット",
+        "認識しました",
+        "そのまま聞いてください"
+      ],
+      "observation": {
+        "happening": "スクリーンショットを認識したことを知らせる暗色の通知ピルが表示されている",
+        "most_important": "「認識しました・そのまま聞いてください」という確認メッセージ",
+        "next_action": "特に操作は不要、そのまま話し続ける",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "586C": {
+      "visible_text": [
+        "設定画面で",
+        "Astra",
+        "をオンにしてください",
+        "システム設定を開く",
+        "×"
+      ],
+      "observation": {
+        "happening": "Astraを設定画面でオンにするよう促す通知が、システム設定を開くボタンと閉じるボタンとともに表示されている",
+        "most_important": "指示文と「システム設定を開く」ボタン",
+        "next_action": "ボタンを押してシステム設定を開く、または×で閉じる",
+        "anomalies": [
+          "右端の丸い音声波形アイコンが枠の端で切れているように見える"
+        ]
+      },
+      "verdict": "FIX",
+      "concerns": [
+        {
+          "axis": "alignment",
+          "what": "右端の円形アイコンが画像枠で途切れている",
+          "where": "ピル右端の丸アイコン"
+        }
+      ],
+      "confidence": "medium"
+    },
+    "6172": {
+      "visible_text": [
+        "画面収録を使うため",
+        "システム設定で",
+        "Astra",
+        "を",
+        "オンにしてください",
+        "×"
+      ],
+      "observation": {
+        "happening": "画面収録機能のためにAstraをシステム設定でオンにするよう求める2行の通知が表示されている",
+        "most_important": "権限が必要な理由（画面収録）とオンにすべき指示",
+        "next_action": "×で閉じる以外に画面上で直接取れる操作がない",
+        "anomalies": [
+          "同様の他の通知（586C・1566）には「システム設定を開く」ボタンがあるが、これには存在しない"
+        ]
+      },
+      "verdict": "FIX",
+      "concerns": [
+        {
+          "axis": "primary-action clarity",
+          "what": "設定をオンにするよう指示しているのに、直接遷移できるボタンがない",
+          "where": "通知ピル全体"
+        }
+      ],
+      "confidence": "medium"
+    },
+    "6AE4": {
+      "visible_text": [
+        "Shuhei Horio",
+        "Apple Account",
+        "iCloudストレージが残りわずかです",
+        "Wi-Fi",
+        "Bluetooth",
+        "ネットワーク",
+        "画面収録とシステムオーディオ録音",
+        "AstraDbg",
+        "オンです・再起動すると使えます",
+        "Claude"
+      ],
+      "observation": {
+        "happening": "macOSのシステム設定「プライバシーとセキュリティ > 画面収録とシステムオーディオ録音」画面で、AstraDbgの行が強調表示され、オンだが再起動が必要という吹き出しが出ている",
+        "most_important": "AstraDbgのトグルがオンで、再起動しないと使えない旨の案内",
+        "next_action": "再起動する、または他のアプリの権限を確認するためスクロールする",
+        "anomalies": [
+          "サイドバーのiCloud警告バッジが本題と無関係に表示されている",
+          "VoiceOSだけトグルがオフで他と状態が異なる",
+          "リストが下に続いておりスクロールバーが見える"
+        ]
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    }
+  },
+  "_judge": {
+    "model": "sonnet",
+    "cost_usd": 0.1609358,
+    "turns": 7,
+    "duration_ms": 69946
+  }
+}

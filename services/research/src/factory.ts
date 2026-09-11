@@ -5,6 +5,7 @@
  * 製品の判断であって、ここで勝手に決めない。決まるまでは代役を返し、
  * 代役であることを名乗る。
  */
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { DeterministicLanguageModel, StaticSearchProvider } from './providers.js';
 import type { LanguageModel, SearchProvider } from './providers.js';
 import { AnthropicLanguageModel } from './anthropic.js';
@@ -109,12 +110,17 @@ function pickModel(
  * 調査の実装は「どの仕事の一部か」を知らないし、知る必要もない。
  * 置くのは activity で、**置かれていなければ端末には頼めない**。
  */
-let context: HostModelContext | null = null;
+const context = new AsyncLocalStorage<HostModelContext | null>();
 
+/** Compatibility for callers that already have a dedicated async execution scope. */
 export function setModelContext(where: HostModelContext | null): void {
-  context = where;
+  context.enterWith(where);
+}
+
+export function withModelContext<T>(where: HostModelContext, run: () => Promise<T>): Promise<T> {
+  return context.run(where, run);
 }
 
 function currentContext(): HostModelContext | null {
-  return context;
+  return context.getStore() ?? null;
 }

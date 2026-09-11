@@ -14,3 +14,6 @@ export * from './step-transport.js';
 export * from './claude-code.js';
 export * from './llm-steps.js';
 export * from './runner.js';
+export * from './work-sync.js';
+export * from './live-fixture.js';
+export * from './grants.js';

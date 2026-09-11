@@ -1,0 +1,28 @@
+name: Bug report
+description: Report a reproducible problem with the developer preview.
+title: '[Bug] '
+body:
+  - type: markdown
+    attributes:
+      value: 'This issue is public. Use synthetic examples and remove credentials and personal data.'
+  - type: input
+    id: version
+    attributes:
+      label: Astra version / commit and macOS version
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps, expected result, and actual result
+    validations:
+      required: true
+  - type: input
+    id: model
+    attributes:
+      label: Model route and model name, if relevant
+      description: 'For example: local Ollama. Never include an API key.'
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Sanitized screenshot or error message

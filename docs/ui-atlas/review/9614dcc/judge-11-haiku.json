@@ -1,0 +1,56 @@
+{
+  "pages": {
+    "F9B9": {
+      "visible_text": [
+        "04:21",
+        "録音中",
+        "会議",
+        "マイクと画面の音を聞いています",
+        "この Mac ではオンデバイス文字起こしを使えません。音声は保存されています",
+        "設定を開く（音声入力）",
+        "決まったことを待っています",
+        "やることを待っています",
+        "文字起こし",
+        "翻訳",
+        "字幕",
+        "まだ発話がありません"
+      ],
+      "observation": {
+        "happening": "Active meeting recording in progress with 04:21 elapsed time. Interface shows placeholder waiting states for decided items and action items. Warning banner indicates on-device transcription unavailable on this Mac, but audio is being saved.",
+        "most_important": "Recording is active and operational. Warning communicates a limitation clearly while reassuring user that data is captured. The interface acknowledges no speech content yet and waits for meeting to develop.",
+        "next_action": "Continue meeting; sections will populate as meeting progresses and transcription becomes available.",
+        "anomalies": [
+          "Both main content panels (decided items, action items) show only placeholder text with significant empty space below",
+          "Right panel is empty despite three tabs being available (transcription/translation/subtitles)",
+          "Large vertical space allocated to waiting states"
+        ]
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    },
+    "FFFD": {
+      "visible_text": [
+        "週次ブリーフィングを作る",
+        "2 件のリソースから作成しました",
+        "開く",
+        "コピー"
+      ],
+      "observation": {
+        "happening": "Success notification/toast showing completion of weekly briefing generation from 2 resources. Green checkmark indicates successful operation. User presented with two action options.",
+        "most_important": "Task completed successfully. User can immediately open the generated briefing or copy it.",
+        "next_action": "User selects 'open' or 'copy' to work with the generated briefing.",
+        "anomalies": []
+      },
+      "verdict": "KEEP",
+      "concerns": [],
+      "confidence": "high"
+    }
+  },
+  "_judge": {
+    "model": "haiku",
+    "cost_usd": 0.051946400000000004,
+    "turns": 3,
+    "duration_ms": 47215
+  }
+}

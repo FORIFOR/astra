@@ -1,0 +1,4 @@
+
+> astra@0.1.2 typecheck /Users/shuhei/Projects/astra
+> tsc -b tsconfig.build.json && tsc -p tsconfig.tests.json
+

@@ -1,0 +1,350 @@
+{
+  "rc": "1039989",
+  "pages": [
+    {
+      "id": "guided-setup.intro",
+      "blind_id": "0681",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "state legibility",
+              "what": "権限未許可という重要度の高い状態を伝える通知に警告アイコンが無く、同種の他通知(31D7)には⚠が付いていて重大度の伝え方が一貫していない",
+              "where": "通知テキスト先頭"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.denied",
+      "blind_id": "31D7",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "screen occupation / alignment",
+              "what": "右端の丸い部品が枠に対して収まりきらず、円の右側が切れている。失敗を伝える画面で部品が欠けていると、表示自体が壊れているように見えて信頼を損なう。",
+              "where": "画像右端の丸いアイコン（× の右側）"
+            },
+            {
+              "axis": "error-recovery clarity",
+              "what": "失敗の理由が書かれておらず、主要アクションは同じ操作の再試行のみ。パンくずは出ているが自力で辿るための手掛かり（コピー等の操作）が絵の中にない。",
+              "where": "「設定画面を開けませんでした」と「もう一度開く」の組"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "error-recovery clarity",
+              "what": "設定画面を開けなかった原因の説明がなく、再試行以外の代替手段(手動パスの案内など)が提示されていない",
+              "where": "本文サブテキスト"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.target-missing",
+      "blind_id": "3EB0",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "low",
+          "concerns": [
+            {
+              "axis": "consistency",
+              "what": "同じ画面収録許可フローに対して文言バリエーションが複数あり(0681と本画像)、ユーザーが状況の違いを理解しにくい",
+              "where": "通知タイトル文"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "screenshot.attached-cloud",
+      "blind_id": "9905",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": false,
+          "why": "照合 2/2（画面に無い文字）",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": []
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "typography",
+              "what": "左端のピクトグラムが「スクリーンショット」の意味と合致しない形状で、アイコンの意図が読み取れない",
+              "where": "左端アイコン"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "screenshot.detected",
+      "blind_id": "ABBC",
+      "verdict": "FIX_CANDIDATE",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": false,
+          "why": "照合 1/2（画面に無い文字）",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "state legibility",
+              "what": "「読み込み中／認識済み」の違いが、暗い背景の上の小さな灰色 1 行だけで表現されている。太字の見出しもサムネイルも前の状態と同じで、状態が変わったことに気づきにくい。",
+              "where": "見出し「スクリーンショット」と 2 行目「認識しました・そのまま聞けます」"
+            },
+            {
+              "axis": "contrast",
+              "what": "状態を伝える唯一の文字列が、濃いグレー地の上に細く小さい中間グレーで置かれており、見出しとのコントラスト差が大きい。",
+              "where": "帯の 2 行目"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "state legibility",
+              "what": "異なる処理状態(送信前と認識済み)なのにアイコン・色・レイアウトが同一で、状態遷移が視覚的に区別できない",
+              "where": "ピル全体のスタイル"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.target-highlighted",
+      "blind_id": "E00C",
+      "verdict": "FIX_CANDIDATE",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": [
+            {
+              "axis": "state legibility",
+              "what": "Red badge with number '1' is unexplained—unclear if it indicates errors, notifications, or prerequisites",
+              "where": "Left side of the service list"
+            },
+            {
+              "axis": "consistency",
+              "what": "Only AstraDbg has explanatory text about restart requirement; ChatGPT and AnyDesk lack any description, creating uneven information hierarchy",
+              "where": "Item-level text across the three services"
+            }
+          ]
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": [
+            {
+              "axis": "trust-provenance",
+              "what": "画面収録の許可を与える一覧で、対象アプリ AstraDbg のアイコンだけが空の灰色四角。前後の行が実アイコンを持つ中で、どのアプリに権限を渡すのか絵で確認できない。",
+              "where": "AstraDbg 行の左端アイコン"
+            },
+            {
+              "axis": "density / alignment",
+              "what": "「AstraDbg を再起動すると使えます」のラベルが行の上に覆いかぶさり、右端は強調枠付きスイッチにほぼ接している。行の内容が隠れ、余白も潰れている。",
+              "where": "AstraDbg 行の中央〜右、スイッチの手前"
+            },
+            {
+              "axis": "state legibility",
+              "what": "スイッチは青（オン）なのに文言は「再起動すると使えます」で、オンなのに使えないという食い違いを、ラベル 1 行だけで説明している。行の見た目は他のオン行と同じ。",
+              "where": "AstraDbg 行のスイッチとラベル"
+            },
+            {
+              "axis": "primary-action clarity",
+              "what": "「再起動すると使えます」と促しているが、その場で再起動する操作が画面上に見当たらない。",
+              "where": "AstraDbg 行のラベル"
+            },
+            {
+              "axis": "hierarchy",
+              "what": "左端に説明のない赤い「1」バッジが一覧の外に浮いており、どの項目に対する未処理なのか結び付かない。",
+              "where": "画像左端の赤い丸"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "error-recovery clarity",
+              "what": "再起動が必要と案内されているが、その場でアプリを再起動する操作(ボタン等)が提供されておらず、ユーザーが手動で対応するしかない",
+              "where": "AstraDbg行のツールチップ"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "guided-setup.granted",
+      "blind_id": "FEDB",
+      "verdict": "KEEP",
+      "judges": [
+        {
+          "model": "haiku",
+          "verdict": "KEEP",
+          "valid": true,
+          "why": "",
+          "confidence": "high",
+          "concerns": []
+        },
+        {
+          "model": "opus",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "state legibility",
+              "what": "円形バッジ内の縦棒3本が何の状態を表すか（録音中/待機中/音量レベル）が絵から読み取れず、成功メッセージと合わせて『いま録画されているのか』が判断できない",
+              "where": "右側の円形バッジ内部"
+            },
+            {
+              "axis": "alignment",
+              "what": "円形バッジが pill の上下からはみ出しており、高さ・中心線が揃っていない。左に離れた pill と視覚的に一体でも独立でもない中途半端な配置",
+              "where": "pill 右端と円形バッジの境界／両者の間の空き"
+            },
+            {
+              "axis": "consistency",
+              "what": "同一の帯の中に、角丸の薄グレー pill と、縁取りのある淡緑の円という異なる形状・色・境界処理の 2 部品が並び、同じ系統の UI に見えない",
+              "where": "帯全体（pill と円形バッジ）"
+            }
+          ]
+        },
+        {
+          "model": "sonnet",
+          "verdict": "FIX",
+          "valid": true,
+          "why": "",
+          "confidence": "medium",
+          "concerns": [
+            {
+              "axis": "consistency",
+              "what": "通知トーストと隣接する円形アイコンボタンが同じ高さ・行に並んでいるが視覚的に無関係な2つの要素に見え、グルーピングの意図が不明瞭",
+              "where": "画像中央〜右側、トーストと丸いボタンの間の余白部分"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "keep": 5,
+    "fix_candidate": 2,
+    "not_enough_evidence": 0,
+    "models": [
+      "haiku",
+      "opus",
+      "sonnet"
+    ]
+  },
+  "gate": "FAIL"
+}

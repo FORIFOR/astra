@@ -20,7 +20,7 @@ sources() { find "$SRC" -name '*.swift' ! -name 'SelfTest.swift' ! -name 'UIGeom
 
 check() {  # $1=名前 $2=上限 $3=理由 $4=パターン
   name="$1"; limit="$2"; why="$3"; pattern="$4"
-  n="$(sources | xargs grep -hoE "$pattern" 2>/dev/null | wc -l | tr -d ' ')"
+  n="$(python3 "$ROOT/scripts/ui-taste-count.py" "$SRC" "$name" "$pattern" "$ROOT/docs/release-evidence/2026-09-08/ui-taste-review.json")" || { fail=1; return; }
   if [ "$n" -gt "$limit" ]; then
     echo "  ${name}: ${n} 箇所（上限 ${limit}）— ${why}" >&2
     sources | xargs grep -lE "$pattern" 2>/dev/null | sed "s|$ROOT/||" | head -3 | sed 's/^/      /' >&2
@@ -48,6 +48,8 @@ check "material/blur" 8 "すりガラスの多用。地は 1 つで足りる" \
 check "sparkles アイコン" 6 "意味の無い sparkles。AI らしさの飾りにしない" \
   "systemName: \"sparkles"
 
+# RC追加箇所の用途レビューは docs/release-evidence/2026-09-08/ui-taste-review.json。
+# ソースhashが変わると失効。全体上限を一律に緩めず、未レビューの追加は従来どおり落とす。
 # 何でも Pill 化。Capsule は波形・チップなど本当に丸いものだけ。
 check "Capsule" 20 "何でも Pill にしていないか" \
   "Capsule\(\)"

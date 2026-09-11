@@ -2,7 +2,7 @@
  * MeetingService の DB 側。Phase 3 実装仕様 §3。
  *   ./infra/db/with-test-db.sh pnpm --filter @astra/service-meeting test
  */
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { uuidv7 } from '@astra/contracts';
 import { createDb, withIdentity, withTenant, type DbHandle } from '@astra/db';
 import { MeetingService } from '../src/service.js';
@@ -151,17 +151,32 @@ describe.skipIf(!url)('MeetingService', () => {
     expect(await service.speakers(tenantId, another.id)).toEqual([]);
   });
 
-  it('translates a final segment once, no matter how often it is asked', async () => {
+  it('calls the translator once across concurrent services and persisted retries', async () => {
     const meeting = await startMeeting();
     const [segment] = await service.ingest(tenantId, meeting.id, [r({ text: '初期費用が' })]);
-    await service.translate(tenantId, meeting.id, segment!, 'en-US');
-    await service.translate(tenantId, meeting.id, segment!, 'en-US');
-
+    const translator = new EchoTranslationProvider();
+    const translate = vi.spyOn(translator, 'translate');
+    const create = () => new MeetingService({ db, publisher: { async publish() {} }, translator });
+    const answers = await Promise.all(
+      [create(), create(), create()].map((s) =>
+        s.translate(tenantId, meeting.id, segment!, 'en-US'),
+      ),
+    );
+    expect(new Set(answers).size).toBe(1);
+    await create().translate(tenantId, meeting.id, segment!, 'en-US');
+    expect(translate).toHaveBeenCalledTimes(1);
     const rows = await withTenant(db, tenantId, (tx) =>
       tx.selectFrom('translations').selectAll().where('meeting_id', '=', meeting.id).execute(),
     );
     expect(rows).toHaveLength(1);
-    expect(rows[0]!.text).toContain('初期費用が');
+    const events = await service.eventsAfter(tenantId, meeting.id, 0);
+    expect(events.filter((e) => e.type === 'meeting.translation.final')).toHaveLength(1);
+    await expect(
+      create().translate(otherTenantId, meeting.id, segment!, 'en-US'),
+    ).rejects.toThrow();
+    expect(translate).toHaveBeenCalledTimes(1);
+    expect(await create().translate(tenantId, meeting.id, segment!, 'ja')).toBe(segment!.text);
+    expect(translate).toHaveBeenCalledTimes(1); // already in target language
   });
 
   it('marks a meeting degraded without ending it', async () => {
@@ -229,5 +244,106 @@ describe.skipIf(!url)('MeetingService', () => {
       // 終わった時刻も残る。いつ止まったかが分からないと追えない。
       expect(after.ended_at).not.toBeNull();
     });
+  });
+
+  it('meeting.bundle hands decisions and actions to the Work Graph sink with stable ids, twice the same', async () => {
+    const { meetingExecutors } = await import('../src/executor.js');
+    const { MemoryRecordingStore } = await import('../src/recording.js');
+    const meeting = await service.start({
+      tenantId,
+      userId,
+      title: 'MOPITA 定例',
+      language: 'ja-JP',
+      targetLanguage: null,
+      audioSources: ['microphone'],
+    });
+    await service.ingest(tenantId, meeting.id, [
+      {
+        isFinal: true,
+        speakerTag: 1,
+        text: '価格案を再提出することにしましょう',
+        startMs: 1000,
+        endMs: 4000,
+        language: 'ja',
+        confidence: 0.9,
+        source: 'microphone',
+      },
+      {
+        isFinal: true,
+        speakerTag: 1,
+        text: '見積を 9/9 までに送ります',
+        startMs: 5000,
+        endMs: 8000,
+        language: 'ja',
+        confidence: 0.9,
+        source: 'microphone',
+      },
+    ] as never);
+    const received: string[][] = [];
+    const executors = meetingExecutors({
+      meetings: service,
+      library: { create: async () => ({ id: uuidv7() }) } as never,
+      recordings: new MemoryRecordingStore(),
+      batch: {
+        name: 'test',
+        isStandIn: true,
+        async transcribe() {
+          throw new Error('unused');
+        },
+      },
+      summarizer: {
+        name: 'fixed',
+        isStandIn: true,
+        async summarize(segments: readonly { id: string }[]) {
+          return {
+            summary: [],
+            decisions: [
+              {
+                text: '価格案を再提出することにしましょう',
+                segmentIds: [String(segments[0]?.id ?? '')],
+              },
+            ],
+            actionItems: [
+              {
+                text: '見積を 9/9 までに送ります',
+                segmentIds: [String(segments[1]?.id ?? '')],
+                assignee: '自分',
+                due: '9/9',
+              },
+            ],
+            openQuestions: [],
+          };
+        },
+      } as never,
+      sink: {
+        async publish(input) {
+          // 安定 id: meeting:<id>:decision|action:<segment>。世界モデル側の関数と同じ規則（そちらは pure test で見る）。
+          const ids = [
+            ...input.bundle.decisions.map(
+              (d) =>
+                `meeting:${input.meeting.id}:decision:${String(d.citations[0]?.segment_id ?? '')}`,
+            ),
+            ...input.bundle.action_items.map(
+              (a) =>
+                `meeting:${input.meeting.id}:action:${String(a.citations[0]?.segment_id ?? '')}`,
+            ),
+          ];
+          received.push(ids);
+          return { published: ids.length };
+        },
+      },
+    });
+    const run = () =>
+      executors['meeting.bundle']!.execute(
+        { taskId: uuidv7(), tenantId, userId, input: { meeting_id: meeting.id } },
+        { toolId: 'meeting.bundle', args: { meeting_id: meeting.id } },
+      );
+    const first = await run();
+    const second = await run();
+    expect(first.detail).toContain('to Work Graph');
+    expect(received).toHaveLength(2);
+    expect(received[0]).toEqual(received[1]);
+    expect((first.result as { work_artifacts: number }).work_artifacts).toBe(received[0]!.length);
+    expect((second.result as { work_artifacts: number }).work_artifacts).toBe(received[0]!.length);
   });
 });

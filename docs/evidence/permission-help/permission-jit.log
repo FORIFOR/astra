@@ -1,0 +1,19 @@
+  起動経路（AppDelegate）で権限を求めていない OK
+  求めている場所:
+    apps/astra-macos/Sources/AstraMac/GuidedSetup/PermissionManager.swift:41:        Permissions.requestMicrophone(done)
+    apps/astra-macos/Sources/AstraMac/Settings/PermissionCenter.swift:88:            case .microphone: Permissions.requestMicrophone { _ in done() }
+    apps/astra-macos/Sources/AstraMac/Settings/PermissionCenter.swift:89:            case .screenRecording: Permissions.requestScreenRecording(); done()
+    apps/astra-macos/Sources/AstraMac/Settings/PermissionCenter.swift:91:            case .calendar: Permissions.requestCalendar { _ in done() }
+    apps/astra-macos/Sources/AstraMac/Settings/PermissionCenter.swift:92:            case .speechRecognition: Permissions.requestSpeechRecognition { _ in done() }
+    apps/astra-macos/Sources/AstraMac/Settings/SettingsView.swift:42:                              request: { Permissions.requestSpeechRecognition { _ in speech = Permissions.speechRecognition } })
+    apps/astra-macos/Sources/AstraMac/Settings/SettingsView.swift:44:                              request: { Permissions.requestCalendar { _ in cal = Permissions.calendar } })
+    apps/astra-macos/Sources/AstraMac/Settings/SettingsView.swift:48:                    if !Permissions.requestInputMonitoring() { Permissions.openInputMonitoringSettings() }
+    apps/astra-macos/Sources/AstraMac/Home/HomeView.swift:430:                PermissionCenter.request(.schedule) {
+    apps/astra-macos/Sources/AstraMac/VoiceHUD/VoiceHUDState.swift:57:        PermissionCenter.request(.voice)
+    apps/astra-macos/Sources/AstraMac/RecordingWorkspace/RecordingWorkspaceState.swift:245:                Permissions.requestMicrophone { [weak self] granted in
+    apps/astra-macos/Sources/AstraMac/RecordingWorkspace/RecordingWorkspaceState.swift:308:            PermissionCenter.request(.meeting) {
+    apps/astra-macos/Sources/AstraMac/RecordingWorkspace/RecordingWorkspaceState.swift:337:        if screenAudio && requestPermissions { PermissionCenter.request(.meetingAudio) }
+  求める場所は機能の入口だけ OK
+  取扱説明書も「使うときに要るものだけ」 OK
+
+PERMISSION_JIT_OK: 起動時に求めず、使う直前に求める

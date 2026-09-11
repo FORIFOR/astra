@@ -39,7 +39,12 @@ enum UserFacingFacts {
     static let notesConcerns = "懸念"
     static let sourceLabel = "出所"
     static let homeIntentPlaceholder = "何を終わらせますか？"
+    static var homeSubmitHint: String { "\(UserShortcut.submitRequest.display) で送信・Return で改行" }
     static let listeningPlaceholder = "聞いています…"
+    /// Dock の字幕・文字起こしがまだ空のとき。メモ・翻訳と同じく「何も無いことを隠さない」。
+    static let captionsEmpty = "まだ発言がありません。聞こえたらここに流れます。"
+    /// 新しい録音の Project が空のとき。隣の「自分だけ」と同じ言葉で（「None」だけ英語だった）。
+    static let projectNone = "なし"
     /// 録音は続いているが、この Mac ではオンデバイス STT の資産が無い。サーバへは落とさない（`SpeechTranscriber`）。
     static let transcriptionOnDeviceUnavailable = "この Mac ではオンデバイス文字起こしを使えません。音声は保存されています"
     static let taskOpenWorkspace = "作業画面で続ける"
@@ -49,16 +54,71 @@ enum UserFacingFacts {
     static let confirmationConfirmExample = "送る"
     static let confirmationCancel = "やめる"
     static let confirmationEdit = "直す"
-    static let confirmationEditDone = "完了"
+    static let confirmationEditDone = "直し終える"
+    static let confirmationEditTitle = "内容を直す"
+    static let confirmationEditReturn = "修正内容を確認画面に戻します"
     static let resultOpen = "開く"
     static let resultCopy = "コピー"
     static let resultOpenSettings = "設定を開く"
     static let recoveryResume = "続きから"
+    // Home の Work Context（気にすること・待ち・返すもの・今週の負荷）と Personalization。
+    static let workContextTitle = "今日、気にした方がいいこと"
+    static let workWaitingTitle = "待っていること"
+    static let workOwedTitle = "返すもの"
+    static let workWeekTitle = "今週の負荷"
+    static let workEvidence = "出所を見る"
+    static let workNotPriority = "優先ではない"
+    static let workDismiss = "外す"
+    static let workDone = "済んだ"
+    /// 「なぜ重要？」。数式は見せない。理由の行と、出所。
+    static let workWhy = "なぜ重要？"
+    static let workClose = "閉じる"
+    static let workLevelHigh = "高"
+    static let workLevelMid = "中"
+    static let workLevelLow = "低"
+    static let workContextSourcesTitle = "仕事のコンテキスト"
+    /// 「これ返して」の確認カードと、会議前の brief。
+    static let replyTitleSuffix = "さんへの返信"
+    static let replySend = "送る"
+    static let replyConnectNeeded = "送るには「Gmail（下書き・送信・整理）」の接続が要ります"
+    static let replyConnect = "接続する"
+    static let briefTitle = "次の会議"
+    static let briefPrepare = "準備する"
+    static let briefClose = "閉じる"
+    static let briefStart = "この予定を録音"
+    static let briefHistory = "前回からの経緯"
+    static let briefOpenSource = "元の資料を開く"
+    static let briefPrevious = "前回"
+    static let briefSince = "その後"
+    static let briefOpen = "開いている件"
+    static let briefQuestions = "今日確認したいこと"
+    static let personalizationTitle = "Astra が使っているあなたの情報"
+    static let personalizationEdit = "編集"
+    static let personalizationConfirm = "そのとおり"
+    static let personalizationDisableTrait = "この推測を使わない"
+    static let personalizationDisableAll = "推測を使わない"
+    static let personalizationEnableAll = "推測を使う"
     static let recoveryDiscard = "破棄"
+    /// できなかった頼みごとを、同じ入口でもう一度。黙って消える代わりに出す道。
+    static let resultRetry = "やり直す"
+    /// オンデバイス文字起こしが使えないときの直し方（システム設定 > キーボード > 音声入力）。
+    static let transcriptionRecoveryHint = "システム設定の音声入力で日本語を入れると使えます"
+    /// 設定の「入力監視」行に添える理由（他の 4 行は PermissionCenter の reason）。
+    static let permissionInputMonitoringReason = "⌥Space をどこからでも効かせるには入力監視が要ります。"
+    /// Dock の会議コントローラの一時停止 / 再開。
+    static let recordingPause = "一時停止"
+    static let recordingResume = "再開"
     static let sessionInterrupted = "途中で終わっています"
+    static let dockRecord = "録音"
+    static let dockRelated = "関連操作"
+    static let menuShowControls = "録音コントロールを表示"
+    static let translationTarget = "翻訳先"
+    static let translationAuto = "自動更新"
+    static let translationRetry = "翻訳を再試行"
+    static let liveRetry = "ライブ字幕を再接続"
     static let hudClickHint = "クリック"
     static let permissionRequest = "許可…"
-    static let settingsPermissionsSection = "許可（OS）"
+    static let settingsPermissionsSection = "Astraでできること"
     static let settingsShortcutRow = "録音を開始 / 停止"
 
     // 録音の見出し（録音中 / 一時停止中）の正本は astra-core（Rust）の `hero_text`。
@@ -76,6 +136,22 @@ enum UserFacingFacts {
     static let menuOpen = "Astra を開く"
     static let menuSettings = "設定…"
     static let menuGuide = "操作ガイド（PDF）"
+    /// Guided Setup: 右下のアバターが System Settings の操作対象を案内する。
+    static let menuGuidedSetup = "権限の設定を案内…"
+
+    // MARK: スクショ自動コンテキスト（画像の行き先を偽らない）
+    /// cloud のモデルで見るとき。「画像は端末から出ない」とは言わない。{provider} はモデルの名前。
+    static let screenshotEgressCloud = "質問したときだけ、その画像を {provider} へ送ります"
+    /// 端末内のモデルで見るとき。
+    static let screenshotEgressLocal = "画像は端末の外へ送りません"
+    /// 検知の一瞬（〜1 秒）だけ Dock に出す 2 行目（1 行目は chip の名）。窓は増やさない・focus は奪わない。
+    static let screenshotDetected = "認識しました · そのまま聞けます"
+    /// chip の名。以降は「· たった今」などの短い出所だけを添える。
+    static let screenshotChip = "スクリーンショット"
+    /// 質問で添えたあとの compact provenance（cloud）。{provider} はモデルの名前。
+    static let screenshotSentCompact = "{provider} に送信"
+    /// 初回だけ明示する（以降は compact）。
+    static let screenshotSentFirst = "質問したときだけ {provider} に送信"
     static let menuQuit = "Astra を終了"
     static let menuCheckUpdates = "更新を確認…"
     /// 更新を確認できない実行体（appcast / 公開鍵の無い swift build 等）で出す面。偽の「最新です」は出さない。
@@ -95,7 +171,7 @@ enum UserFacingFacts {
     static let libraryMeetings = "Meetings"
     static let libraryFiles = "Files"
     static let appsPlugins = "Plugins"
-    static let appsConnectors = "Connectors"
+    static let appsConnectors = "Connections"
     /// `DockLabel` が大文字にして出す（画面では PLAN / CONTEXT / SUGGESTED）。
     static let dockPlan = "Plan"
     static let dockContext = "Context"
@@ -104,6 +180,8 @@ enum UserFacingFacts {
     // MARK: 許可名（設定画面の 5 行。OS の設定と同じ語）
 
     static let permissionMicrophone = "マイク"
+    /// 6 つ目の許可。`permission.` の鍵は設定の 5 行を数える facts selftest が見るので、別の鍵に置く。
+    static let permissionSpeechRecognition = "音声認識"
     static let permissionScreenRecording = "画面収録"
     static let permissionAccessibility = "アクセシビリティ"
     static let permissionCalendar = "カレンダー"
@@ -121,6 +199,13 @@ enum UserFacingFacts {
         func f(_ k: String, _ v: String, _ p: Bool = true) -> Fact { Fact(key: k, value: v, protected: p) }
         return [
             f("recording.start", recordingStart),
+            f("menu.guidedSetup", menuGuidedSetup),
+            f("screenshot.egress.cloud", screenshotEgressCloud),
+            f("screenshot.egress.local", screenshotEgressLocal),
+            f("screenshot.detected", screenshotDetected),
+            f("screenshot.chip", screenshotChip),
+            f("screenshot.sent.compact", screenshotSentCompact),
+            f("screenshot.sent.first", screenshotSentFirst),
             f("recording.menu.start", recordingMenuStart),
             f("recording.menu.stop", recordingMenuStop),
             f("recording.stop", recordingStop, false),
@@ -137,19 +222,71 @@ enum UserFacingFacts {
             f("notes.concerns", notesConcerns, false),
             f("source.label", sourceLabel),
             f("home.intent.placeholder", homeIntentPlaceholder),
+            f("home.intent.submitHint", homeSubmitHint, false),
             f("listening.placeholder", listeningPlaceholder),
+            f("captions.empty", captionsEmpty, false),
+            f("sheet.project.none", projectNone, false),
             f("transcription.onDeviceUnavailable", transcriptionOnDeviceUnavailable),
             f("task.openWorkspace", taskOpenWorkspace),
             f("confirmation.confirm.example", confirmationConfirmExample, false),
             f("confirmation.cancel", confirmationCancel),
             f("confirmation.edit", confirmationEdit),
             f("confirmation.editDone", confirmationEditDone, false),
+            f("confirmation.editTitle", confirmationEditTitle, false),
+            f("confirmation.editReturn", confirmationEditReturn, false),
             f("result.open", resultOpen, false),
             f("result.copy", resultCopy, false),
             f("result.openSettings", resultOpenSettings),
             f("recovery.resume", recoveryResume),
+            f("work.context.title", workContextTitle, false),
+            f("work.waiting.title", workWaitingTitle, false),
+            f("work.owed.title", workOwedTitle, false),
+            f("work.week.title", workWeekTitle, false),
+            f("work.evidence", workEvidence, false),
+            f("work.notPriority", workNotPriority, false),
+            f("work.dismiss", workDismiss, false),
+            f("work.done", workDone, false),
+            f("work.why", workWhy, false),
+            f("work.close", workClose, false),
+            f("work.level.high", workLevelHigh, false),
+            f("work.level.mid", workLevelMid, false),
+            f("work.level.low", workLevelLow, false),
+            f("work.sources.title", workContextSourcesTitle, false),
+            f("reply.titleSuffix", replyTitleSuffix, false),
+            f("reply.send", replySend, false),
+            f("reply.connectNeeded", replyConnectNeeded, false),
+            f("reply.connect", replyConnect, false),
+            f("brief.title", briefTitle, false),
+            f("brief.prepare", briefPrepare, false),
+            f("brief.close", briefClose, false),
+            f("brief.start", briefStart, false),
+            f("brief.history", briefHistory, false),
+            f("brief.openSource", briefOpenSource, false),
+            f("brief.previous", briefPrevious, false),
+            f("brief.since", briefSince, false),
+            f("brief.open", briefOpen, false),
+            f("brief.questions", briefQuestions, false),
+            f("personalization.title", personalizationTitle, false),
+            f("personalization.edit", personalizationEdit, false),
+            f("personalization.confirm", personalizationConfirm, false),
+            f("personalization.disableTrait", personalizationDisableTrait, false),
+            f("personalization.disableAll", personalizationDisableAll, false),
+            f("personalization.enableAll", personalizationEnableAll, false),
             f("recovery.discard", recoveryDiscard),
+            f("result.retry", resultRetry),
+            f("transcription.recoveryHint", transcriptionRecoveryHint, false),
+            f("settings.inputMonitoringReason", permissionInputMonitoringReason, false),
+            f("speech.recognitionName", permissionSpeechRecognition),
+            f("recording.pause", recordingPause),
+            f("recording.resume", recordingResume),
             f("session.interrupted", sessionInterrupted),
+            f("dock.record", dockRecord),
+            f("dock.related", dockRelated),
+            f("menu.showControls", menuShowControls),
+            f("translation.target", translationTarget),
+            f("translation.auto", translationAuto),
+            f("translation.retry", translationRetry),
+            f("transcription.liveRetry", liveRetry),
             f("hud.clickHint", hudClickHint, false),
             f("permission.request", permissionRequest),
             f("settings.permissionsSection", settingsPermissionsSection),
@@ -204,6 +341,7 @@ struct UserShortcut {
 
     /// 確認の実行。Return だけでは走らない（押し慣れた鍵で外へ出るのは危ない）。
     static let confirm = UserShortcut(key: .return, modifiers: .command)
+    static let submitRequest = UserShortcut(key: .return, modifiers: .command)
     /// 逃げ道。どの面でも同じ鍵。
     static let cancel = UserShortcut(key: .escape, modifiers: [])
 

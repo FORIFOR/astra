@@ -29,22 +29,60 @@ struct WorkspaceHeader: View {
 }
 
 /// 空のときに「壊れている」ではなく「まだ何もない」と読ませる。
+///
+/// **中央寄せの 2 行 + 巨大な空白はやめた**（盲検で「AI 生成感」の典型と指摘）。
+/// 見出し → 説明 → 押せる主操作 → 「できること」の実機能 2〜3 行 を、上部に左寄せで置く。
+/// **偽の skeleton は置かない**。見本を出すときは「例」と明示する（ここでは実機能名だけを出す）。
 struct WorkspaceEmpty: View {
     @Environment(\.colorScheme) private var scheme
+    private var dark: Bool { scheme == .dark }
     let title: String
     let hint: String
+    var primaryLabel: String? = nil
+    var primaryAction: (() -> Void)? = nil
+    /// 「できること」= いま実際にある機能の名前だけ（偽データ・偽 skeleton は禁止）。
+    var canDo: [String] = []
 
     var body: some View {
-        VStack(spacing: 6) {
-            Text(title)
-                .font(.system(size: TypeScale.bodySize))
-                .foregroundStyle(Palette.text(scheme == .dark))
-            Text(hint)
-                .font(.system(size: TypeScale.secondarySize))
-                .foregroundStyle(Palette.muted(scheme == .dark))
+        VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text(title)
+                    .font(.system(size: TypeScale.sectionTitleSize, weight: .semibold))
+                    .foregroundStyle(Palette.text(dark))
+                Text(hint)
+                    .font(.system(size: TypeScale.secondarySize))
+                    .foregroundStyle(Palette.muted(dark))
+            }
+            if let primaryLabel, let primaryAction {
+                Button(primaryLabel, action: primaryAction)
+                    .font(.system(size: TypeScale.bodySize, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .frame(height: 36).padding(.horizontal, 18)
+                    .background(Capsule().fill(Palette.accent(dark)))
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("emptyPrimary")
+            }
+            if !canDo.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("できること")
+                        .font(.system(size: TypeScale.microSize, weight: .semibold))
+                        .foregroundStyle(Palette.muted(dark))
+                    ForEach(canDo, id: \.self) { row in
+                        HStack(spacing: 8) {
+                            Image(systemName: "arrow.turn.down.right")
+                                .font(.system(size: 11)).foregroundStyle(Palette.muted(dark))
+                            Text(row)
+                                .font(.system(size: TypeScale.secondarySize))
+                                .foregroundStyle(Palette.text(dark))
+                        }
+                    }
+                }
+            }
         }
-        .frame(maxWidth: .infinity, alignment: .center)
-        .padding(.vertical, 48)
+        // 垂直中央にしない。上から 1/3 に左寄せで固定する。
+        .frame(maxWidth: 460, alignment: .leading)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .padding(.top, 8)
     }
 }
 
@@ -95,59 +133,55 @@ struct WorkspaceRow<Trailing: View>: View {
 struct TasksPane: View {
     @Environment(\.colorScheme) private var scheme
     private var dark: Bool { scheme == .dark }
-    @ObservedObject private var store = AstraStateStore.shared
     @State private var tasks: [AgentTask] = []
+    @State private var query = ""
+    @State private var filter: TaskHistoryFilter = .all
+    private var visible: [AgentTask] { tasks.filter { filter.includes($0, query: query) } }
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                WorkspaceHeader(title: Facts.workTasks,
-                                subtitle: "Astra に頼んだ仕事。UI を閉じても走り続けます。")
+                HStack(alignment: .top) {
+                    WorkspaceHeader(title: Facts.workTasks, subtitle: "進めている仕事と、できあがった成果物。")
+                    Button("新しく依頼する") { MainNav.shared.select(.home) }
+                        .accessibilityIdentifier("tasksNewRequest")
+                }
                 if tasks.isEmpty {
-                    WorkspaceEmpty(title: "まだ頼んだ仕事はありません。",
-                                   hint: "Task Dock から話しかけると、ここに履歴が残ります。")
+                    WorkspaceEmpty(title: "まだ仕事はありません", hint: "最初の依頼をすると、ここから進み具合を確認できます。",
+                                   primaryLabel: "依頼を書く", primaryAction: { MainNav.shared.select(.home) })
                 } else {
-                    ForEach(tasks) { task in
-                        WorkspaceRow(icon: icon(task.status), tint: tint(task.status),
-                                     title: task.title,
-                                     detail: "\(task.steps.filter { $0.state == .success }.count)/\(task.steps.count) 段 · \(Self.time.string(from: task.startedAt))") {
-                            Text("\(Int(task.progress * 100))%")
-                                .font(.system(size: TypeScale.secondarySize, design: .monospaced))
-                                .foregroundStyle(Palette.muted(dark))
+                    HStack {
+                        Image(systemName: "magnifyingglass").foregroundStyle(Palette.muted(dark))
+                        TextField("仕事を検索", text: $query).textFieldStyle(.plain)
+                            .accessibilityIdentifier("taskSearch")
+                        if !query.isEmpty {
+                            Button { query = "" } label: { Image(systemName: "xmark.circle.fill") }
+                                .buttonStyle(.plain).accessibilityLabel("検索をクリア")
                         }
-                        .accessibilityIdentifier("task-\(task.title)")
+                    }
+                    .padding(12).background(Palette.surface(dark), in: RoundedRectangle(cornerRadius: Metrics.paletteRadius))
+                    Picker("状態", selection: $filter) {
+                        ForEach(TaskHistoryFilter.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                    }
+                    .pickerStyle(.segmented).accessibilityIdentifier("taskFilter")
+                    if visible.isEmpty {
+                        Text("条件に合う仕事はありません").foregroundStyle(Palette.muted(dark)).padding(.vertical, 20)
+                    }
+                    LazyVStack(spacing: 12) {
+                        ForEach(visible) { task in
+                            TaskHistoryRow(task: task) { MainNav.shared.openTask = task }
+                        }
                     }
                 }
             }
-            .padding(28)
-            .frame(maxWidth: 900, alignment: .leading)
+            .padding(28).frame(maxWidth: 900, alignment: .leading)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .background(Palette.canvas(dark))
         .onAppear { tasks = LocalStore.shared.loadTasks() }
+        .onReceive(NotificationCenter.default.publisher(for: LocalStore.tasksChanged).receive(on: RunLoop.main)) { _ in tasks = LocalStore.shared.loadTasks() }
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("tasksPane")
-    }
-
-    private static let time: DateFormatter = {
-        let f = DateFormatter(); f.dateFormat = "M/d HH:mm"; return f
-    }()
-
-    private func icon(_ s: AgentRunState) -> String {
-        switch s {
-        case .pending: return "circle"
-        case .running: return "circle.fill"
-        case .success: return "checkmark.circle"
-        case .failed: return "xmark.circle"
-        }
-    }
-
-    private func tint(_ s: AgentRunState) -> Color {
-        switch s {
-        case .pending: return Palette.muted(dark)
-        case .running: return Palette.accent(dark)
-        case .success: return Palette.success(dark)
-        case .failed: return Palette.danger(dark)
-        }
     }
 }
 
@@ -162,10 +196,15 @@ struct MeetingsPane: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 WorkspaceHeader(title: Facts.libraryMeetings,
-                                subtitle: "録った会議。音声は端末から出ません。")
+                                subtitle: "会議の文字起こしと記録を確認できます。")
                 if sessions.recent.isEmpty {
-                    WorkspaceEmpty(title: "録音した会議はまだありません。",
-                                   hint: "Home の「録音を始める」か、予定の「録音」から始められます。")
+                    WorkspaceEmpty(title: "まだ会議はありません",
+                                   hint: "録音した会議と、その出所がここに残ります。",
+                                   primaryLabel: "録音を始める",
+                                   primaryAction: { NewRecordingSheetOpener.shared.open() },
+                                   canDo: ["録音すると 要約・決まったこと・やること にまとまる",
+                                           "どの一文も 発言と音声の位置まで戻れる",
+                                           "予定の会議はワンクリックで録れる"])
                 } else {
                     ForEach(sessions.recent) { s in
                         SessionCard(session: s) {
@@ -216,12 +255,16 @@ struct PluginsPane: View {
     private func pluginCard(_ m: PluginManifest) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 9) {
+                // 全カードが同じ青灰のタイルに見えないよう、名前から安定した色相を振る
+                // （頭文字は同じでも、格子として区別が付く）。
+                let hue = Double(abs(m.id.hashValue) % 360) / 360.0
+                let avatar = Color(hue: hue, saturation: 0.5, brightness: dark ? 0.85 : 0.62)
                 RoundedRectangle(cornerRadius: 7, style: .continuous)
-                    .fill(Color.astraAccent(dark).opacity(0.16))
+                    .fill(avatar.opacity(0.18))
                     .frame(width: 28, height: 28)
                     .overlay(Text(String(m.name.prefix(1)))
                         .font(.system(size: TypeScale.secondarySize, weight: .semibold))
-                        .foregroundStyle(Palette.accent(dark)))
+                        .foregroundStyle(avatar))
                 VStack(alignment: .leading, spacing: 1) {
                     Text(m.name)
                         .font(.system(size: TypeScale.cardTitleSize, weight: TypeScale.cardTitleWeight))

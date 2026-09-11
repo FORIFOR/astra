@@ -1,0 +1,11 @@
+{
+  "id": "video",
+  "elapsedMs": 72162,
+  "result": {
+    "ok": false,
+    "error": {
+      "code": "llm.output_quality",
+      "message": "依頼の条件を満たす下書きを生成できませんでした。条件を絞るか、モデルを変更してお試しください。"
+    }
+  }
+}

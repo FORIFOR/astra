@@ -9,6 +9,42 @@
 export type StepRisk =
   'READ' | 'REVERSIBLE_WRITE' | 'EXTERNAL_COMMIT' | 'DESTRUCTIVE' | 'REGULATED' | 'FINANCIAL';
 
+/** 応答が失われても外部では完了している可能性がある操作は自動再実行しない。 */
+export function requiresSingleAttempt(step: { readonly risk: StepRisk }): boolean {
+  return step.risk !== 'READ' && step.risk !== 'REVERSIBLE_WRITE';
+}
+
+/** Generative work can be billed even when its response is lost. */
+export function isMeteredStep(step: { readonly toolId: string }): boolean {
+  return (
+    step.toolId.startsWith('llm.') ||
+    step.toolId.startsWith('research.') ||
+    // A video artifact can be deleted locally, but the provider's generation
+    // charge cannot be undone. An ambiguous timeout must not submit a new job.
+    [
+      'search.web',
+      'general.answer',
+      'general.compose',
+      'meeting.transcribe',
+      'meeting.summarize',
+      'meeting.bundle',
+      'video.render',
+    ].includes(step.toolId)
+  );
+}
+
+/** Carry the durable summary activity result into rendering; don't ask the LLM twice. */
+export function withMeetingSummary(
+  step: TaskStep,
+  steps: readonly TaskStep[],
+  results: readonly unknown[],
+): TaskStep {
+  if (step.toolId !== 'meeting.bundle') return step;
+  const index = steps.findIndex((s) => s.index < step.index && s.toolId === 'meeting.summarize');
+  if (index < 0 || results[index] === undefined) return step;
+  return { ...step, args: { ...step.args, summary_result: results[index] } };
+}
+
 /** contracts の ComplianceProfile と同じ値。ここは import できない（冒頭の注意）。 */
 export type StepComplianceProfile =
   'GENERAL' | 'ENTERPRISE' | 'REGULATED_HEALTH' | 'CARE' | 'FINANCIAL';
@@ -56,7 +92,7 @@ export interface TaskPlan {
   };
 }
 
-export const KNOWN_TASK_KINDS = ['echo', 'research', 'meeting.finalize'] as const;
+export const KNOWN_TASK_KINDS = ['echo', 'research', 'meeting.finalize', 'mail.send'] as const;
 export type TaskKind = (typeof KNOWN_TASK_KINDS)[number];
 
 export function isKnownTaskKind(kind: string): kind is TaskKind {
@@ -236,6 +272,69 @@ function planMeetingFinalize(input: Record<string, unknown>): TaskPlan {
   };
 }
 
+/**
+ * 返信を送る（「これ返して」の最後の 1 段）。正本 §9.2、Work Context 仕様 REPLY_IN_CONTEXT。
+ *
+ * 1 段だけ。**外へ出る操作なので承認が要り、端末の送る接続（gmail-actions）でしか動かない。**
+ * 本文は本人が確認カードで見た（直した）もの。ここで作文しない。
+ */
+function planMailSend(input: Record<string, unknown>): TaskPlan {
+  const to = Array.isArray(input['to'])
+    ? input['to'].filter((v): v is string => typeof v === 'string')
+    : [];
+  const subject = typeof input['subject'] === 'string' ? input['subject'] : '';
+  const body = typeof input['body'] === 'string' ? input['body'] : '';
+  if (to.length === 0 || !subject || !body) {
+    throw new UnknownTaskKindError('mail.send needs to, subject and body');
+  }
+  const source = typeof input['source'] === 'string' ? input['source'] : 'gmail';
+  const inReplyTo = typeof input['in_reply_to'] === 'string' ? input['in_reply_to'] : null;
+  if (source === 'outlook_mail') {
+    // Outlook は既存メッセージへの返信（Graph の message: reply）。相手のメッセージ id が要る。
+    if (!inReplyTo)
+      throw new UnknownTaskKindError('outlook reply needs the message id to reply to');
+    return {
+      steps: [
+        {
+          index: 0,
+          toolId: 'outlook.mail.reply',
+          risk: 'EXTERNAL_COMMIT',
+          surface: 'local',
+          requiresConfirmation: true,
+          message: `${to.join(', ')} に返信を送ります`,
+          args: { message_id: inReplyTo, comment: body, to, subject, count: to.length },
+        },
+      ],
+      artifact: { type: 'DOCUMENT', title: `返信: ${subject}`, mimeType: 'text/markdown' },
+    };
+  }
+  return {
+    steps: [
+      {
+        index: 0,
+        toolId: 'mail.send',
+        risk: 'EXTERNAL_COMMIT',
+        surface: 'local',
+        requiresConfirmation: true,
+        message: `${to.join(', ')} に返信を送ります`,
+        args: {
+          to,
+          subject,
+          body,
+          count: to.length,
+          ...(typeof input['thread_id'] === 'string'
+            ? { thread_id: input['thread_id'].replace(/^gmail:/, '') }
+            : {}),
+          ...(typeof input['in_reply_to'] === 'string'
+            ? { in_reply_to: input['in_reply_to'] }
+            : {}),
+        },
+      },
+    ],
+    artifact: { type: 'DOCUMENT', title: `返信: ${subject}`, mimeType: 'text/markdown' },
+  };
+}
+
 export function planTask(kind: string, input: Record<string, unknown>): TaskPlan {
   switch (kind) {
     case 'echo':
@@ -244,6 +343,8 @@ export function planTask(kind: string, input: Record<string, unknown>): TaskPlan
       return planResearch(input);
     case 'meeting.finalize':
       return planMeetingFinalize(input);
+    case 'mail.send':
+      return planMailSend(input);
     default:
       throw new UnknownTaskKindError(kind);
   }

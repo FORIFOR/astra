@@ -250,17 +250,25 @@ UI craft             FREEZE    RELEASE                NO-GO
 （Listening / Task Running / Recovery）を同じ RC で通す。FAIL が出た場合だけ:
 その 1 箇所を直す → verify-all → CI GREEN → 新 RC を 1 回だけ作る → 失敗 gate と影響 gate だけ再実行。
 
-## いま埋まっていない欄（2026-09-05 時点）
+## いま埋まっていない欄（2026-09-05 23:00 時点）
+
+2026-09-05、本人の決定で **HUMAN_INTERVENTION=0** が最終原則になった。以後「本人が操作して確認」「人が VoiceOver で触る」
+「相手役の人に Meet へ参加してもらう」「人が競合を見比べる」はリリース条件から外す。実機・実 Meet・実 TCC・VoiceOver 実起動・
+競合実 UI は**使う**が、操作と判定は全部自動。測れないものは人を呼ばず**測定器を作る**。
+`NOT_MEASURED because human required` は禁止。無いものは `AUTOMATION_MISSING` と言い、
+`./scripts/ideal-release-gate.sh` の 20 段（07〜11）がその測定器の置き場所を指す。
 
 ```
-INVOCATION                      PASS           §2  署名 .app で実測（上）
-REAL_MEETING                    NOT_MEASURED   §3  相手のいる実会議が要る
-ACCESSIBILITY                   NOT_MEASURED   §4  FKA / VoiceOver を人が操作する
-LIVE_TCC                        NOT_MEASURED   §5  TCC リセットは本人が行う
-WORLD_CLASS 残り 3 型            NOT_COMPARABLE §6  Listening / Task Running / Recovery は公開素材が無く hands-on が要る
-                                                    （Invocation は vs Raycast WIN、Workspace は vs Granola WIN / vs Notion SPLIT、Sample 23）
-VERIFY_ALL                      PASS           §0  2026-09-05 07:47 本人のターミナルで VERIFY_ALL_OK
-PERCEIVED_SURFACE_CONTINUITY    PASS           journeys/perceived/（層 B。T1 は修正後 3/3 continuous、T2 は 1 枚目が残る 3/3）
+INVOCATION                      PASS                §2  署名 .app で実測（上）
+REAL_MEETING                    AUTOMATION_MISSING  §3  scripts/reality/run-real-meeting.sh（2 台自動。PC B が Playwright で Meet に入り固定 WAV を流す。判定は fixture との文字列一致 / recall / pause leakage / recovery）
+ACCESSIBILITY                   AUTOMATION_MISSING  §4  scripts/reality/run-fka.sh（CGEvent で Tab / Shift+Tab / Space / Return / Esc、focused AX element を記録）+ run-voiceover.sh（VoiceOver 実起動、AX の role/title/value を証拠に A〜D 自動完走）
+LIVE_TCC                        AUTOMATION_MISSING  §5  scripts/reality/run-live-tcc.sh（tccutil reset → 実ダイアログを AX で検出 → Don't Allow 自動押下 → 拒否 UI / 理由 / 復旧の道 → System Settings で ON → 同じ journey が続く）
+WORLD_CLASS 残り 3 型            AUTOMATION_MISSING  §6  scripts/reality/run-competitors.sh（競合実 UI を同じ task / 画面寸法 / archetype で撮り、A/B を乱数化して 3 つの vision judge の盲検へ。観察を先に、3/3 一致 + deterministic evidence でだけ FIX）
+VISUAL_IDEAL_GATE               scripts/ui-atlas/review-blind.sh（Atlas 61 面を 3 model の盲検、OCR 照合、全員 FIX のときだけ FIX_CANDIDATE）
+VERIFY_ALL                      PASS                §0  rc/atlas-61 で VERIFY_ALL_OK（2026-09-05 22:50、background job）
+PERCEIVED_SURFACE_CONTINUITY    PASS                journeys/perceived/（層 A: surfacemotion 5 遷移、層 B: 盲検 3/3）
 ```
 
-上の NOT_MEASURED / FAIL が残る限り **NO-GO**。「十分良いので出す」という判断はしない。
+上の AUTOMATION_MISSING / FAIL が残る限り **NO-GO**。「十分良いので出す」という判断はしない。
+「人間が本当に好きと感じるか」は 100% 証明できないので、複数 AI 視覚評価 + 実測 + 競合比較で代替し、
+人の「なんとなく良い」を gate に入れない。
