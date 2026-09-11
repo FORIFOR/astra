@@ -1,14 +1,14 @@
 # Astra
 
-**アイデアを、動くものに。**
+**見る。聞く。進める。**
 
 スクリーンショットを撮り、画像を添えてAIに質問し、答えを仕事として残せるMacアプリです。ローカルの画像モデルや、対応するAIプロバイダーを接続して使います。
 
 [ホームページ・実演](https://astra-forifor.forifor.chatgpt.site) · [English](../README.md) · [セットアップ](LOCAL_PREVIEW.md)
 
-[![落書きから、触れる小さな宇宙へ](launch/2026-09-12/v3/poster.jpg)](https://youtube.com/shorts/xOQnOKG_Ndg)
+[![Astra for Mac — 見る。聞く。進める。](launch/2026-09-12/v4/poster.jpg)](https://www.youtube.com/watch?v=uSIxI4MGzrg)
 
-**[33秒の実演を見る](https://youtube.com/shorts/xOQnOKG_Ndg)** — スケッチからAstraに依頼し、生成したHTMLを実際に操作。最終版はCodexが約3分で生成しました。試作・修正と待ち時間を短縮し、保存したMarkdownからHTMLを取り出してブラウザーで開いています。[同じ作品で遊ぶ](https://astra-forifor.forifor.chatgpt.site/orbit.html) · [制作過程と検証](launch/2026-09-12/v3/PROVENANCE.md)。
+**[42秒の製品紹介を見る](https://www.youtube.com/watch?v=uSIxI4MGzrg)** — スクリーンショットから質問し、回答を保存して、Workで仕事を再開。実際のMacアプリと架空のデータで収録しました。接続したCodexの回答生成は約13秒。待機時間は短縮しています。[参照・制作・検証](launch/2026-09-12/v4/PROVENANCE.md) · [別の実例：小さな宇宙](https://astra-forifor.forifor.chatgpt.site/orbit.html)。
 
 1. いつも通りMacでスクリーンショットを撮る。
 2. Astraの案内から質問欄を開き、知りたいことを書く。

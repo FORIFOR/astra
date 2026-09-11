@@ -8,9 +8,9 @@ A native Mac AI workspace. Take a screenshot, ask your own question, and keep th
 
 [Website & demo](https://astra-forifor.forifor.chatgpt.site) · [日本語](docs/README.ja.md) · [Setup](docs/LOCAL_PREVIEW.md) · [Feedback](https://github.com/FORIFOR/astra/issues)
 
-[![A sketch becomes an interactive little universe](docs/launch/2026-09-12/v3/poster.jpg)](https://youtube.com/shorts/xOQnOKG_Ndg)
+[![Astra for Mac — See it. Ask it. Move forward.](docs/launch/2026-09-12/v4/poster.jpg)](https://www.youtube.com/watch?v=uSIxI4MGzrg)
 
-**[Watch the 33-second demo](https://youtube.com/shorts/xOQnOKG_Ndg)** — a sketch, a real Astra request, and an interactive HTML result. The final Codex generation took about 3 minutes after iteration; waiting is shortened. HTML was extracted from the saved Markdown document, then opened in a browser. [Try the actual result](https://astra-forifor.forifor.chatgpt.site/orbit.html) · [See the workflow and validation](docs/launch/2026-09-12/v3/PROVENANCE.md).
+**[Watch the 42-second product film](https://www.youtube.com/watch?v=uSIxI4MGzrg)** — capture a screenshot, ask a question, save the answer, and return to your work. Real Mac capture with fictional data; the connected Codex model took about 13 seconds to generate the answer. Waiting is shortened. [References and validation](docs/launch/2026-09-12/v4/PROVENANCE.md) · [Another example: an interactive orbital playground](https://astra-forifor.forifor.chatgpt.site/orbit.html).
 
 ## A small workflow worth keeping
 

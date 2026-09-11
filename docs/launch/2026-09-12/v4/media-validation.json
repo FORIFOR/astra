@@ -1,0 +1,52 @@
+[
+  {
+    "file": "astra-product-film-web.mp4",
+    "width": 1920,
+    "height": 1080,
+    "fps": "60/1",
+    "frames": "2520",
+    "seconds": "42.000000",
+    "video_codec": "h264",
+    "audio_codec": "aac",
+    "audio_channels": 2,
+    "loudness": {
+      "input_i": "-20.13",
+      "input_tp": "-6.90",
+      "input_lra": "0.80",
+      "input_thresh": "-30.20",
+      "output_i": "-20.09",
+      "output_tp": "-7.01",
+      "output_lra": "0.80",
+      "output_thresh": "-30.14",
+      "normalization_type": "dynamic",
+      "target_offset": "0.09"
+    },
+    "sha256": "7f77ea7359fbd26a412f3a8a29d8aa3e2132790b0e133894be61e9c8443f09b3",
+    "full_decode": "passed"
+  },
+  {
+    "file": "astra-product-film-social.mp4",
+    "width": 1080,
+    "height": 1920,
+    "fps": "60/1",
+    "frames": "2520",
+    "seconds": "42.000000",
+    "video_codec": "h264",
+    "audio_codec": "aac",
+    "audio_channels": 2,
+    "loudness": {
+      "input_i": "-20.13",
+      "input_tp": "-6.90",
+      "input_lra": "0.80",
+      "input_thresh": "-30.20",
+      "output_i": "-20.09",
+      "output_tp": "-7.01",
+      "output_lra": "0.80",
+      "output_thresh": "-30.14",
+      "normalization_type": "dynamic",
+      "target_offset": "0.09"
+    },
+    "sha256": "59ddde5816bc4fa754a5e1accd71bc0eb05aaa5b88a59ea349afd6ac3e392551",
+    "full_decode": "passed"
+  }
+]
