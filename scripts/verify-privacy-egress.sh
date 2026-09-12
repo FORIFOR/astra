@@ -89,12 +89,35 @@ else
 fi
 
 # 4. connector（OAuth）は人が押した行からしか始まらない。
-conn=$(prod "\.connect(" | grep -v "Context/ConnectorState.swift" || true)
-conn_bad=$(grep -v "Button" <<<"$conn" | grep . || true)
-if [ -n "$conn" ] && [ -z "$conn_bad" ]; then
+conn_check=$(python3 - "$SRC" <<'CHECK'
+import pathlib, re, sys
+src = pathlib.Path(sys.argv[1])
+allowed = {'Main/ConnectionsPane.swift': 'connectProvider', 'Work/ReplyFlow.swift': 'connectActions'}
+found = set()
+for path in src.rglob('*.swift'):
+    rel = str(path.relative_to(src))
+    if path.name.startswith('SelfTest') or rel == 'Context/ConnectorState.swift': continue
+    text = re.sub(r'//[^\n]*', '', path.read_text())
+    for call in re.findall(r'\.((?:connect|connectProvider|connectActions))\(', text):
+        if allowed.get(rel) != call: raise SystemExit('unreviewed OAuth entry: ' + rel)
+        found.add(rel)
+pane = (src/'Main/ConnectionsPane.swift').read_text()
+reply = (src/'Work/ReplyFlow.swift').read_text()
+# The read flow remains inside the explicit provider button's action, after
+# the purpose preview. Send consent remains behind its own confirmation.
+checks = [
+    found == set(allowed),
+    re.search(r'Button\(provider == "google" \? "Googleで続ける" : "Microsoftで続ける"\)\s*\{\s*preview = nil\s*Task \{[^\n]*connections\.connectProvider\(provider\)', pane),
+    'if Confirm.ask(ask) {\n                _ = connector(pluginId, connectorId)' in reply,
+]
+if not all(checks): raise SystemExit('OAuth must start from the purpose button or send confirmation')
+print('provider purpose button + send confirmation')
+CHECK
+)
+if [ "$?" -eq 0 ]; then
   row "connector egress requires user action" "PASS"
 else
-  bad "connector egress requires user action" "FAIL" "${conn_bad:-connect の呼び手が見つからない}"
+  bad "connector egress requires user action" "FAIL" "${conn_check:-OAuth の操作入口を確認できない}"
 fi
 
 # 5. 外へ届く実行は確認の面を通る（CONFIRMATION_GATE は verify-confirmation.sh が画素で持つ。

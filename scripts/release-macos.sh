@@ -118,6 +118,10 @@ echo "plugins: $PLUGIN_COUNT 件を同梱"
 
 # アイコン。無いと Finder でも Dock でも「開く」ダイアログでも空白になる
 # —— 不特定多数へ配るなら、名前より先に目に入るのはここ。
+# Optional publisher configuration: public native-client parameters only, never user tokens.
+if [[ -n "${ASTRA_CONNECTIONS_CONFIG:-}" ]]; then
+  node "$ROOT/scripts/prepare-connection-config.mjs" "$ASTRA_CONNECTIONS_CONFIG" "$APP/Contents/Resources/connections.json"
+fi
 ICON_SRC="$ROOT/apps/desktop/src-tauri/icons/icon.icns"
 [[ -f "$ICON_SRC" ]] || { echo "FAIL: アイコン ($ICON_SRC) が無い" >&2; exit 1; }
 cp "$ICON_SRC" "$APP/Contents/Resources/AppIcon.icns"
