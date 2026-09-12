@@ -83,7 +83,21 @@ export function connectorProviderConfig(
   scopes: readonly string[],
   env: OauthEnv,
 ): Omit<ProviderConfig, 'redirectUri'> | null {
-  if (provider !== 'microsoft') return providerConfig(provider, scopes, env);
+  if (provider === 'google') {
+    const role = connectorId.endsWith('-actions') ? 'WRITE' : 'READ';
+    const client = env[`ASTRA_OAUTH_GOOGLE_${role}_CLIENT_ID`];
+    return providerConfig(
+      provider,
+      scopes,
+      client
+        ? {
+            ...env,
+            ASTRA_OAUTH_GOOGLE_CLIENT_ID: client,
+            ASTRA_OAUTH_GOOGLE_CLIENT_SECRET: env[`ASTRA_OAUTH_GOOGLE_${role}_CLIENT_SECRET`],
+          }
+        : env,
+    );
+  }
   const read = env['ASTRA_OAUTH_MICROSOFT_READ_CLIENT_ID'];
   const write = env['ASTRA_OAUTH_MICROSOFT_WRITE_CLIENT_ID'];
   if (read && write && read === write) return null;

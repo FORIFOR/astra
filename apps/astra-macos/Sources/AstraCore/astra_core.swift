@@ -3103,6 +3103,23 @@ public func connectorExchangeCode(tokenUrl: String, providerId: String, clientId
 })
 }
 /**
+ * Native client configuration, including Google's desktop client parameter.
+ * The endpoint is fixed by provider; credentials cannot be sent to an arbitrary URL.
+ */
+public func connectorExchangeConfigured(providerId: String, clientId: String, clientSecret: String?, redirectUri: String, code: String, codeVerifier: String, nowMs: UInt64) -> String  {
+    return try!  FfiConverterString.lift(try! rustCall() {
+    uniffi_astra_core_fn_func_connector_exchange_configured(
+        FfiConverterString.lower(providerId),
+        FfiConverterString.lower(clientId),
+        FfiConverterOptionString.lower(clientSecret),
+        FfiConverterString.lower(redirectUri),
+        FfiConverterString.lower(code),
+        FfiConverterString.lower(codeVerifier),
+        FfiConverterUInt64.lower(nowMs),$0
+    )
+})
+}
+/**
  * 折り返し URL（`/callback?code=...`）を解析する。解析は core の parse_callback に一本化。
  */
 public func connectorParseCallback(target: String) -> OauthCallback  {
@@ -3318,6 +3335,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_astra_core_checksum_func_connector_exchange_code() != 37563) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_astra_core_checksum_func_connector_exchange_configured() != 55959) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_astra_core_checksum_func_connector_parse_callback() != 11016) {

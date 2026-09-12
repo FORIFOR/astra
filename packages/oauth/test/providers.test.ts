@@ -149,3 +149,22 @@ describe('Microsoft connection isolation', () => {
     ).toBe('google');
   });
 });
+
+it('keeps dedicated Google read and action clients paired with their own desktop parameters', () => {
+  const env = {
+    ASTRA_OAUTH_GOOGLE_CLIENT_ID: 'legacy',
+    ASTRA_OAUTH_GOOGLE_CLIENT_SECRET: 'legacy-secret',
+    ASTRA_OAUTH_GOOGLE_READ_CLIENT_ID: 'read',
+    ASTRA_OAUTH_GOOGLE_READ_CLIENT_SECRET: 'read-secret',
+    ASTRA_OAUTH_GOOGLE_WRITE_CLIENT_ID: 'write',
+    ASTRA_OAUTH_GOOGLE_WRITE_CLIENT_SECRET: 'write-secret',
+  };
+  expect(connectorProviderConfig('google', 'gmail', ['mail.read'], env)).toMatchObject({
+    clientId: 'read',
+    clientSecret: 'read-secret',
+  });
+  expect(connectorProviderConfig('google', 'gmail-actions', ['mail.send'], env)).toMatchObject({
+    clientId: 'write',
+    clientSecret: 'write-secret',
+  });
+});

@@ -477,6 +477,11 @@ RustBuffer uniffi_astra_core_fn_func_connector_configured_provider_ids(RustBuffe
 RustBuffer uniffi_astra_core_fn_func_connector_exchange_code(RustBuffer token_url, RustBuffer provider_id, RustBuffer client_id, RustBuffer redirect_uri, RustBuffer code, RustBuffer code_verifier, uint64_t now_ms, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_CONNECTOR_EXCHANGE_CONFIGURED
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_CONNECTOR_EXCHANGE_CONFIGURED
+RustBuffer uniffi_astra_core_fn_func_connector_exchange_configured(RustBuffer provider_id, RustBuffer client_id, RustBuffer client_secret, RustBuffer redirect_uri, RustBuffer code, RustBuffer code_verifier, uint64_t now_ms, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_CONNECTOR_PARSE_CALLBACK
 #define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_FN_FUNC_CONNECTOR_PARSE_CALLBACK
 RustBuffer uniffi_astra_core_fn_func_connector_parse_callback(RustBuffer target, RustCallStatus *_Nonnull out_status
@@ -1009,6 +1014,12 @@ uint16_t uniffi_astra_core_checksum_func_connector_configured_provider_ids(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_CONNECTOR_EXCHANGE_CODE
 #define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_CONNECTOR_EXCHANGE_CODE
 uint16_t uniffi_astra_core_checksum_func_connector_exchange_code(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_CONNECTOR_EXCHANGE_CONFIGURED
+#define UNIFFI_FFIDEF_UNIFFI_ASTRA_CORE_CHECKSUM_FUNC_CONNECTOR_EXCHANGE_CONFIGURED
+uint16_t uniffi_astra_core_checksum_func_connector_exchange_configured(void
     
 );
 #endif

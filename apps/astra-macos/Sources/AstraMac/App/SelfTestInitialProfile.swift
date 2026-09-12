@@ -10,9 +10,9 @@ extension SelfTest {
             let sections = InitialProfileSections(focus: ["Astra", "LUMI", "MOPITA"], people: ["田中", "佐藤", "山田"], priorities: ["プロダクトレビュー", "リリース準備"], workPattern: ["火・木は会議が多い"], openItems: 4)
             func fixture(_ status: String) -> InitialProfileResult {
                 InitialProfileResult(id: "fixture", provider: "google", status: status, startedAt: "2026-09-09T00:00:00Z", updatedAt: "2026-09-09T00:00:00Z", outcomes: [
-                    InitialProfileProgress(source: "google_calendar", status: "synced", artifacts: 84),
-                    InitialProfileProgress(source: "gmail", status: status == "analysing" ? "reading" : "synced", artifacts: status == "analysing" ? 0 : 100)
-                ], sections: sections)
+                    InitialProfileProgress(source: "google_calendar", status: status == "failed" ? "failed" : "synced", artifacts: status == "failed" ? 0 : 84),
+                    InitialProfileProgress(source: "gmail", status: status == "failed" ? "failed" : (status == "analysing" ? "reading" : "synced"), artifacts: ["analysing", "failed"].contains(status) ? 0 : 100)
+                ], sections: status == "failed" ? nil : sections)
             }
             let window = NSWindow(contentRect: NSRect(x: 100, y: 100, width: 800, height: 680), styleMask: [.titled, .closable], backing: .buffered, defer: false)
             window.isReleasedWhenClosed = false
@@ -20,25 +20,30 @@ extension SelfTest {
             for dark in [false, true] {
                 let host = NSHostingView(rootView: InitialProfileView().environment(\.colorScheme, dark ? .dark : .light))
                 window.contentView = host; window.makeKeyAndOrderFront(nil)
-                for stage in ["analysing", "ready", "editing"] {
+                for stage in ["analysing", "ready", "editing", "failed"] {
                     if stage == "editing" {
                         guard UIProbe.tap("initialProfileEdit") else { throw URLError(.cannotParseResponse) }
                     } else { store.installForTesting(fixture(stage)) }
                     try await Task.sleep(for: .milliseconds(450))
                     host.layoutSubtreeIfNeeded()
-                    if stage != "analysing", !UIProbe.exists("initialProfileConfirm") { throw URLError(.cannotParseResponse) }
+                    if ["ready", "editing"].contains(stage), !UIProbe.exists("initialProfileConfirm") { throw URLError(.cannotParseResponse) }
                     guard let bitmap = host.bitmapImageRepForCachingDisplay(in: host.bounds) else { throw URLError(.cannotDecodeContentData) }
                     host.cacheDisplay(in: host.bounds, to: bitmap)
                     guard let png = bitmap.representation(using: .png, properties: [:]) else { throw URLError(.cannotDecodeContentData) }
                     let name = "\(stage)-\(dark ? "dark" : "light")"
                     try png.write(to: URL(fileURLWithPath: directory).appendingPathComponent(name + ".png"))
                     geometry.append(["name": name, "width": host.bounds.width, "height": host.bounds.height, "bytes": png.count])
+                    if stage == "failed" {
+                        guard UIProbe.tap("initialProfileLater"), !store.visible else { throw URLError(.cannotParseResponse) }
+                        store.connected(provider: "google")
+                        guard store.visible, store.result?.status == "failed" else { throw URLError(.cannotParseResponse) }
+                    }
                 }
             }
             store.installForTesting(nil); window.close()
             try JSONSerialization.data(withJSONObject: geometry, options: [.prettyPrinted, .sortedKeys])
                 .write(to: URL(fileURLWithPath: directory).appendingPathComponent("geometry.json"))
-            print("SELFTEST_OK initialprofile: 6 native captures; review/edit actions present; no external data or send")
+            print("SELFTEST_OK initialprofile: 8 native captures; review/edit and defer/reopen actions verified; no external data or send")
             exit(0)
         } catch { print("SELFTEST_FAIL initialprofile: \(error)"); exit(1) }
     }

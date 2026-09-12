@@ -77,8 +77,11 @@ enum KeychainStore {
     }
 
     static func setGeneric(service: String, account: String, value: String) throws {
-        SecItemDelete(genericQuery(service: service, account: account) as CFDictionary)
-        var add = genericQuery(service: service, account: account)
+        let query = genericQuery(service: service, account: account)
+        let updated = SecItemUpdate(query as CFDictionary, [kSecValueData as String: Data(value.utf8)] as CFDictionary)
+        if updated == errSecSuccess { return }
+        guard updated == errSecItemNotFound else { throw KeychainError.unexpected(updated) }
+        var add = query
         add[kSecValueData as String] = Data(value.utf8)
         add[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
         let status = SecItemAdd(add as CFDictionary, nil)
