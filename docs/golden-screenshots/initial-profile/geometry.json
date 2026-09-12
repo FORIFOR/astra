@@ -1,6 +1,6 @@
 [
   {
-    "bytes" : 249518,
+    "bytes" : 267956,
     "height" : 680,
     "name" : "analysing-light",
     "width" : 800
@@ -18,7 +18,13 @@
     "width" : 800
   },
   {
-    "bytes" : 249374,
+    "bytes" : 255865,
+    "height" : 680,
+    "name" : "failed-light",
+    "width" : 800
+  },
+  {
+    "bytes" : 268036,
     "height" : 680,
     "name" : "analysing-dark",
     "width" : 800
@@ -33,6 +39,12 @@
     "bytes" : 181022,
     "height" : 680,
     "name" : "editing-dark",
+    "width" : 800
+  },
+  {
+    "bytes" : 254383,
+    "height" : 680,
+    "name" : "failed-dark",
     "width" : 800
   }
 ]

@@ -31,18 +31,22 @@ final class InitialProfileStore: ObservableObject {
     @Published private(set) var failure: String?
     @Published private(set) var saving = false
     @Published private(set) var starting = false
+    @Published private(set) var deferred = false
     private var base: String?
     private var token: String?
     private var poll: Task<Void, Never>?
     private var generation = UUID()
     private var requestedProvider: String?
-    var visible: Bool { (starting || failure != nil) || (result != nil && result?.finished != true) }
+    var visible: Bool { !deferred && ((starting || failure != nil) || (result != nil && result?.finished != true)) }
+
+    func deferUntilRequested() { deferred = true }
+    func showExisting() { deferred = false }
 
     func configureBackend(base: String, token: String, renewal: Bool = false) {
         // Cancel stale responses when the authenticated session changes.
         if self.base != base || (!renewal && self.token != token) {
             poll?.cancel(); generation = UUID(); result = nil; failure = nil
-            starting = false; saving = false; requestedProvider = nil
+            starting = false; saving = false; requestedProvider = nil; deferred = false
         }
         self.base = base; self.token = token
         poll?.cancel()
@@ -52,6 +56,8 @@ final class InitialProfileStore: ObservableObject {
     func connected(provider: String) {
         guard ["google", "microsoft"].contains(provider) else { return }
         guard result?.finished != true else { return }
+        showExisting()
+        if result?.provider == provider { return }
         requestedProvider = provider
         starting = true; failure = nil
         MainWindowController.shared.showSection(.home)
@@ -82,7 +88,7 @@ final class InitialProfileStore: ObservableObject {
     }
 
     /// Explicit fixtures only; never used by the connection or restore paths.
-    func installForTesting(_ value: InitialProfileResult?) { poll?.cancel(); result = value; failure = nil; starting = false }
+    func installForTesting(_ value: InitialProfileResult?) { poll?.cancel(); result = value; failure = nil; starting = false; deferred = false }
 
     func confirm(_ sections: InitialProfileSections) {
         guard Self.valid(sections) else { failure = "項目数の上限を確認してください。1項目は200文字以内で入力できます。"; return }

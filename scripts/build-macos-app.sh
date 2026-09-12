@@ -15,7 +15,13 @@ BIN="$(swift build -c release --show-bin-path)/AstraMac"
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN" "$APP/Contents/MacOS/Astra"
+mkdir -p "$APP/Contents/Resources/plugins"
+cp -R "$ROOT/plugins/builtin" "$APP/Contents/Resources/plugins/builtin"
 # Rust 静的ライブラリは実行ファイルに static link 済み（dylib 同梱不要）。
+# Optional publisher configuration: public native-client parameters only, never user tokens.
+if [[ -n "${ASTRA_CONNECTIONS_CONFIG:-}" ]]; then
+  node "$ROOT/scripts/prepare-connection-config.mjs" "$ASTRA_CONNECTIONS_CONFIG" "$APP/Contents/Resources/connections.json"
+fi
 ICON_SRC="$ROOT/apps/desktop/src-tauri/icons/icon.icns"
 [[ -f "$ICON_SRC" ]] || { echo "FAIL: アイコン ($ICON_SRC) が無い" >&2; exit 1; }
 cp "$ICON_SRC" "$APP/Contents/Resources/AppIcon.icns"

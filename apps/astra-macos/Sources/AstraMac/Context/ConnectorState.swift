@@ -1,276 +1,289 @@
 import Foundation
 import AstraCore
 
-/// Apps/Connectors の接続状態と、実際に繋ぐ経路。正本 §21、Work Context 仕様「read-only first」。
-///
-/// 事実の出所は 2 つだけ:
-///   - **cloud の接続記録**（`GET /v1/plugins/:id/connections`、実際に許された scope）— 表示の正本
-///   - **この Mac の Keychain**（`com.astra.connector.<plugin>/<connector>`、端末 worker と同じ項目）— トークンの在処
-/// 「繋いだつもり」を作らない: 記録も鍵も無ければ未接続。client_id が無ければ繋げない、と言う。
-///
-/// 繋ぐときは manifest の**読むだけの接続**（`connectors[].grants` が全部 `.read`）の scope だけを求める。
-/// 送る・作る接続は、送る操作が要ったときに purpose を見せてから別に求める（JIT）。
 @MainActor
 final class ConnectorState: ObservableObject {
     static let shared = ConnectorState()
-
-    /// Work Context が読む source。順番は画面の順。
     struct Source: Identifiable, Equatable {
         let pluginId: String
         let name: String
-        /// 接続が読むもの（manifest の purpose）。
         let purpose: String
         let provider: String
         let connectorId: String
         let scopes: [String]
-        /// 読む接続は plugin id、送る・作る接続は `plugin#connector`。
         var readOnly: Bool = true
         var id: String { statusKey }
         var statusKey: String { readOnly ? pluginId : "\(pluginId)#\(connectorId)" }
     }
-
-    enum Status: Equatable { case connected, disconnected, cannotConnect, connecting, failed(String) }
-
-    /// 接続済み（このセッションで OAuth を完了した / cloud の記録がある）アプリ名。既存の面と selftest が見る。
+    enum Status: Equatable { case connected, disconnected, cannotConnect, connecting, checking, disconnecting, failed(String) }
+    struct Credential: Codable {
+        let clientId: String
+        let accessToken: String
+        let refreshToken: String?
+        let expiresAt: String?
+        let grantedScopes: [String]
+        let tokenType: String
+        var accountLabel: String?
+        var usable: Bool {
+            !accessToken.isEmpty && (refreshToken?.isEmpty == false || expiresAt.flatMap { ISO8601DateFormatter().date(from: $0) }.map { $0 > Date() } == true)
+        }
+    }
+    struct Record: Decodable {
+        let connectorId: String
+        let state: String
+        let grantedScopes: [String]
+        let expiresAt: String?
+        let accountLabel: String?
+    }
+    struct Dependencies {
+        var configuration: () -> [String: String]
+        var read: (Source) throws -> String?
+        var write: (Source, String) throws -> Void
+        var delete: (Source) throws -> Void
+        var list: (String, String, Source) async throws -> [Record]
+        var register: (String, String, Source, Credential) async throws -> Void
+        var remove: (String, String, Source) async throws -> Void
+        var exchange: (String, String, String?, ConnectorFlow.Pending, String) async throws -> Credential
+        var account: (String, String) async -> String?
+    }
     @Published var connected: Set<String> = []
     @Published private(set) var status: [String: Status] = [:]
     @Published private(set) var sources: [Source] = []
+    @Published private(set) var accounts: [String: String] = [:]
+    @Published private(set) var activeProvider: String?
+    @Published private(set) var disconnectFailures: Set<String> = []
+    @Published private(set) var notice: [String: String] = [:]
     private let flow = ConnectorFlow()
+    private let deps: Dependencies
     private var base: String?
     private var token: String?
+    private var generation = UUID()
+    private var refreshTask: Task<Void, Never>?
+    private var work: Task<Void, Never>?
+    private var activeSources: [Source] = []
+    private var injectedSources: Bool
 
-    init() {
+    init(sources: [Source]? = nil, dependencies: Dependencies? = nil) {
+        deps = dependencies ?? Self.liveDependencies()
+        injectedSources = sources != nil
+        if let sources { self.sources = sources }
         reloadSources()
     }
-
-    /// manifest から読む接続を組む。読める plugin だけ（推測で足さない）。
     func reloadSources() {
-        let store = PluginRuntimeStore.shared
-        store.load()
-        let order = ["com.astra.gmail", "com.astra.google-calendar", "com.astra.outlook", "com.astra.microsoft-todo"]
-        sources = order.compactMap { id in
-            guard let m = store.manifests.first(where: { $0.id == id }), let c = m.readConnector else { return nil }
-            return Source(pluginId: id, name: m.name, purpose: c.purpose ?? "読むだけ", provider: c.provider,
-                          connectorId: c.id, scopes: c.scopes)
+        if !injectedSources {
+            let store = PluginRuntimeStore.shared; store.load()
+            sources = ["com.astra.gmail", "com.astra.google-calendar", "com.astra.outlook", "com.astra.microsoft-todo"].compactMap { id in
+                guard let m = store.manifests.first(where: { $0.id == id }), let c = m.readConnector else { return nil }
+                return Source(pluginId: id, name: m.name, purpose: c.purpose ?? "読むだけ", provider: c.provider, connectorId: c.id, scopes: c.scopes)
+            }
         }
-        for s in sources where status[s.statusKey] == nil {
-            status[s.statusKey] = hasToken(s) ? .connected : (canConnect(s.name) ? .disconnected : .cannotConnect)
+        for source in sources where status[source.statusKey] == nil {
+            status[source.statusKey] = canConnect(source.name) ? .disconnected : .cannotConnect
         }
     }
-
-    /// アプリ名 → OAuth プロバイダ（緩いマッピング）。未対応は nil。
     static func provider(for app: String) -> String? {
         let a = app.lowercased()
         if a.contains("gmail") || a.contains("google") || a.contains("calendar") || a.contains("drive") { return "google" }
         if a.contains("microsoft") || a.contains("outlook") || a.contains("teams") || a.contains("to do") { return "microsoft" }
         return nil
     }
-
-    /// env にある client_id 一覧（`ASTRA_OAUTH_*_CLIENT_ID`）。
-    private func clientIds() -> [String: String] {
-        var out: [String: String] = [:]
-        for (k, v) in ProcessInfo.processInfo.environment where k.hasPrefix("ASTRA_OAUTH_") && k.hasSuffix("_CLIENT_ID") {
-            out[k] = v
-        }
-        out["ASTRA_OAUTH_MICROSOFT_CLIENT_ID"] = Self.connectionClientId(provider: "microsoft", readOnly: true, env: out)
-        return out
-    }
-
-    /// A Microsoft refresh token inherits consent for its client, not one scope request.
     static func connectionClientId(provider: String, readOnly: Bool, env: [String: String]) -> String? {
-        if provider != "microsoft" {
-            return env["ASTRA_OAUTH_\(provider.uppercased())_CLIENT_ID"].flatMap { $0.isEmpty ? nil : $0 }
-        }
-        let read = env["ASTRA_OAUTH_MICROSOFT_READ_CLIENT_ID"] ?? ""
-        let write = env["ASTRA_OAUTH_MICROSOFT_WRITE_CLIENT_ID"] ?? ""
-        if !read.isEmpty && read == write { return nil }
-        let selected = readOnly ? read : write
-        return selected.isEmpty ? nil : selected
+        ConnectionConfiguration.clientId(provider: provider, readOnly: readOnly, values: env)
     }
-
+    static func normalize(_ scope: String) -> String {
+        scope.replacingOccurrences(of: "https://graph.microsoft.com/", with: "", options: .caseInsensitive).lowercased()
+    }
     static func microsoftScopesMatch(granted: [String], required: [String]) -> Bool {
-        func normalized(_ scope: String) -> String {
-            scope.lowercased().replacingOccurrences(of: "https://graph.microsoft.com/", with: "")
-        }
         let identity: Set<String> = ["openid", "profile", "email", "offline_access", "user.read"]
-        let wanted = Set(required.map(normalized)).subtracting(identity)
-        let actual = Set(granted.map(normalized))
+        let wanted = Set(required.map(normalize)).subtracting(identity), actual = Set(granted.map(normalize))
         return wanted.isSubset(of: actual) && actual.isSubset(of: wanted.union(identity))
     }
-
-    /// 設定済み（繋げる）プロバイダ id。判定は core に一本化。
+    static func permits(_ source: Source, granted: [String]) -> Bool {
+        let identity: Set<String> = ["openid", "profile", "email", "offline_access", "user.read"]
+        let wanted = Set(source.scopes.map(normalize)).subtracting(identity)
+        return !wanted.isEmpty && wanted.isSubset(of: Set(granted.map(normalize)))
+    }
+    static func scopesSafe(_ granted: [String], for list: [Source]) -> Bool {
+        let identities: Set<String> = ["openid", "email", "profile", "offline_access", "user.read", "https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/userinfo.profile"]
+        return Set(granted.map(normalize)).isSubset(of: Set(list.flatMap(\.scopes).map(normalize)).union(identities))
+    }
     func configuredProviders() -> [String] {
-        AstraCoreBridge.configuredProviders(clientIds())
+        ["google", "microsoft"].filter { Self.connectionClientId(provider: $0, readOnly: true, env: deps.configuration()) != nil }
     }
-
-    /// このアプリを今すぐ繋げるか（対応プロバイダがあり、その client_id が設定済み）。
-    func canConnect(_ app: String) -> Bool {
-        guard let p = Self.provider(for: app) else { return false }
-        return configuredProviders().contains(p)
-    }
-
+    func canConnect(_ app: String) -> Bool { Self.provider(for: app).map { configuredProviders().contains($0) } ?? false }
     func source(named app: String) -> Source? { sources.first { $0.name == app } }
-
-    /// 送る・作る接続（manifest の grants に `.read` 以外があるもの）。JIT で求める。
+    func status(of app: String) -> Status? { source(named: app).flatMap { status[$0.statusKey] } }
     func actionsSource(pluginId: String, connectorId: String) -> Source? {
-        let store = PluginRuntimeStore.shared
-        store.load()
-        guard let m = store.manifests.first(where: { $0.id == pluginId }),
-              let c = m.connectors.first(where: { $0.id == connectorId && !$0.readOnly }) else { return nil }
-        return Source(pluginId: pluginId, name: m.name, purpose: c.purpose ?? "送る・動かす", provider: c.provider,
-                      connectorId: c.id, scopes: c.scopes, readOnly: false)
+        let store = PluginRuntimeStore.shared; store.load()
+        guard let m = store.manifests.first(where: { $0.id == pluginId }), let c = m.connectors.first(where: { $0.id == connectorId && !$0.readOnly }) else { return nil }
+        return Source(pluginId: pluginId, name: m.name, purpose: c.purpose ?? "送る・動かす", provider: c.provider, connectorId: c.id, scopes: c.scopes, readOnly: false)
     }
-
-    /// 送る・作る接続を始める（purpose を見せたあとで呼ぶ）。
-    @discardableResult
-    func connectActions(pluginId: String, connectorId: String) -> Bool {
-        guard let s = actionsSource(pluginId: pluginId, connectorId: connectorId) else { return false }
-        return connect(source: s)
+    @discardableResult func connectActions(pluginId: String, connectorId: String) -> Bool {
+        guard let s = actionsSource(pluginId: pluginId, connectorId: connectorId) else { return false }; return connect(source: s)
     }
-
-    /// 検査用: 送る接続ができたことにする（OAuth 無し）。
-    func installActionsStatus(pluginId: String, connectorId: String, _ st: Status) {
-        status["\(pluginId)#\(connectorId)"] = st
-    }
-    func status(of app: String) -> Status? { source(named: app).flatMap { status[$0.pluginId] } }
-
-    private func hasToken(_ s: Source) -> Bool {
-        KeychainStore.hasGeneric(service: KeychainStore.connectorService(s.pluginId, s.connectorId), account: NSUserName())
-    }
-
-    // MARK: cloud
-
-    func configureBackend(base: String, token: String) {
-        self.base = base; self.token = token
-        refresh()
-    }
-
-    /// cloud の接続記録を読み直す。読めなければ手元の鍵の有無だけで言う。
-    func refresh() {
-        guard let base, let token else { return }
-        let list = sources
-        Task.detached { [list] in
-            var next: [String: Bool] = [:]
-            for s in list {
-                guard let text = try? AstraCoreBridge.pluginConnections(base, accessToken: token, pluginId: s.pluginId),
-                      let data = text.data(using: .utf8),
-                      let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                      let items = obj["items"] as? [[String: Any]] else { continue }
-                next[s.pluginId] = items.contains { ($0["connectorId"] as? String) == s.connectorId && ($0["state"] as? String) == "CONNECTED" }
-            }
-            await MainActor.run {
-                for s in list {
-                    guard let recorded = next[s.pluginId] else { continue }
-                    if case .connecting = self.status[s.statusKey] { continue }
-                    let live = recorded && self.hasToken(s)
-                    self.status[s.statusKey] = live ? .connected : (self.canConnect(s.name) ? .disconnected : .cannotConnect)
-                    if live { self.connected.insert(s.name) } else { self.connected.remove(s.name) }
-                }
-            }
-        }
-    }
-
-    // MARK: connect / disconnect
-
-    /// 接続を始める（設定済みのときだけ）。**読むだけの接続の scope だけ**を求める。成功で true。
-    @discardableResult
-    func connect(_ app: String) -> Bool {
-        guard let s = source(named: app) else { return false }
-        return connect(source: s)
-    }
-
-    @discardableResult
-    func connect(source s: Source) -> Bool {
-        guard let clientId = Self.connectionClientId(provider: s.provider, readOnly: s.readOnly,
-                                                     env: ProcessInfo.processInfo.environment) else {
-            status[s.statusKey] = .cannotConnect; return false
-        }
-        guard let tokenUrl = AstraCoreBridge.tokenUrl(provider: s.provider) else { return false }
-        status[s.statusKey] = .connecting
-        let ok = (try? flow.begin(provider: s.provider, clientId: clientId, scopes: s.scopes) { [weak self] callback, pending in
-            Task { @MainActor in
-                guard let self else { return }
-                self.flow.stopLoopback()
-                self.finish(source: s, callback: callback, pending: pending, clientId: clientId, tokenUrl: tokenUrl)
-            }
-        }) ?? false
-        if !ok { status[s.statusKey] = .failed("ブラウザで同意画面を開けませんでした") }
-        return ok
-    }
-
-    /// 折り返し → 交換 → Keychain → cloud の記録。**参照だけを cloud へ。**
-    private func finish(source s: Source, callback: OauthCallback, pending: ConnectorFlow.Pending, clientId: String, tokenUrl: String) {
-        if let error = callback.error {
-            status[s.statusKey] = .failed(callback.errorDescription ?? error); return
-        }
-        guard callback.state == pending.state, let code = callback.code else {
-            status[s.statusKey] = .failed("折り返しが合いませんでした（state）"); return
-        }
-        let json = AstraCoreBridge.exchangeCode(tokenUrl: tokenUrl, provider: s.provider, clientId: clientId,
-                                                redirectUri: pending.redirectUri, code: code, verifier: pending.verifier)
-        guard let data = json.data(using: .utf8), !json.isEmpty,
-              let t = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let access = t["access_token"] as? String else {
-            status[s.statusKey] = .failed("トークンを受け取れませんでした"); return
-        }
-        let granted = (t["granted_scopes"] as? [String]) ?? []
-        if s.provider == "microsoft", !Self.microsoftScopesMatch(granted: granted, required: s.scopes) {
-            status[s.statusKey] = .failed("許可された範囲が接続の用途と一致しません。接続し直してください。")
-            return
-        }
-        let expiresAt: String? = (t["expires_at_ms"] as? Double).map {
-            ISO8601DateFormatter().string(from: Date(timeIntervalSince1970: $0 / 1000))
-        }
-        // 端末 worker と同じ形（@astra/oauth TokenSet）。値はここ（Keychain）にだけ置く。
-        let stored: [String: Any] = [
-            "clientId": clientId,
-            "accessToken": access,
-            "refreshToken": t["refresh_token"] as? String ?? NSNull(),
-            "expiresAt": expiresAt ?? NSNull(),
-            "grantedScopes": granted,
-            "tokenType": t["token_type"] as? String ?? "Bearer",
-            "idToken": NSNull(),
-        ]
-        guard let storedData = try? JSONSerialization.data(withJSONObject: stored),
-              let storedText = String(data: storedData, encoding: .utf8) else { status[s.statusKey] = .failed("保存できませんでした"); return }
-        do {
-            try KeychainStore.setGeneric(service: KeychainStore.connectorService(s.pluginId, s.connectorId), account: NSUserName(), value: storedText)
-        } catch {
-            status[s.statusKey] = .failed("Keychain に保存できませんでした"); return
-        }
-        if let base, let token {
-            let body: [String: Any] = [
-                "connector_id": s.connectorId,
-                "credential_ref": "keychain:\(s.pluginId)/\(s.connectorId)",
-                "granted_scopes": granted,
-                "expires_at": expiresAt ?? NSNull(),
-            ]
-            if let bodyData = try? JSONSerialization.data(withJSONObject: body), let bodyText = String(data: bodyData, encoding: .utf8) {
-                do { _ = try AstraCoreBridge.pluginConnect(base, accessToken: token, pluginId: s.pluginId, connectJson: bodyText) }
-                catch { status[s.statusKey] = .failed("接続を記録できませんでした"); return }
-            }
-        }
-        status[s.statusKey] = .connected
-        connected.insert(s.name)
-        if s.readOnly { InitialProfileStore.shared.connected(provider: s.provider) }
-    }
-
-    /// 切る: 鍵を消し、cloud の記録を失効させる。
-    func disconnect(_ app: String) {
-        guard let s = source(named: app) else { connected.remove(app); return }
-        try? KeychainStore.deleteGeneric(service: KeychainStore.connectorService(s.pluginId, s.connectorId), account: NSUserName())
-        if let base, let token {
-            try? AstraCoreBridge.pluginDisconnect(base, accessToken: token, pluginId: s.pluginId, connectorId: s.connectorId)
-        }
-        status[s.statusKey] = canConnect(s.name) ? .disconnected : .cannotConnect
-        connected.remove(s.name)
-    }
-
-    /// 検査用: 状態を直に置く（OAuth 無しで面を撮る）。
+    func installActionsStatus(pluginId: String, connectorId: String, _ st: Status) { status["\(pluginId)#\(connectorId)"] = st }
     func installStatus(_ pluginId: String, _ st: Status) {
         status[pluginId] = st
-        if let s = sources.first(where: { $0.pluginId == pluginId }) {
-            if st == .connected { connected.insert(s.name) } else { connected.remove(s.name) }
+        if let s = sources.first(where: { $0.pluginId == pluginId }) { update(s, st) }
+    }
+    private func update(_ source: Source, _ state: Status) {
+        status[source.statusKey] = state
+        if source.readOnly {
+            if state == .connected { connected.insert(source.name) } else { connected.remove(source.name) }
+        }
+    }
+    func configureBackend(base: String, token: String) {
+        if self.base != nil && (self.base != base || self.token != token) {
+            generation = UUID(); work?.cancel(); flow.stopLoopback(); activeProvider = nil; activeSources = []
+            connected.removeAll(); accounts.removeAll()
+            sources.forEach { update($0, .disconnected) }
+        }
+        self.base = base; self.token = token; refresh()
+    }
+    func refresh() {
+        guard activeProvider == nil else { return }
+        refreshTask?.cancel()
+        refreshTask = Task { await refreshNow() }
+    }
+    func refreshNow() async {
+        guard let base, let token, activeProvider == nil else { return }
+        let attempt = generation
+        for s in sources {
+            guard !Task.isCancelled, attempt == generation, activeProvider == nil else { return }
+            do {
+                let rows = try await deps.list(base, token, s)
+                guard attempt == generation, activeProvider == nil, !Task.isCancelled else { return }
+                let local = try deps.read(s).flatMap { try JSONDecoder().decode(Credential.self, from: Data($0.utf8)) }
+                let recorded = rows.first { $0.connectorId == s.connectorId && $0.state == "CONNECTED" }
+                let expected = Self.connectionClientId(provider: s.provider, readOnly: s.readOnly, env: deps.configuration())
+                let valid = recorded.map { r in
+                    Self.permits(s, granted: r.grantedScopes) && (r.expiresAt == nil || r.expiresAt.flatMap { ISO8601DateFormatter().date(from: $0) }.map { $0 > Date() } == true)
+                } ?? false
+                if valid, let local, local.usable, local.clientId == expected, Self.permits(s, granted: local.grantedScopes),
+                   Self.scopesSafe(local.grantedScopes, for: sources.filter { $0.provider == s.provider }) {
+                    update(s, .connected); accounts[s.provider] = local.accountLabel ?? recorded?.accountLabel
+                } else { update(s, canConnect(s.name) ? .disconnected : .cannotConnect) }
+            } catch {
+                guard attempt == generation, !Task.isCancelled else { return }
+                update(s, .failed("接続状況を確認できません。通信を確認して再確認してください。"))
+            }
+        }
+    }
+    @discardableResult func connect(_ app: String) -> Bool { source(named: app).map { connect(source: $0) } ?? false }
+    @discardableResult func connect(source: Source) -> Bool { begin([source]) }
+    @discardableResult func connectProvider(_ provider: String) -> Bool { begin(sources.filter { $0.provider == provider }) }
+    @discardableResult private func begin(_ list: [Source]) -> Bool {
+        guard activeProvider == nil, let first = list.first else { return false }
+        let config = deps.configuration()
+        guard let clientId = Self.connectionClientId(provider: first.provider, readOnly: first.readOnly, env: config) else {
+            list.forEach { update($0, .cannotConnect) }; return false
+        }
+        guard let base, let token, !base.isEmpty, !token.isEmpty else {
+            list.forEach { update($0, .failed("Genieの接続先に届きません。再確認してから接続してください。")) }; return false
+        }
+        refreshTask?.cancel(); generation = UUID(); let attempt = generation
+        activeProvider = first.provider; activeSources = list; notice[first.provider] = nil
+        list.forEach { update($0, .connecting) }
+        var scopes = Set(list.flatMap(\.scopes))
+        if first.readOnly { scopes.formUnion(first.provider == "google" ? ["openid", "email"] : ["User.Read"]) }
+        work = Task {
+        guard !Task.isCancelled, generation == attempt else { return }
+        let started = (try? await flow.begin(provider: first.provider, clientId: clientId, scopes: scopes.sorted(), onTimeout: { [weak self] in
+            guard let self, self.generation == attempt else { return }
+            self.fail(list, "認証の待ち時間が過ぎました。もう一度接続してください。")
+        }) { [weak self] callback, pending in
+            guard let self, self.generation == attempt else { return }
+            self.work = Task {
+                await self.finish(list: list, callback: callback, pending: pending, clientId: clientId,
+                    secret: ConnectionConfiguration.clientSecret(provider: first.provider, readOnly: first.readOnly, values: config),
+                    base: base, token: token, attempt: attempt)
+            }
+        }) ?? false
+        if !started, generation == attempt { fail(list, "認証画面を開けませんでした。既定のブラウザーを確認して再試行してください。") }
+        }
+        return true
+    }
+    func cancel() {
+        let list = activeSources
+        generation = UUID(); work?.cancel(); flow.stopLoopback(); activeProvider = nil; activeSources = []
+        list.forEach { update($0, canConnect($0.name) ? .disconnected : .cannotConnect) }
+        if let provider = list.first?.provider { notice[provider] = "接続を中止しました。いつでもやり直せます。" }
+        refresh()
+    }
+    private func fail(_ list: [Source], _ reason: String) {
+        list.forEach { update($0, .failed(reason)) }; activeProvider = nil; activeSources = []; flow.stopLoopback()
+    }
+    func finish(list: [Source], callback: OauthCallback, pending: ConnectorFlow.Pending, clientId: String,
+                secret: String?, base: String, token: String, attempt: UUID? = nil) async {
+        let attempt = attempt ?? generation
+        guard let first = list.first, callback.state == pending.state else { fail(list, "認証を確認できません。もう一度接続してください。"); return }
+        guard callback.error == nil, let code = callback.code else { fail(list, "接続は許可されませんでした。必要なサービスを許可して再試行できます。"); return }
+        list.forEach { update($0, .checking) }
+        do {
+            var credential = try await deps.exchange(first.provider, clientId, secret, pending, code)
+            guard attempt == generation, !Task.isCancelled else { return }
+            guard Self.scopesSafe(credential.grantedScopes, for: list) else { fail(list, "許可の範囲が接続の用途と一致しません。専用の接続設定を確認してください。"); return }
+            let accepted = list.filter { Self.permits($0, granted: credential.grantedScopes) }
+            guard !accepted.isEmpty else { fail(list, "メールや予定の読み取りが許可されていません。利用するサービスを選んで再接続してください。"); return }
+            credential.accountLabel = await deps.account(first.provider, credential.accessToken)
+            guard attempt == generation, !Task.isCancelled else { return }
+            for s in accepted {
+                let previous = try deps.read(s)
+                let text = String(decoding: try JSONEncoder().encode(credential), as: UTF8.self)
+                try deps.write(s, text)
+                do { try await deps.register(base, token, s, credential) }
+                catch {
+                    if let previous { try? deps.write(s, previous) } else { try? deps.delete(s) }
+                    throw error
+                }
+                // A completed registration remains real even if UI cancellation happened meanwhile.
+                guard attempt == generation, !Task.isCancelled else { return }
+                update(s, .connected)
+            }
+            if first.readOnly { accounts[first.provider] = credential.accountLabel }
+            for s in list where !accepted.contains(s) { update(s, .failed("このサービスへの許可がありません。接続し直して選択できます。")) }
+            if first.readOnly {
+                notice[first.provider] = accepted.count == list.count ? "接続できました。初期Profileや今日の予定に活用できます。" : "許可されたサービスを接続しました。残りは再接続して追加できます。"
+            }
+            activeProvider = nil; activeSources = []
+            WorkContextStore.shared.load()
+        } catch {
+            guard attempt == generation, !Task.isCancelled else { return }
+            for s in list where status[s.statusKey] != .connected { update(s, .failed("接続を保存できませんでした。通信と接続設定を確認し、再試行してください。")) }
+            activeProvider = nil; activeSources = []
+        }
+    }
+    func disconnect(_ app: String) { if let s = source(named: app) { disconnectProvider(s.provider) } }
+    func disconnectProvider(_ provider: String) {
+        guard activeProvider == nil else { return }
+        let reads = sources.filter { $0.provider == provider }
+        let actions = reads.flatMap { s -> [Source] in
+            let store = PluginRuntimeStore.shared; store.load()
+            return store.manifests.first(where: { $0.id == s.pluginId })?.connectors.compactMap { c in
+                c.readOnly ? nil : actionsSource(pluginId: s.pluginId, connectorId: c.id)
+            } ?? []
+        }
+        guard let base, let token else { fail(reads, "接続先に届きません。通信を確認してください。"); return }
+        refreshTask?.cancel(); generation = UUID(); let attempt = generation
+        activeProvider = provider; activeSources = reads
+        reads.forEach { update($0, .disconnecting) }
+        work = Task {
+            do {
+                for s in reads + actions {
+                    let rows = try await deps.list(base, token, s)
+                    guard attempt == generation, !Task.isCancelled else { return }
+                    if rows.contains(where: { $0.connectorId == s.connectorId && $0.state != "REVOKED" }) { try await deps.remove(base, token, s) }
+                    guard attempt == generation, !Task.isCancelled else { return }
+                    try deps.delete(s)
+                    update(s, canConnect(s.name) ? .disconnected : .cannotConnect)
+                }
+                accounts[provider] = nil; disconnectFailures.remove(provider); notice[provider] = "接続を解除しました。保存済みの成果物は引き続き開けます。"
+            } catch {
+                guard attempt == generation, !Task.isCancelled else { return }
+                disconnectFailures.insert(provider)
+                reads.forEach { update($0, .failed("切断を完了できませんでした。通信とKeychainを確認してもう一度切断してください。")) }
+            }
+            activeProvider = nil; activeSources = []
         }
     }
 }

@@ -6,7 +6,8 @@
 //! 期限）という、macOS/Windows native が共有する OS 非依存のロジックだけ。正本 §21・§2.4。
 //!
 //! TypeScript の `@astra/oauth`（flow.ts / pkce.ts / providers.ts）を Rust の契約へ写したもの。
-//! **client_secret は持たない**（native app は秘密を保てない, RFC 8252 §8.5）。
+//! Google Desktop client parameters may include client_secret; it is not treated as
+//! proof of native-app identity. PKCE is mandatory and user tokens remain local.
 
 use std::collections::BTreeMap;
 
@@ -63,7 +64,8 @@ impl OauthProvider {
         match self {
             // refresh token を貰うために要る。無いと 1 時間で黙って切れる。
             OauthProvider::Google => vec![("access_type", "offline"), ("prompt", "consent")],
-            OauthProvider::Microsoft => vec![("prompt", "consent")],
+            // Let the user choose personal vs organization accounts explicitly.
+            OauthProvider::Microsoft => vec![("prompt", "select_account")],
         }
     }
 
@@ -75,20 +77,19 @@ impl OauthProvider {
 
 /// 折り返し先が loopback か。RFC 8252 §7.3。**他所へ折り返させない。**
 pub fn is_loopback_redirect(uri: &str) -> bool {
-    // http://127.0.0.1[...] または http://[::1][...] だけ。
-    let rest = match uri.strip_prefix("http://") {
-        Some(r) => r,
-        None => return false,
+    let Some(rest) = uri.strip_prefix("http://") else { return false };
+    let authority = rest.split(['/', '?', '#']).next().unwrap_or("");
+    let port = if let Some(tail) = authority.strip_prefix("[::1]") {
+        tail
+    } else {
+        let host = authority.split(':').next().unwrap_or("");
+        if host != "127.0.0.1" && host != "localhost" { return false; }
+        &authority[host.len()..]
     };
-    let host = rest
-        .split(['/', ':', '?'])
-        .next()
-        .unwrap_or("");
-    host == "127.0.0.1" || rest.starts_with("[::1]")
+    port.is_empty() || port.strip_prefix(':').and_then(|p| p.parse::<u16>().ok()).is_some()
 }
 
-/// PKCE の code_challenge（RFC 7636, **S256 のみ**）。base64url(sha256(verifier))。
-/// **plain には落とさない。**verifier は 43..128 文字（呼び出し側が保証）。
+/// PKCE の code_challenge（RFC 7636, S256 のみ）。
 pub fn pkce_challenge(verifier: &str) -> String {
     let digest = Sha256::digest(verifier.as_bytes());
     base64url(&digest)
@@ -348,9 +349,24 @@ pub fn exchange_code_at(
     code_verifier: &str,
     now_ms: u64,
 ) -> Result<TokenSet, ConnectorError> {
-    let form = token_exchange_body(&config.client_id, &config.redirect_uri, code, code_verifier);
+    exchange_code_with_secret_at(token_url, config, code, code_verifier, now_ms, None)
+}
+
+fn exchange_code_with_secret_at(
+    token_url: &str, config: &ProviderConfig, code: &str, code_verifier: &str,
+    now_ms: u64, client_secret: Option<&str>,
+) -> Result<TokenSet, ConnectorError> {
+    let mut form = token_exchange_body(&config.client_id, &config.redirect_uri, code, code_verifier);
+    // Google Desktop client configuration requires this parameter. It is not
+    // proof of native-app identity; PKCE still protects the authorization code.
+    if config.provider == OauthProvider::Google {
+        if let Some(secret) = client_secret.filter(|s| !s.is_empty()) {
+            form.push(("client_secret", secret.to_string()));
+        }
+    }
     let form_ref: Vec<(&str, &str)> = form.iter().map(|(k, v)| (*k, v.as_str())).collect();
     let response = ureq::post(token_url)
+        .timeout(std::time::Duration::from_secs(30))
         .set("accept", "application/json")
         .send_form(&form_ref);
     let text = match response {
@@ -441,6 +457,28 @@ pub fn connector_exchange_code(
     }
 }
 
+/// Native client configuration, including Google's desktop client parameter.
+/// The endpoint is fixed by provider; credentials cannot be sent to an arbitrary URL.
+#[uniffi::export]
+pub fn connector_exchange_configured(
+    provider_id: String, client_id: String, client_secret: Option<String>,
+    redirect_uri: String, code: String, code_verifier: String, now_ms: u64,
+) -> String {
+    let Some(provider) = OauthProvider::from_id(&provider_id) else { return String::new() };
+    if !is_loopback_redirect(&redirect_uri) || !verifier_is_valid(&code_verifier) {
+        return String::new();
+    }
+    let config = ProviderConfig { provider, client_id, redirect_uri, scopes: vec![] };
+    match exchange_code_with_secret_at(provider.token_url(), &config, &code, &code_verifier, now_ms, client_secret.as_deref()) {
+        Ok(t) => serde_json::json!({
+            "access_token": t.access_token, "refresh_token": t.refresh_token,
+            "expires_at_ms": t.expires_at_ms, "granted_scopes": t.granted_scopes,
+            "token_type": t.token_type,
+        }).to_string(),
+        Err(_) => String::new(),
+    }
+}
+
 /// 提供者の token endpoint。交換は core（`connector_exchange_code`）が行うが、
 /// 端末側が mock と本物を同じ口で呼べるように URL を 1 箇所から出す。
 #[uniffi::export]
@@ -471,6 +509,10 @@ mod tests {
     fn only_loopback_redirects_are_allowed() {
         assert!(is_loopback_redirect("http://127.0.0.1:8123/callback"));
         assert!(is_loopback_redirect("http://[::1]:8123/callback"));
+        assert!(is_loopback_redirect("http://localhost:8123/"));
+        for bad in ["http://localhost.evil/cb", "http://127.0.0.1@evil/cb", "http://[::1].evil/cb", "http://localhost:notaport/cb"] {
+            assert!(!is_loopback_redirect(bad));
+        }
         assert!(!is_loopback_redirect("https://example.com/callback"));
         assert!(!is_loopback_redirect("http://evil.example.com/callback"));
     }
@@ -524,6 +566,41 @@ mod tests {
 
         let refused = CallbackParams { error: Some("access_denied".into()), ..Default::default() };
         assert!(matches!(accept_callback("s", 0, 1, &refused), Err(ConnectorError::ProviderRefused(_))));
+    }
+
+    #[test]
+    fn configured_desktop_exchange_preserves_pkce_and_google_parameter() {
+        use std::io::{Read, Write};
+        use std::net::TcpListener;
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        let url = format!("http://{}/token", listener.local_addr().unwrap());
+        let server = std::thread::spawn(move || {
+            let (mut stream, _) = listener.accept().unwrap();
+            stream.set_read_timeout(Some(std::time::Duration::from_secs(3))).unwrap();
+            let mut request = Vec::new();
+            let mut buffer = [0u8; 2048];
+            loop {
+                let n = stream.read(&mut buffer).unwrap();
+                if n == 0 { break; }
+                request.extend_from_slice(&buffer[..n]);
+                let text = String::from_utf8_lossy(&request);
+                if let Some(end) = text.find("\r\n\r\n") {
+                    let length: usize = text[..end].lines().find_map(|line| {
+                        line.to_lowercase().strip_prefix("content-length:").map(|n| n.trim().parse().unwrap())
+                    }).unwrap_or(0);
+                    if request.len() >= end + 4 + length { break; }
+                }
+            }
+            let text = String::from_utf8(request).unwrap();
+            assert!(text.contains("client_secret=desktop-parameter"));
+            assert!(text.contains("code_verifier=verifier"));
+            let body = r#"{"access_token":"test-only","expires_in":3600,"scope":"mail.read"}"#;
+            write!(stream, "HTTP/1.1 200 OK\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}", body.len(), body).unwrap();
+        });
+        let config = ProviderConfig { provider: OauthProvider::Google, client_id: "desktop".into(), redirect_uri: "http://127.0.0.1:1234/callback".into(), scopes: vec![] };
+        let tokens = exchange_code_with_secret_at(&url, &config, "test-code", "verifier", 0, Some("desktop-parameter")).unwrap();
+        assert_eq!(tokens.granted_scopes, vec!["mail.read"]);
+        server.join().unwrap();
     }
 
     #[test]

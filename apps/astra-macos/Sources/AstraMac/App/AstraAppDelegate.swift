@@ -94,6 +94,11 @@ final class AstraAppDelegate: NSObject, NSApplicationDelegate {
         NSApp.activate(ignoringOtherApps: true)
     }
 
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        MainWindowController.shared.showSection(.home)
+        return true
+    }
+
     /// 録音中の終了は会議を失う操作。黙って落とさず一度だけ聞く。
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         guard RecordingWorkspaceState.shared.isRecording else { return .terminateNow }

@@ -1,0 +1,55 @@
+name: 'First test / テスターの報告'
+description: 'Share a result, setup blocker, or demo impression. 日本語歓迎・3つの回答で報告できます。'
+title: '[Test] '
+labels: ['tester-feedback']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for trying Genie (formerly Astra). Setup failures are useful feedback too.
+        起動できなかった報告も歓迎です。公開Issueのため、個人情報・顧客データ・トークン・.envは載せないでください。
+        [Test guide / テスターガイド](https://github.com/FORIFOR/astra/blob/main/docs/TESTING.ja.md)
+  - type: dropdown
+    id: stage
+    attributes:
+      label: 'How far did you get? / どこまで進みましたか？'
+      options:
+        - 'Completed a Mac task / Macで結果を確認・保存した'
+        - 'Tried a task but got stuck / 依頼を試して途中で止まった'
+        - 'Setup blocked / セットアップで止まった'
+        - 'Demo only / 実演・サンプルを見た（アプリ未使用）'
+    validations:
+      required: true
+  - type: textarea
+    id: task
+    attributes:
+      label: 'What did you want to accomplish? / やりたかった仕事'
+      placeholder: 'For example: turn rough notes into a release checklist.'
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: 'Result or first blocker / 結果・最初のつまずき'
+      description: 'What helped? What did you expect, and what happened? 役立った点、期待と実際の違いを教えてください。'
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: 'Version, Mac, model (if known) / 分かる範囲で環境'
+      placeholder: 'v0.1.2 · macOS 15 · Apple silicon · Ollama qwen3.5:9b'
+  - type: dropdown
+    id: use_again
+    attributes:
+      label: 'Would you use this for another task? / 別の仕事でも使いたいですか？'
+      options:
+        - 'Yes / はい'
+        - 'If the blocker is fixed / つまずきが解消したら'
+        - 'Not yet / 今の段階では使わない'
+        - 'I could not evaluate it / まだ判断できない'
+  - type: textarea
+    id: evidence
+    attributes:
+      label: 'Optional sanitized screenshot or error / 任意のスクショ・エラー'
+      description: 'A written description is enough. Remove sensitive details before sharing. テキストの説明だけでも十分です。'

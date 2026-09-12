@@ -106,7 +106,7 @@ enum SelfTest {
         case "waveform": waveform(); return true
         case "recovery": recovery(args); return true
         case "timer": timer(); return true
-        case "connectorflow": connectorflow(); return true
+        case "connectorflow": Task { await connectorflow() }; return true
         case "connectorstate": connectorstate(); return true
         case "connectorexchange": connectorExchange(); return true
         case "voiceask": voiceask(args); return true
@@ -5997,21 +5997,17 @@ enum SelfTest {
     /// `--selftest connectorflow`: OAuth の loopback listener が開き、折り返しを core で解析できるか検証する。
     /// live なトークン交換は実提供者が要るのでここでは扱わない（loopback + callback 解析まで）。
     @MainActor
-    private static func connectorflow() {
+    private static func connectorflow() async {
         let flow = ConnectorFlow()
         var got: OauthCallback?
         let port: UInt16
         do {
-            port = try flow.startLoopback { params in got = params }
+            port = try await flow.startLoopback { params in got = params }
         } catch { print("SELFTEST_FAIL connectorflow listener error=\(error)"); exit(2) }
         guard port > 0 else { print("SELFTEST_FAIL connectorflow: no port"); exit(3) }
         // 疑似的な折り返しを自分で送る（提供者のブラウザの代わり）。
         let url = URL(string: "http://127.0.0.1:\(port)/callback?code=abc123&state=xyz789")!
-        let done = DispatchSemaphore(value: 0)
-        URLSession.shared.dataTask(with: url) { _, _, _ in done.signal() }.resume()
-        let deadline = Date().addingTimeInterval(5)
-        while got == nil && Date() < deadline { RunLoop.current.run(until: Date().addingTimeInterval(0.05)) }
-        _ = done.wait(timeout: .now() + 1)
+        _ = try? await URLSession.shared.data(from: url)
         flow.stopLoopback()
         guard let params = got, params.code == "abc123", params.state == "xyz789" else {
             print("SELFTEST_FAIL connectorflow code=\(got?.code ?? "nil") state=\(got?.state ?? "nil")"); exit(4)

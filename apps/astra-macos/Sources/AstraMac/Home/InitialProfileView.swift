@@ -8,14 +8,15 @@ struct InitialProfileView: View {
     @State private var draft: InitialProfileSections?
     private var dark: Bool { scheme == .dark }
     private var ready: Bool { store.result?.status == "ready" }
+    private var failed: Bool { store.result?.status == "failed" || (store.result == nil && store.failure != nil) }
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Space.largePadding) {
-                Text(ready ? "Your Astra Profile is ready" : "Building your Astra Profile")
+                Text(ready ? "Your Astra Profile is ready" : (failed ? "Profileの作成を再開できます" : "Building your Astra Profile"))
                     .font(.system(size: S.type(TypeScale.pageTitleSize), weight: .semibold))
                     .accessibilityAddTraits(.isHeader)
-                Text(ready ? "最近の記録から整理した初期プロファイルです。推定を含むため、内容を確認してください。" : "許可されたメールやカレンダーから、仕事、よく関わる人、優先事項、予定の傾向を整理しています。回答や提案をあなた向けにするために使います。")
+                Text(ready ? "最近の記録から整理した初期プロファイルです。推定を含むため、内容を確認してください。" : (failed ? "接続を確認して再試行できます。初期Profileはあとから作成することもできます。" : "許可されたメールやカレンダーから、仕事、よく関わる人、優先事項、予定の傾向を整理しています。回答や提案をあなた向けにするために使います。"))
                     .font(.system(size: S.type(TypeScale.bodySize)))
                     .fixedSize(horizontal: false, vertical: true)
                 if let failure = store.failure {
@@ -52,13 +53,19 @@ struct InitialProfileView: View {
                     }
                     Text("初回のみ · 予定は過去90日〜今後45日、メールは直近45日の最大100件。連絡先はやり取りの頻度から整理します。全文は取得しません。")
                         .font(.system(size: S.type(TypeScale.microSize))).foregroundStyle(Palette.muted(dark))
-                    if store.result?.status == "failed" || (store.result == nil && store.failure != nil) {
-                        Text("利用できるデータを取得できませんでした。接続と読む権限を確認してください。")
+                    if failed {
+                        Text("データを取得できませんでした。macOSのキーチェーン確認が表示された場合は許可し、接続と読み取り権限を確認してから再試行してください。")
                         Button("再試行") { store.retry() }.buttonStyle(.bordered)
                     } else {
                         Text("件数や通信状況によって時間がかかる場合があります。この画面を離れても続きから確認できます。")
                             .font(.system(size: S.type(TypeScale.microSize))).foregroundStyle(Palette.muted(dark))
                     }
+                }
+                if !ready {
+                    ProbeButton(id: "initialProfileLater", action: { store.deferUntilRequested() }) { Text("あとでHomeへ") }
+                        .buttonStyle(.borderless).accessibilityIdentifier("initialProfileLater")
+                    Text("Apps → Connectionsの「Profileを確認」から戻れます。")
+                        .font(.system(size: S.type(TypeScale.microSize))).foregroundStyle(Palette.muted(dark))
                 }
                 if ready, store.result?.outcomes.contains(where: { $0.status != "synced" }) == true {
                     Text("未接続・未許可・取得に失敗したデータは含まれていません。取得できた範囲だけで整理しています。")

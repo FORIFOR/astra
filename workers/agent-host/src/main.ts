@@ -1,3 +1,4 @@
+import { connectionConfiguration } from './connection-configuration.js';
 /**
  * Local Agent Host の起動口。正本 §4.4。
  *
@@ -262,7 +263,7 @@ async function main(): Promise<void> {
         provider as OauthProvider,
         connectorId,
         scopes,
-        process.env,
+        connectionConfiguration(process.env),
       );
       return config ? { ...config, redirectUri: redirectUri } : null;
     },
@@ -305,7 +306,9 @@ async function main(): Promise<void> {
   });
   let initialBusy = false;
   const initialTimer = setInterval(() => {
-    if (initialBusy || process.env['ASTRA_WORK_SYNC'] === 'off') return;
+    // Initial profiling is explicitly requested in Connections. Disabling
+    // continuous background sync must not strand that user-requested job.
+    if (initialBusy) return;
     initialBusy = true;
     void runInitialProfile({ cloud, connectors: runtime, refreshGrants })
       .catch(() => logger.warn('initial profile could not finish; the lease will allow recovery'))
