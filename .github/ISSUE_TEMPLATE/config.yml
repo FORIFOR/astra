@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 'Start testing Genie / テストの始め方'
+    url: 'https://github.com/FORIFOR/astra/blob/main/docs/TESTING.md'
+    about: 'Matching app and source, one useful task, and a short report. 日本語ガイドへのリンクもあります。'
+  - name: 'Watch the real workflows / まず実演を見る'
+    url: 'https://astra-forifor.forifor.chatgpt.site/#demos'
+    about: 'Three real app demonstrations; no installation required to watch.'
