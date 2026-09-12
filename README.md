@@ -1,24 +1,38 @@
-<p align="center"><img src="apps/desktop/src-tauri/icons/128x128@2x.png" width="88" alt="Astra"></p>
+<p align="center"><img src="apps/desktop/src-tauri/icons/128x128@2x.png" width="88" alt="Genie"></p>
 
-# Astra
+# Genie
 
-**Your idea. Make it move.**
+**Put your ideas to work.**
 
-A native Mac AI workspace. Take a screenshot, ask your own question, and keep the answer with your work. Use a local vision model or connect a supported AI provider.
+Give Genie a goal, work with your AI model, and keep the result in a native Mac workspace. Turn rough notes into an action plan, draft a better website message, or generate a small HTML prototype. Reopen the work, copy it, or save it as Markdown.
 
-[Website & demo](https://astra-forifor.forifor.chatgpt.site) · [日本語](docs/README.ja.md) · [Setup](docs/LOCAL_PREVIEW.md) · [Feedback](https://github.com/FORIFOR/astra/issues)
+Previously Astra. The repository and current Mac download still use that name.
 
-[![Astra for Mac — See it. Ask it. Move forward.](docs/launch/2026-09-12/v4/poster.jpg)](https://www.youtube.com/watch?v=uSIxI4MGzrg)
+**Mac preview testers wanted.** Try one useful task and tell us the first place you get stuck. Setup feedback counts, too. No waitlist or separate signup; a GitHub account is only needed to post feedback.
 
-**[Watch the 42-second product film](https://www.youtube.com/watch?v=uSIxI4MGzrg)** — capture a screenshot, ask a question, save the answer, and return to your work. Real Mac capture with fictional data; the connected Codex model took about 13 seconds to generate the answer. Waiting is shortened. [References and validation](docs/launch/2026-09-12/v4/PROVENANCE.md) · [Another example: an interactive orbital playground](https://astra-forifor.forifor.chatgpt.site/orbit.html).
+**[Start a first test →](docs/TESTING.md)** · [テスターとして試す](docs/TESTING.ja.md) · [Report your experience](https://github.com/FORIFOR/astra/issues/new?template=tester_feedback.yml)
 
-## A small workflow worth keeping
+[Website & demos](https://astra-forifor.forifor.chatgpt.site) · [日本語](docs/README.ja.md) · [Mac preview v0.1.2](https://github.com/FORIFOR/astra/releases/tag/v0.1.2)
 
-1. Take a Mac screenshot. Astra offers to help with it.
-2. Write what **you** want to know. The image is already attached.
-3. Send the question. Reopen the answer in Work, copy it, or save it as Markdown.
+## See the work, then try your own
 
-Try: “What does this error mean?” or “What would you improve on this page?” Screenshot detection itself makes no AI request. The selected image is included when you send your question.
+| Real workflow             | Watch / explore                                                                                                                                          | What the demonstration shows                                                         |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Build a small prototype   | [33-second demo](https://astra-forifor.forifor.chatgpt.site/#demo) · [Try the orbital playground](https://astra-forifor.forifor.chatgpt.site/orbit.html) | Generate HTML, save the result, then open the extracted HTML in an external browser. |
+| Improve a website message | [30-second demo](https://astra-forifor.forifor.chatgpt.site/#proposal)                                                                                   | A local model turns a fictional website into a copy proposal.                        |
+| Decide what to do next    | [42-second demo](https://astra-forifor.forifor.chatgpt.site/#priorities)                                                                                 | Ask about a fictional dashboard, review a recommendation, and save it.               |
+
+Real app captures; waiting is condensed. Model speed and quality vary. These examples do not demonstrate automatic deployment, SNS posting, or a guaranteed business result.
+
+## Start with a goal
+
+1. In Home, describe what you need and what a useful result looks like.
+2. Your connected model works on the request. Open the result in Work.
+3. Review it, copy it, or save Markdown for the next task.
+
+Try: “Turn these launch notes into a checklist with an owner and a next action: test the app, record a demo, write release notes. Mark unknown owners as unassigned.”
+
+A screenshot can add context when you need it; it is optional. Capturing one makes no AI request. The selected image is included only when you send a question.
 
 ## Bring your model
 
@@ -35,16 +49,18 @@ An explicitly selected route is not silently replaced by a paid provider. Local 
 **Developer preview — setup is required.** The Mac app currently needs a local gateway, task worker, agent host, and model. The app download alone is not a hosted service.
 
 - macOS 14 or later; native SwiftUI app, Apple silicon and Intel builds.
-- [Follow the local setup guide](docs/LOCAL_PREVIEW.md), then try a text request before an image question.
+- [Start the tester guide](docs/TESTING.md) for a matching app and source, a first task, and troubleshooting.
+- [Build current source](docs/LOCAL_PREVIEW.md) if you want to work on the latest code.
 - [Mac builds](https://github.com/FORIFOR/astra/releases): use the build and source version named together in its release notes.
-- [See the actual interface and demo](https://astra-forifor.forifor.chatgpt.site/#demo-slot).
+- [See the actual interface and demo](https://astra-forifor.forifor.chatgpt.site/#demo).
 
 The preview includes recording, live transcription, service connections, and guided Mac permissions. Those paths have additional credentials and permissions; they are not prerequisites for the local text workflow. Production-wide release acceptance is still tracked separately from this developer preview.
 
-## Help shape Astra
+## Help shape Genie
 
-If this fits how you work, a star helps other people find it. The most useful feedback is a real workflow: what you tried, what you expected, and where Astra got in the way.
+If this fits how you work, a star helps other people find it. The most useful feedback is a real workflow: what you tried, what you expected, and where Genie got in the way.
 
+- [Share a first test or setup blocker](https://github.com/FORIFOR/astra/issues/new?template=tester_feedback.yml).
 - [Report a reproducible problem](https://github.com/FORIFOR/astra/issues/new?template=bug_report.yml).
 - [Suggest a workflow or team pilot](https://github.com/FORIFOR/astra/issues/new?template=workflow.yml).
 - Read [contribution guidance](CONTRIBUTING.md) before making a change.
