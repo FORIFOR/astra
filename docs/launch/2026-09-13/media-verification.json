@@ -1,5 +1,5 @@
 {
-  "status": "prepared_not_published",
+  "status": "verified_assets_with_publication_records",
   "verified_on": "2026-09-13",
   "assets": [
     {
@@ -8,7 +8,22 @@
       "width": 1080,
       "height": 1920,
       "duration_seconds": 33.0,
-      "matches_recorded_validation": true
+      "matches_recorded_validation": true,
+      "publications": [
+        {
+          "platform": "TikTok",
+          "publisher": "foriforapps",
+          "url": "https://www.tiktok.com/@foriforapps/video/7684737308754529557",
+          "visibility": "everyone"
+        },
+        {
+          "platform": "Facebook",
+          "publisher": "foriforapps",
+          "profile_id": "61593966556275",
+          "url": "https://www.facebook.com/reel/1490966733064509",
+          "visibility": "public"
+        }
+      ]
     },
     {
       "file": "astra-web-proposal-social.mp4",
@@ -16,7 +31,8 @@
       "width": 1080,
       "height": 1920,
       "duration_seconds": 30.0,
-      "matches_recorded_validation": true
+      "matches_recorded_validation": true,
+      "publications": []
     },
     {
       "file": "astra-product-film-social.mp4",
@@ -24,7 +40,8 @@
       "width": 1080,
       "height": 1920,
       "duration_seconds": 42.0,
-      "matches_recorded_validation": true
+      "matches_recorded_validation": true,
+      "publications": []
     }
   ]
 }
