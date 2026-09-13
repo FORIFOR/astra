@@ -1,5 +1,7 @@
 # Run the Mac developer preview locally
 
+Current source also provides a [managed launcher](MANAGED_PREVIEW.md) that prepares the database and starts the local services together. The steps below describe the manual path.
+
 This is a developer setup, not a one-click consumer installation. It runs a gateway, database, durable worker, and model on your Mac. Do not expose the development authentication endpoint or the supplied database credentials to a network.
 
 ## Requirements
