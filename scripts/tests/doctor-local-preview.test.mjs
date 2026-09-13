@@ -1,11 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, writeFile, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, mkdir, writeFile, readFile, rm, copyFile, symlink } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createServer } from 'node:http';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
   diagnose,
   localEndpoint,
@@ -235,4 +236,43 @@ test('standalone CLI has help, structured missing-checkout output, and distinct 
     return true;
   });
   assert.throws(() => parseArgs(['--repo']));
+});
+
+test('renamed standalone downloads run through a symlink directory and remain inert on import', async (t) => {
+  const root = await mkdtemp(join(tmpdir(), 'genie-doctor-launch-'));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const physical = join(root, 'downloaded files');
+  const linked = join(root, 'download-link');
+  await mkdir(physical);
+  await symlink(physical, linked, 'dir');
+  const filename = 'genie-doctor-downloaded.mjs';
+  await copyFile(
+    fileURLToPath(new URL('../doctor-local-preview.mjs', import.meta.url)),
+    join(physical, filename),
+  );
+  const entry = join(linked, filename);
+
+  const help = await exec(process.execPath, [entry, '--help']);
+  assert.match(help.stdout, /使い方/);
+  assert.match(help.stdout, /終了コード/);
+  assert.equal(help.stderr, '');
+  await assert.rejects(
+    exec(process.execPath, [entry, '--repo', join(root, 'missing'), '--json']),
+    (error) => {
+      assert.equal(error.code, 1);
+      const report = JSON.parse(error.stdout);
+      assert.equal(report.status, 'needs_attention');
+      assert.equal(report.checks.find((check) => check.id === 'checkout').status, 'fail');
+      return true;
+    },
+  );
+
+  const importer = join(root, 'import-only.mjs');
+  await writeFile(
+    importer,
+    `await import(${JSON.stringify(pathToFileURL(entry).href)});\nconsole.log('import-only');\n`,
+  );
+  const imported = await exec(process.execPath, [importer]);
+  assert.equal(imported.stdout, 'import-only\n');
+  assert.equal(imported.stderr, '');
 });
