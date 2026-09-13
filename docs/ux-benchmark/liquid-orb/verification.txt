@@ -1,0 +1,42 @@
+2026-09-13 · macOS 26.6.2 · final source
+Full log SHA-256: f98e929dca6ccf3a152ac66725006c3c2f45621074482f2b8c02c43ee7f20af6
+
+test result: ok. 42 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.01s
+test result: ok. 67 passed; 0 failed; 3 ignored; 0 measured; 0 filtered out; finished in 0.40s
+Tests  357 passed (357)
+SELFTEST_OK voiceask: thinking=true→idle Agent 応答="Genie のレビューは金曜日 15 時です。…"
+SELFTEST_SKIP fulllifecycle: mic not granted
+SELFTEST_SKIP e2e001: mic not granted
+SELFTEST_OK golden: 10面が committed の golden と一致
+SELFTEST_OK golden: 10面が committed の golden と一致
+SELFTEST_OK geometry: 6状態の位置・寸法が基準と 2pt 以内
+SELFTEST_OK occupation: 7面の実寸が token の上限以内
+SELFTEST_OK density: 16面が基準以下（最も詰まっている 09c-speech-denied 57.1% / 最も空いている 02b-voice-hud-preparing 94.5%）
+SELFTEST_SKIP screenshot: screen recording not granted
+SELFTEST_SKIP waveform: microphone not granted
+SELFTEST_SKIP livemic: microphone not granted (status=未確認)
+SELFTEST_SKIP livemeeting: microphone not granted
+SELFTEST_SKIP livescreen: screen recording not granted
+SELFTEST_SKIP sttrecognize: speech not authorized
+SELFTEST_SKIP sttstream: speech not authorized
+SELFTEST_SKIP axtree: AX not trusted
+SELFTEST_SKIP a11ynames: AX not trusted
+SELFTEST_SKIP calendarask: mapping OK, AX not trusted
+SELFTEST_SKIP dictation: AX not trusted
+SELFTEST_SKIP vad: speech not authorized (VAD の判定は上で PASS)
+SELFTEST_SKIP invocation: マイク未許可（実 Mac + 許可でだけ測れる）
+SELFTEST_SKIP invocationaudio: マイク未許可（実 Mac + 許可でだけ測れる）
+SELFTEST_SKIP secret: screencapture が使えない
+SELFTEST_SKIP recordbutton: actual recording requires microphone grant; pre-permission explanation/cancel is covered by journey JC
+SELFTEST_SKIP acceptance: recording lifecycle requires microphone grant; permission gating is covered separately
+SELFTEST_OK home-meeting-focus: explicit Notes/Ask use existing Dock key window; passive updates preserve Home; sharing stays hidden
+ORB_DISPLAY visible=true occlusion=true appHidden=false viewHidden=false paused=false size=(264.0, 264.0) frames=23
+SELFTEST_OK liquid-orb: real Metal snapshots; playback=false
+SURFACE_CONTINUITY_MOTION=PASS
+JOURNEYS_OK: 3 本とも最後まで通った（J-B の遷移中も 60fps で連続）
+Executed 157 tests, with 0 failures (0 unexpected) in 0.887 (0.898) seconds
+VERIFY_ALL_OK: この環境で検証できる全ゲートが緑
+
+Playback lifecycle (separate real macOS run):
+ORB_DISPLAY visible=true occlusion=false appHidden=false viewHidden=false paused=false size=(264.0, 264.0) frames=23
+SELFTEST_OK liquid-orb: real Metal snapshots; playback=true

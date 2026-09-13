@@ -74,6 +74,7 @@ const FIELDS = [
   ['dockPadV', h.padV],
   ['dockRowGap', h.rowGap],
   ['hudOrbSize', h.orbSize],
+  ['hudOrbCompactSize', h.orbCompactSize],
   ['paletteWidth', p.toolWidth],
   ['assistantWidth', p.aiWidth],
   ['paletteRadius', p.radius],

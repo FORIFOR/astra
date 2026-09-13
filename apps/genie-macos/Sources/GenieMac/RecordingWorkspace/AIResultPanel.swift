@@ -14,8 +14,11 @@ struct AIResultPanel: View {
         if state.aiRunning || !state.aiResult.isEmpty {
             VStack(alignment: .leading, spacing: 7) {
                 HStack(spacing: 6) {
-                    Image(systemName: "sparkles").font(.system(size: 10))
-                        .foregroundStyle(Color.genieAccent)
+                    if state.aiRunning { GenieOrb(mode: .thinking, size: 28) }
+                    else {
+                        Image(systemName: "sparkles").font(.system(size: 10))
+                            .foregroundStyle(Color.genieAccent)
+                    }
                     Text(state.aiRunning ? "会議の文字起こしを読んでいます…" : "AI の結果")
                         .font(.system(size: TypeScale.microSize, weight: .semibold))
                         .foregroundStyle(.secondary)

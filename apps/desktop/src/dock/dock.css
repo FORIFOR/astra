@@ -66,23 +66,7 @@
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--genie-color-accent) 55%, transparent);
 }
 
-.astra-dock__orb[data-astra-voice-state='thinking'] .astra-orb {
-  animation: astra-orb-think 1.6s ease-in-out infinite;
-}
-
-.astra-dock__orb[data-astra-voice-state='connecting'] .astra-orb {
-  animation: astra-orb-think 0.9s ease-in-out infinite;
-}
-
-@keyframes astra-orb-think {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.45;
-  }
-}
+/* State motion belongs to the liquid renderer, which stops when hidden or reduced. */
 
 .astra-dock__intent {
   flex: 1;
@@ -397,7 +381,6 @@
 .astra-orb {
   display: inline-block;
   flex: none;
-  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--genie-color-accent) 35%, transparent));
 }
 
 .astra-dock__wave {
@@ -461,11 +444,6 @@
 /* 状態は data 属性で公開する。Deepgram の VoiceButton と同じ考え方（CSS だけで差し替えられる） */
 .astra-dock__orb[data-astra-voice-state='listening'] {
   opacity: 1;
-}
-
-/* 薄くするのは Orb だけ。面ごと薄くすると、明るい机の上で灰色に見える */
-.astra-dock__orb[data-astra-voice-state='thinking'] {
-  opacity: 0.78;
 }
 
 @media (prefers-reduced-motion: reduce) {

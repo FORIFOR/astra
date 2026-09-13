@@ -30,13 +30,19 @@ final class VoiceHUDState: ObservableObject {
     /// 名乗っていた（取り込みも文字起こしも起きない＝宣言だけ）。いまは実際に取り込み、
     /// 最初の音声フレームが届いてから名乗る。タイマーでは切り替えない。
     @Published private(set) var listeningAwaitingAudio = true
+    @Published private(set) var inputLevel: Float = 0
+
+    func receiveInputLevel(_ level: Float) {
+        guard case .listening = mode, !listeningAwaitingAudio else { return }
+        inputLevel = LiquidOrbMotion.clampedLevel(level)
+    }
 
     /// 検査・golden 用。実マイクを開けない撮影で「取り込めている姿」を作る
     /// （録音側の `markListening` と同じ役割）。
     func markVoiceCaptureLive() { listeningAwaitingAudio = false }
 
     /// 検査・golden 用。「まだ取り込めていない姿（準備中…）」を作る。
-    func beginPreparingForShot() { listeningAwaitingAudio = true }
+    func beginPreparingForShot() { listeningAwaitingAudio = true; inputLevel = 0 }
 
     @Published private(set) var latestRequestID: UUID?
     @Published private(set) var refreshingRequests: Set<UUID> = []
@@ -54,6 +60,8 @@ final class VoiceHUDState: ObservableObject {
     /// **実際に取り込む。**面は先に出すが、見出しは最初の音声フレームが届くまで「準備中…」で、
     /// 「聞いています…」と名乗るのはそれからにする（UI の意味と実装状態を一致させる）。
     func beginListening() {
+        GenieSpeechOutput.shared.stop()
+        inputLevel = 0
         guard Permissions.microphone == .granted else {
             PermissionGuideCoordinator.shared.explain(.microphone) { [weak self] in self?.beginListening() }
             return
@@ -74,6 +82,7 @@ final class VoiceHUDState: ObservableObject {
 
     /// 聞くのをやめる（Esc）。マイクが開いている面に逃げ道の鍵が無いのは危ない。
     func cancelListening() {
+        inputLevel = 0
         guard case .listening = mode else { return }
         RecordingRuntime.shared.endVoiceListening()
         listeningAwaitingAudio = true
@@ -151,6 +160,7 @@ final class VoiceHUDState: ObservableObject {
     func ask(_ text: String, newConversation: Bool = false, visualContext: [VisualContextArtifact]? = nil, consumerPlanning: ConsumerPlanningMode? = nil) -> Bool {
         let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty, !requestInFlight else { return false }
+        GenieSpeechOutput.shared.stop()
         // Personal booking requests open an editable local preparation flow.
         // No gateway, model, address lookup, or paid operation happens here.
         // Explicit images keep their normal visual-question route.

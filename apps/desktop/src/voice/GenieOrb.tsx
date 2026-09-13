@@ -1,31 +1,14 @@
-/**
- * Genie の Orb。描画は Deepgram 公式（`vendor/deepgram-ui/Orb.tsx`）。
- *
- * 変えているのは色だけ。**動きは Deepgram、色は Genie。**
- * Orb は hex に alpha を足して使うので、CSS 変数ではなく実値を渡す。
- * 変数から読めなければ §17.1 の accent を使う（見た目が変わるだけで、動きは同じ）。
- */
-import { useEffect, useMemo, useState, type ReactElement } from 'react';
-import { Orb, type OrbState } from '../vendor/deepgram-ui/Orb.js';
+/** The user-selected Liquid Orb Editor shader; all rendering stays on this device. */
+import { useEffect, useRef, useState, type ReactElement } from 'react';
 import type { VoiceMode } from './voiceRuntime.js';
-
-/** §17.1 の accent。変数が読めないときの既定。 */
+import { createOrbRenderer, type OrbSource } from './liquid-orb/renderer.js';
+import './liquid-orb/orb.css';
+import { orbFallback } from './liquid-orb/generated.js';
 const ACCENT_LIGHT = '#5B4CF0';
 const ACCENT_DARK = '#8A7DFF';
-
-export function orbStateFor(mode: VoiceMode): OrbState {
-  switch (mode) {
-    case 'speaking':
-      return 'talking';
-    case 'listening':
-    case 'connecting':
-    case 'thinking':
-      return 'listening';
-    default:
-      return 'idle';
-  }
+export function orbStateFor(mode: VoiceMode): VoiceMode {
+  return mode === 'error' || mode === 'interrupted' ? 'idle' : mode;
 }
-
 /** CSS 変数から hex を読む。`#rrggbb` でなければ既定に落とす。 */
 function readHex(name: string, fallback: string): string {
   if (typeof getComputedStyle !== 'function') return fallback;
@@ -44,27 +27,37 @@ export function GenieOrb({
   getInputVolume?: () => number;
   getOutputVolume?: () => number;
 }): ReactElement {
-  const [colors, setColors] = useState<[string, string]>([ACCENT_LIGHT, ACCENT_DARK]);
-
+  const canvas = useRef<HTMLCanvasElement>(null);
+  const source = useRef<OrbSource>({ mode, getInputVolume, getOutputVolume });
+  source.current = { mode: orbStateFor(mode), getInputVolume, getOutputVolume };
+  const [ready, setReady] = useState(false);
   useEffect(() => {
-    // theme が変わっても追う。読めない環境では既定のまま。
-    setColors([
-      readHex('--genie-color-accent', ACCENT_LIGHT),
-      readHex('--genie-color-accent-on', ACCENT_DARK),
-    ]);
+    const element = canvas.current;
+    if (!element) return;
+    const abort = new AbortController();
+    const fail = (): void => {
+      if (!abort.signal.aborted) setReady(false);
+    };
+    void createOrbRenderer(element, () => source.current, fail, abort.signal)
+      .then(() => {
+        if (!abort.signal.aborted) setReady(true);
+      })
+      .catch(fail);
+    return () => abort.abort();
   }, []);
-
-  const state = useMemo(() => orbStateFor(mode), [mode]);
-
+  useEffect(() => {
+    canvas.current?.dispatchEvent(new Event('genie-orb-state'));
+  }, [mode]);
   return (
-    <span className="astra-orb" data-astra-voice-state={mode}>
-      <Orb
-        state={state}
-        size={size}
-        colors={colors}
-        {...(getInputVolume ? { getInputVolume } : {})}
-        {...(getOutputVolume ? { getOutputVolume } : {})}
-      />
+    <span
+      className="astra-orb genie-liquid-orb"
+      data-astra-voice-state={mode}
+      data-genie-orb-renderer={ready ? 'webgpu' : 'static'}
+      style={{ width: size, height: size }}
+      aria-hidden="true"
+    >
+      {!ready && <img className="genie-liquid-orb__fallback" src={orbFallback} alt="" />}
+      <canvas ref={canvas} style={{ opacity: ready ? 1 : 0 }} />
     </span>
   );
 }

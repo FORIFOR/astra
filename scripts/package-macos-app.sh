@@ -16,6 +16,7 @@ fi
 ICON_SRC="$ROOT/apps/desktop/src-tauri/icons/icon.icns"
 [[ -f "$ICON_SRC" ]] || { echo "FAIL: アイコン ($ICON_SRC) が無い" >&2; exit 1; }
 cp "$ICON_SRC" "$APP/Contents/Resources/AppIcon.icns"
+cp "$ROOT/shared/design/liquid-orb/LICENSE" "$APP/Contents/Resources/LiquidOrb-LICENSE.txt"
 cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">

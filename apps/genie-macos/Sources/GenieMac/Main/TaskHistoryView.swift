@@ -107,7 +107,7 @@ struct TaskDetailView: View {
                         VStack(alignment: .leading, spacing: 16) {
                             if record.phase == .submitting || record.phase == .working {
                                 HStack(spacing: 12) {
-                                    ProgressView().controlSize(.small)
+                                    GenieOrb(mode: record.phase == .working ? .thinking : .preparing)
                                     Text(record.phase == .submitting ? "依頼を保存しました。実行先に届けています。" : "結果を待っています。別の画面で作業を続けられます。")
                                 }
                             }
@@ -160,6 +160,7 @@ struct TaskDetailView: View {
                     copied = true
                 } label: { Label(copied ? "コピー済み" : "コピー", systemImage: copied ? "checkmark" : "doc.on.doc") }
                 .accessibilityIdentifier("taskResultCopy")
+                GenieReadAloudButton(text: record.result, owner: shown.id)
                 Button { exportDocument() } label: { Label("保存…", systemImage: "square.and.arrow.down") }
                     .accessibilityIdentifier("taskResultSave")
             }.padding(Space.cardPadding)

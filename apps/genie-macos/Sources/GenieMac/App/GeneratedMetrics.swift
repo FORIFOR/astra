@@ -49,7 +49,8 @@ enum Metrics {
     static let dockPadH: CGFloat = 20
     static let dockPadV: CGFloat = 16
     static let dockRowGap: CGFloat = 8
-    static let hudOrbSize: CGFloat = 9
+    static let hudOrbSize: CGFloat = 36
+    static let hudOrbCompactSize: CGFloat = 22
     static let paletteWidth: CGFloat = 140
     static let assistantWidth: CGFloat = 180
     static let paletteRadius: CGFloat = 12

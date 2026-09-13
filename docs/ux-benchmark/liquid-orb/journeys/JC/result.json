@@ -1,0 +1,125 @@
+{
+  "artifacts" : [
+    "01-denied.png",
+    "02-recovered.png",
+    "03-after-sharing.png",
+    "04-confirm.png",
+    "05-interrupted.png",
+    "06-resumed.png"
+  ],
+  "errors" : [
+
+  ],
+  "focusTheft" : 0,
+  "interactions" : 4,
+  "journey" : "JC",
+  "notMeasured" : [
+    "kill -9 を挟んだ全体（scripts\/verify-recording-experience.sh）",
+    "実際の TCC 拒否（端末の許可は自動で変えない。simulatedMicrophone で作る）"
+  ],
+  "observations" : [
+
+  ],
+  "product" : "Genie",
+  "startedAt" : "2026-09-13T13:41:37Z",
+  "steps" : [
+    {
+      "front" : "com.apple.finder",
+      "ids" : {
+        "enable" : "true",
+        "later" : "true",
+        "state" : "microphoneIntro"
+      },
+      "interactions" : 1,
+      "keyWindow" : true,
+      "ms" : 1033,
+      "name" : "マイクの説明",
+      "surface" : {
+        "h" : 189,
+        "key" : true,
+        "w" : 312,
+        "x" : 1392,
+        "y" : 101
+      },
+      "transitionMs" : 53,
+      "windows" : 2
+    },
+    {
+      "front" : "com.apple.finder",
+      "ids" : {
+        "session" : "meeting-02da55c6-45b9-42ae-b33c-be84fc7c225c"
+      },
+      "interactions" : 1,
+      "keyWindow" : true,
+      "ms" : 1181,
+      "name" : "回復",
+      "surface" : {
+        "h" : 108,
+        "key" : true,
+        "w" : 820,
+        "x" : 454,
+        "y" : 1009
+      },
+      "windows" : 1
+    },
+    {
+      "front" : "com.apple.finder",
+      "ids" : {
+        "backAfterSharing" : "true",
+        "hiddenWhileSharing" : "true"
+      },
+      "interactions" : 0,
+      "keyWindow" : false,
+      "ms" : 1457,
+      "name" : "共有のあと",
+      "surface" : {
+        "h" : 108,
+        "key" : false,
+        "w" : 820,
+        "x" : 454,
+        "y" : 1009
+      },
+      "windows" : 1
+    },
+    {
+      "front" : "com.apple.finder",
+      "ids" : {
+        "answered" : "false",
+        "surfaces" : "1"
+      },
+      "interactions" : 1,
+      "keyWindow" : false,
+      "ms" : 1258,
+      "name" : "確認（やめる）",
+      "surface" : {
+        "h" : 108,
+        "key" : false,
+        "w" : 820,
+        "x" : 454,
+        "y" : 1009
+      },
+      "windows" : 1
+    },
+    {
+      "ids" : {
+        "status" : "interrupted",
+        "transcriptRows" : "1"
+      },
+      "interactions" : 1,
+      "keyWindow" : false,
+      "ms" : 2284,
+      "name" : "落ちて再開",
+      "surface" : {
+        "h" : 820,
+        "key" : false,
+        "w" : 1240,
+        "x" : 244,
+        "y" : 217
+      },
+      "windows" : 2
+    }
+  ],
+  "success" : true,
+  "totalMs" : 7223,
+  "windowsOpened" : 0
+}

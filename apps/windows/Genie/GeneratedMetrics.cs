@@ -49,7 +49,8 @@ public static class Metrics
     public const double DockPadH = 20;
     public const double DockPadV = 16;
     public const double DockRowGap = 8;
-    public const double HudOrbSize = 9;
+    public const double HudOrbSize = 36;
+    public const double HudOrbCompactSize = 22;
     public const double PaletteWidth = 140;
     public const double AssistantWidth = 180;
     public const double PaletteRadius = 12;
