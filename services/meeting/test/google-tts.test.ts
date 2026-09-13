@@ -4,7 +4,7 @@
  * **実際には呼ばない。**失敗の伝え方が正しいことを見る。
  */
 import { describe, expect, it } from 'vitest';
-import { SpeakError } from '@astra/tts';
+import { SpeakError } from '@genie/tts';
 import { GoogleTtsProvider } from '../src/google-tts.js';
 
 const json = (body: unknown, status = 200): Response =>

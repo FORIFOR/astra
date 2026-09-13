@@ -5,7 +5,7 @@
  * 別の許可（`email.send` / `calendar.write`）で、ここには入れない。
  * 入れないので、承認の跡が無いまま外へ出る経路がそもそも無い。
  *
- * connector 層は判断しない。Graph が返したものを Astra の形に写すだけで、
+ * connector 層は判断しない。Graph が返したものを Genie の形に写すだけで、
  * 「これは依頼か」「急ぎか」は上の層（normalize / Work Graph / 端末の LLM）が決める。
  */
 import { callJson, ConnectorError, type CallConfig } from './http.js';

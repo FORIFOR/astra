@@ -1,4 +1,4 @@
-# @astra/desktop
+# @genie/desktop
 
 Tauri v2 + React desktop client. Owns the Local Control Plane
 (product spec §16.1) and the 4-tab shell (§2).

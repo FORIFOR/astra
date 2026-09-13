@@ -5,7 +5,7 @@
  * アクセスできる全データの一覧ではない（§5.2）。この区別が Lens の意味そのもの。
  */
 import type { ReactElement } from 'react';
-import { chipsFor, type ContextSource } from '@astra/contracts';
+import { chipsFor, type ContextSource } from '@genie/contracts';
 
 /** §5.2: REGULATED / CONFIDENTIAL は短い言葉で。enum をそのまま出さない。 */
 const SENSITIVITY_LABEL: Record<string, string> = {

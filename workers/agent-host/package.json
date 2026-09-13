@@ -1,5 +1,5 @@
 {
-  "name": "@astra/worker-agent-host",
+  "name": "@genie/worker-agent-host",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -12,10 +12,10 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@astra/contracts": "workspace:*",
-    "@astra/telemetry": "workspace:*",
-    "@astra/service-connectors": "workspace:*",
-    "@astra/oauth": "workspace:*"
+    "@genie/contracts": "workspace:*",
+    "@genie/telemetry": "workspace:*",
+    "@genie/service-connectors": "workspace:*",
+    "@genie/oauth": "workspace:*"
   },
   "devDependencies": {
     "vitest": "catalog:"

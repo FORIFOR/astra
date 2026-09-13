@@ -8,7 +8,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
-import { uuidv7, type Artifact, type ContextSource } from '@astra/contracts';
+import { uuidv7, type Artifact, type ContextSource } from '@genie/contracts';
 import { WORK_DETAIL_TABS, WorkDetail, activityLines, nextStep } from '../src/work/WorkDetail.js';
 import type { WorkView } from '../src/work/workView.js';
 

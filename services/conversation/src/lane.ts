@@ -8,7 +8,7 @@
  * 「なぜこの Lane になったか」を説明できなくなる。
  * 規則で決まらないものだけ chat に落とす。
  */
-import type { Lane, Modality } from '@astra/contracts';
+import type { Lane, Modality } from '@genie/contracts';
 
 export interface LaneInput {
   readonly text: string;

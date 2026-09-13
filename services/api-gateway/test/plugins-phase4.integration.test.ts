@@ -2,16 +2,16 @@
  * Plugin Platform。Phase 4 実装仕様 §5。AC4-1〜AC4-12。
  */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { uuidv7, type DashboardView, type TokenResponse } from '@astra/contracts';
-import { composeDataSources } from '@astra/service-plugin-registry';
+import { uuidv7, type DashboardView, type TokenResponse } from '@genie/contracts';
+import { composeDataSources } from '@genie/service-plugin-registry';
 import {
   generatePublisherKeyPair,
   loadManifest,
   signManifest,
   type PluginAsset,
-} from '@astra/plugin-sdk';
-import { withSystem } from '@astra/db';
-import { sha256Hex } from '@astra/contracts';
+} from '@genie/plugin-sdk';
+import { withSystem } from '@genie/db';
+import { sha256Hex } from '@genie/contracts';
 import { makeTestApp, makeTokens, testDbConfig, type TestApp } from './support.js';
 import type { App } from '../src/fastify.js';
 

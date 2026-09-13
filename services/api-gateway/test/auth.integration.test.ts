@@ -1,11 +1,11 @@
 /**
  * 認証の結合テスト。チケット P0-09 の DoD（再利用検知で全 session 失効 + audit）。
- *   ./infra/db/with-test-db.sh pnpm --filter @astra/service-api-gateway test
+ *   ./infra/db/with-test-db.sh pnpm --filter @genie/service-api-gateway test
  */
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { type ApiError, type MeResponse, type TokenResponse, uuidv7 } from '@astra/contracts';
-import { createDb, withTenant, type DbHandle } from '@astra/db';
-import { readAuditChain, verifyAuditChain } from '@astra/telemetry';
+import { type ApiError, type MeResponse, type TokenResponse, uuidv7 } from '@genie/contracts';
+import { createDb, withTenant, type DbHandle } from '@genie/db';
+import { readAuditChain, verifyAuditChain } from '@genie/telemetry';
 import { countActiveSessions } from '../src/auth/sessions.js';
 import { makeTestApp, makeTokens, testDbConfig, type TestApp } from './support.js';
 import { JwtTokens } from '../src/auth/tokens.js';

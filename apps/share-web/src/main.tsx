@@ -1,8 +1,8 @@
 import { StrictMode, useEffect } from 'react';
 import type { JSX } from 'react';
 import { createRoot } from 'react-dom/client';
-import { PublicShareClient } from '@astra/api-client';
-import { TOKENS_CSS } from '@astra/ui-kit';
+import { PublicShareClient } from '@genie/api-client';
+import { TOKENS_CSS } from '@genie/ui-kit';
 import { ShareViewer } from './ShareViewer.js';
 import './share.css';
 
@@ -15,9 +15,9 @@ const client = new PublicShareClient({
 
 function Root(): JSX.Element {
   useEffect(() => {
-    if (document.getElementById('astra-tokens')) return;
+    if (document.getElementById('genie-tokens')) return;
     const style = document.createElement('style');
-    style.id = 'astra-tokens';
+    style.id = 'genie-tokens';
     style.textContent = TOKENS_CSS;
     document.head.appendChild(style);
   }, []);

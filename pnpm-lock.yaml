@@ -80,19 +80,19 @@ importers:
 
   apps/desktop:
     dependencies:
-      '@astra/api-client':
+      '@genie/api-client':
         specifier: workspace:*
         version: link:../../packages/api-client
-      '@astra/contracts':
+      '@genie/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
-      '@astra/oauth':
+      '@genie/oauth':
         specifier: workspace:*
         version: link:../../packages/oauth
-      '@astra/service-notification':
+      '@genie/service-notification':
         specifier: workspace:*
         version: link:../../services/notification
-      '@astra/ui-kit':
+      '@genie/ui-kit':
         specifier: workspace:*
         version: link:../../packages/ui-kit
       '@tauri-apps/api':
@@ -135,13 +135,13 @@ importers:
 
   apps/share-web:
     dependencies:
-      '@astra/api-client':
+      '@genie/api-client':
         specifier: workspace:*
         version: link:../../packages/api-client
-      '@astra/contracts':
+      '@genie/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
-      '@astra/ui-kit':
+      '@genie/ui-kit':
         specifier: workspace:*
         version: link:../../packages/ui-kit
       react:
@@ -178,64 +178,64 @@ importers:
 
   evals:
     dependencies:
-      '@astra/contracts':
+      '@genie/contracts':
         specifier: workspace:*
         version: link:../packages/contracts
-      '@astra/db':
+      '@genie/db':
         specifier: workspace:*
         version: link:../packages/db
-      '@astra/oauth':
+      '@genie/oauth':
         specifier: workspace:*
         version: link:../packages/oauth
-      '@astra/plugin-sdk':
+      '@genie/plugin-sdk':
         specifier: workspace:*
         version: link:../packages/plugin-sdk
-      '@astra/policy':
+      '@genie/policy':
         specifier: workspace:*
         version: link:../packages/policy
-      '@astra/service-agent-host':
+      '@genie/service-agent-host':
         specifier: workspace:*
         version: link:../services/agent-host
-      '@astra/service-agent-runtime':
+      '@genie/service-agent-runtime':
         specifier: workspace:*
         version: link:../services/agent-runtime
-      '@astra/service-api-gateway':
+      '@genie/service-api-gateway':
         specifier: workspace:*
         version: link:../services/api-gateway
-      '@astra/service-connectors':
+      '@genie/service-connectors':
         specifier: workspace:*
         version: link:../services/connectors
-      '@astra/service-context':
+      '@genie/service-context':
         specifier: workspace:*
         version: link:../services/context
-      '@astra/service-conversation':
+      '@genie/service-conversation':
         specifier: workspace:*
         version: link:../services/conversation
-      '@astra/service-library':
+      '@genie/service-library':
         specifier: workspace:*
         version: link:../services/library
-      '@astra/service-meeting':
+      '@genie/service-meeting':
         specifier: workspace:*
         version: link:../services/meeting
-      '@astra/service-plugin-registry':
+      '@genie/service-plugin-registry':
         specifier: workspace:*
         version: link:../services/plugin-registry
-      '@astra/service-research':
+      '@genie/service-research':
         specifier: workspace:*
         version: link:../services/research
-      '@astra/service-share':
+      '@genie/service-share':
         specifier: workspace:*
         version: link:../services/share
-      '@astra/service-task':
+      '@genie/service-task':
         specifier: workspace:*
         version: link:../services/task
-      '@astra/service-world-model':
+      '@genie/service-world-model':
         specifier: workspace:*
         version: link:../services/world-model
-      '@astra/telemetry':
+      '@genie/telemetry':
         specifier: workspace:*
         version: link:../packages/telemetry
-      '@astra/worker-agent-host':
+      '@genie/worker-agent-host':
         specifier: workspace:*
         version: link:../workers/agent-host
       yaml:
@@ -260,10 +260,10 @@ importers:
 
   packages/agent-sdk:
     dependencies:
-      '@astra/contracts':
+      '@genie/contracts':
         specifier: workspace:*
         version: link:../contracts
-      '@astra/policy':
+      '@genie/policy':
         specifier: workspace:*
         version: link:../policy
     devDependencies:
@@ -273,7 +273,7 @@ importers:
 
   packages/api-client:
     dependencies:
-      '@astra/contracts':
+      '@genie/contracts':
         specifier: workspace:*
         version: link:../contracts
       zod:
@@ -286,7 +286,7 @@ importers:
 
   packages/audio:
     dependencies:
-      '@astra/contracts':
+      '@genie/contracts':
         specifier: workspace:*
         version: link:../contracts
     devDependencies:
@@ -306,7 +306,7 @@ importers:
 
   packages/db:
     dependencies:
-      '@astra/contracts':
+      '@genie/contracts':
         specifier: workspace:*
         version: link:../contracts
       kysely:
@@ -328,7 +328,7 @@ importers:
 
   packages/mcp:
     dependencies:
-      '@astra/contracts':
+      '@genie/contracts':
         specifier: workspace:*
         version: link:../contracts
       zod:
@@ -341,7 +341,7 @@ importers:
 
   packages/oauth:
     dependencies:
-      '@astra/contracts':
+      '@genie/contracts':
         specifier: workspace:*
         version: link:../contracts
     devDependencies:
@@ -351,7 +351,7 @@ importers:
 
   packages/plugin-sdk:
     dependencies:
-      '@astra/contracts':
+      '@genie/contracts':
         specifier: workspace:*
         version: link:../contracts
       yaml:
@@ -364,7 +364,7 @@ importers:
 
   packages/policy:
     dependencies:
-      '@astra/contracts':
+      '@genie/contracts':
         specifier: workspace:*
         version: link:../contracts
     devDependencies:
@@ -374,7 +374,7 @@ importers:
 
   packages/stt:
     dependencies:
-      '@astra/contracts':
+      '@genie/contracts':
         specifier: workspace:*
         version: link:../contracts
     devDependencies:
@@ -384,10 +384,10 @@ importers:
 
   packages/telemetry:
     dependencies:
-      '@astra/contracts':
+      '@genie/contracts':
         specifier: workspace:*
         version: link:../contracts
-      '@astra/db':
+      '@genie/db':
         specifier: workspace:*
         version: link:../db
       '@opentelemetry/api':
@@ -409,7 +409,7 @@ importers:
 
   packages/tts:
     dependencies:
-      '@astra/contracts':
+      '@genie/contracts':
         specifier: workspace:*
         version: link:../contracts
     devDependencies:
@@ -419,7 +419,7 @@ importers:
 
   packages/ui-kit:
     dependencies:
-      '@astra/contracts':
+      '@genie/contracts':
         specifier: workspace:*
         version: link:../contracts
       react:
@@ -441,13 +441,13 @@ importers:
 
   services/agent-host:
     dependencies:
-      '@astra/contracts':
+      '@genie/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
-      '@astra/db':
+      '@genie/db':
         specifier: workspace:*
         version: link:../../packages/db
-      '@astra/telemetry':
+      '@genie/telemetry':
         specifier: workspace:*
         version: link:../../packages/telemetry
     devDependencies:
@@ -457,22 +457,22 @@ importers:
 
   services/agent-runtime:
     dependencies:
-      '@astra/agent-sdk':
+      '@genie/agent-sdk':
         specifier: workspace:*
         version: link:../../packages/agent-sdk
-      '@astra/contracts':
+      '@genie/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
-      '@astra/db':
+      '@genie/db':
         specifier: workspace:*
         version: link:../../packages/db
-      '@astra/policy':
+      '@genie/policy':
         specifier: workspace:*
         version: link:../../packages/policy
-      '@astra/service-library':
+      '@genie/service-library':
         specifier: workspace:*
         version: link:../library
-      '@astra/telemetry':
+      '@genie/telemetry':
         specifier: workspace:*
         version: link:../../packages/telemetry
       google-auth-library:
@@ -488,55 +488,55 @@ importers:
 
   services/api-gateway:
     dependencies:
-      '@astra/contracts':
+      '@genie/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
-      '@astra/db':
+      '@genie/db':
         specifier: workspace:*
         version: link:../../packages/db
-      '@astra/policy':
+      '@genie/policy':
         specifier: workspace:*
         version: link:../../packages/policy
-      '@astra/service-agent-host':
+      '@genie/service-agent-host':
         specifier: workspace:*
         version: link:../agent-host
-      '@astra/service-agent-runtime':
+      '@genie/service-agent-runtime':
         specifier: workspace:*
         version: link:../agent-runtime
-      '@astra/service-capabilities':
+      '@genie/service-capabilities':
         specifier: workspace:*
         version: link:../capabilities
-      '@astra/service-context':
+      '@genie/service-context':
         specifier: workspace:*
         version: link:../context
-      '@astra/service-conversation':
+      '@genie/service-conversation':
         specifier: workspace:*
         version: link:../conversation
-      '@astra/service-library':
+      '@genie/service-library':
         specifier: workspace:*
         version: link:../library
-      '@astra/service-meeting':
+      '@genie/service-meeting':
         specifier: workspace:*
         version: link:../meeting
-      '@astra/service-plugin-registry':
+      '@genie/service-plugin-registry':
         specifier: workspace:*
         version: link:../plugin-registry
-      '@astra/service-research':
+      '@genie/service-research':
         specifier: workspace:*
         version: link:../research
-      '@astra/service-share':
+      '@genie/service-share':
         specifier: workspace:*
         version: link:../share
-      '@astra/service-task':
+      '@genie/service-task':
         specifier: workspace:*
         version: link:../task
-      '@astra/service-world-model':
+      '@genie/service-world-model':
         specifier: workspace:*
         version: link:../world-model
-      '@astra/telemetry':
+      '@genie/telemetry':
         specifier: workspace:*
         version: link:../../packages/telemetry
-      '@astra/tts':
+      '@genie/tts':
         specifier: workspace:*
         version: link:../../packages/tts
       '@fastify/cors':
@@ -561,7 +561,7 @@ importers:
         specifier: 'catalog:'
         version: 4.4.3
     devDependencies:
-      '@astra/plugin-sdk':
+      '@genie/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
       '@types/ws':
@@ -576,19 +576,19 @@ importers:
 
   services/capabilities:
     dependencies:
-      '@astra/contracts':
+      '@genie/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
-      '@astra/oauth':
+      '@genie/oauth':
         specifier: workspace:*
         version: link:../../packages/oauth
-      '@astra/service-agent-runtime':
+      '@genie/service-agent-runtime':
         specifier: workspace:*
         version: link:../agent-runtime
-      '@astra/service-meeting':
+      '@genie/service-meeting':
         specifier: workspace:*
         version: link:../meeting
-      '@astra/service-research':
+      '@genie/service-research':
         specifier: workspace:*
         version: link:../research
     devDependencies:
@@ -598,7 +598,7 @@ importers:
 
   services/connectors:
     dependencies:
-      '@astra/contracts':
+      '@genie/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
     devDependencies:
@@ -608,13 +608,13 @@ importers:
 
   services/context:
     dependencies:
-      '@astra/contracts':
+      '@genie/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
-      '@astra/db':
+      '@genie/db':
         specifier: workspace:*
         version: link:../../packages/db
-      '@astra/telemetry':
+      '@genie/telemetry':
         specifier: workspace:*
         version: link:../../packages/telemetry
     devDependencies:
@@ -624,16 +624,16 @@ importers:
 
   services/conversation:
     dependencies:
-      '@astra/contracts':
+      '@genie/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
-      '@astra/db':
+      '@genie/db':
         specifier: workspace:*
         version: link:../../packages/db
-      '@astra/service-task':
+      '@genie/service-task':
         specifier: workspace:*
         version: link:../task
-      '@astra/telemetry':
+      '@genie/telemetry':
         specifier: workspace:*
         version: link:../../packages/telemetry
       kysely:
@@ -646,13 +646,13 @@ importers:
 
   services/library:
     dependencies:
-      '@astra/contracts':
+      '@genie/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
-      '@astra/db':
+      '@genie/db':
         specifier: workspace:*
         version: link:../../packages/db
-      '@astra/telemetry':
+      '@genie/telemetry':
         specifier: workspace:*
         version: link:../../packages/telemetry
       kysely:
@@ -665,22 +665,22 @@ importers:
 
   services/meeting:
     dependencies:
-      '@astra/contracts':
+      '@genie/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
-      '@astra/db':
+      '@genie/db':
         specifier: workspace:*
         version: link:../../packages/db
-      '@astra/service-library':
+      '@genie/service-library':
         specifier: workspace:*
         version: link:../library
-      '@astra/service-task':
+      '@genie/service-task':
         specifier: workspace:*
         version: link:../task
-      '@astra/telemetry':
+      '@genie/telemetry':
         specifier: workspace:*
         version: link:../../packages/telemetry
-      '@astra/tts':
+      '@genie/tts':
         specifier: workspace:*
         version: link:../../packages/tts
       '@google-cloud/speech':
@@ -702,7 +702,7 @@ importers:
 
   services/notification:
     dependencies:
-      '@astra/contracts':
+      '@genie/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
     devDependencies:
@@ -712,19 +712,19 @@ importers:
 
   services/plugin-registry:
     dependencies:
-      '@astra/contracts':
+      '@genie/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
-      '@astra/db':
+      '@genie/db':
         specifier: workspace:*
         version: link:../../packages/db
-      '@astra/plugin-sdk':
+      '@genie/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
-      '@astra/service-task':
+      '@genie/service-task':
         specifier: workspace:*
         version: link:../task
-      '@astra/telemetry':
+      '@genie/telemetry':
         specifier: workspace:*
         version: link:../../packages/telemetry
       kysely:
@@ -740,13 +740,13 @@ importers:
 
   services/research:
     dependencies:
-      '@astra/contracts':
+      '@genie/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
-      '@astra/db':
+      '@genie/db':
         specifier: workspace:*
         version: link:../../packages/db
-      '@astra/telemetry':
+      '@genie/telemetry':
         specifier: workspace:*
         version: link:../../packages/telemetry
       kysely:
@@ -762,16 +762,16 @@ importers:
 
   services/share:
     dependencies:
-      '@astra/contracts':
+      '@genie/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
-      '@astra/db':
+      '@genie/db':
         specifier: workspace:*
         version: link:../../packages/db
-      '@astra/service-library':
+      '@genie/service-library':
         specifier: workspace:*
         version: link:../library
-      '@astra/telemetry':
+      '@genie/telemetry':
         specifier: workspace:*
         version: link:../../packages/telemetry
       '@node-rs/argon2':
@@ -787,19 +787,19 @@ importers:
 
   services/task:
     dependencies:
-      '@astra/contracts':
+      '@genie/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
-      '@astra/db':
+      '@genie/db':
         specifier: workspace:*
         version: link:../../packages/db
-      '@astra/policy':
+      '@genie/policy':
         specifier: workspace:*
         version: link:../../packages/policy
-      '@astra/service-library':
+      '@genie/service-library':
         specifier: workspace:*
         version: link:../library
-      '@astra/telemetry':
+      '@genie/telemetry':
         specifier: workspace:*
         version: link:../../packages/telemetry
       '@temporalio/activity':
@@ -830,13 +830,13 @@ importers:
 
   services/world-model:
     dependencies:
-      '@astra/contracts':
+      '@genie/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
-      '@astra/db':
+      '@genie/db':
         specifier: workspace:*
         version: link:../../packages/db
-      '@astra/telemetry':
+      '@genie/telemetry':
         specifier: workspace:*
         version: link:../../packages/telemetry
       kysely:
@@ -849,16 +849,16 @@ importers:
 
   workers/agent-host:
     dependencies:
-      '@astra/contracts':
+      '@genie/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
-      '@astra/oauth':
+      '@genie/oauth':
         specifier: workspace:*
         version: link:../../packages/oauth
-      '@astra/service-connectors':
+      '@genie/service-connectors':
         specifier: workspace:*
         version: link:../../services/connectors
-      '@astra/telemetry':
+      '@genie/telemetry':
         specifier: workspace:*
         version: link:../../packages/telemetry
     devDependencies:
@@ -868,13 +868,13 @@ importers:
 
   workers/document-worker:
     dependencies:
-      '@astra/contracts':
+      '@genie/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
-      '@astra/service-task':
+      '@genie/service-task':
         specifier: workspace:*
         version: link:../../services/task
-      '@astra/telemetry':
+      '@genie/telemetry':
         specifier: workspace:*
         version: link:../../packages/telemetry
     devDependencies:
@@ -884,16 +884,16 @@ importers:
 
   workers/domain-worker:
     dependencies:
-      '@astra/agent-sdk':
+      '@genie/agent-sdk':
         specifier: workspace:*
         version: link:../../packages/agent-sdk
-      '@astra/contracts':
+      '@genie/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
-      '@astra/service-task':
+      '@genie/service-task':
         specifier: workspace:*
         version: link:../../services/task
-      '@astra/telemetry':
+      '@genie/telemetry':
         specifier: workspace:*
         version: link:../../packages/telemetry
     devDependencies:
@@ -903,13 +903,13 @@ importers:
 
   workers/media-worker:
     dependencies:
-      '@astra/contracts':
+      '@genie/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
-      '@astra/service-task':
+      '@genie/service-task':
         specifier: workspace:*
         version: link:../../services/task
-      '@astra/telemetry':
+      '@genie/telemetry':
         specifier: workspace:*
         version: link:../../packages/telemetry
     devDependencies:
@@ -919,16 +919,16 @@ importers:
 
   workers/research-worker:
     dependencies:
-      '@astra/agent-sdk':
+      '@genie/agent-sdk':
         specifier: workspace:*
         version: link:../../packages/agent-sdk
-      '@astra/contracts':
+      '@genie/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
-      '@astra/service-task':
+      '@genie/service-task':
         specifier: workspace:*
         version: link:../../services/task
-      '@astra/telemetry':
+      '@genie/telemetry':
         specifier: workspace:*
         version: link:../../packages/telemetry
     devDependencies:
@@ -938,47 +938,47 @@ importers:
 
   workers/task-worker:
     dependencies:
-      '@astra/contracts':
+      '@genie/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
-      '@astra/db':
+      '@genie/db':
         specifier: workspace:*
         version: link:../../packages/db
-      '@astra/service-agent-host':
+      '@genie/service-agent-host':
         specifier: workspace:*
         version: link:../../services/agent-host
-      '@astra/service-agent-runtime':
+      '@genie/service-agent-runtime':
         specifier: workspace:*
         version: link:../../services/agent-runtime
-      '@astra/service-capabilities':
+      '@genie/service-capabilities':
         specifier: workspace:*
         version: link:../../services/capabilities
-      '@astra/service-library':
+      '@genie/service-library':
         specifier: workspace:*
         version: link:../../services/library
-      '@astra/service-meeting':
+      '@genie/service-meeting':
         specifier: workspace:*
         version: link:../../services/meeting
-      '@astra/service-plugin-registry':
+      '@genie/service-plugin-registry':
         specifier: workspace:*
         version: link:../../services/plugin-registry
-      '@astra/service-research':
+      '@genie/service-research':
         specifier: workspace:*
         version: link:../../services/research
-      '@astra/service-task':
+      '@genie/service-task':
         specifier: workspace:*
         version: link:../../services/task
-      '@astra/service-world-model':
+      '@genie/service-world-model':
         specifier: workspace:*
         version: link:../../services/world-model
-      '@astra/telemetry':
+      '@genie/telemetry':
         specifier: workspace:*
         version: link:../../packages/telemetry
       '@temporalio/worker':
         specifier: ^1.22.0
         version: 1.22.0
     devDependencies:
-      '@astra/plugin-sdk':
+      '@genie/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
       '@temporalio/testing':

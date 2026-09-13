@@ -1,12 +1,12 @@
 /*
  * サインイン。UI/UX §3 Step 1、deepnote-desktop LoginPage の並び。
  * 提供者ボタンは「提供者の色」を尊重する（Google 白 / Apple 黒 / LINE 緑）。
- * それ以外の色は Astra のトークン。
+ * それ以外の色は Genie のトークン。
  */
 .astra-signin__providers {
   display: flex;
   flex-direction: column;
-  gap: var(--astra-space-base);
+  gap: var(--genie-space-base);
   width: min(100%, 320px);
   margin-inline: auto;
   text-align: start;
@@ -16,23 +16,23 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--astra-space-base);
+  gap: var(--genie-space-base);
   min-height: 44px;
-  padding-inline: var(--astra-space-panel);
-  border: var(--astra-border-hairline) solid var(--astra-color-border);
-  border-radius: var(--astra-radius-small);
-  background: var(--astra-color-surface);
-  color: var(--astra-color-text);
+  padding-inline: var(--genie-space-panel);
+  border: var(--genie-border-hairline) solid var(--genie-color-border);
+  border-radius: var(--genie-radius-small);
+  background: var(--genie-color-surface);
+  color: var(--genie-color-text);
   font: inherit;
-  font-weight: var(--astra-font-weight-card-title);
+  font-weight: var(--genie-font-weight-card-title);
   cursor: pointer;
   transition:
-    background-color var(--astra-motion-hover-duration) var(--astra-motion-hover-easing),
-    opacity var(--astra-motion-hover-duration) var(--astra-motion-hover-easing);
+    background-color var(--genie-motion-hover-duration) var(--genie-motion-hover-easing),
+    opacity var(--genie-motion-hover-duration) var(--genie-motion-hover-easing);
 }
 
 .astra-signin__provider:hover:not(:disabled) {
-  background: var(--astra-color-canvas);
+  background: var(--genie-color-canvas);
 }
 
 .astra-signin__provider:disabled {
@@ -69,27 +69,27 @@
 /* 未設定の提供者は、押せない理由をボタンの下に 1 行で */
 .astra-signin__unavailable {
   margin: 0;
-  font-size: var(--astra-font-size-micro);
-  color: var(--astra-color-muted);
+  font-size: var(--genie-font-size-micro);
+  color: var(--genie-color-muted);
   text-align: center;
 }
 
 .astra-signin__divider {
   display: flex;
   align-items: center;
-  gap: var(--astra-space-base);
+  gap: var(--genie-space-base);
   width: min(100%, 320px);
   margin-inline: auto;
-  color: var(--astra-color-muted);
-  font-size: var(--astra-font-size-micro);
+  color: var(--genie-color-muted);
+  font-size: var(--genie-font-size-micro);
 }
 
 .astra-signin__divider::before,
 .astra-signin__divider::after {
   content: '';
   flex: 1;
-  height: var(--astra-border-hairline);
-  background: var(--astra-color-border);
+  height: var(--genie-border-hairline);
+  background: var(--genie-color-border);
 }
 
 /* ブラウザで続けている間。§21: 何が起きているかを 1 文で */
@@ -97,17 +97,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--astra-space-base);
+  gap: var(--genie-space-base);
   margin: 0;
-  color: var(--astra-color-muted);
-  font-size: var(--astra-font-size-secondary);
+  color: var(--genie-color-muted);
+  font-size: var(--genie-font-size-secondary);
 }
 
 .astra-signin__spinner {
   width: 16px;
   height: 16px;
-  border: 2px solid var(--astra-color-border);
-  border-top-color: var(--astra-color-accent);
+  border: 2px solid var(--genie-color-border);
+  border-top-color: var(--genie-color-accent);
   border-radius: 50%;
   animation: astra-signin-spin 800ms linear infinite;
 }
@@ -122,8 +122,8 @@
   margin: 0;
   max-width: 36ch;
   margin-inline: auto;
-  color: var(--astra-color-muted);
-  font-size: var(--astra-font-size-micro);
+  color: var(--genie-color-muted);
+  font-size: var(--genie-font-size-micro);
   line-height: 1.6;
 }
 

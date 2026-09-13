@@ -10,7 +10,7 @@
  *     取りこぼしに誰も気づけなくなる。
  *   - 重複は捨てる。再接続の境界で同じイベントが二度届き得る。
  */
-import { decodeEvent, type EventEnvelope } from '@astra/contracts';
+import { decodeEvent, type EventEnvelope } from '@genie/contracts';
 import type { HttpClient } from './http.js';
 
 export interface StreamOptions {

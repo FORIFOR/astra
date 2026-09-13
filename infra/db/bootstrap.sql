@@ -3,14 +3,14 @@
 --
 --   psql "$ADMIN_DATABASE_URL" -f infra/db/bootstrap.sql
 --
--- 重要: astra_app は superuser でも BYPASSRLS でもない。
+-- 重要: genie_app は superuser でも BYPASSRLS でもない。
 --       superuser は FORCE ROW LEVEL SECURITY すら無視するため、
 --       アプリが superuser で繋いだ瞬間にテナント隔離が消える（実装仕様 §4.4）。
 
 DO $$
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'astra_app') THEN
-    CREATE ROLE astra_app LOGIN PASSWORD 'astra_app';
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'genie_app') THEN
+    CREATE ROLE genie_app LOGIN PASSWORD 'genie_app';
   END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'astra_migrate') THEN
     -- マイグレーションと世界横断の保守だけがこのロールを使う
@@ -29,10 +29,10 @@ BEGIN
   END IF;
 END $$;
 
-GRANT USAGE ON SCHEMA public TO astra_app;
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO astra_app;
+GRANT USAGE ON SCHEMA public TO genie_app;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO genie_app;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public
-  GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO astra_app;
+  GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO genie_app;
 
 -- 認証専用ロール: identity テーブルだけ。DELETE も与えない（identity は論理削除）。
 GRANT USAGE ON SCHEMA public TO astra_identity;

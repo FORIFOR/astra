@@ -10,12 +10,12 @@ import type {
   ActionReceiptView,
   PluginCatalogEntry,
   DailyBrief,
-} from '@astra/contracts';
+} from '@genie/contracts';
 import type { WorkView } from '../work/workView.js';
-import type { TaskView } from '@astra/api-client';
-import type { Artifact } from '@astra/contracts';
+import type { TaskView } from '@genie/api-client';
+import type { Artifact } from '@genie/contracts';
 import type { TranscriptLine } from '../meeting/meetingView.js';
-import type { AuthProvidersResponse } from '@astra/contracts';
+import type { AuthProvidersResponse } from '@genie/contracts';
 
 const now = Date.now();
 const iso = (offsetMs: number): string => new Date(now + offsetMs).toISOString();

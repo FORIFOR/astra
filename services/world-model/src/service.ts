@@ -4,7 +4,7 @@
  * 「ユーザーの世界の現在状態」を持つ。会話ログではない。
  */
 import {
-  AstraError,
+  GenieError,
   normalizeName,
   uuidv7,
   type CommitmentStatus,
@@ -13,8 +13,8 @@ import {
   type WorldEntityKind,
   type WorldFact,
   type WorldRelation,
-} from '@astra/contracts';
-import { withTenant, type DbHandle } from '@astra/db';
+} from '@genie/contracts';
+import { withTenant, type DbHandle } from '@genie/db';
 import { shouldRemember, type MemoryCandidate } from './memory.js';
 import type { AttentionFeedback } from './brief.js';
 
@@ -52,7 +52,7 @@ export class WorldModelService {
   ): Promise<WorldEntity> {
     const normalized = normalizeName(name);
     if (normalized.length === 0) {
-      throw new AstraError('common.validation_failed', 'an entity needs a name');
+      throw new GenieError('common.validation_failed', 'an entity needs a name');
     }
     const at = this.#now();
 
@@ -198,7 +198,7 @@ export class WorldModelService {
         .returningAll()
         .executeTakeFirst(),
     );
-    if (!row) throw new AstraError('common.not_found', 'no such commitment');
+    if (!row) throw new GenieError('common.not_found', 'no such commitment');
     return toFact(row);
   }
 

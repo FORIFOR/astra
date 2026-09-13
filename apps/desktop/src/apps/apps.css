@@ -3,14 +3,14 @@
 .astra-apps {
   display: flex;
   flex-direction: column;
-  gap: var(--astra-space-lg);
+  gap: var(--genie-space-lg);
 }
 
 .astra-apps__dashboards ul {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--astra-space-compact);
-  margin: 0 0 var(--astra-space-base);
+  gap: var(--genie-space-compact);
+  margin: 0 0 var(--genie-space-base);
   padding: 0;
   list-style: none;
 }
@@ -18,14 +18,14 @@
 /* --- dashboard --------------------------------------------------------- */
 
 .astra-dashboard__title {
-  margin: 0 0 var(--astra-space-base);
-  font-size: var(--astra-font-size-card-title);
+  margin: 0 0 var(--genie-space-base);
+  font-size: var(--genie-font-size-card-title);
 }
 
 .astra-dashboard__grid {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
-  gap: var(--astra-space-base);
+  gap: var(--genie-space-base);
 }
 
 .astra-dashboard[data-layout='stack'] .astra-dashboard__grid {
@@ -34,10 +34,10 @@
 
 .astra-dashboard__item {
   grid-column: span 12;
-  padding: var(--astra-padding-card);
-  border: var(--astra-border-hairline) solid var(--astra-color-border);
-  border-radius: var(--astra-radius-standard);
-  background: var(--astra-color-surface);
+  padding: var(--genie-padding-card);
+  border: var(--genie-border-hairline) solid var(--genie-color-border);
+  border-radius: var(--genie-radius-standard);
+  background: var(--genie-color-surface);
 }
 
 .astra-dashboard__item[data-span='3'] {
@@ -51,55 +51,55 @@
 }
 
 .astra-dashboard__item-title {
-  margin: 0 0 var(--astra-space-compact);
-  font-size: var(--astra-font-size-micro);
-  color: var(--astra-color-muted);
+  margin: 0 0 var(--genie-space-compact);
+  font-size: var(--genie-font-size-micro);
+  color: var(--genie-color-muted);
 }
 
 .astra-dashboard__metric {
   margin: 0;
   /* §17.2 の最大は page title（26px）。生の 32px を書いていた */
-  font-size: var(--astra-font-size-page-title);
-  font-weight: var(--astra-font-weight-page-title);
+  font-size: var(--genie-font-size-page-title);
+  font-weight: var(--genie-font-weight-page-title);
   font-variant-numeric: tabular-nums;
 }
 
 /* 「取れなかった」と「空だった」を見た目でも分ける */
 .astra-dashboard__unavailable {
   margin: 0;
-  color: var(--astra-color-warning);
-  font-size: var(--astra-font-size-micro);
+  color: var(--genie-color-warning);
+  font-size: var(--genie-font-size-micro);
 }
 
 .astra-dashboard__reason {
   display: block;
-  color: var(--astra-color-muted);
+  color: var(--genie-color-muted);
 }
 
 .astra-dashboard__empty,
 .astra-dashboard__unsupported {
   margin: 0;
-  color: var(--astra-color-muted);
-  font-size: var(--astra-font-size-micro);
+  color: var(--genie-color-muted);
+  font-size: var(--genie-font-size-micro);
 }
 
 .astra-dashboard__table {
   width: 100%;
   border-collapse: collapse;
-  font-size: var(--astra-font-size-micro);
+  font-size: var(--genie-font-size-micro);
 }
 
 .astra-dashboard__table th,
 .astra-dashboard__table td {
-  padding: var(--astra-space-compact);
-  border-bottom: var(--astra-border-hairline) solid var(--astra-color-border);
+  padding: var(--genie-space-compact);
+  border-bottom: var(--genie-border-hairline) solid var(--genie-color-border);
   text-align: left;
 }
 
 .astra-dashboard__series {
   display: flex;
   flex-direction: column;
-  gap: var(--astra-space-compact);
+  gap: var(--genie-space-compact);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -108,15 +108,15 @@
 .astra-dashboard__series li {
   display: grid;
   grid-template-columns: 6rem 1fr auto;
-  gap: var(--astra-space-compact);
+  gap: var(--genie-space-compact);
   align-items: center;
 }
 
 .astra-dashboard__series-bar {
   height: 8px;
-  border-radius: var(--astra-radius-small);
-  background: var(--astra-color-accent);
-  width: var(--astra-bar, 0%);
+  border-radius: var(--genie-radius-small);
+  background: var(--genie-color-accent);
+  width: var(--genie-bar, 0%);
 }
 
 /* --- 同意と詳細 -------------------------------------------------------- */
@@ -125,24 +125,24 @@
 .astra-app-detail {
   display: flex;
   flex-direction: column;
-  gap: var(--astra-space-base);
-  padding: var(--astra-padding-card);
-  border: var(--astra-border-hairline) solid var(--astra-color-border);
-  border-radius: var(--astra-radius-standard);
-  background: var(--astra-color-surface);
+  gap: var(--genie-space-base);
+  padding: var(--genie-padding-card);
+  border: var(--genie-border-hairline) solid var(--genie-color-border);
+  border-radius: var(--genie-radius-standard);
+  background: var(--genie-color-surface);
 }
 
 .astra-consent__note,
 .astra-app-detail__locked {
   margin: 0;
-  color: var(--astra-color-muted);
-  font-size: var(--astra-font-size-micro);
+  color: var(--genie-color-muted);
+  font-size: var(--genie-font-size-micro);
 }
 
 .astra-consent__scopes,
 .astra-consent__data {
   margin: 0;
-  padding-left: var(--astra-space-lg);
+  padding-left: var(--genie-space-lg);
 }
 
 .astra-consent__actions {
@@ -151,19 +151,19 @@
 }
 
 .astra-app-detail__verified {
-  color: var(--astra-color-success);
+  color: var(--genie-color-success);
 }
 
 .astra-app-detail__meta {
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: var(--astra-space-compact);
+  gap: var(--genie-space-compact);
   margin: 0;
-  font-size: var(--astra-font-size-micro);
+  font-size: var(--genie-font-size-micro);
 }
 
 .astra-app-detail__meta dt {
-  color: var(--astra-color-muted);
+  color: var(--genie-color-muted);
 }
 
 .astra-app-detail__meta dd {
@@ -173,15 +173,15 @@
 /* データの扱い（UI/UX §22）。短い label と、もう一段だけの説明。 */
 .astra-app-detail__handling {
   display: inline-block;
-  border: 1px solid var(--astra-color-border);
-  border-radius: var(--astra-radius-sm, 4px);
-  padding: 0 var(--astra-space-xs, 4px);
-  margin-right: var(--astra-space-xs, 4px);
+  border: 1px solid var(--genie-color-border);
+  border-radius: var(--genie-radius-sm, 4px);
+  padding: 0 var(--genie-space-xs, 4px);
+  margin-right: var(--genie-space-xs, 4px);
 }
 
 .astra-app-detail__handling-why {
-  color: var(--astra-color-muted);
-  font-size: var(--astra-font-size-sm, 0.875rem);
+  color: var(--genie-color-muted);
+  font-size: var(--genie-font-size-sm, 0.875rem);
 }
 
 /* ------------------------------------------------------------- pack card */
@@ -192,8 +192,8 @@
  */
 
 .astra-app-detail__external {
-  color: var(--astra-color-warning);
-  font-size: var(--astra-font-size-micro);
+  color: var(--genie-color-warning);
+  font-size: var(--genie-font-size-micro);
 }
 
 /* --- 一覧 + 詳細。詳細を一覧の下に積むと、押しても画面外に出て見えない。 --- */
@@ -201,7 +201,7 @@
 .astra-apps__body {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: var(--astra-space-lg);
+  gap: var(--genie-space-lg);
   align-items: start;
 }
 
@@ -215,10 +215,10 @@
 }
 
 .astra-apps__dashboards h3 {
-  margin: 0 0 var(--astra-space-base);
-  color: var(--astra-color-muted);
-  font-size: var(--astra-font-size-micro);
-  font-weight: var(--astra-font-weight-micro);
+  margin: 0 0 var(--genie-space-base);
+  color: var(--genie-color-muted);
+  font-size: var(--genie-font-size-micro);
+  font-weight: var(--genie-font-weight-micro);
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -227,7 +227,7 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: var(--astra-space-base);
+  gap: var(--genie-space-base);
 }
 
 .astra-app-detail__head h3,
@@ -236,69 +236,69 @@
 }
 
 .astra-app-detail h4 {
-  margin-bottom: var(--astra-space-compact);
-  color: var(--astra-color-muted);
-  font-size: var(--astra-font-size-micro);
-  font-weight: var(--astra-font-weight-micro);
+  margin-bottom: var(--genie-space-compact);
+  color: var(--genie-color-muted);
+  font-size: var(--genie-font-size-micro);
+  font-weight: var(--genie-font-weight-micro);
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
 .astra-app-detail ul {
   margin: 0;
-  padding-left: var(--astra-space-lg);
-  font-size: var(--astra-font-size-secondary);
+  padding-left: var(--genie-space-lg);
+  font-size: var(--genie-font-size-secondary);
 }
 
 .astra-app-detail__publisher {
   margin: 0;
-  color: var(--astra-color-muted);
-  font-size: var(--astra-font-size-secondary);
+  color: var(--genie-color-muted);
+  font-size: var(--genie-font-size-secondary);
 }
 
 .astra-app-detail__installed {
   margin: 0;
-  color: var(--astra-color-success);
-  font-size: var(--astra-font-size-secondary);
+  color: var(--genie-color-success);
+  font-size: var(--genie-font-size-secondary);
 }
 
 /* §11.1: できる仕事を先に */
 .astra-app-card__jobs {
-  color: var(--astra-color-text);
-  font-size: var(--astra-font-size-secondary);
+  color: var(--genie-color-text);
+  font-size: var(--genie-font-size-secondary);
 }
 
 .astra-app-detail__jobs {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--astra-space-compact);
+  gap: var(--genie-space-compact);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .astra-app-detail__jobs li {
-  padding: 2px var(--astra-space-base);
-  border: var(--astra-border-hairline) solid var(--astra-color-border);
-  border-radius: var(--astra-radius-pill);
-  background: var(--astra-color-canvas);
-  font-size: var(--astra-font-size-secondary);
+  padding: 2px var(--genie-space-base);
+  border: var(--genie-border-hairline) solid var(--genie-color-border);
+  border-radius: var(--genie-radius-pill);
+  background: var(--genie-color-canvas);
+  font-size: var(--genie-font-size-secondary);
 }
 
 .astra-app-detail__uses,
 .astra-app-detail__empty,
 .astra-app-detail__impact {
   margin: 0;
-  color: var(--astra-color-muted);
-  font-size: var(--astra-font-size-secondary);
+  color: var(--genie-color-muted);
+  font-size: var(--genie-font-size-secondary);
 }
 
 .astra-app-detail__uses span {
-  color: var(--astra-color-text);
+  color: var(--genie-color-text);
 }
 
 .astra-consent__actions {
-  gap: var(--astra-space-compact);
+  gap: var(--genie-space-compact);
   justify-content: flex-end;
 }
 
@@ -310,10 +310,10 @@
  */
 .astra-store {
   width: 100%;
-  padding: var(--astra-space-lg) var(--astra-space-lg) var(--astra-space-xl, 32px);
-  border: var(--astra-border-hairline) solid var(--astra-color-border);
-  border-radius: var(--astra-radius-standard);
-  background: var(--astra-color-surface);
+  padding: var(--genie-space-lg) var(--genie-space-lg) var(--genie-space-xl, 32px);
+  border: var(--genie-border-hairline) solid var(--genie-color-border);
+  border-radius: var(--genie-radius-standard);
+  background: var(--genie-color-surface);
 }
 
 .astra-apps[data-open='false'] .astra-store {
@@ -324,32 +324,32 @@
 .astra-store__head {
   display: flex;
   flex-direction: column;
-  gap: var(--astra-space-base);
+  gap: var(--genie-space-base);
 }
 
 .astra-store__title {
   display: flex;
   align-items: flex-start;
-  gap: var(--astra-space-compact);
+  gap: var(--genie-space-compact);
 }
 
 .astra-store__title h3 {
   margin: 0;
-  font-size: var(--astra-font-size-card-title);
-  font-weight: var(--astra-font-weight-card-title);
+  font-size: var(--genie-font-size-card-title);
+  font-weight: var(--genie-font-weight-card-title);
 }
 
 .astra-store__title p {
   margin: 2px 0 0;
-  color: var(--astra-color-muted);
-  font-size: var(--astra-font-size-micro);
+  color: var(--genie-color-muted);
+  font-size: var(--genie-font-size-micro);
 }
 
 .astra-store__glyph {
   width: 18px;
   height: 18px;
   margin-top: 2px;
-  color: var(--astra-color-text);
+  color: var(--genie-color-text);
   flex: none;
 }
 
@@ -358,44 +358,44 @@
   display: inline-flex;
   gap: 2px;
   padding: 2px;
-  border: var(--astra-border-hairline) solid var(--astra-color-border);
+  border: var(--genie-border-hairline) solid var(--genie-color-border);
   border-radius: 999px;
-  background: var(--astra-color-canvas);
+  background: var(--genie-color-canvas);
   align-self: flex-start;
 }
 
 .astra-store__tab {
   min-height: 26px;
-  padding: 0 var(--astra-space-base);
+  padding: 0 var(--genie-space-base);
   border: 0;
   border-radius: 999px;
   background: transparent;
-  color: var(--astra-color-muted);
+  color: var(--genie-color-muted);
   font: inherit;
-  font-size: var(--astra-font-size-micro);
+  font-size: var(--genie-font-size-micro);
   cursor: pointer;
 }
 
 .astra-store__tab[aria-selected='true'] {
-  background: var(--astra-color-surface);
-  color: var(--astra-color-text);
+  background: var(--genie-color-surface);
+  color: var(--genie-color-text);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
 }
 
 .astra-store__section {
-  margin-top: var(--astra-space-lg);
+  margin-top: var(--genie-space-lg);
 }
 
 .astra-store__section h4 {
-  margin: 0 0 var(--astra-space-compact);
-  font-size: var(--astra-font-size-secondary);
-  font-weight: var(--astra-font-weight-card-title);
+  margin: 0 0 var(--genie-space-compact);
+  font-size: var(--genie-font-size-secondary);
+  font-weight: var(--genie-font-weight-card-title);
 }
 
 .astra-store__grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  column-gap: var(--astra-space-xl, 32px);
+  column-gap: var(--genie-space-xl, 32px);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -411,28 +411,28 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: var(--astra-space-base);
+  gap: var(--genie-space-base);
   min-height: 56px;
-  border-bottom: var(--astra-border-hairline) solid var(--astra-color-border);
+  border-bottom: var(--genie-border-hairline) solid var(--genie-color-border);
 }
 
 .astra-store-row__main {
   display: grid;
   grid-template-columns: 28px minmax(0, 1fr);
   align-items: center;
-  gap: var(--astra-space-base);
+  gap: var(--genie-space-base);
   min-width: 0;
-  padding: var(--astra-space-compact) 0;
+  padding: var(--genie-space-compact) 0;
   border: 0;
   background: transparent;
-  color: var(--astra-color-text);
+  color: var(--genie-color-text);
   font: inherit;
   text-align: start;
   cursor: pointer;
 }
 
 .astra-store-row[aria-current='true'] .astra-store-row__name {
-  color: var(--astra-color-accent);
+  color: var(--genie-color-accent);
 }
 
 .astra-store-row__copy {
@@ -445,30 +445,30 @@
 .astra-store-row__name {
   display: flex;
   align-items: center;
-  gap: var(--astra-space-compact);
-  font-size: var(--astra-font-size-secondary);
-  font-weight: var(--astra-font-weight-card-title);
+  gap: var(--genie-space-compact);
+  font-size: var(--genie-font-size-secondary);
+  font-weight: var(--genie-font-weight-card-title);
   white-space: nowrap;
 }
 
 .astra-store-row__kind {
   padding: 1px 6px;
   border-radius: 999px;
-  background: var(--astra-color-canvas);
-  color: var(--astra-color-muted);
+  background: var(--genie-color-canvas);
+  color: var(--genie-color-muted);
   font-size: 10px;
-  font-weight: var(--astra-font-weight-micro);
+  font-weight: var(--genie-font-weight-micro);
   letter-spacing: 0.04em;
 }
 
 .astra-store-row__kind--warn {
-  color: var(--astra-color-warning);
+  color: var(--genie-color-warning);
 }
 
 .astra-store-row__summary {
   overflow: hidden;
-  color: var(--astra-color-muted);
-  font-size: var(--astra-font-size-micro);
+  color: var(--genie-color-muted);
+  font-size: var(--genie-font-size-micro);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -490,8 +490,8 @@
 
 .astra-app-icon--mono {
   color: #fff;
-  font-size: var(--astra-font-size-secondary);
-  font-weight: var(--astra-font-weight-card-title);
+  font-size: var(--genie-font-size-secondary);
+  font-weight: var(--genie-font-weight-card-title);
 }
 
 /* スイッチ。shell の button 既定（min-height 44px）より小さいので、明示して上書きする */
@@ -504,9 +504,9 @@
   padding: 0;
   border: 0;
   border-radius: 999px;
-  background: var(--astra-color-border);
+  background: var(--genie-color-border);
   cursor: pointer;
-  transition: background-color var(--astra-motion-hover-duration) var(--astra-motion-hover-easing);
+  transition: background-color var(--genie-motion-hover-duration) var(--genie-motion-hover-easing);
 }
 
 .astra-switch__knob {
@@ -518,11 +518,11 @@
   border-radius: 50%;
   background: #fff;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
-  transition: transform var(--astra-motion-hover-duration) var(--astra-motion-hover-easing);
+  transition: transform var(--genie-motion-hover-duration) var(--genie-motion-hover-easing);
 }
 
 .astra-switch[data-on='true'] {
-  background: var(--astra-color-accent);
+  background: var(--genie-color-accent);
 }
 
 .astra-switch[data-on='true'] .astra-switch__knob {
@@ -535,22 +535,22 @@
 }
 
 .astra-switch:focus-visible {
-  outline: 2px solid var(--astra-color-focus-ring);
+  outline: 2px solid var(--genie-color-focus-ring);
   outline-offset: 2px;
 }
 
 .astra-store__empty {
-  margin-top: var(--astra-space-lg);
-  padding: var(--astra-space-xl, 32px);
-  border: 1px dashed var(--astra-color-border);
-  border-radius: var(--astra-radius-standard);
-  color: var(--astra-color-muted);
-  font-size: var(--astra-font-size-secondary);
+  margin-top: var(--genie-space-lg);
+  padding: var(--genie-space-xl, 32px);
+  border: 1px dashed var(--genie-color-border);
+  border-radius: var(--genie-radius-standard);
+  color: var(--genie-color-muted);
+  font-size: var(--genie-font-size-secondary);
   text-align: center;
 }
 
 .astra-store__empty p {
-  margin: 0 0 var(--astra-space-compact);
+  margin: 0 0 var(--genie-space-compact);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -564,19 +564,19 @@
 .astra-apps__sheet {
   position: fixed;
   inset: 0;
-  z-index: var(--astra-z-drawer, 30);
+  z-index: var(--genie-z-drawer, 30);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--astra-space-lg);
-  background: var(--astra-color-overlay);
+  padding: var(--genie-space-lg);
+  background: var(--genie-color-overlay);
 }
 
 .astra-apps__sheet .astra-consent {
   width: min(560px, 100%);
-  max-height: calc(100vh - 2 * var(--astra-space-lg));
+  max-height: calc(100vh - 2 * var(--genie-space-lg));
   overflow: auto;
-  box-shadow: var(--astra-elevation-dock);
+  box-shadow: var(--genie-elevation-dock);
 }
 
 /* ------------------------------------------------- App Store（参照デザインの数値） */
@@ -600,7 +600,7 @@
   padding: 17px 18px 20px;
   border: 1px solid #eeeeef;
   border-radius: 14px;
-  background: color-mix(in srgb, var(--astra-color-surface) 92%, transparent);
+  background: color-mix(in srgb, var(--genie-color-surface) 92%, transparent);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.018);
 }
 

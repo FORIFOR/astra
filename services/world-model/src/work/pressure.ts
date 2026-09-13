@@ -5,9 +5,9 @@
  *            + w4·DependencyBlock + w5·Recency + w6·Repetition + w7·ExplicitPriority
  *
  * 同じ入力からは必ず同じ出力（決定的）。同点は id で並べる。要因ごとに人が読める理由を持つので、
- * 「Astra がなんとなく忙しそうだと思った」ではなく「期限・滞留・会議密度・依存から算出した」と言える。
+ * 「Genie がなんとなく忙しそうだと思った」ではなく「期限・滞留・会議密度・依存から算出した」と言える。
  */
-import type { WorkPressureFactor, WorkPressureFactorName } from '@astra/contracts';
+import type { WorkPressureFactor, WorkPressureFactorName } from '@genie/contracts';
 
 export const WEIGHTS: Readonly<Record<WorkPressureFactorName, number>> = {
   deadline: 0.3,

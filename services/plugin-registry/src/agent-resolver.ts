@@ -5,7 +5,7 @@
  * task 側は `AgentResolver` という口だけを知っていて、registry を持たない。
  * 組み立てるのは gateway / worker の役目（ADR 0001）。
  */
-import { parseAgentKind, type InstalledAgent } from '@astra/service-task';
+import { parseAgentKind, type InstalledAgent } from '@genie/service-task';
 import type { PluginRegistryService } from './service.js';
 
 export function agentResolver(registry: PluginRegistryService): {

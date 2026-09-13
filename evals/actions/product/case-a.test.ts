@@ -18,33 +18,33 @@ import { Writable } from 'node:stream';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { TestWorkflowEnvironment } from '@temporalio/testing';
 import type { Worker } from '@temporalio/worker';
-import { uuidv7, type Artifact, type Share, type Task, type TokenResponse } from '@astra/contracts';
-import { createDb, withTenant, type DbHandle } from '@astra/db';
-import { createLogger } from '@astra/telemetry';
-import { FsObjectStore, LibraryService } from '@astra/service-library';
-import { PluginRegistryService } from '@astra/service-plugin-registry';
-import { ShareService } from '@astra/service-share';
-import { ConversationService } from '@astra/service-conversation';
+import { uuidv7, type Artifact, type Share, type Task, type TokenResponse } from '@genie/contracts';
+import { createDb, withTenant, type DbHandle } from '@genie/db';
+import { createLogger } from '@genie/telemetry';
+import { FsObjectStore, LibraryService } from '@genie/service-library';
+import { PluginRegistryService } from '@genie/service-plugin-registry';
+import { ShareService } from '@genie/service-share';
+import { ConversationService } from '@genie/service-conversation';
 import {
   TaskService,
   TemporalTaskRuntime,
   createTaskWorker,
   workflowIdFor,
-} from '@astra/service-task';
+} from '@genie/service-task';
 import {
   DeterministicLanguageModel,
   ResearchService,
   StaticSearchProvider,
   researchExecutors,
   type SearchHit,
-} from '@astra/service-research';
+} from '@genie/service-research';
 import {
   MemoryRateLimiter,
   buildApp,
   JwtTokens,
   loadSigningKeys,
   type App,
-} from '@astra/service-api-gateway';
+} from '@genie/service-api-gateway';
 
 const url = process.env['TEST_DATABASE_URL'];
 const identityUrl = process.env['TEST_IDENTITY_DATABASE_URL'];
@@ -340,7 +340,7 @@ describe.skipIf(!url || !shareUrl)('Case A — ask, and get something you can ha
   });
 
   it('7. every step of that is on an audit chain that has not been tampered with', async () => {
-    const { readAuditChain, verifyAuditChain } = await import('@astra/telemetry');
+    const { readAuditChain, verifyAuditChain } = await import('@genie/telemetry');
     const chain = await withTenant(db, tenantId, (tx) => readAuditChain(tx, tenantId));
     const actions = chain.map((r) => r.action);
 

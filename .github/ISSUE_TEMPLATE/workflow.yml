@@ -1,5 +1,5 @@
 name: Workflow or pilot proposal
-description: Tell us where Astra could help you or your team.
+description: Tell us where Genie could help you or your team.
 title: '[Workflow] '
 body:
   - type: markdown

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Astra の「この環境で検証できる全て」を 1 コマンドで通す最終アクセプタンス。
+# Genie の「この環境で検証できる全て」を 1 コマンドで通す最終アクセプタンス。
 # 実行時前提が要るもの（署名 .app への TCC・Windows 実機・実 OAuth 提供者）は各スクリプトが
 # SELFTEST_SKIP / SKIP で正直に飛ばす。ここが緑なら「実装＋この環境で検証可能な範囲」は健全。
 set -uo pipefail
@@ -8,12 +8,19 @@ cd "$ROOT"
 fail=0
 run() { echo; echo "== $1 =="; shift; if "$@"; then :; else echo "  ^ FAILED"; fail=1; fi; }
 
-# Several gates invoke .build/debug/AstraMac directly. Build before the first
+# Workspace packages export dist/. Tests must resolve this checkout's modules,
+# including renamed design tokens, rather than a previous build's output.
+if ! pnpm build; then
+  echo "VERIFY_ALL_FAIL: current workspace packages could not be built"
+  exit 1
+fi
+
+# Several gates invoke .build/debug/GenieMac directly. Build before the first
 # consumer: a previous checkout's binary can otherwise reject current fixtures
 # (or pass despite a source regression). Stop if the candidate cannot be built.
 if [[ "$(uname -s)" == Darwin ]]; then
   echo "== current macOS debug candidate =="
-  if ! swift build --package-path "$ROOT/apps/astra-macos"; then
+  if ! swift build --package-path "$ROOT/apps/genie-macos"; then
     echo "VERIFY_ALL_FAIL: current macOS candidate could not be built"
     exit 1
   fi
@@ -25,16 +32,16 @@ if [[ "$(uname -s)" == Darwin ]]; then
       echo "VERIFY_ALL_FAIL: current signed macOS candidate could not be packaged"
       exit 1
     fi
-    export ASTRA_RECORD_BIN="$ROOT/apps/astra-macos/.build/Astra.app/Contents/MacOS/AstraMac"
+    export ASTRA_RECORD_BIN="$ROOT/apps/genie-macos/.build/Genie.app/Contents/MacOS/GenieMac"
   fi
 fi
 
 # `cmd | grep ...` は grep の終了状態になるので、**テストが落ちても緑**になっていた。
 # 実際に 1 件落ちたまま VERIFY_ALL_OK が出た。要約だけ見せつつ、状態は元のコマンドのものを返す。
 # 落ちたときは要約だけでは追えない。**どのテストが落ちたか**を必ず残す。
-run "astra-core tests"            bash -c "cd core/astra-core && out=\$(cargo test --quiet 2>&1); st=\$?; echo \"\$out\" | grep 'test result' | head -1; [ \$st -eq 0 ] || sed -n '/^failures:/,\$p' <<<\"\$out\" | head -40; exit \$st"
+run "genie-core tests"            bash -c "cd core/genie-core && out=\$(cargo test --quiet 2>&1); st=\$?; echo \"\$out\" | grep 'test result' | head -1; [ \$st -eq 0 ] || sed -n '/^failures:/,\$p' <<<\"\$out\" | head -40; exit \$st"
 run "Tauri Rust regression"       bash -c "cd apps/desktop/src-tauri && out=\$(cargo test --quiet 2>&1); st=\$?; echo \"\$out\" | grep 'test result' | head -1; [ \$st -eq 0 ] || sed -n '/^failures:/,\$p' <<<\"\$out\" | head -40; exit \$st"
-run "Tauri desktop JS regression" bash -c "out=\$(pnpm --filter @astra/desktop test 2>&1); st=\$?; echo \"\$out\" | grep -E 'Tests +[0-9]+ passed' | tail -1; [ \$st -eq 0 ] || { echo '--- 落ちたときの全文（末尾40行）---'; tail -40 <<<\"\$out\"; }; exit \$st"
+run "Tauri desktop JS regression" bash -c "out=\$(pnpm --filter @genie/desktop test 2>&1); st=\$?; echo \"\$out\" | grep -E 'Tests +[0-9]+ passed' | tail -1; [ \$st -eq 0 ] || { echo '--- 落ちたときの全文（末尾40行）---'; tail -40 <<<\"\$out\"; }; exit \$st"
 run "TCC usage descriptions"     bash scripts/verify-usage-descriptions.sh
 run "release consistency"        bash scripts/verify-release-consistency.sh
 run "release aggregation regression" python3 -m unittest discover -s scripts/tests -p 'test_*.py'
@@ -60,13 +67,13 @@ run "C# bridge -> core + gateway" bash scripts/verify-csharp-bridge.sh
 run "Windows C# logic type-check" bash scripts/verify-csharp-logic.sh
 run "C ABI round-trip (C)"        bash scripts/verify-c-abi.sh
 run "macOS recording + live E2E"  bash scripts/verify-macos-recording.sh
-run "initial profile native UI"  "$ROOT/apps/astra-macos/.build/debug/AstraMac" --selftest initialprofile /tmp/astra-initial-profile-verify
+run "initial profile native UI"  "$ROOT/apps/genie-macos/.build/debug/GenieMac" --selftest initialprofile /tmp/astra-initial-profile-verify
 # 録音セッションの通し。**プロセスを跨いで** kill → 復元まで確かめる。
 # CI が緑でもここが通らなければ未達、という位置づけのゲート。
 run "recording experience E2E"    bash scripts/verify-recording-experience.sh
 # 3 本の Journey を時間軸で通す（窓・鍵・面・遷移・出所 id の連続。層 A）。
 run "journeys JA/JB/JC"           bash scripts/verify-journeys.sh
-run "macOS swift unit tests"      bash -c 'cd apps/astra-macos || exit; out=$(swift test 2>&1); st=$?; echo "$out" | grep -E "Executed [0-9]+ tests" | tail -1; if [ "$st" -ne 0 ]; then tail -40 <<<"$out"; fi; exit "$st"'
+run "macOS swift unit tests"      bash -c 'cd apps/genie-macos || exit; out=$(swift test 2>&1); st=$?; echo "$out" | grep -E "Executed [0-9]+ tests" | tail -1; if [ "$st" -ne 0 ]; then tail -40 <<<"$out"; fi; exit "$st"'
 
 echo
 if [[ $fail -eq 0 ]]; then echo "VERIFY_ALL_OK: この環境で検証できる全ゲートが緑"; else echo "VERIFY_ALL_FAIL"; exit 1; fi

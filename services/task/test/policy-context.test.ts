@@ -6,7 +6,7 @@
  * `requires_confirmation` も manifest で検証されるだけで効いていなかった。
  */
 import { describe, expect, it } from 'vitest';
-import { evaluate } from '@astra/policy';
+import { evaluate } from '@genie/policy';
 import { planInstalledAgent, type InstalledAgent } from '../src/agent-plan.js';
 
 const agent = (over: Partial<InstalledAgent> = {}): InstalledAgent => ({

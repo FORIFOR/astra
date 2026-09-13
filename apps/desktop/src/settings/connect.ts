@@ -20,8 +20,8 @@ import {
   exchangeCode,
   type ProviderConfig,
   type TokenSet,
-} from '@astra/oauth';
-import type { AstraClient } from '@astra/api-client';
+} from '@genie/oauth';
+import type { GenieClient } from '@genie/api-client';
 import { oauthCallback, secrets } from '../host/tauri.js';
 
 /** 提供者ごとの設定。**client_id は実行時に与える。**同梱しない。 */
@@ -34,7 +34,7 @@ export interface ConnectorTarget {
 }
 
 export interface ConnectDeps {
-  readonly client: AstraClient;
+  readonly client: GenieClient;
   /** ブラウザを開く。**アプリ内の webview では開かない**（RFC 8252 §8.12）。 */
   openExternal(url: string): Promise<void>;
   readonly now?: () => number;

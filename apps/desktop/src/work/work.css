@@ -3,54 +3,54 @@
 .astra-work {
   display: flex;
   flex-direction: column;
-  gap: var(--astra-space-base);
-  padding: var(--astra-padding-card);
-  border: var(--astra-border-hairline) solid var(--astra-color-border);
-  border-radius: var(--astra-radius-standard);
-  background: var(--astra-color-surface);
-  box-shadow: var(--astra-elevation-card);
+  gap: var(--genie-space-base);
+  padding: var(--genie-padding-card);
+  border: var(--genie-border-hairline) solid var(--genie-color-border);
+  border-radius: var(--genie-radius-standard);
+  background: var(--genie-color-surface);
+  box-shadow: var(--genie-elevation-card);
 }
 
 .astra-work__head {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: var(--astra-space-base);
+  gap: var(--genie-space-base);
 }
 
 .astra-work__title {
   margin: 0;
-  font-size: var(--astra-font-size-card-title);
-  font-weight: var(--astra-font-weight-card-title);
+  font-size: var(--genie-font-size-card-title);
+  font-weight: var(--genie-font-weight-card-title);
 }
 
 .astra-work__status {
-  color: var(--astra-color-muted);
-  font-size: var(--astra-font-size-micro);
+  color: var(--genie-color-muted);
+  font-size: var(--genie-font-size-micro);
 }
 
 .astra-work[data-status='WAITING_APPROVAL'] .astra-work__status {
-  color: var(--astra-color-warning);
+  color: var(--genie-color-warning);
 }
 
 .astra-work__bar {
   height: 4px;
-  border-radius: var(--astra-radius-pill);
-  background: var(--astra-color-border);
+  border-radius: var(--genie-radius-pill);
+  background: var(--genie-color-border);
   overflow: hidden;
 }
 
 .astra-work__bar > span {
   display: block;
   height: 100%;
-  background: var(--astra-color-accent);
-  transition: width var(--astra-motion-popover-duration) var(--astra-motion-popover-easing);
+  background: var(--genie-color-accent);
+  transition: width var(--genie-motion-popover-duration) var(--genie-motion-popover-easing);
 }
 
 .astra-work__steps {
   display: flex;
   flex-direction: column;
-  gap: var(--astra-space-compact);
+  gap: var(--genie-space-compact);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -59,31 +59,31 @@
 .astra-work__step {
   display: flex;
   align-items: baseline;
-  gap: var(--astra-space-base);
-  font-size: var(--astra-font-size-secondary);
-  color: var(--astra-color-muted);
+  gap: var(--genie-space-base);
+  font-size: var(--genie-font-size-secondary);
+  color: var(--genie-color-muted);
 }
 
 .astra-work__step[data-state='active'],
 .astra-work__step[data-state='retrying'] {
-  color: var(--astra-color-text);
+  color: var(--genie-color-text);
 }
 
 .astra-work__step[data-state='done'] .astra-work__mark {
-  color: var(--astra-color-success);
+  color: var(--genie-color-success);
 }
 
 .astra-work__step[data-state='active'] .astra-work__mark {
-  color: var(--astra-color-accent);
+  color: var(--genie-color-accent);
 }
 
 /* §6.2: 失敗 step を赤で固定しない。retry 中は注意色に留める。 */
 .astra-work__step[data-state='retrying'] .astra-work__mark {
-  color: var(--astra-color-warning);
+  color: var(--genie-color-warning);
 }
 
 .astra-work__step[data-state='failed'] .astra-work__mark {
-  color: var(--astra-color-danger);
+  color: var(--genie-color-danger);
 }
 
 .astra-work__label {
@@ -92,56 +92,56 @@
 }
 
 .astra-work__detail {
-  color: var(--astra-color-muted);
-  font-size: var(--astra-font-size-micro);
+  color: var(--genie-color-muted);
+  font-size: var(--genie-font-size-micro);
   white-space: nowrap;
 }
 
 .astra-work__elapsed {
   margin: 0;
-  color: var(--astra-color-muted);
-  font-size: var(--astra-font-size-micro);
+  color: var(--genie-color-muted);
+  font-size: var(--genie-font-size-micro);
 }
 
 .astra-work__attention {
   display: flex;
   flex-direction: column;
-  gap: var(--astra-space-base);
-  padding: var(--astra-padding-card);
-  border: var(--astra-border-hairline) solid var(--astra-color-warning);
-  border-radius: var(--astra-radius-small);
-  background: var(--astra-color-canvas);
+  gap: var(--genie-space-base);
+  padding: var(--genie-padding-card);
+  border: var(--genie-border-hairline) solid var(--genie-color-warning);
+  border-radius: var(--genie-radius-small);
+  background: var(--genie-color-canvas);
 }
 
 .astra-work__consequence {
   margin: 0;
-  font-size: var(--astra-font-size-body);
+  font-size: var(--genie-font-size-body);
 }
 
 .astra-work__actions,
 .astra-work__footer {
   display: flex;
   justify-content: flex-end;
-  gap: var(--astra-space-base);
+  gap: var(--genie-space-base);
 }
 
 .astra-work__actions button,
 .astra-work__footer button {
   min-height: 36px;
-  padding-inline: var(--astra-space-lg);
-  border: var(--astra-border-hairline) solid var(--astra-color-border);
-  border-radius: var(--astra-radius-small);
-  background: var(--astra-color-surface);
-  color: var(--astra-color-text);
+  padding-inline: var(--genie-space-lg);
+  border: var(--genie-border-hairline) solid var(--genie-color-border);
+  border-radius: var(--genie-radius-small);
+  background: var(--genie-color-surface);
+  color: var(--genie-color-text);
   font: inherit;
-  font-size: var(--astra-font-size-secondary);
+  font-size: var(--genie-font-size-secondary);
   cursor: pointer;
 }
 
 .astra-work__primary {
-  border-color: var(--astra-color-accent) !important;
-  background: var(--astra-color-accent) !important;
-  color: var(--astra-color-accent-on) !important;
+  border-color: var(--genie-color-accent) !important;
+  background: var(--genie-color-accent) !important;
+  color: var(--genie-color-accent-on) !important;
 }
 
 /*
@@ -152,19 +152,19 @@
  */
 .astra-work__paused {
   margin: 0;
-  color: var(--astra-color-muted);
-  font-size: var(--astra-font-size-secondary);
+  color: var(--genie-color-muted);
+  font-size: var(--genie-font-size-secondary);
 }
 
 .astra-work__error {
   margin: 0;
-  color: var(--astra-color-danger);
-  font-size: var(--astra-font-size-secondary);
+  color: var(--genie-color-danger);
+  font-size: var(--genie-font-size-secondary);
 }
 
 .astra-work__recovery {
-  margin-inline-start: var(--astra-space-compact);
-  color: var(--astra-color-muted);
+  margin-inline-start: var(--genie-space-compact);
+  color: var(--genie-color-muted);
 }
 
 /* ------------------------------------------------------------- work list */
@@ -172,43 +172,43 @@
 .astra-work-list {
   display: flex;
   flex-direction: column;
-  gap: var(--astra-space-lg);
+  gap: var(--genie-space-lg);
 }
 
 .astra-work-filters {
   display: flex;
-  gap: var(--astra-space-compact);
+  gap: var(--genie-space-compact);
 }
 
 .astra-work-filters button {
   min-height: 32px;
-  padding-inline: var(--astra-space-md, var(--astra-space-base));
-  border: var(--astra-border-hairline) solid var(--astra-color-border);
-  border-radius: var(--astra-radius-pill);
+  padding-inline: var(--genie-space-md, var(--genie-space-base));
+  border: var(--genie-border-hairline) solid var(--genie-color-border);
+  border-radius: var(--genie-radius-pill);
   background: transparent;
-  color: var(--astra-color-muted);
+  color: var(--genie-color-muted);
   font: inherit;
-  font-size: var(--astra-font-size-micro);
+  font-size: var(--genie-font-size-micro);
   cursor: pointer;
 }
 
 .astra-work-filters button[aria-pressed='true'] {
-  border-color: var(--astra-color-accent);
-  background: var(--astra-color-accent);
-  color: var(--astra-color-accent-on);
+  border-color: var(--genie-color-accent);
+  background: var(--genie-color-accent);
+  color: var(--genie-color-accent-on);
 }
 
 .astra-work-row {
   display: flex;
   align-items: center;
-  gap: var(--astra-space-base);
+  gap: var(--genie-space-base);
   width: 100%;
   min-height: 44px;
-  padding: var(--astra-space-md, var(--astra-space-base));
-  border: var(--astra-border-hairline) solid var(--astra-color-border);
-  border-radius: var(--astra-radius-small);
-  background: var(--astra-color-surface);
-  color: var(--astra-color-text);
+  padding: var(--genie-space-md, var(--genie-space-base));
+  border: var(--genie-border-hairline) solid var(--genie-color-border);
+  border-radius: var(--genie-radius-small);
+  background: var(--genie-color-surface);
+  color: var(--genie-color-text);
   font: inherit;
   text-align: start;
   cursor: pointer;
@@ -216,12 +216,12 @@
 
 .astra-work-row__meta {
   margin-inline-start: auto;
-  color: var(--astra-color-muted);
-  font-size: var(--astra-font-size-micro);
+  color: var(--genie-color-muted);
+  font-size: var(--genie-font-size-micro);
 }
 
 .astra-empty {
-  color: var(--astra-color-muted);
+  color: var(--genie-color-muted);
 }
 
 .astra-empty p {
@@ -229,14 +229,14 @@
 }
 
 .astra-empty__hint {
-  margin-top: var(--astra-space-compact) !important;
-  font-size: var(--astra-font-size-secondary);
+  margin-top: var(--genie-space-compact) !important;
+  font-size: var(--genie-font-size-secondary);
 }
 
 .astra-work-actions {
   display: flex;
   justify-content: flex-end;
-  gap: var(--astra-space-compact);
+  gap: var(--genie-space-compact);
 }
 
 /* 受け取りの控え（UI/UX §22・§14.1）。 */
@@ -245,52 +245,52 @@
   margin: 0;
   padding: 0;
   display: grid;
-  gap: var(--astra-space-sm, 8px);
+  gap: var(--genie-space-sm, 8px);
 }
 
 .astra-receipt {
-  border: 1px solid var(--astra-color-border);
-  border-radius: var(--astra-radius-md, 8px);
-  padding: var(--astra-space-sm, 8px);
+  border: 1px solid var(--genie-color-border);
+  border-radius: var(--genie-radius-md, 8px);
+  padding: var(--genie-space-sm, 8px);
   display: grid;
-  gap: var(--astra-space-xs, 4px);
+  gap: var(--genie-space-xs, 4px);
 }
 
 .astra-receipt__what {
-  color: var(--astra-color-text);
+  color: var(--genie-color-text);
   margin: 0;
 }
 
 .astra-receipt__meta,
 .astra-receipt__recovery {
-  color: var(--astra-color-muted);
-  font-size: var(--astra-font-size-sm, 0.875rem);
+  color: var(--genie-color-muted);
+  font-size: var(--genie-font-size-sm, 0.875rem);
   margin: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: var(--astra-space-xs, 4px);
+  gap: var(--genie-space-xs, 4px);
 }
 
 .astra-receipt__detail {
-  font-size: var(--astra-font-size-sm, 0.875rem);
-  color: var(--astra-color-muted);
+  font-size: var(--genie-font-size-sm, 0.875rem);
+  color: var(--genie-color-muted);
 }
 
 /* Work detail（UI/UX §9.2）。5 つの tab。 */
 .astra-detail__tabs {
   display: flex;
-  gap: var(--astra-space-xs, 4px);
-  border-bottom: 1px solid var(--astra-color-border);
+  gap: var(--genie-space-xs, 4px);
+  border-bottom: 1px solid var(--genie-color-border);
 }
 
 .astra-detail__tabs [aria-selected='true'] {
-  border-bottom: 2px solid var(--astra-color-accent);
+  border-bottom: 2px solid var(--genie-color-accent);
   /* §19: 選択を色だけで表さない */
   font-weight: 600;
 }
 
 .astra-detail__panel {
-  padding: var(--astra-space-sm, 8px) 0;
+  padding: var(--genie-space-sm, 8px) 0;
 }
 
 .astra-detail__chips {
@@ -299,13 +299,13 @@
   padding: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: var(--astra-space-xs, 4px);
+  gap: var(--genie-space-xs, 4px);
 }
 
 .astra-detail__chips li {
-  border: 1px solid var(--astra-color-border);
-  border-radius: var(--astra-radius-sm, 4px);
-  padding: 0 var(--astra-space-xs, 4px);
+  border: 1px solid var(--genie-color-border);
+  border-radius: var(--genie-radius-sm, 4px);
+  padding: 0 var(--genie-space-xs, 4px);
 }
 
 .astra-detail__steps,
@@ -315,22 +315,22 @@
   margin: 0;
   padding: 0;
   display: grid;
-  gap: var(--astra-space-xs, 4px);
+  gap: var(--genie-space-xs, 4px);
 }
 
 .astra-detail__step,
 .astra-detail__activity li {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--astra-space-xs, 4px);
+  gap: var(--genie-space-xs, 4px);
   align-items: baseline;
 }
 
 .astra-detail__step-detail,
 .astra-detail__step-time,
 .astra-detail__elapsed {
-  color: var(--astra-color-muted);
-  font-size: var(--astra-font-size-sm, 0.875rem);
+  color: var(--genie-color-muted);
+  font-size: var(--genie-font-size-sm, 0.875rem);
 }
 
 /* Evidence Ledger（UI/UX §15）。掘るまで前に出さない。 */
@@ -347,13 +347,13 @@
   margin: 0;
   padding: 0;
   display: grid;
-  gap: var(--astra-space-xs, 4px);
+  gap: var(--genie-space-xs, 4px);
 }
 
 .astra-evidence__groups {
   grid-auto-flow: column;
   justify-content: start;
-  gap: var(--astra-space-sm, 8px);
+  gap: var(--genie-space-sm, 8px);
 }
 
 .astra-evidence__claim {
@@ -364,25 +364,25 @@
 .astra-evidence__relation,
 .astra-evidence__source {
   margin: 0;
-  color: var(--astra-color-muted);
-  font-size: var(--astra-font-size-sm, 0.875rem);
+  color: var(--genie-color-muted);
+  font-size: var(--genie-font-size-sm, 0.875rem);
   display: flex;
   flex-wrap: wrap;
-  gap: var(--astra-space-xs, 4px);
+  gap: var(--genie-space-xs, 4px);
 }
 
 /* §24: 何を試したか。理由の一段下に置く。 */
 .astra-work__attempts {
   display: block;
-  color: var(--astra-color-muted);
-  font-size: var(--astra-font-size-sm, 0.875rem);
+  color: var(--genie-color-muted);
+  font-size: var(--genie-font-size-sm, 0.875rem);
 }
 
 /* Appendix B の行: 時刻 / 題 + ひとこと / 状態 */
 .astra-work-row__time {
   flex: 0 0 5.5em;
-  color: var(--astra-color-muted);
-  font-size: var(--astra-font-size-micro);
+  color: var(--genie-color-muted);
+  font-size: var(--genie-font-size-micro);
   font-variant-numeric: tabular-nums;
 }
 
@@ -397,12 +397,12 @@
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  font-weight: var(--astra-font-weight-card-title);
+  font-weight: var(--genie-font-weight-card-title);
 }
 
 .astra-work-row__detail {
-  color: var(--astra-color-muted);
-  font-size: var(--astra-font-size-micro);
+  color: var(--genie-color-muted);
+  font-size: var(--genie-font-size-micro);
 }
 
 /* 動いている印。色だけに頼らず文字も出す（§19）。 */
@@ -413,7 +413,7 @@
   height: 6px;
   margin-inline-end: 6px;
   border-radius: 50%;
-  background: var(--astra-color-accent);
+  background: var(--genie-color-accent);
   vertical-align: middle;
 }
 
@@ -423,14 +423,14 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--astra-space-base);
+  gap: var(--genie-space-base);
   flex-wrap: wrap;
 }
 
 .astra-work-list__rows {
   display: flex;
   flex-direction: column;
-  gap: var(--astra-space-compact);
+  gap: var(--genie-space-compact);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -444,7 +444,7 @@
     'head head'
     'pane detail';
   align-items: start;
-  column-gap: var(--astra-space-lg);
+  column-gap: var(--genie-space-lg);
 }
 
 .astra-work-list[data-open='true'] .astra-work-list__head {
@@ -460,14 +460,14 @@
   grid-area: detail;
   display: flex;
   flex-direction: column;
-  gap: var(--astra-space-base);
+  gap: var(--genie-space-base);
   min-width: 0;
 }
 
 /* 開いている仕事だけ細い一覧では、行も細く */
 .astra-work-list[data-open='true'] .astra-work-row {
   flex-wrap: wrap;
-  padding-block: var(--astra-space-compact);
+  padding-block: var(--genie-space-compact);
 }
 
 .astra-work-list[data-open='true'] .astra-work-row__time {
@@ -475,20 +475,20 @@
 }
 
 .astra-work-row[aria-current='true'] {
-  border-color: var(--astra-color-accent);
-  background: color-mix(in srgb, var(--astra-color-accent) 6%, var(--astra-color-surface));
+  border-color: var(--genie-color-accent);
+  background: color-mix(in srgb, var(--genie-color-accent) 6%, var(--genie-color-surface));
 }
 
 .astra-work-row:hover {
-  background: var(--astra-color-canvas);
+  background: var(--genie-color-canvas);
 }
 
 .astra-work-row[data-status='WAITING_APPROVAL'] .astra-work-row__meta {
-  color: var(--astra-color-warning);
+  color: var(--genie-color-warning);
 }
 
 .astra-work-row[data-status='FAILED'] .astra-work-row__meta {
-  color: var(--astra-color-danger);
+  color: var(--genie-color-danger);
 }
 
 @media (max-width: 1100px) {
@@ -504,36 +504,36 @@
 /* tab はボタンの見た目を持たない。下線だけで現在地を示す（§9.2）。 */
 .astra-detail__tabs [role='tab'] {
   min-height: 36px;
-  padding: 0 var(--astra-space-md, var(--astra-space-base));
+  padding: 0 var(--genie-space-md, var(--genie-space-base));
   margin-bottom: -1px;
   border: 0;
   border-bottom: 2px solid transparent;
   background: transparent;
-  color: var(--astra-color-muted);
+  color: var(--genie-color-muted);
   font: inherit;
-  font-size: var(--astra-font-size-secondary);
+  font-size: var(--genie-font-size-secondary);
   cursor: pointer;
 }
 
 .astra-detail__tabs [role='tab']:hover {
-  color: var(--astra-color-text);
+  color: var(--genie-color-text);
 }
 
 .astra-detail__tabs [role='tab'][aria-selected='true'] {
-  color: var(--astra-color-text);
+  color: var(--genie-color-text);
 }
 
 /* Overview の見出しと値。ブラウザ既定の字下げを使わない。 */
 .astra-detail__overview dl {
   display: grid;
   grid-template-columns: max-content 1fr;
-  gap: var(--astra-space-compact) var(--astra-space-lg);
+  gap: var(--genie-space-compact) var(--genie-space-lg);
   margin: 0;
 }
 
 .astra-detail__overview dt {
-  color: var(--astra-color-muted);
-  font-size: var(--astra-font-size-secondary);
+  color: var(--genie-color-muted);
+  font-size: var(--genie-font-size-secondary);
 }
 
 .astra-detail__overview dd {
@@ -542,10 +542,10 @@
 
 .astra-detail__overview h3,
 .astra-detail__outputs h3 {
-  margin: var(--astra-space-lg) 0 var(--astra-space-compact);
-  color: var(--astra-color-muted);
-  font-size: var(--astra-font-size-micro);
-  font-weight: var(--astra-font-weight-micro);
+  margin: var(--genie-space-lg) 0 var(--genie-space-compact);
+  color: var(--genie-color-muted);
+  font-size: var(--genie-font-size-micro);
+  font-weight: var(--genie-font-weight-micro);
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -555,17 +555,17 @@
 .astra-evidence {
   display: flex;
   flex-direction: column;
-  gap: var(--astra-space-base);
-  padding: var(--astra-padding-card);
-  border: var(--astra-border-hairline) solid var(--astra-color-border);
-  border-radius: var(--astra-radius-standard);
-  background: var(--astra-color-surface);
+  gap: var(--genie-space-base);
+  padding: var(--genie-padding-card);
+  border: var(--genie-border-hairline) solid var(--genie-color-border);
+  border-radius: var(--genie-radius-standard);
+  background: var(--genie-color-surface);
 }
 
 /* L0: 「12 sources · High confidence · 1 contradiction」だけが最初から見えている */
 .astra-evidence__headline {
   margin: 0;
-  font-weight: var(--astra-font-weight-card-title);
+  font-weight: var(--genie-font-weight-card-title);
 }
 
 .astra-evidence__more {
@@ -573,10 +573,10 @@
 }
 
 .astra-evidence h4 {
-  margin: var(--astra-space-base) 0 var(--astra-space-compact);
-  color: var(--astra-color-muted);
-  font-size: var(--astra-font-size-micro);
-  font-weight: var(--astra-font-weight-micro);
+  margin: var(--genie-space-base) 0 var(--genie-space-compact);
+  color: var(--genie-color-muted);
+  font-size: var(--genie-font-size-micro);
+  font-weight: var(--genie-font-weight-micro);
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -590,56 +590,56 @@
 .astra-evidence__groups {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--astra-space-compact);
+  gap: var(--genie-space-compact);
 }
 
 .astra-evidence__groups li {
-  padding: 2px var(--astra-space-base);
-  border: var(--astra-border-hairline) solid var(--astra-color-border);
-  border-radius: var(--astra-radius-pill);
-  background: var(--astra-color-canvas);
-  font-size: var(--astra-font-size-micro);
+  padding: 2px var(--genie-space-base);
+  border: var(--genie-border-hairline) solid var(--genie-color-border);
+  border-radius: var(--genie-radius-pill);
+  background: var(--genie-color-canvas);
+  font-size: var(--genie-font-size-micro);
 }
 
 .astra-evidence__claims li,
 .astra-evidence__pairs li,
 .astra-evidence__items > li {
-  padding: var(--astra-space-compact) 0;
-  border-bottom: var(--astra-border-hairline) solid var(--astra-color-border);
-  font-size: var(--astra-font-size-secondary);
+  padding: var(--genie-space-compact) 0;
+  border-bottom: var(--genie-border-hairline) solid var(--genie-color-border);
+  font-size: var(--genie-font-size-secondary);
 }
 
 .astra-evidence__type {
   display: inline-block;
-  margin-inline-end: var(--astra-space-compact);
-  padding: 0 var(--astra-space-compact);
-  border-radius: var(--astra-radius-sm, 4px);
-  background: var(--astra-color-canvas);
-  color: var(--astra-color-muted);
-  font-size: var(--astra-font-size-micro);
+  margin-inline-end: var(--genie-space-compact);
+  padding: 0 var(--genie-space-compact);
+  border-radius: var(--genie-radius-sm, 4px);
+  background: var(--genie-color-canvas);
+  color: var(--genie-color-muted);
+  font-size: var(--genie-font-size-micro);
 }
 
 .astra-evidence__publisher,
 .astra-evidence__date {
-  margin-inline-end: var(--astra-space-compact);
-  color: var(--astra-color-muted);
-  font-size: var(--astra-font-size-micro);
+  margin-inline-end: var(--genie-space-compact);
+  color: var(--genie-color-muted);
+  font-size: var(--genie-font-size-micro);
 }
 
 .astra-evidence a {
-  color: var(--astra-color-accent);
+  color: var(--genie-color-accent);
 }
 
 .astra-evidence > button:last-child {
   align-self: flex-start;
   min-height: 32px;
-  padding-inline: var(--astra-space-base);
-  border: var(--astra-border-hairline) solid var(--astra-color-border);
-  border-radius: var(--astra-radius-small);
-  background: var(--astra-color-surface);
-  color: var(--astra-color-muted);
+  padding-inline: var(--genie-space-base);
+  border: var(--genie-border-hairline) solid var(--genie-color-border);
+  border-radius: var(--genie-radius-small);
+  background: var(--genie-color-surface);
+  color: var(--genie-color-muted);
   font: inherit;
-  font-size: var(--astra-font-size-secondary);
+  font-size: var(--genie-font-size-secondary);
   cursor: pointer;
 }
 
@@ -656,20 +656,20 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--astra-space-compact);
+  gap: var(--genie-space-compact);
   margin: 0;
-  color: var(--astra-color-muted);
-  font-size: var(--astra-font-size-micro);
+  color: var(--genie-color-muted);
+  font-size: var(--genie-font-size-micro);
 }
 
 .astra-work__preview-toggle {
   min-height: 24px;
-  padding: 0 var(--astra-space-compact);
+  padding: 0 var(--genie-space-compact);
   border: 0;
   background: transparent;
-  color: var(--astra-color-accent);
+  color: var(--genie-color-accent);
   font: inherit;
-  font-size: var(--astra-font-size-micro);
+  font-size: var(--genie-font-size-micro);
   cursor: pointer;
 }
 
@@ -678,8 +678,8 @@
   content: '✓';
   display: inline-block;
   margin-inline-end: 4px;
-  color: var(--astra-color-success);
-  animation: astra-work-done 400ms var(--astra-motion-hover-easing) 1;
+  color: var(--genie-color-success);
+  animation: astra-work-done 400ms var(--genie-motion-hover-easing) 1;
 }
 
 @keyframes astra-work-done {

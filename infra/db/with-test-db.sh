@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # 使い捨ての検証用データベースを用意してコマンドを実行し、後始末する。
 #
-#   ./infra/db/with-test-db.sh pnpm --filter @astra/db test
+#   ./infra/db/with-test-db.sh pnpm --filter @genie/db test
 #
 # 与えるコマンドには次の環境変数が渡る:
-#   TEST_DATABASE_URL          非 superuser ロール astra_app で接続する URL（RLS が効く）
+#   TEST_DATABASE_URL          非 superuser ロール genie_app で接続する URL（RLS が効く）
 #   TEST_IDENTITY_DATABASE_URL identity 専用ロール astra_identity で接続する URL
 #   TEST_ADMIN_DATABASE_URL    所有者で接続する URL（診断用）
 #
@@ -21,7 +21,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 HOST="${ASTRA_TEST_PGHOST:-localhost}"
 PORT="${ASTRA_TEST_PGPORT:-5433}"
 DB="${ASTRA_TEST_DB:-astra_test_$$}"
-APP_PASSWORD='astra_app'
+APP_PASSWORD='genie_app'
 
 # 管理接続の資格情報。compose の既定に合わせてある。
 export PGPASSWORD="${ASTRA_TEST_PGPASSWORD:-astra}"
@@ -30,7 +30,7 @@ ADMIN_USER="${ASTRA_TEST_PGUSER:-astra}"
 ADMIN_PREFIX="${ADMIN_USER:+${ADMIN_USER}:${PGPASSWORD}@}"
 
 ADMIN_URL="postgres://${ADMIN_PREFIX}${HOST}:${PORT}/${DB}?sslmode=disable"
-APP_URL="postgres://astra_app:${APP_PASSWORD}@${HOST}:${PORT}/${DB}?sslmode=disable"
+APP_URL="postgres://genie_app:${APP_PASSWORD}@${HOST}:${PORT}/${DB}?sslmode=disable"
 IDENTITY_URL="postgres://astra_identity:astra_identity@${HOST}:${PORT}/${DB}?sslmode=disable"
 SHARE_URL="postgres://astra_share:astra_share@${HOST}:${PORT}/${DB}?sslmode=disable"
 
@@ -38,7 +38,7 @@ cleanup() {
   local rc=$?
   dbmate --url "$ADMIN_URL" --migrations-dir "$ROOT/infra/db/migrations" --no-dump-schema drop >/dev/null 2>&1 || true
   # ロールは他のデータベースを跨ぐので、検証で作ったものは必ず落とす
-  psql "postgres://${ADMIN_PREFIX}${HOST}:${PORT}/postgres" -X -q -c 'DROP ROLE IF EXISTS astra_app' >/dev/null 2>&1 || true
+  psql "postgres://${ADMIN_PREFIX}${HOST}:${PORT}/postgres" -X -q -c 'DROP ROLE IF EXISTS genie_app' >/dev/null 2>&1 || true
   psql "postgres://${ADMIN_PREFIX}${HOST}:${PORT}/postgres" -X -q -c 'DROP ROLE IF EXISTS astra_migrate' >/dev/null 2>&1 || true
   psql "postgres://${ADMIN_PREFIX}${HOST}:${PORT}/postgres" -X -q -c 'DROP ROLE IF EXISTS astra_identity' >/dev/null 2>&1 || true
   psql "postgres://${ADMIN_PREFIX}${HOST}:${PORT}/postgres" -X -q -c 'DROP ROLE IF EXISTS astra_share' >/dev/null 2>&1 || true
@@ -54,9 +54,9 @@ psql "$ADMIN_URL" -X -q -v ON_ERROR_STOP=1 -f "$ROOT/infra/db/bootstrap.sql" >/d
 
 # RLS が実際に効くことを前提にしているので、接続ロールが特権を持っていないことを確かめる
 PRIV=$(psql "$ADMIN_URL" -X -t -A -c \
-  "SELECT rolsuper OR rolbypassrls FROM pg_roles WHERE rolname='astra_app'")
+  "SELECT rolsuper OR rolbypassrls FROM pg_roles WHERE rolname='genie_app'")
 if [ "$PRIV" != "f" ]; then
-  echo "FAIL: astra_app must be neither superuser nor BYPASSRLS (RLS would not apply)" >&2
+  echo "FAIL: genie_app must be neither superuser nor BYPASSRLS (RLS would not apply)" >&2
   exit 1
 fi
 

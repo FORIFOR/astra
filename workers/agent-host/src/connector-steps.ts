@@ -19,14 +19,14 @@ import {
   type ApprovalProof,
   type CreateEventInput,
   type DraftMessage,
-} from '@astra/service-connectors';
+} from '@genie/service-connectors';
 import {
   needsRefresh,
   refresh,
   TokenStore,
   type ProviderConfig,
   type SecretStore,
-} from '@astra/oauth';
+} from '@genie/oauth';
 
 /** cloud から渡ってくる、端末にやってほしいこと。 */
 export interface HostStep {
@@ -164,7 +164,7 @@ export class ConnectorRuntime {
     return tokens !== null;
   }
 
-  /** この接続の plugin に実際に許された Astra の許可。 */
+  /** この接続の plugin に実際に許された Genie の許可。 */
   granted(key: ConnectorKey): readonly string[] {
     return this.#deps.grantedScopes(CONNECTORS[key].pluginId);
   }

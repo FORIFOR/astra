@@ -39,26 +39,26 @@
     }
   ],
   "images": {
-    "dark/01-voice-hud-idle.png": "1f8923eb30dd09a5055970335b2ef46e22efd8d0f72f6eaee999659d9332bbec",
-    "dark/02-voice-hud-listening.png": "ded84d82d21979891bfaa6d884c2b8f5a388522788204349d439f669823d1ef2",
-    "dark/02b-voice-hud-preparing.png": "798ded4748fa3599b8c716464c6a2dac6d7df3c0b864093713ed92705bb36b6c",
+    "dark/01-voice-hud-idle.png": "caa4acf3fbd0f415f4aabff66ac4b851547c257d1fe49a4d81b3de94ec2b958e",
+    "dark/02-voice-hud-listening.png": "a528c0bde8c94939d6c9349aa806f45f614486462a3fa75078190b49a5b1dcba",
+    "dark/02b-voice-hud-preparing.png": "3705f26ccaa2de6ad92d7efbb5073c84bc93ca7f34f703d0367af5726307c2d7",
     "dark/03-recording-workspace.png": "fa3878e67cabc4e6cd0b9fccccffef5b8b5db13aee40a322af72a2a3ec8b8243",
     "dark/04-recording-transcript.png": "ed57f82a7d3d0d5670b918559d54ee30ad9db43321f0ad920f5d2f9788bf7f68",
     "dark/05-recording-rag.png": "7dadb252da65f8feb966d499967c18c7c03956ed297d6d81735dc722e34f8df7",
-    "dark/08-meeting-detail.png": "00e05bdb47fe691b5143e82a590cb4d7871a2a6b5e1eb5d09179c4aae1e55cde",
+    "dark/08-meeting-detail.png": "01acd6a86770ac498927fc79e734a1dd9747546d932f638401841bd7ad846614",
     "dark/09-permission-denied.png": "e070c309a0efa7981de3966b36883d2ee8eec964b54bf92755f889ccedc576c1",
     "dark/10-agent-timeline.png": "7bd769b7ae4d04b975c27af6d1f8308ceba840515ce24f58b02eff924d0ebc1e",
     "dark/11-meeting-canvas.png": "ed36187855236e1583a1582e9b5369b780887dd4ecdfac5f18ac9debe1619e0f",
-    "light/01-voice-hud-idle.png": "1f8923eb30dd09a5055970335b2ef46e22efd8d0f72f6eaee999659d9332bbec",
-    "light/02-voice-hud-listening.png": "ded84d82d21979891bfaa6d884c2b8f5a388522788204349d439f669823d1ef2",
-    "light/02b-voice-hud-preparing.png": "798ded4748fa3599b8c716464c6a2dac6d7df3c0b864093713ed92705bb36b6c",
+    "light/01-voice-hud-idle.png": "caa4acf3fbd0f415f4aabff66ac4b851547c257d1fe49a4d81b3de94ec2b958e",
+    "light/02-voice-hud-listening.png": "a528c0bde8c94939d6c9349aa806f45f614486462a3fa75078190b49a5b1dcba",
+    "light/02b-voice-hud-preparing.png": "3705f26ccaa2de6ad92d7efbb5073c84bc93ca7f34f703d0367af5726307c2d7",
     "light/03-recording-workspace.png": "0884d5783b8413833c7c8721a4ae79147ee62697b26e6aa5692911199d1c5254",
     "light/04-recording-transcript.png": "c034f986ac751cba6a49e4db151f90a8267e539168a9b4b4ecf5a78d2d978191",
     "light/05-recording-rag.png": "0f2d76669b0189de64ae0af0d4c55c175e1aef0ba9ff48c9677c450c3eabd68b",
-    "light/08-meeting-detail.png": "755e943dc710c0676cd939581283e4c70ea2992c6b4926360a9c23ab39d32c0d",
+    "light/08-meeting-detail.png": "6782058a0d12aa26608f14e51442feb4acc7328d845ce149aa180ddac61860e6",
     "light/09-permission-denied.png": "716545d91d9197b0b0c307ba9f85d319d1de7509920fc7260a50960a06bd06e6",
     "light/10-agent-timeline.png": "6e2398ecb3d05f96ce255ea61c9e8fcdcd8cf25193550a9e43cc8474ac32aa4c",
-    "light/11-meeting-canvas.png": "85f064f0707adfc284ba2d4063e7dedc149c8110dc82bfb5e76e2b29060bd09b"
+    "light/11-meeting-canvas.png": "b2dad30415970c6b2ed07f4881bf09b6cfae204a7d8da7ad304fada045b8c770"
   },
   "density_reference": {
     "file": "density-baseline.json",
@@ -281,5 +281,290 @@
         "changed_percent_gt16": 0.07162309368191722
       }
     ]
+  },
+  "genie_rename_2026_09_13": {
+    "round": "docs/GENIE_RENAME.md",
+    "capture": "Current Genie native candidate, 16 surfaces per appearance, macOS 26.6.2; original pixels from selftest shots, no relabeling of screenshots.",
+    "review": "Brand label changed from Astra to Genie. Existing dimensions and threshold retained. Light/dark Dock and primary application surfaces visually reviewed.",
+    "changes": [
+      {
+        "image": "light/01-voice-hud-idle.png",
+        "before_sha256": "1f8923eb30dd09a5055970335b2ef46e22efd8d0f72f6eaee999659d9332bbec",
+        "after_sha256": "caa4acf3fbd0f415f4aabff66ac4b851547c257d1fe49a4d81b3de94ec2b958e",
+        "difference_bounds": [
+          40,
+          47,
+          83,
+          60
+        ]
+      },
+      {
+        "image": "light/02-voice-hud-listening.png",
+        "before_sha256": "ded84d82d21979891bfaa6d884c2b8f5a388522788204349d439f669823d1ef2",
+        "after_sha256": "a528c0bde8c94939d6c9349aa806f45f614486462a3fa75078190b49a5b1dcba",
+        "difference_bounds": [
+          0,
+          0,
+          600,
+          85
+        ]
+      },
+      {
+        "image": "light/02b-voice-hud-preparing.png",
+        "before_sha256": "798ded4748fa3599b8c716464c6a2dac6d7df3c0b864093713ed92705bb36b6c",
+        "after_sha256": "3705f26ccaa2de6ad92d7efbb5073c84bc93ca7f34f703d0367af5726307c2d7",
+        "difference_bounds": [
+          0,
+          0,
+          600,
+          85
+        ]
+      },
+      {
+        "image": "light/03-recording-workspace.png",
+        "before_sha256": "0884d5783b8413833c7c8721a4ae79147ee62697b26e6aa5692911199d1c5254",
+        "after_sha256": "0884d5783b8413833c7c8721a4ae79147ee62697b26e6aa5692911199d1c5254",
+        "difference_bounds": null
+      },
+      {
+        "image": "light/04-recording-transcript.png",
+        "before_sha256": "c034f986ac751cba6a49e4db151f90a8267e539168a9b4b4ecf5a78d2d978191",
+        "after_sha256": "c034f986ac751cba6a49e4db151f90a8267e539168a9b4b4ecf5a78d2d978191",
+        "difference_bounds": null
+      },
+      {
+        "image": "light/05-recording-rag.png",
+        "before_sha256": "0f2d76669b0189de64ae0af0d4c55c175e1aef0ba9ff48c9677c450c3eabd68b",
+        "after_sha256": "0f2d76669b0189de64ae0af0d4c55c175e1aef0ba9ff48c9677c450c3eabd68b",
+        "difference_bounds": null
+      },
+      {
+        "image": "light/08-meeting-detail.png",
+        "before_sha256": "755e943dc710c0676cd939581283e4c70ea2992c6b4926360a9c23ab39d32c0d",
+        "after_sha256": "6782058a0d12aa26608f14e51442feb4acc7328d845ce149aa180ddac61860e6",
+        "difference_bounds": [
+          18,
+          8,
+          1232,
+          802
+        ]
+      },
+      {
+        "image": "light/09-permission-denied.png",
+        "before_sha256": "716545d91d9197b0b0c307ba9f85d319d1de7509920fc7260a50960a06bd06e6",
+        "after_sha256": "716545d91d9197b0b0c307ba9f85d319d1de7509920fc7260a50960a06bd06e6",
+        "difference_bounds": null
+      },
+      {
+        "image": "light/10-agent-timeline.png",
+        "before_sha256": "6e2398ecb3d05f96ce255ea61c9e8fcdcd8cf25193550a9e43cc8474ac32aa4c",
+        "after_sha256": "6e2398ecb3d05f96ce255ea61c9e8fcdcd8cf25193550a9e43cc8474ac32aa4c",
+        "difference_bounds": null
+      },
+      {
+        "image": "light/11-meeting-canvas.png",
+        "before_sha256": "85f064f0707adfc284ba2d4063e7dedc149c8110dc82bfb5e76e2b29060bd09b",
+        "after_sha256": "b2dad30415970c6b2ed07f4881bf09b6cfae204a7d8da7ad304fada045b8c770",
+        "difference_bounds": [
+          749,
+          181,
+          1002,
+          255
+        ]
+      },
+      {
+        "image": "dark/01-voice-hud-idle.png",
+        "before_sha256": "1f8923eb30dd09a5055970335b2ef46e22efd8d0f72f6eaee999659d9332bbec",
+        "after_sha256": "caa4acf3fbd0f415f4aabff66ac4b851547c257d1fe49a4d81b3de94ec2b958e",
+        "difference_bounds": [
+          40,
+          47,
+          83,
+          60
+        ]
+      },
+      {
+        "image": "dark/02-voice-hud-listening.png",
+        "before_sha256": "ded84d82d21979891bfaa6d884c2b8f5a388522788204349d439f669823d1ef2",
+        "after_sha256": "a528c0bde8c94939d6c9349aa806f45f614486462a3fa75078190b49a5b1dcba",
+        "difference_bounds": [
+          0,
+          0,
+          600,
+          85
+        ]
+      },
+      {
+        "image": "dark/02b-voice-hud-preparing.png",
+        "before_sha256": "798ded4748fa3599b8c716464c6a2dac6d7df3c0b864093713ed92705bb36b6c",
+        "after_sha256": "3705f26ccaa2de6ad92d7efbb5073c84bc93ca7f34f703d0367af5726307c2d7",
+        "difference_bounds": [
+          0,
+          0,
+          600,
+          85
+        ]
+      },
+      {
+        "image": "dark/03-recording-workspace.png",
+        "before_sha256": "fa3878e67cabc4e6cd0b9fccccffef5b8b5db13aee40a322af72a2a3ec8b8243",
+        "after_sha256": "fa3878e67cabc4e6cd0b9fccccffef5b8b5db13aee40a322af72a2a3ec8b8243",
+        "difference_bounds": null
+      },
+      {
+        "image": "dark/04-recording-transcript.png",
+        "before_sha256": "ed57f82a7d3d0d5670b918559d54ee30ad9db43321f0ad920f5d2f9788bf7f68",
+        "after_sha256": "ed57f82a7d3d0d5670b918559d54ee30ad9db43321f0ad920f5d2f9788bf7f68",
+        "difference_bounds": null
+      },
+      {
+        "image": "dark/05-recording-rag.png",
+        "before_sha256": "7dadb252da65f8feb966d499967c18c7c03956ed297d6d81735dc722e34f8df7",
+        "after_sha256": "7dadb252da65f8feb966d499967c18c7c03956ed297d6d81735dc722e34f8df7",
+        "difference_bounds": null
+      },
+      {
+        "image": "dark/08-meeting-detail.png",
+        "before_sha256": "00e05bdb47fe691b5143e82a590cb4d7871a2a6b5e1eb5d09179c4aae1e55cde",
+        "after_sha256": "01acd6a86770ac498927fc79e734a1dd9747546d932f638401841bd7ad846614",
+        "difference_bounds": [
+          18,
+          8,
+          1232,
+          802
+        ]
+      },
+      {
+        "image": "dark/09-permission-denied.png",
+        "before_sha256": "e070c309a0efa7981de3966b36883d2ee8eec964b54bf92755f889ccedc576c1",
+        "after_sha256": "e070c309a0efa7981de3966b36883d2ee8eec964b54bf92755f889ccedc576c1",
+        "difference_bounds": null
+      },
+      {
+        "image": "dark/10-agent-timeline.png",
+        "before_sha256": "7bd769b7ae4d04b975c27af6d1f8308ceba840515ce24f58b02eff924d0ebc1e",
+        "after_sha256": "7bd769b7ae4d04b975c27af6d1f8308ceba840515ce24f58b02eff924d0ebc1e",
+        "difference_bounds": null
+      },
+      {
+        "image": "dark/11-meeting-canvas.png",
+        "before_sha256": "ed36187855236e1583a1582e9b5369b780887dd4ecdfac5f18ac9debe1619e0f",
+        "after_sha256": "ed36187855236e1583a1582e9b5369b780887dd4ecdfac5f18ac9debe1619e0f",
+        "difference_bounds": null
+      }
+    ],
+    "geometry": [
+      {
+        "file": "01-idle.json",
+        "before_sha256": "007738e76679ec03e264c64820a88cf1c54e47535efa1f62cd31cdf7a7cf79f4",
+        "after_sha256": "6f680224572da58d8d6da5aedd78964bd7c740fc520cc0ff3b49cbb0c2ab8bbb",
+        "changed_over_2pt": [
+          {
+            "element": "dockOpenActions",
+            "delta": {
+              "w": 3.5
+            }
+          }
+        ]
+      },
+      {
+        "file": "02-listening.json",
+        "before_sha256": "a4b4ca752cbf4a77ecbd625f2b4619fdf801140327a3063e9722f529b81cc107",
+        "after_sha256": "011d82a9ccb4dc6b6bc3a68bb4a583f521454ec9b16c5c7d8d832cb68cd3bbc9",
+        "changed_over_2pt": []
+      },
+      {
+        "file": "03-task-dock.json",
+        "before_sha256": "9a7a8bfea9b066696c95646fd8eeee998f5291faed2d02808d7f1eb1f76037e8",
+        "after_sha256": "86146874aa608ed8e7b5d1aa52d9916bba0f2ccca4839daa88331bebb2932852",
+        "changed_over_2pt": [
+          {
+            "element": "text:Genie",
+            "delta": {
+              "w": 3
+            }
+          }
+        ]
+      },
+      {
+        "file": "04-meeting.json",
+        "before_sha256": "c4d550c73ae7f21c5ca8392f57fa42d2d501e110bd8ca7a36bc0c9f15a26d67b",
+        "after_sha256": "103c2c2219b67156ceabbac20d29ce6b87bad965f9cc6d82dbdb88415eedd9aa",
+        "changed_over_2pt": [
+          {
+            "element": "meetingPanel-ask",
+            "delta": {
+              "w": 3.0,
+              "x": -3.0
+            }
+          },
+          {
+            "element": "meetingPanel-captions",
+            "delta": {
+              "x": -3
+            }
+          },
+          {
+            "element": "meetingPanel-notes",
+            "delta": {
+              "x": -3
+            }
+          }
+        ]
+      },
+      {
+        "file": "05-meeting-notes.json",
+        "before_sha256": "9def629b44668913aceba70e06d7edb35c6ebfebc87883def20d5a6a0df99db5",
+        "after_sha256": "97934080f37659f1624230f6ca4cbc34d43cb8d8b961fe8b832bd7e4dade3806",
+        "changed_over_2pt": [
+          {
+            "element": "meetingPanel-ask",
+            "delta": {
+              "w": 3.0,
+              "x": -3.0
+            }
+          },
+          {
+            "element": "meetingPanel-captions",
+            "delta": {
+              "x": -3
+            }
+          },
+          {
+            "element": "meetingPanel-notes",
+            "delta": {
+              "x": -3
+            }
+          }
+        ]
+      },
+      {
+        "file": "06-workspace.json",
+        "before_sha256": "6087b64bfa66bebabcf3c634717875ca4ade25fa5fdc77055272c657b8727fe1",
+        "after_sha256": "3920cec2b5043f7e374fa1bce4c3a69a520993f6bb83119f3ae0eb1596d458d4",
+        "changed_over_2pt": [
+          {
+            "element": "meetingPanel-ask",
+            "delta": {
+              "w": 3.0,
+              "x": -3.0
+            }
+          },
+          {
+            "element": "meetingPanel-captions",
+            "delta": {
+              "x": -3
+            }
+          },
+          {
+            "element": "meetingPanel-notes",
+            "delta": {
+              "x": -3
+            }
+          }
+        ]
+      }
+    ],
+    "geometry_review": "Window class labels updated. Genie text and its idle button grow by 3–3.5pt due to the new word. Ask Genie is 3pt wider than Ask Astra and the three adjacent meeting actions shift by 3pt within the unchanged Dock width. Fresh six-state captures adopted; 2pt regression tolerance remains unchanged."
   }
 }

@@ -1,5 +1,5 @@
 {
-  "name": "@astra/service-task",
+  "name": "@genie/service-task",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -21,15 +21,15 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@astra/contracts": "workspace:*",
-    "@astra/db": "workspace:*",
-    "@astra/policy": "workspace:*",
-    "@astra/telemetry": "workspace:*",
+    "@genie/contracts": "workspace:*",
+    "@genie/db": "workspace:*",
+    "@genie/policy": "workspace:*",
+    "@genie/telemetry": "workspace:*",
     "@temporalio/activity": "^1.22.0",
     "@temporalio/client": "^1.22.0",
     "@temporalio/common": "^1.22.0",
     "@temporalio/workflow": "^1.22.0",
-    "@astra/service-library": "workspace:*",
+    "@genie/service-library": "workspace:*",
     "kysely": "catalog:",
     "@temporalio/worker": "^1.22.0"
   },

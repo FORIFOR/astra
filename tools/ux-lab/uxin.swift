@@ -17,7 +17,7 @@ case "move":
     CGEvent(mouseEventSource: nil, mouseType: .mouseMoved, mouseCursorPosition: pt(2), mouseButton: .left)?.post(tap: .cghidEventTap)
 case "click":
     // **source を nil にすると押下が届かない。** 実際、合成クリックでデスクトップを
-    // 押しても Finder が前面にならず、「Astra がクリックを無視する」と読み違えた。
+    // 押しても Finder が前面にならず、「Genie がクリックを無視する」と読み違えた。
     // hidSystemState の source を使い、clickState も明示する。
     let p = pt(2)
     let src = CGEventSource(stateID: .hidSystemState)

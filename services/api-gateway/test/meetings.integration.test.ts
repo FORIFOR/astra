@@ -2,8 +2,8 @@
  * 会議の HTTP / WS 表面。Phase 3 実装仕様 §6。AC3-1 〜 AC3-5、AC3-11、AC3-12。
  */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { uuidv7, type Meeting, type MeetingSegment, type TokenResponse } from '@astra/contracts';
-import type { ScriptLine } from '@astra/service-meeting';
+import { uuidv7, type Meeting, type MeetingSegment, type TokenResponse } from '@genie/contracts';
+import type { ScriptLine } from '@genie/service-meeting';
 import { makeTestApp, makeTokens, testDbConfig, type TestApp } from './support.js';
 import type { App } from '../src/fastify.js';
 
@@ -79,7 +79,7 @@ describe.skipIf(!url)('meetings', () => {
 
       // WS は inject で扱えないので、gateway が使うのと同じ service 経路を通す。
       // WS 自体の疎通は受け入れスイートの実プロセスで確かめる。
-      const { ScriptedStreamingTranscriber } = await import('@astra/service-meeting');
+      const { ScriptedStreamingTranscriber } = await import('@genie/service-meeting');
       const session = await new ScriptedStreamingTranscriber(SCRIPT).start({ language: 'ja-JP' });
       for (let atMs = 0; atMs <= 6_000; atMs += 1_000) {
         const frame = new Uint8Array(3_200);
@@ -112,7 +112,7 @@ describe.skipIf(!url)('meetings', () => {
 
     it('streams the transcript as events and closes when the meeting ends', async () => {
       const meeting = await startedMeeting();
-      const { ScriptedStreamingTranscriber } = await import('@astra/service-meeting');
+      const { ScriptedStreamingTranscriber } = await import('@genie/service-meeting');
       const session = await new ScriptedStreamingTranscriber(SCRIPT).start({ language: 'ja-JP' });
       await harness.meetings.ingest(
         meeting.tenant_id,

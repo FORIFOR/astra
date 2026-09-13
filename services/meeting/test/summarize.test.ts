@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { uuidv7, type MeetingSegment } from '@astra/contracts';
+import { uuidv7, type MeetingSegment } from '@genie/contracts';
 import { durationMs, speakerCount, withCitations } from '../src/summarize.js';
 import { renderBundle } from '../src/executor.js';
 

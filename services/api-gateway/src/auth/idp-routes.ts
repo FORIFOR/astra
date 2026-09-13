@@ -2,7 +2,7 @@
  * 外部の身元提供者でのサインイン経路。実装仕様 §4.3。
  *
  *   GET  /v1/auth/providers      どの提供者で入れるか（設定されているものだけ true）
- *   POST /v1/auth/idp/token      提供者の ID トークン → Astra のトークン
+ *   POST /v1/auth/idp/token      提供者の ID トークン → Genie のトークン
  *   GET  /v1/auth/line/desktop   LINE の relay（ブラウザ → LINE → callback → 端末の loopback）
  *   GET  /v1/auth/line/callback
  *   GET  /v1/auth/apple/desktop  Apple の web relay（form_post を受けて loopback へ）
@@ -13,14 +13,14 @@
  * サインインそのものは常に /v1/auth/idp/token を通る（経路を 1 本にする）。
  */
 import {
-  AstraError,
+  GenieError,
   AuthProvidersResponse,
   IdpSignInRequest,
   type TokenResponse,
   uuidv7,
-} from '@astra/contracts';
-import { withIdentity, withTenant, type DbHandle } from '@astra/db';
-import { appendAuditEvent } from '@astra/telemetry';
+} from '@genie/contracts';
+import { withIdentity, withTenant, type DbHandle } from '@genie/db';
+import { appendAuditEvent } from '@genie/telemetry';
 import type { App } from '../fastify.js';
 import { AUTH_RATE_LIMIT } from '../plugins/rate-limit.js';
 import { issueTokens } from './routes.js';
@@ -45,7 +45,7 @@ export interface IdpRouteDeps {
 /** 端末の loopback へ戻る。ブラウザの窓は閉じてよいと伝える。 */
 function loopbackPage(target: URL, ok: boolean, message: string): string {
   const title = ok ? 'サインインできました' : 'サインインできませんでした';
-  const body = ok ? 'Astra に戻ります。このウィンドウは閉じて構いません。' : message;
+  const body = ok ? 'Genie に戻ります。このウィンドウは閉じて構いません。' : message;
   const href = target.toString().replace(/"/g, '&quot;');
   return `<!doctype html><html lang="ja"><head><meta charset="utf-8"><title>${title}</title>
 <style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#F7F8FA;color:#17191D;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
@@ -60,7 +60,7 @@ function parseRelayState(raw: string | undefined): { port: number; state: string
   const port = Number.parseInt(portText ?? '', 10);
   const state = rest.join(':');
   if (!Number.isInteger(port) || port < 1024 || port > 65535 || state.length === 0) {
-    throw new AstraError('common.validation_failed', 'relay state is malformed');
+    throw new GenieError('common.validation_failed', 'relay state is malformed');
   }
   return { port, state };
 }
@@ -72,7 +72,7 @@ function loopbackTarget(port: number, params: Record<string, string>): URL {
 }
 
 /**
- * 提供者の主体を Astra の user に結ぶ。
+ * 提供者の主体を Genie の user に結ぶ。
  *
  * 1. 同じ (provider, subject) が居ればその user
  * 2. 居なければ、**確認済みの**メールが一致する user に結ぶ（別の提供者で入った本人）
@@ -115,12 +115,12 @@ export async function linkIdentity(
         .select(['tenant_id'])
         .where('user_id', '=', userId)
         .executeTakeFirst();
-      if (!membership) throw new AstraError('common.internal', 'user without a tenant');
+      if (!membership) throw new GenieError('common.internal', 'user without a tenant');
       tenantId = membership.tenant_id;
     } else {
       userId = uuidv7();
       tenantId = uuidv7();
-      const displayName = identity.displayName ?? identity.email?.split('@')[0] ?? 'Astra User';
+      const displayName = identity.displayName ?? identity.email?.split('@')[0] ?? 'Genie User';
       // 確認済みのメールだけを users.email に使う。未確認のメールで行を作ると、
       // 本人が後で正しく入ってきたときに衝突する。取れない提供者（LINE の scope 無し等）も同じ扱い
       const email =
@@ -228,7 +228,7 @@ export function registerIdpRoutes(app: App, deps: IdpRouteDeps): void {
     { config: { auth: false, rateLimit: AUTH_RATE_LIMIT } },
     async (request, reply) => {
       if (!config.line || !config.publicUrl) {
-        throw new AstraError('auth.provider_not_configured', 'line relay is not configured');
+        throw new GenieError('auth.provider_not_configured', 'line relay is not configured');
       }
       const { port, state } = parseRelayState(
         `${request.query.port ?? ''}:${request.query.state ?? ''}`,
@@ -292,7 +292,7 @@ export function registerIdpRoutes(app: App, deps: IdpRouteDeps): void {
     { config: { auth: false, rateLimit: AUTH_RATE_LIMIT } },
     async (request, reply) => {
       if (!config.apple?.serviceId || !config.publicUrl) {
-        throw new AstraError('auth.provider_not_configured', 'apple relay is not configured');
+        throw new GenieError('auth.provider_not_configured', 'apple relay is not configured');
       }
       const { port, state } = parseRelayState(
         `${request.query.port ?? ''}:${request.query.state ?? ''}`,

@@ -4,7 +4,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
-import { uuidv7, type EventEnvelope, type MeetingSegment } from '@astra/contracts';
+import { uuidv7, type EventEnvelope, type MeetingSegment } from '@genie/contracts';
 import {
   applyMeetingEvent,
   elapsedLabel,

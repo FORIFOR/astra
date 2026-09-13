@@ -5,17 +5,17 @@
 # 持っていなかった**こと。ここを機械で守る。
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-BIN="$ROOT/apps/astra-macos/.build/debug/AstraMac"
+BIN="$ROOT/apps/genie-macos/.build/debug/GenieMac"
 LAB="$ROOT/.build/uxlab"
 OUT="$(mktemp -d)"
 if [[ -x "${ASTRA_CONFIRMATION_BIN:-}" ]]; then
   BIN="$ASTRA_CONFIRMATION_BIN"
-elif [[ -x "$ROOT/dist/Astra.app/Contents/MacOS/AstraMac" ]]; then
-  BIN="$ROOT/dist/Astra.app/Contents/MacOS/AstraMac"
-elif [[ -x "$ROOT/apps/astra-macos/.build/Astra.app/Contents/MacOS/AstraMac" ]]; then
-  BIN="$ROOT/apps/astra-macos/.build/Astra.app/Contents/MacOS/AstraMac"
+elif [[ -x "$ROOT/dist/Genie.app/Contents/MacOS/GenieMac" ]]; then
+  BIN="$ROOT/dist/Genie.app/Contents/MacOS/GenieMac"
+elif [[ -x "$ROOT/apps/genie-macos/.build/Genie.app/Contents/MacOS/GenieMac" ]]; then
+  BIN="$ROOT/apps/genie-macos/.build/Genie.app/Contents/MacOS/GenieMac"
 fi
-APP="${BIN%/Contents/MacOS/AstraMac}"
+APP="${BIN%/Contents/MacOS/GenieMac}"
 if [[ "$APP" == "$BIN" || ! -f "$APP/Contents/Info.plist" ]]; then
   echo "CONFIRMATION_GATE=AUTOMATION_MISSING signed app required (scripts/package-macos-app.sh)"
   exit 2

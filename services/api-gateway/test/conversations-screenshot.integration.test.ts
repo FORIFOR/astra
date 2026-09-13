@@ -4,10 +4,10 @@
  * 「⌘⇧4 → 『これ何？』」で聞き返されないこと。撮ったばかりのスクショは
  * 「いま見ているもの」で、会話に何も無くても「これ」はそれで解ける。
  * 添付は id とラベルだけで、**画素は cloud を通らない。**
- *   ./infra/db/with-test-db.sh pnpm --filter @astra/service-api-gateway test
+ *   ./infra/db/with-test-db.sh pnpm --filter @genie/service-api-gateway test
  */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { type TokenResponse, uuidv7 } from '@astra/contracts';
+import { type TokenResponse, uuidv7 } from '@genie/contracts';
 import { makeTestApp, makeTokens, testDbConfig, type TestApp } from './support.js';
 import type { App } from '../src/fastify.js';
 

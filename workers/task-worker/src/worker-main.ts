@@ -9,34 +9,34 @@
 import path from 'node:path';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { NativeConnection } from '@temporalio/worker';
-import { createDb, dbConfigFromEnv, withTenant, type DbHandle } from '@astra/db';
-import { createLogger } from '@astra/telemetry';
-import { FsObjectStore, LibraryService } from '@astra/service-library';
+import { createDb, dbConfigFromEnv, withTenant, type DbHandle } from '@genie/db';
+import { createLogger } from '@genie/telemetry';
+import { FsObjectStore, LibraryService } from '@genie/service-library';
 import {
   ResearchService,
   researchExecutors,
   generalExecutors,
   researchProvidersFromEnv,
   withModelContext,
-} from '@astra/service-research';
+} from '@genie/service-research';
 import {
   FsRecordingStore,
   MeetingService,
   meetingExecutors,
   meetingProvidersFromEnv,
   HostMeetingSummarizer,
-} from '@astra/service-meeting';
+} from '@genie/service-meeting';
 import {
   meetingArtifacts,
   WorkContextService,
   WorldModelService,
-} from '@astra/service-world-model';
+} from '@genie/service-world-model';
 // 数え方は gateway と同じものを使う。別々に数えると片方だけ見落とす。
-import { assertReadyForProduction, canonicalSha256 } from '@astra/contracts';
-import { capabilityReport, capabilitySummary } from '@astra/service-capabilities';
-import { ConnectionService } from '@astra/service-plugin-registry';
-import { createTaskWorker, TASK_QUEUE, NoopPublisher } from '@astra/service-task';
-import { HostBridge, HostStepExecutor, type ApprovalProof } from '@astra/service-agent-host';
+import { assertReadyForProduction, canonicalSha256 } from '@genie/contracts';
+import { capabilityReport, capabilitySummary } from '@genie/service-capabilities';
+import { ConnectionService } from '@genie/service-plugin-registry';
+import { createTaskWorker, TASK_QUEUE, NoopPublisher } from '@genie/service-task';
+import { HostBridge, HostStepExecutor, type ApprovalProof } from '@genie/service-agent-host';
 import {
   DomainService,
   architectureExecutors,
@@ -45,7 +45,7 @@ import {
   salesCrmExecutors,
   stockExecutors,
   videoExecutors,
-} from '@astra/service-agent-runtime';
+} from '@genie/service-agent-runtime';
 
 async function main(): Promise<void> {
   const logger = createLogger({
@@ -186,7 +186,7 @@ async function main(): Promise<void> {
            * 要約も端末で。正本 §21、UI/UX §22。
            *
            * **会議の中身は、その会議に出た人のもの。**
-           * Astra が預かる利用権で処理してよいものではない。
+           * Genie が預かる利用権で処理してよいものではない。
            * 自分の鍵が設定してあるならそちらを使う。
            */
           summarizer: meetingProviders.summarizer.isStandIn

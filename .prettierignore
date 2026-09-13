@@ -9,9 +9,9 @@ packages/db/src/generated/
 # TypeScript 側から生成している。整形すると生成器の出力とずれる。
 plugins/builtin/sales-crm/schemas/
 apps/desktop/src-tauri/
-apps/astra-macos/
+apps/genie-macos/
 apps/windows/
-apps/astra-macos/Sources/AstraCore/
+apps/genie-macos/Sources/GenieCore/
 # 測定の証拠はそのまま置く。判定者の出力（results/prompts/answers/fixtures）は verbatim、
 # geometry / density-baseline は selftest が書く生成物なので、整形すると次の取り直しとずれる。
 docs/ux-benchmark/

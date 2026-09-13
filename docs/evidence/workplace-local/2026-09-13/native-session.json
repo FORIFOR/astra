@@ -1,0 +1,14 @@
+{
+  "date": "2026-09-13",
+  "scope": "one native Home-to-Work run; explicit save dialog; process restart and artifact reopening",
+  "localModel": "qwen3.5:9b",
+  "manualInterventions": [
+    "Clicked status refresh after task completion was shown as a connection failure",
+    "Skipped a profile-resume error after restarting the app"
+  ],
+  "exportSha256": "f643de8b498eb73293dd64d5e3b12a78c9c61a87b0eba2b09e09ebfb2164ae30",
+  "persistedTaskId": "545744F3-97BE-45EF-9791-FE3F2C70E946",
+  "completed": true,
+  "unattendedPassed": false,
+  "externalApiCostUsd": 0
+}

@@ -12,7 +12,7 @@
 import type { HostCall, HostModelContext } from './host-model.js';
 import type { SearchHit, SearchProvider } from './providers.js';
 import { classify, SearchError, toIsoDate } from './search.js';
-import { canonicalSha256 } from '@astra/contracts';
+import { canonicalSha256 } from '@genie/contracts';
 
 export interface HostSearchDeps {
   readonly host: HostCall;

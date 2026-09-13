@@ -3,7 +3,7 @@
  *
  * **どちらの版が正しいかを決めない。**新しい版があることは言う。
  */
-import { AstraError } from '@astra/contracts';
+import { GenieError } from '@genie/contracts';
 import type { DomainService } from './domain.js';
 import {
   issueGaps,
@@ -126,12 +126,12 @@ export function architectureExecutors(
       async execute(input, step) {
         const question = argOf(input, step, 'question');
         if (question === null) {
-          throw new AstraError('common.validation_failed', '質疑の本文が要ります');
+          throw new GenieError('common.validation_failed', '質疑の本文が要ります');
         }
         const problems = rfiProblems(question);
         if (problems.length > 0) {
           // 出せない理由を先に全部言う
-          throw new AstraError('common.validation_failed', problems.join(' / '));
+          throw new GenieError('common.validation_failed', problems.join(' / '));
         }
 
         return {

@@ -8,7 +8,7 @@
 //!   - 「無い」を capability report で言える（§25）
 //!
 //! DeepNote は macOS で build 時リンク、Windows で `libloading` と分けていた。
-//! Astra はどちらも実行時に統一する。分けると、片方でしか起きない失敗ができる。
+//! Genie はどちらも実行時に統一する。分けると、片方でしか起きない失敗ができる。
 
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -98,7 +98,7 @@ pub fn search_paths() -> Vec<PathBuf> {
         }
     }
     if let Some(data) = dirs::data_local_dir() {
-        paths.push(data.join("Astra").join("lib").join(library_file_name()));
+        paths.push(data.join("Genie").join("lib").join(library_file_name()));
     }
     if let Ok(exe) = std::env::current_exe() {
         if let Some(dir) = exe.parent() {

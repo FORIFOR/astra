@@ -5,8 +5,8 @@
  * ここで見つからないものは Library の絞り込みで探す。
  */
 import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
-import type { TaskView } from '@astra/api-client';
-import type { Artifact } from '@astra/contracts';
+import type { TaskView } from '@genie/api-client';
+import type { Artifact } from '@genie/contracts';
 import { useShell } from '../state/ShellProvider.js';
 import { useOptionalWorkspaceData } from '../state/WorkspaceData.js';
 import { typeLabel } from '../pages/Library.js';

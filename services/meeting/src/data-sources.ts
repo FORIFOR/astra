@@ -2,8 +2,8 @@
  * meeting が dashboard へ出せるもの。Phase 4 実装仕様 §3.1。
  * 自分のテーブルは自分で引く（実装仕様 §5.1）。
  */
-import type { ResolvedValue } from '@astra/contracts';
-import { withTenant, type DbHandle } from '@astra/db';
+import type { ResolvedValue } from '@genie/contracts';
+import { withTenant, type DbHandle } from '@genie/db';
 
 export function meetingDataSources(
   db: DbHandle,

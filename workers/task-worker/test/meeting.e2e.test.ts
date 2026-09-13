@@ -1,6 +1,6 @@
 /**
  * 会議の縦串。正本 §11・§13、Phase 3 実装仕様 §5。AC3-6 〜 AC3-10。
- *   ./infra/db/with-test-db.sh pnpm --filter @astra/worker-task test
+ *   ./infra/db/with-test-db.sh pnpm --filter @genie/worker-task test
  */
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -9,15 +9,15 @@ import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { TestWorkflowEnvironment } from '@temporalio/testing';
 import type { Worker } from '@temporalio/worker';
-import { uuidv7 } from '@astra/contracts';
-import { createDb, withIdentity, type DbHandle } from '@astra/db';
-import { FsObjectStore, LibraryService } from '@astra/service-library';
+import { uuidv7 } from '@genie/contracts';
+import { createDb, withIdentity, type DbHandle } from '@genie/db';
+import { FsObjectStore, LibraryService } from '@genie/service-library';
 import {
   TaskService,
   TemporalTaskRuntime,
   createTaskWorker,
   workflowIdFor,
-} from '@astra/service-task';
+} from '@genie/service-task';
 import {
   KeywordSummarizer,
   MeetingService,
@@ -26,7 +26,7 @@ import {
   ScriptedStreamingTranscriber,
   meetingExecutors,
   type ScriptLine,
-} from '@astra/service-meeting';
+} from '@genie/service-meeting';
 
 const url = process.env['TEST_DATABASE_URL'];
 const identityUrl = process.env['TEST_IDENTITY_DATABASE_URL'];

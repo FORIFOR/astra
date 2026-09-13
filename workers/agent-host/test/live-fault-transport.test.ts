@@ -2,7 +2,7 @@ import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
-import { buildMime } from '@astra/service-connectors';
+import { buildMime } from '@genie/service-connectors';
 import { liveFaultTransport } from '../src/live-fault-transport.js';
 
 describe('live accepted-send response loss', () => {

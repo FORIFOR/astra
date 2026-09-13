@@ -14,8 +14,8 @@ import {
   uuidv7,
   type Artifact,
   type DashboardView,
-} from '@astra/contracts';
-import { TOKENS_CSS, TOP_LEVEL_TABS, meetsAA, palettes, resolveLayout } from '@astra/ui-kit';
+} from '@genie/contracts';
+import { TOKENS_CSS, TOP_LEVEL_TABS, meetsAA, palettes, resolveLayout } from '@genie/ui-kit';
 import { TaskDock } from '../src/dock/TaskDock.js';
 import { HomePage } from '../src/pages/Home.js';
 import { LibraryPage } from '../src/pages/Library.js';
@@ -425,7 +425,7 @@ describe('AC-11: a library artifact can be traced back', () => {
 describe('AC-14: keyboard reachable and focus visible, in both themes', () => {
   it('never removes the focus ring', () => {
     expect(TOKENS_CSS).toContain(':focus-visible');
-    expect(TOKENS_CSS).toMatch(/outline:\s*2px solid var\(--astra-color-focus-ring\)/);
+    expect(TOKENS_CSS).toMatch(/outline:\s*2px solid var\(--genie-color-focus-ring\)/);
     // outline: none で消していない
     expect(TOKENS_CSS).not.toMatch(/:focus-visible\s*\{[^}]*outline:\s*none/);
   });

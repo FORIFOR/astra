@@ -1,4 +1,4 @@
-import type { SecretStore } from '@astra/oauth';
+import type { SecretStore } from '@genie/oauth';
 
 /** A host owns its refresh chain. Never share this key with the desktop session. */
 export class ApiSession {

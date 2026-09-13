@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { ApiError, AstraError } from '@astra/contracts';
+import { ApiError, GenieError } from '@genie/contracts';
 import { toApiError } from '../src/errors.js';
 
 describe('toApiError', () => {
-  it('maps an AstraError to its code and status', () => {
-    const { status, body } = toApiError(new AstraError('task.not_found', 'no such task'), 'req-1');
+  it('maps an GenieError to its code and status', () => {
+    const { status, body } = toApiError(new GenieError('task.not_found', 'no such task'), 'req-1');
     expect(status).toBe(404);
     expect(body.error.code).toBe('task.not_found');
     expect(body.error.request_id).toBe('req-1');

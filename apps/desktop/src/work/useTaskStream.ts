@@ -1,13 +1,13 @@
 /**
  * タスクの進行を購読する。UI/UX §6、実装仕様 §7.3。
  *
- * 接続の面倒（再接続・欠番・重複）は `@astra/api-client` が見る。
+ * 接続の面倒（再接続・欠番・重複）は `@genie/api-client` が見る。
  * ここは受け取ったイベントを view へ畳み込むだけにして、
  * 画面のコードに再接続のロジックを持ち込まない。
  */
 import { useEffect, useState } from 'react';
-import type { AstraClient } from '@astra/api-client';
-import type { Task } from '@astra/contracts';
+import type { GenieClient } from '@genie/api-client';
+import type { Task } from '@genie/contracts';
 import { applyEvent, emptyWorkView, isTerminal, seedWorkView, type WorkView } from './workView.js';
 
 export interface TaskStreamState {
@@ -17,7 +17,7 @@ export interface TaskStreamState {
 }
 
 export function useTaskStream(
-  client: AstraClient | null,
+  client: GenieClient | null,
   taskId: string | null,
   /** 一覧が持っている行。stream が何も流さない（終わった仕事）ときの種。 */
   seed: Task | null = null,

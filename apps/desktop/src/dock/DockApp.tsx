@@ -11,8 +11,8 @@ import {
   type MutableRefObject,
   type ReactElement,
 } from 'react';
-import { AstraClient } from '@astra/api-client';
-import type { ApprovalId } from '@astra/contracts';
+import { GenieClient } from '@genie/api-client';
+import type { ApprovalId } from '@genie/contracts';
 import { ThemeProvider } from '../state/ThemeProvider.js';
 import { SessionProvider, useSession } from '../state/SessionProvider.js';
 import { useTaskStream } from '../work/useTaskStream.js';
@@ -28,7 +28,7 @@ import type { ContextReferent, DockConversation } from './useDockMachine.js';
 import './dock.css';
 
 function useConversation(
-  client: AstraClient | null,
+  client: GenieClient | null,
   conversationId: MutableRefObject<string | null>,
   consumeVoiceTurn: () => boolean,
   onTaskStarted: (taskId: string) => void,

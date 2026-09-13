@@ -1,0 +1,26 @@
+# Consumer journeys — 2026-09-13
+
+## What is implemented
+
+Home has a collapsed movie/travel/delivery section. Direct personal requests open the matching native preparation sheet before any gateway/model call. Each sheet provides editable conditions, validation, an explicit copy action and a fixed official merchant URL. Closing/reopening during the same app session preserves separate drafts.
+
+Travel supports a read-only itinerary draft with the selected model and a separate live-research task. Both use fixed task kinds so a quoted “ホテルを予約して” in the request memo cannot accidentally select an external-action workflow. Drafts and research results use the existing persistent Work document and recovery path.
+
+There is **no automatic booking/order/checkout adapter**. Opening a merchant URL does not prefill conditions, reserve inventory, spend money, or verify an order. The UI remains unconfirmed. Addresses and payment details are entered at the official service, not collected by these forms. See [scope and remaining work](../../CONSUMER_JOURNEYS.md).
+
+## Tests and observations
+
+- Seven native unit tests cover JP/EN routing, product-development requests, existing bookings/cancellation, computer-vs-food ambiguity, missing fields, invalid budgets, URL allowlist, read-only task modes, escaped request data and draft reopening.
+- Worker suite: **190 passed**. New tests prevent text-only local/API models from fabricating WebSearch results, verify the real CLI tool route, reject implicit activation of excluded paid providers, and detect unrequested weekdays/unverified costs in itinerary drafts.
+- `pnpm typecheck`: passed.
+- Six native sheet screenshots (620×680 points; movie/travel/delivery, light/dark), plus four Home captures at the existing 940/1162-point layout sizes. Geometry is in `docs/golden-screenshots/consumer-journeys/geometry.json`. Sheet actions remain outside the scrollable fields; source forms can scroll without losing their primary controls.
+- Local model E2E: native request → gateway → actual local model → 1,000-character itinerary → local Work persistence → close/reopen the database in the same process → identical exported Markdown. This fixture did not restart the app process. The fixed drafting task accepted a memo containing “ホテルを予約して” without running any booking tool. The supplied travel conditions were fictitious.
+- The first live result had invented weekdays and inconsistent cost ranges. It was **not accepted as quality evidence**. After tightening the draft instructions and adding the output checks, the final result retained the supplied dates/people/80,000-yen total budget, omitted weekdays and unverified prices, and marked current information/availability unconfirmed. The final fixture is [itinerary-fixture.md](itinerary-fixture.md). It is a planning draft, not verified travel advice or a reservation.
+- Preparation, rendering and memo-construction tests did not use a model. Live draft tests used the already configured local model, with no external model API charges. No merchant account, home address, real booking, order, payment or test mail was submitted.
+- Computer Use with the signed candidate: opened all three Home entries, entered Japanese conditions, verified ordinary key input and Japanese paste, closed/reopened the movie sheet with its fields intact, and submitted “マクドナルドを家に届けて” from the Home composer to the delivery preparation sheet. No AI task was needed for that routing. The three official-site buttons opened the real TOHO, McDelivery and Booking.com pages in the system browser; the Genie sheet continued to say unconfirmed and that fields were not automatically entered. Merchant login and checkout were not exercised.
+
+## Verification notes
+
+The first whole-product run failed because the recording AI fixture did not have the configured local host identity. A temporary token for that existing host fixed the fixture; an expired token was renewed before the final run. A later run exposed excess explanatory copy; the consumer copy and one existing advanced Connections sentence were shortened without relaxing the UI gate. Focus checks passed individually but the passive-focus test failed intermittently during the full suite, even after the old installed app instance was closed. Its nested `CFRunLoop` wait was replaced with an asynchronous wait, following the existing Home focus test, so normal NSApplication activation events can be processed. Every original focus assertion remains; no retry or skipped failure was added. The updated individual test passed and the whole suite was rerun. Temporary credentials are not committed.
+
+Final `./scripts/verify-all.sh`: **VERIFY_ALL_OK**, including 151 native unit tests, real recording/recovery journeys, golden comparisons and both focus checks. The run used the signed candidate built from the current source and the existing local host, with temporary test credentials. The script's explicit environment-dependent skips remain skips (for example, this run's invocation focus measurement); this does not establish automatic checkout, independent visual review, Microsoft production OAuth, or release=go for the wider product. The computer-use observations above were made against the same-source signed candidate before packaging the normal versioned app.

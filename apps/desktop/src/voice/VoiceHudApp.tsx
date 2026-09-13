@@ -2,7 +2,7 @@
 import { useEffect, type ReactElement } from 'react';
 import { ThemeProvider } from '../state/ThemeProvider.js';
 import { LiveWaveform } from '../vendor/deepgram-ui/LiveWaveform.js';
-import { AstraOrb, useAccentHex } from './AstraOrb.js';
+import { GenieOrb, useAccentHex } from './GenieOrb.js';
 import { useVoiceRuntime, type VoiceMode } from './voiceRuntime.js';
 import { voiceDemoFrom } from './demo.js';
 import './voice-hud.css';
@@ -16,13 +16,13 @@ function labelFor(mode: VoiceMode): string {
     case 'thinking':
       return '考えています';
     case 'speaking':
-      return 'Astra が話しています';
+      return 'Genie が話しています';
     case 'interrupted':
       return '割り込みました';
     case 'error':
       return '音声を続けられません';
     case 'idle':
-      return 'Astra';
+      return 'Genie';
   }
 }
 
@@ -51,7 +51,7 @@ function VoiceHud(): ReactElement {
 
   return (
     <main className="astra-voice-hud" data-astra-voice-state={runtime.mode}>
-      <AstraOrb
+      <GenieOrb
         mode={runtime.mode}
         size={132}
         getInputVolume={runtime.inputLevel}

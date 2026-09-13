@@ -5,9 +5,9 @@
  * 名乗る・借りる・延ばす・返す・途中を残す・戻す、だけ。
  */
 import { z } from 'zod';
-import { AstraError } from '@astra/contracts';
-import type { AgentHostService, HostBridge } from '@astra/service-agent-host';
-import type { TaskService } from '@astra/service-task';
+import { GenieError } from '@genie/contracts';
+import type { AgentHostService, HostBridge } from '@genie/service-agent-host';
+import type { TaskService } from '@genie/service-task';
 import type { App } from '../fastify.js';
 import { requirePrincipal } from '../auth/middleware.js';
 
@@ -124,7 +124,7 @@ export function registerAgentHostRoutes(app: App, deps: AgentHostRouteDeps): voi
     await deps.tasks.get(principal.tenantId, request.params.taskId);
     const checkpoint = await deps.hosts.lastCheckpoint(principal.tenantId, request.params.taskId);
     // 無いことを空の checkpoint にしない（「0 まで進んだ」と読まれる）
-    if (!checkpoint) throw new AstraError('common.not_found', 'no checkpoint yet');
+    if (!checkpoint) throw new GenieError('common.not_found', 'no checkpoint yet');
     return checkpoint;
   });
 
@@ -137,7 +137,7 @@ export function registerAgentHostRoutes(app: App, deps: AgentHostRouteDeps): voi
   app.post('/v1/host-steps/claim', async (request, reply) => {
     const principal = requirePrincipal();
     const body = ClaimStepRequest.parse(request.body ?? {});
-    if (!deps.bridge) throw new AstraError('common.not_found', 'the host bridge is not connected');
+    if (!deps.bridge) throw new GenieError('common.not_found', 'the host bridge is not connected');
 
     const next = await deps.bridge.claimNext({
       tenantId: principal.tenantId,
@@ -153,7 +153,7 @@ export function registerAgentHostRoutes(app: App, deps: AgentHostRouteDeps): voi
       const principal = requirePrincipal();
       const body = CompleteStepRequest.parse(request.body ?? {});
       if (!deps.bridge)
-        throw new AstraError('common.not_found', 'the host bridge is not connected');
+        throw new GenieError('common.not_found', 'the host bridge is not connected');
 
       await deps.bridge.complete({
         tenantId: principal.tenantId,
@@ -171,7 +171,7 @@ export function registerAgentHostRoutes(app: App, deps: AgentHostRouteDeps): voi
       const principal = requirePrincipal();
       const body = FailStepRequest.parse(request.body ?? {});
       if (!deps.bridge)
-        throw new AstraError('common.not_found', 'the host bridge is not connected');
+        throw new GenieError('common.not_found', 'the host bridge is not connected');
 
       await deps.bridge.fail({
         tenantId: principal.tenantId,

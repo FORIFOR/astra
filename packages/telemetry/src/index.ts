@@ -1,5 +1,5 @@
 /**
- * @astra/telemetry
+ * @genie/telemetry
  *
  * 構造化ログ / トレース / 監査イベント。実装仕様 §13。
  */

@@ -1,5 +1,5 @@
 {
-  "name": "@astra/mcp",
+  "name": "@genie/mcp",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -21,7 +21,7 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@astra/contracts": "workspace:*",
+    "@genie/contracts": "workspace:*",
     "zod": "catalog:"
   },
   "devDependencies": {

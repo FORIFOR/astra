@@ -3,13 +3,13 @@
  *
  * これまで `ASTRA_GRANTED_SCOPES`（環境変数）だけが許可の出所で、**誰も書いていなかった**
  * （[[declared-not-enforced]] の型）。繋いだ事実は gateway の `connector_connections` に
- * 「実際に許された provider scope」として残っているので、そこから Astra の許可へ写す。
+ * 「実際に許された provider scope」として残っているので、そこから Genie の許可へ写す。
  * 環境変数は harness の上書きとして残す（足す方向にだけ）。
  */
 import {
   permissionsFromGoogleScopes,
   permissionsFromMicrosoftScopes,
-} from '@astra/service-connectors';
+} from '@genie/service-connectors';
 import { CONNECTORS } from './connector-steps.js';
 
 export interface ConnectionRecord {
@@ -20,7 +20,7 @@ export interface ConnectionRecord {
   readonly grantedScopes: readonly string[];
 }
 
-/** 接続記録（生きているものだけ）→ plugin ごとの Astra の許可。 */
+/** 接続記録（生きているものだけ）→ plugin ごとの Genie の許可。 */
 export function grantsFromConnections(
   items: readonly ConnectionRecord[],
 ): Record<string, string[]> {

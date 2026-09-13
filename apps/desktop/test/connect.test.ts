@@ -4,7 +4,7 @@
  * **値をサーバへ送らない**ことと、**片方だけ残さない**ことを見る。
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { looksLikeCredential } from '@astra/contracts';
+import { looksLikeCredential } from '@genie/contracts';
 import { connectConnector, type ConnectorTarget } from '../src/settings/connect.js';
 import { oauthCallback, secrets } from '../src/host/tauri.js';
 

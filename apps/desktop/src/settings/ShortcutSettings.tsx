@@ -17,7 +17,7 @@ import {
   type Binding,
   type Platform,
   type ShortcutId,
-} from '@astra/ui-kit';
+} from '@genie/ui-kit';
 import { shortcuts as bridge, type ShortcutStatus } from '../host/tauri.js';
 import './settings.css';
 

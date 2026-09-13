@@ -5,7 +5,7 @@
  * ルート側が `config.rateLimit` で宣言する。宣言が無いルートは既定の一般 API 制限。
  */
 import type { FastifyRequest } from 'fastify';
-import { AstraError, RATE_LIMITS } from '@astra/contracts';
+import { GenieError, RATE_LIMITS } from '@genie/contracts';
 import type { App } from '../fastify.js';
 import type { RateLimiter } from '../rate-limit/index.js';
 import { currentRequestContext } from '../request-context.js';
@@ -77,7 +77,7 @@ export function registerRateLimit(app: App, limiter: RateLimiter): void {
 
     if (!verdict.allowed) {
       void reply.header('retry-after', String(Math.ceil(verdict.resetAfterMs / 1000)));
-      throw new AstraError('common.rate_limited', `rate limit exceeded for ${rule.bucket}`);
+      throw new GenieError('common.rate_limited', `rate limit exceeded for ${rule.bucket}`);
     }
   });
 }

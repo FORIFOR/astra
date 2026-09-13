@@ -1,0 +1,16 @@
+{
+  "date": "2026-09-13",
+  "sourceBranch": "codex/consumer-journeys",
+  "sourceBase": "da9f8407830006de0de962678e6e9249db1e04a3",
+  "scope": "source candidate with accompanying changes; not a notarized distribution retest",
+  "checks": {
+    "agentHostTests": 192,
+    "agentHostBuild": "passed",
+    "rustCoreTests": 42,
+    "rustCoreBuild": "passed",
+    "swiftTests": 151,
+    "localModelRepeatMinimumChecks": "30/30",
+    "nativeJourney": "one run with manual status refresh; save and app restart restored result"
+  },
+  "externalApiCostUsd": 0
+}

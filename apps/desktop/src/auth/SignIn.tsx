@@ -1,14 +1,14 @@
 /**
  * サインイン。UI/UX §3 Step 1「画面には説明を並べず 1 文」。
  *
- * deepnote-desktop の LoginPage の並び（Google / Apple / LINE）を Astra の identity に繋ぐ。
+ * deepnote-desktop の LoginPage の並び（Google / Apple / LINE）を Genie の identity に繋ぐ。
  * 提供者の有無は **サーバに聞く**（`/v1/auth/providers`）。設定されていない提供者を
  * 「使える」顔で並べて、押した先で失敗させない（§21）。
  *
  * 開発用のメールサインイン（§4.3）は、サーバが `dev_email: true` と言うときだけ出す。
  */
 import { useEffect, useState, type FormEvent, type ReactElement } from 'react';
-import type { IdentityProvider } from '@astra/contracts';
+import type { IdentityProvider } from '@genie/contracts';
 import { useSession } from '../state/SessionProvider.js';
 import { PROVIDER_LABEL, type ProviderEntry } from './providers.js';
 import { AppleIcon, GoogleIcon, LineIcon } from './ProviderIcons.js';

@@ -1,5 +1,5 @@
 /** サーバのエラー契約（実装仕様 §3.7）をクライアント側の例外へ写す。 */
-import { ApiError, AstraError, type ErrorCode } from '@astra/contracts';
+import { ApiError, GenieError, type ErrorCode } from '@genie/contracts';
 
 /**
  * レスポンスから例外を組み立てる。
@@ -8,7 +8,7 @@ import { ApiError, AstraError, type ErrorCode } from '@astra/contracts';
  * 502 の HTML や proxy のエラーページを code として扱うと、
  * クライアント側の分岐が嘘の code で動き出す。
  */
-export async function errorFrom(response: Response): Promise<AstraError> {
+export async function errorFrom(response: Response): Promise<GenieError> {
   let body: unknown;
   try {
     body = await response.json();
@@ -18,14 +18,14 @@ export async function errorFrom(response: Response): Promise<AstraError> {
 
   const parsed = ApiError.safeParse(body);
   if (parsed.success) {
-    return new AstraError(parsed.data.error.code, parsed.data.error.message, {
+    return new GenieError(parsed.data.error.code, parsed.data.error.message, {
       details: parsed.data.error.details,
       retryable: isRetryable(parsed.data.error.code, response.status),
     });
   }
 
   const code: ErrorCode = response.status >= 500 ? 'common.unavailable' : 'common.internal';
-  return new AstraError(code, `unexpected response (${response.status})`, {
+  return new GenieError(code, `unexpected response (${response.status})`, {
     retryable: response.status >= 500,
   });
 }

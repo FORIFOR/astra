@@ -11,27 +11,27 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Writable } from 'node:stream';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { sha256Hex, uuidv7, type TokenResponse } from '@astra/contracts';
-import { isApprovalUsable } from '@astra/policy';
-import { createDb, withSystem, withTenant, type DbHandle } from '@astra/db';
-import { createLogger } from '@astra/telemetry';
-import { FsObjectStore, LibraryService } from '@astra/service-library';
-import { PluginRegistryService } from '@astra/service-plugin-registry';
+import { sha256Hex, uuidv7, type TokenResponse } from '@genie/contracts';
+import { isApprovalUsable } from '@genie/policy';
+import { createDb, withSystem, withTenant, type DbHandle } from '@genie/db';
+import { createLogger } from '@genie/telemetry';
+import { FsObjectStore, LibraryService } from '@genie/service-library';
+import { PluginRegistryService } from '@genie/service-plugin-registry';
 import {
   generatePublisherKeyPair,
   loadManifest,
   parseManifest,
   signManifest,
   type PluginAsset,
-} from '@astra/plugin-sdk';
-import { InMemoryTaskRuntime, TaskService } from '@astra/service-task';
+} from '@genie/plugin-sdk';
+import { InMemoryTaskRuntime, TaskService } from '@genie/service-task';
 import {
   MemoryRateLimiter,
   buildApp,
   JwtTokens,
   loadSigningKeys,
   type App,
-} from '@astra/service-api-gateway';
+} from '@genie/service-api-gateway';
 
 const url = process.env['TEST_DATABASE_URL'];
 const identityUrl = process.env['TEST_IDENTITY_DATABASE_URL'];

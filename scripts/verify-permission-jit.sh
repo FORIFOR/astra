@@ -6,11 +6,11 @@
 # 求めてよいのは、その機能を使い始めたときだけ。
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-SRC="$ROOT/apps/astra-macos/Sources/AstraMac"
+SRC="$ROOT/apps/genie-macos/Sources/GenieMac"
 fail=0
 
 # 起動経路（AppDelegate）で直接求めていないか。
-launch="$SRC/App/AstraAppDelegate.swift"
+launch="$SRC/App/GenieAppDelegate.swift"
 if grep -nE "Permissions\.request|PermissionCenter\.request|CGRequest|AVCaptureDevice\.requestAccess" "$launch" | grep -q .; then
   echo "  起動経路で権限を求めている:" >&2
   grep -nE "Permissions\.request|PermissionCenter\.request|CGRequest" "$launch" | sed 's/^/    /' >&2

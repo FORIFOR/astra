@@ -17,7 +17,7 @@
 
 **Fastify 5** を採用する。
 
-- ロガーは pino で、`@astra/telemetry` がすでに pino を使っているのでそのまま差し込める。
+- ロガーは pino で、`@genie/telemetry` がすでに pino を使っているのでそのまま差し込める。
 - `inject()` があるので、ポートを開かずに実物のルーティング・フック・エラーハンドラを通した
   結合テストが書ける。
 - WebSocket / multipart / SSE の公式プラグインが揃っている。
@@ -39,4 +39,4 @@ multipart まわりで追加の配線が要るため見送った。
 - `loggerInstance` に pino の `Logger` を渡すとインスタンス型のジェネリクスが固定され、
   素の `FastifyInstance` と代入互換でなくなる → `src/fastify.ts` の `App` 別名に統一する
 - フレームワーク固有 API がサービス層へ漏れやすい → ルートハンドラは
-  `@astra/contracts` の型で入出力し、Fastify 型はハンドラ境界の外へ出さない
+  `@genie/contracts` の型で入出力し、Fastify 型はハンドラ境界の外へ出さない

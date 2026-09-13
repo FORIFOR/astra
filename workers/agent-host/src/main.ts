@@ -1,7 +1,8 @@
+import { connectionConfiguration } from './connection-configuration.js';
 /**
  * Local Agent Host の起動口。正本 §4.4。
  *
- *   pnpm --filter @astra/worker-agent-host start
+ *   pnpm --filter @genie/worker-agent-host start
  *
  * **Dock とは別プロセス。**Dock を閉じても、これは動き続ける。
  */
@@ -11,8 +12,8 @@ import { acquireHostInstance } from './instance-lock.js';
 import { homedir } from 'node:os';
 import { resolve } from 'node:path';
 import { runInitialProfile } from './initial-profile.js';
-import { createLogger } from '@astra/telemetry';
-import { credentialRef, connectorProviderConfig, type OauthProvider } from '@astra/oauth';
+import { createLogger } from '@genie/telemetry';
+import { credentialRef, connectorProviderConfig, type OauthProvider } from '@genie/oauth';
 import { LocalAgentHost } from './host.js';
 import { httpTransport } from './transport.js';
 import { keychainFor } from './keychain.js';
@@ -25,7 +26,7 @@ import { ClaudeCodeCli } from './claude-code.js';
 import { LlmRuntime } from './llm-steps.js';
 import { HttpLlmClient } from './http-llm.js';
 import { CompositeRunner } from './runner.js';
-import type { WorkSyncState, LanguageModelKind } from '@astra/contracts';
+import type { WorkSyncState, LanguageModelKind } from '@genie/contracts';
 import { DEFAULT_SYNC_INTERVAL_MS, WorkSyncLoop } from './work-sync.js';
 import {
   grantsFromConnections,
@@ -65,9 +66,9 @@ async function main(): Promise<void> {
   /*
    * 言葉を扱う仕事も端末で。正本 §21、UI/UX §22。
    *
-   * **Astra は共通の API キーを持たない。**利用者が持ち込んだ利用権は
+   * **Genie は共通の API キーを持たない。**利用者が持ち込んだ利用権は
    * 端末の側にあるので、呼ぶのも端末になる。
-   * Claude Code のログインは Claude Code のもので、Astra は読まない。
+   * Claude Code のログインは Claude Code のもので、Genie は読まない。
    */
   const preferredCli = process.env['ASTRA_LLM_CLI'];
   if (preferredCli && !['codex', 'claude_code', 'api', 'local', 'none'].includes(preferredCli))
@@ -262,7 +263,7 @@ async function main(): Promise<void> {
         provider as OauthProvider,
         connectorId,
         scopes,
-        process.env,
+        connectionConfiguration(process.env),
       );
       return config ? { ...config, redirectUri: redirectUri } : null;
     },
@@ -305,7 +306,9 @@ async function main(): Promise<void> {
   });
   let initialBusy = false;
   const initialTimer = setInterval(() => {
-    if (initialBusy || process.env['ASTRA_WORK_SYNC'] === 'off') return;
+    // Initial profiling is explicitly requested in Connections. Disabling
+    // continuous background sync must not strand that user-requested job.
+    if (initialBusy) return;
     initialBusy = true;
     void runInitialProfile({ cloud, connectors: runtime, refreshGrants })
       .catch(() => logger.warn('initial profile could not finish; the lease will allow recovery'))

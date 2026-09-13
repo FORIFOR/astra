@@ -1,0 +1,2 @@
+There has been no change in the accessibility tree for Window: "以下の営業会議メモからMarkdownを作ってください".
+The focused UI element is 9 標準ウインドウ 以下の営業会議メモからMarkdownを作ってください, Secondary Actions: Raise

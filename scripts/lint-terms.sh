@@ -8,7 +8,7 @@
 # 変える先の語はここに書く。`command:` と `case "…":` は AI への指示名なので対象外。
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-SRC="$ROOT/apps/astra-macos/Sources/AstraMac"
+SRC="$ROOT/apps/genie-macos/Sources/GenieMac"
 fail=0
 check() {   # $1 = 使わない語, $2 = 使う語
   hits="$(grep -rn "\"[^\"]*$1[^\"]*\"" "$SRC" \

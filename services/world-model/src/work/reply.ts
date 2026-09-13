@@ -14,7 +14,7 @@ import type {
   ReplyTarget,
   WorkArtifact,
   WorkContext,
-} from '@astra/contracts';
+} from '@genie/contracts';
 import { cleanTitle, clusterProjects, titleTokens } from './graph.js';
 
 /** 名指しの一致（0.6）以上で採用。それ未満は「分からない」。 */

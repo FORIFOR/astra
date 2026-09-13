@@ -1,13 +1,13 @@
 /**
  * 提供者サインインの結合テスト。実装仕様 §4.3。
- *   ./infra/db/with-test-db.sh pnpm --filter @astra/service-api-gateway test
+ *   ./infra/db/with-test-db.sh pnpm --filter @genie/service-api-gateway test
  *
  * 提供者の鍵は持たないので、検証は差し替える。ここで見るのは **結び方**:
  * 同じ主体は同じ user、確認済みメールは既存 user へ、未確認メールは結ばない。
  */
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { type ApiError, type MeResponse, type TokenResponse, uuidv7 } from '@astra/contracts';
-import { createDb, type DbHandle } from '@astra/db';
+import { type ApiError, type MeResponse, type TokenResponse, uuidv7 } from '@genie/contracts';
+import { createDb, type DbHandle } from '@genie/db';
 import { makeTestApp, makeTokens, testDbConfig, type TestApp } from './support.js';
 import type { JwtTokens } from '../src/auth/tokens.js';
 import type { App } from '../src/fastify.js';
@@ -27,8 +27,8 @@ class StubVerifier implements IdentityVerifier {
   async verify(request: { id_token: string }): Promise<VerifiedIdentity> {
     const found = this.identities.get(request.id_token);
     if (!found) {
-      const { AstraError } = await import('@astra/contracts');
-      throw new AstraError('auth.idp_rejected', 'unknown stub token');
+      const { GenieError } = await import('@genie/contracts');
+      throw new GenieError('auth.idp_rejected', 'unknown stub token');
     }
     return found;
   }

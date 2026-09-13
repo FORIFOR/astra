@@ -1,5 +1,5 @@
 /**
- * @astra/stt
+ * @genie/stt
  *
  * Task Dock の音声入力。正本 §11.1。
  * **音を勝手にクラウドへ出さない**のが、この package の存在理由。

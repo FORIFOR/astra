@@ -1,8 +1,8 @@
 [package]
-name = "astra-desktop"
-version = "0.1.2"
-description = "Astra desktop client (Local Control Plane)"
-authors = ["Astra"]
+name = "genie-desktop"
+version = "0.1.3"
+description = "Genie desktop client (Local Control Plane)"
+authors = ["Genie"]
 license = ""
 repository = ""
 edition = "2021"
@@ -11,7 +11,7 @@ rust-version = "1.77.2"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [lib]
-name = "astra_desktop_lib"
+name = "genie_desktop_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
@@ -36,4 +36,4 @@ dirs = "5"
 tungstenite = { version = "0.24", features = ["native-tls"] }
 base64 = "0.22"
 # OS 非依存の共通ロジック（会議の断片モデル・wire 変換・回復）。二重実装を避ける（§8）
-astra-core = { path = "../../../core/astra-core" }
+genie-core = { path = "../../../core/genie-core" }

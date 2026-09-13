@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
-# macOS の録音 E2E（Swift → astra-core → 実ディスク断片）。ライブ mic ではなく合成音源で
+# macOS の録音 E2E（Swift → genie-core → 実ディスク断片）。ライブ mic ではなく合成音源で
 # 断片が実際に書かれ、回復候補に出ることを確かめる（headless で再現可能）。
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 if [[ -x "${ASTRA_RECORD_BIN:-}" ]]; then
   BIN="$ASTRA_RECORD_BIN"
-elif [[ -x "$ROOT/dist/Astra.app/Contents/MacOS/AstraMac" ]]; then
-  BIN="$ROOT/dist/Astra.app/Contents/MacOS/AstraMac"
-elif [[ -x "$ROOT/apps/astra-macos/.build/Astra.app/Contents/MacOS/AstraMac" ]]; then
-  BIN="$ROOT/apps/astra-macos/.build/Astra.app/Contents/MacOS/AstraMac"
+elif [[ -x "$ROOT/dist/Genie.app/Contents/MacOS/GenieMac" ]]; then
+  BIN="$ROOT/dist/Genie.app/Contents/MacOS/GenieMac"
+elif [[ -x "$ROOT/apps/genie-macos/.build/Genie.app/Contents/MacOS/GenieMac" ]]; then
+  BIN="$ROOT/apps/genie-macos/.build/Genie.app/Contents/MacOS/GenieMac"
 else
-  cd "$ROOT/apps/astra-macos"
+  cd "$ROOT/apps/genie-macos"
   swift build >/dev/null
-  BIN="$(swift build --show-bin-path)/AstraMac"
+  BIN="$(swift build --show-bin-path)/GenieMac"
 fi
-APP="${BIN%/Contents/MacOS/AstraMac}"
+APP="${BIN%/Contents/MacOS/GenieMac}"
 if [[ "$APP" == "$BIN" || ! -f "$APP/Contents/Info.plist" ]]; then
   echo "AUTOMATION_MISSING: E2E-001 requires a signed app launched through LaunchServices" >&2
   exit 2
@@ -188,7 +188,7 @@ for appearance in light dark; do
   [[ "$OUTS" == *SELFTEST_OK* ]] || { echo "$OUTS" >&2; echo "FAIL: Session UX ($appearance)" >&2; exit 1; }
 done
 
-# Task Dock の 8 状態。fixture ではなく **AstraStateStore の実遷移**で撮り、
+# Task Dock の 8 状態。fixture ではなく **GenieStateStore の実遷移**で撮り、
 # 各状態の実寸・top anchor 固定・窓が増えていないことまで見る。
 DOCK_DIR="${ASTRA_DOCK_DIR:-/tmp/astra-dock}"
 for appearance in light dark; do

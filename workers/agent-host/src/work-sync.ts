@@ -18,7 +18,7 @@ import {
   type WorkSource,
   type WorkSyncAttempt,
   type WorkSyncState,
-} from '@astra/contracts';
+} from '@genie/contracts';
 import {
   ConnectorError,
   fromGmail,
@@ -27,7 +27,7 @@ import {
   fromOutlookMail,
   fromTodo,
   type NormalizeContext,
-} from '@astra/service-connectors';
+} from '@genie/service-connectors';
 import type { ConnectorRuntime } from './connector-steps.js';
 import type { StepRunner } from './step-loop.js';
 

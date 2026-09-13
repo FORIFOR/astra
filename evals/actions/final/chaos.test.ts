@@ -9,15 +9,15 @@
  *   - 二度実行しない
  */
 import { describe, expect, it } from 'vitest';
-import { GmailConnector, GoogleCalendarConnector, ConnectorError } from '@astra/service-connectors';
-import { ClaudeCodeCli, LlmRuntime } from '@astra/worker-agent-host';
+import { GmailConnector, GoogleCalendarConnector, ConnectorError } from '@genie/service-connectors';
+import { ClaudeCodeCli, LlmRuntime } from '@genie/worker-agent-host';
 import {
   BraveSearchProvider,
   HostSearchProvider,
   HostLanguageModel,
-} from '@astra/service-research';
-import { ImagenGenerator } from '@astra/service-agent-runtime';
-import { GoogleTtsProvider } from '@astra/service-meeting';
+} from '@genie/service-research';
+import { ImagenGenerator } from '@genie/service-agent-runtime';
+import { GoogleTtsProvider } from '@genie/service-meeting';
 
 const ALL_MAIL = ['email.read', 'email.draft', 'email.modify', 'email.send'];
 

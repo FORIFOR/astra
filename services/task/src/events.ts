@@ -5,8 +5,8 @@
  * 取りこぼし検知に使われるので緩めない。
  */
 import { sql } from 'kysely';
-import { EventEnvelope, uuidv7, type EventType, type StreamKind } from '@astra/contracts';
-import type { ScopedDb } from '@astra/db';
+import { EventEnvelope, uuidv7, type EventType, type StreamKind } from '@genie/contracts';
+import type { ScopedDb } from '@genie/db';
 
 /** イベントを購読者へ配る先。Redis pub/sub か、テストの no-op。 */
 export interface EventPublisher {

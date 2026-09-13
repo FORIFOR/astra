@@ -1,4 +1,4 @@
-//! Astra desktop の Local Control Plane。正本 §16.1。
+//! Genie desktop の Local Control Plane。正本 §16.1。
 
 pub mod audio;
 pub mod capability;

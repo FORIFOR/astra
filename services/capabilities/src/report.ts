@@ -9,15 +9,15 @@ import {
   type CapabilityInput,
   type CapabilityReport,
   type ExternalCapability,
-} from '@astra/contracts';
+} from '@genie/contracts';
 import {
   DeterministicImageGenerator,
   imageCapability,
   videoCapability,
-} from '@astra/service-agent-runtime';
-import { configuredProviders, unconfiguredProviders, type OauthEnv } from '@astra/oauth';
-import type { MeetingProviders } from '@astra/service-meeting';
-import { SEARCH_SETTINGS, type ResearchProviders } from '@astra/service-research';
+} from '@genie/service-agent-runtime';
+import { configuredProviders, unconfiguredProviders, type OauthEnv } from '@genie/oauth';
+import type { MeetingProviders } from '@genie/service-meeting';
+import { SEARCH_SETTINGS, type ResearchProviders } from '@genie/service-research';
 
 /**
  * 名前を持たない提供者もある。無ければ既定の呼び名を使う。
@@ -123,7 +123,7 @@ export function capabilityReport(input: {
     /*
      * 言語モデル。正本 §21、UI/UX §22。
      *
-     * **Astra が共通のキーを持っていないことは、欠落ではない。**
+     * **Genie が共通のキーを持っていないことは、欠落ではない。**
      * 端末で呼ぶ構成（BYOK / Claude Code）は本物であって、代役ではない。
      * `isStandIn` は提供者自身が答える — ここで環境変数の有無から
      * 推し量ると、端末で動いている構成を「未設定」と呼ぶことになる。

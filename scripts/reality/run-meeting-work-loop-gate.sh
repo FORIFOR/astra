@@ -15,9 +15,9 @@ row() { ROWS+=("$1|$2|$3"); case "$2" in ''|FAIL*) fail=1;; esac; }
 run() { local name="$1"; shift; "$@" >"$OUT/$name.log" 2>&1; echo $?; }
 ok() { [ "$1" = 0 ] && echo PASS || { fail=1; echo FAIL; }; }
 zero() { [ "$1" = 0 ] && echo 0 || { fail=1; echo FAIL; }; }
-pure=$(run world-model pnpm --filter @astra/service-world-model exec vitest run test/meeting-loop.test.ts)
-db=$(run world-db ./infra/db/with-test-db.sh pnpm --filter @astra/service-world-model exec vitest run test/work.db.test.ts)
-mt=$(run meeting ./infra/db/with-test-db.sh pnpm --filter @astra/service-meeting exec vitest run test/service.db.test.ts)
+pure=$(run world-model pnpm --filter @genie/service-world-model exec vitest run test/meeting-loop.test.ts)
+db=$(run world-db ./infra/db/with-test-db.sh pnpm --filter @genie/service-world-model exec vitest run test/work.db.test.ts)
+mt=$(run meeting ./infra/db/with-test-db.sh pnpm --filter @genie/service-meeting exec vitest run test/service.db.test.ts)
 # $(ok ...) 内の fail=1 は subshell に閉じる。終了状態は親で集約する。
 for rc in "$pure" "$db" "$mt"; do [ "$rc" = 0 ] || fail=1; done
 row "real meeting bundle finalized" "$(ok "$mt")" "meeting.bundle が実 DB の segment から bundle を作り sink へ渡す"

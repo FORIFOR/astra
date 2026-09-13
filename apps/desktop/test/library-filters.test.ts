@@ -1,6 +1,6 @@
 /** Library の絞り込みと来歴（UI/UX §10.1・§10.2）。 */
 import { describe, expect, it } from 'vitest';
-import type { Artifact } from '@astra/contracts';
+import type { Artifact } from '@genie/contracts';
 import {
   EMPTY_FILTERS,
   activeFilterCount,

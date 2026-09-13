@@ -1,4 +1,4 @@
-# Astra macOS UI 最終仕様 / Visual Gate（2026-08-29）
+# Genie macOS UI 最終仕様 / Visual Gate（2026-08-29）
 
 実機（署名 `.app` / debug build）を起動して撮影し、**画面を見て**評価・修正した結果を固定する。
 「コードにある」ではなく「実機でこう出る」を正とする。
@@ -8,7 +8,7 @@
 `docs/golden-screenshots/` に 9 面を保存。再取得は次のコマンド（実アプリが自分で撮る）:
 
 ```bash
-apps/astra-macos/.build/debug/AstraMac --selftest shots /tmp/astra-shots
+apps/genie-macos/.build/debug/GenieMac --selftest shots /tmp/astra-shots
 ```
 
 | #   | ファイル                      | 画面                    | geometry（実測）                         |
@@ -32,7 +32,7 @@ apps/astra-macos/.build/debug/AstraMac --selftest shots /tmp/astra-shots
 ### Golden 差分
 
 ```bash
-apps/astra-macos/.build/debug/AstraMac --selftest golden docs/golden-screenshots /tmp/astra-shots-light
+apps/genie-macos/.build/debug/GenieMac --selftest golden docs/golden-screenshots /tmp/astra-shots-light
 ```
 
 撮り直した画面を **committed の golden と画素で**比べる（許容 0.5%、200 点角のグレースケール）。
@@ -45,7 +45,7 @@ Home は挨拶が時刻で変わり、Apps は接続状態で変わるので入�
 ### hover / focus / pressed
 
 ```bash
-apps/astra-macos/.build/debug/AstraMac --selftest states /tmp/astra-states [dark]
+apps/genie-macos/.build/debug/GenieMac --selftest states /tmp/astra-states [dark]
 ```
 
 Visual Gate はマウスを動かせないので、状態を差し込んで撮り **neutral との画素差**で判定する。
@@ -79,7 +79,7 @@ focus リングは **Tab / 矢印を押してから**出す（`KeyboardNavigatio
 ```text
 画面上端 ──────────────────────────────  上辺は角丸を付けず、縁に接する
         ┌──────────────────┐            （丸めた瞬間「上に置いたカード」になる）
-        │ ● Astra    ⌥ space│            下の 2 角だけ丸い。くびれは作らない
+        │ ● Genie    ⌥ space│            下の 2 角だけ丸い。くびれは作らない
         └──────────────────┘
 ```
 
@@ -95,7 +95,7 @@ focus リングは **Tab / 矢印を押してから**出す（`KeyboardNavigatio
 | 7 Meeting         | 460×56 / 196 | 既定は 1 行。5 面のうち**開くのは 1 枚だけ**           |
 | 8 Full Workspace  | —            | Dock は静かなまま、Workspace が開く                    |
 
-- **ダイナミックレンジ**: idle 220pt → agent 680pt（3.1 倍）。Astra を menu bar utility に見せない。
+- **ダイナミックレンジ**: idle 220pt → agent 680pt（3.1 倍）。Genie を menu bar utility に見せない。
   「小さい＝洗練」ではなく「必要なときだけ堂々と大きくなる＝洗練」
 - 文字は Dock 主テキスト 16pt / 発話 18pt / 行 15pt / メタ 13pt（`dockType` トークン）
 - **top anchor 固定**: `screen.frame.maxY - height`。高さが変わっても上辺は動かず下へ伸びる
@@ -106,11 +106,11 @@ focus リングは **Tab / 矢印を押してから**出す（`KeyboardNavigatio
 ### Task Dock の Visual Gate
 
 ```bash
-apps/astra-macos/.build/debug/AstraMac --selftest dock8 /tmp/astra-dock [dark]
-apps/astra-macos/.build/debug/AstraMac --selftest dockanim
+apps/genie-macos/.build/debug/GenieMac --selftest dock8 /tmp/astra-dock [dark]
+apps/genie-macos/.build/debug/GenieMac --selftest dockanim
 ```
 
-`dock8` は fixture を並べない。`AstraStateStore` を**実際に遷移させて**撮る
+`dock8` は fixture を並べない。`GenieStateStore` を**実際に遷移させて**撮る
 （`requireConfirmation` が Dock を展開し、`startTask` が timeline にし、
 `meetingStarted` が会議バーにする）。検査するのは:
 
@@ -126,7 +126,7 @@ apps/astra-macos/.build/debug/AstraMac --selftest dockanim
 （実測 185–196ms / 上辺の値は 1 種類）。
 
 ```bash
-apps/astra-macos/.build/debug/AstraMac --selftest surfacemotion /tmp/astra-motion
+apps/genie-macos/.build/debug/GenieMac --selftest surfacemotion /tmp/astra-motion
 ```
 
 `surfacemotion` は J-B の Meeting → Notes → Workspace を、状態を変えた瞬間から 60fps で
@@ -182,12 +182,12 @@ golden は `docs/golden-screenshots/task-dock/`（light）と `.../dark/`。
 6. **起動後にアプリへ触れる入口が無い**: `.accessory` 起動で Dock アイコンも
    メニューバーも無く、Main / 設定 / 終了へ到達できなかった（`open --args` は
    起動済みプロセスには渡らないため実質行き止まり）→ メニューバーに status item を追加
-   （Astra を開く / 会議を録音・停止 / ショートカットの表示 / 設定 / 終了）
+   （Genie を開く / 会議を録音・停止 / ショートカットの表示 / 設定 / 終了）
 7. **dark で本文が読めない**: 面は固定の白のまま、文字は `.primary`（dark では白）だったので
    白 on 白になっていた（実機の dark 撮影で判明）→ 面・カード・罫線・薄塗りを
    `Color.workspaceSurface(dark)` / `cardSurface` / `hairline` / `subtleFill` に集約し外観へ追従
 8. **触っても何も返らない**: hover / focus / pressed が**アプリ全体で 0 箇所**だった。
-   静止画では整って見えるが、押せるものが押せると分からない → `AstraControlStyle` に集約し
+   静止画では整って見えるが、押せるものが押せると分からない → `GenieControlStyle` に集約し
    tokens（`interaction`）から差分量を取る
 9. **窓を開いた瞬間に青い focus リング**: `.focusable(true)` を付けたことで SwiftUI 標準の
    focus effect が出ていた（実機の hover 撮影で判明）。macOS はマウスで開いた直後にリングを見せない
@@ -211,7 +211,7 @@ golden は `docs/golden-screenshots/task-dock/`（light）と `.../dark/`。
     画面は「録音中 / 04:21 / 波形」なのに中身は無音——会議が終わってから気づく壊れ方だった
     → `PermissionBanner`（理由＋設定への導線）を出し、見出しを「録音中（音声なし）」、
     波形を平らに、録音ドットを灰色にして**画面が嘘をつかない**ようにする
-18. **戻せない操作の確認が 0 箇所**: 録音中に「Astra を終了」を押すと会議が黙って消え、
+18. **戻せない操作の確認が 0 箇所**: 録音中に「Genie を終了」を押すと会議が黙って消え、
     Apps の「切断」は一度の誤クリックで繋ぎ直しになった
     → `Confirm.destructive` を 1 か所に置き、`applicationShouldTerminate` と切断に適用。
     既定のボタンは安全側（録音を続ける / やめる）

@@ -5,13 +5,13 @@
  * activity は何度でも再実行され得るので、途中経過をメモリに置くと壊れる。
  */
 import {
-  AstraError,
+  GenieError,
   canonicalSha256,
   countContradictionPairs,
   uuidv7,
   type EvidenceLedger,
-} from '@astra/contracts';
-import { withTenant, type DbHandle, type ScopedDb } from '@astra/db';
+} from '@genie/contracts';
+import { withTenant, type DbHandle, type ScopedDb } from '@genie/db';
 import {
   candidateFrom,
   confidenceOf,
@@ -292,7 +292,7 @@ export class ResearchService {
 
   async #require(tenantId: string, taskId: string): Promise<RunRow> {
     const row = await withTenant(this.#db, tenantId, (tx) => this.#find(tx, taskId));
-    if (!row) throw new AstraError('common.not_found', `no research run for task ${taskId}`);
+    if (!row) throw new GenieError('common.not_found', `no research run for task ${taskId}`);
     return row;
   }
 

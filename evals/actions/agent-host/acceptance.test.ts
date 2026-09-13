@@ -10,9 +10,9 @@
  *   - 端末が落ちても FAILED にしない
  */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { HOST_OFFLINE_AFTER_MS, uuidv7, type Task, type TokenResponse } from '@astra/contracts';
-import { withTenant } from '@astra/db';
-import { AgentHostService } from '@astra/service-agent-host';
+import { HOST_OFFLINE_AFTER_MS, uuidv7, type Task, type TokenResponse } from '@genie/contracts';
+import { withTenant } from '@genie/db';
+import { AgentHostService } from '@genie/service-agent-host';
 import {
   makeTestApp,
   makeTokens,

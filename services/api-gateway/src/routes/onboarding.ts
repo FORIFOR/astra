@@ -7,17 +7,17 @@
  *   - **終わったと言うには、実際に 1 つ終わらせている**（Step 7）
  */
 import {
-  AstraError,
+  GenieError,
   UpdateOnboardingRequest,
   permissionsFor,
   recommendationsFor,
   type InterestArea,
   type OnboardingState,
-} from '@astra/contracts';
-import { withTenant } from '@astra/db';
-import type { DbHandle } from '@astra/db';
-import type { PluginRegistryService } from '@astra/service-plugin-registry';
-import type { TaskService } from '@astra/service-task';
+} from '@genie/contracts';
+import { withTenant } from '@genie/db';
+import type { DbHandle } from '@genie/db';
+import type { PluginRegistryService } from '@genie/service-plugin-registry';
+import type { TaskService } from '@genie/service-task';
 import type { App } from '../fastify.js';
 import { requirePrincipal } from '../auth/middleware.js';
 
@@ -63,7 +63,7 @@ export function registerOnboardingRoutes(app: App, deps: OnboardingRouteDeps): v
      */
     const nextTaskId = body.first_task_id ?? current.first_task_id;
     if (body.step === 'done' && !nextTaskId) {
-      throw new AstraError(
+      throw new GenieError(
         'common.validation_failed',
         'onboarding is not done until one real task has finished',
       );

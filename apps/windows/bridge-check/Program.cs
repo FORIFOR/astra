@@ -1,23 +1,23 @@
-// Windows の C# CoreBridge（apps/windows/Astra/CoreBridge/AstraCore.cs と同一）を P/Invoke で
-// 実 libastra_core に繋ぎ、正しい結果が返ることを検証する。**どのホストでも dotnet + core の
+// Windows の C# CoreBridge（apps/windows/Genie/CoreBridge/GenieCore.cs と同一）を P/Invoke で
+// 実 libgenie_core に繋ぎ、正しい結果が返ることを検証する。**どのホストでも dotnet + core の
 // 共有ライブラリがあれば走る**ので、Windows 実機が無くても C# ブリッジの動作を担保できる。
-using Astra;
+using Genie;
 
-string version = AstraCore.Version;
+string version = GenieCore.Version;
 if (string.IsNullOrEmpty(version)) { Console.WriteLine("CS_FAIL version empty"); Environment.Exit(2); }
 
 // RFC 7636 PKCE テストベクタ（core と一致するはず）。
-string chal = AstraCore.PkceChallenge("dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk");
+string chal = GenieCore.PkceChallenge("dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk");
 if (chal != "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM") { Console.WriteLine($"CS_FAIL pkce={chal}"); Environment.Exit(3); }
 
-string url = AstraCore.AuthorizeUrl("google", "cid-1", "http://127.0.0.1:8123/cb",
+string url = GenieCore.AuthorizeUrl("google", "cid-1", "http://127.0.0.1:8123/cb",
     new[] { "openid", "email" }, "st-1", chal);
 if (!url.Contains("code_challenge_method=S256") || !url.Contains("state=st-1")) { Console.WriteLine($"CS_FAIL url={url}"); Environment.Exit(4); }
 
-string cb = AstraCore.ParseCallback("/callback?code=abc&state=xyz");
+string cb = GenieCore.ParseCallback("/callback?code=abc&state=xyz");
 if (!cb.Contains("\"code\":\"abc\"") || !cb.Contains("\"state\":\"xyz\"")) { Console.WriteLine($"CS_FAIL callback={cb}"); Environment.Exit(5); }
 
-string elapsed = AstraCore.FormatElapsed(65000);
+string elapsed = GenieCore.FormatElapsed(65000);
 if (elapsed != "01:05") { Console.WriteLine($"CS_FAIL elapsed={elapsed}"); Environment.Exit(6); }
 
 // Recording Workspace の形（凹み Bezier）が共有 golden fixture（tokens 由来）と一致するか。
@@ -43,9 +43,9 @@ string d = string.Join(" ", new[] {
     $"Q 0,0 {N(rad)},0",
     "Z",
 });
-// 実 gateway に届くなら、Windows の session/data ロジック(AstraSession)を C# から往復検証する。
+// 実 gateway に届くなら、Windows の session/data ロジック(GenieSession)を C# から往復検証する。
 string apiBase = Environment.GetEnvironmentVariable("ASTRA_GATEWAY_URL") ?? "http://127.0.0.1:3000";
-var session = new AstraSession(apiBase);
+var session = new GenieSession(apiBase);
 if (session.Reachable()) {
     if (!session.SignIn($"cswin-{Environment.ProcessId}@astra.local", "CSWin")) { Console.WriteLine("CS_FAIL session sign-in"); Environment.Exit(10); }
     if (session.RefreshToken.Length == 0) { Console.WriteLine("CS_FAIL no refresh token"); Environment.Exit(11); }
@@ -53,7 +53,7 @@ if (session.Reachable()) {
     var lib = session.Library();
     string echo = session.RunEchoTask("cswin");
     if (apps.Length == 0 || echo.Length == 0) { Console.WriteLine($"CS_FAIL gateway apps={apps.Length} echo={echo.Length}"); Environment.Exit(12); }
-    Console.WriteLine($"CS_OK gateway(AstraSession): signedIn apps={apps.Length} library={lib.Length} echoArtifact={echo.Length}bytes");
+    Console.WriteLine($"CS_OK gateway(GenieSession): signedIn apps={apps.Length} library={lib.Length} echoArtifact={echo.Length}bytes");
 } else {
     Console.WriteLine("CS_SKIP gateway: not reachable");
 }

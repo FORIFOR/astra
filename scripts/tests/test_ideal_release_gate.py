@@ -24,7 +24,7 @@ class ReleaseAggregationTests(unittest.TestCase):
                  "user.email=test@example.invalid", "commit", "-qm", "fixture", "--allow-empty"],
                 check=True,
             )
-            binary = root / "apps/astra-macos/.build/debug/AstraMac"
+            binary = root / "apps/genie-macos/.build/debug/GenieMac"
             binary.parent.mkdir(parents=True)
             binary.write_text('''#!/usr/bin/env bash
 case "$2" in

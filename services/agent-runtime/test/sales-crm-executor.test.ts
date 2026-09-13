@@ -7,7 +7,7 @@
  *   - 外から取ってきたふりをしない
  */
 import { describe, expect, it } from 'vitest';
-import type { DomainEntity } from '@astra/contracts';
+import type { DomainEntity } from '@genie/contracts';
 import { salesCrmExecutors } from '../src/sales-crm-executor.js';
 import type { DomainService } from '../src/domain.js';
 

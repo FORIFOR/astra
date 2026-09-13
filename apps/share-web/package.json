@@ -1,5 +1,5 @@
 {
-  "name": "@astra/share-web",
+  "name": "@genie/share-web",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -12,11 +12,11 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@astra/contracts": "workspace:*",
+    "@genie/contracts": "workspace:*",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "@astra/api-client": "workspace:*",
-    "@astra/ui-kit": "workspace:*"
+    "@genie/api-client": "workspace:*",
+    "@genie/ui-kit": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "catalog:",

@@ -8,9 +8,9 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { uuidv7 } from '@astra/contracts';
-import { createDb, withIdentity, type DbHandle } from '@astra/db';
-import { FsObjectStore, LibraryService } from '@astra/service-library';
+import { uuidv7 } from '@genie/contracts';
+import { createDb, withIdentity, type DbHandle } from '@genie/db';
+import { FsObjectStore, LibraryService } from '@genie/service-library';
 import { DeterministicImageGenerator, ImageService, titleFor } from '../src/image.js';
 
 const url = process.env['TEST_DATABASE_URL'];

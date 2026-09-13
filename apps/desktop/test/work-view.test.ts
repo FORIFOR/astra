@@ -5,7 +5,7 @@
  * **待てば戻るものを、失敗として見せない。**
  */
 import { describe, expect, it } from 'vitest';
-import { uuidv7, type EventEnvelope } from '@astra/contracts';
+import { uuidv7, type EventEnvelope } from '@genie/contracts';
 import { applyEvents, emptyWorkView } from '../src/work/workView.js';
 
 const base = {

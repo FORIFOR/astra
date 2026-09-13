@@ -9,14 +9,14 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { parse as parseYaml } from 'yaml';
 import {
-  AstraError,
+  GenieError,
   DashboardSchema,
   EvalFile,
   PolicyDocument,
   WorkflowFile,
   sha256Hex,
   type PluginManifest,
-} from '@astra/contracts';
+} from '@genie/contracts';
 
 export type AssetKind =
   'skill' | 'dashboard' | 'policy' | 'data_extension' | 'workflow' | 'evaluation';
@@ -58,7 +58,7 @@ export async function loadAssets(manifest: PluginManifest, root: string): Promis
     const full = path.resolve(resolvedRoot, entry.path);
     // `..` で外へ出させない。plugin の宣言は信用しない。
     if (full !== resolvedRoot && !full.startsWith(resolvedRoot + path.sep)) {
-      throw new AstraError(
+      throw new GenieError(
         'plugin.manifest_invalid',
         `asset "${entry.path}" escapes the plugin directory`,
       );
@@ -68,13 +68,13 @@ export async function loadAssets(manifest: PluginManifest, root: string): Promis
     try {
       content = await readFile(full);
     } catch {
-      throw new AstraError(
+      throw new GenieError(
         'plugin.manifest_invalid',
         `${manifest.id} declares "${entry.path}" but the file is not there`,
       );
     }
     if (content.byteLength > MAX_ASSET_BYTES) {
-      throw new AstraError(
+      throw new GenieError(
         'plugin.manifest_invalid',
         `asset "${entry.path}" is larger than ${MAX_ASSET_BYTES} bytes`,
       );
@@ -106,12 +106,12 @@ export function validatePolicies(assets: readonly PluginAsset[]): void {
     try {
       document = parseYaml(Buffer.from(asset.content).toString('utf8'));
     } catch {
-      throw new AstraError('plugin.manifest_invalid', `policy "${asset.path}" is not YAML`);
+      throw new GenieError('plugin.manifest_invalid', `policy "${asset.path}" is not YAML`);
     }
 
     const parsed = PolicyDocument.safeParse(document);
     if (!parsed.success) {
-      throw new AstraError(
+      throw new GenieError(
         'plugin.manifest_invalid',
         `policy "${asset.path}" does not use the vocabulary the host can check`,
         {
@@ -139,7 +139,7 @@ export function validateWorkflows(manifest: PluginManifest, assets: readonly Plu
   for (const asset of assets.filter((a) => a.kind === 'workflow')) {
     const parsed = WorkflowFile.safeParse(parseJson(asset));
     if (!parsed.success) {
-      throw new AstraError(
+      throw new GenieError(
         'plugin.manifest_invalid',
         `workflow "${asset.path}" is not a valid workflow file`,
         {
@@ -153,19 +153,19 @@ export function validateWorkflows(manifest: PluginManifest, assets: readonly Plu
 
     for (const workflow of parsed.data.workflows) {
       if (workflowIds.has(workflow.id)) {
-        throw new AstraError('plugin.manifest_invalid', `duplicate workflow id "${workflow.id}"`);
+        throw new GenieError('plugin.manifest_invalid', `duplicate workflow id "${workflow.id}"`);
       }
       workflowIds.add(workflow.id);
 
       if (!declaredAgents.has(workflow.agent)) {
-        throw new AstraError(
+        throw new GenieError(
           'plugin.manifest_invalid',
           `workflow "${workflow.id}" belongs to agent "${workflow.agent}", which is not declared`,
         );
       }
       for (const step of workflow.steps) {
         if (!declaredTools.has(step.tool)) {
-          throw new AstraError(
+          throw new GenieError(
             'plugin.manifest_invalid',
             `workflow "${workflow.id}" uses tool "${step.tool}", which is not declared`,
           );
@@ -177,7 +177,7 @@ export function validateWorkflows(manifest: PluginManifest, assets: readonly Plu
   for (const asset of assets.filter((a) => a.kind === 'evaluation')) {
     const parsed = EvalFile.safeParse(parseJson(asset));
     if (!parsed.success) {
-      throw new AstraError(
+      throw new GenieError(
         'plugin.manifest_invalid',
         `evaluation "${asset.path}" is not a valid evaluation file`,
       );
@@ -185,7 +185,7 @@ export function validateWorkflows(manifest: PluginManifest, assets: readonly Plu
     for (const testCase of parsed.data.cases) {
       // 存在しない workflow を試す評価は、何も確かめていない
       if (!workflowIds.has(testCase.workflow)) {
-        throw new AstraError(
+        throw new GenieError(
           'plugin.manifest_invalid',
           `evaluation "${testCase.id}" targets workflow "${testCase.workflow}", which does not exist`,
         );
@@ -198,7 +198,7 @@ function parseJson(asset: PluginAsset): unknown {
   try {
     return JSON.parse(Buffer.from(asset.content).toString('utf8'));
   } catch {
-    throw new AstraError('plugin.manifest_invalid', `${asset.path} is not JSON`);
+    throw new GenieError('plugin.manifest_invalid', `${asset.path} is not JSON`);
   }
 }
 
@@ -219,12 +219,12 @@ export function validateDashboards(manifest: PluginManifest, assets: readonly Pl
     try {
       document = JSON.parse(Buffer.from(asset.content).toString('utf8'));
     } catch {
-      throw new AstraError('plugin.manifest_invalid', `dashboard "${decl.schema}" is not JSON`);
+      throw new GenieError('plugin.manifest_invalid', `dashboard "${decl.schema}" is not JSON`);
     }
 
     const parsed = DashboardSchema.safeParse(document);
     if (!parsed.success) {
-      throw new AstraError(
+      throw new GenieError(
         'plugin.manifest_invalid',
         `dashboard "${decl.schema}" is not a valid dashboard`,
         {
@@ -238,7 +238,7 @@ export function validateDashboards(manifest: PluginManifest, assets: readonly Pl
 
     // manifest の宣言と中身の id がずれていると、どちらで引くのか決まらない
     if (parsed.data.id !== decl.id) {
-      throw new AstraError(
+      throw new GenieError(
         'plugin.manifest_invalid',
         `dashboard "${decl.schema}" says id "${parsed.data.id}" but the manifest declares "${decl.id}"`,
       );
@@ -247,7 +247,7 @@ export function validateDashboards(manifest: PluginManifest, assets: readonly Pl
     for (const item of parsed.data.items) {
       if (item.bind === undefined) continue;
       if (!declaredSources.has(item.bind)) {
-        throw new AstraError(
+        throw new GenieError(
           'plugin.manifest_invalid',
           `dashboard "${decl.id}" binds to "${item.bind}", which the manifest does not declare`,
         );

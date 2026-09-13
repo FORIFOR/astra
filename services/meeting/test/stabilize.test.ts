@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MAX_SEGMENT_MS } from '@astra/contracts';
+import { MAX_SEGMENT_MS } from '@genie/contracts';
 import { alignSpeakers, overlapMs, stabilize, supersededBy } from '../src/stabilize.js';
 import type { TranscriptResult } from '../src/providers.js';
 

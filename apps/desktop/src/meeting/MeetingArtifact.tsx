@@ -5,7 +5,7 @@
  * **跳べない引用は出さない**（作った側で落としてある。Phase 3 §5）。
  */
 import { useState, type ReactElement } from 'react';
-import type { MeetingBundle, MeetingSegment } from '@astra/contracts';
+import type { MeetingBundle, MeetingSegment } from '@genie/contracts';
 import { speakerLabel } from './meetingView.js';
 import { TranscriptPanel } from './TranscriptPanel.js';
 

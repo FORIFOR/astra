@@ -2,7 +2,7 @@
  * 割り込んでよいかを決めて、OS へ出す。UI/UX §16。
  *
  * 面の判断は contracts（interrupts）、割り込みの基準は
- * `@astra/service-notification`（shouldNotify）。
+ * `@genie/service-notification`（shouldNotify）。
  * **ここで判断をやり直さない。**二重に持つと、片方だけ直って食い違う。
  *
  * ここが持つのは 2 つだけ:
@@ -10,8 +10,8 @@
  *   - **出せなかったことを黙らない**
  */
 import { useEffect, useRef } from 'react';
-import { interrupts, type BriefItem, type DailyBrief } from '@astra/contracts';
-import { shouldNotify, type HeartbeatOptions } from '@astra/service-notification';
+import { interrupts, type BriefItem, type DailyBrief } from '@genie/contracts';
+import { shouldNotify, type HeartbeatOptions } from '@genie/service-notification';
 import { notifications } from '../host/tauri.js';
 
 /** 静かにしていてほしい時間帯の既定。UI/UX §16。 */

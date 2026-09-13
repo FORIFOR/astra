@@ -9,12 +9,12 @@
  * 表の持ち主は service-research のまま（実装仕様 §5.1）。
  */
 import {
-  AstraError,
+  GenieError,
   EvidenceLedger,
   countContradictionPairs,
   type SourceType,
-} from '@astra/contracts';
-import { withTenant, type DbHandle } from '@astra/db';
+} from '@genie/contracts';
+import { withTenant, type DbHandle } from '@genie/db';
 
 /** L1 の key claims に出す上限。多いほど「結論」に見えてしまう。 */
 const KEY_CLAIM_LIMIT = 5;
@@ -39,7 +39,7 @@ export class ResearchLedgerService {
         .where('task_id', '=', taskId)
         .executeTakeFirst();
       // 調査でない仕事に、空の台帳を返さない。**無いことと空は違う。**
-      if (!run) throw new AstraError('common.not_found', `no research run for task ${taskId}`);
+      if (!run) throw new GenieError('common.not_found', `no research run for task ${taskId}`);
 
       const rows = await tx
         .selectFrom('evidence')

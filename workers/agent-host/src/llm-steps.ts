@@ -14,7 +14,7 @@ import {
   UNAVAILABLE_REASON,
   type LanguageModelKind,
   type LanguageModelOption,
-} from '@astra/contracts';
+} from '@genie/contracts';
 import { ClaudeCodeCli, ClaudeCodeError, CLAUDE_CODE_RECOVERY } from './claude-code.js';
 import { CodexCli, CodexError } from './codex.js';
 import { HttpLlmClient, HttpLlmError } from './http-llm.js';
@@ -157,6 +157,8 @@ export function promptFor(
         '指示された点数と形式に従ってください。複数案の指定がなければ、完成した文章を1つだけ返してください。',
         '提供されていない事実、日時、URL、人名、会社名、署名を補わないでください。',
         '対象者、素材、予算、期限の指定を守ってください。',
+        '担当者・宛先・期限は省略せず保持してください。資料の提供を依頼する文章では、相手に提供をお願いしてください。自分が送付する文章に逆転させないでください。',
+        '送信前の下書きと指定されたメールは「下書き（未送信）」と明記し、実際に送信・発注・予約したとは書かないでください。',
         '実在する製品の使える機能や画面が不明なら推測して作らず、不足している情報を短い質問で確認してください。',
         '複数案を明示的に求められた場合だけ、切り口と内容が異なる案を作ってください。',
         '作り方の説明、不要な別案、自己評価は加えず、求められた本文を返してください。',
@@ -332,7 +334,7 @@ export class LlmRuntime {
         kind: 'claude_code',
         available: probe.available,
         reason: probe.available ? null : (probe.reason ?? UNAVAILABLE_REASON.claude_code),
-        // 資格情報は Claude Code のもの。Astra は持たない。
+        // 資格情報は Claude Code のもの。Genie は持たない。
         credential: 'claude_code',
         implementation: probe.version,
       });
@@ -400,7 +402,27 @@ export class LlmRuntime {
       return { ok: false, error: { code: 'llm.no_model', message: NO_MODEL_MESSAGE } };
     }
 
-    const ask = this.#askFor(chosen.kind, step.toolId);
+    // Text-only HTTP/local models cannot browse. Asking them to emit search
+    // results fabricates evidence (especially dangerous for prices/availability).
+    // Do not silently switch to a paid/search-enabled provider the user excluded.
+    if (
+      step.toolId === 'search.web' &&
+      !(
+        (chosen.kind === 'codex' && this.#deps.codex) ||
+        (chosen.kind === 'claude_code' && this.#deps.claudeCode)
+      )
+    ) {
+      return {
+        ok: false,
+        error: {
+          code: 'host.unsupported_step',
+          message:
+            '現在のAI接続にはWeb検索機能がありません。検索に対応したCodex・Claude Code、または検索サービスを設定してください。料金や空き状況は未確認です。',
+        },
+      };
+    }
+
+    const ask = this.#askFor(chosen.kind, step.toolId, step.args);
     if (!ask) {
       return {
         ok: false,
@@ -509,6 +531,7 @@ export class LlmRuntime {
   #askFor(
     kind: LanguageModelKind,
     tool: string,
+    args: Record<string, unknown>,
   ):
     | ((
         prompt: string,
@@ -526,6 +549,11 @@ export class LlmRuntime {
           webSearch: allowedTools.includes('WebSearch'),
         });
     }
+    // Search always uses the real CLI tool path, never a text-only override.
+    if (tool === 'search.web' && kind === 'claude_code' && this.#deps.claudeCode) {
+      const cli = this.#deps.claudeCode;
+      return (prompt, allowedTools) => cli.ask(prompt, { allowedTools });
+    }
     const provided = this.#deps.askWith?.[kind];
     if (provided) return provided;
     const http = this.#deps.http?.[kind];
@@ -533,7 +561,14 @@ export class LlmRuntime {
       const field = tool === 'llm.answer' ? 'answer' : tool === 'llm.compose' ? 'text' : null;
       return field
         ? async (prompt, _allowedTools, images) => ({
-            [field]: await http.askText(prompt, tool === 'llm.compose', readVisualImages(images)),
+            [field]: await http.askText(
+              prompt,
+              tool === 'llm.compose' &&
+                /小説|物語|キャッチコピー|台本|創作(?:して|する|を|の)|ブレインストーミング|creative\s+(?:writing|story)|brainstorm/i.test(
+                  String(args['instruction'] ?? ''),
+                ),
+              readVisualImages(images),
+            ),
           })
         : (prompt) => http.ask(prompt);
     }

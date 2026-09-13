@@ -32,7 +32,7 @@ fn dock_window(app: &AppHandle) -> Result<WebviewWindow, String> {
 ///
 /// 長らく `monitor.size()`（画面全体）を「work area」と呼んでいた。
 /// それでは macOS の Dock とメニューバーを避けられず、
-/// **Astra の Dock が macOS の Dock の下に潜っていた**（§4.2「タスクバーと重ならない」に反する）。
+/// **Genie の Dock が macOS の Dock の下に潜っていた**（§4.2「タスクバーと重ならない」に反する）。
 /// `work_area()` はその 2 つを除いた矩形を返す。
 ///
 /// 論理 px に直すのは、§4.1 の寸法（560 × 56）が論理 px だから。

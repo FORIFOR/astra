@@ -2,7 +2,7 @@
  * 端末内の画像の受け渡し。画素は cloud を通らず、id だけで指す。
  *
  * 見るのは:
- *   - 置き場所が Astra.app と同じ規約（ASTRA_VISUAL_CONTEXT_DIR → ASTRA_DATA_ROOT/VisualContext → Caches）
+ *   - 置き場所が Genie.app と同じ規約（ASTRA_VISUAL_CONTEXT_DIR → ASTRA_DATA_ROOT/VisualContext → Caches）
  *   - id がパスに化けない（`..` / 絶対パス / 外へ抜ける symlink）
  *   - 無いものは無いと分かる
  */

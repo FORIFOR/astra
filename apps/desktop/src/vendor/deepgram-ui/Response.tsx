@@ -1,6 +1,6 @@
 /**
  * Markdown の軽い描画。Deepgram 公式 `@deepgram/ui` の `Response.tsx`（MIT）から、
- * 解析部分をそのまま。Tailwind の class は持ち込まず、Astra の CSS で装う。
+ * 解析部分をそのまま。Tailwind の class は持ち込まず、Genie の CSS で装う。
  *
  * 外部依存なし。HTML は必ず esc() を通してから組むので、本文に HTML が混じっても実行されない。
  * 流し込み（streaming）にも向く — children を継ぎ足すだけ。

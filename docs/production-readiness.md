@@ -1,4 +1,8 @@
-# Production Readiness — Astra
+# Production Readiness — Genie
+
+> **履歴資料（2026-08-27）。現在の企業導入・製品全体のrelease=go判定ではありません。**
+> 以下のREADYや「本番として起動」は当時の構成における技術的な起動判定です。
+> 現在のL1/L2/L3、実測結果と未完了項目は[企業紹介の判定](ENTERPRISE_READINESS.md)を参照してください。
 
 2026-08-27。判定と、その根拠。
 
@@ -220,7 +224,7 @@ Calendar/Gmail の鎖で見ているのは提供者の挙動ではなく**こち
 - **GUI の手動確認。**assistant はマウスで画面を操作していない。
   代わりに、同じ frontend を headless Chrome（CDP）で開き、**全画面の screenshot を
   自分で見て直した**（サインイン → 初期セットアップ 7 段 → Home / Work / Library / Apps、
-  検索・通知・プロフィール、会議開始、共有）。実機 Astra.app は窓 ID 指定で撮り、
+  検索・通知・プロフィール、会議開始、共有）。実機 Genie.app は窓 ID 指定で撮り、
   **実機でも確認した**（検証用アカウント ui-check で AX / CGEvent から操作）:
   ⌥Space で Dock、Orb 押下で LISTENING（手元 STT が「うん」を書き起こした）、
   window が 56 → 86 → 96px と下端固定で morph、Voice HUD が出現、Esc で 56px へ戻る。
@@ -268,7 +272,7 @@ goal が挙げた 7 項目に、対応する試験を並べる。
 | Rust のゲート（fmt / clippy / test）を**一度も走らせずに「全ゲート PASS」と報告していた**                                                                           | CI の定義を読んでいなかった                                                                 |
 | 本番の関門が `isStandIn` しか見ず、**未確認のまま起動できた**                                                                                                       | 完了条件は UNVERIFIED も禁じていたのに、コードが緩かった                                    |
 | CORS の allow-methods に **PATCH が無く**、初期セットアップの保存（PATCH /v1/onboarding）が preflight で落ちていた。**セットアップは毎回最初から**だった            | `inject` の試験は preflight を通らない。ブラウザ（と Tauri の webview）で通して初めて見えた |
-| Astra の Task Dock が **macOS の Dock の下に潜っていた**。`monitor.size()` を work area と呼んでいた                                                                | 座標の単体試験は「画面の中」しか見ていなかった。実機の画像で気づいた                        |
+| Genie の Task Dock が **macOS の Dock の下に潜っていた**。`monitor.size()` を work area と呼んでいた                                                                | 座標の単体試験は「画面の中」しか見ていなかった。実機の画像で気づいた                        |
 | 終わった仕事を開くと **「準備しています」「状態が分かりません」**。stream は過去を流さず、一覧の行を種にしていなかった                                              | 進行中の仕事の試験しか無かった                                                              |
 | 裸の `<button>` が 60 を超え、ブラウザ既定の灰色のまま。仕様の「静かな」面に見えず、**未完成に見える主因**だった                                                    | 試験は文言と役割しか見ない。見た目は screenshot でしか分からない                            |
 | §11.1「App detail must show」のうち 更新日 / できる仕事 / 画面 / 料金 / 変更点 / 削除の影響 が **どこにも無かった**。契約に項目自体が無く、画面は出しようがなかった | 画面の試験は「あるものが出る」しか見ない。仕様の表を 1 行ずつ照合して気づいた               |

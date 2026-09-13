@@ -33,6 +33,6 @@ for a in "${present[@]}"; do
   done
 done
 [[ $fail -eq 0 ]] || { echo "COMPETITOR_GATE=FAIL"; exit 1; }
-# 盲検（Astra 側は Atlas の同 archetype 面）。
+# 盲検（Genie 側は Atlas の同 archetype 面）。
 bash "$ROOT/scripts/ux-auto/compare-blind.sh" "$OUT" || exit 1
 echo "COMPETITOR_GATE=PASS"

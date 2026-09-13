@@ -7,14 +7,14 @@
 import Fastify from 'fastify';
 import websocket from '@fastify/websocket';
 import cors from '@fastify/cors';
-import { HEADER_REQUEST_ID } from '@astra/contracts';
+import { HEADER_REQUEST_ID } from '@genie/contracts';
 import type { Redis } from 'ioredis';
-import type { DbHandle } from '@astra/db';
-import type { TaskService } from '@astra/service-task';
-import type { LibraryService } from '@astra/service-library';
-import type { PluginRegistryService } from '@astra/service-plugin-registry';
-import type { ShareService } from '@astra/service-share';
-import type { Logger } from '@astra/telemetry';
+import type { DbHandle } from '@genie/db';
+import type { TaskService } from '@genie/service-task';
+import type { LibraryService } from '@genie/service-library';
+import type { PluginRegistryService } from '@genie/service-plugin-registry';
+import type { ShareService } from '@genie/service-share';
+import type { Logger } from '@genie/telemetry';
 import { allowsDevelopmentRoutes, type GatewayConfig } from './config.js';
 import { installErrorHandlers } from './errors.js';
 import { normalizeRequestId, registerRequestId } from './plugins/request-id.js';
@@ -35,10 +35,10 @@ import { registerBriefRoutes } from './routes/brief.js';
 import { registerConversationRoutes } from './routes/conversations.js';
 import { registerOnboardingRoutes } from './routes/onboarding.js';
 import { registerVoiceRoutes, type VoiceRouteDeps } from './routes/voice.js';
-import type { ConversationService } from '@astra/service-conversation';
-import type { WorkContextService, WorldModelService } from '@astra/service-world-model';
+import type { ConversationService } from '@genie/service-conversation';
+import type { WorkContextService, WorldModelService } from '@genie/service-world-model';
 import { localArtifacts, registerWorkRoutes } from './routes/work.js';
-import type { ConnectionService, DataSourceResolver } from '@astra/service-plugin-registry';
+import type { ConnectionService, DataSourceResolver } from '@genie/service-plugin-registry';
 import {
   registerMeetingAudioRoute,
   registerMeetingRoutes,
@@ -63,9 +63,9 @@ export interface AppDeps {
   /** UI/UX §15 の Evidence Ledger を引く先。 */
   readonly evidence?: EvidenceReader;
   /** 手元の実行基盤の調整役。無ければその経路は生えない（§4.4）。 */
-  readonly agentHosts?: import('@astra/service-agent-host').AgentHostService;
+  readonly agentHosts?: import('@genie/service-agent-host').AgentHostService;
   /** 手元でしか動かせない step の受け渡し。§4.4。 */
-  readonly hostBridge?: import('@astra/service-agent-host').HostBridge;
+  readonly hostBridge?: import('@genie/service-agent-host').HostBridge;
   readonly meetings?: MeetingRuntime;
   /** dashboard の bind を解決する先。gateway が各サービスの束を合成して渡す。 */
   readonly dataSources?: DataSourceResolver;

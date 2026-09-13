@@ -4,7 +4,7 @@
  */
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { McpServerDecl } from '@astra/contracts';
+import { McpServerDecl } from '@genie/contracts';
 import { McpClient, httpChannel, stdioChannel, PROTOCOL_VERSION } from '../src/index.js';
 
 const SERVER = fileURLToPath(new URL('./fixtures/echo-server.mjs', import.meta.url));

@@ -20,7 +20,7 @@ import {
   type WorkContext,
   type WorkPriority,
   type MeetingBrief,
-} from '@astra/contracts';
+} from '@genie/contracts';
 import { titleTokens } from './graph.js';
 
 /** 今日 / 今週の優先を聞いている問い。**命令（「会議を録音して」）は含めない。** */

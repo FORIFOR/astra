@@ -1,4 +1,4 @@
-# Local development dependencies for the Astra cloud control plane.
+# Local development dependencies for the Genie cloud control plane.
 #   pnpm dev:infra      # up
 #   pnpm dev:infra:down # down
 #

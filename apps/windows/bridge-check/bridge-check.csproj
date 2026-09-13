@@ -11,14 +11,14 @@
   <ItemGroup>
     <Compile Include="Program.cs" />
     <!-- Windows アプリと同一の CoreBridge を取り込む（二重実装しない）。 -->
-    <Compile Include="../Astra/CoreBridge/AstraCore.cs" />
+    <Compile Include="../Genie/CoreBridge/GenieCore.cs" />
     <!-- tokens 由来の C# Metrics（純定数）。 -->
-    <Compile Include="../Astra/GeneratedMetrics.cs" />
-    <Compile Include="../Astra/AppLogic/AstraSession.cs" />
-    <Compile Include="../Astra/AppLogic/WindowsGlobalShortcut.cs" />
-    <Compile Include="../Astra/AppLogic/WasapiCapture.cs" />
-    <Compile Include="../Astra/AppLogic/WindowsCredentialStore.cs" />
-    <Compile Include="../Astra/AppLogic/WindowsScreenCapture.cs" />
+    <Compile Include="../Genie/GeneratedMetrics.cs" />
+    <Compile Include="../Genie/AppLogic/GenieSession.cs" />
+    <Compile Include="../Genie/AppLogic/WindowsGlobalShortcut.cs" />
+    <Compile Include="../Genie/AppLogic/WasapiCapture.cs" />
+    <Compile Include="../Genie/AppLogic/WindowsCredentialStore.cs" />
+    <Compile Include="../Genie/AppLogic/WindowsScreenCapture.cs" />
     <!-- 共有 golden を出力先へ持っていく（geometry 照合用）。 -->
     <None Include="../../../shared/design/fixtures/recording-workspace.path" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>

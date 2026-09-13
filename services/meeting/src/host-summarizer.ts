@@ -1,15 +1,15 @@
 /**
  * 会議の要約を、端末で作る。正本 §12・§21、UI/UX §22。
  *
- * ほかと同じ理由で端末に置く。**Astra は共通の API キーを持たない。**
- * 会議の中身は、その会議に出た人のもので、Astra が預かる利用権で
+ * ほかと同じ理由で端末に置く。**Genie は共通の API キーを持たない。**
+ * 会議の中身は、その会議に出た人のもので、Genie が預かる利用権で
  * 処理してよいものではない。利用者が持ち込んだ利用権で処理する。
  *
  * ここが守ること:
  *   - **引用は segment id で受ける。**本文を作り直させない
  *   - 存在しない id を指す項目は、上の `withCitations` が捨てる
  */
-import type { MeetingSegment } from '@astra/contracts';
+import type { MeetingSegment } from '@genie/contracts';
 import type { MeetingSummarizer, SummaryDraft } from './summarize.js';
 
 /** 端末への受け渡し口。`HostStepExecutor` がこれを満たす。 */

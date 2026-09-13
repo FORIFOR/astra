@@ -17,7 +17,7 @@ import {
   overridesQuietHours,
   type BriefItem,
   type DailyBrief,
-} from '@astra/contracts';
+} from '@genie/contracts';
 
 export interface NotificationSink {
   /** 端末へ出す。失敗しても heartbeat は止めない。 */

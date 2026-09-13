@@ -8,8 +8,8 @@
 # ここは**静的**に道を数える。実行体での確認は `--selftest egress`（既定 OFF・資産無しロケールで throw）。
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-SRC="$ROOT/apps/astra-macos/Sources/AstraMac"
-BIN="$ROOT/apps/astra-macos/.build/debug/AstraMac"
+SRC="$ROOT/apps/genie-macos/Sources/GenieMac"
+BIN="$ROOT/apps/genie-macos/.build/debug/GenieMac"
 fail=0
 row() { printf "  %-40s %s\n" "$1" "$2"; }
 bad() { row "$1" "$2"; shift 2; printf "    %s\n" "$@" >&2; fail=1; }
@@ -22,7 +22,7 @@ echo "== PRIVACY_EGRESS_GATE =="
 # 1. 録音の upload は、明示的な Google STT 同意の外では 0。
 #    - 音声を送る関数は RecordingRuntime だけが呼ぶ
 #    - cloudTranscriptionAllowed が true のときだけ会議作成・送信・回復を行う
-up=$(prod "uploadMeetingAudio(" | grep -v "RecordingWorkspace/RecordingRuntime.swift\|RecordingWorkspace/AstraCoreBridge.swift" || true)
+up=$(prod "uploadMeetingAudio(" | grep -v "RecordingWorkspace/RecordingRuntime.swift\|RecordingWorkspace/GenieCoreBridge.swift" || true)
 flag=$(awk '/static var devAutoUploadEnabled/,/^    }/' "$SRC/RecordingWorkspace/RecordingRuntime.swift")
 flag_ok=1
 grep -q "#if DEBUG" <<<"$flag" || flag_ok=0
@@ -89,12 +89,35 @@ else
 fi
 
 # 4. connector（OAuth）は人が押した行からしか始まらない。
-conn=$(prod "\.connect(" | grep -v "Context/ConnectorState.swift" || true)
-conn_bad=$(grep -v "Button" <<<"$conn" | grep . || true)
-if [ -n "$conn" ] && [ -z "$conn_bad" ]; then
+conn_check=$(python3 - "$SRC" <<'CHECK'
+import pathlib, re, sys
+src = pathlib.Path(sys.argv[1])
+allowed = {'Main/ConnectionsPane.swift': 'connectProvider', 'Work/ReplyFlow.swift': 'connectActions'}
+found = set()
+for path in src.rglob('*.swift'):
+    rel = str(path.relative_to(src))
+    if path.name.startswith('SelfTest') or rel == 'Context/ConnectorState.swift': continue
+    text = re.sub(r'//[^\n]*', '', path.read_text())
+    for call in re.findall(r'\.((?:connect|connectProvider|connectActions))\(', text):
+        if allowed.get(rel) != call: raise SystemExit('unreviewed OAuth entry: ' + rel)
+        found.add(rel)
+pane = (src/'Main/ConnectionsPane.swift').read_text()
+reply = (src/'Work/ReplyFlow.swift').read_text()
+# The read flow remains inside the explicit provider button's action, after
+# the purpose preview. Send consent remains behind its own confirmation.
+checks = [
+    found == set(allowed),
+    re.search(r'Button\(provider == "google" \? "Googleで続ける" : "Microsoftで続ける"\)\s*\{\s*preview = nil\s*Task \{[^\n]*connections\.connectProvider\(provider\)', pane),
+    'if Confirm.ask(ask) {\n                _ = connector(pluginId, connectorId)' in reply,
+]
+if not all(checks): raise SystemExit('OAuth must start from the purpose button or send confirmation')
+print('provider purpose button + send confirmation')
+CHECK
+)
+if [ "$?" -eq 0 ]; then
   row "connector egress requires user action" "PASS"
 else
-  bad "connector egress requires user action" "FAIL" "${conn_bad:-connect の呼び手が見つからない}"
+  bad "connector egress requires user action" "FAIL" "${conn_check:-OAuth の操作入口を確認できない}"
 fi
 
 # 5. 外へ届く実行は確認の面を通る（CONFIRMATION_GATE は verify-confirmation.sh が画素で持つ。
@@ -112,7 +135,7 @@ claim_ok=1
 grep -q "Google STT" "$guide" || claim_ok=0
 grep -q "相手の声のために" "$guide" && claim_ok=0     # 取り込んでいない音のために許可を説明しない
 grep -q "transcription.onDeviceUnavailable" "$guide" || claim_ok=0   # 落とさない代わりに、出ない理由を教える
-usage=$(grep -rn "NSSpeechRecognitionUsageDescription" "$ROOT/scripts/build-macos-app.sh" "$ROOT/apps/astra-macos/Info.plist" "$ROOT/apps/astra-macos/Sources" 2>/dev/null | head -1)
+usage=$(grep -rn "NSSpeechRecognitionUsageDescription" "$ROOT/scripts/build-macos-app.sh" "$ROOT/apps/genie-macos/Info.plist" "$ROOT/apps/genie-macos/Sources" 2>/dev/null | head -1)
 if [ $claim_ok -eq 1 ]; then
   row "transcription egress guide" "consistent"
 else

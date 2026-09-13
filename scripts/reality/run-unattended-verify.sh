@@ -19,7 +19,7 @@ set -uo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
 ACCOUNT="${ASTRA_VERIFY_ACCOUNT:-astra-verify}"
-APP="$ROOT/apps/astra-macos/.build/Astra.app"
+APP="$ROOT/apps/genie-macos/.build/Genie.app"
 BUNDLE_ID="$(defaults read "$APP/Contents/Info" CFBundleIdentifier 2>/dev/null || echo com.astra.desktop)"
 OUT="${ASTRA_UNATTENDED_OUT:-/tmp/astra-unattended-verify}"
 mkdir -p "$OUT"

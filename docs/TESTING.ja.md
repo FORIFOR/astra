@@ -1,34 +1,34 @@
 # Genieを試して、次の改善に参加する
 
-[English](TESTING.md) · [テスト結果を報告](https://github.com/FORIFOR/astra/issues/new?template=tester_feedback.yml)
+[English](TESTING.md) · [テスト結果を報告](https://github.com/FORIFOR/genie/issues/new?template=tester_feedback.yml)
 
 Macで開発環境を動かせる方を募集しています。知りたいのは「ひとつの仕事が楽になったか」「最初にどこでつまずいたか」です。起動できなかった報告も大切です。コードの貢献や事前登録は必要ありません。
 
-Genieの旧名称はAstraです。このプレビューでは **Astra.app** と `FORIFOR/astra` を使います。
+Genieの旧名称はAstraです。このプレビューでは **Genie.app** と `FORIFOR/genie` を使います。
 
 ## 試し方を選ぶ
 
 | 試し方            | できること                                                                                                                                                              | 準備                                                               |
 | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| まず成果を見る    | [3つの実演](https://astra-forifor.forifor.chatgpt.site/ja#demos)や[宇宙のHTML試作](https://astra-forifor.forifor.chatgpt.site/orbit.html)を見て、使いたい仕事を教える。 | ブラウザだけ。Genie本体を操作する体験ではありません。              |
+| まず成果を見る    | [3つの実演](https://genie-forifor.forifor.chatgpt.site/ja#demos)や[宇宙のHTML試作](https://genie-forifor.forifor.chatgpt.site/orbit.html)を見て、使いたい仕事を教える。 | ブラウザだけ。Genie本体を操作する体験ではありません。              |
 | Mac版を実際に試す | 依頼を書く → 結果を見る → Workで開き直す → Markdownを保存する。                                                                                                         | macOS 14以降、ローカルサービス、AIモデル。以下の手順で準備します。 |
 
 テスト自体は**セットアップ後に10分程度**。ダウンロード・環境構築には別途時間がかかります。最初のテストではGoogle/Microsoft連携、マイク許可、実際の顧客データは使いません。
 
 ## 1. 同じバージョンのアプリとソースを用意
 
-初回は **v0.1.2** を使います。このアプリに最新の`main`のバックエンドを混ぜないでください。
+初回は **v0.1.3** を使います。このアプリに最新の`main`のバックエンドを混ぜないでください。
 
-- [Astra-0.1.2.dmgをダウンロード](https://github.com/FORIFOR/astra/releases/download/v0.1.2/Astra-0.1.2.dmg)
-- [リリース情報・チェックサム・制限事項](https://github.com/FORIFOR/astra/releases/tag/v0.1.2)
-- 対応ソース：`48d2651ba2ec549bdd6764fe0375d4c3548c6062`（タグ`v0.1.2`）
+- [Genie-0.1.3.dmgをダウンロード](https://github.com/FORIFOR/genie/releases/download/v0.1.3/Genie-0.1.3.dmg)
+- [リリース情報・チェックサム・制限事項](https://github.com/FORIFOR/genie/releases/tag/v0.1.3)
+- 対応ソース：タグ`v0.1.3`
 
 ```sh
-git clone --branch v0.1.2 --depth 1 https://github.com/FORIFOR/astra.git astra-preview
-cd astra-preview
+git clone --branch v0.1.3 --depth 1 https://github.com/FORIFOR/genie.git genie-preview
+cd genie-preview
 ```
 
-続いて、[v0.1.2のセットアップ手順](https://github.com/FORIFOR/astra/blob/v0.1.2/docs/LOCAL_PREVIEW.md)を進めます。cloneは済んでいるため、最初のコマンド欄の`pnpm install`から開始してください。各ターミナルで同じ`astra-preview`フォルダを使います。
+続いて、[v0.1.3のセットアップ手順](https://github.com/FORIFOR/genie/blob/v0.1.3/docs/LOCAL_PREVIEW.md)を進めます。cloneは済んでいるため、最初のコマンド欄の`pnpm install`から開始してください。各ターミナルで同じ`genie-preview`フォルダを使います。
 
 必要なものはNode 22以降、pnpm 10.12.2、Docker Compose、`dbmate`、`psql`、Xcodeコマンドラインツール、Macで動くモデルです。Gateway・Task Worker・Agent Hostも起動し続ける必要があります。アプリ単体では動きません。ガイドのローカルOllama検証例は`qwen3.5:9b`で、モデルのダウンロード容量・メモリは別途必要です。DMGを使わずネイティブアプリもビルドする場合は、フルのXcodeとRustが必要です。
 
@@ -63,18 +63,18 @@ Gateway、選択したローカルモデル、アプリの識別情報を確認�
 
 ## 4. 役立った点・つまずきを報告
 
-**[短いテスターレポートを送る →](https://github.com/FORIFOR/astra/issues/new?template=tester_feedback.yml)**
+**[短いテスターレポートを送る →](https://github.com/FORIFOR/genie/issues/new?template=tester_feedback.yml)**
 
 必須なのは「どこまで進んだか」「やりたかった仕事」「結果・最初のつまずき」の3項目。バージョンやモデルは分かる範囲で構いません。未インストール・起動失敗・実演の感想も同じフォームから送れます。日本語でどうぞ。メールアドレスは不要、ひとつのテストにつき1件で十分です。スターの有無は参加条件ではありません。
 
 Issueは公開されます。顧客情報、トークン、`.env`、実際の会議の内容は載せないでください。ログやスクショなしの説明でも構いません。
 
-チームで使いたい方は、[仕事と欲しい成果を相談](https://github.com/FORIFOR/astra/issues/new?template=workflow.yml)できます。機密情報は含めないでください。
+チームで使いたい方は、[仕事と欲しい成果を相談](https://github.com/FORIFOR/genie/issues/new?template=workflow.yml)できます。機密情報は含めないでください。
 
 ## 現在の範囲
 
 - 環境構築が必要な開発者向けプレビューです。セットアップの難しさも改善材料にします。
-- ライブ文字起こし・外部サービス連携には別の設定と権限が必要です。初回の文章テストには不要です。[製品全体のリリース判定](https://github.com/FORIFOR/astra/issues/1)は別途管理しています。
+- ライブ文字起こし・外部サービス連携には別の設定と権限が必要です。初回の文章テストには不要です。[製品全体のリリース判定](https://github.com/FORIFOR/genie/issues/1)は別途管理しています。
 - 明示的に選んだローカル経路を、有料APIへ黙って切り替えることはありません。外部プロバイダーには送信内容が渡り、料金がかかる場合があります。品質・待ち時間はモデルによります。
 - 生成したHTMLは内容を確認し、アプリの外で開きます。自動公開・SNS自動投稿・収益の保証を検証するテストではありません。
 - プロジェクト全体のオープンソースライセンスは未設定です。公開ソースだけで広い利用許諾が付与されるわけではありません。

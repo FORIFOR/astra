@@ -6,9 +6,9 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for trying Genie (formerly Astra). Setup failures are useful feedback too.
+        Thanks for trying Genie. Setup failures are useful feedback too.
         起動できなかった報告も歓迎です。公開Issueのため、個人情報・顧客データ・トークン・.envは載せないでください。
-        [Test guide / テスターガイド](https://github.com/FORIFOR/astra/blob/main/docs/TESTING.ja.md)
+        [Test guide / テスターガイド](https://github.com/FORIFOR/genie/blob/main/docs/TESTING.ja.md)
   - type: dropdown
     id: stage
     attributes:

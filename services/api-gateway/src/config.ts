@@ -1,7 +1,7 @@
 /** api-gateway の設定。実装仕様 §11。 */
 import { existsSync } from 'node:fs';
 import path from 'node:path';
-import { dbConfigFromEnv, type DbConfig } from '@astra/db';
+import { dbConfigFromEnv, type DbConfig } from '@genie/db';
 import { idpConfigFromEnv, type IdpConfig } from './auth/idp.js';
 
 export type Environment = 'development' | 'test' | 'staging' | 'production';

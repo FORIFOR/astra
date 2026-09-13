@@ -5,7 +5,7 @@
  * JSON-RPC が喋れることではない。
  */
 import { describe, expect, it, vi } from 'vitest';
-import { McpServerDecl, UNKNOWN_MCP_TOOL_RISK, resolveMcpTool } from '@astra/contracts';
+import { McpServerDecl, UNKNOWN_MCP_TOOL_RISK, resolveMcpTool } from '@genie/contracts';
 import { McpClient, PROTOCOL_VERSION, type McpTransportChannel } from '../src/index.js';
 
 const server = (over: Record<string, unknown> = {}) =>

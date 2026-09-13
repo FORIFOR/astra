@@ -6,12 +6,12 @@
  */
 import {
   ArtifactType,
-  AstraError,
+  GenieError,
   CreateArtifactRequest,
   MAX_DIRECT_UPLOAD_BYTES,
   PageQuery,
-} from '@astra/contracts';
-import type { LibraryService } from '@astra/service-library';
+} from '@genie/contracts';
+import type { LibraryService } from '@genie/service-library';
 import { z } from 'zod';
 import type { App } from '../fastify.js';
 import { requirePrincipal } from '../auth/middleware.js';
@@ -38,7 +38,7 @@ export function registerArtifactRoutes(app: App, deps: ArtifactRouteDeps): void 
     const body = InlineUpload.parse(request.body ?? {});
     const content = Buffer.from(body.content_base64, 'base64');
     if (content.byteLength > MAX_DIRECT_UPLOAD_BYTES) {
-      throw new AstraError('artifact.too_large', 'artifact exceeds the direct upload limit');
+      throw new GenieError('artifact.too_large', 'artifact exceeds the direct upload limit');
     }
 
     const artifact = await deps.library.create({

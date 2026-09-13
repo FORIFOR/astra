@@ -6,7 +6,7 @@
  * これで plugin が Core UI を壊せない。
  */
 import type { ReactElement } from 'react';
-import type { DashboardItem, DashboardView, ResolvedValue } from '@astra/contracts';
+import type { DashboardItem, DashboardView, ResolvedValue } from '@genie/contracts';
 
 export function DashboardRenderer({
   view,
@@ -147,7 +147,7 @@ function Series({ value }: { value: Extract<ResolvedValue, { kind: 'series' }> }
           <span className="astra-dashboard__series-label">{point.label}</span>
           <span
             className="astra-dashboard__series-bar"
-            style={{ ['--astra-bar' as string]: `${Math.round((point.value / max) * 100)}%` }}
+            style={{ ['--genie-bar' as string]: `${Math.round((point.value / max) * 100)}%` }}
             aria-hidden="true"
           />
           <span className="astra-dashboard__series-value">{point.value}</span>

@@ -4,8 +4,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
-import { TaskId, uuidv7, type Artifact } from '@astra/contracts';
-import type { TaskView } from '@astra/api-client';
+import { TaskId, uuidv7, type Artifact } from '@genie/contracts';
+import type { TaskView } from '@genie/api-client';
 import {
   ATTENTION_LIMIT,
   LONG_TASK_MS,

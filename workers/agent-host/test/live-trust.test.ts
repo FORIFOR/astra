@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { TokenSet } from '@astra/oauth';
+import type { TokenSet } from '@genie/oauth';
 import { assertLiveScopes, liveTokens, LIVE_SCOPES } from '../src/live-oauth.js';
 import { checkReceipt, type ObservedMail } from '../src/live-receipt.js';
 const read = LIVE_SCOPES.google.read;

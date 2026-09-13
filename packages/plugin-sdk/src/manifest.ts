@@ -1,18 +1,18 @@
 /**
  * Plugin manifest の読み込みと検証。実装仕様 §9.1・§9.2。
  *
- * スキーマと不変条件は `@astra/contracts` にある（逸脱 D-12）。
+ * スキーマと不変条件は `@genie/contracts` にある（逸脱 D-12）。
  * ここが引き受けるのは YAML の読み込み・正規化・署名検証・publisher 鍵の管理。
  */
 import { readFile } from 'node:fs/promises';
 import { parse as parseYaml } from 'yaml';
 import {
-  AstraError,
+  GenieError,
   PluginManifest,
   canonicalJson,
   canonicalSha256,
   type SignatureState,
-} from '@astra/contracts';
+} from '@genie/contracts';
 
 export interface LoadedManifest {
   readonly manifest: PluginManifest;
@@ -30,7 +30,7 @@ export function signingPayload(manifest: PluginManifest): string {
 export function parseManifest(source: unknown, origin: string): PluginManifest {
   const parsed = PluginManifest.safeParse(source);
   if (!parsed.success) {
-    throw new AstraError('plugin.manifest_invalid', `invalid manifest at ${origin}`, {
+    throw new GenieError('plugin.manifest_invalid', `invalid manifest at ${origin}`, {
       details: parsed.error.issues.map((i) => ({
         path: i.path.join('.'),
         message: i.message,
@@ -51,14 +51,14 @@ export async function loadManifestFile(path: string): Promise<LoadedManifest> {
   try {
     raw = await readFile(path, 'utf8');
   } catch {
-    throw new AstraError('plugin.manifest_invalid', `cannot read manifest at ${path}`);
+    throw new GenieError('plugin.manifest_invalid', `cannot read manifest at ${path}`);
   }
 
   let document: unknown;
   try {
     document = parseYaml(raw);
   } catch (error) {
-    throw new AstraError('plugin.manifest_invalid', `manifest at ${path} is not valid YAML`, {
+    throw new GenieError('plugin.manifest_invalid', `manifest at ${path} is not valid YAML`, {
       details: { reason: error instanceof Error ? error.message : 'unknown' },
     });
   }

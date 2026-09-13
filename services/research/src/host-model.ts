@@ -1,7 +1,7 @@
 /**
  * 言語モデルを、端末で動かす。正本 §4.4・§16.1・§21、UI/UX §22。
  *
- * **Astra は共通の API キーを持たない。**利用者が持ち込んだ利用権
+ * **Genie は共通の API キーを持たない。**利用者が持ち込んだ利用権
  * （Claude Code のログイン、あるいは自分の API キー）は端末の側にあるので、
  * 呼ぶのも端末になる。cloud は「これを聞いてほしい」を置いて待つだけ。
  *
@@ -13,7 +13,7 @@
  *     鍵が同じなら結果を使い回し、違えば別の依頼になる
  *   - モデルの出力を信用しない。**形が違えば捨てる**
  */
-import { canonicalSha256 } from '@astra/contracts';
+import { canonicalSha256 } from '@genie/contracts';
 import { groundedFindings } from './anthropic.js';
 import type {
   ExtractedClaim,
@@ -23,7 +23,7 @@ import type {
   VisualAttachment,
 } from './providers.js';
 
-/** 端末への受け渡し口。`@astra/service-agent-host` の `HostStepExecutor` が満たす。 */
+/** 端末への受け渡し口。`@genie/service-agent-host` の `HostStepExecutor` が満たす。 */
 export interface HostCall {
   execute(
     input: { taskId: string; tenantId: string; userId: string },

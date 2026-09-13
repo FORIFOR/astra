@@ -4,7 +4,7 @@
  * ワークフロー本体の検証は Temporal の test environment で行う。
  * ここでは「service が runtime に何を頼んだか」だけを記録する。
  */
-import { AstraError } from '@astra/contracts';
+import { GenieError } from '@genie/contracts';
 import type { TaskStateSnapshot, TaskWorkflowInput } from '../workflows.js';
 import type { StartedWorkflow, TaskRuntime } from './types.js';
 
@@ -55,7 +55,7 @@ export class InMemoryTaskRuntime implements TaskRuntime {
 
   #assertRunning(workflowId: string): void {
     if (this.strictSignals && !this.started.has(workflowId)) {
-      throw new AstraError('task.invalid_state', 'task is no longer running');
+      throw new GenieError('task.invalid_state', 'task is no longer running');
     }
   }
 }

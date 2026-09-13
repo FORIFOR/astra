@@ -1,7 +1,7 @@
 /**
- * Workspace の下端にある「Ask Astra…」。UI/UX §7・§7.1。
+ * Workspace の下端にある「Ask Genie…」。UI/UX §7・§7.1。
  *
- * **これが無いと、Workspace から Astra へ話しかけられない。**
+ * **これが無いと、Workspace から Genie へ話しかけられない。**
  * Task Dock は別 window なので、本体を開いている人には見えない。
  * §7 が「Conversation は下部 composer として**常に継続できる**」と
  * 言っているのは、そのため。
@@ -11,7 +11,7 @@
  *   Composer  … 開いている仕事の**続き**を話す口。閉じない
  */
 import { useCallback, useRef, useState, type FormEvent, type ReactElement } from 'react';
-import { isComposing } from '@astra/ui-kit';
+import { isComposing } from '@genie/ui-kit';
 
 export interface ComposerConversation {
   send(text: string): Promise<{ needsClarification: boolean; answer: string | null }>;
@@ -19,7 +19,7 @@ export interface ComposerConversation {
 
 export function Composer({
   conversation,
-  placeholder = 'Ask Astra…',
+  placeholder = 'Ask Genie…',
 }: {
   conversation?: ComposerConversation | undefined;
   placeholder?: string;
@@ -86,7 +86,7 @@ export function Composer({
           value={text}
           rows={1}
           placeholder={placeholder}
-          aria-label="Astra に頼む"
+          aria-label="Genie に頼む"
           onChange={(event) => setText(event.target.value)}
           onKeyDown={(event) => {
             /*

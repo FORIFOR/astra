@@ -1,6 +1,6 @@
 # UI/UX Detailed Spec v0.1 — 準拠状況（2026-08-28）
 
-正: `Astra_UI_UX_Detailed_Spec_v0.1.docx`。ネイティブ（macOS/Windows）を最終製品とし、
+正: `Genie_UI_UX_Detailed_Spec_v0.1.docx`。ネイティブ（macOS/Windows）を最終製品とし、
 Tauri/React 版 `apps/desktop` は参照実装。mock と real を分け、逸脱は捏造せず明記する。
 
 ## 準拠（✅）

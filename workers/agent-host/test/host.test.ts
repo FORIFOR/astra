@@ -9,7 +9,7 @@
  */
 import { describe, expect, it, vi } from 'vitest';
 import { DEFAULT_HEARTBEAT_MS, LocalAgentHost, type HostTransport } from '../src/host.js';
-import { HOST_OFFLINE_AFTER_MS } from '@astra/contracts';
+import { HOST_OFFLINE_AFTER_MS } from '@genie/contracts';
 
 function fakeTransport(over: Partial<HostTransport> = {}): HostTransport & {
   calls: string[];

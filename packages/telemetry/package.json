@@ -1,5 +1,5 @@
 {
-  "name": "@astra/telemetry",
+  "name": "@genie/telemetry",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -21,8 +21,8 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@astra/contracts": "workspace:*",
-    "@astra/db": "workspace:*",
+    "@genie/contracts": "workspace:*",
+    "@genie/db": "workspace:*",
     "@opentelemetry/api": "^1.9.1",
     "kysely": "catalog:",
     "pino": "^10.3.1",

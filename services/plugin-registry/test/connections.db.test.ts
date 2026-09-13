@@ -8,8 +8,8 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { looksLikeCredential, uuidv7 } from '@astra/contracts';
-import { createDb, withIdentity, type DbHandle } from '@astra/db';
+import { looksLikeCredential, uuidv7 } from '@genie/contracts';
+import { createDb, withIdentity, type DbHandle } from '@genie/db';
 import { ConnectionService } from '../src/connections.js';
 import { PluginRegistryService } from '../src/service.js';
 
@@ -172,7 +172,7 @@ describe.skipIf(!url)('ConnectionService', () => {
 });
 
 describe('the reference the device hands over (正本 §21)', () => {
-  it('accepts what @astra/oauth produces', () => {
+  it('accepts what @genie/oauth produces', () => {
     // 端末側が作る参照が、サーバ側の門で弾かれては繋げない。
     // 規則は contracts に 1 つ。ここは、その形が実際に通ることを見る。
     expect(looksLikeCredential('keychain:com.acme.mail/gmail')).toBe(false);

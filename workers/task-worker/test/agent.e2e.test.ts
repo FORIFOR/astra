@@ -12,23 +12,23 @@ import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { TestWorkflowEnvironment } from '@temporalio/testing';
 import type { Worker } from '@temporalio/worker';
-import { AstraError, sha256Hex, uuidv7 } from '@astra/contracts';
-import { createDb, withIdentity, withSystem, withTenant, type DbHandle } from '@astra/db';
-import { FsObjectStore, LibraryService } from '@astra/service-library';
-import { PluginRegistryService, agentResolver } from '@astra/service-plugin-registry';
+import { GenieError, sha256Hex, uuidv7 } from '@genie/contracts';
+import { createDb, withIdentity, withSystem, withTenant, type DbHandle } from '@genie/db';
+import { FsObjectStore, LibraryService } from '@genie/service-library';
+import { PluginRegistryService, agentResolver } from '@genie/service-plugin-registry';
 import {
   generatePublisherKeyPair,
   loadManifest,
   signManifest,
   type PluginAsset,
-} from '@astra/plugin-sdk';
+} from '@genie/plugin-sdk';
 import {
   TaskService,
   TemporalTaskRuntime,
   agentKindFor,
   createTaskWorker,
   workflowIdFor,
-} from '@astra/service-task';
+} from '@genie/service-task';
 
 const url = process.env['TEST_DATABASE_URL'];
 const identityUrl = process.env['TEST_IDENTITY_DATABASE_URL'];
@@ -470,6 +470,6 @@ describe.skipIf(!url)('an installed agent', () => {
         request: { kind: agentKindFor(PLUGIN_ID, 'nope'), input: {} },
         idempotencyKey: `ag-${uuidv7()}`,
       }),
-    ).rejects.toThrow(AstraError);
+    ).rejects.toThrow(GenieError);
   });
 });

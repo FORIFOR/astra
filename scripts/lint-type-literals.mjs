@@ -19,7 +19,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
-const src = path.join(root, 'apps/astra-macos/Sources/AstraMac');
+const src = path.join(root, 'apps/genie-macos/Sources/GenieMac');
 
 /** 6 つの型を描く view。ここに無い面（Home / Settings など）はまだ対象外。 */
 const SCOPE = [

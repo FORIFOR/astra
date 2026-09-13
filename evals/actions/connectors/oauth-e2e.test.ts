@@ -29,8 +29,8 @@ import {
   TokenStore,
   type ProviderConfig,
   type SecretStore,
-} from '@astra/oauth';
-import { looksLikeCredential } from '@astra/contracts';
+} from '@genie/oauth';
+import { looksLikeCredential } from '@genie/contracts';
 
 /** 仕様どおりに振る舞う、その場限りの認可サーバ。 */
 interface FakeProvider {

@@ -4,7 +4,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
-import { PublicShareClient } from '@astra/api-client';
+import { PublicShareClient } from '@genie/api-client';
 import { ShareViewer } from '../src/ShareViewer.js';
 
 afterEach(cleanup);
@@ -169,7 +169,7 @@ describe('what the page reveals', () => {
     await waitFor(() => expect(screen.getByText('A社 提案書')).toBeTruthy());
 
     const page = document.body.textContent ?? '';
-    for (const leak of ['tenant', 'owner', 'Astra', 'workspace']) {
+    for (const leak of ['tenant', 'owner', 'Genie', 'workspace']) {
       expect(page.toLowerCase()).not.toContain(leak.toLowerCase());
     }
   });

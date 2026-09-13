@@ -94,7 +94,7 @@ async function main() {
       const st = u.searchParams.get('state');
       res
         .writeHead(200, { 'content-type': 'text/html; charset=utf-8' })
-        .end('<h2>Astra: サインイン受領。ターミナルに戻ってください。</h2>');
+        .end('<h2>Genie: サインイン受領。ターミナルに戻ってください。</h2>');
       server.close();
       if (st !== state) return reject(new Error('state mismatch'));
       if (!code) return reject(new Error('no code'));
@@ -170,7 +170,7 @@ async function main() {
   fs.writeFileSync('/tmp/astra-live-oauth.json', JSON.stringify(evidence, null, 2));
   if (ok) {
     console.log(
-      '\nLIVE_OAUTH_OK: gateway が実 Google id_token を検証し Astra セッションを発行しました。',
+      '\nLIVE_OAUTH_OK: gateway が実 Google id_token を検証し Genie セッションを発行しました。',
     );
     console.log('  iss=' + payload.iss + ' aud=' + payload.aud + ' sub=' + payload.sub);
     console.log('  証跡: /tmp/astra-live-oauth.json （mock/local-JWKS ではない）');

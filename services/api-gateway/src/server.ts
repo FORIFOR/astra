@@ -1,16 +1,16 @@
 /** 起動エントリ。 */
 import { Redis } from 'ioredis';
-import { createDb } from '@astra/db';
-import { createLogger } from '@astra/telemetry';
-import { FsObjectStore, LibraryService } from '@astra/service-library';
-import { TaskService, TemporalTaskRuntime } from '@astra/service-task';
+import { createDb } from '@genie/db';
+import { createLogger } from '@genie/telemetry';
+import { FsObjectStore, LibraryService } from '@genie/service-library';
+import { TaskService, TemporalTaskRuntime } from '@genie/service-task';
 import {
   ConnectionService,
   PluginRegistryService,
   agentResolver,
   assetReader,
   composeDataSources,
-} from '@astra/service-plugin-registry';
+} from '@genie/service-plugin-registry';
 import {
   DomainService,
   entityDefinitions,
@@ -20,26 +20,26 @@ import {
   salesCrmDataSources,
   stockDataSources,
   videoDataSources,
-} from '@astra/service-agent-runtime';
-import { AgentHostService, HostBridge, HostStepExecutor } from '@astra/service-agent-host';
-import { WorkContextService, WorldModelService } from '@astra/service-world-model';
-import { ConversationService } from '@astra/service-conversation';
+} from '@genie/service-agent-runtime';
+import { AgentHostService, HostBridge, HostStepExecutor } from '@genie/service-agent-host';
+import { WorkContextService, WorldModelService } from '@genie/service-world-model';
+import { ConversationService } from '@genie/service-conversation';
 import {
   ResearchLedgerService,
   researchDataSources,
   researchProvidersFromEnv,
-} from '@astra/service-research';
-import { meetingDataSources } from '@astra/service-meeting';
-import { ShareService } from '@astra/service-share';
+} from '@genie/service-research';
+import { meetingDataSources } from '@genie/service-meeting';
+import { ShareService } from '@genie/service-share';
 import {
   FsRecordingStore,
   GoogleTtsProvider,
   MeetingService,
   meetingProvidersFromEnv,
-} from '@astra/service-meeting';
+} from '@genie/service-meeting';
 // 代役の判定は contracts が正。service ごとに数えると、片方だけ見落とす。
-import { assertReadyForProduction } from '@astra/contracts';
-import { capabilityReport, capabilitySummary } from '@astra/service-capabilities';
+import { assertReadyForProduction } from '@genie/contracts';
+import { capabilityReport, capabilitySummary } from '@genie/service-capabilities';
 import { buildApp } from './app.js';
 import { assertPathsExist, gatewayConfigFromEnv } from './config.js';
 import { keyConfigFromEnv, loadSigningKeys } from './auth/keys.js';

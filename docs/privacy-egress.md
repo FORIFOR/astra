@@ -12,7 +12,7 @@
 | 経路                                                         | 出るもの                                                                                                                                                                                                         | 出る条件                                                                                                                                                                                                                     | 分類                                                            | 根拠                                                                                                                                         |
 | ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | Apple の音声認識サーバ                                       | **会議の音声**                                                                                                                                                                                                   | `SFSpeechRecognizer(ja-JP).supportsOnDeviceRecognition == false` のとき。コードが `requiresOnDeviceRecognition` をその値にしているので、日本語のオンデバイス資産が無い Mac では**黙って**サーバ認識になる                    | cloud-used（利用者に見えない）                                  | `Audio/SpeechTranscriber.swift:53,93`、呼び手 `RecordingWorkspace/RecordingRuntime.swift:82`                                                 |
-| gateway（`ASTRA_GATEWAY_URL`、既定 `http://127.0.0.1:3000`） | 開発サインイン（`main-<pid>@astra.local`）、`/v1/me`、会議の作成・終了、**録音した音声の全断片**（WS `/v1/meetings/:id/audio`）、落ちた録音の回復送信、声で頼んだ文（`/v1/conversations/:id/turns`）、タスク作成 | gateway に到達できるとき。音声の会議作成・送信・回復は設定の `astra.transcription.cloudGoogleSTT=true`（「高精度クラウド文字起こし」）のときだけ。Main window は接続情報を渡すが、音声送信の判断は `RecordingRuntime` が行う | cloud-used / external-send（Google STT は設定がオンのときだけ） | `Main/MainWindowView.swift:35-49`、`RecordingRuntime.swift:150-185,406-410,475-482`、`core/astra-core/src/api.rs:63,111,135,248,297,322,383` |
+| gateway（`ASTRA_GATEWAY_URL`、既定 `http://127.0.0.1:3000`） | 開発サインイン（`main-<pid>@astra.local`）、`/v1/me`、会議の作成・終了、**録音した音声の全断片**（WS `/v1/meetings/:id/audio`）、落ちた録音の回復送信、声で頼んだ文（`/v1/conversations/:id/turns`）、タスク作成 | gateway に到達できるとき。音声の会議作成・送信・回復は設定の `astra.transcription.cloudGoogleSTT=true`（「高精度クラウド文字起こし」）のときだけ。Main window は接続情報を渡すが、音声送信の判断は `RecordingRuntime` が行う | cloud-used / external-send（Google STT は設定がオンのときだけ） | `Main/MainWindowView.swift:35-49`、`RecordingRuntime.swift:150-185,406-410,475-482`、`core/genie-core/src/api.rs:63,111,135,248,297,322,383` |
 | connector の OAuth                                           | 認可コード往復（本文は出ない）                                                                                                                                                                                   | 利用者が接続操作をしたとき                                                                                                                                                                                                   | external-send（本人操作）                                       | `Context/ConnectorFlow.swift:9-14`                                                                                                           |
 | Sparkle appcast（GitHub Releases）                           | 版・OS の情報                                                                                                                                                                                                    | 起動時 1 回、「更新を確認…」                                                                                                                                                                                                 | cloud-used                                                      | `App/SoftwareUpdate.swift`                                                                                                                   |
 | 配布ページ / ガイドの URL                                    | なし（ブラウザを開くだけ）                                                                                                                                                                                       | 本人操作                                                                                                                                                                                                                     | —                                                               | `App/StatusBarController.swift`                                                                                                              |
@@ -24,7 +24,7 @@
 id-ID / hi-IN / tr-TR / uk-UA / ms-MY / he-IL は `available=true, onDevice=false`
 （ログは "No Assistant asset for language …"）。つまり「対応していない Mac」ではなく
 「その言語のオンデバイス資産が入っていない Mac」で起きる。日本語の資産が入っていない
-Mac（英語環境の Mac など）で Astra を使うと、この列に ja-JP が入る。
+Mac（英語環境の Mac など）で Genie を使うと、この列に ja-JP が入る。
 
 `say` で作った 2.75 秒の音声を de-DE（onDevice=false）で認識させた結果:
 
@@ -33,7 +33,7 @@ Mac（英語環境の Mac など）で Astra を使うと、この列に ja-JP �
 | true                          | 即座に error `Failed to access assets`（kLSRErrorDomain 102）。文字は出ない                 |
 | false                         | `Guten Morgen wie teuer die hat` が返る——資産が無いのに認識できた＝**サーバで認識している** |
 
-Astra のコードは後者の設定になる（`= recognizer.supportsOnDeviceRecognition`）。
+Genie のコードは後者の設定になる（`= recognizer.supportsOnDeviceRecognition`）。
 Info.plist の `NSSpeechRecognitionUsageDescription` は「音は端末から出しません」と言っている
 （`scripts/release-macos.sh:132`）。**この 2 つは両立しない。**
 
@@ -129,15 +129,15 @@ CALENDAR_PURPOSE_FIRST
 ## スクリーンショット（SCREENSHOT_EGRESS_TRUTH、2026-09-07）
 
 「⌘⇧4 → 『これ何？』」で画像がどこまで行くか。**「画像は端末から出ない」とは言わない。**
-守るのは `--selftest screenshotegress`（SCREENSHOT_EGRESS_TRUTH）、`core/astra-core` の
+守るのは `--selftest screenshotegress`（SCREENSHOT_EGRESS_TRUTH）、`core/genie-core` の
 `turn_body_carries_ids_and_labels_but_never_pixels`、gateway の `conversations-screenshot.integration.test.ts`
 （`data` 等を持つ添付は 400）、実経路は `scripts/reality/run-screenshot-e2e.sh`。
 
 | 段階                           | 出るもの                                                       | 行き先                                        | 分類          | 根拠                                                                                             |
 | ------------------------------ | -------------------------------------------------------------- | --------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------ |
 | 撮っただけ                     | **なし**（受け渡し場所にも写さない）                           | —                                             | local-only    | `Context/ScreenshotContext.swift` `attachCount==0`、gate capture_only_egress=0                   |
-| 参照表現で尋ねた               | 添付の **id / kind / label** の 3 文字列（画素 0）             | gateway `/v1/conversations/:id/turns`         | cloud-used    | `core/astra-core/src/api.rs` `turn_body`、contracts `TurnAttachment.strict()`                    |
-| 同上（端末内）                 | `<id>.png` の写しを `~/Library/Caches/Astra/VisualContext/` へ | 端末の worker（`workers/agent-host`）が Read  | local-only    | `visual-context.ts` 正規パス検査、TTL 30 分 / 20 件 / 200MB                                      |
+| 参照表現で尋ねた               | 添付の **id / kind / label** の 3 文字列（画素 0）             | gateway `/v1/conversations/:id/turns`         | cloud-used    | `core/genie-core/src/api.rs` `turn_body`、contracts `TurnAttachment.strict()`                    |
+| 同上（端末内）                 | `<id>.png` の写しを `~/Library/Caches/Genie/VisualContext/` へ | 端末の worker（`workers/agent-host`）が Read  | local-only    | `visual-context.ts` 正規パス検査、TTL 30 分 / 20 件 / 200MB                                      |
 | worker が cloud のモデルで見る | **その画像だけ**（Claude Code CLI が Read した画素）           | 利用者自身の Claude（Claude Code のログイン） | external-send | `llm-steps.ts` `toolsFor` は画像が在るときだけ `Read`。UI の開示は `Facts.screenshotEgressCloud` |
 | worker が端末内モデルで見る    | なし                                                           | —                                             | local-only    | `VisualEgressPolicy.localVision`（端末内で画像を見るモデルはまだ無い）                           |
 

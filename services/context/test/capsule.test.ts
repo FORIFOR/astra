@@ -4,7 +4,7 @@
  * **raw なローカルデータをそのまま外へ出さない**ことを確かめる。
  */
 import { describe, expect, it } from 'vitest';
-import type { ContextSource } from '@astra/contracts';
+import type { ContextSource } from '@genie/contracts';
 import {
   buildCapsule,
   containsRawLocalData,

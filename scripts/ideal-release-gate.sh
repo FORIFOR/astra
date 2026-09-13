@@ -18,8 +18,8 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 WORK="${ASTRA_GATE_WORK:-/tmp/astra-ideal-gate}"
 SKIP=",${ASTRA_GATE_SKIP:-},"
-APP="$ROOT/apps/astra-macos/.build/Astra.app"
-BIN="$ROOT/apps/astra-macos/.build/debug/AstraMac"
+APP="$ROOT/apps/genie-macos/.build/Genie.app"
+BIN="$ROOT/apps/genie-macos/.build/debug/GenieMac"
 ATLAS_OUT="$WORK/atlas"
 mkdir -p "$WORK"
 REPORT="$WORK/report.md"
@@ -148,7 +148,7 @@ else
 fi
 # 18 ガイド生成（golden から。文は fact() だけ）
 # ガイドの絵は RC が撮った shots（Atlas と同じ素材）から。
-guide() { ASTRA_GUIDE_CLEAN_SHOTS="$ATLAS_OUT/shots-light" ASTRA_GUIDE_OUT="$WORK/guide/Astra-操作ガイド" ASTRA_GUIDE_BIN="$BIN" python3 docs/guide/build.py && ls "$WORK/guide/" && echo GUIDE_BUILT; }
+guide() { ASTRA_GUIDE_CLEAN_SHOTS="$ATLAS_OUT/shots-light" ASTRA_GUIDE_OUT="$WORK/guide/Genie-操作ガイド" ASTRA_GUIDE_BIN="$BIN" python3 docs/guide/build.py && ls "$WORK/guide/" && echo GUIDE_BUILT; }
 step 18 "guide generation" "GUIDE_BUILT" guide
 # 19 ガイド ↔ 実行体の一致
 step 19 "guide ↔ binary parity" "GUIDE_FACTS_OK" bash scripts/verify-guide-facts.sh

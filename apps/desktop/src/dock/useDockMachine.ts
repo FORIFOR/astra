@@ -13,7 +13,7 @@ import {
   escapeOutcome,
   type DockSurface,
   type InteractionState,
-} from '@astra/ui-kit';
+} from '@genie/ui-kit';
 import { host } from '../host/tauri.js';
 
 /** 上↔下の切替にかける時間。位置移動を全部見せない（黒い帯が画面を横切る）。 */
@@ -75,7 +75,7 @@ export interface DockConversation {
 /**
  * 音声入力の口。正本 §11.1。
  *
- * **Dock は音を持たない。**取り込みと認識は外（`@astra/stt`）でやり、
+ * **Dock は音を持たない。**取り込みと認識は外（`@genie/stt`）でやり、
  * ここへは確定した文字だけが来る。Dock に音の扱いを持ち込むと、
  * 「どこでクラウドへ出ているか」が追えなくなる。
  */

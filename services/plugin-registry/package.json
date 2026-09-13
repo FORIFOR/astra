@@ -1,5 +1,5 @@
 {
-  "name": "@astra/service-plugin-registry",
+  "name": "@genie/service-plugin-registry",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -21,12 +21,12 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@astra/contracts": "workspace:*",
-    "@astra/db": "workspace:*",
-    "@astra/plugin-sdk": "workspace:*",
-    "@astra/telemetry": "workspace:*",
+    "@genie/contracts": "workspace:*",
+    "@genie/db": "workspace:*",
+    "@genie/plugin-sdk": "workspace:*",
+    "@genie/telemetry": "workspace:*",
     "kysely": "catalog:",
-    "@astra/service-task": "workspace:*",
+    "@genie/service-task": "workspace:*",
     "yaml": "^2.9.0"
   },
   "devDependencies": {

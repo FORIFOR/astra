@@ -1,0 +1,33 @@
+<Window
+    x:Class="Genie.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- WinUI 3 では NavigationView 等は既定 namespace。muxc 前置は不要。
+         Icon は Symbol 名文字列ではなく FontIcon(Segoe Fluent) の glyph で明示し、
+         実行時 XAML パースの失敗を避ける。 -->
+    <NavigationView x:Name="Nav" PaneDisplayMode="Left" IsBackButtonVisible="Collapsed">
+        <NavigationView.MenuItems>
+            <NavigationViewItem Content="Home" Tag="home">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE80F;"/>
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+            <NavigationViewItem Content="Work" Tag="agents">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE8FD;"/>
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+            <NavigationViewItem Content="Library" Tag="library">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE8F1;"/>
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+            <NavigationViewItem Content="Apps" Tag="apps">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE71D;"/>
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+        </NavigationView.MenuItems>
+        <Frame x:Name="ContentFrame"/>
+    </NavigationView>
+</Window>

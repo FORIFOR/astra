@@ -1,0 +1,53 @@
+{
+  "entries": [
+    {
+      "kind": "material/blur",
+      "file": "GuidedSetup/Overlay/GuideCalloutView.swift",
+      "sha256": "84393eed00c9000a69b2e72790391a5f83f4d7fff79cc717f2a07d7d5849d7da",
+      "count": 1,
+      "reason": "Permission guidance is a transient system-style callout; the material separates the instructional overlay from the app surface. Re-reviewed 2026-09-13: source differs only in product/module naming; all style expressions and count allowances are unchanged."
+    },
+    {
+      "kind": "material/blur",
+      "file": "GuidedSetup/Overlay/AvatarHUDView.swift",
+      "sha256": "1a961300f2da097b81a3462b11368b4603f8f4de5409d494f3a85c7bc980f922",
+      "count": 1,
+      "reason": "Re-reviewed 2026-09-11 for permission-capabilities: the same one regularMaterial boundary remains on the existing 300pt transient guide. Purpose, waiting, optional repair and ready reuse that surface. Native light/dark captures and fitted geometry are in docs/golden-screenshots/permission-capabilities. No material allowance increase; this is a scoped implementation audit, not an independent product-wide review. Re-reviewed 2026-09-13: source differs only in product/module naming; all style expressions and count allowances are unchanged."
+    },
+    {
+      "kind": "Capsule",
+      "file": "Home/WorkPressureView.swift",
+      "sha256": "e2a93d0bdf63201dee58e270d3ffe696ce56c210a24feb42f0ab412bd73da337",
+      "count": 2,
+      "reason": "The two capsules are compact severity/status indicators; they encode bounded state rather than decorative cards. Re-reviewed 2026-09-13: source differs only in product/module naming; all style expressions and count allowances are unchanged."
+    },
+    {
+      "kind": "Capsule",
+      "file": "Home/SessionCard.swift",
+      "sha256": "c3b03fef620635fbc19a1151f7b68ed544c0628e119c291c6ffedf1adddea2d7",
+      "count": 1,
+      "reason": "The capsule is the session metadata tag and remains within the card row. Re-reviewed 2026-09-13: source differs only in product/module naming; all style expressions and count allowances are unchanged."
+    },
+    {
+      "kind": "Capsule",
+      "file": "Home/WorkContextCard.swift",
+      "sha256": "1f1d22d00bf60171efeef52c4849fe03c17ada3ac46f1b81bf41f172d2d75c9d",
+      "count": 1,
+      "reason": "Existing priority severity capsule unchanged. Workspace UX audit hides zero-valued pressure bars; native light/dark captures and source review show no new pill surfaces. Re-reviewed 2026-09-13: source differs only in product/module naming; all style expressions and count allowances are unchanged."
+    },
+    {
+      "kind": "Capsule",
+      "file": "Home/PersonalizationInspector.swift",
+      "sha256": "5d1d0020a4f7d2aa8b1edbbda60bb5331f08659aa9289cb1d57bbff1c60e47ee",
+      "count": 1,
+      "reason": "The capsule is a selected profile value indicator and is limited to the inspector row. Re-reviewed 2026-09-13: source differs only in product/module naming; all style expressions and count allowances are unchanged."
+    },
+    {
+      "kind": "Capsule",
+      "file": "VoiceHUD/VoiceHUDView.swift",
+      "sha256": "978f6d2918dc88ed301eab762ddf9546a5e643560d12ea376011e7ac92ccb612",
+      "count": 1,
+      "reason": "Re-reviewed 2026-09-12 for screenshot questions: existing task progress Capsules are unchanged. The 320x52 Dock now has one question action plus dismiss; the duplicate action is removed. Three-scale native captures confirm the complete label fits. No Capsule, shadow, material or allowance increase; scoped implementation review only. Re-reviewed 2026-09-13: source differs only in product/module naming; all style expressions and count allowances are unchanged."
+    }
+  ]
+}

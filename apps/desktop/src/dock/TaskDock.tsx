@@ -13,17 +13,17 @@ import {
   isComposing,
   resolveShortcut,
   type BindingOverrides,
-} from '@astra/ui-kit';
-import type { ContextSource } from '@astra/contracts';
+} from '@genie/ui-kit';
+import type { ContextSource } from '@genie/contracts';
 import { useDockMachine, type DockConversation, type DockDictation } from './useDockMachine.js';
 import { ContextLens } from './ContextLens.js';
 import { PermissionAsk } from './PermissionAsk.js';
 import { ResultPreview } from './ResultPreview.js';
 import { WorkCard } from '../work/WorkCard.js';
-import { AstraOrb, useAccentHex } from '../voice/AstraOrb.js';
+import { GenieOrb, useAccentHex } from '../voice/GenieOrb.js';
 import { MicIcon } from '../voice/MicIcon.js';
 import type { VoiceMode } from '../voice/voiceRuntime.js';
-import type { DockSurface, InteractionState } from '@astra/ui-kit';
+import type { DockSurface, InteractionState } from '@genie/ui-kit';
 import { DockPill } from './DockPill.js';
 import { QuickMenu } from './QuickMenu.js';
 import { ProcessingDock, RecordingDock } from './RecordingDock.js';
@@ -322,9 +322,9 @@ export function TaskDock({
   );
 
   const frameStyle = {
-    ['--astra-dock-width' as string]: `${size.width}px`,
-    ['--astra-dock-min-height' as string]: `${size.minHeight}px`,
-    ['--astra-dock-max-height' as string]: `${size.maxHeight}px`,
+    ['--genie-dock-width' as string]: `${size.width}px`,
+    ['--genie-dock-min-height' as string]: `${size.minHeight}px`,
+    ['--genie-dock-max-height' as string]: `${size.maxHeight}px`,
   };
 
   // 録音中: 下部の Recording Dock。停止直後は「保存しました」
@@ -432,10 +432,10 @@ export function TaskDock({
           className="astra-dock__orb"
           data-astra-voice-state={orbMode}
           aria-pressed={listening}
-          aria-label={listening ? '聞くのをやめる' : 'Astra に話しかける'}
+          aria-label={listening ? '聞くのをやめる' : 'Genie に話しかける'}
           onClick={toggleListening}
         >
-          <AstraOrb
+          <GenieOrb
             mode={orbMode}
             size={28}
             {...(voiceLevels

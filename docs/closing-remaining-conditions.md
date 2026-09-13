@@ -9,13 +9,13 @@ Phase 1.81 時点。この環境で実測できるものは全て緑（`pnpm ver
 ## A. #4/#5 — Windows 実ビルド・実描画・実行時（要: Windows ホスト）
 
 > **実機フル GUI(#4) の手順（2026-08-28 整備）**: `windows` workflow が self-contained アプリを
-> artifact `astra-windows-app`（`publish/` 一式 = Astra.exe + WindowsAppSDK ランタイム）として出力する。
+> artifact `astra-windows-app`（`publish/` 一式 = Genie.exe + WindowsAppSDK ランタイム）として出力する。
 >
 > 1. GitHub Actions の最新 `windows` run から `astra-windows-app` を Windows 実機にダウンロードして展開。
-> 2. `Astra.exe` を実行し、以下を目視（最大 5 項目）:
+> 2. `Genie.exe` を実行し、以下を目視（最大 5 項目）:
 >    - **Voice HUD**（上部中央・borderless・option/command/長押しで音声入力）
->    - **Recording Workspace**（`Astra.exe --smoke-workspace`。notch/Bezier・Task Dock・録音中 Hero）
->    - **Main Window**（`Astra.exe --smoke-main`。NavigationView 4 セクション Home/AI Agents/Library/Apps）
+>    - **Recording Workspace**（`Genie.exe --smoke-workspace`。notch/Bezier・Task Dock・録音中 Hero）
+>    - **Main Window**（`Genie.exe --smoke-main`。NavigationView 4 セクション Home/AI Agents/Library/Apps）
 >    - **Task Dock / notch geometry** が tokens 実寸で描かれる
 >    - 録音終了 → HUD 復帰の遷移
 > 3. スクショか結果を戻せば #4 クローズ。
@@ -30,10 +30,10 @@ C# 全ロジック（Window code-behind 含む）は macOS で型検査 PASS 済
 
 1. `apps/windows/**` を含むコミットを push（または GitHub Actions で `windows` workflow を手動実行）。
    - `.github/workflows/windows.yml` が windows-latest で自動実行する:
-     `cargo build --release`（astra_core.dll）→ dll を配置 → `check-cabi-csharp` →
+     `cargo build --release`（genie_core.dll）→ dll を配置 → `check-cabi-csharp` →
      `verify-csharp-bridge` → `check-xaml-wellformed` → `verify-csharp-logic` →
-     `dotnet build apps/windows/Astra.sln -c Release -p:Platform=x64`。
-2. 緑になれば #5 クローズ。実描画/実行時（#4 の残り）は実機で `Astra.exe` を起動し、
+     `dotnet build apps/windows/Genie.sln -c Release -p:Platform=x64`。
+2. 緑になれば #5 クローズ。実描画/実行時（#4 の残り）は実機で `Genie.exe` を起動し、
    Voice HUD → ⌥相当のショートカット → Recording Workspace の遷移を目視。
 3. 期待寸法: HUD/Workspace は tokens 由来（`GeneratedMetrics.cs`、`--check` で macOS と同一）。
    PerMonitorV2 manifest 済みなので高 DPI でも token 実寸で描かれる。
@@ -89,7 +89,7 @@ regression: swift build 0 error / swift test 3 pass / verify:all VERIFY_ALL_OK�
 
 **クローズ手順**:
 
-1. `apps/astra-macos` を署名して .app 化し起動（Info.plist に `NSCalendarsFullAccessUsageDescription`）。
+1. `apps/genie-macos` を署名して .app 化し起動（Info.plist に `NSCalendarsFullAccessUsageDescription`）。
 2. 初回にカレンダー許可プロンプトでユーザーが許可。
 3. `CalendarAccess.upcoming(hours:)` が実イベントを返す（`--selftest calendar` が
    `status=許可済み upcoming=N` を表示）。これで #3 の残り（カレンダー実データ）クローズ。
@@ -98,7 +98,7 @@ regression: swift build 0 error / swift test 3 pass / verify:all VERIFY_ALL_OK�
 
 ## クローズ後に #10/#11 を更新
 
-3 条件クローズ後、`docs/astra-core-migration.md` の状態マトリクスを ✅ 更新し、最終 commit hash を提示する。
+3 条件クローズ後、`docs/genie-core-migration.md` の状態マトリクスを ✅ 更新し、最終 commit hash を提示する。
 
 ### B turnkey
 

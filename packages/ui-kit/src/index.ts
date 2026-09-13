@@ -1,5 +1,5 @@
 /**
- * @astra/ui-kit
+ * @genie/ui-kit
  *
  * Design tokens と共有 UI プリミティブ。
  * 正本: docs/spec/astra_ui_ux_detailed_spec_v0.1.docx §7・§17・§18・§19。

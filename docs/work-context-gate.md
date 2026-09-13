@@ -20,15 +20,15 @@
 | Work Pressure          | `services/world-model/src/work/pressure.ts`                                                                                 | 決定的な式（7 要因、理由つき）。LLM は関わらない                      |
 | 保存 / HTTP            | `infra/db/migrations/20260907090000_work_context.sql`、`services/api-gateway/src/routes/work.ts`                            | RLS、訂正は消さない（監査）                                           |
 | 注入                   | `services/world-model/src/work/injection.ts`、`routes/conversations.ts`                                                     | 関連する案件だけ、<= 3 件 / 1200 字、`<work_context>`                 |
-| Home                   | `apps/astra-macos/Sources/AstraMac/Home/{WorkContextStore,WorkContextCard,WorkPressureView,PersonalizationInspector}.swift` | 3 件・状況 1 行・[出所を見る]・訂正 1 操作・停止 1 操作               |
-| core                   | `core/astra-core/src/api.rs` `api_work_*` / `api_personalization*`                                                          | JSON をそのまま運ぶ（契約の正本は TS の zod）                         |
+| Home                   | `apps/genie-macos/Sources/GenieMac/Home/{WorkContextStore,WorkContextCard,WorkPressureView,PersonalizationInspector}.swift` | 3 件・状況 1 行・[出所を見る]・訂正 1 操作・停止 1 操作               |
+| core                   | `core/genie-core/src/api.rs` `api_work_*` / `api_personalization*`                                                          | JSON をそのまま運ぶ（契約の正本は TS の zod）                         |
 
 ## 2026-09-07 の結果（RC 0d089bc、`/tmp/astra-work-context-gate/report.txt`）
 
 | 行                             | 結果            | 根拠                                                                                                |
 | ------------------------------ | --------------- | --------------------------------------------------------------------------------------------------- |
 | connectors connected           | NOT_CONNECTED   | この Mac に OAuth client id もトークンも無い。契約試験（fixture）で代替、live は AUTOMATION_MISSING |
-| cross-source entity resolution | PASS            | gateway work.integration（Astra task + 会議 + Gmail が同じ案件に）                                  |
+| cross-source entity resolution | PASS            | gateway work.integration（Genie task + 会議 + Gmail が同じ案件に）                                  |
 | project clustering             | PASS            | world-model work.test.ts（明示 → thread → Jaccard）                                                 |
 | task / waiting-on / deadline   | PASS            | 同上（owed / waiting / extractDeadline）                                                            |
 | deterministic scoring          | PASS            | 同上（同じ入力 → 同じ点、要因ごとに理由）                                                           |
@@ -79,7 +79,7 @@ live に必要なのは `ASTRA_OAUTH_GOOGLE_CLIENT_ID` / `ASTRA_OAUTH_MICROSOFT_
 `main.home-work-context` は 5 round とも KEEP（1127b32 で全員 KEEP）。`main.home-personalization` は 5 round とも
 FIX_CANDIDATE だが、指摘の軸は毎回入れ替わり（一貫性 → 詰まり → 語の意味 → 作用範囲 → 密度）、裏の取れたものは
 その都度直した。最後に残ったのは「右 Panel が密」「塗りの選択状態が強すぎる」という主観で、寸法・AX・state の
-証拠が無い（Panel 幅は `Metrics.inspectorWidth`、button は他の面と同じ `AstraControlStyle`）。
+証拠が無い（Panel 幅は `Metrics.inspectorWidth`、button は他の面と同じ `GenieControlStyle`）。
 [[visual-judges-cannot-measure]] の通り、証拠の無い主観では直さない。**VISUAL_IDEAL_GATE（新 2 面）= 1 KEEP / 1 FIX_CANDIDATE（証拠なし、保留）。**
 次に本人が見て「密」と言えばそれが証拠になる（Panel を広げるか、行を畳むか）。
 

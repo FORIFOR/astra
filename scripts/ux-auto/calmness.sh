@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# CALMNESS_TEST — Astra を出したまま普通に仕事をして、邪魔をしないか測る。
+# CALMNESS_TEST — Genie を出したまま普通に仕事をして、邪魔をしないか測る。
 #
 # 人が 5 分 Finder を触る代わり。**測れるものだけ測り、測れないものは
 # 測れないと書く**（キーボード横取りと pointer 横取りは、外から観測する
@@ -9,15 +9,15 @@
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 LAB="$ROOT/.build/uxlab"
-BIN="$ROOT/apps/astra-macos/.build/debug/AstraMac"
+BIN="$ROOT/apps/genie-macos/.build/debug/GenieMac"
 DUR="${1:-60}"
 OUT="$ROOT/artifacts/ux/calmness"
 mkdir -p "$OUT"
 
 bash "$ROOT/scripts/ux-auto/build-tools.sh" >/dev/null
-pkill -9 -f AstraMac 2>/dev/null; sleep 1
+pkill -9 -f GenieMac 2>/dev/null; sleep 1
 
-# Astra を出したまま置く。ここで前へ出てきたら、それが「邪魔」。
+# Genie を出したまま置く。ここで前へ出てきたら、それが「邪魔」。
 "$BIN" --selftest idle-hold $((DUR+30)) >"$OUT/app.log" 2>&1 &
 APP=$!
 sleep 2
@@ -45,7 +45,7 @@ while :; do
   i=$((i+1)); sleep 1
 done
 
-kill $APP 2>/dev/null; pkill -9 -f AstraMac 2>/dev/null
+kill $APP 2>/dev/null; pkill -9 -f GenieMac 2>/dev/null
 
 python3 - "$OUT" <<'PY'
 import sys, os, json, statistics
@@ -94,7 +94,7 @@ fail = []
 if m["focus_theft"] > 0: fail.append(f"焦点を奪った {m['focus_theft']} 回")
 if m["unexpected_expansion"] > 0: fail.append(f"勝手に広がった {m['unexpected_expansion']} 回")
 if m["occupation_max"] >= 0.10: fail.append(f"占有 {m['occupation_max']*100:.1f}%（10% 以上）")
-# **覆われること自体は悪ではない。** idle の Astra が他アプリの後ろに退いて
+# **覆われること自体は悪ではない。** idle の Genie が他アプリの後ろに退いて
 # いるのは望ましい。「93% 覆われている＝FAIL」は Calmness の評価として逆だった。
 # 見えていなければならないのは状態ごとに違う（EVIDENCE_LEVELS.md）:
 #   idle 覆われてよい / listening 聞いていることが見える /

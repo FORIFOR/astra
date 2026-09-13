@@ -14,7 +14,7 @@ import {
   type DataHandling,
   type PermissionScope,
   type PluginCatalogEntry,
-} from '@astra/contracts';
+} from '@genie/contracts';
 
 /**
  * この plugin のデータがどこまで出るか。UI/UX §22。
@@ -45,7 +45,7 @@ export function providerLabel(provider: string): string {
 }
 const SIGNATURE_LABEL: Record<PluginCatalogEntry['signature_state'], string> = {
   VERIFIED: '署名を確認済み',
-  BUILTIN_TRUSTED: 'Astra 同梱',
+  BUILTIN_TRUSTED: 'Genie 同梱',
   UNSIGNED: '署名なし',
 };
 

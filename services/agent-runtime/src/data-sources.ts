@@ -2,7 +2,7 @@
  * Sales CRM が dashboard へ出せるもの。Phase 4 §3.1 / Phase 5 §4。
  * **自分のテーブルは自分で引く**（実装仕様 §5.1、D-35）。
  */
-import type { ResolvedValue } from '@astra/contracts';
+import type { ResolvedValue } from '@genie/contracts';
 import type { DomainService } from './domain.js';
 import { nextBestActions, pipelineSummary } from './sales-crm.js';
 import { toClip, totalDurationMs } from './video.js';

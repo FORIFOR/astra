@@ -6,7 +6,7 @@
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
-import { uuidv7, type Share } from '@astra/contracts';
+import { uuidv7, type Share } from '@genie/contracts';
 import { ArtifactShareState, ShareState, activeShares } from '../src/library/ShareState.js';
 
 afterEach(cleanup);

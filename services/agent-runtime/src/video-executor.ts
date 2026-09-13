@@ -8,7 +8,7 @@
  * storyboard と字幕は、モデルが無くても意味のある成果物なので、
  * ちゃんと作って Library へ残す。
  */
-import { AstraError } from '@astra/contracts';
+import { GenieError } from '@genie/contracts';
 import type { DomainService } from './domain.js';
 import { renderProblems, storyboard, toClip, toWebVtt, totalDurationMs } from './video.js';
 
@@ -52,7 +52,7 @@ function projectIdOf(input: TaskLike, step: StepLike): string {
   if (typeof fromStep === 'string' && fromStep.length > 0) return fromStep;
   const fromTask = input.input['project_id'];
   if (typeof fromTask === 'string' && fromTask.length > 0) return fromTask;
-  throw new AstraError('common.validation_failed', 'この作業には映像プロジェクトの指定が要ります');
+  throw new GenieError('common.validation_failed', 'この作業には映像プロジェクトの指定が要ります');
 }
 
 export function videoExecutors(
@@ -114,7 +114,7 @@ export function videoExecutors(
         // 出せない理由を先に全部言う。1 つずつ突き返さない。
         const problems = renderProblems(clips);
         if (problems.length > 0) {
-          throw new AstraError('common.validation_failed', problems.join(' / '));
+          throw new GenieError('common.validation_failed', problems.join(' / '));
         }
 
         if (!renderer) {
@@ -122,7 +122,7 @@ export function videoExecutors(
            * **ここで代役を作らない。**中身の無い映像が Library に残ると、
            * あとから本物と見分けられなくなる。繋がっていないと言って止まる。
            */
-          throw new AstraError(
+          throw new GenieError(
             'host.not_connected',
             '映像の生成にまだ繋がっていません（正本 §15.2・OQ-19）。構成と字幕はここまでで残っています。',
           );

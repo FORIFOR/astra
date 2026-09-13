@@ -3,7 +3,7 @@
  * ここは DB を要らない部分。**根拠を落とさない**性質を確かめる。
  */
 import { describe, expect, it } from 'vitest';
-import { uuidv7, validateFields, type DomainEntity } from '@astra/contracts';
+import { uuidv7, validateFields, type DomainEntity } from '@genie/contracts';
 import { SALES_CRM_ENTITIES, nextBestActions, pipelineSummary } from '../src/sales-crm.js';
 
 const opportunity = (fields: Record<string, unknown>, title = '商談'): DomainEntity => ({

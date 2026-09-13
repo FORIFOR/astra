@@ -8,14 +8,14 @@
 # 同じ置き場を使い回すと、先に走った shots が残した断片が sections の Home に
 # 「録りかけが 2 件」として写る（実際に起きた）。
 #
-#   bash scripts/ui-atlas/capture-rc.sh apps/astra-macos/.build/Astra.app /tmp/astra-atlas
+#   bash scripts/ui-atlas/capture-rc.sh apps/genie-macos/.build/Genie.app /tmp/astra-atlas
 set -euo pipefail
-APP="${1:?Astra.app のパス}"
+APP="${1:?Genie.app のパス}"
 OUT="${2:?出力先}"
 # `open` はアプリを cwd=/ で起こすので、selftest に渡す出力先は絶対パスでないと /docs/... に化けて
 # 1 枚も書けない（相対で渡すと全 selftest が 0 png になる、2026-09-06 に踏んだ）。
 mkdir -p "$OUT"; OUT="$(cd "$OUT" && pwd)"
-EXE="$APP/Contents/MacOS/AstraMac"
+EXE="$APP/Contents/MacOS/GenieMac"
 [[ -x "$EXE" ]] || { echo "FAIL: $EXE が無い" >&2; exit 1; }
 codesign -v "$APP" 2>/dev/null || { echo "FAIL: $APP の署名が無効" >&2; exit 1; }
 
@@ -45,13 +45,13 @@ write_appcast() {  # $1 = path, $2 = version
   cat > "$1" <<XML
 <?xml version="1.0" encoding="utf-8"?>
 <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
-<channel><title>Astra (UI Atlas)</title>
-<item><title>Astra $2</title>
+<channel><title>Genie (UI Atlas)</title>
+<item><title>Genie $2</title>
 <sparkle:version>$2</sparkle:version><sparkle:shortVersionString>$2</sparkle:shortVersionString>
 <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
 <description><![CDATA[<h3>この版で変わること</h3><ul><li>会議中に録音を一時停止・再開できます（Task Dock の ⏸）。</li><li>音声認識の許可が無いとき、何が止まっていて何が続いているかを画面が言います。</li><li>失敗した作業は、その場で「やり直す」から続けられます。</li><li>「更新を確認…」の案内が日本語になりました。</li></ul><h3>直したこと</h3><ul><li>会議の発話が、区切りごとに文字起こしへ確定されるようになりました。</li><li>設定の「許可」に、なぜ要るかの説明が付きました。</li></ul>]]></description>
 <pubDate>Fri, 05 Sep 2026 12:00:00 +0900</pubDate>
-<enclosure url="https://example.invalid/Astra-$2.zip" length="1" type="application/octet-stream" sparkle:edSignature="AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="/>
+<enclosure url="https://example.invalid/Genie-$2.zip" length="1" type="application/octet-stream" sparkle:edSignature="AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="/>
 </item></channel></rss>
 XML
 }
@@ -70,8 +70,8 @@ curl -sf -o /dev/null "http://127.0.0.1:$FEED_PORT/appcast-available.xml" || { e
 EXTRA_ENV=()
 run() {
   local sub="$1"; shift
-  if pgrep -x AstraMac >/dev/null; then
-    echo "FAIL: AstraMac が既に動いている（$(pgrep -x AstraMac | tr '\n' ' ')）。終わるのを待ってから" >&2
+  if pgrep -x GenieMac >/dev/null; then
+    echo "FAIL: GenieMac が既に動いている（$(pgrep -x GenieMac | tr '\n' ' ')）。終わるのを待ってから" >&2
     exit 1
   fi
   local data="$OUT/data-root/$sub"; mkdir -p "$data"
@@ -98,10 +98,10 @@ run screenshot-light screenshotshots "$OUT/screenshot-light"
 run screenshot-dark  screenshotshots "$OUT/screenshot-dark" dark
 # Guided Setup（右下アバター + System Settings の対象）。実 System Settings を開く。権限は変えない。
 # 合成の 3 面（target-found / target-highlighted / repositioned）は System Settings が OS の外観のままなので light だけ。
-# 一覧に出る Astra の名前はこの Mac の TCC 次第（配布版は "Astra"、dev バンドルは "AstraDbg"）。無ければ target-found は撮れず
+# 一覧に出る Genie の名前はこの Mac の TCC 次第（配布版は "Genie"、dev バンドルは "GenieDbg"）。無ければ target-found は撮れず
 # CAPTURE_MISSING になる（撮れたふりはしない）。ASTRA_ATLAS_GUIDE_APP_NAME で指す。
-run guided-light     guidedshots  "$OUT/guided-light" --simulate-not-granted --app-name "${ASTRA_ATLAS_GUIDE_APP_NAME:-Astra}"
-run guided-dark      guidedshots  "$OUT/guided-dark" dark --simulate-not-granted --app-name "${ASTRA_ATLAS_GUIDE_APP_NAME:-Astra}"
+run guided-light     guidedshots  "$OUT/guided-light" --simulate-not-granted --app-name "${ASTRA_ATLAS_GUIDE_APP_NAME:-Genie}"
+run guided-dark      guidedshots  "$OUT/guided-dark" dark --simulate-not-granted --app-name "${ASTRA_ATLAS_GUIDE_APP_NAME:-Genie}"
 EXTRA_ENV=()
 for j in JA JB JC; do
   run "journey-$j"  journey "$j" "$OUT/journey-$j"

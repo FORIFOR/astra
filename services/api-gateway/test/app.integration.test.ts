@@ -1,10 +1,10 @@
 /**
  * HTTP 基盤の結合テスト。
- *   ./infra/db/with-test-db.sh pnpm --filter @astra/service-api-gateway test
+ *   ./infra/db/with-test-db.sh pnpm --filter @genie/service-api-gateway test
  */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { ApiError, AstraError, HEADER_REQUEST_ID } from '@astra/contracts';
-import { createDb, type DbHandle } from '@astra/db';
+import { ApiError, GenieError, HEADER_REQUEST_ID } from '@genie/contracts';
+import { createDb, type DbHandle } from '@genie/db';
 import { makeTestApp, makeTokens, testDbConfig, type TestApp } from './support.js';
 import type { JwtTokens } from '../src/auth/tokens.js';
 import type { App } from '../src/fastify.js';
@@ -26,7 +26,7 @@ describe.skipIf(!url)('api-gateway http foundation', () => {
           throw new Error('secret connection string hunter2');
         });
         instance.get('/__test/known', { config: { rateLimit: false, auth: false } }, async () => {
-          throw new AstraError('task.not_found', 'no such task');
+          throw new GenieError('task.not_found', 'no such task');
         });
         instance.get(
           '/__test/limited',

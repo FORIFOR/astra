@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Visual Judge を試験するための絵を、**実際の Astra から**撮る。
+# Visual Judge を試験するための絵を、**実際の Genie から**撮る。
 #
 # 名前は乱数の ID にする。`good.png` / `bad.png` を見せたら試験にならない。
 # 正解表は Judge に渡さない場所（answers/）へ置く。
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-BIN="$ROOT/apps/astra-macos/.build/debug/AstraMac"
+BIN="$ROOT/apps/genie-macos/.build/debug/GenieMac"
 LAB="$ROOT/.build/uxlab"
 DIM="${1:?usage: make-judge-fixtures.sh <trust|continuity|delight>}"
 IMG="$ROOT/docs/ux-benchmark/auto/judge-fixtures/$DIM/images"
@@ -17,7 +17,7 @@ bash "$ROOT/scripts/ux-auto/build-tools.sh" >/dev/null
 shots() {   # <fixture> <journey> <撮る名> <正解>
   local fx="$1" j="$2" pick="$3" label="$4"
   local tmp; tmp="$(mktemp -d)"
-  pkill -9 -f AstraMac 2>/dev/null; sleep 1.2
+  pkill -9 -f GenieMac 2>/dev/null; sleep 1.2
   ASTRA_DATA_ROOT="$tmp/data" ASTRA_FIXTURE="$fx" \
     "$BIN" --selftest journey "$j" "$tmp" >/dev/null 2>&1
   local src="$tmp/$pick"
@@ -62,7 +62,7 @@ case "$DIM" in
     shots none J10 "01-落ちたあと.png"   EDGE
     ;;
 esac
-pkill -9 -f AstraMac 2>/dev/null
+pkill -9 -f GenieMac 2>/dev/null
 # OCR も置く（Judge の根拠を照合するため）
 for f in "$IMG"/*.png; do "$LAB/ocr" "$f" > "$ANS/$(basename "${f%.png}").ocr.txt" 2>/dev/null; done
 echo

@@ -14,7 +14,7 @@
  *   Mail B    「導入日は社内確認中です」（会議のあと）
  *   Meeting 2 1時間後の顧客定例（次の brief の対象）
  */
-import type { MeetingBrief, WorkArtifact, WorkContext } from '@astra/contracts';
+import type { MeetingBrief, WorkArtifact, WorkContext } from '@genie/contracts';
 
 export interface LiveFixture {
   readonly nonce: string;

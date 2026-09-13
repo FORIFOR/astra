@@ -4,7 +4,7 @@
  * 開発ビルドでしか効かない。本番でマイク無しに「聞いています」の姿が出せてはいけない。
  * 音量は合成（正弦波）。Orb と波形が音量に反応することを、マイク無しで確かめるため。
  */
-import type { DockSurface, InteractionState } from '@astra/ui-kit';
+import type { DockSurface, InteractionState } from '@genie/ui-kit';
 import type { VoiceMode } from './voiceRuntime.js';
 import type { MeetingSnapshot } from '../meeting/meetingBridge.js';
 

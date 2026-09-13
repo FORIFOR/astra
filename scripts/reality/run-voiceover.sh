@@ -6,7 +6,7 @@
 # defaults com.apple.VoiceOver4/default SCREnableAppleScript）。面ごとに RC .app を hold selftest で出し、
 # `tell application "VoiceOver"` で「次の項目」を N 回送り、vo cursor の内容を TSV に落とす。
 #
-#   ASTRA_VO_CONFIRM=1 bash scripts/reality/run-voiceover.sh [Astra.app] [out-dir]
+#   ASTRA_VO_CONFIRM=1 bash scripts/reality/run-voiceover.sh [Genie.app] [out-dir]
 #
 # 実行の前提（無ければ AUTOMATION_MISSING。設定を勝手に変更しない）:
 #   1. VoiceOver の AppleScript 制御が ON（専用セッションで事前に許可する）
@@ -17,10 +17,10 @@
 #   VO で辿った要素に空の名前が無い            nameless = 0
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-APP="${1:-$ROOT/apps/astra-macos/.build/Astra.app}"
+APP="${1:-$ROOT/apps/genie-macos/.build/Genie.app}"
 OUT="${2:-/tmp/astra-voiceover}"
 mkdir -p "$OUT"
-[[ -x "$APP/Contents/MacOS/AstraMac" ]] || { echo "AUTOMATION_MISSING: 署名済み .app が無い（scripts/package-macos-app.sh）"; exit 2; }
+[[ -x "$APP/Contents/MacOS/GenieMac" ]] || { echo "AUTOMATION_MISSING: 署名済み .app が無い（scripts/package-macos-app.sh）"; exit 2; }
 if [[ "${ASTRA_VO_CONFIRM:-0}" != "1" ]]; then
   echo "AUTOMATION_MISSING: VoiceOver を無人で起動する確認が無い（ASTRA_VO_CONFIRM=1）。音量 0 で回す手順はこのファイル冒頭"
   exit 2
@@ -29,7 +29,7 @@ if [[ "$(defaults read com.apple.VoiceOver4/default SCREnableAppleScript 2>/dev/
   echo "VOICEOVER_GATE=AUTOMATION_MISSING VoiceOver scripting is not enabled in the dedicated test session"
   exit 3
 fi
-if pgrep -x AstraMac >/dev/null; then echo "FAIL: AstraMac is already running; do not interrupt it"; exit 1; fi
+if pgrep -x GenieMac >/dev/null; then echo "FAIL: GenieMac is already running; do not interrupt it"; exit 1; fi
 if ! osascript -e 'tell application "System Events" to return count of processes' >/dev/null 2>&1; then
   echo "AUTOMATION_MISSING: 呼び出し元に Accessibility の許可が無い（System Events を使えない）"; exit 2
 fi
@@ -77,7 +77,7 @@ tell application "VoiceOver"
   return out
 end tell
 AS
-  pkill -x AstraMac 2>/dev/null || true
+  pkill -x GenieMac 2>/dev/null || true
   sleep 1
   n="$(grep -vc '^$' "$tsv" || true)"
   nameless="$(awk -F'\t' '$2!="ERROR" && $3=="" && $4==""' "$tsv" | wc -l | tr -d ' ')"

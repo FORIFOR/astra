@@ -6,7 +6,7 @@ import {
   WorkflowNotFoundError,
   type WorkflowHandle,
 } from '@temporalio/client';
-import { AstraError } from '@astra/contracts';
+import { GenieError } from '@genie/contracts';
 import {
   approveSignal,
   cancelSignal,
@@ -109,7 +109,7 @@ export class TemporalTaskRuntime implements TaskRuntime {
     } catch (error) {
       if (error instanceof WorkflowNotFoundError) {
         // 既に終わっているタスクへの操作。状態不整合として返す。
-        throw new AstraError('task.invalid_state', 'task is no longer running');
+        throw new GenieError('task.invalid_state', 'task is no longer running');
       }
       throw error;
     }

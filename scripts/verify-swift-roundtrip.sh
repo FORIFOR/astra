@@ -3,9 +3,9 @@
 # 入力を Rust へ渡し、core で処理した構造化結果を Swift で受けて検証する。
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-CORE="$ROOT/core/astra-core"
-SWIFT="$ROOT/apps/astra-macos/Sources/AstraCore"
-INC="$ROOT/apps/astra-macos/Sources/AstraCoreFFI/include"
+CORE="$ROOT/core/genie-core"
+SWIFT="$ROOT/apps/genie-macos/Sources/GenieCore"
+INC="$ROOT/apps/genie-macos/Sources/GenieCoreFFI/include"
 
 cd "$CORE"; cargo build --quiet
 LIBDIR="$CORE/target/debug"
@@ -16,8 +16,8 @@ cat > "$TMP/main.swift" <<'SWIFT'
 import Foundation
 let EXPECT_VERSION = "__VERSION__"
 
-// Rust (astra-core) を Swift から実際に呼ぶ。
-let version = astraCoreVersion()
+// Rust (genie-core) を Swift から実際に呼ぶ。
+let version = genieCoreVersion()
 guard version == EXPECT_VERSION else { fatalError("version round-trip failed: \(version) (want \(EXPECT_VERSION))") }
 
 // 構造化入力 → Rust で派生 → 構造化結果
@@ -49,9 +49,9 @@ SWIFT
 sed -i '' "s/__VERSION__/$VERSION/" "$TMP/main.swift"
 
 swiftc \
-  "$SWIFT/astra_core.swift" "$TMP/main.swift" \
+  "$SWIFT/genie_core.swift" "$TMP/main.swift" \
   -I "$INC" \
-  -L "$LIBDIR" -lastra_core \
+  -L "$LIBDIR" -lgenie_core \
   -o "$TMP/roundtrip"
 
 OUT="$("$TMP/roundtrip")"

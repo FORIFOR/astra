@@ -2,8 +2,8 @@
  * API クライアント。実装仕様 §3.7・§7.3・§11。
  */
 import { describe, expect, it, vi } from 'vitest';
-import { ApprovalId, AstraError, uuidv7, type EventEnvelope } from '@astra/contracts';
-import { AstraClient } from '../src/client.js';
+import { ApprovalId, GenieError, uuidv7, type EventEnvelope } from '@genie/contracts';
+import { GenieClient } from '../src/client.js';
 import { HttpClient } from '../src/http.js';
 import { parseSseFrames, streamTaskEvents } from '../src/sse.js';
 
@@ -35,7 +35,7 @@ function jsonResponse(body: unknown, status = 200): Response {
 }
 
 function makeClient(fetchImpl: typeof globalThis.fetch, token: string | null = 'tok') {
-  return new AstraClient({
+  return new GenieClient({
     baseUrl: 'https://astra.test/',
     accessToken: () => token,
     fetch: fetchImpl,
@@ -117,10 +117,10 @@ describe('errors (§3.7)', () => {
     const client = makeClient(
       async () => new Response('<html>bad gateway</html>', { status: 502 }),
     );
-    const error = await client.getTask('t1').catch((e: unknown) => e as AstraError);
-    expect(error).toBeInstanceOf(AstraError);
-    expect((error as AstraError).code).toBe('common.unavailable');
-    expect((error as AstraError).retryable).toBe(true);
+    const error = await client.getTask('t1').catch((e: unknown) => e as GenieError);
+    expect(error).toBeInstanceOf(GenieError);
+    expect((error as GenieError).code).toBe('common.unavailable');
+    expect((error as GenieError).retryable).toBe(true);
   });
 
   it('marks rate limiting as retryable and validation as not', async () => {
@@ -144,7 +144,7 @@ describe('errors (§3.7)', () => {
   it('retries once after a recoverable 401 and then gives up', async () => {
     const calls: string[] = [];
     let refreshed = false;
-    const client = new AstraClient({
+    const client = new GenieClient({
       baseUrl: 'https://astra.test',
       accessToken: () => (refreshed ? 'new' : 'old'),
       fetch: async (input, init) => {
@@ -168,7 +168,7 @@ describe('errors (§3.7)', () => {
 
   it('does not loop when recovery keeps failing', async () => {
     let attempts = 0;
-    const client = new AstraClient({
+    const client = new GenieClient({
       baseUrl: 'https://astra.test',
       accessToken: () => 'tok',
       fetch: async () => {

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { existsSync } from 'node:fs';
 import { CodexCli } from '../src/codex.js';
 import { LlmRuntime } from '../src/llm-steps.js';
-import { isAllowedCredentialLocation } from '@astra/contracts';
+import { isAllowedCredentialLocation } from '@genie/contracts';
 
 const answer = [
   { type: 'item.completed', item: { type: 'agent_message', text: '{"answer":"read the image"}' } },

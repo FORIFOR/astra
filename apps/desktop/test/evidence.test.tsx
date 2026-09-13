@@ -15,7 +15,7 @@ import {
   uuidv7,
   type EvidenceItem,
   type EvidenceLedger,
-} from '@astra/contracts';
+} from '@genie/contracts';
 import { EvidenceLedgerView, TaskEvidence, deeper } from '../src/work/EvidenceLedger.js';
 
 afterEach(cleanup);

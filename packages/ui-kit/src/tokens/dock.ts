@@ -228,7 +228,7 @@ export const UNDERSTANDING_MAX_MS = 1200;
  * floating surface（Task Dock / Voice HUD）の面。§17.3 が Glassmorphism を許す唯一の場所。
  *
  * 値は Deepgram 公式 `@deepgram/ui` の dark scheme（styles.css）そのまま。
- * **動きと面は Deepgram、幾何と accent は Astra。** brand の緑（#13ef93）は取らない。
+ * **動きと面は Deepgram、幾何と accent は Genie。** brand の緑（#13ef93）は取らない。
  * 本体の Workspace はこれを使わない（不透明 surface のまま）。
  */
 export const floatingSurface = {

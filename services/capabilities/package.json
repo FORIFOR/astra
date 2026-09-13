@@ -1,5 +1,5 @@
 {
-  "name": "@astra/service-capabilities",
+  "name": "@genie/service-capabilities",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -21,11 +21,11 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@astra/contracts": "workspace:*",
-    "@astra/oauth": "workspace:*",
-    "@astra/service-agent-runtime": "workspace:*",
-    "@astra/service-meeting": "workspace:*",
-    "@astra/service-research": "workspace:*"
+    "@genie/contracts": "workspace:*",
+    "@genie/oauth": "workspace:*",
+    "@genie/service-agent-runtime": "workspace:*",
+    "@genie/service-meeting": "workspace:*",
+    "@genie/service-research": "workspace:*"
   },
   "devDependencies": {
     "vitest": "catalog:"

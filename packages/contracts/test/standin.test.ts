@@ -128,7 +128,7 @@ describe('required and optional', () => {
     >;
 
   it('does not require what the product can live without', () => {
-    // 読み上げが無くても Astra は使える（文字で読める）
+    // 読み上げが無くても Genie は使える（文字で読める）
     expect(isRequiredCapability('text_to_speech')).toBe(false);
     expect(isRequiredCapability('video_generation')).toBe(false);
     expect(isRequiredCapability('image_generation')).toBe(false);

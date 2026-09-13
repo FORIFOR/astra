@@ -4,7 +4,7 @@
  * **既定は認証必須。** 公開したいルートだけが `config.auth: false` を宣言する。
  * 逆（既定で公開）にすると、ルートを足した人が宣言を忘れた瞬間に穴が開く。
  */
-import { AstraError } from '@astra/contracts';
+import { GenieError } from '@genie/contracts';
 import type { App } from '../fastify.js';
 import { currentRequestContext } from '../request-context.js';
 import { bearerToken, type TokenVerifier } from './tokens.js';
@@ -25,7 +25,7 @@ export function registerAuth(app: App, verifier: TokenVerifier): void {
     if (request.routeOptions.config.auth === false) return;
 
     const token = bearerToken(request.headers.authorization);
-    if (!token) throw new AstraError('auth.missing_token', 'authorization header required');
+    if (!token) throw new GenieError('auth.missing_token', 'authorization header required');
 
     const claims = await verifier.verifyAccessToken(token);
 
@@ -44,7 +44,7 @@ export function requirePrincipal(): { userId: string; tenantId: string; deviceId
   const context = currentRequestContext();
   if (!context?.userId || !context.tenantId || !context.deviceId) {
     // 認証フックを通っていないルートでプリンシパルを読もうとしている = 配線ミス
-    throw new AstraError('auth.missing_token', 'no authenticated principal in this request');
+    throw new GenieError('auth.missing_token', 'no authenticated principal in this request');
   }
   return { userId: context.userId, tenantId: context.tenantId, deviceId: context.deviceId };
 }

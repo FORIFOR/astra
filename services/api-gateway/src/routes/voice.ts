@@ -1,18 +1,18 @@
 /**
- * Astra Voice OS のクラウド音声境界。
+ * Genie Voice OS のクラウド音声境界。
  *
  * Deepgram へは送らない。明示的に許された確定用音声は Google Chirp 3、
  * 読み上げは Google TTS へ、既存 provider を通して送る。
  */
 import {
-  AstraError,
+  GenieError,
   VoiceSynthesisRequest,
   VoiceSynthesisResponse,
   VoiceTranscriptionRequest,
   VoiceTranscriptionResponse,
-} from '@astra/contracts';
-import type { BatchTranscriber } from '@astra/service-meeting';
-import { SpeakError, type TtsProvider } from '@astra/tts';
+} from '@genie/contracts';
+import type { BatchTranscriber } from '@genie/service-meeting';
+import { SpeakError, type TtsProvider } from '@genie/tts';
 import type { App } from '../fastify.js';
 import { requirePrincipal } from '../auth/middleware.js';
 
@@ -29,13 +29,13 @@ export function registerVoiceRoutes(app: App, deps: VoiceRouteDeps): void {
   app.post('/v1/voice/transcriptions', { bodyLimit: VOICE_BODY_LIMIT }, async (request) => {
     requirePrincipal();
     if (!deps.transcriber) {
-      throw new AstraError('common.unavailable', 'Google speech recognition is not configured');
+      throw new GenieError('common.unavailable', 'Google speech recognition is not configured');
     }
 
     const body = VoiceTranscriptionRequest.parse(request.body ?? {});
     const audio = Buffer.from(body.audio_base64, 'base64');
     if (audio.byteLength === 0 || audio.byteLength % 2 !== 0) {
-      throw new AstraError('common.validation_failed', 'audio must be non-empty PCM16');
+      throw new GenieError('common.validation_failed', 'audio must be non-empty PCM16');
     }
 
     try {
@@ -55,7 +55,7 @@ export function registerVoiceRoutes(app: App, deps: VoiceRouteDeps): void {
         fallback_used: results.some((result) => result.fallbackUsed === true),
       });
     } catch {
-      throw new AstraError('common.unavailable', 'speech recognition failed', {
+      throw new GenieError('common.unavailable', 'speech recognition failed', {
         retryable: true,
       });
     }
@@ -64,7 +64,7 @@ export function registerVoiceRoutes(app: App, deps: VoiceRouteDeps): void {
   app.post('/v1/voice/speech', async (request) => {
     requirePrincipal();
     if (!deps.tts) {
-      throw new AstraError('common.unavailable', 'Google text to speech is not configured');
+      throw new GenieError('common.unavailable', 'Google text to speech is not configured');
     }
 
     const body = VoiceSynthesisRequest.parse(request.body ?? {});
@@ -88,20 +88,20 @@ export function registerVoiceRoutes(app: App, deps: VoiceRouteDeps): void {
   });
 }
 
-function speakErrorForApi(error: SpeakError): AstraError {
+function speakErrorForApi(error: SpeakError): GenieError {
   switch (error.reason) {
     case 'invalid_request':
     case 'unsupported_language':
-      return new AstraError('common.validation_failed', error.message);
+      return new GenieError('common.validation_failed', error.message);
     case 'rate_limited':
-      return new AstraError('common.rate_limited', error.message, { retryable: true });
+      return new GenieError('common.rate_limited', error.message, { retryable: true });
     case 'permission_denied':
-      return new AstraError('auth.forbidden', error.message);
+      return new GenieError('auth.forbidden', error.message);
     case 'not_configured':
     case 'timed_out':
     case 'cancelled':
     case 'provider_error':
-      return new AstraError('common.unavailable', error.message, { retryable: true });
+      return new GenieError('common.unavailable', error.message, { retryable: true });
   }
-  return new AstraError('common.unavailable', error.message, { retryable: true });
+  return new GenieError('common.unavailable', error.message, { retryable: true });
 }

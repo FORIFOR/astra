@@ -26,7 +26,7 @@ import {
  * 端末が落ちたときの失敗種別。
  *
  * **文字列で持つ。**このファイルは Temporal のサンドボックスで動くので、
- * `@astra/contracts` を import できない（決定性の制約）。
+ * `@genie/contracts` を import できない（決定性の制約）。
  * 値そのものは `HostOfflineError.TYPE` と一致していなければならず、
  * ずれていないことは試験で見張る。
  */

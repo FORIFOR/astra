@@ -13,7 +13,7 @@
  *   - 任意コマンドの実行口
  *   - 利用者の資格情報の読み出し（Claude Code のログインは Claude Code のもの）
  */
-import { HOST_OFFLINE_AFTER_MS } from '@astra/contracts';
+import { HOST_OFFLINE_AFTER_MS } from '@genie/contracts';
 
 export interface HostTransport {
   heartbeat(input: { deviceLabel: string; models: readonly string[] }): Promise<{ id: string }>;

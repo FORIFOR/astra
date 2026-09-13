@@ -1,6 +1,6 @@
 /** サイドバーの線アイコン（15px, stroke 1.7）。参照デザインの Lucide 系に合わせる。 */
 import type { ReactElement } from 'react';
-import type { TabId } from '@astra/ui-kit';
+import type { TabId } from '@genie/ui-kit';
 
 const common = {
   width: 15,

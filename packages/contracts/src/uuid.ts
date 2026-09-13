@@ -3,7 +3,7 @@
  *
  * 時系列ソート可能であることを利用して、カーソルページングの順序キーに使う。
  * ブラウザと Node の双方で動かすため Web Crypto のみを使い、`node:crypto` を import しない
- * （`@astra/contracts` は apps/desktop からも読み込まれる）。
+ * （`@genie/contracts` は apps/desktop からも読み込まれる）。
  *
  *   unix_ts_ms : 48bit
  *   ver        :  4bit (= 7)

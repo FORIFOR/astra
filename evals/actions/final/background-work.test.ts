@@ -12,9 +12,9 @@
  * サーバ側の記録と Host の貸し出しは何も変わらないはず — それを見る。
  */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { uuidv7, type Task, type TokenResponse } from '@astra/contracts';
-import { withTenant } from '@astra/db';
-import { AgentHostService, HostBridge } from '@astra/service-agent-host';
+import { uuidv7, type Task, type TokenResponse } from '@genie/contracts';
+import { withTenant } from '@genie/db';
+import { AgentHostService, HostBridge } from '@genie/service-agent-host';
 import {
   makeTestApp,
   makeTokens,

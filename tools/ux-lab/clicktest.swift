@@ -1,7 +1,7 @@
 import AppKit
 
 // 合成クリックが本当に届くかを確かめるための的。
-// **Astra を的にしたままでは、道具の不備と製品の欠陥を切り分けられない。**
+// **Genie を的にしたままでは、道具の不備と製品の欠陥を切り分けられない。**
 // ここが押せなければ、その環境では Blind Operator は鍵盤しか使えない。
 final class Target: NSView {
     var hit = false

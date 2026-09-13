@@ -4,7 +4,7 @@
  * ここはモデル無しで成立する部分。**provider を差し替えても壊れてはいけない**
  * 性質だけを扱うので、決定的な関数として書き、単体で試せるようにする。
  */
-import { MAX_SEGMENT_MS } from '@astra/contracts';
+import { MAX_SEGMENT_MS } from '@genie/contracts';
 import type { TranscriptResult } from './providers.js';
 
 /** 確定として積む用意ができた 1 かたまり。 */

@@ -1,5 +1,5 @@
 # 操作ガイド（利用者向け）を、committed の golden から組み立てる。
-# repo の root で:  python3 docs/guide/build.py  → ~/Downloads/Astra-操作ガイド/Astra-操作ガイド.html
+# repo の root で:  python3 docs/guide/build.py  → ~/Downloads/Genie-操作ガイド/Genie-操作ガイド.html
 # PDF は Chrome の headless で:
 #   "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --disable-gpu \
 #     --no-pdf-header-footer --print-to-pdf=<out>.pdf "file://<out>.html"
@@ -8,9 +8,9 @@ import base64, io, os
 from PIL import Image, ImageDraw, ImageFont
 G='docs/golden-screenshots/'
 # まっさらな ASTRA_DATA_ROOT で撮った初回起動の Home（開発 DB の録りかけを絵に出さない）:
-#   ASTRA_DATA_ROOT=/tmp/astra-guide-data .build/debug/AstraMac --selftest shots /tmp/astra-guide-shots
+#   ASTRA_DATA_ROOT=/tmp/astra-guide-data .build/debug/GenieMac --selftest shots /tmp/astra-guide-shots
 CLEAN=os.environ.get('ASTRA_GUIDE_CLEAN_SHOTS','/tmp/astra-guide-shots').rstrip('/')+'/'
-OUT=os.path.expanduser(os.environ.get('ASTRA_GUIDE_OUT','~/Downloads/Astra-操作ガイド'))
+OUT=os.path.expanduser(os.environ.get('ASTRA_GUIDE_OUT','~/Downloads/Genie-操作ガイド'))
 FONT='/System/Library/Fonts/ヒラギノ角ゴシック W6.ttc'
 def font(sz):
     try: return ImageFont.truetype(FONT, sz)
@@ -56,9 +56,9 @@ def img(k, w=None):
 # メニューバーのメニューの絵は、手で写さず**いまのアプリに言わせる**（0.1.1 の絵は
 # 「音声入力 … 長押し」のまま実物とずれていた）。先に swift build しておくこと。
 import html as _html, subprocess
-BIN=os.environ.get('ASTRA_GUIDE_BIN','apps/astra-macos/.build/debug/AstraMac')
+BIN=os.environ.get('ASTRA_GUIDE_BIN','apps/genie-macos/.build/debug/GenieMac')
 def menu_html():
-    if not os.path.exists(BIN): raise SystemExit(f'{BIN} が無い。先に swift build --package-path apps/astra-macos')
+    if not os.path.exists(BIN): raise SystemExit(f'{BIN} が無い。先に swift build --package-path apps/genie-macos')
     out=subprocess.run([BIN,'--selftest','menutitles'],capture_output=True,text=True,timeout=60).stdout
     if 'SELFTEST_OK menutitles' not in out: raise SystemExit('menutitles が取れない:\n'+out)
     rows=[]
@@ -99,7 +99,7 @@ def shortcut(key, names=False):
     return '+'.join(f'<kbd>{p}</kbd>' for p in parts)
 
 html=f'''<!doctype html><html lang="ja"><head><meta charset="utf-8">
-<title>Astra 操作ガイド</title>
+<title>Genie 操作ガイド</title>
 <style>
  @page {{ size: A4; margin: 14mm; }}
  body {{ font-family: "Hiragino Sans","Hiragino Kaku Gothic ProN",-apple-system,sans-serif; color:#1a1a1a; max-width:820px; margin:0 auto; padding:24px; line-height:1.7; font-size:15px; }}
@@ -123,18 +123,18 @@ html=f'''<!doctype html><html lang="ja"><head><meta charset="utf-8">
  .pb {{ page-break-before:always; }}
  footer {{ color:#888; font-size:12px; margin-top:40px; border-top:1px solid #e5e5e5; padding-top:8px; }}
 </style></head><body>
-<h1>Astra 操作ガイド</h1>
+<h1>Genie 操作ガイド</h1>
 <p class="lead">会議を録って、要点をまとめて、頼みごとを片付ける Mac アプリです。</p>
 
 <div class="tip"><b>はじめに、これだけ覚えてください</b><br>
-① 画面右上のメニューバーにある <b>波形アイコン</b> が Astra の入口です<br>
+① 画面右上のメニューバーにある <b>波形アイコン</b> が Genie の入口です<br>
 ② {shortcut("shortcut.recording.toggle", names=True)} を押すと、いつでも <b>{fact("settings.shortcutRow")}</b><br>
 ③ 何かをしてもらう前には、必ず <b>確認カード</b> が出ます。実行のボタン（例:「{fact("confirmation.confirm.example")}」）を押すまで外には出ません<br>
 ④ 困ったら {shortcut("shortcut.escape")}。聞いている途中も、確認カードも、結果の表示も、同じ鍵で取り消せます</div>
 
 <h2><span>1</span>起動する・開く</h2>
 <div class="row"><div>
-<p>Astra は Dock（画面下のアイコン列）には出ません。<b>メニューバー右上の波形アイコン</b>をクリックするとメニューが開きます。</p>
+<p>Genie は Dock（画面下のアイコン列）には出ません。<b>メニューバー右上の波形アイコン</b>をクリックするとメニューが開きます。</p>
 {MENU}
 </div><div>
 <p><b>「{fact("menu.open")}」</b>で {fact("nav.home")} が出ます。左の一覧は 4 つ——{fact("nav.home")}（頼む・最近の状態）、{fact("nav.work")}（いま動いている仕事: {fact("work.tasks")} / {fact("work.agents")} / {fact("dock.record")}中の会議）、{fact("nav.library")}（終わった成果: {fact("library.meetings")} / {fact("library.files")}）、{fact("nav.apps")}（できる仕事を増やす: {fact("apps.plugins")} / {fact("apps.connectors")}）。</p>
@@ -142,7 +142,7 @@ html=f'''<!doctype html><html lang="ja"><head><meta charset="utf-8">
 </div></div>
 
 <h2><span>2</span>会議を記録する</h2>
-<p>画面上部の Astra バーにある <b>{fact("dock.record")}</b> を押すと、その場で会議を録れます。Astra の名前を押すと追加の操作が開き、{shortcut("shortcut.escape")} で小さなバーに戻ります。バーが見つからないときは、メニューバーの Astra アイコン → <b>{fact("menu.showControls")}</b> で戻せます。</p>
+<p>画面上部の Genie バーにある <b>{fact("dock.record")}</b> を押すと、その場で会議を録れます。Genie の名前を押すと追加の操作が開き、{shortcut("shortcut.escape")} で小さなバーに戻ります。バーが見つからないときは、メニューバーの Genie アイコン → <b>{fact("menu.showControls")}</b> で戻せます。</p>
 {img('home')}
 <ol>
 <li><span class="n">1</span><b>{fact("recording.start")}</b> を押す（または {shortcut("shortcut.recording.toggle")}、メニューの「{fact("recording.menu.start")}」）</li>
@@ -207,17 +207,17 @@ html=f'''<!doctype html><html lang="ja"><head><meta charset="utf-8">
 <tr><td>翻訳が止まった</td><td>Ollamaの起動と画面に表示されたモデルを確認してください。モデルが未導入ならターミナルで <code>ollama pull qwen2.5:7b</code> を実行し、{fact("translation.retry")}を押してください。既にできた訳を残して、未翻訳の発言を処理します。{fact("translation.auto")}をオフにすると翻訳を止められます。新しい会議では、再び「翻訳」を選ぶまで翻訳は始まりません。</td></tr>
 <tr><td>Google のライブ字幕が途切れた</td><td>字幕欄の <b>{fact("transcription.liveRetry")}</b> を押してください。同じ会議のまま、接続後の音声から字幕を{fact("recording.resume")}します。途切れていた間の音声は Mac に保存されますが、この操作では遡って文字起こししません。</td></tr>
 <tr><td>「{fact("transcription.onDeviceUnavailable")}」と出る</td><td>この Mac には日本語のオンデバイス文字起こしの資産が入っていません。{fact("dock.record")}は続いていて、音声は残ります。設定の「ライブ文字起こし（Google STT）」をオンにすると、次の{fact("dock.record")}から音声をGoogleへ送り、{fact("dock.record")}中に字幕を表示できます（Mac の設定 → キーボード → 音声入力で日本語を追加すると端末内認識が使えることがあります）</td></tr>
-<tr><td>{shortcut("shortcut.recording.toggle")} を押しても何も起きない</td><td>Astra の <b>{fact("menu.settings")} → {fact("permission.inputMonitoring")}（{fact("shortcut.recording.toggle")}）</b> の「{fact("permission.request")}」を押す。Mac の設定が開いたら Astra をオンにし、Astra を一度終了してから、また開く</td></tr>
+<tr><td>{shortcut("shortcut.recording.toggle")} を押しても何も起きない</td><td>Genie の <b>{fact("menu.settings")} → {fact("permission.inputMonitoring")}（{fact("shortcut.recording.toggle")}）</b> の「{fact("permission.request")}」を押す。Mac の設定が開いたら Genie をオンにし、Genie を一度終了してから、また開く</td></tr>
 <tr><td>{fact("nav.home")} に「録りかけが N 件あります」と出る</td><td>前回、保存前に終わった{fact("dock.record")}です。<b>{fact("recovery.resume")}</b> で読み取り、いらなければ <b>{fact("recovery.discard")}</b></td></tr>
-<tr><td>会議のカードに「{fact("session.interrupted")}」と出る</td><td>{fact("dock.record")}の途中で Astra が止まった会議です。カードを押すと開き、<b>確定した行までは</b>文字起こしが残っています</td></tr>
-<tr><td>画面共有中に Astra を見せたくない</td><td>黒いバーの <b>👁 目のアイコン</b> を押すと、共有画面や録画に Astra が映らなくなります（もう一度押すと戻る）</td></tr>
-<tr><td>Astra が見当たらない</td><td>メニューバー右上の波形アイコン → 「{fact("menu.open")}」</td></tr>
+<tr><td>会議のカードに「{fact("session.interrupted")}」と出る</td><td>{fact("dock.record")}の途中で Genie が止まった会議です。カードを押すと開き、<b>確定した行までは</b>文字起こしが残っています</td></tr>
+<tr><td>画面共有中に Genie を見せたくない</td><td>黒いバーの <b>👁 目のアイコン</b> を押すと、共有画面や録画に Genie が映らなくなります（もう一度押すと戻る）</td></tr>
+<tr><td>Genie が見当たらない</td><td>メニューバー右上の波形アイコン → 「{fact("menu.open")}」</td></tr>
 <tr><td>新しい版があるか知りたい</td><td>メニューバーの波形アイコン → 「{fact("menu.checkUpdates")}」。新しい版があれば知らせが出て、入れるかどうかはあなたが決めます。起動時にも一度だけ静かに確かめています</td></tr>
 </table>
 
-<footer>Astra 操作ガイド（0.1.1 / 2026-09-03）· 画面は開発版の撮影です。文字や配置は今後変わることがあります。<br>
+<footer>Genie 操作ガイド（0.1.1 / 2026-09-03）· 画面は開発版の撮影です。文字や配置は今後変わることがあります。<br>
 {fact("dock.record")}した音声は、設定で「ライブ文字起こし（Google STT）」を許可した場合だけGoogleへ送信されます。オフなら端末内だけで扱います。</footer>
 </body></html>'''
 os.makedirs(OUT, exist_ok=True)
-open(OUT+'/Astra-操作ガイド.html','w').write(html)
+open(OUT+'/Genie-操作ガイド.html','w').write(html)
 print('written', len(html)//1024, 'KB', '/ facts used', len(USED_FACTS))

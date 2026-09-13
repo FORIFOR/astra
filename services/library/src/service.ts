@@ -7,15 +7,15 @@
 import type { Readable } from 'node:stream';
 import {
   Artifact,
-  AstraError,
+  GenieError,
   MAX_DIRECT_UPLOAD_BYTES,
   objectKeyFor,
   uuidv7,
   type ArtifactType,
   type Sensitivity,
-} from '@astra/contracts';
-import { withTenant, type DbHandle, type ScopedDb } from '@astra/db';
-import { appendAuditEvent } from '@astra/telemetry';
+} from '@genie/contracts';
+import { withTenant, type DbHandle, type ScopedDb } from '@genie/db';
+import { appendAuditEvent } from '@genie/telemetry';
 import type { ObjectStore } from './store/index.js';
 
 export interface CreateArtifactInput {
@@ -60,7 +60,7 @@ export class LibraryService {
    */
   async create(input: CreateArtifactInput): Promise<Artifact> {
     if (input.body.byteLength > MAX_DIRECT_UPLOAD_BYTES) {
-      throw new AstraError(
+      throw new GenieError(
         'artifact.too_large',
         `direct upload is limited to ${MAX_DIRECT_UPLOAD_BYTES} bytes`,
       );
@@ -190,7 +190,7 @@ export class LibraryService {
       .where('deleted_at', 'is', null)
       .executeTakeFirst();
     // RLS で他テナントの行は見えないので、ここに来る「無い」は 404 で正しい
-    if (!row) throw new AstraError('artifact.not_found', `no artifact ${artifactId}`);
+    if (!row) throw new GenieError('artifact.not_found', `no artifact ${artifactId}`);
 
     const versions = await this.#versionsFor(tx, [artifactId]);
     return toArtifact(row, versions.get(artifactId));
@@ -251,7 +251,7 @@ function toArtifact(
 ): Artifact {
   if (!version) {
     // 版が無い artifact は作れない。あるなら書き込み経路が壊れている。
-    throw new AstraError('common.internal', `artifact ${row.id} has no version row`);
+    throw new GenieError('common.internal', `artifact ${row.id} has no version row`);
   }
   return Artifact.parse({
     id: row.id,

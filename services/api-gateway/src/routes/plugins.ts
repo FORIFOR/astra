@@ -4,10 +4,10 @@
  * Phase 0 は参照と install 記録まで。実行は Phase 4。
  */
 import { z } from 'zod';
-import { AstraError, InstallPluginRequest, PermissionScope, Semver } from '@astra/contracts';
-import { NO_DATA_SOURCES } from '@astra/service-plugin-registry';
-import type { ConnectionService } from '@astra/service-plugin-registry';
-import type { DataSourceResolver, PluginRegistryService } from '@astra/service-plugin-registry';
+import { GenieError, InstallPluginRequest, PermissionScope, Semver } from '@genie/contracts';
+import { NO_DATA_SOURCES } from '@genie/service-plugin-registry';
+import type { ConnectionService } from '@genie/service-plugin-registry';
+import type { DataSourceResolver, PluginRegistryService } from '@genie/service-plugin-registry';
 import type { App } from '../fastify.js';
 import { requirePrincipal } from '../auth/middleware.js';
 
@@ -125,7 +125,7 @@ export function registerPluginRoutes(app: App, deps: PluginRouteDeps): void {
     async (request, reply) => {
       const principal = requirePrincipal();
       if (!deps.connections) {
-        throw new AstraError('host.not_connected', 'connections are not available here');
+        throw new GenieError('host.not_connected', 'connections are not available here');
       }
       const body = ConnectRequest.parse(request.body ?? {});
       const connection = await deps.connections.connect({
@@ -147,7 +147,7 @@ export function registerPluginRoutes(app: App, deps: PluginRouteDeps): void {
     async (request, reply) => {
       const principal = requirePrincipal();
       if (!deps.connections) {
-        throw new AstraError('host.not_connected', 'connections are not available here');
+        throw new GenieError('host.not_connected', 'connections are not available here');
       }
       await deps.connections.disconnect(
         principal.tenantId,

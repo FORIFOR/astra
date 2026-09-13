@@ -1,7 +1,7 @@
-// §9 Native Messaging で、この Mac の Astra へ渡す。
+// §9 Native Messaging で、この Mac の Genie へ渡す。
 //
 // 送るのは content script が絞った結果だけ。ページ全文はここにも来ない。
-// 送信は「Astra が聞いてきたとき」と「ユーザーがタブを切り替えたとき」に限る。
+// 送信は「Genie が聞いてきたとき」と「ユーザーがタブを切り替えたとき」に限る。
 
 const HOST = 'com.astra.desktop.context';
 

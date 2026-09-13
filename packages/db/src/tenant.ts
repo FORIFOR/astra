@@ -13,7 +13,7 @@
  */
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { sql, type Transaction } from 'kysely';
-import { AstraError, TenantId } from '@astra/contracts';
+import { GenieError, TenantId } from '@genie/contracts';
 import type { Db, DbHandle } from './pool.js';
 import type { Database } from './types.js';
 
@@ -39,7 +39,7 @@ export function currentScopeKind(): ScopeKind | null {
 }
 
 function rejectNesting(outer: Scope, wanted: ScopeKind): never {
-  throw new AstraError(
+  throw new GenieError(
     'common.internal',
     `${wanted} scope cannot be opened inside a ${outer.kind} scope`,
   );
@@ -80,14 +80,14 @@ export async function withTenant<T>(
   fn: (tx: ScopedDb) => Promise<T>,
 ): Promise<T> {
   if (!TenantId.safeParse(tenantId).success) {
-    throw new AstraError('common.validation_failed', `invalid tenant id: ${tenantId}`);
+    throw new GenieError('common.validation_failed', `invalid tenant id: ${tenantId}`);
   }
 
   const existing = scope.getStore();
   if (existing) {
     if (existing.kind !== 'tenant') rejectNesting(existing, 'tenant');
     if (existing.tenantId !== tenantId) {
-      throw new AstraError(
+      throw new GenieError(
         'auth.forbidden',
         `nested withTenant for a different tenant (outer=${existing.tenantId}, inner=${tenantId})`,
       );
@@ -131,7 +131,7 @@ export async function withIdentity<T>(
   const existing = scope.getStore();
   if (existing) rejectNesting(existing, 'identity');
   if (!handle.identity) {
-    throw new AstraError(
+    throw new GenieError(
       'common.internal',
       'identity scope requires ASTRA_DB_IDENTITY_URL; refusing to fall back to the app role',
     );
@@ -154,7 +154,7 @@ export async function withShare<T>(handle: DbHandle, fn: (tx: ScopedDb) => Promi
   const existing = scope.getStore();
   if (existing) rejectNesting(existing, 'share');
   if (!handle.share) {
-    throw new AstraError(
+    throw new GenieError(
       'common.internal',
       'share scope requires ASTRA_DB_SHARE_URL; refusing to fall back to the app role',
     );

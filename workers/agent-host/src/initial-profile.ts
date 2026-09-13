@@ -1,4 +1,4 @@
-import { InitialProfile, InitialProfileOutcome } from '@astra/contracts';
+import { InitialProfile, InitialProfileOutcome } from '@genie/contracts';
 import type { ConnectorRuntime } from './connector-steps.js';
 import { WorkSyncLoop } from './work-sync.js';
 

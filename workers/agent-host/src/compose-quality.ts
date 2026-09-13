@@ -5,6 +5,34 @@ export function compositionIssues(text: string, args: Record<string, unknown>): 
   const source = `${context}\n${instruction}`;
   const issues: string[] = [];
   if (
+    /メール/.test(instruction) &&
+    /下書き.*明記|明記.*下書き/.test(instruction) &&
+    !/下書き/.test(text)
+  )
+    issues.push('メールが未送信の下書きであることを明記してください。');
+  if (
+    /メール/.test(instruction) &&
+    /提供を依頼|提供.*お願い/.test(source) &&
+    !/(?:ご提供|ご共有|ご送付|お送り)(?:を)?(?:いただ|頂|ください|お願い)|(?:提供|共有|送付)をお願い/.test(
+      text,
+    ) &&
+    /(?:送付|添付|提供)(?:いたします|します|しました|いたしました)|ご査収/.test(text)
+  )
+    issues.push(
+      '資料を相手に依頼する指示が、自分から資料を送る文章に逆転しています。相手に提供をお願いするメールに直してください。',
+    );
+  if (instruction.includes('旅程案（最新情報・空き状況は未確認）')) {
+    if (/[（(][月火水木金土日](?:曜日?)?[）)]|[月火水木金土日]曜日/.test(text))
+      issues.push(
+        '曜日を推測して追加しています。曜日は省略し、依頼にある日付だけを使ってください。',
+      );
+    const allowed = yenAmounts(instruction);
+    if ([...yenAmounts(text)].some((amount) => !allowed.has(amount)))
+      issues.push(
+        '未確認の費用を作っています。金額は提供された予算上限だけとし、交通費・宿泊費等は今後確認する項目として書いてください。',
+      );
+  }
+  if (
     /未検証|未測定|実測していない|根拠のない/.test(source) &&
     /書かない|主張しない|補わない|断定しない|禁止/.test(instruction)
   ) {
@@ -26,7 +54,7 @@ export function compositionIssues(text: string, args: Record<string, unknown>): 
           !/(?:無料|0円)(?:では|じゃ|とは)(?:ない|ありません)/.test(line),
       ) &&
     /予算(?:は|が)?\s*0円/.test(instruction) &&
-    !/(?:料金|価格)[は:：]?\s*(?:無料|0円)|(?:製品|アプリ|Astra)[は:：]?\s*無料/.test(context)
+    !/(?:料金|価格)[は:：]?\s*(?:無料|0円)|(?:製品|アプリ|Genie)[は:：]?\s*無料/.test(context)
   )
     issues.push('制作予算0円を製品価格と混同しています。「無料」「0円」の宣伝を削除してください。');
   if (
@@ -38,7 +66,7 @@ export function compositionIssues(text: string, args: Record<string, unknown>): 
     );
   if (
     /macOS|Macアプリ/.test(context) &&
-    (/スマホ(?:の)?画面[^\n。]*(?:Home|Work|Astra)|(?:Astra|アプリアイコン)[^\n。]*タップ/i.test(
+    (/スマホ(?:の)?画面[^\n。]*(?:Home|Work|Genie)|(?:Genie|アプリアイコン)[^\n。]*タップ/i.test(
       text,
     ) ||
       text
@@ -68,6 +96,14 @@ export function compositionIssues(text: string, args: Record<string, unknown>): 
     }
   }
   return issues;
+}
+
+function yenAmounts(text: string): Set<number> {
+  return new Set(
+    [...text.normalize('NFKC').matchAll(/(?:[¥￥]\s*)?(\d[\d,]*(?:\.\d+)?)\s*(万)?\s*円/g)].map(
+      (match) => Number(match[1]!.replace(/,/g, '')) * (match[2] ? 10_000 : 1),
+    ),
+  );
 }
 
 function quantities(text: string): Set<string> {

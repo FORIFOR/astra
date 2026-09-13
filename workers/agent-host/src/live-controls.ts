@@ -1,5 +1,5 @@
 /** Control checks through the running gateway, using the provider-synced tenant. */
-import type { PersonalizationProfile } from '@astra/contracts';
+import type { PersonalizationProfile } from '@genie/contracts';
 import type { LiveExpectationRow, LiveFixture } from './live-fixture.js';
 interface TaskInput {
   taskId?: string;

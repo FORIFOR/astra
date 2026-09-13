@@ -3,7 +3,7 @@
  */
 import { afterEach, describe, expect, it } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
-import { MIN_TOUCH_TARGET_PX, TOKENS_CSS } from '@astra/ui-kit';
+import { MIN_TOUCH_TARGET_PX, TOKENS_CSS } from '@genie/ui-kit';
 import { ANNOUNCE_INTERVAL_MS, LiveAnnouncer, announceable } from '../src/meeting/LiveAnnouncer.js';
 import type { TranscriptLine } from '../src/meeting/meetingView.js';
 

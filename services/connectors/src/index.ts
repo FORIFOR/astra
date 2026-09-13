@@ -1,5 +1,5 @@
 /**
- * @astra/service-connectors
+ * @genie/service-connectors
  *
  * Calendar / Gmail への接続。正本 §2.4・§21、UI/UX §22。
  *

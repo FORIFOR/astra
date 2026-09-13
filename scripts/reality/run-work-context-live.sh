@@ -113,7 +113,7 @@ json() { python3 -c "import json,sys;d=json.load(sys.stdin);print($1)"; }
 dbmate --url "$ADMIN_URL" --migrations-dir "$ROOT/infra/db/migrations" --no-dump-schema up >/dev/null || fail "dbmate up"
 psql "$ADMIN_URL" -X -q -v ON_ERROR_STOP=1 -f "$ROOT/infra/db/bootstrap.sql" >/dev/null || fail "bootstrap.sql"
 export ASTRA_ENV=development ASTRA_API_PORT="$PORT" ASTRA_LOG_LEVEL=info
-export DATABASE_URL="postgres://astra_app:astra_app@${PGHOST}:${PGPORT}/${DB}?sslmode=disable"
+export DATABASE_URL="postgres://genie_app:genie_app@${PGHOST}:${PGPORT}/${DB}?sslmode=disable"
 export ASTRA_DB_IDENTITY_URL="postgres://astra_identity:astra_identity@${PGHOST}:${PGPORT}/${DB}?sslmode=disable"
 export REDIS_URL="${REDIS_URL:-redis://localhost:6380}" TEMPORAL_ADDRESS="${TEMPORAL_ADDRESS:-localhost:7233}"
 export ASTRA_OBJECT_STORE_ROOT="$STORE" ASTRA_RECORDING_ROOT="$STORE/recordings" ASTRA_BUILTIN_PLUGINS_DIR="$ROOT/plugins/builtin"

@@ -14,7 +14,7 @@ import type {
   SuggestedQuestion,
   WorkArtifact,
   WorkContext,
-} from '@astra/contracts';
+} from '@genie/contracts';
 import { clusterProjects, titleTokens } from './graph.js';
 
 export interface MeetingBriefInput {

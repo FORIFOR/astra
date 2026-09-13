@@ -96,7 +96,7 @@ export function salesCrmExecutors(
   domain: DomainService,
   now: () => Date = () => new Date(),
 ): Record<string, Executor> {
-  const opportunities = (tenantId: string): Promise<import('@astra/contracts').DomainEntity[]> =>
+  const opportunities = (tenantId: string): Promise<import('@genie/contracts').DomainEntity[]> =>
     domain.list(tenantId, CRM_PLUGIN, 'opportunity', 500);
 
   return {

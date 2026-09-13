@@ -6,8 +6,8 @@
  * **AI が勝手に話しかけ過ぎない**ための仕組み。最大 3 件しか出さず、
  * 4 件目以降は「すべて見る」へ送る（§8.1）。
  */
-import type { TaskView } from '@astra/api-client';
-import type { DailyBrief, Severity } from '@astra/contracts';
+import type { TaskView } from '@genie/api-client';
+import type { DailyBrief, Severity } from '@genie/contracts';
 
 /**
  * UI/UX §16 の Severity。出す面が違う。

@@ -21,8 +21,8 @@ import {
   GmailConnector,
   GoogleCalendarConnector,
   type ApprovalProof,
-} from '@astra/service-connectors';
-import { fromBase64Url } from '@astra/service-connectors';
+} from '@genie/service-connectors';
+import { fromBase64Url } from '@genie/service-connectors';
 
 interface Seen {
   method: string;

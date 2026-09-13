@@ -6,8 +6,8 @@
  * 業務 KPI は Home に常設しない（Domain dashboard は Work の専用 view へ）。
  */
 import { useMemo, useState, type ReactElement } from 'react';
-import type { TaskView } from '@astra/api-client';
-import type { Artifact } from '@astra/contracts';
+import type { TaskView } from '@genie/api-client';
+import type { Artifact } from '@genie/contracts';
 import { typeLabel } from './Library.js';
 import { relativeTime } from '../home/time.js';
 import { kindLabel } from '../work/kind.js';
@@ -17,7 +17,7 @@ import {
   greeting,
   type AttentionItem,
 } from '../home/attention.js';
-import type { DailyBrief } from '@astra/contracts';
+import type { DailyBrief } from '@genie/contracts';
 import '../work/work.css';
 import '../home/home.css';
 

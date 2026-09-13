@@ -10,7 +10,7 @@ import type {
   PersonalizationTrait,
   PersonalizationUpdate,
   WorkArtifact,
-} from '@astra/contracts';
+} from '@genie/contracts';
 import { wallClock } from './business-time.js';
 import { clusterProjects, personKey } from './graph.js';
 

@@ -5,7 +5,7 @@
  * 画面のコードに「interim をどう混ぜるか」の判断を持ち込むと、
  * 揺れる条件を目で追えなくなる。
  */
-import type { EventEnvelope } from '@astra/contracts';
+import type { EventEnvelope } from '@genie/contracts';
 
 export interface TranscriptLine {
   readonly id: string;

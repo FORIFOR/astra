@@ -5,7 +5,7 @@
  * 外観と設定はここに畳む。§2.1 の 4 タブに「設定」を足さないため。
  */
 import { useEffect, useRef, useState, type ReactElement } from 'react';
-import { THEME_MODES, type ThemeMode } from '@astra/ui-kit';
+import { THEME_MODES, type ThemeMode } from '@genie/ui-kit';
 import { useOptionalSession } from '../state/SessionProvider.js';
 import { useTheme } from '../state/ThemeProvider.js';
 

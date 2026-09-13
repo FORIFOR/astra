@@ -12,7 +12,7 @@
 #   - `scripts/release-macos.sh` が RELEASE_READINESS=NOTARIZED まで通っていること
 #     （公証していないものを配ると、受け取った側で Gatekeeper に止められる）
 #   - Sparkle の署名鍵。一度だけ作る:
-#       ./apps/astra-macos/Vendor/Sparkle/bin/generate_keys
+#       ./apps/genie-macos/Vendor/Sparkle/bin/generate_keys
 #     出てきた公開鍵を ASTRA_UPDATE_PUBKEY に入れて release-macos.sh を回すと
 #     Info.plist に入る。秘密鍵は keychain に残る（**リポジトリに置かない**）。
 #   - 配布先の URL。appcast と zip を置く場所:
@@ -20,9 +20,9 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 OUT="$ROOT/dist"
-SPARKLE_BIN="$ROOT/apps/astra-macos/Vendor/Sparkle/bin"
+SPARKLE_BIN="$ROOT/apps/genie-macos/Vendor/Sparkle/bin"
 VERSION="$(node -p "require('$ROOT/package.json').version")"
-ZIP="$OUT/Astra-${VERSION}.zip"
+ZIP="$OUT/Genie-${VERSION}.zip"
 BASE="${ASTRA_UPDATE_BASE:-}"
 
 [[ -f "$ZIP" ]] || { echo "FAIL: $ZIP が無い。先に scripts/release-macos.sh" >&2; exit 1; }
@@ -34,7 +34,7 @@ BASE="${ASTRA_UPDATE_BASE:-}"
   exit 1; }
 
 # 公証されていないものを更新として出さない。受け取った側で開けない。
-APP="$OUT/Astra.app"
+APP="$OUT/Genie.app"
 if [[ -d "$APP" ]] && ! xcrun stapler validate "$APP" >/dev/null 2>&1; then
   echo "FAIL: 公証（staple）されていない。更新として出すと相手の Mac で開けない。" >&2
   echo "  scripts/release-macos.sh を RELEASE_READINESS=NOTARIZED まで通すこと。" >&2

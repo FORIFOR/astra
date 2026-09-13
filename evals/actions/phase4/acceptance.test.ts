@@ -20,25 +20,25 @@ import {
   resolveMcpTool,
   type PluginCatalogEntry,
   type TokenResponse,
-} from '@astra/contracts';
-import { createDb, withSystem, type DbHandle } from '@astra/db';
-import { createLogger } from '@astra/telemetry';
-import { FsObjectStore, LibraryService } from '@astra/service-library';
-import { PluginRegistryService, composeDataSources } from '@astra/service-plugin-registry';
+} from '@genie/contracts';
+import { createDb, withSystem, type DbHandle } from '@genie/db';
+import { createLogger } from '@genie/telemetry';
+import { FsObjectStore, LibraryService } from '@genie/service-library';
+import { PluginRegistryService, composeDataSources } from '@genie/service-plugin-registry';
 import {
   generatePublisherKeyPair,
   loadManifest,
   signManifest,
   type PluginAsset,
-} from '@astra/plugin-sdk';
-import { InMemoryTaskRuntime, TaskService } from '@astra/service-task';
+} from '@genie/plugin-sdk';
+import { InMemoryTaskRuntime, TaskService } from '@genie/service-task';
 import {
   MemoryRateLimiter,
   buildApp,
   JwtTokens,
   loadSigningKeys,
   type App,
-} from '@astra/service-api-gateway';
+} from '@genie/service-api-gateway';
 
 const url = process.env['TEST_DATABASE_URL'];
 const identityUrl = process.env['TEST_IDENTITY_DATABASE_URL'];

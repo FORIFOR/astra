@@ -99,7 +99,7 @@ async function checkNoRawQueries(dirs) {
     for await (const file of sourceFiles(`${dir}/src`)) {
       const text = await readFile(path.join(root, file), 'utf8');
       for (const match of text.matchAll(/from\s+['"]pg['"]/g)) {
-        fail(file, lineOf(text, match.index), 'imports pg directly; go through @astra/db');
+        fail(file, lineOf(text, match.index), 'imports pg directly; go through @genie/db');
       }
       for (const match of text.matchAll(/\b(pool|client)\.query\s*\(/g)) {
         fail(

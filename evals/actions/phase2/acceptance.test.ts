@@ -15,32 +15,32 @@ import { Writable } from 'node:stream';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { TestWorkflowEnvironment } from '@temporalio/testing';
 import type { Worker } from '@temporalio/worker';
-import { uuidv7, type Artifact, type Share, type Task, type TokenResponse } from '@astra/contracts';
-import { createDb, withTenant, type DbHandle } from '@astra/db';
-import { createLogger, readAuditChain, verifyAuditChain } from '@astra/telemetry';
-import { FsObjectStore, LibraryService } from '@astra/service-library';
-import { PluginRegistryService } from '@astra/service-plugin-registry';
+import { uuidv7, type Artifact, type Share, type Task, type TokenResponse } from '@genie/contracts';
+import { createDb, withTenant, type DbHandle } from '@genie/db';
+import { createLogger, readAuditChain, verifyAuditChain } from '@genie/telemetry';
+import { FsObjectStore, LibraryService } from '@genie/service-library';
+import { PluginRegistryService } from '@genie/service-plugin-registry';
 import {
   TaskService,
   TemporalTaskRuntime,
   createTaskWorker,
   workflowIdFor,
-} from '@astra/service-task';
+} from '@genie/service-task';
 import {
   DeterministicLanguageModel,
   ResearchService,
   StaticSearchProvider,
   researchExecutors,
   type SearchHit,
-} from '@astra/service-research';
-import { ShareService } from '@astra/service-share';
+} from '@genie/service-research';
+import { ShareService } from '@genie/service-share';
 import {
   MemoryRateLimiter,
   buildApp,
   JwtTokens,
   loadSigningKeys,
   type App,
-} from '@astra/service-api-gateway';
+} from '@genie/service-api-gateway';
 
 const url = process.env['TEST_DATABASE_URL'];
 const identityUrl = process.env['TEST_IDENTITY_DATABASE_URL'];

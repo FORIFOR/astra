@@ -1,5 +1,5 @@
 /**
- * @astra/worker-document
+ * @genie/worker-document
  *
  * 文書の生成と変換を拾う worker。正本 §26。
  *
@@ -8,7 +8,7 @@
  * 空のまま worker を起動すると仕事が拾われないので、
  * 起動する側が `DOCUMENT_TOOLS` の空を見て判断する。
  */
-import { TASK_QUEUES } from '@astra/service-task';
+import { TASK_QUEUES } from '@genie/service-task';
 
 export const DOCUMENT_QUEUE = TASK_QUEUES.document;
 

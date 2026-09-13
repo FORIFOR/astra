@@ -11,7 +11,7 @@ import {
   type DailyBrief,
   type Severity,
   type WorldFact,
-} from '@astra/contracts';
+} from '@genie/contracts';
 
 export interface TaskLike {
   readonly id: string;

@@ -9,7 +9,7 @@
  *   5. 失効は即時
  */
 import {
-  AstraError,
+  GenieError,
   CreateShareRequest,
   IssuedShare,
   Share,
@@ -18,10 +18,10 @@ import {
   uuidv7,
   type Artifact,
   type ShareDenialReason,
-} from '@astra/contracts';
-import { withShare, withTenant, type DbHandle, type ScopedDb } from '@astra/db';
-import { appendAuditEvent } from '@astra/telemetry';
-import type { LibraryService } from '@astra/service-library';
+} from '@genie/contracts';
+import { withShare, withTenant, type DbHandle, type ScopedDb } from '@genie/db';
+import { appendAuditEvent } from '@genie/telemetry';
+import type { LibraryService } from '@genie/service-library';
 import {
   hashPassword,
   hashShareSecret,
@@ -84,7 +84,7 @@ export class ShareService {
      * 規則エンジンが入ったら、この分岐を policy の評価へ置き換える。
      */
     if (artifact.sensitivity === 'REGULATED') {
-      throw new AstraError(
+      throw new GenieError(
         'plugin.permission_denied',
         'a REGULATED artifact cannot be shared by link until its policy can be evaluated',
       );
@@ -160,7 +160,7 @@ export class ShareService {
         .where('revoked_at', 'is', null)
         .executeTakeFirst();
       if (Number(result.numUpdatedRows) === 0) {
-        throw new AstraError('common.not_found', 'no active share to revoke');
+        throw new GenieError('common.not_found', 'no active share to revoke');
       }
       await appendAuditEvent(tx, tenantId, {
         actorType: 'user',

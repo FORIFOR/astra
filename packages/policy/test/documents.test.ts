@@ -11,7 +11,7 @@ import {
   evaluatePolicyDocuments,
   ruleApplies,
   type PolicyDocument,
-} from '@astra/contracts';
+} from '@genie/contracts';
 import { evaluate } from '../src/risk.js';
 
 const doc = (rules: PolicyDocument['rules'], profiles: PolicyDocument['profiles'] = []) =>

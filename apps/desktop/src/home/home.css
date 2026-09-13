@@ -3,29 +3,29 @@
 .astra-home {
   display: flex;
   flex-direction: column;
-  gap: var(--astra-space-panel);
+  gap: var(--genie-space-panel);
   max-width: 880px;
 }
 
 .astra-home__greeting {
   margin: 0;
-  font-size: var(--astra-font-size-page-title);
-  font-weight: var(--astra-font-weight-page-title);
+  font-size: var(--genie-font-size-page-title);
+  font-weight: var(--genie-font-weight-page-title);
 }
 
 .astra-home__invite {
   margin: 0;
-  padding: var(--astra-space-section) 0;
-  color: var(--astra-color-muted);
-  font-size: var(--astra-font-size-section-title);
+  padding: var(--genie-space-section) 0;
+  color: var(--genie-color-muted);
+  font-size: var(--genie-font-size-section-title);
   text-align: center;
 }
 
 .astra-home__section {
-  margin: 0 0 var(--astra-space-base);
-  color: var(--astra-color-muted);
-  font-size: var(--astra-font-size-micro);
-  font-weight: var(--astra-font-weight-micro);
+  margin: 0 0 var(--genie-space-base);
+  color: var(--genie-color-muted);
+  font-size: var(--genie-font-size-micro);
+  font-weight: var(--genie-font-weight-micro);
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -33,33 +33,33 @@
 .astra-home__list {
   display: flex;
   flex-direction: column;
-  gap: var(--astra-space-base);
+  gap: var(--genie-space-base);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .astra-home__more {
-  margin-top: var(--astra-space-base);
+  margin-top: var(--genie-space-base);
   border: 0;
   background: transparent;
-  color: var(--astra-color-accent);
+  color: var(--genie-color-accent);
   font: inherit;
-  font-size: var(--astra-font-size-secondary);
+  font-size: var(--genie-font-size-secondary);
   cursor: pointer;
 }
 
 .astra-attention {
   display: flex;
   align-items: center;
-  gap: var(--astra-space-md, var(--astra-space-base));
+  gap: var(--genie-space-md, var(--genie-space-base));
   width: 100%;
   min-height: 56px;
-  padding: var(--astra-padding-card);
-  border: var(--astra-border-hairline) solid var(--astra-color-border);
-  border-radius: var(--astra-radius-standard);
-  background: var(--astra-color-surface);
-  color: var(--astra-color-text);
+  padding: var(--genie-padding-card);
+  border: var(--genie-border-hairline) solid var(--genie-color-border);
+  border-radius: var(--genie-radius-standard);
+  background: var(--genie-color-surface);
+  color: var(--genie-color-text);
   font: inherit;
   text-align: start;
   cursor: pointer;
@@ -72,54 +72,54 @@
  * critical には色が無く、既定の灰色のままだった。
  */
 .astra-attention[data-severity='attention'] {
-  border-color: var(--astra-color-warning);
+  border-color: var(--genie-color-warning);
 }
 
 .astra-attention[data-severity='action-required'] {
-  border-color: var(--astra-color-warning);
+  border-color: var(--genie-color-warning);
   border-width: 2px;
 }
 
 .astra-attention[data-severity='critical'] {
-  border-color: var(--astra-color-danger);
+  border-color: var(--genie-color-danger);
   border-width: 2px;
 }
 
 .astra-attention__severity {
-  padding: 2px var(--astra-space-base);
-  border-radius: var(--astra-radius-pill);
-  background: var(--astra-color-canvas);
-  color: var(--astra-color-muted);
-  font-size: var(--astra-font-size-micro);
+  padding: 2px var(--genie-space-base);
+  border-radius: var(--genie-radius-pill);
+  background: var(--genie-color-canvas);
+  color: var(--genie-color-muted);
+  font-size: var(--genie-font-size-micro);
   white-space: nowrap;
 }
 
 .astra-attention__title {
-  font-weight: var(--astra-font-weight-card-title);
+  font-weight: var(--genie-font-weight-card-title);
 }
 
 .astra-attention__detail {
-  color: var(--astra-color-muted);
-  font-size: var(--astra-font-size-secondary);
+  color: var(--genie-color-muted);
+  font-size: var(--genie-font-size-secondary);
 }
 
 .astra-attention__action {
   margin-inline-start: auto;
-  color: var(--astra-color-accent);
-  font-size: var(--astra-font-size-secondary);
+  color: var(--genie-color-accent);
+  font-size: var(--genie-font-size-secondary);
   white-space: nowrap;
 }
 
 /* 「あとで」と「今後は出さない」（UI/UX §16）。 */
 .astra-attention__feedback {
   display: flex;
-  gap: var(--astra-space-xs, 4px);
-  padding-left: var(--astra-space-sm, 8px);
+  gap: var(--genie-space-xs, 4px);
+  padding-left: var(--genie-space-sm, 8px);
 }
 
 .astra-attention__feedback button {
-  color: var(--astra-color-muted);
-  font-size: var(--astra-font-size-sm, 0.875rem);
+  color: var(--genie-color-muted);
+  font-size: var(--genie-font-size-sm, 0.875rem);
   background: none;
   border: none;
   cursor: pointer;
@@ -130,59 +130,59 @@
 /* §8 の 1 行目。Home は「今必要なこと + universal entry」。入口が無い Home はただの一覧。 */
 .astra-home__ask {
   display: flex;
-  gap: var(--astra-space-compact);
+  gap: var(--genie-space-compact);
 }
 
 .astra-home__ask-input {
   flex: 1;
   min-height: 44px;
-  padding: 0 var(--astra-space-base);
-  border: var(--astra-border-hairline) solid var(--astra-color-border);
-  border-radius: var(--astra-radius-standard);
-  background: var(--astra-color-surface);
-  color: var(--astra-color-text);
+  padding: 0 var(--genie-space-base);
+  border: var(--genie-border-hairline) solid var(--genie-color-border);
+  border-radius: var(--genie-radius-standard);
+  background: var(--genie-color-surface);
+  color: var(--genie-color-text);
   font: inherit;
-  font-size: var(--astra-font-size-body);
+  font-size: var(--genie-font-size-body);
 }
 
 .astra-home__ask-input:focus-visible {
-  outline: 2px solid var(--astra-color-focus-ring);
+  outline: 2px solid var(--genie-color-focus-ring);
   outline-offset: 1px;
 }
 
 .astra-home__ask-send {
   min-height: 44px;
-  padding-inline: var(--astra-space-lg);
-  border: var(--astra-border-hairline) solid var(--astra-color-accent);
-  border-radius: var(--astra-radius-standard);
-  background: var(--astra-color-accent);
-  color: var(--astra-color-accent-on);
-  font-size: var(--astra-font-size-body);
+  padding-inline: var(--genie-space-lg);
+  border: var(--genie-border-hairline) solid var(--genie-color-accent);
+  border-radius: var(--genie-radius-standard);
+  background: var(--genie-color-accent);
+  color: var(--genie-color-accent-on);
+  font-size: var(--genie-font-size-body);
 }
 
 .astra-home__ask-send:disabled {
-  border-color: var(--astra-color-border);
-  background: var(--astra-color-surface);
-  color: var(--astra-color-muted);
+  border-color: var(--genie-color-border);
+  background: var(--genie-color-surface);
+  color: var(--genie-color-muted);
 }
 
 .astra-home__notice {
   margin: 0;
-  color: var(--astra-color-muted);
-  font-size: var(--astra-font-size-secondary);
+  color: var(--genie-color-muted);
+  font-size: var(--genie-font-size-secondary);
 }
 
 /* 共通の素ボタン様式（shell.css）より強く。ここは枠の無い静かな文字（§16）。 */
 .astra-shell .astra-attention__feedback button {
   min-height: 28px;
-  padding-inline: var(--astra-space-compact);
+  padding-inline: var(--genie-space-compact);
   border: 0;
   background: none;
-  color: var(--astra-color-muted);
-  font-size: var(--astra-font-size-micro);
+  color: var(--genie-color-muted);
+  font-size: var(--genie-font-size-micro);
 }
 
 .astra-shell .astra-attention__feedback button:hover {
-  color: var(--astra-color-text);
+  color: var(--genie-color-text);
   background: none;
 }

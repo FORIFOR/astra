@@ -1,5 +1,5 @@
 {
-  "name": "@astra/service-conversation",
+  "name": "@genie/service-conversation",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -21,10 +21,10 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@astra/contracts": "workspace:*",
-    "@astra/db": "workspace:*",
-    "@astra/service-task": "workspace:*",
-    "@astra/telemetry": "workspace:*",
+    "@genie/contracts": "workspace:*",
+    "@genie/db": "workspace:*",
+    "@genie/service-task": "workspace:*",
+    "@genie/telemetry": "workspace:*",
     "kysely": "catalog:"
   },
   "devDependencies": {

@@ -1,21 +1,27 @@
 #!/usr/bin/env bash
-# astra-macos を配布可能な .app に包む。live mic/画面/グローバル操作の許可(TCC)は Info.plist の
+# genie-macos を配布可能な .app に包む。live mic/画面/グローバル操作の許可(TCC)は Info.plist の
 # usage 文言が要る。ad-hoc 署名まで行う（正式配布は Developer ID 署名 + notarize が別途必要）。
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-PKG="$ROOT/apps/astra-macos"
-APP="$PKG/build/Astra.app"
+PKG="$ROOT/apps/genie-macos"
+APP="$PKG/build/Genie.app"
 # 版は package.json 1 か所から（release-macos.sh と同じ）。
 VERSION="$(node -p "require('$ROOT/package.json').version")"
 
 cd "$PKG"
 swift build -c release >/dev/null
-BIN="$(swift build -c release --show-bin-path)/AstraMac"
+BIN="$(swift build -c release --show-bin-path)/GenieMac"
 
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
-cp "$BIN" "$APP/Contents/MacOS/Astra"
+cp "$BIN" "$APP/Contents/MacOS/Genie"
+mkdir -p "$APP/Contents/Resources/plugins"
+cp -R "$ROOT/plugins/builtin" "$APP/Contents/Resources/plugins/builtin"
 # Rust 静的ライブラリは実行ファイルに static link 済み（dylib 同梱不要）。
+# Optional publisher configuration: public native-client parameters only, never user tokens.
+if [[ -n "${ASTRA_CONNECTIONS_CONFIG:-}" ]]; then
+  node "$ROOT/scripts/prepare-connection-config.mjs" "$ASTRA_CONNECTIONS_CONFIG" "$APP/Contents/Resources/connections.json"
+fi
 ICON_SRC="$ROOT/apps/desktop/src-tauri/icons/icon.icns"
 [[ -f "$ICON_SRC" ]] || { echo "FAIL: アイコン ($ICON_SRC) が無い" >&2; exit 1; }
 cp "$ICON_SRC" "$APP/Contents/Resources/AppIcon.icns"
@@ -25,10 +31,10 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-  <key>CFBundleName</key><string>Astra</string>
-  <key>CFBundleDisplayName</key><string>Astra</string>
+  <key>CFBundleName</key><string>Genie</string>
+  <key>CFBundleDisplayName</key><string>Genie</string>
   <key>CFBundleIdentifier</key><string>com.astra.mac</string>
-  <key>CFBundleExecutable</key><string>Astra</string>
+  <key>CFBundleExecutable</key><string>Genie</string>
   <key>CFBundleIconFile</key><string>AppIcon</string>
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>CFBundleShortVersionString</key><string>$VERSION</string>

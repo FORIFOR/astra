@@ -9,7 +9,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
 state() { printf "%-18s %-14s %s\n" "$1" "$2" "$3"; }
 
-echo "== Astra Gates =="
+echo "== Genie Gates =="
 echo
 
 # ---- VISUAL: 造形が崩れていない ----
@@ -22,7 +22,7 @@ else
 fi
 
 # ---- FUNCTIONAL: 動く ----
-if [ -f "$ROOT/dist/Astra.app/Contents/MacOS/AstraMac" ]; then
+if [ -f "$ROOT/dist/Genie.app/Contents/MacOS/GenieMac" ]; then
   state "FUNCTIONAL_GATE" "READY" "配布物あり（scripts/verify-release-artifact.sh で判定）"
 else
   state "FUNCTIONAL_GATE" "READY" "pnpm verify:all で判定"
@@ -66,7 +66,7 @@ fi
 echo
 echo "-- いま言ってよいこと --"
 if [ "${n:-0}" -lt 3 ]; then
-  echo "  「Astra 自身の品質の床は上がった」まで。"
+  echo "  「Genie 自身の品質の床は上がった」まで。"
   echo "  「高品質な UI である」は、まだ言えない（採点が ${n}/3 人）。"
   echo "  → 次にやること: docs/ux-benchmark/qualitative/PROTOCOL.md の R01〜R10 を 3 人で。"
 elif [ "$hands" -eq 0 ] && [ "$pub" -eq 0 ]; then

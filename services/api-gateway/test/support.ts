@@ -4,24 +4,24 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Writable } from 'node:stream';
-import { createDb, type DbConfig, type DbHandle } from '@astra/db';
-import { createLogger } from '@astra/telemetry';
-import { FsObjectStore, LibraryService } from '@astra/service-library';
-import { ConversationService } from '@astra/service-conversation';
-import { WorkContextService, WorldModelService } from '@astra/service-world-model';
-import { InMemoryTaskRuntime, TaskService } from '@astra/service-task';
-import { PluginRegistryService, agentResolver } from '@astra/service-plugin-registry';
-import type { DataSourceResolver } from '@astra/service-plugin-registry';
-import { ShareService } from '@astra/service-share';
-import { ResearchLedgerService } from '@astra/service-research';
+import { createDb, type DbConfig, type DbHandle } from '@genie/db';
+import { createLogger } from '@genie/telemetry';
+import { FsObjectStore, LibraryService } from '@genie/service-library';
+import { ConversationService } from '@genie/service-conversation';
+import { WorkContextService, WorldModelService } from '@genie/service-world-model';
+import { InMemoryTaskRuntime, TaskService } from '@genie/service-task';
+import { PluginRegistryService, agentResolver } from '@genie/service-plugin-registry';
+import type { DataSourceResolver } from '@genie/service-plugin-registry';
+import { ShareService } from '@genie/service-share';
+import { ResearchLedgerService } from '@genie/service-research';
 // 名前がぶつかる: こちらは手元 step の受け渡し、下の HostBridge は desktop 側の口
-import { AgentHostService, HostBridge as HostStepBridge } from '@astra/service-agent-host';
+import { AgentHostService, HostBridge as HostStepBridge } from '@genie/service-agent-host';
 import {
   MeetingService,
   MemoryRecordingStore,
   ScriptedStreamingTranscriber,
   type ScriptLine,
-} from '@astra/service-meeting';
+} from '@genie/service-meeting';
 import { buildApp } from '../src/app.js';
 import type { HostBridge } from '../src/host/bridge.js';
 import { MemoryRateLimiter } from '../src/rate-limit/memory.js';

@@ -5,7 +5,7 @@
  * **診断も治療方針も、自分で決めていないこと。**
  */
 import { describe, expect, it } from 'vitest';
-import type { DomainEntity } from '@astra/contracts';
+import type { DomainEntity } from '@genie/contracts';
 import {
   checkDraft,
   citedLines,

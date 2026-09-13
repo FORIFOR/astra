@@ -1,13 +1,13 @@
 /**
  * 端末内の画像の受け渡し場所（キャッシュ）。スクショ自動コンテキスト（SCREENSHOT_CONTEXT_GATE）。
  *
- * 利用者が「これ何？」と尋ねた turn に添えたスクショは、Astra.app が `VisualContext/<id>.png` へ写す。
+ * 利用者が「これ何？」と尋ねた turn に添えたスクショは、Genie.app が `VisualContext/<id>.png` へ写す。
  * cloud を通るのは id とラベルだけで、**画素はこのフォルダから、端末で走るモデル呼び出しが読む。**
  * （そのモデルが cloud のもの — Claude Code = 利用者の Claude — なら、その瞬間にその画像だけがそこへ送られる。
  *   「画像は端末から出ない」とは言わない。開示は app 側の `VisualEgressPolicy`。）
  *
- * 置き場所は Astra.app（`VisualContextStore.handoverDirectory`）と同じ規約:
- *   `$ASTRA_VISUAL_CONTEXT_DIR` → `$ASTRA_DATA_ROOT/VisualContext` → `~/Library/Caches/Astra/VisualContext`
+ * 置き場所は Genie.app（`VisualContextStore.handoverDirectory`）と同じ規約:
+ *   `$ASTRA_VISUAL_CONTEXT_DIR` → `$ASTRA_DATA_ROOT/VisualContext` → `~/Library/Caches/Astra/VisualContext (compatibility path)`
  * ここが食い違うと、画像は在るのに「見つからない」になる。
  *
  * id は**そのままパスにしない**: 形を検査し、組み立てた正規パスが受け渡し場所の中にあることを確かめる

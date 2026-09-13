@@ -8,7 +8,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
-import { uuidv7, type ActionReceiptView } from '@astra/contracts';
+import { uuidv7, type ActionReceiptView } from '@genie/contracts';
 import { ReceiptList, Receipts } from '../src/work/Receipts.js';
 
 afterEach(cleanup);
@@ -116,6 +116,6 @@ describe('the technical record', () => {
     await userEvent.click(screen.getByText('詳しい記録'));
     expect(screen.getByText('gmail.send')).toBeTruthy();
     expect(screen.getByText('msg-123')).toBeTruthy();
-    expect(screen.getByText('Astra')).toBeTruthy();
+    expect(screen.getByText('Genie')).toBeTruthy();
   });
 });

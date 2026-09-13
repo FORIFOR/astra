@@ -42,11 +42,11 @@ describe('booting the app', () => {
     render(<App />);
 
     await waitFor(() => {
-      const style = document.getElementById('astra-tokens');
+      const style = document.getElementById('genie-tokens');
       expect(style, 'ThemeProvider should have injected the tokens').not.toBeNull();
       // 参照だけあって定義が無いと、ブラウザで色が消える
-      expect(style!.textContent).toContain('--astra-color-canvas');
-      expect(style!.textContent).toContain('--astra-color-surface-raised');
+      expect(style!.textContent).toContain('--genie-color-canvas');
+      expect(style!.textContent).toContain('--genie-color-surface-raised');
     });
   });
 

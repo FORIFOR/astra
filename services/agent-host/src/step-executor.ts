@@ -11,7 +11,7 @@
  *   - **待ちきれなくても失敗にしない。**`HostOffline` として投げ、
  *     workflow 側で `PAUSED_HOST_OFFLINE` に落とす（§4.4）
  */
-import { HostOfflineError, isHostOfflineError } from '@astra/contracts';
+import { HostOfflineError, isHostOfflineError } from '@genie/contracts';
 import type { ApprovalProof, HostBridge, HostStepRequest } from './bridge.js';
 
 /**
@@ -20,7 +20,7 @@ import type { ApprovalProof, HostBridge, HostStepRequest } from './bridge.js';
  * 型そのものは契約側にある。cloud の worker と workflow が
  * 同じものを見分けられないと、端末が落ちただけの仕事が FAILED になる。
  */
-export { HostOfflineError as HostOffline } from '@astra/contracts';
+export { HostOfflineError as HostOffline } from '@genie/contracts';
 
 /** 端末が「できなかった」と答えた。**これは失敗。** */
 export class HostStepFailed extends Error {

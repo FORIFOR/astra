@@ -11,8 +11,8 @@
  *   - 端末が居ないときに、勝手に別の手段へ乗り換えない
  */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { uuidv7, type Task, type TokenResponse } from '@astra/contracts';
-import { HostBridge, HostStepExecutor, isHostOffline } from '@astra/service-agent-host';
+import { uuidv7, type Task, type TokenResponse } from '@genie/contracts';
+import { HostBridge, HostStepExecutor, isHostOffline } from '@genie/service-agent-host';
 import {
   makeTestApp,
   makeTokens,

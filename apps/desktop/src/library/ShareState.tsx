@@ -9,8 +9,8 @@
  * 出したつもりのないものが出ている状態に気付けない。
  */
 import { useEffect, useState, type ReactElement } from 'react';
-import type { Share } from '@astra/contracts';
-import type { AstraClient } from '@astra/api-client';
+import type { Share } from '@genie/contracts';
+import type { GenieClient } from '@genie/api-client';
 
 /** いま効いている共有だけ。期限切れ・失効・消費済みは「共有中」ではない。 */
 export function activeShares(shares: readonly Share[], now: Date = new Date()): Share[] {
@@ -85,7 +85,7 @@ export function ArtifactShareState({
   artifactId,
   refreshKey = 0,
 }: {
-  client: AstraClient | null;
+  client: GenieClient | null;
   artifactId: string;
   /** 共有を作った / 取り消したあとに増やす。引き直しの合図。 */
   refreshKey?: number;

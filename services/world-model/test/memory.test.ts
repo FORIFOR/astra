@@ -2,7 +2,7 @@
  * 何を覚えて、何を覚えないか。正本 §10.3、Phase 6 実装仕様 §1.1。
  */
 import { describe, expect, it } from 'vitest';
-import { normalizeName, proactiveScore, uuidv7, type FactSource } from '@astra/contracts';
+import { normalizeName, proactiveScore, uuidv7, type FactSource } from '@genie/contracts';
 import { MIN_CONFIDENCE, shouldRemember } from '../src/memory.js';
 
 const source: FactSource = { kind: 'user', stated_at: new Date().toISOString() } as FactSource;

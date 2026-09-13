@@ -6,7 +6,7 @@
  * 各コンポーネントに `if (isTauri)` を撒くと、UI のロジックが
  * 実行環境の分岐で汚れて読めなくなる。
  */
-import type { DockState } from '@astra/ui-kit';
+import type { DockState } from '@genie/ui-kit';
 
 export type HostVoiceMode =
   'idle' | 'connecting' | 'listening' | 'thinking' | 'speaking' | 'interrupted' | 'error';
@@ -130,7 +130,7 @@ export const notifications = {
  * 認可の折り返しを待ち受ける。RFC 8252。
  *
  * **交換も保管もここではしない。**このプロセスは code と state を
- * 右から左へ渡すだけ（`@astra/oauth` が続きをやる）。
+ * 右から左へ渡すだけ（`@genie/oauth` が続きをやる）。
  */
 export const oauthCallback = {
   /** 待ち受けを開き、実際の折り返し先を返す。port は OS が選ぶ。 */
@@ -155,7 +155,7 @@ export const oauthCallback = {
  * 端末でできること。正本 §25。
  *
  * サーバ側の report と違い、**これは起動を止めない。**
- * マイクの無い機械でも Astra は使える（文字で頼める）。
+ * マイクの無い機械でも Genie は使える（文字で頼める）。
  * 止める代わりに、できないことを名指しで言う。
  */
 export interface DeviceCapability {

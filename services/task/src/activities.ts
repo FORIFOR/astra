@@ -15,12 +15,12 @@ import {
   type ActionRisk,
   type EscalationStep,
   type EscalationTrail,
-} from '@astra/contracts';
-import { withTenant, type DbHandle, type ScopedDb } from '@astra/db';
-import { appendAuditEvent } from '@astra/telemetry';
-import { approvalTtlMs, evaluate, isApprovalUsable, type ActionContext } from '@astra/policy';
-import type { PolicyDocument } from '@astra/contracts';
-import type { LibraryService } from '@astra/service-library';
+} from '@genie/contracts';
+import { withTenant, type DbHandle, type ScopedDb } from '@genie/db';
+import { appendAuditEvent } from '@genie/telemetry';
+import { approvalTtlMs, evaluate, isApprovalUsable, type ActionContext } from '@genie/policy';
+import type { PolicyDocument } from '@genie/contracts';
+import type { LibraryService } from '@genie/service-library';
 import { appendEvent, type EventPublisher } from './events.js';
 import { approvalSummaryFor, requiresSingleAttempt, isMeteredStep, type TaskStep } from './plan.js';
 import type {

@@ -5,8 +5,8 @@
  * 宛先を決めさせ、作った URL はその場で一度だけ見せる（保存はハッシュ）。
  */
 import { useState, type ReactElement } from 'react';
-import type { AstraClient } from '@astra/api-client';
-import type { Artifact, CreateShareRequest } from '@astra/contracts';
+import type { GenieClient } from '@genie/api-client';
+import type { Artifact, CreateShareRequest } from '@genie/contracts';
 
 const EXPIRY_OPTIONS: { id: NonNullable<CreateShareRequest['expires_in']>; label: string }[] = [
   { id: '1h', label: '1 時間' },
@@ -40,7 +40,7 @@ export function ArtifactActions({
   artifact,
   onShared,
 }: {
-  client: AstraClient | null;
+  client: GenieClient | null;
   artifact: Artifact;
   /** 共有を作ったあと、状態表示を引き直すため。 */
   onShared?(): void;

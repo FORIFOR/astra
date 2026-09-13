@@ -28,7 +28,7 @@
 02-listening     Listening
 03-task-dock     Task Dock Expanded
 04-meeting       Meeting Dock
-05-meeting-notes Meeting Notes / Captions / Ask Astra
+05-meeting-notes Meeting Notes / Captions / Ask Genie
 06-workspace     Full Workspace
 ```
 
@@ -63,7 +63,7 @@ VoiceOver から見ても、複数の操作を持つ面を 1 つの読み上げ�
 鍵は `text:<文言>`。Task Dock の実測:
 
 ```
-text:Astra / Working        y=14.0   ← 見出し行は 4 つとも揃っている
+text:Genie / Working        y=14.0   ← 見出し行は 4 つとも揃っている
 text:週次ブリーフィングを作る   y=42.0
 text:Calendar               y=101.5
 text:Gmail                  y=137.5  ← ピッチ 36pt ちょうど
@@ -148,7 +148,7 @@ Window level → 位置 → 幅・高さ → 影 → 背景 → 角丸 → hit t
 `scripts/verify-ui-taste.sh`。数の**天井**で見る。減らすのは自由、増やすなら理由を書く。
 
 ```
-gradient          0     Astra には要らない
+gradient          0     Genie には要らない
 角丸 >28pt        0     tokens の範囲で足りる
 material/blur     8     地は 1 つで足りる
 sparkles          6     AI らしさの飾りにしない
@@ -167,10 +167,10 @@ shadow            9     面を浮かせすぎない
 
 ```sh
 # 実寸
-apps/astra-macos/.build/debug/AstraMac --selftest geometry docs/golden-screenshots/geometry --record
+apps/genie-macos/.build/debug/GenieMac --selftest geometry docs/golden-screenshots/geometry --record
 
 # 正解画像
-apps/astra-macos/.build/debug/AstraMac --selftest dock8 /tmp/d && cp /tmp/d/*.png docs/golden-screenshots/task-dock/
+apps/genie-macos/.build/debug/GenieMac --selftest dock8 /tmp/d && cp /tmp/d/*.png docs/golden-screenshots/task-dock/
 ```
 
 コミットには**何を変えたのでこの値になったか**を書く。書けないなら、それは意図した変更ではない。

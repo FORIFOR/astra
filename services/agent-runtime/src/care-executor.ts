@@ -4,7 +4,7 @@
  * **判断はしない。**記録を並べ、下書きを作り、足りない欄を数えるところまで。
  * 書き込みは CARE profile の規則で確認と読み上げを通る（policy 側の仕事）。
  */
-import { AstraError } from '@astra/contracts';
+import { GenieError } from '@genie/contracts';
 import type { DomainService } from './domain.js';
 import { handoffSummary, incidentDraft, reviewsDue, toShiftNote } from './care.js';
 
@@ -107,7 +107,7 @@ export function careExecutors(
       async execute(input, step) {
         const incidentId = argOf(input, step, 'incident_id');
         if (!incidentId) {
-          throw new AstraError('common.validation_failed', 'どの記録の下書きかの指定が要ります');
+          throw new GenieError('common.validation_failed', 'どの記録の下書きかの指定が要ります');
         }
         const entity = await domain.get(input.tenantId, incidentId);
         const draft = incidentDraft(

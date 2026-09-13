@@ -9,20 +9,20 @@
 # 採点はしない。採る人と点を付ける人を分ける。
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-BIN="$ROOT/apps/astra-macos/.build/debug/AstraMac"
+BIN="$ROOT/apps/genie-macos/.build/debug/GenieMac"
 LAB="$ROOT/.build/uxlab"
 J="${1:?usage: capture.sh <J05> [iter]}"
 ITER="${2:-base}"
 OUT="$ROOT/artifacts/ux/$J/$ITER"
 
-[ -x "$BIN" ] || { echo "FAIL: 先に swift build --package-path apps/astra-macos" >&2; exit 1; }
+[ -x "$BIN" ] || { echo "FAIL: 先に swift build --package-path apps/genie-macos" >&2; exit 1; }
 bash "$ROOT/scripts/ux-auto/build-tools.sh" >/dev/null
 
 rm -rf "$OUT"; mkdir -p "$OUT/frames" "$OUT/ocr"
-pkill -9 -f AstraMac 2>/dev/null; sleep 1
+pkill -9 -f GenieMac 2>/dev/null; sleep 1
 
 # **窓だけを連写する。** 画面全体を録ると、切り出しても他アプリが写る
-# （Astra が最前面でない場所では、その矩形に別のアプリが見える）。
+# （Genie が最前面でない場所では、その矩形に別のアプリが見える）。
 # 実際、利用者の Finder の書類名やメールの断片が frame に入っていた。
 # `screencapture -l<窓ID>` は**その窓だけ**を撮るので、他は決して入らない。
 # 検査ごとに使い捨ての置き場を使う。実際の置き場へ書くと、積み上がった
@@ -44,7 +44,7 @@ while kill -0 $APP 2>/dev/null; do
 done
 wait $APP 2>/dev/null
 line="$(grep -E '^JOURNEY|^SELFTEST_SKIP' "$OUT/stdout.txt" | head -1)"
-pkill -9 -f AstraMac 2>/dev/null
+pkill -9 -f GenieMac 2>/dev/null
 
 # 画面に写っている文字。**Judge の根拠を照合するための地の文。**
 for p in "$OUT"/*.png; do

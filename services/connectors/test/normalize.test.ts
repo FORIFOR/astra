@@ -8,7 +8,7 @@
  *   - 向きと id とスレッドが正しい
  */
 import { describe, expect, it } from 'vitest';
-import { WorkArtifact } from '@astra/contracts';
+import { WorkArtifact } from '@genie/contracts';
 import {
   fromGmail,
   fromGoogleCalendar,

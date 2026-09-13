@@ -1,13 +1,13 @@
 /**
- * Astra の headless voice runtime。
+ * Genie の headless voice runtime。
  *
  * Rust の実マイク／端末内 live STT、任意の Google Chirp 3 確定、
  * Local Agent Host の結果、Google TTS 再生を一つの状態列へ束ねる。
  * UI はこの状態と音量 getter だけを読み、通信実装を知らない。
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { AstraClient } from '@astra/api-client';
-import type { VoiceSynthesisResponse } from '@astra/contracts';
+import type { GenieClient } from '@genie/api-client';
+import type { VoiceSynthesisResponse } from '@genie/contracts';
 import { isTauri, voice } from '../host/tauri.js';
 import { startUxTimer } from '../ux/metrics.js';
 import type { DockDictation } from '../dock/useDockMachine.js';
@@ -99,7 +99,7 @@ export interface VoiceRuntime {
   settle(): void;
 }
 
-export function useVoiceRuntime(client: AstraClient | null = null): VoiceRuntime {
+export function useVoiceRuntime(client: GenieClient | null = null): VoiceRuntime {
   const [mode, setMode] = useState<VoiceMode>('idle');
   const [unavailable, setUnavailable] = useState<string | null>(null);
   const [transcriptText, setTranscriptText] = useState('');

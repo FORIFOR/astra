@@ -1,0 +1,142 @@
+import SwiftUI
+
+/// 設定を決めてから録るときの 1 枚。**Window は増やさない**（Home に重ねる）。
+///
+/// 毎回これを出さない。`Start recording` は前回設定でそのまま始まり、
+/// ここは `⌄` を押したときだけ出る。
+struct NewRecordingSheet: View {
+    @Environment(\.colorScheme) private var scheme
+    private var dark: Bool { scheme == .dark }
+    @Binding var isPresented: Bool
+
+    @AppStorage("astra.recording.systemAudio") private var systemAudio = true
+    @AppStorage("astra.recording.template") private var template = "会議メモ"
+    @AppStorage("astra.recording.visibility") private var visibilityRaw = MeetingSession.Visibility.mySpace.rawValue
+    @AppStorage("astra.recording.project") private var project = ""
+
+    private let templates = ["会議メモ", "1on1", "インタビュー", "朝会"]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text("新しい録音")
+                .font(.system(size: TypeScale.sectionTitleSize, weight: TypeScale.sectionTitleWeight))
+                .foregroundStyle(Palette.text(dark))
+                .padding(.bottom, 18)
+
+            row("マイク", value: micName, ok: Permissions.microphone == .granted)
+            // 値はトグルが言う。「On」の文字で同じことを二度言わない（Atlas F5）。
+            row("画面の音", value: Permissions.screenRecording == .granted ? "" : "許可が要ります",
+                ok: Permissions.screenRecording == .granted) {
+                Toggle("画面の音", isOn: $systemAudio).labelsHidden().toggleStyle(.switch)
+            }
+            picker("テンプレート", selection: $template, options: templates)
+            picker("保存先", selection: Binding(
+                get: { MeetingSession.Visibility(rawValue: visibilityRaw)?.label ?? "自分だけ" },
+                set: { label in
+                    visibilityRaw = (MeetingSession.Visibility.allCases.first { $0.label == label } ?? .mySpace).rawValue
+                }), options: MeetingSession.Visibility.allCases.map(\.label))
+            picker("プロジェクト", selection: Binding(
+                get: { project.isEmpty ? Facts.projectNone : project },
+                set: { project = $0 == Facts.projectNone ? "" : $0 }),
+                options: [Facts.projectNone] + Projects.all())
+
+            Spacer(minLength: 0)
+
+            HStack(spacing: 10) {
+                Spacer(minLength: 0)
+                Button(Facts.confirmationCancel) { isPresented = false }
+                    .keyboardShortcut(.cancelAction)
+                    .font(.system(size: TypeScale.bodySize))
+                    .foregroundStyle(Palette.muted(dark))
+                    .frame(height: 36).padding(.horizontal, 18)
+                    .buttonStyle(GenieControlStyle(radius: 9, base: 0.0))
+                Button {
+                    isPresented = false
+                    start()
+                } label: {
+                    HStack(spacing: 7) {
+                        Circle().fill(Color.recordingRed).frame(width: 8, height: 8)
+                        Text(Facts.recordingStart)
+                    }
+                    .font(.system(size: TypeScale.bodySize, weight: .semibold))
+                    .foregroundStyle(Palette.text(dark))
+                    .frame(height: 36).padding(.horizontal, 20)
+                }
+                .buttonStyle(GenieControlStyle(radius: 9, base: 0.08))
+                .accessibilityIdentifier("sheetStartRecording")
+            }
+        }
+        .padding(26)
+        // 5 行 + ボタン列で収まる高さ。400 では下半分が空いていた（盲検 3/3 で density）。
+        .frame(width: 620, height: 330)
+        .background(SheetSurface())
+        .accessibilityIdentifier("newRecordingSheet")
+    }
+
+    private var micName: String {
+        Permissions.microphone == .granted ? "MacBook Microphone" : "許可が要ります"
+    }
+
+    private func start() {
+        let state = RecordingWorkspaceState.shared
+        state.pendingCalendarLink = nil
+        state.start()
+        // 設定した保存先と project を、いま作られた Session へ反映する。
+        if let live = MeetingSessionStore.shared.live {
+            if let v = MeetingSession.Visibility(rawValue: visibilityRaw) {
+                MeetingSessionStore.shared.setVisibility(v, for: live.id)
+            }
+            MeetingSessionStore.shared.setProject(project.isEmpty ? nil : project, for: live.id)
+        }
+    }
+
+    @ViewBuilder
+    private func row<Trailing: View>(_ title: String, value: String, ok: Bool,
+                                     @ViewBuilder trailing: () -> Trailing = { EmptyView() }) -> some View {
+        HStack(spacing: 12) {
+            Text(title)
+                .font(.system(size: TypeScale.bodySize))
+                .foregroundStyle(Palette.muted(dark))
+                .frame(width: 130, alignment: .leading)
+            Text(value)
+                .font(.system(size: TypeScale.bodySize))
+                .foregroundStyle(ok ? Palette.text(dark) : Palette.warning(dark))
+            // 操作はどの行も同じ列（ラベルの右）に置く。右端に離すと列が 2 本になる（盲検 3/3 で alignment）。
+            trailing()
+            Spacer(minLength: 0)
+        }
+        .frame(height: 44)
+    }
+
+    private func picker(_ title: String, selection: Binding<String>, options: [String]) -> some View {
+        HStack(spacing: 12) {
+            Text(title)
+                .font(.system(size: TypeScale.bodySize))
+                .foregroundStyle(Palette.muted(dark))
+                .frame(width: 130, alignment: .leading)
+            Picker(title, selection: selection) {
+                ForEach(options, id: \.self) { Text($0).tag($0) }
+            }
+            .labelsHidden()
+            .pickerStyle(.menu)
+            // 3 つのプルダウンを同じ幅にして 1 本の列に揃える。
+            .frame(width: 220, alignment: .leading)
+            .accessibilityIdentifier("sheet-\(title)")
+            Spacer(minLength: 0)
+        }
+        .frame(height: 44)
+    }
+}
+
+/// Sheet の地。Dock と同じく操作 surface なので glass を使う。
+private struct SheetSurface: View {
+    @Environment(\.colorScheme) private var scheme
+    private var dark: Bool { scheme == .dark }
+    var body: some View {
+        let shape = RoundedRectangle(cornerRadius: 24, style: .continuous)
+        shape
+            .fill(.regularMaterial)
+            .overlay(shape.fill(dark ? Color.black.opacity(0.24) : Color.white.opacity(0.5)))
+            .overlay(shape.stroke(dark ? Color.white.opacity(0.12) : Color.black.opacity(0.07), lineWidth: 0.5))
+    }
+}

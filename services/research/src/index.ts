@@ -1,5 +1,5 @@
 /**
- * @astra/service-research
+ * @genie/service-research
  *
  * 計画・検索・突き合わせ・統合と Evidence Ledger。正本 §8。
  */

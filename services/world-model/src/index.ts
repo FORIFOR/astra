@@ -1,5 +1,5 @@
 /**
- * @astra/service-world-model
+ * @genie/service-world-model
  *
  * 「ユーザーの世界の現在状態」。正本 §10。
  * 実装仕様: docs/spec/phase-6-implementation-spec.md

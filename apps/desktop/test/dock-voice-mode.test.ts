@@ -25,7 +25,7 @@ describe('dockVoiceMode', () => {
 
   it('uses the same words as the HUD', () => {
     expect(voiceModeLabel('listening')).toBe('聞いています');
-    expect(voiceModeLabel('speaking')).toBe('Astra が話しています');
+    expect(voiceModeLabel('speaking')).toBe('Genie が話しています');
     expect(voiceModeLabel('idle')).toBeNull();
   });
 });

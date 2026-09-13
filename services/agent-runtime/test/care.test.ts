@@ -5,7 +5,7 @@
  * ここで確かめたいのは **書かないことを書いていないか**。
  */
 import { describe, expect, it } from 'vitest';
-import type { DomainEntity } from '@astra/contracts';
+import type { DomainEntity } from '@genie/contracts';
 import {
   handoffSummary,
   incidentDraft,

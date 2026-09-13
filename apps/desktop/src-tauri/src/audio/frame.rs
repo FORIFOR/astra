@@ -5,11 +5,11 @@
 //! DeepNote はマイクのコールバックの中でシステム音声を混ぜ、
 //! 混ざった `Vec<f32>` だけを認識と録音へ渡していた。
 //! あとから「この発言はどちらから来たか」を言えない。
-//! Astra は会議の話者対応（§12）と、外へ出す判断（§22）で出所が要る。
+//! Genie は会議の話者対応（§12）と、外へ出す判断（§22）で出所が要る。
 
 use serde::{Deserialize, Serialize};
 
-/// 手元で扱う標準の形。TypeScript 側（`@astra/audio`）と揃える。
+/// 手元で扱う標準の形。TypeScript 側（`@genie/audio`）と揃える。
 pub const SAMPLE_RATE_HZ: u32 = 16_000;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

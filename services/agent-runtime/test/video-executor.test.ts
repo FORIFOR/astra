@@ -5,7 +5,7 @@
  */
 import { describe, expect, it, vi } from 'vitest';
 import { videoExecutors, type VideoRenderer } from '../src/video-executor.js';
-import type { DomainEntity } from '@astra/contracts';
+import type { DomainEntity } from '@genie/contracts';
 
 const PROJECT = 'proj-1';
 

@@ -1,0 +1,113 @@
+{
+  "artifacts": [
+    "01-home.png",
+    "02-listening.png",
+    "03-running.png",
+    "04-confirmation.png",
+    "05-done.png"
+  ],
+  "errors": [],
+  "focusTheft": 0,
+  "interactions": 4,
+  "journey": "JA",
+  "notMeasured": ["実際の声（STT は別 selftest）／実際の送信（外部サービス）"],
+  "observations": ["体感の複雑さ（層 C）: 段は 5、面は 1 枚、増えた窓 0"],
+  "product": "Genie",
+  "startedAt": "2026-09-13T12:14:33Z",
+  "steps": [
+    {
+      "interactions": 0,
+      "keyWindow": false,
+      "ms": 37,
+      "name": "Home（Dock は待機）",
+      "surface": {
+        "h": 76,
+        "key": false,
+        "w": 220,
+        "x": 754,
+        "y": 1041
+      },
+      "windows": 2
+    },
+    {
+      "interactions": 1,
+      "keyWindow": false,
+      "keys": {
+        "esc": "listening→idle"
+      },
+      "ms": 1193,
+      "name": "Listening",
+      "surface": {
+        "h": 76,
+        "key": false,
+        "w": 220,
+        "x": 754,
+        "y": 1041
+      },
+      "transitionMs": 209,
+      "windows": 2
+    },
+    {
+      "ids": {
+        "task": "96C28147-C195-41D4-B27A-B0D74A0EEBE0"
+      },
+      "interactions": 0,
+      "keyWindow": false,
+      "ms": 1076,
+      "name": "Running",
+      "surface": {
+        "h": 287,
+        "key": false,
+        "w": 720,
+        "x": 504,
+        "y": 830
+      },
+      "transitionMs": 184,
+      "windows": 2
+    },
+    {
+      "ids": {
+        "confirmation": "43A00AF8-0CE8-4618-AC5C-0B6490728F92",
+        "resolved": "43A00AF8-0CE8-4618-AC5C-0B6490728F92"
+      },
+      "interactions": 2,
+      "keyWindow": false,
+      "keys": {
+        "cmdReturn": "approved",
+        "return": "no-op"
+      },
+      "ms": 1785,
+      "name": "Confirmation",
+      "surface": {
+        "h": 76,
+        "key": false,
+        "w": 220,
+        "x": 754,
+        "y": 1041
+      },
+      "transitionMs": 206,
+      "windows": 2
+    },
+    {
+      "interactions": 1,
+      "keyWindow": false,
+      "keys": {
+        "esc": "result→idle"
+      },
+      "ms": 1259,
+      "name": "Done",
+      "surface": {
+        "h": 76,
+        "key": false,
+        "w": 220,
+        "x": 754,
+        "y": 1041
+      },
+      "transitionMs": 179,
+      "windows": 2
+    }
+  ],
+  "success": true,
+  "totalMs": 5352,
+  "windowsOpened": 0
+}

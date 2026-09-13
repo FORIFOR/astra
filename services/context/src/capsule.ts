@@ -15,7 +15,7 @@ import {
   mayLeaveDevice,
   type ContextSource,
   type Sensitivity,
-} from '@astra/contracts';
+} from '@genie/contracts';
 
 /** 正本 §6.2 の local context。**このまま外へは出さない。** */
 export interface LocalSignals {

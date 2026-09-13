@@ -1,9 +1,9 @@
 // XAML→C# codegen(XamlCompiler.exe)が本来生成する部分メンバーの手書きスタブ。
 // Window の code-behind を macOS/CI で型検査するためだけのもの（実体は Windows のビルドが生成する）。
-// x:Name 要素は apps/windows/Astra/*.xaml と一致させること。
+// x:Name 要素は apps/windows/Genie/*.xaml と一致させること。
 using Microsoft.UI.Xaml.Controls;
 
-namespace Astra
+namespace Genie
 {
     public partial class MainWindow { private void InitializeComponent() { }
         internal NavigationView Nav = null!; internal Frame ContentFrame = null!; }

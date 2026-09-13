@@ -5,8 +5,8 @@ import {
   InitialProfileSections,
   uuidv7,
   type WorkArtifact,
-} from '@astra/contracts';
-import { createDb, withIdentity, type DbHandle } from '@astra/db';
+} from '@genie/contracts';
+import { createDb, withIdentity, type DbHandle } from '@genie/db';
 import { WorkContextService } from '../src/work/service.js';
 import { initialSnapshot } from '../src/work/initial-profile.js';
 
@@ -15,7 +15,7 @@ const artifact = (id: string): WorkArtifact => ({
   id,
   source: 'gmail',
   kind: 'email',
-  title: 'Astra review',
+  title: 'Genie review',
   body_excerpt: null,
   people: [
     { name: 'Colleague', email: 'colleague@example.invalid', role: 'from' },
@@ -26,13 +26,13 @@ const artifact = (id: string): WorkArtifact => ({
   ends_at: null,
   due_at: null,
   thread_id: id,
-  project_hint: 'Astra',
+  project_hint: 'Genie',
   responded: null,
   completed: null,
   provenance: {
     source: 'gmail',
     external_id: id,
-    label: 'Astra review',
+    label: 'Genie review',
     observed_at: NOW.toISOString(),
     url: null,
     excerpt: null,

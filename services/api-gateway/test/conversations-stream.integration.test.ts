@@ -1,12 +1,12 @@
 /**
  * Conversation の SSE。正本 §19 `GET /v1/conversations/{id}/stream` と §20 の統一 envelope
  * （sequence 付き・Last-Event-ID で再開）を HTTP 契約として確かめる。
- *   ./infra/db/with-test-db.sh pnpm --filter @astra/service-api-gateway test
+ *   ./infra/db/with-test-db.sh pnpm --filter @genie/service-api-gateway test
  */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { type TokenResponse, uuidv7 } from '@astra/contracts';
-import { withTenant } from '@astra/db';
-import { appendEvent } from '@astra/service-task';
+import { type TokenResponse, uuidv7 } from '@genie/contracts';
+import { withTenant } from '@genie/db';
+import { appendEvent } from '@genie/service-task';
 import { makeTestApp, makeTokens, testDbConfig, type TestApp } from './support.js';
 import type { App } from '../src/fastify.js';
 

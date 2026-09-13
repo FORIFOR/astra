@@ -8,7 +8,7 @@ import { readdir } from 'node:fs/promises';
 import path from 'node:path';
 import { parse as parseYaml } from 'yaml';
 import {
-  AstraError,
+  GenieError,
   CORE_VERSION,
   DashboardSchema,
   PluginCatalogEntry,
@@ -27,12 +27,12 @@ import {
   type ComplianceProfile,
   type McpServerDecl,
   type PluginManifest,
-} from '@astra/contracts';
-import { withSystem, withTenant, type DbHandle, type ScopedDb } from '@astra/db';
-import type { InstalledAgent } from '@astra/service-task';
+} from '@genie/contracts';
+import { withSystem, withTenant, type DbHandle, type ScopedDb } from '@genie/db';
+import type { InstalledAgent } from '@genie/service-task';
 import { assertRegulatedPluginHasRules } from './compliance.js';
 import type { DataSourceResolver } from './data-sources.js';
-import { appendAuditEvent } from '@astra/telemetry';
+import { appendAuditEvent } from '@genie/telemetry';
 import {
   declaredAssets,
   loadAssets,
@@ -44,7 +44,7 @@ import {
   verifyManifestSignature,
   type LoadedManifest,
   type PluginAsset,
-} from '@astra/plugin-sdk';
+} from '@genie/plugin-sdk';
 
 export interface RegistryDeps {
   /** 実行環境。本番で未実装のゲートに寄りかからないための判定に使う。 */
@@ -117,7 +117,7 @@ export class PluginRegistryService {
     for (const asset of assets) {
       const actual = await sha256Hex(asset.content);
       if (actual !== asset.sha256) {
-        throw new AstraError(
+        throw new GenieError(
           'plugin.manifest_invalid',
           `asset "${asset.path}" does not match its checksum`,
         );
@@ -125,7 +125,7 @@ export class PluginRegistryService {
     }
     for (const declared of declaredAssets(manifest)) {
       if (!assets.some((a) => a.path === declared.path)) {
-        throw new AstraError(
+        throw new GenieError(
           'plugin.manifest_invalid',
           `${manifest.id} declares "${declared.path}" but no such asset was provided`,
         );
@@ -138,7 +138,7 @@ export class PluginRegistryService {
         .where('id', '=', manifest.publisher)
         .executeTakeFirst();
       if (!publisher) {
-        throw new AstraError('plugin.unsigned', `unknown publisher ${manifest.publisher}`);
+        throw new GenieError('plugin.unsigned', `unknown publisher ${manifest.publisher}`);
       }
 
       const verified = verifyManifestSignature(
@@ -148,7 +148,7 @@ export class PluginRegistryService {
       );
       const state = signatureStateFor(manifest, verified);
       if (state === 'UNSIGNED') {
-        throw new AstraError('plugin.unsigned', `manifest for ${manifest.id} is not signed`);
+        throw new GenieError('plugin.unsigned', `manifest for ${manifest.id} is not signed`);
       }
       await this.#upsert(tx, loaded, state, assets);
     });
@@ -224,7 +224,7 @@ export class PluginRegistryService {
 
   async get(tenantId: string, pluginId: string): Promise<PluginCatalogEntry> {
     const entry = (await this.catalog(tenantId)).find((p) => p.id === pluginId);
-    if (!entry) throw new AstraError('plugin.not_found', `no plugin ${pluginId}`);
+    if (!entry) throw new GenieError('plugin.not_found', `no plugin ${pluginId}`);
     return entry;
   }
 
@@ -256,10 +256,10 @@ export class PluginRegistryService {
         .where('version', '=', request.version)
         .executeTakeFirst();
       if (!row || row.yanked_at !== null) {
-        throw new AstraError('plugin.not_found', `no plugin ${pluginId}@${request.version}`);
+        throw new GenieError('plugin.not_found', `no plugin ${pluginId}@${request.version}`);
       }
       if (!isCompatible(row.min_core_version, this.#coreVersion)) {
-        throw new AstraError(
+        throw new GenieError(
           'plugin.incompatible',
           `${pluginId}@${request.version} requires core >= ${row.min_core_version}`,
         );
@@ -365,9 +365,9 @@ export class PluginRegistryService {
         .where('id', '=', pluginId)
         .executeTakeFirst(),
     );
-    if (!plugin) throw new AstraError('plugin.not_found', `no plugin ${pluginId}`);
+    if (!plugin) throw new GenieError('plugin.not_found', `no plugin ${pluginId}`);
     if (plugin.builtin && !plugin.removable) {
-      throw new AstraError('plugin.not_removable', `${pluginId} is a built-in capability`);
+      throw new GenieError('plugin.not_removable', `${pluginId} is a built-in capability`);
     }
 
     await withTenant(this.#db, tenantId, async (tx) => {
@@ -378,7 +378,7 @@ export class PluginRegistryService {
         .where('state', '!=', 'UNINSTALLED')
         .executeTakeFirst();
       if (Number(result.numUpdatedRows) === 0) {
-        throw new AstraError('plugin.not_found', `${pluginId} is not installed`);
+        throw new GenieError('plugin.not_found', `${pluginId} is not installed`);
       }
       await appendAuditEvent(tx, tenantId, {
         actorType: 'user',
@@ -532,7 +532,7 @@ export class PluginRegistryService {
         .where('state', '=', 'INSTALLED')
         .executeTakeFirst(),
     );
-    if (!install) throw new AstraError('plugin.not_found', `${pluginId} is not installed`);
+    if (!install) throw new GenieError('plugin.not_found', `${pluginId} is not installed`);
 
     const version = await withSystem(this.#db, (tx) =>
       tx
@@ -542,16 +542,16 @@ export class PluginRegistryService {
         .where('version', '=', install.version)
         .executeTakeFirst(),
     );
-    if (!version) throw new AstraError('plugin.not_found', `no plugin ${pluginId}`);
+    if (!version) throw new GenieError('plugin.not_found', `no plugin ${pluginId}`);
 
     const manifest = version.manifest as unknown as PluginManifest;
     const decl = manifest.dashboards.find((d) => d.id === dashboardId);
-    if (!decl) throw new AstraError('plugin.not_found', `no dashboard ${dashboardId}`);
+    if (!decl) throw new GenieError('plugin.not_found', `no dashboard ${dashboardId}`);
 
     const content = await this.asset(pluginId, install.version, decl.schema);
     if (!content) {
       // publish で止めているはずなので、ここに来るのは配線ミス
-      throw new AstraError('plugin.manifest_invalid', `dashboard ${decl.schema} is missing`);
+      throw new GenieError('plugin.manifest_invalid', `dashboard ${decl.schema} is missing`);
     }
     const schema = DashboardSchema.parse(JSON.parse(content.toString('utf8')));
 
@@ -781,12 +781,12 @@ export class PluginRegistryService {
         .where('state', '=', 'INSTALLED')
         .executeTakeFirst(),
     );
-    if (!current) throw new AstraError('plugin.not_found', `${pluginId} is not installed`);
+    if (!current) throw new GenieError('plugin.not_found', `${pluginId} is not installed`);
 
     if (compareSemver(toVersion, current.version) <= 0) {
       // 下げるのは rollback の仕事。update で下げられると、
       // 「上げたつもりが下がっていた」が起きる。
-      throw new AstraError(
+      throw new GenieError(
         'plugin.incompatible',
         `${toVersion} is not newer than the installed ${current.version}`,
       );
@@ -835,7 +835,7 @@ export class PluginRegistryService {
     );
     const previous = row?.previous_version ?? null;
     if (!previous) {
-      throw new AstraError('plugin.not_found', `${pluginId} has no version to roll back to`);
+      throw new GenieError('plugin.not_found', `${pluginId} has no version to roll back to`);
     }
 
     const scopes = await this.#grantedScopes(tenantId, pluginId, []);

@@ -10,10 +10,10 @@ LAB="$ROOT/.build/uxlab"
 bash "$ROOT/scripts/ux-auto/build-tools.sh" >/dev/null
 
 # ① シークレットモードが入っていると窓は撮影に写らない。
-sm="$(defaults read AstraMac astra.secretMode 2>/dev/null || echo 0)"
+sm="$(defaults read GenieMac astra.secretMode 2>/dev/null || echo 0)"
 if [ "$sm" = "1" ]; then
   echo "GUARD_FAIL: シークレットモードが有効。窓は撮影に写らない。"
-  echo "  戻す: defaults write AstraMac astra.secretMode -bool false"
+  echo "  戻す: defaults write GenieMac astra.secretMode -bool false"
   exit 1
 fi
 

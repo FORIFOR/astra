@@ -1,6 +1,6 @@
 /**
  * Plugin カタログと install。実装仕様 §9、受け入れテスト AC-12。
- *   ./infra/db/with-test-db.sh pnpm --filter @astra/service-api-gateway test
+ *   ./infra/db/with-test-db.sh pnpm --filter @genie/service-api-gateway test
  */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
@@ -9,9 +9,9 @@ import {
   type PluginCatalogEntry,
   type PluginInstall,
   type TokenResponse,
-} from '@astra/contracts';
-import { withTenant } from '@astra/db';
-import { readAuditChain, verifyAuditChain } from '@astra/telemetry';
+} from '@genie/contracts';
+import { withTenant } from '@genie/db';
+import { readAuditChain, verifyAuditChain } from '@genie/telemetry';
 import { makeTestApp, makeTokens, testDbConfig, type TestApp } from './support.js';
 import type { App } from '../src/fastify.js';
 

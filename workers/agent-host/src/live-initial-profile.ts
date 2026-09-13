@@ -1,8 +1,8 @@
 /** Read-only live onboarding probe. Never seeds or sends mail; prints counts only. */
 import { cloudClient } from './cloud.js';
 import assert from 'node:assert/strict';
-import { InitialProfile, WorkArtifactBatch } from '@astra/contracts';
-import { credentialRef, TokenStore, type SecretStore } from '@astra/oauth';
+import { InitialProfile, WorkArtifactBatch } from '@genie/contracts';
+import { credentialRef, TokenStore, type SecretStore } from '@genie/oauth';
 import { ConnectorRuntime } from './connector-steps.js';
 import { saveLiveReadGrant } from './live-oauth.js';
 import { runInitialProfile } from './initial-profile.js';

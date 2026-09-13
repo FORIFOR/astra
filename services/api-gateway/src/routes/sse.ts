@@ -15,8 +15,8 @@ import {
   SSE_HEARTBEAT_INTERVAL_MS,
   toSseFrame,
   type EventEnvelope,
-} from '@astra/contracts';
-import { channelFor } from '@astra/service-task';
+} from '@genie/contracts';
+import { channelFor } from '@genie/service-task';
 
 /** 終端イベント。これを送ったらサーバから閉じる。 */
 const TERMINAL_TYPES = new Set([

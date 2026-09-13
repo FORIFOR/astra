@@ -2,10 +2,10 @@
  * テナント境界の結合テスト。実装仕様 §4.4 / §5.4、チケット P0-05 の DoD。
  *
  * 実 DB が要る。次で起動する:
- *   ./infra/db/with-test-db.sh pnpm --filter @astra/db test
+ *   ./infra/db/with-test-db.sh pnpm --filter @genie/db test
  */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { uuidv7 } from '@astra/contracts';
+import { uuidv7 } from '@genie/contracts';
 import { createDb, type DbHandle } from '../src/pool.js';
 import type { DbConfig } from '../src/config.js';
 import {

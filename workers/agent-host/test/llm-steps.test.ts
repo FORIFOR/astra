@@ -11,7 +11,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { mkdtempSync, writeFileSync, rmSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { NO_MODEL_MESSAGE, type LanguageModelOption } from '@astra/contracts';
+import { NO_MODEL_MESSAGE, type LanguageModelOption } from '@genie/contracts';
 import { ClaudeCodeCli, ClaudeCodeError, type RunResult } from '../src/claude-code.js';
 import { LlmRuntime, promptFor, toolsFor } from '../src/llm-steps.js';
 import { HttpLlmClient, HttpLlmError } from '../src/http-llm.js';
@@ -23,6 +23,44 @@ const step = (over: Partial<HostStep> = {}): HostStep => ({
   args: { question: 'A社の競合は？', max: 3 },
   approval: null,
   ...over,
+});
+
+it('uses stable local sampling for business drafts and creative sampling only when requested', async () => {
+  const temperatures: unknown[] = [];
+  const client = new HttpLlmClient({
+    kind: 'local',
+    endpoint: 'http://localhost:11434/v1',
+    model: 'local',
+    fetch: async (url, init) => {
+      if (String(url).endsWith('/models')) return Response.json({ data: [{ id: 'local' }] });
+      temperatures.push(JSON.parse(String(init?.body)).temperature);
+      return Response.json({
+        choices: [{ message: { content: '下書きの本文' }, finish_reason: 'stop' }],
+      });
+    },
+  });
+  const runtime = new LlmRuntime({ allowedKinds: ['local'], http: { local: client } });
+  expect(
+    (
+      await runtime.run(
+        step({
+          toolId: 'llm.compose',
+          args: {
+            instruction:
+              '会議メモから依頼メールの下書きを作る。未提供の事実を創作しないでください。',
+          },
+        }),
+      )
+    ).ok,
+  ).toBe(true);
+  expect(
+    (
+      await runtime.run(
+        step({ toolId: 'llm.compose', args: { instruction: '短い物語を創作する' } }),
+      )
+    ).ok,
+  ).toBe(true);
+  expect(temperatures).toEqual([0, 0.6]);
 });
 
 const cliReturning = (result: Partial<RunResult>): ClaudeCodeCli =>
@@ -218,6 +256,59 @@ describe('what the device asks the model', () => {
     expect(promptFor('llm.synthesize', { question: 'q', claims: [] })).toContain(
       '主張に無いことを足さない',
     );
+  });
+});
+
+describe('real web search capability', () => {
+  it('does not turn text-only local/API output into invented search evidence', async () => {
+    for (const kind of ['local', 'openai_api', 'gemini_api', 'anthropic_api'] as const) {
+      const ask = vi.fn().mockResolvedValue({ results: [{ url: 'https://invented.example' }] });
+      const runtime = new LlmRuntime({ others: [keyOption(kind, true)], askWith: { [kind]: ask } });
+      const outcome = await runtime.run(
+        step({ toolId: 'search.web', args: { query: '京都の空室と料金' } }),
+      );
+      expect(outcome.ok).toBe(false);
+      expect(outcome.error?.message).toContain('Web検索機能がありません');
+      expect(ask).not.toHaveBeenCalled();
+    }
+  });
+
+  it('executes the actual CLI search tool rather than a text-only override', async () => {
+    const run = vi.fn(async (_command: string, args: readonly string[]): Promise<RunResult> => ({
+      code: 0,
+      stdout: args.includes('--version') ? '2.0.14' : reply({ results: [] }),
+      stderr: '',
+    }));
+    const override = vi.fn();
+    const runtime = new LlmRuntime({
+      claudeCode: new ClaudeCodeCli({ run }),
+      askWith: { claude_code: override },
+    });
+    expect(
+      (
+        await runtime.run(
+          step({ toolId: 'search.web', args: { query: '京都の旅行情報', limit: 3 } }),
+        )
+      ).ok,
+    ).toBe(true);
+    expect(run.mock.calls.at(-1)?.[1]).toContain('WebSearch');
+    expect(override).not.toHaveBeenCalled();
+  });
+
+  it('does not enable an excluded paid CLI to rescue a local-only search', async () => {
+    const run = vi.fn();
+    const local = vi.fn();
+    const runtime = new LlmRuntime({
+      allowedKinds: ['local'],
+      claudeCode: new ClaudeCodeCli({ run }),
+      others: [keyOption('local', true)],
+      askWith: { local },
+    });
+    expect((await runtime.run(step({ toolId: 'search.web', args: { query: 'ホテル' } }))).ok).toBe(
+      false,
+    );
+    expect(run).not.toHaveBeenCalled();
+    expect(local).not.toHaveBeenCalled();
   });
 });
 
@@ -417,14 +508,14 @@ describe('bounded local composition repair', () => {
     toolId: 'llm.compose',
     args: {
       instruction: '動画の構成を3案。予算0円。実測していない速度は主張しない。',
-      context: 'AstraはmacOSアプリ。Homeで依頼、Workで完成文を開く。',
+      context: 'GenieはmacOSアプリ。Homeで依頼、Workで完成文を開く。',
     },
     approval: null,
   });
   it('repairs a concrete unsupported claim once on local inference', async () => {
     const ask = vi
       .fn()
-      .mockResolvedValueOnce({ text: 'Astraは無料。30秒で完成。' })
+      .mockResolvedValueOnce({ text: 'Genieは無料。30秒で完成。' })
       .mockResolvedValueOnce({
         text: '完成した文章を見せ、WorkからHomeへ戻って依頼文を紹介する。',
       });
@@ -434,7 +525,7 @@ describe('bounded local composition repair', () => {
     expect(ask.mock.calls[1]![0]).toContain('制作予算0円を製品価格と混同');
   });
   it('stops after one failed revision, without switching models', async () => {
-    const ask = vi.fn().mockResolvedValue({ text: 'Astraは無料。30秒で完成。' });
+    const ask = vi.fn().mockResolvedValue({ text: 'Genieは無料。30秒で完成。' });
     const runtime = new LlmRuntime({ others: [keyOption('local', true)], askWith: { local: ask } });
     expect((await runtime.run(brief)).error?.code).toBe('llm.output_quality');
     expect(ask).toHaveBeenCalledTimes(2);

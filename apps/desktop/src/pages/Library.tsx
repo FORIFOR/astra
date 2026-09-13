@@ -6,8 +6,8 @@
  * どの仕事から生まれたか（lineage）を必ず辿れるようにする。
  */
 import { useMemo, useState, type ReactElement } from 'react';
-import { ArtifactType, type Artifact } from '@astra/contracts';
-import type { AstraClient } from '@astra/api-client';
+import { ArtifactType, type Artifact } from '@genie/contracts';
+import type { GenieClient } from '@genie/api-client';
 import { ArtifactShareState } from '../library/ShareState.js';
 import { ArtifactActions } from '../library/ArtifactActions.js';
 import {
@@ -20,7 +20,7 @@ import {
   matchesFilters,
   type LibraryFilters,
 } from '../library/filters.js';
-import type { TaskView } from '@astra/api-client';
+import type { TaskView } from '@genie/api-client';
 import '../library/library.css';
 
 /** §10.1 の Type chips。 */
@@ -73,7 +73,7 @@ export function LibraryPage({
   tasks?: readonly TaskView[];
   selectedId?: string | null;
   /** 共有の状態を引く先。無ければ「確認しています」のまま（オフとは言わない）。 */
-  client?: AstraClient | null;
+  client?: GenieClient | null;
   onSelect?(artifactId: string): void;
   onOpenTask?(taskId: string): void;
 }): ReactElement {

@@ -1,7 +1,7 @@
 /**
  * Task Runtime の縦串。実装仕様 §16 の受け入れテスト AC-2〜AC-11 の土台。
  *
- *   ./infra/db/with-test-db.sh pnpm --filter @astra/service-task test
+ *   ./infra/db/with-test-db.sh pnpm --filter @genie/service-task test
  *
  * Temporal は @temporalio/testing のローカルサーバを使う（Docker 不要）。
  */
@@ -12,10 +12,10 @@ import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { TestWorkflowEnvironment } from '@temporalio/testing';
 import type { Worker } from '@temporalio/worker';
-import { PROGRESS_HEARTBEAT_MAX_MS, uuidv7, type EventEnvelope } from '@astra/contracts';
-import { createDb, withIdentity, withTenant, type DbHandle } from '@astra/db';
-import { readAuditChain, verifyAuditChain } from '@astra/telemetry';
-import { FsObjectStore, LibraryService } from '@astra/service-library';
+import { PROGRESS_HEARTBEAT_MAX_MS, uuidv7, type EventEnvelope } from '@genie/contracts';
+import { createDb, withIdentity, withTenant, type DbHandle } from '@genie/db';
+import { readAuditChain, verifyAuditChain } from '@genie/telemetry';
+import { FsObjectStore, LibraryService } from '@genie/service-library';
 import { TaskService } from '../src/service.js';
 import { TemporalTaskRuntime } from '../src/runtime/temporal.js';
 import { createTaskWorker } from '../src/worker.js';

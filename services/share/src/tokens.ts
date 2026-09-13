@@ -7,7 +7,7 @@
  */
 import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { hash as argonHash, verify as argonVerify } from '@node-rs/argon2';
-import { AstraError, sha256Hex, shareLinkFor } from '@astra/contracts';
+import { GenieError, sha256Hex, shareLinkFor } from '@genie/contracts';
 
 const TOKEN_VERSION = 'v1';
 const SECRET_BYTES = 32;
@@ -75,7 +75,7 @@ export function requesterFingerprint(ip: string | undefined, salt: string): Prom
 
 export function assertShareHost(url: string): string {
   if (!/^https?:\/\//.test(url)) {
-    throw new AstraError('common.internal', `share host must be an absolute URL: ${url}`);
+    throw new GenieError('common.internal', `share host must be an absolute URL: ${url}`);
   }
   return url.replace(/\/$/, '');
 }

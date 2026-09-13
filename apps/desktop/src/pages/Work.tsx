@@ -5,16 +5,16 @@
  * 裏の Agent は詳細/管理者向けにだけ開示する。
  */
 import { useEffect, useMemo, useState, type ReactElement } from 'react';
-import type { TaskView } from '@astra/api-client';
-import type { TaskStatus } from '@astra/contracts';
+import type { TaskView } from '@genie/api-client';
+import type { TaskStatus } from '@genie/contracts';
 import { WorkCard, statusLabel } from '../work/WorkCard.js';
 import { useTaskStream } from '../work/useTaskStream.js';
 import { WorkDetail } from '../work/WorkDetail.js';
 import { relativeTime } from '../home/time.js';
 import { kindLabel } from '../work/kind.js';
 import { approvalFailureMessage } from '../work/approvalOutcome.js';
-import type { ApprovalId } from '@astra/contracts';
-import type { AstraClient } from '@astra/api-client';
+import type { ApprovalId } from '@genie/contracts';
+import type { GenieClient } from '@genie/api-client';
 import '../work/work.css';
 
 export const WORK_FILTERS = [
@@ -56,7 +56,7 @@ export function WorkPage({
   onStartMeeting,
   onOpenArtifact,
 }: {
-  client?: AstraClient | null;
+  client?: GenieClient | null;
   tasks?: readonly TaskView[];
   /** 他のタブから「この仕事を見せる」で渡ってくる（UI-3 の連続性）。 */
   initialTaskId?: string | null;

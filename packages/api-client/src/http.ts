@@ -4,7 +4,7 @@
  * トークンの取得を関数で受けるのは、更新の責務をここに持ち込まないため。
  * ローテーション（§4.2）はアプリ側の関心で、クライアントは常に「今の値」を尋ねる。
  */
-import { AstraError, HEADER_IDEMPOTENCY_KEY, HEADER_REQUEST_ID, uuidv7 } from '@astra/contracts';
+import { GenieError, HEADER_IDEMPOTENCY_KEY, HEADER_REQUEST_ID, uuidv7 } from '@genie/contracts';
 import { errorFrom } from './errors.js';
 
 export interface ClientConfig {
@@ -99,6 +99,6 @@ export class HttpClient {
 }
 
 export function requireOk<T>(value: T | undefined, what: string): T {
-  if (value === undefined) throw new AstraError('common.internal', `expected ${what}`);
+  if (value === undefined) throw new GenieError('common.internal', `expected ${what}`);
   return value;
 }

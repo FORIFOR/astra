@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { uuidv7 } from '@astra/contracts';
+import { uuidv7 } from '@genie/contracts';
 import type { ConnectorRuntime } from '../src/connector-steps.js';
 import { runInitialProfile } from '../src/initial-profile.js';
 

@@ -20,35 +20,35 @@ import {
   type DomainEntity,
   type Task,
   type TokenResponse,
-} from '@astra/contracts';
-import { createDb, type DbHandle } from '@astra/db';
-import { createLogger } from '@astra/telemetry';
-import { FsObjectStore, LibraryService } from '@astra/service-library';
+} from '@genie/contracts';
+import { createDb, type DbHandle } from '@genie/db';
+import { createLogger } from '@genie/telemetry';
+import { FsObjectStore, LibraryService } from '@genie/service-library';
 import {
   PluginRegistryService,
   agentResolver,
   assetReader,
   composeDataSources,
-} from '@astra/service-plugin-registry';
+} from '@genie/service-plugin-registry';
 import {
   DomainService,
   entityDefinitions,
   salesCrmDataSources,
-} from '@astra/service-agent-runtime';
+} from '@genie/service-agent-runtime';
 import {
   TaskService,
   TemporalTaskRuntime,
   agentKindFor,
   createTaskWorker,
   workflowIdFor,
-} from '@astra/service-task';
+} from '@genie/service-task';
 import {
   MemoryRateLimiter,
   buildApp,
   JwtTokens,
   loadSigningKeys,
   type App,
-} from '@astra/service-api-gateway';
+} from '@genie/service-api-gateway';
 
 const url = process.env['TEST_DATABASE_URL'];
 const identityUrl = process.env['TEST_IDENTITY_DATABASE_URL'];

@@ -23,7 +23,7 @@ import {
   type ExecutionSurface,
   type PermissionScope,
   type PolicyRule,
-} from '@astra/contracts';
+} from '@genie/contracts';
 
 export interface ToolSpec {
   readonly id: string;

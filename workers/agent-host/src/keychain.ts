@@ -11,7 +11,7 @@ import { execFile } from 'node:child_process';
 import { chmod, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { promisify } from 'node:util';
-import type { SecretStore } from '@astra/oauth';
+import type { SecretStore } from '@genie/oauth';
 
 const run = promisify(execFile);
 
@@ -46,19 +46,16 @@ export class MacKeychain implements SecretStore {
 
   async get(key: string): Promise<string | null> {
     try {
-      const { stdout } = await run('security', [
-        'find-generic-password',
-        '-a',
-        this.#account,
-        '-s',
-        serviceFor(key),
-        '-w',
-      ]);
+      const { stdout } = await run(
+        'security',
+        ['find-generic-password', '-a', this.#account, '-s', serviceFor(key), '-w'],
+        { timeout: 30_000 },
+      );
       return stdout.trimEnd();
     } catch (error) {
       if (isNotFound(error)) return null;
       throw new KeychainUnavailable(
-        'この端末の資格情報ストアを開けませんでした。ロックされていないか確認してください。',
+        '接続情報を読めませんでした。macOSのキーチェーン確認を許可してから、もう一度試してください。',
       );
     }
   }

@@ -6,9 +6,9 @@
 # 落ちたら result.json の errors にどの段で何が切れたかが残る。
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-BIN="$ROOT/apps/astra-macos/.build/debug/AstraMac"
+BIN="$ROOT/apps/genie-macos/.build/debug/GenieMac"
 OUT="$ROOT/docs/ux-benchmark/astra"
-[[ -x "$BIN" ]] || { echo "FAIL: 先に swift build --package-path apps/astra-macos" >&2; exit 1; }
+[[ -x "$BIN" ]] || { echo "FAIL: 先に swift build --package-path apps/genie-macos" >&2; exit 1; }
 fail=0
 for j in JA JB JC; do
   line="$("$BIN" --selftest journey "$j" "$OUT/$j" 2>&1 | grep -E '^JOURNEY' | head -1)"

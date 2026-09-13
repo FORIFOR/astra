@@ -2,7 +2,7 @@
  * Plugin manifest。正本 §2.4 / §14 / §22、実装仕様 §3.6 / §9。
  *
  * スキーマと不変条件はここ（契約）に置く。YAML の読み込みと署名検証は
- * `@astra/plugin-sdk` が本スキーマを再利用して実装する。
+ * `@genie/plugin-sdk` が本スキーマを再利用して実装する。
  */
 import { z } from 'zod';
 import { DataSourceDecl } from './dashboard.js';
@@ -77,7 +77,7 @@ export const PERMISSION_SCOPES = [
  * よそのサービスへ出て行く scope。UI/UX §22 の external-send。
  *
  * **一覧で持つ。**`.write` で終わるかどうかで判断すると、
- * Astra 自身の保管庫に書くだけの `artifacts.write` まで
+ * Genie 自身の保管庫に書くだけの `artifacts.write` まで
  * 「外部へ送信」と言うことになる。名前の形は根拠にならない。
  */
 export const EXTERNAL_SEND_SCOPES = [
@@ -157,7 +157,7 @@ export type ToolDecl = z.infer<typeof ToolDecl>;
 /**
  * 資格情報そのものを渡そうとしていないか。**形で弾く。**正本 §21。
  *
- * 端末側（`@astra/oauth`）が参照を作り、サーバ側（ConnectionService）が
+ * 端末側（`@genie/oauth`）が参照を作り、サーバ側（ConnectionService）が
  * 値を断る。**両側が別の規則を持つと、片方だけ緩む。**ここに 1 つ置く。
  */
 const LOOKS_LIKE_A_SECRET = [
@@ -208,7 +208,7 @@ export const ConnectorDecl = z.object({
   provider: z.string().min(1),
   scopes: z.array(z.string()).default([]),
   /**
-   * この接続（同意画面 1 回）が与える Astra の許可。**capability 単位で同意を分ける**ための欄。
+   * この接続（同意画面 1 回）が与える Genie の許可。**capability 単位で同意を分ける**ための欄。
    *
    * 「読むだけ」の接続と「送る・動かす」接続を同じ plugin の中で分け、Work Context の同期は
    * 読む接続だけを使う。送る接続は、送る操作が要ったときに初めて（purpose を見せてから）求める。

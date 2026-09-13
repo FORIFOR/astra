@@ -5,7 +5,7 @@ name: windows
 on:
   push:
     paths:
-      ['apps/windows/**', 'core/astra-core/**', 'shared/design/**', '.github/workflows/windows.yml']
+      ['apps/windows/**', 'core/genie-core/**', 'shared/design/**', '.github/workflows/windows.yml']
   workflow_dispatch:
 jobs:
   build:
@@ -15,12 +15,12 @@ jobs:
       - name: Design token freshness
         run: node scripts/gen-design-tokens.mjs --check
       - uses: dtolnay/rust-toolchain@stable
-      - name: Build astra-core (cdylib astra_core.dll)
-        working-directory: core/astra-core
+      - name: Build genie-core (cdylib genie_core.dll)
+        working-directory: core/genie-core
         run: cargo build --release
-      - name: Stage astra_core.dll for the app
-        run: copy core\astra-core\target\release\astra_core.dll apps\windows\Astra\astra_core.dll
-      # Windows は安定 C ABI + P/Invoke（core/astra-core/include/astra_core.h）で同じ core を使う。
+      - name: Stage genie_core.dll for the app
+        run: copy core\genie-core\target\release\genie_core.dll apps\windows\Genie\genie_core.dll
+      # Windows は安定 C ABI + P/Invoke（core/genie-core/include/genie_core.h）で同じ core を使う。
       # C ABI 契約は macOS 側で `pnpm verify:c-abi` により実証済み（Windows build 自体はここで検証）。
       - uses: actions/setup-dotnet@v4
         with:
@@ -36,19 +36,19 @@ jobs:
       - name: Windows C# logic type-check (Window code-behind)
         run: bash scripts/verify-csharp-logic.sh
       - name: Restore + build WinUI 3 solution
-        run: dotnet build apps/windows/Astra.sln -c Release -p:Platform=x64 -v normal
-      # 実行時スモーク: 実際に Astra.exe を起動し、WinUI ブートストラップ + ウィンドウ生成が
+        run: dotnet build apps/windows/Genie.sln -c Release -p:Platform=x64 -v normal
+      # 実行時スモーク: 実際に Genie.exe を起動し、WinUI ブートストラップ + ウィンドウ生成が
       # クラッシュせず立ち上がることを実測する（unpackaged なので WindowsAppRuntime を同梱する
       # self-contained publish を使う）。プライマリ画面のスクショを証跡として artifact にする。
       - name: Publish self-contained (bundles WindowsAppSDK runtime)
-        run: dotnet publish apps/windows/Astra/Astra.csproj -c Release -p:Platform=x64 -r win-x64 --self-contained true -p:WindowsAppSDKSelfContained=true -o publish
-      # 実機で目視確認するための self-contained アプリ一式（Astra.exe + ランタイム）を artifact 化する。
-      # 実機手順: 展開して Astra.exe を実行 → Voice HUD / Recording Workspace(--smoke-workspace) /
+        run: dotnet publish apps/windows/Genie/Genie.csproj -c Release -p:Platform=x64 -r win-x64 --self-contained true -p:WindowsAppSDKSelfContained=true -o publish
+      # 実機で目視確認するための self-contained アプリ一式（Genie.exe + ランタイム）を artifact 化する。
+      # 実機手順: 展開して Genie.exe を実行 → Voice HUD / Recording Workspace(--smoke-workspace) /
       # Main(--smoke-main) / Task Dock・notch / 終了→HUD 復帰 を目視。
       - name: Upload self-contained app (for real-device GUI check)
         uses: actions/upload-artifact@v4
         with:
-          name: astra-windows-app
+          name: genie-windows-app
           path: publish/
           if-no-files-found: error
       # 実行時スモークは best-effort。build + self-contained publish が Windows の hard gate。
@@ -61,15 +61,15 @@ jobs:
         continue-on-error: true
         shell: pwsh
         run: |
-          $exe = (Resolve-Path "publish/Astra.exe").Path
-          if (!(Test-Path $exe)) { throw "Astra.exe not found at $exe" }
+          $exe = (Resolve-Path "publish/Genie.exe").Path
+          if (!(Test-Path $exe)) { throw "Genie.exe not found at $exe" }
           Add-Type -AssemblyName System.Windows.Forms, System.Drawing
           function Shot($name) {
             $b = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
             $bmp = New-Object System.Drawing.Bitmap $b.Width, $b.Height
             $g = [System.Drawing.Graphics]::FromImage($bmp)
             $g.CopyFromScreen($b.Location, [System.Drawing.Point]::Empty, $b.Size)
-            $bmp.Save("$PWD\astra-windows-$name.png")
+            $bmp.Save("$PWD\genie-windows-$name.png")
           }
           # 各サーフェスを実提示 → 生存確認 → 撮影（HUD / Recording Workspace / Main）。
           $modes = @(@{ name = "hud"; arg = "" }, @{ name = "workspace"; arg = "--smoke-workspace" }, @{ name = "main"; arg = "--smoke-main" })
@@ -81,7 +81,7 @@ jobs:
             Shot $m.name
             if ($p.HasExited) {
               $failed += "$($m.name)(exit=$($p.ExitCode))"
-              $crash = Join-Path $env:TEMP "astra-crash.log"
+              $crash = Join-Path $env:TEMP "genie-crash.log"
               if (Test-Path $crash) { Write-Host "CRASHLOG[$($m.name)]: $(Get-Content $crash -Raw)"; Remove-Item $crash -Force }
               # クラッシュ理由を Application イベントログから拾って表示する。
               try {
@@ -98,8 +98,8 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: astra-windows-smoke
-          path: astra-windows-*.png
+          name: genie-windows-smoke
+          path: genie-windows-*.png
           if-no-files-found: ignore
       - name: Note
         run: echo "WinUI build + runtime smoke run on windows-latest; macOS host cannot build this."

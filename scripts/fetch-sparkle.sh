@@ -13,7 +13,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 VERSION="2.9.6"
 CHECKSUM="8d5fb41d960b43f4a68aa14126bf62b098544ec8d191cdcc73eb14e63a8e7606"
 URL="https://github.com/sparkle-project/Sparkle/releases/download/${VERSION}/Sparkle-for-Swift-Package-Manager.zip"
-DEST="$ROOT/apps/astra-macos/Vendor/Sparkle"
+DEST="$ROOT/apps/genie-macos/Vendor/Sparkle"
 
 if [[ -d "$DEST/Sparkle.xcframework" && "${1:-}" != "--force" ]]; then
   echo "sparkle: 取得済み ($DEST)"

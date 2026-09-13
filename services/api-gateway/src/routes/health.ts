@@ -6,9 +6,9 @@
  *   /readyz   依存が揃っていてトラフィックを受けられるか。落ちても再起動しない。
  * ここを混ぜると、DB の一時的な不調でプロセスが再起動され続ける。
  */
-import { pingDb, type DbHandle } from '@astra/db';
+import { pingDb, type DbHandle } from '@genie/db';
 import type { App } from '../fastify.js';
-import type { HealthResponse } from '@astra/contracts';
+import type { HealthResponse } from '@genie/contracts';
 import type { Redis } from 'ioredis';
 
 export interface HealthDeps {

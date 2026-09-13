@@ -4,9 +4,9 @@ import type { ReactElement } from 'react';
  *
  * トップレベルは 4 つ固定。Plugin を入れても増えない（AC-12）。
  */
-import { TOP_LEVEL_TABS, type TabId } from '@astra/ui-kit';
+import { TOP_LEVEL_TABS, type TabId } from '@genie/ui-kit';
 import { NavIcon } from './NavIcons.js';
-import { surfacesFor, type Severity } from '@astra/contracts';
+import { surfacesFor, type Severity } from '@genie/contracts';
 import { useShell } from '../state/ShellProvider.js';
 import { useOptionalSession } from '../state/SessionProvider.js';
 import { initialOf } from './ProfileMenu.js';
@@ -41,7 +41,7 @@ export function Sidebar(): ReactElement {
         <span className="astra-sidebar__mark" aria-hidden="true">
           ✦
         </span>
-        {!collapsed && <span className="astra-sidebar__wordmark">Astra</span>}
+        {!collapsed && <span className="astra-sidebar__wordmark">Genie</span>}
       </div>
 
       <ul className="astra-sidebar__list">

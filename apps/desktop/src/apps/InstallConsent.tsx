@@ -10,7 +10,7 @@ import {
   PERMISSION_SCOPE_LABEL,
   type PermissionScope,
   type PluginCatalogEntry,
-} from '@astra/contracts';
+} from '@genie/contracts';
 
 export function InstallConsent({
   plugin,

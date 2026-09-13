@@ -46,9 +46,9 @@ let sem = DispatchSemaphore(value: 0)
 SCShareableContent.getExcludingDesktopWindows(false, onScreenWindowsOnly: true) { content, err in
     defer { sem.signal() }
     guard let content else { return }
-    // Astra の窓のうち、いちばん大きいもの。**他アプリは対象にしない。**
+    // Genie の窓のうち、いちばん大きいもの。**他アプリは対象にしない。**
     picked = content.windows
-        .filter { ($0.owningApplication?.applicationName ?? "").contains("Astra") }
+        .filter { ($0.owningApplication?.applicationName ?? "").contains("Genie") }
         .filter { $0.frame.width > 100 && $0.frame.height > 28 }
         .max { $0.frame.width * $0.frame.height < $1.frame.width * $1.frame.height }
 }

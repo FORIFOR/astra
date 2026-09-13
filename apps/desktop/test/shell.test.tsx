@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 // 名前付き export を使う。NodeNext の型解決では default が namespace に潰れる
 import { userEvent } from '@testing-library/user-event';
-import { TOP_LEVEL_TABS, breakpoints, layout } from '@astra/ui-kit';
+import { TOP_LEVEL_TABS, breakpoints, layout } from '@genie/ui-kit';
 import { ThemeProvider } from '../src/state/ThemeProvider.js';
 import { ShellProvider } from '../src/state/ShellProvider.js';
 import { badgeCount } from '../src/shell/Sidebar.js';
@@ -57,7 +57,7 @@ beforeEach(() => {
   setViewport(1440);
   localStorage.clear();
   document.documentElement.removeAttribute('data-theme');
-  document.getElementById('astra-tokens')?.remove();
+  document.getElementById('genie-tokens')?.remove();
 });
 
 afterEach(cleanup);
@@ -114,10 +114,10 @@ describe('theme', () => {
 
   it('injects the design tokens exactly once', () => {
     const { unmount } = render(<App />);
-    expect(document.getElementById('astra-tokens')).not.toBeNull();
+    expect(document.getElementById('genie-tokens')).not.toBeNull();
     unmount();
     render(<App />);
-    expect(document.querySelectorAll('#astra-tokens')).toHaveLength(1);
+    expect(document.querySelectorAll('#genie-tokens')).toHaveLength(1);
   });
 
   it('applies an explicit choice and remembers it', async () => {
@@ -171,7 +171,7 @@ describe('responsive layout (§7.2)', () => {
     render(<App />);
     const shell = document.querySelector('.astra-shell') as HTMLElement;
     expect(shell.getAttribute('data-layout')).toBe('medium');
-    expect(shell.style.getPropertyValue('--astra-sidebar-width')).toBe(
+    expect(shell.style.getPropertyValue('--genie-sidebar-width')).toBe(
       `${layout.sidebar.expanded}px`,
     );
     expect((screen.getByRole('button', { name: /サイドバー/ }) as HTMLButtonElement).disabled).toBe(
@@ -183,7 +183,7 @@ describe('responsive layout (§7.2)', () => {
     setViewport(800);
     render(<App />);
     const shell = document.querySelector('.astra-shell') as HTMLElement;
-    expect(shell.style.getPropertyValue('--astra-sidebar-width')).toBe(
+    expect(shell.style.getPropertyValue('--genie-sidebar-width')).toBe(
       `${layout.sidebar.collapsed}px`,
     );
   });
@@ -193,12 +193,12 @@ describe('responsive layout (§7.2)', () => {
     setViewport(1440);
     render(<App />);
     const shell = document.querySelector('.astra-shell') as HTMLElement;
-    expect(shell.style.getPropertyValue('--astra-sidebar-width')).toBe(
+    expect(shell.style.getPropertyValue('--genie-sidebar-width')).toBe(
       `${layout.sidebar.expanded}px`,
     );
 
     await user.click(screen.getByRole('button', { name: 'サイドバーをたたむ' }));
-    expect(shell.style.getPropertyValue('--astra-sidebar-width')).toBe(
+    expect(shell.style.getPropertyValue('--genie-sidebar-width')).toBe(
       `${layout.sidebar.collapsed}px`,
     );
   });

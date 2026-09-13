@@ -1,5 +1,5 @@
 /** §14 の Risk を、利用者の言葉にする。tool 名も内部の enum も出さない。 */
-import type { ActionRisk } from '@astra/contracts';
+import type { ActionRisk } from '@genie/contracts';
 
 export const RISK_LABEL: Record<ActionRisk, string> = {
   READ: '参照',

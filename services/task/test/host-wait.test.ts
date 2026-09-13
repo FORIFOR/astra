@@ -7,7 +7,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { HostOfflineError, isHostOfflineError } from '@astra/contracts';
+import { HostOfflineError, isHostOfflineError } from '@genie/contracts';
 
 const src = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../src');
 

@@ -10,7 +10,7 @@ import {
 import { ShellProvider, useShell } from './state/ShellProvider.js';
 import { ThemeProvider } from './state/ThemeProvider.js';
 import { SessionProvider, useSession } from './state/SessionProvider.js';
-import type { AstraClient } from '@astra/api-client';
+import type { GenieClient } from '@genie/api-client';
 import { workspace } from './host/tauri.js';
 import { WorkspaceDataProvider, useWorkspaceData } from './state/WorkspaceData.js';
 import { SignIn } from './auth/SignIn.js';
@@ -40,13 +40,13 @@ function ProactiveLayer(): null {
 }
 
 /**
- * Workspace から Astra へ話す口。UI/UX §7。
+ * Workspace から Genie へ話す口。UI/UX §7。
  *
  * Dock の `useConversation` と同じ形。**別の口にしない** —
  * 別にすると、Dock で言ったことと本体で言ったことが別の会話になり、
  * 「さっき言ったやつ」が通じなくなる。
  */
-function useWorkspaceConversation(client: AstraClient | null): ComposerConversation | undefined {
+function useWorkspaceConversation(client: GenieClient | null): ComposerConversation | undefined {
   const conversationId = useRef<string | null>(null);
 
   const send = useCallback(

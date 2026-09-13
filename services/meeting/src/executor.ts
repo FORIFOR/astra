@@ -4,8 +4,8 @@
  * task 側は「何をどの順でやるか」だけを持ち、中身は知らない（`StepExecutor`）。
  * ここが meeting 側の入口。
  */
-import { AUDIO_SAMPLE_RATE_HZ, MeetingBundle, type MeetingSegment } from '@astra/contracts';
-import type { LibraryService } from '@astra/service-library';
+import { AUDIO_SAMPLE_RATE_HZ, MeetingBundle, type MeetingSegment } from '@genie/contracts';
+import type { LibraryService } from '@genie/service-library';
 import type { MeetingService } from './service.js';
 import type { BatchTranscriber } from './providers.js';
 import type { RecordingStore } from './recording.js';

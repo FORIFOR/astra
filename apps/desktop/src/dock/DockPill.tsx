@@ -11,8 +11,8 @@ import {
   currentPlatform,
   defaultBinding,
   type InteractionState,
-} from '@astra/ui-kit';
-import { AstraOrb, useAccentHex } from '../voice/AstraOrb.js';
+} from '@genie/ui-kit';
+import { GenieOrb, useAccentHex } from '../voice/GenieOrb.js';
 import type { VoiceMode } from '../voice/voiceRuntime.js';
 import { LiveWaveform } from '../vendor/deepgram-ui/LiveWaveform.js';
 
@@ -57,7 +57,7 @@ export function DockPill({
     return (
       <div className="astra-pill astra-pill--thinking" role="status">
         <span className="astra-pill__orb" data-astra-voice-state={orbMode}>
-          <AstraOrb mode="thinking" size={16} />
+          <GenieOrb mode="thinking" size={16} />
         </span>
         <span className="astra-pill__text">考えています…</span>
       </div>
@@ -69,10 +69,10 @@ export function DockPill({
       type="button"
       className="astra-pill astra-pill--idle"
       onClick={onOpen}
-      aria-label="Astra に頼む"
+      aria-label="Genie に頼む"
     >
       <span className="astra-pill__mark" aria-hidden="true">
-        <AstraOrb mode="idle" size={12} />
+        <GenieOrb mode="idle" size={12} />
       </span>
       {keys.map((key) => (
         <kbd key={key} className="astra-pill__key">

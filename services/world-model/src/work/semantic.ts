@@ -2,7 +2,7 @@
  * 意味の**代役**（規則）。端末の LLM（llm.classify_email）が無いときに使う。**賢くしない。**
  * 分類は表面の手掛かり（疑問符・依頼の語・自分宛か）だけで決め、確度は低く付ける。
  */
-import type { WorkArtifact, WorkSemantic } from '@astra/contracts';
+import type { WorkArtifact, WorkSemantic } from '@genie/contracts';
 import { extractDeadline } from './deadline.js';
 
 const REQUEST =

@@ -36,8 +36,8 @@ m = json.load(open(os.path.join(atlas, "manifest.json"), encoding="utf-8"))
 req = [s for s in m["screens"] if s.get("required") and (s.get("image") or {}).get("light")]
 # 差分再検証: ASTRA_JUDGE_ONLY="guided-setup. screenshot." のように id の前置きで絞る（新規面だけ full audit、既存面は pixel regression）。
 only = [x for x in os.environ.get("ASTRA_JUDGE_ONLY", "").split() if x]
-# Apple の窓（System Settings）に Astra の 2 窓を重ねた合成面は、judge が OS の一覧（第三者アプリの行）まで採点してしまう。
-# 盲検は Astra が描いた画素だけを見る（manifest の blind_review: false）。合成面は Atlas の文脈証拠として残る。
+# Apple の窓（System Settings）に Genie の 2 窓を重ねた合成面は、judge が OS の一覧（第三者アプリの行）まで採点してしまう。
+# 盲検は Genie が描いた画素だけを見る（manifest の blind_review: false）。合成面は Atlas の文脈証拠として残る。
 req = [s for s in req if s.get("blind_review", True)]
 if only:
     req = [s for s in req if any(s["id"].startswith(x) for x in only)]

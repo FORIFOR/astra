@@ -4,8 +4,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
-import type { DashboardView, PluginCatalogEntry } from '@astra/contracts';
-import { PERMISSION_SCOPE_LABEL } from '@astra/contracts';
+import type { DashboardView, PluginCatalogEntry } from '@genie/contracts';
+import { PERMISSION_SCOPE_LABEL } from '@genie/contracts';
 import type { ReactElement } from 'react';
 import { DashboardRenderer } from '../src/apps/DashboardRenderer.js';
 import { InstallConsent } from '../src/apps/InstallConsent.js';

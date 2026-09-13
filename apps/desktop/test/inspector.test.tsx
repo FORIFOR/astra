@@ -5,7 +5,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
-import type { TaskView } from '@astra/api-client';
+import type { TaskView } from '@genie/api-client';
 import { INSPECTOR_TABS, TaskInspector } from '../src/shell/TaskInspector.js';
 
 afterEach(cleanup);

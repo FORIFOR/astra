@@ -3,7 +3,7 @@
  *   会議の bundle → 安定 id の artifact（決定 / やること、発言への出所）→ Work Graph → 次の brief / Home
  */
 import { describe, expect, it } from 'vitest';
-import type { MeetingBundle, MeetingSegment, WorkArtifact } from '@astra/contracts';
+import type { MeetingBundle, MeetingSegment, WorkArtifact } from '@genie/contracts';
 import {
   buildMeetingBrief,
   buildWorkContext,

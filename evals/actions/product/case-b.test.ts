@@ -23,12 +23,12 @@ import {
   type MeetingSegment,
   type Task,
   type TokenResponse,
-} from '@astra/contracts';
-import { createDb, type DbHandle } from '@astra/db';
-import { createLogger } from '@astra/telemetry';
-import { FsObjectStore, LibraryService } from '@astra/service-library';
-import { PluginRegistryService } from '@astra/service-plugin-registry';
-import { ConversationService } from '@astra/service-conversation';
+} from '@genie/contracts';
+import { createDb, type DbHandle } from '@genie/db';
+import { createLogger } from '@genie/telemetry';
+import { FsObjectStore, LibraryService } from '@genie/service-library';
+import { PluginRegistryService } from '@genie/service-plugin-registry';
+import { ConversationService } from '@genie/service-conversation';
 import {
   KeywordSummarizer,
   MeetingService,
@@ -37,20 +37,20 @@ import {
   ScriptedStreamingTranscriber,
   meetingExecutors,
   type ScriptLine,
-} from '@astra/service-meeting';
+} from '@genie/service-meeting';
 import {
   TaskService,
   TemporalTaskRuntime,
   createTaskWorker,
   workflowIdFor,
-} from '@astra/service-task';
+} from '@genie/service-task';
 import {
   MemoryRateLimiter,
   buildApp,
   JwtTokens,
   loadSigningKeys,
   type App,
-} from '@astra/service-api-gateway';
+} from '@genie/service-api-gateway';
 
 const url = process.env['TEST_DATABASE_URL'];
 const identityUrl = process.env['TEST_IDENTITY_DATABASE_URL'];

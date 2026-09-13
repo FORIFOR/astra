@@ -1,6 +1,6 @@
-# Astra — repo rules for coding agents
+# Genie — repo rules for coding agents
 
-UI（`apps/astra-macos`、`apps/windows`、`shared/design`）を触る前に、必ず読む:
+UI（`apps/genie-macos`、`apps/windows`、`shared/design`）を触る前に、必ず読む:
 
 1. `shared/design/DESIGN.md` — 何を目指すか、どの面にどの製品の作法を借りるか、
    借りたものをどう検証するか（BEST-IN-CLASS_REFERENCE_GATE）。

@@ -6,7 +6,7 @@
  */
 import { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import type { ReactNode, ReactElement } from 'react';
-import { isTabId, resolveLayout, type LayoutDecision, type TabId } from '@astra/ui-kit';
+import { isTabId, resolveLayout, type LayoutDecision, type TabId } from '@genie/ui-kit';
 import { useViewportWidth } from './useViewportWidth.js';
 
 interface ShellContextValue {

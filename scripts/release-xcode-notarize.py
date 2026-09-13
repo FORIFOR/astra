@@ -25,7 +25,7 @@ def make_project(work, team):
                      mainGroup=key(4), productRefGroup=key(5), projectDirPath='', projectRoot='',
                      targets=[key(2)]),
         key(2): dict(isa='PBXNativeTarget', buildConfigurationList=key(6), buildPhases=[key(7)],
-                     buildRules=[], dependencies=[], name='Astra', productName='Astra',
+                     buildRules=[], dependencies=[], name='Genie', productName='Genie',
                      productReference=key(8), productType='com.apple.product-type.application'),
         key(3): dict(isa='XCConfigurationList', buildConfigurations=[key(9)],
                      defaultConfigurationIsVisible=0, defaultConfigurationName='Release'),
@@ -38,25 +38,25 @@ def make_project(work, team):
                      shellPath='/bin/sh', name='Install current SwiftPM product', shellScript='''set -eu
 mkdir -p "$TARGET_BUILD_DIR/$CONTENTS_FOLDER_PATH"
 for part in MacOS Resources Frameworks; do
-  if [ -d "$SRCROOT/prebuilt/Astra.app/Contents/$part" ]; then
-    ditto "$SRCROOT/prebuilt/Astra.app/Contents/$part" "$TARGET_BUILD_DIR/$CONTENTS_FOLDER_PATH/$part"
+  if [ -d "$SRCROOT/prebuilt/Genie.app/Contents/$part" ]; then
+    ditto "$SRCROOT/prebuilt/Genie.app/Contents/$part" "$TARGET_BUILD_DIR/$CONTENTS_FOLDER_PATH/$part"
   fi
 done
 '''),
         key(8): dict(isa='PBXFileReference', explicitFileType='wrapper.application',
-                     includeInIndex=0, path='Astra.app', sourceTree='BUILT_PRODUCTS_DIR'),
+                     includeInIndex=0, path='Genie.app', sourceTree='BUILT_PRODUCTS_DIR'),
         key(9): dict(isa='XCBuildConfiguration', name='Release', buildSettings={
             'SDKROOT': 'macosx', 'MACOSX_DEPLOYMENT_TARGET': '14.0', 'ONLY_ACTIVE_ARCH': 'NO'}),
         key(10): dict(isa='XCBuildConfiguration', name='Release', buildSettings={
-            'PRODUCT_NAME': 'Astra', 'EXECUTABLE_NAME': 'AstraMac',
+            'PRODUCT_NAME': 'Genie', 'EXECUTABLE_NAME': 'GenieMac',
             'PRODUCT_BUNDLE_IDENTIFIER': 'com.astra.desktop',
-            'INFOPLIST_FILE': 'prebuilt/Astra.app/Contents/Info.plist', 'GENERATE_INFOPLIST_FILE': 'NO',
+            'INFOPLIST_FILE': 'prebuilt/Genie.app/Contents/Info.plist', 'GENERATE_INFOPLIST_FILE': 'NO',
             'DEVELOPMENT_TEAM': team, 'CODE_SIGN_IDENTITY': 'Apple Development', 'CODE_SIGN_STYLE': 'Manual',
             'ENABLE_HARDENED_RUNTIME': 'YES', 'ENABLE_USER_SCRIPT_SANDBOXING': 'NO',
             'SKIP_INSTALL': 'NO', 'INSTALL_PATH': '$(LOCAL_APPS_DIR)',
             'CODE_SIGN_ENTITLEMENTS': 'astra.entitlements'}),
     }
-    project = work / 'AstraDistribution.xcodeproj'
+    project = work / 'GenieDistribution.xcodeproj'
     project.mkdir()
     (project / 'project.pbxproj').write_bytes(plistlib.dumps(dict(
         archiveVersion='1', classes={}, objectVersion='56', objects=objects, rootObject=key(1))))
@@ -84,7 +84,7 @@ def main():
     team = sys.argv[3]
     work = Path(tempfile.mkdtemp(prefix='astra-xcode-', dir=app.parent))
     print(f'XCODE_NOTARIZATION_WORK={work}', flush=True)
-    source = work / 'prebuilt' / 'Astra.app'
+    source = work / 'prebuilt' / 'Genie.app'
     source.parent.mkdir()
     run(['ditto', str(app), str(source)])
     shutil.copy2(entitlements, work / 'astra.entitlements')
@@ -97,8 +97,8 @@ def main():
         run(['codesign', '--force', '--timestamp', '--options', 'runtime', '--sign',
              'Apple Development', str(target)])
     project = make_project(work, team)
-    archive = work / 'Astra.xcarchive'
-    if run(['xcodebuild', '-project', str(project), '-scheme', 'Astra', '-configuration', 'Release',
+    archive = work / 'Genie.xcarchive'
+    if run(['xcodebuild', '-project', str(project), '-scheme', 'Genie', '-configuration', 'Release',
             '-archivePath', str(archive), 'archive'], work / 'archive.log'):
         return 1
     options = work / 'ExportOptions.plist'
@@ -120,7 +120,7 @@ def main():
             print(f'XCODE_NOTARIZATION=NOT_READY; retry export from {archive}', flush=True)
             return 3
         time.sleep(30)
-    candidate = exported / 'Astra.app'
+    candidate = exported / 'Genie.app'
     run(['codesign', '--verify', '--deep', '--strict', str(candidate)])
     run(['xcrun', 'stapler', 'validate', str(candidate)])
     run(['spctl', '--assess', '--type', 'execute', '--verbose=4', str(candidate)])
@@ -133,7 +133,7 @@ def main():
     for field in ('CFBundleIdentifier', 'CFBundleShortVersionString', 'CFBundleVersion'):
         if original_info[field] != exported_info[field]:
             raise ValueError(f'Xcode changed {field}')
-    archs = subprocess.check_output(['lipo', '-archs', str(candidate / 'Contents/MacOS/AstraMac')], text=True)
+    archs = subprocess.check_output(['lipo', '-archs', str(candidate / 'Contents/MacOS/GenieMac')], text=True)
     if set(archs.split()) != {'arm64', 'x86_64'}:
         raise ValueError(f'not a Universal app: {archs}')
     os.rename(app, work / 'unsigned-original.app')
