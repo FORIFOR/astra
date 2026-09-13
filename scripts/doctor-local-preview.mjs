@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /** Standalone, read-only preview checks. Works outside a v0.1.4 checkout. */
 import { execFile } from 'node:child_process';
-import { readFile, access } from 'node:fs/promises';
+import { readFile, access, realpath } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { createConnection } from 'node:net';
 
@@ -383,5 +383,11 @@ async function main() {
     process.exitCode = 2;
   }
 }
-if (process.argv[1] && pathToFileURL(resolve(process.argv[1])).href === import.meta.url)
-  await main();
+// Node resolves module paths through symlinks, but argv can retain /tmp (which is
+// /private/tmp on macOS), another linked directory, or a renamed downloaded file.
+// Compare physical paths on both sides without running the CLI when imported.
+if (process.argv[1]) {
+  const invokedPath = await realpath(resolve(process.argv[1])).catch(() => null);
+  const modulePath = await realpath(fileURLToPath(import.meta.url)).catch(() => null);
+  if (invokedPath && invokedPath === modulePath) await main();
+}

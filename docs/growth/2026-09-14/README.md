@@ -22,7 +22,7 @@ The existing TikTok video description still contains the old repository name. It
 
 ## Validation
 
-The diagnostic's 10 regression tests passed, as did the existing helper's 2 tests, formatting and whitespace checks. An independent review found and verified fixes for a missing loopback binding and package-manager version probes that could otherwise provision software. The diagnostic suite now runs in CI. On this Mac, the diagnostic correctly reported missing checkout configuration and PATH/version prerequisites while reading the already-running local services; it did not change that environment. This is not a fresh full-app acceptance run.
+The diagnostic's 11 regression tests passed, as did the existing helper's 2 tests, formatting and whitespace checks. An independent review found and verified fixes for a missing loopback binding and package-manager version probes that could otherwise provision software. The diagnostic suite now runs in CI. On this Mac, the diagnostic correctly reported missing checkout configuration and PATH/version prerequisites while reading the already-running local services; it did not change that environment. A final downloaded-file check exposed a symlink-path launch bug on macOS; physical-path entry detection and a renamed-download regression fixed it. This is not a fresh full-app acceptance run.
 
 Website changes preserve the existing media and layout. Both language entrypoints, local asset references, fragment links, JavaScript syntax, and the first-start link's aggregate event classification were checked. No new tracking identifiers or model requests were added.
 
