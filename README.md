@@ -50,6 +50,8 @@ An explicitly selected route is not silently replaced by a paid provider. Local 
 
 **Developer preview — setup is required.** The Mac app currently needs a local gateway, task worker, agent host, and model. The app download alone is not a hosted service.
 
+**New in source: [start the local services together](docs/MANAGED_PREVIEW.md).** With Node, Docker Desktop and an Ollama model installed, open `Start Genie.command` to prepare the database, start the services and open Home. The launcher keeps a separate preview workspace and stops its services with Ctrl+C. It is not included in the v0.1.4 DMG.
+
 - macOS 14 or later; native SwiftUI app, Apple silicon and Intel builds.
 - [Start the tester guide](docs/TESTING.md) for a matching app and source, a first task, and troubleshooting.
 - [Build current source](docs/LOCAL_PREVIEW.md) if you want to work on the latest code.

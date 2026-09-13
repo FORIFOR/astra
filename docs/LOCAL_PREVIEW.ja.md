@@ -1,5 +1,7 @@
 # Macで最初の仕事を試す（v0.1.4）
 
+新しいソースでは、[準備と起動をひとつにまとめる方法](MANAGED_PREVIEW.ja.md)も使えます。以下はv0.1.4の手動起動手順です。
+
 [テスター案内に戻る](TESTING.ja.md) · [English setup](LOCAL_PREVIEW.md)
 
 このページだけで、準備 → 起動 → 依頼 → 保存 → 停止まで進めます。対象は **macOS 14以降の開発者向けプレビュー**です。アプリのほかに、このMacで動くGateway・Task Worker・Agent Hostとモデルが必要です。環境構築とモデルのダウンロードには時間がかかります。

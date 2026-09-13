@@ -19,6 +19,17 @@ env:
   TEMPORAL_ADDRESS: localhost:7233
 
 jobs:
+  managed-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Fresh setup, first result, stop and restart
+        run: node scripts/verification/managed-preview-smoke.mjs
+
   verify:
     runs-on: ubuntu-latest
     timeout-minutes: 40
@@ -40,8 +51,8 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - name: Local preview diagnostic regression tests
-        run: node --test scripts/tests/doctor-local-preview.test.mjs
+      - name: Local preview startup and diagnostic regression tests
+        run: node --test scripts/tests/doctor-local-preview.test.mjs scripts/tests/local-preview.test.mjs scripts/tests/managed-local-preview.test.mjs
 
       - name: Install dbmate
         run: |
