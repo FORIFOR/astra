@@ -30,7 +30,7 @@ cd genie-preview
 
 続いて、[日本語の初回起動ガイド](LOCAL_PREVIEW.ja.md)へ進みます。準備・起動・最初の依頼・保存・停止までを1ページにまとめています。cloneは済んでいるため、手順2のcloneは省略し、既存フォルダを使ってください。
 
-ガイドには、v0.1.4の配布後に追加した**独立の事前診断**もあります。`main`から診断用ファイルだけを別に取得し、内容を確認して、`--repo`で既存のv0.1.4を検査します。アプリやバックエンドを`main`と混用する手順ではありません。[v0.1.4同梱の英語手順](https://github.com/FORIFOR/genie/blob/v0.1.4/docs/LOCAL_PREVIEW.md)も参照できます。
+ガイドには、v0.1.4の配布後に追加した**独立の事前診断**もあります。ガイドに固定した検証済みコミットから診断用ファイルだけを別に取得し、内容を確認して、`--repo`で既存のv0.1.4を検査します。アプリやバックエンドを`main`と混用する手順ではありません。[v0.1.4同梱の英語手順](https://github.com/FORIFOR/genie/blob/v0.1.4/docs/LOCAL_PREVIEW.md)も参照できます。
 
 必要なものはNode 22以降、pnpm 10.12.2、Docker Compose、`dbmate`、`psql`、Xcodeコマンドラインツール、Macで動くモデルです。Gateway・Task Worker・Agent Hostも起動し続ける必要があります。アプリ単体では動きません。ガイドのローカルOllama検証例は`qwen3.5:9b`で、モデルのダウンロード容量・メモリは別途必要です。DMGを使わずネイティブアプリもビルドする場合は、フルのXcodeとRustが必要です。
 
