@@ -8,6 +8,8 @@ Give Genie a goal, work with your AI model, and keep the result in a native Mac 
 
 Previously Astra. The repository and current Mac download still use that name.
 
+[Enterprise introduction: measured workflows, limits, and L1/L2/L3 gates](docs/ENTERPRISE_READINESS.md).
+
 **Mac preview testers wanted.** Try one useful task and tell us the first place you get stuck. Setup feedback counts, too. No waitlist or separate signup; a GitHub account is only needed to post feedback.
 
 **[Start a first test →](docs/TESTING.md)** · [テスターとして試す](docs/TESTING.ja.md) · [Report your experience](https://github.com/FORIFOR/astra/issues/new?template=tester_feedback.yml)

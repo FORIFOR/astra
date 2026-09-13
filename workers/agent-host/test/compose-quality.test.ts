@@ -1,6 +1,23 @@
 import { expect, it } from 'vitest';
 import { compositionIssues } from '../src/compose-quality.js';
 
+it('rejects the observed reversed document request and missing draft label', () => {
+  const args = { instruction: '提供を依頼するメールを作成。下書きと明記してください。' };
+  expect(compositionIssues('在庫一覧を送付いたします。ご査収ください。', args)).toHaveLength(2);
+  expect(compositionIssues('下書き（未送信）\n在庫一覧をご提供いただけますか。', args)).toEqual([]);
+  expect(
+    compositionIssues(
+      '下書き：参考資料を送付いたします。御社の在庫一覧をご提供いただけますか。',
+      args,
+    ),
+  ).toEqual([]);
+  expect(
+    compositionIssues('在庫一覧を送付いたします。', {
+      instruction: '添付資料の送付メールを作成。',
+    }),
+  ).toEqual([]);
+});
+
 it('catches invented weekdays and unverified costs in consumer itinerary drafts', () => {
   const instruction = '旅程案（最新情報・空き状況は未確認）\n予算上限（合計）: 80000円';
   expect(

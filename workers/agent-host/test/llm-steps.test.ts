@@ -25,6 +25,44 @@ const step = (over: Partial<HostStep> = {}): HostStep => ({
   ...over,
 });
 
+it('uses stable local sampling for business drafts and creative sampling only when requested', async () => {
+  const temperatures: unknown[] = [];
+  const client = new HttpLlmClient({
+    kind: 'local',
+    endpoint: 'http://localhost:11434/v1',
+    model: 'local',
+    fetch: async (url, init) => {
+      if (String(url).endsWith('/models')) return Response.json({ data: [{ id: 'local' }] });
+      temperatures.push(JSON.parse(String(init?.body)).temperature);
+      return Response.json({
+        choices: [{ message: { content: '下書きの本文' }, finish_reason: 'stop' }],
+      });
+    },
+  });
+  const runtime = new LlmRuntime({ allowedKinds: ['local'], http: { local: client } });
+  expect(
+    (
+      await runtime.run(
+        step({
+          toolId: 'llm.compose',
+          args: {
+            instruction:
+              '会議メモから依頼メールの下書きを作る。未提供の事実を創作しないでください。',
+          },
+        }),
+      )
+    ).ok,
+  ).toBe(true);
+  expect(
+    (
+      await runtime.run(
+        step({ toolId: 'llm.compose', args: { instruction: '短い物語を創作する' } }),
+      )
+    ).ok,
+  ).toBe(true);
+  expect(temperatures).toEqual([0, 0.6]);
+});
+
 const cliReturning = (result: Partial<RunResult>): ClaudeCodeCli =>
   new ClaudeCodeCli({
     run: async (): Promise<RunResult> => ({ code: 0, stdout: '', stderr: '', ...result }),

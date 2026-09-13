@@ -162,6 +162,55 @@ pub fn api_reachable(base_url: String) -> bool {
 mod tests {
     use super::*;
 
+    fn task_server(responses: Vec<u16>, minimum_spacing_ms: u128) -> (String, std::thread::JoinHandle<()>) {
+        use std::io::{Read, Write};
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let url = format!("http://{}", listener.local_addr().unwrap());
+        let thread = std::thread::spawn(move || {
+            let mut previous: Option<std::time::Instant> = None;
+            for (index, code) in responses.iter().enumerate() {
+                let (mut socket, _) = listener.accept().unwrap();
+                socket.set_read_timeout(Some(std::time::Duration::from_secs(3))).unwrap();
+                let mut bytes = [0u8; 4096];
+                let n = socket.read(&mut bytes).unwrap();
+                assert!(String::from_utf8_lossy(&bytes[..n]).starts_with("GET /v1/tasks/existing "));
+                let status = if previous.is_some_and(|t| t.elapsed().as_millis() < minimum_spacing_ms) { 429 } else { *code };
+                previous = Some(std::time::Instant::now());
+                let task_status = if index + 1 == responses.len() { "COMPLETED" } else { "RUNNING" };
+                let body = format!(r#"{{"id":"existing","status":"{task_status}","result_artifact_id":"artifact"}}"#);
+                write!(socket, "HTTP/1.1 {status} Test\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}", body.len()).unwrap();
+            }
+        });
+        (url, thread)
+    }
+
+    #[test]
+    fn waiting_for_a_long_task_leaves_rate_limit_headroom() {
+        let (url, server) = task_server(vec![200, 200], 800);
+        let result = api_wait_task(url, "test-token".into(), "existing".into(), 5000);
+        server.join().unwrap();
+        assert_eq!(result.unwrap().status, "COMPLETED");
+    }
+
+    #[test]
+    fn task_poll_recovers_transient_read_failure_without_resubmitting() {
+        let (url, server) = task_server(vec![503, 200], 0);
+        let result = api_wait_task(url, "test-token".into(), "existing".into(), 5000);
+        server.join().unwrap();
+        assert_eq!(result.unwrap().status, "COMPLETED");
+    }
+
+    #[test]
+    fn task_poll_bounds_failure_retries_and_does_not_retry_auth() {
+        for responses in [vec![503, 503, 503], vec![401], vec![429]] {
+            let expected = *responses.last().unwrap();
+            let (url, server) = task_server(responses, 0);
+            let error = api_wait_task(url, "test-token".into(), "existing".into(), 5000).unwrap_err();
+            server.join().unwrap();
+            assert!(matches!(error, ApiError::Server { status, .. } if status == expected));
+        }
+    }
+
     /// SCREENSHOT_EGRESS_TRUTH: gateway へ行く turn に画素が無い。添付は id / kind / label だけ。
     #[test]
     fn turn_body_carries_ids_and_labels_but_never_pixels() {
@@ -527,6 +576,7 @@ pub fn api_task_status(
     }
     let resp: Resp = ureq::get(&format!("{}/v1/tasks/{}", base(&base_url), task_id))
         .set("Authorization", &format!("Bearer {access_token}"))
+        .timeout(std::time::Duration::from_secs(10))
         .call()
         .map_err(map_transport)?
         .into_json()
@@ -547,15 +597,35 @@ pub fn api_wait_task(
     timeout_ms: u64,
 ) -> Result<TaskStatus, ApiError> {
     let start = std::time::Instant::now();
+    let mut transient_failures = 0;
     loop {
-        let st = api_task_status(base_url.clone(), access_token.clone(), task_id.clone())?;
+        let st = match api_task_status(base_url.clone(), access_token.clone(), task_id.clone()) {
+            Ok(st) => { transient_failures = 0; st }
+            Err(error) => {
+                // Only repeat the read of an existing task. Never recreate a
+                // task or retry authentication, permission, or rate-limit errors.
+                let transient = matches!(error, ApiError::Network { .. }
+                    | ApiError::Server { status: 502 | 503 | 504, .. });
+                transient_failures += 1;
+                if !transient || transient_failures >= 3
+                    || start.elapsed().as_millis() as u64 >= timeout_ms {
+                    return Err(error);
+                }
+                std::thread::sleep(std::time::Duration::from_millis(1000.min(
+                    timeout_ms.saturating_sub(start.elapsed().as_millis() as u64))));
+                continue;
+            }
+        };
         if matches!(st.status.as_str(), "COMPLETED" | "FAILED" | "CANCELLED") {
             return Ok(st);
         }
         if start.elapsed().as_millis() as u64 >= timeout_ms {
             return Ok(st);
         }
-        std::thread::sleep(std::time::Duration::from_millis(200));
+        // 200ms polling alone consumes the general API's entire 300/min
+        // allowance, leaving no room for the host or the rest of the app.
+        std::thread::sleep(std::time::Duration::from_millis(1000.min(
+            timeout_ms.saturating_sub(start.elapsed().as_millis() as u64))));
     }
 }
 

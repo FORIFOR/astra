@@ -4,6 +4,23 @@ export function compositionIssues(text: string, args: Record<string, unknown>): 
   const context = String(args['context'] ?? '');
   const source = `${context}\n${instruction}`;
   const issues: string[] = [];
+  if (
+    /メール/.test(instruction) &&
+    /下書き.*明記|明記.*下書き/.test(instruction) &&
+    !/下書き/.test(text)
+  )
+    issues.push('メールが未送信の下書きであることを明記してください。');
+  if (
+    /メール/.test(instruction) &&
+    /提供を依頼|提供.*お願い/.test(source) &&
+    !/(?:ご提供|ご共有|ご送付|お送り)(?:を)?(?:いただ|頂|ください|お願い)|(?:提供|共有|送付)をお願い/.test(
+      text,
+    ) &&
+    /(?:送付|添付|提供)(?:いたします|します|しました|いたしました)|ご査収/.test(text)
+  )
+    issues.push(
+      '資料を相手に依頼する指示が、自分から資料を送る文章に逆転しています。相手に提供をお願いするメールに直してください。',
+    );
   if (instruction.includes('旅程案（最新情報・空き状況は未確認）')) {
     if (/[（(][月火水木金土日](?:曜日?)?[）)]|[月火水木金土日]曜日/.test(text))
       issues.push(

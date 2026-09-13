@@ -157,6 +157,8 @@ export function promptFor(
         '指示された点数と形式に従ってください。複数案の指定がなければ、完成した文章を1つだけ返してください。',
         '提供されていない事実、日時、URL、人名、会社名、署名を補わないでください。',
         '対象者、素材、予算、期限の指定を守ってください。',
+        '担当者・宛先・期限は省略せず保持してください。資料の提供を依頼する文章では、相手に提供をお願いしてください。自分が送付する文章に逆転させないでください。',
+        '送信前の下書きと指定されたメールは「下書き（未送信）」と明記し、実際に送信・発注・予約したとは書かないでください。',
         '実在する製品の使える機能や画面が不明なら推測して作らず、不足している情報を短い質問で確認してください。',
         '複数案を明示的に求められた場合だけ、切り口と内容が異なる案を作ってください。',
         '作り方の説明、不要な別案、自己評価は加えず、求められた本文を返してください。',
@@ -420,7 +422,7 @@ export class LlmRuntime {
       };
     }
 
-    const ask = this.#askFor(chosen.kind, step.toolId);
+    const ask = this.#askFor(chosen.kind, step.toolId, step.args);
     if (!ask) {
       return {
         ok: false,
@@ -529,6 +531,7 @@ export class LlmRuntime {
   #askFor(
     kind: LanguageModelKind,
     tool: string,
+    args: Record<string, unknown>,
   ):
     | ((
         prompt: string,
@@ -558,7 +561,14 @@ export class LlmRuntime {
       const field = tool === 'llm.answer' ? 'answer' : tool === 'llm.compose' ? 'text' : null;
       return field
         ? async (prompt, _allowedTools, images) => ({
-            [field]: await http.askText(prompt, tool === 'llm.compose', readVisualImages(images)),
+            [field]: await http.askText(
+              prompt,
+              tool === 'llm.compose' &&
+                /小説|物語|キャッチコピー|台本|創作(?:して|する|を|の)|ブレインストーミング|creative\s+(?:writing|story)|brainstorm/i.test(
+                  String(args['instruction'] ?? ''),
+                ),
+              readVisualImages(images),
+            ),
           })
         : (prompt) => http.ask(prompt);
     }
