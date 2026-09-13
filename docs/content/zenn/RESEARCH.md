@@ -4,7 +4,7 @@
 
 ## 対象記事の確認
 
-Zennの既存アカウントの記事管理画面に掲載されていたのはOathra 2本、Multibot 1本。Genie/Astraの記事・下書きは見当たらず、関連するローカル原稿にも該当記事はなかった。別製品の記事を上書きせず、Genieの新規原稿 `genie-mac-workspace.md` を用意した。GitHub連携先は管理画面で確認したFORIFOR/oathra。公開可否・別記事を想定しているかはユーザーに確認中。
+Zennの既存アカウントの記事管理画面に掲載されていたのはOathra 2本、Multibot 1本。Genie/Astraの記事・下書きは見当たらず、関連するローカル原稿にも該当記事はなかった。別製品の記事を上書きせず、Genieの新規原稿 `genie-mac-workspace.md` を用意した。GitHub連携先は管理画面で確認したFORIFOR/oathra。修正対象の任意確認を行い、別記事の指定がなかったため、このタスクの対象Genieと継続中の公開依頼に基づいて新規記事を用意した。既存の別製品の記事は上書きしていない。
 
 ## 比較した公開記事
 
@@ -53,3 +53,9 @@ Zenn形式は[公式Markdownガイド](https://zenn.dev/zenn/articles/markdown-g
 - 採用見出しの実文字数は20字。未達という誤った記述を校正時に除去。
 - 案内先のREADMEと日英TESTINGでアプリ・ソース・手順の参照をv0.1.4へ統一。
 - 今回は記事と案内文だけの変更。アプリコードやモデル動作は変更していない。Prettierとgit diff --checkで文書の整形を確認。
+
+## 公開反映
+
+[Genie記事](https://zenn.dev/forifori/articles/genie-mac-workspace)を2026-09-14に公開。記事管理画面の同期成功と公開ページの公開日・本文を確認し、認証を付けないHTTP取得でも`status: published`を確認。Zenn本番ページではYouTubeのサムネイル・タイトル・再生ボタンも表示された。生成HTMLのリンク先はORBIT PLAYGROUNDとして開き、一時停止・速度・惑星選択の操作部を確認した。
+
+公開元は既存のZenn連携リポジトリ`FORIFOR/oathra`の`articles/genie-mac-workspace.md`。Genie側の原稿と本文のバイト一致を確認。今後編集する際も両方を同期すること。公開直後の反応数などは`publication.json`に記録。この記事による読者・スター増加はまだ測定できていない。
