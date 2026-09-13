@@ -63,10 +63,10 @@ git clone --branch v0.1.4 --depth 1 https://github.com/FORIFOR/genie.git genie-p
 cd genie-preview
 ```
 
-次の診断スクリプトは**v0.1.4の配布後に追加した独立ツール**です。`main`から別ファイルとして取得し、内容を確認して実行します。アプリやバックエンドのソースを`main`へ更新する操作ではありません。
+次の診断スクリプトは**v0.1.4の配布後に追加した独立ツール**です。検証済みの公開コミットから別ファイルとして取得し、内容を確認して実行します。アプリやバックエンドのソースを`main`へ更新する操作ではありません。
 
 ```sh
-curl --fail --location --output "$HOME/Downloads/genie-doctor-local-preview.mjs" https://raw.githubusercontent.com/FORIFOR/genie/main/scripts/doctor-local-preview.mjs
+curl --fail --location --output "$HOME/Downloads/genie-doctor-local-preview.mjs" https://raw.githubusercontent.com/FORIFOR/genie/3bd0d00ef19835fc98a0a6bd9ab782f8d7bc1e35/scripts/doctor-local-preview.mjs
 less "$HOME/Downloads/genie-doctor-local-preview.mjs"
 ```
 
