@@ -32,6 +32,8 @@ Follow the [setup guide at v0.1.4](https://github.com/FORIFOR/genie/blob/v0.1.4/
 
 You will need Node 22+, pnpm 10.12.2, Docker Compose, `dbmate`, `psql`, Xcode command-line tools, and a model that fits your Mac. The app alone is not sufficient: keep the gateway, task worker, and agent host running. The guide uses local Ollama; its verified example is `qwen3.5:9b`. Model downloads and memory requirements are additional. Full Xcode and Rust are needed if you build the native app from source instead of using the DMG.
 
+For a single-page Japanese walkthrough, including a separate read-only diagnostic that also works with the v0.1.4 checkout, see [the first-start guide](LOCAL_PREVIEW.ja.md). It reports missing prerequisites without starting services or generating a model response; passing its checks does not prove that the worker or a complete task works.
+
 Already running a working setup? Keep your data and configuration. Record the app/source version in your feedback. Developers using current `main` should [build the Mac app from the same checkout](LOCAL_PREVIEW.md).
 
 ## 2. Check readiness, then try one useful task

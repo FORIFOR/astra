@@ -1,0 +1,194 @@
+{
+  "observed_at": "2026-09-13T18:04:43.585077+00:00",
+  "repository": "FORIFOR/genie",
+  "stars": 0,
+  "forks": 0,
+  "subscribers": 0,
+  "traffic_views": {
+    "count": 13,
+    "uniques": 12,
+    "views": [
+      {
+        "timestamp": "2026-08-30T00:00:00Z",
+        "count": 0,
+        "uniques": 0
+      },
+      {
+        "timestamp": "2026-08-31T00:00:00Z",
+        "count": 0,
+        "uniques": 0
+      },
+      {
+        "timestamp": "2026-09-01T00:00:00Z",
+        "count": 0,
+        "uniques": 0
+      },
+      {
+        "timestamp": "2026-09-02T00:00:00Z",
+        "count": 0,
+        "uniques": 0
+      },
+      {
+        "timestamp": "2026-09-03T00:00:00Z",
+        "count": 0,
+        "uniques": 0
+      },
+      {
+        "timestamp": "2026-09-04T00:00:00Z",
+        "count": 0,
+        "uniques": 0
+      },
+      {
+        "timestamp": "2026-09-05T00:00:00Z",
+        "count": 0,
+        "uniques": 0
+      },
+      {
+        "timestamp": "2026-09-06T00:00:00Z",
+        "count": 0,
+        "uniques": 0
+      },
+      {
+        "timestamp": "2026-09-07T00:00:00Z",
+        "count": 0,
+        "uniques": 0
+      },
+      {
+        "timestamp": "2026-09-08T00:00:00Z",
+        "count": 2,
+        "uniques": 1
+      },
+      {
+        "timestamp": "2026-09-09T00:00:00Z",
+        "count": 0,
+        "uniques": 0
+      },
+      {
+        "timestamp": "2026-09-10T00:00:00Z",
+        "count": 0,
+        "uniques": 0
+      },
+      {
+        "timestamp": "2026-09-11T00:00:00Z",
+        "count": 4,
+        "uniques": 4
+      },
+      {
+        "timestamp": "2026-09-12T00:00:00Z",
+        "count": 7,
+        "uniques": 7
+      }
+    ]
+  },
+  "traffic_clones": {
+    "count": 459,
+    "uniques": 170,
+    "clones": [
+      {
+        "timestamp": "2026-08-30T00:00:00Z",
+        "count": 17,
+        "uniques": 8
+      },
+      {
+        "timestamp": "2026-08-31T00:00:00Z",
+        "count": 15,
+        "uniques": 9
+      },
+      {
+        "timestamp": "2026-09-01T00:00:00Z",
+        "count": 9,
+        "uniques": 5
+      },
+      {
+        "timestamp": "2026-09-02T00:00:00Z",
+        "count": 5,
+        "uniques": 5
+      },
+      {
+        "timestamp": "2026-09-03T00:00:00Z",
+        "count": 23,
+        "uniques": 7
+      },
+      {
+        "timestamp": "2026-09-04T00:00:00Z",
+        "count": 20,
+        "uniques": 10
+      },
+      {
+        "timestamp": "2026-09-05T00:00:00Z",
+        "count": 5,
+        "uniques": 4
+      },
+      {
+        "timestamp": "2026-09-06T00:00:00Z",
+        "count": 11,
+        "uniques": 6
+      },
+      {
+        "timestamp": "2026-09-07T00:00:00Z",
+        "count": 27,
+        "uniques": 9
+      },
+      {
+        "timestamp": "2026-09-08T00:00:00Z",
+        "count": 75,
+        "uniques": 29
+      },
+      {
+        "timestamp": "2026-09-09T00:00:00Z",
+        "count": 81,
+        "uniques": 27
+      },
+      {
+        "timestamp": "2026-09-10T00:00:00Z",
+        "count": 58,
+        "uniques": 30
+      },
+      {
+        "timestamp": "2026-09-11T00:00:00Z",
+        "count": 39,
+        "uniques": 22
+      },
+      {
+        "timestamp": "2026-09-12T00:00:00Z",
+        "count": 74,
+        "uniques": 29
+      }
+    ]
+  },
+  "referrers": [
+    {
+      "referrer": "github.com",
+      "count": 8,
+      "uniques": 7
+    },
+    {
+      "referrer": "astra-forifor.forifor.chatgpt.site",
+      "count": 2,
+      "uniques": 2
+    }
+  ],
+  "external_open_issue_reports": 0,
+  "tiktok": {
+    "profile": "https://www.tiktok.com/@foriforapps",
+    "followers": 0,
+    "likes": 0,
+    "genie_video": "7684737308754529557",
+    "video_views_displayed": 0,
+    "video_likes_displayed": 0,
+    "video_comments_displayed": 0,
+    "observed_in": "TikTok Studio content list",
+    "aggregate_dashboard": "-- values; chart ended September 11; unavailable, not zero"
+  },
+  "zenn": {
+    "article": "https://zenn.dev/forifori/articles/genie-mac-workspace",
+    "article_views": null,
+    "reason": "Not yet present in per-article stats. Dashboard says reflection is normally next day; unrelated article views excluded."
+  },
+  "caveats": [
+    "Views and unique visitors can include owner checks.",
+    "Clone and release download counts include CI/verification; not a tester count.",
+    "GitHub returned daily data ends before the September 13 UTC Zenn publication.",
+    "Zero displayed TikTok views do not establish account restriction or content rejection."
+  ]
+}

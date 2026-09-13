@@ -28,7 +28,9 @@ git clone --branch v0.1.4 --depth 1 https://github.com/FORIFOR/genie.git genie-p
 cd genie-preview
 ```
 
-続いて、[v0.1.4のセットアップ手順](https://github.com/FORIFOR/genie/blob/v0.1.4/docs/LOCAL_PREVIEW.md)を進めます。cloneは済んでいるため、最初のコマンド欄の`pnpm install`から開始してください。各ターミナルで同じ`genie-preview`フォルダを使います。
+続いて、[日本語の初回起動ガイド](LOCAL_PREVIEW.ja.md)へ進みます。準備・起動・最初の依頼・保存・停止までを1ページにまとめています。cloneは済んでいるため、手順2のcloneは省略し、既存フォルダを使ってください。
+
+ガイドには、v0.1.4の配布後に追加した**独立の事前診断**もあります。`main`から診断用ファイルだけを別に取得し、内容を確認して、`--repo`で既存のv0.1.4を検査します。アプリやバックエンドを`main`と混用する手順ではありません。[v0.1.4同梱の英語手順](https://github.com/FORIFOR/genie/blob/v0.1.4/docs/LOCAL_PREVIEW.md)も参照できます。
 
 必要なものはNode 22以降、pnpm 10.12.2、Docker Compose、`dbmate`、`psql`、Xcodeコマンドラインツール、Macで動くモデルです。Gateway・Task Worker・Agent Hostも起動し続ける必要があります。アプリ単体では動きません。ガイドのローカルOllama検証例は`qwen3.5:9b`で、モデルのダウンロード容量・メモリは別途必要です。DMGを使わずネイティブアプリもビルドする場合は、フルのXcodeとRustが必要です。
 
@@ -36,13 +38,13 @@ cd genie-preview
 
 ## 2. 準備を確認して、ひとつの仕事を試す
 
-Gatewayを起動しHomeを一度開いた後、リポジトリで実行します。
+初回起動ガイドで診断ファイルを保存した後、既存のチェックアウトで実行します。GatewayとHomeをまだ起動していない場合は「要対応」が出て正常です。
 
 ```sh
-node --env-file=.env scripts/start-local-host.mjs --check
+node "$HOME/Downloads/genie-doctor-local-preview.mjs" --repo "$PWD"
 ```
 
-Gateway、選択したローカルモデル、アプリの識別情報を確認します。AIへの生成リクエストは行いません。その後、ガイドに従ってHostを起動します。失敗したら何度も再試行せず、認証情報を除いたエラーを報告してください。
+不足する道具・GatewayのDB/Redis確認・選択したローカルモデル・Temporal設定先へのTCP到達・アプリ識別情報をまとめて確認します。AI生成・認証・ファイル変更は行いません。**Worker・Hostの稼働や、実際のタスク完了は未検査です。** 全項目がOKでも、ガイドに従ってWorkerとHostを起動し、次の依頼まで試してください。うまくいかない場合は、診断の項目名と最初のつまずきを報告できます。
 
 以下から**ひとつ**選び、Homeに貼り付けてください。自分の仕事を機密情報なしで書いても構いません。
 

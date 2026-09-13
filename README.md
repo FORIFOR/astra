@@ -10,9 +10,9 @@ Previously Astra. The app, downloads, and source are now named Genie. Existing s
 
 [Enterprise introduction: measured workflows, limits, and L1/L2/L3 gates](docs/ENTERPRISE_READINESS.md).
 
-**Mac preview testers wanted.** Try one useful task and tell us the first place you get stuck. Setup feedback counts, too. No waitlist or separate signup; a GitHub account is only needed to post feedback.
+**Using Ollama on a Mac? Help test the preview.** Turn a few notes into a plan, reopen the result, and save it. Tell us the first place you get stuck. Setup feedback counts, too. No waitlist or separate signup; a GitHub account is only needed to post feedback.
 
-**[Start a first test →](docs/TESTING.md)** · [テスターとして試す](docs/TESTING.ja.md) · [Report your experience](https://github.com/FORIFOR/genie/issues/new?template=tester_feedback.yml)
+**[Start a first test →](docs/TESTING.md)** · [日本語の初回起動ガイド](docs/LOCAL_PREVIEW.ja.md) · [Report your experience](https://github.com/FORIFOR/genie/issues/new?template=tester_feedback.yml)
 
 [Website & demos](https://genie-forifor.forifor.chatgpt.site) · [日本語](docs/README.ja.md) · [Mac preview v0.1.4](https://github.com/FORIFOR/genie/releases/tag/v0.1.4)
 

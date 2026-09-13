@@ -40,6 +40,9 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - name: Local preview diagnostic regression tests
+        run: node --test scripts/tests/doctor-local-preview.test.mjs
+
       - name: Install dbmate
         run: |
           sudo curl -fsSL -o /usr/local/bin/dbmate \

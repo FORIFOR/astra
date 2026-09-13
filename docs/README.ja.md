@@ -6,9 +6,9 @@
 
 旧名称はAstraです。アプリ、配布物、リポジトリはGenieに統一しました。既存の設定とアカウントは引き継げます。
 
-**Mac版プレビューのテスターを募集しています。** ひとつの仕事を試し、最初につまずいたところを教えてください。セットアップで止まった報告も歓迎です。事前登録・メールアドレスの登録は不要。報告時だけGitHubアカウントを使います。
+**MacでOllamaを使う開発者のテスターを募集しています。** メモから行動計画をつくり、Workで開き直して保存するところまで。最初につまずいたところを教えてください。セットアップで止まった報告も歓迎です。事前登録・メールアドレスの登録は不要。報告時だけGitHubアカウントを使います。
 
-**[テスターとして試す →](TESTING.ja.md)** · [結果・つまずきを報告](https://github.com/FORIFOR/genie/issues/new?template=tester_feedback.yml) · [English](../README.md)
+**[日本語の初回起動ガイド →](LOCAL_PREVIEW.ja.md)** · [テスト内容を見る](TESTING.ja.md) · [結果・つまずきを報告](https://github.com/FORIFOR/genie/issues/new?template=tester_feedback.yml) · [English](../README.md)
 
 ## まず実演を見る
 
