@@ -1,5 +1,5 @@
 /**
- * @astra/service-api-gateway
+ * @genie/service-api-gateway
  *
  * 認証・テナントルーティング・レート制限・REST の入口。実装仕様 §11・§17。
  */

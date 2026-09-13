@@ -49,7 +49,7 @@ async function main() {
         { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] },
       ).trim();
     } catch {
-      throw new Error('Open Astra once with the gateway running, then run this command again.');
+      throw new Error('Open Genie once with the gateway running, then run this command again.');
     }
   }
   const email = desktopEmail(identity);
@@ -62,7 +62,7 @@ async function main() {
   const credentials = await jsonRequest(base + '/v1/auth/dev/token', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ email, display_name: 'Astra local preview' }),
+    body: JSON.stringify({ email, display_name: 'Genie local preview' }),
   });
   await jsonRequest(base + '/v1/plugins/com.astra.general/install', {
     method: 'POST',
@@ -95,7 +95,7 @@ async function main() {
   });
   // The host stores its own refresh chain in the OS credential store; no token is
   // printed or written by this helper, and model CLIs never inherit these values.
-  console.log(`Starting Astra with ${model}. Leave this terminal open; Ctrl+C stops this host.`);
+  console.log(`Starting Genie with ${model}. Leave this terminal open; Ctrl+C stops this host.`);
   for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, () => child.kill(signal));
   child.on('error', () => {
     console.error('Could not start the local host. Run pnpm install first.');

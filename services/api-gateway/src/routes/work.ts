@@ -7,10 +7,10 @@
  *   POST /v1/work/artifacts          端末の worker からの取り込み（正規化済み。全文は来ない）
  *   GET  /v1/work/sync               source ごとの同期位置（端末はここから続きを読む）
  *   POST /v1/work/sync/:source/attempt  同期の試み（失敗の理由。cursor は動かさない）
- *   GET  /v1/personalization         Astra が今あなたについて使っている情報
+ *   GET  /v1/personalization         Genie が今あなたについて使っている情報
  *   PUT  /v1/personalization         確認・使わない・全体の停止
  *
- * Astra 自身の task と会議も同じ artifact として混ぜる（cross-source）。
+ * Genie 自身の task と会議も同じ artifact として混ぜる（cross-source）。
  */
 import {
   canonicalSha256,
@@ -23,11 +23,11 @@ import {
   WorkSource,
   WorkSyncAttempt,
   type WorkArtifact,
-} from '@astra/contracts';
+} from '@genie/contracts';
 import { z } from 'zod';
-import type { TaskService } from '@astra/service-task';
-import type { MeetingService } from '@astra/service-meeting';
-import type { WorkContextService } from '@astra/service-world-model';
+import type { TaskService } from '@genie/service-task';
+import type { MeetingService } from '@genie/service-meeting';
+import type { WorkContextService } from '@genie/service-world-model';
 import type { App } from '../fastify.js';
 import { requirePrincipal } from '../auth/middleware.js';
 
@@ -37,7 +37,7 @@ export interface WorkRouteDeps {
   readonly meetings?: MeetingService;
 }
 
-/** Astra の task と会議を、同じ形にする（端末からは来ない、cloud が持っているもの）。 */
+/** Genie の task と会議を、同じ形にする（端末からは来ない、cloud が持っているもの）。 */
 export async function localArtifacts(
   deps: WorkRouteDeps,
   tenantId: string,

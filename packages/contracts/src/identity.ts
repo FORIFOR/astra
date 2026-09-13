@@ -106,7 +106,7 @@ export type Session = z.infer<typeof Session>;
 
 /**
  * 外部の身元提供者でのサインイン。deepnote-desktop の Google / Apple / LINE を、
- * Firebase を挟まずに Astra 自身の identity へ繋ぐ。
+ * Firebase を挟まずに Genie 自身の identity へ繋ぐ。
  *
  * 端末は提供者の **ID トークン**だけをサーバへ渡す。access / refresh token は渡さない
  * （Google の refresh token は connector 用で、Keychain の外へ出さない — 正本 §21）。

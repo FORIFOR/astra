@@ -115,7 +115,7 @@ export const SendTurnRequest = z.object({
     .default([]),
   /**
    * 「これ返して」の候補。端末が決めた順（開いているメール → 選択 → 前面の窓）。
-   * 形は `@astra/contracts` の `ReplyCandidate`。cloud はこの順で解決し、曖昧なら選ばない。
+   * 形は `@genie/contracts` の `ReplyCandidate`。cloud はこの順で解決し、曖昧なら選ばない。
    */
   reply_candidates: z
     .array(

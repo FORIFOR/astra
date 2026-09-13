@@ -3,7 +3,7 @@
  * 実際の API は叩かない。**モデルが破れない保証**だけを確かめる。
  */
 import { describe, expect, it, vi } from 'vitest';
-import { uuidv7, type MeetingSegment } from '@astra/contracts';
+import { uuidv7, type MeetingSegment } from '@genie/contracts';
 import { AnthropicSummarizer } from '../src/anthropic.js';
 import { withCitations } from '../src/summarize.js';
 

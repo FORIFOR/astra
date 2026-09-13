@@ -6,15 +6,15 @@
  */
 import {
   ACCESS_TOKEN_TTL_SECONDS,
-  AstraError,
+  GenieError,
   DevTokenRequest,
   MeResponse,
   RefreshRequest,
   TokenResponse,
   uuidv7,
-} from '@astra/contracts';
-import { withIdentity, withTenant, type DbHandle } from '@astra/db';
-import { appendAuditEvent } from '@astra/telemetry';
+} from '@genie/contracts';
+import { withIdentity, withTenant, type DbHandle } from '@genie/db';
+import { appendAuditEvent } from '@genie/telemetry';
 import type { App } from '../fastify.js';
 import { AUTH_RATE_LIMIT } from '../plugins/rate-limit.js';
 import { requirePrincipal } from './middleware.js';
@@ -71,7 +71,7 @@ export function registerAuthRoutes(app: App, deps: AuthRouteDeps): void {
               .select(['tenant_id'])
               .where('user_id', '=', userId)
               .executeTakeFirst();
-            if (!membership) throw new AstraError('common.internal', 'user without a tenant');
+            if (!membership) throw new GenieError('common.internal', 'user without a tenant');
             tenantId = membership.tenant_id;
           } else {
             tenantId = uuidv7();
@@ -181,7 +181,7 @@ export function registerAuthRoutes(app: App, deps: AuthRouteDeps): void {
 
       // どちらが欠けていても、トークンが指す主体はもう存在しない
       if (!account || !device) {
-        throw new AstraError('auth.invalid_token', 'principal no longer exists');
+        throw new GenieError('auth.invalid_token', 'principal no longer exists');
       }
 
       return MeResponse.parse({

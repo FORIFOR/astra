@@ -1,14 +1,14 @@
-# Astra UI/UX テスト仕様書 v1.0
+# Genie UI/UX テスト仕様書 v1.0
 
 > **正本**。UI/UX の受け入れは「画面が表示できる」ではなく
 > **ユーザーが迷わず一連の仕事を完了できるか**で判定する。
 
 ## 1. テスト目的
 
-Astra が macOS / Windows 上で、次の一連の体験を自然に提供できることを確認する。
+Genie が macOS / Windows 上で、次の一連の体験を自然に提供できることを確認する。
 
 ```text
-Astra起動 → 上部Voice HUDが常駐 → どこでも音声入力 → 必要ならAstraへ質問
+Genie起動 → 上部Voice HUDが常駐 → どこでも音声入力 → 必要ならGenieへ質問
  → 会議開始 → Recording Workspaceへ切替 → 文字起こし/翻訳/AI要約/質問/RAG
  → 会議終了 → 履歴・Libraryへ保存 → 通常のVoice HUDへ復帰
 ```
@@ -22,7 +22,7 @@ Astra起動 → 上部Voice HUDが常駐 → どこでも音声入力 → 必要
 | Flow           | 操作手順が自然か、迷わないか                          |
 | Function       | 実際に録音・STT・Agent などが動くか                   |
 | Reliability    | 切断・権限拒否・クラッシュから復旧できるか            |
-| Cross-platform | macOS / Windows で同じ Astra 体験になっているか       |
+| Cross-platform | macOS / Windows で同じ Genie 体験になっているか       |
 
 ---
 
@@ -30,7 +30,7 @@ Astra起動 → 上部Voice HUDが常駐 → どこでも音声入力 → 必要
 
 ### E2E-001 通常利用 → 会議 → 保存
 
-**前提**: Astra 起動済み / マイク許可済み / Calendar 接続可能 / STT 利用可能
+**前提**: Genie 起動済み / マイク許可済み / Calendar 接続可能 / STT 利用可能
 
 **操作**: 起動 → Voice HUD 確認 → テキスト欄へカーソル → Shortcut 長押し → 発話 →
 テキスト入力 → 「会議を録音」 → Recording Workspace 表示 → 2人以上で発話 →
@@ -47,7 +47,7 @@ Library から会議を開く → Transcript / Summary 確認 → Voice HUD へ�
 - 保存後に再アクセスできる
 - **エラーが起きてもユーザーデータを失わない**
 
-> これが通らない状態では、個別機能が完成していても「Astra 完成」と判定しない。
+> これが通らない状態では、個別機能が完成していても「Genie 完成」と判定しない。
 
 ### 自動テスト（実装済み）
 
@@ -111,7 +111,7 @@ gateway（Postgres+Redis+Temporal）が上がっている環境では ⑦AI と 
 
 - **AI-001 Realtime Summary**: 会議全体を考慮 / 毎発話で全文がチラつかない /
   新情報だけ更新 / **聞いていない内容を捏造しない**。
-- **AI-002 Ask Astra**: 会議内に答えがあれば答える。無ければ「会議内では確認できません」。
+- **AI-002 Ask Genie**: 会議内に答えがあれば答える。無ければ「会議内では確認できません」。
 - **AI-003 Decisions**: 要約と Decision を**分ける**。
 - **AI-004 Actions**: 担当/期限が会話に無ければ**勝手に作らない**。
 
@@ -125,13 +125,13 @@ gateway（Postgres+Redis+Temporal）が上がっている環境では ⑦AI と 
 ## 8. Screenshot → AI
 
 - **SCR-001 Capture**: 撮影後にユーザーが改めてアップロード不要 /
-  現在のアプリ・Window コンテキストと結びつく / Astra 自身の Overlay を極力 capture しない。
+  現在のアプリ・Window コンテキストと結びつく / Genie 自身の Overlay を極力 capture しない。
 
 ## 9. Main Window
 
 トップレベルは `Home / AI Agents / Library / Apps` に固定。
 
-- **MAIN-001 Home**: Ask Astra / Recent / Upcoming meeting / Tasks / Recent captures
+- **MAIN-001 Home**: Ask Genie / Recent / Upcoming meeting / Tasks / Recent captures
 - **MAIN-002 Agents**: Agent ごとに 使用可能 Apps / 権限 / 最近の実行
 - **MAIN-003 Library**: Meetings / Transcripts / Screenshots / Files / AI outputs を横断検索
 
@@ -214,7 +214,7 @@ AI 回答自体が数秒かかっても `Thinking… / Searching Gmail… / Read
 
 ## 19. 実装優先度
 
-### P0 — Astra v1 の最低ライン
+### P0 — Genie v1 の最低ライン
 
 1. Voice OS 型 Top HUD（global voice / dictation / listening・processing state）
 2. 全アプリ音声入力（focused text field へ入力）
@@ -251,4 +251,4 @@ ACT      アプリを操作できる
 REMEMBER 保存して再利用できる
 ```
 
-特に **①音声 + ②画面 + ③会議 + ⑤操作** が 1 つの Context Engine でつながることが Astra の本質。
+特に **①音声 + ②画面 + ③会議 + ⑤操作** が 1 つの Context Engine でつながることが Genie の本質。

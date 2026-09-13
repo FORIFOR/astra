@@ -2,9 +2,9 @@
  * 共有リンク。Phase 2 実装仕様 §2、正本 §2.3。AC2-6 〜 AC2-12。
  */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { uuidv7, type Artifact, type Share, type TokenResponse } from '@astra/contracts';
-import { withTenant } from '@astra/db';
-import { readAuditChain, verifyAuditChain } from '@astra/telemetry';
+import { uuidv7, type Artifact, type Share, type TokenResponse } from '@genie/contracts';
+import { withTenant } from '@genie/db';
+import { readAuditChain, verifyAuditChain } from '@genie/telemetry';
 import { makeTestApp, makeTokens, testDbConfig, type TestApp } from './support.js';
 import type { App } from '../src/fastify.js';
 

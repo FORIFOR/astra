@@ -1,5 +1,5 @@
 {
-  "name": "@astra/worker-media",
+  "name": "@genie/worker-media",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -21,9 +21,9 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@astra/contracts": "workspace:*",
-    "@astra/telemetry": "workspace:*",
-    "@astra/service-task": "workspace:*"
+    "@genie/contracts": "workspace:*",
+    "@genie/telemetry": "workspace:*",
+    "@genie/service-task": "workspace:*"
   },
   "devDependencies": {
     "vitest": "catalog:"

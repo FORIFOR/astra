@@ -5,20 +5,20 @@
 #
 #   world-model reply-brief.test.ts   「これ」の解決（順番・曖昧は選ばない）、pack の範囲、brief の事実と質問
 #   gateway work.integration          turn → 解決 → 返信案 task（送らない）、聞き返し、brief/next、send は別 task
-#   AstraMac --selftest replyflow     候補の順、確認カード、直した本文、JIT 接続、接続後に自動送信しない、静かさ
-#   AstraMac --selftest brief         出所 100%、質問 1..3、会議前に出る、窓 0
+#   GenieMac --selftest replyflow     候補の順、確認カード、直した本文、JIT 接続、接続後に自動送信しない、静かさ
+#   GenieMac --selftest brief         出所 100%、質問 1..3、会議前に出る、窓 0
 set -uo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
 OUT="${ASTRA_RB_OUT:-/tmp/astra-reply-brief-gate}"; mkdir -p "$OUT"
-BIN="$ROOT/apps/astra-macos/.build/debug/AstraMac"
+BIN="$ROOT/apps/genie-macos/.build/debug/GenieMac"
 declare -a ROWS=(); fail=0
 row() { ROWS+=("$1|$2|$3|$4"); case "$3" in ''|FAIL*) fail=1;; esac; }
 run() { local name="$1"; shift; "$@" >"$OUT/$name.log" 2>&1; echo $?; }
 ok() { [ "$1" = 0 ] && echo PASS || { fail=1; echo FAIL; }; }
-wm=$(run world-model pnpm --filter @astra/service-world-model exec vitest run test/reply-brief.test.ts)
-wk=$(run worker pnpm --filter @astra/worker-agent-host test)
-cn=$(run connectors pnpm --filter @astra/service-connectors test)
+wm=$(run world-model pnpm --filter @genie/service-world-model exec vitest run test/reply-brief.test.ts)
+wk=$(run worker pnpm --filter @genie/worker-agent-host test)
+cn=$(run connectors pnpm --filter @genie/service-connectors test)
 gw=$(run gateway ./infra/db/with-test-db.sh pnpm --filter ./services/api-gateway exec vitest run test/work.integration.test.ts)
 r=1; b=1
 if [ -x "$BIN" ]; then

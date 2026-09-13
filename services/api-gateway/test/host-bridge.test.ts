@@ -5,7 +5,7 @@
  */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import WebSocket from 'ws';
-import { HOST_PROTOCOL, uuidv7, type TokenResponse } from '@astra/contracts';
+import { HOST_PROTOCOL, uuidv7, type TokenResponse } from '@genie/contracts';
 import { makeTestApp, makeTokens, testDbConfig, type TestApp } from './support.js';
 import { HostBridge } from '../src/host/bridge.js';
 import { extractDeviceToken } from '../src/host/routes.js';

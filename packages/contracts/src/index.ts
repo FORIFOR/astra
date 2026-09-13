@@ -1,5 +1,5 @@
 /**
- * @astra/contracts
+ * @genie/contracts
  *
  * 境界を越えるものの一次ソース。Zod スキーマが正本で、TypeScript の型は z.infer で導出する。
  * 手書きの interface を並置しない（実装仕様 §3.1）。

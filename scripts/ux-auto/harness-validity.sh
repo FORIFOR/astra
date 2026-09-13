@@ -2,24 +2,24 @@
 # HARNESS_VALIDITY_GATE — 採点する側を先に採点する。
 #
 # 答えの分かっている絵を評価器に見せ、当てられるかを測る。
-# 当てられない評価器の点で Astra を直さない（幻を直すことになる）。
+# 当てられない評価器の点で Genie を直さない（幻を直すことになる）。
 #
 #   harness-validity.sh            いまの結果を出す
-#   harness-validity.sh --make     fixture を Astra から作る
+#   harness-validity.sh --make     fixture を Genie から作る
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 FIX="$ROOT/docs/ux-benchmark/auto/fixtures"
 LAB="$ROOT/.build/uxlab"
-BIN="$ROOT/apps/astra-macos/.build/debug/AstraMac"
+BIN="$ROOT/apps/genie-macos/.build/debug/GenieMac"
 
 if [ "${1:-}" = "--make" ]; then
-  # fixture は**実際の Astra から作る**。手描きでは、本物を採点したときに
+  # fixture は**実際の Genie から作る**。手描きでは、本物を採点したときに
   # 同じ判断をする保証が無い。
   mkdir -p "$FIX/blank" "$FIX/contradiction"
   bash "$ROOT/scripts/ux-auto/build-tools.sh" >/dev/null
 
   # blank: 白紙かどうかを見分けられるか
-  pkill -9 -f AstraMac 2>/dev/null; sleep 1
+  pkill -9 -f GenieMac 2>/dev/null; sleep 1
   ASTRA_DATA_ROOT="$(mktemp -d)" "$BIN" --selftest journey J05 "$(mktemp -d)/j5" >/dev/null 2>&1
   # ↑ の出力から良い絵を拾うのは面倒なので、既にある採取物を使う
   cp "$ROOT/artifacts/ux/J05/base/01-start.png" "$FIX/blank/good-meeting-start.png" 2>/dev/null
@@ -37,12 +37,12 @@ PY
   echo '{"good-meeting-start.png":"NOT_BLANK","bad-blank.png":"BLANK"}' > "$FIX/blank/expected.json"
 
   # contradiction: 画面内の食い違いを見分けられるか
-  pkill -9 -f AstraMac 2>/dev/null; sleep 1
+  pkill -9 -f GenieMac 2>/dev/null; sleep 1
   "$BIN" --selftest hold-meeting 20 silent >/dev/null 2>&1 &
   sleep 4
   r="$("$LAB/winrect")"
   [ -n "$r" ] && screencapture -x -o -l"$(echo "$r"|awk '{print $5}')" "$FIX/contradiction/good-no-audio.png" 2>/dev/null
-  pkill -9 -f AstraMac 2>/dev/null
+  pkill -9 -f GenieMac 2>/dev/null
   echo '{"good-no-audio.png":"CONSISTENT"}' > "$FIX/contradiction/expected.json"
   echo "fixture を作った: $FIX"
   exit 0
@@ -102,7 +102,7 @@ echo
 ok=$(python3 -c "print(1 if $acc>=95 and $fpr<=5 and $fnr<=10 else 0)")
 if [ "$ok" = "1" ]; then
   echo "HARNESS_VALIDITY_GATE=PASS"
-  echo "  → この評価器の点で Astra を直してよい（AUTO_FIX_ELIGIBLE）"
+  echo "  → この評価器の点で Genie を直してよい（AUTO_FIX_ELIGIBLE）"
 else
   echo "HARNESS_VALIDITY_GATE=FAIL"
   echo "  → OBSERVATION_ONLY。見るだけで、コードを変えない"

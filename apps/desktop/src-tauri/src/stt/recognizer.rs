@@ -25,9 +25,9 @@ use super::ffi;
 use super::library::{LibraryProblem, SherpaLibrary};
 use super::model::{self, ModelHealth};
 
-/// 文字起こしのドメイン型は astra-core が正本。ここは録音エンジン（sherpa-onnx）
+/// 文字起こしのドメイン型は genie-core が正本。ここは録音エンジン（sherpa-onnx）
 /// だけを持ち、窓・重なり・途中経過/確定の純ロジックは core から使う。
-pub use astra_core::{merge_overlap, LiveWindow, TranscriptEvent};
+pub use genie_core::{merge_overlap, LiveWindow, TranscriptEvent};
 
 /// 認識できない理由。**「失敗しました」で済ませない。**
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

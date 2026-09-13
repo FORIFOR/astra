@@ -5,11 +5,11 @@
  * **規則エンジンが入ったので、そのガードは消した**（OQ-25 は閉じた）。
  *
  * いま効いているもの:
- *   - compliance profile による判定（`@astra/policy` の `evaluate`）
+ *   - compliance profile による判定（`@genie/policy` の `evaluate`）
  *   - profile ごとの組み込み規則（plugin が書き忘れても効く）
  *   - plugin が持ち込んだ規則（publish で語彙を検証済み）
  */
-import { AstraError, type ComplianceProfile } from '@astra/contracts';
+import { GenieError, type ComplianceProfile } from '@genie/contracts';
 
 /** 個別 compliance gate を要する profile。正本 §22。 */
 const STRICT_PROFILES: readonly ComplianceProfile[] = ['REGULATED_HEALTH', 'CARE', 'FINANCIAL'];
@@ -32,7 +32,7 @@ export function assertRegulatedPluginHasRules(
 ): void {
   if (!isStrictProfile(profile)) return;
   if (ruleCount > 0) return;
-  throw new AstraError(
+  throw new GenieError(
     'plugin.manifest_invalid',
     `${pluginId} declares ${profile} but ships no enforceable rule. ` +
       'A regulated plugin must say what it will not do.',

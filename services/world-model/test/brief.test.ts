@@ -4,7 +4,7 @@
  * **話しかけ過ぎないための仕組み**であることを確かめる。
  */
 import { describe, expect, it } from 'vitest';
-import { MAX_ATTENTION_ITEMS, uuidv7, type WorldFact } from '@astra/contracts';
+import { MAX_ATTENTION_ITEMS, uuidv7, type WorldFact } from '@genie/contracts';
 import {
   DISMISS_QUIET_MS,
   buildBrief,

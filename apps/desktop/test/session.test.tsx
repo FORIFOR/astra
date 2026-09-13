@@ -5,7 +5,7 @@ import type { JSX } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
-import { uuidv7 } from '@astra/contracts';
+import { uuidv7 } from '@genie/contracts';
 import { SessionProvider, useSession } from '../src/state/SessionProvider.js';
 import { SignIn } from '../src/auth/SignIn.js';
 

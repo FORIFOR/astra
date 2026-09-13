@@ -10,9 +10,9 @@
 #   bash scripts/verify-guide-facts.sh --selfcheck  # 検査が本当に落ちるか（protected の語を書き戻した写しで確かめる）
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-BIN="$ROOT/apps/astra-macos/.build/debug/AstraMac"
+BIN="$ROOT/apps/genie-macos/.build/debug/GenieMac"
 BUILD="$ROOT/docs/guide/build.py"
-[[ -x "$BIN" ]] || { echo "FAIL: 先に swift build --package-path apps/astra-macos" >&2; exit 1; }
+[[ -x "$BIN" ]] || { echo "FAIL: 先に swift build --package-path apps/genie-macos" >&2; exit 1; }
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
 
 # ガイドが必ず引く語（ここに無い key が facts から消えたら、ガイドが何を失ったか分かるように名前で落とす）
@@ -61,7 +61,7 @@ check() {
   # アプリ側: 鍵の表示（⌥Space 等）を画面の文字列に直書きしていないか。正本は GlobalShortcut.label() /
   # UserShortcut。直書きが残ると、割り当てを変えた日に画面とガイドが別々の鍵を言う。
   # 対象は SHORTCUT の表示値そのもの。ログ（NSLog）とコメントは除く。
-  local src="$ROOT/apps/astra-macos/Sources/AstraMac"
+  local src="$ROOT/apps/genie-macos/Sources/GenieMac"
   while IFS=$'\t' read -r _ _ disp _; do
     [[ "$disp" =~ [⌘⌥⌃⇧] ]] || continue   # esc のような素の語は他の語の一部と区別できない
     local hit; hit=$(grep -rn --include='*.swift' -F "\"" "$src" \
@@ -148,12 +148,12 @@ if [[ $fail -eq 0 ]]; then
   shots="${ASTRA_GUIDE_CLEAN_SHOTS:-}"
   if [[ -z "$shots" || ! -f "$shots/06-main-home.png" ]]; then
     shots="$TMP/shots"
-    # The fixture captures its own window IDs. Never terminate the user's running Astra.
+    # The fixture captures its own window IDs. Never terminate the user's running Genie.
     ASTRA_DATA_ROOT="$TMP/data" "$BIN" --selftest shots "$shots" 2>&1 | grep -E '^SELFTEST_(OK|FAIL)' || { echo "  FAIL: 初回起動の面が撮れない"; fail=1; }
   fi
   if [[ $fail -eq 0 ]]; then
     out="$( cd "$ROOT" && ASTRA_GUIDE_CLEAN_SHOTS="$shots" ASTRA_GUIDE_OUT="$TMP/out" ASTRA_GUIDE_BIN="$BIN" python3 "$BUILD" 2>&1 )" \
-      && [[ -s "$TMP/out/Astra-操作ガイド.html" ]] && echo "  guide build: $out" \
+      && [[ -s "$TMP/out/Genie-操作ガイド.html" ]] && echo "  guide build: $out" \
       || { echo "  FAIL: ガイドが組めない"; tail -20 <<<"$out"; fail=1; }
   fi
 fi

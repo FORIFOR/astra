@@ -8,11 +8,11 @@
 #   ASTRA_NOTARY_PROFILE=astra scripts/build-dmg.sh   # 資格情報がある場合
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-PKG="$ROOT/apps/astra-macos"
-APP="$PKG/build/Astra.app"
-DIST="$ROOT/apps/astra-macos/dist"
+PKG="$ROOT/apps/genie-macos"
+APP="$PKG/build/Genie.app"
+DIST="$ROOT/apps/genie-macos/dist"
 VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP/Contents/Info.plist" 2>/dev/null || echo 0.1.0)"
-DMG="$DIST/Astra-$VERSION.dmg"
+DMG="$DIST/Genie-$VERSION.dmg"
 
 # Developer ID は「配布用」の証明書。Apple Development では Gatekeeper を通らない。
 IDENTITY="${ASTRA_DEVELOPER_ID:-$(security find-identity -v -p codesigning \
@@ -53,7 +53,7 @@ rm -f "$DMG"
 STAGE="$(mktemp -d)"
 cp -R "$APP" "$STAGE/"
 ln -s /Applications "$STAGE/Applications"
-hdiutil create -volname "Astra" -srcfolder "$STAGE" -ov -format UDZO "$DMG" >/dev/null
+hdiutil create -volname "Genie" -srcfolder "$STAGE" -ov -format UDZO "$DMG" >/dev/null
 rm -rf "$STAGE"
 codesign --force --sign "$IDENTITY" --timestamp "$DMG"
 echo "built $DMG"

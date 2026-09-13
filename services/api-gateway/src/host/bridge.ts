@@ -5,8 +5,8 @@
  * 呼び出しを転送する。**能力の最終判断はホスト側**にあり、ここでの検査は
  * 明らかに無駄な往復を減らすための一次フィルタでしかない（正本 §21）。
  */
-import { AstraError, HOST_CALL_DEDUPE_WINDOW_MS, uuidv7, type ActionRisk } from '@astra/contracts';
-import type { Logger } from '@astra/telemetry';
+import { GenieError, HOST_CALL_DEDUPE_WINDOW_MS, uuidv7, type ActionRisk } from '@genie/contracts';
+import type { Logger } from '@genie/telemetry';
 
 export interface HostSocket {
   send(data: string): void;
@@ -129,17 +129,17 @@ export class HostBridge {
   async call(deviceId: string, options: HostCallOptions): Promise<unknown> {
     const connection = this.#byDevice.get(deviceId);
     if (!connection) {
-      throw new AstraError('host.not_connected', `device ${deviceId} is not connected`);
+      throw new GenieError('host.not_connected', `device ${deviceId} is not connected`);
     }
     if (!connection.capabilities.has(options.capability)) {
       // ホスト側でも同じ検査をする。ここは往復を省くための一次フィルタ。
-      throw new AstraError(
+      throw new GenieError(
         'host.capability_denied',
         `device ${deviceId} did not declare ${options.capability}`,
       );
     }
     if (options.risk !== 'READ' && !options.approvalId) {
-      throw new AstraError(
+      throw new GenieError(
         'host.capability_denied',
         `${options.capability} is ${options.risk} and requires an approved decision`,
       );
@@ -151,7 +151,7 @@ export class HostBridge {
     const result = new Promise<unknown>((resolve, reject) => {
       const timer = setTimeout(() => {
         connection.pending.delete(callId);
-        reject(new AstraError('host.timeout', `${options.capability} timed out`));
+        reject(new GenieError('host.timeout', `${options.capability} timed out`));
       }, deadlineMs);
       connection.pending.set(callId, { resolve, reject, timer });
     });
@@ -198,7 +198,7 @@ export class HostBridge {
     clearTimeout(pending.timer);
 
     if (outcome.ok) pending.resolve(outcome.value);
-    else pending.reject(new AstraError('host.capability_denied', outcome.error.message));
+    else pending.reject(new GenieError('host.capability_denied', outcome.error.message));
   }
 
   #pruneRecent(connection: Connection): void {
@@ -211,7 +211,7 @@ export class HostBridge {
   #failAllPending(connection: Connection, reason: string): void {
     for (const [, pending] of connection.pending) {
       clearTimeout(pending.timer);
-      pending.reject(new AstraError('host.not_connected', reason));
+      pending.reject(new GenieError('host.not_connected', reason));
     }
     connection.pending.clear();
   }
@@ -219,7 +219,7 @@ export class HostBridge {
   #require(deviceId: string): Connection {
     const connection = this.#byDevice.get(deviceId);
     if (!connection) {
-      throw new AstraError('host.not_connected', `device ${deviceId} is not connected`);
+      throw new GenieError('host.not_connected', `device ${deviceId} is not connected`);
     }
     return connection;
   }

@@ -1,35 +1,35 @@
-/* 共有 viewer。Astra 本体のトークンをそのまま使う。 */
+/* 共有 viewer。Genie 本体のトークンをそのまま使う。 */
 
 .share {
   max-width: 760px;
   margin: 0 auto;
-  padding: var(--astra-space-section) var(--astra-padding-panel);
+  padding: var(--genie-space-section) var(--genie-padding-panel);
   display: flex;
   flex-direction: column;
-  gap: var(--astra-space-lg);
+  gap: var(--genie-space-lg);
 }
 
 .share__title {
   margin: 0;
-  font-size: var(--astra-font-size-page-title);
-  font-weight: var(--astra-font-weight-page-title);
+  font-size: var(--genie-font-size-page-title);
+  font-weight: var(--genie-font-weight-page-title);
 }
 
 .share__meta,
 .share__note {
   margin: 0;
-  color: var(--astra-color-muted);
-  font-size: var(--astra-font-size-secondary);
+  color: var(--genie-color-muted);
+  font-size: var(--genie-font-size-secondary);
 }
 
 .share__body {
   margin: 0;
-  padding: var(--astra-padding-panel);
-  border: var(--astra-border-hairline) solid var(--astra-color-border);
-  border-radius: var(--astra-radius-standard);
-  background: var(--astra-color-surface);
-  font-family: var(--astra-font-mono);
-  font-size: var(--astra-font-size-secondary);
+  padding: var(--genie-padding-panel);
+  border: var(--genie-border-hairline) solid var(--genie-color-border);
+  border-radius: var(--genie-radius-standard);
+  background: var(--genie-color-surface);
+  font-family: var(--genie-font-mono);
+  font-size: var(--genie-font-size-secondary);
   white-space: pre-wrap;
   overflow-x: auto;
 }
@@ -40,32 +40,32 @@
     -45deg,
     transparent,
     transparent 80px,
-    color-mix(in srgb, var(--astra-color-muted) 8%, transparent) 80px,
-    color-mix(in srgb, var(--astra-color-muted) 8%, transparent) 160px
+    color-mix(in srgb, var(--genie-color-muted) 8%, transparent) 80px,
+    color-mix(in srgb, var(--genie-color-muted) 8%, transparent) 160px
   );
 }
 
 .share__form {
   display: flex;
   flex-direction: column;
-  gap: var(--astra-space-base);
+  gap: var(--genie-space-base);
   max-width: 360px;
 }
 
 .share__field {
   display: flex;
   flex-direction: column;
-  gap: var(--astra-space-compact);
-  font-size: var(--astra-font-size-secondary);
+  gap: var(--genie-space-compact);
+  font-size: var(--genie-font-size-secondary);
 }
 
 .share__field input {
   min-height: 40px;
-  padding-inline: var(--astra-space-base);
-  border: var(--astra-border-hairline) solid var(--astra-color-border);
-  border-radius: var(--astra-radius-small);
-  background: var(--astra-color-surface);
-  color: var(--astra-color-text);
+  padding-inline: var(--genie-space-base);
+  border: var(--genie-border-hairline) solid var(--genie-color-border);
+  border-radius: var(--genie-radius-small);
+  background: var(--genie-color-surface);
+  color: var(--genie-color-text);
   font: inherit;
 }
 
@@ -73,11 +73,11 @@
 .share__download {
   align-self: flex-start;
   min-height: 44px;
-  padding-inline: var(--astra-space-panel);
+  padding-inline: var(--genie-space-panel);
   border: 0;
-  border-radius: var(--astra-radius-small);
-  background: var(--astra-color-accent);
-  color: var(--astra-color-accent-on);
+  border-radius: var(--genie-radius-small);
+  background: var(--genie-color-accent);
+  color: var(--genie-color-accent-on);
   font: inherit;
   cursor: pointer;
 }

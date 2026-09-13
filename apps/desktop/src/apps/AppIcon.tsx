@@ -5,7 +5,7 @@
  * それ以外は名前の頭文字を、種類ごとの色のタイルに置く。画像ファイルは持たない。
  */
 import type { ReactElement, ReactNode } from 'react';
-import type { PluginCatalogEntry } from '@astra/contracts';
+import type { PluginCatalogEntry } from '@genie/contracts';
 
 const KIND_COLOR: Record<PluginCatalogEntry['category'], string> = {
   'domain-agent': '#5B5BD6',

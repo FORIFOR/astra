@@ -8,7 +8,7 @@ import {
 } from '../src/scopes.js';
 
 describe('scope translation', () => {
-  it('asks for one Google scope per Astra permission', () => {
+  it('asks for one Google scope per Genie permission', () => {
     expect(googleScopesFor(['email.read', 'calendar.read'])).toEqual([
       'https://www.googleapis.com/auth/calendar.readonly',
       'https://www.googleapis.com/auth/gmail.readonly',

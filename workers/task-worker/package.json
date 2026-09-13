@@ -1,5 +1,5 @@
 {
-  "name": "@astra/worker-task",
+  "name": "@genie/worker-task",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -14,23 +14,23 @@
     "start": "node dist/worker-main.js"
   },
   "dependencies": {
-    "@astra/contracts": "workspace:*",
-    "@astra/db": "workspace:*",
-    "@astra/telemetry": "workspace:*",
-    "@astra/service-task": "workspace:*",
-    "@astra/service-research": "workspace:*",
-    "@astra/service-library": "workspace:*",
+    "@genie/contracts": "workspace:*",
+    "@genie/db": "workspace:*",
+    "@genie/telemetry": "workspace:*",
+    "@genie/service-task": "workspace:*",
+    "@genie/service-research": "workspace:*",
+    "@genie/service-library": "workspace:*",
     "@temporalio/worker": "^1.22.0",
-    "@astra/service-meeting": "workspace:*",
-    "@astra/service-world-model": "workspace:*",
-    "@astra/service-plugin-registry": "workspace:*",
-    "@astra/service-capabilities": "workspace:*",
-    "@astra/service-agent-runtime": "workspace:*",
-    "@astra/service-agent-host": "workspace:*"
+    "@genie/service-meeting": "workspace:*",
+    "@genie/service-world-model": "workspace:*",
+    "@genie/service-plugin-registry": "workspace:*",
+    "@genie/service-capabilities": "workspace:*",
+    "@genie/service-agent-runtime": "workspace:*",
+    "@genie/service-agent-host": "workspace:*"
   },
   "devDependencies": {
     "@temporalio/testing": "^1.22.0",
     "vitest": "catalog:",
-    "@astra/plugin-sdk": "workspace:*"
+    "@genie/plugin-sdk": "workspace:*"
   }
 }

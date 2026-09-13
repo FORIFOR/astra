@@ -1,4 +1,4 @@
-# Release — Astra macOS
+# Release — Genie macOS
 
 版: **0.1.1**（`package.json` / `tauri.conf.json` / 両 `Cargo.toml` で一致。
 `scripts/verify-release-consistency.sh` が見ている）
@@ -23,12 +23,12 @@ Gatekeeper: 受理・券あり（落としてきた状態でも、圏外でも�
 RELEASE_ARTIFACT_OK: 47 PASS / 0 SKIP / 0 FAIL（repo の外・まっさらな置き場）
 ```
 
-配布物: `dist/Astra-0.1.1.zip` (9,679,166 bytes) / universal (arm64 + x86_64)
+配布物: `dist/Genie-0.1.1.zip` (9,679,166 bytes) / universal (arm64 + x86_64)
 sha256: `d57e977543ffc09072a919a82afa2c536ea205a6adc1d2a160229a931bcc3e44`
 appcast: `dist/feed/appcast.xml`（EdDSA 署名済み。0.1.0 → 0.1.1 の delta 16,450 bytes も同梱）
 
-**公開済み**（2026-09-03、本人の指示で）: https://github.com/FORIFOR/astra/releases/tag/v0.1.1
-添付: `Astra-0.1.1.zip` / `Astra0.1.1-0.1.0.delta` / `appcast.xml`。
+**公開済み**（2026-09-03、本人の指示で）: https://github.com/FORIFOR/genie/releases/tag/v0.1.1
+添付: `Genie-0.1.1.zip` / `Genie0.1.1-0.1.0.delta` / `appcast.xml`。
 公開後に `releases/latest/download/appcast.xml` を取り直して手元の appcast と一致、
 zip の sha256 も一致を確認した。0.1.0 の利用者には自動更新で届く。
 
@@ -37,8 +37,8 @@ DS-01〜06 の造形規則、Craft Freeze、journey J-A/J-B/J-C（頼む・録�
 最後まで通す検証、失敗時に袋小路を作らない直し（マイク拒否・共有中・強制終了）、
 一覧の状態語を日本語に（録音中 / 会話を読み取っています… / 使えます）。
 
-**前の版**: https://github.com/FORIFOR/astra/releases/tag/v0.1.0
-（`Astra-0.1.0.zip` sha256 `571a00271f8469036464333233ee285e27d19480a1c611b2c52661c49235310b`）
+**前の版**: https://github.com/FORIFOR/genie/releases/tag/v0.1.0
+（`Genie-0.1.0.zip` sha256 `571a00271f8469036464333233ee285e27d19480a1c611b2c52661c49235310b`）
 
 |                      | 状態                                                             |
 | -------------------- | ---------------------------------------------------------------- |
@@ -57,7 +57,7 @@ DS-01〜06 の造形規則、Craft Freeze、journey J-A/J-B/J-C（頼む・録�
 | 自動更新             | ✅ Sparkle 2.9.6 を同梱・署名。設定が揃った状態で起動を確認      |
 | 更新の出し方         | ✅ `scripts/publish-update.sh`（appcast まで作る。上げはしない） |
 | Sparkle 署名鍵       | ✅ 作成済み・公開鍵は release-macos.sh の既定値                  |
-| 配布先               | ✅ GitHub Releases（FORIFOR/astra）                              |
+| 配布先               | ✅ GitHub Releases（FORIFOR/genie）                              |
 | 自動更新             | ✅ 有効（appcast 署名済み・feed URL は版に依らず固定）           |
 | 対応 CPU             | ✅ Apple Silicon / Intel（universal）                            |
 | Windows              | ❌ 別（`apps/windows`。CI で実ビルドまで）                       |
@@ -91,20 +91,20 @@ Rust 側は `--remap-path-prefix` で畳んでいるが、依存の C ソース�
 公証が済むまで待たなくても、**相手が限られているなら配れる**。
 受け取った人が初回だけ Gatekeeper を通す必要がある、というだけ。
 
-実測: quarantine の印を外した `Astra.app` は、**そのまま起動して動く**
+実測: quarantine の印を外した `Genie.app` は、**そのまま起動して動く**
 （DB を作り、生存する）。`spctl` は unnotarized なので rejected のままだが、
 印が無ければ macOS は起動を許す。
 
 受け取る人への説明（そのまま渡せる）:
 
-> 1. `Astra-0.1.0.zip` を展開して `Astra.app` を「アプリケーション」へ入れる
+> 1. `Genie-0.1.0.zip` を展開して `Genie.app` を「アプリケーション」へ入れる
 > 2. **右クリック（二本指クリック）→「開く」**→ ダイアログで「開く」
 >    （ダブルクリックだと「開けません」と言われる。初回だけの手順）
 > 3. 初回起動時に、マイク・画面収録・カレンダー・**入力監視**の許可を聞かれる。
 >    入力監視を許可しないと ⌥Space が効かない
 >
 > うまくいかないときは、ターミナルで:
-> `xattr -dr com.apple.quarantine /Applications/Astra.app`
+> `xattr -dr com.apple.quarantine /Applications/Genie.app`
 
 **向くとき**: 相手が数人で、手順を伝えられる。社内・知人向け。
 **向かないとき**: 不特定多数へ配る。「壊れています」と出て終わる人が必ず出る。
@@ -141,7 +141,7 @@ bash scripts/release-macos.sh
 
 ## 2. 過去に踏んだもの（同じ穴に落ちないように）
 
-- **配布物が起動しなかった。** `Package.swift` が `-L target/debug -lastra_core`
+- **配布物が起動しなかった。** `Package.swift` が `-L target/debug -lgenie_core`
   だったので、cargo が同じ場所に置く `.a` と `.dylib` のうちリンカが `.dylib` を選び、
   署名済み .app が**ソースツリーの絶対パスにある debug の dylib** を参照していた。
   他人の Mac には無いので起動しない（Team ID 不一致で落ちる）。
@@ -153,7 +153,7 @@ bash scripts/release-macos.sh
 - **同梱プラグインが手元でしか読めなかった。** バンドルへ入れておらず、
   解決の候補に開発機の絶対パスが 1 本入っていたので、私の Mac でだけ 12 件読めていた。
   配った先では 0 件になる。バンドルへ同梱し、個人のパスは消した。
-  cwd 相対も当てにしない（ゲートは `apps/astra-macos` へ cd して動かすので外れる）
+  cwd 相対も当てにしない（ゲートは `apps/genie-macos` へ cd して動かすので外れる）
   —— 実行体から上へ辿って探す。
 - **`spctl` だけで「公証済み」と判断しない。** 評価は経路ごとに再利用されるので、
   公証していない版でも「受理」と出ることがある（実際に出た。同じ場所で前に
@@ -209,22 +209,22 @@ ASTRA_UPDATE_BASE=https://…/astra bash scripts/publish-update.sh
 本人の「公開して」があってから。1 つの Release に **5 点**を添える:
 
 ```sh
-python3 docs/guide/build.py                       # ~/Downloads/Astra-操作ガイド/ を作り直す（メニューの絵と画面の語は .build/debug の AstraMac に訊く: --selftest menutitles / facts。先に swift build。写し違いは scripts/verify-guide-facts.sh が落とす）
-cp ~/Downloads/Astra-操作ガイド/Astra-操作ガイド.pdf docs/guide/   # repo にも残す
-gh release create v<版> --title "Astra <版>" --notes-file <本文> \
-  dist/Astra-<版>.zip dist/feed/appcast.xml dist/feed/*.delta \
-  "<PDF>#Astra 操作ガイド (PDF, 日本語)"            # 名前は Astra-<版>-guide-ja.pdf にして渡す
-gh release upload v<版> "<PDF を Astra-guide-ja.pdf に複製したもの>"
+python3 docs/guide/build.py                       # ~/Downloads/Genie-操作ガイド/ を作り直す（メニューの絵と画面の語は .build/debug の GenieMac に訊く: --selftest menutitles / facts。先に swift build。写し違いは scripts/verify-guide-facts.sh が落とす）
+cp ~/Downloads/Genie-操作ガイド/Genie-操作ガイド.pdf docs/guide/   # repo にも残す
+gh release create v<版> --title "Genie <版>" --notes-file <本文> \
+  dist/Genie-<版>.zip dist/feed/appcast.xml dist/feed/*.delta \
+  "<PDF>#Genie 操作ガイド (PDF, 日本語)"            # 名前は Genie-<版>-guide-ja.pdf にして渡す
+gh release upload v<版> "<PDF を Genie-guide-ja.pdf に複製したもの>"
 ```
 
-| 添付                                         | 役割                                                                                                                                                                                                                                                                                                                                                                             |
-| -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Astra-<版>.zip` / `appcast.xml` / `*.delta` | アプリと自動更新。feed URL は `releases/latest/download/appcast.xml` で固定                                                                                                                                                                                                                                                                                                      |
-| `Astra-<版>-guide-ja.pdf`                    | **この版の**操作ガイド（監査・特定版の利用者向け）                                                                                                                                                                                                                                                                                                                               |
-| `Astra-guide-ja.pdf`                         | 版番号なしの同じ PDF。一般利用者へ案内する固定 URL はこれ: `https://github.com/FORIFOR/astra/releases/latest/download/Astra-guide-ja.pdf`。アプリのメニューバー「操作ガイド（PDF）」もこの URL を開く（`StatusBarController.guideURL`。名前を変えたら両方）。同じメニューの「更新を確認…」は Sparkle の確認で、appcast の無い実行体では理由を出して `releases/latest` へ案内する |
+| 添付                                         | 役割                                                                                                                                                                                                                                                                                                                                                                                     |
+| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Genie-<版>.zip` / `appcast.xml` / `*.delta` | アプリと自動更新。feed URL は `releases/latest/download/appcast.xml` で固定                                                                                                                                                                                                                                                                                                              |
+| `Genie-<版>-guide-ja.pdf`                    | **この版の**操作ガイド（監査・特定版の利用者向け）                                                                                                                                                                                                                                                                                                                                       |
+| `Genie-guide-ja.pdf`                         | 版番号なしの同じ PDF。一般利用者へ案内する固定 URL はこれ: `https://github.com/FORIFOR/genie/releases/download/v0.1.3/Genie-guide-ja.pdf`。このプレビューのメニューバー「操作ガイド（PDF）」もこの URL を開く（`StatusBarController.guideURL`。名前を変えたら両方）。同じメニューの「更新を確認…」は Sparkle の確認で、appcast の無い実行体では理由を出して `releases/latest` へ案内する |
 
 Release 本文には「入れ方」の後に「操作ガイド」の節を置き、上の固定 URL を貼る。
-日本語のファイル名で上げると GitHub が `Astra-.pdf` に削るので、ASCII 名にしてから渡す。
+日本語のファイル名で上げると GitHub が `Genie-.pdf` に削るので、ASCII 名にしてから渡す。
 公開後は `releases/latest/download/` から appcast・zip・PDF を取り直し、手元と一致を確かめる。
 
 ---
@@ -251,8 +251,8 @@ xcrun notarytool store-credentials "astra-notary" \
 配布まで進めるなら、この 3 つは人が決める必要がある。
 
 1. ~~**置き場所**~~ GitHub Releases。
-   `ASTRA_UPDATE_FEED=https://github.com/FORIFOR/astra/releases/latest/download/appcast.xml`
-   `ASTRA_UPDATE_BASE=https://github.com/FORIFOR/astra/releases/download/v<版>`
+   `ASTRA_UPDATE_FEED=https://github.com/FORIFOR/genie/releases/latest/download/appcast.xml`
+   `ASTRA_UPDATE_BASE=https://github.com/FORIFOR/genie/releases/download/v<版>`
 2. ~~**Sparkle の署名鍵**~~ 作成済み（§2.5）。
 3. ~~**置き場所**~~ GitHub Releases に決定。
 4. **gateway の向き先**。`docs/production-readiness.md` の判定は
@@ -263,7 +263,7 @@ xcrun notarytool store-credentials "astra-notary" \
 ## 5. 手で見る確認
 
 アシスタントは GUI を人の目で見られないので、代わりに
-**配布物そのもの**で自己検査を回している（`dist/Astra.app` を直接起動）:
+**配布物そのもの**で自己検査を回している（`dist/Genie.app` を直接起動）:
 
 zip を別の場所へ展開し、リポジトリの外を作業ディレクトリにして 49 件:
 
@@ -276,7 +276,7 @@ zip を別の場所へ展開し、リポジトリの外を作業ディレクト�
 再ビルドで実行体が変わると、preflight は true のまま tap だけ拒まれる。
 同じ 3 件が、今朝緑だったコミット（4ee835b）を建て直しても同じように落ちる。
 直すには、システム設定 > プライバシーとセキュリティ > 入力監視 で
-Astra を一度外して入れ直す（人の操作）。
+Genie を一度外して入れ直す（人の操作）。
 
 これは人の目視の代わりにはなるが、同じものではない。
 配る前には、少なくとも次を人が見ること:

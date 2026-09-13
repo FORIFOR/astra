@@ -38,15 +38,15 @@ const DRAIN_TIMEOUT: Duration = Duration::from_secs(15);
 
 // ---------------------------------------------------------------- manifest
 
-// OS 非依存の断片モデル・wire 変換・回復は astra-core に一本化した（§8: 二重実装を避ける）。
-use astra_core::{
+// OS 非依存の断片モデル・wire 変換・回復は genie-core に一本化した（§8: 二重実装を避ける）。
+use genie_core::{
     scan_recoverable_path, to_wire, Journal, JournalState, LinkState, RecoverableMeeting,
     FRAGMENT_MS, WIRE_SAMPLE_RATE,
 };
 
-/// 会議の保存先。ASTRA_MEETINGS_DIR も含め astra-core の既定に委ねる。
+/// 会議の保存先。ASTRA_MEETINGS_DIR も含め genie-core の既定に委ねる。
 fn meetings_root() -> std::path::PathBuf {
-    astra_core::meetings_root_default()
+    genie_core::meetings_root_default()
 }
 
 /// frontend へ配る接続状態イベント（Tauri 固有のシリアライズ。core の LinkState を包む）。

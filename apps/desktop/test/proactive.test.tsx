@@ -6,7 +6,7 @@
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, waitFor } from '@testing-library/react';
-import { uuidv7, type BriefItem, type DailyBrief } from '@astra/contracts';
+import { uuidv7, type BriefItem, type DailyBrief } from '@genie/contracts';
 import { useProactiveNotifications } from '../src/home/useProactive.js';
 import { notifications } from '../src/host/tauri.js';
 

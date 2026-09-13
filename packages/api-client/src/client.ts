@@ -1,5 +1,5 @@
 /**
- * Astra API クライアント。実装仕様 §11 の表面をそのまま写す。
+ * Genie API クライアント。実装仕様 §11 の表面をそのまま写す。
  *
  * 応答は必ず contracts のスキーマで検証してから返す。
  * サーバを信用して素通しすると、契約のずれが UI の奥深くで初めて露見する。
@@ -43,7 +43,7 @@ import {
   type InstallPluginRequest,
   type MeResponse,
   type TaskDockState,
-} from '@astra/contracts';
+} from '@genie/contracts';
 import { z } from 'zod';
 import { HttpClient, type ClientConfig } from './http.js';
 import { streamMeetingEvents, streamTaskEvents, type StreamOptions } from './sse.js';
@@ -73,7 +73,7 @@ function toView(task: Task | TaskListItem, dockState?: string): TaskView {
   };
 }
 
-export class AstraClient {
+export class GenieClient {
   readonly http: HttpClient;
 
   constructor(config: ClientConfig) {
@@ -95,7 +95,7 @@ export class AstraClient {
     );
   }
 
-  /** 提供者の ID トークンで Astra のトークンを得る。access / refresh token は渡さない。 */
+  /** 提供者の ID トークンで Genie のトークンを得る。access / refresh token は渡さない。 */
   signInWithIdp(body: IdpSignInRequest): Promise<TokenResponse> {
     return this.http.request({ method: 'POST', path: '/v1/auth/idp/token', body }, (value) =>
       TokenResponse.parse(value),

@@ -6,23 +6,23 @@
 
 Give Genie a goal, work with your AI model, and keep the result in a native Mac workspace. Turn rough notes into an action plan, draft a better website message, or generate a small HTML prototype. Reopen the work, copy it, or save it as Markdown.
 
-Previously Astra. The repository and current Mac download still use that name.
+Previously Astra. The app, downloads, and source are now named Genie. Existing settings and accounts are retained.
 
 [Enterprise introduction: measured workflows, limits, and L1/L2/L3 gates](docs/ENTERPRISE_READINESS.md).
 
 **Mac preview testers wanted.** Try one useful task and tell us the first place you get stuck. Setup feedback counts, too. No waitlist or separate signup; a GitHub account is only needed to post feedback.
 
-**[Start a first test →](docs/TESTING.md)** · [テスターとして試す](docs/TESTING.ja.md) · [Report your experience](https://github.com/FORIFOR/astra/issues/new?template=tester_feedback.yml)
+**[Start a first test →](docs/TESTING.md)** · [テスターとして試す](docs/TESTING.ja.md) · [Report your experience](https://github.com/FORIFOR/genie/issues/new?template=tester_feedback.yml)
 
-[Website & demos](https://astra-forifor.forifor.chatgpt.site) · [日本語](docs/README.ja.md) · [Mac preview v0.1.2](https://github.com/FORIFOR/astra/releases/tag/v0.1.2)
+[Website & demos](https://genie-forifor.forifor.chatgpt.site) · [日本語](docs/README.ja.md) · [Mac preview v0.1.3](https://github.com/FORIFOR/genie/releases/tag/v0.1.3)
 
 ## See the work, then try your own
 
 | Real workflow             | Watch / explore                                                                                                                                          | What the demonstration shows                                                         |
 | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| Build a small prototype   | [33-second demo](https://astra-forifor.forifor.chatgpt.site/#demo) · [Try the orbital playground](https://astra-forifor.forifor.chatgpt.site/orbit.html) | Generate HTML, save the result, then open the extracted HTML in an external browser. |
-| Improve a website message | [30-second demo](https://astra-forifor.forifor.chatgpt.site/#proposal)                                                                                   | A local model turns a fictional website into a copy proposal.                        |
-| Decide what to do next    | [42-second demo](https://astra-forifor.forifor.chatgpt.site/#priorities)                                                                                 | Ask about a fictional dashboard, review a recommendation, and save it.               |
+| Build a small prototype   | [33-second demo](https://genie-forifor.forifor.chatgpt.site/#demo) · [Try the orbital playground](https://genie-forifor.forifor.chatgpt.site/orbit.html) | Generate HTML, save the result, then open the extracted HTML in an external browser. |
+| Improve a website message | [30-second demo](https://genie-forifor.forifor.chatgpt.site/#proposal)                                                                                   | A local model turns a fictional website into a copy proposal.                        |
+| Decide what to do next    | [42-second demo](https://genie-forifor.forifor.chatgpt.site/#priorities)                                                                                 | Ask about a fictional dashboard, review a recommendation, and save it.               |
 
 Real app captures; waiting is condensed. Model speed and quality vary. These examples do not demonstrate automatic deployment, SNS posting, or a guaranteed business result.
 
@@ -53,8 +53,8 @@ An explicitly selected route is not silently replaced by a paid provider. Local 
 - macOS 14 or later; native SwiftUI app, Apple silicon and Intel builds.
 - [Start the tester guide](docs/TESTING.md) for a matching app and source, a first task, and troubleshooting.
 - [Build current source](docs/LOCAL_PREVIEW.md) if you want to work on the latest code.
-- [Mac builds](https://github.com/FORIFOR/astra/releases): use the build and source version named together in its release notes.
-- [See the actual interface and demo](https://astra-forifor.forifor.chatgpt.site/#demo).
+- [Mac builds](https://github.com/FORIFOR/genie/releases): use the build and source version named together in its release notes.
+- [See the actual interface and demo](https://genie-forifor.forifor.chatgpt.site/#demo).
 
 The preview includes recording, live transcription, service connections, and guided Mac permissions. Those paths have additional credentials and permissions; they are not prerequisites for the local text workflow. Production-wide release acceptance is still tracked separately from this developer preview.
 
@@ -62,9 +62,9 @@ The preview includes recording, live transcription, service connections, and gui
 
 If this fits how you work, a star helps other people find it. The most useful feedback is a real workflow: what you tried, what you expected, and where Genie got in the way.
 
-- [Share a first test or setup blocker](https://github.com/FORIFOR/astra/issues/new?template=tester_feedback.yml).
-- [Report a reproducible problem](https://github.com/FORIFOR/astra/issues/new?template=bug_report.yml).
-- [Suggest a workflow or team pilot](https://github.com/FORIFOR/astra/issues/new?template=workflow.yml).
+- [Share a first test or setup blocker](https://github.com/FORIFOR/genie/issues/new?template=tester_feedback.yml).
+- [Report a reproducible problem](https://github.com/FORIFOR/genie/issues/new?template=bug_report.yml).
+- [Suggest a workflow or team pilot](https://github.com/FORIFOR/genie/issues/new?template=workflow.yml).
 - Read [contribution guidance](CONTRIBUTING.md) before making a change.
 
 Issues are public. Use synthetic examples and remove credentials and personal information. This repository currently has no project-wide open-source license; public visibility is not a license grant. Third-party components retain their own licenses.
@@ -73,7 +73,7 @@ Issues are public. Use synthetic examples and remove credentials and personal in
 
 | Directory             | Purpose                                               |
 | --------------------- | ----------------------------------------------------- |
-| `apps/astra-macos`    | Native SwiftUI Mac app and interaction tests          |
+| `apps/genie-macos`    | Native SwiftUI Mac app and interaction tests          |
 | `apps/windows`        | Native Windows client work                            |
 | `core`                | Shared Rust core and native bindings                  |
 | `services`            | Gateway, identity, tasks, artifacts, and integrations |
@@ -83,7 +83,7 @@ Issues are public. Use synthetic examples and remove credentials and personal in
 | `shared/design`       | Design rules and generated tokens                     |
 | `docs/evidence`       | Verification records and known limitations            |
 
-The older Tauri client remains under `apps/desktop`; the current Mac interface is `apps/astra-macos`.
+The older Tauri client remains under `apps/desktop`; the current Mac interface is `apps/genie-macos`.
 
 ```sh
 pnpm install

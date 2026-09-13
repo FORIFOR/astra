@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { SignJWT, createLocalJWKSet, exportJWK, generateKeyPair } from 'jose';
-import { AstraError } from '@astra/contracts';
+import { GenieError } from '@genie/contracts';
 import {
   APPLE_JWKS_URL,
   GOOGLE_JWKS_URL,
@@ -152,7 +152,7 @@ describe('idp verifiers', () => {
     await expect(
       verifier.verify({ ...base, provider: 'google', id_token: 'x'.repeat(30) }),
     ).rejects.toSatisfy(
-      (e: unknown) => e instanceof AstraError && e.code === 'auth.provider_not_configured',
+      (e: unknown) => e instanceof GenieError && e.code === 'auth.provider_not_configured',
     );
     expect(verifier.providers().map((p) => p.configured)).toEqual([false, false, false]);
   });

@@ -1,5 +1,5 @@
 /**
- * @astra/oauth
+ * @genie/oauth
  *
  * 端末で走らせる OAuth2 + PKCE。正本 §21 Credential。
  *

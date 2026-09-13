@@ -7,12 +7,12 @@
  *   - 越境アクセスは 403 ではなく 404（逸脱 D-11）
  */
 import { ZodError } from 'zod';
-import { AstraError, type ApiError, type ErrorCode } from '@astra/contracts';
+import { GenieError, type ApiError, type ErrorCode } from '@genie/contracts';
 import { currentRequestId } from './request-context.js';
 import type { App } from './fastify.js';
 
 export function toApiError(error: unknown, requestId: string): { status: number; body: ApiError } {
-  if (error instanceof AstraError) {
+  if (error instanceof GenieError) {
     return { status: error.httpStatus, body: error.toApiError(requestId) };
   }
 

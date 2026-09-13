@@ -1,5 +1,5 @@
 {
-  "name": "@astra/meet-bot",
+  "name": "@genie/meet-bot",
   "private": true,
   "type": "module",
   "description": "REAL_MEETING の相手役。人の代わりに Google Meet へ入り、固定 WAV を仮想マイクへ流す。",

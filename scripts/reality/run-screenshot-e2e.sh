@@ -8,7 +8,7 @@
 # nonce が入るかを機械で確かめる。prompt の中身や file の有無ではなく、**画像を本当に読んだ**ことの証拠。
 #
 # HUMAN_INTERVENTION = 0。人はクリックも判定もしない。Claude Code CLI のログインは端末のもの
-# （Astra は鍵を持たない）。この Mac に無ければ SKIP ではなく FAIL（見たふりはしない）。
+# （Genie は鍵を持たない）。この Mac に無ければ SKIP ではなく FAIL（見たふりはしない）。
 set -uo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
@@ -30,7 +30,7 @@ ADMIN_URL="postgres://${PGSUPER}:${PGPASSWORD}@${PGHOST}:${PGPORT}/${DB}?sslmode
 STORE="$(mktemp -d)"
 OUT="${ASTRA_E2E_OUT:-/tmp/astra-screenshot-e2e}"
 BASE="http://127.0.0.1:${PORT}"
-BIN="$ROOT/apps/astra-macos/.build/debug/AstraMac"
+BIN="$ROOT/apps/genie-macos/.build/debug/GenieMac"
 EMAIL="screenshot-e2e-$$@astra.local"
 mkdir -p "$OUT"
 
@@ -67,7 +67,7 @@ say() { printf '\n\033[1m%s\033[0m\n' "$1"; }
 fail() { echo "SCREENSHOT_E2E=FAIL $1" >&2; for f in host worker gateway; do [ -f "$STORE/$f.log" ] && { echo "--- $f.log ---" >&2; tail -25 "$STORE/$f.log" >&2; }; done; exit 1; }
 json() { python3 -c "import json,sys;d=json.load(sys.stdin);print($1)"; }
 
-[ -x "$BIN" ] || fail "build the app first: swift build --package-path apps/astra-macos"
+[ -x "$BIN" ] || fail "build the app first: swift build --package-path apps/genie-macos"
 command -v "$LLM_COMMAND" >/dev/null 2>&1 || fail "$LLM_COMMAND is not on PATH"
 
 say "provisioning ${DB}"
@@ -77,7 +77,7 @@ psql "$ADMIN_URL" -X -q -v ON_ERROR_STOP=1 -f "$ROOT/infra/db/bootstrap.sql" >/d
 export ASTRA_ENV=development
 export ASTRA_API_PORT="$PORT"
 export ASTRA_LOG_LEVEL=info
-export DATABASE_URL="postgres://astra_app:astra_app@${PGHOST}:${PGPORT}/${DB}?sslmode=disable"
+export DATABASE_URL="postgres://genie_app:genie_app@${PGHOST}:${PGPORT}/${DB}?sslmode=disable"
 export ASTRA_DB_IDENTITY_URL="postgres://astra_identity:astra_identity@${PGHOST}:${PGPORT}/${DB}?sslmode=disable"
 export REDIS_URL="${REDIS_URL:-redis://localhost:6380}"
 export TEMPORAL_ADDRESS="${TEMPORAL_ADDRESS:-localhost:7233}"

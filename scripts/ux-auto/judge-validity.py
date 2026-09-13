@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """VISUAL_JUDGE_VALIDITY_GATE — 採点者を採点する。
 
-Judge の点で Astra を直してよいかを決める。通らない軸は OBSERVATION_ONLY。
+Judge の点で Genie を直してよいかを決める。通らない軸は OBSERVATION_ONLY。
 
   pairwise_accuracy       >= 90%   good/bad を並べて、good を選べるか
   good_bad_separation     >= 1.5   絶対点の差（good 平均 - bad 平均）

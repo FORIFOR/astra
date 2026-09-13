@@ -1,10 +1,10 @@
 /**
  * WorldModelService の DB 側。Phase 6 実装仕様 §2・§3。
- *   ./infra/db/with-test-db.sh pnpm --filter @astra/service-world-model test
+ *   ./infra/db/with-test-db.sh pnpm --filter @genie/service-world-model test
  */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { uuidv7, type FactSource } from '@astra/contracts';
-import { createDb, withIdentity, type DbHandle } from '@astra/db';
+import { uuidv7, type FactSource } from '@genie/contracts';
+import { createDb, withIdentity, type DbHandle } from '@genie/db';
 import { WorldModelService } from '../src/service.js';
 
 const url = process.env['TEST_DATABASE_URL'];

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { grantsFromConnections, knownPluginIds, mergeGrants } from '../src/grants.js';
 
 describe('grants from connection records', () => {
-  it('maps live provider scopes to Astra permissions, per plugin, ignoring dead connections', () => {
+  it('maps live provider scopes to Genie permissions, per plugin, ignoring dead connections', () => {
     const grants = grantsFromConnections([
       {
         pluginId: 'com.astra.gmail',

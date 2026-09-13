@@ -12,16 +12,16 @@ import {
   type InjectionStats,
   type ReplyDraftMeta,
   type WorkArtifact,
-} from '@astra/contracts';
-import type { ConversationService } from '@astra/service-conversation';
+} from '@genie/contracts';
+import type { ConversationService } from '@genie/service-conversation';
 import {
   clarificationFor,
   isDocumentRequest,
   remember,
   resolveReferences,
   routeLane,
-} from '@astra/service-conversation';
-import { agentKindFor, type TaskService } from '@astra/service-task';
+} from '@genie/service-conversation';
+import { agentKindFor, type TaskService } from '@genie/service-task';
 import type { Redis } from 'ioredis';
 import {
   classifyContextIntent,
@@ -30,7 +30,7 @@ import {
   replyInstruction,
   selectContextPack,
   type WorkContextService,
-} from '@astra/service-world-model';
+} from '@genie/service-world-model';
 import type { App } from '../fastify.js';
 import { parseLastEventId, pollingWaker, pumpEventStream, redisWaker } from './sse.js';
 import { requirePrincipal } from '../auth/middleware.js';
@@ -42,7 +42,7 @@ export interface ConversationRouteDeps {
   readonly ssePollIntervalMs?: number;
   /** Work Context。chat lane の問いに、関連する案件だけを `<work_context>` として添える（正本 §6、上限つき）。 */
   readonly work?: WorkContextService;
-  /** Astra 自身の task・会議を artifact として足す（work routes と同じもの）。 */
+  /** Genie 自身の task・会議を artifact として足す（work routes と同じもの）。 */
   readonly extraArtifacts?: (tenantId: string) => Promise<WorkArtifact[]>;
 }
 

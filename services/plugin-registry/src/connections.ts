@@ -9,13 +9,13 @@
  *     何も起きないのと、繋がっていないのは違う
  */
 import {
-  AstraError,
+  GenieError,
   looksLikeCredential,
   uuidv7,
   type ConnectorDecl,
   type PluginManifest,
-} from '@astra/contracts';
-import { withSystem, withTenant, type DbHandle } from '@astra/db';
+} from '@genie/contracts';
+import { withSystem, withTenant, type DbHandle } from '@genie/db';
 
 export type ConnectionState = 'CONNECTED' | 'EXPIRED' | 'REVOKED' | 'ERROR';
 
@@ -64,7 +64,7 @@ export class ConnectionService {
    */
   async connect(input: ConnectInput): Promise<Connection> {
     if (looksLikeCredential(input.credentialRef)) {
-      throw new AstraError(
+      throw new GenieError(
         'common.validation_failed',
         'a connection stores a reference to a credential, never the credential itself',
       );
@@ -156,7 +156,7 @@ export class ConnectionService {
         .executeTakeFirst(),
     );
     if (Number(result.numUpdatedRows) === 0) {
-      throw new AstraError('plugin.not_found', 'no such connection');
+      throw new GenieError('plugin.not_found', 'no such connection');
     }
   }
 
@@ -171,17 +171,17 @@ export class ConnectionService {
     const connection = rows.find((c) => c.connectorId === connectorId);
 
     if (!connection) {
-      throw new AstraError('host.not_connected', `${pluginId}/${connectorId} is not connected yet`);
+      throw new GenieError('host.not_connected', `${pluginId}/${connectorId} is not connected yet`);
     }
     if (connection.state !== 'CONNECTED') {
-      throw new AstraError(
+      throw new GenieError(
         'host.not_connected',
         `${pluginId}/${connectorId} is ${connection.state.toLowerCase()}`,
       );
     }
     if (connection.expiresAt && Date.parse(connection.expiresAt) <= this.#now().getTime()) {
       // 期限切れを「繋がっている」と言わない
-      throw new AstraError('host.not_connected', `${pluginId}/${connectorId} has expired`);
+      throw new GenieError('host.not_connected', `${pluginId}/${connectorId} has expired`);
     }
     return connection;
   }
@@ -218,13 +218,13 @@ export class ConnectionService {
         .where('plugins.id', '=', pluginId)
         .executeTakeFirst(),
     );
-    if (!row) throw new AstraError('plugin.not_found', `no plugin ${pluginId}`);
+    if (!row) throw new GenieError('plugin.not_found', `no plugin ${pluginId}`);
 
     const manifest = row.manifest as unknown as PluginManifest;
     const decl = manifest.connectors.find((c) => c.id === connectorId);
     // 宣言していない connector には繋がない
     if (!decl) {
-      throw new AstraError(
+      throw new GenieError(
         'plugin.not_found',
         `${pluginId} does not declare a connector "${connectorId}"`,
       );

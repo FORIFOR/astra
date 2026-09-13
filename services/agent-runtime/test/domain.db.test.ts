@@ -1,10 +1,10 @@
 /**
  * DomainService の DB 側。Phase 5 実装仕様 §3。
- *   ./infra/db/with-test-db.sh pnpm --filter @astra/service-agent-runtime test
+ *   ./infra/db/with-test-db.sh pnpm --filter @genie/service-agent-runtime test
  */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { uuidv7 } from '@astra/contracts';
-import { createDb, withIdentity, withSystem, type DbHandle } from '@astra/db';
+import { uuidv7 } from '@genie/contracts';
+import { createDb, withIdentity, withSystem, type DbHandle } from '@genie/db';
 import { DomainService } from '../src/domain.js';
 import { SALES_CRM_ENTITIES, nextBestActions, pipelineSummary } from '../src/sales-crm.js';
 
@@ -57,7 +57,7 @@ describe.skipIf(!url)('DomainService', () => {
     await withSystem(db, (tx) =>
       tx
         .insertInto('plugin_publishers')
-        .values({ id: 'astra', display_name: 'Astra', public_key: '', verified: true })
+        .values({ id: 'astra', display_name: 'Genie', public_key: '', verified: true })
         .onConflict((oc) => oc.column('id').doNothing())
         .execute(),
     );

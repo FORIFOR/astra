@@ -23,8 +23,8 @@ import {
   type ReplyCandidate,
   type ReplyPack,
   type ReplyResolution,
-} from '@astra/contracts';
-import { withTenant, type DbHandle } from '@astra/db';
+} from '@genie/contracts';
+import { withTenant, type DbHandle } from '@genie/db';
 import { sql } from 'kysely';
 import { buildWorkContext, clusterProjects } from './graph.js';
 import { buildMeetingBrief } from './meeting-brief.js';
@@ -299,7 +299,7 @@ export class WorkContextService {
     return this.personalization(tenantId, userId);
   }
 
-  /** Home に出す全体。追加の artifact（Astra の task / 会議）は呼び出し側が足せる。 */
+  /** Home に出す全体。追加の artifact（Genie の task / 会議）は呼び出し側が足せる。 */
   async context(
     tenantId: string,
     userId: string,

@@ -21,7 +21,7 @@ import {
   sourceQuality,
   type ScoredCandidate,
   type SearchHit,
-} from '@astra/service-research';
+} from '@genie/service-research';
 
 const NOW = new Date('2026-08-27T00:00:00.000Z');
 

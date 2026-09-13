@@ -263,7 +263,7 @@ export class GmailConnector {
    * 捨てる。**人の承認が要る。**
    *
    * ゴミ箱へ移すだけで、消しはしない（`messages.delete` は使わない）。
-   * 完全な削除は取り返しがつかず、Astra が代わりに決めてよいことではない。
+   * 完全な削除は取り返しがつかず、Genie が代わりに決めてよいことではない。
    */
   async trash(
     messageId: string,

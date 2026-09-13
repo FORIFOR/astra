@@ -4,19 +4,19 @@
 
 目的を伝え、接続したAIと仕事を進め、結果を次の作業で使えるように残すMacアプリです。メモを行動計画に、Webサイトの文章を改善案に、アイデアを小さなHTMLの試作に。Workで開き直し、コピーやMarkdown保存で持ち出せます。
 
-旧名称はAstraです。リポジトリ名と現在の配布アプリ名にはAstraが残っています。
+旧名称はAstraです。アプリ、配布物、リポジトリはGenieに統一しました。既存の設定とアカウントは引き継げます。
 
 **Mac版プレビューのテスターを募集しています。** ひとつの仕事を試し、最初につまずいたところを教えてください。セットアップで止まった報告も歓迎です。事前登録・メールアドレスの登録は不要。報告時だけGitHubアカウントを使います。
 
-**[テスターとして試す →](TESTING.ja.md)** · [結果・つまずきを報告](https://github.com/FORIFOR/astra/issues/new?template=tester_feedback.yml) · [English](../README.md)
+**[テスターとして試す →](TESTING.ja.md)** · [結果・つまずきを報告](https://github.com/FORIFOR/genie/issues/new?template=tester_feedback.yml) · [English](../README.md)
 
 ## まず実演を見る
 
 | 仕事                | 実演                                                                                                                                        | 確認できること                                           |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
-| 小さな試作をつくる  | [33秒の動画](https://astra-forifor.forifor.chatgpt.site/ja#demo)・[宇宙の試作を触る](https://astra-forifor.forifor.chatgpt.site/orbit.html) | HTMLを生成・保存し、取り出したHTMLを外部ブラウザで開く。 |
-| Webの言葉を改善する | [30秒の動画](https://astra-forifor.forifor.chatgpt.site/ja#proposal)                                                                        | ローカルモデルで、架空のWebサイトの文章改善案をつくる。  |
-| 次の一手を決める    | [42秒の動画](https://astra-forifor.forifor.chatgpt.site/ja#priorities)                                                                      | 架空のダッシュボードから次の行動を考え、結果を保存する。 |
+| 小さな試作をつくる  | [33秒の動画](https://genie-forifor.forifor.chatgpt.site/ja#demo)・[宇宙の試作を触る](https://genie-forifor.forifor.chatgpt.site/orbit.html) | HTMLを生成・保存し、取り出したHTMLを外部ブラウザで開く。 |
+| Webの言葉を改善する | [30秒の動画](https://genie-forifor.forifor.chatgpt.site/ja#proposal)                                                                        | ローカルモデルで、架空のWebサイトの文章改善案をつくる。  |
+| 次の一手を決める    | [42秒の動画](https://genie-forifor.forifor.chatgpt.site/ja#priorities)                                                                      | 架空のダッシュボードから次の行動を考え、結果を保存する。 |
 
 実際のアプリを収録し、待機時間は短縮しています。回答の品質・速度はモデルによって変わります。自動デプロイやSNS投稿、ビジネス成果を保証する実演ではありません。
 
@@ -36,6 +36,6 @@ Ollama、対応API、Codex、Claude Codeを選択できます。明示的に選�
 
 録音・ライブ文字起こし・外部サービス連携には追加設定が必要です。最初の文章テストには不要です。製品全体のリリース判定と、開発者向けプレビューの公開は別に管理しています。
 
-使いたい場面があれば、[活用提案・チームでの試験導入](https://github.com/FORIFOR/astra/issues/new?template=workflow.yml)も歓迎します。公開Issueには機密情報や認証情報を含めないでください。役立ちそうならGitHubのスターで応援してください。
+使いたい場面があれば、[活用提案・チームでの試験導入](https://github.com/FORIFOR/genie/issues/new?template=workflow.yml)も歓迎します。公開Issueには機密情報や認証情報を含めないでください。役立ちそうならGitHubのスターで応援してください。
 
 プロジェクト全体のオープンソースライセンスは未設定です。コードの公開だけでライセンスが付与されるわけではありません。外部コンポーネントには、それぞれのライセンスが適用されます。

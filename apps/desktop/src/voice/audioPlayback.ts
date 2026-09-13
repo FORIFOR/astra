@@ -1,5 +1,5 @@
 /** Google TTS の LINEAR16 を Web Audio で再生し、Orb 用の実音量を測る。 */
-import type { VoiceSynthesisResponse } from '@astra/contracts';
+import type { VoiceSynthesisResponse } from '@genie/contracts';
 
 interface Pcm16 {
   readonly samples: Float32Array<ArrayBuffer>;

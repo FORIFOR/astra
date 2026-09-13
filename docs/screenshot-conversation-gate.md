@@ -5,8 +5,8 @@
 
 | 測定器                                     | 何を測るか                                                                         |
 | ------------------------------------------ | ---------------------------------------------------------------------------------- |
-| `AstraMac --selftest screenshotcontext`    | 検知・分類・会話紐付け・参照解決・キャッシュの規律・path traversal                 |
-| `AstraMac --selftest screenshotegress`     | 画像の行き先（SCREENSHOT_EGRESS_TRUTH）                                            |
+| `GenieMac --selftest screenshotcontext`    | 検知・分類・会話紐付け・参照解決・キャッシュの規律・path traversal                 |
+| `GenieMac --selftest screenshotegress`     | 画像の行き先（SCREENSHOT_EGRESS_TRUTH）                                            |
 | `scripts/reality/run-screenshot-e2e.sh`    | 実 gateway + 実 task worker + 実 agent-host + 実 Claude Code CLI + 実 PNG（nonce） |
 | `scripts/reality/run-unattended-verify.sh` | TCC を含む verify-all の無人実行（**AUTOMATION_MISSING**、測定器を作る）           |
 

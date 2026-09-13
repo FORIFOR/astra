@@ -63,7 +63,7 @@ fn frontmost_app() -> Option<String> {
 /// 前面アプリを含む最小の文脈を返す。
 ///
 /// 取れなかった項目は None のままにする。**推測で埋めない。**
-/// Context Lens は「Astra が実際に見たもの」を映す面なので、
+/// Context Lens は「Genie が実際に見たもの」を映す面なので、
 /// 埋め草を入れるとその意味が壊れる。
 #[tauri::command]
 pub fn context_snapshot() -> LocalContext {

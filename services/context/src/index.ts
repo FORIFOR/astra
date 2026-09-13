@@ -1,5 +1,5 @@
 /**
- * @astra/service-context
+ * @genie/service-context
  *
  * Context Engine。正本 §6。**raw なローカルデータをそのまま外へ出さない。**
  * 実装仕様: docs/spec/phase-7-implementation-spec.md

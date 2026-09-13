@@ -14,10 +14,10 @@ import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { TestWorkflowEnvironment } from '@temporalio/testing';
 import type { Worker } from '@temporalio/worker';
-import { uuidv7 } from '@astra/contracts';
-import { createDb, withIdentity, withTenant, type DbHandle } from '@astra/db';
-import { FsObjectStore, LibraryService } from '@astra/service-library';
-import { createTaskWorker, type TaskResult } from '@astra/service-task';
+import { uuidv7 } from '@genie/contracts';
+import { createDb, withIdentity, withTenant, type DbHandle } from '@genie/db';
+import { FsObjectStore, LibraryService } from '@genie/service-library';
+import { createTaskWorker, type TaskResult } from '@genie/service-task';
 
 const url = process.env['TEST_DATABASE_URL'];
 const identityUrl = process.env['TEST_IDENTITY_DATABASE_URL'];

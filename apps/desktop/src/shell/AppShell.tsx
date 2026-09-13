@@ -28,7 +28,7 @@ export function AppShell({
     // §7.2: desktop MVP の最低幅は 720px。無理に潰さず、必要な幅を伝える。
     return (
       <div className="astra-too-narrow" role="alert">
-        <p>Astra のデスクトップ画面には幅 720px 以上が必要です。</p>
+        <p>Genie のデスクトップ画面には幅 720px 以上が必要です。</p>
         <p>ウィンドウを広げてください。</p>
       </div>
     );
@@ -38,7 +38,7 @@ export function AppShell({
     <div
       className="astra-shell"
       data-layout={layout.mode}
-      style={{ ['--astra-sidebar-width' as string]: `${layout.sidebarWidth}px` }}
+      style={{ ['--genie-sidebar-width' as string]: `${layout.sidebarWidth}px` }}
     >
       <Sidebar />
       <div className="astra-shell__column">
@@ -49,7 +49,7 @@ export function AppShell({
         {/*
           §7.1 の Composer。**Main の下に置く。**
           Task Dock は別 window なので、本体を開いている人には見えない。
-          ここが無いと、Workspace から Astra へ話しかける口が一つも無くなる。
+          ここが無いと、Workspace から Genie へ話しかける口が一つも無くなる。
         */}
         {/* Home には §8 の「何を終わらせますか？」がある。同じ口を 2 つ並べない */}
         {activeTab !== 'home' && <Composer {...(conversation ? { conversation } : {})} />}

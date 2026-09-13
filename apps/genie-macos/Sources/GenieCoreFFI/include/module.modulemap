@@ -1,0 +1,4 @@
+module genie_coreFFI {
+    header "genie_coreFFI.h"
+    export *
+}

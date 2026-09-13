@@ -5,7 +5,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
-import type { ContextSource } from '@astra/contracts';
+import type { ContextSource } from '@genie/contracts';
 import { TaskDock } from '../src/dock/TaskDock.js';
 import { shortcuts } from '../src/host/tauri.js';
 
@@ -615,7 +615,7 @@ describe('the Orb is the entry (Deepgram floating-orb)', () => {
   it('shows the Orb while idle and starts listening when pressed', async () => {
     const user = userEvent.setup();
     render(<TaskDock dictation={voice} />);
-    const orb = screen.getByRole('button', { name: 'Astra に話しかける' });
+    const orb = screen.getByRole('button', { name: 'Genie に話しかける' });
     expect(orb.getAttribute('data-astra-voice-state')).toBe('idle');
     await user.click(orb);
     expect(
@@ -636,7 +636,7 @@ describe('Esc while listening (§4.4, privacy)', () => {
     const user = userEvent.setup();
     const stop = vi.fn(async () => {});
     render(<TaskDock dictation={{ async start() {}, stop }} />);
-    await user.click(screen.getByRole('button', { name: 'Astra に話しかける' }));
+    await user.click(screen.getByRole('button', { name: 'Genie に話しかける' }));
     const dock = screen.getByLabelText('依頼を入力').closest('.astra-dock') as HTMLElement;
     expect(dock.dataset['state']).toBe('LISTENING');
     await user.keyboard('{Escape}');

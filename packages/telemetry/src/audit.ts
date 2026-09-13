@@ -16,7 +16,7 @@
  * 定期的に最新 hash を外部（別システム / WORM ストレージ）へ固定する運用が要る。
  * Phase 0 の範囲外（実装仕様 §18 OQ-10）。
  */
-import { canonicalSha256, uuidv7, type Sha256Hex } from '@astra/contracts';
+import { canonicalSha256, uuidv7, type Sha256Hex } from '@genie/contracts';
 import { sql, type ScopedDb } from './db.js';
 
 /** 監査必須イベント。実装仕様 §13.2。 */

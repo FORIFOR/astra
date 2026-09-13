@@ -1,16 +1,16 @@
 /**
- * Astra の許可と、Google の scope URL の対応。正本 §21。
+ * Genie の許可と、Google の scope URL の対応。正本 §21。
  *
  * **翻訳を 1 箇所に置く。**散らばると、要求した scope と記録した許可が
  * ずれても誰も気づかない。「送信を許した覚えはないのに送れる」はこの隙間から生まれる。
  *
  * 対応は片方向ではない。
- *   Astra → Google  … 何を要求するか
- *   Google → Astra  … 実際に何が許されたか（**同意画面で外された分を落とす**）
+ *   Genie → Google  … 何を要求するか
+ *   Google → Genie  … 実際に何が許されたか（**同意画面で外された分を落とす**）
  */
-import type { PermissionScope } from '@astra/contracts';
+import type { PermissionScope } from '@genie/contracts';
 
-/** Astra の許可 1 つに要る Google scope。 */
+/** Genie の許可 1 つに要る Google scope。 */
 const GRANTS: Readonly<Partial<Record<PermissionScope, string>>> = {
   'email.read': 'https://www.googleapis.com/auth/gmail.readonly',
   // 下書きは compose。send を含まない — これが分割の要。
@@ -68,7 +68,7 @@ export function googleScopesFor(permissions: readonly PermissionScope[]): string
 }
 
 /**
- * 同意画面の結果から、実際に許された Astra の許可を出す。
+ * 同意画面の結果から、実際に許された Genie の許可を出す。
  *
  * Google は許された scope を空白区切りで返す。**要求した一覧ではなく、これを使う。**
  * 利用者は同意画面で一部だけ外せる。要求を根拠にすると、
@@ -99,7 +99,7 @@ export function withheldPermissions(
 // ------------------------------------------------------------ Microsoft
 
 /**
- * Astra の許可 1 つに要る Microsoft Graph scope。**読むものだけ。**
+ * Genie の許可 1 つに要る Microsoft Graph scope。**読むものだけ。**
  *
  * Work Context は読むだけで成り立つ。送る・書くは別の許可で、
  * 別の同意画面を通す（正本 §21、Work Context 仕様「read-only scopes first」）。
@@ -149,7 +149,7 @@ export function microsoftScopesFor(permissions: readonly PermissionScope[]): str
   return out.length === 0 ? [] : [...out, MICROSOFT_OFFLINE_SCOPE].sort();
 }
 
-/** 同意画面の結果（空白区切り）から、実際に許された Astra の許可を出す。 */
+/** 同意画面の結果（空白区切り）から、実際に許された Genie の許可を出す。 */
 export function permissionsFromMicrosoftScopes(granted: string): PermissionScope[] {
   const scopes = new Set(granted.split(/\s+/).filter((s) => s.length > 0));
   const out = new Set<PermissionScope>();

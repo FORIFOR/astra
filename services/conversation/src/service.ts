@@ -4,7 +4,7 @@
  * 会話そのものは DB が正本。**打ち切っても出した分は消さない**（D-50）。
  */
 import {
-  AstraError,
+  GenieError,
   COMPACTION_BATCH,
   RECENT_TURN_WINDOW,
   uuidv7,
@@ -13,9 +13,9 @@ import {
   type Modality,
   type Referent,
   type Turn,
-} from '@astra/contracts';
-import { withTenant, type DbHandle } from '@astra/db';
-import { readEventsAfter } from '@astra/service-task';
+} from '@genie/contracts';
+import { withTenant, type DbHandle } from '@genie/db';
+import { readEventsAfter } from '@genie/service-task';
 
 export interface ConversationDeps {
   readonly db: DbHandle;
@@ -86,7 +86,7 @@ export class ConversationService {
         .executeTakeFirst(),
     );
     // 別テナントの会話は「無い」（AC7-10）
-    if (!row) throw new AstraError('common.not_found', 'conversation not found');
+    if (!row) throw new GenieError('common.not_found', 'conversation not found');
     return toState(row);
   }
 

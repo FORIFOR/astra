@@ -1,5 +1,5 @@
 {
-  "name": "@astra/worker-research",
+  "name": "@genie/worker-research",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -21,10 +21,10 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@astra/agent-sdk": "workspace:*",
-    "@astra/contracts": "workspace:*",
-    "@astra/telemetry": "workspace:*",
-    "@astra/service-task": "workspace:*"
+    "@genie/agent-sdk": "workspace:*",
+    "@genie/contracts": "workspace:*",
+    "@genie/telemetry": "workspace:*",
+    "@genie/service-task": "workspace:*"
   },
   "devDependencies": {
     "vitest": "catalog:"

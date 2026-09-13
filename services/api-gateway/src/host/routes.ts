@@ -5,14 +5,14 @@
  * （漏れた REST 用トークンで OS 操作が走らないようにするため）。
  */
 import {
-  AstraError,
+  GenieError,
   type AccessTokenClaims,
   HOST_HEARTBEAT_INTERVAL_MS,
   HOST_HEARTBEAT_TIMEOUT_MS,
   HOST_PROTOCOL,
   HostMessage,
-} from '@astra/contracts';
-import type { Logger } from '@astra/telemetry';
+} from '@genie/contracts';
+import type { Logger } from '@genie/telemetry';
 import type { App } from '../fastify.js';
 import { bearerToken, type TokenVerifier } from '../auth/tokens.js';
 import type { HostBridge, HostSocket } from './bridge.js';
@@ -176,6 +176,6 @@ export function registerHostRoutes(app: App, deps: HostRouteDeps): void {
 /** テストと診断用。Phase 0 のホストが申告すべき最小集合。 */
 export function assertPhase0Capability(capability: string): void {
   if (capability !== 'host.ping' && capability !== 'host.system.info') {
-    throw new AstraError('host.capability_denied', `${capability} is not available in Phase 0`);
+    throw new GenieError('host.capability_denied', `${capability} is not available in Phase 0`);
   }
 }

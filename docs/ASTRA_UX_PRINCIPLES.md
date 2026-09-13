@@ -1,9 +1,9 @@
-# Astra UX の 6 原則
+# Genie UX の 6 原則
 
 **迷ったらここへ戻る。** どれかを破る変更は、破る理由を書いてから入れる。
 
 VoiceOS の写しと SuperIntern の写しを足しても、最も優れた UI にはならない。
-Astra が強くなるのは、片方では Voice Agent、片方では Meeting Agent だったものが、
+Genie が強くなるのは、片方では Voice Agent、片方では Meeting Agent だったものが、
 **一つの Ambient Work Surface** になるところ。
 
 ---

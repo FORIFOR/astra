@@ -1,10 +1,10 @@
 /**
- * @astra/api-client
+ * @genie/api-client
  *
- * `@astra/contracts` に対する HTTP / SSE クライアント。
+ * `@genie/contracts` に対する HTTP / SSE クライアント。
  * 応答は必ずスキーマで検証してから返す（実装仕様 §11、逸脱 D-20）。
  */
-export { AstraClient, type Page, type TaskView } from './client.js';
+export { GenieClient, type Page, type TaskView } from './client.js';
 export { HttpClient, type ClientConfig, type RequestOptions } from './http.js';
 export {
   streamMeetingEvents,

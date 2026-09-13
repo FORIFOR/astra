@@ -1,6 +1,6 @@
 import { afterAll, describe, expect, it } from 'vitest';
 import { Redis } from 'ioredis';
-import { uuidv7 } from '@astra/contracts';
+import { uuidv7 } from '@genie/contracts';
 import { MemoryRateLimiter } from '../src/rate-limit/memory.js';
 import { RedisRateLimiter } from '../src/rate-limit/redis.js';
 import { normalizeRequestId } from '../src/plugins/request-id.js';

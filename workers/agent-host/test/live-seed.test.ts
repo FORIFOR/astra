@@ -1,10 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { TokenStore } from '@astra/oauth';
+import { TokenStore } from '@genie/oauth';
 import { cleanup, seedGoogle, seedMicrosoft, type Seeded } from '../src/live-seed.js';
 import { liveFixture } from '../src/live-fixture.js';
 
-vi.mock('@astra/oauth', async (original) => ({
-  ...(await original<typeof import('@astra/oauth')>()),
+vi.mock('@genie/oauth', async (original) => ({
+  ...(await original<typeof import('@genie/oauth')>()),
   refresh: vi.fn(async (config: { scopes: readonly string[] }) => ({
     accessToken: 'test-only-access',
     grantedScopes: config.scopes,

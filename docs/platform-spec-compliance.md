@@ -41,7 +41,7 @@ mock と real を分け、未検証は「未検証」と書く。
 - **復帰手順**: Docker 復旧後に
   `mv docs/pending-migrations/20260829010000_world_embeddings.sql infra/db/migrations/` →
   `pnpm dev:infra` → `pnpm db:migrate`（schema.sql を再ダンプ）→
-  `./infra/db/with-test-db.sh pnpm --filter @astra/service-api-gateway test` で
+  `./infra/db/with-test-db.sh pnpm --filter @genie/service-api-gateway test` で
   SSE 統合テストと合わせて実測できる。
 
 ## 未達（実装方針の相違・要判断）

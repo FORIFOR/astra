@@ -9,9 +9,9 @@ import { mkdtemp, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import type { WorkContext } from '@astra/contracts';
+import type { WorkContext } from '@genie/contracts';
 import { FileSecretStore, keychainFor } from '../src/keychain.js';
-import type { MeetingBrief } from '@astra/contracts';
+import type { MeetingBrief } from '@genie/contracts';
 import {
   checkBrief,
   checkHome,

@@ -4,7 +4,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import { createLevelStore, displayedText, foldTranscript } from '../src/voice/voiceRuntime.js';
-import { orbStateFor } from '../src/voice/AstraOrb.js';
+import { orbStateFor } from '../src/voice/GenieOrb.js';
 
 describe('levels the orb reads', () => {
   it('clamps to 0–1 and never throws on garbage', () => {

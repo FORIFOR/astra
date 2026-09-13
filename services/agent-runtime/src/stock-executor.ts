@@ -4,7 +4,7 @@
  * **既定は research / draft order のみ。**証券会社への発注は、
  * 接続先が決まるまで置かない（tool そのものが無い）。
  */
-import { AstraError } from '@astra/contracts';
+import { GenieError } from '@genie/contracts';
 import type { DomainService } from './domain.js';
 import {
   concentration,
@@ -129,12 +129,12 @@ export function stockExecutors(domain: DomainService): Record<string, Executor> 
            * **欠けたまま確認だけ取らない。**
            * 読み上げに「未入力」が混ざったら、それは読み上げになっていない。
            */
-          throw new AstraError('common.validation_failed', problems.join(' / '));
+          throw new GenieError('common.validation_failed', problems.join(' / '));
         }
 
         const note = asString(value(input, step, 'note'));
         if (note !== null && containsRecommendation(note)) {
-          throw new AstraError(
+          throw new GenieError(
             'common.validation_failed',
             'この下書きに売買の推奨が含まれています',
           );

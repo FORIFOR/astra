@@ -1,5 +1,5 @@
 {
-  "name": "@astra/service-api-gateway",
+  "name": "@genie/service-api-gateway",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -23,14 +23,14 @@
     "start": "node dist/server.js"
   },
   "dependencies": {
-    "@astra/contracts": "workspace:*",
-    "@astra/db": "workspace:*",
-    "@astra/policy": "workspace:*",
-    "@astra/service-library": "workspace:*",
-    "@astra/service-plugin-registry": "workspace:*",
-    "@astra/service-task": "workspace:*",
-    "@astra/telemetry": "workspace:*",
-    "@astra/tts": "workspace:*",
+    "@genie/contracts": "workspace:*",
+    "@genie/db": "workspace:*",
+    "@genie/policy": "workspace:*",
+    "@genie/service-library": "workspace:*",
+    "@genie/service-plugin-registry": "workspace:*",
+    "@genie/service-task": "workspace:*",
+    "@genie/telemetry": "workspace:*",
+    "@genie/tts": "workspace:*",
     "@fastify/cors": "^11.3.0",
     "@fastify/websocket": "^11.3.0",
     "fastify": "^5.12.1",
@@ -38,20 +38,20 @@
     "jose": "^6.2.10",
     "kysely": "catalog:",
     "zod": "catalog:",
-    "@astra/service-share": "workspace:*",
-    "@astra/service-meeting": "workspace:*",
-    "@astra/service-research": "workspace:*",
-    "@astra/service-world-model": "workspace:*",
-    "@astra/service-conversation": "workspace:*",
-    "@astra/service-context": "workspace:*",
-    "@astra/service-capabilities": "workspace:*",
-    "@astra/service-agent-runtime": "workspace:*",
-    "@astra/service-agent-host": "workspace:*"
+    "@genie/service-share": "workspace:*",
+    "@genie/service-meeting": "workspace:*",
+    "@genie/service-research": "workspace:*",
+    "@genie/service-world-model": "workspace:*",
+    "@genie/service-conversation": "workspace:*",
+    "@genie/service-context": "workspace:*",
+    "@genie/service-capabilities": "workspace:*",
+    "@genie/service-agent-runtime": "workspace:*",
+    "@genie/service-agent-host": "workspace:*"
   },
   "devDependencies": {
     "@types/ws": "^8.18.1",
     "vitest": "catalog:",
     "ws": "^8.21.3",
-    "@astra/plugin-sdk": "workspace:*"
+    "@genie/plugin-sdk": "workspace:*"
   }
 }

@@ -1,7 +1,7 @@
 /**
  * 言語モデルの持ち込み。正本 §21、UI/UX §22。
  *
- * **Astra は共通の API キーを持たない。**利用者が自分の利用権を持ち込む。
+ * **Genie は共通の API キーを持たない。**利用者が自分の利用権を持ち込む。
  *
  *   1. Claude Code を繋いでいる → 端末の Claude Code を subprocess で呼ぶ
  *   2. 自分の API キーを登録している → そのキーで呼ぶ
@@ -42,7 +42,7 @@ export const LANGUAGE_MODEL_LABEL: Readonly<Record<LanguageModelKind, string>> =
 /**
  * どこに資格情報があるか。**サーバに置く選択肢を作らない。**
  *
- *   - `claude_code`: Astra は持たない。Claude Code が自分で持っている
+ *   - `claude_code`: Genie は持たない。Claude Code が自分で持っている
  *   - `keychain`: 端末の資格情報ストア。サーバへは参照だけ
  */
 export const CREDENTIAL_LOCATIONS = ['claude_code', 'codex', 'keychain', 'none'] as const;
@@ -65,7 +65,7 @@ export type LanguageModelOption = z.infer<typeof LanguageModelOption>;
  * 選ぶ順。**上から順に、使えるものを採る。**
  *
  * Claude Code を先にするのは、利用者が既に払っている利用権をそのまま使えるため。
- * API キーより手数が少なく、Astra がキーを預からずに済む。
+ * API キーより手数が少なく、Genie がキーを預からずに済む。
  */
 export const SELECTION_ORDER: readonly LanguageModelKind[] = [
   'claude_code',
@@ -97,7 +97,7 @@ export function isAllowedCredentialLocation(
   location: CredentialLocation,
 ): boolean {
   if (kind === 'claude_code') {
-    // Claude Code の資格情報は Claude Code のもの。Astra は持たない。
+    // Claude Code の資格情報は Claude Code のもの。Genie は持たない。
     return location === 'claude_code';
   }
   if (kind === 'codex') return location === 'codex';

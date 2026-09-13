@@ -28,7 +28,7 @@ for script in scripts/package-macos-app.sh scripts/build-macos-app.sh scripts/re
 done
 
 # .appを経由しないdebug selftestにも同じ用途説明が必要。
-DEBUG_PLIST="$ROOT/apps/astra-macos/Support/SelfTest-Info.plist"
+DEBUG_PLIST="$ROOT/apps/genie-macos/Support/SelfTest-Info.plist"
 for key in "${NEEDED[@]}"; do
   value="$(/usr/libexec/PlistBuddy -c "Print :$key" "$DEBUG_PLIST" 2>/dev/null || true)"
   if [[ -z "$value" ]]; then
@@ -38,7 +38,7 @@ for key in "${NEEDED[@]}"; do
 done
 
 # 実際にビルド済みの .app があれば、そちらも見る（配布物が正）。
-APP="$ROOT/apps/astra-macos/.build/Astra.app"
+APP="$ROOT/apps/genie-macos/.build/Genie.app"
 if [[ -f "$APP/Contents/Info.plist" ]]; then
   for key in "${NEEDED[@]}"; do
     if ! /usr/libexec/PlistBuddy -c "Print :$key" "$APP/Contents/Info.plist" >/dev/null 2>&1; then

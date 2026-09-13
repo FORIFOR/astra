@@ -1,7 +1,7 @@
 /**
  * 手元の実行基盤。正本 §4.4・§16.1。
  *
- *   ./infra/db/with-test-db.sh pnpm --filter @astra/service-agent-host test
+ *   ./infra/db/with-test-db.sh pnpm --filter @genie/service-agent-host test
  *
  * ここで守りたいのは 4 つ:
  *   - 同じ仕事を二重に走らせない
@@ -10,8 +10,8 @@
  *   - 端末が落ちても FAILED にしない
  */
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { HOST_OFFLINE_AFTER_MS, uuidv7 } from '@astra/contracts';
-import { createDb, withIdentity, withSystem, withTenant, type DbHandle } from '@astra/db';
+import { HOST_OFFLINE_AFTER_MS, uuidv7 } from '@genie/contracts';
+import { createDb, withIdentity, withSystem, withTenant, type DbHandle } from '@genie/db';
 import { AgentHostService } from '../src/service.js';
 
 const url = process.env['TEST_DATABASE_URL'];

@@ -1,5 +1,5 @@
 /**
- * @astra/service-task
+ * @genie/service-task
  *
  * タスクのライフサイクル、Temporal 連携、進捗。実装仕様 §6・§11。
  */

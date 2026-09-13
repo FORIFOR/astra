@@ -1,6 +1,6 @@
-# Astra Context Bridge（Chrome 拡張）
+# Genie Context Bridge（Chrome 拡張）
 
-仕様書 §9 / §10。ブラウザでしか取れない文脈（Notion / Gmail など）を Astra に渡す。
+仕様書 §9 / §10。ブラウザでしか取れない文脈（Notion / Gmail など）を Genie に渡す。
 
 ## 送るもの・送らないもの
 
@@ -20,7 +20,7 @@
 ## 入れ方（ユーザー操作が要る）
 
 拡張のインストールと Native Messaging host の登録は、ブラウザの設定変更なので
-**利用者自身が行う**。Astra は自動では入れない。
+**利用者自身が行う**。Genie は自動では入れない。
 
 1. `chrome://extensions` → デベロッパーモード → 「パッケージ化されていない拡張機能を読み込む」
    → `apps/browser-extension` を選ぶ
@@ -31,10 +31,10 @@
 scripts/install-native-messaging-host.sh <拡張ID>
 ```
 
-4. Astra を再起動する
+4. Genie を再起動する
 
 ## 検証
 
-host 側（Astra）のプロトコルと Notion Adapter は
-`AstraMac --selftest browser` で検査している（ブラウザ無しで走る）。
+host 側（Genie）のプロトコルと Notion Adapter は
+`GenieMac --selftest browser` で検査している（ブラウザ無しで走る）。
 拡張を入れた実ブラウザとの往復は、上の手順を踏むまで **external verification pending**。

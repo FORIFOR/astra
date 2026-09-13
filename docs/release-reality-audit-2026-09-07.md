@@ -9,7 +9,7 @@ Offline の成功や資格情報の存在を Live の成功に読み替えない
 - 実装は `main` ではなく `.claude/worktrees/ui-atlas-review`、ブランチ `rc/atlas-61`。
 - HEAD: `8b6bdf771888a0e5b12834065b742569e9ef2c31`。
 - 作業開始時点から `workers/agent-host/src/work-sync.ts` に未コミット変更あり。既存変更を保持し、欠けていたbackoffメソッドと回帰試験を追加した。
-- 保存済み `apps/astra-macos/.build/Astra.app` の実行体 SHA-256:
+- 保存済み `apps/genie-macos/.build/Genie.app` の実行体 SHA-256:
   `26c7407013bf255b4544371f9ee93243b5696acd35ebedd21536f524df327cc7`。
 - `codesign --verify --deep --strict` は終了0。ただし **Apple Development 署名**。
 - `xcrun stapler validate` は終了65、ticket なし。
@@ -104,12 +104,12 @@ Google → Microsoft → recovery → Real Meet → TCC → keyboard/VO → exac
 
 配布スクリプトのCPU別ビルド出力、ライブゲートのcleanup、確認ゲートの終了状態を修正した後、同じRCから配布物を作り直した。
 
-- `dist/Astra.app` は Developer ID Application（Shuhei Horio）で署名し、hardened runtime と deep strict 検証に成功。
+- `dist/Genie.app` は Developer ID Application（Shuhei Horio）で署名し、hardened runtime と deep strict 検証に成功。
 - 公証 submission `2badcbd5-2e70-4f15-bc95-9adb09bd9af8` は Apple の `Accepted`。staple と `xcrun stapler validate` に成功。
-- `spctl --assess --type execute --verbose=4 dist/Astra.app` は `accepted` / `source=Notarized Developer ID`。
+- `spctl --assess --type execute --verbose=4 dist/Genie.app` は `accepted` / `source=Notarized Developer ID`。
 - `scripts/verify-release-artifact.sh` は初回起動、DB生成、録音の強制終了後復旧、inspect、resume、finish、ready残存まで成功。
 - 配布ZIP SHA-256: `adbfee872513810ad298198f83cbc0236503734db29e688c5c76d4bbaaec10a1`。
 - この結果により Release Artifact gate は PASS へ更新できる。ただし Google/Microsoft の実OAuth、Real Meeting、TCC専用ユーザー、Keyboard/VoiceOver、全Live Work Context閉ループは未測定または `AUTOMATION_MISSING` のままであり、総合判定は **RELEASE = NO-GO**。
 - `run-work-context-release-gate.sh` は同じRCで Offline 全項目 `PASS`。Live は両providerとも `AUTOMATION_MISSING`。
-- `run-real-meeting.sh dist/Astra.app` は BlackHole + `SwitchAudioSource` の実マイク経路で transcript similarity 0.90、decision 2/2、action 1/1、pause leakage 0、Library ready、source jump 0件を確認した（`REAL_MEETING_GATE=PARTIAL`）。`ASTRA_MEET_URL` / bot profile が無いため、実MeetのPASSには昇格しない。
+- `run-real-meeting.sh dist/Genie.app` は BlackHole + `SwitchAudioSource` の実マイク経路で transcript similarity 0.90、decision 2/2、action 1/1、pause leakage 0、Library ready、source jump 0件を確認した（`REAL_MEETING_GATE=PARTIAL`）。`ASTRA_MEET_URL` / bot profile が無いため、実MeetのPASSには昇格しない。
 - `verify-macos-recording.sh` は合成ディスク録音・復旧などを通過したが、E2E-001実キャプチャは終了134（TCC/実環境の未解決）であり、合成結果へ読み替えない。

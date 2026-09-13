@@ -11,7 +11,7 @@ rc-fingerprint.json）。ここから docs/ui-atlas/ に
     strips/<id>.png     60fps の frame から T0 / +50 / +100 / +200 / final の 5 枚
     contact-sheet.png   全画面の一覧
     index.html          1 画面 1 ページ
-    Astra-UI-Atlas.pdf  index.html を Chrome headless で印刷
+    Genie-UI-Atlas.pdf  index.html を Chrome headless で印刷
     README.md
 
 を書く。画像は RC の描画だけ。manifest で capture が null の画面はそのまま残す（gate が落ちる）。
@@ -210,7 +210,7 @@ def write_html(m: dict, summary: dict) -> None:
     rc = m["rc"]
     groups = {g["id"]: g for g in m["groups"]}
     parts = [f"""<!doctype html><html lang="ja"><head><meta charset="utf-8">
-<title>Astra UI Atlas — RC {esc(rc['sha'])}</title>
+<title>Genie UI Atlas — RC {esc(rc['sha'])}</title>
 <style>
  body{{font-family:-apple-system,"Hiragino Sans","Hiragino Kaku Gothic ProN",sans-serif;color:#1d1d1f;margin:0;background:#fff}}
  .page{{page-break-after:always;padding:28px 36px;min-height:96vh;box-sizing:border-box}}
@@ -225,7 +225,7 @@ def write_html(m: dict, summary: dict) -> None:
  .cover td{{font-size:14px}} .ok{{color:#1b7f3b}} .ng{{color:#d0342c}}
 </style></head><body>"""]
     # 表紙
-    parts.append(f"""<div class="page"><h1>Astra UI Atlas — Visual Release Book</h1>
+    parts.append(f"""<div class="page"><h1>Genie UI Atlas — Visual Release Book</h1>
 <div class="sub">RC {esc(rc['sha'])} / exe sha256 <code>{esc(rc.get('exe_sha256','')[:16])}…</code> / built {esc(rc.get('built'))} / captured {esc(rc.get('captured_at'))} / {esc(rc.get('codesign_identifier'))} ({esc(rc.get('team'))})</div>
 <p>取扱説明書ではなく、<b>UI 設計の完成検査資料</b>。画像は全部、署名済み RC .app が描いたもの（モック・Figma 不可）。
 1 画面 1 ページ。各ページを KEEP / FIX / NOT_ENOUGH_EVIDENCE で採点し、全部 KEEP で VISUAL_IDEAL_GATE = PASS。</p>
@@ -289,7 +289,7 @@ def write_pdf() -> bool:
     if not os.path.exists(chrome):
         print("PDF: Chrome が無いので書かない", file=sys.stderr)
         return False
-    pdf = ATLAS / "Astra-UI-Atlas.pdf"
+    pdf = ATLAS / "Genie-UI-Atlas.pdf"
     pdf.unlink(missing_ok=True)
     with tempfile.TemporaryDirectory() as tmp:
         # headless Chrome は印刷後に居座ることがある（実際に起きた）。PDF が書けたら止める。
@@ -319,7 +319,7 @@ def write_pdf() -> bool:
 
 def write_readme(m: dict, summary: dict) -> None:
     rc = m["rc"]
-    lines = [f"# Astra UI Atlas — Visual Release Book (RC {rc['sha']})", "",
+    lines = [f"# Genie UI Atlas — Visual Release Book (RC {rc['sha']})", "",
              "取扱説明書ではない。**全 UI を RC .app の実画像で 1 画面 1 ページに固定し、ページ単位で KEEP / FIX / NOT_ENOUGH_EVIDENCE を出す**ための資料。",
              "画像は署名済み RC .app が `--selftest` で描いたものだけ。モック・Figma・別ビルドは入れない。", "",
              "```",
@@ -333,7 +333,7 @@ def write_readme(m: dict, summary: dict) -> None:
              f"appearance_policy fixed {len(summary['appearance_policy']['fixed'])} 面 / 違反 {len(summary['appearance_policy']['violations'])}（{', '.join(summary['appearance_policy']['violations']) or 'なし'}）",
              "```", "",
              "| ファイル | 中身 |", "|---|---|",
-             "| `Astra-UI-Atlas.pdf` | 1 画面 1 ページ。表紙に集計、末尾に strip と reality gate |",
+             "| `Genie-UI-Atlas.pdf` | 1 画面 1 ページ。表紙に集計、末尾に strip と reality gate |",
              "| `index.html` | PDF の元。ブラウザで開くと同じもの |",
              "| `contact-sheet.png` | 全画面の一覧（light）。赤枠は撮る経路が無い画面 |",
              "| `manifest.json` | 正本。説明は人が書き、image / sha256 / size / rc は build が埋める |",
@@ -354,7 +354,7 @@ def write_readme(m: dict, summary: dict) -> None:
         lines.append(f"| {r['gate']} | {r['status']} | `{r['where']}` |")
     lines += ["", "## 作り直し方", "",
               "```bash",
-              "bash scripts/ui-atlas/capture-rc.sh apps/astra-macos/.build/Astra.app /tmp/astra-atlas   # RC .app だけが描く",
+              "bash scripts/ui-atlas/capture-rc.sh apps/genie-macos/.build/Genie.app /tmp/astra-atlas   # RC .app だけが描く",
               "python3 scripts/ui-atlas/build.py /tmp/astra-atlas                                      # docs/ui-atlas/ を組む",
               "bash scripts/verify-ui-atlas.sh                                                          # UI_ATLAS_GATE",
               "```", "",

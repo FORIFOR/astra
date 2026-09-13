@@ -1,10 +1,10 @@
 /**
  * WorkContextService の DB 側。
- *   ./infra/db/with-test-db.sh pnpm --filter @astra/service-world-model test
+ *   ./infra/db/with-test-db.sh pnpm --filter @genie/service-world-model test
  */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { uuidv7, type WorkArtifact } from '@astra/contracts';
-import { createDb, withIdentity, type DbHandle } from '@astra/db';
+import { uuidv7, type WorkArtifact } from '@genie/contracts';
+import { createDb, withIdentity, type DbHandle } from '@genie/db';
 import { WorldModelService } from '../src/service.js';
 import { WorkContextService } from '../src/work/service.js';
 

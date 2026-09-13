@@ -6,8 +6,8 @@
  */
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
-import type { AstraClient, TaskView } from '@astra/api-client';
-import type { Artifact, DailyBrief } from '@astra/contracts';
+import type { GenieClient, TaskView } from '@genie/api-client';
+import type { Artifact, DailyBrief } from '@genie/contracts';
 
 interface WorkspaceDataValue {
   readonly tasks: readonly TaskView[];
@@ -26,7 +26,7 @@ export function WorkspaceDataProvider({
   client,
   children,
 }: {
-  client: AstraClient;
+  client: GenieClient;
   children: ReactNode;
 }): ReactElement {
   const [tasks, setTasks] = useState<readonly TaskView[]>([]);

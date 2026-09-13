@@ -1,4 +1,4 @@
-# Contributing to Astra
+# Contributing to Genie
 
 Start with a reproducible issue or a small workflow proposal. Please discuss larger changes before writing them, especially changes to permissions, external transmission, model routing, or the native interface.
 

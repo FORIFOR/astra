@@ -13,8 +13,8 @@
  * 「まだ実装していない」のか、利用者には区別が付かない。
  */
 import { useEffect, useMemo, useState, type ReactElement } from 'react';
-import type { Artifact, ContextSource } from '@astra/contracts';
-import type { AstraClient } from '@astra/api-client';
+import type { Artifact, ContextSource } from '@genie/contracts';
+import type { GenieClient } from '@genie/api-client';
 import { Receipts } from './Receipts.js';
 import { TaskEvidence } from './EvidenceLedger.js';
 import { formatElapsed, type WorkStep, type WorkView } from './workView.js';
@@ -129,7 +129,7 @@ function Outputs({
   artifacts,
   onOpenArtifact,
 }: {
-  client: AstraClient | null;
+  client: GenieClient | null;
   taskId: string;
   artifacts: readonly Artifact[] | null;
   onOpenArtifact?(artifactId: string): void;
@@ -214,7 +214,7 @@ export function WorkDetail({
 }: {
   view: WorkView;
   taskId: string;
-  client?: AstraClient | null;
+  client?: GenieClient | null;
   /** この仕事で使った情報。記録が無ければ空（推測で埋めない）。 */
   sources?: readonly ContextSource[];
   onOpenArtifact?(artifactId: string): void;

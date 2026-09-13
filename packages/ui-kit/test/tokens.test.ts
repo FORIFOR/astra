@@ -4,7 +4,7 @@
  * 色は目視で決めない。コントラストは計算できるので、ここで機械的に守る。
  */
 import { describe, expect, it } from 'vitest';
-import { chipsFor, mayLeaveDevice } from '@astra/contracts';
+import { chipsFor, mayLeaveDevice } from '@genie/contracts';
 import {
   AA_LARGE_TEXT,
   DOCK_STATES,
@@ -255,7 +255,7 @@ describe('generated css', () => {
   it('emits a variable for every colour token in both themes', () => {
     for (const token of Object.keys(lightColors)) {
       const name = token.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
-      expect(TOKENS_CSS, token).toContain(`--astra-color-${name}:`);
+      expect(TOKENS_CSS, token).toContain(`--genie-color-${name}:`);
     }
     expect(TOKENS_CSS).toContain(`:root[data-theme='dark']`);
     expect(TOKENS_CSS).toContain('prefers-color-scheme: dark');
@@ -263,14 +263,14 @@ describe('generated css', () => {
 
   it('keeps the focus ring and honours reduced motion', () => {
     expect(TOKENS_CSS).toContain(':focus-visible');
-    expect(TOKENS_CSS).toContain('outline: 2px solid var(--astra-color-focus-ring)');
+    expect(TOKENS_CSS).toContain('outline: 2px solid var(--genie-color-focus-ring)');
     expect(TOKENS_CSS).toContain('prefers-reduced-motion: reduce');
   });
 
   it('exposes layout and motion values so CSS never hardcodes them', () => {
-    expect(TOKENS_CSS).toContain('--astra-layout-sidebar-expanded: 176px');
-    expect(TOKENS_CSS).toContain('--astra-layout-top-bar: 44px');
-    expect(TOKENS_CSS).toContain('--astra-motion-dock-morph-duration: 200ms');
+    expect(TOKENS_CSS).toContain('--genie-layout-sidebar-expanded: 176px');
+    expect(TOKENS_CSS).toContain('--genie-layout-top-bar: 44px');
+    expect(TOKENS_CSS).toContain('--genie-motion-dock-morph-duration: 200ms');
   });
 });
 

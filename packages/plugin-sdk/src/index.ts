@@ -1,8 +1,8 @@
 /**
- * @astra/plugin-sdk
+ * @genie/plugin-sdk
  *
  * Plugin manifest の読み込み・正規化・署名検証・permission スコープの補助。
- * スキーマと不変条件は `@astra/contracts` 側（実装仕様 §3.6・§9）。
+ * スキーマと不変条件は `@genie/contracts` 側（実装仕様 §3.6・§9）。
  */
 export {
   loadManifest,

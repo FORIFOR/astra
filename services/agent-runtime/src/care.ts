@@ -11,7 +11,7 @@
  *   - 埋まっていない欄は空欄のまま残す（`incidentDraft`）
  *   - 良し悪しを判断しない（数値と観察をそのまま並べる）
  */
-import type { DomainEntity } from '@astra/contracts';
+import type { DomainEntity } from '@genie/contracts';
 
 export interface ShiftNote {
   readonly id: string;

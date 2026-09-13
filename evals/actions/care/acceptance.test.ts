@@ -8,9 +8,9 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
-import { PolicyDocument, builtInPoliciesFor } from '@astra/contracts';
-import { isStrictProfile } from '@astra/service-plugin-registry';
-import { evaluate } from '@astra/policy';
+import { PolicyDocument, builtInPoliciesFor } from '@genie/contracts';
+import { isStrictProfile } from '@genie/service-plugin-registry';
+import { evaluate } from '@genie/policy';
 
 const root = fileURLToPath(new URL('../../..', import.meta.url));
 

@@ -14,7 +14,7 @@ import type {
   MeetingClaim,
   MeetingSegment,
   WorkArtifact,
-} from '@astra/contracts';
+} from '@genie/contracts';
 import { extractDeadline } from './deadline.js';
 
 export interface MeetingPublishInput {

@@ -1,5 +1,5 @@
 /**
- * @astra/service-agent-runtime
+ * @genie/service-agent-runtime
  *
  * Skill / tool / domain entity と、専業 Agent の土台。
  * 正本 §14・§15、実装仕様: docs/spec/phase-5-implementation-spec.md

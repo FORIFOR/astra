@@ -1,5 +1,5 @@
 /**
- * @astra/service-conversation
+ * @genie/service-conversation
  *
  * Conversation Engine。正本 §7。
  * 実装仕様: docs/spec/phase-7-implementation-spec.md

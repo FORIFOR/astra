@@ -1,5 +1,5 @@
 /**
- * @astra/db
+ * @genie/db
  *
  * PostgreSQL への型付きアクセスとテナント境界。
  * スキーマの正本は `infra/db/migrations/*.sql`（ADR 0002）。

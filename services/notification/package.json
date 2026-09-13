@@ -1,9 +1,9 @@
 {
-  "name": "@astra/service-notification",
+  "name": "@genie/service-notification",
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Proactive heartbeat and the rules for when Astra may interrupt.",
+  "description": "Proactive heartbeat and the rules for when Genie may interrupt.",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
@@ -21,7 +21,7 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@astra/contracts": "workspace:*"
+    "@genie/contracts": "workspace:*"
   },
   "devDependencies": {
     "vitest": "catalog:"

@@ -1,9 +1,9 @@
 {
-  "name": "@astra/desktop",
+  "name": "@genie/desktop",
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Astra desktop client (Tauri v2 + React). Hosts the 4-tab shell and Task Dock.",
+  "description": "Genie desktop client (Tauri v2 + React). Hosts the 4-tab shell and Task Dock.",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
@@ -15,14 +15,14 @@
     "tauri:build": "tauri build"
   },
   "dependencies": {
-    "@astra/contracts": "workspace:*",
-    "@astra/ui-kit": "workspace:*",
+    "@genie/contracts": "workspace:*",
+    "@genie/ui-kit": "workspace:*",
     "@tauri-apps/api": "^2.11.1",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "@astra/api-client": "workspace:*",
-    "@astra/service-notification": "workspace:*",
-    "@astra/oauth": "workspace:*"
+    "@genie/api-client": "workspace:*",
+    "@genie/service-notification": "workspace:*",
+    "@genie/oauth": "workspace:*"
   },
   "devDependencies": {
     "@testing-library/react": "^16.3.2",

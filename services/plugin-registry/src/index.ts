@@ -1,5 +1,5 @@
 /**
- * @astra/service-plugin-registry
+ * @genie/service-plugin-registry
  *
  * カタログ、署名、バージョン、互換性、install 状態。実装仕様 §9。
  */
@@ -20,4 +20,4 @@ export {
   type ConnectionState,
 } from './connections.js';
 // 資格情報の形の規則は contracts が正。両側が別の規則を持つと、片方だけ緩む。
-export { looksLikeCredential } from '@astra/contracts';
+export { looksLikeCredential } from '@genie/contracts';

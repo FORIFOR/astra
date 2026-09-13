@@ -8,7 +8,7 @@
  *   - 確かめたいことは開いている件から作り、理由と出所を持つ（作らない）
  */
 import { describe, expect, it } from 'vitest';
-import type { WorkArtifact, WorkSemantic } from '@astra/contracts';
+import type { WorkArtifact, WorkSemantic } from '@genie/contracts';
 import {
   buildMeetingBrief,
   buildReplyPack,
@@ -188,7 +188,7 @@ describe('reply in context', () => {
     // 前面の窓が無関係（Xcode）なら、それも当てない
     const unrelated = resolveReplyTarget({
       utterance: 'これ返して',
-      candidates: [{ kind: 'frontmost', label: 'main.swift — Astra', app: 'Xcode' }],
+      candidates: [{ kind: 'frontmost', label: 'main.swift — Genie', app: 'Xcode' }],
       artifacts: fixture,
     });
     expect(unrelated.status).toBe('none');

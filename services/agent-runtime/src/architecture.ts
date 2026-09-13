@@ -8,7 +8,7 @@
  *   - 同じ日に 2 版あるなら、**どちらが新しいか決めない**（両方出す）
  *   - 期限の無い質疑を「まだ先」にしない
  */
-import type { DomainEntity } from '@astra/contracts';
+import type { DomainEntity } from '@genie/contracts';
 
 export interface Revision {
   readonly id: string;

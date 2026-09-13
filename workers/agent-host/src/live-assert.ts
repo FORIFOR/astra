@@ -6,11 +6,11 @@
  * ここでの「確認」は harness が押す（本人の代わり）。**送るのは承認を通してだけ**で、経路は本番と同じ
  * （POST /v1/work/reply/send → 承認 → 端末の worker → provider）。送り先は fixture の sink（identity 自身）。
  */
-import { TokenStore } from '@astra/oauth';
+import { TokenStore } from '@genie/oauth';
 import { FileSecretStore } from './keychain.js';
 import { saveLiveWriteGrant } from './live-oauth.js';
 import { readFile, writeFile, rename } from 'node:fs/promises';
-import type { MeetingBrief, WorkContext, WorkSyncState } from '@astra/contracts';
+import type { MeetingBrief, WorkContext, WorkSyncState } from '@genie/contracts';
 import {
   checkBrief,
   checkHome,

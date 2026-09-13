@@ -18,8 +18,8 @@ import {
   useState,
 } from 'react';
 import type { ReactElement, ReactNode } from 'react';
-import { AstraClient } from '@astra/api-client';
-import { AstraError, type MeResponse } from '@astra/contracts';
+import { GenieClient } from '@genie/api-client';
+import { GenieError, type MeResponse } from '@genie/contracts';
 import { oauthCallback, secrets } from '../host/tauri.js';
 import { SignInAbortedError, signInWithProvider, type ProviderEntry } from '../auth/providers.js';
 
@@ -33,14 +33,14 @@ const REFRESH_KEY = 'astra.refresh_token';
  * サーバが一時的に返事できないだけで利用者がサインアウトされる。
  */
 export function refreshTokenIsDead(error: unknown): boolean {
-  return error instanceof AstraError && error.code.startsWith('auth.');
+  return error instanceof GenieError && error.code.startsWith('auth.');
 }
 
 export type SessionStatus = 'loading' | 'signed-out' | 'signed-in';
 
 interface SessionContextValue {
   readonly status: SessionStatus;
-  readonly client: AstraClient;
+  readonly client: GenieClient;
   readonly me: MeResponse | null;
   readonly error: string | null;
   signIn(email: string, displayName: string): Promise<void>;
@@ -76,7 +76,7 @@ export function SessionProvider({
 
   const client = useMemo(
     () =>
-      new AstraClient({
+      new GenieClient({
         baseUrl,
         accessToken: () => accessToken.current,
         ...(fetchImpl ? { fetch: fetchImpl } : {}),
@@ -107,7 +107,7 @@ export function SessionProvider({
   );
 
   // onUnauthorized の中から自分自身を呼ぶための参照
-  const clientRef = useRef<AstraClient | null>(null);
+  const clientRef = useRef<GenieClient | null>(null);
   clientRef.current = client;
 
   const adopt = useCallback(

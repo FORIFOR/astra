@@ -7,6 +7,6 @@
  */
 import type { IncomingMessage, Server, ServerResponse } from 'node:http';
 import type { FastifyInstance } from 'fastify';
-import type { Logger } from '@astra/telemetry';
+import type { Logger } from '@genie/telemetry';
 
 export type App = FastifyInstance<Server, IncomingMessage, ServerResponse, Logger>;

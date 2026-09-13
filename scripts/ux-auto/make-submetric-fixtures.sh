@@ -2,7 +2,7 @@
 # 軸ごとの fixture。**正解は作った側が知っている。**
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-BIN="$ROOT/apps/astra-macos/.build/debug/AstraMac"
+BIN="$ROOT/apps/genie-macos/.build/debug/GenieMac"
 LAB="$ROOT/.build/uxlab"
 DIM="${1:?usage: make-submetric-fixtures.sh <continuity|delight>}"
 B="$ROOT/docs/ux-benchmark/auto/judge-fixtures/$DIM"
@@ -11,7 +11,7 @@ bash "$ROOT/scripts/ux-auto/build-tools.sh" >/dev/null
 
 shot() {
   local fx="$1" kind="$2" j="${3:-J09}" pick="${4:-01-拾ったあと.png}" tmp; tmp="$(mktemp -d)"
-  pkill -9 -f AstraMac 2>/dev/null; sleep 1.2
+  pkill -9 -f GenieMac 2>/dev/null; sleep 1.2
   ASTRA_DATA_ROOT="$tmp/data" ASTRA_FIXTURE="$fx" \
     "$BIN" --selftest journey "$j" "$tmp" >/dev/null 2>&1
   [ -f "$tmp/$pick" ] || { echo "  撮れない: $kind"; return; }
@@ -39,7 +39,7 @@ case "$DIM" in
     shot bad-misaligned     MISALIGNED
     ;;
 esac
-pkill -9 -f AstraMac 2>/dev/null
+pkill -9 -f GenieMac 2>/dev/null
 for f in "$B/images"/*.png; do "$LAB/ocr" "$f" > "$B/answers/$(basename "${f%.png}").ocr.txt" 2>/dev/null; done
 
 python3 - "$B" "$DIM" <<'PY'

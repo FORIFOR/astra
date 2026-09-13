@@ -1,5 +1,5 @@
 {
-  "name": "@astra/service-share",
+  "name": "@genie/service-share",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -21,12 +21,12 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@astra/contracts": "workspace:*",
-    "@astra/db": "workspace:*",
-    "@astra/telemetry": "workspace:*",
+    "@genie/contracts": "workspace:*",
+    "@genie/db": "workspace:*",
+    "@genie/telemetry": "workspace:*",
     "@node-rs/argon2": "^2.1.0",
     "kysely": "catalog:",
-    "@astra/service-library": "workspace:*"
+    "@genie/service-library": "workspace:*"
   },
   "devDependencies": {
     "vitest": "catalog:"

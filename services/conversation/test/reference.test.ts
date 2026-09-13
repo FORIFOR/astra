@@ -3,7 +3,7 @@
  * **解決できないものを埋めない**（D-49）。
  */
 import { describe, expect, it } from 'vitest';
-import { uuidv7, type Referent } from '@astra/contracts';
+import { uuidv7, type Referent } from '@genie/contracts';
 import { clarificationFor, fullyResolved, remember, resolveReferences } from '../src/reference.js';
 
 const ref = (label: string): Referent =>

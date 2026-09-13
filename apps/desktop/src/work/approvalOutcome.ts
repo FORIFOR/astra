@@ -4,10 +4,10 @@
  * 「エラーが発生しました」では、何が起きて次に何をすればいいか分からない。
  * 期限切れ・内容の変更は「もう一度確認してください」、決定済みは「もう決まっています」。
  */
-import { AstraError } from '@astra/contracts';
+import { GenieError } from '@genie/contracts';
 
 export function approvalFailureMessage(error: unknown): string {
-  const code = error instanceof AstraError ? error.code : null;
+  const code = error instanceof GenieError ? error.code : null;
   switch (code) {
     case 'approval.expired':
       return '内容が変更されたため、もう一度確認してください。';

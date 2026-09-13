@@ -1,7 +1,7 @@
 /**
  * 言語モデルの持ち込み。正本 §21。
  *
- * **Astra は共通の API キーを持たない。**
+ * **Genie は共通の API キーを持たない。**
  * 大事なのは、資格情報がどこに置かれるかの線引き。
  */
 import { describe, expect, it } from 'vitest';

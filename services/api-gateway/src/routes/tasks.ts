@@ -6,15 +6,15 @@
 import type { Redis } from 'ioredis';
 import {
   ApprovalDecision,
-  AstraError,
+  GenieError,
   CancelTaskRequest,
   CreateTaskRequest,
   HEADER_IDEMPOTENCY_KEY,
   IdempotencyKey,
   PageQuery,
   dockStateFor,
-} from '@astra/contracts';
-import type { TaskService } from '@astra/service-task';
+} from '@genie/contracts';
+import type { TaskService } from '@genie/service-task';
 import type { App } from '../fastify.js';
 import { requirePrincipal } from '../auth/middleware.js';
 import { CREATE_TASK_RATE_LIMIT } from '../plugins/rate-limit.js';
@@ -44,7 +44,7 @@ export function registerTaskRoutes(app: App, deps: TaskRouteDeps): void {
       const parsedKey = IdempotencyKey.safeParse(Array.isArray(header) ? header[0] : header);
       if (!parsedKey.success) {
         // 実装仕様 §11: POST /v1/tasks では必須。無いまま受けると再送で二重実行になる。
-        throw new AstraError(
+        throw new GenieError(
           'common.validation_failed',
           `${HEADER_IDEMPOTENCY_KEY} header is required (8-128 chars)`,
         );
@@ -89,7 +89,7 @@ export function registerTaskRoutes(app: App, deps: TaskRouteDeps): void {
     // 存在しない / 他テナントなら、evidence を見に行く前に 404
     await deps.tasks.get(principal.tenantId, request.params.taskId);
     if (!deps.evidence) {
-      throw new AstraError('common.not_found', 'evidence is not available in this deployment');
+      throw new GenieError('common.not_found', 'evidence is not available in this deployment');
     }
     // UI/UX §15: L0〜L3 を 1 度に返す。段ごとに待たせない。
     return deps.evidence.ledger(principal.tenantId, request.params.taskId);

@@ -1,5 +1,5 @@
 {
-  "name": "@astra/service-world-model",
+  "name": "@genie/service-world-model",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -21,9 +21,9 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@astra/contracts": "workspace:*",
-    "@astra/db": "workspace:*",
-    "@astra/telemetry": "workspace:*",
+    "@genie/contracts": "workspace:*",
+    "@genie/db": "workspace:*",
+    "@genie/telemetry": "workspace:*",
     "kysely": "catalog:"
   },
   "devDependencies": {

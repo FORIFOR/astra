@@ -5,7 +5,7 @@
 # 以前は「システム設定で ON にして、本人が TSV を読む」だった（docs/ux-benchmark/a11y/RUNBOOK.md §1）。
 # 設定の変更は行わない。AppleKeyboardUIModeだけではFull Keyboard Accessの証拠にならない。
 #
-#   bash scripts/reality/run-fka.sh [Astra.app] [out.tsv]
+#   bash scripts/reality/run-fka.sh [Genie.app] [out.tsv]
 #
 # 部分判定（FKA_TRAVERSAL_GATE）。4つの結果到達journeyは別途必要:
 #   fullKeyboardAccess=true            OS 側で ON になった実行だけを数える
@@ -15,11 +15,11 @@
 #   moved steps per surface         >= 1  main-home / workspace / settings で Tab が実際に動く
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-APP="${1:-$ROOT/apps/astra-macos/.build/Astra.app}"
+APP="${1:-$ROOT/apps/genie-macos/.build/Genie.app}"
 OUT="${2:-/tmp/astra-fka/a11ynames-fka-on.tsv}"
 mkdir -p "$(dirname "$OUT")"
-[[ -x "$APP/Contents/MacOS/AstraMac" ]] || { echo "AUTOMATION_MISSING: 署名済み .app が無い（scripts/package-macos-app.sh）"; exit 2; }
-if pgrep -x AstraMac >/dev/null; then echo "FAIL: AstraMac が既に動いている"; exit 1; fi
+[[ -x "$APP/Contents/MacOS/GenieMac" ]] || { echo "AUTOMATION_MISSING: 署名済み .app が無い（scripts/package-macos-app.sh）"; exit 2; }
+if pgrep -x GenieMac >/dev/null; then echo "FAIL: GenieMac が既に動いている"; exit 1; fi
 
 # Keyboard > Keyboard navigation (AppleKeyboardUIMode) and Accessibility >
 # Keyboard > Full Keyboard Access are separate settings. Do not change the former

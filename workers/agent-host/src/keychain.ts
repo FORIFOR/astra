@@ -11,7 +11,7 @@ import { execFile } from 'node:child_process';
 import { chmod, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { promisify } from 'node:util';
-import type { SecretStore } from '@astra/oauth';
+import type { SecretStore } from '@genie/oauth';
 
 const run = promisify(execFile);
 

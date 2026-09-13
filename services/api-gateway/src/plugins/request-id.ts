@@ -4,7 +4,7 @@
  * 受け取ったヘッダをそのまま信用しない。ログの相関キーになるので、
  * 形式を検査し、怪しければサーバ側で採番し直す。
  */
-import { HEADER_REQUEST_ID, uuidv7 } from '@astra/contracts';
+import { HEADER_REQUEST_ID, uuidv7 } from '@genie/contracts';
 import type { App } from '../fastify.js';
 import { runWithRequestContext } from '../request-context.js';
 

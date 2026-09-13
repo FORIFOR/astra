@@ -8,9 +8,9 @@
 #   → もう一度起動し直しても ready のまま
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-cd "$ROOT/apps/astra-macos"
+cd "$ROOT/apps/genie-macos"
 swift build >/dev/null
-BIN="$(swift build --show-bin-path)/AstraMac"
+BIN="$(swift build --show-bin-path)/GenieMac"
 DB="$(mktemp -t astra-experience).sqlite"
 trap 'rm -f "$DB" "$DB"-wal "$DB"-shm' EXIT
 

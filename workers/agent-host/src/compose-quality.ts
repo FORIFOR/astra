@@ -54,7 +54,7 @@ export function compositionIssues(text: string, args: Record<string, unknown>): 
           !/(?:無料|0円)(?:では|じゃ|とは)(?:ない|ありません)/.test(line),
       ) &&
     /予算(?:は|が)?\s*0円/.test(instruction) &&
-    !/(?:料金|価格)[は:：]?\s*(?:無料|0円)|(?:製品|アプリ|Astra)[は:：]?\s*無料/.test(context)
+    !/(?:料金|価格)[は:：]?\s*(?:無料|0円)|(?:製品|アプリ|Genie)[は:：]?\s*無料/.test(context)
   )
     issues.push('制作予算0円を製品価格と混同しています。「無料」「0円」の宣伝を削除してください。');
   if (
@@ -66,7 +66,7 @@ export function compositionIssues(text: string, args: Record<string, unknown>): 
     );
   if (
     /macOS|Macアプリ/.test(context) &&
-    (/スマホ(?:の)?画面[^\n。]*(?:Home|Work|Astra)|(?:Astra|アプリアイコン)[^\n。]*タップ/i.test(
+    (/スマホ(?:の)?画面[^\n。]*(?:Home|Work|Genie)|(?:Genie|アプリアイコン)[^\n。]*タップ/i.test(
       text,
     ) ||
       text

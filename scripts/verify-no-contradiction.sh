@@ -6,7 +6,7 @@
 # 状態ではなく OCR で見るのは、**出ている文字**が食い違いの本体だから。
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-BIN="$ROOT/apps/astra-macos/.build/debug/AstraMac"
+BIN="$ROOT/apps/genie-macos/.build/debug/GenieMac"
 LAB="$ROOT/.build/uxlab"
 OUT="$(mktemp -d)"
 bash "$ROOT/scripts/ux-auto/build-tools.sh" >/dev/null

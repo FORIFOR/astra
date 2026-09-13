@@ -4,7 +4,7 @@
  * 設計の要:
  *   Context Lens には「今回の依頼で実際に使う / 使った情報」だけを出す。
  *   アクセス可能な全データの一覧ではない（UI/UX §5.2）。
- *   これを守らないと、ユーザーは「Astra が何を見たか」を確認できなくなる。
+ *   これを守らないと、ユーザーは「Genie が何を見たか」を確認できなくなる。
  */
 import { z } from 'zod';
 import { Sensitivity } from './artifact.js';

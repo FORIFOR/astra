@@ -17,20 +17,20 @@ coverage/
 /apps/desktop/src-tauri/target/
 /apps/desktop/src-tauri/gen/
 
-# Swift (astra-macos)
-apps/astra-macos/.build/
+# Swift (genie-macos)
+apps/genie-macos/.build/
 # SwiftPM / swiftc の出力。tools/ux-lab の実行体も scripts/ux-auto/build-tools.sh が
 # tools/ux-lab/*.swift から .build/uxlab/ へ作り直すので、追跡しない
 .build/
 
 # Rust shared core build output
-core/astra-core/target/
-core/astra-core/generated/
-apps/astra-macos/build/
+core/genie-core/target/
+core/genie-core/generated/
+apps/genie-macos/build/
 
 # 配布物（scripts/build-dmg.sh が作る）
-apps/astra-macos/dist/
-apps/astra-macos/Vendor/
+apps/genie-macos/dist/
+apps/genie-macos/Vendor/
 
 # 画面の連写は判定のたびに撮り直す。repo に置かない
 # （画面全体を録っていた頃、利用者の私物が frame に入っていた）
@@ -39,3 +39,6 @@ artifacts/ux/**/*.mp4
 artifacts/ux/**/data/
 artifacts/ux/motion/**/frames/
 __pycache__/
+
+# Generated local document previews
+/output/

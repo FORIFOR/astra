@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ACTION_RISKS, type ActionRisk, type ComplianceProfile } from '@astra/contracts';
+import { ACTION_RISKS, type ActionRisk, type ComplianceProfile } from '@genie/contracts';
 import {
   DEFAULT_APPROVAL_TTL_MS,
   FINANCIAL_APPROVAL_TTL_MS,

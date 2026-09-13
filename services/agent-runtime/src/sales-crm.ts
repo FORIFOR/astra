@@ -5,7 +5,7 @@
  * `meeting prep` / `call notes to CRM` / `follow-up drafts` は
  * Gmail / Calendar / Salesforce の接続先が決まってから（OQ-20）。
  */
-import type { DomainEntity, EntityDef } from '@astra/contracts';
+import type { DomainEntity, EntityDef } from '@genie/contracts';
 
 /** 正本 §15.3 の entity。**plugin が持ち込む形をそのまま書いてある。** */
 export const SALES_CRM_ENTITIES: Record<string, EntityDef> = {

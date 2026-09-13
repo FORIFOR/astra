@@ -1,6 +1,6 @@
 /**
  * Research の縦串。正本 §8、Phase 2 実装仕様 §3。AC2-1 〜 AC2-5。
- *   ./infra/db/with-test-db.sh pnpm --filter @astra/service-research test
+ *   ./infra/db/with-test-db.sh pnpm --filter @genie/service-research test
  */
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -9,23 +9,23 @@ import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { TestWorkflowEnvironment } from '@temporalio/testing';
 import type { Worker } from '@temporalio/worker';
-import { uuidv7, type EventEnvelope } from '@astra/contracts';
-import { createDb, withIdentity, withTenant, type DbHandle } from '@astra/db';
-import { FsObjectStore, LibraryService } from '@astra/service-library';
+import { uuidv7, type EventEnvelope } from '@genie/contracts';
+import { createDb, withIdentity, withTenant, type DbHandle } from '@genie/db';
+import { FsObjectStore, LibraryService } from '@genie/service-library';
 import {
   InMemoryTaskRuntime,
   TaskService,
   TemporalTaskRuntime,
   createTaskWorker,
   workflowIdFor,
-} from '@astra/service-task';
-import { ResearchService } from '@astra/service-research';
-import { researchExecutors } from '@astra/service-research';
+} from '@genie/service-task';
+import { ResearchService } from '@genie/service-research';
+import { researchExecutors } from '@genie/service-research';
 import {
   DeterministicLanguageModel,
   StaticSearchProvider,
   type SearchHit,
-} from '@astra/service-research';
+} from '@genie/service-research';
 
 const url = process.env['TEST_DATABASE_URL'];
 const identityUrl = process.env['TEST_IDENTITY_DATABASE_URL'];

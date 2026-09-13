@@ -9,7 +9,7 @@
  *   - 判断しない。「依頼か」「急ぎか」は付けない（semantic は null のまま）
  *   - 出所（Provenance）を必ず付ける。付けられないものは出さない
  */
-import type { PersonRef, WorkArtifact } from '@astra/contracts';
+import type { PersonRef, WorkArtifact } from '@genie/contracts';
 import type { CalendarEvent } from './calendar.js';
 import type { MailSummary } from './gmail.js';
 import type { OutlookEvent, OutlookMailSummary, OutlookRecipient, TodoTask } from './microsoft.js';

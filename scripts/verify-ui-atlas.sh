@@ -54,7 +54,7 @@ mock = [s["id"] for s in m["screens"] + m["strips"] if s.get("image") and s.get(
 row("unknown/manual mock", not mock, str(mock or 0))
 not_rc = [s["id"] for s in m["screens"] + m["strips"] if s.get("image") and (s.get("captured") or {}).get("exe_sha256") != rc.get("exe_sha256")]
 row("image captured from manifest RC exe", not not_rc, str(not_rc or 0))
-app = root / rc["app"]; exe = app / "Contents" / "MacOS" / "AstraMac"
+app = root / rc["app"]; exe = app / "Contents" / "MacOS" / "GenieMac"
 if exe.exists():
     same = sha(exe) == rc.get("exe_sha256")
     row("image belongs to RC (.app on disk)", same, f"{rc['app']} exe {sha(exe)[:16]}… vs manifest {str(rc.get('exe_sha256'))[:16]}…")
@@ -78,7 +78,7 @@ st_missing = [s["id"] for s in st_req if s.get("status") != "CAPTURED"]
 row("required strips with 60fps frames", not st_missing, f"{len(st_req)-len(st_missing)}/{len(st_req)}" + (f"  missing: {st_missing}" if st_missing else ""))
 
 # golden（shots 10 面）: atlas の png を golden の名前に戻して、画素比較の selftest にかける
-bin_ = root / "apps/astra-macos/.build/debug/AstraMac"
+bin_ = root / "apps/genie-macos/.build/debug/GenieMac"
 if bin_.exists():
     for ap, gdir in (("light", "docs/golden-screenshots"), ("dark", "docs/golden-screenshots/dark")):
         with tempfile.TemporaryDirectory() as tmp:
@@ -91,7 +91,7 @@ if bin_.exists():
             line = next((l for l in (r.stdout + r.stderr).splitlines() if l.startswith("SELFTEST_")), "no SELFTEST line")
             row(f"golden hash mismatch ({ap})", line.startswith("SELFTEST_OK"), f"{n} faces → {line}")
 else:
-    row("golden hash mismatch", None, "debug 実行体が無い（swift build --package-path apps/astra-macos）→ NOT_VERIFIABLE")
+    row("golden hash mismatch", None, "debug 実行体が無い（swift build --package-path apps/genie-macos）→ NOT_VERIFIABLE")
 
 for name, ok, detail in rows:
     mark = "PASS" if ok else ("NOT_VERIFIABLE" if ok is None else "FAIL")

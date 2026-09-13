@@ -1,5 +1,5 @@
 /**
- * すべての `var(--astra-*)` に定義があること。
+ * すべての `var(--genie-*)` に定義があること。
  *
  * トークンは実行時に `ThemeProvider` が注す。CSS 側から見ると
  * **参照はあるが定義は同じファイルに無い**ので、綴りを間違えても
@@ -27,22 +27,22 @@ async function cssFiles(dir: string): Promise<string[]> {
 
 /**
  * その場で与える変数。コンポーネントが inline style で入れる。
- *   `--astra-sidebar-width`  … AppShell
- *   `--astra-dock-*`         … TaskDock
- *   `--astra-bar`            … dashboard の棒
+ *   `--genie-sidebar-width`  … AppShell
+ *   `--genie-dock-*`         … TaskDock
+ *   `--genie-bar`            … dashboard の棒
  */
 const LOCALLY_SET = new Set([
-  '--astra-bar',
-  '--astra-sidebar-width',
-  '--astra-dock-width',
-  '--astra-dock-min-height',
-  '--astra-dock-max-height',
+  '--genie-bar',
+  '--genie-sidebar-width',
+  '--genie-dock-width',
+  '--genie-dock-min-height',
+  '--genie-dock-max-height',
 ]);
 
 describe('design tokens', () => {
   it('defines every variable the stylesheets reference', async () => {
     const tokens = TOKENS_CSS;
-    const defined = new Set([...tokens.matchAll(/(--astra-[a-z0-9-]+)\s*:/g)].map((m) => m[1]!));
+    const defined = new Set([...tokens.matchAll(/(--genie-[a-z0-9-]+)\s*:/g)].map((m) => m[1]!));
 
     const files = [
       ...(await cssFiles(path.join(repoRoot, 'apps/desktop/src'))),
@@ -55,7 +55,7 @@ describe('design tokens', () => {
       const css = await readFile(file, 'utf8');
       // `var(--x, fallback)` は落ちても代わりが出るので数えない。
       // 危ないのは**代わりの無い参照**で、綴りを間違えるとその宣言ごと消える。
-      for (const match of css.matchAll(/var\((--astra-[a-z0-9-]+)\s*([,)])/g)) {
+      for (const match of css.matchAll(/var\((--genie-[a-z0-9-]+)\s*([,)])/g)) {
         const name = match[1]!;
         const hasFallback = match[2] === ',';
         if (hasFallback || defined.has(name) || LOCALLY_SET.has(name)) continue;
@@ -71,28 +71,28 @@ describe('design tokens', () => {
     // 検査そのものが効いていることを確かめる。
     // 効かない検査は、通っているのに守っていない
     const defined = new Set(
-      [...TOKENS_CSS.matchAll(/(--astra-[a-z0-9-]+)\s*:/g)].map((m) => m[1]!),
+      [...TOKENS_CSS.matchAll(/(--genie-[a-z0-9-]+)\s*:/g)].map((m) => m[1]!),
     );
-    const sample = '.x { color: var(--astra-color-canvasss); }';
-    const found = [...sample.matchAll(/var\((--astra-[a-z0-9-]+)\s*([,)])/g)].filter(
+    const sample = '.x { color: var(--genie-color-canvasss); }';
+    const found = [...sample.matchAll(/var\((--genie-[a-z0-9-]+)\s*([,)])/g)].filter(
       (m) => m[2] === ')' && !defined.has(m[1]!),
     );
-    expect(found.map((m) => m[1])).toEqual(['--astra-color-canvasss']);
+    expect(found.map((m) => m[1])).toEqual(['--genie-color-canvasss']);
   });
 
   it('emits the tokens the components rely on', () => {
     // floating surface（Dock / HUD）。値は Deepgram の dark scheme
-    expect(TOKENS_CSS).toContain('--astra-float-background: rgba(24, 24, 28, 0.92);');
-    expect(TOKENS_CSS).toContain('--astra-float-padding: 16px;');
+    expect(TOKENS_CSS).toContain('--genie-float-background: rgba(24, 24, 28, 0.92);');
+    expect(TOKENS_CSS).toContain('--genie-float-padding: 16px;');
     const tokens = TOKENS_CSS;
     for (const name of [
-      '--astra-color-canvas',
-      '--astra-color-surface',
-      '--astra-color-surface-raised',
-      '--astra-color-accent-on',
-      '--astra-color-focus-ring',
-      '--astra-space-base',
-      '--astra-radius-standard',
+      '--genie-color-canvas',
+      '--genie-color-surface',
+      '--genie-color-surface-raised',
+      '--genie-color-accent-on',
+      '--genie-color-focus-ring',
+      '--genie-space-base',
+      '--genie-radius-standard',
     ]) {
       expect(tokens, name).toContain(name);
     }

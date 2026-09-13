@@ -9,7 +9,7 @@ import {
   UnlockShareResponse,
   tokenFromShareLink,
   type UnlockShareRequest,
-} from '@astra/contracts';
+} from '@genie/contracts';
 import { z } from 'zod';
 
 export interface PublicShareConfig {

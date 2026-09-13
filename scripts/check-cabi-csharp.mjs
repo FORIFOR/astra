@@ -6,9 +6,9 @@ import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const RUST = resolve(ROOT, 'core/astra-core/src/capi.rs');
-const HEADER = resolve(ROOT, 'core/astra-core/include/astra_core.h');
-const CSHARP = resolve(ROOT, 'apps/windows/Astra/CoreBridge/AstraCore.cs');
+const RUST = resolve(ROOT, 'core/genie-core/src/capi.rs');
+const HEADER = resolve(ROOT, 'core/genie-core/include/genie_core.h');
+const CSHARP = resolve(ROOT, 'apps/windows/Genie/CoreBridge/GenieCore.cs');
 
 /** 引数リスト文字列 → 引数個数。"void"/"" は 0。トップレベルのカンマで数える。 */
 function argCount(args) {
@@ -24,7 +24,7 @@ function argCount(args) {
   return count;
 }
 
-/** 文字列から astra_core_* の (name -> argCount) を集める。 */
+/** 文字列から genie_core_* の (name -> argCount) を集める。 */
 function collect(text, pattern) {
   const map = new Map();
   let m;
@@ -34,19 +34,19 @@ function collect(text, pattern) {
   return map;
 }
 
-// Rust: 実体。`pub [unsafe] extern "C" fn astra_core_NAME(<args>) [-> ...]`
+// Rust: 実体。`pub [unsafe] extern "C" fn genie_core_NAME(<args>) [-> ...]`
 const rustText = readFileSync(RUST, 'utf8');
-const rust = collect(rustText, /extern\s+"C"\s+fn\s+(astra_core_[a-z0-9_]+)\s*\(([^)]*)\)/gis);
+const rust = collect(rustText, /extern\s+"C"\s+fn\s+(genie_core_[a-z0-9_]+)\s*\(([^)]*)\)/gis);
 
-// Header: 宣言。`<type> astra_core_NAME(<args>);`（複数行に跨るので改行を潰す）
+// Header: 宣言。`<type> genie_core_NAME(<args>);`（複数行に跨るので改行を潰す）
 const headerText = readFileSync(HEADER, 'utf8').replace(/\s+/g, ' ');
-const header = collect(headerText, /(astra_core_[a-z0-9_]+)\s*\(([^)]*)\)/gi);
+const header = collect(headerText, /(genie_core_[a-z0-9_]+)\s*\(([^)]*)\)/gi);
 
-// C#: P/Invoke。`extern <type> astra_core_NAME(<args>);`
+// C#: P/Invoke。`extern <type> genie_core_NAME(<args>);`
 const csText = readFileSync(CSHARP, 'utf8');
 const csharp = collect(
   csText,
-  /extern\s+[A-Za-z0-9_<>]+\s+(astra_core_[a-z0-9_]+)\s*\(([^)]*)\)/gis,
+  /extern\s+[A-Za-z0-9_<>]+\s+(genie_core_[a-z0-9_]+)\s*\(([^)]*)\)/gis,
 );
 
 const problems = [];

@@ -12,7 +12,7 @@ import {
   type ComplianceProfile,
   type ExecutionSurface,
   type PolicyDocument,
-} from '@astra/contracts';
+} from '@genie/contracts';
 
 /** 書き込み（= receipt を残す対象）。正本 §9.4「全 write action は receipt」。 */
 export function isWrite(risk: ActionRisk): boolean {

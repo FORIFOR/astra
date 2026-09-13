@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ApiError, AstraError, ERROR_CODES, httpStatusFor } from '../src/errors.js';
+import { ApiError, GenieError, ERROR_CODES, httpStatusFor } from '../src/errors.js';
 
 describe('errors', () => {
   it('maps every declared code to an explicit status', () => {
@@ -16,7 +16,7 @@ describe('errors', () => {
   });
 
   it('serializes to the api error contract', () => {
-    const err = new AstraError('task.unknown_kind', 'unknown kind "nope"', {
+    const err = new GenieError('task.unknown_kind', 'unknown kind "nope"', {
       details: { kind: 'nope' },
     });
     const body = err.toApiError('req-1');
@@ -26,12 +26,12 @@ describe('errors', () => {
   });
 
   it('omits details when absent', () => {
-    const body = new AstraError('common.internal', 'boom').toApiError('req-2');
+    const body = new GenieError('common.internal', 'boom').toApiError('req-2');
     expect('details' in body.error).toBe(false);
   });
 
   it('defaults to non-retryable', () => {
-    expect(new AstraError('common.internal', 'x').retryable).toBe(false);
-    expect(new AstraError('common.unavailable', 'x', { retryable: true }).retryable).toBe(true);
+    expect(new GenieError('common.internal', 'x').retryable).toBe(false);
+    expect(new GenieError('common.unavailable', 'x', { retryable: true }).retryable).toBe(true);
   });
 });

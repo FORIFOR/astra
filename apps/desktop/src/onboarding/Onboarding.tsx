@@ -7,7 +7,7 @@
  *   - **動画ではなく 1 回の成功体験で終える**（Step 7）
  */
 import { useCallback, useEffect, useMemo, useState, type ReactElement } from 'react';
-import type { AstraClient } from '@astra/api-client';
+import type { GenieClient } from '@genie/api-client';
 import {
   INTEREST_AREAS,
   INTEREST_LABELS,
@@ -18,7 +18,7 @@ import {
   type InterestArea,
   type OnboardingStep,
   type PackRecommendation,
-} from '@astra/contracts';
+} from '@genie/contracts';
 import { ShortcutSettings } from '../settings/ShortcutSettings.js';
 import './onboarding.css';
 
@@ -32,7 +32,7 @@ export function Onboarding({
   client,
   onDone,
 }: {
-  client: AstraClient | null;
+  client: GenieClient | null;
   onDone(): void;
 }): ReactElement {
   const [step, setStep] = useState<OnboardingStep>('promise');

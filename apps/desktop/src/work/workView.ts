@@ -9,7 +9,7 @@
  *   「12 sources」        ← crawler worker count       ではなく
  *   「確認待ち」          ← workflow waiting activity  ではなく
  */
-import type { ActionRisk, EventEnvelope, TaskStatus, Task } from '@astra/contracts';
+import type { ActionRisk, EventEnvelope, TaskStatus, Task } from '@genie/contracts';
 
 export type StepState = 'todo' | 'active' | 'done' | 'retrying' | 'failed';
 

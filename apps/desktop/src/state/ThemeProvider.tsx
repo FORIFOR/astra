@@ -11,7 +11,7 @@ import {
   resolveTheme,
   type ResolvedTheme,
   type ThemeMode,
-} from '@astra/ui-kit';
+} from '@genie/ui-kit';
 
 interface ThemeContextValue {
   readonly mode: ThemeMode;
@@ -21,7 +21,7 @@ interface ThemeContextValue {
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
-const STYLE_ID = 'astra-tokens';
+const STYLE_ID = 'genie-tokens';
 
 /**
  * 使える localStorage を返す。無ければ null。
@@ -59,7 +59,7 @@ export function ThemeProvider({ children }: { children: ReactNode }): ReactEleme
   const [mode, setModeState] = useState<ThemeMode>(readStoredMode);
   const [systemDark, setSystemDark] = useState<boolean>(prefersDark);
 
-  // トークンは 1 度だけ挿す。生成元は @astra/ui-kit なので、ここでは中身を知らない。
+  // トークンは 1 度だけ挿す。生成元は @genie/ui-kit なので、ここでは中身を知らない。
   useEffect(() => {
     if (document.getElementById(STYLE_ID)) return;
     const style = document.createElement('style');

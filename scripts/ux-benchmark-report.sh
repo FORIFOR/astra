@@ -12,7 +12,7 @@ JOURNEYS="J01 J02 J03 J04 J05 J06 J07 J08 J09 J10"
 echo "== Competitive UX Benchmark =="
 echo
 
-printf "%-6s %-26s %-10s %-10s %-10s\n" "ID" "課題" "Astra" "VoiceOS" "SuperIntern"
+printf "%-6s %-26s %-10s %-10s %-10s\n" "ID" "課題" "Genie" "VoiceOS" "SuperIntern"
 printf "%-6s %-26s %-10s %-10s %-10s\n" "----" "------------------------" "--------" "--------" "-----------"
 
 astra_measured=0; astra_success=0
@@ -55,7 +55,7 @@ for j in $JOURNEYS; do
 done
 
 echo
-echo "Astra: ${astra_measured}/10 計測・${astra_success} 完遂"
+echo "Genie: ${astra_measured}/10 計測・${astra_success} 完遂"
 echo "競合:  実機 ${competitor_have} 件 / 公開のみ ${public_only} 件"
 if [ "$public_only" -gt 0 ]; then
   echo
@@ -73,7 +73,7 @@ if [ "$competitor_have" -eq 0 ]; then
   判定できない。
 
   競合（VoiceOS / SuperIntern）の計測が 1 件も無い。
-  「Astra のほうが優れている」は競合と比べて初めて言えることなので、
+  「Genie のほうが優れている」は競合と比べて初めて言えることなので、
   ここで「合格」と出すのは、確かめていないことを確かめたと言うことになる。
 
   必要なもの（**実機**。公開素材ではこのゲートは通らない）:

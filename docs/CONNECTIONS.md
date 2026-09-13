@@ -17,9 +17,9 @@ Supported JSON keys:
 
 The legacy Google `ASTRA_OAUTH_GOOGLE_CLIENT_ID` / `ASTRA_OAUTH_GOOGLE_CLIENT_SECRET` pair remains supported. Dedicated role-specific settings take precedence. Do not package user refresh/access tokens or Microsoft confidential-client secrets.
 
-Local override: `~/Library/Application Support/Astra/connections.json` (0600). An operator can import a JSON file through **詳しい接続情報 → 接続設定を読み込む…**. Successful connection also makes the publisher parameters available to the local worker for token renewal. Environment variables override the bundled/local settings. Isolated selftests do not read the user's real configuration unless an explicit configuration path is provided.
+Local override: `~/Library/Application Support/Genie/connections.json` (0600). An operator can import a JSON file through **詳しい接続情報 → 接続設定を読み込む…**. Successful connection also makes the publisher parameters available to the local worker for token renewal. Environment variables override the bundled/local settings. Isolated selftests do not read the user's real configuration unless an explicit configuration path is provided.
 
-OAuth provider verification, consent-screen branding and public access restrictions must be completed by the publisher before claiming unrestricted public availability. The existing test application is still labeled Astra by the providers.
+OAuth provider verification, consent-screen branding and public access restrictions must be completed by the publisher before claiming unrestricted public availability. The existing test application is still labeled Genie by the providers.
 
 ## Recovery
 

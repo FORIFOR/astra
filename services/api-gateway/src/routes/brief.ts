@@ -5,10 +5,10 @@
  * 「いま気にすべき最大 3 件」と、その残りだけ。
  */
 import { z } from 'zod';
-import { CommitmentStatus } from '@astra/contracts';
-import type { TaskService } from '@astra/service-task';
-import type { MeetingService } from '@astra/service-meeting';
-import { buildBrief, type WorldModelService } from '@astra/service-world-model';
+import { CommitmentStatus } from '@genie/contracts';
+import type { TaskService } from '@genie/service-task';
+import type { MeetingService } from '@genie/service-meeting';
+import { buildBrief, type WorldModelService } from '@genie/service-world-model';
 import type { App } from '../fastify.js';
 import { requirePrincipal } from '../auth/middleware.js';
 

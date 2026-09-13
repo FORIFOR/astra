@@ -89,8 +89,8 @@ if (!(await inCall()))
 try {
   const name = page.getByRole('textbox', { name: /名前|Your name|Name/ }).first();
   if (await name.isVisible({ timeout: 1500 })) {
-    await name.fill('Astra Test Bot');
-    note('guest name = Astra Test Bot');
+    await name.fill('Genie Test Bot');
+    note('guest name = Genie Test Bot');
   }
 } catch {}
 // マイク選択: 設定 → 音声 → マイク = BlackHole 2ch（UI は変わるので、text で探す）。
@@ -121,7 +121,7 @@ if (await inCall()) {
 await page.waitForTimeout(8000);
 await page.screenshot({ path: join(out, '01-joined.png') });
 
-// 台本を順に流す。行間に 1.2 秒。途中で 6 秒の無音（Astra の一時停止の検査用）。
+// 台本を順に流す。行間に 1.2 秒。途中で 6 秒の無音（Genie の一時停止の検査用）。
 const lines = readFileSync(join(corpus, 'lines.tsv'), 'utf8')
   .trim()
   .split('\n')

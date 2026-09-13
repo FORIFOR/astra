@@ -15,7 +15,7 @@ import {
   PERMISSION_WITHOUT,
   isOsPermission,
   type OsPermission,
-} from '@astra/contracts';
+} from '@genie/contracts';
 import { permissions as bridge } from '../host/tauri.js';
 
 export function PermissionAsk({

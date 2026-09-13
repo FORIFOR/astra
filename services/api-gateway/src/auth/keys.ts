@@ -5,7 +5,7 @@
  * 本番の鍵は Secret Manager / KMS から環境変数経由で渡す（正本 §21）。
  */
 import { importPKCS8, importSPKI, generateKeyPair, type CryptoKey } from 'jose';
-import type { Logger } from '@astra/telemetry';
+import type { Logger } from '@genie/telemetry';
 
 export interface SigningKeys {
   readonly privateKey: CryptoKey;

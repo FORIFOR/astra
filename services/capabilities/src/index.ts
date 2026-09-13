@@ -1,5 +1,5 @@
 /**
- * @astra/service-capabilities
+ * @genie/service-capabilities
  *
  * 起動時に「何が本物で、何が代役か」を答える。正本 §21・§25。
  *

@@ -14,7 +14,7 @@
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 VERSION="$(node -p "require('$ROOT/package.json').version")" || exit 1
-ZIP="${1:-$ROOT/dist/Astra-${VERSION}.zip}"
+ZIP="${1:-$ROOT/dist/Genie-${VERSION}.zip}"
 [[ -f "$ZIP" ]] || { echo "FAIL: 対象版のzipが無い。先に scripts/release-macos.sh" >&2; exit 1; }
 python3 "$ROOT/scripts/release-provenance.py" verify "$ROOT" "$ZIP" || exit 1
 
@@ -22,8 +22,8 @@ WORK="$(mktemp -d)"
 VERIFIED=0
 trap 'pkill -f "$WORK" 2>/dev/null || true; if [[ "$VERIFIED" = 1 ]]; then rm -rf "$WORK"; else echo "artifact diagnostics: $WORK" >&2; fi' EXIT
 ditto -x -k "$ZIP" "$WORK/app" || exit 1
-APP="$WORK/app/Astra.app"
-BIN="$APP/Contents/MacOS/AstraMac"
+APP="$WORK/app/Genie.app"
+BIN="$APP/Contents/MacOS/GenieMac"
 [[ -x "$BIN" ]] || { echo "FAIL: 展開しても実行体が無い" >&2; exit 1; }
 fail=0
 
@@ -71,7 +71,7 @@ cp "$ZIP" "$QDIR/dl.zip" || exit 1
 QUARANTINE="0083;$(printf %x "$(date +%s)");Safari;"
 xattr -w com.apple.quarantine "$QUARANTINE" "$QDIR/dl.zip" || exit 1
 ( cd "$QDIR" && ditto -x -k dl.zip . ) || exit 1
-QAPP="$QDIR/Astra.app"
+QAPP="$QDIR/Genie.app"
 xattr -w com.apple.quarantine "$QUARANTINE" "$QAPP" || exit 1
 [[ "$(xattr -p com.apple.quarantine "$QAPP")" == "$QUARANTINE" ]] || exit 1
 

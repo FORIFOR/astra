@@ -1,7 +1,7 @@
 /**
  * 手元でしか動かせない step の受け渡し。正本 §4.4・§16.1・§21。
  *
- *   ./infra/db/with-test-db.sh pnpm --filter @astra/service-agent-host test
+ *   ./infra/db/with-test-db.sh pnpm --filter @genie/service-agent-host test
  *
  * 見るのは 4 つ:
  *   - 同じ step を二度置かない
@@ -10,8 +10,8 @@
  *   - 取りに来ないものを、やってみて駄目だったことにしない
  */
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { uuidv7 } from '@astra/contracts';
-import { createDb, withIdentity, withTenant, type DbHandle } from '@astra/db';
+import { uuidv7 } from '@genie/contracts';
+import { createDb, withIdentity, withTenant, type DbHandle } from '@genie/db';
 import { AgentHostService } from '../src/service.js';
 import { HostBridge } from '../src/bridge.js';
 

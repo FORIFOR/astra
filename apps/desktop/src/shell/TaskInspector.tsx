@@ -10,7 +10,7 @@
  *   Activity … 何をしたか（実行の記録）
  */
 import { useState, type ReactElement } from 'react';
-import type { AstraClient, TaskView } from '@astra/api-client';
+import type { GenieClient, TaskView } from '@genie/api-client';
 import { TaskEvidence } from '../work/EvidenceLedger.js';
 import { Receipts } from '../work/Receipts.js';
 
@@ -26,7 +26,7 @@ export function TaskInspector({
   client,
   task,
 }: {
-  client: AstraClient | null;
+  client: GenieClient | null;
   task: TaskView | null;
 }): ReactElement {
   const [tab, setTab] = useState<InspectorTab>('context');

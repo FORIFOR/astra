@@ -6,13 +6,13 @@
  * MCP の tool も、manifest の tool と同じ確認を通す。
  */
 import {
-  AstraError,
+  GenieError,
   resolveMcpTool,
   type McpServerDecl,
   type McpToolDescriptor,
   type McpTrustState,
   type ResolvedMcpTool,
-} from '@astra/contracts';
+} from '@genie/contracts';
 import {
   InitializeResult,
   JsonRpcResponse,
@@ -56,7 +56,7 @@ export class McpClient {
   /** 版が合わない相手とは話さない。 */
   async initialize(): Promise<void> {
     if (this.#trust === 'BLOCKED') {
-      throw new AstraError('plugin.permission_denied', `mcp server ${this.#server.id} is blocked`);
+      throw new GenieError('plugin.permission_denied', `mcp server ${this.#server.id} is blocked`);
     }
 
     const result = InitializeResult.parse(
@@ -67,7 +67,7 @@ export class McpClient {
       }),
     );
     if (result.protocolVersion !== PROTOCOL_VERSION) {
-      throw new AstraError(
+      throw new GenieError(
         'plugin.incompatible',
         `mcp server ${this.#server.id} speaks ${result.protocolVersion}, not ${PROTOCOL_VERSION}`,
       );
@@ -118,10 +118,10 @@ export class McpClient {
 
     const tool = (await this.listTools()).find((t) => t.name === name);
     if (!tool) {
-      throw new AstraError('plugin.not_found', `mcp server ${this.#server.id} has no tool ${name}`);
+      throw new GenieError('plugin.not_found', `mcp server ${this.#server.id} has no tool ${name}`);
     }
     if (tool.requires_confirmation && !context.approved) {
-      throw new AstraError(
+      throw new GenieError(
         'plugin.permission_denied',
         `${name} needs confirmation before it runs (risk ${tool.risk})`,
       );
@@ -130,7 +130,7 @@ export class McpClient {
     const result = ToolCallResult.parse(await this.#call('tools/call', { name, arguments: args }));
     // MCP は失敗を isError で返す。**勝手に成功扱いしない**（正本 §9）。
     if (result.isError) {
-      throw new AstraError('host.capability_denied', `${name} failed: ${textOf(result)}`, {
+      throw new GenieError('host.capability_denied', `${name} failed: ${textOf(result)}`, {
         retryable: true,
       });
     }
@@ -143,7 +143,7 @@ export class McpClient {
 
   #requireInitialized(): void {
     if (!this.#initialized) {
-      throw new AstraError(
+      throw new GenieError(
         'host.not_connected',
         `mcp server ${this.#server.id} has not been initialized`,
       );
@@ -157,13 +157,13 @@ export class McpClient {
     const response = JsonRpcResponse.parse(raw);
     if (response.id !== id) {
       // 応答の取り違えは、別の tool の結果を返すことになる
-      throw new AstraError(
+      throw new GenieError(
         'host.timeout',
         `mcp response ${String(response.id)} does not match ${id}`,
       );
     }
     if (response.error) {
-      throw new AstraError(
+      throw new GenieError(
         'host.capability_denied',
         `mcp ${method} failed: ${response.error.message}`,
       );

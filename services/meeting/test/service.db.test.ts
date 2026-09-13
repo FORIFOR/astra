@@ -1,10 +1,10 @@
 /**
  * MeetingService の DB 側。Phase 3 実装仕様 §3。
- *   ./infra/db/with-test-db.sh pnpm --filter @astra/service-meeting test
+ *   ./infra/db/with-test-db.sh pnpm --filter @genie/service-meeting test
  */
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
-import { uuidv7 } from '@astra/contracts';
-import { createDb, withIdentity, withTenant, type DbHandle } from '@astra/db';
+import { uuidv7 } from '@genie/contracts';
+import { createDb, withIdentity, withTenant, type DbHandle } from '@genie/db';
 import { MeetingService } from '../src/service.js';
 import { EchoTranslationProvider, type TranscriptResult } from '../src/providers.js';
 

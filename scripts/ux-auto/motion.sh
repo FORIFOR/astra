@@ -9,21 +9,21 @@
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 LAB="$ROOT/.build/uxlab"
-BIN="$ROOT/apps/astra-macos/.build/debug/AstraMac"
+BIN="$ROOT/apps/genie-macos/.build/debug/GenieMac"
 NAME="${1:?usage: motion.sh <名前> <opt-space|esc>}"
 KEY="${2:-opt-space}"
 OUT="$ROOT/artifacts/ux/motion/$NAME"
 bash "$ROOT/scripts/ux-auto/build-tools.sh" >/dev/null
 rm -rf "$OUT"; mkdir -p "$OUT"
 
-pkill -9 -f AstraMac 2>/dev/null; sleep 1
+pkill -9 -f GenieMac 2>/dev/null; sleep 1
 "$BIN" --selftest idle-hold 25 >/dev/null 2>&1 &
 sleep 3
 ( "$LAB/motion" "$OUT/frames" 3 > "$OUT/capture.log" 2>&1 ) &
 sleep 1.0
 "$LAB/uxin" key $([ "$KEY" = esc ] && echo 53 || echo 49) $([ "$KEY" = esc ] || echo opt)
 sleep 3.5
-pkill -9 -f AstraMac 2>/dev/null
+pkill -9 -f GenieMac 2>/dev/null
 
 "$LAB/framediff" "$OUT/frames" > "$OUT/diff.tsv" 2>/dev/null
 python3 - "$OUT" <<'PY'

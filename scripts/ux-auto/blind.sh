@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Blind Operator の手足。**実装を知らない評価者**が使う 3 つの動作だけを出す。
 #
-#   blind.sh start [秒]     Astra を出して待つ
-#   blind.sh shot <名前>    いまの画面を撮る（Astra の窓だけ。他アプリは写さない）
+#   blind.sh start [秒]     Genie を出して待つ
+#   blind.sh shot <名前>    いまの画面を撮る（Genie の窓だけ。他アプリは写さない）
 #   blind.sh press <x> <y>  撮った画像の座標を**意味として押す**（Vision→AX）
 #   blind.sh click <x> <y>  物理クリック（この環境では届かない。press を使う）
 #   blind.sh key <名前>     ショートカットを送る（opt-space など）
@@ -13,13 +13,13 @@
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 LAB="$ROOT/.build/uxlab"
-BIN="$ROOT/apps/astra-macos/.build/debug/AstraMac"
+BIN="$ROOT/apps/genie-macos/.build/debug/GenieMac"
 OUT="${BLIND_OUT:-$ROOT/artifacts/ux/blind/session}"
 mkdir -p "$OUT"
 
 # 合成クリックが本当に届くかを、**自分で作った的**で確かめる。
-# Astra を的にしたままでは、道具の不備と製品の欠陥を切り分けられない。
-# 実際、届かないクリックを「Astra がクリックを無視する」と 2 回記録した。
+# Genie を的にしたままでは、道具の不備と製品の欠陥を切り分けられない。
+# 実際、届かないクリックを「Genie がクリックを無視する」と 2 回記録した。
 selfcheck() {
   bash "$ROOT/scripts/ux-auto/build-tools.sh" >/dev/null
   local log="$OUT/selfcheck.log"
@@ -38,7 +38,7 @@ selfcheck() {
 case "${1:-}" in
   selfcheck) selfcheck ;;
   start)
-    pkill -9 -f AstraMac 2>/dev/null; sleep 1
+    pkill -9 -f GenieMac 2>/dev/null; sleep 1
     rm -f "$OUT"/*.png "$OUT"/rect.txt
     # 既定を長く取る。**評価の途中でアプリが寿命で消えると、それを製品の欠陥と
     # 読み違える**（実際そうなった: 60 秒で終了したのを「窓が二度と戻らない」と
@@ -116,8 +116,8 @@ case "${1:-}" in
     # 実際、引数の書き方を確かめようとして評価者が blind.sh を読んでしまい、
     # 「実装を見ない」約束が破れかけた。
     cat <<'H'
-blind.sh start [秒] [idle|meeting]   Astra を出して待つ
-blind.sh shot <名前>                 いまの Astra の窓を撮る（他アプリは写さない）
+blind.sh start [秒] [idle|meeting]   Genie を出して待つ
+blind.sh shot <名前>                 いまの Genie の窓を撮る（他アプリは写さない）
 blind.sh press <x> <y>               撮った画像の座標を押す（PRESSED/NOT_PRESSABLE/NOTHING_THERE）
 blind.sh type <文字>                 文字を打つ
 blind.sh key esc|enter|opt-space     鍵を送る
@@ -133,6 +133,6 @@ H
     esac
     sleep 0.6; echo "sent"
     ;;
-  stop) pkill -9 -f AstraMac 2>/dev/null; echo "stopped" ;;
+  stop) pkill -9 -f GenieMac 2>/dev/null; echo "stopped" ;;
   *) echo "usage: blind.sh start|shot|press|click|key|selfcheck|stop"; exit 2 ;;
 esac

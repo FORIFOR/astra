@@ -128,14 +128,14 @@ export function httpStatusFor(code: ErrorCode): number {
   return STATUS[code] ?? 500;
 }
 
-export class AstraError extends Error {
+export class GenieError extends Error {
   readonly code: ErrorCode;
   readonly details: unknown;
   readonly retryable: boolean;
 
   constructor(code: ErrorCode, message: string, opts?: { details?: unknown; retryable?: boolean }) {
     super(message);
-    this.name = 'AstraError';
+    this.name = 'GenieError';
     this.code = code;
     this.details = opts?.details;
     // Temporal の nonRetryableErrorTypes と対応させる（実装仕様 §6.5）

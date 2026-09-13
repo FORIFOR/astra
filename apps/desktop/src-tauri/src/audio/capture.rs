@@ -21,7 +21,7 @@ use serde::{Deserialize, Serialize};
 use super::frame::{to_mono, AudioSourceKind, PcmFrame, SAMPLE_RATE_HZ};
 use super::resample::Resampler;
 
-/// 取り込めない理由。TypeScript 側（`@astra/audio`）の `CaptureFailure` と同じ綴り。
+/// 取り込めない理由。TypeScript 側（`@genie/audio`）の `CaptureFailure` と同じ綴り。
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum CaptureFailure {

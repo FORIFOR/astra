@@ -1,16 +1,16 @@
 /** §21 Approval stale: 「内容が変更されたため、もう一度確認してください」 */
 import { describe, expect, it } from 'vitest';
-import { AstraError } from '@astra/contracts';
+import { GenieError } from '@genie/contracts';
 import { approvalFailureMessage } from '../src/work/approvalOutcome.js';
 
 describe('approvalFailureMessage', () => {
   it('asks for a fresh look when the approval went stale', () => {
-    expect(approvalFailureMessage(new AstraError('approval.expired', 'x'))).toBe(
+    expect(approvalFailureMessage(new GenieError('approval.expired', 'x'))).toBe(
       '内容が変更されたため、もう一度確認してください。',
     );
   });
   it('says when it was already decided', () => {
-    expect(approvalFailureMessage(new AstraError('approval.already_decided', 'x'))).toContain(
+    expect(approvalFailureMessage(new GenieError('approval.already_decided', 'x'))).toContain(
       'すでに決まっています',
     );
   });

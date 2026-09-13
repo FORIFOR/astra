@@ -5,14 +5,14 @@
  * 型の検査は契約側（`validateFields`）が行い、ここは保存と読み出しに徹する。
  */
 import {
-  AstraError,
+  GenieError,
   titleOf,
   uuidv7,
   validateFields,
   type DomainEntity,
   type EntityDef,
-} from '@astra/contracts';
-import { withTenant, type DbHandle } from '@astra/db';
+} from '@genie/contracts';
+import { withTenant, type DbHandle } from '@genie/db';
 
 export interface DomainDeps {
   readonly db: DbHandle;
@@ -42,7 +42,7 @@ export class DomainService {
   async create(input: CreateEntityInput): Promise<DomainEntity> {
     const { fields, problems } = validateFields(input.def, input.fields);
     if (problems.length > 0) {
-      throw new AstraError('common.validation_failed', `invalid ${input.def.id}`, {
+      throw new GenieError('common.validation_failed', `invalid ${input.def.id}`, {
         details: problems,
       });
     }
@@ -95,7 +95,7 @@ export class DomainService {
       tx.selectFrom('domain_entities').selectAll().where('id', '=', id).executeTakeFirst(),
     );
     // 別テナントのものは「無い」（AC5-10）
-    if (!row) throw new AstraError('common.not_found', 'entity not found');
+    if (!row) throw new GenieError('common.not_found', 'entity not found');
     return toEntity(row);
   }
 

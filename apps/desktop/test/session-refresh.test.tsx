@@ -27,7 +27,7 @@ vi.mock('../src/host/tauri.js', async (importOriginal) => {
 
 const { SessionProvider, useSession, refreshTokenIsDead } =
   await import('../src/state/SessionProvider.js');
-const { AstraError } = await import('@astra/contracts');
+const { GenieError } = await import('@genie/contracts');
 
 function Probe(): JSX.Element {
   const { status, error } = useSession();
@@ -84,8 +84,8 @@ describe('stored refresh token', () => {
   });
 
   it('classifies only auth.* errors as dead', () => {
-    expect(refreshTokenIsDead(new AstraError('auth.expired_token', 'x'))).toBe(true);
-    expect(refreshTokenIsDead(new AstraError('common.rate_limited', 'x'))).toBe(false);
+    expect(refreshTokenIsDead(new GenieError('auth.expired_token', 'x'))).toBe(true);
+    expect(refreshTokenIsDead(new GenieError('common.rate_limited', 'x'))).toBe(false);
     expect(refreshTokenIsDead(new TypeError('fetch failed'))).toBe(false);
   });
 });

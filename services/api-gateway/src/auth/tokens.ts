@@ -8,13 +8,13 @@ import { SignJWT, jwtVerify } from 'jose';
 import {
   ACCESS_TOKEN_TTL_SECONDS,
   AccessTokenClaims,
-  AstraError,
+  GenieError,
   DEVICE_TOKEN_TTL_SECONDS,
   SHARE_VIEW_AUDIENCE,
   SHARE_VIEW_TOKEN_TTL_SECONDS,
   ShareViewClaims,
   uuidv7,
-} from '@astra/contracts';
+} from '@genie/contracts';
 import type { SigningKeys } from './keys.js';
 
 export const AUDIENCE_API = 'astra-api';
@@ -106,10 +106,10 @@ export class JwtTokens implements TokenVerifier {
       payload = result.payload;
     } catch {
       // 期限切れも不正も同じ扱い。共有相手に内部状態を教えない。
-      throw new AstraError('auth.invalid_token', 'share view token is not valid');
+      throw new GenieError('auth.invalid_token', 'share view token is not valid');
     }
     const parsed = ShareViewClaims.safeParse(payload);
-    if (!parsed.success) throw new AstraError('auth.invalid_token', 'share view claims mismatch');
+    if (!parsed.success) throw new GenieError('auth.invalid_token', 'share view claims mismatch');
     return parsed.data;
   }
 
@@ -135,15 +135,15 @@ export class JwtTokens implements TokenVerifier {
       const code = (error as { code?: string }).code;
       // 期限切れだけは区別する。クライアントが refresh すべきか判断できるようにするため。
       if (code === 'ERR_JWT_EXPIRED') {
-        throw new AstraError('auth.expired_token', 'access token expired');
+        throw new GenieError('auth.expired_token', 'access token expired');
       }
-      throw new AstraError('auth.invalid_token', 'token verification failed');
+      throw new GenieError('auth.invalid_token', 'token verification failed');
     }
 
     const parsed = AccessTokenClaims.safeParse(payload);
     if (!parsed.success) {
       // 署名は通ったが中身が契約と違う。鍵漏洩か版ずれなので通さない。
-      throw new AstraError('auth.invalid_token', 'token claims do not match the contract');
+      throw new GenieError('auth.invalid_token', 'token claims do not match the contract');
     }
     return parsed.data;
   }

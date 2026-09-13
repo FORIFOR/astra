@@ -13,7 +13,7 @@
  *   - 取り出すのは、**書いてある値だけ**（`extract`）
  *   - 書かれていない項目は「記載なし」。**「異常なし」にしない**
  */
-import type { DomainEntity } from '@astra/contracts';
+import type { DomainEntity } from '@genie/contracts';
 
 export interface ClinicalNote {
   readonly id: string;

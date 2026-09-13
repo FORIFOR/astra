@@ -16,13 +16,13 @@
  *   - **失敗を成功として返さない**
  */
 import {
-  AstraError,
+  GenieError,
   looksLikeSecretName,
   looksLikeSecretValue,
   stateFromHeartbeat,
   uuidv7,
-} from '@astra/contracts';
-import { withTenant, type DbHandle } from '@astra/db';
+} from '@genie/contracts';
+import { withTenant, type DbHandle } from '@genie/db';
 
 /**
  * 承認された事実。cloud が発行し、**端末が使う前にもう一度確かめる。**
@@ -273,7 +273,7 @@ export class HostBridge {
         .executeTakeFirst(),
     );
     if (!updated) {
-      throw new AstraError(
+      throw new GenieError(
         'common.conflict',
         'this step was not claimed by that host, or it has already been settled',
       );
@@ -332,7 +332,7 @@ function assertNoCredentials(args: Record<string, unknown>, depth = 0): void {
   for (const [key, value] of Object.entries(args)) {
     const named = looksLikeSecretName(key);
     if (typeof value === 'string' && (named || looksLikeSecretValue(value))) {
-      throw new AstraError(
+      throw new GenieError(
         'common.validation_failed',
         'a step handed to the device must not carry a credential; the device holds its own',
       );
@@ -340,7 +340,7 @@ function assertNoCredentials(args: Record<string, unknown>, depth = 0): void {
     if (Array.isArray(value)) {
       for (const item of value) {
         if (typeof item === 'string' && (named || looksLikeSecretValue(item))) {
-          throw new AstraError(
+          throw new GenieError(
             'common.validation_failed',
             'a step handed to the device must not carry a credential; the device holds its own',
           );

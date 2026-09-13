@@ -1,5 +1,5 @@
 {
-  "name": "@astra/service-meeting",
+  "name": "@genie/service-meeting",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -21,16 +21,16 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@astra/contracts": "workspace:*",
-    "@astra/db": "workspace:*",
-    "@astra/service-library": "workspace:*",
-    "@astra/service-task": "workspace:*",
-    "@astra/telemetry": "workspace:*",
+    "@genie/contracts": "workspace:*",
+    "@genie/db": "workspace:*",
+    "@genie/service-library": "workspace:*",
+    "@genie/service-task": "workspace:*",
+    "@genie/telemetry": "workspace:*",
     "@google-cloud/speech": "^6.7.1",
     "google-auth-library": "^11.0.2",
     "kysely": "catalog:",
     "zod": "catalog:",
-    "@astra/tts": "workspace:*"
+    "@genie/tts": "workspace:*"
   },
   "devDependencies": {
     "vitest": "catalog:"

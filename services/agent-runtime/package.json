@@ -1,5 +1,5 @@
 {
-  "name": "@astra/service-agent-runtime",
+  "name": "@genie/service-agent-runtime",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -21,13 +21,13 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@astra/agent-sdk": "workspace:*",
-    "@astra/contracts": "workspace:*",
-    "@astra/db": "workspace:*",
-    "@astra/policy": "workspace:*",
-    "@astra/telemetry": "workspace:*",
+    "@genie/agent-sdk": "workspace:*",
+    "@genie/contracts": "workspace:*",
+    "@genie/db": "workspace:*",
+    "@genie/policy": "workspace:*",
+    "@genie/telemetry": "workspace:*",
     "kysely": "catalog:",
-    "@astra/service-library": "workspace:*",
+    "@genie/service-library": "workspace:*",
     "google-auth-library": "^11.0.2"
   },
   "devDependencies": {

@@ -10,9 +10,9 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
-import { PolicyDocument, builtInPoliciesFor } from '@astra/contracts';
-import { evaluate } from '@astra/policy';
-import { checkDraft, citedLines, extract, extractionTable } from '@astra/service-agent-runtime';
+import { PolicyDocument, builtInPoliciesFor } from '@genie/contracts';
+import { evaluate } from '@genie/policy';
+import { checkDraft, citedLines, extract, extractionTable } from '@genie/service-agent-runtime';
 
 const root = fileURLToPath(new URL('../../..', import.meta.url));
 

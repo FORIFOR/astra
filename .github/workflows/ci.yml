@@ -64,8 +64,8 @@ jobs:
       - run: pnpm build
       - run: pnpm exec tsc -p tsconfig.tests.json
       # Vite の app は tsc -b の対象外なので個別に確かめる
-      - run: pnpm --filter @astra/desktop build
-      - run: pnpm --filter @astra/share-web build
+      - run: pnpm --filter @genie/desktop build
+      - run: pnpm --filter @genie/share-web build
       - run: pnpm format:check
 
       # ------------------------------------------------------------ 規約検査
@@ -76,7 +76,7 @@ jobs:
       - run: pnpm check:cabi-csharp
       # Recording Workspace の形（凹み Bezier）を tokens 由来の golden と照合（visual regression fixture）。
       - run: pnpm check:workspace-fixture
-      # 最終製品経路（macOS native + astra-core）が Tauri 非依存であることを担保（Done#8）。
+      # 最終製品経路（macOS native + genie-core）が Tauri 非依存であることを担保（Done#8）。
       - run: pnpm check:native-tauri-free
       # Windows の C# CoreBridge を P/Invoke で実 core に繋ぎ動作検証（Windows 実機なしで, dotnet）。
       - uses: actions/setup-dotnet@v4

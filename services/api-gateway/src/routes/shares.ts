@@ -9,18 +9,18 @@
  * 分けて返すと、有効なトークンの存在を教えることになる。
  */
 import {
-  AstraError,
+  GenieError,
   CreateShareRequest,
   SHARE_UNLOCK_RATE_LIMIT,
   SHARE_VIEW_TOKEN_TTL_SECONDS,
   SharedArtifactView,
   UnlockShareRequest,
-} from '@astra/contracts';
+} from '@genie/contracts';
 import { z } from 'zod';
-import type { ShareService } from '@astra/service-share';
-import { parseShareToken, requesterFingerprint } from '@astra/service-share';
-import { appendAuditEvent } from '@astra/telemetry';
-import { withTenant, type DbHandle } from '@astra/db';
+import type { ShareService } from '@genie/service-share';
+import { parseShareToken, requesterFingerprint } from '@genie/service-share';
+import { appendAuditEvent } from '@genie/telemetry';
+import { withTenant, type DbHandle } from '@genie/db';
 import type { App } from '../fastify.js';
 import { requirePrincipal } from '../auth/middleware.js';
 import type { JwtTokens } from '../auth/tokens.js';
@@ -37,8 +37,8 @@ export interface ShareRouteDeps {
 }
 
 /** 公開面が返す唯一のエラー。理由は監査にだけ残す。 */
-function opaqueDenial(): AstraError {
-  return new AstraError('common.not_found', 'this link is not available');
+function opaqueDenial(): GenieError {
+  return new GenieError('common.not_found', 'this link is not available');
 }
 
 export function registerShareRoutes(app: App, deps: ShareRouteDeps): void {
@@ -97,7 +97,7 @@ export function registerShareRoutes(app: App, deps: ShareRouteDeps): void {
         SHARE_UNLOCK_RATE_LIMIT.windowMs,
       );
       if (!verdict.allowed) {
-        throw new AstraError('common.rate_limited', 'too many attempts for this link');
+        throw new GenieError('common.rate_limited', 'too many attempts for this link');
       }
 
       const requesterHash = await requesterFingerprint(request.ip, deps.requesterSalt);

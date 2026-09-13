@@ -12,7 +12,7 @@
  * 表に無い名前は解決しない。**0 や空表として描かない**（D-34）。
  * 「データが無い」と「壊れている」を混ぜると、誰も気づけなくなる。
  */
-import type { ResolvedValue } from '@astra/contracts';
+import type { ResolvedValue } from '@genie/contracts';
 
 /** 所有サービスが 1 つの名前に対して提供する引き方。 */
 export type DataSourceHandler = (tenantId: string) => Promise<ResolvedValue>;

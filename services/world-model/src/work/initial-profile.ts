@@ -1,5 +1,5 @@
 import { sql } from 'kysely';
-import { withTenant, type DbHandle } from '@astra/db';
+import { withTenant, type DbHandle } from '@genie/db';
 import {
   InitialProfile,
   type InitialProfileOutcome,
@@ -8,7 +8,7 @@ import {
   type WorkArtifactBatch,
   uuidv7,
   type PersonalizationProfile,
-} from '@astra/contracts';
+} from '@genie/contracts';
 import { buildWorkContext, clusterProjects, personKey } from './graph.js';
 import { wallClock } from './business-time.js';
 import { deriveProfile, EMPTY_PERSONALIZATION } from './personalization.js';

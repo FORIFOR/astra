@@ -13,7 +13,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse } from 'yaml';
 import { describe, expect, it } from 'vitest';
-import { EXTERNAL_SEND_SCOPES, PERMISSION_SCOPES, riskRank } from '@astra/contracts';
+import { EXTERNAL_SEND_SCOPES, PERMISSION_SCOPES, riskRank } from '@genie/contracts';
 import {
   CALENDAR_OPERATIONS,
   GMAIL_OPERATIONS,
@@ -23,8 +23,8 @@ import {
   permissionsFromGoogleScopes,
   permissionsFromMicrosoftScopes,
   type OperationDecl,
-} from '@astra/service-connectors';
-import { CONNECTORS, TOOL_CONNECTOR } from '@astra/worker-agent-host';
+} from '@genie/service-connectors';
+import { CONNECTORS, TOOL_CONNECTOR } from '@genie/worker-agent-host';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 

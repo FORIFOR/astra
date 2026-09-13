@@ -1,8 +1,8 @@
 /**
  * 外部の身元提供者（Google / Apple / LINE）の ID トークン検証。実装仕様 §4.3。
  *
- * deepnote-desktop は Firebase を仲介にしていた。Astra は自分の identity を持つので、
- * **提供者の鍵で直接検証し、Astra のトークンを発行する。**
+ * deepnote-desktop は Firebase を仲介にしていた。Genie は自分の identity を持つので、
+ * **提供者の鍵で直接検証し、Genie のトークンを発行する。**
  * 端末から受け取るのは ID トークンだけ。access / refresh token は受け取らない。
  *
  * 設定されていない提供者は「使えない」と答える（`configured: false`）。
@@ -11,11 +11,11 @@
 import { createHash } from 'node:crypto';
 import { createRemoteJWKSet, jwtVerify, type JWTPayload, type JWTVerifyGetKey } from 'jose';
 import {
-  AstraError,
+  GenieError,
   type AuthProvidersResponse,
   type IdentityProvider,
   type IdpSignInRequest,
-} from '@astra/contracts';
+} from '@genie/contracts';
 
 export const GOOGLE_JWKS_URL = 'https://www.googleapis.com/oauth2/v3/certs';
 export const APPLE_JWKS_URL = 'https://appleid.apple.com/auth/keys';
@@ -85,8 +85,8 @@ export interface IdpDeps {
   readonly fetchImpl?: typeof fetch;
 }
 
-function rejected(reason: string): AstraError {
-  return new AstraError('auth.idp_rejected', reason);
+function rejected(reason: string): GenieError {
+  return new GenieError('auth.idp_rejected', reason);
 }
 
 function str(value: unknown): string | null {
@@ -160,7 +160,7 @@ export class IdpVerifiers implements IdentityVerifier {
 
   async #google(request: IdpSignInRequest): Promise<VerifiedIdentity> {
     const google = this.config.google;
-    if (!google) throw new AstraError('auth.provider_not_configured', 'google is not configured');
+    if (!google) throw new GenieError('auth.provider_not_configured', 'google is not configured');
     const payload = await this.#verifyJwt(request.id_token, GOOGLE_JWKS_URL, {
       issuer: ['https://accounts.google.com', 'accounts.google.com'],
       audience: [...google.clientIds],
@@ -178,7 +178,7 @@ export class IdpVerifiers implements IdentityVerifier {
 
   async #apple(request: IdpSignInRequest): Promise<VerifiedIdentity> {
     const apple = this.config.apple;
-    if (!apple) throw new AstraError('auth.provider_not_configured', 'apple is not configured');
+    if (!apple) throw new GenieError('auth.provider_not_configured', 'apple is not configured');
     const audience = [apple.bundleId, ...(apple.serviceId ? [apple.serviceId] : [])];
     const payload = await this.#verifyJwt(request.id_token, APPLE_JWKS_URL, {
       issuer: 'https://appleid.apple.com',
@@ -203,7 +203,7 @@ export class IdpVerifiers implements IdentityVerifier {
 
   async #line(request: IdpSignInRequest): Promise<VerifiedIdentity> {
     const line = this.config.line;
-    if (!line) throw new AstraError('auth.provider_not_configured', 'line is not configured');
+    if (!line) throw new GenieError('auth.provider_not_configured', 'line is not configured');
     // LINE は JWKS ではなく verify endpoint。署名・aud・期限は LINE 側が見る
     const body = new URLSearchParams({ id_token: request.id_token, client_id: line.channelId });
     if (request.nonce) body.set('nonce', request.nonce);

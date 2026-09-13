@@ -8,7 +8,7 @@
  * 要約の質そのものは LanguageModel の仕事（OQ-11 が決まるまで代役）。
  * ここが持つのは「引用を落とさない」という、モデルに任せてはいけない性質。
  */
-import type { MeetingActionItem, MeetingClaim, MeetingSegment } from '@astra/contracts';
+import type { MeetingActionItem, MeetingClaim, MeetingSegment } from '@genie/contracts';
 
 export interface MeetingSummarizer {
   summarize(segments: readonly MeetingSegment[]): Promise<SummaryDraft>;

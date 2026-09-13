@@ -7,14 +7,14 @@
 #   2. 日本語の模型（ReazonSpeech zipformer）
 #
 # 置き場所は Rust 側の探索順に合わせてある（stt/library.rs, stt/model.rs）:
-#   ~/Library/Application Support/Astra/lib/libsherpa-onnx-c-api.dylib
-#   ~/Library/Application Support/Astra/models/sherpa-onnx-zipformer-ja-reazonspeech-2024-08-01/
+#   ~/Library/Application Support/Genie/lib/libsherpa-onnx-c-api.dylib
+#   ~/Library/Application Support/Genie/models/sherpa-onnx-zipformer-ja-reazonspeech-2024-08-01/
 #
 #   ./scripts/install-local-stt.sh
 #
 set -euo pipefail
 
-ROOT="${HOME}/Library/Application Support/Astra"
+ROOT="${HOME}/Library/Application Support/Genie"
 LIB_DIR="${ROOT}/lib"
 MODEL_DIR="${ROOT}/models"
 MODEL="sherpa-onnx-zipformer-ja-reazonspeech-2024-08-01"

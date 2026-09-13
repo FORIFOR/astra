@@ -12,7 +12,7 @@
  * 残ると、あとから本物と見分けられなくなる。書き出しは、繋がっていなければ
  * 繋がっていないと言って止まる。段取りの側は、それでも全部動く。
  */
-import type { DomainEntity, EntityDef } from '@astra/contracts';
+import type { DomainEntity, EntityDef } from '@genie/contracts';
 
 /** 正本 §15.2 の entity。plugin が持ち込む形をそのまま書いてある。 */
 export const VIDEO_ENTITIES: Record<string, EntityDef> = {

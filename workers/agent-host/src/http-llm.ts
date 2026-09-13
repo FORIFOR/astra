@@ -1,4 +1,4 @@
-import type { LanguageModelKind } from '@astra/contracts';
+import type { LanguageModelKind } from '@genie/contracts';
 
 export class HttpLlmError extends Error {
   constructor(

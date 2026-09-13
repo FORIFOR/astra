@@ -11,7 +11,7 @@ import {
   type SpeakRequest,
   type SpokenAudio,
   type TtsProvider,
-} from '@astra/tts';
+} from '@genie/tts';
 
 const SCOPES = ['https://www.googleapis.com/auth/cloud-platform'];
 

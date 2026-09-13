@@ -19,17 +19,17 @@
   </ItemGroup>
   <ItemGroup>
     <!-- 実アプリのソース（コピーせず参照）。 -->
-    <Compile Include="../Astra/CoreBridge/AstraCore.cs" />
-    <Compile Include="../Astra/GeneratedMetrics.cs" />
-    <Compile Include="../Astra/AppLogic/AstraSession.cs" />
-    <Compile Include="../Astra/AppLogic/WasapiCapture.cs" />
-    <Compile Include="../Astra/AppLogic/WindowsGlobalShortcut.cs" />
-    <Compile Include="../Astra/AppLogic/WindowsCredentialStore.cs" />
-    <Compile Include="../Astra/AppLogic/WindowsScreenCapture.cs" />
-    <Compile Include="../Astra/Main/MainWindow.xaml.cs" />
-    <Compile Include="../Astra/RecordingWorkspace/RecordingWorkspaceWindow.xaml.cs" />
-    <Compile Include="../Astra/RecordingWorkspace/RecordingWorkspaceGeometry.cs" />
-    <Compile Include="../Astra/VoiceHUD/VoiceHudWindow.xaml.cs" />
+    <Compile Include="../Genie/CoreBridge/GenieCore.cs" />
+    <Compile Include="../Genie/GeneratedMetrics.cs" />
+    <Compile Include="../Genie/AppLogic/GenieSession.cs" />
+    <Compile Include="../Genie/AppLogic/WasapiCapture.cs" />
+    <Compile Include="../Genie/AppLogic/WindowsGlobalShortcut.cs" />
+    <Compile Include="../Genie/AppLogic/WindowsCredentialStore.cs" />
+    <Compile Include="../Genie/AppLogic/WindowsScreenCapture.cs" />
+    <Compile Include="../Genie/Main/MainWindow.xaml.cs" />
+    <Compile Include="../Genie/RecordingWorkspace/RecordingWorkspaceWindow.xaml.cs" />
+    <Compile Include="../Genie/RecordingWorkspace/RecordingWorkspaceGeometry.cs" />
+    <Compile Include="../Genie/VoiceHUD/VoiceHudWindow.xaml.cs" />
     <!-- XAML が生成する部分メンバーの手書きスタブ（型検査用）。 -->
     <Compile Include="xaml-stubs.g.cs" />
   </ItemGroup>

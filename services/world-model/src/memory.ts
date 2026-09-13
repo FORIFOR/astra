@@ -7,7 +7,7 @@
  * ここは純粋関数だけにしてある。何を残すかの判断は、
  * DB の都合ではなく方針そのものなので、単体で読めるようにしたい。
  */
-import { MEMORABLE_KINDS, type FactKind, type FactSource } from '@astra/contracts';
+import { MEMORABLE_KINDS, type FactKind, type FactSource } from '@genie/contracts';
 
 export interface MemoryCandidate {
   readonly kind: string;

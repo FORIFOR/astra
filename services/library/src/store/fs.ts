@@ -7,7 +7,7 @@ import { createReadStream } from 'node:fs';
 import { mkdir, rm, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { Readable } from 'node:stream';
-import { AstraError } from '@astra/contracts';
+import { GenieError } from '@genie/contracts';
 import type { ObjectHead, ObjectStore, PutResult } from './types.js';
 
 async function toBuffer(body: Readable | Buffer): Promise<Buffer> {
@@ -29,7 +29,7 @@ export class FsObjectStore implements ObjectStore {
     // key はサーバが組み立てるが、外から来た値が紛れ込んでも root の外へ出さない
     const resolved = path.resolve(this.#root, key);
     if (resolved !== this.#root && !resolved.startsWith(this.#root + path.sep)) {
-      throw new AstraError('common.validation_failed', `object key escapes the store root: ${key}`);
+      throw new GenieError('common.validation_failed', `object key escapes the store root: ${key}`);
     }
     return resolved;
   }
@@ -53,7 +53,7 @@ export class FsObjectStore implements ObjectStore {
   async get(key: string): Promise<Readable> {
     const target = this.#pathFor(key);
     if (!(await this.head(key))) {
-      throw new AstraError('artifact.not_found', `no object at ${key}`);
+      throw new GenieError('artifact.not_found', `no object at ${key}`);
     }
     return createReadStream(target);
   }

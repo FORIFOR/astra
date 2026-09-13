@@ -7,7 +7,7 @@
  *   - 失敗が理由つきで返ること
  */
 import { describe, expect, it, vi } from 'vitest';
-import { connectorProviderConfig, type SecretStore } from '@astra/oauth';
+import { connectorProviderConfig, type SecretStore } from '@genie/oauth';
 import { ConnectorRuntime } from '../src/connector-steps.js';
 import type { HostStep } from '../src/connector-steps.js';
 

@@ -9,7 +9,7 @@
  *   - **絵が返らなかったら、絵が返らなかったと言う。**空の画像を作らない
  *   - 断られた理由を種類ごとに分ける（安全側の拒否と、設定の不足は別）
  */
-import { AstraError } from '@astra/contracts';
+import { GenieError } from '@genie/contracts';
 import {
   MAX_IMAGE_BYTES,
   type GenerateImageRequest,
@@ -94,7 +94,7 @@ export class ImagenGenerator implements ImageGenerator {
 
   constructor(config: ImagenConfig) {
     if (!config.projectId) {
-      throw new AstraError('common.validation_failed', 'imagen needs a project id');
+      throw new GenieError('common.validation_failed', 'imagen needs a project id');
     }
     this.#config = config;
     this.#token = config.token ?? adcToken();

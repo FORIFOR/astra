@@ -6,17 +6,17 @@ import { boundedTaskTitle } from './task-title.js';
  */
 import {
   ActionReceiptView,
-  AstraError,
+  GenieError,
   Task,
   isTerminal,
   uuidv7,
   type CreateTaskRequest,
   type TaskStatus,
-} from '@astra/contracts';
+} from '@genie/contracts';
 import { sql } from 'kysely';
-import { withTenant, type DbHandle, type ScopedDb } from '@astra/db';
-import { TaskProgressPayload, type TaskCurrentStep, type TaskListItem } from '@astra/contracts';
-import { appendAuditEvent } from '@astra/telemetry';
+import { withTenant, type DbHandle, type ScopedDb } from '@genie/db';
+import { TaskProgressPayload, type TaskCurrentStep, type TaskListItem } from '@genie/contracts';
+import { appendAuditEvent } from '@genie/telemetry';
 import { ensureStream, readEventsAfter } from './events.js';
 import { isKnownTaskKind, type TaskPlan } from './plan.js';
 import {
@@ -165,20 +165,20 @@ export class TaskService {
 
     const parsed = parseAgentKind(kind);
     if (!parsed || !this.#agents) {
-      throw new AstraError('task.unknown_kind', `unknown task kind: ${kind}`);
+      throw new GenieError('task.unknown_kind', `unknown task kind: ${kind}`);
     }
 
     const agent = await this.#agents.resolve(params.tenantId, kind);
     if (!agent) {
       // uninstall 済み / 未 install。「無い」として断る（AC5-6）。
-      throw new AstraError('task.unknown_kind', `unknown task kind: ${kind}`);
+      throw new GenieError('task.unknown_kind', `unknown task kind: ${kind}`);
     }
 
     try {
       return planInstalledAgent(agent, params.request.input);
     } catch (error) {
       if (error instanceof AgentNotRunnableError) {
-        throw new AstraError('plugin.permission_denied', error.message, {
+        throw new GenieError('plugin.permission_denied', error.message, {
           details: { missing_scopes: error.missing },
         });
       }
@@ -301,7 +301,7 @@ export class TaskService {
     const row = await withTenant(this.#db, tenantId, async (tx) => {
       const task = await loadTask(tx, taskId);
       if (isTerminal(task.status as TaskStatus)) {
-        throw new AstraError('task.invalid_state', `task is already ${task.status}`);
+        throw new GenieError('task.invalid_state', `task is already ${task.status}`);
       }
       await tx
         .updateTable('tasks')
@@ -332,9 +332,9 @@ export class TaskService {
         .where('task_id', '=', taskId)
         .executeTakeFirst();
 
-      if (!approval) throw new AstraError('approval.not_found', 'no such approval');
+      if (!approval) throw new GenieError('approval.not_found', 'no such approval');
       if (approval.status !== 'PENDING') {
-        throw new AstraError('approval.already_decided', `approval is ${approval.status}`);
+        throw new GenieError('approval.already_decided', `approval is ${approval.status}`);
       }
       if (approval.expires_at.getTime() <= Date.now()) {
         await tx
@@ -342,7 +342,7 @@ export class TaskService {
           .set({ status: 'EXPIRED' })
           .where('id', '=', approvalId)
           .execute();
-        throw new AstraError('approval.expired', 'approval expired');
+        throw new GenieError('approval.expired', 'approval expired');
       }
 
       await tx
@@ -387,7 +387,7 @@ type TaskRow = {
 async function loadTask(tx: ScopedDb, taskId: string): Promise<TaskRow> {
   const row = await tx.selectFrom('tasks').selectAll().where('id', '=', taskId).executeTakeFirst();
   // RLS で他テナントの行は見えない。ここに来る「無い」は 404 で正しい（逸脱 D-11）
-  if (!row) throw new AstraError('task.not_found', `no task ${taskId}`);
+  if (!row) throw new GenieError('task.not_found', `no task ${taskId}`);
   return row as TaskRow;
 }
 

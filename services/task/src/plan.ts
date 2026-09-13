@@ -2,7 +2,7 @@
  * タスクの計画。**純粋関数のみ**。
  *
  * ワークフローのコードは決定的でなければならないので、このファイルは
- * 乱数・時刻・I/O・Node の API に触れない。`@astra/contracts` も import しない
+ * 乱数・時刻・I/O・Node の API に触れない。`@genie/contracts` も import しない
  * （uuidv7 が Web Crypto を触るため、ワークフローのサンドボックスに持ち込めない）。
  */
 
@@ -70,7 +70,7 @@ export interface TaskStep {
   readonly complianceProfile?: StepComplianceProfile;
   /**
    * plugin が持ち込んだ規則（正本 §22）。
-   * 中身は `@astra/contracts` の `PolicyDocument` だが、
+   * 中身は `@genie/contracts` の `PolicyDocument` だが、
    * このファイルは contracts を import できない（冒頭の注意）。
    */
   readonly policies?: readonly unknown[];

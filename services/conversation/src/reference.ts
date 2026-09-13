@@ -5,7 +5,7 @@
  * 埋めると、利用者が指したものとは別のものに対して動く。
  * 分からないなら分からないまま残し、聞き返す材料にする。
  */
-import type { Referent, ReferenceResolution } from '@astra/contracts';
+import type { Referent, ReferenceResolution } from '@genie/contracts';
 
 /** 単独で立つ指示語。**後ろに名詞を取らない。** */
 const ANAPHORA = ['それ', 'あれ', 'これ'];

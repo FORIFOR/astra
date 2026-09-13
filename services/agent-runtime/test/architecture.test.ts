@@ -4,7 +4,7 @@
  * **設計判断はしない。**版と質疑を落とさないだけ。
  */
 import { describe, expect, it } from 'vitest';
-import type { DomainEntity } from '@astra/contracts';
+import type { DomainEntity } from '@genie/contracts';
 import {
   issueGaps,
   latestRevisions,

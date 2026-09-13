@@ -19,7 +19,7 @@ class ReleaseProvenanceTests(unittest.TestCase):
             subprocess.run(['git', '-C', str(root), '-c', 'user.name=Test', '-c',
                             'user.email=test@example.invalid', 'commit', '-qm', 'fixture'], check=True)
             (root / 'dist').mkdir()
-            archive = root / 'dist/Astra.zip'
+            archive = root / 'dist/Genie.zip'
             archive.write_bytes(b'archive fixture')
             def run(mode, *args):
                 return subprocess.run(['python3', str(SCRIPT), mode, str(root), *map(str, args)],

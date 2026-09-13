@@ -20,8 +20,8 @@ import {
   type EvidenceLedger as Ledger,
   type EvidenceLevel,
   type SourceType,
-} from '@astra/contracts';
-import type { AstraClient } from '@astra/api-client';
+} from '@genie/contracts';
+import type { GenieClient } from '@genie/api-client';
 
 const SOURCE_LABEL: Record<SourceType, string> = {
   official: '一次情報',
@@ -176,7 +176,7 @@ export function TaskEvidence({
   client,
   taskId,
 }: {
-  client: AstraClient | null;
+  client: GenieClient | null;
   taskId: string;
 }): ReactElement {
   const [ledger, setLedger] = useState<Ledger | null>(null);

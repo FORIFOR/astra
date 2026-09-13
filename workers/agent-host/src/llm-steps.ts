@@ -14,7 +14,7 @@ import {
   UNAVAILABLE_REASON,
   type LanguageModelKind,
   type LanguageModelOption,
-} from '@astra/contracts';
+} from '@genie/contracts';
 import { ClaudeCodeCli, ClaudeCodeError, CLAUDE_CODE_RECOVERY } from './claude-code.js';
 import { CodexCli, CodexError } from './codex.js';
 import { HttpLlmClient, HttpLlmError } from './http-llm.js';
@@ -334,7 +334,7 @@ export class LlmRuntime {
         kind: 'claude_code',
         available: probe.available,
         reason: probe.available ? null : (probe.reason ?? UNAVAILABLE_REASON.claude_code),
-        // 資格情報は Claude Code のもの。Astra は持たない。
+        // 資格情報は Claude Code のもの。Genie は持たない。
         credential: 'claude_code',
         implementation: probe.version,
       });

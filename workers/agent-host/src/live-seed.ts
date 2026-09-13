@@ -12,8 +12,8 @@
  */
 import { readFile, writeFile, rename } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
-import { buildMime } from '@astra/service-connectors';
-import { TokenStore } from '@astra/oauth';
+import { buildMime } from '@genie/service-connectors';
+import { TokenStore } from '@genie/oauth';
 import { observeReplies } from './live-receipt.js';
 import { liveTokens, saveLiveReadGrant } from './live-oauth.js';
 import { FileSecretStore } from './keychain.js';

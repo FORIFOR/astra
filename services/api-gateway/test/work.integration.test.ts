@@ -1,6 +1,6 @@
 /**
  * Work Context の HTTP 契約（WORK_CONTEXT_GATE の cloud 側）。
- *   ./infra/db/with-test-db.sh pnpm --filter @astra/service-api-gateway test
+ *   ./infra/db/with-test-db.sh pnpm --filter @genie/service-api-gateway test
  *
  * 見るのは:
  *   - 端末の worker が push した artifact から、案件・待ち・返すもの・週の負荷が組まれ、全部に出所がある
@@ -9,7 +9,7 @@
  *   - メール全文は受け取らない（抜粋の上限 500 字）
  */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { type TokenResponse, uuidv7 } from '@astra/contracts';
+import { type TokenResponse, uuidv7 } from '@genie/contracts';
 import { makeTestApp, makeTokens, testDbConfig, type TestApp } from './support.js';
 import type { App } from '../src/fastify.js';
 

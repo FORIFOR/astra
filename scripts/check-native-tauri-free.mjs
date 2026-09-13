@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// 最終製品経路（macOS native app + astra-core）が Tauri に依存していないことを機械で担保する（Done#8）。
+// 最終製品経路（macOS native app + genie-core）が Tauri に依存していないことを機械で担保する（Done#8）。
 // native app が Tauri/apps-desktop/AppHandle/WebviewWindow を参照したら fail。
 // core が tauri crate に依存したら fail。既存 Tauri アプリ(apps/desktop)は参照側なので対象外（§7: 残置）。
 import { readFileSync, readdirSync, statSync } from 'node:fs';
@@ -39,7 +39,7 @@ const FORBIDDEN = [
   /apps\/desktop/,
   /src-tauri/,
 ];
-const swiftFiles = walk(resolve(ROOT, 'apps/astra-macos/Sources'), ['.swift']);
+const swiftFiles = walk(resolve(ROOT, 'apps/genie-macos/Sources'), ['.swift']);
 for (const f of swiftFiles) {
   const code = stripComments(readFileSync(f, 'utf8'));
   for (const pat of FORBIDDEN) {
@@ -50,15 +50,15 @@ for (const f of swiftFiles) {
 }
 
 // Package.swift が Tauri を link/依存していないこと。
-const pkg = readFileSync(resolve(ROOT, 'apps/astra-macos/Package.swift'), 'utf8');
+const pkg = readFileSync(resolve(ROOT, 'apps/genie-macos/Package.swift'), 'utf8');
 if (/tauri/i.test(stripComments(pkg))) {
-  problems.push('apps/astra-macos/Package.swift: Tauri を参照している');
+  problems.push('apps/genie-macos/Package.swift: Tauri を参照している');
 }
 
-// 2) astra-core が tauri crate に依存していないこと。
-const coreCargo = readFileSync(resolve(ROOT, 'core/astra-core/Cargo.toml'), 'utf8');
+// 2) genie-core が tauri crate に依存していないこと。
+const coreCargo = readFileSync(resolve(ROOT, 'core/genie-core/Cargo.toml'), 'utf8');
 if (/^\s*tauri\s*=/m.test(coreCargo) || /\btauri-/.test(coreCargo)) {
-  problems.push('core/astra-core/Cargo.toml: astra-core が tauri に依存している');
+  problems.push('core/genie-core/Cargo.toml: genie-core が tauri に依存している');
 }
 
 if (problems.length > 0) {
@@ -68,5 +68,5 @@ if (problems.length > 0) {
 }
 
 console.log(
-  `native product path is Tauri-free: ${swiftFiles.length} Swift files + astra-core に Tauri 依存なし (Done#8)`,
+  `native product path is Tauri-free: ${swiftFiles.length} Swift files + genie-core に Tauri 依存なし (Done#8)`,
 );

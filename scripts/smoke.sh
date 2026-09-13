@@ -36,7 +36,7 @@ cleanup() {
   [ -n "$GATEWAY_PID" ] && { kill "$GATEWAY_PID" 2>/dev/null || true; wait "$GATEWAY_PID" 2>/dev/null || true; }
   dbmate --url "$ADMIN_URL" --migrations-dir "$ROOT/infra/db/migrations" --no-dump-schema drop >/dev/null 2>&1 || true
   psql "postgres://${PGSUPER}:${PGPASSWORD}@${PGHOST}:${PGPORT}/postgres" -X -q \
-    -c 'DROP ROLE IF EXISTS astra_app' -c 'DROP ROLE IF EXISTS astra_identity' \
+    -c 'DROP ROLE IF EXISTS genie_app' -c 'DROP ROLE IF EXISTS astra_identity' \
     -c 'DROP ROLE IF EXISTS astra_migrate' >/dev/null 2>&1 || true
   if [ $rc -ne 0 ] && [ -f "$STORE/worker.log" ]; then
     echo "--- worker log ---" >&2
@@ -78,7 +78,7 @@ export ASTRA_API_PORT="$PORT"
 # warn に落とすと「何が本物か」がログから消える（それを見たいので）。
 # 出力はファイルへ送っているので、量は問題にならない。
 export ASTRA_LOG_LEVEL=info
-export DATABASE_URL="postgres://astra_app:astra_app@${PGHOST}:${PGPORT}/${DB}?sslmode=disable"
+export DATABASE_URL="postgres://genie_app:genie_app@${PGHOST}:${PGPORT}/${DB}?sslmode=disable"
 export ASTRA_DB_IDENTITY_URL="postgres://astra_identity:astra_identity@${PGHOST}:${PGPORT}/${DB}?sslmode=disable"
 export REDIS_URL="${REDIS_URL:-redis://localhost:6380}"
 export TEMPORAL_ADDRESS="${TEMPORAL_ADDRESS:-localhost:7233}"

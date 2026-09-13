@@ -7,7 +7,7 @@
  * モデルの善意ではなくこの検査で成り立たせる。
  */
 import { z } from 'zod';
-import type { MeetingSegment } from '@astra/contracts';
+import type { MeetingSegment } from '@genie/contracts';
 import type { MeetingSummarizer, SummaryDraft } from './summarize.js';
 
 export type Fetch = (url: string, init: RequestInit) => Promise<Response>;

@@ -8,7 +8,7 @@
  * 「この呼び出しだけ直接」と近道を作り、それが既定になる。
  * connector 側が承認の跡を要求していれば、その近道は型で止まる。
  */
-import type { ActionRisk } from '@astra/contracts';
+import type { ActionRisk } from '@genie/contracts';
 import { ConnectorError } from './http.js';
 
 /** 承認された事実。**上位が発行し、connector が検証する。** */

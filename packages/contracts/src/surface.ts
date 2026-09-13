@@ -42,7 +42,7 @@ export const DATA_HANDLING_LABEL: Readonly<Record<DataHandling, string>> = {
 /** もう一段だけ開く説明。モデルの内部推論は出さない（§5.2 と同じ扱い）。 */
 export const DATA_HANDLING_DETAIL: Readonly<Record<DataHandling, string>> = {
   local_only: 'この端末の中だけで処理します。外には出ません。',
-  cloud_used: 'Astra のクラウドで処理します。ほかのサービスへは送りません。',
+  cloud_used: 'Genie のクラウドで処理します。ほかのサービスへは送りません。',
   external_send: 'ほかのサービスへ送ります。送る前に確認します。',
 };
 

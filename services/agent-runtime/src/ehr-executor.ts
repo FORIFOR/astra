@@ -5,7 +5,7 @@
  * 「診断/治療を自律決定しない」は、書いたあとで人が消す約束ではなく、
  * そもそも作らない約束として実装する。
  */
-import { AstraError } from '@astra/contracts';
+import { GenieError } from '@genie/contracts';
 import type { DomainService } from './domain.js';
 import {
   checkDraft,
@@ -50,7 +50,7 @@ export function ehrExecutors(domain: DomainService): Record<string, Executor> {
 
   const requireEncounter = (input: TaskLike, step: StepLike): string => {
     const id = argOf(input, step, 'encounter_id');
-    if (!id) throw new AstraError('common.validation_failed', 'どの受診かの指定が要ります');
+    if (!id) throw new GenieError('common.validation_failed', 'どの受診かの指定が要ります');
     return id;
   };
 
@@ -59,7 +59,7 @@ export function ehrExecutors(domain: DomainService): Record<string, Executor> {
       async execute(input, step) {
         const query = (argOf(input, step, 'query') ?? '').trim();
         if (query.length === 0) {
-          throw new AstraError('common.validation_failed', '探す言葉の指定が要ります');
+          throw new GenieError('common.validation_failed', '探す言葉の指定が要ります');
         }
 
         // **その利用者が既に見られる記録の中だけ**を探す（RLS がテナントを絞る）
@@ -117,7 +117,7 @@ export function ehrExecutors(domain: DomainService): Record<string, Executor> {
       async execute(input, step) {
         const encounterId = requireEncounter(input, step);
         const draft = argOf(input, step, 'draft');
-        if (!draft) throw new AstraError('common.validation_failed', '下書きの本文が要ります');
+        if (!draft) throw new GenieError('common.validation_failed', '下書きの本文が要ります');
 
         const notes = await notesOf(input.tenantId, encounterId);
         const check = checkDraft(draft, citedLines(notes));
@@ -126,7 +126,7 @@ export function ehrExecutors(domain: DomainService): Record<string, Executor> {
            * **残さずに止める。**「診断/治療を自律決定しない」は、
            * 書いたあとで人が消す約束ではない。
            */
-          throw new AstraError(
+          throw new GenieError(
             'common.validation_failed',
             `この下書きには、記録に無い診断・治療の判断が含まれています: ${check.problems.join(' / ')}`,
           );

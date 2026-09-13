@@ -14,55 +14,55 @@ import { floatingSurface } from './dock.js';
 const kebab = (s: string): string => s.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
 
 function colorVars(colors: ColorTokens): string[] {
-  return Object.entries(colors).map(([name, value]) => `  --astra-color-${kebab(name)}: ${value};`);
+  return Object.entries(colors).map(([name, value]) => `  --genie-color-${kebab(name)}: ${value};`);
 }
 
 function staticVars(): string[] {
   const lines: string[] = [];
   for (const [name, value] of Object.entries(space))
-    lines.push(`  --astra-space-${name}: ${value}px;`);
+    lines.push(`  --genie-space-${name}: ${value}px;`);
   for (const [name, value] of Object.entries(radius))
-    lines.push(`  --astra-radius-${name}: ${value}px;`);
+    lines.push(`  --genie-radius-${name}: ${value}px;`);
   for (const [name, value] of Object.entries(padding))
-    lines.push(`  --astra-padding-${kebab(name)}: ${value}px;`);
-  lines.push(`  --astra-border-hairline: ${border.hairline}px;`);
+    lines.push(`  --genie-padding-${kebab(name)}: ${value}px;`);
+  lines.push(`  --genie-border-hairline: ${border.hairline}px;`);
   for (const [name, value] of Object.entries(elevation))
-    lines.push(`  --astra-elevation-${name}: ${value};`);
+    lines.push(`  --genie-elevation-${name}: ${value};`);
   for (const [role, scale] of Object.entries(typography)) {
-    lines.push(`  --astra-font-size-${kebab(role)}: ${scale.size}px;`);
-    lines.push(`  --astra-font-weight-${kebab(role)}: ${scale.weight};`);
-    lines.push(`  --astra-line-height-${kebab(role)}: ${scale.lineHeight};`);
+    lines.push(`  --genie-font-size-${kebab(role)}: ${scale.size}px;`);
+    lines.push(`  --genie-font-weight-${kebab(role)}: ${scale.weight};`);
+    lines.push(`  --genie-line-height-${kebab(role)}: ${scale.lineHeight};`);
   }
   /*
    * 画面側が使っていた短い名前。**出していなかった。**
-   * `var(--astra-font-size-sm, 0.875rem)` は黙って 14px に落ち、
+   * `var(--genie-font-size-sm, 0.875rem)` は黙って 14px に落ち、
    * §17.2 が 11–12px と定める micro の文字が body の大きさで出ていた。
    * 見た目は壊れないので、目で見ても気づけない。ここで実値に結ぶ。
    */
-  lines.push(`  --astra-space-xs: ${space.compact}px;`);
-  lines.push(`  --astra-space-sm: ${space.base}px;`);
-  lines.push(`  --astra-space-md: ${space.lg}px;`);
-  lines.push(`  --astra-radius-sm: ${radius.small}px;`);
-  lines.push(`  --astra-font-size-sm: ${typography.micro.size}px;`);
-  lines.push(`  --astra-font-sans: ${fontStacks.sans};`);
-  lines.push(`  --astra-font-mono: ${fontStacks.mono};`);
+  lines.push(`  --genie-space-xs: ${space.compact}px;`);
+  lines.push(`  --genie-space-sm: ${space.base}px;`);
+  lines.push(`  --genie-space-md: ${space.lg}px;`);
+  lines.push(`  --genie-radius-sm: ${radius.small}px;`);
+  lines.push(`  --genie-font-size-sm: ${typography.micro.size}px;`);
+  lines.push(`  --genie-font-sans: ${fontStacks.sans};`);
+  lines.push(`  --genie-font-mono: ${fontStacks.mono};`);
   for (const [role, spec] of Object.entries(motion)) {
-    lines.push(`  --astra-motion-${kebab(role)}-duration: ${spec.durationMs}ms;`);
-    lines.push(`  --astra-motion-${kebab(role)}-easing: ${spec.easing};`);
+    lines.push(`  --genie-motion-${kebab(role)}-duration: ${spec.durationMs}ms;`);
+    lines.push(`  --genie-motion-${kebab(role)}-easing: ${spec.easing};`);
   }
-  lines.push(`  --astra-layout-sidebar-expanded: ${layout.sidebar.expanded}px;`);
-  lines.push(`  --astra-layout-sidebar-collapsed: ${layout.sidebar.collapsed}px;`);
-  lines.push(`  --astra-layout-top-bar: ${layout.topBar}px;`);
-  lines.push(`  --astra-layout-main-min: ${layout.mainMin}px;`);
-  lines.push(`  --astra-layout-inspector: ${layout.inspector}px;`);
-  for (const [name, value] of Object.entries(zIndex)) lines.push(`  --astra-z-${name}: ${value};`);
+  lines.push(`  --genie-layout-sidebar-expanded: ${layout.sidebar.expanded}px;`);
+  lines.push(`  --genie-layout-sidebar-collapsed: ${layout.sidebar.collapsed}px;`);
+  lines.push(`  --genie-layout-top-bar: ${layout.topBar}px;`);
+  lines.push(`  --genie-layout-main-min: ${layout.mainMin}px;`);
+  lines.push(`  --genie-layout-inspector: ${layout.inspector}px;`);
+  for (const [name, value] of Object.entries(zIndex)) lines.push(`  --genie-z-${name}: ${value};`);
   for (const [name, value] of Object.entries(breakpoints)) {
-    lines.push(`  --astra-breakpoint-${name}: ${value}px;`);
+    lines.push(`  --genie-breakpoint-${name}: ${value}px;`);
   }
   // floating surface（Dock / HUD）。Deepgram の dark scheme を値の正として持つ
   for (const [name, value] of Object.entries(floatingSurface)) {
     lines.push(
-      `  --astra-float-${kebab(name)}: ${typeof value === 'number' ? `${value}px` : value};`,
+      `  --genie-float-${kebab(name)}: ${typeof value === 'number' ? `${value}px` : value};`,
     );
   }
   return lines;
@@ -102,19 +102,19 @@ body,
 
 body {
   margin: 0;
-  background: var(--astra-color-canvas);
-  color: var(--astra-color-text);
-  font-family: var(--astra-font-sans);
-  font-size: var(--astra-font-size-body);
-  line-height: var(--astra-line-height-body);
+  background: var(--genie-color-canvas);
+  color: var(--genie-color-text);
+  font-family: var(--genie-font-sans);
+  font-size: var(--genie-font-size-body);
+  line-height: var(--genie-line-height-body);
   -webkit-font-smoothing: antialiased;
 }
 
 /* §19: focus ring を消さない。色だけに頼らないよう offset も付ける。 */
 :focus-visible {
-  outline: 2px solid var(--astra-color-focus-ring);
+  outline: 2px solid var(--genie-color-focus-ring);
   outline-offset: 2px;
-  border-radius: var(--astra-radius-small);
+  border-radius: var(--genie-radius-small);
 }
 
 /*

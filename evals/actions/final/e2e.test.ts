@@ -18,20 +18,20 @@ import { Writable } from 'node:stream';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { TestWorkflowEnvironment } from '@temporalio/testing';
 import type { Worker } from '@temporalio/worker';
-import { uuidv7, type Task, type TokenResponse } from '@astra/contracts';
-import { createDb, type DbHandle } from '@astra/db';
-import { createLogger } from '@astra/telemetry';
-import { FsObjectStore, LibraryService } from '@astra/service-library';
-import { PluginRegistryService, agentResolver } from '@astra/service-plugin-registry';
-import { AgentHostService, HostBridge, HostStepExecutor } from '@astra/service-agent-host';
-import { TaskService, TemporalTaskRuntime, createTaskWorker } from '@astra/service-task';
+import { uuidv7, type Task, type TokenResponse } from '@genie/contracts';
+import { createDb, type DbHandle } from '@genie/db';
+import { createLogger } from '@genie/telemetry';
+import { FsObjectStore, LibraryService } from '@genie/service-library';
+import { PluginRegistryService, agentResolver } from '@genie/service-plugin-registry';
+import { AgentHostService, HostBridge, HostStepExecutor } from '@genie/service-agent-host';
+import { TaskService, TemporalTaskRuntime, createTaskWorker } from '@genie/service-task';
 import {
   MemoryRateLimiter,
   buildApp,
   JwtTokens,
   loadSigningKeys,
   type App,
-} from '@astra/service-api-gateway';
+} from '@genie/service-api-gateway';
 
 const url = process.env['TEST_DATABASE_URL'];
 const identityUrl = process.env['TEST_IDENTITY_DATABASE_URL'];

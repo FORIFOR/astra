@@ -5,7 +5,7 @@
 //! loopback listener が、native app の正しいやり方（§7.3）。
 //!
 //! ここが持つのは待ち受けだけ。トークンの交換も保管も TypeScript 側
-//! （`@astra/oauth`）にあり、**このプロセスは code と state を右から左へ渡すだけ。**
+//! （`@genie/oauth`）にあり、**このプロセスは code と state を右から左へ渡すだけ。**
 //! 交換をここへ持ち込むと、資格情報の通り道が二重になる。
 
 use std::io::{BufRead, BufReader, Write};
@@ -32,8 +32,8 @@ pub struct Listening {
     pub port: u16,
 }
 
-// 折り返しで戻る値の型は astra-core が正本（macOS/Windows native も同じ型を使う）。
-pub use astra_core::CallbackParams;
+// 折り返しで戻る値の型は genie-core が正本（macOS/Windows native も同じ型を使う）。
+pub use genie_core::CallbackParams;
 
 /// 待ち受けを開く。**port は OS に選ばせる。**
 ///
@@ -117,17 +117,17 @@ fn read_request_target(stream: &mut TcpStream) -> Result<String, String> {
         .ok_or_else(|| "the callback was not a request we understand".to_string())
 }
 
-// クエリの読み取り・percent decode は astra-core が正本。ここは待ち受けだけ持つ。
-pub use astra_core::parse_callback;
+// クエリの読み取り・percent decode は genie-core が正本。ここは待ち受けだけ持つ。
+pub use genie_core::parse_callback;
 
 fn respond(stream: &mut TcpStream, params: &CallbackParams) {
     let message = if params.error.is_some() {
-        "サインインは完了しませんでした。Astra に戻ってください。"
+        "サインインは完了しませんでした。Genie に戻ってください。"
     } else {
         "サインインが終わりました。このタブは閉じて構いません。"
     };
     let body =
-        format!("<!doctype html><meta charset=\"utf-8\"><title>Astra</title><p>{message}</p>");
+        format!("<!doctype html><meta charset=\"utf-8\"><title>Genie</title><p>{message}</p>");
     let response = format!(
         "HTTP/1.1 200 OK\r\ncontent-type: text/html; charset=utf-8\r\ncontent-length: {}\r\nconnection: close\r\n\r\n{}",
         body.len(),
@@ -141,7 +141,7 @@ fn respond(stream: &mut TcpStream, params: &CallbackParams) {
 mod tests {
     use super::*;
 
-    // クエリ解析・percent decode・URL 許可判定のテストは astra-core 側に移動。
+    // クエリ解析・percent decode・URL 許可判定のテストは genie-core 側に移動。
     // ここに残すのは待ち受け（OS 統合）のテストだけ。
     #[test]
     fn opens_on_a_port_the_os_chose() {
@@ -161,7 +161,7 @@ mod tests {
 /// ここで絞らないと「開く」が何でも実行する口になる。
 #[tauri::command]
 pub fn oauth_open_browser(url: String) -> Result<(), String> {
-    if !astra_core::is_allowed_auth_url(&url) {
+    if !genie_core::is_allowed_auth_url(&url) {
         return Err(format!(
             "refusing to open a non-https url: {}",
             url.chars().take(32).collect::<String>()

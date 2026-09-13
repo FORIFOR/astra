@@ -1,5 +1,5 @@
 {
-  "name": "@astra/agent-sdk",
+  "name": "@genie/agent-sdk",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -21,8 +21,8 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@astra/contracts": "workspace:*",
-    "@astra/policy": "workspace:*"
+    "@genie/contracts": "workspace:*",
+    "@genie/policy": "workspace:*"
   },
   "devDependencies": {
     "vitest": "catalog:"

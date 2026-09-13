@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Astra",
-  "version": "0.1.2",
+  "productName": "Genie",
+  "version": "0.1.3",
   "identifier": "com.astra.desktop",
   "build": {
     "frontendDist": "../dist",
@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "Astra",
+        "title": "Genie",
         "width": 1440,
         "height": 900,
         "minWidth": 720,
@@ -24,7 +24,7 @@
       },
       {
         "label": "dock",
-        "title": "Astra Task Dock",
+        "title": "Genie Task Dock",
         "url": "index.html#/dock",
         "width": 560,
         "height": 56,
@@ -39,7 +39,7 @@
       },
       {
         "label": "voice-hud",
-        "title": "Astra Voice",
+        "title": "Genie Voice",
         "url": "index.html#/voice-hud",
         "width": 360,
         "height": 220,
@@ -69,6 +69,6 @@
       "icons/icon.ico"
     ],
     "category": "Productivity",
-    "shortDescription": "Astra — 会話から仕事を終わらせる"
+    "shortDescription": "Genie — 会話から仕事を終わらせる"
   }
 }

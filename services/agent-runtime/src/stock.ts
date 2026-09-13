@@ -11,7 +11,7 @@
  * ここで守るのは、読み上げの中身が**欠けないこと**。
  * 「数量が未入力のまま確認だけ取る」が、いちばん危ない形。
  */
-import type { DomainEntity } from '@astra/contracts';
+import type { DomainEntity } from '@genie/contracts';
 
 export type Side = 'BUY' | 'SELL';
 export type OrderType = 'MARKET' | 'LIMIT';

@@ -11,7 +11,7 @@ import {
   surfacesFor,
   type BriefItem,
   type DailyBrief,
-} from '@astra/contracts';
+} from '@genie/contracts';
 import { Heartbeat, inQuietHours, shouldNotify } from '../src/heartbeat.js';
 
 const item = (over: Partial<BriefItem> = {}): BriefItem =>

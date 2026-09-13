@@ -10,8 +10,8 @@
  *
  * モデルが決まっても、この部分は書き直さない。
  */
-import { AstraError, type Artifact } from '@astra/contracts';
-import type { LibraryService } from '@astra/service-library';
+import { GenieError, type Artifact } from '@genie/contracts';
+import type { LibraryService } from '@genie/service-library';
 
 export interface GenerateImageRequest {
   readonly prompt: string;
@@ -172,7 +172,7 @@ export class ImageService {
   }): Promise<GenerateResult> {
     const prompt = input.request.prompt.trim();
     if (prompt.length === 0) {
-      throw new AstraError('common.validation_failed', 'an image needs a prompt');
+      throw new GenieError('common.validation_failed', 'an image needs a prompt');
     }
 
     // 派生元がこのテナントのものであることを確かめてから作る。
@@ -183,7 +183,7 @@ export class ImageService {
 
     const image = await this.#generator.generate({ ...input.request, prompt });
     if (image.bytes.byteLength > MAX_IMAGE_BYTES) {
-      throw new AstraError('artifact.too_large', 'the generated image is too large to store');
+      throw new GenieError('artifact.too_large', 'the generated image is too large to store');
     }
 
     const artifact = await this.#library.create({

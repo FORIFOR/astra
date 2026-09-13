@@ -1,5 +1,5 @@
 /**
- * @astra/worker-agent-host
+ * @genie/worker-agent-host
  *
  * 端末で動く実行基盤。正本 §4.4・§16.1・§21。
  *

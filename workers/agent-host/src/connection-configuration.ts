@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
-import type { OauthEnv } from '@astra/oauth';
+import type { OauthEnv } from '@genie/oauth';
 
 export const CONNECTION_CONFIGURATION_KEYS = new Set([
   'ASTRA_OAUTH_GOOGLE_CLIENT_ID',

@@ -5,7 +5,7 @@
  * ここで別の通知を作らない — 印の数と Home の件数が食い違うと信用を失う。
  */
 import { useEffect, useRef, useState, type ReactElement } from 'react';
-import type { BriefItem } from '@astra/contracts';
+import type { BriefItem } from '@genie/contracts';
 import { useShell } from '../state/ShellProvider.js';
 import { useOptionalWorkspaceData } from '../state/WorkspaceData.js';
 import { badgeCount } from './Sidebar.js';

@@ -1,8 +1,8 @@
-# Astra Design System — 決まっている規則と、その根拠
+# Genie Design System — 決まっている規則と、その根拠
 
-## 0. 最上位原則 — Astra は装飾ではなく、構造・寸法・意味で美しくする
+## 0. 最上位原則 — Genie は装飾ではなく、構造・寸法・意味で美しくする
 
-Astra の造形は飾って良くならない。**情報構造と物理寸法が正確なほど良くなる。**
+Genie の造形は飾って良くならない。**情報構造と物理寸法が正確なほど良くなる。**
 局所の造形 9 段（`docs/ux-benchmark/auto/CRAFT.md`）と、6 つの型を横断した
 DS-01〜05（同 末尾、`docs/ux-benchmark/compare/SAMPLES.md` Sample 11〜16）、
 磨きの 7 チケット（Sample 20）と横展開（craftL / Sample 21）で確かめた。
@@ -25,7 +25,7 @@ Workspace / Library / Listening / Running / Confirmation / Done / Recovery）を
 NOT_MEASURED のまま）、Home の主入口は盲検 3 名が 3/3 で入力欄を指した。凍結の対象に
 Home の階層 / 確認面の寸法 / Library の accent / 主操作の強調 / Compact Meeting Mode を
 明示して加える。**測れていない主観（perceived）を理由に面を変えない。**
-Library / Running / Confirmation / Recovery は Astra らしさの核で、触るほど退行の危険が高い。
+Library / Running / Confirmation / Recovery は Genie らしさの核で、触るほど退行の危険が高い。
 再確認（2026-09-04、P0 Privacy・NAV 4 タブ・Calendar purpose-first のあと）: **新しい FIX は 0、
 CRAFT_FREEZE_OVERRIDE は NO**。以後 UI の改善案は作らず、実機で未測定のもの（Full Keyboard Access /
 VoiceOver / 実 TCC / 実会議の録れ方）を閉じる。失敗が出たときだけ、Evidence A/B が取れるときだけ、
@@ -201,7 +201,7 @@ recovery / keyboard safety / perceived complexity）。ここには **決まっ�
 ```
 visual_craft 5/6（前 2/6、raw 4/6）  hierarchy 5/5  state 4/4  provenance 5/6
 fragmentation 3/5  control 3/5（負け 0）  density 2/5（負け 1）  occupation → §7 の寸法ゲート
-action_confirmation  Astra 6 / VoiceOS 0 / 引分 1
+action_confirmation  Genie 6 / VoiceOS 0 / 引分 1
 ```
 
 sample11〜16 の時点は craft 3/5・hierarchy 4/4・provenance 4/5・fragmentation 3/4・
@@ -210,11 +210,11 @@ density 2/4（`compare/aggregate.json` の履歴）。
 DS の外の課題は 4 つとも片付いた: post_meeting の戻る手段と fixture の量（547dd40）、
 meeting_controller の標本の切り抜き（sample17: 4/1/2、craft は引分）、
 screen_occupation の寸法ゲート化（§7）、transcript_attribution の競合素材
-（sample18: 動画 webp の 30 コマ目。5 軸で Astra 3 / 競合 1 / 引分 1）。
-post_meeting は 547dd40 の絵で採点し直した（sample19: Astra 4 / 競合 2 / 引分 2、
+（sample18: 動画 webp の 30 コマ目。5 軸で Genie 3 / 競合 1 / 引分 1）。
+post_meeting は 547dd40 の絵で採点し直した（sample19: Genie 4 / 競合 2 / 引分 2、
 前は 2 / 5）。「戻る手段が無い」「右パネルが上端に寄る」は 2 名から消え、
-craft は 2 名一致で Astra（列の揃いは実測 x=295 で確認）。
-6 型を揃えた visual_craft は **Astra 5 / 競合 0 / 引分 1**（raw 4 / 1 / 1）。
+craft は 2 名一致で Genie（列の揃いは実測 x=295 で確認）。
+6 型を揃えた visual_craft は **Genie 5 / 競合 0 / 引分 1**（raw 4 / 1 / 1）。
 残る負け筋は 2 つ: fragmentation の「上部の黒いバーが本体と別の窓に見える」
 （造形⑧で選んだ側。戻さない）と、post_meeting の 3 列（§7.1 の設計）＋
 窓だけの撮影が壁紙の上の小窓に占有で負けること（素材の非対称。§7 で実寸を測る）。

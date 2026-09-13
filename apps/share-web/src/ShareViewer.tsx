@@ -1,7 +1,7 @@
 /**
  * 共有された成果物の viewer。正本 §2.3、Phase 2 実装仕様 §2。
  *
- * ここは**組織の外の人**が見る画面。Astra の中身を説明しない。
+ * ここは**組織の外の人**が見る画面。Genie の中身を説明しない。
  * テナント名も所有者も出さない（サーバがそもそも返さない）。
  */
 import { useCallback, useEffect, useState, type FormEvent, type ReactElement } from 'react';
@@ -10,7 +10,7 @@ import {
   ShareUnavailableError,
   isRenderable,
   type UnlockedShare,
-} from '@astra/api-client';
+} from '@genie/api-client';
 
 type Phase = 'opening' | 'needs-input' | 'open' | 'unavailable' | 'no-link';
 

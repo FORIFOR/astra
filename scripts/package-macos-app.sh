@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# Astra macOS を署名済み .app にする（Calendar 等の TCC を実機で検証するため）。
+# Genie macOS を署名済み .app にする（Calendar 等の TCC を実機で検証するため）。
 # TCC プロンプトは署名 .app を LaunchServices(open) 経由で起動したときだけ出る。
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 IDENTITY="${ASTRA_SIGN_IDENTITY:-Apple Development}"   # security find-identity -v -p codesigning で確認
-APP="$ROOT/apps/astra-macos/.build/Astra.app"
-( cd "$ROOT/apps/astra-macos" && swift build -c release )
+APP="$ROOT/apps/genie-macos/.build/Genie.app"
+( cd "$ROOT/apps/genie-macos" && swift build -c release )
 rm -rf "$APP"; mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources/ja.lproj"
-cp "$ROOT/apps/astra-macos/.build/release/AstraMac" "$APP/Contents/MacOS/AstraMac"
+cp "$ROOT/apps/genie-macos/.build/release/GenieMac" "$APP/Contents/MacOS/GenieMac"
 mkdir -p "$APP/Contents/Resources/plugins"
 cp -R "$ROOT/plugins/builtin" "$APP/Contents/Resources/plugins/builtin"
 if [[ -n "${ASTRA_CONNECTIONS_CONFIG:-}" ]]; then
@@ -20,9 +20,10 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
-  <key>CFBundleExecutable</key><string>AstraMac</string>
+  <key>CFBundleExecutable</key><string>GenieMac</string>
   <key>CFBundleIdentifier</key><string>com.astra.desktop</string>
-  <key>CFBundleName</key><string>Astra</string>
+  <key>CFBundleName</key><string>Genie</string>
+  <key>CFBundleDisplayName</key><string>Genie</string>
   <key>CFBundleIconFile</key><string>AppIcon</string>
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>CFBundleShortVersionString</key><string>1.0</string>
@@ -44,25 +45,25 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <!-- 自動更新（Sparkle）。release-macos.sh と同じ鍵と配布先。これが無いと SoftwareUpdate は起動せず、
        UI Atlas の system.update-available / up-to-date（sysshots）を撮れない。
        検証用の .app なので、起動時の自動チェックは切る（hands-on gate の途中で更新の窓を出さない）。 -->
-  <key>SUFeedURL</key><string>${ASTRA_UPDATE_FEED:-https://github.com/FORIFOR/astra/releases/latest/download/appcast.xml}</string>
+  <key>SUFeedURL</key><string>${ASTRA_UPDATE_FEED:-https://github.com/FORIFOR/genie/releases/latest/download/appcast.xml}</string>
   <key>SUPublicEDKey</key><string>${ASTRA_UPDATE_PUBKEY:-b61dWnFNEdpzAWG/V5SMb4bZGrqgzJwMDAcuw/564cs=}</string>
   <key>SUEnableAutomaticChecks</key><false/>
 </dict></plist>
 PLIST
 # ja.lproj に実体を置く（中身の無い lproj は localization として数えられない）。Sparkle は
 # メインバンドルの言語に合わせて自分の窓を出す。
-printf 'CFBundleName = "Astra";\n' > "$APP/Contents/Resources/ja.lproj/InfoPlist.strings"
+printf 'CFBundleName = "Genie";\n' > "$APP/Contents/Resources/ja.lproj/InfoPlist.strings"
 # Sparkle を同梱する。**入れないと起動できない**（実行体が @rpath/Sparkle.framework を要求し、
 # dyld が "Library not loaded" で落とす）。Sparkle を入れた後もこの台本は更新されておらず、
 # ここで作った .app は起動即クラッシュしていた —— TCC を要る検証が全部できない状態だった。
-SPARKLE_FW="$(find "$ROOT/apps/astra-macos/Vendor/Sparkle/Sparkle.xcframework" \
+SPARKLE_FW="$(find "$ROOT/apps/genie-macos/Vendor/Sparkle/Sparkle.xcframework" \
   -type d -name "Sparkle.framework" -path "*macos*" 2>/dev/null | head -1)"
 if [[ -n "$SPARKLE_FW" ]]; then
   mkdir -p "$APP/Contents/Frameworks"
   rm -rf "$APP/Contents/Frameworks/Sparkle.framework"
   cp -R "$SPARKLE_FW" "$APP/Contents/Frameworks/Sparkle.framework"
   install_name_tool -add_rpath "@executable_path/../Frameworks" \
-    "$APP/Contents/MacOS/AstraMac" 2>/dev/null || true
+    "$APP/Contents/MacOS/GenieMac" 2>/dev/null || true
 else
   echo "FAIL: Sparkle.framework が見つからない（scripts/fetch-sparkle.sh を先に）" >&2; exit 1
 fi
@@ -77,7 +78,7 @@ codesign --force --sign "$IDENTITY" --identifier com.astra.desktop "$APP"
 codesign --verify --strict --verbose=2 "$APP"
 codesign -dv --verbose=2 "$APP" 2>&1 | grep -iE "Identifier=|TeamIdentifier=|Authority=Apple Dev" | head -3
 # 起動できることをここで確かめる。落ちる .app を渡すと、TCC の検証が全部そこで止まる。
-"$APP/Contents/MacOS/AstraMac" --selftest facts >/dev/null 2>&1 \
+"$APP/Contents/MacOS/GenieMac" --selftest facts >/dev/null 2>&1 \
   && echo "launch: OK（実行体は起動する）" \
   || { echo "FAIL: パッケージした .app が起動しない" >&2; exit 1; }
 echo "packaged: $APP"

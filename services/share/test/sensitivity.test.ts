@@ -6,7 +6,7 @@
  * 判定できないまま外へ出すのは、判定して許すのとは違う。
  */
 import { describe, expect, it, vi } from 'vitest';
-import { uuidv7, type Artifact, type Sensitivity } from '@astra/contracts';
+import { uuidv7, type Artifact, type Sensitivity } from '@genie/contracts';
 import { ShareService } from '../src/service.js';
 
 const artifactWith = (sensitivity: Sensitivity): Artifact =>

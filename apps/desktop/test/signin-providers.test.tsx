@@ -1,7 +1,7 @@
 /**
  * 提供者でのサインイン。実装仕様 §4.3、正本 §21。
  *
- * deepnote-desktop から持ち込んだ流れが、Astra の約束を守っているかを見る:
+ * deepnote-desktop から持ち込んだ流れが、Genie の約束を守っているかを見る:
  *   - サーバへ渡すのは ID トークンだけ（access / refresh token は渡さない）
  *   - 折り返しの state が違えば受け取らない
  *   - 途中でやめたのは失敗ではない（赤い文を出さない）
@@ -10,7 +10,7 @@ import type { JSX } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
-import { uuidv7 } from '@astra/contracts';
+import { uuidv7 } from '@genie/contracts';
 
 const loopback = {
   listen: vi.fn(async () => ({ redirectUri: 'http://127.0.0.1:5555/callback', port: 5555 })),

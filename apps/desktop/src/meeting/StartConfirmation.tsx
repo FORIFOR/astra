@@ -6,7 +6,7 @@
  */
 import { useEffect, useState, type ReactElement } from 'react';
 import { audio, type InputDevice } from '../host/tauri.js';
-import type { AudioSource } from '@astra/contracts';
+import type { AudioSource } from '@genie/contracts';
 
 export interface MeetingStartValues {
   readonly title: string;

@@ -9,21 +9,21 @@
  */
 import type { Redis } from 'ioredis';
 import {
-  AstraError,
+  GenieError,
   CreateMeetingRequest,
   MeetingControlMessage,
   NameSpeakerRequest,
   TranscriptPass,
   type AccessTokenClaims,
-} from '@astra/contracts';
-import type { Logger } from '@astra/telemetry';
+} from '@genie/contracts';
+import type { Logger } from '@genie/telemetry';
 import type {
   MeetingService,
   RecordingStore,
   StreamingSession,
   StreamingTranscriber,
-} from '@astra/service-meeting';
-import type { TaskService } from '@astra/service-task';
+} from '@genie/service-meeting';
+import type { TaskService } from '@genie/service-task';
 import type { App } from '../fastify.js';
 import { requirePrincipal } from '../auth/middleware.js';
 import { bearerToken, type TokenVerifier } from '../auth/tokens.js';
@@ -129,7 +129,7 @@ export function registerMeetingRoutes(app: App, deps: MeetingRouteDeps): void {
         });
       }
       if (meeting.status === 'COMPLETE' || meeting.status === 'FAILED') {
-        throw new AstraError('meeting.not_recording', 'this meeting is already over');
+        throw new GenieError('meeting.not_recording', 'this meeting is already over');
       }
 
       const { task } = await deps.tasks.create({

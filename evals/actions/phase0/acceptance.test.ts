@@ -25,18 +25,18 @@ import {
   type PluginCatalogEntry,
   type Task,
   type TokenResponse,
-} from '@astra/contracts';
-import { createDb, withTenant, type DbHandle } from '@astra/db';
-import { createLogger, readAuditChain, verifyAuditChain } from '@astra/telemetry';
-import { FsObjectStore, LibraryService } from '@astra/service-library';
-import { PluginRegistryService } from '@astra/service-plugin-registry';
+} from '@genie/contracts';
+import { createDb, withTenant, type DbHandle } from '@genie/db';
+import { createLogger, readAuditChain, verifyAuditChain } from '@genie/telemetry';
+import { FsObjectStore, LibraryService } from '@genie/service-library';
+import { PluginRegistryService } from '@genie/service-plugin-registry';
 import {
   TaskService,
   TemporalTaskRuntime,
   createTaskWorker,
   workflowIdFor,
-} from '@astra/service-task';
-import { parseManifest } from '@astra/plugin-sdk';
+} from '@genie/service-task';
+import { parseManifest } from '@genie/plugin-sdk';
 import {
   HostBridge,
   MemoryRateLimiter,
@@ -44,7 +44,7 @@ import {
   JwtTokens,
   loadSigningKeys,
   type App,
-} from '@astra/service-api-gateway';
+} from '@genie/service-api-gateway';
 
 const url = process.env['TEST_DATABASE_URL'];
 const identityUrl = process.env['TEST_IDENTITY_DATABASE_URL'];

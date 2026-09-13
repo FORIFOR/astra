@@ -11,7 +11,7 @@
  *   - 推測を止めれば何も出ない（week の事実だけ残る）
  */
 import { describe, expect, it } from 'vitest';
-import type { WorkArtifact, WorkSemantic } from '@astra/contracts';
+import type { WorkArtifact, WorkSemantic } from '@genie/contracts';
 import {
   applyUpdate,
   buildWorkContext,
@@ -148,14 +148,14 @@ const fixture: WorkArtifact[] = [
   }),
   art({
     id: 'a1',
-    title: 'Astra UI release',
+    title: 'Genie UI release',
     source: 'astra_task',
     kind: 'task',
     due_at: iso('2026-09-07T18:00:00+09:00'),
     direction: 'self',
     semantic: sem({
       category: 'request_to_me',
-      project: 'Astra UI release',
+      project: 'Genie UI release',
       request: '無人 Verify driver',
     }),
   }),

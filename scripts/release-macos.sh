@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Astra macOS を**配布できる形**にする。
+# Genie macOS を**配布できる形**にする。
 #
 # `package-macos-app.sh` との違い:
 #   あちらは Apple Development 署名で、実機の TCC を出すための開発用。
@@ -26,7 +26,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 # A candidate can be built without replacing the app the user is running.
 OUT="${ASTRA_RELEASE_OUTPUT_DIR:-$ROOT/dist}"
-APP="$OUT/Astra.app"
+APP="$OUT/Genie.app"
 NOTARY_PROFILE="${ASTRA_NOTARY_PROFILE:-astra-notary}"
 NOTARY_BACKEND="${ASTRA_NOTARIZATION_BACKEND:-notarytool}"
 [[ "$NOTARY_BACKEND" == notarytool || "$NOTARY_BACKEND" == xcode ]] || {
@@ -55,53 +55,53 @@ echo "== build (release) =="
 # 不特定多数へ配るものに開発者のユーザー名を載せない。開発ビルドはそのままにして、
 # 配布ビルドだけ畳む。
 for target in aarch64-apple-darwin x86_64-apple-darwin; do
-  ( cd "$ROOT/core/astra-core" \
+  ( cd "$ROOT/core/genie-core" \
     && MACOSX_DEPLOYMENT_TARGET=14.0 \
        RUSTFLAGS="--remap-path-prefix=$HOME/.cargo=/cargo --remap-path-prefix=$ROOT=/astra ${RUSTFLAGS:-}" \
        cargo build --release --quiet --target "$target" )
 done
-export ASTRA_CORE_LIB_DIR="$ROOT/core/astra-core/target/universal-release"
+export ASTRA_CORE_LIB_DIR="$ROOT/core/genie-core/target/universal-release"
 mkdir -p "$ASTRA_CORE_LIB_DIR"
 lipo -create \
-  "$ROOT/core/astra-core/target/aarch64-apple-darwin/release/libastra_core.a" \
-  "$ROOT/core/astra-core/target/x86_64-apple-darwin/release/libastra_core.a" \
-  -output "$ASTRA_CORE_LIB_DIR/libastra_core.a"
-[[ -f "$ASTRA_CORE_LIB_DIR/libastra_core.a" ]] || {
-  echo "FAIL: release の libastra_core.a が無い" >&2; exit 1; }
+  "$ROOT/core/genie-core/target/aarch64-apple-darwin/release/libgenie_core.a" \
+  "$ROOT/core/genie-core/target/x86_64-apple-darwin/release/libgenie_core.a" \
+  -output "$ASTRA_CORE_LIB_DIR/libgenie_core.a"
+[[ -f "$ASTRA_CORE_LIB_DIR/libgenie_core.a" ]] || {
+  echo "FAIL: release の libgenie_core.a が無い" >&2; exit 1; }
 bash "$ROOT/scripts/fetch-sparkle.sh"
-( cd "$ROOT/apps/astra-macos" && swift build -c release --arch arm64 --arch x86_64 )
+( cd "$ROOT/apps/genie-macos" && swift build -c release --arch arm64 --arch x86_64 )
 
 # 実行時に外の dylib を掴んでいないこと。掴んでいたら、その絶対パスが無い
 # 他人の Mac では起動しない（一度そうなっていた）。
-BIN_DIR="$(cd "$ROOT/apps/astra-macos" && swift build -c release --arch arm64 --arch x86_64 --show-bin-path)"
-BIN="$BIN_DIR/AstraMac"
+BIN_DIR="$(cd "$ROOT/apps/genie-macos" && swift build -c release --arch arm64 --arch x86_64 --show-bin-path)"
+BIN="$BIN_DIR/GenieMac"
 [[ -x "$BIN" ]] || { echo "FAIL: 今回のuniversal実行体が無い: $BIN" >&2; exit 1; }
-if otool -L "$BIN" | grep -q "astra_core.*dylib"; then
-  echo "FAIL: astra_core を dylib で掴んでいる（静的リンクになっていない）" >&2
-  otool -L "$BIN" | grep astra_core >&2
+if otool -L "$BIN" | grep -q "genie_core.*dylib"; then
+  echo "FAIL: genie_core を dylib で掴んでいる（静的リンクになっていない）" >&2
+  otool -L "$BIN" | grep genie_core >&2
   exit 1
 fi
 
 echo "== bundle =="
 rm -rf "$APP"; mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources/ja.lproj"
-cp "$BIN" "$APP/Contents/MacOS/AstraMac"
+cp "$BIN" "$APP/Contents/MacOS/GenieMac"
 
 # 両アーキ入っているか。片方だけだと、その CPU の人は起動できない。
 for a in arm64 x86_64; do
-  lipo -info "$APP/Contents/MacOS/AstraMac" | grep -q "$a" || {
+  lipo -info "$APP/Contents/MacOS/GenieMac" | grep -q "$a" || {
     echo "FAIL: $a が入っていない（universal になっていない）" >&2; exit 1; }
 done
-echo "arch: $(lipo -info "$APP/Contents/MacOS/AstraMac" | sed 's/.*are: //')"
+echo "arch: $(lipo -info "$APP/Contents/MacOS/GenieMac" | sed 's/.*are: //')"
 
 # 記号を落とす。**署名より前に**やること（後でやると署名が壊れる）。
 # 依存の C ソース（ring 等）の絶対パスは rustc の --remap-path-prefix では
 # 畳めない（cc が埋めるため）ので、ここで消す。配るものに開発者の
 # ユーザー名を載せない。
-strip -x "$APP/Contents/MacOS/AstraMac"
+strip -x "$APP/Contents/MacOS/GenieMac"
 # 残った分は panic の位置文字列（__TEXT のリテラル）。記号ではないので strip では
 # 消えず、依存の C ソース由来は rustc の --remap-path-prefix でも畳めない。
 # **体裁の話で、機能でも安全性でもない**ので、ここでは止めずに数だけ報告する。
-LEAK="$(strings "$APP/Contents/MacOS/AstraMac" 2>/dev/null | grep -c "$HOME" || true)"
+LEAK="$(strings "$APP/Contents/MacOS/GenieMac" 2>/dev/null | grep -c "$HOME" || true)"
 if [[ "${LEAK:-0}" -eq 0 ]]; then
   echo "strip: 記号を落とした（個人パス 0 件）"
 else
@@ -133,9 +133,10 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
-  <key>CFBundleExecutable</key><string>AstraMac</string>
+  <key>CFBundleExecutable</key><string>GenieMac</string>
   <key>CFBundleIdentifier</key><string>com.astra.desktop</string>
-  <key>CFBundleName</key><string>Astra</string>
+  <key>CFBundleName</key><string>Genie</string>
+  <key>CFBundleDisplayName</key><string>Genie</string>
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>CFBundleShortVersionString</key><string>${VERSION}</string>
   <key>CFBundleVersion</key><string>${VERSION}</string>
@@ -168,11 +169,11 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 PLIST
 # ja.lproj に実体を置く（中身の無い lproj は localization として数えられない）。Sparkle は
 # メインバンドルの言語に合わせて自分の窓を出す。
-printf 'CFBundleName = "Astra";\n' > "$APP/Contents/Resources/ja.lproj/InfoPlist.strings"
+printf 'CFBundleName = "Genie";\n' > "$APP/Contents/Resources/ja.lproj/InfoPlist.strings"
 
 # hardened runtime で要る権利だけ。付けすぎると審査で不利になるうえ、
 # 「何ができるアプリか」の説明にもならない。
-cat > "$OUT/astra.entitlements" <<'ENT'
+cat > "$OUT/genie.entitlements" <<'ENT'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
@@ -182,7 +183,7 @@ cat > "$OUT/astra.entitlements" <<'ENT'
 ENT
 
 # Sparkle を同梱する。framework が入っていないと、更新の口だけ在って動かない。
-SPARKLE_FW="$(find "$ROOT/apps/astra-macos/Vendor/Sparkle/Sparkle.xcframework" \
+SPARKLE_FW="$(find "$ROOT/apps/genie-macos/Vendor/Sparkle/Sparkle.xcframework" \
   -type d -name "Sparkle.framework" -path "*macos*" 2>/dev/null | head -1)"
 if [[ -n "$SPARKLE_FW" ]]; then
   mkdir -p "$APP/Contents/Frameworks"
@@ -190,7 +191,7 @@ if [[ -n "$SPARKLE_FW" ]]; then
   cp -R "$SPARKLE_FW" "$APP/Contents/Frameworks/Sparkle.framework"
   # 実行体が @rpath で framework を見つけられるように。
   install_name_tool -add_rpath "@executable_path/../Frameworks" \
-    "$APP/Contents/MacOS/AstraMac" 2>/dev/null || true
+    "$APP/Contents/MacOS/GenieMac" 2>/dev/null || true
   echo "sparkle: 同梱した"
 else
   echo "FAIL: Sparkle.framework が見つからない（scripts/fetch-sparkle.sh を先に）" >&2; exit 1
@@ -200,8 +201,8 @@ if [[ "$NOTARY_BACKEND" == xcode ]]; then
   # Xcode uses its signed-in Apple account; no app-specific password is copied.
   TEAM="$(printf '%s' "$IDENTITY" | sed -n 's/.*(\([A-Z0-9]*\))$/\1/p')"
   [[ -n "$TEAM" ]] || { echo "FAIL: Xcode backend requires a named Developer ID identity" >&2; exit 1; }
-  python3 "$ROOT/scripts/release-xcode-notarize.py" "$APP" "$OUT/astra.entitlements" "$TEAM"
-  ZIP="$OUT/Astra-${VERSION}.zip"
+  python3 "$ROOT/scripts/release-xcode-notarize.py" "$APP" "$OUT/genie.entitlements" "$TEAM"
+  ZIP="$OUT/Genie-${VERSION}.zip"
   rm -f "$ZIP"
   /usr/bin/ditto -c -k --keepParent "$APP" "$ZIP"
   python3 "$ROOT/scripts/release-provenance.py" create "$ROOT" "$ZIP" "$SOURCE_SNAPSHOT"
@@ -221,12 +222,12 @@ codesign --force --timestamp --options runtime --sign "$IDENTITY" \
   "$APP/Contents/Frameworks/Sparkle.framework"
 
 codesign --force --timestamp --options runtime \
-  --entitlements "$OUT/astra.entitlements" \
+  --entitlements "$OUT/genie.entitlements" \
   --sign "$IDENTITY" --identifier com.astra.desktop "$APP"
 codesign --verify --strict --deep --verbose=2 "$APP"
 echo "signed: $(codesign -dv --verbose=2 "$APP" 2>&1 | grep -m1 Authority=)"
 
-ZIP="$OUT/Astra-${VERSION}.zip"
+ZIP="$OUT/Genie-${VERSION}.zip"
 rm -f "$ZIP"
 /usr/bin/ditto -c -k --keepParent "$APP" "$ZIP"
 echo "zip: $ZIP ($(du -h "$ZIP" | cut -f1))"

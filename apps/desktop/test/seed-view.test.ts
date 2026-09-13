@@ -1,6 +1,6 @@
 /** 終わった仕事を開いたとき、一覧の行から view を組む（stream は過去を流さない）。 */
 import { describe, expect, it } from 'vitest';
-import type { Task } from '@astra/contracts';
+import type { Task } from '@genie/contracts';
 import { isTerminal, seedWorkView } from '../src/work/workView.js';
 
 const base = {

@@ -60,7 +60,7 @@ pub fn models_root() -> PathBuf {
     dirs::data_local_dir()
         .or_else(dirs::home_dir)
         .unwrap_or_else(|| PathBuf::from("."))
-        .join("Astra")
+        .join("Genie")
         .join("models")
 }
 
@@ -162,6 +162,6 @@ mod tests {
         let root = models_root().display().to_string();
         // 別アプリの領域を読むと、片方を消したときにもう片方が壊れる
         assert!(!root.contains("DeepNote"));
-        assert!(root.contains("Astra"));
+        assert!(root.contains("Genie"));
     }
 }

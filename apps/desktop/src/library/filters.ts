@@ -5,7 +5,7 @@
  * Project / Person は Phase 6（World Model）まで entities が空なので、
  * `project:` / `person:` の tag から拾う。無ければその絞り込みは「まだありません」。
  */
-import type { Artifact } from '@astra/contracts';
+import type { Artifact } from '@genie/contracts';
 
 export type DateRange = 'all' | 'today' | '7d' | '30d';
 

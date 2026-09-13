@@ -5,7 +5,7 @@
  * MCP の通知（notification）は使わないので、待ち合わせを持たない。
  */
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
-import { AstraError } from '@astra/contracts';
+import { GenieError } from '@genie/contracts';
 import type { McpTransportChannel } from './protocol.js';
 
 /** 1 往復の上限。応答しないサーバで固まらないため。 */
@@ -87,20 +87,20 @@ export function stdioChannel(options: StdioOptions): McpTransportChannel {
 
   return {
     async send(request) {
-      if (failure) throw new AstraError('host.not_connected', failure.message);
+      if (failure) throw new GenieError('host.not_connected', failure.message);
       const process = ensure();
       const id = request['id'] as string | number;
 
       return new Promise((resolve, reject) => {
         const timer = setTimeout(() => {
           waiting.delete(id);
-          reject(new AstraError('host.timeout', `mcp server did not answer in ${timeoutMs}ms`));
+          reject(new GenieError('host.timeout', `mcp server did not answer in ${timeoutMs}ms`));
         }, timeoutMs);
 
         waiting.set(id, (value) => {
           clearTimeout(timer);
           if ((value as { __exited?: boolean }).__exited) {
-            reject(new AstraError('host.not_connected', failure?.message ?? 'mcp server exited'));
+            reject(new GenieError('host.not_connected', failure?.message ?? 'mcp server exited'));
             return;
           }
           resolve(value);
@@ -146,15 +146,15 @@ export function httpChannel(options: HttpOptions): McpTransportChannel {
           signal: controller.signal,
         });
         if (!response.ok) {
-          throw new AstraError('host.capability_denied', `mcp server responded ${response.status}`);
+          throw new GenieError('host.capability_denied', `mcp server responded ${response.status}`);
         }
         return await response.json();
       } catch (error) {
-        if (error instanceof AstraError) throw error;
+        if (error instanceof GenieError) throw error;
         if (controller.signal.aborted) {
-          throw new AstraError('host.timeout', `mcp server did not answer in ${timeoutMs}ms`);
+          throw new GenieError('host.timeout', `mcp server did not answer in ${timeoutMs}ms`);
         }
-        throw new AstraError('host.not_connected', String(error));
+        throw new GenieError('host.not_connected', String(error));
       } finally {
         clearTimeout(timer);
       }

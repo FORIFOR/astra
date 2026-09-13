@@ -21,9 +21,9 @@ import {
   salesCrmExecutors,
   stockExecutors,
   videoExecutors,
-} from '@astra/service-agent-runtime';
-import { generalExecutors, researchExecutors } from '@astra/service-research';
-import { meetingExecutors } from '@astra/service-meeting';
+} from '@genie/service-agent-runtime';
+import { generalExecutors, researchExecutors } from '@genie/service-research';
+import { meetingExecutors } from '@genie/service-meeting';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 const builtinDir = path.join(root, 'plugins/builtin');

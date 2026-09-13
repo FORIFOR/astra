@@ -11,7 +11,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { mkdtempSync, writeFileSync, rmSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { NO_MODEL_MESSAGE, type LanguageModelOption } from '@astra/contracts';
+import { NO_MODEL_MESSAGE, type LanguageModelOption } from '@genie/contracts';
 import { ClaudeCodeCli, ClaudeCodeError, type RunResult } from '../src/claude-code.js';
 import { LlmRuntime, promptFor, toolsFor } from '../src/llm-steps.js';
 import { HttpLlmClient, HttpLlmError } from '../src/http-llm.js';
@@ -508,14 +508,14 @@ describe('bounded local composition repair', () => {
     toolId: 'llm.compose',
     args: {
       instruction: '動画の構成を3案。予算0円。実測していない速度は主張しない。',
-      context: 'AstraはmacOSアプリ。Homeで依頼、Workで完成文を開く。',
+      context: 'GenieはmacOSアプリ。Homeで依頼、Workで完成文を開く。',
     },
     approval: null,
   });
   it('repairs a concrete unsupported claim once on local inference', async () => {
     const ask = vi
       .fn()
-      .mockResolvedValueOnce({ text: 'Astraは無料。30秒で完成。' })
+      .mockResolvedValueOnce({ text: 'Genieは無料。30秒で完成。' })
       .mockResolvedValueOnce({
         text: '完成した文章を見せ、WorkからHomeへ戻って依頼文を紹介する。',
       });
@@ -525,7 +525,7 @@ describe('bounded local composition repair', () => {
     expect(ask.mock.calls[1]![0]).toContain('制作予算0円を製品価格と混同');
   });
   it('stops after one failed revision, without switching models', async () => {
-    const ask = vi.fn().mockResolvedValue({ text: 'Astraは無料。30秒で完成。' });
+    const ask = vi.fn().mockResolvedValue({ text: 'Genieは無料。30秒で完成。' });
     const runtime = new LlmRuntime({ others: [keyOption('local', true)], askWith: { local: ask } });
     expect((await runtime.run(brief)).error?.code).toBe('llm.output_quality');
     expect(ask).toHaveBeenCalledTimes(2);

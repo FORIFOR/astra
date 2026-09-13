@@ -6,7 +6,7 @@
  * DB を要るこちらは別ファイルにしてある。計画は task を作る時点で確定させ、
  * workflow へ持ち込む（D-40）。
  */
-import { stepApplies, type StepCondition } from '@astra/contracts';
+import { stepApplies, type StepCondition } from '@genie/contracts';
 import type { StepComplianceProfile, TaskPlan, TaskStep } from './plan.js';
 
 /** `plugin:<pluginId>:<agentId>` の形。ここ以外で組み立てない。 */

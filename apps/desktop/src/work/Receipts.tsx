@@ -6,8 +6,8 @@
  * 文面が無い。**無いものを、それらしい文で埋めない。**
  */
 import { useEffect, useState, type ReactElement } from 'react';
-import { DATA_HANDLING_LABEL, isReversible, type ActionReceiptView } from '@astra/contracts';
-import type { AstraClient } from '@astra/api-client';
+import { DATA_HANDLING_LABEL, isReversible, type ActionReceiptView } from '@genie/contracts';
+import type { GenieClient } from '@genie/api-client';
 
 import { RISK_LABEL } from './risk.js';
 
@@ -70,7 +70,7 @@ export function ReceiptList({
               <dt>操作</dt>
               <dd>{receipt.tool_id}</dd>
               <dt>実行したもの</dt>
-              <dd>{receipt.actor === 'user' ? 'あなた' : 'Astra'}</dd>
+              <dd>{receipt.actor === 'user' ? 'あなた' : 'Genie'}</dd>
               {receipt.result_ref !== null && (
                 <>
                   <dt>結果</dt>
@@ -90,7 +90,7 @@ export function Receipts({
   client,
   taskId,
 }: {
-  client: AstraClient | null;
+  client: GenieClient | null;
   taskId: string | null;
 }): ReactElement | null {
   const [receipts, setReceipts] = useState<readonly ActionReceiptView[] | null>(null);

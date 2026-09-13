@@ -5,7 +5,7 @@
  * 画像は代役を返し、代役だと名乗る。動画は実装そのものが無いので、
  * 「無い」と答える（無いものを本物として扱わない）。
  */
-import { NOT_IMPLEMENTED, type CapabilityInput } from '@astra/contracts';
+import { NOT_IMPLEMENTED, type CapabilityInput } from '@genie/contracts';
 import { DeterministicImageGenerator, type ImageGenerator } from './image.js';
 import { IMAGE_SETTINGS, vertexImageGeneratorFromEnv, type ImagenEnv } from './imagen.js';
 

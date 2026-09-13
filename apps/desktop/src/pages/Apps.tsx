@@ -5,12 +5,12 @@
  * 追加した plugin の dashboard は**ここに勝手に増える**（Phase 4 Exit）。
  */
 import { useCallback, useEffect, useMemo, useState, type ReactElement } from 'react';
-import type { AstraClient } from '@astra/api-client';
+import type { GenieClient } from '@genie/api-client';
 import {
   EXTERNAL_SEND_SCOPES,
   type DashboardView,
   type PluginCatalogEntry,
-} from '@astra/contracts';
+} from '@genie/contracts';
 import { AppDetail, providerLabel } from '../apps/AppDetail.js';
 import { AppIcon } from '../apps/AppIcon.js';
 import { AppSwitch } from '../apps/AppSwitch.js';
@@ -24,7 +24,7 @@ export function appSummary(plugin: PluginCatalogEntry): string {
   return plugin.data_accessed[0] ?? CATEGORY_LABEL[plugin.category];
 }
 
-/** 公式 = Astra が出しているもの。接続先は同梱扱いではない（外せる）が、Astra 署名なら公式。 */
+/** 公式 = Genie が出しているもの。接続先は同梱扱いではない（外せる）が、Genie 署名なら公式。 */
 export function isOfficial(plugin: PluginCatalogEntry): boolean {
   return plugin.builtin || plugin.publisher === 'astra';
 }
@@ -64,14 +64,14 @@ export interface DashboardRef {
   readonly title: string;
 }
 
-export function AppsPage({ client = null }: { client?: AstraClient | null }): ReactElement {
+export function AppsPage({ client = null }: { client?: GenieClient | null }): ReactElement {
   const [catalog, setCatalog] = useState<readonly PluginCatalogEntry[]>([]);
   const [dashboards, setDashboards] = useState<readonly DashboardRef[]>([]);
   const [openId, setOpenId] = useState<string | null>(null);
   const [consenting, setConsenting] = useState<PluginCatalogEntry | null>(null);
   const [view, setView] = useState<DashboardView | null>(null);
   const [error, setError] = useState<string | null>(null);
-  // 公式 = Astra が出しているもの（同梱の Pack と、Astra 署名の接続先）。カスタム = 手で登録したもの
+  // 公式 = Genie が出しているもの（同梱の Pack と、Genie 署名の接続先）。カスタム = 手で登録したもの
   const [tab, setTab] = useState<'official' | 'custom'>('official');
   const [busyId, setBusyId] = useState<string | null>(null);
 
@@ -261,7 +261,7 @@ export function AppsPage({ client = null }: { client?: AstraClient | null }): Re
               </svg>
               <div>
                 <h3>アプリストア</h3>
-                <p>Astra が仕事で使うアプリを繋ぐ</p>
+                <p>Genie が仕事で使うアプリを繋ぐ</p>
               </div>
             </div>
             <div className="astra-store__tabs" role="tablist" aria-label="種類">

@@ -20,8 +20,8 @@ import {
   type ReactElement,
   type ReactNode,
 } from 'react';
-import type { AstraClient } from '@astra/api-client';
-import type { AudioSource, Meeting } from '@astra/contracts';
+import type { GenieClient } from '@genie/api-client';
+import type { AudioSource, Meeting } from '@genie/contracts';
 import { applyMeetingEvent, emptyMeetingView, type MeetingView } from './meetingView.js';
 import type { RecordingState } from './RecordingIndicator.js';
 import type { MeetingStartValues } from './StartConfirmation.js';
@@ -66,7 +66,7 @@ export function MeetingProvider({
   client,
   children,
 }: {
-  client: AstraClient | null;
+  client: GenieClient | null;
   children: ReactNode;
 }): ReactElement {
   const [phase, setPhase] = useState<MeetingPhase>('idle');

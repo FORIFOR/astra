@@ -8,8 +8,8 @@
 # ここは**静的**に道を数える。実行体での確認は `--selftest egress`（既定 OFF・資産無しロケールで throw）。
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-SRC="$ROOT/apps/astra-macos/Sources/AstraMac"
-BIN="$ROOT/apps/astra-macos/.build/debug/AstraMac"
+SRC="$ROOT/apps/genie-macos/Sources/GenieMac"
+BIN="$ROOT/apps/genie-macos/.build/debug/GenieMac"
 fail=0
 row() { printf "  %-40s %s\n" "$1" "$2"; }
 bad() { row "$1" "$2"; shift 2; printf "    %s\n" "$@" >&2; fail=1; }
@@ -22,7 +22,7 @@ echo "== PRIVACY_EGRESS_GATE =="
 # 1. 録音の upload は、明示的な Google STT 同意の外では 0。
 #    - 音声を送る関数は RecordingRuntime だけが呼ぶ
 #    - cloudTranscriptionAllowed が true のときだけ会議作成・送信・回復を行う
-up=$(prod "uploadMeetingAudio(" | grep -v "RecordingWorkspace/RecordingRuntime.swift\|RecordingWorkspace/AstraCoreBridge.swift" || true)
+up=$(prod "uploadMeetingAudio(" | grep -v "RecordingWorkspace/RecordingRuntime.swift\|RecordingWorkspace/GenieCoreBridge.swift" || true)
 flag=$(awk '/static var devAutoUploadEnabled/,/^    }/' "$SRC/RecordingWorkspace/RecordingRuntime.swift")
 flag_ok=1
 grep -q "#if DEBUG" <<<"$flag" || flag_ok=0
@@ -135,7 +135,7 @@ claim_ok=1
 grep -q "Google STT" "$guide" || claim_ok=0
 grep -q "相手の声のために" "$guide" && claim_ok=0     # 取り込んでいない音のために許可を説明しない
 grep -q "transcription.onDeviceUnavailable" "$guide" || claim_ok=0   # 落とさない代わりに、出ない理由を教える
-usage=$(grep -rn "NSSpeechRecognitionUsageDescription" "$ROOT/scripts/build-macos-app.sh" "$ROOT/apps/astra-macos/Info.plist" "$ROOT/apps/astra-macos/Sources" 2>/dev/null | head -1)
+usage=$(grep -rn "NSSpeechRecognitionUsageDescription" "$ROOT/scripts/build-macos-app.sh" "$ROOT/apps/genie-macos/Info.plist" "$ROOT/apps/genie-macos/Sources" 2>/dev/null | head -1)
 if [ $claim_ok -eq 1 ]; then
   row "transcription egress guide" "consistent"
 else

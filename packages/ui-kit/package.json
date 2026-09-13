@@ -1,5 +1,5 @@
 {
-  "name": "@astra/ui-kit",
+  "name": "@genie/ui-kit",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -23,7 +23,7 @@
   "dependencies": {
     "react": "catalog:",
     "react-dom": "catalog:",
-    "@astra/contracts": "workspace:*"
+    "@genie/contracts": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "catalog:",

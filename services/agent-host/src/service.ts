@@ -9,14 +9,14 @@
  *   - **運営側のモデルへ黙って乗り換えない**
  */
 import {
-  AstraError,
+  GenieError,
   HOST_OFFLINE_AFTER_MS,
   canAutoResume,
   stateFromHeartbeat,
   uuidv7,
   type HostState,
-} from '@astra/contracts';
-import { withTenant, type DbHandle } from '@astra/db';
+} from '@genie/contracts';
+import { withTenant, type DbHandle } from '@genie/db';
 
 export interface AgentHostDeps {
   readonly db: DbHandle;
@@ -148,7 +148,7 @@ export class AgentHostService {
 
       if (existing && existing.expires_at > at && existing.host_id !== input.hostId) {
         // 別の端末がまだ持っている。**取り上げない。**
-        throw new AstraError('task.invalid_state', 'this job is already leased to another host');
+        throw new GenieError('task.invalid_state', 'this job is already leased to another host');
       }
 
       const leaseId = uuidv7();
@@ -201,7 +201,7 @@ export class AgentHostService {
     );
     if (!row) {
       // 取り上げられたあとの書き込みを通さない
-      throw new AstraError('task.invalid_state', 'this lease is no longer valid');
+      throw new GenieError('task.invalid_state', 'this lease is no longer valid');
     }
     return {
       taskId: row.task_id,
@@ -246,7 +246,7 @@ export class AgentHostService {
   }): Promise<void> {
     if (!(await this.isLeaseValid(input.tenantId, input.taskId, input.leaseId))) {
       // 取り上げられた host が、あとから上書きしてくるのを防ぐ
-      throw new AstraError('task.invalid_state', 'this lease is no longer valid');
+      throw new GenieError('task.invalid_state', 'this lease is no longer valid');
     }
     const at = this.#now();
     await withTenant(this.#db, input.tenantId, (tx) =>

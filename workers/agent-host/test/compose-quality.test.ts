@@ -32,9 +32,9 @@ it('catches invented weekdays and unverified costs in consumer itinerary drafts'
 it('keeps production budget and film length out of unsupported advertising promises', () => {
   const args = {
     instruction: '動画の台本を3案。予算0円。実測していない速度を主張しない。',
-    context: 'AstraはmacOSアプリです。',
+    context: 'GenieはmacOSアプリです。',
   };
-  expect(compositionIssues('Astraは無料。30秒で完成します。', args)).toHaveLength(2);
+  expect(compositionIssues('Genieは無料。30秒で完成します。', args)).toHaveLength(2);
   expect(compositionIssues('0〜30秒：Workで成果物を開く。', args)).toEqual([]);
   expect(compositionIssues('確認会は金曜日15時。', { instruction: '案内文を作成' })).toEqual([]);
 });
@@ -47,7 +47,7 @@ it('detects duplicated options while allowing a shared product name', () => {
   ).toBe(1);
   expect(
     compositionIssues(
-      '### 案1\n完成した提案書から逆順で依頼を見せる。\n### 案2\nAstraのコピーと保存の使い分けを左右で並べる。',
+      '### 案1\n完成した提案書から逆順で依頼を見せる。\n### 案2\nGenieのコピーと保存の使い分けを左右で並べる。',
       { instruction: '動画を2案' },
     ),
   ).toEqual([]);
@@ -56,18 +56,18 @@ it('detects duplicated options while allowing a shared product name', () => {
 it('detects phone UI inventions without mistaking filming a Mac for phone operation', () => {
   const args = {
     instruction: '動画を3案。予算は0円',
-    context: 'AstraはmacOSアプリ。料金は不明です。',
+    context: 'GenieはmacOSアプリ。料金は不明です。',
   };
   expect(compositionIssues('スマホ画面に「Home」と入力する', args)).toHaveLength(1);
-  expect(compositionIssues('Astraのアプリアイコンをタップする', args)).toHaveLength(1);
-  expect(compositionIssues('Astraは無料', args)).toHaveLength(1);
+  expect(compositionIssues('Genieのアプリアイコンをタップする', args)).toHaveLength(1);
+  expect(compositionIssues('Genieは無料', args)).toHaveLength(1);
   expect(compositionIssues('MacのHome画面をスマホで撮影する', args)).toEqual([]);
   expect(compositionIssues('制作予算0円で、Macの画面をスマホで撮影します。', args)).toEqual([]);
-  expect(compositionIssues('Astraは無料ではありません。', args)).toEqual([]);
-  expect(compositionIssues('Astraで文章を簡単に作成・保存！スマホだけで完結', args)).toHaveLength(
+  expect(compositionIssues('Genieは無料ではありません。', args)).toEqual([]);
+  expect(compositionIssues('Genieで文章を簡単に作成・保存！スマホだけで完結', args)).toHaveLength(
     1,
   );
-  expect(compositionIssues('スマホ１台で文章作成ができるAstra', args)).toHaveLength(1);
+  expect(compositionIssues('スマホ１台で文章作成ができるGenie', args)).toHaveLength(1);
   expect(compositionIssues('Macでの文章作成の様子をスマホだけで撮影します。', args)).toEqual([]);
 });
 

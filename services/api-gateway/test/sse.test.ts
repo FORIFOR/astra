@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { uuidv7, type EventEnvelope } from '@astra/contracts';
+import { uuidv7, type EventEnvelope } from '@genie/contracts';
 import { parseLastEventId, pumpEventStream, pollingWaker } from '../src/routes/sse.js';
 
 const streamId = uuidv7();

@@ -4,7 +4,7 @@
  * 定義の実体は `data_extensions` が指すファイル。**publish 時に検証済み**
  * のものを読むだけで、ここで信用の判断はしない。
  */
-import { EntityDef } from '@astra/contracts';
+import { EntityDef } from '@genie/contracts';
 
 /** plugin の asset を読む口。registry が実装を渡す。 */
 export interface AssetReader {

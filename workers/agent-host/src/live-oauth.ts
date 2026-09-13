@@ -1,5 +1,5 @@
 /** Dedicated live-test grants. Requested scopes are never evidence of granted scopes. */
-import { providerConfig, refresh, TokenStore, type TokenSet } from '@astra/oauth';
+import { providerConfig, refresh, TokenStore, type TokenSet } from '@genie/oauth';
 export type LiveProvider = 'google' | 'microsoft';
 export type LiveGrant = 'seed' | 'read' | 'write';
 export const LIVE_SCOPES = {

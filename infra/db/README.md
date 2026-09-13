@@ -38,11 +38,11 @@ psql "$ADMIN_DATABASE_URL" -f infra/db/bootstrap.sql
 
 | ロール           | 権限                                           | 用途                   |
 | ---------------- | ---------------------------------------------- | ---------------------- |
-| `astra_app`      | 非 superuser・非 BYPASSRLS                     | アプリの通常動作       |
+| `genie_app`      | 非 superuser・非 BYPASSRLS                     | アプリの通常動作       |
 | `astra_identity` | BYPASSRLS だが identity 5 テーブルにのみ GRANT | 認証（テナント確定前） |
 | `astra_migrate`  | BYPASSRLS                                      | マイグレーション       |
 
-`astra_app` は **superuser でも BYPASSRLS でもない**。superuser は
+`genie_app` は **superuser でも BYPASSRLS でもない**。superuser は
 `FORCE ROW LEVEL SECURITY` すら無視するため、アプリが superuser で接続すると
 テナント隔離が無くなる（実装仕様 §4.4）。
 

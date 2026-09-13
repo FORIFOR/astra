@@ -8,22 +8,22 @@
 #   gateway work.integration     first useful Work Context の時間、出所 100%、turn ごとの selected/available
 #   connectors acceptance        read-only first、外部への操作は確認 100%
 #   worker tests                 送る許可なしの下書き、JIT の書く許可（purpose つき not_connected）
-#   AstraMac --selftest workcontext  1–3 件・なぜ重要？ 1 操作・訂正 1 操作・停止 1 操作・接続状況・静かさ
+#   GenieMac --selftest workcontext  1–3 件・なぜ重要？ 1 操作・訂正 1 操作・停止 1 操作・接続状況・静かさ
 #   run-work-context-live.sh     接続 <= 2 分（専用 identity が無ければ AUTOMATION_MISSING）
 set -uo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
 OUT="${ASTRA_DAILY_OUT:-/tmp/astra-daily-work-gate}"
 mkdir -p "$OUT"
-BIN="$ROOT/apps/astra-macos/.build/debug/AstraMac"
+BIN="$ROOT/apps/genie-macos/.build/debug/GenieMac"
 declare -a ROWS=(); fail=0; missing=0
 row() { ROWS+=("$1|$2|$3|$4"); case "$3" in ''|FAIL*) fail=1;; esac; }
 run() { local name="$1"; shift; "$@" >"$OUT/$name.log" 2>&1; echo $?; }
 
-wm=$(run world-model pnpm --filter @astra/service-world-model exec vitest run test/work.test.ts)
+wm=$(run world-model pnpm --filter @genie/service-world-model exec vitest run test/work.test.ts)
 gw=$(run gateway ./infra/db/with-test-db.sh pnpm --filter ./services/api-gateway exec vitest run test/work.integration.test.ts)
 acc=$(run acceptance pnpm exec vitest run evals/actions/connectors/acceptance.test.ts)
-wk=$(run worker pnpm --filter @astra/worker-agent-host test)
+wk=$(run worker pnpm --filter @genie/worker-agent-host test)
 ui=1; if [ -x "$BIN" ]; then "$BIN" --selftest workcontext >"$OUT/ui.out" 2>"$OUT/ui.err"; ui=$?; fi
 # 行を作る command substitution から親の fail は変更できない。
 for rc in "$wm" "$gw" "$acc" "$wk" "$ui"; do [ "$rc" = 0 ] || fail=1; done

@@ -6,15 +6,15 @@ This is a developer setup, not a one-click consumer installation. It runs a gate
 
 - macOS 14+, Xcode command-line tools; full Xcode and Rust for a native source build.
 - Node 22+, pnpm 10.12.2, Docker with Compose, `dbmate`, and `psql`.
-- Ollama running with a model that fits your machine. Image questions require a vision-capable model. The verified local example is `qwen3.5:9b`; model downloads and memory use are additional to Astra.
+- Ollama running with a model that fits your machine. Image questions require a vision-capable model. The verified local example is `qwen3.5:9b`; model downloads and memory use are additional to Genie.
 
 ## 1. Prepare the checkout and local services
 
 Run these commands from the repository root. If you already have a working setup, preserve your `.env` and existing services instead of replacing them.
 
 ```sh
-git clone https://github.com/FORIFOR/astra.git
-cd astra
+git clone https://github.com/FORIFOR/genie.git
+cd genie
 pnpm install
 cp .env.example .env
 pnpm dev:infra
@@ -46,7 +46,7 @@ Check `http://127.0.0.1:3000/healthz`. Temporal's local UI is at `http://127.0.0
 
 ## 3. Open the Mac app and connect the local model
 
-Install the Mac build from the release matching this checkout, or build with `pnpm build:macos-app` and open `dist/Astra.app`. Open Home once while the gateway is running; this establishes the desktop's local development identity.
+Install the Mac build from the release matching this checkout, or build with `pnpm build:macos-app` and open `dist/Genie.app`. Open Home once while the gateway is running; this establishes the desktop's local development identity.
 
 In another terminal:
 
@@ -64,7 +64,7 @@ For another installed model, set `ASTRA_LOCAL_LLM_MODEL` to its exact model name
 
 1. In Home, ask: “Turn these notes into a checklist: test the app, capture a demo, write release notes.”
 2. Wait for the result, open it in Work, then copy or save it as Markdown.
-3. Take a screenshot of a non-sensitive example with macOS. Choose Astra's offer to ask about it, enter your question, and send.
+3. Take a screenshot of a non-sensitive example with macOS. Choose Genie's offer to ask about it, enter your question, and send.
 
 The screenshot is not automatically submitted just because you captured it. Mac permissions are requested for the feature that needs them; text requests do not require microphone access.
 
@@ -72,7 +72,7 @@ The screenshot is not automatically submitted just because you captured it. Mac 
 
 | Symptom                                             | Check                                                                                               |
 | --------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| “Open Astra once”                                   | Gateway is reachable; Home has been opened using this Mac app and gateway address.                  |
+| “Open Genie once”                                   | Gateway is reachable; Home has been opened using this Mac app and gateway address.                  |
 | Model not found                                     | `ollama list` contains the exact model named in `ASTRA_LOCAL_LLM_MODEL`.                            |
 | Request cannot find an agent                        | Gateway, task worker, and the local host are running; the helper was started after opening the app. |
 | Image cannot be understood                          | The selected model supports vision and the screenshot is attached.                                  |

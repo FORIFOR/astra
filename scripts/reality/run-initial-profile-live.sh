@@ -31,7 +31,7 @@ trap cleanup EXIT
 # No shared role removal; other local databases may be using these roles.
 dbmate --url "$ADMIN" --migrations-dir infra/db/migrations --no-dump-schema up > "$STORE/migrate.log"
 psql "$ADMIN" -X -q -v ON_ERROR_STOP=1 -f infra/db/bootstrap.sql > "$STORE/bootstrap.log" 2>&1
-export DATABASE_URL="postgres://astra_app:astra_app@${PGHOST}:${PGPORT}/${DB}?sslmode=disable"
+export DATABASE_URL="postgres://genie_app:genie_app@${PGHOST}:${PGPORT}/${DB}?sslmode=disable"
 export ASTRA_DB_IDENTITY_URL="postgres://astra_identity:astra_identity@${PGHOST}:${PGPORT}/${DB}?sslmode=disable"
 export ASTRA_ENV=development ASTRA_API_PORT="${ASTRA_LIVE_PORT:-3499}"
 export ASTRA_API_URL="http://127.0.0.1:${ASTRA_API_PORT}"

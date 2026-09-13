@@ -13,7 +13,7 @@ import {
   isRequiredCapability,
   missingFromReport,
   remainingStandIns,
-} from '@astra/contracts';
+} from '@genie/contracts';
 import { capabilityReport, VERIFIED_IMPLEMENTATIONS } from '../src/index.js';
 
 const providers = (over: { search?: boolean; model?: boolean; stt?: boolean } = {}) => ({

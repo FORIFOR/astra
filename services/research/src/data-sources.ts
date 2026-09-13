@@ -4,8 +4,8 @@
  * **自分のテーブルは自分で引く**（実装仕様 §5.1）。
  * plugin が指定できるのは名前だけで、中身はここが決める。
  */
-import type { ResolvedValue } from '@astra/contracts';
-import { withTenant, type DbHandle } from '@astra/db';
+import type { ResolvedValue } from '@genie/contracts';
+import { withTenant, type DbHandle } from '@genie/db';
 
 export function researchDataSources(
   db: DbHandle,

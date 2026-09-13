@@ -15,8 +15,8 @@ import type {
   WorkSource,
   WorkSyncAttempt,
   WorkSyncState,
-} from '@astra/contracts';
-import type { SecretStore } from '@astra/oauth';
+} from '@genie/contracts';
+import type { SecretStore } from '@genie/oauth';
 import { ConnectorRuntime, type HostStep, type StepOutcome } from '../src/connector-steps.js';
 import { WorkSyncLoop, semanticFrom, type WorkSyncDeps } from '../src/work-sync.js';
 

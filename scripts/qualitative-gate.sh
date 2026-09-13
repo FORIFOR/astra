@@ -195,6 +195,6 @@ if fail:
     print("\nQUALITATIVE_UI_GATE=FAIL")
     sys.exit(1)
 print("QUALITATIVE_UI_GATE=PASS")
-print("  → 「Astra は内部定性評価において高品質な UI 基準を満たした」と言える。")
+print("  → 「Genie は内部定性評価において高品質な UI 基準を満たした」と言える。")
 print("  → 「SuperIntern より優れている」とは**まだ言わない**（実機比較が要る）。")
 PYEOF

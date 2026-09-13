@@ -14,9 +14,9 @@
  */
 import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { sql } from 'kysely';
-import { AstraError, REFRESH_TOKEN_TTL_SECONDS, sha256Hex, uuidv7 } from '@astra/contracts';
-import { withTenant, type DbHandle, type ScopedDb } from '@astra/db';
-import { appendAuditEvent } from '@astra/telemetry';
+import { GenieError, REFRESH_TOKEN_TTL_SECONDS, sha256Hex, uuidv7 } from '@genie/contracts';
+import { withTenant, type DbHandle, type ScopedDb } from '@genie/db';
+import { appendAuditEvent } from '@genie/telemetry';
 
 const TOKEN_VERSION = 'v1';
 const SECRET_BYTES = 32;
@@ -36,7 +36,7 @@ interface ParsedRefreshToken {
 function parseRefreshToken(token: string): ParsedRefreshToken {
   const parts = token.split('.');
   if (parts.length !== 4 || parts[0] !== TOKEN_VERSION) {
-    throw new AstraError('auth.invalid_token', 'malformed refresh token');
+    throw new GenieError('auth.invalid_token', 'malformed refresh token');
   }
   return { tenantId: parts[1]!, sessionId: parts[2]!, secret: parts[3]! };
 }
@@ -210,13 +210,13 @@ export async function rotateRefreshToken(
     case 'rotated':
       return outcome.result;
     case 'reuse':
-      throw new AstraError('auth.refresh_reuse_detected', 'refresh token was already used');
+      throw new GenieError('auth.refresh_reuse_detected', 'refresh token was already used');
     case 'expired':
-      throw new AstraError('auth.expired_token', 'refresh token expired');
+      throw new GenieError('auth.expired_token', 'refresh token expired');
     case 'unknown':
     case 'mismatch':
       // 「存在しない」と「秘密値が違う」を区別して返さない（列挙の手掛かりにされる）
-      throw new AstraError('auth.invalid_token', 'refresh token is not valid');
+      throw new GenieError('auth.invalid_token', 'refresh token is not valid');
   }
 }
 
@@ -255,7 +255,7 @@ export async function revokeSession(
 
     const presentedHash = await hashSecret(parsed.sessionId, parsed.secret);
     if (!constantTimeEquals(presentedHash, session.refresh_token_hash)) {
-      throw new AstraError('auth.invalid_token', 'refresh token does not match');
+      throw new GenieError('auth.invalid_token', 'refresh token does not match');
     }
 
     await tx

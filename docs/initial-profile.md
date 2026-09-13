@@ -1,4 +1,4 @@
-# 初回の Astra Profile
+# 初回の Genie Profile
 
 Google / Microsoft の最初の読取接続後に、Home の同じ領域で「接続 → 解析中 → 結果確認」を表示する。結果は現在の仕事、よく関わる人、直近の優先事項、仕事の傾向、未完了の項目の5つに絞る。確認後は Home に戻り、この初回プロファイルを自動で作り直さない。
 
@@ -25,6 +25,6 @@ Google / Microsoft の最初の読取接続後に、Home の同じ領域で「�
 
 DB / API テストで一度だけの開始、排他実行、tenant 分離、途中の実データ集計、失敗と再試行、ユーザー編集、確認後の固定を検証する。AgentHost テストでは期間・件数上限、プロバイダー分離、抜粋除去を確認する。
 
-`AstraMac --selftest initialprofile <output-directory>` は、解析中・結果確認・編集を明暗両テーマで描画し、実際の編集ボタンを操作する。`docs/golden-screenshots/initial-profile/` の画像・geometry はこのテストの架空データであり、ユーザーの実アカウントの分析結果ではない。
+`GenieMac --selftest initialprofile <output-directory>` は、解析中・結果確認・編集を明暗両テーマで描画し、実際の編集ボタンを操作する。`docs/golden-screenshots/initial-profile/` の画像・geometry はこのテストの架空データであり、ユーザーの実アカウントの分析結果ではない。
 
 Google の読取専用実サービス検証では、メール51件・予定7件の解析、結果確定、同じプロファイルの再取得、再読取なし、Home API取得まで成功した。`scripts/reality/run-initial-profile-live.sh` で再現できる（事前の読取認証設定が必要）。Microsoft とネイティブ画面の通し操作は引き続き未検証。

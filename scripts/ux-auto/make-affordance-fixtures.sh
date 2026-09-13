@@ -2,7 +2,7 @@
 # Trust Affordance の fixture。**正解は作った側が知っている。**
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-BIN="$ROOT/apps/astra-macos/.build/debug/AstraMac"
+BIN="$ROOT/apps/genie-macos/.build/debug/GenieMac"
 LAB="$ROOT/.build/uxlab"
 B="$ROOT/docs/ux-benchmark/auto/judge-fixtures/affordance"
 rm -rf "$B"; mkdir -p "$B/images" "$B/answers" "$B/results"
@@ -10,7 +10,7 @@ bash "$ROOT/scripts/ux-auto/build-tools.sh" >/dev/null
 
 shot() {  # <fixture> <型> [撮る絵]
   local fx="$1" kind="$2" pick="${3:-01-拾ったあと.png}" tmp; tmp="$(mktemp -d)"
-  pkill -9 -f AstraMac 2>/dev/null; sleep 1.2
+  pkill -9 -f GenieMac 2>/dev/null; sleep 1.2
   ASTRA_DATA_ROOT="$tmp/data" ASTRA_FIXTURE="$fx" \
     "$BIN" --selftest journey J09 "$tmp" >/dev/null 2>&1
   local src="$tmp/$pick"
@@ -32,7 +32,7 @@ shot bad-fake-confidence     FAKE_CONFIDENCE
 shot bad-contradictory       CONTRADICTORY  "02-原文を開いた.png"
 # 比較のための、正しい開いた絵
 shot ""                      GOOD_OPEN      "02-原文を開いた.png"
-pkill -9 -f AstraMac 2>/dev/null
+pkill -9 -f GenieMac 2>/dev/null
 for f in "$B/images"/*.png; do "$LAB/ocr" "$f" > "$B/answers/$(basename "${f%.png}").ocr.txt" 2>/dev/null; done
 
 # 正解表。**何を壊したかは作った側が知っている。**

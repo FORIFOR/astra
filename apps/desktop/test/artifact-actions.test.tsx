@@ -2,8 +2,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
-import type { AstraClient } from '@astra/api-client';
-import type { Artifact } from '@astra/contracts';
+import type { GenieClient } from '@genie/api-client';
+import type { Artifact } from '@genie/contracts';
 import { ArtifactActions, parseAllowlist } from '../src/library/ArtifactActions.js';
 
 afterEach(cleanup);
@@ -28,7 +28,7 @@ describe('ArtifactActions', () => {
       share: {} as never,
       url: 'https://astra.local/s/abc',
     }));
-    const client = { createShare, artifactContent: vi.fn() } as unknown as AstraClient;
+    const client = { createShare, artifactContent: vi.fn() } as unknown as GenieClient;
     const onShared = vi.fn();
     render(<ArtifactActions client={client} artifact={artifact} onShared={onShared} />);
 
@@ -59,7 +59,7 @@ describe('ArtifactActions', () => {
       share: {} as never,
       url: 'u',
     }));
-    const client = { createShare } as unknown as AstraClient;
+    const client = { createShare } as unknown as GenieClient;
     render(<ArtifactActions client={client} artifact={artifact} />);
     await user.click(screen.getByRole('button', { name: '共有…' }));
     await user.type(screen.getByLabelText(/合言葉/), 'ab');

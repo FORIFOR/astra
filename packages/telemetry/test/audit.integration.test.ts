@@ -1,10 +1,10 @@
 /**
  * 監査ハッシュ連鎖の結合テスト。受け入れテスト AC-15 の基盤。
- *   ./infra/db/with-test-db.sh pnpm --filter @astra/telemetry test
+ *   ./infra/db/with-test-db.sh pnpm --filter @genie/telemetry test
  */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { uuidv7 } from '@astra/contracts';
-import { createDb, withIdentity, withTenant, type DbHandle } from '@astra/db';
+import { uuidv7 } from '@genie/contracts';
+import { createDb, withIdentity, withTenant, type DbHandle } from '@genie/db';
 import { appendAuditEvent, readAuditChain, verifyAuditChain } from '../src/audit.js';
 
 const url = process.env['TEST_DATABASE_URL'];

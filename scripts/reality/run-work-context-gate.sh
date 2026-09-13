@@ -13,14 +13,14 @@
 #   services/api-gateway test/work.integration (PG)     HTTP surface + chat-lane injection (real routes, real DB)
 #   evals/actions/connectors/tool-coverage              every declared tool has somewhere to run
 #   packages/plugin-sdk test/manifest                   external actions declare confirmation
-#   AstraMac --selftest workcontext                     Home card: provenance 100%, 1-action correction / disable, no big cards
+#   GenieMac --selftest workcontext                     Home card: provenance 100%, 1-action correction / disable, no big cards
 #   keychain (security)                                 connectors connected on THIS Mac (live) — 無ければ NOT_CONNECTED
 set -uo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
 OUT="${ASTRA_WC_OUT:-/tmp/astra-work-context-gate}"
 mkdir -p "$OUT"
-BIN="$ROOT/apps/astra-macos/.build/debug/AstraMac"
+BIN="$ROOT/apps/genie-macos/.build/debug/GenieMac"
 
 declare -a ROWS=()
 row() { ROWS+=("$1|$2|$3"); }
@@ -37,7 +37,7 @@ run_vitest() { # name, dir-or-filter, files...
 }
 
 # ---------------------------------------------------------------- 1. pure engine
-r="$(run_vitest world-pure pnpm --filter @astra/service-world-model exec vitest run test/work.test.ts)"
+r="$(run_vitest world-pure pnpm --filter @genie/service-world-model exec vitest run test/work.test.ts)"
 rc="${r%%|*}"; s="${r#*|}"
 [ "$rc" = 0 ] || fail=1
 row "deterministic_scoring" "$([ "$rc" = 0 ] && echo PASS || echo FAIL)" "world-model work.test.ts ($s)"
@@ -52,7 +52,7 @@ row "cm_email_reply_target_only" "$([ "$rc" = 0 ] && echo PASS || echo FAIL)" "�
 row "cm_meeting_prep_pack" "$([ "$rc" = 0 ] && echo PASS || echo FAIL)" "「MOPITA 定例の準備」→ 案件 + 相手 + 開いている件"
 
 # ---------------------------------------------------------------- 2. connectors (read-only, normalization)
-r="$(run_vitest connectors pnpm --filter @astra/service-connectors test)"
+r="$(run_vitest connectors pnpm --filter @genie/service-connectors test)"
 rc="${r%%|*}"; s="${r#*|}"
 [ "$rc" = 0 ] || fail=1
 row "connectors_read_only_contract" "$([ "$rc" = 0 ] && echo PASS || echo FAIL)" "connectors ($s): \$select に body 無し、scope 無しは網に出ない"
@@ -88,7 +88,7 @@ row "workcontext_gmail_write_scopes" "$([ "$rc" = 0 ] && echo 0 || echo FAIL)" "
 row "workcontext_calendar_write_scopes" "$([ "$rc" = 0 ] && echo 0 || echo FAIL)" "manifest calendar/google-calendar: calendar.readonly だけ"
 
 # ---------------------------------------------------------------- 3. device worker
-r="$(run_vitest worker pnpm --filter @astra/worker-agent-host test)"
+r="$(run_vitest worker pnpm --filter @genie/worker-agent-host test)"
 rc="${r%%|*}"; s="${r#*|}"
 [ "$rc" = 0 ] || fail=1
 row "raw_full_mailbox_to_llm" "$([ "$rc" = 0 ] && echo 0 || echo FAIL)" "work-sync: format=full を要求しない、LLM には件名+抜粋だけ"
@@ -101,19 +101,19 @@ row "one_source_failure_isolated" "$([ "$rc" = 0 ] && echo PASS || echo FAIL)" "
 r="$(run_vitest tool-coverage pnpm exec vitest run evals/actions/connectors/tool-coverage.test.ts)"
 rc="${r%%|*}"; [ "$rc" = 0 ] || fail=1
 row "declared_tools_have_runner" "$([ "$rc" = 0 ] && echo PASS || echo FAIL)" "tool-coverage"
-r="$(run_vitest manifest pnpm --filter @astra/plugin-sdk test)"
+r="$(run_vitest manifest pnpm --filter @genie/plugin-sdk test)"
 rc="${r%%|*}"; [ "$rc" = 0 ] || fail=1
 row "external_action_confirmation" "$([ "$rc" = 0 ] && echo 100% || echo FAIL)" "manifest: EXTERNAL_COMMIT / DESTRUCTIVE は requires_confirmation"
 
 # ---------------------------------------------------------------- 5. storage + HTTP + injection (real DB)
 if pg_isready -h "${ASTRA_TEST_PGHOST:-localhost}" -p "${ASTRA_TEST_PGPORT:-5433}" >/dev/null 2>&1; then
-  r="$(run_vitest world-db ./infra/db/with-test-db.sh pnpm --filter @astra/service-world-model exec vitest run test/work.db.test.ts)"
+  r="$(run_vitest world-db ./infra/db/with-test-db.sh pnpm --filter @genie/service-world-model exec vitest run test/work.db.test.ts)"
   rc="${r%%|*}"; s="${r#*|}"; [ "$rc" = 0 ] || fail=1
   row "storage_tenant_isolation" "$([ "$rc" = 0 ] && echo PASS || echo FAIL)" "work.db.test.ts ($s)"
   r="$(run_vitest gateway ./infra/db/with-test-db.sh pnpm --filter ./services/api-gateway exec vitest run test/work.integration.test.ts)"
   rc="${r%%|*}"; s="${r#*|}"; [ "$rc" = 0 ] || fail=1
   row "http_surface_and_chat_injection" "$([ "$rc" = 0 ] && echo PASS || echo FAIL)" "gateway work.integration ($s): POST artifacts → GET context → chat lane <work_context>"
-  row "cross_source_entity_resolution" "$([ "$rc" = 0 ] && echo PASS || echo FAIL)" "同上（Astra task + meeting + gmail が同じ案件に）"
+  row "cross_source_entity_resolution" "$([ "$rc" = 0 ] && echo PASS || echo FAIL)" "同上（Genie task + meeting + gmail が同じ案件に）"
   row "cm_stats_recorded_per_turn" "$([ "$rc" = 0 ] && echo PASS || echo FAIL)" "同上（task.input.context_meta に intent / selected / available、log にも）"
   row "persistent_sync_cursor" "$([ "$rc" = 0 ] && echo PASS || echo FAIL)" "work.db + gateway: cursor は upsert と同じ tx でだけ進む、途中 batch は前の cursor、失敗は理由だけ"
 else
@@ -137,7 +137,7 @@ if [ -x "$BIN" ]; then
   row "no_big_cards" "$(ui no_big_cards)" "card height $(ui card_height_pt)pt < 660"
 else
   fail=1
-  row "work_context_visible" "AUTOMATION_MISSING" "debug 実行体が無い（swift build --package-path apps/astra-macos）"
+  row "work_context_visible" "AUTOMATION_MISSING" "debug 実行体が無い（swift build --package-path apps/genie-macos）"
 fi
 
 # ---------------------------------------------------------------- 7. live connectors on THIS Mac

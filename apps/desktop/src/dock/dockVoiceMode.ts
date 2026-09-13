@@ -5,7 +5,7 @@
  * 音声 runtime（マイク / 読み上げ）と Dock の対話状態を一つに畳む。
  * **読み上げ中は runtime が勝つ。** 話しているのに「考えています」の姿だと嘘になる。
  */
-import type { InteractionState } from '@astra/ui-kit';
+import type { InteractionState } from '@genie/ui-kit';
 import type { VoiceMode } from '../voice/voiceRuntime.js';
 
 export function dockVoiceMode(state: InteractionState, runtime: VoiceMode = 'idle'): VoiceMode {
@@ -31,7 +31,7 @@ export function voiceModeLabel(mode: VoiceMode): string | null {
     case 'thinking':
       return '考えています';
     case 'speaking':
-      return 'Astra が話しています';
+      return 'Genie が話しています';
     case 'interrupted':
       return '割り込みました';
     case 'error':

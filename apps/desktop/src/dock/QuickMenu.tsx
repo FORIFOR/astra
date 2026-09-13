@@ -20,8 +20,8 @@ export function QuickMenu({
     first.current?.focus();
   }, []);
   return (
-    <div className="astra-quick" role="menu" aria-label="Astra に頼む">
-      <p className="astra-quick__title">Ask Astra</p>
+    <div className="astra-quick" role="menu" aria-label="Genie に頼む">
+      <p className="astra-quick__title">Ask Genie</p>
       <button
         ref={first}
         type="button"

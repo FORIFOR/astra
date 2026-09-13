@@ -6,8 +6,8 @@
  * 何でも書き込める口になる。
  */
 import { z } from 'zod';
-import { AstraError, EntityDef } from '@astra/contracts';
-import type { DomainService } from '@astra/service-agent-runtime';
+import { GenieError, EntityDef } from '@genie/contracts';
+import type { DomainService } from '@genie/service-agent-runtime';
 import type { App } from '../fastify.js';
 import { requirePrincipal } from '../auth/middleware.js';
 
@@ -41,7 +41,7 @@ export function registerDomainRoutes(app: App, deps: DomainRouteDeps): void {
     const def = await deps.definitions(tenantId, params.pluginId, params.entityType);
     // install していない plugin の entity は「無い」（AC5-6 と同じ扱い）
     if (!def) {
-      throw new AstraError(
+      throw new GenieError(
         'plugin.not_found',
         `no entity "${params.entityType}" from ${params.pluginId}`,
       );

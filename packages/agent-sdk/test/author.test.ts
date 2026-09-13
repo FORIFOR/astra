@@ -5,7 +5,7 @@
  * **宣言どうしの食い違いを、publish まで持っていかない。**
  */
 import { describe, expect, it } from 'vitest';
-import { PluginManifest } from '@astra/contracts';
+import { PluginManifest } from '@genie/contracts';
 import { build, buildEvaluations, review, type PackageDraft } from '../src/author.js';
 
 const draft = (over: Partial<PackageDraft> = {}): PackageDraft => ({

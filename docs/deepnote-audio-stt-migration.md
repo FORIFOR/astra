@@ -1,26 +1,26 @@
-# DeepNote → Astra: 音声取得とローカル認識の移植
+# DeepNote → Genie: 音声取得とローカル認識の移植
 
 `/Users/horioshuuhei/Projects/deepnote-desktop` を実際に読んだ上での対応表。
-**donor implementation として使い、Astra の抽象化・計測契約へ作り直す。**
+**donor implementation として使い、Genie の抽象化・計測契約へ作り直す。**
 
 ## 1. 対応表
 
-| DeepNote                        | 内容                                | Astra                            | 判断                      | 理由                                                                                                                            |
+| DeepNote                        | 内容                                | Genie                            | 判断                      | 理由                                                                                                                            |
 | ------------------------------- | ----------------------------------- | -------------------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
 | `audio/capture.rs`              | cpal 入力・mono 化・16k 変換        | `src-tauri/src/audio/capture.rs` | **rewrite**               | 取り込みは同じ形で足りるが、**frame に出所を付けて返す**必要がある。DeepNote は `Vec<f32>` を裸で渡すので、mix 後に出所が消える |
 | `audio/system_capture.rs`       | ScreenCaptureKit 経由のシステム音声 | 同 `system.rs`                   | **rewrite（骨組みのみ）** | Swift bridge を含む 571 行。**今回は口だけ作り、実装は macOS 権限と合わせて次段**。無いことを capability で言う                 |
 | `audio/mixer.rs`                | 2 本の mono を加算しクランプ        | `audio/mixer.rs`                 | **reuse（考え方）**       | 25 行。式は正しい。ただし **mix 後に出所を捨てない**形へ変える                                                                  |
 | `audio/resampler.rs`            | rubato FftFixedIn、100ms チャンク   | `audio/resampler.rs`             | **reuse（考え方）**       | 契約（入力 N → 出力 M、端数は内部保持）だけ引き継ぐ                                                                             |
-| `audio/recorder.rs`             | WAV 書き出し                        | —                                | **reject**                | Astra は `RecordingStore` が既にある（`services/meeting`）。二重に持たない                                                      |
+| `audio/recorder.rs`             | WAV 書き出し                        | —                                | **reject**                | Genie は `RecordingStore` が既にある（`services/meeting`）。二重に持たない                                                      |
 | `audio/cache.rs`                | 音声キャッシュ                      | —                                | **reject**                | DeepNote のセッション模型に依存                                                                                                 |
 | `audio/level_meter.rs`          | RMS                                 | `audio/level.rs`                 | **reuse**                 | 31 行。そのままの考え方で足りる                                                                                                 |
 | `stt/sherpa.rs`                 | offline recognizer + 疑似ライブ     | `stt/sherpa.rs`                  | **rewrite**               | 後述の理由（§2）で**窓の設計を変える**。FFI の使い方と CString 寿命管理は引き継ぐ                                               |
 | `stt/sherpa_ffi.rs`             | C FFI 束縛 1194 行                  | `stt/ffi.rs`                     | **部分 reuse**            | offline recognizer と VAD に要る分だけ写す。translation / online / LID の構造体は持ち込まない                                   |
-| `stt/vad.rs`                    | Silero VAD (sherpa)                 | `stt/vad.rs`                     | **reuse**                 | ただし DeepNote は**録音経路で VAD を使っていない**（§2）。Astra は使う                                                         |
+| `stt/vad.rs`                    | Silero VAD (sherpa)                 | `stt/vad.rs`                     | **reuse**                 | ただし DeepNote は**録音経路で VAD を使っていない**（§2）。Genie は使う                                                         |
 | `stt/lid.rs`                    | Whisper tiny による言語判定         | —                                | **defer**                 | 日本語固定で始める。多言語は会議の翻訳と一緒に                                                                                  |
-| `stt/cloud_stream.rs`           | 自前 backend への WS                | —                                | **reject**                | Firebase + `/ws/stream/{id}`。Astra の local-first と別物                                                                       |
+| `stt/cloud_stream.rs`           | 自前 backend への WS                | —                                | **reject**                | Firebase + `/ws/stream/{id}`。Genie の local-first と別物                                                                       |
 | `stt/translation_recognizer.rs` | SenseVoice 翻訳 2036 行             | —                                | **defer**                 | 翻訳は provider 契約の向こう側                                                                                                  |
-| `stt/path_compat.rs`            | Windows 非 ASCII パス対策           | `stt/path_compat.rs`             | **reuse**                 | 日本語ユーザー名で初期化が落ちる問題は Astra でも起きる                                                                         |
+| `stt/path_compat.rs`            | Windows 非 ASCII パス対策           | `stt/path_compat.rs`             | **reuse**                 | 日本語ユーザー名で初期化が落ちる問題は Genie でも起きる                                                                         |
 | `commands/model_commands.rs`    | モデルの取得・検証・隔離            | `stt/model.rs`                   | **部分 reuse**            | manifest + sha256 + 破損隔離の考え方は良い。ダウンロード UI は持ち込まない                                                      |
 | `commands/audio_commands.rs`    | 録音の起動と ASR スレッド           | `audio/session.rs`               | **rewrite**               | 800 行超。Firebase / cloud / interview mode / 診断ログが混ざっている。**取り込みと認識だけ**を抜く                              |
 
@@ -32,7 +32,7 @@
 **混ざった `Vec<f32>` だけ**を ASR とレコーダへ渡している。
 あとから「この発言はどちらから来たか」を言えない。
 
-Astra は会議の話者対応（§12）と、外へ出す判断（§22）で出所が要る。
+Genie は会議の話者対応（§12）と、外へ出す判断（§22）で出所が要る。
 `PcmFrame` に `source` を持たせ、**mix したものは `mixed` として別の frame** にする。
 
 ### 2.2 ライブ認識が 6 秒窓だった
@@ -54,7 +54,7 @@ ReazonSpeech は **offline（非ストリーミング）transducer** なので�
 `stt/vad.rs`（Silero）は存在するが、`audio_commands.rs` の録音経路は通らない。
 固定窓で回しているため、無音でも decode が走る。
 
-Astra は VAD を経路に入れる。無音を decode しない分だけ、
+Genie は VAD を経路に入れる。無音を decode しない分だけ、
 `sttDecodeStarted` が意味のある印になる。
 
 ### 2.4 診断が `/tmp` への文字列追記だった
@@ -66,7 +66,7 @@ Astra は VAD を経路に入れる。無音を decode しない分だけ、
 
 ASR スレッドは `catch_unwind` で panic を飲み、poisoned mutex を `into_inner` で回復する。
 落ちないのは良いが、**何が起きたかが残らない。**
-Astra は typed error にして、capability と task の失敗に載せる。
+Genie は typed error にして、capability と task の失敗に載せる。
 
 ## 3. 持ち込まないもの
 
@@ -93,7 +93,7 @@ ReazonSpeech 日本語モデルを使い、モデル同梱の `test_wavs/5.wav`�
 | 窓                        | decode 合計 | 文字数 | 結果                                                                              |
 | ------------------------- | ----------- | ------ | --------------------------------------------------------------------------------- |
 | 6000ms（DeepNote の既定） | 531ms       | 42     | 「…なぎ倒されてしまったようです**倒れてしまったようです**」（重なりが畳めず二重） |
-| 1500ms（Astra の既定）    | 378ms       | 24     | 「えっ持ち主とはぐ傘が風で舞い看板もなぎ倒すえっ何」                              |
+| 1500ms（Genie の既定）    | 378ms       | 24     | 「えっ持ち主とはぐ傘が風で舞い看板もなぎ倒すえっ何」                              |
 | 700ms                     | 301ms       | 19     | 「あっ持ち主れた傘がでもうなぎそうです何」                                        |
 
 **窓を縮めると、速くなるのではなく落ちる。**

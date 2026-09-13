@@ -1,12 +1,12 @@
 /**
  * 提供者（Google / Apple / LINE）でサインインする。実装仕様 §4.3、正本 §21。
  *
- * deepnote-desktop の auth/{google,apple,line}.rs を Astra の形にしたもの。
+ * deepnote-desktop の auth/{google,apple,line}.rs を Genie の形にしたもの。
  * 違いは 2 つ:
  *
  *   - Firebase を挟まない。提供者の **ID トークンだけ**を gateway に渡し、
- *     gateway が提供者の鍵で検証して Astra のトークンを返す。
- *   - Google は端末の PKCE loopback（`@astra/oauth`）で直接。**refresh token は
+ *     gateway が提供者の鍵で検証して Genie のトークンを返す。
+ *   - Google は端末の PKCE loopback（`@genie/oauth`）で直接。**refresh token は
  *     求めない**（サインインに要らない。connector 用の token は別の場所で Keychain へ）。
  *
  * Apple の web flow と LINE は、提供者が https の折り返し先や channel secret を
@@ -18,9 +18,9 @@ import {
   beginAuthorization,
   exchangeCode,
   type ProviderConfig,
-} from '@astra/oauth';
-import type { AstraClient } from '@astra/api-client';
-import type { AuthProvidersResponse, IdentityProvider, TokenResponse } from '@astra/contracts';
+} from '@genie/oauth';
+import type { GenieClient } from '@genie/api-client';
+import type { AuthProvidersResponse, IdentityProvider, TokenResponse } from '@genie/contracts';
 import { oauthCallback } from '../host/tauri.js';
 
 export type ProviderEntry = AuthProvidersResponse['providers'][number];
@@ -40,7 +40,7 @@ export class SignInAbortedError extends Error {
 }
 
 export interface ProviderSignInDeps {
-  readonly client: AstraClient;
+  readonly client: GenieClient;
   /** gateway の場所。relay の URL を組むのに使う。 */
   readonly baseUrl: string;
   readonly openExternal: (url: string) => Promise<void>;

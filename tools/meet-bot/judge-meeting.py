@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""REAL_MEETING の判定器。Astra が書いた result.json を fixture と突き合わせ、人を介さず PASS / FAIL を出す。
+"""REAL_MEETING の判定器。Genie が書いた result.json を fixture と突き合わせ、人を介さず PASS / FAIL を出す。
 
   python3 tools/meet-bot/judge-meeting.py tools/meet-bot/fixture.json <astra-out-dir>
 
@@ -26,7 +26,7 @@ got = norm("".join(t["text"] for t in res.get("transcript", [])))
 sim = difflib.SequenceMatcher(None, want, got).ratio() if got else 0.0
 row("transcript similarity", sim >= exp["transcript_similarity_min"], f"{sim:.2f} (min {exp['transcript_similarity_min']})")
 
-# recall: 抽出できたか（Astra が決定/行動を拾ったか）を見る。文字起こしの綴りは見ない。
+# recall: 抽出できたか（Genie が決定/行動を拾ったか）を見る。文字起こしの綴りは見ない。
 #   - keyword は候補の list でよい（"macOS"→"MC OS" のような綴れの揺れを吸収）。
 #   - 英語だけの keyword（例 "Windows"）は best-effort（optional）。ja-JP のオンデバイス STT は
 #     日本語音声に混ざった英語の固有名詞を丸ごと落とすことがある（TTS 音声で実測: "Windows 版は"→欠落）。

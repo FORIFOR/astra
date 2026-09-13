@@ -17,7 +17,7 @@ import {
   type WorkCorrection,
   type WorkPriority,
   type WorkSource,
-} from '@astra/contracts';
+} from '@genie/contracts';
 import { pressure, type PressureInput } from './pressure.js';
 import { wallClock, instant } from './business-time.js';
 import { ruleSemantic } from './semantic.js';

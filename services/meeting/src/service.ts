@@ -5,7 +5,7 @@
  * プロセスのメモリに transcript を溜めると、落ちた瞬間に消える。
  */
 import {
-  AstraError,
+  GenieError,
   MeetingBundle,
   uuidv7,
   type AudioSource,
@@ -14,14 +14,14 @@ import {
   type MeetingSpeaker,
   type MeetingStatus,
   type TranscriptPass,
-} from '@astra/contracts';
-import { withTenant, type DbHandle, type ScopedDb } from '@astra/db';
+} from '@genie/contracts';
+import { withTenant, type DbHandle, type ScopedDb } from '@genie/db';
 import {
   appendEvent,
   ensureStream,
   readEventsAfter,
   type EventPublisher,
-} from '@astra/service-task';
+} from '@genie/service-task';
 import { alignSpeakers, stabilize, supersededBy, type StableSegment } from './stabilize.js';
 import type { TranscriptResult, TranslationProvider } from './providers.js';
 
@@ -90,7 +90,7 @@ export class MeetingService {
       tx.selectFrom('meetings').selectAll().where('id', '=', meetingId).executeTakeFirst(),
     );
     // 別テナントの会議は「無い」。あることを教えない（AC3-12）。
-    if (!row) throw new AstraError('meeting.not_found', 'meeting not found');
+    if (!row) throw new GenieError('meeting.not_found', 'meeting not found');
     return toMeeting(row);
   }
 
@@ -265,7 +265,7 @@ export class MeetingService {
         .where('meeting_id', '=', meetingId)
         .forUpdate()
         .executeTakeFirst();
-      if (!source) throw new AstraError('meeting.not_found', 'meeting segment not found');
+      if (!source) throw new GenieError('meeting.not_found', 'meeting segment not found');
       const existing = await tx
         .selectFrom('translations')
         .select('text')

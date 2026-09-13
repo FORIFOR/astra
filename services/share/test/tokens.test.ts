@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { uuidv7 } from '@astra/contracts';
+import { uuidv7 } from '@genie/contracts';
 import {
   hashPassword,
   hashShareSecret,

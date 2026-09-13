@@ -4,7 +4,7 @@
  * 外観の切替と設定は profile の中。top bar に生の select を並べない。
  */
 import { useEffect, useState, type ReactElement } from 'react';
-import { TOP_LEVEL_TABS } from '@astra/ui-kit';
+import { TOP_LEVEL_TABS } from '@genie/ui-kit';
 import { useShell } from '../state/ShellProvider.js';
 import { DeviceCapabilities } from '../settings/DeviceCapabilities.js';
 import { ShortcutSettings } from '../settings/ShortcutSettings.js';
