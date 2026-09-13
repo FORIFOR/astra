@@ -54,9 +54,9 @@ describe('folding the transcript', () => {
 
 describe('mapping our modes onto the orb', () => {
   it('shows talking only when we are speaking', () => {
-    expect(orbStateFor('speaking')).toBe('talking');
+    expect(orbStateFor('speaking')).toBe('speaking');
     expect(orbStateFor('listening')).toBe('listening');
-    expect(orbStateFor('thinking')).toBe('listening');
+    expect(orbStateFor('thinking')).toBe('thinking');
     expect(orbStateFor('idle')).toBe('idle');
     expect(orbStateFor('error')).toBe('idle');
   });

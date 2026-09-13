@@ -327,6 +327,7 @@ final class RecordingRuntime {
             systemAudioPeak = max(systemAudioPeak, peak)
         }
         onLevel?(min(1, peak * 1.6))
+        if channel == .localUser { VoiceHUDState.shared.receiveInputLevel(min(1, peak * 1.6)) }
         if systemAudioWanted { audioBuffer.append(frame, channel: channel) }
         else { _ = session?.pushSamples(samples: frame, sampleRate: 16_000) }
         currentChannel = channel
@@ -412,7 +413,14 @@ final class RecordingRuntime {
             do {
                 try mic.start { frame in
                     guard let self, self.voiceListening else { return }
-                    if !sawFirst { sawFirst = true; DispatchQueue.main.async { onFirstFrame() } }
+                    let first = !sawFirst
+                    sawFirst = true
+                    let level = min(1, frame.reduce(Float(0)) { max($0, abs($1)) } * 1.6)
+                    DispatchQueue.main.async { [weak self] in
+                        guard let self, self.voiceListening, self.micGeneration == gen else { return }
+                        if first { onFirstFrame() }
+                        VoiceHUDState.shared.receiveInputLevel(level)
+                    }
                     if self.voiceVad.accept(frame) { self.voiceSpeech?.append(frame, sampleRate: 16_000) }
                 }
             } catch {

@@ -1,23 +1,33 @@
 import SwiftUI
 
-/// Task Dock の小さな青い点。ブランドを主張する場所ではないので、大きくしない。
+/// The user-selected glass orb. Text alongside it carries the accessible state.
 struct GenieOrb: View {
-    var active: Bool = false
+    var mode: GenieOrbMode = .idle
+    var level: Float = 0
+    var size: CGFloat = Metrics.hudOrbSize
+    @Environment(\.accessibilityReduceMotion) private var reduced
 
     var body: some View {
-        Circle()
-            .fill(active ? Color.genieAccent : Color.genieAccent.opacity(0.78))
-            .frame(width: Metrics.hudOrbSize, height: Metrics.hudOrbSize)
-            .shadow(color: Color.genieAccent.opacity(active ? 0.65 : 0.30),
-                    radius: active ? 6 : 3)
-            .accessibilityHidden(true)
+        Group {
+            if CommandLine.arguments.contains("--selftest"),
+               let image = LiquidOrbGPU.shared?.image(mode: mode, size: 192, level: level) {
+                // Freeze a frame of the SAME Metal pipeline for reproducible UI goldens.
+                Image(nsImage: image).resizable().scaledToFit()
+            } else if LiquidOrbGPU.shared != nil {
+                LiquidOrbSurface(mode: mode, level: level, reduced: reduced)
+            } else if let image = NSImage(data: LiquidOrbAssets.fallbackPNG) {
+                // A static frame of the same shader, with no GPU or browser dependency.
+                Image(nsImage: image).resizable().scaledToFit()
+                    .opacity(mode.animated ? 1 : 0.65)
+            }
+        }
+        .frame(width: size, height: size)
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
     }
 }
 
-
-/// Genie の署名（静的な声のマーク）。**idle 専用**。
-/// 状態の文法を混ぜない: idle = 静的な 3 本 / preparing = GenieOrb の pulse / listening = 実振幅の波形。
-/// 動かないこと・本数が少ないことで「聞いている波形」と区別する。
+/// Compact, static idle entry; no continuous rendering while Genie is not working.
 struct GenieVoiceMark: View {
     // 中央が高い左右対称の 3 本。ブランド記号であって、音の量ではない。
     private let heights: [CGFloat] = [7, 12, 9]
@@ -29,7 +39,7 @@ struct GenieVoiceMark: View {
                     .frame(width: 2.5, height: heights[i])
             }
         }
-        .frame(width: Metrics.hudOrbSize + 4, height: 14)
+        .frame(width: 13, height: 14)
         .accessibilityHidden(true)
     }
 }

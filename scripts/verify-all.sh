@@ -55,6 +55,7 @@ run "screen terms (one word each)" bash scripts/lint-terms.sh
 # 操作ガイドの語は、アプリが今表示している語（UserFacingFacts）からしか来ない。写し違いは落ちる。
 run "guide facts (app words only)" bash scripts/verify-guide-facts.sh
 run "guide facts selfcheck"        bash scripts/verify-guide-facts.sh --selfcheck
+run "liquid orb assets fresh"    node scripts/gen-liquid-orb.mjs --check
 run "design tokens fresh"         node scripts/gen-design-tokens.mjs --check
 run "type scale (no literals)"    node scripts/lint-type-literals.mjs
 run "swift bindings fresh"        bash scripts/gen-swift-bindings.sh --check
@@ -67,6 +68,7 @@ run "C# bridge -> core + gateway" bash scripts/verify-csharp-bridge.sh
 run "Windows C# logic type-check" bash scripts/verify-csharp-logic.sh
 run "C ABI round-trip (C)"        bash scripts/verify-c-abi.sh
 run "macOS recording + live E2E"  bash scripts/verify-macos-recording.sh
+run "liquid orb native lifecycle" "$ROOT/apps/genie-macos/.build/debug/GenieMac" --selftest liquid-orb /tmp/genie-liquid-orb-verify
 run "initial profile native UI"  "$ROOT/apps/genie-macos/.build/debug/GenieMac" --selftest initialprofile /tmp/astra-initial-profile-verify
 # 録音セッションの通し。**プロセスを跨いで** kill → 復元まで確かめる。
 # CI が緑でもここが通らなければ未達、という位置づけのゲート。

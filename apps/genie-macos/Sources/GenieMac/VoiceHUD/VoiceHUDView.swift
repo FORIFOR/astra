@@ -294,13 +294,8 @@ struct ListeningDock: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 9) {
-                // 取り込みが生きるまでは光らせない（「聞いている」の合図なので）。
-                GenieOrb(active: !voice.listeningAwaitingAudio)
-                // 準備中は波形を出さず、GenieOrb の pulse だけ（「聞いている」と紛れさせない）。
-                if !voice.listeningAwaitingAudio {
-                    MiniWaveform()
-                        .frame(width: 44, height: 16)
-                }
+                GenieOrb(mode: voice.listeningAwaitingAudio ? .preparing : .listening,
+                         level: voice.inputLevel)
                 // **取り込みが生きるまで「聞いています…」と名乗らない。**
                 // 切り替えるのは最初の音声フレームの到着（`listeningAwaitingAudio`）で、タイマーではない。
                 Text(partial.isEmpty
@@ -371,7 +366,17 @@ struct ContextStrip: View {
 struct ThinkingDock: View {
     @Environment(\.colorScheme) private var scheme
     var body: some View {
-        SimpleDock(icon: "sparkles", text: "考えています…", tint: Palette.accent(scheme == .dark))
+        HStack(spacing: 8) {
+            GenieOrb(mode: .thinking)
+            Text("考えています…")
+                .font(.system(size: S.type(Metrics.dockPrimarySize)))
+                .foregroundStyle(Palette.text(scheme == .dark))
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, S.metric(Metrics.dockPadH))
+        .padding(.vertical, S.metric(Metrics.dockPadV))
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("dockThinking")
     }
 }
 
@@ -442,7 +447,8 @@ struct AgentDock: View {
 
     private var header: some View {
         HStack(spacing: 10) {
-            GenieOrb(active: true)
+            GenieOrb(mode: store.state.activeTask?.status == .running ? .thinking : .idle,
+                     size: Metrics.hudOrbCompactSize)
             Text("Genie")
                 .font(.system(size: S.type(Metrics.dockMetaSize), weight: .medium))
                 .foregroundStyle(Palette.muted(dark))

@@ -45,9 +45,9 @@
     {
       "kind": "Capsule",
       "file": "VoiceHUD/VoiceHUDView.swift",
-      "sha256": "978f6d2918dc88ed301eab762ddf9546a5e643560d12ea376011e7ac92ccb612",
+      "sha256": "96136b05c1111e1dab8ce9e16a52009fdf49d9b6229080b7905c9e5d06db5b3a",
       "count": 1,
-      "reason": "Re-reviewed 2026-09-12 for screenshot questions: existing task progress Capsules are unchanged. The 320x52 Dock now has one question action plus dismiss; the duplicate action is removed. Three-scale native captures confirm the complete label fits. No Capsule, shadow, material or allowance increase; scoped implementation review only. Re-reviewed 2026-09-13: source differs only in product/module naming; all style expressions and count allowances are unchanged."
+      "reason": "Re-reviewed 2026-09-12 for screenshot questions: existing task progress Capsules are unchanged. The 320x52 Dock now has one question action plus dismiss; the duplicate action is removed. Three-scale native captures confirm the complete label fits. No Capsule, shadow, material or allowance increase; scoped implementation review only. Re-reviewed 2026-09-13: source differs only in product/module naming; all style expressions and count allowances are unchanged. Re-reviewed 2026-09-13 for the user-selected liquid orb: existing Capsule uses/count unchanged. Listening replaces the fixed sample waveform with a 36pt real-meter orb; thinking replaces sparkle. Native light/dark snapshots and 600x100 listening geometry reviewed in docs/ux-benchmark/liquid-orb/ROUND.md. No increase to Capsule allowance. Final Agent header uses 22pt orb; actual 720x329pt geometry passes the unchanged 720x330pt ceiling. Existing Capsule count remains unchanged."
     }
   ]
 }

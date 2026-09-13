@@ -39,6 +39,7 @@ enum SelfTest {
         SecretMode.persistChanges = false
         SecretMode.shared.set(false)
         switch args[i + 1] {
+        case "liquid-orb": Task { await liquidOrb(args) }; return true
         case "session-renewal": Task { await sessionRenewal() }; return true
         case "outcome-live": Task { await outcomeLive(args) }; return true
         case "workspace-ux": Task { await workspaceUX(args) }; return true

@@ -1,0 +1,12 @@
+{
+  "gallery-dark" : {
+    "dockOrb" : 36,
+    "height" : 363,
+    "width" : 712
+  },
+  "gallery-light" : {
+    "dockOrb" : 36,
+    "height" : 363,
+    "width" : 712
+  }
+}

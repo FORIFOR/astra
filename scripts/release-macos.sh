@@ -125,6 +125,7 @@ fi
 ICON_SRC="$ROOT/apps/desktop/src-tauri/icons/icon.icns"
 [[ -f "$ICON_SRC" ]] || { echo "FAIL: アイコン ($ICON_SRC) が無い" >&2; exit 1; }
 cp "$ICON_SRC" "$APP/Contents/Resources/AppIcon.icns"
+cp "$ROOT/shared/design/liquid-orb/LICENSE" "$APP/Contents/Resources/LiquidOrb-LICENSE.txt"
 echo "icon: 同梱した"
 
 # 用途説明は package-macos-app.sh と同じものを使う。片方だけ直すとずれるので、

@@ -566,5 +566,48 @@
       }
     ],
     "geometry_review": "Window class labels updated. Genie text and its idle button grow by 3–3.5pt due to the new word. Ask Genie is 3pt wider than Ask Astra and the three adjacent meeting actions shift by 3pt within the unchanged Dock width. Fresh six-state captures adopted; 2pt regression tolerance remains unchanged."
+  },
+  "liquid_orb_2026_09_13": {
+    "round": "docs/ux-benchmark/liquid-orb/ROUND.md",
+    "capture": "Native shader rendered at a fixed phase for deterministic snapshots; on-screen UI geometry measured through AX. Unrelated baseline bytes retained.",
+    "changes": [
+      {
+        "file": "docs/golden-screenshots/environments/macos-26.6.2-2x-safe-top-32/light/02-voice-hud-listening.png",
+        "before": "a528c0bde8c94939d6c9349aa806f45f614486462a3fa75078190b49a5b1dcba",
+        "after": "6935e11952f4b36cb435724cecac52a0c864ca25d098d5d56974e10337785218"
+      },
+      {
+        "file": "docs/golden-screenshots/environments/macos-26.6.2-2x-safe-top-32/light/02b-voice-hud-preparing.png",
+        "before": "3705f26ccaa2de6ad92d7efbb5073c84bc93ca7f34f703d0367af5726307c2d7",
+        "after": "8d1100189fa365bc1cbad7ceb34346d64ab513c9998ae0a60201d1346e96477a"
+      },
+      {
+        "file": "docs/golden-screenshots/environments/macos-26.6.2-2x-safe-top-32/dark/02-voice-hud-listening.png",
+        "before": "a528c0bde8c94939d6c9349aa806f45f614486462a3fa75078190b49a5b1dcba",
+        "after": "6935e11952f4b36cb435724cecac52a0c864ca25d098d5d56974e10337785218"
+      },
+      {
+        "file": "docs/golden-screenshots/environments/macos-26.6.2-2x-safe-top-32/dark/02b-voice-hud-preparing.png",
+        "before": "3705f26ccaa2de6ad92d7efbb5073c84bc93ca7f34f703d0367af5726307c2d7",
+        "after": "8d1100189fa365bc1cbad7ceb34346d64ab513c9998ae0a60201d1346e96477a"
+      },
+      {
+        "file": "docs/golden-screenshots/environments/macos-26.6.2-2x-safe-top-32/geometry/02-listening.json",
+        "before": "011d82a9ccb4dc6b6bc3a68bb4a583f521454ec9b16c5c7d8d832cb68cd3bbc9",
+        "after": "a353be1a74e03da522a2b91cdfab38ddcb9618fdc7bda8e72f943be450192548"
+      },
+      {
+        "file": "docs/golden-screenshots/environments/macos-26.6.2-2x-safe-top-32/geometry/03-task-dock.json",
+        "before": "86146874aa608ed8e7b5d1aa52d9916bba0f2ccca4839daa88331bebb2932852",
+        "after": "89aa8c242377cf4e81c6ed4b8c3cc1df718436eb76fa7079ac9443528807ed80"
+      }
+    ],
+    "review": "36pt primary orb and 22pt task header. Listening 600x100pt, Agent Dock 720x329pt, within unchanged occupation limits; controls retained.",
+    "density_adoption": {
+      "surface": "02-voice-hud-listening",
+      "before_percent": 92.6,
+      "after_percent": 94.1,
+      "reason": "The fixed six-bar MiniWaveform was decorative, unrelated to the microphone. Removed it in favor of the user-selected real-meter orb; current 600x100pt geometry is within the unchanged ceiling. Adopt only this reviewed surface under DESIGN.md §4; keep the 1.5pp tolerance and all other baselines."
+    }
   }
 }

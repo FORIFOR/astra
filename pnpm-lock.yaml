@@ -123,6 +123,9 @@ importers:
       '@vitejs/plugin-react':
         specifier: 'catalog:'
         version: 4.7.0(vite@7.3.6(@types/node@22.20.1)(terser@5.50.0)(tsx@4.23.12)(yaml@2.9.0))
+      '@webgpu/types':
+        specifier: ^0.1.72
+        version: 0.1.72
       happy-dom:
         specifier: ^20.11.6
         version: 20.11.6
@@ -488,6 +491,12 @@ importers:
 
   services/api-gateway:
     dependencies:
+      '@fastify/cors':
+        specifier: ^11.3.0
+        version: 11.3.0
+      '@fastify/websocket':
+        specifier: ^11.3.0
+        version: 11.3.0
       '@genie/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
@@ -539,12 +548,6 @@ importers:
       '@genie/tts':
         specifier: workspace:*
         version: link:../../packages/tts
-      '@fastify/cors':
-        specifier: ^11.3.0
-        version: 11.3.0
-      '@fastify/websocket':
-        specifier: ^11.3.0
-        version: 11.3.0
       fastify:
         specifier: ^5.12.1
         version: 5.12.1
@@ -2052,6 +2055,9 @@ packages:
 
   '@webassemblyjs/wast-printer@1.14.1':
     resolution: {integrity: sha512-kPSSXE6De1XOR820C90RIo2ogvZG+c3KiHzqUoO/F34Y2shGzesfqv7o57xrxovZJH/MetF5UjroJ/R/3isoiw==}
+
+  '@webgpu/types@0.1.72':
+    resolution: {integrity: sha512-0cF7RFM2edNoiIS1ODJp0/Gzv4/xSXhwoR0YCza+OWpJWtn4wmo9DvK91aLlH9+uUnwIriP7ZiC3WitmyhuzBw==}
 
   '@xtuc/ieee754@1.2.0':
     resolution: {integrity: sha512-DX8nKgqcGwsc0eJSqYt5lwP4DH5FlHnmuWWBRy7X0NcaGR0ZtuyeESgMwTYVEtxmsNGY+qit4QYT/MIYTOTPeA==}
@@ -4470,6 +4476,8 @@ snapshots:
     dependencies:
       '@webassemblyjs/ast': 1.14.1
       '@xtuc/long': 4.2.2
+
+  '@webgpu/types@0.1.72': {}
 
   '@xtuc/ieee754@1.2.0': {}
 
