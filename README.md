@@ -14,7 +14,7 @@ Previously Astra. The app, downloads, and source are now named Genie. Existing s
 
 **[Start a first test →](docs/TESTING.md)** · [テスターとして試す](docs/TESTING.ja.md) · [Report your experience](https://github.com/FORIFOR/genie/issues/new?template=tester_feedback.yml)
 
-[Website & demos](https://genie-forifor.forifor.chatgpt.site) · [日本語](docs/README.ja.md) · [Mac preview v0.1.3](https://github.com/FORIFOR/genie/releases/tag/v0.1.3)
+[Website & demos](https://genie-forifor.forifor.chatgpt.site) · [日本語](docs/README.ja.md) · [Mac preview v0.1.4](https://github.com/FORIFOR/genie/releases/tag/v0.1.4)
 
 ## See the work, then try your own
 

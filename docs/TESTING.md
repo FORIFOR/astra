@@ -17,18 +17,18 @@ The exercise takes about 10 minutes **after setup**; downloads and developer set
 
 ## 1. Use the matching app and source
 
-Use **v0.1.3** for this first-test path. Do not mix this app with the current `main` backend.
+Use **v0.1.4** for this first-test path. Do not mix this app with the current `main` backend.
 
-- [Download Genie-0.1.3.dmg](https://github.com/FORIFOR/genie/releases/download/v0.1.3/Genie-0.1.3.dmg)
-- [Release notes, checksums, and known limits](https://github.com/FORIFOR/genie/releases/tag/v0.1.3)
-- Matching source: tag `v0.1.3`.
+- [Download Genie-0.1.4.dmg](https://github.com/FORIFOR/genie/releases/download/v0.1.4/Genie-0.1.4.dmg)
+- [Release notes, checksums, and known limits](https://github.com/FORIFOR/genie/releases/tag/v0.1.4)
+- Matching source: tag `v0.1.4`.
 
 ```sh
-git clone --branch v0.1.3 --depth 1 https://github.com/FORIFOR/genie.git genie-preview
+git clone --branch v0.1.4 --depth 1 https://github.com/FORIFOR/genie.git genie-preview
 cd genie-preview
 ```
 
-Follow the [setup guide at v0.1.3](https://github.com/FORIFOR/genie/blob/v0.1.3/docs/LOCAL_PREVIEW.md). You have already cloned the repository: start its first command block at `pnpm install`. Keep using the `genie-preview` directory in each terminal.
+Follow the [setup guide at v0.1.4](https://github.com/FORIFOR/genie/blob/v0.1.4/docs/LOCAL_PREVIEW.md). You have already cloned the repository: start its first command block at `pnpm install`. Keep using the `genie-preview` directory in each terminal.
 
 You will need Node 22+, pnpm 10.12.2, Docker Compose, `dbmate`, `psql`, Xcode command-line tools, and a model that fits your Mac. The app alone is not sufficient: keep the gateway, task worker, and agent host running. The guide uses local Ollama; its verified example is `qwen3.5:9b`. Model downloads and memory requirements are additional. Full Xcode and Rust are needed if you build the native app from source instead of using the DMG.
 

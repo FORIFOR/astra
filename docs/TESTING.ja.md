@@ -17,18 +17,18 @@ Genieの旧名称はAstraです。このプレビューでは **Genie.app** と 
 
 ## 1. 同じバージョンのアプリとソースを用意
 
-初回は **v0.1.3** を使います。このアプリに最新の`main`のバックエンドを混ぜないでください。
+初回は **v0.1.4** を使います。このアプリに最新の`main`のバックエンドを混ぜないでください。
 
-- [Genie-0.1.3.dmgをダウンロード](https://github.com/FORIFOR/genie/releases/download/v0.1.3/Genie-0.1.3.dmg)
-- [リリース情報・チェックサム・制限事項](https://github.com/FORIFOR/genie/releases/tag/v0.1.3)
-- 対応ソース：タグ`v0.1.3`
+- [Genie-0.1.4.dmgをダウンロード](https://github.com/FORIFOR/genie/releases/download/v0.1.4/Genie-0.1.4.dmg)
+- [リリース情報・チェックサム・制限事項](https://github.com/FORIFOR/genie/releases/tag/v0.1.4)
+- 対応ソース：タグ`v0.1.4`
 
 ```sh
-git clone --branch v0.1.3 --depth 1 https://github.com/FORIFOR/genie.git genie-preview
+git clone --branch v0.1.4 --depth 1 https://github.com/FORIFOR/genie.git genie-preview
 cd genie-preview
 ```
 
-続いて、[v0.1.3のセットアップ手順](https://github.com/FORIFOR/genie/blob/v0.1.3/docs/LOCAL_PREVIEW.md)を進めます。cloneは済んでいるため、最初のコマンド欄の`pnpm install`から開始してください。各ターミナルで同じ`genie-preview`フォルダを使います。
+続いて、[v0.1.4のセットアップ手順](https://github.com/FORIFOR/genie/blob/v0.1.4/docs/LOCAL_PREVIEW.md)を進めます。cloneは済んでいるため、最初のコマンド欄の`pnpm install`から開始してください。各ターミナルで同じ`genie-preview`フォルダを使います。
 
 必要なものはNode 22以降、pnpm 10.12.2、Docker Compose、`dbmate`、`psql`、Xcodeコマンドラインツール、Macで動くモデルです。Gateway・Task Worker・Agent Hostも起動し続ける必要があります。アプリ単体では動きません。ガイドのローカルOllama検証例は`qwen3.5:9b`で、モデルのダウンロード容量・メモリは別途必要です。DMGを使わずネイティブアプリもビルドする場合は、フルのXcodeとRustが必要です。
 
