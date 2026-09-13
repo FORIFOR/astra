@@ -36,7 +36,7 @@ struct ConnectorsPane: View {
                     .font(.system(size: TypeScale.secondarySize)).foregroundStyle(Palette.muted(dark))
                 DisclosureGroup("詳しい接続情報") {
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("開発者向けプレビューでは、運営者が発行した接続設定を使います。パスワードやトークンを入力する必要はありません。")
+                Text("運営者の接続設定を使います。パスワードやトークンの入力は不要です。")
                         Button("接続設定を読み込む…") { importConfiguration() }
                         ForEach(connections.sources) { source in
                             VStack(alignment: .leading, spacing: 4) {

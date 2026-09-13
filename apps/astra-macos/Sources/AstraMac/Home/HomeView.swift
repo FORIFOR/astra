@@ -45,6 +45,7 @@ struct HomeView: View {
     @ObservedObject private var sheetOpener = NewRecordingSheetOpener.shared
     @ObservedObject private var initialProfile = InitialProfileStore.shared
     @ObservedObject private var work = WorkContextStore.shared
+    @ObservedObject private var consumer = ConsumerJourneyStore.shared
     @FocusState private var intentFocused: Bool
 
     static func greetingForNow(_ date: Date = Date()) -> String {
@@ -73,6 +74,13 @@ struct HomeView: View {
         .animation(.easeOut(duration: 0.14), value: sheetOpener.isOpen)
         .onChange(of: nav.intentFocusRequest) { _, request in focusIntent(request) }
         .onAppear { if nav.intentVisualContext != nil { intentFocused = true } }
+        .sheet(item: $consumer.active) { draft in
+            ConsumerJourneyView(draft: draft, onClose: { consumer.close($0) }, onResearch: { prompt, mode in
+                guard voice.ask(prompt, newConversation: true, visualContext: [], consumerPlanning: mode) else { return false }
+                if let id = voice.latestRequestID { nav.openTask = LocalStore.shared.loadTasks().first { $0.id == id } }
+                return true
+            })
+        }
     }
 
     private func focusIntent(_ request: UUID) {
@@ -125,6 +133,28 @@ struct HomeView: View {
                         .foregroundStyle(Palette.warning(dark)).textSelection(.enabled)
                 }
                 starterRequests
+                DisclosureGroup("映画・旅行・デリバリー") {
+                    VStack(alignment: .leading, spacing: Space.base) {
+                        ForEach(ConsumerJourneyKind.allCases) { kind in
+                            Button { consumer.present(kind) } label: {
+                                HStack(spacing: Space.cardPadding) {
+                                    Image(systemName: kind.symbol).frame(width: 24)
+                                    VStack(alignment: .leading, spacing: Space.compact) {
+                                        Text(kind.title).foregroundStyle(Palette.text(dark))
+                                        Text(kind.subtitle).font(.system(size: S.type(TypeScale.microSize)))
+                                    }
+                                    Spacer()
+                                    Image(systemName: "chevron.right")
+                                }.padding(Space.base).contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityIdentifier("homeConsumer-" + kind.rawValue)
+                        }
+                    }.padding(.top, Space.base)
+                }
+                .font(.system(size: S.type(TypeScale.secondarySize)))
+                .foregroundStyle(Palette.muted(dark))
+                .accessibilityIdentifier("homeConsumerDisclosure")
                 if !recentTasks.isEmpty {
                     VStack(alignment: .leading, spacing: 12) {
                         HStack {

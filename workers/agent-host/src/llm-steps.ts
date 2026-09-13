@@ -400,6 +400,26 @@ export class LlmRuntime {
       return { ok: false, error: { code: 'llm.no_model', message: NO_MODEL_MESSAGE } };
     }
 
+    // Text-only HTTP/local models cannot browse. Asking them to emit search
+    // results fabricates evidence (especially dangerous for prices/availability).
+    // Do not silently switch to a paid/search-enabled provider the user excluded.
+    if (
+      step.toolId === 'search.web' &&
+      !(
+        (chosen.kind === 'codex' && this.#deps.codex) ||
+        (chosen.kind === 'claude_code' && this.#deps.claudeCode)
+      )
+    ) {
+      return {
+        ok: false,
+        error: {
+          code: 'host.unsupported_step',
+          message:
+            '現在のAI接続にはWeb検索機能がありません。検索に対応したCodex・Claude Code、または検索サービスを設定してください。料金や空き状況は未確認です。',
+        },
+      };
+    }
+
     const ask = this.#askFor(chosen.kind, step.toolId);
     if (!ask) {
       return {
@@ -525,6 +545,11 @@ export class LlmRuntime {
             : [],
           webSearch: allowedTools.includes('WebSearch'),
         });
+    }
+    // Search always uses the real CLI tool path, never a text-only override.
+    if (tool === 'search.web' && kind === 'claude_code' && this.#deps.claudeCode) {
+      const cli = this.#deps.claudeCode;
+      return (prompt, allowedTools) => cli.ask(prompt, { allowedTools });
     }
     const provided = this.#deps.askWith?.[kind];
     if (provided) return provided;

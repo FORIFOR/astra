@@ -4,6 +4,17 @@ export function compositionIssues(text: string, args: Record<string, unknown>): 
   const context = String(args['context'] ?? '');
   const source = `${context}\n${instruction}`;
   const issues: string[] = [];
+  if (instruction.includes('旅程案（最新情報・空き状況は未確認）')) {
+    if (/[（(][月火水木金土日](?:曜日?)?[）)]|[月火水木金土日]曜日/.test(text))
+      issues.push(
+        '曜日を推測して追加しています。曜日は省略し、依頼にある日付だけを使ってください。',
+      );
+    const allowed = yenAmounts(instruction);
+    if ([...yenAmounts(text)].some((amount) => !allowed.has(amount)))
+      issues.push(
+        '未確認の費用を作っています。金額は提供された予算上限だけとし、交通費・宿泊費等は今後確認する項目として書いてください。',
+      );
+  }
   if (
     /未検証|未測定|実測していない|根拠のない/.test(source) &&
     /書かない|主張しない|補わない|断定しない|禁止/.test(instruction)
@@ -68,6 +79,14 @@ export function compositionIssues(text: string, args: Record<string, unknown>): 
     }
   }
   return issues;
+}
+
+function yenAmounts(text: string): Set<number> {
+  return new Set(
+    [...text.normalize('NFKC').matchAll(/(?:[¥￥]\s*)?(\d[\d,]*(?:\.\d+)?)\s*(万)?\s*円/g)].map(
+      (match) => Number(match[1]!.replace(/,/g, '')) * (match[2] ? 10_000 : 1),
+    ),
+  );
 }
 
 function quantities(text: string): Set<string> {

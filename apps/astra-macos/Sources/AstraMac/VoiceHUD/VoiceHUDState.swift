@@ -148,9 +148,19 @@ final class VoiceHUDState: ObservableObject {
 
     /// 声/テキストの依頼を Agent に投げる。listening→thinking→answer→idle と状態を進める。
     @discardableResult
-    func ask(_ text: String, newConversation: Bool = false, visualContext: [VisualContextArtifact]? = nil) -> Bool {
+    func ask(_ text: String, newConversation: Bool = false, visualContext: [VisualContextArtifact]? = nil, consumerPlanning: ConsumerPlanningMode? = nil) -> Bool {
         let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty, !requestInFlight else { return false }
+        // Personal booking requests open an editable local preparation flow.
+        // No gateway, model, address lookup, or paid operation happens here.
+        // Explicit images keep their normal visual-question route.
+        if consumerPlanning == nil, visualContext?.isEmpty != false,
+           let kind = ConsumerJourneyKind.detect(text) {
+            latestRequestID = nil; answer = ""; mode = .idle
+            ConsumerJourneyStore.shared.present(kind, request: text)
+            MainWindowController.shared.showSection(.home)
+            return true
+        }
         guard let base = apiBase, let token = apiToken else {
             answer = "接続を確認してください。入力した内容は残しています。"; mode = .idle; return false
         }
@@ -177,21 +187,28 @@ final class VoiceHUDState: ObservableObject {
         mode = .thinking; answer = ""
         Task.detached { [weak self] in
             do {
-                let conv: String
-                if !newConversation, let existing = await self?.conversationId { conv = existing }
-                else {
-                    conv = try AstraCoreBridge.startConversation(base, accessToken: token)
-                    await MainActor.run { self?.conversationId = conv }
+                let outcome: TurnOutcome
+                if let consumerPlanning {
+                    let id = try AstraCoreBridge.createTask(base, accessToken: token,
+                        kind: consumerPlanning.taskKind, inputJson: consumerPlanning.inputJSON(text))
+                    outcome = TurnOutcome(needsClarification: false, answer: "", taskId: id, notice: "", replyJson: "")
+                } else {
+                    let conv: String
+                    if !newConversation, let existing = await self?.conversationId { conv = existing }
+                    else {
+                        conv = try AstraCoreBridge.startConversation(base, accessToken: token)
+                        await MainActor.run { self?.conversationId = conv }
+                    }
+                    await MainActor.run {
+                        VisualContextStore.shared.bind(conversationID: conv, preserving: Set(attached.map(\.id)))
+                        self?.updateRequest(task.id) { $0.conversationID = conv }
+                    }
+                    outcome = replyCandidates.isEmpty
+                        ? try AstraCoreBridge.sendTurn(base, accessToken: token, conversationId: conv,
+                                                       text: text, attachments: attachments)
+                        : try AstraCoreBridge.sendTurn(base, accessToken: token, conversationId: conv,
+                                                       text: text, attachments: attachments, replyCandidatesJson: replyCandidates)
                 }
-                await MainActor.run {
-                    VisualContextStore.shared.bind(conversationID: conv, preserving: Set(attached.map(\.id)))
-                    self?.updateRequest(task.id) { $0.conversationID = conv }
-                }
-                let outcome = replyCandidates.isEmpty
-                    ? try AstraCoreBridge.sendTurn(base, accessToken: token, conversationId: conv,
-                                                   text: text, attachments: attachments)
-                    : try AstraCoreBridge.sendTurn(base, accessToken: token, conversationId: conv,
-                                                   text: text, attachments: attachments, replyCandidatesJson: replyCandidates)
                 await MainActor.run {
                     self?.updateRequest(task.id) { $0.backendTaskID = outcome.taskId; $0.phase = .working }
                 }

@@ -1,5 +1,17 @@
 import { expect, it } from 'vitest';
 import { compositionIssues } from '../src/compose-quality.js';
+
+it('catches invented weekdays and unverified costs in consumer itinerary drafts', () => {
+  const instruction = '旅程案（最新情報・空き状況は未確認）\n予算上限（合計）: 80000円';
+  expect(
+    compositionIssues('10月10日（金）\n交通費30,000円、宿泊35,000円', { instruction }),
+  ).toHaveLength(2);
+  expect(
+    compositionIssues('10月10日。予算上限は8万円。運賃と空室は未確認。', { instruction }),
+  ).toEqual([]);
+  expect(compositionIssues('金曜日に出発、ホテル3万円', { instruction })).toHaveLength(2);
+  expect(compositionIssues('予算上限80,000円。費用は要確認。', { instruction })).toEqual([]);
+});
 it('keeps production budget and film length out of unsupported advertising promises', () => {
   const args = {
     instruction: '動画の台本を3案。予算0円。実測していない速度を主張しない。',

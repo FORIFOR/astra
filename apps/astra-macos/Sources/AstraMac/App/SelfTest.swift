@@ -71,7 +71,7 @@ enum SelfTest {
         case "navtitle": navtitle(); return true
         case "geometry": geometryGate(args); return true
         case "occupation": occupationGate(); return true
-        case "focus": focusGate(); return true
+        case "focus": Task { @MainActor in await focusGate() }; return true
         case "screenshot-input": Task { await screenshotInput(args) }; return true
         case "screenshotcontext": screenshotContextGate(); return true
         case "screenshot-question": Task { await screenshotQuestion(args) }; return true
@@ -84,6 +84,8 @@ enum SelfTest {
         case "screenshotshots": screenshotShots(args); return true
         case "screenshotshot": screenshotShot(args); return true
         case "initialprofile": Task { @MainActor in await initialProfileShots(args) }; return true
+        case "consumerjourneys": Task { @MainActor in await consumerJourneyShots(args) }; return true
+        case "consumer-live": Task { @MainActor in await consumerJourneyLive() }; return true
         case "workcontext": workContextGate(); return true
         case "replyflow": replyFlowGate(); return true
         case "brief": briefGate(); return true
@@ -1655,11 +1657,13 @@ enum SelfTest {
     /// 使い物にならない。`.nonactivatingPanel` と `canBecomeKey=false` は
     /// 宣言してあるが、**宣言だけでは効いたことにならない**ので実際に確かめる。
     @MainActor
-    private static func focusGate() {
+    private static func focusGate() async {
         var fail: [String] = []
-        func settle(_ sec: Double) {
-            let until = Date().addingTimeInterval(sec)
-            while Date() < until { CFRunLoopRunInMode(.defaultMode, 0.05, true) }
+        func settle(_ sec: Double) async {
+            // Return to NSApplication's event loop so activation/deactivation is
+            // delivered normally. A nested CFRunLoop can observe stale focus
+            // while LaunchServices is still restoring the launching app.
+            try? await Task.sleep(for: .seconds(sec))
         }
 
         // 他アプリを前面にする。Finder はどの Mac にも居る。
@@ -1670,7 +1674,7 @@ enum SelfTest {
             print("SELFTEST_SKIP focus: 前面にできる他アプリが無い"); exit(0)
         }
         other.activate()
-        settle(1.2)
+        await settle(1.2)
         guard NSWorkspace.shared.frontmostApplication?.bundleIdentifier == other.bundleIdentifier else {
             print("SELFTEST_SKIP focus: 他アプリを前面にできない（この環境では確かめられない）"); exit(0)
         }
@@ -1691,7 +1695,7 @@ enum SelfTest {
         ]
         for (label, act) in steps {
             act()
-            settle(0.9)
+            await settle(0.9)
 
             // 製品がしない操作（makeKeyAndOrderFront を総当たり）でこじ開けるのは
             // やめた。Ask 用の面は key になれてよいので、それを「奪った」と呼ぶのは誤り。

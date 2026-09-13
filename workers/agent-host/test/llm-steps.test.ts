@@ -221,6 +221,59 @@ describe('what the device asks the model', () => {
   });
 });
 
+describe('real web search capability', () => {
+  it('does not turn text-only local/API output into invented search evidence', async () => {
+    for (const kind of ['local', 'openai_api', 'gemini_api', 'anthropic_api'] as const) {
+      const ask = vi.fn().mockResolvedValue({ results: [{ url: 'https://invented.example' }] });
+      const runtime = new LlmRuntime({ others: [keyOption(kind, true)], askWith: { [kind]: ask } });
+      const outcome = await runtime.run(
+        step({ toolId: 'search.web', args: { query: '京都の空室と料金' } }),
+      );
+      expect(outcome.ok).toBe(false);
+      expect(outcome.error?.message).toContain('Web検索機能がありません');
+      expect(ask).not.toHaveBeenCalled();
+    }
+  });
+
+  it('executes the actual CLI search tool rather than a text-only override', async () => {
+    const run = vi.fn(async (_command: string, args: readonly string[]): Promise<RunResult> => ({
+      code: 0,
+      stdout: args.includes('--version') ? '2.0.14' : reply({ results: [] }),
+      stderr: '',
+    }));
+    const override = vi.fn();
+    const runtime = new LlmRuntime({
+      claudeCode: new ClaudeCodeCli({ run }),
+      askWith: { claude_code: override },
+    });
+    expect(
+      (
+        await runtime.run(
+          step({ toolId: 'search.web', args: { query: '京都の旅行情報', limit: 3 } }),
+        )
+      ).ok,
+    ).toBe(true);
+    expect(run.mock.calls.at(-1)?.[1]).toContain('WebSearch');
+    expect(override).not.toHaveBeenCalled();
+  });
+
+  it('does not enable an excluded paid CLI to rescue a local-only search', async () => {
+    const run = vi.fn();
+    const local = vi.fn();
+    const runtime = new LlmRuntime({
+      allowedKinds: ['local'],
+      claudeCode: new ClaudeCodeCli({ run }),
+      others: [keyOption('local', true)],
+      askWith: { local },
+    });
+    expect((await runtime.run(step({ toolId: 'search.web', args: { query: 'ホテル' } }))).ok).toBe(
+      false,
+    );
+    expect(run).not.toHaveBeenCalled();
+    expect(local).not.toHaveBeenCalled();
+  });
+});
+
 describe('answering about a screenshot that stayed on this device', () => {
   it('delivers real PNG bytes to local inference and rejects missing or escaped files without inference', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'astra-vision-'));
