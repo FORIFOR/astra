@@ -10,12 +10,14 @@ import SwiftUI
 /// 出所とボタンの間に穴が出る。式と view は必ずずれる。だから式を持たない。
 ///
 /// **Dock の面の高さの規則は 1 つ**: 中身の実寸 + 上下の inset（view 自身の padding）。
-/// 例外は 3 つだけ ——
+/// 固定寸法と上限の例外は 3 つだけ ——
 /// - `.meeting(expanded: .captions)`: 生きて増える文字起こしを scroll で見せる **固定**の高さ
 ///   （`.notes` は測る。**上限 460** に当たってからだけ scroll。`.ask` の答えは
 ///   `RecordingWorkspaceState` にあって鍵に入らないので、いまは固定のまま）
 /// - `.confirmation`: 決断の面が作業面ほど大きくならないよう **上限 360**
 /// - `.idle` / `.appContext`（畳んだ棚）: Dynamic Island の寸法そのもの（token）
+///
+/// `.answer` / `.result` は中身を測る（短い回答も結果面と同じ幅で、長文は面内でスクロール）。
 ///
 /// 測るのは `NSHostingView.fittingSize`。実際に窓へ載せる view と同じ型・同じ幅・
 /// 同じ environment（dark / UIScale）で測るので、窓の中でだけ違う高さになることはない。
@@ -43,6 +45,7 @@ enum DockContentMeasure {
         case .agent: body = AnyView(AgentDock())
         case .confirmation(let c): body = AnyView(ConfirmationDock(confirmation: c))
         case .result(let r): body = AnyView(ResultDock(result: r))
+        case .answer(let text): body = AnyView(AnswerDock(text: text))
         case .contextDetail: body = AnyView(ContextDetailDock())
         case .quickActions: body = AnyView(QuickActionsDock())
         case .enteringRecording: body = AnyView(SimpleDock(icon: "record.circle", text: "録音を始めます…", tint: .recordingRed))

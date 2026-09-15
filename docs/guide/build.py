@@ -142,7 +142,7 @@ html=f'''<!doctype html><html lang="ja"><head><meta charset="utf-8">
 </div></div>
 
 <h2><span>2</span>会議を記録する</h2>
-<p>画面上部の Genie バーにある <b>{fact("dock.record")}</b> を押すと、その場で会議を録れます。Genie の名前を押すと追加の操作が開き、{shortcut("shortcut.escape")} で小さなバーに戻ります。バーが見つからないときは、メニューバーの Genie アイコン → <b>{fact("menu.showControls")}</b> で戻せます。</p>
+<p>画面上部の Genie バーにある <b>{fact("dock.record")}</b> を押すと、その場で会議を録れます。Genie の名前を押すと追加の操作が開き、{shortcut("shortcut.escape")} で小さなバーに戻ります。バーが見つからないときは、メニューバーの Genie アイコン → <b>{fact("menu.showControls")}</b> で戻せます。常駐パネルが邪魔なときは同じメニューの <b>{fact("menu.hideControls")}</b> を選ぶと、画面だけ隠れて {fact("dock.record")} 中や実行中の仕事は続きます。</p>
 {img('home')}
 <ol>
 <li><span class="n">1</span><b>{fact("recording.start")}</b> を押す（または {shortcut("shortcut.recording.toggle")}、メニューの「{fact("recording.menu.start")}」）</li>

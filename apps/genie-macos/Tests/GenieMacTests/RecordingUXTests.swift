@@ -29,4 +29,21 @@ final class RecordingUXTests: XCTestCase {
     func testRestoreControlsHasARealMenuAction() {
         XCTAssertTrue(StatusBarController.shared.menuWiring().contains { $0.title == Facts.menuShowControls && $0.wired })
     }
+
+    func testShortAnswerStaysInTaskDockAndCanBeDismissed() {
+        let store = GenieStateStore.shared
+        let previousDock = store.dock
+        let previousMode = store.state.mode
+        defer {
+            store.setDock(previousDock)
+            store.setMode(previousMode)
+        }
+
+        store.setDock(.answer("金曜日の15時です。"))
+        XCTAssertEqual(store.dock, .answer("金曜日の15時です。"))
+        XCTAssertEqual(store.state.mode, .completed)
+
+        store.dismissResult()
+        XCTAssertEqual(store.dock, .idle)
+    }
 }

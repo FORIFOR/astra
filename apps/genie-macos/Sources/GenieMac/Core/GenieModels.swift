@@ -32,6 +32,8 @@ enum DockPresentation: Equatable {
     case confirmation(ActionConfirmation)
     /// 会議中。既定は 1 行。必要なものだけ開く。
     case meeting(expanded: MeetingPanel?)
+    /// すぐ返せる短い回答。Task Dock の中で確認でき、作業画面へ遷移しない。
+    case answer(String)
     /// 仕事が終わった直後。消して終わらせず、後始末だけ出して残す（CleanShot の Quick Access）。
     case result(AgentResult)
     /// 文脈の棚を開いた状態（Dropover: 棚そのものが詳細へ展開する）。
@@ -109,6 +111,9 @@ enum DockPresentation: Equatable {
             // 補助面が作業面ほど大きくなると、会議そのものより目立つ。
             let s = measured(Metrics.dockMeetingWidth, fallback: Metrics.dockMeetingExpandedHeight)
             return CGSize(width: s.width, height: min(Metrics.dockMeetingExpandedHeight, s.height))
+        case .answer:
+            // 短い回答は結果面と同じ幅で測る。長い回答も Dock 内でスクロールできる。
+            return measured(Metrics.dockResultWidth, fallback: Metrics.dockResultHeight)
         case .result:
             return measured(Metrics.dockResultWidth, fallback: Metrics.dockResultHeight)
         case .contextDetail:

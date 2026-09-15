@@ -45,6 +45,7 @@ final class GenieStateStore: ObservableObject {
         case .agent: return .acting
         case .confirmation: return .awaitingConfirmation
         case .meeting, .enteringRecording: return .meeting
+        case .answer: return .completed
         case .result: return .completed
         case .idle, .appContext, .appContextExpanded, .contextDetail, .quickActions:
             // 会議中や workspace 表示中は、Dock が idle でも活動は続いている。
@@ -198,7 +199,10 @@ final class GenieStateStore: ObservableObject {
 
     /// 結果面を閉じる。
     func dismissResult() {
-        if case .result = state.dock { setDock(.idle) }
+        switch state.dock {
+        case .answer, .result: setDock(.idle)
+        default: break
+        }
     }
 
     /// テスト用に初期化する。

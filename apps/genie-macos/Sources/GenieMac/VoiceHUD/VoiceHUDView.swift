@@ -79,6 +79,7 @@ struct VoiceTaskDockView: View {
         case .agent: AgentDock()
         case .confirmation(let confirmation): ConfirmationDock(confirmation: confirmation)
         case .meeting(let panel): MeetingDock(open: panel)
+        case .answer(let text): AnswerDock(text: text)
         case .result(let result): ResultDock(result: result)
         case .contextDetail: ContextDetailDock()
         case .quickActions: QuickActionsDock()
@@ -89,6 +90,69 @@ struct VoiceTaskDockView: View {
 
 /// 旧名。既存の呼び出しを壊さないための別名。
 typealias VoiceHUDView = VoiceTaskDockView
+
+// MARK: - 短い回答（Task Dock 内で完結）
+
+/// すぐ返せる質問の答えを、Task Dock から離れずに確認できる面。
+/// 仕事の成果物（`ResultDock`）とは分け、短い回答には進捗や別の作業ボタンを混ぜない。
+struct AnswerDock: View {
+    @Environment(\.colorScheme) private var scheme
+    private var dark: Bool { scheme == .dark }
+    let text: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 9) {
+                Image(systemName: "sparkles")
+                    .font(.system(size: 13))
+                    .foregroundStyle(Palette.accent(dark))
+                Text("回答")
+                    .font(.system(size: S.type(Metrics.dockTitleSize), weight: .semibold))
+                    .foregroundStyle(Palette.text(dark))
+                Spacer(minLength: 0)
+                Button { copy() } label: {
+                    Text(Facts.resultCopy)
+                        .font(.system(size: S.type(Metrics.dockMetaSize), weight: .medium))
+                        .foregroundStyle(Palette.text(dark))
+                        .frame(height: 28)
+                        .padding(.horizontal, 9)
+                }
+                .buttonStyle(GenieControlStyle(radius: 7, base: 0.06))
+                .accessibilityIdentifier("answerCopy")
+                Button { GenieStateStore.shared.dismissResult() } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 11))
+                        .foregroundStyle(Palette.muted(dark))
+                        .frame(width: 28, height: 28)
+                }
+                .buttonStyle(GenieControlStyle(radius: 7, base: 0.0))
+                .accessibilityIdentifier("answerDismiss")
+                .accessibilityLabel("回答を閉じる")
+            }
+            ScrollView {
+                Text(text)
+                    .font(.system(size: S.type(Metrics.dockRowSize)))
+                    .foregroundStyle(Palette.text(dark))
+                    .textSelection(.enabled)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .frame(maxHeight: 82)
+            .accessibilityIdentifier("answerText")
+        }
+        .padding(.horizontal, S.metric(Metrics.dockPadH))
+        .padding(.vertical, S.metric(Metrics.dockPadV))
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .escapeKey { GenieStateStore.shared.dismissResult() }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("dockAnswer")
+    }
+
+    private func copy() {
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(text, forType: .string)
+    }
+}
 
 // MARK: - 1. Idle / Presence
 

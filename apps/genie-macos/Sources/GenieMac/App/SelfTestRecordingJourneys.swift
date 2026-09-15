@@ -48,9 +48,10 @@ extension SelfTest {
         check("quick actions reachable", VoiceHUDState.shared.mode == .quickActions)
         VoiceHUDState.shared.mode = .idle
         windows.hideVoiceHUD(); await settle()
+        check("menu offers restore after hiding controls", StatusBarController.shared.menuWiring().contains { $0.title == Facts.menuShowControls && $0.wired })
         windows.restoreControls(); await settle()
         check("hidden controls restore from menu action", windows.isVoiceHUDVisible && VoiceHUDState.shared.mode == .idle)
-        check("menu restore action wired", StatusBarController.shared.menuWiring().contains { $0.title == Facts.menuShowControls && $0.wired })
+        check("menu offers hide while controls are visible", StatusBarController.shared.menuWiring().contains { $0.title == Facts.menuHideControls && $0.wired })
         check("meeting itself is not a screen-share signal", !ScreenSharingProbe.isStopControl("Leave call") && !ScreenSharingProbe.isStopControl("Share screen"))
         check("active sharing has an explicit stop control", ScreenSharingProbe.isStopControl("Stop presenting") && ScreenSharingProbe.isStopControl("共有を停止"))
         do {

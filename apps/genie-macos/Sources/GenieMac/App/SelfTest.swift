@@ -6071,12 +6071,18 @@ enum SelfTest {
             let deadline = Date().addingTimeInterval(60)
             while hud.requestInFlight && Date() < deadline { RunLoop.current.run(until: Date().addingTimeInterval(0.2)) }
             let record = LocalStore.shared.loadTasks().first { $0.id == id }?.requestRecord
-            guard wasThinking, record?.hasResult == true, hud.mode == .idle,
+            // Settled short answers remain visible in the TaskDock so the user
+            // can read them immediately; older builds returned to idle here.
+            let settled = switch hud.mode {
+            case .idle, .answer: true
+            default: false
+            }
+            guard wasThinking, record?.hasResult == true, settled,
                   hud.answer.contains("金曜"), hud.answer.contains("15") || hud.answer.contains("3時") else {
                 print("SELFTEST_FAIL voiceask: no completed, persisted answer with fixture facts"); exit(2)
             }
             let preview = String(hud.answer.prefix(36)).replacingOccurrences(of: "\n", with: " ")
-            print("SELFTEST_OK voiceask: thinking=\(wasThinking)→idle Agent 応答=\"\(preview)…\"")
+            print("SELFTEST_OK voiceask: thinking=\(wasThinking)→settled Agent 応答=\"\(preview)…\"")
             exit(0)
         } catch { print("SELFTEST_FAIL voiceask error=\(error)"); exit(3) }
     }

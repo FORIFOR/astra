@@ -1,0 +1,42 @@
+project_id,対象種別：アカウント／投稿／サイト／リポジトリ／製品,対象IDまたはURL,指標名,値,単位,対象期間の開始と終了,数値の取得日時,データ取得元,確認状態,補足
+forifor-genie,リポジトリ,https://github.com/FORIFOR/genie,GitHubスター数,0,stars,現時点の累計,2026-09-15 00:00 JST,GitHub repo API,確認済み,外部スターと内部確認を分離できる履歴は未取得。
+forifor-genie,リポジトリ,https://github.com/FORIFOR/genie,フォーク数,0,forks,現時点の累計,2026-09-15 00:00 JST,GitHub repo API,確認済み,
+forifor-genie,リポジトリ,https://github.com/FORIFOR/genie,Watchers数,0,watchers,現時点の累計,2026-09-15 00:00 JST,GitHub repo API,確認済み,
+forifor-genie,リポジトリ,https://github.com/FORIFOR/genie,オープンIssue数,2,issues,現時点の残高,2026-09-15 00:00 JST,GitHub repo API,確認済み,Issue #1、#7。外部報告数ではない。
+forifor-genie,リポジトリ,https://github.com/FORIFOR/genie,オープンPR数,1,pull requests,現時点の残高,2026-09-15 00:00 JST,GitHub PR API,確認済み,PR #8（TikTok/Facebook運用記録）がopen。
+forifor-genie,リポジトリ,https://github.com/FORIFOR/genie,リポジトリ閲覧数,15,views,2026-08-31〜2026-09-13 UTC（GitHubの返却14日窓）,2026-09-15 00:00 JST,GitHub traffic/views API,確認済み,オーナー確認を含む可能性あり。
+forifor-genie,リポジトリ,https://github.com/FORIFOR/genie,ユニーク閲覧者数,14,unique visitors,2026-08-31〜2026-09-13 UTC（GitHubの返却14日窓）,2026-09-15 00:00 JST,GitHub traffic/views API,確認済み,オーナー確認を含む可能性あり。
+forifor-genie,リポジトリ,https://github.com/FORIFOR/genie,リポジトリ閲覧数（直近7日、日次合計）,15,views,2026-09-07〜2026-09-13 UTC,2026-09-15 00:00 JST,GitHub traffic/views API,確認済み,daily uniqueの合計14は同一人の重複排除ではない。
+forifor-genie,リポジトリ,https://github.com/FORIFOR/genie,ユニーク閲覧者数（直近7日、日次合計）,14,daily uniques sum,2026-09-07〜2026-09-13 UTC,2026-09-15 00:00 JST,GitHub traffic/views API,確認済み,GitHubの返却値を日次合計した参考値。
+forifor-genie,リポジトリ,https://github.com/FORIFOR/genie,リポジトリ閲覧数（直近30日）,,views,直近30日,2026-09-15 00:00 JST,GitHub traffic/views API,取得不可,APIが14日分のみ返したため。0ではない。
+forifor-genie,リポジトリ,https://github.com/FORIFOR/genie,リポジトリclone数,543,clones,2026-08-31〜2026-09-13 UTC（GitHubの返却14日窓）,2026-09-15 00:00 JST,GitHub traffic/clones API,確認済み,CI・検証・オーナーを含み得るためテスター数ではない。
+forifor-genie,リポジトリ,https://github.com/FORIFOR/genie,ユニークclone数,207,unique cloners,2026-08-31〜2026-09-13 UTC（GitHubの返却14日窓）,2026-09-15 00:00 JST,GitHub traffic/clones API,確認済み,CI・検証を除外できない。
+forifor-genie,リポジトリ,https://github.com/FORIFOR/genie,clone数（直近7日）,455,clones,2026-09-07〜2026-09-13 UTC,2026-09-15 00:00 JST,GitHub traffic/clones API,確認済み,日次countの合計。テスター数ではない。
+forifor-genie,リポジトリ,https://github.com/FORIFOR/genie,ユニークclone数（直近7日、日次合計）,203,daily unique cloners sum,2026-09-07〜2026-09-13 UTC,2026-09-15 00:00 JST,GitHub traffic/clones API,確認済み,同一人の重複排除ではない。
+forifor-genie,リポジトリ,https://github.com/FORIFOR/genie,clone数（直近30日）,,clones,直近30日,2026-09-15 00:00 JST,GitHub traffic/clones API,取得不可,APIが14日分のみ返したため。0ではない。
+forifor-genie,Release asset,https://github.com/FORIFOR/genie/releases/tag/v0.1.4,Genie-0.1.4.dmg ダウンロード数,1,downloads,現時点の累計,2026-09-15 00:00 JST,GitHub release asset API,確認済み,自分・CI・検証を除外できない。
+forifor-genie,Release asset,https://github.com/FORIFOR/genie/releases/tag/v0.1.4,Genie-0.1.4.zip ダウンロード数,2,downloads,現時点の累計,2026-09-15 00:00 JST,GitHub release asset API,確認済み,自分・CI・検証を除外できない。
+forifor-genie,Release asset,https://github.com/FORIFOR/genie/releases/tag/v0.1.4,Genie-guide-ja.pdf ダウンロード数,1,downloads,現時点の累計,2026-09-15 00:00 JST,GitHub release asset API,確認済み,
+forifor-genie,Release asset,https://github.com/FORIFOR/genie/releases/tag/v0.1.4,SHA256SUMS.txt ダウンロード数,1,downloads,現時点の累計,2026-09-15 00:00 JST,GitHub release asset API,確認済み,
+forifor-genie,Zenn記事,https://zenn.dev/forifori/articles/genie-mac-workspace,いいね数,1,likes,現時点の累計,2026-09-14 23:58 JST,Zenn公開HTML likedCount,確認済み,公開直後。PVとは別指標。
+forifor-genie,Zenn記事,https://zenn.dev/forifori/articles/genie-mac-workspace,コメント数,0,comments,現時点の累計,2026-09-14 23:58 JST,Zenn公開HTML commentsCount,確認済み,
+forifor-genie,Zenn記事,https://zenn.dev/forifori/articles/genie-mac-workspace,閲覧数,,views,直近7日／30日／累計,2026-09-14 23:58 JST,Zenn公開HTML,未取得,公開ページにPVは含まれず、管理画面は今回取得していない。0ではない。
+forifor-genie,YouTube動画,https://www.youtube.com/shorts/xOQnOKG_Ndg,再生数,253,views,現時点の累計表示,2026-09-14 23:58 JST,YouTube公開HTML videoDetails,確認済み,チャンネル全体の登録者・Studio retentionは未取得。
+forifor-genie,YouTube動画,https://www.youtube.com/shorts/xOQnOKG_Ndg,高評価数,0,likes,現時点の累計表示,2026-09-14 23:58 JST,YouTube公開HTML videoDetails,確認済み,
+forifor-genie,YouTube動画,https://www.youtube.com/shorts/xOQnOKG_Ndg,コメント数,,comments,現時点の累計表示,2026-09-14 23:58 JST,YouTube公開HTML,未取得,公開HTMLから取得できなかった。0とは扱わない。
+forifor-genie,YouTube動画,https://www.youtube.com/shorts/x74kQKDzHsU,再生数,12,views,現時点の累計表示,2026-09-14 23:58 JST,YouTube公開HTML videoDetails,確認済み,
+forifor-genie,YouTube動画,https://www.youtube.com/shorts/x74kQKDzHsU,高評価数,0,likes,現時点の累計表示,2026-09-14 23:58 JST,YouTube公開HTML videoDetails,確認済み,
+forifor-genie,YouTube動画,https://www.youtube.com/watch?v=uSIxI4MGzrg,再生数,7,views,現時点の累計表示,2026-09-14 23:58 JST,YouTube公開HTML videoDetails,確認済み,
+forifor-genie,YouTube動画,https://www.youtube.com/watch?v=uSIxI4MGzrg,高評価数,0,likes,現時点の累計表示,2026-09-14 23:58 JST,YouTube公開HTML videoDetails,確認済み,
+forifor-genie,TikTokアカウント,https://www.tiktok.com/@foriforapps,フォロワー数,0,followers,資料記録時点（2026-09-14 03:04 JST）,2026-09-14 03:04 JST,docs/growth/2026-09-14/metrics.json（TikTok Studio記録）,資料記載のみ,現在のStudio再取得は行わず、公開ページはWAF待機のみ。0を現在の確定値とは扱わない。
+forifor-genie,TikTok投稿,https://www.tiktok.com/@foriforapps/video/7684737308754529557,再生数,0,views,資料記録時点（2026-09-14 03:04 JST）,2026-09-14 03:04 JST,TikTok Studio記録（資料）,資料記載のみ,0表示は制限・拒否・コンテンツ品質の診断ではない。
+forifor-genie,TikTok投稿,https://www.tiktok.com/@foriforapps/video/7684737308754529557,いいね数,0,likes,資料記録時点（2026-09-14 03:04 JST）,2026-09-14 03:04 JST,TikTok Studio記録（資料）,資料記載のみ,
+forifor-genie,TikTok投稿,https://www.tiktok.com/@foriforapps/video/7684737308754529557,コメント数,0,comments,資料記録時点（2026-09-14 03:04 JST）,2026-09-14 03:04 JST,TikTok Studio記録（資料）,資料記載のみ,
+forifor-genie,Facebook投稿,https://www.facebook.com/permalink.php?story_fbid=pfbid0EQKVof1iAKkxPauws4KasVooTuZ9fwQ7K428f8b2rEGcZ5SKwHgEDb2QAruyS3Nl&id=61593966556275,反応数,,reactions,現時点,2026-09-14 23:58 JST,Facebook公開HTML／資料,取得不可,動的HTMLで反応値を取得できなかった。0とは扱わない。
+forifor-genie,公式サイト,https://genie-forifor.forifor.chatgpt.site/ja,訪問者数,,visitors,直近7日／30日／累計,2026-09-14 23:58 JST,公開HTML,未設定,解析タグ・ダッシュボードを確認できず、0ではない。
+forifor-genie,公式サイト,https://genie-forifor.forifor.chatgpt.site/ja#start,テスターCTAクリック数,,clicks,直近7日／30日／累計,2026-09-14 23:58 JST,公開HTML,未設定,CTAは存在するが、計測受信は未確認。
+forifor-genie,製品利用,https://github.com/FORIFOR/genie/issues/7,外部テスター報告数,,reports,現時点の累計,2026-09-15 00:00 JST,GitHub Issue comments API,未取得,Issueコメント0件は応募者数・実試用人数の0を意味しない。
+forifor-genie,事業成果,https://genie-forifor.forifor.chatgpt.site/ja#business,問い合わせ数,,inquiries,直近7日／30日／累計,2026-09-14 23:58 JST,フォームHTML,未確認,フォーム送信をしていないため受信状況は確認不可。
+forifor-genie,事業成果,,有料利用者数,,customers,現時点の累計,2026-09-15 00:00 JST,取得元なし,未確認,公開情報から確認できず。0とは扱わない。
+forifor-genie,事業成果,,売上,,JPY,直近7日／30日／累計,2026-09-15 00:00 JST,取得元なし,未確認,公開情報から確認できず。0とは扱わない。
+forifor-genie,費用,,広告費・制作費・ツール費,,JPY,直近7日／30日／累計,2026-09-15 00:00 JST,取得元なし,未確認,アカウント／請求情報へアクセスしていない。

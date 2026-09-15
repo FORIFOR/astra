@@ -112,6 +112,7 @@ enum UserFacingFacts {
     static let dockRecord = "録音"
     static let dockRelated = "関連操作"
     static let menuShowControls = "録音コントロールを表示"
+    static let menuHideControls = "録音コントロールを隠す"
     static let translationTarget = "翻訳先"
     static let translationAuto = "自動更新"
     static let translationRetry = "翻訳を再試行"
@@ -283,6 +284,7 @@ enum UserFacingFacts {
             f("dock.record", dockRecord),
             f("dock.related", dockRelated),
             f("menu.showControls", menuShowControls),
+            f("menu.hideControls", menuHideControls),
             f("translation.target", translationTarget),
             f("translation.auto", translationAuto),
             f("translation.retry", translationRetry),

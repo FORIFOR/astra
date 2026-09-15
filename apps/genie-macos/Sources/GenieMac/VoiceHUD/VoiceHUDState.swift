@@ -2,7 +2,7 @@ import GenieCore
 import SwiftUI
 
 /// 上部 Voice OS ピルの状態。idle は静か、listening は声を拾っている、thinking は Agent に問い合わせ中。
-/// 実フロー: ショートカット→声/テキストの依頼→`ask()`→thinking→Agent 応答→idle。
+/// 実フロー: ショートカット→声/テキストの依頼→`ask()`→thinking→Agent 応答→回答面（または idle）。
 @MainActor
 final class VoiceHUDState: ObservableObject {
     static let shared = VoiceHUDState()
@@ -225,7 +225,11 @@ final class VoiceHUDState: ObservableObject {
                 let reply = try Self.followUp(outcome, base: base, token: token, waitMs: 12_000)
                 await MainActor.run {
                     self?.applyReply(reply, to: task.id)
-                    self?.answer = reply.text; self?.mode = .idle
+                    self?.answer = reply.text
+                    // 短い確定回答や聞き返しは、その場で確認できるよう Dock に残す。
+                    // 作業中・待機中は従来どおり静かな入口へ戻し、Work で追える状態にする。
+                    self?.mode = reply.settled && !reply.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                        ? .answer(reply.text) : .idle
                     if reply.settled { VisualContextStore.shared.markRecent(attached) }
                     // 返信案なら、答えとしてではなく確認カードとして出す（送るのは押されたときだけ）。
                     if reply.settled, !outcome.replyJson.isEmpty, let draft = ReplyFlow.draft(replyJson: outcome.replyJson, body: reply.text) {
@@ -238,7 +242,11 @@ final class VoiceHUDState: ObservableObject {
                     await MainActor.run {
                         self?.applyReply(later, to: task.id)
                         if later.settled {
-                            self?.answer = later.text; VisualContextStore.shared.markRecent(attached)
+                            self?.answer = later.text
+                            if !later.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                                self?.mode = .answer(later.text)
+                            }
+                            VisualContextStore.shared.markRecent(attached)
                             if !outcome.replyJson.isEmpty, let draft = ReplyFlow.draft(replyJson: outcome.replyJson, body: later.text) {
                                 ReplyFlow.shared.present(draft)
                             }

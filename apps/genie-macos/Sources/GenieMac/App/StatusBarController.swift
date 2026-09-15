@@ -38,7 +38,12 @@ final class StatusBarController {
         open.target = self
         menu.addItem(open)
 
-        let controls = NSMenuItem(title: Facts.menuShowControls, action: #selector(showControls), keyEquivalent: "")
+        // 常駐パネルは作業を止めずに隠せる。表示状態に応じて同じ場所の
+        // 項目を切り替えるので、「隠したあと、どこから戻すか」が変わらない。
+        let controlsTitle = WindowCoordinator.shared.isVoiceHUDVisible
+            ? Facts.menuHideControls
+            : Facts.menuShowControls
+        let controls = NSMenuItem(title: controlsTitle, action: #selector(toggleControls), keyEquivalent: "")
         controls.target = self
         menu.addItem(controls)
         let recording = WindowCoordinator.shared.isRecording
@@ -105,7 +110,13 @@ final class StatusBarController {
     }
 
     @objc private func openMain() { MainWindowController.shared.showSection(.home) }
-    @objc private func showControls() { WindowCoordinator.shared.restoreControls() }
+    @objc private func toggleControls() {
+        if WindowCoordinator.shared.isVoiceHUDVisible {
+            WindowCoordinator.shared.hideVoiceHUD()
+        } else {
+            WindowCoordinator.shared.restoreControls()
+        }
+    }
     @objc private func toggleRecording() { WindowCoordinator.shared.toggleRecording() }
     @objc private func openSettings() { SettingsWindowController.shared.show() }
     @objc private func openGuide() { NSWorkspace.shared.open(Self.guideURL) }

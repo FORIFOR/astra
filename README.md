@@ -2,21 +2,30 @@
 
 # Genie
 
-**Put your ideas to work.**
+**Ask about the work in front of you, then keep the answer where you work.**
 
-Give Genie a goal, work with your AI model, and keep the result in a native Mac workspace. Turn rough notes into an action plan, draft a better website message, or generate a small HTML prototype. Reopen the work, copy it, or save it as Markdown.
+Genie is a native Mac app for a small, repeatable loop: bring up TaskDock, optionally attach the screen you are looking at, ask one specific question, and copy the answer without leaving the current work. Run it with Ollama or another model endpoint you choose.
 
 Previously Astra. The app, downloads, and source are now named Genie. Existing settings and accounts are retained.
 
 [Enterprise introduction: measured workflows, limits, and L1/L2/L3 gates](docs/ENTERPRISE_READINESS.md).
 
-**Using Ollama on a Mac? Help test the preview.** Turn a few notes into a plan, reopen the result, and save it. Tell us the first place you get stuck. Setup feedback counts, too. No waitlist or separate signup; a GitHub account is only needed to post feedback.
+**Using Ollama on a Mac? Help test the preview.** Try the loop below with a fictional screen or note, then tell us the first place you get stuck. Setup feedback counts, too. No waitlist or separate signup; a GitHub account is only needed to post feedback.
 
-**[Start a first test →](docs/TESTING.md)** · [日本語の初回起動ガイド](docs/LOCAL_PREVIEW.ja.md) · [Report your experience](https://github.com/FORIFOR/genie/issues/new?template=tester_feedback.yml)
+**[Watch the first workflow →](https://genie-forifor.forifor.chatgpt.site/#demo)** · [Start a first test](docs/TESTING.md) · [Download the Mac preview](https://github.com/FORIFOR/genie/releases/tag/v0.1.4) · [Report your experience](https://github.com/FORIFOR/genie/issues/new?template=tester_feedback.yml)
 
 [Website & demos](https://genie-forifor.forifor.chatgpt.site) · [日本語](docs/README.ja.md) · [Mac preview v0.1.4](https://github.com/FORIFOR/genie/releases/tag/v0.1.4)
 
-## See the work, then try your own
+## One workflow to try first
+
+1. Open the app or page you are working on. Add a screenshot only when it helps explain the question.
+2. Bring up TaskDock and ask: “What are the three problems on this screen and the next checks I should make?”
+3. Read the answer in TaskDock, without opening a separate work window.
+4. Copy the useful part, or reopen the saved request in Work.
+
+This is the product’s first proof point: less context switching, a clear local or external model route, and a result that can be used immediately. The screenshot is optional; taking one does not send it anywhere until you submit a question.
+
+## More workflows
 
 | Real workflow             | Watch / explore                                                                                                                                          | What the demonstration shows                                                         |
 | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
@@ -29,8 +38,8 @@ Real app captures; waiting is condensed. Model speed and quality vary. These exa
 ## Start with a goal
 
 1. In Home, describe what you need and what a useful result looks like.
-2. Your connected model works on the request. Open the result in Work.
-3. Review it, copy it, or save Markdown for the next task.
+2. Short questions appear in TaskDock; longer requests continue as work you can reopen in Work.
+3. Review the answer or result, copy it, or save Markdown for the next task.
 
 Try: “Turn these launch notes into a checklist with an owner and a next action: test the app, record a demo, write release notes. Mark unknown owners as unassigned.”
 
